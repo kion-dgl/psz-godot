@@ -27,6 +27,24 @@ extends RefCounted
 const SFX_MOVE := "res://assets/sfx/ui/menu_move.wav"
 const SFX_SELECT := "res://assets/sfx/ui/menu_select.wav"
 const SFX_BACK := "res://assets/sfx/ui/menu_back.wav"
+## The shared "denied" cue — a blocked action: Accept on a greyed/un-actionable
+## row, or a transaction that fails at commit. Distinct from SFX_BACK (close);
+## screens used to play the close cue on a blocked buy, which read as "closed".
+const SFX_DENIED := "res://assets/sfx/ui/menu_invalid.wav"
+
+## Canonical economy-screen failure vocabulary (spec /states/shops #feedback).
+## Defined once here — screens MUST reference these, never a local literal, so
+## the message can't drift ("Inventory full!" vs "No room" across screens).
+const MSG_NO_ROOM := "No room"
+const MSG_NOT_ENOUGH_MESETA := "Not enough meseta"
+
+## Set by deny()/denied_sfx() so the accept branch can tell an Accept that
+## opened something apart from one that was immediately blocked. on_accept runs
+## synchronously inside handle(), so a deny during that call lands here before
+## handle() decides whether to play the accept cue — without it, a blocked buy
+## plays SFX_SELECT *and* SFX_DENIED stacked. Spec /states/shops #feedback:
+## a blocked action plays the denied cue once, never the accept cue.
+static var _denied_during_accept := false
 
 
 static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
@@ -62,14 +80,25 @@ static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
 		_mark_handled(shop)
 		return true
 	if opts.has("on_accept") and event.is_action_pressed("ui_accept"):
-		if sfx:
-			SfxManager.play(SFX_SELECT)
-		(opts["on_accept"] as Callable).call()
-		_mark_handled(shop)
+		_run_accept(shop, opts["on_accept"] as Callable, sfx)
 		return true
 	if opts.has("on_other"):
 		return (opts["on_other"] as Callable).call(event)
 	return false
+
+
+## Run an accept branch: invoke the handler, then play the accept cue *unless*
+## the handler blocked the action (deny/denied_sfx flips _denied_during_accept).
+## Playing after on_accept is what lets a rejected buy sound the denied cue
+## alone instead of select+denied stacked. Spec /states/shops #feedback.
+## (Split out of handle() so the cue-suppression branch doesn't push it over
+## the complexity bound.)
+static func _run_accept(shop: Control, on_accept: Callable, sfx: bool) -> void:
+	_denied_during_accept = false
+	on_accept.call()
+	if sfx and not _denied_during_accept:
+		SfxManager.play(SFX_SELECT)
+	_mark_handled(shop)
 
 
 ## Guard for "confirm acts on the selected row" (#274 inc 4): the selected
@@ -115,6 +144,23 @@ static func info(shop: Control, msg: String, on_dismiss := Callable()) -> void:
 	shop.set("_active_modal", modal)
 	shop.add_child(modal)
 	modal.info(msg)
+
+
+## Play the shared "denied" cue for a blocked action that opens nothing — Accept
+## on a greyed/un-actionable row whose reason already shows in the detail panel.
+## Once, never the back/close or accept cue. Spec /states/shops #feedback.
+static func denied_sfx() -> void:
+	_denied_during_accept = true
+	SfxManager.play(SFX_DENIED)
+
+
+## Report a blocking failure the player *could* start (a commit-time reject):
+## the denied cue + an info modal that states the reason. Use this instead of a
+## silent hint when a confirmed action can't complete. Spec /states/shops #feedback.
+static func deny(shop: Control, reason: String, on_dismiss := Callable()) -> void:
+	_denied_during_accept = true
+	SfxManager.play(SFX_DENIED)
+	info(shop, reason, on_dismiss)
 
 
 ## Standard tab switch for buy/sell shops (item + weapon): wrap `_tab`,

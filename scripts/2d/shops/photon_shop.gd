@@ -80,7 +80,7 @@ func _open_confirm_modal() -> void:
 		return
 	var item_id: String = item["id"]
 	if not item_id.begins_with("debug_mag") and not Inventory.can_add_item(item_id):
-		_open_info_modal("Inventory full!")
+		_open_info_modal(ShopNav.MSG_NO_ROOM)
 		return
 
 	var prompt: String
@@ -94,10 +94,11 @@ func _open_confirm_modal() -> void:
 
 
 ## Open a single-button info modal for blocking error states (not enough
-## photon drops, inventory full, etc.) so the failure is unmissable.
+## photon drops, inventory full, etc.) so the failure is unmissable. Routes
+## through ShopNav.deny so the shared denied cue plays (spec #feedback).
 func _open_info_modal(msg: String) -> void:
 	hint_label.text = msg
-	ShopNav.info(self, msg)
+	ShopNav.deny(self, msg)
 
 
 func _exchange_selected() -> void:
@@ -111,6 +112,7 @@ func _exchange_selected() -> void:
 
 	var pd_count: int = Inventory.get_item_count("photon_drop")
 	if pd_count < cost:
+		ShopNav.denied_sfx()
 		hint_label.text = "Not enough Photon Drops! Need %d" % cost
 		return
 
@@ -120,7 +122,8 @@ func _exchange_selected() -> void:
 		return
 
 	if not Inventory.can_add_item(item_id):
-		hint_label.text = "Inventory full!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NO_ROOM
 		return
 
 	Inventory.remove_item("photon_drop", cost)
@@ -132,6 +135,7 @@ func _exchange_selected() -> void:
 func _handle_debug_mag(item_id: String, item_name: String, cost: int) -> void:
 	var character = CharacterManager.get_active_character()
 	if character == null:
+		ShopNav.denied_sfx()
 		hint_label.text = "No active character!"
 		return
 
@@ -141,7 +145,8 @@ func _handle_debug_mag(item_id: String, item_name: String, cost: int) -> void:
 			character["mag_states"] = {}
 		var inst_id: String = MagManager.add_mag_to_character(character, "mag")
 		if inst_id.is_empty():
-			hint_label.text = "Inventory full!"
+			ShopNav.denied_sfx()
+			hint_label.text = ShopNav.MSG_NO_ROOM
 		else:
 			if cost > 0:
 				Inventory.remove_item("photon_drop", cost)
@@ -151,7 +156,8 @@ func _handle_debug_mag(item_id: String, item_name: String, cost: int) -> void:
 
 	# Stat boost items — add to inventory as consumable items
 	if not Inventory.can_add_item(item_id):
-		hint_label.text = "Inventory full!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NO_ROOM
 		return
 	if cost > 0:
 		Inventory.remove_item("photon_drop", cost)

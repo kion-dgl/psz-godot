@@ -265,7 +265,7 @@ func _craft_selected() -> void:
 	# never proceed into the photon flow only to reject.
 	if not _can_craft_recipe(recipe):
 		hint_label.text = _craft_block_reason(recipe)
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+		ShopNav.denied_sfx()
 		return
 
 	# All synthesis requires a photon crystal
@@ -323,7 +323,8 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 	# Each crafted weapon gets a unique instance ID
 	var inst_id: String = Inventory.add_weapon(recipe.output_weapon_id)
 	if inst_id.is_empty():
-		hint_label.text = "Inventory full!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NO_ROOM
 		return
 
 	# Roll special attack tier and element from photon

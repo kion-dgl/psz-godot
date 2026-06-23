@@ -218,7 +218,7 @@ func _current_list_size() -> int:
 ## silent hint_label update.
 func _open_info_modal(msg: String) -> void:
 	hint_label.text = msg
-	ShopNav.info(self, msg)
+	ShopNav.deny(self, msg)
 
 
 func _open_meseta_modal() -> void:
@@ -287,7 +287,7 @@ func _open_move_modal() -> void:
 		var room: int = Inventory.get_stack_room(item_id)
 		max_qty = mini(available_qty, room)
 		if max_qty <= 0:
-			_open_info_modal("Inventory full!")
+			_open_info_modal(ShopNav.MSG_NO_ROOM)
 			return
 
 	var verb: String = "Store" if _tab == Tab.DEPOSIT_ITEMS else "Withdraw"
@@ -377,7 +377,7 @@ func _do_item_move(qty: int) -> void:
 		# Per-slot can_add_item is per copy; for stackable, add_item
 		# silently clamps to max_stack — we already capped via stack_room.
 		if Inventory._is_per_slot(item_id) and not Inventory.can_add_item(item_id):
-			_open_info_modal("Inventory full!")
+			_open_info_modal(ShopNav.MSG_NO_ROOM)
 			return
 		Inventory.add_item(item_id, move_qty)
 		for s_item in GameState.shared_storage:

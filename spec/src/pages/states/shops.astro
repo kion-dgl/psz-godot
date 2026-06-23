@@ -143,6 +143,42 @@ import Concept from '../../layouts/Concept.astro';
   </ul>
   <p>A shop whose entries have no per-item stats (a flat exchange list) <strong>MAY</strong> omit the detail panel and present a single full-width list. Such list-only shops <strong>SHOULD</strong> adopt the detail panel as their content grows. <em>(photon / crafting / tekker are list-only today; migrating them to the standard list + detail layout is tracked on issue #368.)</em></p>
 
+  <h3 id="feedback">Feedback: sounds, messages, and failures</h3>
+  <p>Every economy screen — the shops, storage, the guild counter, and Blackjack — <strong>MUST</strong> give the same audible and textual feedback for the same event. Today each screen hand-rolls this and they diverge (issue #368, Rozalin playtest): three different "can't buy" modals, two different full-inventory strings, and per-screen sound choices. The rules below are the single contract; a screen <strong>MUST</strong> route through the shared helpers (<a href="#implemented-by">below</a>) rather than re-deciding any of it.</p>
+
+  <h4>Sounds</h4>
+  <p>One sound per event class, identical on every economy screen:</p>
+  <ul>
+    <li><strong>Move</strong> (Up/Down/Left/Right, including tab change) — the navigation cue.</li>
+    <li><strong>Accept on an actionable row</strong> — the accept cue, then the confirm/quantity modal opens.</li>
+    <li><strong>Close / Cancel</strong> — the back cue. It <strong>MUST</strong> play on <em>every</em> screen, Blackjack and the storage / quest counter included (these are silent today).</li>
+    <li><strong>Accept on a greyed (un-actionable) row, or any action that fails at commit</strong> — the <em>denied</em> cue, played <strong>once</strong>, and nothing opens. A screen <strong>MUST NOT</strong> emit the back/close cue here (the item shop plays a close sound on a blocked buy today), and <strong>MUST NOT</strong> emit the accept cue (which reads as success). The denied cue <strong>MUST</strong> be the same one for every blocked action on every screen, played once — never silent (the press must register), never the back/close cue, never the accept cue.</li>
+  </ul>
+
+  <h4>Messages</h4>
+  <p>Failure text comes from one shared vocabulary, defined once (a shared constant), never a per-screen literal:</p>
+  <ul>
+    <li>Inventory has no free slot → <strong>"No room"</strong> (the item/weapon-shop wording; the photon collector's "Inventory Full" is the outlier and <strong>MUST</strong> be retired).</li>
+    <li>Insufficient currency → <strong>"Not enough meseta"</strong> (or the screen's currency name).</li>
+    <li>Any other block (missing materials, wrong level, can't-equip) → states the specific reason, in the detail panel per the <a href="#the-row-contract">row contract</a>.</li>
+  </ul>
+
+  <h4>Failure modals</h4>
+  <ul>
+    <li>A greyed row is inert: Accept on it <strong>MUST NOT</strong> open a confirm modal (its reason already lives in the detail panel). This replaces the disk modal that "just asks and fails."</li>
+    <li>When a transaction the player <em>could</em> start fails at commit (a race, or a multi-resource exchange like a photon reward), the failure <strong>MUST</strong> be reported with the specific reason — what is missing — not a bare "failed." The photon collector's "you are missing X" modal is the correct model; every screen <strong>MUST</strong> use the same modal style for this, not its own.</li>
+  </ul>
+
+  <h4>Quantity</h4>
+  <ul>
+    <li>Buying a stackable <strong>MUST</strong> open the shared quantity stepper. Selling a stackable <strong>MUST</strong> open the <em>same</em> stepper — selling is not single-only today, which is the inconsistency. Single-instance gear (a specific weapon/armor) is acted on one at a time, with no stepper.</li>
+  </ul>
+
+  <h4>Tab chrome</h4>
+  <ul>
+    <li>The pill tab bar <strong>MUST</strong> be built by the shared <code>PszStyle.create_tab_bar()</code> so its size, spacing, and position are identical across every shop and the storage counter (they differ today). A screen <strong>MUST NOT</strong> lay out its own pills.</li>
+  </ul>
+
   <h2>How each shop differs</h2>
   <p>Within the shared skeleton, each shop specializes its tabs, its currency, and what "confirm" does:</p>
 

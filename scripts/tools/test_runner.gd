@@ -3810,6 +3810,33 @@ func test_shop_nav() -> void:
 	assert_true(ShopNav.handle(shop, _nav_event("ui_up"), bare), "unclaimed key reaches on_other")
 	assert_true(other_hit[0], "on_other fired")
 
+	# Feedback contract (spec /states/shops #feedback): one message vocabulary +
+	# a denied cue distinct from the close cue. Pins the constants every economy
+	# screen now routes through, so they can't drift back to per-screen literals.
+	assert_eq(ShopNav.MSG_NO_ROOM, "No room", "canonical full-inventory message")
+	assert_eq(ShopNav.MSG_NOT_ENOUGH_MESETA, "Not enough meseta", "canonical insufficient-meseta message")
+	assert_true(ShopNav.SFX_DENIED.ends_with("menu_invalid.wav"), "denied cue is the invalid sfx")
+	assert_true(ShopNav.SFX_DENIED != ShopNav.SFX_BACK, "denied cue is distinct from the close/back cue")
+	# The pointed-at .wav lives only in the asset pack (assets/ is gitignored), so it
+	# isn't on disk in the CI test runner — ResourceLoader.exists() would always fail
+	# here. The path's real existence is guarded instead by the check-asset-refs job
+	# (it must appear in asset_tree.txt), which is the right layer for pack assets.
+
+	# Denied-during-accept: an on_accept that blocks the action (deny/denied_sfx)
+	# must suppress the accept cue, so a rejected buy plays the denied cue ALONE —
+	# not select+denied stacked (Rozalin playtest). The static flag is the seam.
+	# (bind to a local var — a lambda can capture vars but not the local const.)
+	var nav: GDScript = ShopNav
+	var deny_opts := {"sfx": false,
+		"on_accept": func() -> void: nav.denied_sfx()}
+	ShopNav.handle(shop, _nav_event("ui_accept"), deny_opts)
+	assert_true(ShopNav._denied_during_accept,
+		"on_accept that denies marks the accept cue suppressed")
+	var ok_opts := {"sfx": false, "on_accept": func() -> void: pass}
+	ShopNav.handle(shop, _nav_event("ui_accept"), ok_opts)
+	assert_true(not ShopNav._denied_during_accept,
+		"a clean accept leaves the accept cue intact (flag reset per accept)")
+
 	shop.free()
 	print("")
 
