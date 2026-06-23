@@ -3817,7 +3817,10 @@ func test_shop_nav() -> void:
 	assert_eq(ShopNav.MSG_NOT_ENOUGH_MESETA, "Not enough meseta", "canonical insufficient-meseta message")
 	assert_true(ShopNav.SFX_DENIED.ends_with("menu_invalid.wav"), "denied cue is the invalid sfx")
 	assert_true(ShopNav.SFX_DENIED != ShopNav.SFX_BACK, "denied cue is distinct from the close/back cue")
-	assert_true(ResourceLoader.exists(ShopNav.SFX_DENIED), "denied sfx resource exists in the project")
+	# The pointed-at .wav lives only in the asset pack (assets/ is gitignored), so it
+	# isn't on disk in the CI test runner — ResourceLoader.exists() would always fail
+	# here. The path's real existence is guarded instead by the check-asset-refs job
+	# (it must appear in asset_tree.txt), which is the right layer for pack assets.
 
 	shop.free()
 	print("")
