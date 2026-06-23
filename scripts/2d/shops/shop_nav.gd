@@ -80,18 +80,25 @@ static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
 		_mark_handled(shop)
 		return true
 	if opts.has("on_accept") and event.is_action_pressed("ui_accept"):
-		# Play the accept cue *after* on_accept so a handler that blocks the
-		# action (deny/denied_sfx) suppresses it — otherwise the select cue and
-		# the denied cue stack on a rejected buy. Spec /states/shops #feedback.
-		_denied_during_accept = false
-		(opts["on_accept"] as Callable).call()
-		if sfx and not _denied_during_accept:
-			SfxManager.play(SFX_SELECT)
-		_mark_handled(shop)
+		_run_accept(shop, opts["on_accept"] as Callable, sfx)
 		return true
 	if opts.has("on_other"):
 		return (opts["on_other"] as Callable).call(event)
 	return false
+
+
+## Run an accept branch: invoke the handler, then play the accept cue *unless*
+## the handler blocked the action (deny/denied_sfx flips _denied_during_accept).
+## Playing after on_accept is what lets a rejected buy sound the denied cue
+## alone instead of select+denied stacked. Spec /states/shops #feedback.
+## (Split out of handle() so the cue-suppression branch doesn't push it over
+## the complexity bound.)
+static func _run_accept(shop: Control, on_accept: Callable, sfx: bool) -> void:
+	_denied_during_accept = false
+	on_accept.call()
+	if sfx and not _denied_during_accept:
+		SfxManager.play(SFX_SELECT)
+	_mark_handled(shop)
 
 
 ## Guard for "confirm acts on the selected row" (#274 inc 4): the selected
