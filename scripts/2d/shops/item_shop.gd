@@ -30,6 +30,13 @@ var _disk_items: Array = []
 # Sell tab data
 var _sell_items: Array = []
 
+# Cached pill nodes from the last _refresh_display, one per list row. Lets a
+# cursor move re-style the selected row in place instead of rebuilding the whole
+# list — a full rebuild recreates the ScrollContainer and resets it to the top,
+# which made the scrollbar jump on every keypress (Kion playtest). Mirrors the
+# weapon shop's incremental update.
+var _pill_nodes: Array = []
+
 var _mode_bar: HBoxContainer
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
@@ -153,9 +160,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		"modal": _active_modal,
 		"on_tab": func(dir: int) -> void: ShopNav.switch_shop_tab(self, dir, TAB_COUNT, Tab.SELL),
 		"list_size": func() -> int: return _get_current_list().size(),
-		"on_move": func(_old: int) -> void:
+		"on_move": func(old_index: int) -> void:
 			_update_hint()
-			_refresh_display(),
+			ShopNav.cursor_move(_pill_nodes, old_index, _selected_index, _refresh_detail),
 		"on_accept": _open_confirm_modal,
 	})
 
@@ -183,13 +190,13 @@ func _open_confirm_modal() -> void:
 		_open_sell_confirm(item)
 		return
 
-	# ITEMS / MATERIALS: the row is disabled (greyed + reason in _refresh_display)
-	# when it can't be bought — confirm just echoes the reason in the hint and
-	# opens nothing, so the player never reaches a rejection modal.
+	# ITEMS / MATERIALS: affordability/room no longer grey the row, so an
+	# unaffordable or full buy is blocked here with the shared info modal (denied
+	# cue + reason) — unmissable and consistent with every other shop. Spec
+	# /states/shops. A row greyed for capability (can't use it) is still buyable.
 	var verdict: Dictionary = _can_buy(item)
 	if not verdict.get("ok", true):
-		hint_label.text = str(verdict.get("reason", ""))
-		ShopNav.denied_sfx()
+		ShopNav.deny(self, str(verdict.get("reason", "")), _update_hint)
 		return
 
 	# Bulk-buy aware: compute the maximum qty the player can both afford and
@@ -268,14 +275,12 @@ func _buy_disk() -> void:
 		return
 
 	if int(character.get("meseta", 0)) < cost:
-		ShopNav.denied_sfx()
-		hint_label.text = ShopNav.MSG_NOT_ENOUGH_MESETA
+		ShopNav.deny(self, ShopNav.MSG_NOT_ENOUGH_MESETA, _update_hint)
 		return
 
 	var disk_id: String = "disk_%s_%d" % [technique_id, level]
 	if not Inventory.can_add_item(disk_id):
-		ShopNav.denied_sfx()
-		hint_label.text = ShopNav.MSG_NO_ROOM
+		ShopNav.deny(self, ShopNav.MSG_NO_ROOM, _update_hint)
 		return
 
 	character["meseta"] = int(character["meseta"]) - cost
@@ -334,6 +339,8 @@ func _refresh_display() -> void:
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
 
+	_pill_nodes.clear()
+	_pill_nodes.resize(list.size())
 	var selected_pill: Control = null
 
 	if list.is_empty():
@@ -356,6 +363,7 @@ func _refresh_display() -> void:
 				str(item.get("name", "???")) + equip_tag + qty_str,
 				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _selected_index:
 				selected_pill = pill
 	elif _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
@@ -365,24 +373,26 @@ func _refresh_display() -> void:
 			var item_id: String = shop_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
-			# Unified shop row (#368): grey only when the row can't be bought;
-			# the reason and held count live in the detail panel, not the label.
-			var verdict: Dictionary = _can_buy(item)
+			# Capability grey (spec /states/shops): grey when the character's
+			# class/race can't use the consumable. Affordability and inventory
+			# space do NOT grey — an unaffordable or maxed-stack row stays normal
+			# and is blocked at accept with the info modal. (Consumable usable_by
+			# is the extension point; no item populates it yet, so this is always
+			# usable for now — the antidote/antipara-on-CAST case is the spec's
+			# open question.)
 			var cost: int = int(item.get("cost", 0))
-			var right_text: String = "%d M" % cost
-			var pill := PszStyle.shop_row(shop_name, right_text, {
+			var pill := PszStyle.shop_row(shop_name, "%d M" % cost, {
 				"icons": buy_icons,
-				"affordable": bool(verdict.get("ok", true)),
+				"disabled": not _can_use_item(item_id),
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _selected_index:
 				selected_pill = pill
 	else:
 		# Disks tab
 		var character = CharacterManager.get_active_character()
-		var char_level: int = int(character.get("level", 1)) if character else 1
-		var current_meseta: int = int(character.get("meseta", 0)) if character else 0
 
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
@@ -391,26 +401,29 @@ func _refresh_display() -> void:
 			var cost: int = int(item.get("cost", 0))
 			var disk_name: String = str(item.get("name", "???"))
 
-			var current_tech_level: int = 0
-			if character:
-				current_tech_level = TechniqueManager.get_technique_level(character, technique_id)
+			# Capability grey (spec /states/shops). Two tiers, matching gear:
+			#   • ✕ marker (cannot_use) when the character's CLASS/RACE can never
+			#     learn this disk — a CAST, a technique group the class can't learn,
+			#     or a level beyond its cap. Permanent, like un-equippable gear.
+			#   • plain grey (disabled) for a satisfiable block — already known at
+			#     this level or higher, or below the required player level.
+			# Affordability does NOT grey; an unaffordable disk stays normal and is
+			# blocked at accept. Greyed disks are still buyable ("buy anyway").
+			var class_blocked: bool = character != null \
+				and not TechniqueManager.class_can_learn(character, technique_id, level)
+			var learn_blocked: bool = character != null \
+				and not TechniqueManager.can_learn(character, technique_id, level).get("allowed", false)
 
-			var required_level: int = TechniqueManager.get_disk_required_level(level)
-			var cant_afford: bool = current_meseta < cost
-			var too_low_level: bool = char_level < required_level
-			var already_higher: bool = current_tech_level >= level
-
-			# Unified shop row (#368): one grey for any can't-buy reason —
-			# affordability, req-level, or already-known-higher. Current/required
-			# level live in the detail panel, not as inline row tags.
 			var disk_icon: Texture2D = InventoryIcons.for_item("disk_%s_1" % technique_id, "Disk")
 			var disk_icons: Array = [disk_icon] if disk_icon else []
 			var pill := PszStyle.shop_row(disk_name, "%d M" % cost, {
 				"icons": disk_icons,
-				"affordable": not (cant_afford or too_low_level or already_higher),
+				"cannot_use": class_blocked,
+				"disabled": learn_blocked and not class_blocked,
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _selected_index:
 				selected_pill = pill
 
@@ -418,9 +431,22 @@ func _refresh_display() -> void:
 	shop_panel.add_child(scroll)
 
 	if selected_pill != null:
-		PszStyle.scroll_into_view(selected_pill)
+		PszStyle.scroll_selected_into_view(selected_pill)
 
 	_refresh_detail()
+
+
+## True if the active character's class/race can use the consumable `item_id`
+## (capability grey, spec /states/shops). Non-consumables (materials, boards) and
+## the no-character/-class case carry no restriction. Empty `usable_by` = all.
+func _can_use_item(item_id: String) -> bool:
+	var consumable = ConsumableRegistry.get_consumable(item_id)
+	if consumable == null:
+		return true
+	var class_str: String = ShopNav.active_class_use_string()
+	if class_str.is_empty():
+		return true
+	return consumable.can_be_used_by(class_str)
 
 
 func _refresh_detail() -> void:
@@ -462,6 +488,10 @@ func _refresh_item_detail(item: Dictionary) -> void:
 		details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(details_label)
 
+	# Capability caveat (the row greys for this): the class/race can't use it.
+	if not _can_use_item(item_id):
+		vbox.add_child(PszStyle.detail_label("Cannot use: class", PszStyle.TEXT_DANGER))
+
 	# Surface the can't-buy reason here (the row no longer carries an inline tag).
 	var verdict: Dictionary = _can_buy(item)
 	if not verdict.get("ok", true):
@@ -495,6 +525,11 @@ func _refresh_disk_detail(item: Dictionary) -> void:
 	var required_level: int = TechniqueManager.get_disk_required_level(level)
 	var character = CharacterManager.get_active_character()
 	var char_level: int = int(character.get("level", 1)) if character else 1
+
+	# Capability caveat (the ✕-marked grey): the class/race can never learn this.
+	if character and not TechniqueManager.class_can_learn(character, technique_id, level):
+		vbox.add_child(PszStyle.detail_label("Cannot learn: class", PszStyle.TEXT_DANGER))
+
 	var req_color := PszStyle.TEXT_WARNING if char_level < required_level else PszStyle.TEXT
 	vbox.add_child(PszStyle.detail_label("Req. Level: %d" % required_level, req_color))
 

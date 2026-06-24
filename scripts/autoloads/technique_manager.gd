@@ -163,6 +163,30 @@ func can_learn(character: Dictionary, technique_id: String, level: int) -> Dicti
 	return {"allowed": true, "reason": ""}
 
 
+## True when the character's CLASS/RACE could ever learn this disk — ignoring the
+## satisfiable blocks (player level too low, or already known). This is the
+## permanent-capability slice of can_learn: a CAST (no technique access), a
+## technique group the class can't learn, or a disk level beyond the class's cap
+## all return false. The item shop uses this to mark a disk with the ✕ "can never
+## use" marker (vs a plain grey for a merely-temporary block). Spec /states/shops.
+func class_can_learn(character: Dictionary, technique_id: String, level: int) -> bool:
+	if not TECHNIQUES.has(technique_id):
+		return false
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	if class_data == null:
+		return false
+	var group: String = TECHNIQUES[technique_id]["group"]
+	var technique_limits: Dictionary = class_data.technique_limits
+	if technique_limits.is_empty():
+		return false  # CASTs have no technique access at all
+	if not technique_limits.has(group):
+		return false  # class can't learn this technique group
+	var max_level: int = int(technique_limits.get(group, 0))
+	if max_level <= 0:
+		return false
+	return level <= max_level  # disk level within the class's cap for the group
+
+
 ## Use a disk to learn/upgrade a technique
 func use_disk(character: Dictionary, disk: Dictionary) -> Dictionary:
 	var technique_id: String = str(disk.get("technique_id", ""))

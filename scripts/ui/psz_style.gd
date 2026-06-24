@@ -195,25 +195,67 @@ static func create_pill_with_icons(icons: Array, left_text: String, selected: bo
 
 
 ## The ONE shop/storage list row, shared by every shop (#368 — match the Astro
-## mock at spec/src/components/screens/shops). Rules, identical everywhere:
-##   • A row greys out ONLY when the player can't AFFORD it. Soft reasons (class
-##     can't equip, req-level, stack-full, …) keep the row selectable and
-##     surface in the DETAIL panel — never as an inline "[reason]" in the label.
+## mock at spec/src/components/screens/shops). Rules, identical everywhere
+## (normative contract: spec /states/shops "row contract"):
+##   • A buy-shop row greys out when the character CAN'T USE/EQUIP it — a
+##     capability limit (wrong class/race, an unlearnable or already-known
+##     technique, below the level requirement). Affordability and inventory
+##     space do NOT grey a row; an unaffordable row stays normal and the buy is
+##     blocked at accept with the shared info modal instead.
+##   • A row the character can never equip/use (a permanent race/class block,
+##     e.g. a HUmar's cannot-equip weapon) ALSO carries a red ✕ marker icon
+##     (`cannot_use`). A merely-temporary block (req-level, already-known) greys
+##     without the marker (`disabled`).
+##   • Greyed rows stay SELECTABLE and BUYABLE — the player may still purchase
+##     gear/disks they can't use if they have room + meseta (#375).
 ##   • Equipped gear is marked with an [E] PREFIX (not a right-side tag).
 ##   • Rarity stars / req-level tags do NOT go in the name; they belong in the
 ##     detail panel.
-## `opts`: { icons:Array, equipped:bool, affordable:bool=true, selected:bool }.
+## `opts`: { icons:Array, equipped:bool, affordable:bool=true, disabled:bool=false,
+##           cannot_use:bool=false, selected:bool }. `affordable` is retained for
+## list-only shops (crafting/tekker) that still gate the row on a resource cost;
+## buy shops pass `disabled`/`cannot_use` (capability) instead.
 static func shop_row(item_name: String, right_text: String, opts: Dictionary = {}) -> PanelContainer:
 	var equipped: bool = bool(opts.get("equipped", false))
 	var affordable: bool = bool(opts.get("affordable", true))
+	var disabled: bool = bool(opts.get("disabled", false))
+	var cannot_use: bool = bool(opts.get("cannot_use", false))
 	var selected: bool = bool(opts.get("selected", false))
-	var icons: Array = opts.get("icons", [])
+	var icons: Array = (opts.get("icons", []) as Array).duplicate()
+	# A "can never use/equip" row leads with the forbidden ✕ marker.
+	if cannot_use:
+		icons.push_front(cannot_use_icon())
 	var label: String = ("[E] " if equipped else "") + item_name
-	# Muted for rows the player can't act on: unaffordable, or equipped gear
-	# (which can't be re-bought / deposited / sold). Everything else is normal.
-	var muted: bool = (not affordable) or equipped
+	# Muted when the player can't act on the row: capability block (can't
+	# use/equip, or already-known/req-level), equipped gear (can't re-buy /
+	# deposit / sell), or — for the legacy cost-gated list shops — unaffordable.
+	var muted: bool = (not affordable) or equipped or disabled or cannot_use
 	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
 	return create_pill_with_icons(icons, label, selected, right_text, color)
+
+
+static var _cannot_use_tex: Texture2D = null
+
+
+## A 16×16 red "✕" marker drawn at runtime — prepended to shop rows for gear/items
+## the character can never equip/use (permanent race/class block). Generated in
+## code (like scanline_texture) so it ships no new asset file and needs no pack
+## republish. Cached after first build.
+static func cannot_use_icon() -> Texture2D:
+	if _cannot_use_tex != null:
+		return _cannot_use_tex
+	var n := 16
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	# Two 3px-thick diagonals forming an ✕, inset 2px from the edges.
+	for i in range(2, n - 2):
+		for t in range(-1, 2):
+			var x: int = i + t
+			if x >= 2 and x < n - 2:
+				img.set_pixel(x, i, TEXT_DANGER)            # ╲
+				img.set_pixel(x, n - 1 - i, TEXT_DANGER)    # ╱
+	_cannot_use_tex = ImageTexture.create_from_image(img)
+	return _cannot_use_tex
 
 
 static func create_section_header(text: String) -> PanelContainer:
@@ -251,6 +293,57 @@ static func scroll_into_view(row: Control) -> void:
 		p = p.get_parent()
 	if p is ScrollContainer:
 		(p as ScrollContainer).ensure_control_visible.call_deferred(row)
+
+
+## Like scroll_into_view, but keeps `margin_rows` of context between the selected
+## row and the viewport edge, so the selection moves *within* the visible area
+## and the list only scrolls once the selection nears an edge (playtest: the
+## cursor should travel inside the view before the whole list scrolls, rather
+## than the bar jumping on every move). Deferred so it runs after layout settles.
+## Use this for the cursor-follow in shop lists; storage etc. may still use the
+## flush ensure_control_visible via scroll_into_view.
+static func scroll_selected_into_view(row: Control, margin_rows: int = 1) -> void:
+	if row == null:
+		return
+	var p: Node = row.get_parent()
+	while p != null and not (p is ScrollContainer):
+		p = p.get_parent()
+	if p is ScrollContainer:
+		_apply_scroll_margin.call_deferred(p as ScrollContainer, row, margin_rows)
+
+
+static func _apply_scroll_margin(scroll: ScrollContainer, row: Control, margin_rows: int) -> void:
+	if not is_instance_valid(scroll) or not is_instance_valid(row):
+		return
+	var view_h: float = scroll.size.y
+	var row_top: float = row.position.y
+	var row_h: float = row.size.y
+	# One "row" of margin ≈ the row height plus the VBox separation (3px).
+	var margin: float = (row_h + 3.0) * float(maxi(margin_rows, 0))
+	var v: float = float(scroll.scroll_vertical)
+	var top_limit: float = row_top - margin
+	var bottom_limit: float = row_top + row_h + margin - view_h
+	if v > top_limit:
+		v = top_limit
+	elif v < bottom_limit:
+		v = bottom_limit
+	scroll.scroll_vertical = int(maxf(0.0, v))
+
+
+## Cursor-move restyle shared by every shop's incremental selection update:
+## de-highlight the old row, then highlight + margin-scroll the new one. Indices
+## out of range are ignored, so a stale cache simply no-ops. The screen renders
+## its own detail panel separately (see ShopNav.cursor_move).
+static func restyle_selection(pill_nodes: Array, old_index: int, new_index: int) -> void:
+	if old_index >= 0 and old_index < pill_nodes.size():
+		var old_pill = pill_nodes[old_index]
+		if is_instance_valid(old_pill):
+			old_pill.add_theme_stylebox_override("panel", pill_style(false))
+	if new_index >= 0 and new_index < pill_nodes.size():
+		var new_pill = pill_nodes[new_index]
+		if is_instance_valid(new_pill):
+			new_pill.add_theme_stylebox_override("panel", pill_style(true))
+			scroll_selected_into_view(new_pill)
 
 
 static func create_tab_bar(tab_names: Array, active_tab: int) -> HBoxContainer:
