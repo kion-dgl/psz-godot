@@ -45,6 +45,7 @@ func _run_tests_core() -> void:
 	test_shops()
 	test_shop_buy_unequippable_gear()
 	test_shop_capability_grey()
+	test_synth_unequippable_marker()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1678,6 +1679,28 @@ func test_shop_capability_grey() -> void:
 	character["techniques"] = saved_techs
 	character["level"] = saved_level
 	character["meseta"] = saved_meseta
+	print("")
+
+
+# Synthesis shop marks recipes whose OUTPUT weapon the class can't equip with the
+# ✕ marker (crafting still allowed) — a visual filter (Kion request).
+func test_synth_unequippable_marker() -> void:
+	print("── Synthesis: ✕ marker on un-equippable recipe outputs ──")
+	var cs = load("res://scripts/2d/shops/crafting_shop.gd").new()
+	if CharacterManager.get_active_character() == null:
+		print("  INFO: no active character — skipped"); cs.free(); print(""); return
+	var class_str: String = cs._class_use_string()
+	if class_str.is_empty():
+		print("  INFO: no class string — skipped"); cs.free(); print(""); return
+	var all_consistent := true
+	for recipe in RecipeRegistry.get_all_recipes():
+		var w = WeaponRegistry.get_weapon(recipe.output_weapon_id)
+		var expect: bool = w != null and not w.can_be_used_by(class_str)
+		if cs._output_unequippable(recipe) != expect:
+			all_consistent = false
+	assert_true(all_consistent,
+		"_output_unequippable matches can_be_used_by for every recipe output")
+	cs.free()
 	print("")
 
 
