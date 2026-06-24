@@ -1640,6 +1640,8 @@ func test_shop_capability_grey() -> void:
 		var lvl2 := int(inv[0].get("level", 1))
 		assert_true(not TechniqueManager.can_learn(character, tid2, lvl2).get("allowed", false),
 			"CAST disk is capability-greyed (cannot learn techniques)")
+		assert_true(not TechniqueManager.class_can_learn(character, tid2, lvl2),
+			"CAST disk gets the ✕ marker (class can never learn it)")
 
 	# Pick a genuinely learnable (class, disk) so the "already-known greys it"
 	# path (Rozalin's Ryuker observation) is tested precisely, not vacuously.
@@ -1667,6 +1669,8 @@ func test_shop_capability_grey() -> void:
 		character["techniques"] = {learn_tid: learn_lvl}
 		assert_true(not TechniqueManager.can_learn(character, learn_tid, learn_lvl).get("allowed", false),
 			"already-known disk IS greyed (Ryuker: the spare copy greys once learned)")
+		assert_true(TechniqueManager.class_can_learn(character, learn_tid, learn_lvl),
+			"already-known disk greys WITHOUT ✕ (class can still learn it — a temporary block)")
 	else:
 		print("  INFO: no learnable disk found for sample classes — known-disk check skipped")
 

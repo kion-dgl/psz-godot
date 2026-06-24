@@ -401,13 +401,16 @@ func _refresh_display() -> void:
 			var cost: int = int(item.get("cost", 0))
 			var disk_name: String = str(item.get("name", "???"))
 
-			# Capability grey (spec /states/shops): grey when the character can't
-			# learn this disk — can't use techniques at all (CAST), already knows
-			# it at this level or higher, or is below the required level. These are
-			# exactly TechniqueManager.can_learn's rejections. Affordability does
-			# NOT grey; an unaffordable disk stays normal and is blocked at accept.
-			# No ✕ marker — a temporary/already-known block, not a permanent one,
-			# and the disk is still buyable ("buy anyway").
+			# Capability grey (spec /states/shops). Two tiers, matching gear:
+			#   • ✕ marker (cannot_use) when the character's CLASS/RACE can never
+			#     learn this disk — a CAST, a technique group the class can't learn,
+			#     or a level beyond its cap. Permanent, like un-equippable gear.
+			#   • plain grey (disabled) for a satisfiable block — already known at
+			#     this level or higher, or below the required player level.
+			# Affordability does NOT grey; an unaffordable disk stays normal and is
+			# blocked at accept. Greyed disks are still buyable ("buy anyway").
+			var class_blocked: bool = character != null \
+				and not TechniqueManager.class_can_learn(character, technique_id, level)
 			var learn_blocked: bool = character != null \
 				and not TechniqueManager.can_learn(character, technique_id, level).get("allowed", false)
 
@@ -415,7 +418,8 @@ func _refresh_display() -> void:
 			var disk_icons: Array = [disk_icon] if disk_icon else []
 			var pill := PszStyle.shop_row(disk_name, "%d M" % cost, {
 				"icons": disk_icons,
-				"disabled": learn_blocked,
+				"cannot_use": class_blocked,
+				"disabled": learn_blocked and not class_blocked,
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)
@@ -544,6 +548,11 @@ func _refresh_disk_detail(item: Dictionary) -> void:
 	var required_level: int = TechniqueManager.get_disk_required_level(level)
 	var character = CharacterManager.get_active_character()
 	var char_level: int = int(character.get("level", 1)) if character else 1
+
+	# Capability caveat (the ✕-marked grey): the class/race can never learn this.
+	if character and not TechniqueManager.class_can_learn(character, technique_id, level):
+		vbox.add_child(PszStyle.detail_label("Cannot learn: class", PszStyle.TEXT_DANGER))
+
 	var req_color := PszStyle.TEXT_WARNING if char_level < required_level else PszStyle.TEXT
 	vbox.add_child(PszStyle.detail_label("Req. Level: %d" % required_level, req_color))
 
