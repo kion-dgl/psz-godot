@@ -364,11 +364,18 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# Cancel out of name entry → back to appearance. Shared by the global
+# step dispatcher and the LineEdit's gui_input (the focused field eats input,
+# so both paths can see the cancel press).
+func _cancel_name_entry() -> void:
+	SfxManager.play(SFX_BACK)
+	_show_appearance()
+	get_viewport().set_input_as_handled()
+
+
 func _handle_name_entry_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play(SFX_BACK)
-		_show_appearance()
-		get_viewport().set_input_as_handled()
+		_cancel_name_entry()
 
 
 # ── Step 1: CLASS SELECT (Gamecube style) ───────────────────────
@@ -865,9 +872,7 @@ func _show_name_entry() -> void:
 
 func _on_name_gui_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play(SFX_BACK)
-		_show_appearance()
-		get_viewport().set_input_as_handled()
+		_cancel_name_entry()
 
 
 func _on_name_submitted(text: String) -> void:
