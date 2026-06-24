@@ -163,6 +163,31 @@ static func deny(shop: Control, reason: String, on_dismiss := Callable()) -> voi
 	info(shop, reason, on_dismiss)
 
 
+## Shared cursor-move handler for shop lists that cache their pill nodes for an
+## incremental update: restyle the selection (PszStyle.restyle_selection) and
+## re-render the screen's detail panel. Composition, not a base class (the
+## Android export can't resolve a cross-script shop base — see the file header),
+## so screens call this from their ShopNav.handle `on_move` hook instead of each
+## hand-rolling an identical `_update_selection`.
+static func cursor_move(pill_nodes: Array, old_index: int, new_index: int, on_detail := Callable()) -> void:
+	PszStyle.restyle_selection(pill_nodes, old_index, new_index)
+	if on_detail.is_valid():
+		on_detail.call()
+
+
+## The active character's "Type Race" capability string (e.g. "Force Newman"), or
+## "" when unavailable — the format WeaponData/ArmorData/ConsumableData
+## can_be_used_by expect. Shared so the shops don't each re-derive it.
+static func active_class_use_string() -> String:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return ""
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	if class_data == null:
+		return ""
+	return "%s %s" % [class_data.type, class_data.race]
+
+
 ## Standard tab switch for buy/sell shops (item + weapon): wrap `_tab`,
 ## reset the selection, regenerate the sell list when landing on it,
 ## refresh hint + display. The shop must define those members.

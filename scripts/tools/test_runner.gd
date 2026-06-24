@@ -45,6 +45,7 @@ func _run_tests_core() -> void:
 	test_shops()
 	test_shop_buy_unequippable_gear()
 	test_shop_capability_grey()
+	test_disk_capability_grey()
 	test_synth_unequippable_marker()
 	test_start_menu_data()
 	test_damage_formulas()
@@ -1608,7 +1609,15 @@ func test_shop_capability_grey() -> void:
 	cd.usable_by = PackedStringArray(["Force Newman"])
 	assert_true(cd.can_be_used_by("Force Newman"), "listed Type/Race can use it")
 	assert_true(not cd.can_be_used_by("Hunter Cast"), "unlisted Type/Race cannot use it")
+	print("")
 
+
+# The disk-grey slice of the capability rule: greys via TechniqueManager.can_learn
+# (meseta-independent), with the ✕ marker only when the class/race can NEVER learn
+# it (class_can_learn) vs a plain grey for already-known / below-level. Split from
+# test_shop_capability_grey to stay under the code-health complexity bound.
+func test_disk_capability_grey() -> void:
+	print("── Disk capability greying ──")
 	# Disk grey predicate IS TechniqueManager.can_learn, and it never depends on
 	# meseta — affordability must not grey a disk.
 	var character = CharacterManager.get_active_character()

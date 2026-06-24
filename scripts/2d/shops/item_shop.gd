@@ -162,7 +162,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		"list_size": func() -> int: return _get_current_list().size(),
 		"on_move": func(old_index: int) -> void:
 			_update_hint()
-			_update_selection(old_index),
+			ShopNav.cursor_move(_pill_nodes, old_index, _selected_index, _refresh_detail),
 		"on_accept": _open_confirm_modal,
 	})
 
@@ -436,40 +436,17 @@ func _refresh_display() -> void:
 	_refresh_detail()
 
 
-# Lightweight cursor-move update: restyle only the affected rows and re-render
-# the detail panel, instead of rebuilding the whole list (which recreates the
-# ScrollContainer and snaps it to the top, making the scrollbar jump). Mirrors
-# the weapon shop. Falls back to a full rebuild if the pill cache is stale.
-func _update_selection(old_index: int) -> void:
-	if _pill_nodes.size() != _get_current_list().size():
-		_refresh_display()
-		return
-	if old_index >= 0 and old_index < _pill_nodes.size():
-		var old_pill: Control = _pill_nodes[old_index]
-		if is_instance_valid(old_pill):
-			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
-	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
-		var new_pill: Control = _pill_nodes[_selected_index]
-		if is_instance_valid(new_pill):
-			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			PszStyle.scroll_selected_into_view(new_pill)
-	_refresh_detail()
-
-
 ## True if the active character's class/race can use the consumable `item_id`
 ## (capability grey, spec /states/shops). Non-consumables (materials, boards) and
-## the no-character case carry no restriction. Empty `usable_by` = usable by all.
+## the no-character/-class case carry no restriction. Empty `usable_by` = all.
 func _can_use_item(item_id: String) -> bool:
 	var consumable = ConsumableRegistry.get_consumable(item_id)
 	if consumable == null:
 		return true
-	var character = CharacterManager.get_active_character()
-	if character == null:
+	var class_str: String = ShopNav.active_class_use_string()
+	if class_str.is_empty():
 		return true
-	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
-	if class_data == null:
-		return true
-	return consumable.can_be_used_by("%s %s" % [class_data.type, class_data.race])
+	return consumable.can_be_used_by(class_str)
 
 
 func _refresh_detail() -> void:

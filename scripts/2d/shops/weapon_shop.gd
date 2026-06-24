@@ -244,21 +244,11 @@ func _get_current_list() -> Array:
 	return _weapons
 
 
-func _get_class_use_string() -> String:
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return ""
-	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
-	if class_data == null:
-		return ""
-	return "%s %s" % [class_data.type, class_data.race]
-
-
 func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return {"can_equip": false, "reason": ""}
-	var class_str: String = _get_class_use_string()
+	var class_str: String = ShopNav.active_class_use_string()
 
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
@@ -329,7 +319,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		"list_size": func() -> int: return _get_current_list().size(),
 		"on_move": func(old_index: int) -> void:
 			_update_hint()
-			_update_selection(old_index),
+			ShopNav.cursor_move(_pill_nodes, old_index, _selected_index, _refresh_detail),
 		"on_accept": _open_confirm_modal,
 	})
 
@@ -486,22 +476,6 @@ func _refresh_display() -> void:
 	if selected_pill != null:
 		PszStyle.scroll_selected_into_view(selected_pill)
 
-	_refresh_detail()
-
-
-# Lightweight cursor-move update: swap the selected stylebox on the affected
-# pills and re-render the detail panel. Avoids the full list rebuild that
-# _refresh_display does, which becomes a bottleneck under hold-to-scroll.
-func _update_selection(old_index: int) -> void:
-	if old_index >= 0 and old_index < _pill_nodes.size():
-		var old_pill: Control = _pill_nodes[old_index]
-		if old_pill:
-			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
-	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
-		var new_pill: Control = _pill_nodes[_selected_index]
-		if new_pill:
-			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			PszStyle.scroll_selected_into_view(new_pill)  # keep selected row in view (with margin)
 	_refresh_detail()
 
 

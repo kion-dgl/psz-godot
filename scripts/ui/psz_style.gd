@@ -330,6 +330,22 @@ static func _apply_scroll_margin(scroll: ScrollContainer, row: Control, margin_r
 	scroll.scroll_vertical = int(maxf(0.0, v))
 
 
+## Cursor-move restyle shared by every shop's incremental selection update:
+## de-highlight the old row, then highlight + margin-scroll the new one. Indices
+## out of range are ignored, so a stale cache simply no-ops. The screen renders
+## its own detail panel separately (see ShopNav.cursor_move).
+static func restyle_selection(pill_nodes: Array, old_index: int, new_index: int) -> void:
+	if old_index >= 0 and old_index < pill_nodes.size():
+		var old_pill = pill_nodes[old_index]
+		if is_instance_valid(old_pill):
+			old_pill.add_theme_stylebox_override("panel", pill_style(false))
+	if new_index >= 0 and new_index < pill_nodes.size():
+		var new_pill = pill_nodes[new_index]
+		if is_instance_valid(new_pill):
+			new_pill.add_theme_stylebox_override("panel", pill_style(true))
+			scroll_selected_into_view(new_pill)
+
+
 static func create_tab_bar(tab_names: Array, active_tab: int) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)

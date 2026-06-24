@@ -172,7 +172,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_refresh_display(),
 		"list_size": func() -> int:
 			return _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size(),
-		"on_move": func(old_index: int) -> void: _update_selection(old_index, _selected_index),
+		"on_move": func(old_index: int) -> void:
+			ShopNav.cursor_move(_pill_nodes, old_index, _selected_index, _refresh_detail),
 		"on_accept": func() -> void:
 			if _mode == Mode.CRAFT:
 				_craft_selected()
@@ -192,12 +193,12 @@ func _handle_photon_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_up"):
 		var old_index: int = _photon_index
 		_photon_index = wrapi(_photon_index - 1, 0, PHOTON_OPTIONS.size())
-		_update_selection(old_index, _photon_index)
+		ShopNav.cursor_move(_pill_nodes, old_index, _photon_index, _refresh_detail)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		var old_index: int = _photon_index
 		_photon_index = wrapi(_photon_index + 1, 0, PHOTON_OPTIONS.size())
-		_update_selection(old_index, _photon_index)
+		ShopNav.cursor_move(_pill_nodes, old_index, _photon_index, _refresh_detail)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_open_craft_modal()
@@ -726,23 +727,6 @@ func _build_recipe_detail(vbox: VBoxContainer) -> void:
 		vbox.add_child(PszStyle.detail_label(_craft_block_reason(recipe), PszStyle.TEXT_WARNING))
 
 
-# Cheap cursor-move update — toggle the selected stylebox on the old and new
-# pills instead of rebuilding the list. Required for hold-scroll to not tank
-# the framerate on a large recipe list.
-func _update_selection(old_index: int, new_index: int) -> void:
-	if old_index >= 0 and old_index < _pill_nodes.size():
-		var old_pill: Control = _pill_nodes[old_index]
-		if old_pill:
-			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
-	if new_index >= 0 and new_index < _pill_nodes.size():
-		var new_pill: Control = _pill_nodes[new_index]
-		if new_pill:
-			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			PszStyle.scroll_selected_into_view(new_pill)  # keep selected row in view (with margin)
-	# Cursor moves don't rebuild the list, so refresh the detail card here too.
-	_refresh_detail()
-
-
 func _can_craft_recipe(recipe: RecipeBoardData) -> bool:
 	var character = CharacterManager.get_active_character()
 	if character == null:
@@ -755,24 +739,12 @@ func _can_craft_recipe(recipe: RecipeBoardData) -> bool:
 	return true
 
 
-## "Type Race" string for the active character (e.g. "Force Newman"), or "" when
-## unavailable. The format WeaponData.can_be_used_by expects.
-func _class_use_string() -> String:
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return ""
-	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
-	if class_data == null:
-		return ""
-	return "%s %s" % [class_data.type, class_data.race]
-
-
 ## True when the recipe's OUTPUT weapon can't be equipped by the active
 ## character's class/race. Drives the ✕ "can't equip" marker on the craft row
 ## (spec /states/shops). Crafting stays allowed — the marker is purely a visual
 ## filter so players can spot which recipes are useful to them.
 func _output_unequippable(recipe: RecipeBoardData) -> bool:
-	var class_str := _class_use_string()
+	var class_str := ShopNav.active_class_use_string()
 	if class_str.is_empty():
 		return false
 	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
