@@ -25,6 +25,17 @@ const HAIR_COLORS: Array[String] = ["Blonde", "Brown", "Black"]
 const SKIN_TONES: Array[String] = ["Light", "Medium", "Dark"]
 const HEAD_VARIATIONS := 4  # 0-3
 
+# Per-class skin-tone index → texture-slot remap (#372). The appearance UI
+# presents skin tones lightest→darkest as SKIN_TONES (0=Light, 1=Medium,
+# 2=Dark), and most classes bake their three skin textures in that same slot
+# order. HUmarl's source textures are scrambled — empirically (pc_01x skin
+# luminance) slot 0=medium, slot 1=darkest, slot 2=lightest — so its index→slot
+# map is [2, 0, 1] to render Light→Medium→Dark in label order. Identity for
+# every class not listed (casts have no skin tone and are unaffected).
+const SKIN_TONE_SLOT_OVERRIDES := {
+	"humarl": [2, 0, 1],
+}
+
 
 ## Get the variation directory name for a class + variation index (e.g. "pc_032")
 func get_variation(class_id: String, variation_index: int) -> String:
@@ -43,7 +54,11 @@ func get_model_path(class_id: String, variation_index: int) -> String:
 ## where skinTone = hair * 3 + skin (0-8 range from hair 0-2, skin 0-2)
 func get_texture_path(class_id: String, variation_index: int, hair_color: int, skin_tone: int, body_color: int) -> String:
 	var variation := get_variation(class_id, variation_index)
-	var skin_tone_combined: int = clampi(hair_color, 0, 2) * 3 + clampi(skin_tone, 0, 2)
+	var skin_slot: int = clampi(skin_tone, 0, 2)
+	var slot_map: Variant = SKIN_TONE_SLOT_OVERRIDES.get(class_id)
+	if slot_map != null:
+		skin_slot = slot_map[skin_slot]
+	var skin_tone_combined: int = clampi(hair_color, 0, 2) * 3 + skin_slot
 	var texture_index: int = (skin_tone_combined / 3) * 100 + (skin_tone_combined % 3) * 10 + clampi(body_color, 0, 4)
 	var texture_name := "%s_%s" % [variation, str(texture_index).pad_zeros(3)]
 	return "res://assets/player/%s/textures/%s.png" % [variation, texture_name]

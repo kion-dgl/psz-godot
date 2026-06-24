@@ -4081,6 +4081,27 @@ func test_character_appearance() -> void:
 	var tex224: String = PlayerConfig.get_texture_path("humar", 0, 2, 2, 4)
 	assert_true(tex224.ends_with("pc_000_224.png"), "Texture idx 224 (hair2 skin2 body4)")
 
+	# --- HUmarl skin-tone remap (#372) ---
+	# HUmarl's source skin textures are scrambled vs the lightest→darkest label
+	# order, so PlayerConfig remaps skin_tone_index [0,1,2] → texture slot
+	# [2,0,1]. The label (0=Light,1=Medium,2=Dark) must match the rendered slot.
+	var hml_light: String = PlayerConfig.get_texture_path("humarl", 0, 0, 0, 0)
+	assert_true(hml_light.ends_with("pc_010_020.png"), "HUmarl Light (skin 0) → slot 2 / idx 020")
+	var hml_med: String = PlayerConfig.get_texture_path("humarl", 0, 0, 1, 0)
+	assert_true(hml_med.ends_with("pc_010_000.png"), "HUmarl Medium (skin 1) → slot 0 / idx 000")
+	var hml_dark: String = PlayerConfig.get_texture_path("humarl", 0, 0, 2, 0)
+	assert_true(hml_dark.ends_with("pc_010_010.png"), "HUmarl Dark (skin 2) → slot 1 / idx 010")
+	# Remap composes with hair (hundreds) + body (units): hair1, skin0→slot2,
+	# body2 → combined = 1*3+2 = 5 → idx (5/3)*100+(5%3)*10+2 = 122.
+	var hml_combo: String = PlayerConfig.get_texture_path("humarl", 0, 1, 0, 2)
+	assert_true(hml_combo.ends_with("pc_010_122.png"), "HUmarl remap composes with hair+body → idx 122")
+	# Non-listed classes pass skin straight through (no remap): HUmar Dark = slot 2.
+	var hm_dark: String = PlayerConfig.get_texture_path("humar", 0, 0, 2, 0)
+	assert_true(hm_dark.ends_with("pc_000_020.png"), "HUmar Dark (skin 2) → slot 2 / idx 020 (no remap)")
+	# Casts have no skin tone and are not in the override table → straight through.
+	var cast_tex: String = PlayerConfig.get_texture_path("hucast", 0, 0, 2, 0)
+	assert_true(cast_tex.ends_with("pc_100_020.png"), "HUcast not remapped (idx 020)")
+
 	# --- Full path generation via get_paths_for_character ---
 	var char_data := {
 		"class_id": "ramarl",
