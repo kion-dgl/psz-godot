@@ -44,6 +44,7 @@ func _run_tests_core() -> void:
 	test_mag_personality_contract()
 	test_shops()
 	test_shop_buy_unequippable_gear()
+	test_shop_capability_grey()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1553,6 +1554,126 @@ func test_shop_buy_unequippable_gear() -> void:
 	character["meseta"] = saved_meseta
 	GameState.meseta = saved_game_meseta
 	ws.free()
+	print("")
+
+
+## The visible Label inside a PszStyle.shop_row pill (the item name).
+func _shop_row_label(pill: Control) -> Label:
+	for c in pill.get_child(0).get_children():
+		if c is Label:
+			return c
+	return null
+
+
+## Count of leading marker icons (TextureRects) in a shop_row pill — the
+## cannot_use ✕ marker shows up as one extra TextureRect.
+func _shop_row_icon_count(pill: Control) -> int:
+	var n := 0
+	for c in pill.get_child(0).get_children():
+		if c is TextureRect:
+			n += 1
+	return n
+
+
+# Capability-based greying (PSOBB rule, Rozalin/Kion playtest 2026-06-22):
+# a row greys when the character CAN'T USE/EQUIP it — never for affordability or
+# inventory space. Gear that can never be equipped also carries a ✕ marker.
+func test_shop_capability_grey() -> void:
+	print("── Shop capability greying (PSOBB rule) ──")
+
+	# shop_row rendering: capability greys (with/without ✕), economics don't.
+	var normal := PszStyle.shop_row("Saber", "100 M", {})
+	assert_eq(_shop_row_label(normal).get_theme_color("font_color"), PszStyle.TEXT,
+		"usable row is not muted")
+	assert_eq(_shop_row_icon_count(normal), 0, "usable row has no ✕ marker")
+
+	var cant_equip := PszStyle.shop_row("Cane", "100 M", {"cannot_use": true})
+	assert_eq(_shop_row_label(cant_equip).get_theme_color("font_color"), PszStyle.TEXT_MUTED,
+		"cannot_use (can't equip) row is muted")
+	assert_eq(_shop_row_icon_count(cant_equip), 1, "cannot_use row carries the ✕ marker icon")
+
+	var disabled := PszStyle.shop_row("Foie Lv1", "100 M", {"disabled": true})
+	assert_eq(_shop_row_label(disabled).get_theme_color("font_color"), PszStyle.TEXT_MUTED,
+		"disabled (already-known / req-level) row is muted")
+	assert_eq(_shop_row_icon_count(disabled), 0, "disabled row has NO ✕ marker (temporary block)")
+
+	var x_tex := PszStyle.cannot_use_icon()
+	assert_true(x_tex != null and x_tex.get_width() == 16 and x_tex.get_height() == 16,
+		"cannot_use_icon() is a generated 16×16 texture (no asset, no pack republish)")
+
+	# ConsumableData usable_by: empty = usable by all; restriction respected.
+	var cd := ConsumableData.new()
+	assert_true(cd.can_be_used_by("Hunter Cast"), "empty usable_by → usable by everyone")
+	cd.usable_by = PackedStringArray(["Force Newman"])
+	assert_true(cd.can_be_used_by("Force Newman"), "listed Type/Race can use it")
+	assert_true(not cd.can_be_used_by("Hunter Cast"), "unlisted Type/Race cannot use it")
+
+	# Disk grey predicate IS TechniqueManager.can_learn, and it never depends on
+	# meseta — affordability must not grey a disk.
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("  INFO: no active character — disk-grey checks skipped")
+		print(""); return
+	var saved_class = character.get("class_id", "")
+	var saved_techs: Dictionary = (character.get("techniques", {}) as Dictionary).duplicate()
+	var saved_level = character.get("level", 1)
+	var saved_meseta = character.get("meseta", 0)
+	character["level"] = 50
+	character["techniques"] = {}
+
+	var inv: Array = TechniqueManager.generate_shop_inventory(50)
+	if not inv.is_empty():
+		var tid := str(inv[0].get("technique_id", ""))
+		var lvl := int(inv[0].get("level", 1))
+		character["class_id"] = "humar"
+		character["meseta"] = 0
+		var poor: bool = TechniqueManager.can_learn(character, tid, lvl).get("allowed", false)
+		character["meseta"] = 999999
+		var rich: bool = TechniqueManager.can_learn(character, tid, lvl).get("allowed", false)
+		assert_eq(poor, rich, "disk grey predicate ignores meseta (afford never greys)")
+
+	# A CAST can never learn techniques → every disk is capability-greyed.
+	character["class_id"] = "hucast"
+	character["techniques"] = {}
+	if not inv.is_empty():
+		var tid2 := str(inv[0].get("technique_id", ""))
+		var lvl2 := int(inv[0].get("level", 1))
+		assert_true(not TechniqueManager.can_learn(character, tid2, lvl2).get("allowed", false),
+			"CAST disk is capability-greyed (cannot learn techniques)")
+
+	# Pick a genuinely learnable (class, disk) so the "already-known greys it"
+	# path (Rozalin's Ryuker observation) is tested precisely, not vacuously.
+	var learn_class := ""
+	var learn_tid := ""
+	var learn_lvl := 1
+	for cid in ["fonewm", "fomar", "fonewearl", "ramar", "humar"]:
+		if ClassRegistry.get_class_data(cid) == null:
+			continue
+		character["class_id"] = cid
+		character["techniques"] = {}
+		for d in inv:
+			var t := str(d.get("technique_id", ""))
+			var l := int(d.get("level", 1))
+			if TechniqueManager.can_learn(character, t, l).get("allowed", false):
+				learn_class = cid; learn_tid = t; learn_lvl = l
+				break
+		if learn_tid != "":
+			break
+	if learn_tid != "":
+		character["class_id"] = learn_class
+		character["techniques"] = {}
+		assert_true(TechniqueManager.can_learn(character, learn_tid, learn_lvl).get("allowed", false),
+			"learnable disk is NOT greyed for a class that can learn it")
+		character["techniques"] = {learn_tid: learn_lvl}
+		assert_true(not TechniqueManager.can_learn(character, learn_tid, learn_lvl).get("allowed", false),
+			"already-known disk IS greyed (Ryuker: the spare copy greys once learned)")
+	else:
+		print("  INFO: no learnable disk found for sample classes — known-disk check skipped")
+
+	character["class_id"] = saved_class
+	character["techniques"] = saved_techs
+	character["level"] = saved_level
+	character["meseta"] = saved_meseta
 	print("")
 
 

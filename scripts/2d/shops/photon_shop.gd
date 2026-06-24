@@ -30,6 +30,11 @@ var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
 var _detail_panel: PanelContainer
 var _active_modal: Control = null
+# Cached pill nodes (one per EXCHANGE_ITEMS row) so a cursor move re-styles the
+# selected row in place rather than rebuilding the whole list — a rebuild
+# recreates the ScrollContainer and snaps it to the top, jumping the scrollbar
+# on every keypress (Kion playtest). Mirrors the weapon/item shops.
+var _pill_nodes: Array = []
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel
@@ -57,7 +62,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	ShopNav.handle(self, event, {
 		"modal": _active_modal,
 		"list_size": func() -> int: return EXCHANGE_ITEMS.size(),
-		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_move": func(old_index: int) -> void: _update_selection(old_index),
 		"on_accept": _open_confirm_modal,
 	})
 
@@ -194,27 +199,30 @@ func _refresh_display() -> void:
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
 
+	_pill_nodes.clear()
+	_pill_nodes.resize(EXCHANGE_ITEMS.size())
 	var selected_pill: Control = null
 
 	for i in range(EXCHANGE_ITEMS.size()):
 		var item: Dictionary = EXCHANGE_ITEMS[i]
 		var cost: int = int(item["cost"])
 
-		var can_afford: bool = pd_count >= cost
-
 		var held: int = Inventory.get_item_count(item["id"])
 		var held_str: String = " (x%d)" % held if held > 0 else ""
 
 		var item_icon: Texture2D = InventoryIcons.for_item(str(item["id"]))
 		var icons: Array = [item_icon] if item_icon else []
-		# Unified shop row (#368): grey (not red) when the player can't afford.
-		# This is a list-only shop, so the held count stays in the row label.
+		# Capability grey (spec /states/shops): these exchange items (grinders,
+		# photon crystals, materials, mags) carry no class/race restriction, so no
+		# row greys. Affordability does NOT grey — a row the player can't afford
+		# yet stays normal and is blocked at accept with the shared info modal.
+		# List-only shop, so the held count stays in the row label.
 		var pill := PszStyle.shop_row("%s%s" % [item["name"], held_str], "%d PD" % cost, {
 			"icons": icons,
-			"affordable": can_afford,
 			"selected": i == _selected_index,
 		})
 		vbox.add_child(pill)
+		_pill_nodes[i] = pill
 		if i == _selected_index:
 			selected_pill = pill
 
@@ -222,8 +230,27 @@ func _refresh_display() -> void:
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:
-		PszStyle.scroll_into_view(selected_pill)
+		PszStyle.scroll_selected_into_view(selected_pill)
 
+	_refresh_detail()
+
+
+# Lightweight cursor-move update: restyle only the affected rows and re-render
+# the detail panel, rather than rebuilding the list (which recreates the
+# ScrollContainer and snaps it to the top). Mirrors the weapon/item shops.
+func _update_selection(old_index: int) -> void:
+	if _pill_nodes.size() != EXCHANGE_ITEMS.size():
+		_refresh_display()
+		return
+	if old_index >= 0 and old_index < _pill_nodes.size():
+		var old_pill: Control = _pill_nodes[old_index]
+		if is_instance_valid(old_pill):
+			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
+	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
+		var new_pill: Control = _pill_nodes[_selected_index]
+		if is_instance_valid(new_pill):
+			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
+			PszStyle.scroll_selected_into_view(new_pill)
 	_refresh_detail()
 
 

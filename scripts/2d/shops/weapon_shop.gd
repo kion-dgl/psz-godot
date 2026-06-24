@@ -274,13 +274,15 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	return {"can_equip": true, "reason": ""}
 
 
-## Affordance override: a weapon/armor/unit row is buyable when the character can
-## afford it and has inventory room. Class-equippability is deliberately NOT a
-## buy-block (states/shops spec, #375): gear a class can't equip stays selectable
-## and purchasable — the caveat is surfaced in the detail panel and a warning
-## confirmation modal (see _open_confirm_modal), not by greying the row. Mirrors
+## The buy-block: a weapon/armor/unit row is buyable when the character can afford
+## it and has inventory room — those are the ONLY hard blocks. Class-equippability
+## is deliberately NOT a buy-block (states/shops spec, #375): gear a class can't
+## equip stays selectable and purchasable, gated only by a warning confirmation
+## modal (see _open_confirm_modal). Equippability DOES drive the row's capability
+## grey + ✕ marker (see _refresh_display), but that is a clarity aid, not a block —
+## the grey predicate and this buy-block are intentionally separate. Mirrors
 ## _buy_selected's hard guards (which key off the registry id, not a name-derived
-## one), so the disabled-row rendering can't drift from what _buy_selected accepts.
+## one), so the buy-time block can't drift from what _buy_selected accepts.
 func _can_buy(item: Dictionary) -> Dictionary:
 	var item_id: String = str(item.get("id", ""))
 	if _get_meseta() < int(item.get("cost", 0)):
@@ -302,12 +304,12 @@ func _open_confirm_modal() -> void:
 		prompt = "Sell %s for %d M?" % [str(item.get("name", "???")), sell_price]
 		on_yes = _sell_selected
 	else:
-		# Disabled row (greyed + reason in _refresh_display) → echo the reason
-		# and open nothing, so the player never reaches a rejection.
+		# Affordability/room no longer grey the row, so the block must be
+		# unmissable at accept: the shared info modal (denied cue + reason), the
+		# same way the photon collector reports it. Spec /states/shops.
 		var verdict: Dictionary = _can_buy(item)
 		if not verdict.get("ok", true):
-			hint_label.text = str(verdict.get("reason", ""))
-			ShopNav.denied_sfx()
+			ShopNav.deny(self, str(verdict.get("reason", "")), _update_hint)
 			return
 		var cost: int = int(item.get("cost", 0))
 		var name_str: String = str(item.get("name", "???"))
@@ -462,15 +464,18 @@ func _refresh_display() -> void:
 			# Rarity stars + held count + can't-buy reason all live in the detail
 			# panel — the row carries only name, price, and the one grey rule.
 
-			# Unified shop row (#368): grey only when _can_buy rejects the row
-			# (class / affordability / room — same verdict _buy_selected uses);
-			# no per-reason colour split. The reason itself shows in the detail.
-			var verdict: Dictionary = _can_buy(item)
+			# Capability grey (spec /states/shops): grey + ✕ marker when the
+			# character can never equip this gear (race/class). Affordability and
+			# inventory room do NOT grey the row — an unaffordable row stays normal
+			# and the buy is blocked at accept with the shared info modal. The
+			# reason still shows in the detail panel.
+			var cant_equip: bool = not _check_equippability(
+				item_id, str(item.get("category", ""))).get("can_equip", true)
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
 			var pill := PszStyle.shop_row(str(item.get("name", "???")), "%d M" % cost, {
 				"icons": buy_icons,
-				"affordable": bool(verdict.get("ok", true)),
+				"cannot_use": cant_equip,
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)
@@ -482,7 +487,7 @@ func _refresh_display() -> void:
 	list_panel.add_child(scroll)
 
 	if selected_pill != null:
-		PszStyle.scroll_into_view(selected_pill)
+		PszStyle.scroll_selected_into_view(selected_pill)
 
 	_refresh_detail()
 
@@ -499,7 +504,7 @@ func _update_selection(old_index: int) -> void:
 		var new_pill: Control = _pill_nodes[_selected_index]
 		if new_pill:
 			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			PszStyle.scroll_into_view(new_pill)  # keep selected row in view
+			PszStyle.scroll_selected_into_view(new_pill)  # keep selected row in view (with margin)
 	_refresh_detail()
 
 
