@@ -7,6 +7,12 @@ extends Node3D
 
 const CCState := preload("res://scripts/2d/character_create_state.gd")
 
+# Menu SFX — parity with character_select.gd so class-select and appearance
+# give the same audio feedback as the rest of the menu chrome (#372).
+const SFX_MOVE := "res://assets/sfx/ui/menu_move.wav"
+const SFX_SELECT := "res://assets/sfx/ui/menu_select.wav"
+const SFX_BACK := "res://assets/sfx/ui/menu_back.wav"
+
 # ── PSZ Theme Colors ────────────────────────────────────────────
 # Sourced from web/src/storybook/MenuDesign.tsx + slats-PSZ palette.
 const C_BG := Color(0.659, 0.800, 0.910)                  # #a8cce8 pale icy blue
@@ -297,19 +303,23 @@ func _handle_class_select_input(event: InputEvent) -> void:
 	# last class (no wrap), so the leftmost / rightmost feel like edges.
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
 		if _state.move_class(-1):
+			SfxManager.play(SFX_MOVE)
 			_sync_type_from_class()
 			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
 		if _state.move_class(1):
+			SfxManager.play(SFX_MOVE)
 			_sync_type_from_class()
 			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
+		SfxManager.play(SFX_SELECT)
 		_state.confirm_class()
 		_show_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
+		SfxManager.play(SFX_BACK)
 		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
 		get_viewport().set_input_as_handled()
 
@@ -321,37 +331,51 @@ func _handle_appearance_input(event: InputEvent) -> void:
 	# (which is bound to camera_lock) used to swallow every dpad press
 	# and the accept button on Bluetooth pads with sloppy calibration.
 	if event.is_action_pressed("ui_up"):
+		SfxManager.play(SFX_MOVE)
 		_state.move_appearance_row(-1)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
+		SfxManager.play(SFX_MOVE)
 		_state.move_appearance_row(1)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left"):
+		SfxManager.play(SFX_MOVE)
 		_state.cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
+		SfxManager.play(SFX_MOVE)
 		_state.cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
+		SfxManager.play(SFX_SELECT)
 		_teardown_preview()
 		_show_name_entry()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
+		SfxManager.play(SFX_BACK)
 		_teardown_preview()
 		_show_class_select()
 		get_viewport().set_input_as_handled()
 
 
+# Cancel out of name entry → back to appearance. Shared by the global
+# step dispatcher and the LineEdit's gui_input (the focused field eats input,
+# so both paths can see the cancel press).
+func _cancel_name_entry() -> void:
+	SfxManager.play(SFX_BACK)
+	_show_appearance()
+	get_viewport().set_input_as_handled()
+
+
 func _handle_name_entry_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_show_appearance()
-		get_viewport().set_input_as_handled()
+		_cancel_name_entry()
 
 
 # ── Step 1: CLASS SELECT (Gamecube style) ───────────────────────
@@ -848,8 +872,7 @@ func _show_name_entry() -> void:
 
 func _on_name_gui_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_show_appearance()
-		get_viewport().set_input_as_handled()
+		_cancel_name_entry()
 
 
 func _on_name_submitted(text: String) -> void:

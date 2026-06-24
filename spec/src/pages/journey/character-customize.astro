@@ -23,10 +23,36 @@ import CharacterCustomize from '../../components/screens/CharacterCustomize';
   <h2>Appearance</h2>
   <p>Left panel with 4 rows — labels adapt for Cast classes (Head Parts, Body Color A/B/C). Right side shows a live 3D preview in a SubViewport. Right analog stick rotates the model.</p>
   <ul>
-    <li><strong>Head Type</strong> — variation_index (8 options)</li>
-    <li><strong>Hair Color</strong> — hair_color_index (12 colors)</li>
-    <li><strong>Costume Color</strong> — body_color_index (12 colors)</li>
-    <li><strong>Skin Tone</strong> — skin_tone_index (6 tones)</li>
+    <li><strong>Head Type</strong> — variation_index (4 options)</li>
+    <li><strong>Hair Color</strong> — hair_color_index (3 colors: Blonde, Brown, Black)</li>
+    <li><strong>Costume Color</strong> — body_color_index (5 colors)</li>
+    <li><strong>Skin Tone</strong> — skin_tone_index (3 tones: Light, Medium, Dark)</li>
+  </ul>
+
+  <h2>Skin tone ordering (normative)</h2>
+  <p>
+    The Skin Tone row MUST read lightest → darkest as the index increases:
+    index 0 = <strong>Light</strong>, 1 = <strong>Medium</strong>, 2 =
+    <strong>Dark</strong>. This is the order in <code>PlayerConfig.SKIN_TONES</code>,
+    and the rendered model MUST match the selected label.
+  </p>
+  <p>
+    Most classes bake their three skin textures in that same slot order, so the
+    UI index maps straight through to the texture's tens digit. <strong>HUmarl</strong>
+    is the lone exception: its source textures are scrambled (texture slot 0 =
+    medium, slot 1 = darkest, slot 2 = lightest), so the index→slot map for
+    HUmarl is <code>[2, 0, 1]</code>. <code>PlayerConfig.get_texture_path()</code>
+    applies this per-class remap so every class renders Light→Medium→Dark in
+    label order. Casts have no skin tone (their fourth row is Body Color C, a
+    hue choice, not a light→dark ramp) and are unaffected.
+  </p>
+
+  <h2>Audio feedback (normative)</h2>
+  <p>Both customization steps MUST give the same menu audio as the rest of the menu chrome (parity with Class Select / Character Select):</p>
+  <ul>
+    <li><strong>Move</strong> (change row or cycle a value) → <code>menu_move.wav</code></li>
+    <li><strong>Confirm</strong> (advance a step) → <code>menu_select.wav</code></li>
+    <li><strong>Cancel</strong> (back out a step) → <code>menu_back.wav</code></li>
   </ul>
 
   <h2>Name Entry</h2>
