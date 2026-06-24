@@ -313,13 +313,10 @@ func _open_confirm_modal() -> void:
 			return
 		var cost: int = int(item.get("cost", 0))
 		var name_str: String = str(item.get("name", "???"))
-		# Class-unequippable gear is still purchasable (#375) — warn before charging.
-		var equippable: bool = _check_equippability(
-			str(item.get("id", "")), str(item.get("category", ""))).get("can_equip", true)
-		if equippable:
-			prompt = "Buy %s for %d M?" % [name_str, cost]
-		else:
-			prompt = "Can't equip %s — buy anyway for %d M?" % [name_str, cost]
+		# Class-unequippable gear is still purchasable (#375). No "buy anyway?"
+		# wording — the row's ✕ marker already shows it can't be equipped, so the
+		# buy prompt stays the plain one. Spec /states/shops.
+		prompt = "Buy %s for %d M?" % [name_str, cost]
 		on_yes = _buy_selected
 
 	ShopNav.confirm(self, prompt, on_yes, _update_hint)
