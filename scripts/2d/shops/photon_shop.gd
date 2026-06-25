@@ -213,13 +213,13 @@ func _refresh_display() -> void:
 
 		var item_icon: Texture2D = InventoryIcons.for_item(str(item["id"]))
 		var icons: Array = [item_icon] if item_icon else []
-		# Capability grey (spec /states/shops): these exchange items (grinders,
-		# photon crystals, materials, mags) carry no class/race restriction, so no
-		# row greys. Affordability does NOT grey — a row the player can't afford
-		# yet stays normal and is blocked at accept with the shared info modal.
-		# List-only shop, so the held count stays in the row label.
+		# The photon collector greys rows you don't have enough Photon Drops for
+		# (Rozalin playtest) — unlike the meseta shops, where purchase power never
+		# greys. PD is the gating resource for the exchange, so insufficient PD is
+		# surfaced inline here. List-only shop, so the held count stays in the row.
 		var pill := PszStyle.shop_row("%s%s" % [item["name"], held_str], "%d PD" % cost, {
 			"icons": icons,
+			"affordable": pd_count >= cost,
 			"selected": i == _selected_index,
 		})
 		vbox.add_child(pill)

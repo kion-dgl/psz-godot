@@ -242,6 +242,16 @@ func _open_item_buy(item: Dictionary) -> void:
 func _open_disk_confirm(item: Dictionary) -> void:
 	var disk_name: String = str(item.get("name", "???"))
 	var cost: int = int(item.get("cost", 0))
+	# Pre-check meseta + room so a blocked buy goes STRAIGHT to the info modal,
+	# the same as every other shop — instead of opening the buy confirm first and
+	# only then failing with a second modal (Rozalin: disks had a double modal).
+	if _get_meseta() < cost:
+		ShopNav.deny(self, ShopNav.MSG_NOT_ENOUGH_MESETA, _update_hint)
+		return
+	var disk_id: String = "disk_%s_%d" % [str(item.get("technique_id", "")), int(item.get("level", 1))]
+	if not Inventory.can_add_item(disk_id):
+		ShopNav.deny(self, ShopNav.MSG_NO_ROOM, _update_hint)
+		return
 	ShopNav.confirm(self, "Buy %s for %d M?" % [disk_name, cost], _buy_disk, _update_hint)
 
 
@@ -353,15 +363,16 @@ func _refresh_display() -> void:
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
-			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
-			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
 			var sell_id: String = str(item.get("id", ""))
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				sell_icons,
-				str(item.get("name", "???")) + equip_tag + qty_str,
-				i == _selected_index, "%d M" % sell_price, text_color)
+			# Through shop_row so the [E] equipped marker sits in the leftmost slot,
+			# consistent with the weapon/storage sell lists (was a trailing tag).
+			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
+				"icons": sell_icons,
+				"equipped": bool(item.get("equipped", false)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
 			if i == _selected_index:

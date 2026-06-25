@@ -31,6 +31,10 @@ var _active_modal: Control = null
 # _refresh_panel AFTER the vbox is parented to the ScrollContainer (the row
 # can't find its scroll ancestor before it's in the tree).
 var _scroll_to_pill: Control = null
+# Cached pill nodes (one per item row) so a cursor move restyles in place via
+# ShopNav.cursor_move instead of rebuilding the panel — a rebuild recreates the
+# ScrollContainer and snaps it to the top (the bouncing scrollbar the shops had).
+var _pill_nodes: Array = []
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -170,15 +174,17 @@ func _change_tab(direction: int) -> void:
 
 func _handle_items_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up"):
+		var old := _selected_index
 		var max_idx: int = _current_list_size() - 1
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(max_idx + 1, 1))
-		_refresh_display()
+		ShopNav.cursor_move(_pill_nodes, old, _selected_index, _refresh_detail)
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
+		var old := _selected_index
 		var max_idx: int = _current_list_size() - 1
 		_selected_index = wrapi(_selected_index + 1, 0, maxi(max_idx + 1, 1))
-		_refresh_display()
+		ShopNav.cursor_move(_pill_nodes, old, _selected_index, _refresh_detail)
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
@@ -424,6 +430,7 @@ func _refresh_panel() -> void:
 	vbox.add_theme_constant_override("separation", 3)
 
 	_scroll_to_pill = null
+	_pill_nodes.clear()
 	if _is_items_tab():
 		_render_items_panel(vbox)
 	else:
@@ -432,10 +439,11 @@ func _refresh_panel() -> void:
 	scroll.add_child(vbox)
 	panel.add_child(scroll)
 
-	# Keep the selected row in view. Deferred so it runs after the
-	# ScrollContainer has laid the rows out (matches the shop screens).
+	# Keep the selected row in view, with a row of margin so the selection moves
+	# inside the viewport before the list scrolls (matches the shops). Deferred so
+	# it runs after the ScrollContainer has laid the rows out.
 	if _scroll_to_pill != null:
-		PszStyle.scroll_into_view(_scroll_to_pill)
+		PszStyle.scroll_selected_into_view(_scroll_to_pill)
 
 
 ## Detail panel for the selected row — stats for gear, effect + count for
@@ -552,7 +560,7 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			if not eid.is_empty():
 				equipped_ids.append(eid)
 
-	var pills_ref: Array = []
+	_pill_nodes.resize(items.size())
 	for i in range(items.size()):
 		var item: Dictionary = items[i]
 		var item_id: String = str(item.get("id", "???"))
@@ -573,8 +581,6 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			elif armor_data:
 				item_name = armor_data.name
 		var qty: int = int(item.get("quantity", 1))
-		# Unified shop convention (#368): [E] is a PREFIX, matching every shop.
-		var equip_prefix: String = "[E] " if item_id in equipped_ids else ""
 
 		var grind_tag := ""
 		if weapon and character:
@@ -584,37 +590,45 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 
 		# Rarity stars now live in the detail panel (#368); the row keeps the
 		# weapon's grind level, which is part of its identity ("Saber +3").
-		var display_name := equip_prefix + item_name + grind_tag
+		var display_name := item_name + grind_tag
 		var right_text := "x%d" % qty if qty > 1 else ""
-
-		# Equipped items are locked from being moved into storage (see
-		# _do_item_move); show muted to make the locked state legible.
-		# Unified disabled style (#368): one grey for every can't-use state
-		# (equipped/locked, class mismatch, under-level) — matching the shops,
-		# no red/yellow split. Only genuinely-broken data (an id that won't
-		# resolve to a weapon/armor) stays red as an error indicator.
-		var text_color := Color.TRANSPARENT
-		var is_locked_equipped: bool = item_id in equipped_ids
-		if is_unresolved:
-			text_color = PszStyle.TEXT_DANGER
-		elif is_locked_equipped:
-			text_color = PszStyle.TEXT_MUTED
-		elif weapon and not class_type_race.is_empty():
-			if not weapon.can_be_used_by(class_type_race) or char_level < weapon.level:
-				text_color = PszStyle.TEXT_MUTED
-		elif armor_data and not class_type_race.is_empty():
-			if not armor_data.can_be_used_by(class_type_race) or char_level < armor_data.level:
-				text_color = PszStyle.TEXT_MUTED
-
 		var is_selected: bool = i == _selected_index
 		var item_icon: Texture2D = InventoryIcons.for_item(item_id)
 		var icons: Array = [item_icon] if item_icon else []
-		var pill := PszStyle.create_pill_with_icons(icons, display_name, is_selected, right_text, text_color)
-		vbox.add_child(pill)
-		pills_ref.append(pill)
 
-	if _selected_index >= 0 and _selected_index < pills_ref.size():
-		_scroll_to_pill = pills_ref[_selected_index]
+		var pill: Control
+		if is_unresolved:
+			# Genuinely-broken data (an id that won't resolve) stays red as an
+			# error indicator. Reserve the marker slot so it still lines up.
+			pill = PszStyle.create_pill_with_icons(
+				icons, display_name, is_selected, right_text, PszStyle.TEXT_DANGER,
+				PszStyle.marker_cell(""))
+		else:
+			# Same capability markers as the shops (spec /states/shops): ✕ when the
+			# class can never equip this gear, [E] when it's equipped (locked from
+			# deposit), grey-without-✕ when only the level requirement isn't met.
+			var is_locked_equipped: bool = item_id in equipped_ids
+			var cannot_equip := false
+			var under_level := false
+			if not is_locked_equipped and not class_type_race.is_empty():
+				if weapon:
+					cannot_equip = not weapon.can_be_used_by(class_type_race)
+					under_level = char_level < weapon.level
+				elif armor_data:
+					cannot_equip = not armor_data.can_be_used_by(class_type_race)
+					under_level = char_level < armor_data.level
+			pill = PszStyle.shop_row(display_name, right_text, {
+				"icons": icons,
+				"equipped": is_locked_equipped,
+				"cannot_use": cannot_equip,
+				"disabled": under_level,
+				"selected": is_selected,
+			})
+		vbox.add_child(pill)
+		_pill_nodes[i] = pill
+
+	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
+		_scroll_to_pill = _pill_nodes[_selected_index]
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────

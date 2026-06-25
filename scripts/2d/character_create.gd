@@ -297,17 +297,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_class_select_input(event: InputEvent) -> void:
-	# Slats are arranged horizontally so left/right is the primary axis;
-	# up/down still works as a secondary path so keyboard users with a
-	# vertical mental model aren't stuck. Selection stops at the first /
-	# last class (no wrap), so the leftmost / rightmost feel like edges.
-	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
+	# Slats are arranged horizontally, so ONLY left/right move the selection.
+	# Up/down are deliberately ignored here (they used to alias to left/right,
+	# which read as a D-pad mapping bug — Rozalin playtest). The appearance step
+	# that follows uses all four directions independently, so this is scoped to
+	# class select only. Selection stops at the first / last class (no wrap).
+	if event.is_action_pressed("ui_left"):
 		if _state.move_class(-1):
 			SfxManager.play(SFX_MOVE)
 			_sync_type_from_class()
 			_update_class_select()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_right"):
 		if _state.move_class(1):
 			SfxManager.play(SFX_MOVE)
 			_sync_type_from_class()

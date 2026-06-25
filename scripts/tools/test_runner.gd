@@ -44,6 +44,7 @@ func _run_tests_core() -> void:
 	test_mag_personality_contract()
 	test_shops()
 	test_shop_buy_unequippable_gear()
+	test_humar_gear_unequippable()
 	test_shop_capability_grey()
 	test_disk_capability_grey()
 	test_synth_unequippable_marker()
@@ -1559,6 +1560,34 @@ func test_shop_buy_unequippable_gear() -> void:
 	print("")
 
 
+# Regression for Rozalin's "HUmar shows every weapon/armor equippable" report:
+# a HUmar must NOT be able to equip a robe (Newman-Hunter / Force only) or a rod
+# (Force only) — both must mark ✕ in the shop. Guards the gear capability path
+# (active_class_use_string → can_be_used_by) the same way the disk test guards
+# class_can_learn.
+func test_humar_gear_unequippable() -> void:
+	print("── HUmar can't equip robes / Force weapons (regression) ──")
+	var saved_chars = CharacterManager._characters
+	var saved_slot = CharacterManager._active_slot
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "EquipTest")
+	CharacterManager.set_active_slot(0)
+
+	var ws = load("res://scripts/2d/shops/weapon_shop.gd").new()
+	assert_true(not ws._check_equippability("robe", "armor").get("can_equip", true),
+		"HUmar cannot equip a robe (should ✕)")
+	assert_true(not ws._check_equippability("rod", "weapon").get("can_equip", true),
+		"HUmar cannot equip a rod / Force weapon (should ✕)")
+	assert_true(ws._check_equippability("frame", "armor").get("can_equip", true),
+		"HUmar CAN equip a basic frame (no ✕)")
+	ws.free()
+
+	CharacterManager._characters = saved_chars
+	CharacterManager._active_slot = saved_slot
+	print("")
+
+
 ## The visible Label inside a PszStyle.shop_row pill (the item name).
 func _shop_row_label(pill: Control) -> Label:
 	for c in pill.get_child(0).get_children():
@@ -1567,14 +1596,13 @@ func _shop_row_label(pill: Control) -> Label:
 	return null
 
 
-## Count of leading marker icons (TextureRects) in a shop_row pill — the
-## cannot_use ✕ marker shows up as one extra TextureRect.
-func _shop_row_icon_count(pill: Control) -> int:
-	var n := 0
-	for c in pill.get_child(0).get_children():
-		if c is TextureRect:
-			n += 1
-	return n
+## The leftmost marker-slot kind of a shop_row pill: "x" (✕ icon), "e" ([E] tag),
+## or "" (empty reserved gap). The marker cell is always the first hbox child.
+func _shop_row_marker(pill: Control) -> String:
+	var cell: Node = pill.get_child(0).get_child(0)
+	if cell == null or cell.get_child_count() == 0:
+		return ""
+	return "x" if cell.get_child(0) is TextureRect else "e"
 
 
 # Capability-based greying (PSOBB rule, Rozalin/Kion playtest 2026-06-22):
@@ -1583,21 +1611,25 @@ func _shop_row_icon_count(pill: Control) -> int:
 func test_shop_capability_grey() -> void:
 	print("── Shop capability greying (PSOBB rule) ──")
 
-	# shop_row rendering: capability greys (with/without ✕), economics don't.
+	# shop_row rendering: capability greys (with/without ✕), economics don't. The
+	# [E]/✕ live in a fixed leftmost marker slot, reserved (empty) otherwise.
 	var normal := PszStyle.shop_row("Saber", "100 M", {})
 	assert_eq(_shop_row_label(normal).get_theme_color("font_color"), PszStyle.TEXT,
 		"usable row is not muted")
-	assert_eq(_shop_row_icon_count(normal), 0, "usable row has no ✕ marker")
+	assert_eq(_shop_row_marker(normal), "", "usable row reserves an empty marker slot")
 
 	var cant_equip := PszStyle.shop_row("Cane", "100 M", {"cannot_use": true})
 	assert_eq(_shop_row_label(cant_equip).get_theme_color("font_color"), PszStyle.TEXT_MUTED,
 		"cannot_use (can't equip) row is muted")
-	assert_eq(_shop_row_icon_count(cant_equip), 1, "cannot_use row carries the ✕ marker icon")
+	assert_eq(_shop_row_marker(cant_equip), "x", "cannot_use row carries the ✕ marker")
 
 	var disabled := PszStyle.shop_row("Foie Lv1", "100 M", {"disabled": true})
 	assert_eq(_shop_row_label(disabled).get_theme_color("font_color"), PszStyle.TEXT_MUTED,
 		"disabled (already-known / req-level) row is muted")
-	assert_eq(_shop_row_icon_count(disabled), 0, "disabled row has NO ✕ marker (temporary block)")
+	assert_eq(_shop_row_marker(disabled), "", "disabled row has NO ✕ marker (temporary block)")
+
+	var equipped := PszStyle.shop_row("Saber +1", "100 M", {"equipped": true})
+	assert_eq(_shop_row_marker(equipped), "e", "equipped row shows the [E] marker in the slot")
 
 	var x_tex := PszStyle.cannot_use_icon()
 	assert_true(x_tex != null and x_tex.get_width() == 16 and x_tex.get_height() == 16,
@@ -1696,9 +1728,10 @@ func test_disk_capability_grey() -> void:
 func test_synth_unequippable_marker() -> void:
 	print("── Synthesis: ✕ marker on un-equippable recipe outputs ──")
 	var cs = load("res://scripts/2d/shops/crafting_shop.gd").new()
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
 	if CharacterManager.get_active_character() == null:
 		print("  INFO: no active character — skipped"); cs.free(); print(""); return
-	var class_str: String = cs._class_use_string()
+	var class_str: String = ShopNavCls.active_class_use_string()
 	if class_str.is_empty():
 		print("  INFO: no class string — skipped"); cs.free(); print(""); return
 	var all_consistent := true
