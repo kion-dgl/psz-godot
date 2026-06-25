@@ -13,9 +13,39 @@ extends RefCounted
 ## Back-reference to the PsoStartMenu autoload that owns this renderer.
 var _c
 
+# Preloaded shop helper (static), for the shared "Type Race" capability string —
+# composition, not inheritance (the sanctioned shop-dedup pattern).
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 
 func _init(controller) -> void:
 	_c = controller
+
+
+## True when the active character can never equip/use this inventory item — gear
+## the class/race can't equip, or a disk the class can never learn. Drives the ✕
+## marker in the items list, matching the shops and storage counter.
+func _item_cannot_use(item_id: String) -> bool:
+	if item_id.begins_with("disk_"):
+		var ch = CharacterManager.get_active_character()
+		if ch == null:
+			return false
+		var rest := item_id.substr(5)
+		var us := rest.rfind("_")
+		if us < 0:
+			return false
+		return not TechniqueManager.class_can_learn(ch, rest.substr(0, us), int(rest.substr(us + 1)))
+	var class_str: String = ShopNav.active_class_use_string()
+	if class_str.is_empty():
+		return false
+	var base_id: String = Inventory.get_base_id(item_id)
+	var weapon = WeaponRegistry.get_weapon(base_id)
+	if weapon:
+		return not weapon.can_be_used_by(class_str)
+	var armor = ArmorRegistry.get_armor(base_id)
+	if armor:
+		return not armor.can_be_used_by(class_str)
+	return false
 
 
 func _draw_menu() -> void:
@@ -220,12 +250,27 @@ func _draw_items(c: Control, font: Font) -> void:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(0.34, 0.55, 0.85))
 		else:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
-
-		# Per-item icon (PNG when known, fallback to colored letter block).
-		var icon_rect := Rect2(px + 6, draw_y + 2, 16, 16)
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
+		var is_equipped: bool = bool(item.get("equipped", false))
+		var cannot_use: bool = _item_cannot_use(item_id)
+
+		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
+		# Grey gear/disks the class can never use, unless this row is highlighted.
+		if cannot_use and not (is_sel or is_move_origin):
+			col = PsoStartMenu.C_TEXT_MUTED
+
+		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
+		# reserved on every row so item names stay aligned — same convention as
+		# the shops and storage. ✕ takes precedence (equipped gear is equippable).
+		if cannot_use:
+			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, draw_y + 2, 16, 16), false)
+		elif is_equipped:
+			c.draw_string(font, Vector2(px + 6, draw_y + 14), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
+
+		# Per-item icon (PNG when known, fallback to colored letter block), shifted
+		# right past the marker slot.
+		var icon_rect := Rect2(px + 24, draw_y + 2, 16, 16)
 		var tex: Texture2D = _c._get_item_icon(item_id, category)
 		if tex:
 			c.draw_texture_rect(tex, icon_rect, false)
@@ -236,15 +281,10 @@ func _draw_items(c: Control, font: Font) -> void:
 			if is_sel or is_move_origin:
 				icon_color = Color(1, 1, 1, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 9, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 27, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
-		# Item name (with [E] prefix for equipped — the type icon's slot
-		# is now occupied by the type indicator, so the equipped pill
-		# moves into the name string).
-		var item_name: String = str(item.get("name", ""))
-		if item.get("equipped", false):
-			item_name = "[E] " + item_name
-		c.draw_string(font, Vector2(px + 28, draw_y + 14), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
+		# Item name (the [E]/✕ marker lives in the leftmost slot, not the name).
+		c.draw_string(font, Vector2(px + 46, draw_y + 14), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
