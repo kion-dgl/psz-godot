@@ -160,12 +160,15 @@ static func create_pill(left_text: String, selected: bool, right_text: String = 
 ## Each icon renders as a 16×16 TextureRect; nulls in the array are
 ## skipped so callers can pass [type_icon, rarity_icon] without
 ## branching on missing assets.
-static func create_pill_with_icons(icons: Array, left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT) -> PanelContainer:
+static func create_pill_with_icons(icons: Array, left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT, lead: Control = null) -> PanelContainer:
 	var pill := PanelContainer.new()
 	pill.add_theme_stylebox_override("panel", pill_style(selected))
 	pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
+	# Optional fixed-width leftmost cell (the [E]/✕ marker slot), before any icon.
+	if lead != null:
+		hbox.add_child(lead)
 	for icon in icons:
 		if icon == null:
 			continue
@@ -222,16 +225,48 @@ static func shop_row(item_name: String, right_text: String, opts: Dictionary = {
 	var cannot_use: bool = bool(opts.get("cannot_use", false))
 	var selected: bool = bool(opts.get("selected", false))
 	var icons: Array = (opts.get("icons", []) as Array).duplicate()
-	# A "can never use/equip" row leads with the forbidden ✕ marker.
-	if cannot_use:
-		icons.push_front(cannot_use_icon())
-	var label: String = ("[E] " if equipped else "") + item_name
+	# Leftmost FIXED-WIDTH marker cell, before the item icon — ✕ when the
+	# character can never use/equip it, else [E] for equipped gear, else an empty
+	# reserved gap so item names stay aligned whether or not a row has a marker
+	# (PSOBB convention; Rozalin playtest). The marker, not a text prefix, carries
+	# the [E]/✕ so all shop lists line up identically.
+	var marker_kind := "x" if cannot_use else ("e" if equipped else "")
 	# Muted when the player can't act on the row: capability block (can't
 	# use/equip, or already-known/req-level), equipped gear (can't re-buy /
 	# deposit / sell), or — for the legacy cost-gated list shops — unaffordable.
 	var muted: bool = (not affordable) or equipped or disabled or cannot_use
 	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
-	return create_pill_with_icons(icons, label, selected, right_text, color)
+	return create_pill_with_icons(icons, item_name, selected, right_text, color, marker_cell(marker_kind))
+
+
+## Width of the leftmost shop-row marker slot. Wide enough for the "[E]" tag; the
+## ✕ icon and the empty gap reserve the same width so names align across rows.
+const MARKER_W := 22
+
+
+## A fixed-width leftmost marker cell for shop rows: the ✕ "can't use" icon
+## (`"x"`), the "[E]" equipped tag (`"e"`), or an empty reserved gap (anything
+## else). Every shop_row reserves this slot so item names line up regardless of
+## whether the row carries a marker.
+static func marker_cell(kind: String) -> Control:
+	var cell := Control.new()
+	cell.custom_minimum_size = Vector2(MARKER_W, 16)
+	cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if kind == "x":
+		var rect := TextureRect.new()
+		rect.texture = cannot_use_icon()
+		rect.custom_minimum_size = Vector2(16, 16)
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		cell.add_child(rect)
+	elif kind == "e":
+		var lbl := Label.new()
+		lbl.text = "[E]"
+		lbl.add_theme_color_override("font_color", TEXT_MUTED)
+		lbl.add_theme_font_size_override("font_size", FONT_TAB)
+		lbl.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		cell.add_child(lbl)
+	return cell
 
 
 static var _cannot_use_tex: Texture2D = null

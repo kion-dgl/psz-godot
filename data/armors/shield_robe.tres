@@ -22,6 +22,6 @@ resist_ice = 12
 resist_lightning = 12
 resist_light = 12
 resist_dark = 12
-usable_by = PackedStringArray("Newman Hunter", "Human Ranger", "Human Force", "Newman Force")
+usable_by = PackedStringArray("Hunter Newman", "Ranger Human", "Force Human", "Force Newman")
 set_bonus = ""
 pso_world_id = 499

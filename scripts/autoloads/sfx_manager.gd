@@ -39,6 +39,8 @@ func _ready() -> void:
 
 ## Play a 2D sound effect (UI, menu, global sounds).
 func play(path: String, volume_db: float = 0.0) -> void:
+	if OS.has_environment("PSZ_SFX_DEBUG"):
+		print("[SFX-DEBUG] ", path)
 	var stream := _load(path)
 	if not stream:
 		return
