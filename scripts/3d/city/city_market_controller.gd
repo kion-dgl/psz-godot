@@ -29,8 +29,9 @@ func _ready() -> void:
 	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
 	# Drop in the replacement shop carts over the empty spots the no-cart
-	# GLB left behind.
-	_add_shop_carts()
+	# GLB left behind. Disabled while evaluating dairon2, which may have the
+	# item/weapon stalls baked into the geometry — re-enable if not.
+	#_add_shop_carts()
 
 	# Heal on city entry
 	_heal_character()
