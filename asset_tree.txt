@@ -3965,6 +3965,31 @@ assets/stages/city_a/s00a_nr6/lndmd/s06_1_rlamp01.png
 assets/stages/city_a/s00a_nr6/lndmd/s06_1_rwea1.png
 assets/stages/city_e/dairon_city.zip
 assets/stages/city_e/market/canyon_panorama.png
+assets/stages/city_e/market/dairon2.glb
+assets/stages/city_e/market/dairon2_s00_0_cent5.png
+assets/stages/city_e/market/dairon2_s00_0_floor05.png
+assets/stages/city_e/market/dairon2_s00_0_gr1.png
+assets/stages/city_e/market/dairon2_s00_0_set01.png
+assets/stages/city_e/market/dairon2_s00_0_set02.png
+assets/stages/city_e/market/dairon2_s00_0_set02b.png
+assets/stages/city_e/market/dairon2_s00_0_set03.png
+assets/stages/city_e/market/dairon2_s00_0_tile1b.png
+assets/stages/city_e/market/dairon2_s00_0_tile1c.png
+assets/stages/city_e/market/dairon2_s00_0_wall03.png
+assets/stages/city_e/market/dairon2_s00_1_gr1.png
+assets/stages/city_e/market/dairon2_s00_1_house01.png
+assets/stages/city_e/market/dairon2_s00_1_kan_1.png
+assets/stages/city_e/market/dairon2_s00_1_kan_2.png
+assets/stages/city_e/market/dairon2_s00_1_ppl0.png
+assets/stages/city_e/market/dairon2_s00_1_set04.png
+assets/stages/city_e/market/dairon2_s00_1_set05.png
+assets/stages/city_e/market/dairon2_s00_1_shopa.png
+assets/stages/city_e/market/dairon2_s00_1_shopb.png
+assets/stages/city_e/market/dairon2_s00_1_shopc.png
+assets/stages/city_e/market/dairon2_s00_1_shopd.png
+assets/stages/city_e/market/dairon2_s00_1_wood01.png
+assets/stages/city_e/market/dairon2_s00_2_wave01.png
+assets/stages/city_e/market/dairon2_s00_2_wave02.png
 assets/stages/city_e/market/item_shop/item_cart.glb
 assets/stages/city_e/market/item_shop/item_cart_accessoriesBase Color - 2048px.png
 assets/stages/city_e/market/item_shop/item_cart_cartBase Color - 2048px.png
