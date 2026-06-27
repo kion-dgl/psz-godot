@@ -148,8 +148,21 @@ func _show_pickup_dialog() -> void:
 	var dlg := pickup_dialog
 	var comp := companion_node
 	var rem_dlg := remaining_dialog
+	# Register the pickup the instant the item is touched — NOT on
+	# dialog_complete. The "Picked up X" box is skippable (you can walk out of
+	# the room before closing it), and the item is already consumed by DropBase
+	# at this point. If registration hung off the dialog the objective would
+	# silently never tick and the quest would be permanently unclearable — the
+	# "picked up but not counted" brick. Quest progression must never depend on
+	# the player reading the dialog.
+	SessionManager.collect_quest_item(qitem_id)
+	# If this pickup just completed the quest, root the player so they can't
+	# wander off mid-finale: the closing dialogue AND the return telepipe still
+	# fire from dialog_complete, and rooting guarantees the player advances it so
+	# the pipe reliably spawns. Released in _execute_pickup_actions.
+	if SessionManager.are_objectives_complete():
+		_root_player(true)
 	dialog_box.dialog_complete.connect(func() -> void:
-		SessionManager.collect_quest_item(qitem_id)
 		if not dlg.is_empty() and comp and is_instance_valid(comp) and comp.has_method("show_speech"):
 			_show_companion_pages(comp, dlg, 0, func() -> void:
 				_show_remaining_dialog(comp, rem_dlg, actions)
@@ -266,6 +279,9 @@ func _show_remaining_dialog(comp: Node, rem_entries: Array, fallback_actions: Ar
 
 
 func _execute_pickup_actions(actions: Array) -> void:
+	# Release any root taken on the final pickup — the dialogue has finished and
+	# the telepipe (if any) is about to spawn, so hand control back to the player.
+	_root_player(false)
 	if actions.is_empty():
 		queue_free()
 		return
@@ -322,6 +338,15 @@ func _find_dialog_box() -> Node:
 	if not hud:
 		return null
 	return hud.get_node_or_null("DialogBox")
+
+
+## Freeze (CUTSCENE) or release (IDLE) the player. Used on the final pickup so
+## the player can't walk away before the closing dialogue spawns the telepipe.
+func _root_player(enable: bool) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_method("transition_to"):
+		return
+	player.transition_to(player.PlayerState.CUTSCENE if enable else player.PlayerState.IDLE)
 
 
 func _find_field_controller() -> Node:

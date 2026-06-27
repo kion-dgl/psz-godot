@@ -217,6 +217,23 @@ var _quest_manifest_index: int = 0  # used by guild_counter to scroll-down befor
 # wall hits go away.
 var _floor_only := false
 
+# Adversarial pickup mode: when PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG=1, quest-item
+# pickups are consumed but the "Picked up X" dialog is NEVER confirmed — the
+# autopilot leaves immediately, mirroring a player who walks off at the system
+# message. Used by the regression matrix's dialogue-bug probe (#239): on the
+# bug, registration is deferred to dialog_complete, so the fragment is consumed
+# yet never counted and the quest can't legitimately clear. The fix
+# (register-on-contact) makes the run pass with this flag on.
+var _skip_pickup_dialog := false
+
+# Toast-persistence probe: when PSZ_AUTOPILOT_MENU_DURING_PICKUP=1, after each
+# quest-item pickup the autopilot confirms the dialog (so the "Picked up X" box
+# closes) and then toggles the PSO start menu a few times. FieldHud's
+# restore_after_menu blindly re-shows every Control child on menu-close,
+# including the already-closed DialogBox whose stale text was never cleared, so
+# "Picked up X" reappears and sticks until the room unloads.
+var _menu_during_pickup := false
+
 # Shop/storage smoke coverage: when PSZ_AUTOPILOT_SHOPS=1, after the office
 # intro the autopilot detours through the principal (debug meseta grant) and
 # the shop/storage screens instead of accepting a quest. Gated so the
@@ -288,6 +305,12 @@ func _ready() -> void:
 	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
 	if _floor_only:
 		print("[sanity] autopilot floor-only mode: shrinking player capsule, walls won't block")
+	_skip_pickup_dialog = OS.has_environment("PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG")
+	if _skip_pickup_dialog:
+		print("[sanity] autopilot SKIP_PICKUP_DIALOG on: quest-item pickups will not confirm the dialog (dialogue-bug probe)")
+	_menu_during_pickup = OS.has_environment("PSZ_AUTOPILOT_MENU_DURING_PICKUP")
+	if _menu_during_pickup:
+		print("[sanity] autopilot MENU_DURING_PICKUP on: will toggle the start menu during quest-item pickups (toast-persistence probe)")
 	set_process(true)
 
 
@@ -1893,6 +1916,12 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# QuestItemPickup node from _find_quest_item_pickup — call its
 	# DropBase._on_interact(player) directly. After that, dwell for the
 	# multi-page dialog and press ui_accept to advance it.
+	if _skip_pickup_dialog:
+		_pickup_skip_dialog(field, item)
+		return
+	if _menu_during_pickup:
+		_pickup_menu_toggle(field, item)
+		return
 	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
 	# After step-on lands, fire the item's _on_interact directly. We can't
 	# tell WHEN step-on completes from here, so schedule the direct
@@ -1912,6 +1941,63 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# SessionManager.collect_quest_item).
 	for i in range(25):
 		_after(3.0 + i * 0.7, func() -> void: _press_action("ui_accept"))
+
+
+## PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG probe — adversarial repro of the dialogue
+## bug (#239): walk ONTO the quest item (via the waypoint graph) and leave
+## WITHOUT confirming the "Picked up X" dialog. On the unfixed code registration
+## hung off dialog_complete, so the fragment was consumed yet never counted and
+## the quest bricked. The fix registers on contact; the final fragment then
+## roots the player and gates the telepipe on the finale dialogue, which a
+## rooted real player can only advance — so we advance it here to spawn the pipe.
+func _pickup_skip_dialog(field: Node, item: Node) -> void:
+	var item_skip := item
+	print("[sanity] SKIP_PICKUP_DIALOG: walking onto quest_item, will leave the dialog unconfirmed")
+	_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
+		var psk: Node3D = get_tree().get_first_node_in_group("player")
+		if is_instance_valid(item_skip) and item_skip.has_method("_on_interact") and psk != null:
+			item_skip._on_interact(psk)
+			print("[sanity] SKIP_PICKUP_DIALOG: consumed quest_item; mag_fragment registered=%d (dialog left unconfirmed)" % SessionManager.get_quest_item_count("mag_fragment"))
+		if SessionManager.are_objectives_complete():
+			# Final fragment — advance the finale so the telepipe spawns. (On the
+			# UNFIXED code this branch is never reached: earlier fragments never
+			# registered, so the count can't hit target and the run wedges first.)
+			print("[sanity] SKIP_PICKUP_DIALOG: final fragment — advancing finale dialogue so the telepipe spawns")
+			for i in range(14):
+				_after(0.8 + i * 0.8, func() -> void: _press_action("ui_accept"))
+			_after(13.0, func() -> void: _run_next_action(field))
+		else:
+			# Intermediate fragment: leave WITHOUT confirming — the brick scenario.
+			_after(1.5, func() -> void: _run_next_action(field)))
+
+
+## PSZ_AUTOPILOT_MENU_DURING_PICKUP probe — adversarial repro of the
+## toast-persistence bug: pick up, CONFIRM the dialog (closes the "Picked up X"
+## box), then toggle the PSO start menu. On the bug restore_after_menu re-shows
+## the closed box with its stale text. The probe logs DialogBox visible/active
+## after the toggle — the bug is a CLOSED box still painted (visible AND not
+## active); an active box (the finale's narration page) is correctly visible.
+func _pickup_menu_toggle(field: Node, item: Node) -> void:
+	var item_menu := item
+	print("[sanity] MENU_DURING_PICKUP: walk on, pick up, confirm, then toggle the start menu")
+	_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
+		var pm: Node3D = get_tree().get_first_node_in_group("player")
+		if is_instance_valid(item_menu) and item_menu.has_method("_on_interact") and pm != null:
+			item_menu._on_interact(pm)
+		_after(1.2, func() -> void: _press_action("ui_accept"))
+		var t := 2.8
+		for i in range(3):
+			_after(t, func() -> void: PsoStartMenu.open())
+			_after(t + 1.3, func() -> void: PsoStartMenu.close())
+			t += 3.0
+		_after(t + 0.5, func() -> void:
+			var hud_node := get_tree().root.find_child("FieldHud", true, false)
+			var dbox: Node = hud_node.get_node_or_null("DialogBox") if hud_node else null
+			var vis: bool = dbox != null and dbox.visible
+			var act: bool = dbox != null and dbox.has_method("is_active") and dbox.is_active()
+			var stuck: bool = vis and not act
+			print("[sanity] MENU_DURING_PICKUP: after menu toggle DialogBox visible=%s active=%s — toast %s" % [str(vis), str(act), ("STUCK (BUG)" if stuck else "cleared (ok)")]))
+		_after(t + 3.0, func() -> void: _run_next_action(field)))
 
 
 func _do_flip_switch(field: Node) -> void:
@@ -1964,10 +2050,18 @@ func _do_wait_quest_complete(_field: Node) -> void:
 	# Path (b) needs the full 6 pages to be advanced before complete_quest
 	# AND telepipe fire. Press ui_accept 12 times over ~12s (so multi-page
 	# dialogs of any plausible length advance) before force-completing.
-	for i in range(12):
-		_after(1.0 + i * 1.0, func() -> void: _press_action("ui_accept"))
+	# Under SKIP_PICKUP_DIALOG (dialogue-bug probe) we must NOT confirm dialogs
+	# or force-complete — the whole point is to show the quest CANNOT clear when
+	# pickups go unconfirmed. Let it sit so the brick is visible and assertable.
+	if not _skip_pickup_dialog:
+		for i in range(12):
+			_after(1.0 + i * 1.0, func() -> void: _press_action("ui_accept"))
 	_after(13.5, func() -> void:
-		if not SessionManager.has_completed_quest():
+		if SessionManager.has_completed_quest():
+			return
+		if _skip_pickup_dialog:
+			print("[sanity] SKIP_PICKUP_DIALOG: objectives unmet — NOT force-completing; quest is bricked (dialogue-bug repro)")
+		else:
 			print("[sanity] dialog didn't fire complete_quest (objectives unmet from bypassed cells) — calling SessionManager.complete_quest() directly")
 			SessionManager.complete_quest())
 	# NOTE: the natural completion path is the room_clear dialog firing its
@@ -2054,7 +2148,7 @@ func _find_telepipe(root: Node) -> Node3D:
 
 # ── Action helpers ─────────────────────────────────────────────
 
-func _walk_then_interact(field: Node, target: Vector3, label: String, settle: float, auto_collect: bool = false) -> void:
+func _walk_then_interact(field: Node, target: Vector3, label: String, settle: float, auto_collect: bool = false, on_arrive: Callable = Callable()) -> void:
 	# Route via the authored / computed waypoint graph too, not just direct —
 	# key pickups, switches, and gates are inside the cell, and L-bend stages
 	# need the same multi-leg approach as exit walks. `auto_collect=true`
@@ -2070,24 +2164,35 @@ func _walk_then_interact(field: Node, target: Vector3, label: String, settle: fl
 		for p in path:
 			leg_str += " → (%.1f, %.1f)" % [p.x, p.z]
 		print("[sanity] walk to %s via %d waypoint(s):%s" % [label, path.size() - 1, leg_str])
-	_walk_path_then_interact(field, path, label, settle, 0, auto_collect)
+	_walk_path_then_interact(field, path, label, settle, 0, auto_collect, on_arrive)
 
 
-func _walk_path_then_interact(field: Node, path: Array, label: String, settle: float, leg: int, auto_collect: bool) -> void:
+func _walk_path_then_interact(field: Node, path: Array, label: String, settle: float, leg: int, auto_collect: bool, on_arrive: Callable = Callable()) -> void:
 	if leg >= path.size():
 		return
 	var target: Vector3 = path[leg]
 	var is_last: bool = (leg == path.size() - 1)
 	# For step-on targets we need to physically enter a tight collision box,
 	# not just get close — use a tighter arrive distance on the final leg.
+	# on_arrive fires _on_interact directly (range-independent), so it only needs
+	# the looser "interact" approach distance — the tight step-on box is for
+	# auto_collect step-on pickups, and demanding it for on_arrive risks a
+	# never-arrives wedge on stages whose waypoint endpoint isn't dead-on.
 	var arrive: float = WALK_ARRIVE_DIST_INTERACT
-	if is_last and auto_collect:
+	if is_last and auto_collect and not on_arrive.is_valid():
 		arrive = WALK_ARRIVE_DIST_STEP_ON
 	_start_field_walk(target, func() -> void:
 		if not is_instance_valid(field) or field != get_tree().current_scene:
 			return
 		if is_last:
-			if auto_collect:
+			# A caller-supplied on_arrive owns everything after arrival (custom
+			# pickup / menu sequences) — it runs only once the player is
+			# physically on the target via the waypoint graph, so the pickup
+			# looks natural instead of firing mid-walk.
+			if on_arrive.is_valid():
+				print("[sanity] arrived at %s" % label)
+				on_arrive.call()
+			elif auto_collect:
 				print("[sanity] stepped on %s" % label)
 				_after(settle, func() -> void: _run_next_action(field))
 			else:
@@ -2097,7 +2202,7 @@ func _walk_path_then_interact(field: Node, path: Array, label: String, settle: f
 					_after(settle, func() -> void: _run_next_action(field)))
 		else:
 			print("[sanity] waypoint %d/%d reached — next leg" % [leg + 1, path.size() - 1])
-			_after(0.1, func() -> void: _walk_path_then_interact(field, path, label, settle, leg + 1, auto_collect)),
+			_after(0.1, func() -> void: _walk_path_then_interact(field, path, label, settle, leg + 1, auto_collect, on_arrive)),
 		arrive)
 
 

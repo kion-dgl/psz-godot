@@ -114,11 +114,24 @@ func _advance() -> void:
 		_show_page(_current_page)
 
 
+## True only while a dialog is on screen. FieldHud.restore_after_menu() checks
+## this so it doesn't blanket-re-show a closed box (which would otherwise pop
+## back up with stale text every time the start menu closes — the
+## "Picked up X" toast that sticks until you leave the room).
+func is_active() -> bool:
+	return _active
+
+
 func _close() -> void:
 	if _active:
 		GameState.pop_modal()
 	_active = false
 	visible = false
+	# Clear the text too — otherwise a stale line lingers in the labels and any
+	# code that flips this Control visible again (e.g. HUD menu restore) repaints
+	# the old "Picked up X" message.
+	_speaker_label.text = ""
+	_text_label.text = ""
 	_pages.clear()
 	_current_page = 0
 	dialog_complete.emit()

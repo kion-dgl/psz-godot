@@ -182,7 +182,14 @@ func hide_for_menu(keep_stats: bool = false) -> void:
 func restore_after_menu() -> void:
 	for child in get_children():
 		if child is Control:
-			child.visible = true
+			# A DialogBox owns its own visibility (only up while a dialog is
+			# active). Blanket-restoring it re-shows a box the player already
+			# closed — the "Picked up X" toast that then sticks until the room
+			# unloads. Honour its active state; everything else restores normally.
+			if child is DialogBox:
+				child.visible = (child as DialogBox).is_active()
+			else:
+				child.visible = true
 	# Log respects its own toggle state
 	if _quest_log:
 		_quest_log.visible = _log_visible
