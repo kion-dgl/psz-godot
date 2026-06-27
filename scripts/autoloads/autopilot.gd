@@ -1917,70 +1917,10 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# DropBase._on_interact(player) directly. After that, dwell for the
 	# multi-page dialog and press ui_accept to advance it.
 	if _skip_pickup_dialog:
-		# Adversarial repro of the dialogue bug (#239): walk ONTO the quest item
-		# (via the waypoint graph) and leave WITHOUT confirming the "Picked up X"
-		# dialog. Registration (SessionManager.collect_quest_item) is wired to
-		# dialog_complete, so on the unfixed code the fragment is consumed yet
-		# never counted — the objective never ticks and the quest can't
-		# legitimately clear, exactly as it bricks for a player who walks off at
-		# the system message.
-		var item_skip := item
-		print("[sanity] SKIP_PICKUP_DIALOG: walking onto quest_item, will leave the dialog unconfirmed")
-		_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
-			var psk: Node3D = get_tree().get_first_node_in_group("player")
-			if is_instance_valid(item_skip) and item_skip.has_method("_on_interact") and psk != null:
-				item_skip._on_interact(psk)
-				print("[sanity] SKIP_PICKUP_DIALOG: consumed quest_item; mag_fragment registered=%d (dialog left unconfirmed)" % SessionManager.get_quest_item_count("mag_fragment"))
-			if SessionManager.are_objectives_complete():
-				# Final fragment: the fix registers on contact AND roots the
-				# player, gating the return telepipe on the finale dialogue. A
-				# rooted real player can only advance it — so do that here, which
-				# spawns the pipe, then carry on. (On the UNFIXED code this branch
-				# is never reached: the earlier fragments never registered, so the
-				# count can't hit its target and the run wedges first.)
-				print("[sanity] SKIP_PICKUP_DIALOG: final fragment — advancing finale dialogue so the telepipe spawns")
-				for i in range(14):
-					_after(0.8 + i * 0.8, func() -> void: _press_action("ui_accept"))
-				_after(13.0, func() -> void: _run_next_action(field))
-			else:
-				# Intermediate fragment: leave WITHOUT confirming the dialog —
-				# the exact brick scenario. The fix still registers it on contact.
-				_after(1.5, func() -> void: _run_next_action(field)))
+		_pickup_skip_dialog(field, item)
 		return
 	if _menu_during_pickup:
-		# Adversarial repro of the toast-persistence bug: walk on, pick up,
-		# CONFIRM the dialog (closes the "Picked up X" box, Elio speaks), then
-		# toggle the PSO start menu — restore_after_menu re-shows the closed box
-		# with its stale text, so it sticks on screen until the room unloads.
-		var item_menu := item
-		print("[sanity] MENU_DURING_PICKUP: walk on, pick up, confirm, then toggle the start menu")
-		_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
-			var pm: Node3D = get_tree().get_first_node_in_group("player")
-			if is_instance_valid(item_menu) and item_menu.has_method("_on_interact") and pm != null:
-				item_menu._on_interact(pm)
-			# Close the "Picked up X" box → dialog_complete (Elio + registration).
-			_after(1.2, func() -> void: _press_action("ui_accept"))
-			# Toggle the start menu 3×; on the bug each CLOSE re-shows the stale
-			# closed box via restore_after_menu.
-			var t := 2.8
-			for i in range(3):
-				_after(t, func() -> void: PsoStartMenu.open())
-				_after(t + 1.3, func() -> void: PsoStartMenu.close())
-				t += 3.0
-			# Oracle: after the last close, is the closed "Picked up X" box still
-			# on screen? The fix keeps it hidden; the matrix greps this line.
-			_after(t + 0.5, func() -> void:
-				var hud_node := get_tree().root.find_child("FieldHud", true, false)
-				var dbox: Node = hud_node.get_node_or_null("DialogBox") if hud_node else null
-				var vis: bool = dbox != null and dbox.visible
-				# An ACTIVE box that's visible is correct (e.g. the finale's
-				# narration page legitimately reuses the DialogBox). The bug is a
-				# CLOSED box still painted on screen: visible AND not active.
-				var act: bool = dbox != null and dbox.has_method("is_active") and dbox.is_active()
-				var stuck: bool = vis and not act
-				print("[sanity] MENU_DURING_PICKUP: after menu toggle DialogBox visible=%s active=%s — toast %s" % [str(vis), str(act), ("STUCK (BUG)" if stuck else "cleared (ok)")]))
-			# Dwell so the (possibly stuck) toast is clearly on camera, then carry on.
-			_after(t + 3.0, func() -> void: _run_next_action(field)))
+		_pickup_menu_toggle(field, item)
 		return
 	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
 	# After step-on lands, fire the item's _on_interact directly. We can't
@@ -2001,6 +1941,63 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# SessionManager.collect_quest_item).
 	for i in range(25):
 		_after(3.0 + i * 0.7, func() -> void: _press_action("ui_accept"))
+
+
+## PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG probe — adversarial repro of the dialogue
+## bug (#239): walk ONTO the quest item (via the waypoint graph) and leave
+## WITHOUT confirming the "Picked up X" dialog. On the unfixed code registration
+## hung off dialog_complete, so the fragment was consumed yet never counted and
+## the quest bricked. The fix registers on contact; the final fragment then
+## roots the player and gates the telepipe on the finale dialogue, which a
+## rooted real player can only advance — so we advance it here to spawn the pipe.
+func _pickup_skip_dialog(field: Node, item: Node) -> void:
+	var item_skip := item
+	print("[sanity] SKIP_PICKUP_DIALOG: walking onto quest_item, will leave the dialog unconfirmed")
+	_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
+		var psk: Node3D = get_tree().get_first_node_in_group("player")
+		if is_instance_valid(item_skip) and item_skip.has_method("_on_interact") and psk != null:
+			item_skip._on_interact(psk)
+			print("[sanity] SKIP_PICKUP_DIALOG: consumed quest_item; mag_fragment registered=%d (dialog left unconfirmed)" % SessionManager.get_quest_item_count("mag_fragment"))
+		if SessionManager.are_objectives_complete():
+			# Final fragment — advance the finale so the telepipe spawns. (On the
+			# UNFIXED code this branch is never reached: earlier fragments never
+			# registered, so the count can't hit target and the run wedges first.)
+			print("[sanity] SKIP_PICKUP_DIALOG: final fragment — advancing finale dialogue so the telepipe spawns")
+			for i in range(14):
+				_after(0.8 + i * 0.8, func() -> void: _press_action("ui_accept"))
+			_after(13.0, func() -> void: _run_next_action(field))
+		else:
+			# Intermediate fragment: leave WITHOUT confirming — the brick scenario.
+			_after(1.5, func() -> void: _run_next_action(field)))
+
+
+## PSZ_AUTOPILOT_MENU_DURING_PICKUP probe — adversarial repro of the
+## toast-persistence bug: pick up, CONFIRM the dialog (closes the "Picked up X"
+## box), then toggle the PSO start menu. On the bug restore_after_menu re-shows
+## the closed box with its stale text. The probe logs DialogBox visible/active
+## after the toggle — the bug is a CLOSED box still painted (visible AND not
+## active); an active box (the finale's narration page) is correctly visible.
+func _pickup_menu_toggle(field: Node, item: Node) -> void:
+	var item_menu := item
+	print("[sanity] MENU_DURING_PICKUP: walk on, pick up, confirm, then toggle the start menu")
+	_walk_then_interact(field, item.global_position, "quest_item", 0.0, false, func() -> void:
+		var pm: Node3D = get_tree().get_first_node_in_group("player")
+		if is_instance_valid(item_menu) and item_menu.has_method("_on_interact") and pm != null:
+			item_menu._on_interact(pm)
+		_after(1.2, func() -> void: _press_action("ui_accept"))
+		var t := 2.8
+		for i in range(3):
+			_after(t, func() -> void: PsoStartMenu.open())
+			_after(t + 1.3, func() -> void: PsoStartMenu.close())
+			t += 3.0
+		_after(t + 0.5, func() -> void:
+			var hud_node := get_tree().root.find_child("FieldHud", true, false)
+			var dbox: Node = hud_node.get_node_or_null("DialogBox") if hud_node else null
+			var vis: bool = dbox != null and dbox.visible
+			var act: bool = dbox != null and dbox.has_method("is_active") and dbox.is_active()
+			var stuck: bool = vis and not act
+			print("[sanity] MENU_DURING_PICKUP: after menu toggle DialogBox visible=%s active=%s — toast %s" % [str(vis), str(act), ("STUCK (BUG)" if stuck else "cleared (ok)")]))
+		_after(t + 3.0, func() -> void: _run_next_action(field)))
 
 
 func _do_flip_switch(field: Node) -> void:
