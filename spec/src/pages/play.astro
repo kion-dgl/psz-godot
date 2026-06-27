@@ -1,0 +1,103 @@
+---
+// Play in browser. The Godot web build is served statically at /game (Caddy
+// mount on the droplet, or the node static dir locally); this page wraps it so
+// it carries the shared nav and a "Report a bug" panel. The report posts to
+// /api/report. (The richer in-game report button — save blob + screenshot —
+// is a later Godot change; this is the page-level fallback.)
+import PlaytestBase from '../layouts/PlaytestBase.astro';
+---
+
+<PlaytestBase title="Play — Phantasy Star Zero" active="play">
+  <div class="play-shell">
+    <iframe
+      class="game"
+      src="/game/"
+      title="Phantasy Star Zero"
+      allow="autoplay; fullscreen; gamepad; pointer-lock"
+    ></iframe>
+    <button id="report-open" class="btn report-fab">🐞 Report a bug</button>
+  </div>
+
+  <dialog id="report" class="report-dialog">
+    <form id="report-form" method="dialog">
+      <h2>Report a bug</h2>
+      <p class="tag">Where were you, what did you do, what went wrong?</p>
+      <textarea id="free_text" name="free_text" required placeholder="Describe the bug…"></textarea>
+      <input type="text" id="reporter_handle" name="reporter_handle" placeholder="Your handle (optional — so I can follow up)" />
+      <p class="status" id="status"></p>
+      <div class="row">
+        <button type="button" id="report-cancel" class="btn">Cancel</button>
+        <button type="submit" class="btn primary">Send report</button>
+      </div>
+    </form>
+  </dialog>
+
+  <style>
+    .play-shell { position: relative; flex: 1; min-height: 0; }
+    .game { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+    .report-fab {
+      position: absolute; right: 1rem; bottom: 1rem; z-index: 5;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+    .report-dialog {
+      border: 1px solid #2a3142; border-radius: 0.7rem; background: #0f141d;
+      color: #e6e9ef; width: min(440px, 92vw); padding: 1.25rem;
+    }
+    .report-dialog::backdrop { background: rgba(0,0,0,0.6); }
+    .report-dialog h2 { margin: 0 0 0.25rem; font-size: 1.15rem; }
+    .report-dialog .tag { color: #8b93a7; margin: 0 0 0.9rem; font-size: 0.9rem; }
+    .report-dialog form { display: grid; gap: 0.75rem; }
+    textarea, input[type="text"] {
+      width: 100%; background: #0b0e14; border: 1px solid #2a3142;
+      border-radius: 0.5rem; color: #e6e9ef; padding: 0.6rem; font: inherit;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .row { display: flex; justify-content: flex-end; gap: 0.6rem; }
+    .status { font-size: 0.9rem; min-height: 1.2em; margin: 0; }
+    .status.ok { color: #4ade80; }
+    .status.err { color: #f87171; }
+  </style>
+
+  <script>
+    const dialog = document.getElementById('report') as HTMLDialogElement;
+    const form = document.getElementById('report-form') as HTMLFormElement;
+    const status = document.getElementById('status') as HTMLParagraphElement;
+
+    const open = () => { status.textContent = ''; status.className = 'status'; dialog.showModal(); };
+    document.getElementById('report-open')?.addEventListener('click', open);
+    document.getElementById('report-cancel')?.addEventListener('click', () => dialog.close());
+    // Deep-link from the nav (/play#report) opens the panel.
+    if (location.hash === '#report') open();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.className = 'status';
+      status.textContent = 'Sending…';
+      const data = new FormData(form);
+      try {
+        const res = await fetch('/api/report', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            free_text: data.get('free_text'),
+            reporter_handle: data.get('reporter_handle'),
+            source: 'play-page',
+          }),
+        });
+        if (res.ok) {
+          status.className = 'status ok';
+          status.textContent = 'Thanks! Report received.';
+          form.reset();
+          setTimeout(() => dialog.close(), 1200);
+        } else {
+          const body = await res.json().catch(() => ({}));
+          status.className = 'status err';
+          status.textContent = `Failed: ${body.error ?? res.status}`;
+        }
+      } catch {
+        status.className = 'status err';
+        status.textContent = 'Network error — try again.';
+      }
+    });
+  </script>
+</PlaytestBase>

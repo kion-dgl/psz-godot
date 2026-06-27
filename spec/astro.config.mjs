@@ -4,6 +4,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { resolve, normalize } from 'node:path';
 
 import react from '@astrojs/react';
+import node from '@astrojs/node';
 
 // Dev-only middleware: serve the repo's local working-tree assets at /local/*.
 // The /cdn proxy points at the R2 mirror (published assets); /local serves the
@@ -32,7 +33,16 @@ function localAssets() {
 }
 
 // https://astro.build/config
+// Deployed as the public site at psz.onl (DO droplet, systemd node server behind
+// Caddy). Static-by-default so the 55 docs pages prerender (cheap on the 1GB
+// box); only /api/report opts into on-demand rendering (prerender = false there).
+// The node standalone server serves the prerendered pages + /play + the endpoint.
+// The dev-only proxies below (/cdn → R2, /web → :5173, /local → working tree)
+// exist only under `astro dev`; in production Caddy recreates /cdn → R2
+// (see the deploy script / Caddyfile).
 export default defineConfig({
+  output: 'static',
+  adapter: node({ mode: 'standalone' }),
   vite: {
     plugins: [localAssets()],
     server: {

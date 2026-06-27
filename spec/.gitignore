@@ -22,3 +22,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Godot web build — staged by the deploy step, ~93MB artifact, never committed.
+# Served at /game (the /play Astro page embeds it); deployed to /srv/game on the box.
+public/game/
+
+# Local /api/report holding dir (REPORTS_DIR default for `npm run dev`/local builds)
+reports/

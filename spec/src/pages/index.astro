@@ -1,27 +1,59 @@
 ---
-import Base from '../layouts/Base.astro';
-import Navbar from '../components/Navbar.astro';
-import WireframeBoard from '../components/WireframeBoard.tsx';
+// Public playtest landing (psz.onl). Hero + per-platform downloads. The bug
+// report lives on /play (see play.astro), reachable from the shared nav.
+import PlaytestBase from '../layouts/PlaytestBase.astro';
+
+const REPO = 'https://github.com/kion-dgl/psz-godot';
+const dl = (asset: string) => `${REPO}/releases/latest/download/${asset}`;
+
+const downloads = [
+  { label: 'Windows', sub: 'x86-64', href: dl('psz-godot-windows-x86_64.zip') },
+  { label: 'macOS', sub: 'universal', href: dl('psz-godot-macos.zip') },
+  { label: 'Linux', sub: 'x86-64', href: dl('psz-godot-linux-x86_64.zip') },
+  { label: 'Linux', sub: 'ARM64', href: dl('psz-godot-linux-arm64.zip') },
+  { label: 'Android', sub: 'APK', href: dl('psz-godot.apk') },
+];
 ---
 
-<Base title="Overview">
-  <div class="shell">
-    <Navbar current="Overview" />
-    <div class="canvas">
-      <WireframeBoard client:only="react" />
-    </div>
-  </div>
-</Base>
+<PlaytestBase title="Phantasy Star Zero — playtest">
+  <main>
+    <header>
+      <img class="logo" src="/logo.png" alt="Phantasy Star Zero" />
+      <h1>Phantasy Star Zero</h1>
+      <p class="tag">A fan remake — open playtest</p>
+      <a class="btn primary play" href="/play">▶ Play in browser</a>
+    </header>
 
-<style>
-  .shell {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-  .canvas {
-    flex: 1;
-    position: relative;
-    min-height: 0;
-  }
-</style>
+    <section id="downloads">
+      <h2>Download</h2>
+      <p class="tag">No install needed — <a href="/play">play in your browser</a>. Or grab a native build:</p>
+      <ul class="grid">
+        {downloads.map((d) => (
+          <li>
+            <a class="btn" href={d.href}>
+              <span class="plat">{d.label}</span>
+              <span class="arch">{d.sub}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+
+  <style>
+    main { max-width: 720px; margin: 0 auto; padding: 3rem 1.25rem 5rem; width: 100%; }
+    header { text-align: center; margin-bottom: 3rem; }
+    .logo { width: 180px; max-width: 60%; height: auto; }
+    h1 { font-size: 1.9rem; margin: 1rem 0 0.25rem; }
+    .tag { color: #8b93a7; margin: 0 0 1.5rem; }
+    .play { margin-top: 0.5rem; }
+    h2 { font-size: 1.15rem; border-bottom: 1px solid #1d2433; padding-bottom: 0.4rem; }
+    ul.grid {
+      list-style: none; padding: 0; margin: 1.25rem 0 0;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;
+    }
+    ul.grid .btn { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; padding: 0.9rem; }
+    .plat { font-size: 1rem; }
+    .arch { font-size: 0.78rem; color: #8b93a7; font-weight: 500; }
+  </style>
+</PlaytestBase>

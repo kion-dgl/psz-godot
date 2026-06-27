@@ -1,0 +1,52 @@
+---
+// Shared player-facing nav for the public playtest pages (/ and /play).
+// Distinct from Navbar.astro (the dev "PSZ Spec" docs nav).
+interface Props { active?: string }
+const { active } = Astro.props;
+const REPO = 'https://github.com/kion-dgl/psz-godot';
+const links = [
+  { href: '/play', label: 'Play', key: 'play' },
+  { href: '/#downloads', label: 'Download', key: 'downloads' },
+  { href: '/play#report', label: 'Report a bug', key: 'report' },
+  { href: '/overview', label: 'Spec', key: 'spec' },
+  { href: REPO, label: 'GitHub', key: 'github', external: true },
+];
+---
+<nav class="site-nav">
+  <a class="brand" href="/"><img src="/logo.png" alt="Phantasy Star Zero" /></a>
+  <div class="links">
+    {links.map((l) => (
+      <a
+        href={l.href}
+        class:list={[{ active: active === l.key }]}
+        target={l.external ? '_blank' : undefined}
+        rel={l.external ? 'noopener' : undefined}
+      >{l.label}</a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  .site-nav {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    background: #0f141d;
+    border-bottom: 1px solid #1d2433;
+    flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; }
+  .brand img { height: 26px; width: auto; }
+  .links { display: flex; gap: 1.25rem; }
+  .links a {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #8b93a7;
+    text-decoration: none;
+    padding: 0.25rem 0;
+  }
+  .links a:hover { color: #e6e9ef; }
+  .links a.active { color: #fff; border-bottom: 2px solid #3b82f6; }
+</style>

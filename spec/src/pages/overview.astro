@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import WireframeBoard from '../components/WireframeBoard.tsx';
+---
+
+<Base title="Overview">
+  <div class="shell">
+    <Navbar current="Overview" />
+    <div class="canvas">
+      <WireframeBoard client:only="react" />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .canvas {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+</style>
