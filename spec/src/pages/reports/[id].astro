@@ -1,0 +1,77 @@
+---
+// Public per-report detail. Stable URL (/reports/<id>) to link from issues.
+export const prerender = false;
+import PlaytestBase from '../../layouts/PlaytestBase.astro';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const REPORTS_DIR = process.env.REPORTS_DIR ?? './reports';
+// Sanitize to the chars our dir names use — blocks path traversal.
+const id = (Astro.params.id ?? '').replace(/[^A-Za-z0-9._-]/g, '');
+
+let report: Record<string, any> | null = null;
+let screenshot: string | null = null;
+let hasSave = false;
+try {
+  report = JSON.parse(await readFile(join(REPORTS_DIR, id, 'report.json'), 'utf8'));
+  try {
+    const png = await readFile(join(REPORTS_DIR, id, 'screenshot.png'));
+    screenshot = `data:image/png;base64,${png.toString('base64')}`;
+  } catch { /* none */ }
+  try { await readFile(join(REPORTS_DIR, id, 'save.bin')); hasSave = true; } catch { /* none */ }
+} catch { /* not found */ }
+
+const tel = report?.telemetry ?? null;
+---
+
+<PlaytestBase title={`Report ${id} — Phantasy Star Zero`}>
+  <main>
+    <p><a href="/reports">← all reports</a></p>
+    {!report && <h1>Report not found</h1>}
+    {report && (
+      <>
+        <h1>{report.free_text || '(no text)'}</h1>
+        <dl>
+          <dt>Received</dt><dd>{report.received_at ?? '—'}</dd>
+          <dt>Source</dt><dd>{report.source ?? '—'}</dd>
+          <dt>Reporter</dt><dd>{report.reporter_handle ?? 'anon'}</dd>
+          <dt>Client version</dt><dd>{report.version ?? tel?.client_version ?? '—'}</dd>
+          {report.quest_id && <><dt>Quest / cell</dt><dd>{report.quest_id} / {report.cell ?? '—'}</dd></>}
+          {tel?.viewport && <><dt>Viewport</dt><dd>{tel.viewport}</dd></>}
+          {tel?.session_ms != null && <><dt>Session</dt><dd>{(tel.session_ms / 1000).toFixed(0)}s</dd></>}
+          <dt>User agent</dt><dd class="ua">{report.user_agent ?? '—'}</dd>
+          {hasSave && <><dt>Save blob</dt><dd>present (replayable)</dd></>}
+        </dl>
+
+        {screenshot && <img class="shot" src={screenshot} alt="screenshot" />}
+
+        {tel?.errors?.length > 0 && (
+          <section><h2>JS errors</h2><pre class="log err">{tel.errors.join('\n')}</pre></section>
+        )}
+        {tel?.console_tail?.length > 0 && (
+          <section><h2>Console tail ({tel.console_tail.length})</h2><pre class="log">{tel.console_tail.join('\n')}</pre></section>
+        )}
+        {report.sanity_tail && (
+          <section><h2>Sanity tail</h2><pre class="log">{Array.isArray(report.sanity_tail) ? report.sanity_tail.join('\n') : String(report.sanity_tail)}</pre></section>
+        )}
+      </>
+    )}
+  </main>
+
+  <style>
+    main { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem 4rem; width: 100%; }
+    h1 { font-size: 1.35rem; }
+    h2 { font-size: 1rem; color: #b6bdcc; margin: 1.5rem 0 0.5rem; }
+    dl { display: grid; grid-template-columns: 140px 1fr; gap: 0.3rem 1rem; margin: 1rem 0; }
+    dt { color: #8b93a7; font-size: 0.85rem; }
+    dd { margin: 0; color: #e6e9ef; }
+    dd.ua { font-size: 0.8rem; color: #8b93a7; word-break: break-word; }
+    .shot { max-width: 100%; border: 1px solid #2a3142; border-radius: 0.5rem; margin: 1rem 0; }
+    pre.log {
+      background: #0b0e14; border: 1px solid #1d2433; border-radius: 0.5rem;
+      padding: 0.75rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5;
+      max-height: 420px; white-space: pre-wrap; word-break: break-word;
+    }
+    pre.log.err { border-color: #5b2330; color: #f87171; }
+  </style>
+</PlaytestBase>

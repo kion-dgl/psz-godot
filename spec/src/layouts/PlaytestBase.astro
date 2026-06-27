@@ -1,0 +1,46 @@
+---
+// Shared shell for the public playtest pages (/ and /play): dark theme, the
+// shared SiteNav, and common button styles. Keeps the pages themselves small.
+import SiteNav from '../components/SiteNav.astro';
+interface Props {
+  title: string;
+  active?: 'play' | 'downloads' | 'report';
+}
+const { title, active } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.svg" />
+    <style is:global>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #0b0e14;
+        color: #e6e9ef;
+        line-height: 1.55;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      a { color: #7aa2ff; }
+      .btn {
+        display: inline-block; padding: 0.7rem 1.3rem; border-radius: 0.6rem;
+        font-weight: 600; text-decoration: none; border: 1px solid #2a3142;
+        background: #161c28; color: #e6e9ef; cursor: pointer; font-size: 1rem;
+      }
+      .btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+      .btn:hover { border-color: #3b82f6; }
+    </style>
+  </head>
+  <body>
+    <SiteNav active={active} />
+    <slot />
+  </body>
+</html>

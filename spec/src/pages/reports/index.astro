@@ -1,0 +1,59 @@
+---
+// Public bug-report triage list. Reads REPORTS_DIR at request time (the same
+// dir /api/report writes to). No auth — reports carry no IPs or private data.
+export const prerender = false;
+import PlaytestBase from '../../layouts/PlaytestBase.astro';
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const REPORTS_DIR = process.env.REPORTS_DIR ?? './reports';
+
+interface Row { id: string; received_at?: string; source?: string; reporter_handle?: string; free_text?: string; version?: string }
+let reports: Row[] = [];
+try {
+  const dirs = (await readdir(REPORTS_DIR, { withFileTypes: true }))
+    .filter((d) => d.isDirectory()).map((d) => d.name);
+  reports = (await Promise.all(dirs.map(async (id): Promise<Row> => {
+    try { return { id, ...JSON.parse(await readFile(join(REPORTS_DIR, id, 'report.json'), 'utf8')) }; }
+    catch { return { id }; }
+  }))).sort((a, b) => (b.received_at ?? b.id).localeCompare(a.received_at ?? a.id));
+} catch { /* dir not created yet */ }
+---
+
+<PlaytestBase title="Reports — Phantasy Star Zero">
+  <main>
+    <h1>Bug reports <span class="count">{reports.length}</span></h1>
+    {reports.length === 0 && <p class="tag">No reports yet.</p>}
+    <ul class="list">
+      {reports.map((r) => (
+        <li>
+          <a href={`/reports/${r.id}`}>
+            <time>{r.received_at?.replace('T', ' ').replace(/\..*/, '') ?? r.id}</time>
+            <span class="src">{r.source ?? '—'}</span>
+            <span class="who">{r.reporter_handle ?? 'anon'}</span>
+            <span class="txt">{(r.free_text ?? '').slice(0, 90) || '(no text)'}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </main>
+
+  <style>
+    main { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem 4rem; width: 100%; }
+    h1 { font-size: 1.5rem; }
+    .count { color: #8b93a7; font-weight: 400; }
+    .tag { color: #8b93a7; }
+    ul.list { list-style: none; padding: 0; margin: 1rem 0 0; }
+    ul.list li { border-bottom: 1px solid #1d2433; }
+    ul.list a {
+      display: grid; grid-template-columns: 160px 90px 120px 1fr; gap: 0.75rem;
+      padding: 0.7rem 0.25rem; text-decoration: none; color: #e6e9ef; align-items: baseline;
+    }
+    ul.list a:hover { background: #11161f; }
+    time { color: #8b93a7; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+    .src { color: #7aa2ff; font-size: 0.82rem; }
+    .who { color: #b6bdcc; font-size: 0.85rem; }
+    .txt { color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 600px) { ul.list a { grid-template-columns: 1fr; gap: 0.15rem; } }
+  </style>
+</PlaytestBase>
