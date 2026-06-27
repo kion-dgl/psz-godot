@@ -14,7 +14,8 @@ const REPORTS_DIR = process.env.REPORTS_DIR ?? './reports';
 const MAX_BODY = 8 * 1024 * 1024;
 
 // Crude per-IP throttle (in-memory, resets on restart) — enough to stop a
-// trivial flood. The site runs behind Caddy, so prefer X-Forwarded-For.
+// trivial flood. The IP is used ONLY as a transient rate-limit key (behind
+// Caddy, via X-Forwarded-For); it is never written to disk.
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 10;
 const hits = new Map<string, number[]>();
@@ -67,7 +68,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   const meta = {
     received_at: new Date().toISOString(),
-    ip,
+    // NB: no IP stored — `ip` above is a transient rate-limit key only.
     user_agent: request.headers.get('user-agent'),
     source: body.source ?? null,
     version: body.version ?? null,
@@ -76,6 +77,9 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     cell: body.cell ?? null,
     player_pos: body.player_pos ?? null,
     sanity_tail: body.sanity_tail ?? null,
+    // Web telemetry captured from the game iframe: console tail, JS errors,
+    // client version, session timing. See play.astro.
+    telemetry: body.telemetry ?? null,
     reporter_handle: body.reporter_handle ? String(body.reporter_handle).slice(0, 120) : null,
     free_text: freeText,
   };
