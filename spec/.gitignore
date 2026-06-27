@@ -27,5 +27,6 @@ pnpm-debug.log*
 # Served at /game (the /play Astro page embeds it); deployed to /srv/game on the box.
 public/game/
 
-# Local /api/report holding dir (REPORTS_DIR default for `npm run dev`/local builds)
-reports/
+# Local /api/report holding dir (REPORTS_DIR default for `npm run dev`/local
+# builds). Anchored to spec root so it does NOT match src/pages/reports/.
+/reports/
