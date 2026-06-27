@@ -10,6 +10,10 @@
 #   Boot              (via record_boot.sh)
 #   SR                (via record_first_mission.sh, hardcoded steps — refactor control)
 #   PP canon + backtrack  (parallel from post-SR)
+#   PP dialogue-bug probe (#239) — adversarial replay from post-SR: pick up
+#                       every mag_fragment WITHOUT confirming its dialog and
+#                       assert the quest still clears legitimately (no
+#                       force-complete fallback, all 4 registered).
 #   AS canon + moon + sol (parallel from post-PP_canon)
 #   DOE               (sequential from post-AS_canon)
 #   finding_ogi       (sequential from post-AS_canon) — unlocks the endgame.
@@ -28,7 +32,7 @@
 # skip with a warning rather than running from a stale state.
 #
 # Resume:  --from <quest_id>  to skip already-completed upstream phases.
-#          Stages, in order: boot sr pp as doe fo static it heretic csy tbs dc
+#          Stages, in order: boot sr pp ppdlg ppmenu as doe fo static it heretic csy tbs dc
 # Speed:   --speed N   set autopilot time_scale (default 3x; physics ticks
 #                       scale with it so collision stays accurate). 3x is the
 #                       only VALIDATED speed — higher is best-effort: at 6x the
@@ -51,6 +55,7 @@ LOG=/tmp/regression_matrix.log
 SCRATCH=/tmp/quest_matrix_scratch
 REPORT="$SCRATCH/regression_report.json"
 MATRIX_FAIL=0  # post-build state assertions (e.g. #344) flip this; exit reflects it
+PROBE_EXTRA_ENV=""  # extra env injected into a single run_godot call (dialogue-bug probe); empty otherwise
 GODOT="/home/kion/.local/bin/godot"
 OUTDIR="$REPO/spec/public/recordings"
 PACK="$REPO/dist/assets.pck"
@@ -216,6 +221,7 @@ JSON
         PSZ_AUTOPILOT_NO_BOXES=1 \
         PSZ_AUTOPILOT_QUEST="$quest" \
         $SPEED_ENV \
+        $PROBE_EXTRA_ENV \
         XDG_DATA_HOME="$userdir" \
         LIBGL_ALWAYS_SOFTWARE=1 \
         $DBUS_WRAP \
@@ -280,7 +286,7 @@ JSON
   # --- Resume guards ---
   # Execution order of the phases. `reached <stage>` returns 0 (run it) when
   # no --from was given, or when <stage> is at-or-after FROM in this order.
-  PHASE_ORDER=(boot sr pp as doe fo static it heretic csy tbs dc shops)
+  PHASE_ORDER=(boot sr pp ppdlg ppmenu as doe fo static it heretic csy tbs dc shops)
   phase_index() {
     local name=$1 i=0
     for p in "${PHASE_ORDER[@]}"; do
@@ -380,6 +386,89 @@ JSON
     echo "[regression] snapshotting post-PP_canon save → $SCRATCH/post-pp"
     rm -rf "$SCRATCH/post-pp"
     cp -r "$SCRATCH/pp-canon/godot/app_userdata/PSZ Godot" "$SCRATCH/post-pp"
+  fi
+
+  # === Phase 3.5: PP dialogue-bug probe (#239) ===
+  # Adversarial replay of The Paru Pact with PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG=1:
+  # every mag_fragment is stepped on but its "Picked up X" dialog is NEVER
+  # confirmed — exactly what a player does when they walk off at the system
+  # message. On the bug, SessionManager.collect_quest_item is wired to
+  # dialog_complete, so the fragments are consumed yet never registered: the
+  # objective can't reach 4 and the quest only "completes" because the
+  # autopilot's wait_quest_complete safety-net force-calls complete_quest()
+  # ("objectives unmet from bypassed cells"). The fix (register-on-contact)
+  # ticks all 4 without the dialog, so the quest clears legitimately and the
+  # fallback never fires.
+  #
+  # Oracle (beyond DONE-ok, same shape as #344): FAIL if the force-complete
+  # fallback fired, if the run never reached DONE, or if <4 fragments were
+  # registered at completion. Runs from post-sr (PP is acceptable there), in an
+  # isolated userdir that never feeds the chain. No retry — in SKIP mode a
+  # wedge/timeout is itself the bug signal, not a flake.
+  if reached ppdlg; then
+    echo ""; echo "=== Phase 3.5: PP dialogue-bug probe (#239) ==="
+    if [ ! -d "$SCRATCH/post-sr" ]; then
+      echo "[regression] SKIP ppdlg — $SCRATCH/post-sr missing (SR did not pass)"
+    else
+      stage_userdir "$SCRATCH/pp-dialogue-probe" "$SCRATCH/post-sr"
+      # No retry: in SKIP mode a wedge/timeout is the bug signal, not a flake.
+      PROBE_EXTRA_ENV="PSZ_AUTOPILOT_SKIP_PICKUP_DIALOG=1"
+      QUEST_MAX_ATTEMPTS=1
+      run_godot "pp_dialogue_probe" "the_paru_pact" "$SCRATCH/pp-dialogue-probe" 900
+      unset QUEST_MAX_ATTEMPTS
+      PROBE_EXTRA_ENV=""
+      probe_sanity=$(ls -t "$OUTDIR"/pp_dialogue_probe_*.sanity.log 2>/dev/null | head -1)
+      probe_json=$(ls -t "$OUTDIR"/pp_dialogue_probe_*.json 2>/dev/null | head -1)
+      probe_status="unknown"
+      [ -n "$probe_json" ] && probe_status=$(jq -r '.status' "$probe_json" 2>/dev/null || echo unknown)
+      # Last "mag_fragment": N count printed (the quest_completed checkpoint).
+      probe_reg=$(grep -oE '"mag_fragment":[[:space:]]*[0-9]+' "$probe_sanity" 2>/dev/null | grep -oE '[0-9]+' | tail -1)
+      probe_reg=${probe_reg:-0}
+      if [ -n "$probe_sanity" ] && grep -qF 'objectives unmet from bypassed cells' "$probe_sanity"; then
+        echo "[regression] ::error:: #239 dialogue-bug probe FAILED — fragments consumed without registering; autopilot force-completed (objectives unmet). Registered mag_fragment=$probe_reg/4."
+        MATRIX_FAIL=1
+      elif [ "$probe_status" != "pass" ]; then
+        echo "[regression] ::error:: #239 dialogue-bug probe FAILED — run did not reach DONE ok (status=$probe_status); quest could not clear with pickup dialogs unconfirmed."
+        MATRIX_FAIL=1
+      elif [ "$probe_reg" -ne 4 ]; then
+        echo "[regression] ::error:: #239 dialogue-bug probe FAILED — only $probe_reg/4 fragments registered at completion."
+        MATRIX_FAIL=1
+      else
+        echo "[regression] #239 OK — all 4 fragments registered and The Paru Pact cleared legitimately with every pickup dialog left unconfirmed."
+      fi
+    fi
+  fi
+
+  # === Phase 3.6: PP toast-persistence probe (start menu during pickup) ===
+  # Replays The Paru Pact with PSZ_AUTOPILOT_MENU_DURING_PICKUP=1: each fragment
+  # is picked up, its dialog confirmed, then the PSO start menu is toggled. On
+  # the bug FieldHud.restore_after_menu re-shows the closed "Picked up X" box
+  # (stale text); the autopilot reports DialogBox.visible after the toggle. The
+  # fix keeps it hidden. Oracle: FAIL on any "toast STUCK (BUG)" line, and
+  # require at least one "toast cleared (ok)" so we know a pickup was exercised.
+  # Doesn't need full completion, so a tighter budget; no retry.
+  if reached ppmenu; then
+    echo ""; echo "=== Phase 3.6: PP toast-persistence probe (start menu during pickup) ==="
+    if [ ! -d "$SCRATCH/post-sr" ]; then
+      echo "[regression] SKIP ppmenu — $SCRATCH/post-sr missing (SR did not pass)"
+    else
+      stage_userdir "$SCRATCH/pp-menu-probe" "$SCRATCH/post-sr"
+      PROBE_EXTRA_ENV="PSZ_AUTOPILOT_MENU_DURING_PICKUP=1"
+      QUEST_MAX_ATTEMPTS=1
+      run_godot "pp_menu_probe" "the_paru_pact" "$SCRATCH/pp-menu-probe" 480
+      unset QUEST_MAX_ATTEMPTS
+      PROBE_EXTRA_ENV=""
+      menu_sanity=$(ls -t "$OUTDIR"/pp_menu_probe_*.sanity.log 2>/dev/null | head -1)
+      if [ -n "$menu_sanity" ] && grep -qF 'toast STUCK (BUG)' "$menu_sanity"; then
+        echo "[regression] ::error:: toast-persistence probe FAILED — closed 'Picked up X' box re-shown after a start-menu toggle (stuck toast)."
+        MATRIX_FAIL=1
+      elif [ -z "$menu_sanity" ] || ! grep -qF 'toast cleared (ok)' "$menu_sanity"; then
+        echo "[regression] ::error:: toast-persistence probe INCONCLUSIVE — no DialogBox visibility check ran (never reached a pickup); treating as FAIL."
+        MATRIX_FAIL=1
+      else
+        echo "[regression] toast-persistence OK — closed 'Picked up X' box stays hidden across start-menu toggles."
+      fi
+    fi
   fi
 
   # === Phase 4: AS canon + AS moon + AS sol (parallel) ===

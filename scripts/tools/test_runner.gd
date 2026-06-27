@@ -110,6 +110,8 @@ func _run_tests_systems() -> void:
 	test_tower_field()
 	test_quest_lifecycle()
 	test_quest_objectives()
+	test_quest_item_registers_on_contact()
+	test_dialog_box_not_restored_after_close()
 	test_quest_rewards()
 	test_quest_reward_data()
 	test_scaled_rewards()
@@ -5000,6 +5002,139 @@ func test_quest_objectives() -> void:
 	SessionManager.quest_completed.disconnect(cb)
 	SessionManager.return_to_city()
 	SessionManager._completed_quest.clear()
+	print("")
+
+
+# ── Quest-item pickup registers on contact, not on dialog close ──
+# Rozalin's "dialogue bug": the "Picked up X" message is shown by
+# quest_item_pickup.gd, but SessionManager.collect_quest_item() is wired to the
+# DialogBox's `dialog_complete` signal — it only fires when the player presses
+# E/Enter to CLOSE the box. Movement is not gated by the modal
+# (player.gd `_handle_movement` polls input directly), so the player can walk
+# out of the room before closing the box. Meanwhile DropBase consumes the star
+# immediately (`set_state("collected")`), so the fragment is GONE from the world
+# but never counted → the objective never ticks, the section gate never unlocks,
+# and the quest is permanently unclearable.
+#
+# Reproduced on The Paru Pact (4× mag_fragment; the 4th pickup runs
+# complete_quest + telepipe). The desired contract: a quest item is registered
+# the instant you touch it, independent of whether the dialog is ever read.
+# This test asserts that contract and so FAILS against the deferred-registration
+# code — it is the failing repro that the fix must turn green.
+func test_quest_item_registers_on_contact() -> void:
+	print("── Quest item registers on contact, not on dialog close (dialogue bug) ──")
+
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	SessionManager.enter_quest("the_paru_pact", "normal")
+
+	# Part A — first fragment. A field HUD is what the pickup attaches its
+	# "Picked up X" message to; the pickup must be in the tree for get_tree().
+	var hud_a := CanvasLayer.new()
+	hud_a.name = "FieldHud"
+	add_child(hud_a)
+	hud_a.add_to_group("hud")
+
+	const PickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
+	var pickup_a = PickupScript.new()
+	pickup_a.quest_item_id = "mag_fragment"
+	pickup_a.quest_item_label = "Mag Fragment"
+	add_child(pickup_a)
+
+	# Walk onto the star: DropBase fires the reward and consumes the node. The
+	# player is now free to leave WITHOUT pressing E to close the dialog.
+	pickup_a._give_reward()
+	pickup_a.set_state("collected")  # DropBase does this immediately after _give_reward
+
+	assert_eq(SessionManager.get_quest_item_count("mag_fragment"), 1,
+		"fragment registers on contact, before the pickup dialog is closed")
+
+	# Part B — the FINAL (4th) fragment. Pre-register 3 (these tick directly),
+	# then touch the 4th via the pickup path without ever closing its dialog.
+	# Desired: count reaches 4 and the quest's objectives complete. Current bug:
+	# the 4th never registers, so the quest can never clear and the clear
+	# telepipe (gated on the 4th pickup's actions) never spawns.
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	SessionManager.enter_quest("the_paru_pact", "normal")
+	for _i in range(3):
+		SessionManager.collect_quest_item("mag_fragment")
+	assert_eq(SessionManager.get_quest_item_count("mag_fragment"), 3, "three fragments registered directly (setup)")
+	assert_true(not SessionManager.are_objectives_complete(), "three of four fragments is not complete (setup)")
+
+	var hud_b := CanvasLayer.new()
+	hud_b.name = "FieldHud"
+	add_child(hud_b)
+	hud_b.add_to_group("hud")
+
+	var pickup_b = PickupScript.new()
+	pickup_b.quest_item_id = "mag_fragment"
+	pickup_b.quest_item_label = "Mag Fragment"
+	pickup_b.remaining_dialog = [{
+		"condition": {"item_count": 4},
+		"dialog": [{"speaker": "Elio", "text": "There it is. The last piece."}],
+		"actions": ["dismiss_companion", "complete_quest", "telepipe"],
+	}]
+	add_child(pickup_b)
+
+	pickup_b._give_reward()
+	pickup_b.set_state("collected")
+
+	assert_eq(SessionManager.get_quest_item_count("mag_fragment"), 4,
+		"final fragment registers on contact (quest is clearable even if dialog is skipped)")
+	assert_true(SessionManager.are_objectives_complete(),
+		"objectives complete after the final fragment is touched (quest not bricked)")
+
+	# Cleanup — the pickups left their "Picked up X" dialogs open (the player
+	# never closed them), so drop the modal the DialogBox pushed and free nodes.
+	GameState.modal_stack = 0
+	pickup_a.free()
+	pickup_b.free()
+	hud_a.free()
+	hud_b.free()
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	print("")
+
+
+# ── A closed DialogBox is NOT re-shown when the HUD menu closes ──
+# The "Picked up X" toast-persistence bug: the pickup DialogBox lives as a child
+# of FieldHud. FieldHud.restore_after_menu() (fired when the PSO start menu
+# closes) used to blanket-set every Control child visible=true, re-showing a box
+# the player had already closed — with its stale text, since _close() never
+# cleared the labels. So "Picked up X" reappeared on every menu toggle and stuck
+# until the room unloaded. Fix: _close() clears the text + exposes is_active(),
+# and restore_after_menu() honours that instead of forcing the box back on.
+func test_dialog_box_not_restored_after_close() -> void:
+	print("── Closed DialogBox stays hidden across a HUD menu toggle (toast bug) ──")
+
+	const DialogBoxScript := preload("res://scripts/3d/ui/dialog_box.gd")
+	var box = DialogBoxScript.new()
+	add_child(box)
+	box.show_dialog([{"speaker": "", "text": "Picked up Mag Fragment."}])
+	assert_true(box.is_active(), "dialog reads active while shown")
+	assert_true(box.visible, "dialog is visible while shown")
+
+	box._close()
+	assert_true(not box.is_active(), "dialog reads inactive after close")
+	assert_true(not box.visible, "dialog is hidden after close")
+	assert_eq(box._text_label.text, "", "closed dialog clears its stale text")
+
+	# Mount it as a HUD child (where quest_item_pickup adds it) and toggle a menu.
+	const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
+	var hud = FieldHudScript.new()
+	add_child(hud)
+	box.reparent(hud)
+	hud.hide_for_menu(true)   # start menu opens
+	assert_true(not box.visible, "closed dialog stays hidden while the menu is open")
+	hud.restore_after_menu()  # start menu closes
+	assert_true(not box.visible,
+		"closed dialog is NOT re-shown when the menu closes (no stuck 'Picked up X' toast)")
+
+	GameState.modal_stack = 0
+	if is_instance_valid(box):
+		box.free()
+	hud.free()
 	print("")
 
 
