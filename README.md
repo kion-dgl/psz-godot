@@ -4,7 +4,7 @@
 
 <p align="center">
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL%20v3-%23ff554d.svg" alt="License: GPLv3"></a>
-<a href="https://discord.gg/qGzGK9UY"><img src="https://img.shields.io/badge/Discord-PSZ%20Godot-7289da?logo=discord&logoColor=white" alt="Discord"></a>
+<a href="https://discord.gg/CNpA39xBqw"><img src="https://img.shields.io/badge/Discord-PSZ%20Godot-7289da?logo=discord&logoColor=white" alt="Discord"></a>
 <a href="https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml/badge.svg" alt="Release"></a>
 <a href="https://github.com/kion-dgl/psz-godot/actions/workflows/static.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/static.yml/badge.svg" alt="Pages"></a>
