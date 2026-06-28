@@ -75,6 +75,13 @@ check "frame: non-first instance equips"  "[sanity] checkpoint: frame-dup equipp
 check "frame: suffixed gives full stats"  "[sanity] checkpoint: frame-dup suffixed frame full stats"
 check "frame change clears all units"     "[sanity] checkpoint: frame-change cleared all units"
 check "armor slots are per-instance"      "[sanity] checkpoint: armor-slots per-instance count"
+# Equip-legality (spec /mechanics/equip-legality): the equip ACTION on the real
+# screen must match the ✕ gate. Weapon + armor checkpoints fire for the smoke's
+# Hunter/Ranger class (it can equip 'armor' but not 'robe'); the disk check
+# (start-menu ✕) prints too but can legitimately skip, so it isn't asserted here —
+# a genuine mismatch still trips the global [sanity] FAIL guard below.
+check "equip-legality weapon action==gate" "[sanity] checkpoint: equip-legality weapon action == gate"
+check "equip-legality armor action==gate"  "[sanity] checkpoint: equip-legality frame action == gate"
 check "storage screen opened"             "[sanity] checkpoint: storage opened"
 check "storage deposited meseta"          "[sanity] checkpoint: storage deposited meseta"
 check "storage deposited an item"         "[sanity] checkpoint: storage deposited item"
