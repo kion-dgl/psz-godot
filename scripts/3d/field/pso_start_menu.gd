@@ -355,22 +355,17 @@ func _slot_key_for_inventory_item(item: Dictionary) -> String:
 		return ""
 	var equip: Dictionary = ch.get("equipment", {})
 	var category: String = str(item.get("category", ""))
+	var item_id: String = str(item.get("id", ""))
+	# Legality routes through the single canonical gate (EquipmentUtils.item_fits_slot
+	# → class weapon-type gate / armor class list, honoring DebugConfig.equip_all;
+	# spec /mechanics/equip-legality) so this equip action can NEVER disagree with the
+	# ✕ "cannot equip" markers the shops, storage, and the items list show. Returning
+	# "" disables the Equip choice for gear the class can't use.
 	match category:
 		"Weapon":
-			var item_id: String = str(item.get("id", ""))
-			var base_id: String = Inventory.get_base_id(item_id)
-			var weapon = WeaponRegistry.get_weapon(base_id)
-			if weapon == null:
-				return ""
-			var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
-			# DebugConfig.equip_all bypasses the class restriction so any weapon
-			# can be equipped to verify its model/orientation looks right.
-			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type) \
-					and not DebugConfig.equip_all:
-				return ""
-			return "weapon"
+			return "weapon" if EquipmentUtils.item_fits_slot(item_id, "weapon") else ""
 		"Armor":
-			return "frame"
+			return "frame" if EquipmentUtils.item_fits_slot(item_id, "frame") else ""
 		"Unit":
 			for i in range(4):
 				var key := "unit%d" % (i + 1)

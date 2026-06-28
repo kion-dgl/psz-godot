@@ -880,18 +880,19 @@ class _QuickWeaponMenu extends Control:
 		var character = CharacterManager.get_active_character()
 		if character == null:
 			return
-		var class_id: String = str(character.get("class_id", ""))
-		var class_data = ClassRegistry.get_class_data(class_id)
 		var equipped_id: String = str(character.get("equipment", {}).get("weapon", ""))
 
-		# Gather all weapons from inventory that this class can equip
+		# Gather inventory weapons the class can equip — via the single canonical gate
+		# (EquipmentUtils.item_fits_slot; spec /mechanics/equip-legality) so the in-field
+		# weapon palette matches the shop/menu ✕ markers and honors DebugConfig.equip_all
+		# (the hand-rolled check this replaces ignored equip_all, so debug-equipped
+		# weapons vanished from the swap list).
 		for item_info in Inventory.get_all_items():
 			var item_id: String = str(item_info.get("id", ""))
 			var base_id: String = Inventory.get_base_id(item_id)
-			var weapon = WeaponRegistry.get_weapon(base_id)
-			if weapon == null:
+			if WeaponRegistry.get_weapon(base_id) == null:
 				continue
-			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+			if not EquipmentUtils.item_fits_slot(item_id, "weapon"):
 				continue
 			var is_equipped: bool = item_id == equipped_id
 			_weapon_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "equipped": is_equipped})

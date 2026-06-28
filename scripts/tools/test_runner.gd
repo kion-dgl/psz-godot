@@ -51,6 +51,8 @@ func _run_tests_core() -> void:
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
+	test_equip_action_matches_marker()
+	test_field_weapon_swap_gate()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1981,6 +1983,86 @@ func test_storage_cannot_use() -> void:
 		"storage ✕ == shared sell_cannot_use for a disk")
 
 	storage.free()
+	_restore_character_state(saved)
+	print("")
+
+
+# The ACTUAL equip action must agree with the ✕ marker — they previously used
+# different checks, so the shop could show "no ✕ / can equip" while the equip
+# action refused (or, for armor, the reverse: a ✕ but still equippable). Both now
+# route through EquipmentUtils.item_fits_slot. This pins the 3D start menu's
+# equip-from-inventory slot resolver (PsoStartMenu._slot_key_for_inventory_item):
+# an empty slot key (= Equip disabled) must equal the shared cannot-use predicate.
+func test_equip_action_matches_marker() -> void:
+	print("── Equip action == ✕ marker (single gate) ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+	# FOnewm: Rod/Handgun yes, Sword no; can wear "robe" (lists Force Newman) and
+	# the unrestricted "frame", but not "armor" (Hunter/Ranger only).
+	CharacterManager.create_character(0, "fonewm", "EquipActX")
+	CharacterManager.set_active_slot(0)
+
+	# Helper: slot key the start menu would equip this item into ("" = can't).
+	var slot := func(cat: String, id: String) -> String:
+		return PsoStartMenu._slot_key_for_inventory_item({"category": cat, "id": id})
+
+	if WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("rod"):
+		assert_eq(slot.call("Weapon", "sword"), "", "start-menu equip: Sword refused for FOnewm")
+		assert_eq(slot.call("Weapon", "rod"), "weapon", "start-menu equip: Rod allowed for FOnewm")
+		# The equip action and the ✕ marker can't disagree.
+		assert_eq(slot.call("Weapon", "sword").is_empty(), ShopNavCls.sell_cannot_use("sword"),
+			"Sword: equip-refused == ✕ marker")
+		assert_eq(slot.call("Weapon", "rod").is_empty(), ShopNavCls.sell_cannot_use("rod"),
+			"Rod: equip-allowed == no ✕")
+	if ArmorRegistry.get_armor("armor") and ArmorRegistry.get_armor("robe") and ArmorRegistry.get_armor("frame"):
+		# THE regression: class-illegal armor used to return "frame" unconditionally
+		# (equippable despite the ✕). It must now be refused.
+		assert_eq(slot.call("Armor", "armor"), "", "start-menu equip: class-illegal 'armor' refused for FOnewm")
+		assert_eq(slot.call("Armor", "robe"), "frame", "start-menu equip: Robe allowed for FOnewm")
+		assert_eq(slot.call("Armor", "frame"), "frame", "start-menu equip: unrestricted Frame allowed")
+		assert_eq(slot.call("Armor", "armor").is_empty(), ShopNavCls.sell_cannot_use("armor"),
+			"armor: equip-refused == ✕ marker (no longer diverges)")
+
+	# equip_all bypasses the gate for the equip action too (verify-models flow).
+	DebugConfig.equip_all = true
+	assert_eq(slot.call("Weapon", "sword"), "weapon", "equip_all: Sword becomes equippable")
+	assert_eq(slot.call("Armor", "armor"), "frame", "equip_all: 'armor' becomes equippable")
+
+	_restore_character_state(saved)
+	print("")
+
+
+# The in-field weapon palette swap (field_hud _QuickWeaponMenu._build_weapon_list)
+# now filters via EquipmentUtils.item_fits_slot — so it matches the shop ✕ AND
+# honors DebugConfig.equip_all (the hand-rolled check it replaced ignored equip_all,
+# so debug-equipped weapons vanished from the swap list).
+func test_field_weapon_swap_gate() -> void:
+	print("── In-field weapon swap list == canonical gate ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "fonewm", "SwapX")
+	CharacterManager.set_active_slot(0)
+	if not (WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("rod")):
+		print("  INFO: sword/rod missing — skipped"); _restore_character_state(saved); print(""); return
+
+	Inventory.clear_inventory()
+	Inventory.add_item("sword", 1)
+	Inventory.add_item("rod", 1)
+
+	var menu = FieldHud._QuickWeaponMenu.new()
+	menu._build_weapon_list()
+	var ids: Array = menu._weapon_list.map(func(e): return Inventory.get_base_id(str(e.get("id", ""))))
+	assert_true(ids.has("rod"), "swap list includes Rod (FOnewm can equip)")
+	assert_true(not ids.has("sword"), "swap list excludes Sword (FOnewm can't equip)")
+
+	# equip_all must surface the class-illegal weapon too (the bug this fixes).
+	DebugConfig.equip_all = true
+	menu._build_weapon_list()
+	var ids_all: Array = menu._weapon_list.map(func(e): return Inventory.get_base_id(str(e.get("id", ""))))
+	assert_true(ids_all.has("sword"), "equip_all: swap list now includes Sword (was hidden before the fix)")
+	menu.free()
+
+	Inventory.clear_inventory()
 	_restore_character_state(saved)
 	print("")
 
