@@ -1,0 +1,123 @@
+name: Deploy to psz.onl
+
+# Auto-deploy to the DigitalOcean droplet on every merge to main. Two
+# independent targets, mirroring the manual scripts they replace:
+#
+#   deploy-play  → /srv/game  (Godot "Web" export; Caddy serves it at
+#                  psz.onl/game, the /play page embeds it) — deploy_web_do.sh
+#   deploy-site  → /srv/site  (Astro spec/landing site + /api/report, an SSR
+#                  node service restarted via systemd)        — deploy_site_do.sh
+#
+# The two are SEPARATE mounts and run as independent jobs: a spec-only change
+# redeploys the site without rebuilding the game, and a game-only change
+# redeploys the game without restarting the site. Either can fail without
+# blocking the other.
+#
+# main is protected by the "Merge to Main" ruleset (PR + CI required), so any
+# commit that lands here has already passed CI — no extra gating needed.
+#
+# REQUIRED SECRET: DO_DEPLOY_SSH_KEY — a dedicated deploy private key whose
+# public half is in the droplet's authorized_keys. Optional repo variables
+# override the defaults: DO_DEPLOY_TARGET (root@159.223.133.93), DO_DEPLOY_HOST,
+# DO_GAME_DIR (/srv/game), DO_SITE_DIR (/srv/site).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Never let two merges race the droplet; newest wins.
+concurrency:
+  group: deploy-psz-onl
+  cancel-in-progress: true
+
+jobs:
+  # ── Playable Godot Web build → psz.onl/play (/srv/game) ──────────────────
+  deploy-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          include-templates: true
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-4.5.1
+
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
+      - name: Export Web
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+          test -f build/web/index.html  # fail loudly if the export produced nothing
+
+      - name: Deploy to droplet (/srv/game)
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DO_DEPLOY_SSH_KEY }}
+          DEPLOY_TARGET: ${{ vars.DO_DEPLOY_TARGET || 'root@159.223.133.93' }}
+          DEPLOY_HOST: ${{ vars.DO_DEPLOY_HOST || '159.223.133.93' }}
+          GAME_DIR: ${{ vars.DO_GAME_DIR || '/srv/game' }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Secret DO_DEPLOY_SSH_KEY is not set — add it before this workflow can deploy."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes" \
+            build/web/ "$DEPLOY_TARGET:$GAME_DIR/"
+          echo "✓ deployed → https://psz.onl/play"
+
+  # ── Astro spec / landing site → psz.onl (/srv/site, SSR node service) ────
+  deploy-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: spec/package-lock.json
+
+      - name: Build spec site
+        run: cd spec && npm ci && npm run build
+
+      - name: Deploy to droplet (/srv/site) + restart psz-site
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DO_DEPLOY_SSH_KEY }}
+          DEPLOY_TARGET: ${{ vars.DO_DEPLOY_TARGET || 'root@159.223.133.93' }}
+          DEPLOY_HOST: ${{ vars.DO_DEPLOY_HOST || '159.223.133.93' }}
+          SITE_DIR: ${{ vars.DO_SITE_DIR || '/srv/site' }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Secret DO_DEPLOY_SSH_KEY is not set — add it before this workflow can deploy."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          SSH_OPTS="-i ~/.ssh/id_deploy -o IdentitiesOnly=yes"
+          # Game lives at the separate /srv/game mount — never reship it here.
+          rsync -az --delete --exclude='client/game/' -e "ssh $SSH_OPTS" \
+            spec/dist/ "$DEPLOY_TARGET:$SITE_DIR/dist/"
+          rsync -az -e "ssh $SSH_OPTS" \
+            spec/package.json spec/package-lock.json "$DEPLOY_TARGET:$SITE_DIR/"
+          ssh $SSH_OPTS "$DEPLOY_TARGET" \
+            "cd '$SITE_DIR' && rm -rf node_modules && npm ci --omit=dev >/dev/null 2>&1 && systemctl restart psz-site && sleep 2 && systemctl is-active psz-site"
+          echo "✓ deployed → https://psz.onl"
