@@ -38,4 +38,10 @@ import Concept from '../layouts/Concept.astro';
     <li><code>scripts/tools/autoplay/merge_gate.sh</code> — blocks merges without a green sanity run for the exact HEAD.</li>
     <li><code>scripts/tools/autoplay/run_regression_matrix.sh</code> — the full post-build layer (dev-box, before combat merges).</li>
   </ul>
+
+  <h2>Porting Three.js → Godot</h2>
+  <p>When porting an R3F mock or a Three.js shader, wrap modes and material features don't map one-to-one. The known traps + their Godot recipes live on dedicated pages:</p>
+  <ul>
+    <li><a href="/engineering/mirrored-repeat-wrapping">MirroredRepeatWrapping</a> — Godot 4 has no native mirrored-repeat flag (the Godot-3 <code>flags_mirrored_repeat</code> throws); emulate it with the UV-fold shader. <strong>MUST</strong> read before porting any tiled/mirrored material.</li>
+  </ul>
 </Concept>

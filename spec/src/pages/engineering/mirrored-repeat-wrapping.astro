@@ -1,0 +1,41 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Porting Three.js MirroredRepeatWrapping to Godot" section="Engineering">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. This page is the normative recipe for reproducing Three.js wrap modes when porting an R3F mock or shader to Godot (the office library port <a href="https://github.com/kion-dgl/psz-godot/issues/356">#356</a> and every future stage/effect port — <a href="https://github.com/kion-dgl/psz-godot/issues/381">#381</a>).</p>
+
+  <h2>The trap: Godot 4 has no native mirrored-repeat toggle</h2>
+  <p>Three.js sets wrapping per texture: <code>texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping</code>. Godot 3 had an analogous per-texture flag, <code>Texture.FLAGS_MIRRORED_REPEAT</code> / <code>texture.flags_mirrored_repeat</code>. <strong>That flag does not exist in Godot 4.</strong> <code>Texture2D</code> (and <code>ImageTexture</code>) expose no <code>flags_mirrored_repeat</code> property, and <code>StandardMaterial3D</code> has no per-axis mirror toggle either.</p>
+  <p>A port that assigns it MUST be treated as a bug. The write <code>tex.flags_mirrored_repeat = true</code> does not no-op silently — in GDScript it raises <em>"Invalid assignment of property 'flags_mirrored_repeat' … on a base object of type 'ImageTexture'"</em> at runtime, which <strong>aborts the enclosing function/lambda at that line</strong>. Any setup that follows the assignment in the same call (e.g. registering a duplicated material) never runs. This is exactly the failure fixed in <code>game_element.gd</code> for the trap elements (<a href="https://github.com/kion-dgl/psz-godot/issues/381">#381</a>): <code>_setup_split_materials</code> aborted before <code>set_surface_override_material</code>, so bear/needle traps got <code>null</code> scroll/alpha materials.</p>
+
+  <h2>The recipe: fold the UVs in shader math</h2>
+  <p>When a port genuinely needs mirror-tiling (UVs that exceed <code>[0,1]</code> and must reflect at each seam rather than wrap), it <strong>MUST</strong> be emulated in a <code>.gdshader</code>. Scale the UVs first, then fold with a triangle wave:</p>
+  <pre><code>{`vec2 scaled_uv = UV * tiling;                          // repeat/scale factor
+vec2 mirrored_uv = 1.0 - abs(mod(scaled_uv, 2.0) - 1.0); // fold at each seam
+vec4 col = texture(albedo_texture, mirrored_uv);`}</code></pre>
+  <p>The canonical implementation lives in <code>scripts/3d/shaders/mirror_repeat.gdshader</code> (opaque) and <code>mirror_repeat_alpha.gdshader</code> (alpha, double-sided), whose <code>mirror_coord(c) = mod(c,2.0) &lt; 1.0 ? mod(c,2.0) : 2.0 - mod(c,2.0)</code> is identical to the <code>1.0 - abs(mod(c,2.0) - 1.0)</code> fold. Folding is gated per axis by <code>mirror_x</code> / <code>mirror_y</code> uniforms so a port can mirror one axis and plain-repeat the other (set the sampler hint <code>repeat_enable</code>).</p>
+
+  <h3>Reference values the fold MUST satisfy</h3>
+  <table>
+    <tr><th>input u</th><th>0.0</th><th>0.5</th><th>1.0</th><th>1.5</th><th>2.0</th><th>2.5</th><th>-0.5</th></tr>
+    <tr><td>folded</td><td>0.0</td><td>0.5</td><td>1.0</td><td>0.5</td><td>0.0</td><td>0.5</td><td>0.5</td></tr>
+  </table>
+  <p>This matches Three.js <code>MirroredRepeatWrapping</code>: each integer crossing reflects the coordinate, so the texture mirrors instead of repeating.</p>
+
+  <h2>Applying it to a model</h2>
+  <p>For GLB-backed elements the shared helper <code>GameElement._setup_mirror_textures(uv_offset)</code> replaces every albedo-textured <code>StandardMaterial3D</code> on the model with a <code>ShaderMaterial</code> bound to <code>mirror_repeat.gdshader</code>, at <code>uv_scale = (2, 2)</code> with <code>mirror_x</code> / <code>mirror_y</code> enabled (used by <code>wall</code> / <code>box</code>). New ports <strong>SHOULD</strong> reuse this helper rather than hand-rolling the fold.</p>
+
+  <h2>When you DON'T need it</h2>
+  <ul>
+    <li><strong>Plain repeat is the default and correct unless the mock used <code>MirroredRepeatWrapping</code>.</strong> The office library port (<code>office_library_room.gd</code>) mirrors <code>LibrarySet.tsx</code>, which uses <code>THREE.RepeatWrapping</code> — so its tiled materials correctly stay <code>StandardMaterial3D</code> with <code>uv1_scale</code> (default repeat). Don't add the fold where the source didn't ask for it.</li>
+    <li><strong>If the surface needs runtime material animation</strong> (scrolling <code>uv1_offset</code>, alpha-scissor state — e.g. the trap prongs), it <strong>MUST</strong> stay a <code>StandardMaterial3D</code>, because those properties don't exist on a <code>ShaderMaterial</code> bound to the fold shader. Such surfaces almost always keep UVs within <code>[0,1]</code>, where wrap mode is irrelevant — so plain repeat is correct and the fold is unnecessary. A surface needing <em>both</em> mirror-tiling and per-frame UV animation must move the scroll into a shader uniform.</li>
+  </ul>
+
+  <h2>Verified by</h2>
+  <ul>
+    <li><code>test_runner.gd</code> → <code>test_mirror_repeat_wrapping</code> — pins that <code>_setup_split_materials</code> resolves non-null feature/base for textured surfaces (the #381 regression) and that <code>_setup_mirror_textures</code> applies a <code>ShaderMaterial</code> at the documented 2×2 mirrored params.</li>
+  </ul>
+
+  <p><a href="/engineering">← Engineering Policy</a></p>
+</Concept>

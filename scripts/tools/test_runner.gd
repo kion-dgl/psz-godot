@@ -104,6 +104,7 @@ func _run_tests_systems() -> void:
 	test_mesh_utils_apply_texture()
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
+	test_mirror_repeat_wrapping()
 	test_setup_shop_portrait()
 	test_shop_nav()
 	test_shop_confirm()
@@ -4397,6 +4398,79 @@ func test_game_element_override_textured_material() -> void:
 	assert_true(result != src_mat, "Returned material is a duplicate, not the shared source")
 	assert_true(ge._override_textured_material("does_not_exist") == null, "No matching surface → null")
 	ge.free()
+	print("")
+
+
+# ── MirroredRepeatWrapping emulation (#381) ──────────────────
+# Two things, one method (one registration line):
+#  (a) Regression for the Godot-3 `flags_mirrored_repeat` write that lived in
+#      _setup_split_materials. That property does NOT exist on Godot-4 Texture2D,
+#      so the assignment threw mid-callback and aborted BEFORE the surface
+#      override + result registration — bear_trap/needle_trap silently got null
+#      feature/base materials (no prong hide, no laser scroll). Pin that the
+#      split now completes for textured surfaces.
+#  (b) Recipe wiring: mirrored repeat is emulated via the UV-fold shader, so
+#      _setup_mirror_textures MUST apply a ShaderMaterial with the documented
+#      2×2 mirrored params (mirror_repeat.gdshader), never a texture flag.
+func test_mirror_repeat_wrapping() -> void:
+	print("── MirroredRepeatWrapping emulation (#381) ──")
+	# (a) split materials — two textured surfaces (one feature, one base),
+	# mirroring bear_trap/needle_trap's two-material model.
+	var ge := GameElement.new()
+	var model := Node3D.new()
+	var mi_feat := MeshInstance3D.new()
+	mi_feat.mesh = BoxMesh.new()
+	var feat_mat := StandardMaterial3D.new()
+	var feat_tex := PlaceholderTexture2D.new()
+	feat_tex.take_over_path("res://_test_o0c_1_tora1.png")
+	feat_mat.albedo_texture = feat_tex
+	mi_feat.set_surface_override_material(0, feat_mat)
+	model.add_child(mi_feat)
+	var mi_base := MeshInstance3D.new()
+	mi_base.mesh = BoxMesh.new()
+	var base_mat := StandardMaterial3D.new()
+	var base_tex := PlaceholderTexture2D.new()
+	base_tex.take_over_path("res://_test_o0c_floor.png")
+	base_mat.albedo_texture = base_tex
+	mi_base.set_surface_override_material(0, base_mat)
+	model.add_child(mi_base)
+	ge.model = model
+	ge.add_child(model)
+
+	var mats := ge._setup_split_materials("o0c_1_tora1")
+	assert_true(mats["feature"] is StandardMaterial3D, "feature material resolved (was null pre-#381)")
+	assert_true(mats["base"] is StandardMaterial3D, "base material resolved (was null pre-#381)")
+	assert_true(mats["feature"] != feat_mat, "feature is a per-instance duplicate")
+	if mats["feature"] is StandardMaterial3D:
+		assert_eq((mats["feature"] as StandardMaterial3D).texture_filter,
+			BaseMaterial3D.TEXTURE_FILTER_NEAREST, "feature uses nearest filter")
+	assert_true(mi_feat.get_surface_override_material(0) == mats["feature"],
+		"feature override actually applied to the mesh surface")
+	ge.free()
+
+	# (b) mirror shader recipe — _setup_mirror_textures applies the UV-fold shader.
+	var ge2 := GameElement.new()
+	var model2 := Node3D.new()
+	var mi2 := MeshInstance3D.new()
+	mi2.mesh = BoxMesh.new()
+	var m2 := StandardMaterial3D.new()
+	m2.albedo_texture = PlaceholderTexture2D.new()
+	mi2.set_surface_override_material(0, m2)
+	model2.add_child(mi2)
+	ge2.model = model2
+	ge2.add_child(model2)
+	ge2._setup_mirror_textures()
+	var applied := mi2.get_surface_override_material(0)
+	assert_true(applied is ShaderMaterial,
+		"mirror setup applies a ShaderMaterial (UV-fold, not a Godot-3 texture flag)")
+	if applied is ShaderMaterial:
+		var sm := applied as ShaderMaterial
+		assert_true(sm.shader != null, "mirror_repeat.gdshader loaded onto the material")
+		assert_eq(sm.get_shader_parameter("uv_scale"), Vector2(2, 2),
+			"mirror UV scale = 2×2 (tiles twice, folds at the seam)")
+		assert_eq(sm.get_shader_parameter("mirror_x"), true, "mirror_x enabled")
+		assert_eq(sm.get_shader_parameter("mirror_y"), true, "mirror_y enabled")
+	ge2.free()
 	print("")
 
 

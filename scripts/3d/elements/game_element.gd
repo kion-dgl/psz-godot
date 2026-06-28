@@ -205,8 +205,16 @@ func _setup_split_materials(feature_tex: String) -> Dictionary:
 			var std_mat := mat as StandardMaterial3D
 			var dup := std_mat.duplicate() as StandardMaterial3D
 			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			if std_mat.albedo_texture:
-				std_mat.albedo_texture.flags_mirrored_repeat = true
+			# NO `albedo_texture.flags_mirrored_repeat = true` here: that was a
+			# Godot-3 Texture flag that DOESN'T EXIST in Godot 4. The assignment
+			# threw `Invalid assignment of property 'flags_mirrored_repeat'` at
+			# runtime, aborting THIS callback before the override below — so
+			# feature/base came back null and bear_trap/needle_trap silently lost
+			# their scroll/alpha materials (prongs never hid, laser never scrolled).
+			# MirroredRepeatWrapping must be emulated with the UV-fold shader
+			# instead (mirror_repeat.gdshader / _setup_mirror_textures); these trap
+			# surfaces don't tile past [0,1], so plain repeat is correct here.
+			# See /engineering/mirrored-repeat-wrapping (#381).
 			mesh.set_surface_override_material(surface, dup)
 			if std_mat.albedo_texture and feature_tex in std_mat.albedo_texture.resource_path:
 				result["feature"] = dup
