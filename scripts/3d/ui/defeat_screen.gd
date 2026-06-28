@@ -65,21 +65,31 @@ func _build_prompt() -> void:
 	panel.custom_minimum_size = Vector2(420, 0)
 	center.add_child(panel)
 
+	# Back-most scanline overlay — the same tiling texture the shop white cards
+	# use (PszStyle.scanline_texture), so the box reads as a PSZ panel.
+	var scan := TextureRect.new()
+	scan.texture = PszStyle.scanline_texture()
+	scan.stretch_mode = TextureRect.STRETCH_TILE
+	scan.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(scan)
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 14)
 	panel.add_child(vbox)
+	# Keep the scanlines behind the content.
+	panel.move_child(scan, 0)
 
 	var title := Label.new()
 	title.text = "You were defeated"
 	title.add_theme_font_size_override("font_size", PszStyle.FONT_TITLE + 4)
-	title.add_theme_color_override("font_color", PszStyle.TEXT_WHITE)
+	title.add_theme_color_override("font_color", PszStyle.TEXT_DANGER)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	var question := Label.new()
 	question.text = "Would you like to return to the city?"
 	question.add_theme_font_size_override("font_size", PszStyle.FONT_ITEM)
-	question.add_theme_color_override("font_color", PszStyle.TEXT_WHITE)
+	question.add_theme_color_override("font_color", PszStyle.TEXT)
 	question.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question.custom_minimum_size = Vector2(380, 0)
@@ -187,18 +197,30 @@ func _apply_button_style(btn: Button, selected: bool) -> void:
 	btn.add_theme_stylebox_override("disabled", style)
 
 
+## PSZ white scan-lined card: near-opaque white bg (scanlines layered on top),
+## a blue border with a heavier TOP edge, asymmetric corners (rounded top,
+## squared bottom), and a soft drop shadow so it floats over the red wash.
+const PANEL_BG := Color(1.0, 1.0, 1.0, 0.95)
+const PANEL_BORDER := Color(0.30, 0.52, 0.82)  # PSZ blue
+
 static func _panel_style() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
-	s.bg_color = PszStyle.TITLE_BG
-	s.border_color = PszStyle.TEXT_DANGER
+	s.bg_color = PANEL_BG
+	s.border_color = PANEL_BORDER
+	# Thicker top edge (PSZ panel signature); thin on the other three sides.
+	s.border_width_top = 5
 	s.border_width_left = 2
-	s.border_width_top = 2
 	s.border_width_right = 2
 	s.border_width_bottom = 2
-	s.corner_radius_top_left = 8
-	s.corner_radius_top_right = 8
-	s.corner_radius_bottom_left = 8
-	s.corner_radius_bottom_right = 8
+	# Different radius on the two ends: rounded top, near-square bottom.
+	s.corner_radius_top_left = 12
+	s.corner_radius_top_right = 12
+	s.corner_radius_bottom_left = 3
+	s.corner_radius_bottom_right = 3
+	# Soft drop shadow.
+	s.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	s.shadow_size = 10
+	s.shadow_offset = Vector2(0, 5)
 	s.content_margin_left = 28.0
 	s.content_margin_right = 28.0
 	s.content_margin_top = 22.0
