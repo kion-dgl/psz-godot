@@ -64,6 +64,15 @@ static func pill_style(selected: bool) -> StyleBoxFlat:
 	return s
 
 
+## Apply the pill style (selected → orange, else white) to every visual state of
+## a Button. Extracted so the confirm / choice / defeat modals don't each re-roll
+## the identical five add_theme_stylebox_override calls (code-health dedup, #294).
+static func apply_pill_button_style(btn: Button, selected: bool) -> void:
+	var style := pill_style(selected)
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		btn.add_theme_stylebox_override(state, style)
+
+
 static func tab_style(active: bool) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	if active:

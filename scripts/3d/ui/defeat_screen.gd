@@ -171,8 +171,8 @@ func _notification(what: int) -> void:
 # ── Styling (mirrors ConfirmDialog so the prompt matches the rest of the UI) ──
 
 func _refresh_focus() -> void:
-	_apply_button_style(_yes_button, _focused_idx == 0)
-	_apply_button_style(_no_button, _focused_idx == 1)
+	PszStyle.apply_pill_button_style(_yes_button, _focused_idx == 0)
+	PszStyle.apply_pill_button_style(_no_button, _focused_idx == 1)
 
 
 func _make_button(label: String) -> Button:
@@ -186,15 +186,6 @@ func _make_button(label: String) -> Button:
 	btn.add_theme_color_override("font_pressed_color", PszStyle.TEXT)
 	btn.add_theme_color_override("font_focus_color", PszStyle.TEXT)
 	return btn
-
-
-func _apply_button_style(btn: Button, selected: bool) -> void:
-	var style := PszStyle.pill_style(selected)
-	btn.add_theme_stylebox_override("normal", style)
-	btn.add_theme_stylebox_override("hover", style)
-	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_stylebox_override("focus", style)
-	btn.add_theme_stylebox_override("disabled", style)
 
 
 ## PSZ white scan-lined card: near-opaque white bg (scanlines layered on top),

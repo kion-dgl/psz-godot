@@ -722,16 +722,7 @@ func _drive_scene(path: String) -> void:
 		# Defeat probe: chose "Yes" on the defeat screen and arrived in the city.
 		# Assert the consequences and finish — don't fall into the accept flow.
 		if _defeat_awaiting_city:
-			_defeat_awaiting_city = false
-			var want_meseta: int = _defeat_meseta_before / 2
-			var ok: bool = GameState.meseta == want_meseta and GameState.hp == GameState.max_hp
-			print("[sanity] checkpoint: defeat probe — arrived city, meseta %d->%d (want %d), hp %d/%d" % [
-				_defeat_meseta_before, GameState.meseta, want_meseta, GameState.hp, GameState.max_hp])
-			if ok:
-				print("[sanity] DONE ok")
-			else:
-				print("[sanity] FAIL: defeat probe — meseta/hp not as expected after return")
-			_after(QUIT_GRACE, func() -> void: get_tree().quit(0 if ok else 1))
+			_finish_defeat_probe()
 			return
 		print("[sanity] checkpoint: city_counter")
 		_counter_npc_interacted = false
@@ -1808,6 +1799,21 @@ func _defeat_confirm_yes() -> void:
 	print("[sanity] checkpoint: defeat probe — screen shown, choosing Yes")
 	_defeat_awaiting_city = true
 	screens[0].confirm_return()
+
+
+## Arrived back in the city after the defeat "Yes" — assert the penalty + revive
+## landed (they must survive the city's re-sync from the character) and finish.
+func _finish_defeat_probe() -> void:
+	_defeat_awaiting_city = false
+	var want_meseta: int = _defeat_meseta_before / 2
+	var ok: bool = GameState.meseta == want_meseta and GameState.hp == GameState.max_hp
+	print("[sanity] checkpoint: defeat probe — arrived city, meseta %d->%d (want %d), hp %d/%d" % [
+		_defeat_meseta_before, GameState.meseta, want_meseta, GameState.hp, GameState.max_hp])
+	if ok:
+		print("[sanity] DONE ok")
+	else:
+		print("[sanity] FAIL: defeat probe — meseta/hp not as expected after return")
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(0 if ok else 1))
 
 
 func _on_field_cell_loaded(field: Node) -> void:
