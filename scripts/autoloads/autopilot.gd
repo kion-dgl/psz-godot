@@ -189,6 +189,13 @@ var _cell_visit_count: Dictionary = {}
 # the autopilot logs CELL DRIFT (something warped us somewhere unexpected).
 var _expected_next_cell_key: String = ""
 
+# cell_pos → last cell-flush tally seen for that cell (dead, boxes_destroyed,
+# drops_pending, msgs_read, items_collected). Fed by CellObjectSpawner via
+# observe_cell_flush() to enforce the /states/field-lifecycle persistence
+# contract live: progress (kills/breaks/reads/pickups) MUST NOT regress and
+# ground drops MUST NOT respawn across a cell re-visit.
+var _cell_flush_tally: Dictionary = {}
+
 # Boot-phase: tracks whether we've finished the office intro + kicked off the
 # "Return to Title" path, so the title-scene handler can recognize "we're done"
 # vs "this is the first-time title" and quit cleanly.
@@ -505,6 +512,45 @@ func _get_current_cell_key(field: Node) -> String:
 	return "%d:%s" % [sec_idx, pos]
 
 
+## Live persistence oracle (#423 + /states/field-lifecycle §Persistence).
+## CellObjectSpawner._save_cell_state hands us the per-cell tally (keyed by
+## SECTION + pos) on every exit-flush. On a re-flush of a cell we've already
+## seen, the *accumulating* progress MUST NOT regress — killed enemies, broken
+## boxes, read messages, and collected items only ever go up for a given cell;
+## a drop in any of those counts means a re-entry resurrected something (the bug
+## this feature guards against). We print "[sanity] FAIL:" so the autopilot
+## pass-oracle (grep 'FAIL:') flags the run. Non-aborting: we keep going so the
+## run also reports any *other* regressions in later cells.
+##
+## NOTE: drops_pending is reported but NOT asserted here — ground loot is
+## *generated* by combat/box-breaks that can post-date an early pass-through
+## flush, so the count is legitimately non-monotonic. Drop identity persistence
+## (a specific drop keeps its position + amount through a round-trip, and
+## collected drops don't reappear) is pinned by the seeded unit test
+## test_drop_state_survives_warp_flush instead.
+func observe_cell_flush(cell_key: String, tally: Dictionary) -> void:
+	var prev: Dictionary = _cell_flush_tally.get(cell_key, {})
+	if not prev.is_empty():
+		# Accumulating fields: a re-visit must never show LESS progress.
+		for field in ["dead", "boxes_destroyed", "msgs_read", "items_collected"]:
+			var now_v: int = int(tally.get(field, 0))
+			var was_v: int = int(prev.get(field, 0))
+			if now_v < was_v:
+				print("[sanity] FAIL: state regressed at cell %s (%s %d→%d) — respawn/undo on re-entry" % [
+					cell_key, field, was_v, now_v])
+	# Keep the highest tally seen for this cell (guards against a late
+	# pass-through flush — e.g. an 'open_gate' return visit that doesn't
+	# re-fight — making the baseline drop and masking a later real regression).
+	var merged := tally.duplicate()
+	for field in ["dead", "boxes_destroyed", "msgs_read", "items_collected"]:
+		merged[field] = max(int(tally.get(field, 0)), int(prev.get(field, 0)))
+	_cell_flush_tally[cell_key] = merged
+	print("[sanity] checkpoint: cell-state-held cell=%s dead=%d boxes_destroyed=%d drops_pending=%d msgs_read=%d items_collected=%d" % [
+		cell_key, int(tally.get("dead", 0)), int(tally.get("boxes_destroyed", 0)),
+		int(tally.get("drops_pending", 0)), int(tally.get("msgs_read", 0)),
+		int(tally.get("items_collected", 0))])
+
+
 ## Position of a quest in data/quests/manifest.json (0-based). Returns 0 if not
 ## found. Used to scroll-down at the guild counter — entries are displayed in
 ## manifest order after the passthrough "report / cancel" rows.
@@ -818,7 +864,18 @@ func _drive_char_create() -> void:
 	if step != _cc_acted_step:
 		_cc_acted_step = step
 		match step:
-			0, 1:
+			0:
+				# Exercise the class-select slat tween — the path that produced
+				# the #380 cutout wobble — by navigating right then back left
+				# before confirming, so the selection width animation actually
+				# runs. (Previously this step pressed ui_accept immediately and
+				# the slats were never animated.)
+				for i in range(3):
+					_after(0.25 * float(i), func() -> void: _press_action("ui_right"))
+				for i in range(2):
+					_after(0.75 + 0.25 * float(i), func() -> void: _press_action("ui_left"))
+				_after(1.4, func() -> void: _press_action("ui_accept"))
+			1:
 				_press_action("ui_accept")
 			2:
 				_enter_name(node)
