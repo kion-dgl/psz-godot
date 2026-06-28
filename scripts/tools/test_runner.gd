@@ -56,6 +56,7 @@ func _run_tests_core() -> void:
 	test_quick_weapon_menu_unequip_and_order()
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
+	test_scene_manager_fade_rect_full_size()
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
@@ -2289,6 +2290,23 @@ func test_start_menu_palette_bg_cached() -> void:
 	assert_true(bg0_again == bg0, "palette page 0 background is cached (same instance on re-fetch)")
 	var bg1_again: Texture2D = PsoStartMenu._get_palette_bg(1)
 	assert_true(bg1_again == bg1, "palette page 1 background is cached (same instance on re-fetch)")
+	print("")
+
+
+func test_scene_manager_fade_rect_full_size() -> void:
+	print("── SceneManager fade rect full-size (#421 follow-up) ──")
+
+	# The transition fade-to-black only masks the HUD/menu rebuild if the fade
+	# rect actually covers the viewport. Setting `anchors_preset` alone leaves a
+	# fresh ColorRect at size (0,0) — black, full-alpha, on the right layer, but
+	# zero-area, so it masked NOTHING (the real cause of the #421 flicker that the
+	# layer-raise didn't fix). The rect MUST be sized via
+	# set_anchors_and_offsets_preset so its area equals the viewport.
+	var fr: ColorRect = SceneManager._fade_rect
+	assert_true(fr != null, "SceneManager fade rect exists")
+	assert_true(fr.size.x > 0.0 and fr.size.y > 0.0, "fade rect has non-zero size (not 0,0)")
+	var vp: Vector2 = SceneManager.get_viewport().get_visible_rect().size
+	assert_true(fr.size.is_equal_approx(vp), "fade rect covers the full viewport (%s == %s)" % [fr.size, vp])
 	print("")
 
 
