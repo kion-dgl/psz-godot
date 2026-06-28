@@ -54,6 +54,7 @@ func _run_tests_core() -> void:
 	test_equip_action_matches_marker()
 	test_field_weapon_swap_gate()
 	test_start_menu_data()
+	test_start_menu_palette_bg_cached()
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
@@ -2110,6 +2111,34 @@ func test_start_menu_data() -> void:
 		assert_true(not PsoStartMenu._can_use_techs(), "_can_use_techs false for a CAST (HUcast)")
 		assert_true(not PsoStartMenu._get_menu_labels().has("Techs"), "Techs view absent for a CAST")
 		sm_char["class_id"] = sm_saved_class
+	print("")
+
+
+# #421 — the Palette HUD-preview background must be CACHED on the persistent
+# PsoStartMenu autoload (like action icons), not re-load()ed on every draw. The
+# menu survives change_scene_to_file across an area transition; the pre-fix
+# renderer re-load()ed the bg each draw, so a redraw fired during the tree
+# rebuild could transiently miss and silently skip the image until the player
+# exited/re-entered the page. A cached ref re-binds from memory and can never
+# skip. Deterministic (no GPU/seed): palette_bg.png / palette_bg_r.png are
+# repo-resident and import in the editor pass CI runs before the tests.
+func test_start_menu_palette_bg_cached() -> void:
+	print("── Start Menu (palette bg cache, #421) ──")
+
+	# Both pages resolve to a non-null Texture2D (page 0 → palette_bg.png,
+	# page 1 → palette_bg_r.png).
+	var bg0: Texture2D = PsoStartMenu._get_palette_bg(0)
+	var bg1: Texture2D = PsoStartMenu._get_palette_bg(1)
+	assert_true(bg0 != null, "palette page 0 background resolves to a texture")
+	assert_true(bg1 != null, "palette page 1 background resolves to a texture")
+
+	# The cache returns the IDENTICAL instance on a second call — proving the
+	# texture ref is held on the persistent autoload and survives a redraw, so a
+	# post-transition repaint re-binds from cache instead of risking a miss.
+	var bg0_again: Texture2D = PsoStartMenu._get_palette_bg(0)
+	assert_true(bg0_again == bg0, "palette page 0 background is cached (same instance on re-fetch)")
+	var bg1_again: Texture2D = PsoStartMenu._get_palette_bg(1)
+	assert_true(bg1_again == bg1, "palette page 1 background is cached (same instance on re-fetch)")
 	print("")
 
 

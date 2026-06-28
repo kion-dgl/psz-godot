@@ -503,12 +503,14 @@ func _draw_palette(c: Control, font: Font) -> void:
 		c.draw_string(font, Vector2(tab_x + 10, tab_y + 18), "Page %d" % (pi + 1),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_SELECT_TEXT if is_active else PsoStartMenu.C_TEXT_MUTED)
 
-	# HUD preview with palette_bg
+	# HUD preview with palette_bg. Fetch via the autoload's cached getter rather
+	# than load()-ing inline every draw: the menu survives area transitions, and
+	# an uncached load() could transiently miss on a post-transition redraw and
+	# silently skip the background until the player re-entered the page (#421).
 	var hud_y: float = tab_y + 34
 	var hud_scale: float = 1.7
-	var bg_path: String = "res://assets/ui/psz-palette/palette_bg%s.png" % ("_r" if _c._pal_page_idx == 1 else "")
-	if ResourceLoader.exists(bg_path):
-		var bg_tex: Texture2D = load(bg_path)
+	var bg_tex: Texture2D = _c._get_palette_bg(_c._pal_page_idx)
+	if bg_tex:
 		c.draw_texture_rect(bg_tex, Rect2(lx + 8, hud_y, 128.0 * hud_scale, 67.0 * hud_scale), false)
 
 	var slot_centers := [Vector2(26.0, 27.0), Vector2(58.0, 41.0), Vector2(90.0, 27.0)]
