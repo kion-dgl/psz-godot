@@ -1,0 +1,43 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="City Area Contract" section="Hierarchies">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p><code>CityAreaBase</code> (<code>scripts/3d/city/city_area_base.gd</code>) is the base class for every walkable 3D city hub. Its five subclasses — the guild <strong>Counter</strong>, the <strong>Market</strong>, the <strong>Warp</strong> teleporter, the <strong>Underground</strong> shops, and the Principal's <strong>Office</strong> — extend it and differ only in <em>data</em>: floor footprint, NPC roster, exit triggers, lighting, and which procedural/GLB geometry they render. The shared <em>behavior</em> — spawning the player + camera, NPCs, area triggers, floor collision, and the position overlay — lives in the base.</p>
+
+  <h2>What the base owns</h2>
+  <table>
+    <tr><th>Member</th><th>Owns</th></tr>
+    <tr><td><code>_spawn_player / _setup_camera</code></td><td>The avatar + orbit camera, spawn-variant resolution, location/music sync, field HUD.</td></tr>
+    <tr><td><code>_add_npc / _add_warp_pad</code></td><td>Interactable city actors.</td></tr>
+    <tr><td><code>_add_area_trigger / _add_interactive_trigger</code></td><td>Scene-transition volumes (auto on body-enter, or interact-prompted).</td></tr>
+    <tr><td><code>_add_floor_collision</code></td><td>The floor collider <strong>and</strong> the perimeter boundary that contains the avatar (see below).</td></tr>
+  </table>
+
+  <h2>Floor containment (issue #371)</h2>
+  <p>This is the normative invariant the hierarchy exists to guarantee.</p>
+  <p>Each area's floor collider is a flat slab on the environment collision layer (layer 1). The player avatar (collision layer 2, mask 1) raycasts that layer downward in its ledge-guard (<code>_can_move_to</code> / <code>_has_floor_at</code> — see <a href="/states/player-state">player state</a>) and requires at least 2 of 3 forward probes to find floor before committing movement. That guard is only as good as the floor collider is honest: when the collider footprint <em>exceeds</em> the visible floor mesh, the guard finds invisible floor past the rendered edge and walks the avatar off the visible geometry into the void. That was #371: the counter used a 30×50 collider, the office a 24×24 square under an R=9 disc, and neither had walls.</p>
+  <ul>
+    <li>Every city area <strong>MUST</strong> enclose its walkable floor with perimeter collision on the environment layer (layer 1) so the avatar <strong>CANNOT</strong> traverse beyond the visible floor edge. <code>_add_floor_collision</code> builds this boundary (node <code>FloorBoundary</code>) by default, so every subclass inherits containment with no call-site change.</li>
+    <li>The floor collider footprint <strong>SHOULD</strong> match the rendered floor mesh. A round room (the Office, #356) <strong>SHOULD</strong> use a cylindrical floor + ring boundary (e.g. R=9) rather than a square; the ring <strong>MUST</strong> leave a gap only at an exit door (the Office's +Z entrance, ~8 m wide).</li>
+    <li>Exit-trigger volumes <strong>MUST</strong> sit <em>inside</em> the wall line, so a scene transition fires before the avatar can reach (and be stopped by) a wall — a wall <strong>MUST NOT</strong> seal a doorway. (Verified: counter market z=+20, warp z=−22.3, office x=+11.5 all inside the ±15x/±25z wall line; the office door gets an explicit +Z gap.)</li>
+    <li>The <code>FALL_RESPAWN_Y</code> fall-respawn (<code>player.gd</code>) is the <strong>secondary</strong> safety net for genuine falls, <strong>NOT</strong> the primary boundary. With perimeter walls the avatar never leaves the slab, so the respawn rarely fires by design.</li>
+  </ul>
+
+  <h2>Reconciliation with <a href="/states/player-state">player-state</a></h2>
+  <p>The player-state page defines the ledge-guard (3 downward probes, 2-of-3 to permit movement, retry per-axis to slide along obstructions). This page does <strong>not</strong> contradict it — it states the environment-side precondition that makes the guard deterministic: <strong>perimeter walls guarantee no invisible floor exists past the visible edge</strong>, so "find floor → permit movement" can never permit a void-walk. The guard tolerates hairline mesh gaps; the boundary removes the failure mode where the collider lies about where the floor ends.</p>
+
+  <h2>Subclassing</h2>
+  <ul>
+    <li>A subclass exists only because its <em>data</em> differs (footprint, roster, triggers, geometry). New behavior shared by more than one area <strong>MUST</strong> land in the base, not be copied into a leaf.</li>
+    <li>The Office is the lone round area: it passes <code>radius</code> to <code>_add_floor_collision</code> and builds its hall via <code>OfficeLibraryRoom</code> composition (a static helper, not inheritance — Android export breaks on cross-script office scene inheritance; see <code>docs/shop-dedup.md</code>).</li>
+  </ul>
+
+  <h2>Tests</h2>
+  <ul>
+    <li><strong>Unit:</strong> <code>test_city_area_floor_boundary</code> (test_runner) builds <code>_add_floor_collision</code> for the rectangular and round paths and asserts the <code>FloorBoundary</code> body, its layer/mask, the four rect walls at ±(half-extent + thickness/2), the round cylinder floor (R=9), and the +Z door gap. Asset-free, exact-equality.</li>
+    <li><strong>Autopilot:</strong> <code>shop_smoke.sh</code> loads the Office scene and greps <code>[sanity] checkpoint: office-boundary-built</code> (the boundary node exists at runtime). The live containment-walk (drive the avatar past the visible edge, confirm it clamps at the wall) is movement-physics-dependent and is verified on real hardware.</li>
+  </ul>
+</Concept>

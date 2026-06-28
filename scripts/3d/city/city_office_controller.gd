@@ -115,8 +115,14 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision — covers the R=9 round hall plus the +Z door threshold.
-	_add_floor_collision(Vector3(0, 0, 0), Vector3(24, 0.2, 24))
+	# Floor collision — a round R=9 disc matching the visible library hall
+	# (#356), bounded by a ring wall with a +Z door gap so the avatar stays on
+	# the rendered floor instead of the old oversized 24×24 square (#371).
+	_add_floor_collision(Vector3(0, 0, 0), Vector3(18, 0.2, 18), OfficeLibraryRoom.R)
+	# Runtime probe (#371): assert the perimeter boundary actually built. The
+	# shop_smoke autopilot loads this office scene and greps this checkpoint.
+	if OS.has_environment("PSZ_AUTOPILOT") and get_node_or_null("FloorBoundary") != null:
+		print("[sanity] checkpoint: office-boundary-built")
 
 	# Principal NPC at fixed position
 	_principal_npc = _add_npc(

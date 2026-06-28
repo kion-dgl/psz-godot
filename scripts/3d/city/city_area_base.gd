@@ -187,7 +187,30 @@ func _update_position_overlay() -> void:
 	_pos_overlay.text = "pos: (%.2f, %.2f, %.2f)  rot: %.2f rad (%.0f°)" % [p.x, p.y, p.z, rot, deg]
 
 
-func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2, 70)) -> void:
+# Perimeter-wall geometry (issue #371). Thin, tall, invisible boxes on the
+# environment layer that hug the floor footprint so the avatar can't stride
+# past the visible floor edge onto the (oversized) floor collider. See
+# spec/hierarchies/city-area.
+const FLOOR_WALL_THICKNESS := 0.5
+const FLOOR_WALL_HEIGHT := 3.0
+# Office door opening half-width (door spans ~8.1 m at +Z; see
+# city_office_controller.DOOR_TRIGGER_SIZE). The round boundary leaves a gap
+# here so the entrance isn't sealed.
+const ROUND_DOOR_HALF_WIDTH := 4.05
+
+
+## Build the floor collider AND a perimeter boundary that encloses it.
+##
+## Issue #371: a bare floor box (top at y=0, no walls) whose footprint exceeds
+## the visible floor mesh let the player's ledge-guard find "invisible" floor
+## past the rendered edge and walk into the void. Every city area now gets
+## perimeter collision (default-on) so the avatar is physically contained to
+## the floor footprint; FALL_RESPAWN_Y stays the secondary safety net.
+##
+## `radius > 0` builds a round area instead: a CylinderShape3D floor plus a ring
+## of wall segments with a gap at the +Z door (for the Principal's office, whose
+## visible floor is an R=9 disc — #356).
+func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2, 70), radius: float = 0.0) -> void:
 	var body := StaticBody3D.new()
 	body.name = "FloorCollision"
 	body.collision_layer = 1  # Environment
@@ -195,13 +218,87 @@ func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2
 	body.position = Vector3(center.x, 0, center.z)
 
 	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = floor_size
-	shape.shape = box
+	if radius > 0.0:
+		var cyl := CylinderShape3D.new()
+		cyl.radius = radius
+		cyl.height = floor_size.y
+		shape.shape = cyl
+	else:
+		var box := BoxShape3D.new()
+		box.size = floor_size
+		shape.shape = box
 	shape.position.y = -floor_size.y / 2.0
 
 	body.add_child(shape)
 	add_child(body)
+
+	# Perimeter containment (issue #371) — keep the walkable footprint bounded.
+	if radius > 0.0:
+		_add_round_boundary(center, radius)
+	else:
+		_add_rect_boundary(center, floor_size)
+
+
+## StaticBody3D on the environment layer that parents the perimeter walls.
+func _make_boundary_body(center: Vector3) -> StaticBody3D:
+	var boundary := StaticBody3D.new()
+	boundary.name = "FloorBoundary"
+	boundary.collision_layer = 1  # Environment — the player (mask 1) collides with it.
+	boundary.collision_mask = 0
+	boundary.position = Vector3(center.x, 0, center.z)
+	add_child(boundary)
+	return boundary
+
+
+func _add_wall(parent: Node3D, pos: Vector3, size: Vector3, rot_y: float = 0.0) -> void:
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	cs.shape = box
+	cs.position = pos
+	cs.rotation.y = rot_y
+	parent.add_child(cs)
+
+
+## Four walls hugging a rectangular floor box. X-walls run the full Z (corners
+## included); Z-walls span the floor X. Walls sit just OUTSIDE the floor edge so
+## the floor probes still land on floor, while the wall is the hard stop.
+func _add_rect_boundary(center: Vector3, floor_size: Vector3) -> void:
+	var boundary := _make_boundary_body(center)
+	var hx := floor_size.x / 2.0
+	var hz := floor_size.z / 2.0
+	var t := FLOOR_WALL_THICKNESS
+	var h := FLOOR_WALL_HEIGHT
+	var y := h / 2.0
+	var z_span := floor_size.z + 2.0 * t
+	_add_wall(boundary, Vector3(hx + t / 2.0, y, 0), Vector3(t, h, z_span))
+	_add_wall(boundary, Vector3(-(hx + t / 2.0), y, 0), Vector3(t, h, z_span))
+	_add_wall(boundary, Vector3(0, y, hz + t / 2.0), Vector3(floor_size.x, h, t))
+	_add_wall(boundary, Vector3(0, y, -(hz + t / 2.0)), Vector3(floor_size.x, h, t))
+
+
+## A ring of wall segments at `radius`, leaving a gap at the +Z entrance so the
+## doorway isn't sealed. Segment angle is measured from +Z; the gap half-angle
+## comes from the door width. Used by the round Principal's office (#356).
+func _add_round_boundary(center: Vector3, radius: float, door_half_width: float = ROUND_DOOR_HALF_WIDTH) -> void:
+	var boundary := _make_boundary_body(center)
+	var t := FLOOR_WALL_THICKNESS
+	var h := FLOOR_WALL_HEIGHT
+	var y := h / 2.0
+	var gap_half := asin(clampf(door_half_width / radius, 0.0, 1.0))
+	var seg_count := 24
+	var seg_arc := TAU / float(seg_count)
+	var seg_len := seg_arc * radius * 1.15  # slight overlap so corners don't leak
+	for i in range(seg_count):
+		var a := (float(i) + 0.5) * seg_arc  # 0..TAU, measured from +Z
+		var aw := a
+		if aw > PI:
+			aw -= TAU
+		if absf(aw) < gap_half:
+			continue  # +Z door opening — leave it open
+		var pos := Vector3(sin(a) * radius, y, cos(a) * radius)
+		# rot_y = a makes the box's long (X) axis tangent and its thin (Z) axis radial.
+		_add_wall(boundary, pos, Vector3(seg_len, h, t), a)
 
 
 func _heal_character() -> void:

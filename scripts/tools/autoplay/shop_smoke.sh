@@ -63,6 +63,11 @@ check() {  # label needle
 }
 
 check "reached city_office"               "[sanity] checkpoint: city_office"
+# #371: the office floor now has a perimeter boundary (round R=9 ring with a +Z
+# door gap) so the avatar can't walk off the visible disc into the void. This
+# asserts the FloorBoundary node built at runtime; the live containment-walk is
+# Mac-verified (movement physics is flaky headless under xvfb).
+check "office floor boundary built (#371)" "[sanity] checkpoint: office-boundary-built"
 check "entered shop-smoke detour"         "[sanity] office intro complete → shop/storage smoke"
 check "principal debug meseta granted"    "[sanity] checkpoint: principal debug meseta granted"
 check "item shop opened"                  "[sanity] checkpoint: item_shop opened"

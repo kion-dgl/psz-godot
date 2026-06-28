@@ -12,6 +12,7 @@ import Concept from '../../layouts/Concept.astro';
     <li><a href="/hierarchies/weapon">Weapon</a> — <code>WeaponData</code> + archetype behavior: what's a data row vs. an archetype class, and the CombatResolver interface (#157).</li>
     <li><a href="/hierarchies/weapons-library">Weapon Library</a> — the curated in-game roster: which basic PSO type models + <code>ein-</code> test weapons actually ship, their texture state, and the VRAM texture-import contract.</li>
     <li><a href="/hierarchies/shop-screen">Shop / list screens</a> — the composition contract (<code>ShopNav</code> / <code>ShopUI</code> hooks): grouping without inheritance, because inheritance breaks the Android export here.</li>
+    <li><a href="/hierarchies/city-area">City Area</a> — the <code>CityAreaBase</code> contract for the five 3D city hubs: shared spawn/camera/NPC/trigger behavior, and the floor-containment invariant (perimeter walls bound the walkable floor so the avatar can't walk into the void — #371).</li>
   </ul>
 
   <p>The <a href="/states/player-state">player state machine</a> page serves the same role for the player avatar and predates this section.</p>

@@ -135,6 +135,7 @@ func _run_tests_systems() -> void:
 	test_message_wall_questitem_persist()
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
+	test_city_area_floor_boundary()
 	test_script_parse()
 
 
@@ -338,6 +339,97 @@ func test_element_collision_setup() -> void:
 	assert_true(is_equal_approx(shape.position.y, el.collision_size.y / 2.0), "shape offset half-height")
 	el.free()
 	print("")
+
+
+# ── City-area floor boundary (#371 — void-walk containment) ──────────────────
+# CityAreaBase._add_floor_collision must enclose the walkable floor with
+# perimeter collision on the environment layer (layer 1) so the avatar can't
+# walk past the visible floor edge onto the oversized floor slab. Spec:
+# spec/hierarchies/city-area. Asset-free + deterministic: build the tree and
+# inspect it.
+func test_city_area_floor_boundary() -> void:
+	print("── CityAreaBase._add_floor_collision perimeter boundary (#371) ──")
+	const CityAreaScript := preload("res://scripts/3d/city/city_area_base.gd")
+	_check_rect_floor_boundary(CityAreaScript)
+	_check_round_floor_boundary(CityAreaScript)
+	print("")
+
+
+# (1) Rectangular path — counter footprint (30 × 50), centred at origin.
+func _check_rect_floor_boundary(CityAreaScript) -> void:
+	var t: float = CityAreaScript.FLOOR_WALL_THICKNESS
+	var rect = CityAreaScript.new()
+	rect._add_floor_collision(Vector3.ZERO, Vector3(30, 0.2, 50))
+	assert_true(rect.get_node_or_null("FloorCollision") is StaticBody3D, "rect: FloorCollision StaticBody3D built")
+	var boundary = rect.get_node_or_null("FloorBoundary")
+	assert_true(boundary is StaticBody3D, "rect: FloorBoundary StaticBody3D built")
+	if boundary:
+		assert_eq(boundary.collision_layer, 1, "rect: boundary on environment layer 1")
+		assert_eq(boundary.collision_mask, 0, "rect: boundary mask 0")
+		var walls: Array = boundary.get_children()
+		assert_true(walls.size() >= 4, "rect: at least 4 wall shapes")
+		var all_box := true
+		for w in walls:
+			if not (w is CollisionShape3D and (w as CollisionShape3D).shape is BoxShape3D):
+				all_box = false
+		assert_true(all_box, "rect: every wall is a BoxShape3D CollisionShape3D")
+		# Four walls hug the floor edges at ±(half-extent + t/2).
+		var seen := _seen_rect_walls(walls, 15.0 + t / 2.0, 25.0 + t / 2.0)
+		assert_true(seen["+x"] and seen["-x"], "rect: +X/-X walls at x=±(hx+t/2)")
+		assert_true(seen["+z"] and seen["-z"], "rect: +Z/-Z walls at z=±(hz+t/2)")
+	rect.free()
+
+
+# Map each wall to the edge it hugs (±px on X / ±pz on Z, centred on the other axis).
+func _seen_rect_walls(walls: Array, px: float, pz: float) -> Dictionary:
+	var seen := {"+x": false, "-x": false, "+z": false, "-z": false}
+	for w in walls:
+		var p: Vector3 = (w as CollisionShape3D).position
+		if is_equal_approx(p.x, px) and is_equal_approx(p.z, 0.0):
+			seen["+x"] = true
+		elif is_equal_approx(p.x, -px) and is_equal_approx(p.z, 0.0):
+			seen["-x"] = true
+		elif is_equal_approx(p.z, pz) and is_equal_approx(p.x, 0.0):
+			seen["+z"] = true
+		elif is_equal_approx(p.z, -pz) and is_equal_approx(p.x, 0.0):
+			seen["-z"] = true
+	return seen
+
+
+# (2) Round path — office R=9 disc with a +Z door gap.
+func _check_round_floor_boundary(CityAreaScript) -> void:
+	var round_area = CityAreaScript.new()
+	round_area._add_floor_collision(Vector3.ZERO, Vector3(18, 0.2, 18), 9.0)
+	var round_floor = round_area.get_node_or_null("FloorCollision")
+	assert_true(round_floor is StaticBody3D, "round: FloorCollision built")
+	if round_floor and round_floor.get_child_count() > 0:
+		var fshape = round_floor.get_child(0)
+		assert_true(fshape is CollisionShape3D and fshape.shape is CylinderShape3D, "round: floor is a CylinderShape3D")
+		if fshape.shape is CylinderShape3D:
+			assert_true(is_equal_approx((fshape.shape as CylinderShape3D).radius, 9.0), "round: cylinder radius == 9")
+	var round_boundary = round_area.get_node_or_null("FloorBoundary")
+	assert_true(round_boundary is StaticBody3D, "round: FloorBoundary built")
+	if round_boundary:
+		var rwalls: Array = round_boundary.get_children()
+		assert_true(rwalls.size() >= 8, "round: ring has multiple wall segments")
+		# +Z door gap: no wall segment sits directly in front of the entrance
+		# (|x| < door half-width on the +Z side), and the back (-Z) is enclosed.
+		var gap := _round_door_gap(rwalls, CityAreaScript.ROUND_DOOR_HALF_WIDTH)
+		assert_true(gap["open"], "round: +Z door gap left open (no wall across the entrance)")
+		assert_true(gap["back_enclosed"], "round: back (-Z) of the ring is walled")
+	round_area.free()
+
+
+# Is the +Z entrance clear of wall segments, and is the -Z back enclosed?
+func _round_door_gap(rwalls: Array, door_half: float) -> Dictionary:
+	var gap := {"open": true, "back_enclosed": false}
+	for w in rwalls:
+		var p: Vector3 = (w as CollisionShape3D).position
+		if absf(p.x) < door_half and p.z > 0.0:
+			gap["open"] = false
+		if p.z < 0.0:
+			gap["back_enclosed"] = true
+	return gap
 
 
 # ── Equipment slot-name derivation (dedup guard, #294) ───────
