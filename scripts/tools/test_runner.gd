@@ -83,6 +83,7 @@ func _run_tests_core() -> void:
 	test_free_roam_per_area_state()
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
+	test_player_defeat_return()
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
@@ -2922,6 +2923,52 @@ func test_telepipe_suspend_resume_keeps_telepipe() -> void:
 	SessionManager.return_to_city()
 	assert_true(not TelepipeManager.is_active(),
 		"return_to_city cancels telepipe (full session end)")
+	print("")
+
+
+func test_player_defeat_return() -> void:
+	print("── Player defeat — return-to-city transaction (spec /states/player-death) ──")
+
+	TelepipeManager.cancel("test_setup")
+	SessionManager._suspended_session.clear()
+
+	# In a quest field, carrying 100 meseta with 500 banked, an active telepipe.
+	SessionManager.enter_quest("search_and_rescue", "normal")
+	GameState.meseta = 100
+	GameState.stored_meseta = 500
+	GameState.max_hp = 120
+	GameState.set_hp(0)  # dead
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3(1, 0, 1),
+		"res://scenes/3d/field/valley_field.tscn")
+
+	var result: Dictionary = SessionManager.defeat_return_to_city()
+
+	# 50% of carried meseta is lost (floored); bank untouched.
+	assert_eq(int(result.get("meseta_lost", -1)), 50, "Defeat loses 50% of carried meseta (100 → lose 50)")
+	assert_eq(GameState.meseta, 50, "Carried meseta halved to 50")
+	assert_eq(GameState.stored_meseta, 500, "Banked meseta untouched by defeat penalty")
+
+	# Revived to full HP.
+	assert_eq(GameState.hp, GameState.max_hp, "Revived to full HP on return")
+
+	# Session ended (not resumable) and telepipe cleared.
+	assert_true(not SessionManager.has_active_session(), "Defeat ends the field session")
+	assert_true(not SessionManager.has_suspended_session(), "Defeat does NOT leave a resumable session")
+	assert_eq(SessionManager.get_location(), "city", "Player is back in the city after defeat")
+	assert_true(not TelepipeManager.is_active(), "Defeat cancels any active telepipe (session end)")
+
+	# Odd amount floors (101 → lose 50, keep 51); zero carried → lose nothing.
+	GameState.meseta = 101
+	assert_eq(int(SessionManager.defeat_return_to_city().get("meseta_lost", -1)), 50,
+		"Odd carried meseta floors (101 → lose 50)")
+	assert_eq(GameState.meseta, 51, "51 meseta kept after flooring")
+	GameState.meseta = 0
+	assert_eq(int(SessionManager.defeat_return_to_city().get("meseta_lost", -1)), 0,
+		"Zero carried meseta → nothing lost")
+
+	# Cleanup
+	GameState.stored_meseta = 0
+	GameState.set_hp(GameState.max_hp)
 	print("")
 
 

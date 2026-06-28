@@ -257,6 +257,26 @@ func return_to_city() -> Dictionary:
 	return summary
 
 
+## Player defeated in the field (HP reached 0) and chose to return to the city.
+## Applies the defeat consequences as one transaction (spec /states/player-death):
+##   • lose 50% of CARRIED meseta, rounded down (storage/bank untouched)
+##   • revive to full HP
+##   • end the field session (return_to_city — NOT resumable; cancels telepipe)
+## Returns {meseta_lost, meseta_before, meseta_after}. The DefeatScreen handles
+## the UI + the actual scene transition (city counter, telepipe-arrival spawn);
+## this owns only the state changes so they're unit-testable without UI.
+func defeat_return_to_city() -> Dictionary:
+	var before: int = GameState.meseta
+	var lost: int = GameState.lose_meseta(before / 2)
+	GameState.set_hp(GameState.max_hp)
+	return_to_city()
+	return {
+		"meseta_lost": lost,
+		"meseta_before": before,
+		"meseta_after": GameState.meseta,
+	}
+
+
 ## Get current session data
 func get_session() -> Dictionary:
 	return _session

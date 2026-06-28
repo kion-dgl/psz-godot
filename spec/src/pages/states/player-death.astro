@@ -1,0 +1,129 @@
+---
+// Player death / defeat — what happens when the player's HP reaches 0 in the
+// field. The normative contract the Godot implementation is tested against.
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> Alive
+  Alive --> Defeated: HP reaches 0 (field only)
+  Defeated --> Defeated: choose "No"
+  Defeated --> City: choose "Yes"
+  City --> [*]: revived (full HP), -50% carried meseta, session ended
+
+  Alive: Fighting in the field
+  Defeated: "You were defeated" prompt (red overlay)
+  City: Back in the city
+`;
+---
+
+<Concept title="Player Death / Defeat" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>,
+  <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in
+  RFC 2119.</p>
+
+  <p>Defeat is the failure exit of a <a href="/states/field-lifecycle">field
+  session</a>. It is the mirror of the success exit (clear the objectives,
+  ride the end telepipe home): the player goes down, and the run ends with a
+  cost instead of a reward. There is <strong>no permadeath</strong> — defeat
+  is a setback, not a game-over.</p>
+
+  <h2>Trigger</h2>
+  <ul>
+    <li>The player enters <strong>Defeat</strong> the moment their HP reaches
+    <strong>0</strong> while in a field (a quest field <em>or</em> a free-roam
+    field). HP only ever reaches 0 in the field — the city has no combat — so
+    Defeat is field-only.</li>
+    <li>The death knockdown itself (the lying-down animation) is the
+    <code>DOWN</code> branch of the <a href="/states/player-state">Player
+    State</a> contract; this page governs what happens <em>around</em> that
+    animation.</li>
+  </ul>
+
+  <h2>The defeat screen</h2>
+  <ul>
+    <li>On defeat a translucent <strong>red</strong> overlay <strong>MUST</strong>
+    cover the play area. It <strong>MUST</strong> render <em>below</em> the HUD
+    elements — the HP/PP panel and other HUD stay visible on top of the red
+    layer.</li>
+    <li>Gameplay input <strong>MUST</strong> be blocked while the defeat screen
+    is up (the player cannot move, attack, or open menus).</li>
+    <li>A PSZ-style text box <strong>MUST</strong> appear reading
+    <strong>"You were defeated"</strong>, followed by the question
+    <strong>"Would you like to return to the city?"</strong> with two options,
+    <strong>Yes</strong> and <strong>No</strong>.</li>
+    <li>Choosing <strong>No</strong> <strong>MUST</strong> return to the "You
+    were defeated" prompt. There is no other way to dismiss the screen — the
+    only exit is <strong>Yes</strong>.</li>
+    <li>Choosing <strong>Yes</strong> <strong>MUST</strong> return the player to
+    the city, arriving at the <strong>same spot a telepipe arrival uses</strong>
+    (the counter's telepipe-arrival point), <strong>without</strong> consuming a
+    Telepipe item or spawning a placed telepipe in either the field or the
+    city.</li>
+  </ul>
+
+  <h2>Consequences of returning (the "Yes" path)</h2>
+  <ul>
+    <li><strong>Session ends.</strong> Returning to the city via defeat ends the
+    field session exactly like the <code>return_to_city</code> exit — the
+    expedition is over and is <strong>NOT</strong> resumable. To retry a quest
+    the player <strong>MUST</strong> re-accept it at the guild counter. Any
+    active <a href="/states/telepipe">telepipe</a> is cleared (a session end
+    cancels it).</li>
+    <li><strong>Meseta penalty.</strong> The player <strong>MUST</strong> lose
+    <strong>50%</strong> of the meseta they are <em>carrying</em>, rounded down
+    (e.g. 101 → lose 50, keep 51). Meseta in <strong>storage</strong> (the bank)
+    <strong>MUST NOT</strong> be touched.</li>
+    <li><strong>Revive.</strong> On arrival in the city the player
+    <strong>MUST</strong> be revived — HP restored to full. They do not walk
+    around the city at 0 HP.</li>
+    <li>No items are lost beyond the meseta penalty. Quest-item progress is moot
+    because the session has ended.</li>
+  </ul>
+
+  <h2>Persistence</h2>
+  <p>The defeat screen is transient UI and <strong>MUST NOT</strong> persist.
+  The only durable effects of a defeat are the meseta deduction and the session
+  ending; both are in-memory game state, saved with the normal save flow.</p>
+
+  <h2>Conformance scenario</h2>
+  <ol>
+    <li>Accept a quest and enter its field carrying <strong>100</strong> meseta
+    (with, say, 500 in storage).</li>
+    <li>Take lethal damage so HP hits 0 → the avatar drops into the knockdown
+    loop, the red overlay fades in <em>below</em> the HUD, and the
+    <strong>"You were defeated"</strong> prompt appears asking to return to the
+    city.</li>
+    <li>Choose <strong>No</strong> → the prompt stays up (no exit, no movement).</li>
+    <li>Choose <strong>Yes</strong> → <strong>50</strong> meseta is deducted
+    (carried 100 → 50; storage stays 500), the player is revived at full HP, and
+    arrives in the city at the telepipe-arrival spot. No telepipe was used or
+    spawned.</li>
+    <li>The quest session is over: the guild counter offers the quest fresh
+    again (re-accept to retry), not a resume.</li>
+  </ol>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — emits
+    <code>died</code> when <code>take_damage()</code> drives HP to 0; the
+    field controller listens for it.</li>
+    <li><code>scripts/3d/ui/defeat_screen.gd</code> (DefeatScreen) — the red
+    overlay + "You were defeated" prompt (Yes/No), mounted below the HUD. On
+    <strong>Yes</strong> it runs the defeat transaction and routes to the city
+    counter via the telepipe-arrival spawn variant.</li>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) —
+    <code>defeat_return_to_city()</code> applies the consequences (50% carried
+    meseta penalty, full-HP revive, <code>return_to_city</code> session end) as
+    one transaction and returns <code>&#123; meseta_lost &#125;</code>.</li>
+    <li><code>scripts/autoloads/game_state.gd</code> (GameState) —
+    <code>lose_meseta()</code> deducts carried meseta (clamped at 0), leaving
+    <code>stored_meseta</code> untouched.</li>
+  </ul>
+</Concept>
+
+<style>
+  .diagram { margin: 0 0 28px; }
+</style>
