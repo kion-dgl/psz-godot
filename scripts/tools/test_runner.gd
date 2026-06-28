@@ -93,6 +93,7 @@ func _run_tests_core() -> void:
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
 	test_weapon_anim_data_new_animation_sets()
+	test_companion_anim_from_measured_speed()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -4121,6 +4122,51 @@ func test_weapon_anim_data_new_animation_sets() -> void:
 		var cfg: Dictionary = CombatManager.get_weapon_type_config(wtype)
 		assert_eq(int(cfg.get("combo_steps", -1)), expected_combo[wtype],
 			"type %d combo_steps" % wtype)
+	print("")
+
+
+# ── #420: companion locomotion clip is keyed to MEASURED displacement ──
+# The bug: _process_follow chose the companion's walk/run/wait clip from the
+# delayed *player* PlayerState (IDLE=0/WALKING=1/RUNNING=2/ATTACKING=3/…). A
+# rooted player attack (state 3) is >= 1 and != 1, so the companion fell into
+# the `run` branch while its trail-follow position never advanced — it ran in
+# place. The fix makes the clip a pure function of the companion's own planar
+# displacement via _select_locomotion_anim, which takes NO player state at all.
+# Off-tree instance (no _ready / scene / AnimationPlayer needed) — the selector
+# is pure, so this is fully deterministic.
+func test_companion_anim_from_measured_speed() -> void:
+	print("── Companion locomotion clip from measured planar speed (#420) ──")
+	const CompanionScript := preload("res://scripts/3d/elements/companion_npc.gd")
+	var c = CompanionScript.new()
+	var dt: float = 1.0 / 60.0  # one physics frame
+
+	# The bug case: zero displacement MUST be "wait" — proves the selector reads
+	# the companion's motion, not the player's state. (Under the old code a
+	# rooted-attack player here produced "run" while the companion stood still.)
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3.ZERO, dt), "wait",
+		"zero displacement -> wait (no run-in-place)")
+
+	# Sub-IDLE_EPS jitter (0.002 m/frame ≈ 0.12 m/s < IDLE_EPS 0.15) stays wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.002, 0, 0), dt), "wait",
+		"sub-threshold jitter -> wait")
+
+	# 0.02 m/frame = 1.2 m/s — between IDLE_EPS and RUN_EPS -> walk.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.02, 0, 0), dt), "walk",
+		"0.02 m/frame (1.2 m/s) -> walk")
+
+	# 0.1 m/frame = 6 m/s — above RUN_EPS (4.0) -> run.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0, 0, 0.1), dt), "run",
+		"0.1 m/frame (6 m/s) -> run")
+
+	# Pure vertical displacement is planar-excluded (gravity / height-snap) -> wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0, 1.0, 0), dt), "wait",
+		"pure vertical motion -> wait (planar only)")
+
+	# delta == 0 must not divide-by-zero — defaults to wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.1, 0, 0.1), 0.0), "wait",
+		"delta == 0 -> wait (no div-by-zero)")
+
+	c.free()
 	print("")
 
 
