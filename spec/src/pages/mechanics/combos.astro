@@ -12,6 +12,9 @@ import Concept from '../../layouts/Concept.astro';
   <ul>
     <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_attack</code> / <code>_start_strong_attack</code> begin or advance a combo (tracked by <code>combo_state</code>); <code>_handle_attack_state</code> opens the combo window at <code>COMBO_WINDOW_OPEN_PCT</code> of the swing and closes it after <code>COMBO_WINDOW_DURATION</code>; <code>_play_attack_animation</code> / <code>_play_and_track_attack</code> drive the per-step animation and SFX; <code>_activate_attack_hitbox</code> (melee) and <code>_fire_projectile</code> (ranged weapon types) apply the hit. Per-weapon <code>combo_steps</code> come from <code>CombatManager.get_weapon_type_config</code>.</li>
   </ul>
+
+  <h2>Combo-timing debug overlay</h2>
+  <p>The <strong>Combo Timing</strong> debug toggle (<code>DebugConfig.show_combo_timing</code>, default <strong>OFF</strong>, toggled from the field start menu) draws the at-feet timing rings that visualize the combo window. When the toggle is <strong>OFF</strong> it <strong>MUST</strong> hide <em>every</em> timing ring — both the green normal-attack combo ring (<code>_combo_ring</code>, via <code>_update_combo_ring</code> / <code>_combo_ring_flash</code>) <em>and</em> the element-tinted heavy/special-attack charge ring (<code>_charge_ring</code>, in <code>_start_charge_visual</code>). #415 fixed the charge ring still showing while the toggle was off. The heavy attack's rising particles and model glow are permanent attack VFX, <strong>not</strong> timing rings, and are unaffected by the toggle.</p>
   <p>These attacks are the ATTACKING state of the <a href="/states/player-state">Player State Machine</a>.</p>
 
   <p><a href="/mechanics">← Mechanics</a></p>

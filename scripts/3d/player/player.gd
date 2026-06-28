@@ -2019,27 +2019,32 @@ func _start_charge_visual() -> void:
 	_charge_active = true
 	_charge_timer = 0.0
 
-	# 1. Expanding ring at feet
-	if not _charge_ring:
-		_charge_ring = MeshInstance3D.new()
-		var torus := TorusMesh.new()
-		torus.inner_radius = 0.6
-		torus.outer_radius = 0.8
-		torus.rings = 16
-		torus.ring_segments = 24
-		_charge_ring.mesh = torus
-		_charge_ring_mat = StandardMaterial3D.new()
-		_charge_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_charge_ring_mat.no_depth_test = true
-		_charge_ring.material_override = _charge_ring_mat
-		add_child(_charge_ring)
-	_charge_ring_mat.albedo_color = Color(_charge_color.r, _charge_color.g, _charge_color.b, 0.6)
-	_charge_ring_mat.emission_enabled = true
-	_charge_ring_mat.emission = _charge_color
-	_charge_ring_mat.emission_energy_multiplier = 2.0
-	_charge_ring.scale = Vector3(0.2, 0.3, 0.2)
-	_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
-	_charge_ring.visible = true
+	# 1. Expanding ring at feet — gated on the Combo Timing debug toggle.
+	#    #415: when the toggle is OFF, OFF hides ALL timing rings, including this
+	#    heavy/special-attack charge ring (the green normal-attack combo ring is
+	#    already gated in _update_combo_ring/_combo_ring_flash). The rising
+	#    particles + model glow below are permanent attack VFX and stay regardless.
+	if DebugConfig.show_combo_timing:
+		if not _charge_ring:
+			_charge_ring = MeshInstance3D.new()
+			var torus := TorusMesh.new()
+			torus.inner_radius = 0.6
+			torus.outer_radius = 0.8
+			torus.rings = 16
+			torus.ring_segments = 24
+			_charge_ring.mesh = torus
+			_charge_ring_mat = StandardMaterial3D.new()
+			_charge_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			_charge_ring_mat.no_depth_test = true
+			_charge_ring.material_override = _charge_ring_mat
+			add_child(_charge_ring)
+		_charge_ring_mat.albedo_color = Color(_charge_color.r, _charge_color.g, _charge_color.b, 0.6)
+		_charge_ring_mat.emission_enabled = true
+		_charge_ring_mat.emission = _charge_color
+		_charge_ring_mat.emission_energy_multiplier = 2.0
+		_charge_ring.scale = Vector3(0.2, 0.3, 0.2)
+		_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
+		_charge_ring.visible = true
 
 	# 2. Glow on player model (uses cached material references)
 	for mat in _cached_materials:

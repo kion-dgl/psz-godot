@@ -259,9 +259,9 @@ func _open_disk_confirm(item: Dictionary) -> void:
 
 
 func _open_sell_confirm(item: Dictionary) -> void:
-	var name_str: String = str(item.get("name", "???"))
-	var sell_price: int = int(item.get("sell_price", 0))
-	ShopNav.confirm(self, "Sell %s for %d M?" % [name_str, sell_price], _sell_selected, _update_hint)
+	# Stacks (Monomate x5, materials) get the quantity picker; per-slot gear
+	# collapses to a plain confirm — same flow as buying. #416.
+	ShopNav.sell_confirm(self, item, _sell_selected, _update_hint)
 
 
 func _buy_item(item_name: String, unit_cost: int, qty: int) -> void:
@@ -305,7 +305,7 @@ func _buy_disk() -> void:
 	_refresh_display()
 
 
-func _sell_selected() -> void:
+func _sell_selected(qty: int = 1) -> void:
 	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
 		return
 	var item: Dictionary = _sell_items[_selected_index]
@@ -313,18 +313,24 @@ func _sell_selected() -> void:
 		hint_label.text = "Unequip first!"
 		return
 	var item_id: String = str(item.get("id", ""))
-	var sell_price: int = int(item.get("sell_price", 0))
+	var unit_price: int = int(item.get("sell_price", 0))
+	var sell_qty: int = clampi(qty, 1, int(item.get("quantity", 1)))
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	if not Inventory.remove_item(item_id, 1):
+	if not Inventory.remove_item(item_id, sell_qty):
 		hint_label.text = "Cannot sell that!"
 		return
 
-	character["meseta"] = int(character.get("meseta", 0)) + sell_price
+	var total: int = unit_price * sell_qty
+	character["meseta"] = int(character.get("meseta", 0)) + total
 	GameState.meseta = int(character["meseta"])
-	hint_label.text = "Sold %s for %d M!" % [str(item.get("name", "???")), sell_price]
+	var item_name: String = str(item.get("name", "???"))
+	if sell_qty > 1:
+		hint_label.text = "Sold %d× %s for %d M!" % [sell_qty, item_name, total]
+	else:
+		hint_label.text = "Sold %s for %d M!" % [item_name, total]
 	_generate_sell_list()
 	if _selected_index >= _sell_items.size():
 		_selected_index = maxi(0, _sell_items.size() - 1)

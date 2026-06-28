@@ -610,13 +610,18 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			var is_locked_equipped: bool = item_id in equipped_ids
 			var cannot_equip := false
 			var under_level := false
-			if not is_locked_equipped and not class_type_race.is_empty():
-				if weapon:
-					cannot_equip = not weapon.can_be_used_by(class_type_race)
-					under_level = char_level < weapon.level
-				elif armor_data:
-					cannot_equip = not armor_data.can_be_used_by(class_type_race)
-					under_level = char_level < armor_data.level
+			if not is_locked_equipped:
+				# ✕ via the shared cannot-use predicate (the canonical equip-legality
+				# gate; spec /mechanics/equip-legality) — same as the shops and the
+				# 3D start menu, so the marker can't drift. Covers weapons, armor,
+				# AND disks (the disk ✕ was previously missing from this counter).
+				cannot_equip = _item_cannot_use(item_id)
+				# The level requirement is a separate, temporary block (grey, no ✕).
+				if not class_type_race.is_empty():
+					if weapon:
+						under_level = char_level < weapon.level
+					elif armor_data:
+						under_level = char_level < armor_data.level
 			pill = PszStyle.shop_row(display_name, right_text, {
 				"icons": icons,
 				"equipped": is_locked_equipped,
@@ -629,6 +634,15 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 
 	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
 		_scroll_to_pill = _pill_nodes[_selected_index]
+
+
+## True when the active character can NEVER use/equip this item — the ✕ marker.
+## Delegates to the shared cannot-use predicate (the canonical equip-legality
+## gate; spec /mechanics/equip-legality) so storage agrees with the shops and the
+## 3D start menu. Weapons (type gate), armor (per-item class list), and disks
+## (class_can_learn) are all covered; DebugConfig.equip_all is honored.
+func _item_cannot_use(item_id: String) -> bool:
+	return ShopNav.sell_cannot_use(item_id)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────

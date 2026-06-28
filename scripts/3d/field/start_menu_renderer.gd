@@ -23,29 +23,14 @@ func _init(controller) -> void:
 
 
 ## True when the active character can never equip/use this inventory item — gear
-## the class/race can't equip, or a disk the class can never learn. Drives the ✕
-## marker in the items list, matching the shops and storage counter.
+## the class/race can't equip (weapon type or armor class restriction), or a disk
+## the class can never learn. Drives the ✕ marker in the items list. Routes through
+## the shared cannot-use predicate (ShopNav.sell_cannot_use → the canonical
+## EquipmentUtils.item_fits_slot gate; spec /mechanics/equip-legality) so this
+## marker can't drift from the shops or storage. WeaponData.usable_by is NOT
+## consulted (drifted); armor uses its per-item class list, honoring equip_all.
 func _item_cannot_use(item_id: String) -> bool:
-	if item_id.begins_with("disk_"):
-		var ch = CharacterManager.get_active_character()
-		if ch == null:
-			return false
-		var rest := item_id.substr(5)
-		var us := rest.rfind("_")
-		if us < 0:
-			return false
-		return not TechniqueManager.class_can_learn(ch, rest.substr(0, us), int(rest.substr(us + 1)))
-	var class_str: String = ShopNav.active_class_use_string()
-	if class_str.is_empty():
-		return false
-	var base_id: String = Inventory.get_base_id(item_id)
-	var weapon = WeaponRegistry.get_weapon(base_id)
-	if weapon:
-		return not weapon.can_be_used_by(class_str)
-	var armor = ArmorRegistry.get_armor(base_id)
-	if armor:
-		return not armor.can_be_used_by(class_str)
-	return false
+	return ShopNav.sell_cannot_use(item_id)
 
 
 func _draw_menu() -> void:

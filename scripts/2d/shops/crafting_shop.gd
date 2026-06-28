@@ -744,13 +744,13 @@ func _can_craft_recipe(recipe: RecipeBoardData) -> bool:
 ## (spec /states/shops). Crafting stays allowed — the marker is purely a visual
 ## filter so players can spot which recipes are useful to them.
 func _output_unequippable(recipe: RecipeBoardData) -> bool:
-	var class_str := ShopNav.active_class_use_string()
-	if class_str.is_empty():
+	# Canonical equip-legality gate (ClassData.allowed_weapon_types via
+	# EquipmentUtils.item_fits_slot; spec /mechanics/equip-legality) — the same
+	# gate the shops use, honoring DebugConfig.equip_all. WeaponData.usable_by is
+	# NOT consulted (it has drifted from the class lists).
+	if WeaponRegistry.get_weapon(recipe.output_weapon_id) == null:
 		return false
-	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
-	if weapon == null:
-		return false
-	return not weapon.can_be_used_by(class_str)
+	return not EquipmentUtils.item_fits_slot(recipe.output_weapon_id, "weapon")
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

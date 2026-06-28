@@ -23,7 +23,21 @@ static func item_fits_slot(item_id: String, slot_key: String) -> bool:
 					return false
 			return true
 		"frame":
-			return ArmorRegistry.has_armor(base_id)
+			var armor = ArmorRegistry.get_armor(base_id)
+			if armor == null:
+				return false
+			# Armor legality is a per-item class restriction (ArmorData.usable_by,
+			# e.g. robe = Newman-Hunter/Force) — the legitimate, non-drifted data,
+			# and the ONLY source of armor legality (ClassData has no armor analog).
+			# Mirror the weapon branch: gate by the active class, bypassed by
+			# DebugConfig.equip_all. Empty usable_by = no restriction (all classes).
+			# Spec /mechanics/equip-legality.
+			var character = CharacterManager.get_active_character()
+			if character:
+				var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+				if class_data and not armor.can_be_used_by("%s %s" % [class_data.type, class_data.race]) and not DebugConfig.equip_all:
+					return false
+			return true
 		"unit1", "unit2", "unit3", "unit4":
 			return UnitRegistry.get_unit(base_id) != null
 		"mag":

@@ -49,6 +49,8 @@ func _run_tests_core() -> void:
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
 	test_synth_unequippable_marker()
+	test_start_menu_cannot_use()
+	test_storage_cannot_use()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1403,6 +1405,39 @@ func test_shops() -> void:
 		assert_eq(Inventory.get_max_stack("monomate"), int(mono.max_stack), "get_max_stack matches consumable.max_stack")
 	assert_eq(Inventory.get_max_stack("saber"), 1, "Per-slot items report max_stack=1")
 
+	# ── Multi-qty SELL (#416) ──
+	# Selling a stack used to remove one copy per confirm; now the sell tab
+	# mirrors the buy flow — true stacks open the QuantityDialog picker, per-slot
+	# gear stays a 1-at-a-time confirm. ShopNav.sell_confirm() is the shared
+	# router both shops call; assert its modal choice here (the seeded unit layer)
+	# and let the autopilot/manual round exercise the on-screen picker.
+	print("  ── Multi-qty sell routing ──")
+	var ShopNavSell = load("res://scripts/2d/shops/shop_nav.gd")
+	var noop_qty := func(_q: int) -> void: pass
+	var noop := func() -> void: pass
+	var sell_shop = load("res://scripts/2d/shops/item_shop.gd").new()
+	# A stack of 5 → the quantity picker, clamped to the stack size.
+	ShopNavSell.sell_confirm(
+		sell_shop, {"name": "Monomate", "id": "monomate", "sell_price": 10, "quantity": 5},
+		noop_qty, noop)
+	assert_true(sell_shop._active_modal is QuantityDialog,
+		"selling a 5-stack opens the quantity picker")
+	if sell_shop._active_modal is QuantityDialog:
+		assert_eq(sell_shop._active_modal._max_qty, 5,
+			"sell picker max qty == the stack size (5)")
+	if sell_shop._active_modal != null:
+		sell_shop._active_modal.free()
+		sell_shop._active_modal = null
+	# A single per-slot weapon instance → plain confirm, never the picker.
+	ShopNavSell.sell_confirm(
+		sell_shop, {"name": "Saber", "id": "saber#1", "sell_price": 40, "quantity": 1},
+		noop_qty, noop)
+	assert_true(sell_shop._active_modal != null and not (sell_shop._active_modal is QuantityDialog),
+		"selling per-slot gear stays a plain 1-qty confirm")
+	if sell_shop._active_modal != null:
+		sell_shop._active_modal.free()
+	sell_shop.free()
+
 	# ── Buy guards: affordability + room ──
 	# ShopManager.buy_item already refuses an unaffordable / no-room purchase
 	# (returns false, no state change). These lock that behavior in as the
@@ -1572,14 +1607,16 @@ func test_shop_buy_unequippable_gear() -> void:
 
 
 # Regression for Rozalin's "HUmar shows every weapon/armor equippable" report,
-# re-pinned to the canonical equip-legality gate (allowed_weapon_types via
-# EquipmentUtils.item_fits_slot — NOT WeaponData/ArmorData.usable_by; spec
-# /mechanics/equip-legality). Under the contract:
-#   • a rod is a Force weapon type HUmar's class can't equip → ✕;
+# re-pinned to the canonical equip-legality gate (EquipmentUtils.item_fits_slot;
+# spec /mechanics/equip-legality). Under the contract:
+#   • a rod is a Force weapon type HUmar's class can't equip → ✕
+#     (ClassData.allowed_weapon_types; WeaponData.usable_by is NOT consulted);
 #   • a saber is allowed for every class → no ✕;
-#   • ARMOR carries no class restriction, so a frame AND a robe are both
-#     equippable (the old usable_by robe block is dropped — that drift is exactly
-#     what made buy and sell disagree).
+#   • a basic Frame (empty usable_by = no restriction) is equippable → no ✕;
+#   • a Robe IS class-restricted (usable_by = Newman-Hunter/Force, which excludes
+#     HUmar = Hunter Human) → ✕. Armor legality is a per-item class list
+#     (ArmorData.usable_by, the only armor-legality source), routed through
+#     item_fits_slot("frame") — the same gate everywhere, so buy/sell/inventory agree.
 # Also asserts the buy-tab ✕ predicate equals the sell-tab one
 # (ShopNav.sell_cannot_use) — the "single source of truth" rule in code.
 func test_humar_gear_unequippable() -> void:
@@ -1601,17 +1638,32 @@ func test_humar_gear_unequippable() -> void:
 	assert_true(ws._check_equippability("saber", "weapon").get("can_equip", false),
 		"HUmar CAN equip a saber — every class allows it (no ✕)")
 	assert_true(ws._check_equippability("frame", "armor").get("can_equip", false),
-		"HUmar CAN equip a basic frame (no ✕)")
-	assert_true(ws._check_equippability("robe", "armor").get("can_equip", false),
-		"HUmar CAN equip a robe — armor has no class restriction under the gate (no ✕)")
+		"HUmar CAN equip a basic frame — empty usable_by = no restriction (no ✕)")
+	assert_true(not ws._check_equippability("robe", "armor").get("can_equip", true),
+		"HUmar CANNOT equip a robe — usable_by excludes Hunter Human (should ✕)")
 
-	# Buy and sell agree: the buy-tab ✕ predicate == the sell-tab ✕ predicate.
+	# Buy and sell agree: the buy-tab ✕ predicate == the sell-tab ✕ predicate,
+	# for weapons AND armor (the single source of truth, every gear type).
 	assert_eq(not ws._check_equippability("rod", "weapon").get("can_equip", true),
 		ShopNavCls.sell_cannot_use("rod"),
 		"buy ✕ and sell ✕ agree for a rod (single source of truth)")
 	assert_eq(not ws._check_equippability("saber", "weapon").get("can_equip", true),
 		ShopNavCls.sell_cannot_use("saber"),
 		"buy ✕ and sell ✕ agree for a saber (single source of truth)")
+	assert_eq(not ws._check_equippability("robe", "armor").get("can_equip", true),
+		ShopNavCls.sell_cannot_use("robe"),
+		"buy ✕ and sell ✕ agree for a robe (armor class restriction is canonical)")
+	assert_eq(not ws._check_equippability("frame", "armor").get("can_equip", true),
+		ShopNavCls.sell_cannot_use("frame"),
+		"buy ✕ and sell ✕ agree for an unrestricted frame")
+
+	# DebugConfig.equip_all bypasses the armor class gate too (verify-models flow).
+	DebugConfig.equip_all = true
+	assert_true(ws._check_equippability("robe", "armor").get("can_equip", false),
+		"equip_all bypasses the armor class gate (robe becomes equippable)")
+	assert_true(not ShopNavCls.sell_cannot_use("robe"),
+		"equip_all clears the robe ✕ on the sell predicate too")
+	DebugConfig.equip_all = false
 	ws.free()
 
 	DebugConfig.equip_all = saved_equip_all
@@ -1759,15 +1811,33 @@ func test_disk_capability_grey() -> void:
 # use with the ✕ marker, so a player scanning what to offload sees dead weight at
 # a glance (spec /states/shops). Uses the canonical equip-legality gate
 # (allowed_weapon_types via EquipmentUtils), NOT WeaponData.usable_by.
-func test_shop_sell_cannot_use_marker() -> void:
-	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
-	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
-	var saved_chars = CharacterManager._characters
-	var saved_slot = CharacterManager._active_slot
-	var saved_equip_all := DebugConfig.equip_all
+# Shared isolation for the per-screen ✕-marker tests below (shop sell, start
+# menu, storage): each asserts its screen's _item_cannot_use agrees with the
+# canonical ShopNav.sell_cannot_use, so they share identical character-state
+# setup/teardown. Extracted so the three parallel tests keep one copy of the
+# isolation (and don't trip the near-duplicate ratchet, #294).
+func _isolate_character_state() -> Dictionary:
+	var saved := {
+		"chars": CharacterManager._characters,
+		"slot": CharacterManager._active_slot,
+		"equip_all": DebugConfig.equip_all,
+	}
 	DebugConfig.equip_all = false  # the ✕ gate must see real class legality
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
+	return saved
+
+
+func _restore_character_state(saved: Dictionary) -> void:
+	CharacterManager._characters = saved["chars"]
+	CharacterManager._active_slot = saved["slot"]
+	DebugConfig.equip_all = saved["equip_all"]
+
+
+func test_shop_sell_cannot_use_marker() -> void:
+	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
 
 	# FOnewm (Force): allowed_weapon_types is Saber/Handgun/Rod/Wand — no Sword.
 	CharacterManager.create_character(0, "fonewm", "SellXForce")
@@ -1777,6 +1847,16 @@ func test_shop_sell_cannot_use_marker() -> void:
 			"FOnewm sell row: Sword carries ✕ (class can't equip the type)")
 		assert_true(not ShopNavCls.sell_cannot_use("saber"),
 			"FOnewm sell row: Saber has no ✕ (class can equip it)")
+	# Armor carries the per-item class ✕ too (ArmorData.usable_by, the only
+	# armor-legality source). "armor" = Hunter/Ranger only → ✕ for a Force;
+	# "robe" lists Force Newman → no ✕; "frame" is unrestricted → no ✕.
+	if ArmorRegistry.get_armor("armor") and ArmorRegistry.get_armor("robe") and ArmorRegistry.get_armor("frame"):
+		assert_true(ShopNavCls.sell_cannot_use("armor"),
+			"FOnewm sell row: 'armor' carries ✕ (Hunter/Ranger only, FOnewm can't wear it)")
+		assert_true(not ShopNavCls.sell_cannot_use("robe"),
+			"FOnewm sell row: Robe has no ✕ (usable_by lists Force Newman)")
+		assert_true(not ShopNavCls.sell_cannot_use("frame"),
+			"FOnewm sell row: unrestricted Frame has no ✕")
 	# Non-gear (consumables, materials) never carry the ✕.
 	assert_true(not ShopNavCls.sell_cannot_use("monomate"),
 		"Consumable sell row: no ✕ (no permanent class restriction)")
@@ -1800,9 +1880,7 @@ func test_shop_sell_cannot_use_marker() -> void:
 	assert_true(ShopNavCls._parse_disk_id("disk_foie").is_empty(),
 		"_parse_disk_id rejects a level-less id")
 
-	CharacterManager._characters = saved_chars
-	CharacterManager._active_slot = saved_slot
-	DebugConfig.equip_all = saved_equip_all
+	_restore_character_state(saved)
 	print("")
 
 
@@ -1817,15 +1895,93 @@ func test_synth_unequippable_marker() -> void:
 	var class_str: String = ShopNavCls.active_class_use_string()
 	if class_str.is_empty():
 		print("  INFO: no class string — skipped"); cs.free(); print(""); return
+	# Expectation routes through the SAME canonical gate the migrated
+	# _output_unequippable now uses (EquipmentUtils.item_fits_slot →
+	# ClassData.allowed_weapon_types), NOT the deprecated WeaponData.usable_by.
 	var all_consistent := true
 	for recipe in RecipeRegistry.get_all_recipes():
 		var w = WeaponRegistry.get_weapon(recipe.output_weapon_id)
-		var expect: bool = w != null and not w.can_be_used_by(class_str)
+		var expect: bool = w != null and not EquipmentUtils.item_fits_slot(recipe.output_weapon_id, "weapon")
 		if cs._output_unequippable(recipe) != expect:
 			all_consistent = false
 	assert_true(all_consistent,
-		"_output_unequippable matches can_be_used_by for every recipe output")
+		"_output_unequippable matches the canonical equip-legality gate for every recipe output")
 	cs.free()
+	print("")
+
+
+# The 3D field start menu's items-list ✕ marker (StartMenuRenderer._item_cannot_use)
+# routes through the shared cannot-use predicate (the canonical equip-legality gate;
+# spec /mechanics/equip-legality), so it agrees with the shops and storage. Covers
+# the three gear kinds — weapon type, armor class list, disk learnability — plus the
+# DebugConfig.equip_all bypass.
+func test_start_menu_cannot_use() -> void:
+	print("── 3D start menu: ✕ cannot-use marker via canonical gate ──")
+	var renderer = load("res://scripts/3d/field/start_menu_renderer.gd").new(null)
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+	# FOnewm (Force Newman): can equip Rod/Handgun, not Sword; can wear "robe"
+	# (lists Force Newman) but not "armor" (Hunter/Ranger only); can learn Foie.
+	CharacterManager.create_character(0, "fonewm", "StartMenuX")
+	CharacterManager.set_active_slot(0)
+
+	if WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("rod"):
+		assert_true(renderer._item_cannot_use("sword"), "start menu: Sword ✕ for FOnewm (type)")
+		assert_true(not renderer._item_cannot_use("rod"), "start menu: Rod has no ✕ for FOnewm")
+	if ArmorRegistry.get_armor("armor") and ArmorRegistry.get_armor("robe") and ArmorRegistry.get_armor("frame"):
+		assert_true(renderer._item_cannot_use("armor"), "start menu: 'armor' ✕ for FOnewm (class list)")
+		assert_true(not renderer._item_cannot_use("robe"), "start menu: Robe has no ✕ for FOnewm")
+		assert_true(not renderer._item_cannot_use("frame"), "start menu: unrestricted Frame has no ✕")
+	assert_true(not renderer._item_cannot_use("disk_foie_1"), "start menu: learnable disk has no ✕")
+	assert_true(not renderer._item_cannot_use("monomate"), "start menu: consumable never gets ✕")
+
+	# The marker IS the shared predicate (single source of truth) — no per-screen drift.
+	assert_eq(renderer._item_cannot_use("sword"), ShopNavCls.sell_cannot_use("sword"),
+		"start menu ✕ == shared sell_cannot_use for a weapon")
+	assert_eq(renderer._item_cannot_use("armor"), ShopNavCls.sell_cannot_use("armor"),
+		"start menu ✕ == shared sell_cannot_use for armor")
+
+	# equip_all bypasses the gate everywhere it applies.
+	DebugConfig.equip_all = true
+	assert_true(not renderer._item_cannot_use("sword"), "equip_all clears the weapon ✕")
+	assert_true(not renderer._item_cannot_use("armor"), "equip_all clears the armor ✕")
+
+	_restore_character_state(saved)
+	print("")
+
+
+# The storage counter's row ✕ marker (storage._item_cannot_use) routes through the
+# same shared cannot-use predicate as the shops and start menu, so the three agree.
+# Storage previously skipped disks entirely; this also pins that disks now get the ✕.
+func test_storage_cannot_use() -> void:
+	print("── Storage: ✕ cannot-use marker via canonical gate ──")
+	var storage = load("res://scripts/2d/storage.gd").new()
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+	# A CAST: can't equip Rod (Force type), can't wear "robe" (Newman-Hunter/Force),
+	# and can NEVER learn a technique disk → all three carry the ✕.
+	CharacterManager.create_character(0, "hucast", "StorageX")
+	CharacterManager.set_active_slot(0)
+
+	if WeaponRegistry.get_weapon("rod") and WeaponRegistry.get_weapon("saber"):
+		assert_true(storage._item_cannot_use("rod"), "storage: Rod ✕ for HUcast (type)")
+		assert_true(not storage._item_cannot_use("saber"), "storage: Saber has no ✕ for HUcast")
+	if ArmorRegistry.get_armor("robe") and ArmorRegistry.get_armor("frame"):
+		assert_true(storage._item_cannot_use("robe"), "storage: Robe ✕ for HUcast (class list)")
+		assert_true(not storage._item_cannot_use("frame"), "storage: unrestricted Frame has no ✕")
+	assert_true(storage._item_cannot_use("disk_foie_1"),
+		"storage: technique disk ✕ for a CAST (can never learn) — previously unmarked here")
+
+	# Single source of truth: storage ✕ == the shared sell predicate.
+	assert_eq(storage._item_cannot_use("rod"), ShopNavCls.sell_cannot_use("rod"),
+		"storage ✕ == shared sell_cannot_use for a weapon")
+	assert_eq(storage._item_cannot_use("robe"), ShopNavCls.sell_cannot_use("robe"),
+		"storage ✕ == shared sell_cannot_use for armor")
+	assert_eq(storage._item_cannot_use("disk_foie_1"), ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"storage ✕ == shared sell_cannot_use for a disk")
+
+	storage.free()
+	_restore_character_state(saved)
 	print("")
 
 
@@ -3293,6 +3449,12 @@ func test_telepipe_239_fixes() -> void:
 # only for weapons, so armor/unit/mag duplicates became "tools").
 func test_dup_equipment() -> void:
 	print("── Same-stat items are each their own equippable item (#357) ──")
+	# This test is about instance-suffix categorization, not class legality, and
+	# runs against whatever character is globally active. "armor" is Hunter/Ranger-
+	# only, so force equip_all to isolate the slot-fit check from the armor class
+	# gate item_fits_slot("frame") now applies.
+	var saved_equip_all_dup := DebugConfig.equip_all
+	DebugConfig.equip_all = true
 	Inventory.clear_inventory()
 	for _i in range(3):
 		Inventory.add_item("armor", 1)
@@ -3304,6 +3466,7 @@ func test_dup_equipment() -> void:
 	for iid in armor_ids:
 		assert_eq(Inventory.get_item_category(iid), "Armor", "copy %s categorizes as Armor" % iid)
 		assert_true(EquipmentUtils.item_fits_slot(iid, "frame"), "copy %s fits the frame slot" % iid)
+	DebugConfig.equip_all = saved_equip_all_dup
 
 	# Equip the 2nd copy, then switch to the 3rd — any instance is equippable.
 	var character = CharacterManager.get_active_character()
@@ -3342,7 +3505,9 @@ func test_equipment_screen_dup_frame() -> void:
 	print("── Equipment screen lists + equips every same-stat frame (#357) ──")
 	const EquipmentScreen := preload("res://scenes/2d/equipment.tscn")
 
-	# Deterministic active character (any class can wear any frame).
+	# Deterministic active character. HUmar (Hunter Human) is in "armor"'s
+	# usable_by (Hunter/Ranger), so the seeded frames are legally equippable —
+	# this test exercises instance handling, not the class gate.
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
 	CharacterManager.create_character(0, "humar", "EquipDupTester")
