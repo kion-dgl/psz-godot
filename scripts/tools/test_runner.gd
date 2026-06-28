@@ -125,6 +125,12 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock_persistence()
 	test_input_config()
 	test_blackjack()
+	test_kill_state_survives_warp_flush()
+	test_box_state_survives_warp_flush()
+	test_drop_state_survives_warp_flush()
+	test_message_wall_questitem_persist()
+	test_keys_gates_survive_section_roundtrip()
+	test_field_state_full_contract_roundtrip()
 	test_script_parse()
 
 
@@ -3211,6 +3217,358 @@ func test_telepipe_round_trip() -> void:
 	print("")
 
 
+# ── Kill-state survives the exit flush (#423) ────────────────
+# Pins the invariant that an enemy defeated in the SAME frame the player
+# warps out of a cell is snapshotted dead by save_cell_state and MUST NOT
+# respawn on return. The capture path (CellObjectSpawner._save_cell_state)
+# builds the alive list from is_alive, so an enemy whose _die() already
+# flipped is_alive=false this frame is written as "dead" — and that dead
+# state survives a city suspend/resume round-trip. Spec:
+# /states/field-lifecycle "Flush on exit". Companion to #426 (input
+# precedence — the warp consuming the palette button is what makes this a
+# same-frame race in the first place).
+func test_kill_state_survives_warp_flush() -> void:
+	print("── Kill-state — defeated enemy persists as dead through warp flush (#423) ──")
+
+	# Clean slate for the section-state store + any suspended session.
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	# Stub field controller exposing exactly the fields _save_cell_state reads.
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "1,2",
+		"objects": [
+			{"type": "enemy", "enemy_id": "lizard", "wave": 1, "position": [1.0, 0.0, 2.0]},
+			{"type": "enemy", "enemy_id": "wolf", "wave": 1, "position": [3.0, 0.0, 4.0]},
+		],
+	}
+
+	# Two real EnemyBase nodes mirror the live room. The wolf has already had
+	# _die() flip is_alive=false THIS frame (the kill-all-then-warp case); the
+	# lizard is still alive. Not added to the tree — _save_cell_state only reads
+	# is_alive + enemy_data.id, no _ready() needed.
+	var lizard_data := EnemyData.new()
+	lizard_data.id = "lizard"
+	var wolf_data := EnemyData.new()
+	wolf_data.id = "wolf"
+	var lizard := EnemyBase.new()
+	lizard.enemy_data = lizard_data
+	lizard.is_alive = true
+	var wolf := EnemyBase.new()
+	wolf.enemy_data = wolf_data
+	wolf.is_alive = false
+	stub._room_enemies = [lizard, wolf]
+
+	# Capture the live cell state, exactly as a warp/exit flush would.
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	assert_true(stub._cell_states.has("1,2"), "Cell 1,2 flushed into _cell_states")
+	var saved_objs: Array = stub._cell_states.get("1,2", {}).get("objects", [])
+	var lizard_state: String = ""
+	var wolf_state: String = ""
+	for o in saved_objs:
+		if str(o.get("type", "")) != "enemy":
+			continue
+		if str(o.get("enemy_id", "")) == "lizard":
+			lizard_state = str(o.get("state", ""))
+		elif str(o.get("enemy_id", "")) == "wolf":
+			wolf_state = str(o.get("state", ""))
+	assert_eq(lizard_state, "alive", "Live lizard snapshotted alive")
+	assert_eq(wolf_state, "dead", "Same-frame-killed wolf snapshotted dead")
+
+	# Round-trip the snapshot through a city suspend/resume — the kill must
+	# survive (the #423 invariant: defeated enemies MUST NOT respawn on return).
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var st: Dictionary = SessionManager.get_section_state(0)
+	var rt_cells: Dictionary = st.get("cell_states", {})
+	assert_true(rt_cells.has("1,2"), "Cell 1,2 survives city round-trip")
+	var rt_wolf_state: String = ""
+	for o in rt_cells.get("1,2", {}).get("objects", []):
+		if str(o.get("type", "")) == "enemy" and str(o.get("enemy_id", "")) == "wolf":
+			rt_wolf_state = str(o.get("state", ""))
+	assert_eq(rt_wolf_state, "dead", "Killed wolf still dead after city trip (no respawn)")
+
+	# Cleanup — free the Node-derived EnemyBase instances (stub is RefCounted).
+	lizard.free()
+	wolf.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Box-state survives the warp flush (#423 / field-lifecycle §Persistence) ──
+# Broken boxes MUST NOT reappear (and MUST NOT re-drop loot). A box destroyed in
+# the field is freed, so it's absent from _room_boxes; the save's diff against
+# the authored cell records it "destroyed", and that survives a city telepipe.
+func test_box_state_survives_warp_flush() -> void:
+	print("── Box-state — broken boxes persist as destroyed through warp flush (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "5,5",
+		"objects": [
+			{"type": "box", "position": [1.0, 0.0, 1.0]},   # A — still standing
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # B — destroyed, gone from room
+		],
+	}
+	# Live room: only the intact box at A survives (B was broken → freed → absent).
+	var intact_box := Box.new()
+	intact_box.element_state = "intact"
+	intact_box.position = Vector3(1.0, 0.0, 1.0)
+	stub._room_boxes = [intact_box]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	var objs: Array = stub._cell_states.get("5,5", {}).get("objects", [])
+	var box_a := ""
+	var box_b := ""
+	for o in objs:
+		if str(o.get("type", "")) != "box":
+			continue
+		if abs(float(o.get("px", 0)) - 1.0) < 0.01:
+			box_a = str(o.get("state", ""))
+		elif abs(float(o.get("px", 0)) - 9.0) < 0.01:
+			box_b = str(o.get("state", ""))
+	assert_eq(box_a, "intact", "Intact box snapshotted intact")
+	assert_eq(box_b, "destroyed", "Broken box snapshotted destroyed")
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("5,5", {}).get("objects", [])
+	var rt_b := ""
+	for o in rt:
+		if str(o.get("type", "")) == "box" and abs(float(o.get("px", 0)) - 9.0) < 0.01:
+			rt_b = str(o.get("state", ""))
+	assert_eq(rt_b, "destroyed", "Broken box still destroyed after city trip (no reappear / no re-drop)")
+
+	intact_box.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Drop-state survives the warp flush (#423) ────────────────────────────────
+# Uncollected ground loot MUST keep its position + amount (no move, no re-roll);
+# collected drops MUST NOT reappear. The save only persists drops whose
+# element_state == "available".
+func test_drop_state_survives_warp_flush() -> void:
+	print("── Drop-state — uncollected loot persists (pos+amount), collected does not (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {"pos": "6,6", "objects": []}
+
+	var meseta := DropMeseta.new()
+	meseta.element_state = "available"
+	meseta.amount = 250
+	meseta.position = Vector3(2.0, 0.0, 3.0)
+	var material := DropMaterial.new()
+	material.element_state = "available"
+	material.item_id = "power_material"
+	material.amount = 1
+	material.position = Vector3(4.0, 0.0, 5.0)
+	var collected := DropItem.new()
+	collected.element_state = "collected"   # already picked up → excluded by the save
+	collected.item_id = "monomate"
+	collected.position = Vector3(7.0, 0.0, 8.0)
+	stub._room_drops = [meseta, material, collected]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	var drops: Array = stub._cell_states.get("6,6", {}).get("drops", [])
+	assert_eq(drops.size(), 2, "Only the 2 available drops saved (collected excluded)")
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt_drops: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("6,6", {}).get("drops", [])
+	var got_meseta := {}
+	var got_material := {}
+	var has_collected := false
+	for d in rt_drops:
+		if str(d.get("kind", "")) == "meseta":
+			got_meseta = d
+		elif str(d.get("kind", "")) == "material":
+			got_material = d
+		if str(d.get("item_id", "")) == "monomate":
+			has_collected = true
+	assert_eq(int(got_meseta.get("amount", -1)), 250, "Meseta drop keeps amount (no re-roll)")
+	assert_true(abs(float(got_meseta.get("px", -99)) - 2.0) < 0.01 and abs(float(got_meseta.get("pz", -99)) - 3.0) < 0.01,
+		"Meseta drop keeps exact position")
+	assert_eq(str(got_material.get("item_id", "")), "power_material", "Material drop keeps item_id")
+	assert_true(not has_collected, "Collected item did NOT reappear as a ground drop")
+
+	meseta.free()
+	material.free()
+	collected.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Read messages / destroyed walls / collected quest items persist (#423) ───
+func test_message_wall_questitem_persist() -> void:
+	print("── Read messages / destroyed walls / collected quest items persist (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {"pos": "7,7", "objects": []}
+
+	var msg := MessagePack.new()
+	msg.element_state = "read"
+	msg.message_text = "A cryptic note."
+	msg.position = Vector3(1.0, 0.0, 0.0)
+	stub._room_messages = [msg]
+
+	var wall := Wall.new()
+	wall.element_state = "destroyed"
+	wall.is_destructible = true
+	wall.position = Vector3(2.0, 0.0, 0.0)
+	stub._room_walls = [wall]
+
+	var qitem := QuestItemPickup.new()
+	qitem.element_state = "collected"
+	qitem.quest_item_id = "ancient_key"
+	qitem.quest_item_label = "Ancient Key"
+	qitem.position = Vector3(3.0, 0.0, 0.0)
+	stub._room_quest_items = [qitem]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("7,7", {}).get("objects", [])
+	var m := ""
+	var w := ""
+	var qi := ""
+	for o in rt:
+		match str(o.get("type", "")):
+			"message": m = str(o.get("state", ""))
+			"wall": w = str(o.get("state", ""))
+			"quest_item": qi = str(o.get("state", ""))
+	assert_eq(m, "read", "Read message stays read after warp")
+	assert_eq(w, "destroyed", "Destroyed wall stays destroyed after warp")
+	assert_eq(qi, "collected", "Collected quest item stays collected after warp")
+
+	msg.free()
+	wall.free()
+	qitem.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Collected keys + opened gates survive the section round-trip (#423) ──────
+# Gate/key progress is controller-level state (not in the objects array); it
+# rides along in save_section_state and MUST survive a telepipe suspend/resume.
+func test_keys_gates_survive_section_roundtrip() -> void:
+	print("── Collected keys + opened gates survive the section round-trip (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+	SessionManager.enter_field("gurhacia", "normal")
+
+	var keys := {"1,2:red_key": true, "2,3:blue_key": true}
+	var gates := {"1,2:north_gate": true}
+	SessionManager.save_section_state(0, {}, keys, gates, {"1,2": true})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var st: Dictionary = SessionManager.get_section_state(0)
+	assert_eq((st.get("keys_collected", {}) as Dictionary).size(), 2, "Both collected keys survive round-trip")
+	assert_true((st.get("keys_collected", {}) as Dictionary).has("1,2:red_key"), "red_key still collected")
+	assert_true(bool((st.get("gates_opened", {}) as Dictionary).get("1,2:north_gate", false)), "north_gate still opened")
+	assert_true((st.get("visited_cells", {}) as Dictionary).has("1,2"), "visited cell preserved")
+
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Full persistence contract holds across repeated city trips (#423) ────────
+# The reliability/stress case: one cell mixing every persisted category, bounced
+# to the city 3× in a row. Every category MUST hold each trip — nothing respawns.
+func test_field_state_full_contract_roundtrip() -> void:
+	print("── Full persistence contract holds across 3 consecutive city trips (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "8,8",
+		"objects": [
+			{"type": "enemy", "enemy_id": "wolf", "wave": 1, "position": [0.0, 0.0, 0.0]},
+			{"type": "enemy", "enemy_id": "lizard", "wave": 1, "position": [1.0, 0.0, 0.0]},
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # broken, absent from room
+		],
+	}
+	var dead_wolf := EnemyBase.new()
+	var wd := EnemyData.new(); wd.id = "wolf"; dead_wolf.enemy_data = wd; dead_wolf.is_alive = false
+	var live_liz := EnemyBase.new()
+	var ld := EnemyData.new(); ld.id = "lizard"; live_liz.enemy_data = ld; live_liz.is_alive = true
+	stub._room_enemies = [dead_wolf, live_liz]
+	var drop := DropMeseta.new(); drop.element_state = "available"; drop.amount = 99; drop.position = Vector3(3.0, 0.0, 3.0)
+	stub._room_drops = [drop]
+	var msg := MessagePack.new(); msg.element_state = "read"; msg.message_text = "x"; msg.position = Vector3(4.0, 0.0, 4.0)
+	stub._room_messages = [msg]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	var cells: Dictionary = stub._cell_states
+	for trip in range(1, 4):
+		SessionManager.save_section_state(0, cells, {}, {}, {})
+		SessionManager.suspend_session()
+		SessionManager.resume_session()
+		cells = SessionManager.get_section_state(0).get("cell_states", {})
+		var objs: Array = cells.get("8,8", {}).get("objects", [])
+		var n_destroyed := 0
+		var n_read := 0
+		var wolf_state := ""
+		var liz_state := ""
+		for o in objs:
+			var t := str(o.get("type", ""))
+			var s := str(o.get("state", ""))
+			if (t == "box" or t == "rare_box") and s == "destroyed":
+				n_destroyed += 1
+			elif t == "message" and s == "read":
+				n_read += 1
+			if t == "enemy" and str(o.get("enemy_id", "")) == "wolf":
+				wolf_state = s
+			elif t == "enemy" and str(o.get("enemy_id", "")) == "lizard":
+				liz_state = s
+		var n_drops: int = (cells.get("8,8", {}).get("drops", []) as Array).size()
+		assert_eq(wolf_state, "dead", "Trip %d: killed wolf stays dead" % trip)
+		assert_eq(liz_state, "alive", "Trip %d: live lizard stays alive" % trip)
+		assert_eq(n_destroyed, 1, "Trip %d: broken box stays destroyed" % trip)
+		assert_eq(n_read, 1, "Trip %d: read message stays read" % trip)
+		assert_eq(n_drops, 1, "Trip %d: ground drop still present" % trip)
+
+	dead_wolf.free()
+	live_liz.free()
+	drop.free()
+	msg.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
 func test_telepipe_suspend_resume_keeps_telepipe() -> void:
 	print("── Telepipe — suspend/resume preserves the active telepipe ──")
 
@@ -6049,3 +6407,25 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+# ── Duck-typed stub for test_kill_state_survives_warp_flush (#423) ───
+# Exposes exactly the fields CellObjectSpawner._save_cell_state reads off
+# its back-reference controller (_c). RefCounted so it auto-frees; the
+# real ValleyFieldController is far heavier and not needed for the
+# capture-path assertion.
+class _KillStateStubController extends RefCounted:
+	var _current_cell: Dictionary = {}
+	var _cell_states: Dictionary = {}
+	var _room_enemies: Array = []
+	var _room_boxes: Array = []
+	var _room_drops: Array = []
+	var _room_messages: Array = []
+	var _room_props: Array = []
+	var _room_triggers: Array = []
+	var _room_npcs: Array = []
+	var _room_quest_items: Array = []
+	var _room_walls: Array = []
+	var _fence_links: Dictionary = {}
+	var _current_wave: int = 1
+	var _max_wave: int = 1
