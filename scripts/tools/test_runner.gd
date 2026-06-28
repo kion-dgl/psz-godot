@@ -60,6 +60,7 @@ func _run_tests_core() -> void:
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
+	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
@@ -2804,6 +2805,73 @@ func test_technique_disks() -> void:
 	CombatManager.clear_combat()
 	print("  INFO: %d disk drops from 500 boss kills (expected ~150 at 30%%)" % disk_drops)
 	assert_gt(disk_drops, 50, "Disks drop from bosses (got %d)" % disk_drops)
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+# Regression for #417: a duplicate technique disk is minted as "disk_foie_3#2".
+# Parsing the RAW instance id makes int("3#2") == 32, so use_disk() rejected
+# every copy past the first as "level 32 > class max" (the "greyed out / not
+# usable" report). The fix strips the suffix via get_base_id() BEFORE parsing
+# tech/level, while remove_item still consumes the exact selected instance.
+func test_disk_duplicate_use_strips_suffix() -> void:
+	print("── Disk Duplicate Use (#417) ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# FOmar — Force class, full technique access
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	GameState.reset_game_state()
+	var fomar := CharacterManager.create_character(0, "fomar", "DupDiskForce")
+	assert_true(fomar != null, "Created FOmar character")
+	if fomar == null:
+		print("  SKIP: Could not create FOmar")
+		CharacterManager._characters = saved_characters
+		CharacterManager._active_slot = saved_slot
+		if saved_slot >= 0:
+			CharacterManager.set_active_slot(saved_slot)
+		print("")
+		return
+	fomar["level"] = 20
+	CharacterManager.set_active_slot(0)
+	fomar["techniques"].clear()
+
+	# Buy TWO copies of the same learnable disk → two per-slot instances.
+	Inventory.add_item("disk_foie_3", 1)
+	Inventory.add_item("disk_foie_3", 1)
+	var keys: Array = Inventory._items.keys()
+	assert_true(keys.has("disk_foie_3"), "First copy minted as 'disk_foie_3'")
+	# The second copy gets a '#N' instance suffix (any N, not just #2).
+	var dup_id := ""
+	for k in keys:
+		var kk := str(k)
+		if kk != "disk_foie_3" and kk.begins_with("disk_foie_3#"):
+			dup_id = kk
+			break
+	assert_true(not dup_id.is_empty(), "Second copy minted with '#' instance suffix (%s)" % dup_id)
+	# Two distinct disk instances exist (create_character seeds starter gear, so
+	# assert on the disk count specifically rather than total unique items).
+	assert_eq(Inventory.get_item_count("disk_foie_3") + Inventory.get_item_count(dup_id), 2, "Two distinct disk instances exist")
+
+	# Load-bearing: using the DUPLICATE instance must learn Foie at Lv.3, NOT 32.
+	# Under the bug this returned false and the level would parse as 32.
+	var use_ok := Inventory.use_item(dup_id)
+	assert_true(use_ok, "use_item(duplicate '%s') succeeded" % dup_id)
+	assert_eq(TechniqueManager.get_technique_level(fomar, "foie"), 3, "Foie learned at Lv.3 (not 32) from the duplicate copy")
+
+	# The exact instance the player selected is consumed; the base copy is untouched.
+	assert_eq(Inventory.get_item_count(dup_id), 0, "Selected duplicate instance consumed")
+	assert_eq(Inventory.get_item_count("disk_foie_3"), 1, "First copy left untouched")
 
 	# Restore state
 	CharacterManager._characters = saved_characters

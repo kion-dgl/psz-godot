@@ -298,9 +298,11 @@ func _draw_items(c: Control, font: Font) -> void:
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable and not str(consumable.details).is_empty():
 			desc += "\n%s" % str(consumable.details)
-		# Technique disks: show what they teach and the use prompt
+		# Technique disks: show what they teach and the use prompt. Parse from the
+		# BASE id, not the raw instance id — a duplicate disk's id is "disk_foie_3#2"
+		# and the raw suffix would leak into the teach-line as "Lv.3#2" (#417).
 		if item_id.begins_with("disk_"):
-			var rest := item_id.substr(5)
+			var rest := Inventory.get_base_id(item_id).substr(5)
 			var us := rest.rfind("_")
 			if us >= 0:
 				var tech_id := rest.substr(0, us)
