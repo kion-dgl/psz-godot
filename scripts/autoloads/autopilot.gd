@@ -1785,8 +1785,13 @@ func _run_defeat_probe(attempt: int = 0) -> void:
 			_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	var p = players[0]
+	# Set meseta on the CHARACTER (source of truth) + the GameState mirror, so the
+	# penalty is observable after the city re-syncs from the character on arrival.
+	var ch = CharacterManager.get_active_character()
+	if ch != null:
+		ch["meseta"] = 100
 	GameState.meseta = 100
-	_defeat_meseta_before = GameState.meseta
+	_defeat_meseta_before = 100
 	print("[sanity] checkpoint: defeat probe — killing player (meseta=%d, hp=%d/%d)" % [
 		GameState.meseta, GameState.hp, GameState.max_hp])
 	p.take_damage(9999)

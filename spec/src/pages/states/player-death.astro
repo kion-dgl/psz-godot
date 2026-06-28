@@ -117,10 +117,13 @@ const chart = `stateDiagram-v2
     <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) —
     <code>defeat_return_to_city()</code> applies the consequences (50% carried
     meseta penalty, full-HP revive, <code>return_to_city</code> session end) as
-    one transaction and returns <code>&#123; meseta_lost &#125;</code>.</li>
-    <li><code>scripts/autoloads/game_state.gd</code> (GameState) —
-    <code>lose_meseta()</code> deducts carried meseta (clamped at 0), leaving
-    <code>stored_meseta</code> untouched.</li>
+    one transaction and returns <code>&#123; meseta_lost &#125;</code>. The
+    penalty and revive are written to the <strong>active character dict</strong>
+    (the persistent source of truth) as well as the <code>GameState</code>
+    mirror — the city re-syncs <code>GameState</code> from the character on entry
+    (<code>CharacterManager._sync_to_game_state</code>), so a mirror-only change
+    would be clobbered on arrival. Carried meseta lives on the character;
+    <code>stored_meseta</code> (the bank) is never touched.</li>
   </ul>
 </Concept>
 

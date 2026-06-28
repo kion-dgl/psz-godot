@@ -265,15 +265,28 @@ func return_to_city() -> Dictionary:
 ## Returns {meseta_lost, meseta_before, meseta_after}. The DefeatScreen handles
 ## the UI + the actual scene transition (city counter, telepipe-arrival spawn);
 ## this owns only the state changes so they're unit-testable without UI.
+##
+## CRITICAL: the active CHARACTER dict is the persistent source of truth — the
+## city re-syncs GameState from it on entry (CharacterManager._sync_to_game_state,
+## via city_area_base). Changing only the GameState mirror gets silently clobbered
+## on arrival, so the penalty + revive MUST be written to the character too. This
+## mirrors how the shops adjust meseta (character first, GameState second).
 func defeat_return_to_city() -> Dictionary:
-	var before: int = GameState.meseta
-	var lost: int = GameState.lose_meseta(before / 2)
+	var character = CharacterManager.get_active_character()
+	var before: int = int(character["meseta"]) if character != null else GameState.meseta
+	var lost: int = before / 2
+	var after: int = before - lost
+	if character != null:
+		character["meseta"] = after
+		character["hp"] = int(character["max_hp"])  # revive to full
+	GameState.meseta = after
+	GameState.meseta_changed.emit(after)
 	GameState.set_hp(GameState.max_hp)
 	return_to_city()
 	return {
 		"meseta_lost": lost,
 		"meseta_before": before,
-		"meseta_after": GameState.meseta,
+		"meseta_after": after,
 	}
 
 

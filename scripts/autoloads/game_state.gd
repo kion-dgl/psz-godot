@@ -178,14 +178,3 @@ func add_meseta(amount: int) -> void:
 
 func get_meseta() -> int:
 	return meseta
-
-
-## Deduct carried meseta (clamped at 0); leaves stored_meseta (the bank)
-## untouched. Returns the amount actually lost. Used by the defeat penalty
-## (spec /states/player-death) — the only path that subtracts meseta directly.
-func lose_meseta(amount: int) -> int:
-	var lost: int = clampi(amount, 0, meseta)
-	if lost > 0:
-		meseta -= lost
-		meseta_changed.emit(meseta)
-	return lost
