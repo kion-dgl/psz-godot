@@ -53,6 +53,7 @@ func _run_tests_core() -> void:
 	test_storage_cannot_use()
 	test_equip_action_matches_marker()
 	test_field_weapon_swap_gate()
+	test_quick_weapon_menu_unequip_and_order()
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_damage_formulas()
@@ -2138,6 +2139,80 @@ func test_field_weapon_swap_gate() -> void:
 	assert_true(ids_all.has("sword"), "equip_all: swap list now includes Sword (was hidden before the fix)")
 	menu.free()
 
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Quick Weapon Menu (issue #424, spec /states/quick-weapon-menu):
+#   (1) the equipped row sorts LAST in the built list;
+#   (2) selecting the equipped row UNEQUIPS to barehanded then closes;
+#   (3) selecting a non-equipped row still equips then closes;
+#   (4) barehanded SFX no longer maps to common35 (the saber swing).
+# The menu is add_child'd so _equip_selected()'s get_tree() call is safe; the
+# "player" group is empty headless, so refresh_weapon() is skipped.
+func test_quick_weapon_menu_unequip_and_order() -> void:
+	print("── Quick Weapon Menu: unequip-to-barehanded + ordering (#424) ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "QuickMenuX")
+	CharacterManager.set_active_slot(0)
+	# saber/sword/dagger are weapon types 0/1/2 — all HUmar-equippable.
+	if not (WeaponRegistry.get_weapon("saber") and WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("dagger")):
+		print("  INFO: saber/sword/dagger missing — skipped"); _restore_character_state(saved); print(""); return
+
+	Inventory.clear_inventory()
+	Inventory.add_item("saber", 1)
+	Inventory.add_item("sword", 1)
+	Inventory.add_item("dagger", 1)
+	var character = CharacterManager.get_active_character()
+	character["equipment"]["weapon"] = "saber"
+
+	var menu = FieldHud._QuickWeaponMenu.new()
+	add_child(menu)
+
+	# (1) ORDER — equipped row sorts to the END; nothing before it is equipped.
+	menu._build_weapon_list()
+	assert_true(menu._weapon_list.size() == 3, "swap list has all three HUmar weapons")
+	assert_true(bool(menu._weapon_list.back().get("equipped", false)),
+		"equipped row (Saber) sorts LAST in the list (#424)")
+	var any_earlier_equipped := false
+	for i in range(menu._weapon_list.size() - 1):
+		if bool(menu._weapon_list[i].get("equipped", false)):
+			any_earlier_equipped = true
+	assert_true(not any_earlier_equipped, "no non-final row is marked equipped")
+
+	# (2) UNEQUIP — accept on the equipped row → barehanded, menu closes.
+	menu._selected_index = menu._weapon_list.size() - 1  # the equipped row
+	menu._is_open = true
+	menu._equip_selected()
+	assert_eq(str(CharacterManager.get_active_character()["equipment"]["weapon"]), "",
+		"selecting the equipped row unequips to barehanded (weapon == '')")
+	assert_true(not menu._is_open, "menu closes after unequip")
+
+	# (3) EQUIP still works — re-equip, then accept on a non-equipped row.
+	character["equipment"]["weapon"] = "saber"
+	menu._build_weapon_list()
+	var sword_idx := -1
+	for i in range(menu._weapon_list.size()):
+		if Inventory.get_base_id(str(menu._weapon_list[i].get("id", ""))) == "sword":
+			sword_idx = i
+	assert_true(sword_idx >= 0, "Sword row present for equip")
+	menu._selected_index = sword_idx
+	menu._is_open = true
+	menu._equip_selected()
+	assert_eq(Inventory.get_base_id(str(CharacterManager.get_active_character()["equipment"]["weapon"])), "sword",
+		"selecting a non-equipped row equips it (Sword)")
+	assert_true(not menu._is_open, "menu closes after equip")
+
+	# (4) SFX — barehanded no longer resolves to common35 (the saber swing).
+	# The common46 asset isn't in the pack headless, so we assert the mapping is
+	# distinct rather than loading it.
+	assert_true(PlayerScript.BAREHANDED_SFX != PlayerScript.WEAPON_SFX[WeaponData.WeaponType.SABER],
+		"barehanded SFX (common46) != saber SFX (common35)")
+
+	menu.free()
 	Inventory.clear_inventory()
 	_restore_character_state(saved)
 	print("")

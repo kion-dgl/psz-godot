@@ -1929,6 +1929,16 @@ const WEAPON_SFX := {
 	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_1.wav",           # common45
 }
 
+## Barehanded (no weapon equipped) attack SFX — common46 (issue #424).
+## NOT in the pack yet, so the play site only fires it when ResourceLoader can
+## load it; until the republish, barehanded plays NOTHING rather than wrongly
+## leaking the saber swing (common35). The sentinel bug: _get_equipped_weapon_type()
+## returns 0 when barehanded, but WeaponType.SABER == 0, so WEAPON_SFX.get(0)
+## resolved to the saber sound. We discriminate barehanded locally at the call
+## site (empty weapon_id) instead of changing that return value — 5+ combat
+## callers depend on its 0 fallback (player.gd ~1247/1770/2215/2297/2450).
+const BAREHANDED_SFX := "res://assets/sfx/weapons/unarmed_swing_1.wav"  # common46 — pending pack republish
+
 func _play_and_track_attack(anim_name: String) -> void:
 	play_animation(anim_name, false)
 	_attack_anim_elapsed = 0.0
@@ -1940,7 +1950,15 @@ func _play_and_track_attack(anim_name: String) -> void:
 		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
 	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
-	var sfx_path: String = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
+	# Barehanded is discriminated here by the empty weapon_id (NOT by the weapon
+	# type, which falls back to 0 == SABER): map it to BAREHANDED_SFX (common46)
+	# and only play if the asset is actually loadable, so until the pack carries
+	# common46 barehanded is silent rather than playing the wrong saber swing.
+	var sfx_path: String
+	if _is_barehanded():
+		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
+	else:
+		sfx_path = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
 	if not sfx_path.is_empty():
 		SfxManager.play_at(sfx_path, global_position)
 
@@ -2321,6 +2339,16 @@ func _get_equipped_weapon_type() -> int:
 	if weapon:
 		return weapon.weapon_type
 	return 0
+
+
+## True when no weapon is equipped. Distinct from _get_equipped_weapon_type()==0
+## (which also means SABER) so the SFX site can pick the barehanded sound (issue
+## #424) without disturbing the 0-fallback that combat callers rely on.
+func _is_barehanded() -> bool:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	return str(character.get("equipment", {}).get("weapon", "")).is_empty()
 
 
 const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RIFLE, BAZOOKA
