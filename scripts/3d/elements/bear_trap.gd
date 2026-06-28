@@ -35,6 +35,13 @@ func _setup_materials() -> void:
 	var mats := _setup_split_materials(PRONG_TEX_NAME)
 	_prong_material = mats["feature"]
 	_base_material = mats["base"]
+	# #381 autopilot oracle: pre-fix _setup_split_materials threw on the bogus
+	# Godot-3 flags_mirrored_repeat assignment and returned {null, null}, so the
+	# prongs never hid and the laser never scrolled. Surface this for headless
+	# probes (a Mac/visual pass confirms the actual prong-hide + scroll).
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		print("[sanity] checkpoint: bear-trap-materials prong=%s base=%s" % [
+			str(_prong_material != null), str(_base_material != null)])
 
 
 func _setup_trigger_area() -> void:

@@ -1,0 +1,60 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Mirrored-Repeat Wrapping (Godot-4 port recipe)" section="Spec">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. This page is the normative recipe for porting Three.js <code>MirroredRepeatWrapping</code> textures into the Godot-4 runtime. It exists because the naive port silently breaks at runtime (#381).</p>
+
+  <h2>The trap: there is no native Godot-4 mirror flag</h2>
+  <p>Three.js exposes <code>texture.wrapS / wrapT = THREE.MirroredRepeatWrapping</code>, and Godot <em>3</em> had an analogous <code>Texture.flags_mirrored_repeat</code> bit. <strong>Godot 4 removed it.</strong> <code>Texture2D</code> / <code>ImageTexture</code> have no <code>flags_mirrored_repeat</code> property.</p>
+  <p>Crucially, assigning the missing property is <strong>not</strong> a silent no-op. GDScript raises at runtime:</p>
+  <pre><code>Invalid assignment of property 'flags_mirrored_repeat' with value of type 'bool'
+on a base object of type 'ImageTexture'.</code></pre>
+  <p>Because the throw happens mid-statement, it <strong>aborts the enclosing function/lambda at that line</strong> — every statement after the bogus assignment is skipped. In #381 this meant <code>GameElement._setup_split_materials</code> never applied its surface override and returned <code>{feature: null, base: null}</code>, so the bear/needle traps' prong-hide and laser-scroll guards (<code>if _prong_material:</code>) silently no-op'd. The texture <em>looked</em> fine; the behavior was dead.</p>
+  <ul>
+    <li>Code <strong>MUST NOT</strong> assign <code>flags_mirrored_repeat</code> (or any other Godot-3 <code>flags_*</code> texture bit) on a Godot-4 texture. It does not exist and it throws.</li>
+    <li>A surface that only samples UVs within <code>[0,1]</code> (the trap prong / spike / base atlases) needs <strong>no</strong> wrap flag at all — a duplicated <code>StandardMaterial3D</code> with <code>TEXTURE_FILTER_NEAREST</code> is the correct, complete setup.</li>
+  </ul>
+
+  <h2>The recipe: emulate mirror-repeat with the UV-fold shader</h2>
+  <p>When a surface genuinely tiles past <code>[0,1]</code> and the source authored it as <code>MirroredRepeatWrapping</code>, the wrapping <strong>MUST</strong> be emulated in a fragment shader by folding the UV, not by a texture flag. The canonical implementation is <code>scripts/3d/shaders/mirror_repeat.gdshader</code>, wired through <code>GameElement._setup_mirror_textures()</code>:</p>
+  <pre><code>float mirror_coord(float c) {
+    float m = mod(c, 2.0);
+    return m &lt; 1.0 ? m : 2.0 - m;
+}
+// uv = UV * uv_scale + uv_offset; fold each mirrored axis through mirror_coord()</code></pre>
+  <p>The fold maps a continuous coordinate onto a triangle wave with period 2 over <code>[0,1]</code>, identical to <code>MirroredRepeatWrapping</code>. Reference fold values (must hold for any conforming implementation):</p>
+  <table>
+    <tr><th>input <code>c</code></th><th><code>mirror_coord(c)</code></th><th>note</th></tr>
+    <tr><td>0.00</td><td>0.00</td><td>tile start</td></tr>
+    <tr><td>0.50</td><td>0.50</td><td>forward half</td></tr>
+    <tr><td>1.00</td><td>1.00</td><td>peak (seam, no flip artifact)</td></tr>
+    <tr><td>1.50</td><td>0.50</td><td>reflected back</td></tr>
+    <tr><td>2.00</td><td>0.00</td><td>period wrap</td></tr>
+    <tr><td>2.50</td><td>0.50</td><td>repeats forward again</td></tr>
+  </table>
+  <p>The canonical wiring binds the source albedo to the shader's <code>albedo_texture</code> uniform, sets <code>uv_scale = (2, 2)</code> and <code>mirror_x = mirror_y = true</code>; the optional <code>uv_offset</code> shifts a palette row (Box rare variants pass <code>(0, 1)</code>). The shader's sampler declares <code>repeat_enable</code> so the fold's edges sample cleanly.</p>
+
+  <h2>When NOT to use the shader</h2>
+  <ul>
+    <li><strong>Plain <code>RepeatWrapping</code> ports</strong> (no mirror) <strong>MUST</strong> stay a <code>StandardMaterial3D</code> with <code>uv1_scale</code> — e.g. <code>office_library_room.gd</code> / <code>LibrarySet.tsx</code>. There is no Godot-4 trap for ordinary repeat; the engine supports it natively.</li>
+    <li><strong>Animated / alpha-scissor surfaces</strong> <strong>MUST</strong> stay <code>StandardMaterial3D</code>. The bear-trap prong scrolls via <code>uv1_offset</code> and toggles <code>TRANSPARENCY_ALPHA_SCISSOR</code> per state; those are <code>BaseMaterial3D</code> features the fold shader doesn't expose. The fold shader is for <em>static</em> mirror-tiled geometry (walls, boxes), not per-frame material animation.</li>
+    <li><strong>UV stays within <code>[0,1]</code></strong> — no wrapping of any kind is needed; drop the flag entirely (the #381 fix).</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/shaders/mirror_repeat.gdshader</code> — the UV-fold fragment shader (the only mirror path).</li>
+    <li><code>GameElement._setup_mirror_textures()</code> — applies the shader (wall / box, #294).</li>
+    <li><code>GameElement._setup_split_materials()</code> — the trap path; carries no wrap flag (the #381 fix removed the throwing <code>flags_mirrored_repeat</code> assignment).</li>
+  </ul>
+
+  <h2>Tested by</h2>
+  <ul>
+    <li><code>test_mirror_repeat_wrapping</code> (<code>scripts/tools/test_runner.gd</code>) — asserts <code>_setup_split_materials</code> returns non-null feature AND base and actually applies the surface override (the #381 regression: both were null), and that <code>_setup_mirror_textures</code> binds a <code>ShaderMaterial</code> to <code>mirror_repeat.gdshader</code> with <code>uv_scale == (2,2)</code> and both mirror axes on.</li>
+    <li><strong>NEEDS MAC VERIFICATION</strong> — the runtime <em>visual</em> (trap prongs hiding on the <code>off</code> state; held-laser texture scroll) is not assertable from headless log checkpoints and is a Mac/visual follow-up.</li>
+  </ul>
+
+  <p>Status: <strong>fixed (#381)</strong>.</p>
+  <p><a href="/engineering">← Engineering Policy</a></p>
+</Concept>

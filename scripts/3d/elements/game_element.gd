@@ -205,8 +205,16 @@ func _setup_split_materials(feature_tex: String) -> Dictionary:
 			var std_mat := mat as StandardMaterial3D
 			var dup := std_mat.duplicate() as StandardMaterial3D
 			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			if std_mat.albedo_texture:
-				std_mat.albedo_texture.flags_mirrored_repeat = true
+			# NOTE (#381): the Godot-3 `Texture.flags_mirrored_repeat` flag does
+			# NOT exist on Godot-4 Texture2D/ImageTexture — assigning it THROWS
+			# ("Invalid assignment of property 'flags_mirrored_repeat'") and the
+			# throw aborts this lambda at the assignment, so the override below and
+			# the feature/base registration never ran (both came back null and the
+			# traps' prong-hide / laser-scroll silently no-op'd). These trap
+			# surfaces don't tile past [0,1], so plain repeat is correct and no flag
+			# is needed. Where mirror-tiling IS wanted, emulate MirroredRepeatWrapping
+			# via the UV-fold shader (_setup_mirror_textures / mirror_repeat.gdshader),
+			# never a texture flag. See spec/engineering/mirrored-repeat-wrapping.
 			mesh.set_surface_override_material(surface, dup)
 			if std_mat.albedo_texture and feature_tex in std_mat.albedo_texture.resource_path:
 				result["feature"] = dup

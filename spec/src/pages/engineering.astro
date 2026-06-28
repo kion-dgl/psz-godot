@@ -31,6 +31,12 @@ import Concept from '../layouts/Concept.astro';
   </table>
   <p>A combat increment whose plan has only one layer is not done being planned. The unit layer is the merge gate in CI; the post-build layer runs in the sanity check (every merge) and the full matrix (every combat-behavior PR).</p>
 
+  <h2>Port recipes</h2>
+  <p>Normative recipes for porting source-engine constructs into the Godot-4 runtime, where the naive translation has a hidden trap:</p>
+  <ul>
+    <li><a href="/engineering/mirrored-repeat-wrapping">Mirrored-repeat wrapping</a> — Godot 4 has no native mirror flag and the Godot-3 <code>flags_mirrored_repeat</code> <em>throws</em> (aborting material setup, #381); emulate via the UV-fold shader.</li>
+  </ul>
+
   <h2>Enforced by</h2>
   <ul>
     <li><code>scripts/tools/code_graph.py --check</code> — the four-way ratchet (CI, every PR).</li>

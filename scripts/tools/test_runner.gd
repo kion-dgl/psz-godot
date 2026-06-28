@@ -104,6 +104,7 @@ func _run_tests_systems() -> void:
 	test_mesh_utils_apply_texture()
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
+	test_mirror_repeat_wrapping()
 	test_setup_shop_portrait()
 	test_shop_nav()
 	test_shop_confirm()
@@ -4397,6 +4398,83 @@ func test_game_element_override_textured_material() -> void:
 	assert_true(result != src_mat, "Returned material is a duplicate, not the shared source")
 	assert_true(ge._override_textured_material("does_not_exist") == null, "No matching surface → null")
 	ge.free()
+	print("")
+
+
+func test_mirror_repeat_wrapping() -> void:
+	print("── GameElement mirror-repeat wrapping — #381 Godot-3 flag port trap ──")
+	# Regression for #381: _setup_split_materials used to assign the Godot-3
+	# `albedo_texture.flags_mirrored_repeat` flag, which DOES NOT EXIST on
+	# Godot-4 textures and THROWS at runtime, aborting the lambda mid-setup so
+	# the surface override never applied and feature/base both came back null.
+	# Pre-fix the asserts below were null/null; post-fix they resolve and apply.
+
+	# Build a GameElement model with two textured surfaces: one whose albedo
+	# path matches the feature texture name, one that doesn't (the base slot).
+	var ge := GameElement.new()
+	var model := Node3D.new()
+
+	var feat_mi := MeshInstance3D.new()
+	feat_mi.mesh = BoxMesh.new()
+	var feat_mat := StandardMaterial3D.new()
+	var feat_tex := PlaceholderTexture2D.new()
+	feat_tex.take_over_path("res://_test_o0c_1_tora1.png")
+	feat_mat.albedo_texture = feat_tex
+	feat_mi.set_surface_override_material(0, feat_mat)
+	model.add_child(feat_mi)
+
+	var base_mi := MeshInstance3D.new()
+	base_mi.mesh = BoxMesh.new()
+	var base_mat := StandardMaterial3D.new()
+	var base_tex := PlaceholderTexture2D.new()
+	base_tex.take_over_path("res://_test_o0c_1_base.png")
+	base_mat.albedo_texture = base_tex
+	base_mi.set_surface_override_material(0, base_mat)
+	model.add_child(base_mi)
+
+	ge.model = model
+	ge.add_child(model)
+
+	var mats := ge._setup_split_materials("o0c_1_tora1")
+	# The #381 regression assertions: both slots must resolve non-null.
+	assert_true(mats["feature"] != null, "feature material resolves (was null pre-#381 fix)")
+	assert_true(mats["base"] != null, "base material resolves (was null pre-#381 fix)")
+	assert_true(mats["feature"] is StandardMaterial3D, "feature is a StandardMaterial3D")
+	assert_true(mats["base"] is StandardMaterial3D, "base is a StandardMaterial3D")
+	# The override must actually be applied to the mesh surface (the statement
+	# the throw used to skip), and it must be the duplicate, not the source.
+	var feat_override := feat_mi.get_surface_override_material(0)
+	assert_true(feat_override == mats["feature"], "feature override applied to its mesh surface")
+	assert_true(feat_override != feat_mat, "feature override is a duplicate, not the shared source")
+	assert_eq((mats["feature"] as StandardMaterial3D).texture_filter,
+		BaseMaterial3D.TEXTURE_FILTER_NEAREST, "feature dup carries nearest filter")
+	assert_eq((mats["base"] as StandardMaterial3D).texture_filter,
+		BaseMaterial3D.TEXTURE_FILTER_NEAREST, "base dup carries nearest filter")
+	ge.free()
+
+	# _setup_mirror_textures: the canonical mirror path binds the UV-fold shader
+	# (mirror_repeat.gdshader) at uv_scale (2,2) with both axes mirrored.
+	var ge2 := GameElement.new()
+	var model2 := Node3D.new()
+	var mi2 := MeshInstance3D.new()
+	mi2.mesh = BoxMesh.new()
+	var smat_src := StandardMaterial3D.new()
+	smat_src.albedo_texture = PlaceholderTexture2D.new()
+	mi2.set_surface_override_material(0, smat_src)
+	model2.add_child(mi2)
+	ge2.model = model2
+	ge2.add_child(model2)
+
+	ge2._setup_mirror_textures()
+	var sh_override := mi2.get_surface_override_material(0)
+	assert_true(sh_override is ShaderMaterial, "mirror path applies a ShaderMaterial")
+	if sh_override is ShaderMaterial:
+		var sm := sh_override as ShaderMaterial
+		assert_eq(sm.shader, GameElement.MIRROR_SHADER, "bound to mirror_repeat.gdshader")
+		assert_eq(sm.get_shader_parameter("uv_scale"), Vector2(2, 2), "uv_scale == (2,2)")
+		assert_eq(sm.get_shader_parameter("mirror_x"), true, "mirror_x enabled")
+		assert_eq(sm.get_shader_parameter("mirror_y"), true, "mirror_y enabled")
+	ge2.free()
 	print("")
 
 
