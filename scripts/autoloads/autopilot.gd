@@ -1188,6 +1188,8 @@ func _probe_frame_dup_equip() -> void:
 		return
 	if not _pf_per_instance_slots(screen, character):
 		return
+	if not _pf_equip_legality(screen, character):
+		return
 	_pf_cleanup_and_finish(character)
 
 
@@ -1304,6 +1306,126 @@ func _pf_per_instance_slots(screen: Node, character) -> bool:
 		_after(STEP_DELAY, _save_and_quit)
 		return false
 	print("[sanity] checkpoint: armor-slots per-instance count = %d" % unit_slots)
+	return true
+
+
+# Inc 4c (equip-legality, spec /mechanics/equip-legality): the ✕ marker the shops
+# and menus show MUST match what the equip ACTION actually allows — the exact class
+# of bug Rozalin hit ("no ✕ / can equip" in the shop, but it won't equip; or a ✕ yet
+# it still equips). On the LIVE equipment screen, seed a class-legal and a class-
+# illegal weapon AND armor, then assert the screen's built equip list (the action)
+# includes exactly the gear EquipmentUtils.item_fits_slot permits. Disks aren't
+# equippable, so their ✕ is checked through the live start-menu renderer. Runs against
+# real built screens (load + render + Android export), which the .new() unit tests can't.
+func _pf_equip_legality(screen: Node, character) -> bool:
+	# Weapons: get_all_weapon_ids enumerates the full set, so an illegal type always
+	# exists for any class (no class allows every type).
+	if not _el_check_slot(screen, "weapon", _el_pick_weapon(false), _el_pick_weapon(true)):
+		return false
+	# Armor: ArmorRegistry has no enumerator, so probe a known core set; "frame" is
+	# always legal (empty usable_by). Skips with a WARN only if this class happens to
+	# be able to wear every candidate (rare).
+	if not _el_check_slot(screen, "frame", _el_pick_armor(false), _el_pick_armor(true)):
+		return false
+	return _el_disk_marker_ok(character)
+
+
+## Assert the live equipment screen's built list for `slot_key` includes the legal
+## item and excludes the illegal one (== item_fits_slot). Seeds + removes both.
+## On mismatch, prints FAIL + schedules save/quit and returns false.
+func _el_check_slot(screen: Node, slot_key: String, illegal_id: String, legal_id: String) -> bool:
+	if illegal_id.is_empty() or legal_id.is_empty():
+		print("[sanity] WARN: equip-legality — no illegal/legal %s pair for this class (skipped)" % slot_key)
+		return true
+	Inventory.add_item(illegal_id, 1)
+	Inventory.add_item(legal_id, 1)
+	var listed: Array = _el_listed_base_ids(screen, slot_key)
+	var legal_ok: bool = legal_id in listed
+	var illegal_ok: bool = not (illegal_id in listed)
+	Inventory.remove_item(illegal_id, Inventory.get_item_count(illegal_id))
+	Inventory.remove_item(legal_id, Inventory.get_item_count(legal_id))
+	if not (legal_ok and illegal_ok):
+		print("[sanity] FAIL: equip-legality %s — action != gate (legal '%s' listed=%s, illegal '%s' excluded=%s)" % [
+			slot_key, legal_id, str(legal_ok), illegal_id, str(illegal_ok)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: equip-legality %s action == gate (legal '%s' listed, illegal '%s' excluded)" % [
+		slot_key, legal_id, illegal_id])
+	return true
+
+
+## First weapon id whose legality (item_fits_slot, active class + equip_all) equals
+## `want_legal`. Sorted so the pick is deterministic across registry load order.
+func _el_pick_weapon(want_legal: bool) -> String:
+	var ids: Array = WeaponRegistry.get_all_weapon_ids()
+	ids.sort()
+	for wid in ids:
+		if EquipmentUtils.item_fits_slot(str(wid), "weapon") == want_legal:
+			return str(wid)
+	return ""
+
+
+## First known-core armor whose legality equals `want_legal` for the active class.
+const _EL_ARMOR_CANDIDATES := ["frame", "armor", "robe", "aegir_robe", "ancient_robe", "psy_armor", "cross_armor", "hide_suit", "battle_suit"]
+func _el_pick_armor(want_legal: bool) -> String:
+	for aid in _EL_ARMOR_CANDIDATES:
+		if ArmorRegistry.get_armor(aid) == null:
+			continue
+		if EquipmentUtils.item_fits_slot(aid, "frame") == want_legal:
+			return aid
+	return ""
+
+
+## Open the screen's item list for `slot_key` and return the base ids it offers.
+func _el_listed_base_ids(screen: Node, slot_key: String) -> Array:
+	var idx: int = (screen._get_visible_slots() as Array).find(slot_key)
+	if idx < 0:
+		return []
+	screen._selected_slot = idx
+	screen._open_item_selection()
+	var out: Array = []
+	for row in screen._equippable_items:
+		out.append(Inventory.get_base_id(str(row.get("id", ""))))
+	return out
+
+
+## Disk ✕ via the LIVE start-menu renderer (disks aren't equippable — the ✕ is the
+## whole UX). An unlearnable disk MUST be marked, a learnable one MUST NOT be.
+func _el_disk_marker_ok(character) -> bool:
+	if PsoStartMenu == null or PsoStartMenu._renderer == null:
+		print("[sanity] WARN: equip-legality — start-menu renderer unavailable, disk check skipped")
+		return true
+	var inv: Array = TechniqueManager.generate_shop_inventory(int(character.get("level", 1)))
+	var illegal_disk := ""
+	var legal_disk := ""
+	for d in inv:
+		var tid := str(d.get("technique_id", ""))
+		var lvl := int(d.get("level", 1))
+		var did := "disk_%s_%d" % [tid, lvl]
+		if TechniqueManager.class_can_learn(character, tid, lvl):
+			if legal_disk.is_empty():
+				legal_disk = did
+		elif illegal_disk.is_empty():
+			illegal_disk = did
+	if illegal_disk.is_empty():
+		print("[sanity] WARN: equip-legality — class can learn every shop disk; no unlearnable disk to check")
+		return true
+	Inventory.add_item(illegal_disk, 1)
+	var illegal_marked: bool = PsoStartMenu._renderer._item_cannot_use(illegal_disk)
+	Inventory.remove_item(illegal_disk, Inventory.get_item_count(illegal_disk))
+	if not illegal_marked:
+		print("[sanity] FAIL: equip-legality disk — unlearnable disk '%s' NOT marked ✕" % illegal_disk)
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	if not legal_disk.is_empty():
+		Inventory.add_item(legal_disk, 1)
+		var legal_marked: bool = PsoStartMenu._renderer._item_cannot_use(legal_disk)
+		Inventory.remove_item(legal_disk, Inventory.get_item_count(legal_disk))
+		if legal_marked:
+			print("[sanity] FAIL: equip-legality disk — learnable disk '%s' wrongly marked ✕" % legal_disk)
+			_after(STEP_DELAY, _save_and_quit)
+			return false
+	print("[sanity] checkpoint: equip-legality disk ✕ (unlearnable '%s' marked, learnable not)" % illegal_disk)
 	return true
 
 

@@ -2,14 +2,17 @@
 import Concept from '../../layouts/Concept.astro';
 ---
 
-<Concept title="Equip Legality (class × weapon type)" section="Mechanics">
-  <p>The key words <strong>MUST</strong> / <strong>MUST NOT</strong> / <strong>SHOULD</strong> are used as in RFC 2119. This page defines <strong>which classes can equip which weapon types</strong> — the normative contract behind the Equip menu, the field-HUD weapon picker, storage, and the weapon shop.</p>
+<Concept title="Equip Legality (weapons, armor, disks)" section="Mechanics">
+  <p>The key words <strong>MUST</strong> / <strong>MUST NOT</strong> / <strong>SHOULD</strong> are used as in RFC 2119. This page defines <strong>which gear a class can use</strong> — weapons (by type), armor (per-item class list), and technique disks (learnability) — and the one ✕ "cannot use/equip" marker that surfaces it. It is the normative contract behind <em>every</em> screen that shows that marker or gates equipping: the Equip menu, the 3D field weapon picker, storage, and all of the shops.</p>
+
+  <p><strong>The invariant:</strong> the ✕ marker and the actual equip action MUST agree everywhere. If a row shows no ✕ it MUST equip; if it shows a ✕ it MUST NOT equip. Both sides route through one predicate (<code>EquipmentUtils.item_fits_slot</code>), so they cannot drift — see <a href="#ui-surfaces">UI surfaces</a> for the full map.</p>
 
   <h2>Contract</h2>
   <ul>
     <li><strong>Single source of truth (weapons):</strong> a weapon's equippability for a class is determined by <code>ClassData.allowed_weapon_types</code> (a list of <code>WeaponType</code> ids). It is the <em>only</em> input — <code>WeaponData.usable_by</code> MUST NOT be consulted for legality (it has drifted from the class lists; see Issues).</li>
     <li><strong>Single source of truth (armor):</strong> an armor's equippability for a class is a <em>per-item class restriction</em>, <code>ArmorData.usable_by</code> (a list of "Type Race" strings, e.g. Robe = <code>Hunter Newman</code> / <code>Force Human</code> / <code>Force Newman</code>). This is the <em>only</em> armor-legality source — there is no <code>ClassData</code> armor analog — so unlike the weapon list it is <strong>not</strong> dead data. An empty <code>usable_by</code> means no restriction (every class). Both gates live behind <code>EquipmentUtils.item_fits_slot(item_id, "weapon" | "frame")</code>.</li>
-    <li><strong>One shared predicate:</strong> every screen that asks "can this be equipped?" MUST route through the single gate (<code>EquipmentUtils.item_fits_slot</code>, and its permanent-only wrapper <code>ShopNav.sell_cannot_use</code> for the ✕ marker). No per-screen class checks (the Alpha pattern this replaces had four divergent copies).</li>
+    <li><strong>Technique disks (learnability):</strong> a disk is "usable" if the class can ever learn its technique. The ✕ marker uses <code>TechniqueManager.class_can_learn</code> — a <em>permanent</em> capability (a CAST learns nothing; a Hunter can't learn a Force-only group). This is distinct from <code>TechniqueManager.can_learn</code>, which is the <em>temporary</em> grey (already known, or below the level/class cap) — temporary blocks grey the row but carry <strong>no</strong> ✕. Disks are never "equipped"; the ✕ is the whole UX.</li>
+    <li><strong>One shared predicate:</strong> every screen that asks "can this be used/equipped?" MUST route through the single gate — <code>EquipmentUtils.item_fits_slot</code> for weapons/armor (and its permanent-only ✕ wrapper <code>ShopNav.sell_cannot_use</code>, which also folds in the disk rule), and <code>class_can_learn</code> for disks. No per-screen class checks (the Alpha pattern this replaces had four divergent copies).</li>
     <li><strong>Level gate:</strong> equipping a weapon also requires <code>character.level &ge; weapon.level</code>. A failure here yields a distinct reason ("Requires Lv N").</li>
     <li><strong>Reasons are surfaced:</strong> when a weapon can't be equipped, the UI MUST show <em>why</em> (greyed Equip option + reason), never a silent omission.</li>
     <li><strong>Debug bypass:</strong> <code>DebugConfig.equip_all</code> (System menu / <code>PSZ_DEBUG_WEAPONS</code>) bypasses the class + level gates so any weapon can be equipped to verify its model — it MUST affect only the legality gate, nothing else.</li>
@@ -36,6 +39,41 @@ import Concept from '../../layouts/Concept.astro';
   </table>
   <p>Broad strokes hold (Hunters = melee + handgun, Rangers = guns + saber, Forces = rod/wand + handgun), and every class can use a Saber + Handgun.</p>
 
+  <h2>Armor (per-item class restriction)</h2>
+  <p>Armor legality is <strong>not</strong> a class-wide type list like weapons — it is a <em>per-item</em> restriction carried on each armor, <code>ArmorData.usable_by</code>: a list of <code>"Type Race"</code> strings naming exactly which class identities may wear it. An empty list means no restriction (every class). This is the <strong>only</strong> source of armor legality — there is no <code>ClassData</code> armor analog — so it is live, canonical data, evaluated through <code>EquipmentUtils.item_fits_slot(id, "frame")</code> (which also honors <code>DebugConfig.equip_all</code>). 27 of 50 armors carry a restriction; the rest are open.</p>
+  <table>
+    <tr><th>Armor</th><th><code>usable_by</code></th><th>Who can wear it</th></tr>
+    <tr><td><code>frame</code></td><td><em>(empty)</em></td><td>Every class</td></tr>
+    <tr><td><code>armor</code></td><td>Hunter Human, Hunter Cast, Ranger Human, Ranger Cast</td><td>Human/Cast Hunters &amp; Rangers (no Newmen, no Forces)</td></tr>
+    <tr><td><code>robe</code></td><td>Hunter Newman, Force Human, Force Newman</td><td>Newman Hunters &amp; all Forces (the "caster" frames)</td></tr>
+  </table>
+  <p>So a HUmar (Hunter Human) wears <code>frame</code> and <code>armor</code> but <strong>not</strong> <code>robe</code> (✕); a FOnewm (Force Newman) wears <code>frame</code> and <code>robe</code> but not <code>armor</code> (✕). Because the restriction is per item, this doubles as the <em>explicit per-item override</em> mechanism: any single piece can widen or narrow who may wear it independent of class type.</p>
+
+  <h2>Technique disks (learnability)</h2>
+  <p>A technique disk (<code>disk_&lt;technique&gt;_&lt;level&gt;</code>) teaches a technique when used. Its ✕ marker means the class can <em>never</em> learn that technique — <code>TechniqueManager.class_can_learn</code>:</p>
+  <ul>
+    <li><strong>✕ (permanent):</strong> a CAST (learns no techniques at all), or a disk whose technique group the class is barred from (e.g. a Hunter and a Force-only group). This is the permanent block the ✕ marks — same tier as a class-illegal weapon/armor.</li>
+    <li><strong>Grey, no ✕ (temporary):</strong> the technique is already known, or the disk is above the class's level/level-cap for it — <code>can_learn</code> returns false but <code>class_can_learn</code> stays true. A temporary block greys the row to signal "not useful right now" without the permanent ✕.</li>
+    <li><strong>Affordability never greys a disk</strong> — being unable to pay is a buy-time block, surfaced at accept, not a capability marker.</li>
+  </ul>
+
+  <h2 id="ui-surfaces">UI surfaces — one predicate, everywhere</h2>
+  <p>Every surface below routes its ✕ marker <em>and</em> its equip/use action through the same gate, so marker == action by construction. Weapons/armor go through <code>item_fits_slot</code> (markers via the permanent-only wrapper <code>ShopNav.sell_cannot_use</code>); disks go through <code>class_can_learn</code>.</p>
+  <table>
+    <tr><th>Surface</th><th>Shows ✕ for</th><th>Predicate</th></tr>
+    <tr><td>Weapon shop — buy (weapons, armor)</td><td>weapon, armor</td><td><code>_check_equippability</code> → <code>item_fits_slot</code></td></tr>
+    <tr><td>Weapon shop — sell</td><td>weapon, armor, disk</td><td><code>ShopNav.sell_cannot_use</code></td></tr>
+    <tr><td>Item shop — sell</td><td>weapon, armor, disk</td><td><code>ShopNav.sell_cannot_use</code></td></tr>
+    <tr><td>Item shop — buy disks</td><td>disk</td><td><code>class_can_learn</code></td></tr>
+    <tr><td>Crafting / synthesis</td><td>weapon (output)</td><td><code>_output_unequippable</code> → <code>item_fits_slot</code></td></tr>
+    <tr><td>Storage</td><td>weapon, armor, disk</td><td><code>storage._item_cannot_use</code> → <code>sell_cannot_use</code></td></tr>
+    <tr><td>3D field start menu — items list</td><td>weapon, armor, disk</td><td><code>start_menu_renderer._item_cannot_use</code> → <code>sell_cannot_use</code></td></tr>
+    <tr><td>3D start menu — equip (action)</td><td>weapon, armor</td><td><code>_slot_key_for_inventory_item</code> / <code>_get_equip_candidates</code> → <code>item_fits_slot</code></td></tr>
+    <tr><td>2D equipment screen (action)</td><td>weapon, armor</td><td><code>item_fits_slot</code></td></tr>
+    <tr><td>In-field weapon palette swap (action)</td><td>weapon</td><td><code>_QuickWeaponMenu._build_weapon_list</code> → <code>item_fits_slot</code></td></tr>
+  </table>
+  <p>Units, mags, materials, and consumables carry no permanent class block, so they never get a ✕ from this gate. (Consumables have their own <code>ConsumableData.usable_by</code> — a separate, legitimate source used only by the item shop's consumable rows.)</p>
+
   <h2>Issues to reconcile</h2>
   <p>The current data predates this contract and needs a pass (tracked with the legality refactor):</p>
   <ul>
@@ -52,5 +90,9 @@ import Concept from '../../layouts/Concept.astro';
   </ul>
 
   <h2>Testing</h2>
-  <p>Seeded <code>test_runner</code> unit tests over the shared predicate: a representative weapon per type and a class-restricted vs unrestricted armor against each class, plus level-gate and <code>equip_all</code> debug-bypass cases. Each migrated ✕-marker site has its own test asserting it equals the shared predicate (single source of truth) and that buy/sell/storage/start-menu agree: <code>test_humar_gear_unequippable</code>, <code>test_shop_sell_cannot_use_marker</code>, <code>test_synth_unequippable_marker</code>, <code>test_start_menu_cannot_use</code>, <code>test_storage_cannot_use</code>. The autopilot equip smoke already equips a weapon per class; extend it to assert a known-illegal weapon is rejected with a reason.</p>
+  <p>Two layers (the project's frame/UI rule):</p>
+  <ul>
+    <li><strong>Seeded <code>test_runner</code> unit tests</strong> over the shared predicate: a representative weapon per type and a class-restricted vs unrestricted armor against each class, plus level-gate and <code>equip_all</code> debug-bypass cases. Each ✕-marker site and each equip-<em>action</em> site has its own test asserting it equals the shared predicate (single source of truth): <code>test_humar_gear_unequippable</code>, <code>test_shop_sell_cannot_use_marker</code>, <code>test_synth_unequippable_marker</code>, <code>test_start_menu_cannot_use</code>, <code>test_storage_cannot_use</code>, <code>test_equip_action_matches_marker</code>, <code>test_field_weapon_swap_gate</code>.</li>
+    <li><strong>Autopilot UI probe</strong> (post-build, real scene tree) under the shops smoke (<code>PSZ_AUTOPILOT_SHOPS=1</code>): on the live equipment screen it seeds a class-legal and a class-illegal weapon <em>and</em> armor and asserts the screen's built equip list (the action) includes exactly the gear <code>item_fits_slot</code> permits; and via the live start-menu renderer it asserts an unlearnable disk shows the ✕ while a learnable one does not. <code>[sanity]</code> checkpoints; any mismatch fails the run. This catches the marker/action divergence on the real built screens (load + render + Android export), which the <code>.new()</code> unit tests can't.</li>
+  </ul>
 </Concept>
