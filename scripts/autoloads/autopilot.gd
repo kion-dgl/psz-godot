@@ -818,7 +818,18 @@ func _drive_char_create() -> void:
 	if step != _cc_acted_step:
 		_cc_acted_step = step
 		match step:
-			0, 1:
+			0:
+				# Exercise the class-select slat tween — the path that produced
+				# the #380 cutout wobble — by navigating right then back left
+				# before confirming, so the selection width animation actually
+				# runs. (Previously this step pressed ui_accept immediately and
+				# the slats were never animated.)
+				for i in range(3):
+					_after(0.25 * float(i), func() -> void: _press_action("ui_right"))
+				for i in range(2):
+					_after(0.75 + 0.25 * float(i), func() -> void: _press_action("ui_left"))
+				_after(1.4, func() -> void: _press_action("ui_accept"))
+			1:
 				_press_action("ui_accept")
 			2:
 				_enter_name(node)

@@ -110,6 +110,7 @@ func _run_tests_systems() -> void:
 	test_character_appearance()
 	test_humarl_skin_remap()
 	test_character_create_state()
+	test_class_select_slat_crop_is_width_stable()
 	test_valley_grid()
 	test_field_config()
 	test_wetlands_field()
@@ -164,6 +165,74 @@ func _find_child_recursive(node: Node, child_name: String) -> Node:
 		if found:
 			return found
 	return null
+
+
+## #380 — class-select cutout wobble. The slat portrait must be cropped against
+## a FIXED width so the selection-tween (slat width 1<->5) only changes how much
+## of the cutout is revealed, never the crop origin. Deterministic, no RNG:
+## build the real (static) portrait frame, then resolve layout at a narrow and a
+## wide slat width and assert the frame + cover-cropped TextureRect sizes are
+## identical. Also assert every class id maps to an art file that ships in the
+## pack (asset_tree.txt), covering the hucaseal->hucasteal / racaseal->racasteal
+## filename overrides without loading the pack-only PNGs.
+func test_class_select_slat_crop_is_width_stable() -> void:
+	print("\n── Class-select slat crop stability (#380) ──")
+	var CharacterCreate := preload("res://scripts/2d/character_create.gd")
+
+	# Dummy art at hucast's real dimensions (250x347). Built in-memory so the
+	# test runs in repo-only CI where assets/images/*.png live only in the pack.
+	var img := Image.create(250, 347, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.0, 1.0, 0.0, 0.5))
+	var tex := ImageTexture.create_from_image(img)
+
+	var ref_w := 178.0
+	var slat := Control.new()
+	slat.clip_contents = true
+	var frame: Control = CharacterCreate._make_portrait_frame(ref_w, tex)
+	slat.add_child(frame)
+	add_child(slat)
+	var portrait: TextureRect = frame.get_node("Portrait")
+
+	# Narrow (unselected, stretch ratio 1) slat width.
+	slat.size = Vector2(ref_w / 5.0, 280.0)
+	var frame_w_narrow: float = frame.size.x
+	var portrait_w_narrow: float = portrait.size.x
+
+	# Wide (selected, stretch ratio 5) slat width.
+	slat.size = Vector2(ref_w, 280.0)
+	var frame_w_wide: float = frame.size.x
+	var portrait_w_wide: float = portrait.size.x
+
+	assert_gt(frame_w_narrow, 0.0, "portrait frame has positive width")
+	assert_eq(frame_w_narrow, ref_w, "portrait frame width == ref width (px-fixed)")
+	assert_eq(frame_w_narrow, frame_w_wide,
+		"portrait frame width is IDENTICAL at narrow vs wide slat (crop origin can't drift)")
+	assert_eq(portrait_w_narrow, portrait_w_wide,
+		"cover-crop TextureRect size IDENTICAL across slat widths — #380 wobble removed")
+	assert_eq(frame.anchor_left, 0.5, "frame left anchor collapsed to slat centre")
+	assert_eq(frame.anchor_right, 0.5, "frame right anchor collapsed to slat centre")
+	assert_true(frame.clip_contents, "portrait frame clips its overflow")
+	assert_true(portrait.texture != null, "portrait received its texture")
+	slat.queue_free()
+
+	# Every class id must resolve to an art file that ships in the pack.
+	# asset_tree.txt is the in-repo manifest of pack contents (res:// = repo root).
+	var tree_txt := FileAccess.get_file_as_string("res://asset_tree.txt")
+	assert_gt(tree_txt.length(), 0, "asset_tree.txt readable for art-coverage check")
+	var overrides: Dictionary = CharacterCreate.CLASS_ART_OVERRIDES
+	var all_classes: Array = ClassRegistry.get_all_classes()
+	assert_eq(all_classes.size(), 14, "ClassRegistry exposes all 14 classes")
+	var missing: Array = []
+	for cls in all_classes:
+		var art_name: String = overrides.get(cls.id, cls.id)
+		if not tree_txt.contains("assets/images/%s.png" % art_name):
+			missing.append("%s->%s" % [cls.id, art_name])
+	assert_eq(missing.size(), 0,
+		"every class id maps to a packed art file (missing: %s)" % str(missing))
+	assert_eq(overrides.get("hucaseal", "hucaseal"), "hucasteal",
+		"hucaseal art override -> hucasteal")
+	assert_eq(overrides.get("racaseal", "racaseal"), "racasteal",
+		"racaseal art override -> racasteal")
 
 
 ## Helper: check if a drop ID is a misc drop (disk, grinder, material, photon drop, unidentified)
