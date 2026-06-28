@@ -195,6 +195,9 @@ func _generate_sell_list() -> void:
 			"id": item_id, "name": item_name, "category": cat,
 			"sell_price": sell_price, "quantity": qty,
 			"equipped": is_equipped,
+			# ✕ marker: gear/disks this character can never use (spec /states/shops,
+			# /mechanics/equip-legality). Shared with the item shop's sell list.
+			"cannot_use": ShopNav.sell_cannot_use(item_id),
 		})
 	# No re-sort: keep Inventory.get_all_items() order so the sell list matches
 	# the player's inventory/storage ordering (pickup or auto-sort).
@@ -432,10 +435,12 @@ func _refresh_display() -> void:
 			var sell_id: String = str(item.get("id", ""))
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
-			# Unified shop row (#368): [E] prefix + muted for equipped gear.
+			# Unified shop row (#368): [E] prefix + muted for equipped gear, ✕ for
+			# gear the class can't equip (✕ takes precedence over [E] in shop_row).
 			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
 				"icons": sell_icons,
 				"equipped": bool(item.get("equipped", false)),
+				"cannot_use": bool(item.get("cannot_use", false)),
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)

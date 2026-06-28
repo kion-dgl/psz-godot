@@ -47,6 +47,7 @@ func _run_tests_core() -> void:
 	test_humar_gear_unequippable()
 	test_shop_capability_grey()
 	test_disk_capability_grey()
+	test_shop_sell_cannot_use_marker()
 	test_synth_unequippable_marker()
 	test_start_menu_data()
 	test_damage_formulas()
@@ -1722,6 +1723,57 @@ func test_disk_capability_grey() -> void:
 	character["techniques"] = saved_techs
 	character["level"] = saved_level
 	character["meseta"] = saved_meseta
+	print("")
+
+
+# Sell tabs (item + weapon shop) mark gear/disks the active character can never
+# use with the ✕ marker, so a player scanning what to offload sees dead weight at
+# a glance (spec /states/shops). Uses the canonical equip-legality gate
+# (allowed_weapon_types via EquipmentUtils), NOT WeaponData.usable_by.
+func test_shop_sell_cannot_use_marker() -> void:
+	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved_chars = CharacterManager._characters
+	var saved_slot = CharacterManager._active_slot
+	var saved_equip_all := DebugConfig.equip_all
+	DebugConfig.equip_all = false  # the ✕ gate must see real class legality
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+
+	# FOnewm (Force): allowed_weapon_types is Saber/Handgun/Rod/Wand — no Sword.
+	CharacterManager.create_character(0, "fonewm", "SellXForce")
+	CharacterManager.set_active_slot(0)
+	if WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("saber"):
+		assert_true(ShopNavCls.sell_cannot_use("sword"),
+			"FOnewm sell row: Sword carries ✕ (class can't equip the type)")
+		assert_true(not ShopNavCls.sell_cannot_use("saber"),
+			"FOnewm sell row: Saber has no ✕ (class can equip it)")
+	# Non-gear (consumables, materials) never carry the ✕.
+	assert_true(not ShopNavCls.sell_cannot_use("monomate"),
+		"Consumable sell row: no ✕ (no permanent class restriction)")
+	# A learnable technique disk for a Force → no ✕.
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"FOnewm sell row: a learnable disk has no ✕")
+
+	# A CAST can never learn techniques → every disk carries the ✕.
+	# (create_character refuses an occupied slot, so clear it first.)
+	CharacterManager._characters[0] = null
+	CharacterManager.create_character(0, "hucast", "SellXCast")
+	CharacterManager.set_active_slot(0)
+	assert_true(ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"CAST sell row: a technique disk carries ✕ (class can never learn it)")
+
+	# Disk-id parser: well-formed vs malformed.
+	assert_eq(str(ShopNavCls._parse_disk_id("disk_gizonde_3").get("technique_id", "")), "gizonde",
+		"_parse_disk_id reads the technique id")
+	assert_eq(int(ShopNavCls._parse_disk_id("disk_gizonde_3").get("level", -1)), 3,
+		"_parse_disk_id reads the level")
+	assert_true(ShopNavCls._parse_disk_id("disk_foie").is_empty(),
+		"_parse_disk_id rejects a level-less id")
+
+	CharacterManager._characters = saved_chars
+	CharacterManager._active_slot = saved_slot
+	DebugConfig.equip_all = saved_equip_all
 	print("")
 
 
