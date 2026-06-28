@@ -1,0 +1,75 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> Idle
+
+  Idle --> Walk: measured planar speed > IDLE_EPS
+  Walk --> Run: measured planar speed > RUN_EPS
+  Run --> Walk: measured planar speed < RUN_EPS
+  Walk --> Idle: measured planar speed < IDLE_EPS (held ANIM_HOLD_TIME)
+
+  note right of Idle
+    The player's action state
+    (ATTACKING / DODGING / DAMAGED …)
+    has NO edge into Walk or Run.
+    Only the companion's own
+    measured displacement does.
+  end note
+`;
+---
+
+<Concept title="Companion Locomotion" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p>A companion NPC (<code>scripts/3d/elements/companion_npc.gd</code>, a <code>CharacterBody3D</code>) follows the player through field exploration. It records the player's position every physics frame into a <em>trail</em> and replays it <code>TRAIL_DELAY</code> (0.5&nbsp;s) behind, so the companion walks the player's recent path rather than beelining. This page is the normative contract for how the companion picks its <strong>locomotion animation</strong> — distinct from how it picks its <strong>position</strong>.</p>
+
+  <h2>Position vs. animation are decoupled</h2>
+  <p>Two independent decisions happen each frame:</p>
+  <ul>
+    <li><strong>Position</strong> — whether to chase the delayed trail or freeze in place. This <strong>MAY</strong> consult the player's recorded locomotion state: only <code>WALKING</code> or <code>RUNNING</code> (the states in which the player's recorded position actually advances) put the companion in "follow the trail" mode; every other player state (<code>IDLE</code>, <code>ATTACKING</code>, <code>DODGING</code>, <code>DAMAGED</code>, <code>DOWN</code>, <code>CUTSCENE</code> …) leaves the player's recorded position constant, so the companion holds station either way.</li>
+    <li><strong>Animation</strong> — which locomotion clip to play. This <strong>MUST</strong> be a pure function of the companion's <em>own</em> measured planar displacement for the frame, and <strong>MUST NOT</strong> read the player's state.</li>
+  </ul>
+
+  <h2>Animation selection (normative)</h2>
+  <p>Let <code>speed</code> be the companion's planar (XZ) displacement between the start and end of the frame, divided by the frame <code>delta</code> — i.e. the distance it <em>actually</em> moved this frame, not where it intended to go.</p>
+
+  <table>
+    <thead><tr><th>Measured planar speed</th><th>Animation the companion MUST play</th></tr></thead>
+    <tbody>
+      <tr><td><code>&lt; IDLE_EPS</code> (0.15&nbsp;m/s)</td><td><code>wait</code> (idle)</td></tr>
+      <tr><td><code>IDLE_EPS … RUN_EPS</code></td><td><code>walk</code></td></tr>
+      <tr><td><code>&gt; RUN_EPS</code> (4.0&nbsp;m/s)</td><td><code>run</code></td></tr>
+    </tbody>
+  </table>
+
+  <ul>
+    <li>The companion <strong>MUST</strong> select its locomotion animation from its own frame-to-frame displacement (<code>curr_pos − prev_pos</code> over <code>delta</code>), and <strong>MUST NOT</strong> derive it from the player's attack/animation state.</li>
+    <li>The companion <strong>MUST NOT</strong> play <code>walk</code> or <code>run</code> in any frame where its planar displacement is ≈&nbsp;0. A rooted player attack (the player is <code>ATTACKING</code> and not translating) therefore leaves a stationary companion on <code>wait</code> — it <strong>MUST NOT</strong> run in place.</li>
+    <li>A player attack <strong>MUST NOT</strong>, by itself, change the companion's locomotion animation.</li>
+    <li>Only the <strong>planar</strong> (XZ) component counts: pure vertical displacement (gravity settle, step-up) <strong>MUST NOT</strong> register as locomotion.</li>
+    <li>The <code>ANIM_HOLD_TIME</code> (0.30&nbsp;s) debounce <strong>SHOULD</strong> be retained — once a clip starts it holds for that window before another switch is allowed, preventing flicker on micro-stops (handled in <code>_play_companion_anim</code>).</li>
+  </ul>
+
+  <h2>Other animation overrides</h2>
+  <p>Independent of measured speed, the companion plays <code>wait</code> when it has no trail history yet, immediately after a long-range teleport (it snapped, it did not run there), and while <em>dismissed</em> (<code>dismiss()</code> stops following and idles in place). These are explicit non-locomotion poses set before the measured-speed path runs.</p>
+
+  <h2>Why this contract exists (#420)</h2>
+  <p>Originally the companion mirrored the player's recorded <code>PlayerState</code> enum to pick its clip: any state ≥&nbsp;<code>WALKING</code> counted as "moving", and within that, <code>WALKING</code>→<code>walk</code> while everything else→<code>run</code>. Because <code>ATTACKING</code> (enum value 3) is ≥&nbsp;<code>WALKING</code> and is <em>not</em> <code>WALKING</code>, a stationary player attack drove the companion into <code>run</code> while its position never changed — it ran in place. Driving the animation off measured displacement removes the player-state leak entirely.</p>
+
+  <h2>Invariants</h2>
+  <ul>
+    <li>The companion's locomotion animation is a pure function of its own measured planar speed for the frame; no player state is an input to it.</li>
+    <li>Zero planar displacement ⇒ <code>wait</code>, regardless of what the player is doing.</li>
+    <li>The position decision and the animation decision are computed separately; the position decision <strong>MAY</strong> still consult the player's locomotion state, the animation decision <strong>MUST NOT</strong>.</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/elements/companion_npc.gd</code> — <code>_process_follow</code> (trail record/replay and the position decision), <code>_select_locomotion_anim(prev_pos, curr_pos, delta)</code> (the pure measured-speed clip pick), and <code>_play_companion_anim</code> (the <code>ANIM_HOLD_TIME</code> debounce). Thresholds: <code>IDLE_EPS</code>, <code>RUN_EPS</code>, <code>ANIM_HOLD_TIME</code>.</li>
+  </ul>
+  <p>Pinned by <code>test_companion_anim_from_measured_speed</code> in <code>scripts/tools/test_runner.gd</code> (zero / sub-threshold / walk / run / vertical-only / zero-delta cases). See the <a href="/states/player-state">Player State Machine</a> for the <code>PlayerState</code> enum this contract deliberately does <em>not</em> read.</p>
+</Concept>
