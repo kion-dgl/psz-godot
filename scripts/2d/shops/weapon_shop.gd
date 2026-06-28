@@ -195,6 +195,9 @@ func _generate_sell_list() -> void:
 			"id": item_id, "name": item_name, "category": cat,
 			"sell_price": sell_price, "quantity": qty,
 			"equipped": is_equipped,
+			# ✕ marker: gear/disks this character can never use (spec /states/shops,
+			# /mechanics/equip-legality). Shared with the item shop's sell list.
+			"cannot_use": ShopNav.sell_cannot_use(item_id),
 		})
 	# No re-sort: keep Inventory.get_all_items() order so the sell list matches
 	# the player's inventory/storage ordering (pickup or auto-sort).
@@ -244,23 +247,33 @@ func _get_current_list() -> Array:
 	return _weapons
 
 
+## Buy-tab equippability — drives the capability ✕ marker and the detail panel's
+## "Can/Cannot equip" line. Routes through the canonical equip-legality gate
+## (EquipmentUtils.item_fits_slot → ClassData.allowed_weapon_types; spec
+## /mechanics/equip-legality), the SAME gate the sell tab uses
+## (ShopNav.sell_cannot_use), so buy and sell can't disagree. WeaponData.usable_by
+## MUST NOT be consulted — it has drifted from the class lists (e.g. Double Saber's
+## usable_by lists all Hunters, but only HUnewm allows the type). Armor carries no
+## class restriction under the contract, so item_fits_slot("frame") only confirms
+## it's real gear. Permanent-capability only: the level gate is deliberately NOT
+## applied here (matches the ✕ marker's semantics — a too-low level is a temporary
+## block, surfaced at equip time, not a never-usable ✕). DebugConfig.equip_all
+## bypasses the class gate inside item_fits_slot, same as every other screen.
 func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return {"can_equip": false, "reason": ""}
-	var class_str: String = ShopNav.active_class_use_string()
 
+	var slot_key: String = ""
 	if cat == "weapon":
-		var w = WeaponRegistry.get_weapon(item_id)
-		if w:
-			if not class_str.is_empty() and not w.can_be_used_by(class_str):
-				return {"can_equip": false, "reason": "class"}
+		slot_key = "weapon"
 	elif cat == "armor":
-		var a = ArmorRegistry.get_armor(item_id)
-		if a:
-			if not class_str.is_empty() and not a.can_be_used_by(class_str):
-				return {"can_equip": false, "reason": "class"}
+		slot_key = "frame"
+	else:
+		return {"can_equip": true, "reason": ""}
 
+	if not EquipmentUtils.item_fits_slot(item_id, slot_key):
+		return {"can_equip": false, "reason": "class"}
 	return {"can_equip": true, "reason": ""}
 
 
@@ -432,10 +445,12 @@ func _refresh_display() -> void:
 			var sell_id: String = str(item.get("id", ""))
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
-			# Unified shop row (#368): [E] prefix + muted for equipped gear.
+			# Unified shop row (#368): [E] prefix + muted for equipped gear, ✕ for
+			# gear the class can't equip (✕ takes precedence over [E] in shop_row).
 			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
 				"icons": sell_icons,
 				"equipped": bool(item.get("equipped", false)),
+				"cannot_use": bool(item.get("cannot_use", false)),
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)

@@ -640,6 +640,11 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	player.add_to_group("player")
 	add_child(player)
 	player.global_position = pos
+	# HP-zero defeat (spec /states/player-death): raise the "You were defeated"
+	# screen when this player dies. CONNECT_ONE_SHOT — a fresh player is spawned
+	# per cell, so the signal only ever fires once on this instance anyway, but
+	# this makes the single-fire contract explicit.
+	player.died.connect(_on_player_died, CONNECT_ONE_SHOT)
 
 	# Set player facing direction (both model visual and movement state)
 	player.player_rotation = rot
@@ -677,6 +682,17 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	_blob_shadow.material_override = shadow_mat
 	add_child(_blob_shadow)
 	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
+
+
+## Player HP reached 0 (spec /states/player-death). Raise the "You were
+## defeated" screen, which owns the prompt + the return-to-city transition.
+## Guarded so a second death signal (shouldn't happen — take_damage early-
+## returns while down) can't stack two screens.
+func _on_player_died() -> void:
+	if not get_tree().get_nodes_in_group("defeat_screen").is_empty():
+		return
+	_fdbg("[ValleyField] Player defeated → raising defeat screen")
+	add_child(DefeatScreen.new())
 
 
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]

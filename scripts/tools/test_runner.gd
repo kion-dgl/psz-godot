@@ -47,6 +47,7 @@ func _run_tests_core() -> void:
 	test_humar_gear_unequippable()
 	test_shop_capability_grey()
 	test_disk_capability_grey()
+	test_shop_sell_cannot_use_marker()
 	test_synth_unequippable_marker()
 	test_start_menu_data()
 	test_damage_formulas()
@@ -83,6 +84,7 @@ func _run_tests_core() -> void:
 	test_free_roam_per_area_state()
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
+	test_player_defeat_return()
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
@@ -1525,6 +1527,11 @@ func test_shop_buy_unequippable_gear() -> void:
 	if character == null:
 		print("  INFO: no active character — skipped")
 		ws.free(); print(""); return
+	# _check_equippability now routes through item_fits_slot, which honors
+	# DebugConfig.equip_all — force it off so a genuinely class-illegal weapon
+	# exists to find (else the gate would clear everything and the test no-ops).
+	var saved_equip_all := DebugConfig.equip_all
+	DebugConfig.equip_all = false
 	# Find a weapon the active character's class genuinely cannot equip.
 	var unequip_id := ""
 	for wid in WeaponRegistry.get_all_weapon_ids():
@@ -1533,6 +1540,7 @@ func test_shop_buy_unequippable_gear() -> void:
 			break
 	if unequip_id.is_empty():
 		print("  INFO: active class can equip every weapon — skipped")
+		DebugConfig.equip_all = saved_equip_all
 		ws.free(); print(""); return
 
 	var saved_meseta: int = int(character.get("meseta", 0))
@@ -1558,33 +1566,55 @@ func test_shop_buy_unequippable_gear() -> void:
 	Inventory.clear_inventory()
 	character["meseta"] = saved_meseta
 	GameState.meseta = saved_game_meseta
+	DebugConfig.equip_all = saved_equip_all
 	ws.free()
 	print("")
 
 
-# Regression for Rozalin's "HUmar shows every weapon/armor equippable" report:
-# a HUmar must NOT be able to equip a robe (Newman-Hunter / Force only) or a rod
-# (Force only) — both must mark ✕ in the shop. Guards the gear capability path
-# (active_class_use_string → can_be_used_by) the same way the disk test guards
-# class_can_learn.
+# Regression for Rozalin's "HUmar shows every weapon/armor equippable" report,
+# re-pinned to the canonical equip-legality gate (allowed_weapon_types via
+# EquipmentUtils.item_fits_slot — NOT WeaponData/ArmorData.usable_by; spec
+# /mechanics/equip-legality). Under the contract:
+#   • a rod is a Force weapon type HUmar's class can't equip → ✕;
+#   • a saber is allowed for every class → no ✕;
+#   • ARMOR carries no class restriction, so a frame AND a robe are both
+#     equippable (the old usable_by robe block is dropped — that drift is exactly
+#     what made buy and sell disagree).
+# Also asserts the buy-tab ✕ predicate equals the sell-tab one
+# (ShopNav.sell_cannot_use) — the "single source of truth" rule in code.
 func test_humar_gear_unequippable() -> void:
-	print("── HUmar can't equip robes / Force weapons (regression) ──")
+	print("── HUmar gear equippability via canonical gate (regression) ──")
 	var saved_chars = CharacterManager._characters
 	var saved_slot = CharacterManager._active_slot
+	var saved_equip_all := DebugConfig.equip_all
+	DebugConfig.equip_all = false  # item_fits_slot honors equip_all; force real legality
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
 	CharacterManager.create_character(0, "humar", "EquipTest")
 	CharacterManager.set_active_slot(0)
 
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
 	var ws = load("res://scripts/2d/shops/weapon_shop.gd").new()
-	assert_true(not ws._check_equippability("robe", "armor").get("can_equip", true),
-		"HUmar cannot equip a robe (should ✕)")
+
 	assert_true(not ws._check_equippability("rod", "weapon").get("can_equip", true),
 		"HUmar cannot equip a rod / Force weapon (should ✕)")
-	assert_true(ws._check_equippability("frame", "armor").get("can_equip", true),
+	assert_true(ws._check_equippability("saber", "weapon").get("can_equip", false),
+		"HUmar CAN equip a saber — every class allows it (no ✕)")
+	assert_true(ws._check_equippability("frame", "armor").get("can_equip", false),
 		"HUmar CAN equip a basic frame (no ✕)")
+	assert_true(ws._check_equippability("robe", "armor").get("can_equip", false),
+		"HUmar CAN equip a robe — armor has no class restriction under the gate (no ✕)")
+
+	# Buy and sell agree: the buy-tab ✕ predicate == the sell-tab ✕ predicate.
+	assert_eq(not ws._check_equippability("rod", "weapon").get("can_equip", true),
+		ShopNavCls.sell_cannot_use("rod"),
+		"buy ✕ and sell ✕ agree for a rod (single source of truth)")
+	assert_eq(not ws._check_equippability("saber", "weapon").get("can_equip", true),
+		ShopNavCls.sell_cannot_use("saber"),
+		"buy ✕ and sell ✕ agree for a saber (single source of truth)")
 	ws.free()
 
+	DebugConfig.equip_all = saved_equip_all
 	CharacterManager._characters = saved_chars
 	CharacterManager._active_slot = saved_slot
 	print("")
@@ -1722,6 +1752,57 @@ func test_disk_capability_grey() -> void:
 	character["techniques"] = saved_techs
 	character["level"] = saved_level
 	character["meseta"] = saved_meseta
+	print("")
+
+
+# Sell tabs (item + weapon shop) mark gear/disks the active character can never
+# use with the ✕ marker, so a player scanning what to offload sees dead weight at
+# a glance (spec /states/shops). Uses the canonical equip-legality gate
+# (allowed_weapon_types via EquipmentUtils), NOT WeaponData.usable_by.
+func test_shop_sell_cannot_use_marker() -> void:
+	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved_chars = CharacterManager._characters
+	var saved_slot = CharacterManager._active_slot
+	var saved_equip_all := DebugConfig.equip_all
+	DebugConfig.equip_all = false  # the ✕ gate must see real class legality
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+
+	# FOnewm (Force): allowed_weapon_types is Saber/Handgun/Rod/Wand — no Sword.
+	CharacterManager.create_character(0, "fonewm", "SellXForce")
+	CharacterManager.set_active_slot(0)
+	if WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("saber"):
+		assert_true(ShopNavCls.sell_cannot_use("sword"),
+			"FOnewm sell row: Sword carries ✕ (class can't equip the type)")
+		assert_true(not ShopNavCls.sell_cannot_use("saber"),
+			"FOnewm sell row: Saber has no ✕ (class can equip it)")
+	# Non-gear (consumables, materials) never carry the ✕.
+	assert_true(not ShopNavCls.sell_cannot_use("monomate"),
+		"Consumable sell row: no ✕ (no permanent class restriction)")
+	# A learnable technique disk for a Force → no ✕.
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"FOnewm sell row: a learnable disk has no ✕")
+
+	# A CAST can never learn techniques → every disk carries the ✕.
+	# (create_character refuses an occupied slot, so clear it first.)
+	CharacterManager._characters[0] = null
+	CharacterManager.create_character(0, "hucast", "SellXCast")
+	CharacterManager.set_active_slot(0)
+	assert_true(ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"CAST sell row: a technique disk carries ✕ (class can never learn it)")
+
+	# Disk-id parser: well-formed vs malformed.
+	assert_eq(str(ShopNavCls._parse_disk_id("disk_gizonde_3").get("technique_id", "")), "gizonde",
+		"_parse_disk_id reads the technique id")
+	assert_eq(int(ShopNavCls._parse_disk_id("disk_gizonde_3").get("level", -1)), 3,
+		"_parse_disk_id reads the level")
+	assert_true(ShopNavCls._parse_disk_id("disk_foie").is_empty(),
+		"_parse_disk_id rejects a level-less id")
+
+	CharacterManager._characters = saved_chars
+	CharacterManager._active_slot = saved_slot
+	DebugConfig.equip_all = saved_equip_all
 	print("")
 
 
@@ -2922,6 +3003,73 @@ func test_telepipe_suspend_resume_keeps_telepipe() -> void:
 	SessionManager.return_to_city()
 	assert_true(not TelepipeManager.is_active(),
 		"return_to_city cancels telepipe (full session end)")
+	print("")
+
+
+func test_player_defeat_return() -> void:
+	print("── Player defeat — return-to-city transaction (spec /states/player-death) ──")
+
+	TelepipeManager.cancel("test_setup")
+	SessionManager._suspended_session.clear()
+
+	# The active CHARACTER dict is the source of truth for meseta/HP (the city
+	# re-syncs GameState from it on arrival), so set up a known one and assert
+	# the penalty/revive land on the CHARACTER, not just the GameState mirror.
+	var saved_chars = CharacterManager._characters
+	var saved_slot = CharacterManager._active_slot
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "DefeatTest")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["meseta"] = 100
+	ch["max_hp"] = 120
+	ch["hp"] = 1
+	GameState.meseta = 100
+	GameState.stored_meseta = 500
+	GameState.max_hp = 120
+	GameState.set_hp(0)  # dead
+
+	# In a quest field, carrying 100 meseta with 500 banked, an active telepipe.
+	SessionManager.enter_quest("search_and_rescue", "normal")
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3(1, 0, 1),
+		"res://scenes/3d/field/valley_field.tscn")
+
+	var result: Dictionary = SessionManager.defeat_return_to_city()
+
+	# 50% of carried meseta is lost (floored), on the CHARACTER + the mirror;
+	# bank untouched.
+	assert_eq(int(result.get("meseta_lost", -1)), 50, "Defeat loses 50% of carried meseta (100 → lose 50)")
+	assert_eq(int(ch["meseta"]), 50, "Character (source of truth) meseta halved to 50")
+	assert_eq(GameState.meseta, 50, "GameState meseta mirror halved to 50")
+	assert_eq(GameState.stored_meseta, 500, "Banked meseta untouched by defeat penalty")
+
+	# Revived to full HP — on the character and the mirror.
+	assert_eq(int(ch["hp"]), int(ch["max_hp"]), "Character revived to full HP")
+	assert_eq(GameState.hp, GameState.max_hp, "GameState HP mirror at full")
+
+	# Session ended (not resumable) and telepipe cleared.
+	assert_true(not SessionManager.has_active_session(), "Defeat ends the field session")
+	assert_true(not SessionManager.has_suspended_session(), "Defeat does NOT leave a resumable session")
+	assert_eq(SessionManager.get_location(), "city", "Player is back in the city after defeat")
+	assert_true(not TelepipeManager.is_active(), "Defeat cancels any active telepipe (session end)")
+
+	# Odd amount floors (101 → lose 50, keep 51); zero carried → lose nothing.
+	ch["meseta"] = 101
+	GameState.meseta = 101
+	assert_eq(int(SessionManager.defeat_return_to_city().get("meseta_lost", -1)), 50,
+		"Odd carried meseta floors (101 → lose 50)")
+	assert_eq(int(ch["meseta"]), 51, "51 meseta kept on the character after flooring")
+	ch["meseta"] = 0
+	GameState.meseta = 0
+	assert_eq(int(SessionManager.defeat_return_to_city().get("meseta_lost", -1)), 0,
+		"Zero carried meseta → nothing lost")
+
+	# Cleanup
+	GameState.stored_meseta = 0
+	CharacterManager._characters = saved_chars
+	CharacterManager._active_slot = saved_slot
+	GameState.set_hp(GameState.max_hp)
 	print("")
 
 

@@ -240,6 +240,16 @@ var _menu_during_pickup := false
 # regression-matrix quest flow is completely untouched. See issue #9.
 var _shops_phase := false
 
+# Defeat probe (spec /states/player-death): when PSZ_AUTOPILOT_DEFEAT=1, the
+# autopilot drives normally into the first field cell, then kills the player
+# instead of running the cell plan — exercising the HP-zero defeat flow end to
+# end (red screen → "Yes" → return to city, 50% meseta penalty, full revive).
+# Success oracle is the same DONE ok line.
+var _defeat_probe := false
+var _defeat_triggered := false      # killed the player already (fires once)
+var _defeat_awaiting_city := false  # chose Yes, waiting to land in the city
+var _defeat_meseta_before := 0
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -259,6 +269,9 @@ func _ready() -> void:
 	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
 	if _shops_phase:
 		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
+	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
+	if _defeat_probe:
+		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -706,6 +719,11 @@ func _drive_scene(path: String) -> void:
 		# Wait a bit longer for the 3D scene + dialog to settle.
 		_after(STEP_DELAY * 2.0, _drive_city_office)
 	elif path == CITY_COUNTER:
+		# Defeat probe: chose "Yes" on the defeat screen and arrived in the city.
+		# Assert the consequences and finish — don't fall into the accept flow.
+		if _defeat_awaiting_city:
+			_finish_defeat_probe()
+			return
 		print("[sanity] checkpoint: city_counter")
 		_counter_npc_interacted = false
 		_after(STEP_DELAY * 2.0, _drive_city_counter)
@@ -1741,8 +1759,72 @@ func _drive_city_warp() -> void:
 ## NOT by a linear counter), then drive its action list and walk to the exit
 ## portal. The next cell-load resolves the next step the same way — drifts
 ## from the planned cell sequence are caught and logged at the boundary.
+# ── Defeat probe (spec /states/player-death) ───────────────────────────────
+
+## First field cell loaded under PSZ_AUTOPILOT_DEFEAT: give the player a known
+## meseta count, then deal lethal damage. The field controller raises the
+## DefeatScreen on the `died` signal; _defeat_confirm_yes drives the "Yes".
+## The player is spawned a beat after the cell-load callback fires, so poll a
+## few frames until it joins the "player" group before striking.
+func _run_defeat_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_defeat_probe(attempt + 1))
+		else:
+			print("[sanity] FAIL: defeat probe — no player in field to kill")
+			_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	var p = players[0]
+	# Set meseta on the CHARACTER (source of truth) + the GameState mirror, so the
+	# penalty is observable after the city re-syncs from the character on arrival.
+	var ch = CharacterManager.get_active_character()
+	if ch != null:
+		ch["meseta"] = 100
+	GameState.meseta = 100
+	_defeat_meseta_before = 100
+	print("[sanity] checkpoint: defeat probe — killing player (meseta=%d, hp=%d/%d)" % [
+		GameState.meseta, GameState.hp, GameState.max_hp])
+	p.take_damage(9999)
+	_after(STEP_DELAY * 3.0, _defeat_confirm_yes)
+
+
+## The DefeatScreen should be up now — confirm "Yes" to return to the city.
+func _defeat_confirm_yes() -> void:
+	var screens: Array = get_tree().get_nodes_in_group("defeat_screen")
+	if screens.is_empty():
+		print("[sanity] FAIL: defeat probe — defeat screen did not appear after death")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: defeat probe — screen shown, choosing Yes")
+	_defeat_awaiting_city = true
+	screens[0].confirm_return()
+
+
+## Arrived back in the city after the defeat "Yes" — assert the penalty + revive
+## landed (they must survive the city's re-sync from the character) and finish.
+func _finish_defeat_probe() -> void:
+	_defeat_awaiting_city = false
+	var want_meseta: int = _defeat_meseta_before / 2
+	var ok: bool = GameState.meseta == want_meseta and GameState.hp == GameState.max_hp
+	print("[sanity] checkpoint: defeat probe — arrived city, meseta %d->%d (want %d), hp %d/%d" % [
+		_defeat_meseta_before, GameState.meseta, want_meseta, GameState.hp, GameState.max_hp])
+	if ok:
+		print("[sanity] DONE ok")
+	else:
+		print("[sanity] FAIL: defeat probe — meseta/hp not as expected after return")
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(0 if ok else 1))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
+	# Defeat probe: in the first field cell, kill the player instead of running
+	# the cell plan. Everything after this is the defeat flow (spec
+	# /states/player-death), driven by _run_defeat_probe.
+	if _defeat_probe and not _defeat_triggered:
+		_defeat_triggered = true
+		_run_defeat_probe()
+		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
 	var current_cell = field.get("_current_cell") if field else null

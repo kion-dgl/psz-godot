@@ -145,6 +145,12 @@ const lifecycle = `flowchart TD
   an area gate). When the cell's exit is empty and objectives are met, the final
   cell's <code>wait_quest_complete</code> resolves and the controller spawns the
   end-cell exit, which telepipes the player back to the city for the quest report.</p>
+  <p>That is the <em>success</em> exit. A field session also has a
+  <strong>failure</strong> exit: if the player's HP reaches 0 the run ends in
+  <a href="/states/player-death">Defeat</a> — a red overlay + "You were defeated"
+  prompt that returns the player to the city (full-HP revive, a 50% carried-meseta
+  penalty, session ended). Defeat and the end-cell telepipe are the only two ways a
+  field session ends from inside the field.</p>
 
   <h3>Quests vs. free roam</h3>
   <p>Quests and free (explorable) areas share the <strong>same stage JSON
@@ -182,6 +188,8 @@ const lifecycle = `flowchart TD
     <tr><td><code>action i/n: &lt;name&gt;</code></td><td>executing a <code>do[]</code> action</td></tr>
     <tr><td><code>walk to exit '&lt;dir&gt;' via N waypoint(s)</code> / <code>waypoint i/n reached</code></td><td>navigating to the exit</td></tr>
     <tr><td><code>stuck-walk diagnostic …</code> / <code>FAIL: walk stuck …</code></td><td>pathfinding failed — the stage needs authored waypoints</td></tr>
+    <tr><td><code>checkpoint: defeat-screen-shown</code></td><td>HP hit 0 → the <a href="/states/player-death">defeat</a> prompt is up</td></tr>
+    <tr><td><code>checkpoint: defeat-return-to-city meseta &lt;before&gt; -&gt; &lt;after&gt;</code></td><td>chose "Yes" → revived, penalty applied, session ended</td></tr>
     <tr><td><code>DONE ok</code></td><td>quest cleared end-to-end (success oracle)</td></tr>
   </table>
 </Concept>

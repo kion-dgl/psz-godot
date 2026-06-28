@@ -253,6 +253,10 @@ const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
 # Signals
 signal state_changed(new_state: PlayerState)
 signal interacted_with(element: Node3D)
+## Emitted once when a hit drives HP to 0 (spec /states/player-death). The field
+## controller listens for it to raise the DefeatScreen. Fires exactly once per
+## death — take_damage() early-returns on further hits while already down.
+signal died
 
 
 func _ready() -> void:
@@ -2251,9 +2255,12 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 	velocity = Vector3.ZERO
 
 	if GameState.hp <= 0:
-		# Death: knockdown into lying-down loop
+		# Death: knockdown into lying-down loop, then raise the defeat screen.
+		# The "already dead" guard at the top of take_damage() makes this fire
+		# exactly once (spec /states/player-death).
 		play_animation(_anim_prefix + "_dam_d", false)
 		transition_to(PlayerState.DOWN)
+		died.emit()
 	elif damage > 20:
 		# Heavy hit: knockdown then get back up
 		play_animation(_anim_prefix + "_dam_d", false)
