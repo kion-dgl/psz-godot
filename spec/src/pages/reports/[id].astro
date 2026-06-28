@@ -22,6 +22,12 @@ try {
 } catch { /* not found */ }
 
 const tel = report?.telemetry ?? null;
+
+// Triage fields (set by scripts/deploy/triage_report.sh). status absent ⇒ open.
+const REPO = 'https://github.com/kion-dgl/psz-godot';
+const STATUS_LABEL: Record<string, string> = { open: 'open', resolved: 'resolved', wontfix: "won't do" };
+const status = (report?.status as string) ?? 'open';
+const issue = report?.issue as number | undefined;
 ---
 
 <PlaytestBase title={`Report ${id} — Phantasy Star Zero`}>
@@ -32,6 +38,15 @@ const tel = report?.telemetry ?? null;
       <>
         <h1>{report.free_text || '(no text)'}</h1>
         <dl>
+          <dt>Status</dt>
+          <dd>
+            <span class={`badge st-${status}`}>{STATUS_LABEL[status] ?? status}</span>
+            {report.triaged_at && <span class="triaged">· triaged {String(report.triaged_at).replace('T', ' ').replace(/\..*/, '')}</span>}
+          </dd>
+          <dt>Issue</dt>
+          <dd>{issue != null
+            ? <a class="issue" href={`${REPO}/issues/${issue}`} target="_blank" rel="noopener">#{issue} ↗</a>
+            : <span class="none">not filed</span>}</dd>
           <dt>Received</dt><dd>{report.received_at ?? '—'}</dd>
           <dt>Source</dt><dd>{report.source ?? '—'}</dd>
           <dt>Reporter</dt><dd>{report.reporter_handle ?? 'anon'}</dd>
@@ -66,6 +81,17 @@ const tel = report?.telemetry ?? null;
     dt { color: #8b93a7; font-size: 0.85rem; }
     dd { margin: 0; color: #e6e9ef; }
     dd.ua { font-size: 0.8rem; color: #8b93a7; word-break: break-word; }
+    .badge {
+      font-size: 0.78rem; padding: 0.1rem 0.55rem; border-radius: 999px;
+      border: 1px solid currentColor; text-transform: lowercase;
+    }
+    .st-open { color: #d4a843; }
+    .st-resolved { color: #4ade80; }
+    .st-wontfix { color: #8b93a7; }
+    .triaged { color: #8b93a7; font-size: 0.8rem; margin-left: 0.5rem; }
+    a.issue { color: #7aa2ff; text-decoration: none; }
+    a.issue:hover { text-decoration: underline; }
+    .none { color: #8b93a7; }
     .shot { max-width: 100%; border: 1px solid #2a3142; border-radius: 0.5rem; margin: 1rem 0; }
     pre.log {
       background: #0b0e14; border: 1px solid #1d2433; border-radius: 0.5rem;
