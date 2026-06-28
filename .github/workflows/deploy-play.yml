@@ -1,0 +1,76 @@
+name: Deploy /play (Web build)
+
+# Auto-deploy ONLY the playable Godot Web export to https://psz.onl/play on
+# every merge to main. This is the CD counterpart of the manual
+# scripts/deploy/deploy_web_do.sh — it builds the "Web" preset and rsyncs it to
+# the droplet's /srv/game mount (Caddy serves it at psz.onl/game; the /play page
+# embeds it). The Astro spec/landing site is NOT touched — that stays a manual
+# deploy via scripts/deploy/deploy_site_do.sh.
+#
+# main is protected by the "Merge to Main" ruleset (PR + CI required), so any
+# commit that lands here has already passed CI — no extra gating needed.
+#
+# The gitignored local asset set is not in the CI checkout, so the export stays
+# small (~wasm + game pck); the ~264MB asset pack is a runtime download from
+# pck.psz.onl (its Caddy block already sends Access-Control-Allow-Origin *).
+#
+# REQUIRED SECRET: DO_DEPLOY_SSH_KEY — a private key whose public half is in the
+# droplet's authorized_keys for the deploy user (see repo docs / PR description).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Never let two deploys race the same /srv/game mount; newest wins.
+concurrency:
+  group: deploy-play
+  cancel-in-progress: true
+
+jobs:
+  deploy-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          include-templates: true
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-4.5.1
+
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
+      - name: Export Web
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+          test -f build/web/index.html  # fail loudly if the export produced nothing
+
+      - name: Deploy to droplet (/srv/game → psz.onl/play)
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DO_DEPLOY_SSH_KEY }}
+          DEPLOY_TARGET: ${{ vars.DO_DEPLOY_TARGET || 'root@159.223.133.93' }}
+          DEPLOY_HOST: ${{ vars.DO_DEPLOY_HOST || '159.223.133.93' }}
+          GAME_DIR: ${{ vars.DO_GAME_DIR || '/srv/game' }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Secret DO_DEPLOY_SSH_KEY is not set — add it before this workflow can deploy."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes" \
+            build/web/ "$DEPLOY_TARGET:$GAME_DIR/"
+          echo "✓ deployed → https://psz.onl/play"
