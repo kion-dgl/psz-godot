@@ -17,6 +17,7 @@ sky = SubResource("sky")
 ambient_light_source = 3
 ambient_light_color = Color(0.804, 0.69, 0.533, 1)
 ambient_light_energy = 0.55
+tonemap_mode = 3
 
 [node name="CityOffice" type="Node3D"]
 script = ExtResource("1_script")

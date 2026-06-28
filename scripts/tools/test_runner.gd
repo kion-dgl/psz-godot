@@ -136,6 +136,7 @@ func _run_tests_systems() -> void:
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
 	test_script_parse()
+	test_port_color_space_hygiene()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -6545,7 +6546,7 @@ func test_blackjack() -> void:
 func test_script_parse() -> void:
 	print("── Script parse smoke test ──")
 	var paths: Array = []
-	_collect_gd_files("res://scripts", paths)
+	_collect_files_by_ext("res://scripts", ".gd", paths)
 	var failures: int = 0
 	for path in paths:
 		# Skip the test runner itself — it's already running.
@@ -6583,7 +6584,9 @@ func _compile_blocked_by_missing_pack_asset(script: GDScript) -> bool:
 	return false
 
 
-func _collect_gd_files(dir_path: String, out: Array) -> void:
+# Generic recursive collector for an arbitrary extension (e.g. ".gd",
+# ".gdshader", ".tscn").
+func _collect_files_by_ext(dir_path: String, ext: String, out: Array) -> void:
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
 		return
@@ -6593,8 +6596,8 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 		if not entry.begins_with("."):
 			var sub_path: String = dir_path.path_join(entry)
 			if dir.current_is_dir():
-				_collect_gd_files(sub_path, out)
-			elif entry.ends_with(".gd"):
+				_collect_files_by_ext(sub_path, ext, out)
+			elif entry.ends_with(ext):
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
@@ -6620,3 +6623,82 @@ class _KillStateStubController extends RefCounted:
 	var _fence_links: Dictionary = {}
 	var _current_wave: int = 1
 	var _max_wave: int = 1
+
+
+# Issue #382 (muddy-colors-source-aces): freeze the two halves of the
+# Three.js → Godot color-port contract (spec /engineering/color-port) so a
+# future shader/scene edit can't silently regress sRGB decode or tonemapping.
+#
+# (1) Every COLOR/albedo input uniform in a res://scripts/3d *.gdshader MUST
+#     carry `: source_color` — without it Godot treats the sRGB pack texture
+#     as linear and the scene reads flat/muddy. Non-color data uniforms
+#     (uv_scale, offsets, scalar knobs) MUST NOT — the matcher keys on a tight
+#     color-name set AND a color-bearing type (sampler2D / vec3 / vec4).
+# (2) Every res://scenes/3d *.tscn that embeds an Environment MUST set
+#     `tonemap_mode = 3` (TONE_MAPPER_ACES). The Godot 4.5 default is Linear
+#     (0), the flat default the issue calls out.
+#
+# Fully static: reads repo text via DirAccess/FileAccess, no RNG, no asset pack.
+func test_port_color_space_hygiene() -> void:
+	print("── Color-port hygiene (#382): source_color + ACES tonemap ──")
+
+	# --- (1) Shader color uniforms carry : source_color -----------------
+	var color_name_tokens: Array = ["albedo", "_tex", "texture", "color", "tint", "emission"]
+	var color_types: Array = ["sampler2D", "vec3", "vec4"]
+	var shader_paths: Array = []
+	_collect_files_by_ext("res://scripts/3d", ".gdshader", shader_paths)
+	assert_gt(shader_paths.size(), 0, "found at least one .gdshader under scripts/3d")
+	var shader_violations: int = 0
+	for path in shader_paths:
+		var text: String = FileAccess.get_file_as_string(path)
+		var line_no: int = 0
+		for raw_line in text.split("\n"):
+			line_no += 1
+			var line: String = raw_line.strip_edges()
+			if not line.begins_with("uniform "):
+				continue
+			var parts: PackedStringArray = line.split(" ", false)
+			if parts.size() < 3:
+				continue
+			var utype: String = parts[1]
+			var uname: String = parts[2]
+			if not color_types.has(utype):
+				continue
+			var is_color_input: bool = false
+			for token in color_name_tokens:
+				if uname.contains(token):
+					is_color_input = true
+					break
+			if not is_color_input:
+				continue
+			if not line.contains("source_color"):
+				shader_violations += 1
+				print("  FAIL: %s:%d color uniform '%s' missing ': source_color' → %s"
+					% [path, line_no, uname, line])
+	if shader_violations == 0:
+		_pass += 1
+		print("  PASS: all color/albedo shader uniforms carry : source_color")
+	else:
+		_fail += 1
+
+	# --- (2) 3D-scene Environments use ACES tonemapping -----------------
+	var scene_paths: Array = []
+	_collect_files_by_ext("res://scenes/3d", ".tscn", scene_paths)
+	var env_scene_count: int = 0
+	var tonemap_violations: int = 0
+	for path in scene_paths:
+		var text: String = FileAccess.get_file_as_string(path)
+		if not text.contains("type=\"Environment\""):
+			continue
+		env_scene_count += 1
+		if not text.contains("tonemap_mode = 3"):
+			tonemap_violations += 1
+			print("  FAIL: %s has an Environment but no ACES 'tonemap_mode = 3'" % path)
+	assert_gt(env_scene_count, 0, "found at least one Environment scene under scenes/3d")
+	if tonemap_violations == 0:
+		_pass += 1
+		print("  PASS: all %d Environment scenes set ACES tonemap_mode = 3" % env_scene_count)
+	else:
+		_fail += 1
+
+	print("")

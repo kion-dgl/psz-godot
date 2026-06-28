@@ -63,6 +63,9 @@ check() {  # label needle
 }
 
 check "reached city_office"               "[sanity] checkpoint: city_office"
+# #382 color-port: the office Environment must load with ACES tonemap (3), not
+# the muddy Linear default (0). Proves the edited .tscn took effect at runtime.
+check "office env uses ACES tonemap"      "[sanity] checkpoint: office-env tonemap=3"
 check "entered shop-smoke detour"         "[sanity] office intro complete → shop/storage smoke"
 check "principal debug meseta granted"    "[sanity] checkpoint: principal debug meseta granted"
 check "item shop opened"                  "[sanity] checkpoint: item_shop opened"

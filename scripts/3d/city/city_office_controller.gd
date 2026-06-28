@@ -130,6 +130,15 @@ func _ready() -> void:
 	# Connect custom interaction handler via signal
 	_principal_npc.interacted.connect(_on_principal_interact)
 
+	# #382 color-port probe: confirm the office Environment actually loads with
+	# ACES tonemapping (3) at runtime, not the muddy Linear default (0). Read
+	# off the WorldEnvironment so a botched .tscn edit is caught by shop_smoke.
+	var world_env := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_env != null and world_env.environment != null:
+		var office_env := world_env.environment
+		print("[sanity] checkpoint: office-env tonemap=%d ambient_src=%d"
+			% [office_env.tonemap_mode, office_env.ambient_light_source])
+
 	# Exit trigger — back to counter
 	_add_area_trigger(
 		DOOR_TRIGGER_POSITION, DOOR_TRIGGER_SIZE,

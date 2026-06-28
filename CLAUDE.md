@@ -114,6 +114,18 @@ just burns ~3 min of autopilot and can flake on a loaded box. (The
 merge regardless — pointless for a non-Godot diff; relaxing it to skip
 diffs with no `.gd`/scene/quest changes is a reasonable follow-up.)
 
+## Color porting (Three.js → Godot) — don't ship muddy scenes
+
+Porting the original R3F look into Godot silently drops two color steps:
+sRGB texture decode and filmic tonemapping. The normative contract is
+spec `/engineering/color-port` (RFC-2119). In short: color/albedo shader
+uniforms **MUST** carry `: source_color`; every `scenes/3d/*.tscn`
+`Environment` **MUST** set `tonemap_mode` to ACES (`3`) or AgX (`4`) —
+Linear (`0`, the engine default) is the muddy bug; interiors **SHOULD**
+use a Color ambient (`3`) over Sky (`2`). Both halves are pinned by
+`test_port_color_space_hygiene()` in `test_runner.gd` and the
+`[sanity] checkpoint: office-env tonemap=3` probe in `shop_smoke.sh`.
+
 ## Orphan / superseded files → `/archive/`, not `rm`
 
 When working files turn up that look orphaned (untracked, no references

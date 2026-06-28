@@ -1,0 +1,30 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Three.js → Godot color-port contract" section="Spec">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. This page is the normative contract for porting the original Three.js / R3F scene look into Godot 4.5 without the flat, washed-out, "muddy" result tracked in issue #382. It is net-new: no prior spec page defines tonemapping or shader color-space, so there is no conflict to reconcile.</p>
+
+  <h2>Why the port goes muddy</h2>
+  <p>Three.js (WebGLRenderer) decodes sRGB textures on sample and applies ACES filmic tonemapping by default. Godot does neither implicitly: a <code>sampler2D</code> uniform is sampled raw (linear) unless told the data is sRGB, and a <code>WorldEnvironment</code> defaults to <code>TONE_MAPPER_LINEAR</code> (<code>0</code>). Porting the materials and lighting verbatim therefore drops <em>two</em> color steps at once — sRGB decode and filmic tonemapping — and the scene reads flat and grey-brown even when the ambient color is correct.</p>
+
+  <h2>(a) Shader color uniforms MUST declare sRGB</h2>
+  <p>Every <strong>color/albedo input</strong> uniform in a <code>.gdshader</code> — an albedo/texture <code>sampler2D</code>, or a <code>vec3</code>/<code>vec4</code> whose name denotes a color, tint, albedo, or emission — <strong>MUST</strong> carry the <code>: source_color</code> hint, so Godot decodes the sRGB pack texture/constant into linear space before lighting.</p>
+  <ul>
+    <li><strong>Non-color data uniforms MUST NOT</strong> carry <code>: source_color</code>. UV scales/offsets/scrolls, tiling counts, radii, fog distances, mode flags, and other scalar knobs are not colors — tagging them is wrong and would corrupt their values.</li>
+    <li>The matcher of record (see the test below) keys on a color-bearing type (<code>sampler2D</code> / <code>vec3</code> / <code>vec4</code>) <em>and</em> a tight color-name token set: <code>albedo</code>, <code>_tex</code>, <code>texture</code>, <code>color</code>, <code>tint</code>, <code>emission</code>.</li>
+  </ul>
+
+  <h2>(b) Every 3D-scene Environment MUST use a filmic tonemapper</h2>
+  <p>Every <code>WorldEnvironment</code> <code>Environment</code> resource under <code>scenes/3d/</code> <strong>MUST</strong> set <code>tonemap_mode</code> to <strong>ACES (<code>3</code>)</strong> or <strong>AgX (<code>4</code>)</strong>. <code>TONE_MAPPER_LINEAR</code> (<code>0</code>, the engine default) is <strong>non-conformant</strong>. The project default is <strong>ACES</strong> for consistent contrast across city interiors and fields; AgX is permitted where a scene specifically wants its gentler highlight rolloff. (Godot 4.5 enum: LINEAR 0, REINHARD 1, FILMIC 2, ACES 3, AGX 4.)</p>
+
+  <h2>(c) Interiors SHOULD use a Color ambient, not Sky</h2>
+  <p>Interior and enclosed-biome scenes <strong>SHOULD</strong> set <code>ambient_light_source = Color</code> (<code>3</code>) with an intentional biome tint, rather than <code>Sky</code> (<code>2</code>). A procedural-sky ambient leaks a grayish-blue wash into rooms that should read warm (the office, the shops). The one current exception is <code>city_underground</code>, which keeps a Sky ambient for its cool cave mood pending a Mac eyeball — the tonemap rule still applies there.</p>
+
+  <h2>Enforced by</h2>
+  <ul>
+    <li><code>test_port_color_space_hygiene()</code> in <code>scripts/tools/test_runner.gd</code> — static text scan: asserts (a) for every <code>scripts/3d/*.gdshader</code> and (b) for every <code>scenes/3d/*.tscn</code> embedding an <code>Environment</code>. This is the merge-gate unit layer; it freezes the already-correct shader half as a regression guard and pins the tonemap half.</li>
+    <li><code>scripts/tools/autoplay/shop_smoke.sh</code> + the <code>[sanity] checkpoint: office-env tonemap=3</code> line printed by <code>city_office_controller.gd</code> — the post-build layer: proves the edited <code>.tscn</code> actually loads with ACES at runtime (catches a botched scene edit) without judging pixels.</li>
+  </ul>
+  <p>Perceptual confirmation (does the corrected scene actually look right?) is a human/Mac step — software-GL headless rendering cannot byte-assert tonemapped output.</p>
+</Concept>

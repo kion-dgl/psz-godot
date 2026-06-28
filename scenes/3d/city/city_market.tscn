@@ -18,6 +18,7 @@ sky = SubResource("sky")
 ambient_light_source = 3
 ambient_light_color = Color(0.95, 0.85, 0.7, 1)
 ambient_light_energy = 1.6
+tonemap_mode = 3
 
 [node name="CityMarket" type="Node3D"]
 script = ExtResource("1_script")

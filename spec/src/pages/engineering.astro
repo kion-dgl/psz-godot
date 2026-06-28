@@ -31,6 +31,9 @@ import Concept from '../layouts/Concept.astro';
   </table>
   <p>A combat increment whose plan has only one layer is not done being planned. The unit layer is the merge gate in CI; the post-build layer runs in the sanity check (every merge) and the full matrix (every combat-behavior PR).</p>
 
+  <h2>Color porting: sRGB decode + filmic tonemap</h2>
+  <p>Porting the original Three.js / R3F look into Godot drops two color steps unless they are made explicit — sRGB texture decode and filmic tonemapping — producing the flat, "muddy" result tracked in #382. The normative rules (shader <code>: source_color</code> on color uniforms, ACES/AgX <code>tonemap_mode</code> on every 3D Environment, Color ambient over Sky for interiors) live on the <a href="/engineering/color-port">Three.js → Godot color-port contract</a> page.</p>
+
   <h2>Enforced by</h2>
   <ul>
     <li><code>scripts/tools/code_graph.py --check</code> — the four-way ratchet (CI, every PR).</li>
