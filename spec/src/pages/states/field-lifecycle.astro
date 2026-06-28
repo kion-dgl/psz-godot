@@ -219,6 +219,28 @@ const lifecycle = `flowchart TD
   penalty, session ended). Defeat and the end-cell telepipe are the only two ways a
   field session ends from inside the field.</p>
 
+  <h2>HUD across an area transition</h2>
+  <p>An area transition is a full scene reload
+  (<code>SceneManager.goto_scene</code> → <code>change_scene_to_file</code>): the
+  field HUD (a <code>CanvasLayer</code> at <code>layer = 200</code>) is freed with the
+  old scene and rebuilt by the new <code>valley_field_controller._ready</code>. The
+  HUD's stats come from autoloads (<code>GameState</code> / <code>CharacterManager</code>),
+  so the rebuilt panel already holds the correct values on its first frame — the
+  problem was never wrong data, only a render gap.</p>
+  <p>The transition is covered by the <code>SceneManager</code> fade-to-black. The
+  fade rect <strong>MUST</strong> sit on a canvas layer <em>above</em> the field HUD
+  (and the start menu at <code>layer = 150</code>) so the fade masks the HUD rebuild:
+  with the fade below the HUD, the ~1-frame gap where the old HUD is freed and the
+  new one is not yet drawn blinks the HUD region against the already-black screen
+  (#421). With the fade above, the whole frame — HUD included — transitions uniformly
+  under black, so the HUD <strong>MUST NOT</strong> blink independently of the fade.</p>
+  <p><em>Target end-state (planned follow-up):</em> the masking fix makes the HUD fade
+  with the world rather than persist. A future refactor promoting the stats panel to a
+  persistent autoload (it is currently coupled to the per-scene minimap) would let the
+  HUD <strong>stay visible and hold its last values</strong> across the warp instead of
+  fading out. That is the eventual ideal; the shipped contract above is the no-blink
+  masking guarantee, and the two <strong>MUST NOT</strong> be conflated.</p>
+
   <h3>Quests vs. free roam</h3>
   <p>Quests and free (explorable) areas share the <strong>same stage JSON
   format</strong>. The only difference is that a free area has no guild quest
