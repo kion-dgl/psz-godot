@@ -2,8 +2,8 @@
 import Concept from '../../layouts/Concept.astro';
 ---
 
-<Concept title="Equip Legality (weapons, armor, disks)" section="Mechanics">
-  <p>The key words <strong>MUST</strong> / <strong>MUST NOT</strong> / <strong>SHOULD</strong> are used as in RFC 2119. This page defines <strong>which gear a class can use</strong> — weapons (by type), armor (per-item class list), and technique disks (learnability) — and the one ✕ "cannot use/equip" marker that surfaces it. It is the normative contract behind <em>every</em> screen that shows that marker or gates equipping: the Equip menu, the 3D field weapon picker, storage, and all of the shops.</p>
+<Concept title="Equip Legality (weapons, armor, techniques)" section="Mechanics">
+  <p>The key words <strong>MUST</strong> / <strong>MUST NOT</strong> / <strong>SHOULD</strong> are used as in RFC 2119. This page defines <strong>which gear a class can use</strong> — weapons (by type), armor (by body type: frame / armor / robe), and which techniques a class can learn (and to what level) — and the one ✕ "cannot use/equip" marker that surfaces it. It is the normative contract behind <em>every</em> screen that shows that marker or gates equipping: the Equip menu, the 3D field weapon picker, storage, and all of the shops.</p>
 
   <p><strong>The invariant:</strong> the ✕ marker and the actual equip action MUST agree everywhere. If a row shows no ✕ it MUST equip; if it shows a ✕ it MUST NOT equip. Both sides route through one predicate (<code>EquipmentUtils.item_fits_slot</code>), so they cannot drift — see <a href="#ui-surfaces">UI surfaces</a> for the full map.</p>
 
@@ -39,15 +39,33 @@ import Concept from '../../layouts/Concept.astro';
   </table>
   <p>Broad strokes hold (Hunters = melee + handgun, Rangers = guns + saber, Forces = rod/wand + handgun), and every class can use a Saber + Handgun.</p>
 
-  <h2>Armor (per-item class restriction)</h2>
-  <p>Armor legality is <strong>not</strong> a class-wide type list like weapons — it is a <em>per-item</em> restriction carried on each armor, <code>ArmorData.usable_by</code>: a list of <code>"Type Race"</code> strings naming exactly which class identities may wear it. An empty list means no restriction (every class). This is the <strong>only</strong> source of armor legality — there is no <code>ClassData</code> armor analog — so it is live, canonical data, evaluated through <code>EquipmentUtils.item_fits_slot(id, "frame")</code> (which also honors <code>DebugConfig.equip_all</code>). 27 of 50 armors carry a restriction; the rest are open.</p>
+  <h2>Armor (frame · armor · robe)</h2>
+  <p>Armor comes in three body types. <strong>Frames</strong> are universal; the heavy/light split is by <em>race + role</em>, not class alone:</p>
   <table>
-    <tr><th>Armor</th><th><code>usable_by</code></th><th>Who can wear it</th></tr>
-    <tr><td><code>frame</code></td><td><em>(empty)</em></td><td>Every class</td></tr>
-    <tr><td><code>armor</code></td><td>Hunter Human, Hunter Cast, Ranger Human, Ranger Cast</td><td>Human/Cast Hunters &amp; Rangers (no Newmen, no Forces)</td></tr>
-    <tr><td><code>robe</code></td><td>Hunter Newman, Force Human, Force Newman</td><td>Newman Hunters &amp; all Forces (the "caster" frames)</td></tr>
+    <tr><th>Body type</th><th>Equippable by</th><th><code>usable_by</code></th></tr>
+    <tr><td><strong>Frame</strong> (universal)</td><td>Every class</td><td><em>(empty)</em></td></tr>
+    <tr><td><strong>Armor</strong> (heavy)</td><td>Human &amp; Cast Hunters and Rangers</td><td>Hunter Human, Hunter Cast, Ranger Human, Ranger Cast</td></tr>
+    <tr><td><strong>Robe</strong> (light / caster)</td><td>Newman Hunters and all Forces</td><td>Hunter Newman, Force Human, Force Newman</td></tr>
   </table>
-  <p>So a HUmar (Hunter Human) wears <code>frame</code> and <code>armor</code> but <strong>not</strong> <code>robe</code> (✕); a FOnewm (Force Newman) wears <code>frame</code> and <code>robe</code> but not <code>armor</code> (✕). Because the restriction is per item, this doubles as the <em>explicit per-item override</em> mechanism: any single piece can widen or narrow who may wear it independent of class type.</p>
+  <p>The low-DEF body types — <strong>Newmen and Forces</strong> — wear robes; <strong>Human and Cast</strong> Hunters/Rangers wear armor; everyone wears frames. (Rangers exist only as Human or Cast — there is no Newman Ranger — and Forces only as Human or Newman, so every class lands in exactly one of armor/robe.)</p>
+  <table>
+    <tr><th>Class</th><th>Frame</th><th>Armor</th><th>Robe</th></tr>
+    <tr><td><code>HUmar</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>HUmarl</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>HUnewm</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+    <tr><td><code>HUnewearl</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+    <tr><td><code>HUcast</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>HUcaseal</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>RAmar</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>RAmarl</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>RAcast</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>RAcaseal</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td></tr>
+    <tr><td><code>FOmar</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+    <tr><td><code>FOmarl</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+    <tr><td><code>FOnewm</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+    <tr><td><code>FOnewearl</code></td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#30363d">·</td><td style="text-align:center;color:#3fb950">✓</td></tr>
+  </table>
+  <p><strong>Mechanism.</strong> Each armor carries <code>ArmorData.usable_by</code> (a list of "Type Race" strings) — the <strong>only</strong> source of armor legality (there is no <code>ClassData</code> armor analog), evaluated through <code>EquipmentUtils.item_fits_slot(id, "frame")</code> + <code>DebugConfig.equip_all</code>. The three body types above are the broad rule; an individual piece can narrow it further via its own list (e.g. a cast-only armor, or a robe that also admits Ranger Humans) — that per-item list <em>is</em> the override mechanism. 27 of 50 armors carry a restriction; the rest are open frames.</p>
 
   <h2>Technique disks (learnability)</h2>
   <p>A technique disk (<code>disk_&lt;technique&gt;_&lt;level&gt;</code>) teaches a technique when used. Its ✕ marker means the class can <em>never</em> learn that technique — <code>TechniqueManager.class_can_learn</code>:</p>
@@ -56,6 +74,34 @@ import Concept from '../../layouts/Concept.astro';
     <li><strong>Grey, no ✕ (temporary):</strong> the technique is already known, or the disk is above the class's level/level-cap for it — <code>can_learn</code> returns false but <code>class_can_learn</code> stays true. A temporary block greys the row to signal "not useful right now" without the permanent ✕.</li>
     <li><strong>Affordability never greys a disk</strong> — being unable to pay is a buy-time block, surfaced at accept, not a capability marker.</li>
   </ul>
+
+  <h2>Class × technique max level</h2>
+  <p>What each class can learn, and the cap (max disk level) per group. <code>—</code> = the class can never learn that group (permanent ✕ on any such disk). The cap lives in <code>ClassData.technique_limits</code>, keyed by group. Columns:</p>
+  <ul>
+    <li><strong>Atk</strong> — the attack lines (<code>foieBartaZonde</code> group): Foie/Gifoie/Rafoie, Barta/Gibarta/Rabarta, Zonde/Gizonde/Razonde</li>
+    <li><strong>Grants</strong> (light) · <strong>Megid</strong> (dark)</li>
+    <li><strong>Support</strong> — Resta / Anti / Reverser (<code>restaReverser</code>)</li>
+    <li><strong>Buff</strong> — Shifta / Deband (<code>shiftaDeband</code>) · <strong>Debuff</strong> — Jellen / Zalure (<code>jellenZalure</code>)</li>
+  </ul>
+  <table>
+    <tr><th>Class</th><th>Atk</th><th>Grants</th><th>Megid</th><th>Support</th><th>Buff</th><th>Debuff</th></tr>
+    <tr><td><code>HUmar</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>HUmarl</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>HUnewm</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>HUnewearl</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>HUcast</code></td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>HUcaseal</code></td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>RAmar</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td></tr>
+    <tr><td><code>RAmarl</code></td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#3fb950">10</td></tr>
+    <tr><td><code>RAcast</code></td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>RAcaseal</code></td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td><td style="text-align:center;color:#30363d">—</td></tr>
+    <tr><td><code>FOmar</code></td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td></tr>
+    <tr><td><code>FOmarl</code></td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td></tr>
+    <tr><td><code>FOnewm</code></td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td></tr>
+    <tr><td><code>FOnewearl</code></td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td><td style="text-align:center;color:#3fb950">15</td></tr>
+  </table>
+  <p>Reading it: <strong>Forces</strong> learn everything to Lv.15. <strong>Hunters</strong> get attack + Resta + Shifta/Deband to Lv.10 (no Grants/Megid, no Jellen/Zalure). <strong>Rangers</strong> get attack + Resta + Jellen/Zalure to Lv.10 (no Shifta/Deband). <strong>CASTs</strong> (all four) learn <em>no</em> techniques — they use traps instead (<code>ClassData.trap_limits</code>, a separate system). So every disk carries the ✕ for a CAST.</p>
+  <p>Two further gates on top of the class cap (both temporary — grey, no ✕): the player must meet the disk's required character level (<code>get_disk_required_level</code>: Lv.1–5 disks need that level; higher disks need <code>level×2−5</code>), and a disk at or below the technique's current level is rejected as a downgrade / already-known.</p>
 
   <h2 id="ui-surfaces">UI surfaces — one predicate, everywhere</h2>
   <p>Every surface below routes its ✕ marker <em>and</em> its equip/use action through the same gate, so marker == action by construction. Weapons/armor go through <code>item_fits_slot</code> (markers via the permanent-only wrapper <code>ShopNav.sell_cannot_use</code>); disks go through <code>class_can_learn</code>.</p>
