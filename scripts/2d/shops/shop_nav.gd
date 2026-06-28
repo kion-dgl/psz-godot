@@ -188,6 +188,49 @@ static func active_class_use_string() -> String:
 	return "%s %s" % [class_data.type, class_data.race]
 
 
+## True when the active character can NEVER use/equip `item_id` — drives the ✕
+## marker on shop SELL rows, the same permanent-capability marker the buy lists
+## use, so a player scanning what to sell can see at a glance which gear/disks
+## are dead weight for this character. Covers:
+##   • Weapons whose type the class can't equip — the canonical equip-legality
+##     gate (ClassData.allowed_weapon_types, via EquipmentUtils.item_fits_slot;
+##     spec /mechanics/equip-legality). WeaponData.usable_by is deliberately NOT
+##     consulted — it has drifted and is not the source of truth.
+##   • Technique disks the race/class can never learn (TechniqueManager.class_can_learn).
+## Armor, units, mags, materials, and consumables carry no permanent class block,
+## so they never get the ✕. A temporary block (e.g. too-low level) is NOT a ✕.
+static func sell_cannot_use(item_id: String) -> bool:
+	var base_id: String = Inventory.get_base_id(item_id)
+	if WeaponRegistry.get_weapon(base_id) != null:
+		# item_fits_slot applies the class weapon-type gate (and DebugConfig.equip_all),
+		# without the level gate — exactly the permanent-only check the ✕ wants.
+		return not EquipmentUtils.item_fits_slot(item_id, "weapon")
+	if base_id.begins_with("disk_"):
+		var character = CharacterManager.get_active_character()
+		if character == null:
+			return false
+		var parsed: Dictionary = _parse_disk_id(base_id)
+		if parsed.is_empty():
+			return false
+		return not TechniqueManager.class_can_learn(
+			character, str(parsed.get("technique_id", "")), int(parsed.get("level", 1)))
+	return false
+
+
+## Parse a technique-disk inventory id "disk_<technique>_<level>" into
+## {technique_id, level}, or {} when it doesn't match. Technique ids are single
+## tokens (foie, gizonde, …), so the final underscore field is the level.
+static func _parse_disk_id(disk_id: String) -> Dictionary:
+	var rest: String = disk_id.trim_prefix("disk_")
+	var cut: int = rest.rfind("_")
+	if cut <= 0:
+		return {}
+	var lvl_str: String = rest.substr(cut + 1)
+	if not lvl_str.is_valid_int():
+		return {}
+	return {"technique_id": rest.substr(0, cut), "level": int(lvl_str)}
+
+
 ## Standard tab switch for buy/sell shops (item + weapon): wrap `_tab`,
 ## reset the selection, regenerate the sell list when landing on it,
 ## refresh hint + display. The shop must define those members.
