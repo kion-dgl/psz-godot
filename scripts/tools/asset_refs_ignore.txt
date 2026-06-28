@@ -3,3 +3,9 @@
 # Prefer fixing the reference over adding entries here. This file exists so a
 # new CI check can be introduced without having to resolve every latent issue
 # in the repo first.
+
+# common46 barehanded swing — referenced by player.gd BAREHANDED_SFX (issue
+# #424) but not yet in the pack. The play site is gated behind ResourceLoader
+# .exists() so it stays silent (never plays the wrong saber sound) until the
+# asset lands. Remove this line once `unarmed_swing_1.wav` ships via upload-pack.
+assets/sfx/weapons/unarmed_swing_1.wav
