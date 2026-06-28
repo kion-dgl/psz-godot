@@ -43,6 +43,9 @@ jobs:
         uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.5.1
+          # Non-mono build: Godot 4 .NET/mono CANNOT export to Web (it refuses
+          # even for a GDScript project). ci.yml's build job sets this too.
+          use-dotnet: false
           include-templates: true
 
       - name: Cache Godot export templates
