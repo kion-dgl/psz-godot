@@ -653,6 +653,16 @@ func _save_cell_state() -> void:
 	}
 	print("[CellObjects] Saved state for cell %s: %d objects, %d drops (wave %d/%d)" % [
 		cell_pos, obj_states.size(), drop_states.size(), _c._current_wave, _c._max_wave])
+	# Autopilot field oracle (#423): emit how many enemies this exit-flush
+	# snapshotted as dead, so a probe can assert that clearing a room then
+	# warping out actually persists the kills (dead>=1 before the warp
+	# checkpoint). Guarded so normal runs don't get the extra line.
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		var _dead_enemies: int = 0
+		for _o in obj_states:
+			if str(_o.get("type", "")) == "enemy" and str(_o.get("state", "")) == "dead":
+				_dead_enemies += 1
+		print("[sanity] checkpoint: cell-flush cell=%s dead=%d" % [cell_pos, _dead_enemies])
 
 
 func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type: String = "", drop_value: String = "") -> void:

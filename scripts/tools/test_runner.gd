@@ -125,6 +125,7 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock_persistence()
 	test_input_config()
 	test_blackjack()
+	test_kill_state_survives_warp_flush()
 	test_script_parse()
 
 
@@ -3211,6 +3212,90 @@ func test_telepipe_round_trip() -> void:
 	print("")
 
 
+# ── Kill-state survives the exit flush (#423) ────────────────
+# Pins the invariant that an enemy defeated in the SAME frame the player
+# warps out of a cell is snapshotted dead by save_cell_state and MUST NOT
+# respawn on return. The capture path (CellObjectSpawner._save_cell_state)
+# builds the alive list from is_alive, so an enemy whose _die() already
+# flipped is_alive=false this frame is written as "dead" — and that dead
+# state survives a city suspend/resume round-trip. Spec:
+# /states/field-lifecycle "Flush on exit". Companion to #426 (input
+# precedence — the warp consuming the palette button is what makes this a
+# same-frame race in the first place).
+func test_kill_state_survives_warp_flush() -> void:
+	print("── Kill-state — defeated enemy persists as dead through warp flush (#423) ──")
+
+	# Clean slate for the section-state store + any suspended session.
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	# Stub field controller exposing exactly the fields _save_cell_state reads.
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "1,2",
+		"objects": [
+			{"type": "enemy", "enemy_id": "lizard", "wave": 1, "position": [1.0, 0.0, 2.0]},
+			{"type": "enemy", "enemy_id": "wolf", "wave": 1, "position": [3.0, 0.0, 4.0]},
+		],
+	}
+
+	# Two real EnemyBase nodes mirror the live room. The wolf has already had
+	# _die() flip is_alive=false THIS frame (the kill-all-then-warp case); the
+	# lizard is still alive. Not added to the tree — _save_cell_state only reads
+	# is_alive + enemy_data.id, no _ready() needed.
+	var lizard_data := EnemyData.new()
+	lizard_data.id = "lizard"
+	var wolf_data := EnemyData.new()
+	wolf_data.id = "wolf"
+	var lizard := EnemyBase.new()
+	lizard.enemy_data = lizard_data
+	lizard.is_alive = true
+	var wolf := EnemyBase.new()
+	wolf.enemy_data = wolf_data
+	wolf.is_alive = false
+	stub._room_enemies = [lizard, wolf]
+
+	# Capture the live cell state, exactly as a warp/exit flush would.
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	assert_true(stub._cell_states.has("1,2"), "Cell 1,2 flushed into _cell_states")
+	var saved_objs: Array = stub._cell_states.get("1,2", {}).get("objects", [])
+	var lizard_state: String = ""
+	var wolf_state: String = ""
+	for o in saved_objs:
+		if str(o.get("type", "")) != "enemy":
+			continue
+		if str(o.get("enemy_id", "")) == "lizard":
+			lizard_state = str(o.get("state", ""))
+		elif str(o.get("enemy_id", "")) == "wolf":
+			wolf_state = str(o.get("state", ""))
+	assert_eq(lizard_state, "alive", "Live lizard snapshotted alive")
+	assert_eq(wolf_state, "dead", "Same-frame-killed wolf snapshotted dead")
+
+	# Round-trip the snapshot through a city suspend/resume — the kill must
+	# survive (the #423 invariant: defeated enemies MUST NOT respawn on return).
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var st: Dictionary = SessionManager.get_section_state(0)
+	var rt_cells: Dictionary = st.get("cell_states", {})
+	assert_true(rt_cells.has("1,2"), "Cell 1,2 survives city round-trip")
+	var rt_wolf_state: String = ""
+	for o in rt_cells.get("1,2", {}).get("objects", []):
+		if str(o.get("type", "")) == "enemy" and str(o.get("enemy_id", "")) == "wolf":
+			rt_wolf_state = str(o.get("state", ""))
+	assert_eq(rt_wolf_state, "dead", "Killed wolf still dead after city trip (no respawn)")
+
+	# Cleanup — free the Node-derived EnemyBase instances (stub is RefCounted).
+	lizard.free()
+	wolf.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
 func test_telepipe_suspend_resume_keeps_telepipe() -> void:
 	print("── Telepipe — suspend/resume preserves the active telepipe ──")
 
@@ -6049,3 +6134,25 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+# ── Duck-typed stub for test_kill_state_survives_warp_flush (#423) ───
+# Exposes exactly the fields CellObjectSpawner._save_cell_state reads off
+# its back-reference controller (_c). RefCounted so it auto-frees; the
+# real ValleyFieldController is far heavier and not needed for the
+# capture-path assertion.
+class _KillStateStubController extends RefCounted:
+	var _current_cell: Dictionary = {}
+	var _cell_states: Dictionary = {}
+	var _room_enemies: Array = []
+	var _room_boxes: Array = []
+	var _room_drops: Array = []
+	var _room_messages: Array = []
+	var _room_props: Array = []
+	var _room_triggers: Array = []
+	var _room_npcs: Array = []
+	var _room_quest_items: Array = []
+	var _room_walls: Array = []
+	var _fence_links: Dictionary = {}
+	var _current_wave: int = 1
+	var _max_wave: int = 1

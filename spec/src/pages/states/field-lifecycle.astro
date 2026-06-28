@@ -115,6 +115,42 @@ const lifecycle = `flowchart TD
     state.</li>
   </ul>
 
+  <h3 id="flush-on-exit">Flush on exit</h3>
+  <p>The "killed enemies MUST NOT respawn" invariant above is only upheld if
+  the snapshot is taken <em>after</em> the kill. The timing is therefore
+  normative, not incidental:</p>
+  <ul>
+    <li>When the player leaves a cell via <strong>any</strong> warp or exit —
+    cell transition, <code>area_warp</code>, telepipe travel, StartWarp,
+    section advance, or final exit — the controller <strong>MUST</strong>
+    snapshot the cell's live object state via <code>save_cell_state</code>
+    <strong>before</strong> the scene transition (<code>goto_scene</code>).</li>
+    <li>That snapshot <strong>MUST</strong> reflect combat resolved in the
+    <strong>same frame</strong> as the warp. An enemy whose <code>is_alive</code>
+    flipped <code>false</code> in the same frame the warp button was pressed
+    (e.g. a kill bound to the same button that triggers the exit)
+    <strong>MUST</strong> be persisted as <code>dead</code> and
+    <strong>MUST NOT</strong> respawn on return.</li>
+    <li>The capture builds its alive-set from each live enemy's
+    <code>is_alive</code> flag. Because <code>EnemyBase._die()</code> flips
+    <code>is_alive</code> synchronously and only <code>queue_free()</code>s the
+    node ~1.5&nbsp;s later, a same-frame kill is still a valid node reading
+    <code>is_alive == false</code> at flush time — so the flush records it
+    <code>dead</code>. Any refactor of the exit path <strong>MUST</strong>
+    preserve this ordering (flush after same-frame combat, before transition).</li>
+  </ul>
+  <p>This <strong>strengthens</strong> — it does not contradict — the
+  "Killed enemies MUST NOT respawn" bullet: that bullet names the invariant,
+  this clause pins the ordering that guarantees it. The companion guarantee is
+  <a href="https://github.com/kion-dgl/psz-godot/issues/426">#426</a> (input
+  precedence — world interaction consumes the palette button), which makes the
+  warp-button press a genuine same-frame race; tracked as the #423 regression
+  this clause closes.</p>
+  <p><strong>Exception:</strong> the expedition-end return to city
+  (<code>_return_to_city</code>) intentionally <em>discards</em> section state
+  and <strong>MUST NOT</strong> flush — the run is over and there is no cell to
+  return to.</p>
+
   <h2>Gates</h2>
   <p>A gate blocks a cell exit until its condition is met. There are three kinds:</p>
   <ul>
