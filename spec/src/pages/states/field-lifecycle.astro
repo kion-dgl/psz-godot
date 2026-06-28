@@ -234,6 +234,15 @@ const lifecycle = `flowchart TD
   new one is not yet drawn blinks the HUD region against the already-black screen
   (#421). With the fade above, the whole frame — HUD included — transitions uniformly
   under black, so the HUD <strong>MUST NOT</strong> blink independently of the fade.</p>
+  <p>The fade rect <strong>MUST</strong> also cover the full viewport. Sitting on the
+  right layer is necessary but <em>not sufficient</em>: a <code>ColorRect</code> whose
+  anchors are set via <code>anchors_preset</code> alone stays at size <code>(0,0)</code> —
+  black, full-alpha, correctly layered, yet zero-area, so it masks nothing. The rect
+  <strong>MUST</strong> be sized with <code>set_anchors_and_offsets_preset(PRESET_FULL_RECT)</code>
+  (anchors <em>and</em> offsets) so its area equals the viewport. The layer-raise in #421
+  could not have masked the HUD on its own because the fade rect was zero-sized; both the
+  layer <em>and</em> the size are load-bearing. This is pinned in
+  <code>test_scene_manager_fade_rect_full_size</code>.</p>
   <p><em>Target end-state (planned follow-up):</em> the masking fix makes the HUD fade
   with the world rather than persist. A future refactor promoting the stats panel to a
   persistent autoload (it is currently coupled to the per-scene minimap) would let the

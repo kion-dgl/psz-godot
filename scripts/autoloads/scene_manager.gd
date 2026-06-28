@@ -20,7 +20,10 @@ func _ready() -> void:
 	_fade_rect = ColorRect.new()
 	_fade_rect.color = Color(0, 0, 0, 0)
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_fade_rect.anchors_preset = Control.PRESET_FULL_RECT
+	# Must set anchors AND offsets — `anchors_preset` alone leaves the rect at
+	# size (0,0), so the fade was black-but-zero-area and masked nothing (the
+	# real cause of the #421 transition flicker; raising the layer was moot).
+	_fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade_rect.z_index = 100
 	var canvas := CanvasLayer.new()
 	# Fade canvas sits ABOVE the field HUD (layer 200) and the start menu (layer
