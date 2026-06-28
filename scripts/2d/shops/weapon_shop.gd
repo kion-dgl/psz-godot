@@ -253,9 +253,10 @@ func _get_current_list() -> Array:
 ## /mechanics/equip-legality), the SAME gate the sell tab uses
 ## (ShopNav.sell_cannot_use), so buy and sell can't disagree. WeaponData.usable_by
 ## MUST NOT be consulted — it has drifted from the class lists (e.g. Double Saber's
-## usable_by lists all Hunters, but only HUnewm allows the type). Armor carries no
-## class restriction under the contract, so item_fits_slot("frame") only confirms
-## it's real gear. Permanent-capability only: the level gate is deliberately NOT
+## usable_by lists all Hunters, but only HUnewm allows the type). Armor IS class-
+## restricted — item_fits_slot("frame") applies its per-item class list
+## (ArmorData.usable_by, the only armor-legality source; spec
+## /mechanics/equip-legality). Permanent-capability only: the level gate is deliberately NOT
 ## applied here (matches the ✕ marker's semantics — a too-low level is a temporary
 ## block, surfaced at equip time, not a never-usable ✕). DebugConfig.equip_all
 ## bypasses the class gate inside item_fits_slot, same as every other screen.

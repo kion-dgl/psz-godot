@@ -188,23 +188,33 @@ static func active_class_use_string() -> String:
 	return "%s %s" % [class_data.type, class_data.race]
 
 
-## True when the active character can NEVER use/equip `item_id` — drives the ✕
-## marker on shop SELL rows, the same permanent-capability marker the buy lists
-## use, so a player scanning what to sell can see at a glance which gear/disks
-## are dead weight for this character. Covers:
+## True when the active character can NEVER use/equip `item_id` — THE shared
+## permanent-capability ✕ predicate. Every ✕ "cannot use/equip" marker routes
+## through here so they can't drift: shop SELL rows, and the inventory screens
+## (storage, the 3D field start menu). The buy lists use the same gate via
+## EquipmentUtils.item_fits_slot, so buy and sell agree. Covers:
 ##   • Weapons whose type the class can't equip — the canonical equip-legality
 ##     gate (ClassData.allowed_weapon_types, via EquipmentUtils.item_fits_slot;
 ##     spec /mechanics/equip-legality). WeaponData.usable_by is deliberately NOT
 ##     consulted — it has drifted and is not the source of truth.
+##   • Armor the class can't wear — the per-item class restriction
+##     (ArmorData.usable_by, via item_fits_slot("frame")). This is the ONLY
+##     armor-legality source (ClassData has no armor analog), so it is NOT dead
+##     data like the weapon list — it stays canonical.
 ##   • Technique disks the race/class can never learn (TechniqueManager.class_can_learn).
-## Armor, units, mags, materials, and consumables carry no permanent class block,
-## so they never get the ✕. A temporary block (e.g. too-low level) is NOT a ✕.
+## Units, mags, materials, and consumables carry no permanent class block, so
+## they never get the ✕. A temporary block (e.g. too-low level) is NOT a ✕ —
+## item_fits_slot deliberately omits the level gate.
 static func sell_cannot_use(item_id: String) -> bool:
 	var base_id: String = Inventory.get_base_id(item_id)
 	if WeaponRegistry.get_weapon(base_id) != null:
 		# item_fits_slot applies the class weapon-type gate (and DebugConfig.equip_all),
 		# without the level gate — exactly the permanent-only check the ✕ wants.
 		return not EquipmentUtils.item_fits_slot(item_id, "weapon")
+	if ArmorRegistry.get_armor(base_id) != null:
+		# Same permanent-only check for armor: the per-item class restriction,
+		# honoring DebugConfig.equip_all, without the level gate.
+		return not EquipmentUtils.item_fits_slot(item_id, "frame")
 	if base_id.begins_with("disk_"):
 		var character = CharacterManager.get_active_character()
 		if character == null:
