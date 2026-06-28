@@ -63,24 +63,24 @@ If the user's exact words are "commit and merge", interpret it as
 like "skip the PR" or "force-push, I'll deal with it." When in doubt,
 ask — opening a PR is cheap, undoing a direct-merge is expensive.
 
-**Keep it to one open PR at a time.** This is a one-developer (+ Claude)
-project — there's no reason to have more than one PR open at once. Land the
-current green PR before opening the next. The point isn't "never combine
-work"; it's "don't accumulate a queue." Multiple open PRs fight over
-`VERSION` (every PR must bump it, so the second to merge hits a conflict +
-a re-bump), drift out of sync with `main`, and make the merge order
-load-bearing. If two are unavoidably open, merge them promptly in order and
-`git pull` / resolve the next branch against the new `main` right away.
+**The only blocker for a PR is testing and verification.** Batch freely.
+Multiple unrelated changes in one PR is fine, and more than one PR open at a
+time is fine — the gate is that every change in a PR is verified, not how many
+PRs exist or how topically pure they are. Don't hold work back to keep a
+single-PR queue. One mechanical heads-up, not a reason to serialize: every PR
+bumps `VERSION` (all three sources), so if two PRs are open at once the second
+to merge will hit a VERSION conflict — just re-bump and `git pull` against the
+new `main`. That's a 30-second fixup.
 
 **Testing is the unit of a PR.** Bundle freely *as long as the bundle can
 be tested and verified together*. If several changes are exercised by the
 same build/test pass (same autopilot run, same manual round on the Mac),
 putting them in one PR is good — it's one verification, one review, one
 release. A change that's "basically free" (small, low-risk) is fine to fold
-into a larger related PR rather than spinning up a second one. The line to
-watch is *verifiability*, not topical purity: only split when a change
-needs its own distinct test/verification path, or is risky enough that you
-want it isolated so a revert is clean. When unsure, ask which way to package.
+into a larger related PR. The line to watch is *verifiability*, not topical
+purity: split only when a change needs its own distinct test/verification path,
+or is risky enough that you want it isolated so a revert is clean. When unsure,
+ask which way to package.
 
 ## Feature flow — spec-first, Godot-implemented, human-tested
 
