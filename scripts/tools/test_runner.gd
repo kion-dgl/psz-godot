@@ -1811,15 +1811,33 @@ func test_disk_capability_grey() -> void:
 # use with the ✕ marker, so a player scanning what to offload sees dead weight at
 # a glance (spec /states/shops). Uses the canonical equip-legality gate
 # (allowed_weapon_types via EquipmentUtils), NOT WeaponData.usable_by.
-func test_shop_sell_cannot_use_marker() -> void:
-	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
-	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
-	var saved_chars = CharacterManager._characters
-	var saved_slot = CharacterManager._active_slot
-	var saved_equip_all := DebugConfig.equip_all
+# Shared isolation for the per-screen ✕-marker tests below (shop sell, start
+# menu, storage): each asserts its screen's _item_cannot_use agrees with the
+# canonical ShopNav.sell_cannot_use, so they share identical character-state
+# setup/teardown. Extracted so the three parallel tests keep one copy of the
+# isolation (and don't trip the near-duplicate ratchet, #294).
+func _isolate_character_state() -> Dictionary:
+	var saved := {
+		"chars": CharacterManager._characters,
+		"slot": CharacterManager._active_slot,
+		"equip_all": DebugConfig.equip_all,
+	}
 	DebugConfig.equip_all = false  # the ✕ gate must see real class legality
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
+	return saved
+
+
+func _restore_character_state(saved: Dictionary) -> void:
+	CharacterManager._characters = saved["chars"]
+	CharacterManager._active_slot = saved["slot"]
+	DebugConfig.equip_all = saved["equip_all"]
+
+
+func test_shop_sell_cannot_use_marker() -> void:
+	print("── Shop sell ✕ — cannot-use marker on the sell tabs ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
 
 	# FOnewm (Force): allowed_weapon_types is Saber/Handgun/Rod/Wand — no Sword.
 	CharacterManager.create_character(0, "fonewm", "SellXForce")
@@ -1862,9 +1880,7 @@ func test_shop_sell_cannot_use_marker() -> void:
 	assert_true(ShopNavCls._parse_disk_id("disk_foie").is_empty(),
 		"_parse_disk_id rejects a level-less id")
 
-	CharacterManager._characters = saved_chars
-	CharacterManager._active_slot = saved_slot
-	DebugConfig.equip_all = saved_equip_all
+	_restore_character_state(saved)
 	print("")
 
 
@@ -1903,12 +1919,7 @@ func test_start_menu_cannot_use() -> void:
 	print("── 3D start menu: ✕ cannot-use marker via canonical gate ──")
 	var renderer = load("res://scripts/3d/field/start_menu_renderer.gd").new(null)
 	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
-	var saved_chars = CharacterManager._characters
-	var saved_slot = CharacterManager._active_slot
-	var saved_equip_all := DebugConfig.equip_all
-	DebugConfig.equip_all = false
-	CharacterManager._characters = [null, null, null, null]
-	CharacterManager._active_slot = -1
+	var saved := _isolate_character_state()
 	# FOnewm (Force Newman): can equip Rod/Handgun, not Sword; can wear "robe"
 	# (lists Force Newman) but not "armor" (Hunter/Ranger only); can learn Foie.
 	CharacterManager.create_character(0, "fonewm", "StartMenuX")
@@ -1934,10 +1945,8 @@ func test_start_menu_cannot_use() -> void:
 	DebugConfig.equip_all = true
 	assert_true(not renderer._item_cannot_use("sword"), "equip_all clears the weapon ✕")
 	assert_true(not renderer._item_cannot_use("armor"), "equip_all clears the armor ✕")
-	DebugConfig.equip_all = saved_equip_all
 
-	CharacterManager._characters = saved_chars
-	CharacterManager._active_slot = saved_slot
+	_restore_character_state(saved)
 	print("")
 
 
@@ -1948,12 +1957,7 @@ func test_storage_cannot_use() -> void:
 	print("── Storage: ✕ cannot-use marker via canonical gate ──")
 	var storage = load("res://scripts/2d/storage.gd").new()
 	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
-	var saved_chars = CharacterManager._characters
-	var saved_slot = CharacterManager._active_slot
-	var saved_equip_all := DebugConfig.equip_all
-	DebugConfig.equip_all = false
-	CharacterManager._characters = [null, null, null, null]
-	CharacterManager._active_slot = -1
+	var saved := _isolate_character_state()
 	# A CAST: can't equip Rod (Force type), can't wear "robe" (Newman-Hunter/Force),
 	# and can NEVER learn a technique disk → all three carry the ✕.
 	CharacterManager.create_character(0, "hucast", "StorageX")
@@ -1977,9 +1981,7 @@ func test_storage_cannot_use() -> void:
 		"storage ✕ == shared sell_cannot_use for a disk")
 
 	storage.free()
-	CharacterManager._characters = saved_chars
-	CharacterManager._active_slot = saved_slot
-	DebugConfig.equip_all = saved_equip_all
+	_restore_character_state(saved)
 	print("")
 
 
