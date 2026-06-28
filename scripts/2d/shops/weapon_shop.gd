@@ -301,29 +301,25 @@ func _open_confirm_modal() -> void:
 	if item_v == null:
 		return
 	var item: Dictionary = item_v
-	var prompt: String
-	var on_yes: Callable
 	if _tab == Tab.SELL:
-		var sell_price: int = int(item.get("sell_price", 0))
-		prompt = "Sell %s for %d M?" % [str(item.get("name", "???")), sell_price]
-		on_yes = _sell_selected
-	else:
-		# Affordability/room no longer grey the row, so the block must be
-		# unmissable at accept: the shared info modal (denied cue + reason), the
-		# same way the photon collector reports it. Spec /states/shops.
-		var verdict: Dictionary = _can_buy(item)
-		if not verdict.get("ok", true):
-			ShopNav.deny(self, str(verdict.get("reason", "")), _update_hint)
-			return
-		var cost: int = int(item.get("cost", 0))
-		var name_str: String = str(item.get("name", "???"))
-		# Class-unequippable gear is still purchasable (#375). No "buy anyway?"
-		# wording — the row's ✕ marker already shows it can't be equipped, so the
-		# buy prompt stays the plain one. Spec /states/shops.
-		prompt = "Buy %s for %d M?" % [name_str, cost]
-		on_yes = _buy_selected
+		# Stacks (consumables/materials) get the quantity picker; per-slot gear
+		# collapses to a plain confirm — same flow as buying. #416.
+		ShopNav.sell_confirm(self, item, _sell_selected, _update_hint)
+		return
 
-	ShopNav.confirm(self, prompt, on_yes, _update_hint)
+	# Affordability/room no longer grey the row, so the block must be
+	# unmissable at accept: the shared info modal (denied cue + reason), the
+	# same way the photon collector reports it. Spec /states/shops.
+	var verdict: Dictionary = _can_buy(item)
+	if not verdict.get("ok", true):
+		ShopNav.deny(self, str(verdict.get("reason", "")), _update_hint)
+		return
+	var cost: int = int(item.get("cost", 0))
+	var name_str: String = str(item.get("name", "???"))
+	# Class-unequippable gear is still purchasable (#375). No "buy anyway?"
+	# wording — the row's ✕ marker already shows it can't be equipped, so the
+	# buy prompt stays the plain one. Spec /states/shops.
+	ShopNav.confirm(self, "Buy %s for %d M?" % [name_str, cost], _buy_selected, _update_hint)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -386,7 +382,7 @@ func _buy_selected() -> void:
 	_refresh_display()
 
 
-func _sell_selected() -> void:
+func _sell_selected(qty: int = 1) -> void:
 	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
 		return
 	var item: Dictionary = _sell_items[_selected_index]
@@ -394,18 +390,24 @@ func _sell_selected() -> void:
 		hint_label.text = "Unequip first!"
 		return
 	var item_id: String = str(item.get("id", ""))
-	var sell_price: int = int(item.get("sell_price", 0))
+	var unit_price: int = int(item.get("sell_price", 0))
+	var sell_qty: int = clampi(qty, 1, int(item.get("quantity", 1)))
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	if not Inventory.remove_item(item_id, 1):
+	if not Inventory.remove_item(item_id, sell_qty):
 		hint_label.text = "Cannot sell that!"
 		return
 
-	character["meseta"] = int(character.get("meseta", 0)) + sell_price
+	var total: int = unit_price * sell_qty
+	character["meseta"] = int(character.get("meseta", 0)) + total
 	GameState.meseta = int(character["meseta"])
-	hint_label.text = "Sold %s for %d M!" % [str(item.get("name", "???")), sell_price]
+	var item_name: String = str(item.get("name", "???"))
+	if sell_qty > 1:
+		hint_label.text = "Sold %d× %s for %d M!" % [sell_qty, item_name, total]
+	else:
+		hint_label.text = "Sold %s for %d M!" % [item_name, total]
 	_generate_sell_list()
 	if _selected_index >= _sell_items.size():
 		_selected_index = maxi(0, _sell_items.size() - 1)

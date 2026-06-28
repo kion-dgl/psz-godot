@@ -131,6 +131,39 @@ static func confirm(shop: Control, prompt: String, on_yes: Callable, on_cancel :
 	shop.add_child(modal)
 
 
+## Sell-tab confirm that mirrors the buy flow's quantity awareness (#416). True
+## item stacks (consumables/materials with quantity > 1) get the QuantityDialog
+## picker — "Sell 5× Monomate for 50 M?"; per-slot gear (weapons/armor/units/
+## mags/disks, always one instance per row) collapses to a plain Yes/No confirm.
+## `on_confirm` is called with the chosen quantity (1 on the simple path), so a
+## caller's `_sell_selected(qty := 1)` works for both. Shared by the item + weapon
+## shops; `on_cancel` (optional) runs on dismissal — same `_active_modal` lifecycle
+## as confirm().
+static func sell_confirm(shop: Control, item: Dictionary, on_confirm: Callable, on_cancel := Callable()) -> void:
+	var name_str: String = str(item.get("name", "???"))
+	var unit_price: int = int(item.get("sell_price", 0))
+	var item_id: String = str(item.get("id", ""))
+	var available: int = int(item.get("quantity", 1))
+	if Inventory._is_per_slot(item_id) or available <= 1:
+		confirm(shop, "Sell %s for %d M?" % [name_str, unit_price],
+			func() -> void: on_confirm.call(1), on_cancel)
+		return
+	var modal := QuantityDialog.new()
+	modal.set_item(name_str, unit_price, available, "Sell")
+	modal.ask("Sell %s?" % name_str)
+	modal.confirmed_qty.connect(func(qty: int) -> void:
+		shop.set("_active_modal", null)
+		on_confirm.call(qty)
+	)
+	modal.cancelled.connect(func() -> void:
+		shop.set("_active_modal", null)
+		if on_cancel.is_valid():
+			on_cancel.call()
+	)
+	shop.set("_active_modal", modal)
+	shop.add_child(modal)
+
+
 ## Single-button info modal for blocking error states (inventory full,
 ## can't afford, …) so the failure is unmissable. Same `_active_modal`
 ## lifecycle as confirm(); on_dismiss (optional) runs after dismissal.

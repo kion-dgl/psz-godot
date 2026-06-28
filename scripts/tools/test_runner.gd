@@ -1405,6 +1405,39 @@ func test_shops() -> void:
 		assert_eq(Inventory.get_max_stack("monomate"), int(mono.max_stack), "get_max_stack matches consumable.max_stack")
 	assert_eq(Inventory.get_max_stack("saber"), 1, "Per-slot items report max_stack=1")
 
+	# ── Multi-qty SELL (#416) ──
+	# Selling a stack used to remove one copy per confirm; now the sell tab
+	# mirrors the buy flow — true stacks open the QuantityDialog picker, per-slot
+	# gear stays a 1-at-a-time confirm. ShopNav.sell_confirm() is the shared
+	# router both shops call; assert its modal choice here (the seeded unit layer)
+	# and let the autopilot/manual round exercise the on-screen picker.
+	print("  ── Multi-qty sell routing ──")
+	var ShopNavSell = load("res://scripts/2d/shops/shop_nav.gd")
+	var noop_qty := func(_q: int) -> void: pass
+	var noop := func() -> void: pass
+	var sell_shop = load("res://scripts/2d/shops/item_shop.gd").new()
+	# A stack of 5 → the quantity picker, clamped to the stack size.
+	ShopNavSell.sell_confirm(
+		sell_shop, {"name": "Monomate", "id": "monomate", "sell_price": 10, "quantity": 5},
+		noop_qty, noop)
+	assert_true(sell_shop._active_modal is QuantityDialog,
+		"selling a 5-stack opens the quantity picker")
+	if sell_shop._active_modal is QuantityDialog:
+		assert_eq(sell_shop._active_modal._max_qty, 5,
+			"sell picker max qty == the stack size (5)")
+	if sell_shop._active_modal != null:
+		sell_shop._active_modal.free()
+		sell_shop._active_modal = null
+	# A single per-slot weapon instance → plain confirm, never the picker.
+	ShopNavSell.sell_confirm(
+		sell_shop, {"name": "Saber", "id": "saber#1", "sell_price": 40, "quantity": 1},
+		noop_qty, noop)
+	assert_true(sell_shop._active_modal != null and not (sell_shop._active_modal is QuantityDialog),
+		"selling per-slot gear stays a plain 1-qty confirm")
+	if sell_shop._active_modal != null:
+		sell_shop._active_modal.free()
+	sell_shop.free()
+
 	# ── Buy guards: affordability + room ──
 	# ShopManager.buy_item already refuses an unaffordable / no-room purchase
 	# (returns false, no state change). These lock that behavior in as the

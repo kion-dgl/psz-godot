@@ -184,7 +184,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <h4>Quantity</h4>
   <ul>
-    <li>Buying a stackable <strong>MUST</strong> open the shared quantity stepper. Selling a stackable <strong>MUST</strong> open the <em>same</em> stepper — selling is not single-only today, which is the inconsistency. Single-instance gear (a specific weapon/armor) is acted on one at a time, with no stepper.</li>
+    <li>Buying a stackable <strong>MUST</strong> open the shared quantity stepper. Selling a stackable <strong>MUST</strong> open the <em>same</em> stepper (both the item and weapon shop sell tabs route through <code>ShopNav.sell_confirm</code>, which mirrors the buy flow — #416, resolving Rozalin's report that selling a Monomate stack only sold one per confirm). Single-instance gear (a specific weapon/armor/unit/mag/disk) is acted on one at a time, with no stepper.</li>
   </ul>
 
   <h4>Tab chrome</h4>
@@ -205,7 +205,7 @@ import Concept from '../../layouts/Concept.astro';
         <td>Items · Materials · Disks · Sell</td>
         <td>Meseta</td>
         <td>Buy a consumable / technique disk, or sell back at half price</td>
-        <td>Effect, cost, max stack, held count <em>(qty stepper planned)</em></td>
+        <td>Effect, cost, max stack, held count <em>(qty stepper on buy + sell)</em></td>
       </tr>
       <tr>
         <td><strong>Weapon Shop</strong></td>
