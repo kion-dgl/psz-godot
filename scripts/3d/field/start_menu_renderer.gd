@@ -254,11 +254,14 @@ func _draw_items(c: Control, font: Font) -> void:
 		# player level) — same temporary-block predicate the shops/storage use.
 		var soft_disabled: bool = mute[1]
 
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
-		# Grey gear/disks the class can never use (or temporarily can't), unless
-		# this row is highlighted. Only the permanent block draws the ✕ (below).
-		if (cannot_use or soft_disabled) and not (is_sel or is_move_origin):
-			col = PsoStartMenu.C_TEXT_MUTED
+		var is_highlight: bool = is_sel or is_move_origin
+		# Disabled = the class can never use it (✕) OR it's temporarily useless (a
+		# disk already known at this level / below the required level). A highlighted
+		# row stays readable so the cursor is visible even on a disabled item.
+		var disabled: bool = (cannot_use or soft_disabled) and not is_highlight
+		var col: Color = PsoStartMenu.C_SELECT_TEXT if is_highlight else PsoStartMenu.C_TEXT
+		if disabled:
+			col = PsoStartMenu.C_TEXT_DISABLED
 
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
 		# reserved on every row so item names stay aligned — same convention as
@@ -271,15 +274,20 @@ func _draw_items(c: Control, font: Font) -> void:
 		# Per-item icon (PNG when known, fallback to colored letter block), shifted
 		# right past the marker slot.
 		var icon_rect := Rect2(px + 24, draw_y + 2, 16, 16)
+		# Disabled rows dim their icon too (alpha modulate), so the whole row reads
+		# as greyed — not just the text — making "you can't use this" unmissable.
+		var icon_mod: Color = Color(1, 1, 1, 0.35) if disabled else Color.WHITE
 		var tex: Texture2D = _c._get_item_icon(item_id, category)
 		if tex:
-			c.draw_texture_rect(tex, icon_rect, false)
+			c.draw_texture_rect(tex, icon_rect, false, icon_mod)
 		else:
 			var type_key: String = _c._category_to_type(category)
 			var icon_letter: String = str(PsoStartMenu.TYPE_ICONS.get(type_key, "?"))
 			var icon_color: Color = PsoStartMenu.TYPE_COLORS.get(type_key, Color.GRAY)
 			if is_sel or is_move_origin:
 				icon_color = Color(1, 1, 1, 0.4)
+			elif disabled:
+				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
 			c.draw_string(font, Vector2(px + 27, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 

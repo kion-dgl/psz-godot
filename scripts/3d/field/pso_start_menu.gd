@@ -33,6 +33,12 @@ const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
 const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
 const C_TEXT := Color(0.10, 0.15, 0.25)
 const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
+# A clearly-faded grey for DISABLED inventory rows (cannot-use / already-known
+# disks). C_TEXT_MUTED is only marginally lighter than C_TEXT, so a disabled row
+# barely reads as disabled against the near-white row bg; this sits much closer
+# to the background so the row is unmistakably greyed (matches the shops, where
+# TEXT_MUTED is far lighter than TEXT). Disabled rows also dim their icon.
+const C_TEXT_DISABLED := Color(0.58, 0.62, 0.69)
 const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)
 const C_SELECT := Color(0.88, 0.53, 0.13)
 const C_SELECT_TEXT := Color.WHITE
