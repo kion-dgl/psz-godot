@@ -384,6 +384,7 @@ func _refresh_display() -> void:
 				"icons": sell_icons,
 				"equipped": bool(item.get("equipped", false)),
 				"cannot_use": bool(item.get("cannot_use", false)),
+				"disabled": bool(item.get("disabled", false)),
 				"selected": i == _selected_index,
 			})
 			vbox.add_child(pill)

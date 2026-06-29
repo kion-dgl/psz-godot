@@ -49,6 +49,7 @@ func _run_tests_core() -> void:
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
 	test_shop_sell_disabled_already_known()
+	test_shop_sell_disabled_renders_muted()
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
@@ -2022,6 +2023,78 @@ func test_shop_sell_disabled_already_known() -> void:
 
 	_restore_character_state(saved)
 	print("")
+
+
+# RENDER-LEVEL guard: the predicate test above proves sell_disabled flips, but a
+# row only greys if the shop's _refresh_display actually FORWARDS that flag into
+# PszStyle.shop_row. The real #417-followup bug lived exactly there — the sell
+# render dropped "disabled" — invisible to a predicate-only test. So instantiate
+# the real item_shop, render its sell tab, and assert the disk pill's text colour.
+func test_shop_sell_disabled_renders_muted() -> void:
+	print("── Shop sell — already-known disk RENDERS muted (pixels, not predicate) ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskRender")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(5):
+		Inventory.add_item("disk_foie_1", 1)
+
+	var shop = load("res://scenes/2d/shops/item_shop.tscn").instantiate()
+	add_child(shop)  # add_child runs _ready synchronously → @onready nodes ready
+	shop.set("_tab", 3)  # Tab.SELL
+
+	# Before learning: the disk sell row renders at normal (non-muted) colour.
+	assert_eq(_sell_disk_pill_muted(shop), 0,
+		"sell row for an unknown-level Foie disk renders NOT muted")
+
+	# Learn Foie Lv.1 through the real use path, then re-render the sell tab.
+	var first_disk: String = ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first_disk = str(k); break
+	Inventory.use_item(first_disk)
+
+	# After learning: every remaining Foie Lv.1 disk row renders muted.
+	assert_eq(_sell_disk_pill_muted(shop), 1,
+		"sell row for an already-known Foie disk renders MUTED (disabled forwarded to shop_row)")
+
+	shop.free()
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Regenerate the item_shop sell list and report the rendered mute state of the
+# first disk_ row: 1 = muted (TEXT_MUTED), 0 = normal, -1 = no disk row / no label.
+func _sell_disk_pill_muted(shop) -> int:
+	shop.call("_generate_sell_list")
+	shop.call("_refresh_display")
+	var sell_items: Array = shop.get("_sell_items")
+	var pills = shop.get("_pill_nodes")
+	for i in range(sell_items.size()):
+		if not str(sell_items[i].get("id", "")).begins_with("disk_"):
+			continue
+		var pill = pills[i] if (typeof(pills) == TYPE_ARRAY and i < pills.size()) else (pills.get(i) if typeof(pills) == TYPE_DICTIONARY else null)
+		if pill == null:
+			return -1
+		var lbl := _first_label(pill)
+		if lbl == null:
+			return -1
+		return 1 if lbl.get_theme_color("font_color").is_equal_approx(PszStyle.TEXT_MUTED) else 0
+	return -1
+
+
+func _first_label(n: Node) -> Label:
+	if n is Label:
+		return n
+	for c in n.get_children():
+		var r := _first_label(c)
+		if r != null:
+			return r
+	return null
 
 
 # Synthesis shop marks recipes whose OUTPUT weapon the class can't equip with the
