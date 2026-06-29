@@ -10,7 +10,7 @@ import Concept from '../../layouts/Concept.astro';
   <p>Crucially, assigning the missing property is <strong>not</strong> a silent no-op. GDScript raises at runtime:</p>
   <pre><code>Invalid assignment of property 'flags_mirrored_repeat' with value of type 'bool'
 on a base object of type 'ImageTexture'.</code></pre>
-  <p>Because the throw happens mid-statement, it <strong>aborts the enclosing function/lambda at that line</strong> — every statement after the bogus assignment is skipped. In #381 this meant <code>GameElement._setup_split_materials</code> never applied its surface override and returned <code>{feature: null, base: null}</code>, so the bear/needle traps' prong-hide and laser-scroll guards (<code>if _prong_material:</code>) silently no-op'd. The texture <em>looked</em> fine; the behavior was dead.</p>
+  <p>Because the throw happens mid-statement, it <strong>aborts the enclosing function/lambda at that line</strong> — every statement after the bogus assignment is skipped. In #381 this meant <code>GameElement._setup_split_materials</code> never applied its surface override and returned <code>&#123;feature: null, base: null&#125;</code>, so the bear/needle traps' prong-hide and laser-scroll guards (<code>if _prong_material:</code>) silently no-op'd. The texture <em>looked</em> fine; the behavior was dead.</p>
   <ul>
     <li>Code <strong>MUST NOT</strong> assign <code>flags_mirrored_repeat</code> (or any other Godot-3 <code>flags_*</code> texture bit) on a Godot-4 texture. It does not exist and it throws.</li>
     <li>A surface that only samples UVs within <code>[0,1]</code> (the trap prong / spike / base atlases) needs <strong>no</strong> wrap flag at all — a duplicated <code>StandardMaterial3D</code> with <code>TEXTURE_FILTER_NEAREST</code> is the correct, complete setup.</li>
@@ -18,7 +18,7 @@ on a base object of type 'ImageTexture'.</code></pre>
 
   <h2>The recipe: emulate mirror-repeat with the UV-fold shader</h2>
   <p>When a surface genuinely tiles past <code>[0,1]</code> and the source authored it as <code>MirroredRepeatWrapping</code>, the wrapping <strong>MUST</strong> be emulated in a fragment shader by folding the UV, not by a texture flag. The canonical implementation is <code>scripts/3d/shaders/mirror_repeat.gdshader</code>, wired through <code>GameElement._setup_mirror_textures()</code>:</p>
-  <pre><code>float mirror_coord(float c) {
+  <pre><code is:raw>float mirror_coord(float c) {
     float m = mod(c, 2.0);
     return m &lt; 1.0 ? m : 2.0 - m;
 }
