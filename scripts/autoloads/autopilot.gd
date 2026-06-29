@@ -688,23 +688,7 @@ func _drive_scene(path: String) -> void:
 	if path == INPUT_SELECT:
 		_after(STEP_DELAY, _pick_keyboard)
 	elif path == TITLE:
-		if _boot_returning_to_title:
-			# Boot phase ran "Return to Title" — DONE here, not at the office.
-			# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
-			print("[sanity] checkpoint: returned to title (boot phase complete)")
-			# #425: title.gd::_ready already ran SessionManager.reset_all_state(),
-			# the production chokepoint that must wipe the city-hub position cache.
-			# Assert it here so a regression (reset_all_state no longer clearing
-			# CityState) is caught by the probe rather than only the unit test.
-			if CityState != null and CityState.get_player_position() == null:
-				print("[sanity] checkpoint: city-state cleared on title-return")
-			else:
-				print("[sanity] FAIL: CityState not cleared on title-return — stale city position survives reset_all_state (#425)")
-			print("[sanity] DONE ok")
-			_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
-		else:
-			print("[sanity] checkpoint: title")
-			_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
+		_drive_title_scene()
 	elif path == CHAR_SELECT:
 		print("[sanity] checkpoint: character_select")
 		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
@@ -743,6 +727,26 @@ func _drive_scene(path: String) -> void:
 		print("[sanity] checkpoint: valley_field entered")
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
 		# same frame this scene-change does, so don't drive anything here.
+
+
+func _drive_title_scene() -> void:
+	if _boot_returning_to_title:
+		# Boot phase ran "Return to Title" — DONE here, not at the office.
+		# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
+		print("[sanity] checkpoint: returned to title (boot phase complete)")
+		# #425: title.gd::_ready already ran SessionManager.reset_all_state(),
+		# the production chokepoint that must wipe the city-hub position cache.
+		# Assert it here so a regression (reset_all_state no longer clearing
+		# CityState) is caught by the probe rather than only the unit test.
+		if CityState != null and CityState.get_player_position() == null:
+			print("[sanity] checkpoint: city-state cleared on title-return")
+		else:
+			print("[sanity] FAIL: CityState not cleared on title-return — stale city position survives reset_all_state (#425)")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+	else:
+		print("[sanity] checkpoint: title")
+		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
 
 
 func _drive_overlay(path: String) -> void:
