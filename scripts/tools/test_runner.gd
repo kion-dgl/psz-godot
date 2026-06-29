@@ -50,6 +50,7 @@ func _run_tests_core() -> void:
 	test_shop_sell_cannot_use_marker()
 	test_shop_sell_disabled_already_known()
 	test_shop_sell_disabled_renders_muted()
+	test_start_menu_disk_use_gated()
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
@@ -2095,6 +2096,50 @@ func _first_label(n: Node) -> Label:
 		if r != null:
 			return r
 	return null
+
+
+# The start-menu item modal must NOT offer "Use" for a disk that can't be learned
+# right now (already known at this level, too-low level, or class-illegal). The
+# "Use" choice is gated on _get_inventory()'s `usable` flag, so assert that flag:
+# a learnable disk is usable, an already-known one is not (#417).
+func test_start_menu_disk_use_gated() -> void:
+	print("── Start menu — already-known disk offers no Use ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskUse")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(3):
+		Inventory.add_item("disk_foie_1", 1)
+
+	# Unknown technique → the disk is usable (offers "Use").
+	assert_eq(_disk_usable_flag("disk_foie_1"), 1,
+		"unknown Foie Lv.1 disk: usable (Use offered)")
+
+	# Learn it, then every remaining copy must be NOT usable (no Use option).
+	var first := ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first = str(k); break
+	Inventory.use_item(first)
+	assert_eq(_disk_usable_flag("disk_foie_1"), 0,
+		"already-known Foie Lv.1 disk: NOT usable (no Use option offered)")
+
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Returns the start menu's `usable` flag for the first inventory row whose base id
+# matches `base`: 1 = usable, 0 = not usable, -1 = no such row.
+func _disk_usable_flag(base: String) -> int:
+	for it in PsoStartMenu._get_inventory():
+		var id: String = str(it.get("id", ""))
+		if Inventory.get_base_id(id) == base:
+			return 1 if bool(it.get("usable", false)) else 0
+	return -1
 
 
 # Synthesis shop marks recipes whose OUTPUT weapon the class can't equip with the

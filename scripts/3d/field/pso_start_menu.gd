@@ -10,6 +10,8 @@ signal closed()
 ## drop an in-progress technique charge on menu open (#352).
 signal opened()
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 # ── Layout ──────────────────────────────────────────────────────────────────────
 const VIEWPORT_W := 1280.0
 const VIEWPORT_H := 720.0
@@ -734,9 +736,16 @@ func _get_inventory() -> Array:
 		# Items the start-menu's "Use" action will dispatch to Inventory.use_item().
 		# Add new use-handler ids here when wiring more consumables — see
 		# inventory.gd's use_item() switchboard for the dispatch logic.
+		# A technique disk is only "usable" when it can actually be learned right
+		# now: an already-known-at-level (or too-low-level / class-illegal) disk
+		# offers NO Use action — it routes through the same shared predicates that
+		# grey its row, so the modal can't offer a Use the row says is disabled.
+		var disk_usable: bool = item_id.begins_with("disk_") \
+			and not ShopNav.sell_cannot_use(item_id) \
+			and not ShopNav.sell_disabled(item_id)
 		item["usable"] = (
 			Inventory.CONSUMABLE_EFFECTS.has(item_id)
-			or item_id.begins_with("disk_")
+			or disk_usable
 			or item_id == "telepipe"
 		)
 	return items
