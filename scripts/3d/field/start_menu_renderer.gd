@@ -33,6 +33,16 @@ func _item_cannot_use(item_id: String) -> bool:
 	return ShopNav.sell_cannot_use(item_id)
 
 
+## Both row-mute tiers for an inventory row, as [cannot_use, soft_disabled]:
+##   [0] cannot_use   — permanent class block → ✕ marker (_item_cannot_use).
+##   [1] soft_disabled — a temporary block (a disk already known at this level, or
+##       below the required player level) → grey WITHOUT the ✕ (ShopNav.sell_disabled).
+## Both route through the shared ShopNav predicates so the start menu greys in
+## lockstep with the shops and storage (spec /mechanics/equip-legality).
+func _item_mute_state(item_id: String) -> Array:
+	return [_item_cannot_use(item_id), ShopNav.sell_disabled(item_id)]
+
+
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
 	var font := ThemeDB.fallback_font
@@ -238,12 +248,20 @@ func _draw_items(c: Control, font: Font) -> void:
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
-		var cannot_use: bool = _item_cannot_use(item_id)
+		var mute := _item_mute_state(item_id)
+		var cannot_use: bool = mute[0]
+		# Grey-without-✕: a disk already known at this level (or below the required
+		# player level) — same temporary-block predicate the shops/storage use.
+		var soft_disabled: bool = mute[1]
 
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
-		# Grey gear/disks the class can never use, unless this row is highlighted.
-		if cannot_use and not (is_sel or is_move_origin):
-			col = PsoStartMenu.C_TEXT_MUTED
+		var is_highlight: bool = is_sel or is_move_origin
+		# Disabled = the class can never use it (✕) OR it's temporarily useless (a
+		# disk already known at this level / below the required level). A highlighted
+		# row stays readable so the cursor is visible even on a disabled item.
+		var disabled: bool = (cannot_use or soft_disabled) and not is_highlight
+		var col: Color = PsoStartMenu.C_SELECT_TEXT if is_highlight else PsoStartMenu.C_TEXT
+		if disabled:
+			col = PsoStartMenu.C_TEXT_DISABLED
 
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
 		# reserved on every row so item names stay aligned — same convention as
@@ -256,15 +274,20 @@ func _draw_items(c: Control, font: Font) -> void:
 		# Per-item icon (PNG when known, fallback to colored letter block), shifted
 		# right past the marker slot.
 		var icon_rect := Rect2(px + 24, draw_y + 2, 16, 16)
+		# Disabled rows dim their icon too (alpha modulate), so the whole row reads
+		# as greyed — not just the text — making "you can't use this" unmissable.
+		var icon_mod: Color = Color(1, 1, 1, 0.35) if disabled else Color.WHITE
 		var tex: Texture2D = _c._get_item_icon(item_id, category)
 		if tex:
-			c.draw_texture_rect(tex, icon_rect, false)
+			c.draw_texture_rect(tex, icon_rect, false, icon_mod)
 		else:
 			var type_key: String = _c._category_to_type(category)
 			var icon_letter: String = str(PsoStartMenu.TYPE_ICONS.get(type_key, "?"))
 			var icon_color: Color = PsoStartMenu.TYPE_COLORS.get(type_key, Color.GRAY)
 			if is_sel or is_move_origin:
 				icon_color = Color(1, 1, 1, 0.4)
+			elif disabled:
+				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
 			c.draw_string(font, Vector2(px + 27, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
@@ -298,9 +321,11 @@ func _draw_items(c: Control, font: Font) -> void:
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable and not str(consumable.details).is_empty():
 			desc += "\n%s" % str(consumable.details)
-		# Technique disks: show what they teach and the use prompt
+		# Technique disks: show what they teach and the use prompt. Parse from the
+		# BASE id, not the raw instance id — a duplicate disk's id is "disk_foie_3#2"
+		# and the raw suffix would leak into the teach-line as "Lv.3#2" (#417).
 		if item_id.begins_with("disk_"):
-			var rest := item_id.substr(5)
+			var rest := Inventory.get_base_id(item_id).substr(5)
 			var us := rest.rfind("_")
 			if us >= 0:
 				var tech_id := rest.substr(0, us)

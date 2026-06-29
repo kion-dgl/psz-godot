@@ -10,6 +10,8 @@ signal closed()
 ## drop an in-progress technique charge on menu open (#352).
 signal opened()
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 # ── Layout ──────────────────────────────────────────────────────────────────────
 const VIEWPORT_W := 1280.0
 const VIEWPORT_H := 720.0
@@ -31,6 +33,12 @@ const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
 const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
 const C_TEXT := Color(0.10, 0.15, 0.25)
 const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
+# A clearly-faded grey for DISABLED inventory rows (cannot-use / already-known
+# disks). C_TEXT_MUTED is only marginally lighter than C_TEXT, so a disabled row
+# barely reads as disabled against the near-white row bg; this sits much closer
+# to the background so the row is unmistakably greyed (matches the shops, where
+# TEXT_MUTED is far lighter than TEXT). Disabled rows also dim their icon.
+const C_TEXT_DISABLED := Color(0.58, 0.62, 0.69)
 const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)
 const C_SELECT := Color(0.88, 0.53, 0.13)
 const C_SELECT_TEXT := Color.WHITE
@@ -734,9 +742,16 @@ func _get_inventory() -> Array:
 		# Items the start-menu's "Use" action will dispatch to Inventory.use_item().
 		# Add new use-handler ids here when wiring more consumables — see
 		# inventory.gd's use_item() switchboard for the dispatch logic.
+		# A technique disk is only "usable" when it can actually be learned right
+		# now: an already-known-at-level (or too-low-level / class-illegal) disk
+		# offers NO Use action — it routes through the same shared predicates that
+		# grey its row, so the modal can't offer a Use the row says is disabled.
+		var disk_usable: bool = item_id.begins_with("disk_") \
+			and not ShopNav.sell_cannot_use(item_id) \
+			and not ShopNav.sell_disabled(item_id)
 		item["usable"] = (
 			Inventory.CONSUMABLE_EFFECTS.has(item_id)
-			or item_id.begins_with("disk_")
+			or disk_usable
 			or item_id == "telepipe"
 		)
 	return items

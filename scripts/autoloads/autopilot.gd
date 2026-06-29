@@ -1483,6 +1483,51 @@ func _el_disk_marker_ok(character) -> bool:
 			_after(STEP_DELAY, _save_and_quit)
 			return false
 	print("[sanity] checkpoint: equip-legality disk ✕ (unlearnable '%s' marked, learnable not)" % illegal_disk)
+	return _el_disk_dup_use_ok(character, legal_disk)
+
+
+# #417: a duplicate learnable disk (minted as "disk_<t>_<n>#2") must still
+# learn at Lv.N — not be rejected because int("<n>#2") concatenates to a
+# huge over-cap level. Exercise the data path through Inventory.use_item on
+# the SECOND instance, then restore the character's techniques.
+func _el_disk_dup_use_ok(character, legal_disk: String) -> bool:
+	if legal_disk.is_empty():
+		return true
+	var parts := legal_disk.split("_", false, 2)
+	var tid := str(parts[1]) if parts.size() >= 3 else ""
+	var lvl := int(str(parts[2])) if parts.size() >= 3 else 0
+	var techs_backup: Dictionary = (character.get("techniques", {}) as Dictionary).duplicate(true)
+	Inventory.add_item(legal_disk, 1)
+	Inventory.add_item(legal_disk, 1)
+	var dup_id := ""
+	for k in Inventory._items.keys():
+		var kk := str(k)
+		if kk != legal_disk and kk.begins_with(legal_disk + "#"):
+			dup_id = kk
+			break
+	var dup_ok: bool = (not dup_id.is_empty()) and Inventory.use_item(dup_id)
+	var learned: int = TechniqueManager.get_technique_level(character, tid)
+	# Display half: the technique is now known at Lv.N, and the FIRST copy is still
+	# in the bag. It must read as grey-WITHOUT-✕ (already known) through the shared
+	# sell_disabled predicate, not a permanent ✕. Capture before restoring techs.
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var rest_greyed: bool = ShopNavCls.sell_disabled(legal_disk)
+	var rest_no_x: bool = not ShopNavCls.sell_cannot_use(legal_disk)
+	# Clean up both instances and restore prior technique state.
+	Inventory.remove_item(legal_disk, Inventory.get_item_count(legal_disk))
+	if not dup_id.is_empty():
+		Inventory.remove_item(dup_id, Inventory.get_item_count(dup_id))
+	character["techniques"] = techs_backup
+	if not dup_ok or learned != lvl:
+		print("[sanity] FAIL: disk dup-use — '%s' (dup '%s') learned Lv.%d, expected Lv.%d (ok=%s)" % [legal_disk, dup_id, learned, lvl, str(dup_ok)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: disk dup-use strips suffix (#2 learns Lv.%d)" % lvl)
+	if not rest_greyed or not rest_no_x:
+		print("[sanity] FAIL: already-known disk grey — remaining '%s' greyed=%s no-✕=%s (expected true/true)" % [legal_disk, str(rest_greyed), str(rest_no_x)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: already-known disk greyed without ✕ (Lv.%d duplicate)" % lvl)
 	return true
 
 

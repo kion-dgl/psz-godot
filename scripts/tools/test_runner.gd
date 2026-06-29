@@ -48,6 +48,9 @@ func _run_tests_core() -> void:
 	test_shop_capability_grey()
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
+	test_shop_sell_disabled_already_known()
+	test_shop_sell_disabled_renders_muted()
+	test_start_menu_disk_use_gated()
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
@@ -60,6 +63,7 @@ func _run_tests_core() -> void:
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
+	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
@@ -1964,6 +1968,180 @@ func test_shop_sell_cannot_use_marker() -> void:
 	print("")
 
 
+# The grey-WITHOUT-✕ tier (ShopNav.sell_disabled): a disk for a technique
+# already known at this level (or below the required player level) mutes the row
+# but carries no ✕. The same predicate backs every item-list surface (sell tabs,
+# storage, start-menu inventory), so owning N copies of a learnable disk and
+# learning one greys the rest consistently — the display half of the #417 fix.
+func test_shop_sell_disabled_already_known() -> void:
+	print("── Shop grey — already-known disk disabled (no ✕) ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+
+	# HUmar learns Foie (attack group, cap 10). Level 20 clears the required-
+	# player-level gate so the ONLY block in play is the already-known one.
+	CharacterManager.create_character(0, "humar", "DiskGrey")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	character["level"] = 20
+	character["techniques"] = {}
+
+	# Before learning: a Lv.1 Foie disk is fully usable — no ✕, not greyed.
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"unknown Foie Lv.1: no ✕ (class can learn it)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"unknown Foie Lv.1: not greyed (still worth learning)")
+
+	# Learn Foie Lv.1 → the Lv.1 disk is now a no-op.
+	character["techniques"]["foie"] = 1
+
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1"),
+		"already-known Foie Lv.1: greyed (already learned at this level)")
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"already-known Foie Lv.1: still NO ✕ (block is temporary, not a class bar)")
+	# A suffixed duplicate greys identically — get_base_id strips the #2 first.
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1#2"),
+		"already-known Foie Lv.1#2 duplicate: greyed too (suffix stripped)")
+	# A higher-level disk is still an upgrade → not greyed.
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_2"),
+		"Foie Lv.2 while knowing Lv.1: not greyed (it upgrades)")
+
+	# Permanent class block stays the ✕ tier, never the grey tier: a CAST disk is
+	# ✕ and NOT sell_disabled (sell_disabled is the can-learn-but-not-now slice).
+	CharacterManager._characters[0] = null
+	CharacterManager.create_character(0, "hucast", "DiskGreyCast")
+	CharacterManager.set_active_slot(0)
+	assert_true(ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"CAST disk: ✕ (permanent class block)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"CAST disk: NOT in the grey tier (permanent block is ✕, not grey)")
+
+	# Non-disk items never enter the grey-disk tier.
+	assert_true(not ShopNavCls.sell_disabled("monomate"),
+		"consumable: never disk-greyed")
+	assert_true(not ShopNavCls.sell_disabled("saber"),
+		"weapon: never disk-greyed")
+
+	_restore_character_state(saved)
+	print("")
+
+
+# RENDER-LEVEL guard: the predicate test above proves sell_disabled flips, but a
+# row only greys if the shop's _refresh_display actually FORWARDS that flag into
+# PszStyle.shop_row. The real #417-followup bug lived exactly there — the sell
+# render dropped "disabled" — invisible to a predicate-only test. So instantiate
+# the real item_shop, render its sell tab, and assert the disk pill's text colour.
+func test_shop_sell_disabled_renders_muted() -> void:
+	print("── Shop sell — already-known disk RENDERS muted (pixels, not predicate) ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskRender")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(5):
+		Inventory.add_item("disk_foie_1", 1)
+
+	var shop = load("res://scenes/2d/shops/item_shop.tscn").instantiate()
+	add_child(shop)  # add_child runs _ready synchronously → @onready nodes ready
+	shop.set("_tab", 3)  # Tab.SELL
+
+	# Before learning: the disk sell row renders at normal (non-muted) colour.
+	assert_eq(_sell_disk_pill_muted(shop), 0,
+		"sell row for an unknown-level Foie disk renders NOT muted")
+
+	# Learn Foie Lv.1 through the real use path, then re-render the sell tab.
+	var first_disk: String = ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first_disk = str(k); break
+	Inventory.use_item(first_disk)
+
+	# After learning: every remaining Foie Lv.1 disk row renders muted.
+	assert_eq(_sell_disk_pill_muted(shop), 1,
+		"sell row for an already-known Foie disk renders MUTED (disabled forwarded to shop_row)")
+
+	shop.free()
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Regenerate the item_shop sell list and report the rendered mute state of the
+# first disk_ row: 1 = muted (TEXT_MUTED), 0 = normal, -1 = no disk row / no label.
+func _sell_disk_pill_muted(shop) -> int:
+	shop.call("_generate_sell_list")
+	shop.call("_refresh_display")
+	var sell_items: Array = shop.get("_sell_items")
+	var pills = shop.get("_pill_nodes")
+	for i in range(sell_items.size()):
+		if not str(sell_items[i].get("id", "")).begins_with("disk_"):
+			continue
+		var pill = pills[i] if (typeof(pills) == TYPE_ARRAY and i < pills.size()) else (pills.get(i) if typeof(pills) == TYPE_DICTIONARY else null)
+		if pill == null:
+			return -1
+		var lbl := _first_label(pill)
+		if lbl == null:
+			return -1
+		return 1 if lbl.get_theme_color("font_color").is_equal_approx(PszStyle.TEXT_MUTED) else 0
+	return -1
+
+
+func _first_label(n: Node) -> Label:
+	if n is Label:
+		return n
+	for c in n.get_children():
+		var r := _first_label(c)
+		if r != null:
+			return r
+	return null
+
+
+# The start-menu item modal must NOT offer "Use" for a disk that can't be learned
+# right now (already known at this level, too-low level, or class-illegal). The
+# "Use" choice is gated on _get_inventory()'s `usable` flag, so assert that flag:
+# a learnable disk is usable, an already-known one is not (#417).
+func test_start_menu_disk_use_gated() -> void:
+	print("── Start menu — already-known disk offers no Use ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskUse")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(3):
+		Inventory.add_item("disk_foie_1", 1)
+
+	# Unknown technique → the disk is usable (offers "Use").
+	assert_eq(_disk_usable_flag("disk_foie_1"), 1,
+		"unknown Foie Lv.1 disk: usable (Use offered)")
+
+	# Learn it, then every remaining copy must be NOT usable (no Use option).
+	var first := ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first = str(k); break
+	Inventory.use_item(first)
+	assert_eq(_disk_usable_flag("disk_foie_1"), 0,
+		"already-known Foie Lv.1 disk: NOT usable (no Use option offered)")
+
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Returns the start menu's `usable` flag for the first inventory row whose base id
+# matches `base`: 1 = usable, 0 = not usable, -1 = no such row.
+func _disk_usable_flag(base: String) -> int:
+	for it in PsoStartMenu._get_inventory():
+		var id: String = str(it.get("id", ""))
+		if Inventory.get_base_id(id) == base:
+			return 1 if bool(it.get("usable", false)) else 0
+	return -1
+
+
 # Synthesis shop marks recipes whose OUTPUT weapon the class can't equip with the
 # ✕ marker (crafting still allowed) — a visual filter (Kion request).
 func test_synth_unequippable_marker() -> void:
@@ -2804,6 +2982,73 @@ func test_technique_disks() -> void:
 	CombatManager.clear_combat()
 	print("  INFO: %d disk drops from 500 boss kills (expected ~150 at 30%%)" % disk_drops)
 	assert_gt(disk_drops, 50, "Disks drop from bosses (got %d)" % disk_drops)
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+# Regression for #417: a duplicate technique disk is minted as "disk_foie_3#2".
+# Parsing the RAW instance id makes int("3#2") == 32, so use_disk() rejected
+# every copy past the first as "level 32 > class max" (the "greyed out / not
+# usable" report). The fix strips the suffix via get_base_id() BEFORE parsing
+# tech/level, while remove_item still consumes the exact selected instance.
+func test_disk_duplicate_use_strips_suffix() -> void:
+	print("── Disk Duplicate Use (#417) ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# FOmar — Force class, full technique access
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	GameState.reset_game_state()
+	var fomar := CharacterManager.create_character(0, "fomar", "DupDiskForce")
+	assert_true(fomar != null, "Created FOmar character")
+	if fomar == null:
+		print("  SKIP: Could not create FOmar")
+		CharacterManager._characters = saved_characters
+		CharacterManager._active_slot = saved_slot
+		if saved_slot >= 0:
+			CharacterManager.set_active_slot(saved_slot)
+		print("")
+		return
+	fomar["level"] = 20
+	CharacterManager.set_active_slot(0)
+	fomar["techniques"].clear()
+
+	# Buy TWO copies of the same learnable disk → two per-slot instances.
+	Inventory.add_item("disk_foie_3", 1)
+	Inventory.add_item("disk_foie_3", 1)
+	var keys: Array = Inventory._items.keys()
+	assert_true(keys.has("disk_foie_3"), "First copy minted as 'disk_foie_3'")
+	# The second copy gets a '#N' instance suffix (any N, not just #2).
+	var dup_id := ""
+	for k in keys:
+		var kk := str(k)
+		if kk != "disk_foie_3" and kk.begins_with("disk_foie_3#"):
+			dup_id = kk
+			break
+	assert_true(not dup_id.is_empty(), "Second copy minted with '#' instance suffix (%s)" % dup_id)
+	# Two distinct disk instances exist (create_character seeds starter gear, so
+	# assert on the disk count specifically rather than total unique items).
+	assert_eq(Inventory.get_item_count("disk_foie_3") + Inventory.get_item_count(dup_id), 2, "Two distinct disk instances exist")
+
+	# Load-bearing: using the DUPLICATE instance must learn Foie at Lv.3, NOT 32.
+	# Under the bug this returned false and the level would parse as 32.
+	var use_ok := Inventory.use_item(dup_id)
+	assert_true(use_ok, "use_item(duplicate '%s') succeeded" % dup_id)
+	assert_eq(TechniqueManager.get_technique_level(fomar, "foie"), 3, "Foie learned at Lv.3 (not 32) from the duplicate copy")
+
+	# The exact instance the player selected is consumed; the base copy is untouched.
+	assert_eq(Inventory.get_item_count(dup_id), 0, "Selected duplicate instance consumed")
+	assert_eq(Inventory.get_item_count("disk_foie_3"), 1, "First copy left untouched")
 
 	# Restore state
 	CharacterManager._characters = saved_characters
