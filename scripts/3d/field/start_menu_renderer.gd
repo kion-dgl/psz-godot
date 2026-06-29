@@ -33,6 +33,16 @@ func _item_cannot_use(item_id: String) -> bool:
 	return ShopNav.sell_cannot_use(item_id)
 
 
+## Both row-mute tiers for an inventory row, as [cannot_use, soft_disabled]:
+##   [0] cannot_use   — permanent class block → ✕ marker (_item_cannot_use).
+##   [1] soft_disabled — a temporary block (a disk already known at this level, or
+##       below the required player level) → grey WITHOUT the ✕ (ShopNav.sell_disabled).
+## Both route through the shared ShopNav predicates so the start menu greys in
+## lockstep with the shops and storage (spec /mechanics/equip-legality).
+func _item_mute_state(item_id: String) -> Array:
+	return [_item_cannot_use(item_id), ShopNav.sell_disabled(item_id)]
+
+
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
 	var font := ThemeDB.fallback_font
@@ -238,11 +248,16 @@ func _draw_items(c: Control, font: Font) -> void:
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
-		var cannot_use: bool = _item_cannot_use(item_id)
+		var mute := _item_mute_state(item_id)
+		var cannot_use: bool = mute[0]
+		# Grey-without-✕: a disk already known at this level (or below the required
+		# player level) — same temporary-block predicate the shops/storage use.
+		var soft_disabled: bool = mute[1]
 
 		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
-		# Grey gear/disks the class can never use, unless this row is highlighted.
-		if cannot_use and not (is_sel or is_move_origin):
+		# Grey gear/disks the class can never use (or temporarily can't), unless
+		# this row is highlighted. Only the permanent block draws the ✕ (below).
+		if (cannot_use or soft_disabled) and not (is_sel or is_move_origin):
 			col = PsoStartMenu.C_TEXT_MUTED
 
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),

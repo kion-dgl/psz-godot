@@ -622,11 +622,14 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 						under_level = char_level < weapon.level
 					elif armor_data:
 						under_level = char_level < armor_data.level
+			# Disks already known at this level (or below the required player level)
+			# grey without the ✕ too — the same temporary-block predicate the shops use.
+			var disk_disabled: bool = ShopNav.sell_disabled(item_id)
 			pill = PszStyle.shop_row(display_name, right_text, {
 				"icons": icons,
 				"equipped": is_locked_equipped,
 				"cannot_use": cannot_equip,
-				"disabled": under_level,
+				"disabled": under_level or disk_disabled,
 				"selected": is_selected,
 			})
 		vbox.add_child(pill)

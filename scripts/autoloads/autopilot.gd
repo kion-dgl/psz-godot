@@ -1507,6 +1507,12 @@ func _el_disk_dup_use_ok(character, legal_disk: String) -> bool:
 			break
 	var dup_ok: bool = (not dup_id.is_empty()) and Inventory.use_item(dup_id)
 	var learned: int = TechniqueManager.get_technique_level(character, tid)
+	# Display half: the technique is now known at Lv.N, and the FIRST copy is still
+	# in the bag. It must read as grey-WITHOUT-✕ (already known) through the shared
+	# sell_disabled predicate, not a permanent ✕. Capture before restoring techs.
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var rest_greyed: bool = ShopNavCls.sell_disabled(legal_disk)
+	var rest_no_x: bool = not ShopNavCls.sell_cannot_use(legal_disk)
 	# Clean up both instances and restore prior technique state.
 	Inventory.remove_item(legal_disk, Inventory.get_item_count(legal_disk))
 	if not dup_id.is_empty():
@@ -1517,6 +1523,11 @@ func _el_disk_dup_use_ok(character, legal_disk: String) -> bool:
 		_after(STEP_DELAY, _save_and_quit)
 		return false
 	print("[sanity] checkpoint: disk dup-use strips suffix (#2 learns Lv.%d)" % lvl)
+	if not rest_greyed or not rest_no_x:
+		print("[sanity] FAIL: already-known disk grey — remaining '%s' greyed=%s no-✕=%s (expected true/true)" % [legal_disk, str(rest_greyed), str(rest_no_x)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: already-known disk greyed without ✕ (Lv.%d duplicate)" % lvl)
 	return true
 
 

@@ -48,6 +48,7 @@ func _run_tests_core() -> void:
 	test_shop_capability_grey()
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
+	test_shop_sell_disabled_already_known()
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
@@ -1960,6 +1961,64 @@ func test_shop_sell_cannot_use_marker() -> void:
 		"_parse_disk_id reads the level")
 	assert_true(ShopNavCls._parse_disk_id("disk_foie").is_empty(),
 		"_parse_disk_id rejects a level-less id")
+
+	_restore_character_state(saved)
+	print("")
+
+
+# The grey-WITHOUT-✕ tier (ShopNav.sell_disabled): a disk for a technique
+# already known at this level (or below the required player level) mutes the row
+# but carries no ✕. The same predicate backs every item-list surface (sell tabs,
+# storage, start-menu inventory), so owning N copies of a learnable disk and
+# learning one greys the rest consistently — the display half of the #417 fix.
+func test_shop_sell_disabled_already_known() -> void:
+	print("── Shop grey — already-known disk disabled (no ✕) ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+
+	# HUmar learns Foie (attack group, cap 10). Level 20 clears the required-
+	# player-level gate so the ONLY block in play is the already-known one.
+	CharacterManager.create_character(0, "humar", "DiskGrey")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	character["level"] = 20
+	character["techniques"] = {}
+
+	# Before learning: a Lv.1 Foie disk is fully usable — no ✕, not greyed.
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"unknown Foie Lv.1: no ✕ (class can learn it)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"unknown Foie Lv.1: not greyed (still worth learning)")
+
+	# Learn Foie Lv.1 → the Lv.1 disk is now a no-op.
+	character["techniques"]["foie"] = 1
+
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1"),
+		"already-known Foie Lv.1: greyed (already learned at this level)")
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"already-known Foie Lv.1: still NO ✕ (block is temporary, not a class bar)")
+	# A suffixed duplicate greys identically — get_base_id strips the #2 first.
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1#2"),
+		"already-known Foie Lv.1#2 duplicate: greyed too (suffix stripped)")
+	# A higher-level disk is still an upgrade → not greyed.
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_2"),
+		"Foie Lv.2 while knowing Lv.1: not greyed (it upgrades)")
+
+	# Permanent class block stays the ✕ tier, never the grey tier: a CAST disk is
+	# ✕ and NOT sell_disabled (sell_disabled is the can-learn-but-not-now slice).
+	CharacterManager._characters[0] = null
+	CharacterManager.create_character(0, "hucast", "DiskGreyCast")
+	CharacterManager.set_active_slot(0)
+	assert_true(ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"CAST disk: ✕ (permanent class block)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"CAST disk: NOT in the grey tier (permanent block is ✕, not grey)")
+
+	# Non-disk items never enter the grey-disk tier.
+	assert_true(not ShopNavCls.sell_disabled("monomate"),
+		"consumable: never disk-greyed")
+	assert_true(not ShopNavCls.sell_disabled("saber"),
+		"weapon: never disk-greyed")
 
 	_restore_character_state(saved)
 	print("")

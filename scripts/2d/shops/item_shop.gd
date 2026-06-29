@@ -146,6 +146,9 @@ func _generate_sell_list() -> void:
 			# ✕ marker: gear/disks this character can never use (spec /states/shops,
 			# /mechanics/equip-legality). Shared with the weapon shop's sell list.
 			"cannot_use": ShopNav.sell_cannot_use(item_id),
+			# Grey-without-✕: a disk already known at this level (or below the
+			# required player level) — a temporary block, same predicate everywhere.
+			"disabled": ShopNav.sell_disabled(item_id),
 		})
 	# No re-sort: keep Inventory.get_all_items() order so the sell list matches
 	# the player's inventory/storage ordering (pickup or auto-sort).

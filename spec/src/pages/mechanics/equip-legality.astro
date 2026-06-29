@@ -120,6 +120,8 @@ import Concept from '../../layouts/Concept.astro';
   </table>
   <p>Units, mags, materials, and consumables carry no permanent class block, so they never get a ✕ from this gate. (Consumables have their own <code>ConsumableData.usable_by</code> — a separate, legitimate source used only by the item shop's consumable rows.)</p>
 
+  <p><strong>The grey tier routes through one predicate too.</strong> The temporary "grey, no ✕" disk block — a disk for a technique <strong>already known at that level or higher</strong>, or below the required player level — <strong>MUST</strong> mute the row on <em>every</em> item-list surface, not just the buy tab. All of them route it through the single companion predicate <code>ShopNav.sell_disabled</code> (the <code>can_learn</code>-but-not-<code>class_can_learn</code> slice), exactly as the ✕ tier routes through <code>sell_cannot_use</code>: the <strong>item and weapon shop SELL lists</strong>, the <strong>storage</strong> deposit/withdraw lists, and the <strong>field start-menu inventory</strong>. (The item shop's buy-disks tab computes the same slice inline from <code>can_learn</code> ∧ <code>class_can_learn</code>.) So owning five Lv.1 Foie disks and learning Foie Lv.1 greys the other four everywhere they appear — they are still sellable/depositable, just no longer useful to learn.</p>
+
   <h2>Beyond the tables: per-item exceptions (planned)</h2>
   <p>The tables above are the <strong>base layer</strong> and the right default, but legality won't always reduce to "class × type." Some gear needs a finer, per-item rule a class-wide table can't express:</p>
   <ul>
