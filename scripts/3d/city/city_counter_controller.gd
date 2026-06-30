@@ -79,14 +79,14 @@ func _ready() -> void:
 		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
 		"Storage",
 		"res://scenes/2d/storage.tscn",
-		"pso_f_sa_stand"
+		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
 	)
 	_add_npc(
 		"QuestCounterNPC", Vector3(-8.52, -10.67, 110.51), 0.64,
 		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
 		"Guild Counter",
 		"res://scenes/2d/guild_counter.tscn",
-		"pso_f_sa_stand"
+		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
 	)
 
 	# Area triggers — probed on the merged mesh (floor at y≈-10.67, box centered

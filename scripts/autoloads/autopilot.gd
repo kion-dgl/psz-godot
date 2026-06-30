@@ -28,7 +28,6 @@ const CHAR_CREATE := "res://scenes/2d/character_create.tscn"
 const CITY_MARKET := "res://scenes/3d/city/city_market.tscn"
 const CITY_OFFICE := "res://scenes/3d/city/city_office.tscn"
 const CITY_COUNTER := "res://scenes/3d/city/city_counter.tscn"
-const CITY_WARP := "res://scenes/3d/city/city_warp.tscn"
 const GUILD_COUNTER := "res://scenes/2d/guild_counter.tscn"
 const WARP_TELEPORTER := "res://scenes/2d/warp_teleporter.tscn"
 const VALLEY_FIELD := "res://scenes/3d/field/valley_field.tscn"
@@ -40,9 +39,10 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
 const COUNTER_NPC_POS := Vector3(-8.31, 0.5, -9.5)       # inside QuestCounterNPC range
-const COUNTER_TO_OFFICE_POS := Vector3(11.496, 0.5, -11.572)   # counter Area3D → office
-const COUNTER_TO_WARP_POS := Vector3(-0.015, 0.5, -22.305)     # counter Area3D → warp
-const WARP_PAD_POS := Vector3(0.08, 0.5, 1.0)                  # central WarpTeleporter pad
+const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
+# Warp teleporter merged into the counter (#city-merge): interact in-place, no
+# counter→warp scene transition.
+const WARP_PAD_POS := Vector3(0.05, -5.0, 60.96)               # WarpTeleporter pad in the counter
 
 # ── Timing ─────────────────────────────────────────────────────
 const STEP_DELAY := 0.8         # let a scene settle (slide/fade) before acting
@@ -772,11 +772,8 @@ func _drive_scene(path: String) -> void:
 			return
 		print("[sanity] checkpoint: city_counter")
 		_counter_npc_interacted = false
+		_warp_pad_interacted = false  # warp pad lives here now (merged map)
 		_after(STEP_DELAY * 2.0, _drive_city_counter)
-	elif path == CITY_WARP:
-		print("[sanity] checkpoint: city_warp")
-		_warp_pad_interacted = false
-		_after(STEP_DELAY * 2.0, _drive_city_warp)
 	elif path == VALLEY_FIELD:
 		print("[sanity] checkpoint: valley_field entered")
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
@@ -1920,9 +1917,13 @@ func _drive_city_counter() -> void:
 	if not bool(accepted.get("briefing_shown", false)):
 		print("[sanity] counter: teleport to office trigger (for briefing)")
 		_teleport_player(COUNTER_TO_OFFICE_POS)
-	else:
-		print("[sanity] counter: teleport to warp trigger")
-		_teleport_player(COUNTER_TO_WARP_POS)
+	elif not _warp_pad_interacted:
+		# Warp pad now lives in this scene (merged map). Teleport onto it and
+		# interact in-place to open the warp_teleporter overlay — no transition.
+		_warp_pad_interacted = true
+		print("[sanity] counter: teleport to warp pad")
+		_teleport_player(WARP_PAD_POS)
+		_after(0.8, func() -> void: _press_action("interact"))
 
 
 # ── Guild counter overlay ──────────────────────────────────────
@@ -1959,19 +1960,8 @@ func _drive_guild_counter() -> void:
 	_after(1.2, _drive_guild_counter)
 
 
-# ── City: warp ─────────────────────────────────────────────────
-## Teleport onto the central WarpTeleporter pad and press interact, which
-## opens the warp_teleporter UI overlay.
-func _drive_city_warp() -> void:
-	var node := get_tree().current_scene
-	if node == null or node.scene_file_path != CITY_WARP:
-		return
-	if _warp_pad_interacted:
-		return
-	_warp_pad_interacted = true
-	print("[sanity] warp: teleport to central pad")
-	_teleport_player(WARP_PAD_POS)
-	_after(0.8, func() -> void: _press_action("interact"))
+# City warp is no longer a separate scene — the WarpTeleporter pad lives in the
+# counter (merged map) and is driven in-place by _drive_city_counter (#city-merge).
 
 
 # ── Field: per-cell driver ─────────────────────────────────────

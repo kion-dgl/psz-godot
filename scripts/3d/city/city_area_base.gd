@@ -40,6 +40,8 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 		player.player_rotation = default_rot
 
 	player.spawn_position = player.global_position
+	if OS.has_environment("PSZ_DIAG"):
+		print("[diag spawn] area=%s key=%s pos=%s" % [_get_area_name(), spawn_key, str(player.global_position)])
 	CityState.set_spawn_key("")
 
 	# Force-sync SessionManager location to "city" — without this, a player
@@ -70,7 +72,7 @@ func _setup_camera(target: Node3D) -> Node3D:
 	return orbit_camera
 
 
-func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "", interact_anim: String = "") -> CityNPC:
+func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "", interact_anim: String = "", interact_size: Vector3 = Vector3(2, 2, 2)) -> CityNPC:
 	var npc := CityNPC.new()
 	npc.name = npc_name
 	npc.npc_model_path = model_path
@@ -80,6 +82,10 @@ func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, di
 	npc.idle_anim = npc_idle_anim
 	npc.hat_model_path = hat_path
 	npc.interact_anim = interact_anim
+	# Interaction box (set before add_child so _setup_collision picks it up).
+	# Counter NPCs stand off the walkable floor, so widen the box to reach the
+	# player at the counter front (player interaction radius is only 2.0).
+	npc.collision_size = interact_size
 	npc.position = pos
 	add_child(npc)
 	_npcs.append(npc)
@@ -262,6 +268,8 @@ func _save_player_state() -> void:
 
 
 func _save_and_transition(target_scene: String, spawn_key: String) -> void:
+	if OS.has_environment("PSZ_DIAG"):
+		print("[diag transit] from=%s -> %s key=%s" % [_get_area_name(), target_scene.get_file(), spawn_key])
 	CityState.set_spawn_key(spawn_key)
 	SceneManager.goto_scene(target_scene)
 
