@@ -23,6 +23,16 @@ const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 # menu string in it, so the start menu and the shop lists share one typeface
 # (#417 — Rozalin: "the font doesn't seem identical"). ThemeDB.fallback_font
 # (the old default) is Godot's built-in sans, a different face entirely.
+#
+# This preload is at class scope, which PsoStartMenu (an autoload) resolves at
+# engine boot — BEFORE bootstrap.gd mounts the asset .pck. That is only safe
+# because JetBrains Mono is vendored in source and ships IN THE BINARY (it's
+# OFL, not a SEGA pack asset — see .gitignore !/assets/fonts/ and the runnable
+# export presets, which no longer exclude assets/fonts/). #448 hit exactly this
+# trap by preloading the font while it was still pck-gated, blacking out the
+# menu in release exports; #450 moved the font into the binary. Do NOT
+# class-scope-preload a genuinely pack-only asset here — see
+# test_autoloads_avoid_packonly_classscope_preloads.
 const MENU_FONT: Font = preload("res://assets/fonts/JetBrainsMono-Regular.ttf")
 
 
