@@ -72,40 +72,8 @@ func _ready() -> void:
 		Vector3.ZERO
 	)
 
-	# NPCs — positions probed on the merged mesh (behind the counter). Rotations
-	# face toward the player approach; provisional — may need ±PI in-game.
-	_add_npc(
-		"StorageNPC", Vector3(-11.42, -10.67, 113.50), 0.94,
-		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
-		"Storage",
-		"res://scenes/2d/storage.tscn",
-		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
-	)
-	_add_npc(
-		"QuestCounterNPC", Vector3(-8.52, -10.67, 110.51), 0.64,
-		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
-		"Guild Counter",
-		"res://scenes/2d/guild_counter.tscn",
-		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
-	)
-
-	# Area triggers — probed on the merged mesh (floor at y≈-10.67, box centered
-	# ~1.5 above it). The old counter→warp trigger is gone: the teleporter lives
-	# in this scene now.
-	_add_area_trigger(
-		Vector3(-0.06, -9.17, 140.65), Vector3(4, 3, 1),
-		"res://scenes/3d/city/city_market.tscn", "counter-exit"
-	)
-
-	# East exit — Principal's office
-	_add_area_trigger(
-		Vector3(14.30, -9.17, 107.47), Vector3(2, 3, 2),
-		"res://scenes/3d/city/city_office.tscn", "counter-office"
-	)
-
-	# Warp teleporter — on the raised plaza disc at the top of the kaidan slope.
-	# Empty area_id = central pad that opens the teleporter menu. Probed position.
-	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.33, 60.96), "", "Warp Teleporter")
+	# NPCs, exit triggers, and the warp pad — positions probed on the merged mesh.
+	_add_interactables()
 
 	# City-side telepipe — spawns if a player-dropped telepipe is active in
 	# TelepipeManager. Interaction (E) consumes it: returns the player to the
@@ -120,6 +88,38 @@ func _ready() -> void:
 
 	# Wire up
 	_connect_player_to_interactables()
+
+
+## NPCs (behind the counter — widened interaction boxes so the player reaches
+## them across it), the market/office exit triggers, and the warp teleporter pad
+## on the raised kaidan plaza. Rotations are provisional (may need ±PI in-game).
+func _add_interactables() -> void:
+	_add_npc(
+		"StorageNPC", Vector3(-11.42, -10.67, 113.50), 0.94,
+		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
+		"Storage",
+		"res://scenes/2d/storage.tscn",
+		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
+	)
+	_add_npc(
+		"QuestCounterNPC", Vector3(-8.52, -10.67, 110.51), 0.64,
+		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
+		"Guild Counter",
+		"res://scenes/2d/guild_counter.tscn",
+		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
+	)
+	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
+	# counter→warp trigger is gone; the teleporter lives in this scene now.
+	_add_area_trigger(
+		Vector3(-0.06, -9.17, 140.65), Vector3(4, 3, 1),
+		"res://scenes/3d/city/city_market.tscn", "counter-exit"
+	)
+	_add_area_trigger(
+		Vector3(14.30, -9.17, 107.47), Vector3(2, 3, 2),
+		"res://scenes/3d/city/city_office.tscn", "counter-office"
+	)
+	# Warp teleporter — empty area_id = central pad that opens the teleporter menu.
+	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.33, 60.96), "", "Warp Teleporter")
 
 
 func _maybe_spawn_city_telepipe() -> void:
