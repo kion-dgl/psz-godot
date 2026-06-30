@@ -6888,9 +6888,10 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 # whole autoload fails — even though the editor loads it fine because assets/
 # sit on local disk there. CI is repo-only too (font present), so this can't be
 # caught at runtime; we assert it structurally instead. #448 introduced exactly
-# this by adding `const MENU_FONT = preload("res://assets/fonts/...")` to
-# start_menu_renderer.gd, which PsoStartMenu reaches via `class_name
-# StartMenuRenderer`.
+# this by adding a class-scope preload of the pack-only assets/fonts/ JetBrains
+# Mono face to start_menu_renderer.gd, which PsoStartMenu reaches via
+# `class_name StartMenuRenderer`. (Bare res://assets/ strings are avoided in
+# these comments — check_asset_refs.py treats them as real asset references.)
 func test_autoloads_avoid_packonly_classscope_preloads() -> void:
 	print("── Autoload pack-only class-scope preload guard ──")
 	var excluded: Array = _export_excluded_globs()

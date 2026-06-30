@@ -23,8 +23,10 @@ const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 # JetBrainsMono) so the start menu and the shop lists share one typeface
 # (#417 — Rozalin: "the font doesn't seem identical").
 #
-# IMPORTANT: this font lives under res://assets/fonts/, which is in the export
-# `exclude_filter` — it ships ONLY in the downloaded .pck, not the export
+# IMPORTANT: this font lives under assets/fonts/ (no res:// prefix in this
+# comment on purpose — check_asset_refs.py reads res://assets/ strings as real
+# refs), which is in every runnable export preset's `exclude_filter` — it ships
+# ONLY in the downloaded .pck, not the export
 # template. PsoStartMenu is an *autoload*, so anything this renderer pulls in at
 # class scope (a `const ... = preload(...)`) is resolved at engine boot, BEFORE
 # bootstrap.gd mounts the pack. A class-scope preload of a pack-only asset
