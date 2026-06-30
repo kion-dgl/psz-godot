@@ -63,6 +63,7 @@ _TODO — add a representative screenshot of the title screen or a combat moment
 - Extensive sound work and playtest feedback from the PSO community on the project Discord
 - **Input Prompts**, **Nature Kit**, and **Playing Cards Pack** by [Kenney](https://kenney.nl/) — CC0 (public domain)
 - **Anime Combat Cowboy** model by [Booth.pm seller](https://booth.pm/en/items/7594680) — used as the saloon blackjack dealer; embedded in the asset pack per the model's "incorporate into a larger project" license carve-out
+- **Dairon city stage models** (market, and the combined guild counter + teleporter interior) by **Calum "Limitiv"** — [limitiv.co.uk](https://limitiv.co.uk/)
 - Character-portrait art by **Rozalin**
 - Runs on [Godot 4.5](https://godotengine.org/) — thanks to the Godot contributors and maintainers
 

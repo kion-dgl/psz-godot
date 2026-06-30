@@ -204,6 +204,50 @@ func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2
 	add_child(body)
 
 
+## Build a trimesh floor collider from a hand-authored -floor.glb (the walkable
+## surface selected in the floor-collider web tool), offset into the scene's
+## frame. Used where a flat box won't do — e.g. a stage with a slope/stairs.
+## MapCollisionBuilder makes a StaticBody3D + trimesh shape per mesh and hides
+## the visual (collision-only). No top-face filtering: the source is already a
+## hand-picked walkable surface.
+func _add_trimesh_floor(glb_path: String, offset: Vector3) -> void:
+	var packed: PackedScene = load(glb_path)
+	if packed == null:
+		push_error("[city] floor collider not found: %s" % glb_path)
+		return
+	var holder := packed.instantiate()
+	holder.name = "FloorCollision"
+	holder.position = offset
+	add_child(holder)
+	# Build the trimesh StaticBody3D as a CHILD of each MeshInstance3D so it
+	# inherits the mesh's world transform (the holder offset) exactly once. Don't
+	# use MapCollisionBuilder here: it sets body.global_transform before the body
+	# is in the tree, which double-applies the offset under a non-identity root.
+	for mi in _collect_mesh_instances(holder, []):
+		if mi.mesh == null:
+			continue
+		var shape: Shape3D = mi.mesh.create_trimesh_shape()
+		if shape == null:
+			continue
+		var body := StaticBody3D.new()
+		body.name = "collision_floor"
+		body.collision_layer = 1  # Environment
+		body.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		cs.shape = shape
+		body.add_child(cs)
+		mi.add_child(body)
+		mi.visible = false
+
+
+func _collect_mesh_instances(node: Node, out: Array) -> Array:
+	if node is MeshInstance3D:
+		out.append(node)
+	for c in node.get_children():
+		_collect_mesh_instances(c, out)
+	return out
+
+
 func _heal_character() -> void:
 	var character = CharacterManager.get_active_character()
 	if character:
