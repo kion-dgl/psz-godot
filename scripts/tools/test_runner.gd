@@ -141,6 +141,7 @@ func _run_tests_systems() -> void:
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
 	test_script_parse()
+	test_autoloads_avoid_packonly_classscope_preloads()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -6875,6 +6876,184 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+# Regression guard for the #448 start-menu blackout (Retroid/Windows release):
+# PsoStartMenu is an *autoload*, so every script it pulls into its load-time
+# graph — a class-scope `const X = preload(...)`, or any global `class_name` it
+# references (which the engine resolves at parse time) — is loaded at engine
+# BOOT, before bootstrap.gd mounts the asset .pck. A class-scope preload of an
+# asset the release export drops via `exclude_filter` (pack-only, e.g.
+# assets/fonts/*) therefore can't resolve at boot in an exported build, and the
+# whole autoload fails — even though the editor loads it fine because assets/
+# sit on local disk there. CI is repo-only too (font present), so this can't be
+# caught at runtime; we assert it structurally instead. #448 introduced exactly
+# this by adding `const MENU_FONT = preload("res://assets/fonts/...")` to
+# start_menu_renderer.gd, which PsoStartMenu reaches via `class_name
+# StartMenuRenderer`.
+func test_autoloads_avoid_packonly_classscope_preloads() -> void:
+	print("── Autoload pack-only class-scope preload guard ──")
+	var excluded: Array = _export_excluded_globs()
+	var class_to_path: Dictionary = _build_class_name_map()
+	# BFS the boot-time script closure reachable from the autoloads.
+	var reachable: Dictionary = {}
+	var queue: Array = _autoload_script_paths()
+	while not queue.is_empty():
+		var path: String = queue.pop_back()
+		if reachable.has(path) or not path.ends_with(".gd"):
+			continue
+		reachable[path] = true
+		for dep in _load_time_script_deps(_read_text_file(path), class_to_path):
+			if not reachable.has(dep):
+				queue.append(dep)
+	# Any class-scope preload of a pack-only (export-excluded) asset in that
+	# closure is a boot-time landmine in release exports.
+	var violations: Array = []
+	for path in reachable.keys():
+		for asset_path in _classscope_asset_preloads(_read_text_file(path)):
+			if _path_matches_any_glob(asset_path.trim_prefix("res://"), excluded):
+				violations.append("%s class-scope preloads pack-only %s" % [path, asset_path])
+	if violations.is_empty():
+		_pass += 1
+		print("  PASS: %d autoload-reachable scripts, none class-scope preload a pack-only asset" % reachable.size())
+	else:
+		for v in violations:
+			print("  FAIL: %s — resolves only from the .pck, but autoloads boot before bootstrap mounts it" % v)
+		_fail += violations.size()
+
+
+# res:// script paths of the project's autoloads (project.godot [autoload]).
+func _autoload_script_paths() -> Array:
+	var out: Array = []
+	var src := _read_text_file("res://project.godot")
+	var in_section := false
+	for raw in src.split("\n"):
+		var line: String = raw.strip_edges()
+		if line.begins_with("[") and line.ends_with("]"):
+			in_section = (line == "[autoload]")
+			continue
+		if not in_section or not line.contains("="):
+			continue
+		var idx := line.find("res://")
+		if idx < 0:
+			continue
+		var rest := line.substr(idx)
+		var end := rest.find("\"")
+		if end < 0:
+			end = rest.length()
+		out.append(rest.substr(0, end))
+	return out
+
+
+# Map global class_name → its res:// script path, across all scripts.
+func _build_class_name_map() -> Dictionary:
+	var paths: Array = []
+	_collect_gd_files("res://scripts", paths)
+	var out: Dictionary = {}
+	for path in paths:
+		for raw in _read_text_file(path).split("\n"):
+			var line: String = raw.strip_edges()
+			if line.begins_with("class_name "):
+				out[line.substr(11).strip_edges().split(" ")[0]] = path
+				break
+	return out
+
+
+# Load-time script dependencies of a source: preloaded .gd files plus the script
+# behind every global class_name it references (the engine parses those at load).
+func _load_time_script_deps(src: String, class_to_path: Dictionary) -> Array:
+	var out: Array = []
+	for raw in src.split("\n"):
+		var idx := raw.find("preload(\"res://")
+		while idx >= 0:
+			var start := raw.find("\"", idx) + 1
+			var p := raw.substr(start, raw.find("\"", start) - start)
+			if p.ends_with(".gd"):
+				out.append(p)
+			idx = raw.find("preload(\"res://", start)
+	for cls in class_to_path.keys():
+		if _references_identifier(src, cls):
+			out.append(class_to_path[cls])
+	return out
+
+
+# True if `ident` appears in `src` as a whole word (not a substring of a longer
+# identifier), so class "Enemy" doesn't match "WolfEnemy"/"EnemyData".
+func _references_identifier(src: String, ident: String) -> bool:
+	var from := 0
+	while true:
+		var i := src.find(ident, from)
+		if i < 0:
+			return false
+		var before := src[i - 1] if i > 0 else " "
+		var after_i := i + ident.length()
+		var after := src[after_i] if after_i < src.length() else " "
+		if not _is_ident_char(before) and not _is_ident_char(after):
+			return true
+		from = i + 1
+	return false
+
+
+func _is_ident_char(ch: String) -> bool:
+	return ch == "_" or (ch >= "0" and ch <= "9") or (ch.to_lower() >= "a" and ch.to_lower() <= "z")
+
+
+# Asset paths preloaded at class scope (column 0 — top-level const/var, not an
+# indented function body). These resolve at script load, i.e. at autoload boot.
+func _classscope_asset_preloads(src: String) -> Array:
+	var out: Array = []
+	for raw in src.split("\n"):
+		if raw.length() == 0 or raw[0] == " " or raw[0] == "\t":
+			continue  # indented → inside a func body, runs lazily, not at boot
+		var idx := raw.find("preload(\"res://assets/")
+		if idx < 0:
+			continue
+		var start := raw.find("\"", idx) + 1
+		out.append(raw.substr(start, raw.find("\"", start) - start))
+	return out
+
+
+# Union of the exclude_filter globs of every RUNNABLE export preset — i.e. the
+# game-binary exports the player actually launches (Web/Linux/Windows/Android/
+# macOS). An asset excluded from those isn't in the binary at boot; it's only in
+# the downloaded .pck (built by the non-runnable "Asset Pack" preset, whose own
+# excludes we ignore — they describe what's left OUT of the pack, e.g. the
+# vendored assets/kenney_* that ship in the binary instead, and would be a false
+# positive here). So we read exclude_filter only from `runnable=true` presets.
+func _export_excluded_globs() -> Array:
+	var out: Array = []
+	var preset_runnable := false
+	for raw in _read_text_file("res://export_presets.cfg").split("\n"):
+		var line: String = raw.strip_edges()
+		if line.begins_with("[preset."):
+			preset_runnable = false  # reset at each preset; runnable= appears before exclude_filter=
+			continue
+		if line.begins_with("runnable="):
+			preset_runnable = (line.substr(9).strip_edges() == "true")
+			continue
+		if not preset_runnable or not line.begins_with("exclude_filter="):
+			continue
+		var val := line.substr(line.find("\"") + 1)
+		val = val.substr(0, val.rfind("\""))
+		for glob in val.split(","):
+			var g: String = glob.strip_edges()
+			if g != "":
+				out.append(g)
+	return out
+
+
+func _path_matches_any_glob(path: String, globs: Array) -> bool:
+	for g in globs:
+		if path.match(g):
+			return true
+	return false
+
+
+func _read_text_file(path: String) -> String:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return ""
+	return f.get_as_text()
 
 
 # ── Duck-typed stub for test_kill_state_survives_warp_flush (#423) ───

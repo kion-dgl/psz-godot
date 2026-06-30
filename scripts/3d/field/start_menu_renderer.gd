@@ -18,16 +18,41 @@ var _c
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 # The start menu draws its text in immediate mode (draw_string), so it doesn't
-# pick up the rpg_theme font the way the 2D Control screens do. Preload the same
-# face the shops render with (rpg_theme.tres → JetBrainsMono) and draw every
-# menu string in it, so the start menu and the shop lists share one typeface
-# (#417 — Rozalin: "the font doesn't seem identical"). ThemeDB.fallback_font
-# (the old default) is Godot's built-in sans, a different face entirely.
-const MENU_FONT: Font = preload("res://assets/fonts/JetBrainsMono-Regular.ttf")
+# pick up the rpg_theme font the way the 2D Control screens do. We draw every
+# menu string in the same face the shops render with (rpg_theme.tres →
+# JetBrainsMono) so the start menu and the shop lists share one typeface
+# (#417 — Rozalin: "the font doesn't seem identical").
+#
+# IMPORTANT: this font lives under res://assets/fonts/, which is in the export
+# `exclude_filter` — it ships ONLY in the downloaded .pck, not the export
+# template. PsoStartMenu is an *autoload*, so anything this renderer pulls in at
+# class scope (a `const ... = preload(...)`) is resolved at engine boot, BEFORE
+# bootstrap.gd mounts the pack. A class-scope preload of a pack-only asset
+# therefore fails the whole renderer script in a release export, and the start
+# menu never opens (works in the editor, where assets/ are on local disk). So we
+# `load()` it lazily on first draw — which only happens in the field, long after
+# the pack is mounted — and cache it, falling back to ThemeDB.fallback_font
+# (Godot's built-in sans) if it somehow isn't available yet.
+const MENU_FONT_PATH := "res://assets/fonts/JetBrainsMono-Regular.ttf"
+
+# Cached menu font, lazily resolved on first draw. See MENU_FONT_PATH above for
+# why this is NOT a class-scope preload.
+var _menu_font: Font
 
 
 func _init(controller) -> void:
 	_c = controller
+
+
+## The shared JetBrains Mono face, loaded from the pack on first use and cached.
+## Falls back to Godot's built-in sans if the pack font can't be resolved (it
+## always can by the time the field — and thus this menu — is reachable).
+func _menu_font_face() -> Font:
+	if _menu_font == null:
+		_menu_font = load(MENU_FONT_PATH) as Font
+		if _menu_font == null:
+			_menu_font = ThemeDB.fallback_font
+	return _menu_font
 
 
 ## True when the active character can never equip/use this inventory item — gear
@@ -53,7 +78,7 @@ func _item_mute_state(item_id: String) -> Array:
 
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
-	var font: Font = MENU_FONT
+	var font: Font = _menu_font_face()
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
 
 	# L-shaped backdrop
