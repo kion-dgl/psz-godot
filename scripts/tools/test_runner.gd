@@ -46,6 +46,7 @@ func _run_tests_core() -> void:
 	test_shop_buy_unequippable_gear()
 	test_humar_gear_unequippable()
 	test_shop_capability_grey()
+	test_shop_row_dims_disabled_icon()
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
 	test_shop_sell_disabled_already_known()
@@ -1773,6 +1774,17 @@ func _shop_row_marker(pill: Control) -> String:
 	return "x" if cell.get_child(0) is TextureRect else "e"
 
 
+## The leading item-icon TextureRect of a shop_row pill — the first TextureRect
+## among the hbox children (the marker cell is a Control wrapper, so its inner ✕
+## TextureRect is not a direct hbox child and isn't picked up here). null when the
+## row carries no icon.
+func _shop_row_icon(pill: Control) -> TextureRect:
+	for child in pill.get_child(0).get_children():
+		if child is TextureRect:
+			return child
+	return null
+
+
 # Capability-based greying (PSOBB rule, Rozalin/Kion playtest 2026-06-22):
 # a row greys when the character CAN'T USE/EQUIP it — never for affordability or
 # inventory space. Gear that can never be equipped also carries a ✕ marker.
@@ -1809,6 +1821,26 @@ func test_shop_capability_grey() -> void:
 	cd.usable_by = PackedStringArray(["Force Newman"])
 	assert_true(cd.can_be_used_by("Force Newman"), "listed Type/Race can use it")
 	assert_true(not cd.can_be_used_by("Hunter Cast"), "unlisted Type/Race cannot use it")
+	print("")
+
+
+# A muted shop row greys its ITEM ICON, not just its text — Rozalin's #417 note
+# ("shop should be graying the icons like the inventory"). The leading icon is
+# dimmed via PszStyle.DISABLED_ICON_MOD, the SAME modulate the start-menu
+# inventory uses, so the two surfaces grey icons identically.
+func test_shop_row_dims_disabled_icon() -> void:
+	print("── Shop row — a muted row dims its item icon (matches inventory) ──")
+	var icon := PszStyle.cannot_use_icon()  # any texture; only its modulate matters here
+
+	var normal := PszStyle.shop_row("Foie Lv1", "100 M", {"icons": [icon]})
+	var normal_icon := _shop_row_icon(normal)
+	assert_true(normal_icon != null and normal_icon.modulate.is_equal_approx(Color.WHITE),
+		"usable row renders its icon at full colour")
+
+	var disabled := PszStyle.shop_row("Foie Lv1", "100 M", {"icons": [icon], "disabled": true})
+	var disabled_icon := _shop_row_icon(disabled)
+	assert_true(disabled_icon != null and disabled_icon.modulate.is_equal_approx(PszStyle.DISABLED_ICON_MOD),
+		"disabled row dims its icon (greyed like the text, same modulate as inventory)")
 	print("")
 
 

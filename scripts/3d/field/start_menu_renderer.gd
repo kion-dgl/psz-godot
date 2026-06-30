@@ -17,6 +17,14 @@ var _c
 # composition, not inheritance (the sanctioned shop-dedup pattern).
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
+# The start menu draws its text in immediate mode (draw_string), so it doesn't
+# pick up the rpg_theme font the way the 2D Control screens do. Preload the same
+# face the shops render with (rpg_theme.tres → JetBrainsMono) and draw every
+# menu string in it, so the start menu and the shop lists share one typeface
+# (#417 — Rozalin: "the font doesn't seem identical"). ThemeDB.fallback_font
+# (the old default) is Godot's built-in sans, a different face entirely.
+const MENU_FONT: Font = preload("res://assets/fonts/JetBrainsMono-Regular.ttf")
+
 
 func _init(controller) -> void:
 	_c = controller
@@ -45,7 +53,7 @@ func _item_mute_state(item_id: String) -> Array:
 
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
-	var font := ThemeDB.fallback_font
+	var font: Font = MENU_FONT
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
 
 	# L-shaped backdrop
@@ -208,43 +216,49 @@ func _draw_items(c: Control, font: Font) -> void:
 	# Slot count header
 	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
-	# Two-pass scroll calc: each row is one fixed-height entry now that
-	# category banners are gone. Type is shown via the per-row icon instead.
-	var content_y: float = 20.0
-	var item_positions: Array = []
-	for _i in range(inv.size()):
-		item_positions.append(content_y)
-		content_y += 22
+	# Taller rows + the shop's name-font size, so the list reads with the same
+	# padding/weight as the 2D shop lists instead of the old cramped 22px/size-13
+	# rows (Kion: "align the inventory to have the same padding + margin as the shop").
+	const ROW_H := 26
+	const ROW_RECT_H := 24
+	# Content band the rows live in: below the slot header, inset from the panel
+	# bottom so a row never paints past the inner-panel border. The list scrolls by
+	# whole rows and is clipped to this band, so it respects the panel's bounds
+	# instead of spilling rows out the bottom of the UI (#417 — Kion: "the inventory
+	# list in the start menu doesn't respect overflow Y").
+	var list_top: float = py + 22.0
+	var list_bottom: float = py + ph - 4.0
+	var visible_rows: int = int(floor((list_bottom - list_top) / float(ROW_H)))
 
-	var view_h: float = ph - 6
-	if _c._sub_idx >= 0 and _c._sub_idx < item_positions.size():
-		var sel_y: float = item_positions[_c._sub_idx]
-		if sel_y - _c._item_scroll < 20:
-			_c._item_scroll = int(sel_y - 20)
-		elif sel_y - _c._item_scroll + 22 > view_h:
-			_c._item_scroll = int(sel_y + 22 - view_h)
-	_c._item_scroll = maxf(_c._item_scroll, 0.0)
+	# Whole-row scroll window that keeps the selection in view — same model as
+	# _draw_bottom_list (no partial rows, nothing drawn past the panel edge).
+	var scroll_offset: int = maxi(0, _c._sub_idx - (visible_rows - 1))
+	var max_scroll: int = maxi(0, inv.size() - visible_rows)
+	scroll_offset = mini(scroll_offset, max_scroll)
 
 	# Origin row index when the player is mid-Manual-sort, so we can paint
 	# it distinctively (cool blue) — distinct from the orange selection tint.
 	var move_idx: int = _c._move_from_idx if _c._mode == PsoStartMenu.Mode.ITEMS_MOVE else -1
 
-	# Draw pass
-	var draw_y: float = py + 20.0 - _c._item_scroll
+	# Draw pass — only the rows that fully fit the visible window.
 	for i in range(inv.size()):
-		if draw_y + 22 < py or draw_y > py + ph:
-			draw_y += 22
+		var draw_i: int = i - scroll_offset
+		if draw_i < 0 or draw_i >= visible_rows:
 			continue
+		var draw_y: float = list_top + draw_i * ROW_H
+		# Baseline for text vertically centered in the taller row rect.
+		var text_y: float = draw_y + ROW_RECT_H * 0.5 + 5.0
+		var icon_y: float = draw_y + (ROW_RECT_H - 16.0) * 0.5
 		var item: Dictionary = inv[i]
 		var is_sel: bool = i == _c._sub_idx
 		var is_move_origin: bool = i == move_idx
 
 		if is_sel:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), PsoStartMenu.C_SELECT)
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), PsoStartMenu.C_SELECT)
 		elif is_move_origin:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(0.34, 0.55, 0.85))
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), Color(0.34, 0.55, 0.85))
 		else:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), Color(1, 1, 1, 0.85))
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
@@ -267,16 +281,16 @@ func _draw_items(c: Control, font: Font) -> void:
 		# reserved on every row so item names stay aligned — same convention as
 		# the shops and storage. ✕ takes precedence (equipped gear is equippable).
 		if cannot_use:
-			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, draw_y + 2, 16, 16), false)
+			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, icon_y, 16, 16), false)
 		elif is_equipped:
-			c.draw_string(font, Vector2(px + 6, draw_y + 14), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
+			c.draw_string(font, Vector2(px + 6, text_y), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
 
 		# Per-item icon (PNG when known, fallback to colored letter block), shifted
 		# right past the marker slot.
-		var icon_rect := Rect2(px + 24, draw_y + 2, 16, 16)
+		var icon_rect := Rect2(px + 24, icon_y, 16, 16)
 		# Disabled rows dim their icon too (alpha modulate), so the whole row reads
-		# as greyed — not just the text — making "you can't use this" unmissable.
-		var icon_mod: Color = Color(1, 1, 1, 0.35) if disabled else Color.WHITE
+		# as greyed — not just the text. Same modulate the shops use (#417 parity).
+		var icon_mod: Color = PszStyle.DISABLED_ICON_MOD if disabled else Color.WHITE
 		var tex: Texture2D = _c._get_item_icon(item_id, category)
 		if tex:
 			c.draw_texture_rect(tex, icon_rect, false, icon_mod)
@@ -284,22 +298,27 @@ func _draw_items(c: Control, font: Font) -> void:
 			var type_key: String = _c._category_to_type(category)
 			var icon_letter: String = str(PsoStartMenu.TYPE_ICONS.get(type_key, "?"))
 			var icon_color: Color = PsoStartMenu.TYPE_COLORS.get(type_key, Color.GRAY)
-			if is_sel or is_move_origin:
+			if is_highlight:
 				icon_color = Color(1, 1, 1, 0.4)
 			elif disabled:
 				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 27, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 27, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
 		# Item name (the [E]/✕ marker lives in the leftmost slot, not the name).
-		c.draw_string(font, Vector2(px + 46, draw_y + 14), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
+		c.draw_string(font, Vector2(px + 46, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_ITEM, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
 		if qty > 1:
-			c.draw_string(font, Vector2(px + pw - 40, draw_y + 14), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
+			c.draw_string(font, Vector2(px + pw - 40, text_y), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
 
-		draw_y += 22
+	# Scroll cues when the list extends past the visible window (matches the
+	# ▲/▼ hints the other start-menu lists draw via _draw_bottom_list).
+	if scroll_offset > 0:
+		c.draw_string(font, Vector2(px + pw - 60, py + 14), "▲ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+	if scroll_offset + visible_rows < inv.size():
+		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
 	# Description
 	var desc: String = ""
