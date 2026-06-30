@@ -12,7 +12,10 @@ const ROTATE_SPEED: float = 10.0
 ## by slowing the character when their facing is far from input direction.
 const TURN_SPEED_FLOOR: float = 0.3
 const GRAVITY: float = 20.0
-const FALL_RESPAWN_Y: float = -10.0  # Respawn if player falls below this
+# Respawn if the player falls below this. Settable per-scene: areas authored in
+# a low frame (e.g. the merged Dairon counter, floor ≈ -10.67) lower it so the
+# floor itself doesn't read as "fell off the world".
+var fall_respawn_y: float = -10.0
 
 # Spawn tracking
 var spawn_position: Vector3 = Vector3.ZERO
@@ -855,7 +858,7 @@ func _cache_model_materials() -> void:
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
 	# Check for fall and respawn
-	if global_position.y < FALL_RESPAWN_Y:
+	if global_position.y < fall_respawn_y:
 		_respawn()
 		return
 

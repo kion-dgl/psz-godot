@@ -40,6 +40,8 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 		player.player_rotation = default_rot
 
 	player.spawn_position = player.global_position
+	if OS.has_environment("PSZ_DIAG"):
+		print("[diag spawn] area=%s key=%s pos=%s" % [_get_area_name(), spawn_key, str(player.global_position)])
 	CityState.set_spawn_key("")
 
 	# Force-sync SessionManager location to "city" — without this, a player
@@ -70,7 +72,7 @@ func _setup_camera(target: Node3D) -> Node3D:
 	return orbit_camera
 
 
-func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "", interact_anim: String = "") -> CityNPC:
+func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "", interact_anim: String = "", interact_size: Vector3 = Vector3(2, 2, 2)) -> CityNPC:
 	var npc := CityNPC.new()
 	npc.name = npc_name
 	npc.npc_model_path = model_path
@@ -80,6 +82,10 @@ func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, di
 	npc.idle_anim = npc_idle_anim
 	npc.hat_model_path = hat_path
 	npc.interact_anim = interact_anim
+	# Interaction box (set before add_child so _setup_collision picks it up).
+	# Counter NPCs stand off the walkable floor, so widen the box to reach the
+	# player at the counter front (player interaction radius is only 2.0).
+	npc.collision_size = interact_size
 	npc.position = pos
 	add_child(npc)
 	_npcs.append(npc)
@@ -204,6 +210,50 @@ func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2
 	add_child(body)
 
 
+## Build a trimesh floor collider from a hand-authored -floor.glb (the walkable
+## surface selected in the floor-collider web tool), offset into the scene's
+## frame. Used where a flat box won't do — e.g. a stage with a slope/stairs.
+## MapCollisionBuilder makes a StaticBody3D + trimesh shape per mesh and hides
+## the visual (collision-only). No top-face filtering: the source is already a
+## hand-picked walkable surface.
+func _add_trimesh_floor(glb_path: String, offset: Vector3) -> void:
+	var packed: PackedScene = load(glb_path)
+	if packed == null:
+		push_error("[city] floor collider not found: %s" % glb_path)
+		return
+	var holder := packed.instantiate()
+	holder.name = "FloorCollision"
+	holder.position = offset
+	add_child(holder)
+	# Build the trimesh StaticBody3D as a CHILD of each MeshInstance3D so it
+	# inherits the mesh's world transform (the holder offset) exactly once. Don't
+	# use MapCollisionBuilder here: it sets body.global_transform before the body
+	# is in the tree, which double-applies the offset under a non-identity root.
+	for mi in _collect_mesh_instances(holder, []):
+		if mi.mesh == null:
+			continue
+		var shape: Shape3D = mi.mesh.create_trimesh_shape()
+		if shape == null:
+			continue
+		var body := StaticBody3D.new()
+		body.name = "collision_floor"
+		body.collision_layer = 1  # Environment
+		body.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		cs.shape = shape
+		body.add_child(cs)
+		mi.add_child(body)
+		mi.visible = false
+
+
+func _collect_mesh_instances(node: Node, out: Array) -> Array:
+	if node is MeshInstance3D:
+		out.append(node)
+	for c in node.get_children():
+		_collect_mesh_instances(c, out)
+	return out
+
+
 func _heal_character() -> void:
 	var character = CharacterManager.get_active_character()
 	if character:
@@ -218,6 +268,8 @@ func _save_player_state() -> void:
 
 
 func _save_and_transition(target_scene: String, spawn_key: String) -> void:
+	if OS.has_environment("PSZ_DIAG"):
+		print("[diag transit] from=%s -> %s key=%s" % [_get_area_name(), target_scene.get_file(), spawn_key])
 	CityState.set_spawn_key(spawn_key)
 	SceneManager.goto_scene(target_scene)
 

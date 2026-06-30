@@ -6,36 +6,31 @@ const BUBBLE_HEIGHT := 180
 
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 
-const DEFAULT_SPAWN := Vector3(0.06, 2, 12.95)
+# Positions probed on the merged mesh (floor at y≈-10.67). Spawns sit a touch
+# above the floor so the player settles onto it. Rotations are provisional
+# (the mock didn't capture facing) — tune in-game.
+const DEFAULT_SPAWN := Vector3(-0.05, -9.0, 121.78)
 const DEFAULT_ROT := PI
 
-# Where the city-side telepipe spawns when one is active. Per spec: (0,0) in
-# the city scene with the quest + storage NPCs (this scene). Player spawn for
-# the "telepipe-arrival" variant lands a step in front of it so they're not
-# clipping the trigger volume on arrival.
-const TELEPIPE_CITY_POS := Vector3(0, 0, 0)
+# City-side telepipe spawns at the player's arrival spot (spec: same place the
+# player lands). The telepipe-arrival variant drops a step east of it.
+const TELEPIPE_CITY_POS := Vector3(-0.05, -10.67, 121.78)
 
 const SPAWN_VARIANTS := {
 	"market-exit": {
-		"position": Vector3(0.06, 2, 12.95),
+		"position": Vector3(-0.06, -9.0, 137.68),
 		"rotation": PI,
 	},
 	"warp-exit": {
-		"position": Vector3(0.50, 2, -15.33),
+		"position": Vector3(0.05, -4.0, 64.0),
 		"rotation": 0.0,
 	},
 	"office-exit": {
-		"position": Vector3(11.496, 0, -11.572),
-		"rotation": PI + PI / 4,
+		"position": Vector3(10.59, -9.0, 111.17),
+		"rotation": -PI / 2.0,
 	},
 	"telepipe-arrival": {
-		# Per spec: (2, 0, 0) drops the player just east of the city-side
-		# telepipe (which lives at TELEPIPE_CITY_POS = 0,0,0), placing them
-		# next to the counter NPCs. Rotation faces west so the cyan pillar
-		# is right in front of the player on arrival — they can press accept
-		# immediately to bounce back to the field, or walk away to use the
-		# storage / quest counter.
-		"position": Vector3(2, 0, 0),
+		"position": Vector3(1.95, -9.0, 121.78),
 		"rotation": -PI / 2.0,
 	},
 }
@@ -59,44 +54,26 @@ func _ready() -> void:
 
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)
+	# This mesh is authored low (floor ≈ -10.67), below the player's default
+	# -10.0 fall-respawn — drop the threshold so the floor isn't read as a fall.
+	if player:
+		player.fall_respawn_y = -25.0
 
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision — centered on walkable area (Z range ~-22 to ~20)
-	_add_floor_collision(Vector3(0, 0, 0), Vector3(30, 0.2, 50))
-
-	# NPCs
-	_add_npc(
-		"StorageNPC", Vector3(-10.66, 0, -7.93), 4.06 + PI,
-		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
-		"Storage",
-		"res://scenes/2d/storage.tscn",
-		"pso_f_sa_stand"
-	)
-	_add_npc(
-		"QuestCounterNPC", Vector3(-8.31, 0, -10.37), 3.86 + PI,
-		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
-		"Guild Counter",
-		"res://scenes/2d/guild_counter.tscn",
-		"pso_f_sa_stand"
+	# Floor collision — trimesh from the hand-authored s00e_sa2-floor.glb (the
+	# walkable surface incl. the kaidan slope, selected in the floor-collider
+	# tool). The tool bakes the GLB node transforms, so the collider is already
+	# in the model's natural frame and overlaps the visual mesh at identity — no
+	# offset.
+	_add_trimesh_floor(
+		"res://assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb",
+		Vector3.ZERO
 	)
 
-	# Area triggers
-	_add_area_trigger(
-		Vector3(0, 1, 20), Vector3(4, 3, 1),
-		"res://scenes/3d/city/city_market.tscn", "counter-exit"
-	)
-	_add_area_trigger(
-		Vector3(-0.015, 1, -22.305), Vector3(3.29, 3, 0.91),
-		"res://scenes/3d/city/city_warp.tscn", "counter-exit"
-	)
-
-	# East exit — Principal's office
-	_add_area_trigger(
-		Vector3(11.496, 1, -11.572), Vector3(2, 3, 2),
-		"res://scenes/3d/city/city_office.tscn", "counter-office"
-	)
+	# NPCs, exit triggers, and the warp pad — positions probed on the merged mesh.
+	_add_interactables()
 
 	# City-side telepipe — spawns if a player-dropped telepipe is active in
 	# TelepipeManager. Interaction (E) consumes it: returns the player to the
@@ -111,6 +88,40 @@ func _ready() -> void:
 
 	# Wire up
 	_connect_player_to_interactables()
+
+
+## NPCs (behind the counter — interaction boxes sized to reach across the counter
+## from the floor without overlapping each other, so storage/guild switch
+## cleanly), the market/office exit triggers, and the warp teleporter pad on the
+## raised kaidan plaza.
+func _add_interactables() -> void:
+	# Nudged ~1.1u forward along their facing (just behind the counter front).
+	_add_npc(
+		"StorageNPC", Vector3(-10.53, -10.67, 114.15), 0.94,
+		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
+		"Storage",
+		"res://scenes/2d/storage.tscn",
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
+	)
+	_add_npc(
+		"QuestCounterNPC", Vector3(-7.86, -10.67, 111.39), 0.64,
+		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
+		"Guild Counter",
+		"res://scenes/2d/guild_counter.tscn",
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
+	)
+	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
+	# counter→warp trigger is gone; the teleporter lives in this scene now.
+	_add_area_trigger(
+		Vector3(-0.06, -9.17, 140.65), Vector3(4, 3, 1),
+		"res://scenes/3d/city/city_market.tscn", "counter-exit"
+	)
+	_add_area_trigger(
+		Vector3(14.30, -9.17, 107.47), Vector3(2, 3, 2),
+		"res://scenes/3d/city/city_office.tscn", "counter-office"
+	)
+	# Warp teleporter — empty area_id = central pad that opens the teleporter menu.
+	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.33, 60.96), "", "Warp Teleporter")
 
 
 func _maybe_spawn_city_telepipe() -> void:
