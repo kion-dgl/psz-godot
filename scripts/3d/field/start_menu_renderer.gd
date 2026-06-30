@@ -209,7 +209,10 @@ func _draw_items(c: Control, font: Font) -> void:
 
 	var px: float = 5.0
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
-	var pw: float = 300.0
+	# Wider than the other sub-screens' 300px list (Kion: "make the inventory a bit
+	# wider") — the description panel shifts right to match (see the _draw_bottom_desc
+	# call below). The bottom backdrop strip is full-width, so there's ample room.
+	var pw: float = 340.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 
@@ -253,12 +256,11 @@ func _draw_items(c: Control, font: Font) -> void:
 		var is_sel: bool = i == _c._sub_idx
 		var is_move_origin: bool = i == move_idx
 
-		if is_sel:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), PsoStartMenu.C_SELECT)
-		elif is_move_origin:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), Color(0.34, 0.55, 0.85))
-		else:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), Color(1, 1, 1, 0.85))
+		# Rounded row pill (like the shop's list rows), tinted by state: orange when
+		# selected, cool blue for the manual-sort origin, else translucent white.
+		var row_color: Color = PsoStartMenu.C_SELECT if is_sel \
+			else (Color(0.34, 0.55, 0.85) if is_move_origin else Color(1, 1, 1, 0.85))
+		_draw_row_pill(c, Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), row_color)
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
@@ -280,14 +282,15 @@ func _draw_items(c: Control, font: Font) -> void:
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
 		# reserved on every row so item names stay aligned — same convention as
 		# the shops and storage. ✕ takes precedence (equipped gear is equippable).
+		# The slot is wide enough for the "[E]" tag so it doesn't crowd the item icon.
 		if cannot_use:
 			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, icon_y, 16, 16), false)
 		elif is_equipped:
 			c.draw_string(font, Vector2(px + 6, text_y), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
 
-		# Per-item icon (PNG when known, fallback to colored letter block), shifted
-		# right past the marker slot.
-		var icon_rect := Rect2(px + 24, icon_y, 16, 16)
+		# Per-item icon (PNG when known, fallback to colored letter block), past the
+		# fixed ~26px marker slot so the [E] tag and the icon never overlap.
+		var icon_rect := Rect2(px + 32, icon_y, 16, 16)
 		# Disabled rows dim their icon too (alpha modulate), so the whole row reads
 		# as greyed — not just the text. Same modulate the shops use (#417 parity).
 		var icon_mod: Color = PszStyle.DISABLED_ICON_MOD if disabled else Color.WHITE
@@ -303,10 +306,10 @@ func _draw_items(c: Control, font: Font) -> void:
 			elif disabled:
 				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 27, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 35, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
 		# Item name (the [E]/✕ marker lives in the leftmost slot, not the name).
-		c.draw_string(font, Vector2(px + 46, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_ITEM, col)
+		c.draw_string(font, Vector2(px + 54, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_ITEM, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
@@ -359,7 +362,8 @@ func _draw_items(c: Control, font: Font) -> void:
 			desc += "\n[Enter] Open"
 	if not _c._action_message.is_empty():
 		desc += "\n\n" + _c._action_message
-	_draw_bottom_desc(c, font, desc)
+	# Description sits to the right of the (wider) items list, not the default 310px.
+	_draw_bottom_desc(c, font, desc, 350.0)
 
 
 func _draw_equip(c: Control, font: Font) -> void:
@@ -828,9 +832,41 @@ func _draw_options(c: Control, font: Font) -> void:
 
 
 # ── Draw helpers ────────────────────────────────────────────────────────────────
+# Cached rounded panel style for the inner list/desc panels — rounded corners +
+# a border, drawn via draw_style_box so the start menu's panels read like the 2D
+# shop's rounded cards (Kion: "add some border radius … closer to the look of the
+# shop") instead of the old hard-cornered draw_rect. Built once, reused per frame.
+var _panel_sbox: StyleBoxFlat = null
+
+
+func _inner_panel_sbox() -> StyleBoxFlat:
+	if _panel_sbox == null:
+		var s := StyleBoxFlat.new()
+		s.bg_color = PsoStartMenu.C_PANEL
+		s.border_color = PsoStartMenu.C_PANEL_BORDER
+		s.set_border_width_all(2)
+		s.set_corner_radius_all(6)
+		_panel_sbox = s
+	return _panel_sbox
+
+
 func _draw_inner_panel(c: Control, rect: Rect2) -> void:
-	c.draw_rect(rect, PsoStartMenu.C_PANEL)
-	c.draw_rect(rect, PsoStartMenu.C_PANEL_BORDER, false, 1.5)
+	c.draw_style_box(_inner_panel_sbox(), rect)
+
+
+# Reusable rounded-rect style for list ROWS (the inventory pills) so they read like
+# the 2D shop's rounded list rows instead of hard-cornered bars (Kion). One
+# instance, recoloured per row — draw_style_box paints with the current bg_color
+# synchronously, so reusing it across rows in a frame is safe.
+var _row_sbox: StyleBoxFlat = null
+
+
+func _draw_row_pill(c: Control, rect: Rect2, color: Color) -> void:
+	if _row_sbox == null:
+		_row_sbox = StyleBoxFlat.new()
+		_row_sbox.set_corner_radius_all(4)
+	_row_sbox.bg_color = color
+	c.draw_style_box(_row_sbox, rect)
 
 
 func _draw_section_label(c: Control, font: Font, text: String) -> void:
@@ -895,10 +931,8 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
 
-func _draw_bottom_desc(c: Control, font: Font, text: String) -> void:
-	var px: float = 310.0
+func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0) -> void:
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
-	var pw: float = 200.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 	# Simple multi-line text
