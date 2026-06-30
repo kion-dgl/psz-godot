@@ -97,10 +97,10 @@ export/convert_text_resources_to_binary=false
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-# 4 = SCREEN_SENSOR_LANDSCAPE: allow BOTH landscape orientations and let the
-# device sensor pick based on how the phone is held (Android screenOrientation
-# "sensorLandscape"). Default 0 (SCREEN_LANDSCAPE) locks to one side. Never
-# rotates to portrait.
+; 4 = SCREEN_SENSOR_LANDSCAPE: allow BOTH landscape orientations and let the
+; device sensor pick based on how the phone is held (Android screenOrientation
+; "sensorLandscape"). Default 0 (SCREEN_LANDSCAPE) locks to one side. Never
+; rotates to portrait.
 window/handheld/orientation=4
 
 [editor_plugins]
