@@ -37,6 +37,7 @@ const VENDORED_SKIPS = new Set<string>([
   "kenney_input-prompts",
   "kenney_nature-pack",
   "cc0_textures", // ambientCG CC0 — vendored in-repo, ships with the exe, never on R2 (#356)
+  "fonts", // JetBrains Mono (SIL OFL 1.1) — vendored in-repo, ships in the binary, never on R2 (#450)
 ]);
 
 // Relative-path prefixes (under each SYNC_ROOTS entry) that are licensed
