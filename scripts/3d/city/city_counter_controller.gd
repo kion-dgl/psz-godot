@@ -90,23 +90,25 @@ func _ready() -> void:
 	_connect_player_to_interactables()
 
 
-## NPCs (behind the counter — widened interaction boxes so the player reaches
-## them across it), the market/office exit triggers, and the warp teleporter pad
-## on the raised kaidan plaza. Rotations are provisional (may need ±PI in-game).
+## NPCs (behind the counter — interaction boxes sized to reach across the counter
+## from the floor without overlapping each other, so storage/guild switch
+## cleanly), the market/office exit triggers, and the warp teleporter pad on the
+## raised kaidan plaza.
 func _add_interactables() -> void:
+	# Nudged ~1.1u forward along their facing (just behind the counter front).
 	_add_npc(
-		"StorageNPC", Vector3(-11.42, -10.67, 113.50), 0.94,
+		"StorageNPC", Vector3(-10.53, -10.67, 114.15), 0.94,
 		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
 		"Storage",
 		"res://scenes/2d/storage.tscn",
-		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	_add_npc(
-		"QuestCounterNPC", Vector3(-8.52, -10.67, 110.51), 0.64,
+		"QuestCounterNPC", Vector3(-7.86, -10.67, 111.39), 0.64,
 		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
 		"Guild Counter",
 		"res://scenes/2d/guild_counter.tscn",
-		"pso_f_sa_stand", "", "", Vector3(7, 3, 7)
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
 	# counter→warp trigger is gone; the teleporter lives in this scene now.
