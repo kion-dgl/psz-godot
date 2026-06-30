@@ -323,7 +323,16 @@ func _draw_items(c: Control, font: Font) -> void:
 	if scroll_offset + visible_rows < inv.size():
 		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
-	# Description
+	# Description sits to the right of the (wider) items list, not the default 310px.
+	# Built in its own helper to keep this draw routine's call fan-out down.
+	_draw_bottom_desc(c, font, _items_description(inv), 350.0)
+
+
+## The detail text for the currently-selected inventory item — stats from the
+## registries, the disk teach-line, and the contextual prompt. Split out of
+## _draw_items so that routine doesn't fan out across every registry (#295
+## god-orchestrator bound).
+func _items_description(inv: Array) -> String:
 	var desc: String = ""
 	if _c._sub_idx < inv.size():
 		var item: Dictionary = inv[_c._sub_idx]
@@ -362,8 +371,7 @@ func _draw_items(c: Control, font: Font) -> void:
 			desc += "\n[Enter] Open"
 	if not _c._action_message.is_empty():
 		desc += "\n\n" + _c._action_message
-	# Description sits to the right of the (wider) items list, not the default 310px.
-	_draw_bottom_desc(c, font, desc, 350.0)
+	return desc
 
 
 func _draw_equip(c: Control, font: Font) -> void:
