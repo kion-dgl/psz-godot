@@ -33,12 +33,13 @@ const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
 const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
 const C_TEXT := Color(0.10, 0.15, 0.25)
 const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
-# A clearly-faded grey for DISABLED inventory rows (cannot-use / already-known
-# disks). C_TEXT_MUTED is only marginally lighter than C_TEXT, so a disabled row
-# barely reads as disabled against the near-white row bg; this sits much closer
-# to the background so the row is unmistakably greyed (matches the shops, where
-# TEXT_MUTED is far lighter than TEXT). Disabled rows also dim their icon.
-const C_TEXT_DISABLED := Color(0.58, 0.62, 0.69)
+# Grey for DISABLED inventory rows (cannot-use / already-known disks). This is
+# the SAME value the 2D shops mute their rows with (PszStyle.TEXT_MUTED), so an
+# already-known disk greys identically whether the player sees it in the start
+# menu or a shop list (#417 — Rozalin: "the graying color isn't identical between
+# the two"). Single source of truth → they can't drift. Disabled rows also dim
+# their icon (PszStyle.DISABLED_ICON_MOD), matching the shop.
+const C_TEXT_DISABLED := PszStyle.TEXT_MUTED
 const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)
 const C_SELECT := Color(0.88, 0.53, 0.13)
 const C_SELECT_TEXT := Color.WHITE
@@ -52,6 +53,9 @@ const FONT_SIZE := 15
 const FONT_SIZE_SM := 13
 const FONT_SIZE_XS := 11
 const FONT_SIZE_LG := 17
+## Inventory item-name size — matches the 2D shop row name size (PszStyle.FONT_ITEM)
+## so the start-menu items list and the shop lists read at the same weight (#417).
+const FONT_SIZE_ITEM := 14
 
 # ── State ───────────────────────────────────────────────────────────────────────
 enum Mode { MAIN, ITEMS, ITEMS_MOVE, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
@@ -67,7 +71,6 @@ var _pal_slot_idx: int = 0
 var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
-var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
 var _move_from_idx: int = -1  # Origin row when in Mode.ITEMS_MOVE (Manual sort)
 var _move_from_id: String = ""  # Origin item id, used to relocate cursor after move
@@ -426,7 +429,6 @@ func open() -> void:
 	_mag_idx = 0
 	_mag_feed_idx = 0
 	_options_idx = 0
-	_item_scroll = 0.0
 	_action_message = ""
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
