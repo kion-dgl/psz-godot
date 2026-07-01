@@ -196,6 +196,10 @@ var _expected_next_cell_key: String = ""
 # ground drops MUST NOT respawn across a cell re-visit.
 var _cell_flush_tally: Dictionary = {}
 
+# observe_hud_stats() tracks the persistent HP/PP/Lv panel's instance id (#444)
+# — it must never change across scene transitions. 0 = not yet observed.
+var _hud_stats_panel_id: int = 0
+
 # Boot-phase: tracks whether we've finished the office intro + kicked off the
 # "Return to Title" path, so the title-scene handler can recognize "we're done"
 # vs "this is the first-time title" and quit cleanly.
@@ -549,6 +553,25 @@ func observe_cell_flush(cell_key: String, tally: Dictionary) -> void:
 		cell_key, int(tally.get("dead", 0)), int(tally.get("boxes_destroyed", 0)),
 		int(tally.get("drops_pending", 0)), int(tally.get("msgs_read", 0)),
 		int(tally.get("items_collected", 0))])
+
+
+## Live persistence oracle for the HP/PP/Lv stats panel (#444;
+## /states/field-lifecycle §HUD across an area transition). The panel is a
+## persistent autoload (HudStats) — it MUST be the SAME node instance across
+## every scene transition, never freed and rebuilt by a per-scene controller.
+## HudStats reports its panel's instance id + in-tree state on every
+## SceneManager.scene_changed; a changed id means something rebuilt the panel,
+## an out-of-tree panel means it got freed. Either prints "[sanity] FAIL:" so
+## the pass-oracle (grep 'FAIL:') flags the run. Non-aborting, like
+## observe_cell_flush.
+func observe_hud_stats(panel_id: int, in_tree: bool, scene_path: String) -> void:
+	if not in_tree:
+		print("[sanity] FAIL: hud-stats panel left the tree at %s — panel was freed" % scene_path)
+	elif _hud_stats_panel_id != 0 and panel_id != _hud_stats_panel_id:
+		print("[sanity] FAIL: hud-stats panel instance changed across transition (%d→%d at %s) — panel was rebuilt" % [
+			_hud_stats_panel_id, panel_id, scene_path])
+	_hud_stats_panel_id = panel_id
+	print("[sanity] checkpoint: hud-stats-held id=%d scene=%s" % [panel_id, scene_path.get_file()])
 
 
 ## Position of a quest in data/quests/manifest.json (0-based). Returns 0 if not

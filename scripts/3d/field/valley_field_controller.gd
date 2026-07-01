@@ -492,7 +492,8 @@ func _ready() -> void:
 	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
 	_map_overlay.add_child(map_panel)
 
-	# Field HUD (always visible — stats panel + meseta + minimap)
+	# Per-scene field HUD (minimap host, palette, log, FPS). The HP/PP/Lv stats
+	# panel is NOT rebuilt here — it persists on the HudStats autoload (#444).
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
 

@@ -221,34 +221,67 @@ const lifecycle = `flowchart TD
 
   <h2>HUD across an area transition</h2>
   <p>An area transition is a full scene reload
-  (<code>SceneManager.goto_scene</code> → <code>change_scene_to_file</code>): the
-  field HUD (a <code>CanvasLayer</code> at <code>layer = 200</code>) is freed with the
-  old scene and rebuilt by the new <code>valley_field_controller._ready</code>. The
-  HUD's stats come from autoloads (<code>GameState</code> / <code>CharacterManager</code>),
-  so the rebuilt panel already holds the correct values on its first frame — the
-  problem was never wrong data, only a render gap.</p>
-  <p>The transition is covered by the <code>SceneManager</code> fade-to-black. The
-  fade rect <strong>MUST</strong> sit on a canvas layer <em>above</em> the field HUD
-  (and the start menu at <code>layer = 150</code>) so the fade masks the HUD rebuild:
-  with the fade below the HUD, the ~1-frame gap where the old HUD is freed and the
-  new one is not yet drawn blinks the HUD region against the already-black screen
-  (#421). With the fade above, the whole frame — HUD included — transitions uniformly
-  under black, so the HUD <strong>MUST NOT</strong> blink independently of the fade.</p>
-  <p>The fade rect <strong>MUST</strong> also cover the full viewport. Sitting on the
-  right layer is necessary but <em>not sufficient</em>: a <code>ColorRect</code> whose
-  anchors are set via <code>anchors_preset</code> alone stays at size <code>(0,0)</code> —
-  black, full-alpha, correctly layered, yet zero-area, so it masks nothing. The rect
-  <strong>MUST</strong> be sized with <code>set_anchors_and_offsets_preset(PRESET_FULL_RECT)</code>
-  (anchors <em>and</em> offsets) so its area equals the viewport. The layer-raise in #421
-  could not have masked the HUD on its own because the fade rect was zero-sized; both the
-  layer <em>and</em> the size are load-bearing. This is pinned in
-  <code>test_scene_manager_fade_rect_full_size</code>.</p>
-  <p><em>Target end-state (planned follow-up):</em> the masking fix makes the HUD fade
-  with the world rather than persist. A future refactor promoting the stats panel to a
-  persistent autoload (it is currently coupled to the per-scene minimap) would let the
-  HUD <strong>stay visible and hold its last values</strong> across the warp instead of
-  fading out. That is the eventual ideal; the shipped contract above is the no-blink
-  masking guarantee, and the two <strong>MUST NOT</strong> be conflated.</p>
+  (<code>SceneManager.goto_scene</code> → <code>change_scene_to_file</code>). The HUD
+  splits into two tiers with different lifecycles (#444, superseding the
+  #430-era "planned end-state" note that used to live here):</p>
+  <ul>
+    <li><strong>The HP/PP/Lv stats panel is persistent.</strong> It lives on the
+    <code>HudStats</code> autoload (a <code>CanvasLayer</code> at
+    <code>layer = 200</code>, pattern: <code>PsoStartMenu</code>). It
+    <strong>MUST</strong> persist across an area transition: it <strong>MUST NOT</strong>
+    be freed or rebuilt by the per-scene controller (same node instance before and
+    after the warp), and it <strong>MUST</strong> remain rendered — holding its last
+    values — while the world fades and reloads underneath it, with no blank frame.</li>
+    <li>The stats panel <strong>MUST</strong> read live values from the
+    <code>GameState</code> / <code>CharacterManager</code> autoloads (HP/PP via the
+    <code>*_changed</code> signals, level via <code>level_up</code>), so it shows
+    correct values continuously.</li>
+    <li>The <strong>per-scene HUD</strong> (<code>FieldHud</code>: minimap, action
+    palette, quick-weapon menu, action log, FPS) is scene-specific and
+    <strong>MAY</strong> continue to be freed/rebuilt per scene by
+    <code>valley_field_controller._ready</code> / <code>city_area_base</code>; only
+    the stats panel is promoted.</li>
+    <li>Visibility: the panel is rendered in gameplay scenes (city and field),
+    <strong>MUST</strong> stay rendered under the PSO start menu
+    (<code>layer 200 &gt; 150</code>, the old <code>keep_stats</code> rule), is hidden
+    under full-screen <code>SceneManager</code> overlays (shops, storage, guild), and
+    is hidden on non-gameplay scenes (title / character select / create).</li>
+    <li>The panel's backdrop texture is a pack asset; the autoload
+    <strong>MUST NOT</strong> <code>preload()</code> it (autoloads must compile in
+    repo-only CI) — it lazy-<code>load()</code>s and retries until the pack mounts.</li>
+  </ul>
+  <p>The transition is still covered by the <code>SceneManager</code> fade-to-black.
+  The fade rect <strong>MUST</strong> sit on a canvas layer <em>above</em> the HUD
+  layers (and the start menu at <code>layer = 150</code>) so the whole frame
+  transitions uniformly under black, and <strong>MUST</strong> cover the full
+  viewport — a <code>ColorRect</code> whose anchors are set via
+  <code>anchors_preset</code> alone stays at size <code>(0,0)</code>: black,
+  full-alpha, correctly layered, yet zero-area, so it masks nothing. The rect
+  <strong>MUST</strong> be sized with
+  <code>set_anchors_and_offsets_preset(PRESET_FULL_RECT)</code> (anchors <em>and</em>
+  offsets). Pinned in <code>test_scene_manager_fade_rect_full_size</code>.</p>
+  <p>With the stats panel persistent, the fade's coverage of the HUD region is
+  <strong>belt-and-suspenders, not the mechanism</strong>: the #430 masking hid the
+  per-scene rebuild gap under black, whereas now there is no stats-panel gap to hide —
+  the fade only needs to mask the <em>world</em> reload and the per-scene HUD tier.
+  The two guarantees <strong>MUST NOT</strong> be conflated: persistence is the
+  stats-panel contract; the fade contract stands on its own for everything else.</p>
+  <h3>Test + probe enforcement (two-layer rule)</h3>
+  <ul>
+    <li><strong>Seeded unit test</strong> <code>test_hud_stats_persistent_panel</code>
+    drives a simulated transition (<code>_transitioning</code> +
+    <code>scene_changed</code>, the same signals a real <code>goto_scene</code> fires)
+    and pins: same instance id across the change, panel in-tree and rendered on every
+    step, values live from <code>GameState</code>/<code>CharacterManager</code>, and
+    the overlay-visibility rules.</li>
+    <li><strong>Live autopilot oracle.</strong> Under <code>PSZ_AUTOPILOT</code>,
+    every <code>scene_changed</code> makes <code>HudStats</code> report its panel to
+    <code>Autopilot.observe_hud_stats</code>, which prints
+    <code>[sanity] checkpoint: hud-stats-held id=&lt;instance&gt; scene=&lt;file&gt;</code>
+    and prints <code>[sanity] FAIL:</code> if the instance id ever changes (panel
+    rebuilt) or the panel leaves the tree (panel freed) — failing the run via the
+    pass-oracle's <code>FAIL:</code> grep.</li>
+  </ul>
 
   <h3>Quests vs. free roam</h3>
   <p>Quests and free (explorable) areas share the <strong>same stage JSON
@@ -286,6 +319,7 @@ const lifecycle = `flowchart TD
     <tr><td><code>action i/n: &lt;name&gt;</code></td><td>executing a <code>do[]</code> action</td></tr>
     <tr><td><code>walk to exit '&lt;dir&gt;' via N waypoint(s)</code> / <code>waypoint i/n reached</code></td><td>navigating to the exit</td></tr>
     <tr><td><code>stuck-walk diagnostic …</code> / <code>FAIL: walk stuck …</code></td><td>pathfinding failed — the stage needs authored waypoints</td></tr>
+    <tr><td><code>checkpoint: hud-stats-held id=… scene=…</code></td><td>the persistent HP/PP/Lv panel survived a scene transition as the same instance (#444; <code>FAIL:</code> if it was rebuilt or freed)</td></tr>
     <tr><td><code>checkpoint: defeat-screen-shown</code></td><td>HP hit 0 → the <a href="/states/player-death">defeat</a> prompt is up</td></tr>
     <tr><td><code>checkpoint: defeat-return-to-city meseta &lt;before&gt; -&gt; &lt;after&gt;</code></td><td>chose "Yes" → revived, penalty applied, session ended</td></tr>
     <tr><td><code>DONE ok</code></td><td>quest cleared end-to-end (success oracle)</td></tr>

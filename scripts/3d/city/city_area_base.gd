@@ -58,7 +58,8 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 	else:
 		MusicManager.play_location_music("city")
 
-	# Add field HUD (stats panel + meseta)
+	# Add per-scene field HUD (palette / log / FPS). The HP/PP/Lv stats panel
+	# is NOT here — it lives on the persistent HudStats autoload (#444).
 	var field_hud := FieldHudScript.new()
 	add_child(field_hud)
 
