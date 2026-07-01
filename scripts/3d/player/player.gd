@@ -230,6 +230,11 @@ var dodge_anim_duration: float = 0.0
 var dodge_move_end: float = 0.0
 const DODGE_DURATION: float = 0.8
 const DODGE_SPEED: float = 7.0
+# Invincibility window from roll start (spec /mechanics/dodge, #377):
+# fixed ≈11 frames for every weapon — deliberately NOT the whole move
+# phase, so a poorly-timed roll is a punish. The rest of the roll and
+# the recovery are vulnerable, and a hit there interrupts the dodge.
+const DODGE_IFRAME_DURATION: float = 0.2
 # Fraction of the dodge animation during which we apply velocity. The
 # remaining (1 - fraction) is the recovery — the character lands in a
 # crouch and stands up. Sliding through that recovery looked wrong, so
@@ -289,9 +294,9 @@ func _ready() -> void:
 		animation_player.animation_finished.connect(_on_animation_finished)
 
 	# #352: opening the Start Menu drops inputs, so it cancels an in-progress
-	# technique charge (the Quick Menu #141 should connect here too once it
-	# lands). _drop_charge no-ops when nothing is charging, so this is safe to
-	# fire on every menu open.
+	# technique charge (the Quick Menu's opened signal connects the same way
+	# from field_hud, #377). _drop_charge no-ops when nothing is charging, so
+	# this is safe to fire on every menu open.
 	var start_menu := get_node_or_null("/root/PsoStartMenu")
 	if start_menu and start_menu.has_signal("opened"):
 		start_menu.opened.connect(_drop_charge)
@@ -1175,6 +1180,12 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
+	# Action commitment (spec /states/player-state, #377): a swing must fully
+	# execute — dodge cannot cancel it — and a roll cannot restart itself.
+	# Damage-initiated exits (take_damage → DAMAGED/DOWN) bypass this by
+	# calling transition_to directly.
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
 	# Store facing direction for dodge movement
 	dodge_direction = player_rotation
 	dodge_timer = 0.0
@@ -1245,6 +1256,10 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
+	# Action commitment (spec /states/player-state, #377): a roll must fully
+	# execute — attack cannot cancel it (mirrors _start_strong_attack's gate).
+	if current_state == PlayerState.DODGING:
+		return
 	if current_state == PlayerState.ATTACKING:
 		# Check if we're in combo window
 		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
@@ -2175,6 +2190,12 @@ func transition_to(new_state: PlayerState) -> void:
 		_set_weapon_hold("attack")
 	elif was_attacking and new_state != PlayerState.ATTACKING:
 		_set_weapon_hold("idle")
+		# Hitbox lifetime invariant (spec /states/player-state, #428): the
+		# attack hitbox must not outlive ATTACKING by ANY exit path — the
+		# swing-end paths already deactivate, but interrupts (damage now,
+		# anything future) land here. Deactivation clears _hit_targets, so
+		# no "stored" hits carry into the next swing.
+		_deactivate_attack_hitbox()
 
 	match new_state:
 		PlayerState.IDLE:
@@ -2264,9 +2285,11 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 	if current_state == PlayerState.DOWN and GameState.hp <= 0:
 		return
 
-	# Dodge i-frames (#273, spec /mechanics/dodge): the roll's move phase
-	# grants invincibility; the recovery (crouch + rise) is vulnerable.
-	if current_state == PlayerState.DODGING and dodge_timer < dodge_move_end:
+	# Dodge i-frames (spec /mechanics/dodge): only the first
+	# DODGE_IFRAME_DURATION of the roll is invincible (#377 tightened this
+	# from the whole move phase); a hit after the window damages AND
+	# interrupts the roll like any other hit.
+	if current_state == PlayerState.DODGING and dodge_timer < DODGE_IFRAME_DURATION:
 		return
 
 	GameState.set_hp(GameState.hp - damage)
