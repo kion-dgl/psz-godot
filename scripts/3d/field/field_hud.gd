@@ -863,11 +863,12 @@ class _QuickWeaponMenu extends Control:
 			return
 		_is_open = true
 		visible = true
-		# Pre-select currently equipped weapon
-		for i in range(_weapon_list.size()):
-			if _weapon_list[i].equipped:
-				_selected_index = i
-				break
+		# Cursor starts at the top of the list (spec /states/quick-weapon-menu,
+		# issue #141) — a fixed, predictable entry point. It deliberately does NOT
+		# pre-select the equipped row (which sorts to the bottom as the "unequip"
+		# choice), so the cursor never lands at the far end of the palette on open.
+		_selected_index = 0
+		_scroll_offset = 0
 		_update_scroll()
 		queue_redraw()
 

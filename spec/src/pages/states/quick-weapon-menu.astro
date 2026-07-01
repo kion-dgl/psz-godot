@@ -5,7 +5,7 @@ import LayerBadge from '../../components/LayerBadge.astro';
 
 const chart = `flowchart TD
   open["Open Quick Menu (quick-weapon action)"] --> build["Build weapon list"]
-  build --> preselect["Pre-select equipped row (cursor starts on it)"]
+  build --> preselect["Cursor starts at top of list (index 0)"]
   preselect --> sel{"Accept on row == equipped weapon?"}
   sel -- "yes" --> un["Unequip -> barehanded (equipment.weapon = '')\\nplay common46 SFX"]
   sel -- "no" --> eq["Equip selected weapon"]
@@ -25,7 +25,10 @@ const chart = `flowchart TD
   <p>The list is built by <code>_build_weapon_list()</code>. Each inventory item is included <strong>iff</strong> it resolves to a weapon in <code>WeaponRegistry</code> <em>and</em> passes the single canonical equip gate <code>EquipmentUtils.item_fits_slot(item_id, "weapon")</code> (PR #419). That gate is the same predicate that drives the shop / start-menu equippability markers, and it honors <code>DebugConfig.equip_all</code>. The menu <strong>MUST NOT</strong> re-derive equippability with a hand-rolled class check — see <a href="/mechanics/equip-legality">Equip Legality</a> for the canonical <code>item_fits_slot</code> contract.</p>
 
   <h2>List ordering</h2>
-  <p>When a weapon is equipped, its row <strong>MUST</strong> sort to the <strong>end</strong> of the list; all other (non-equipped) rows <strong>MUST</strong> precede it, ordered alphabetically by display name. Rationale: selecting the equipped row is the <em>unequip</em> action (below), so it belongs at the bottom of the palette as the "take it off" choice rather than the first thing the cursor lands on. (The cursor is still pre-positioned on the equipped row when the menu opens, so the equipped weapon is what's highlighted first — it is the position in the <em>list</em>, not the initial selection, that this rule fixes.)</p>
+  <p>When a weapon is equipped, its row <strong>MUST</strong> sort to the <strong>end</strong> of the list; all other (non-equipped) rows <strong>MUST</strong> precede it, ordered alphabetically by display name. Rationale: selecting the equipped row is the <em>unequip</em> action (below), so it belongs at the bottom of the palette as the "take it off" choice rather than the first thing the cursor lands on.</p>
+
+  <h2>Initial cursor position</h2>
+  <p>When the menu opens, the cursor <strong>MUST</strong> start on the <strong>first row</strong> of the built list (<code>_selected_index == 0</code>) — the top, alphabetically-first equippable weapon. It <strong>MUST NOT</strong> jump to the equipped weapon's row. Rationale (issue #141): a fixed, predictable entry point reads better than a cursor that lands in a different place each open depending on what's equipped; and since the equipped row sorts to the <em>bottom</em> (above), pre-selecting it would drop the cursor at the far end of the list rather than a natural starting point. This supersedes the earlier "pre-select the equipped row" behavior (#424), which positioned the cursor on the equipped weapon on open.</p>
 
   <h2>Selecting a row</h2>
   <p>Accept on a row dispatches in <code>_equip_selected()</code>:</p>
@@ -42,13 +45,14 @@ const chart = `flowchart TD
   <h2>Invariants</h2>
   <ul>
     <li>The equipped weapon row, when present, <strong>MUST</strong> be the last entry of the built list.</li>
+    <li>On open, the cursor <strong>MUST</strong> start at the first row (<code>_selected_index == 0</code>) and <strong>MUST NOT</strong> pre-select the equipped row.</li>
     <li>Accept on the equipped row <strong>MUST</strong> unequip to barehanded (<code>equipment.weapon == ""</code>) and then close; Accept on any other row <strong>MUST</strong> equip that weapon and then close.</li>
     <li>Barehanded attack SFX <strong>MUST</strong> resolve to <code>common46</code> and <strong>MUST NOT</strong> be <code>common35</code>; while <code>common46</code> is absent from the pack the barehanded swing is silent.</li>
     <li>Which rows appear <strong>MUST</strong> come from the canonical <code>EquipmentUtils.item_fits_slot</code> gate, never a re-derived class check.</li>
   </ul>
 
   <h2>Tests</h2>
-  <p><code>test_quick_weapon_menu_unequip_and_order()</code> in <code>scripts/tools/test_runner.gd</code> locks the ordering (equipped row sorts last), the unequip-on-equipped-row behavior, and that equip-on-other-row still works; it also asserts <code>BAREHANDED_SFX != WEAPON_SFX[SABER]</code> (barehanded no longer maps to <code>common35</code>). <code>test_field_weapon_swap_gate()</code> covers the canonical-gate row filtering. The menu-driven autopilot step (opening the menu, accepting the equipped row) and actual <code>common46</code> audio playback are verified on hardware — the new unequip branch emits <code>[sanity] checkpoint: quickmenu-unequip-barehanded</code> as the hook for that probe.</p>
+  <p><code>test_quick_weapon_menu_unequip_and_order()</code> in <code>scripts/tools/test_runner.gd</code> locks the ordering (equipped row sorts last), the cursor starting at the top on open (<code>_selected_index == 0</code>, not the equipped row), the unequip-on-equipped-row behavior, and that equip-on-other-row still works; it also asserts <code>BAREHANDED_SFX != WEAPON_SFX[SABER]</code> (barehanded no longer maps to <code>common35</code>). <code>test_field_weapon_swap_gate()</code> covers the canonical-gate row filtering. The menu-driven autopilot step (opening the menu, accepting the equipped row) and actual <code>common46</code> audio playback are verified on hardware — the new unequip branch emits <code>[sanity] checkpoint: quickmenu-unequip-barehanded</code> as the hook for that probe.</p>
 
   <h2>Implemented by</h2>
   <ul>

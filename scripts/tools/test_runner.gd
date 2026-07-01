@@ -2395,6 +2395,15 @@ func test_quick_weapon_menu_unequip_and_order() -> void:
 			any_earlier_equipped = true
 	assert_true(not any_earlier_equipped, "no non-final row is marked equipped")
 
+	# (1b) CURSOR — _open() starts the cursor at the TOP (index 0), NOT on the
+	# equipped row (which sorts last). Spec /states/quick-weapon-menu (#141).
+	menu._selected_index = 99  # dirty it so a stale value can't pass by accident
+	menu._open()
+	assert_eq(menu._selected_index, 0, "cursor starts at the top of the list on open (#141)")
+	assert_true(not bool(menu._weapon_list[menu._selected_index].get("equipped", false)),
+		"cursor does NOT land on the equipped row on open")
+	menu._close()
+
 	# (2) UNEQUIP — accept on the equipped row → barehanded, menu closes.
 	menu._selected_index = menu._weapon_list.size() - 1  # the equipped row
 	menu._is_open = true
