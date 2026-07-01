@@ -29,6 +29,12 @@ const TEXT_CLEAR := Color(0.20, 0.50, 0.25)
 const TEXT_HIGHLIGHT := Color(0.82, 0.45, 0.05)
 const TEXT_MESETA := Color(0.82, 0.58, 0.05)
 
+## Icon modulate for a muted/disabled list row — the row's leading item icon is
+## dimmed along with its text so the WHOLE row reads as greyed, not just the
+## label. Shared with the 3D start-menu inventory (PsoStartMenu references this)
+## so the shops and the inventory dim icons identically (#417).
+const DISABLED_ICON_MOD := Color(1, 1, 1, 0.35)
+
 # ── Font Sizes ──
 const FONT_TITLE := 16
 const FONT_ITEM := 14
@@ -169,7 +175,7 @@ static func create_pill(left_text: String, selected: bool, right_text: String = 
 ## Each icon renders as a 16×16 TextureRect; nulls in the array are
 ## skipped so callers can pass [type_icon, rarity_icon] without
 ## branching on missing assets.
-static func create_pill_with_icons(icons: Array, left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT, lead: Control = null) -> PanelContainer:
+static func create_pill_with_icons(icons: Array, left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT, lead: Control = null, dim_icons: bool = false) -> PanelContainer:
 	var pill := PanelContainer.new()
 	pill.add_theme_stylebox_override("panel", pill_style(selected))
 	pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -187,6 +193,10 @@ static func create_pill_with_icons(icons: Array, left_text: String, selected: bo
 		rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		# Dim the item icon on a muted row so the whole row greys, not just the
+		# text — same modulate the inventory uses (#417 shop/inventory parity).
+		if dim_icons:
+			rect.modulate = DISABLED_ICON_MOD
 		hbox.add_child(rect)
 	var label := Label.new()
 	label.text = left_text
@@ -245,7 +255,9 @@ static func shop_row(item_name: String, right_text: String, opts: Dictionary = {
 	# deposit / sell), or — for the legacy cost-gated list shops — unaffordable.
 	var muted: bool = (not affordable) or equipped or disabled or cannot_use
 	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
-	return create_pill_with_icons(icons, item_name, selected, right_text, color, marker_cell(marker_kind))
+	# Dim the row's item icon when muted so the icon greys with the text (#417) —
+	# the ✕ marker in the leftmost cell stays full-colour (it's a marker, not item art).
+	return create_pill_with_icons(icons, item_name, selected, right_text, color, marker_cell(marker_kind), muted)
 
 
 ## Width of the leftmost shop-row marker slot. Wide enough for the "[E]" tag; the

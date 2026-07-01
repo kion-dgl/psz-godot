@@ -863,11 +863,12 @@ class _QuickWeaponMenu extends Control:
 			return
 		_is_open = true
 		visible = true
-		# Pre-select currently equipped weapon
-		for i in range(_weapon_list.size()):
-			if _weapon_list[i].equipped:
-				_selected_index = i
-				break
+		# Cursor starts at the top of the list (spec /states/quick-weapon-menu,
+		# issue #141) — a fixed, predictable entry point. It deliberately does NOT
+		# pre-select the equipped row (which sorts to the bottom as the "unequip"
+		# choice), so the cursor never lands at the far end of the palette on open.
+		_selected_index = 0
+		_scroll_offset = 0
 		_update_scroll()
 		queue_redraw()
 
@@ -897,10 +898,13 @@ class _QuickWeaponMenu extends Control:
 			var is_equipped: bool = item_id == equipped_id
 			_weapon_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "equipped": is_equipped})
 
-		# Sort: equipped first, then alphabetical
+		# Sort: equipped row LAST, the rest alphabetical (spec
+		# /states/quick-weapon-menu, issue #424). Selecting the equipped row
+		# unequips, so it reads as the "take it off" action at the bottom of
+		# the palette rather than the first thing the cursor lands on.
 		_weapon_list.sort_custom(func(a, b):
 			if a.equipped != b.equipped:
-				return a.equipped  # equipped comes first
+				return not a.equipped  # non-equipped first; equipped sinks to the end
 			return str(a.name) < str(b.name)
 		)
 
@@ -916,19 +920,26 @@ class _QuickWeaponMenu extends Control:
 		if _selected_index < 0 or _selected_index >= _weapon_list.size():
 			return
 		var weapon_entry: Dictionary = _weapon_list[_selected_index]
-		if weapon_entry.equipped:
-			_close()
-			return
-
-		# Equip the weapon
 		var character = CharacterManager.get_active_character()
 		if character == null:
 			return
+		# Same equipment dict the equip branch mutates — class-legality already
+		# governed by the canonical EquipmentUtils.item_fits_slot gate that built
+		# the list (PR #419), so no re-derivation here.
 		var equipment: Dictionary = character.get("equipment", {})
-		equipment["weapon"] = weapon_entry.id
-		print("[QuickWeapon] Equipped: %s" % weapon_entry.name)
 
-		# Refresh player model
+		if weapon_entry.equipped:
+			# Selecting the already-equipped row UNEQUIPS to barehanded, then
+			# closes (spec /states/quick-weapon-menu, issue #424). Previously this
+			# just dismissed the menu with no state change.
+			print("[sanity] checkpoint: quickmenu-unequip-barehanded")
+			equipment["weapon"] = ""
+			print("[QuickWeapon] Unequipped: %s (now barehanded)" % weapon_entry.name)
+		else:
+			equipment["weapon"] = weapon_entry.id
+			print("[QuickWeapon] Equipped: %s" % weapon_entry.name)
+
+		# Refresh player model (equip and unequip both restyle the held weapon).
 		var players: Array = get_tree().get_nodes_in_group("player")
 		if players.size() > 0 and players[0].has_method("refresh_weapon"):
 			players[0].refresh_weapon()

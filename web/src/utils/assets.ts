@@ -22,6 +22,7 @@ const CDN_PREFIXES = ['assets/'];
 const LOCAL_ONLY_PREFIXES = [
   'assets/kenney_input-prompts/',
   'assets/kenney_nature-pack/',
+  'assets/fonts/', // JetBrains Mono (OFL) — vendored in-repo, ships in the binary, never on R2 (#450)
 ];
 
 export function assetUrl(path: string): string {
