@@ -69,6 +69,12 @@ const SLAT_ANIM_DURATION := 0.32
 var _slats: Array = []                       # Control nodes in display order
 var _slat_data: Array = []                   # Dictionary per slat: refs + orig_index
 var _selection_tween: Tween = null
+# Fixed width (px) of every slat's portrait frame, computed once per build
+# from the content-area width and the selected stretch ratio. The cover-crop
+# is solved against this constant size, NOT the slat's animated width, so the
+# selection transition can no longer shift the crop origin (issue #380 —
+# hucast/hucaseal cutout wobble). See _make_portrait_frame().
+var _slat_ref_width: float = 0.0
 # Re-entry guard. _build_class_select_slats() awaits a frame, and the input
 # handler can fire again during that await — without this we'd kick off
 # overlapping builds that each call _clear_content() + add children.
@@ -446,6 +452,20 @@ func _build_class_select_slats() -> void:
 	hbox.add_theme_constant_override("separation", 0)
 	_content_area.add_child(hbox)
 
+	# Reference width for the portrait frame: the px width a slat occupies
+	# when SELECTED (stretch ratio 5 of the total ratio across all slats).
+	# Every slat's portrait is built at this constant width so the cover-crop
+	# never re-solves as the slat animates between ratio 1 and 5 (#380).
+	var area_w: float = _content_area.size.x
+	if area_w <= 0.0:
+		area_w = float(get_viewport().get_visible_rect().size.x)
+	var n_slats: int = sorted_entries.size()
+	var total_ratio: float = SLAT_RATIO_SELECTED \
+		+ float(max(n_slats - 1, 0)) * SLAT_RATIO_UNSELECTED
+	if total_ratio <= 0.0:
+		total_ratio = SLAT_RATIO_SELECTED
+	_slat_ref_width = area_w * SLAT_RATIO_SELECTED / total_ratio
+
 	_slats.clear()
 	_slat_data.clear()
 
@@ -454,6 +474,18 @@ func _build_class_select_slats() -> void:
 		hbox.add_child(d["slat"])
 		_slats.append(d["slat"])
 		_slat_data.append(d)
+
+	# Autopilot/sanity scaffolding: confirm every slat received art (catches
+	# the class-art override / missing-art class of bug — #380) and that the
+	# crop is built width-stable. Gated to autopilot runs to avoid log noise.
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		var art_resolved: int = 0
+		for d in _slat_data:
+			if d["portrait"].texture != null:
+				art_resolved += 1
+		print("[sanity] checkpoint: class_select_art resolved=%d/%d" \
+			% [art_resolved, _slat_data.size()])
+		print("[sanity] checkpoint: slat_crop_stable ref_width=%.1f" % _slat_ref_width)
 
 	# Apply the initial selection state instantly (no animation) so the
 	# selected slat is already expanded on first paint.
@@ -490,15 +522,16 @@ func _make_slat_pack(cls, orig_index: int) -> Dictionary:
 	slat.size_flags_stretch_ratio = SLAT_RATIO_UNSELECTED
 	slat.clip_contents = true
 
-	# Portrait fills the slat
-	var portrait := TextureRect.new()
-	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if _class_art_cache.has(cls.id):
-		portrait.texture = _class_art_cache[cls.id]
-	slat.add_child(portrait)
+	# Portrait is drawn into a FIXED-width inner frame (centered in the slat),
+	# not stretched to the slat directly. The slat clips, so its animated width
+	# only changes how much of the constant-size cutout is revealed — the
+	# cover-crop is solved once against a stable size and can no longer drift
+	# its origin as the container re-rounds 14 fractional widths each animation
+	# frame (#380 — hucast/hucaseal cutout wobble). Mirrors SlatsView.tsx
+	# object-fit:cover where the image is anchored and the flex box clips.
+	var frame := _make_portrait_frame(_slat_ref_width, _class_art_cache.get(cls.id, null))
+	slat.add_child(frame)
+	var portrait: TextureRect = frame.get_node("Portrait")
 
 	# Type-coloured top + bottom stripes — shown only when this slat is
 	# the selected one. Visibility is toggled by _animate_to_selection().
@@ -610,6 +643,50 @@ func _make_slat_pack(cls, orig_index: int) -> Dictionary:
 		"overlay": overlay,
 		"orig_index": orig_index,
 	}
+
+
+## Build the inner portrait frame for a slat. The frame is a fixed-width
+## (`ref_width` px) Control centered horizontally in its parent slat and
+## spanning the full slat height; the slat's `clip_contents` reveals only the
+## part of the frame that overlaps it. Because the frame's width is constant —
+## anchored at the parent's horizontal centre with ±ref_width/2 offsets, so it
+## is independent of the slat's animated stretch ratio — the child TextureRect
+## solves STRETCH_KEEP_ASPECT_COVERED against a stable size and the crop origin
+## never shifts during the selection transition (issue #380). Static + pure so
+## the unit test can build a frame without standing up the whole screen.
+## The returned frame's TextureRect child is named "Portrait".
+static func _make_portrait_frame(ref_width: float, tex) -> Control:
+	var frame := Control.new()
+	frame.name = "PortraitFrame"
+	# Constant width, centred horizontally: anchors collapse to the slat's
+	# midpoint so the resolved width is offset_right - offset_left = ref_width,
+	# regardless of the slat's own (animated) width.
+	frame.anchor_left = 0.5
+	frame.anchor_right = 0.5
+	frame.anchor_top = 0.0
+	frame.anchor_bottom = 1.0
+	frame.offset_left = -ref_width / 2.0
+	frame.offset_right = ref_width / 2.0
+	frame.offset_top = 0.0
+	frame.offset_bottom = 0.0
+	frame.clip_contents = true
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var portrait := TextureRect.new()
+	portrait.name = "Portrait"
+	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	# COVERED centres the crop. For the shipped Cast arts (e.g. hucast 250x347)
+	# the frame is narrower in aspect than the art, so the cover-crop runs along
+	# the X axis and the full height — heads included — is shown; centre and
+	# 'center top' coincide. Exact center-top parity for any future wider art is
+	# a Mac-side visual tune (SlatsView.tsx uses objectPosition 'center top').
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if tex != null:
+		portrait.texture = tex
+	frame.add_child(portrait)
+	return frame
 
 
 # ── Step 2: APPEARANCE ──────────────────────────────────────────

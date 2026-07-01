@@ -1121,7 +1121,7 @@ func _spawn_field_elements() -> void:
 						_cell_spawner._save_cell_state()
 						SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
 						SessionManager.flush_free_roam_field()
-					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+					SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 				else:
 					_fdbg("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
 					_cell_spawner._save_cell_state()
@@ -1417,7 +1417,7 @@ func _on_start_warp_interacted(_player: Node3D) -> void:
 		SessionManager.suspend_session()
 	else:
 		SessionManager.flush_free_roam_field()
-	SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+	SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 
 
 ## Field → city via player-dropped telepipe. Saves section state so coming
@@ -2081,12 +2081,12 @@ func _on_end_reached() -> void:
 			SessionManager.suspend_session()
 		else:
 			SessionManager.flush_free_roam_field()
-		SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+		SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 
 
 func _return_to_city() -> void:
 	SessionManager.return_to_city()
-	SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+	SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 
 
 func _unhandled_input(event: InputEvent) -> void:

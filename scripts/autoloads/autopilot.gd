@@ -28,7 +28,6 @@ const CHAR_CREATE := "res://scenes/2d/character_create.tscn"
 const CITY_MARKET := "res://scenes/3d/city/city_market.tscn"
 const CITY_OFFICE := "res://scenes/3d/city/city_office.tscn"
 const CITY_COUNTER := "res://scenes/3d/city/city_counter.tscn"
-const CITY_WARP := "res://scenes/3d/city/city_warp.tscn"
 const GUILD_COUNTER := "res://scenes/2d/guild_counter.tscn"
 const WARP_TELEPORTER := "res://scenes/2d/warp_teleporter.tscn"
 const VALLEY_FIELD := "res://scenes/3d/field/valley_field.tscn"
@@ -40,9 +39,10 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
 const COUNTER_NPC_POS := Vector3(-8.31, 0.5, -9.5)       # inside QuestCounterNPC range
-const COUNTER_TO_OFFICE_POS := Vector3(11.496, 0.5, -11.572)   # counter Area3D → office
-const COUNTER_TO_WARP_POS := Vector3(-0.015, 0.5, -22.305)     # counter Area3D → warp
-const WARP_PAD_POS := Vector3(0.08, 0.5, 1.0)                  # central WarpTeleporter pad
+const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
+# Warp teleporter merged into the counter (#city-merge): interact in-place, no
+# counter→warp scene transition.
+const WARP_PAD_POS := Vector3(0.05, -5.0, 60.96)               # WarpTeleporter pad in the counter
 
 # ── Timing ─────────────────────────────────────────────────────
 const STEP_DELAY := 0.8         # let a scene settle (slide/fade) before acting
@@ -188,6 +188,13 @@ var _cell_visit_count: Dictionary = {}
 # Checked by the next _on_field_cell_loaded — if the loaded cell key differs,
 # the autopilot logs CELL DRIFT (something warped us somewhere unexpected).
 var _expected_next_cell_key: String = ""
+
+# cell_pos → last cell-flush tally seen for that cell (dead, boxes_destroyed,
+# drops_pending, msgs_read, items_collected). Fed by CellObjectSpawner via
+# observe_cell_flush() to enforce the /states/field-lifecycle persistence
+# contract live: progress (kills/breaks/reads/pickups) MUST NOT regress and
+# ground drops MUST NOT respawn across a cell re-visit.
+var _cell_flush_tally: Dictionary = {}
 
 # Boot-phase: tracks whether we've finished the office intro + kicked off the
 # "Return to Title" path, so the title-scene handler can recognize "we're done"
@@ -505,6 +512,45 @@ func _get_current_cell_key(field: Node) -> String:
 	return "%d:%s" % [sec_idx, pos]
 
 
+## Live persistence oracle (#423 + /states/field-lifecycle §Persistence).
+## CellObjectSpawner._save_cell_state hands us the per-cell tally (keyed by
+## SECTION + pos) on every exit-flush. On a re-flush of a cell we've already
+## seen, the *accumulating* progress MUST NOT regress — killed enemies, broken
+## boxes, read messages, and collected items only ever go up for a given cell;
+## a drop in any of those counts means a re-entry resurrected something (the bug
+## this feature guards against). We print "[sanity] FAIL:" so the autopilot
+## pass-oracle (grep 'FAIL:') flags the run. Non-aborting: we keep going so the
+## run also reports any *other* regressions in later cells.
+##
+## NOTE: drops_pending is reported but NOT asserted here — ground loot is
+## *generated* by combat/box-breaks that can post-date an early pass-through
+## flush, so the count is legitimately non-monotonic. Drop identity persistence
+## (a specific drop keeps its position + amount through a round-trip, and
+## collected drops don't reappear) is pinned by the seeded unit test
+## test_drop_state_survives_warp_flush instead.
+func observe_cell_flush(cell_key: String, tally: Dictionary) -> void:
+	var prev: Dictionary = _cell_flush_tally.get(cell_key, {})
+	if not prev.is_empty():
+		# Accumulating fields: a re-visit must never show LESS progress.
+		for field in ["dead", "boxes_destroyed", "msgs_read", "items_collected"]:
+			var now_v: int = int(tally.get(field, 0))
+			var was_v: int = int(prev.get(field, 0))
+			if now_v < was_v:
+				print("[sanity] FAIL: state regressed at cell %s (%s %d→%d) — respawn/undo on re-entry" % [
+					cell_key, field, was_v, now_v])
+	# Keep the highest tally seen for this cell (guards against a late
+	# pass-through flush — e.g. an 'open_gate' return visit that doesn't
+	# re-fight — making the baseline drop and masking a later real regression).
+	var merged := tally.duplicate()
+	for field in ["dead", "boxes_destroyed", "msgs_read", "items_collected"]:
+		merged[field] = max(int(tally.get(field, 0)), int(prev.get(field, 0)))
+	_cell_flush_tally[cell_key] = merged
+	print("[sanity] checkpoint: cell-state-held cell=%s dead=%d boxes_destroyed=%d drops_pending=%d msgs_read=%d items_collected=%d" % [
+		cell_key, int(tally.get("dead", 0)), int(tally.get("boxes_destroyed", 0)),
+		int(tally.get("drops_pending", 0)), int(tally.get("msgs_read", 0)),
+		int(tally.get("items_collected", 0))])
+
+
 ## Position of a quest in data/quests/manifest.json (0-based). Returns 0 if not
 ## found. Used to scroll-down at the guild counter — entries are displayed in
 ## manifest order after the passthrough "report / cancel" rows.
@@ -726,11 +772,8 @@ func _drive_scene(path: String) -> void:
 			return
 		print("[sanity] checkpoint: city_counter")
 		_counter_npc_interacted = false
+		_warp_pad_interacted = false  # warp pad lives here now (merged map)
 		_after(STEP_DELAY * 2.0, _drive_city_counter)
-	elif path == CITY_WARP:
-		print("[sanity] checkpoint: city_warp")
-		_warp_pad_interacted = false
-		_after(STEP_DELAY * 2.0, _drive_city_warp)
 	elif path == VALLEY_FIELD:
 		print("[sanity] checkpoint: valley_field entered")
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
@@ -818,7 +861,18 @@ func _drive_char_create() -> void:
 	if step != _cc_acted_step:
 		_cc_acted_step = step
 		match step:
-			0, 1:
+			0:
+				# Exercise the class-select slat tween — the path that produced
+				# the #380 cutout wobble — by navigating right then back left
+				# before confirming, so the selection width animation actually
+				# runs. (Previously this step pressed ui_accept immediately and
+				# the slats were never animated.)
+				for i in range(3):
+					_after(0.25 * float(i), func() -> void: _press_action("ui_right"))
+				for i in range(2):
+					_after(0.75 + 0.25 * float(i), func() -> void: _press_action("ui_left"))
+				_after(1.4, func() -> void: _press_action("ui_accept"))
+			1:
 				_press_action("ui_accept")
 			2:
 				_enter_name(node)
@@ -1426,6 +1480,51 @@ func _el_disk_marker_ok(character) -> bool:
 			_after(STEP_DELAY, _save_and_quit)
 			return false
 	print("[sanity] checkpoint: equip-legality disk ✕ (unlearnable '%s' marked, learnable not)" % illegal_disk)
+	return _el_disk_dup_use_ok(character, legal_disk)
+
+
+# #417: a duplicate learnable disk (minted as "disk_<t>_<n>#2") must still
+# learn at Lv.N — not be rejected because int("<n>#2") concatenates to a
+# huge over-cap level. Exercise the data path through Inventory.use_item on
+# the SECOND instance, then restore the character's techniques.
+func _el_disk_dup_use_ok(character, legal_disk: String) -> bool:
+	if legal_disk.is_empty():
+		return true
+	var parts := legal_disk.split("_", false, 2)
+	var tid := str(parts[1]) if parts.size() >= 3 else ""
+	var lvl := int(str(parts[2])) if parts.size() >= 3 else 0
+	var techs_backup: Dictionary = (character.get("techniques", {}) as Dictionary).duplicate(true)
+	Inventory.add_item(legal_disk, 1)
+	Inventory.add_item(legal_disk, 1)
+	var dup_id := ""
+	for k in Inventory._items.keys():
+		var kk := str(k)
+		if kk != legal_disk and kk.begins_with(legal_disk + "#"):
+			dup_id = kk
+			break
+	var dup_ok: bool = (not dup_id.is_empty()) and Inventory.use_item(dup_id)
+	var learned: int = TechniqueManager.get_technique_level(character, tid)
+	# Display half: the technique is now known at Lv.N, and the FIRST copy is still
+	# in the bag. It must read as grey-WITHOUT-✕ (already known) through the shared
+	# sell_disabled predicate, not a permanent ✕. Capture before restoring techs.
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var rest_greyed: bool = ShopNavCls.sell_disabled(legal_disk)
+	var rest_no_x: bool = not ShopNavCls.sell_cannot_use(legal_disk)
+	# Clean up both instances and restore prior technique state.
+	Inventory.remove_item(legal_disk, Inventory.get_item_count(legal_disk))
+	if not dup_id.is_empty():
+		Inventory.remove_item(dup_id, Inventory.get_item_count(dup_id))
+	character["techniques"] = techs_backup
+	if not dup_ok or learned != lvl:
+		print("[sanity] FAIL: disk dup-use — '%s' (dup '%s') learned Lv.%d, expected Lv.%d (ok=%s)" % [legal_disk, dup_id, learned, lvl, str(dup_ok)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: disk dup-use strips suffix (#2 learns Lv.%d)" % lvl)
+	if not rest_greyed or not rest_no_x:
+		print("[sanity] FAIL: already-known disk grey — remaining '%s' greyed=%s no-✕=%s (expected true/true)" % [legal_disk, str(rest_greyed), str(rest_no_x)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: already-known disk greyed without ✕ (Lv.%d duplicate)" % lvl)
 	return true
 
 
@@ -1818,9 +1917,13 @@ func _drive_city_counter() -> void:
 	if not bool(accepted.get("briefing_shown", false)):
 		print("[sanity] counter: teleport to office trigger (for briefing)")
 		_teleport_player(COUNTER_TO_OFFICE_POS)
-	else:
-		print("[sanity] counter: teleport to warp trigger")
-		_teleport_player(COUNTER_TO_WARP_POS)
+	elif not _warp_pad_interacted:
+		# Warp pad now lives in this scene (merged map). Teleport onto it and
+		# interact in-place to open the warp_teleporter overlay — no transition.
+		_warp_pad_interacted = true
+		print("[sanity] counter: teleport to warp pad")
+		_teleport_player(WARP_PAD_POS)
+		_after(0.8, func() -> void: _press_action("interact"))
 
 
 # ── Guild counter overlay ──────────────────────────────────────
@@ -1857,19 +1960,8 @@ func _drive_guild_counter() -> void:
 	_after(1.2, _drive_guild_counter)
 
 
-# ── City: warp ─────────────────────────────────────────────────
-## Teleport onto the central WarpTeleporter pad and press interact, which
-## opens the warp_teleporter UI overlay.
-func _drive_city_warp() -> void:
-	var node := get_tree().current_scene
-	if node == null or node.scene_file_path != CITY_WARP:
-		return
-	if _warp_pad_interacted:
-		return
-	_warp_pad_interacted = true
-	print("[sanity] warp: teleport to central pad")
-	_teleport_player(WARP_PAD_POS)
-	_after(0.8, func() -> void: _press_action("interact"))
+# City warp is no longer a separate scene — the WarpTeleporter pad lives in the
+# counter (merged map) and is driven in-place by _drive_city_counter (#city-merge).
 
 
 # ── Field: per-cell driver ─────────────────────────────────────
