@@ -23,6 +23,12 @@ const GATE_WALL := Color(0.4, 0.4, 0.4)
 const KEY_LABEL_COLOR := Color(0.1, 0.1, 0.17, 0.8)
 const KEY_BG_ACTIVE := Color(0.8, 0.53, 0.27, 0.8)  # Orange for collected
 const KEY_BG_INACTIVE := Color(0.59, 0.71, 0.82, 0.3)
+# Enemy markers (#422, spec /states/enemies): filled orange dots, visually
+# distinct from the green player arrow. Bosses get ≈8× the AREA of a normal
+# dot (radius × sqrt(8)).
+const ENEMY_COLOR := Color(1.0, 0.55, 0.13)
+const ENEMY_DOT_RADIUS := 2.2
+const BOSS_DOT_AREA_RATIO := 8.0
 
 var _floor_triangles: Array = []   # Array[PackedVector2Array] — 3 verts each
 var _boundary_lines: Array = []    # Array[[Vector2, Vector2]]
@@ -33,6 +39,12 @@ var _player_display_dir := Vector2(0, 1)  # arrow direction in display space
 var _last_drawn_pos := Vector2(-999, -999)  # last position that triggered a redraw
 const REDRAW_THRESHOLD := 1.5  # minimum pixel movement to trigger redraw
 var _has_player_tracking := false
+
+# Live enemy markers (#422) — enemies registered via track_enemy() while alive
+# in the currently loaded cell. Death signals untrack; positions re-projected
+# each frame by update_enemies() through the same SVG pipeline as the player.
+var _tracked_enemies: Array = []       # alive enemy Node3Ds in this cell
+var _enemy_markers: Dictionary = {}    # instance_id → {"pos": Vector2, "radius": float}
 
 # Key counter (drawn below minimap)
 var _keys_collected: int = 0
@@ -143,6 +155,94 @@ func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> 
 		queue_redraw()
 
 
+# ── Enemy markers (#422) ─────────────────────────────────────────────────────
+
+## Register a live enemy for dot tracking. Scoping mirrors the player marker
+## exactly: the minimap instance is rebuilt per loaded cell, so only this
+## cell's enemies ever register — no off-cell markers, no cap. Death removes
+## the marker via the enemy's own death signal (EnemyBase emits `died(enemy)`,
+## legacy EnemySpawn emits `defeated`), so no stale dots survive a kill.
+func track_enemy(enemy: Node3D) -> void:
+	if enemy == null or _tracked_enemies.has(enemy):
+		return
+	_tracked_enemies.append(enemy)
+	if enemy.has_signal("died"):
+		enemy.connect("died", _on_tracked_enemy_died)
+	elif enemy.has_signal("defeated"):
+		enemy.connect("defeated", untrack_enemy.bind(enemy))
+	queue_redraw()
+
+
+func _on_tracked_enemy_died(enemy: Node) -> void:
+	untrack_enemy(enemy)
+
+
+func untrack_enemy(enemy: Node) -> void:
+	_tracked_enemies.erase(enemy)
+	if enemy != null:
+		_enemy_markers.erase(enemy.get_instance_id())
+	queue_redraw()
+
+
+## Live marker count — the autopilot probe asserts this against the alive
+## enemy roster. Freed instances (death animation finished → queue_free)
+## are swept first so the count never includes dangling references.
+func get_enemy_marker_count() -> int:
+	_sweep_tracked_enemies()
+	return _tracked_enemies.size()
+
+
+func _sweep_tracked_enemies() -> void:
+	for i in range(_tracked_enemies.size() - 1, -1, -1):
+		if not is_instance_valid(_tracked_enemies[i]):
+			_tracked_enemies.remove_at(i)
+
+
+## Project every tracked enemy into display space — same SVG-metadata pipeline
+## (and therefore the same loaded-cell scoping) as update_player(). Called
+## per-frame by the field controller alongside the player update.
+func update_enemies(map_root: Node3D) -> void:
+	if not _has_player_tracking:
+		return
+	_sweep_tracked_enemies()
+	var inv := map_root.global_transform.affine_inverse()
+	var markers: Dictionary = {}
+	var needs_redraw: bool = false
+	for enemy in _tracked_enemies:
+		if not enemy.is_inside_tree():
+			continue
+		var local: Vector3 = inv * (enemy as Node3D).global_position
+		var svg := Vector2(
+			local.x * _svg_scale + _svg_offset_x,
+			local.z * _svg_scale + _svg_offset_y)
+		var id: int = enemy.get_instance_id()
+		var entry := {
+			"pos": _svg_to_display(svg),
+			"radius": enemy_marker_radius(_is_boss_enemy(enemy)),
+		}
+		markers[id] = entry
+		var prev: Dictionary = _enemy_markers.get(id, {})
+		if prev.is_empty() or entry["pos"].distance_squared_to(prev["pos"]) > REDRAW_THRESHOLD * REDRAW_THRESHOLD:
+			needs_redraw = true
+	if markers.size() != _enemy_markers.size():
+		needs_redraw = true
+	if needs_redraw:
+		_enemy_markers = markers
+		queue_redraw()
+
+
+## Boss dots carry ≈8× the AREA of a normal dot → radius × sqrt(8).
+static func enemy_marker_radius(is_boss: bool) -> float:
+	return ENEMY_DOT_RADIUS * sqrt(BOSS_DOT_AREA_RATIO) if is_boss else ENEMY_DOT_RADIUS
+
+
+func _is_boss_enemy(enemy: Node) -> bool:
+	var edata: Variant = enemy.get("enemy_data")
+	if edata is Resource:
+		return bool(edata.get("is_boss"))
+	return false
+
+
 # ── Drawing ──────────────────────────────────────────────────────────────────
 
 func _draw() -> void:
@@ -205,6 +305,10 @@ func _draw() -> void:
 		if not lbl.is_empty():
 			draw_string(font, c + Vector2(-4, -8), lbl,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, gate["color"])
+
+	# Enemy markers — filled orange dots (#422); player arrow draws on top
+	for entry in _enemy_markers.values():
+		draw_circle(entry["pos"] + map_offset, entry["radius"], ENEMY_COLOR)
 
 	# Player arrow
 	if _has_player_tracking:

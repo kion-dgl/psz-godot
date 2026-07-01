@@ -2137,7 +2137,37 @@ func _run_next_action(field: Node) -> void:
 const KILL_ALL_MAX_WAVES := 5
 
 func _do_kill_all(field: Node) -> void:
+	_minimap_enemy_probe(field)
 	_kill_all_wave(field, 0)
+
+
+## #422 minimap enemy-marker probe: the room minimap's live dot count MUST
+## match the alive count of the cell's enemy roster (spec /states/enemies —
+## minimap markers). Reads the field's privates via node.get(), same as the
+## other screen probes. Cheap — one pass over _room_enemies per kill_all.
+func _minimap_enemy_probe(field: Node) -> void:
+	var minimap: Variant = field.get("_room_minimap")
+	var room_enemies: Variant = field.get("_room_enemies")
+	if minimap == null or not (room_enemies is Array):
+		return
+	if not minimap.has_method("get_enemy_marker_count"):
+		return
+	var alive: int = 0
+	for enemy in room_enemies:
+		if not is_instance_valid(enemy):
+			continue
+		# EnemyBase carries is_alive; legacy EnemySpawn carries element_state.
+		var alive_flag: Variant = enemy.get("is_alive")
+		if alive_flag != null:
+			if bool(alive_flag):
+				alive += 1
+		elif str(enemy.get("element_state")) != "dead":
+			alive += 1
+	var markers: int = minimap.get_enemy_marker_count()
+	if markers == alive:
+		print("[sanity] minimap-probe: enemy markers=%d alive=%d ok" % [markers, alive])
+	else:
+		print("[sanity] FAIL: minimap enemy markers=%d != alive=%d" % [markers, alive])
 
 
 func _kill_all_wave(field: Node, attempt: int) -> void:
