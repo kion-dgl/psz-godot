@@ -260,6 +260,35 @@ static func sell_cannot_use(item_id: String) -> bool:
 	return false
 
 
+## The grey-WITHOUT-✕ companion to sell_cannot_use: a *temporary / already-
+## satisfied* block that mutes the row but carries no permanent ✕ marker (spec
+## /states/shops "row contract", /mechanics/equip-legality). For a technique
+## disk the class CAN learn, this is true when can_learn currently rejects it —
+## the technique is already known at this level or higher, or the player is below
+## the disk's required level. Every item-list surface (sell lists, storage,
+## start-menu inventory) routes its grey tier through here so already-known disks
+## mute consistently — the same single-predicate, no-drift rule as the ✕ marker.
+## Non-disks (and the permanent class-block, which is the ✕ tier) return false.
+static func sell_disabled(item_id: String) -> bool:
+	var base_id: String = Inventory.get_base_id(item_id)
+	if not base_id.begins_with("disk_"):
+		return false
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	var parsed: Dictionary = _parse_disk_id(base_id)
+	if parsed.is_empty():
+		return false
+	var technique_id: String = str(parsed.get("technique_id", ""))
+	var level: int = int(parsed.get("level", 1))
+	# A permanent class block is the ✕ tier (sell_cannot_use), not the grey tier.
+	if not TechniqueManager.class_can_learn(character, technique_id, level):
+		return false
+	# Class can learn it, but not right now → already known at >= level, or the
+	# player level is too low. Both are temporary/satisfied blocks → grey, no ✕.
+	return not TechniqueManager.can_learn(character, technique_id, level).get("allowed", false)
+
+
 ## Parse a technique-disk inventory id "disk_<technique>_<level>" into
 ## {technique_id, level}, or {} when it doesn't match. Technique ids are single
 ## tokens (foie, gizonde, …), so the final underscore field is the level.

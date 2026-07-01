@@ -65,6 +65,8 @@ const chart = `stateDiagram-v2
 
   <h3>ITEMS (and ITEMS_MOVE)</h3>
   <p>Lists the inventory in storage order. Accept on a row opens an item modal offering <code>Equip</code> / <code>Unequip</code> (when the item is equippable), <code>Use</code>, <code>Drop</code> (disabled for equipped gear), and <code>Sort</code>; choices are greyed PSO-style when unavailable. <code>Use</code> calls <code>Inventory.use_item</code> and writes a one-shot result line (restored HP / PP, learned a disk, telepipe placed, etc.). <code>Sort</code> offers <code>Auto</code> (rebuild in canonical order) or <code>Manual</code>, and <code>Manual</code> enters <strong>ITEMS_MOVE</strong>, a relocate sub-mode where Up / Down pick the destination row and Accept drops the held item there (Back cancels the move). The move origin is tracked by item id so the cursor survives a list that reorders under it.</p>
+  <p>The items list <strong>MUST</strong> respect its panel bounds: it scrolls by <strong>whole rows</strong> and clips to the inner panel, so a row is never painted past the panel border (the list must not "pop out" the bottom of the UI). Only fully-visible rows render; the visible count follows from the panel height and row metrics, with <code>▲ / ▼ more</code> cues shown while content extends above / below the window. Row padding matches the 2D shop lists (the same name-font size and row height) so the inventory does not read as cramped relative to the shops.</p>
+  <p>A <strong>disabled inventory row MUST read as disabled and offer no <code>Use</code></strong> — the visual marker and the action agree (the grey-tier <em>marker == action</em> rule; see <a href="/mechanics/equip-legality">Equip Legality</a>). A row is disabled when the item is permanently class-unusable (<code>ShopNav.sell_cannot_use</code> — gear the class can't equip, or a disk the class can never learn → the <code>✕</code> marker) <em>or</em> temporarily useless (<code>ShopNav.sell_disabled</code> — a technique disk already known at this level or higher, or below the required player level → greyed, no <code>✕</code>). In both cases the row's <code>usable</code> flag is false, so the item modal <strong>MUST NOT</strong> offer <code>Use</code> (only <code>Drop</code> / <code>Sort</code> remain): buying five Lv.1 Foie disks and learning one leaves the other four greyed <em>and</em> un-usable. The disabled style <strong>MUST</strong> be clearly distinct from a normal row — a faded text colour <em>and</em> a dimmed icon, not a near-normal shade.</p>
 
   <h3>EQUIP (and EQUIP_PICK)</h3>
   <p>Lists the character's equipment slots — a <code>Weapon</code> slot, the armor <code>Frame</code> slot, and one <code>Unit</code> slot per the equipped frame instance's own unit-slot count (a per-instance rolled value, not the resource's <code>max_slots</code> — see <a href="/mechanics/inventory">Inventory</a>; so the unit slots are built dynamically, and an unarmored character shows none). Accept on a slot enters <strong>EQUIP_PICK</strong>, which lists the inventory items that fit that slot (<code>_get_equip_candidates</code>); Accept there equips the chosen item via <code>_do_equip</code> and returns to EQUIP, Back returns without changing the loadout. Equipping a weapon or mag refreshes the player's held model; changing the armor frame to a different item unequips <em>every</em> currently-equipped unit (not only those beyond the new frame's capacity) — see the equipping-gear contract under <a href="/mechanics/inventory">Inventory</a>.</p>
@@ -90,6 +92,30 @@ const chart = `stateDiagram-v2
   <h2>Techs gating</h2>
   <p>The <code>Techs</code> view <strong>MAY</strong> be absent. <code>_can_use_techs()</code> looks up the active character's class and returns <code>false</code> when its race is <code>CAST</code>; <code>_get_menu_labels()</code> (and the parallel <code>_get_menu_descs()</code>) omit the <code>Techs</code> entry in that case. Therefore, for a CAST character the main menu <strong>MUST NOT</strong> offer Techs, and for any non-CAST character it <strong>MUST</strong>. Because the label list is the cursor's wrap bound, the same gate that hides the label also keeps the cursor from ever landing on a missing row.</p>
 
+  <h2>Persistence across an area transition</h2>
+  <p>Because the menu is an autoload <code>CanvasLayer</code>, it survives a full
+  area transition (<code>SceneManager.goto_scene</code> → <code>change_scene_to_file</code>):
+  the node is not freed and rebuilt with the scene. Its canvas, however, only
+  repaints on input or open (<code>queue_redraw</code>), so a transition that fires
+  a redraw mid-rebuild can repaint at a moment a freshly <code>load()</code>ed
+  visual is transiently unavailable.</p>
+  <p>Therefore every menu visual that is drawn while a view is open <strong>MUST</strong>
+  be cached on the persistent autoload rather than re-loaded inside the draw call,
+  so a redraw can never silently skip it. The action-palette icons already follow
+  this (<code>_get_action_icon</code> → <code>_icon_cache</code>). The Palette
+  HUD-preview <strong>background image</strong> (<code>palette_bg.png</code> /
+  <code>palette_bg_r.png</code>) <strong>MUST</strong> likewise be cached
+  (<code>_get_palette_bg</code> → <code>_pal_bg_cache</code>); the renderer
+  <strong>MUST NOT</strong> <code>load()</code> it inline per draw. Nulls
+  <strong>MUST NOT</strong> be cached, preserving recovery after a late pack mount.</p>
+  <p>Additionally, the menu <strong>MUST</strong> re-issue a redraw on the area-load
+  signal (<code>SceneManager.scene_changed</code>) when it is open, so a Palette page
+  that was open across the warp repaints in place from the cache. The player
+  <strong>MUST NOT</strong> have to exit and re-enter the page to recover the
+  background. The redraw handler <strong>MUST</strong> be guarded on the open state
+  so overlay pushes (which also emit <code>scene_changed</code>) do not trigger
+  spurious repaints on a closed menu.</p>
+
   <h2>Data contract</h2>
   <p>A set of pure data helpers feeds both rendering (the <code>_draw_*</code> family) and input (the <code>_input_*</code> router), so the two halves never disagree about what a view contains:</p>
   <ul>
@@ -109,6 +135,7 @@ const chart = `stateDiagram-v2
     <li><code>open()</code> <strong>MUST</strong> reset to <code>MAIN</code> and clear all per-mode cursors.</li>
     <li>The <code>Techs</code> view <strong>MUST</strong> be hidden for CAST characters and present otherwise.</li>
     <li>Rendering and input <strong>MUST</strong> derive their view contents from the same data helpers.</li>
+    <li>Every menu visual drawn while open <strong>MUST</strong> be cached on the persistent autoload (never <code>load()</code>ed inline per draw), and the menu <strong>MUST</strong> repaint on <code>scene_changed</code> when open — so an open Palette page survives an area transition without an exit/re-enter to recover its background (#421).</li>
   </ul>
 
   <h2>Implemented by</h2>

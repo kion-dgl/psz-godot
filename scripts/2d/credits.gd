@@ -65,6 +65,9 @@ func _build_credits_data() -> void:
 		["Anime Combat Cowboy", t, 16],
 		["Booth.pm — Saloon Blackjack Dealer", t, 16],
 		["", t, 16],
+		["Dairon City Stage Models", t, 16],
+		["Calum \"Limitiv\" — limitiv.co.uk", t, 16],
+		["", t, 16],
 		["", t, 16],
 
 		["— Engine —", h, 20],

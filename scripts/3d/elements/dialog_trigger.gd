@@ -237,7 +237,7 @@ func _spawn_telepipe_at_position() -> void:
 	else:
 		# Fallback: go to city directly
 		telepipe.activated.connect(func() -> void:
-			SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+			SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 		)
 
 

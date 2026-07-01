@@ -15,6 +15,15 @@ import Concept from '../../layouts/Concept.astro';
     <li>Equipped gear <strong>MUST NOT</strong> be deposited or sold until unequipped.</li>
   </ul>
 
+  <h2>Parsing per-slot instance ids</h2>
+  <p>An instance id is a <strong>storage / equip / consume reference only</strong>. Any code that derives a per-slot item's <strong>base type</strong> — <em>or any field embedded in the base id</em> (a disk's technique and level, a weapon's base type) — <strong>MUST</strong> first strip the instance suffix via <code>Inventory.get_base_id()</code>. Parsing the raw instance id (<code>disk_foie_3#2</code>) for an embedded field is a bug: <code>int("3#2")</code> evaluates to <code>32</code> (Godot's <code>int()</code> concatenates the digits across the <code>#</code> — it does <strong>not</strong> truncate at it), so a duplicate disk would be read as Lv.32 and rejected as over the class cap.</p>
+  <ul>
+    <li>Buying <em>N</em> copies of a learnable technique disk <strong>MUST</strong> yield <em>N</em> independently usable copies. Each copy <strong>MUST</strong> learn/upgrade the technique to the <strong>same level as the first</strong> — a duplicate is never "greyed out" or rejected for being a later instance.</li>
+    <li>The displayed <code>Teaches &lt;tech&gt; Lv.&lt;n&gt;</code> line <strong>MUST NOT</strong> contain the <code>#</code>-suffix (it reads <code>Lv.3</code>, never <code>Lv.3#2</code>).</li>
+    <li>Consuming a disk <strong>MUST</strong> remove the exact instance the player selected (<code>remove_item</code> keeps the full instance id), not an arbitrary base-id copy.</li>
+  </ul>
+  <p>This generalizes the same <code>get_base_id</code> rule already required for category sorting and the unlearnable-disk <code>✕</code> marker (see <a href="/mechanics/equip-legality">equip-legality</a>) to the use/parse path; it does not contradict the per-slot instance-id text above.</p>
+
   <h2>Equipping gear</h2>
   <p>Gear is equipped from the <a href="/start-menu">equipment screen</a>; each equip slot (weapon, armor <code>frame</code>, one <code>unit</code> slot per the equipped frame instance's own <strong>unit-slot count</strong>, mag) holds at most one item, referenced by its <strong>instance id</strong>.</p>
   <ul>
