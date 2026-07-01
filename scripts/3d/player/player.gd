@@ -948,6 +948,15 @@ func _respawn() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Momentary palette swap (#447, spec /states/player-state): the back page
+	# shows only while palette_swap is HELD. The release leg runs before every
+	# gate below so a menu/cutscene/modal opening mid-hold can never latch the
+	# back page — the release always restores the front page (idempotent no-op
+	# when already there).
+	if event.is_action_released("palette_swap"):
+		ActionPalette.show_front()
+		_tech_targeting_dirty = true
+
 	if current_state == PlayerState.CUTSCENE:
 		return
 
@@ -963,9 +972,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	# would play attack anims and spawn projectiles in town with a weapon
 	# equipped. Interact stays available for NPC conversations.
 	if not _is_in_city():
-		# Palette swap
+		# Palette swap — hold-to-activate (#447): press shows the back page;
+		# the matching release (handled unconditionally above) returns to the
+		# front page. Edge-driven, never latched.
 		if event.is_action_pressed("palette_swap"):
-			ActionPalette.swap_page()
+			ActionPalette.show_back()
 			_tech_targeting_dirty = true
 
 		# Action palette inputs — press starts charge for techniques, release casts

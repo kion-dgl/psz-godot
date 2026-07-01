@@ -33,6 +33,7 @@ func _run_tests_core() -> void:
 	test_character_creation()
 	test_equipment()
 	test_player_states()
+	test_palette_momentary_swap()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -563,6 +564,54 @@ func test_player_states() -> void:
 	p.transition_to(states["DODGING"])
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
+	p.free()
+	print("")
+
+
+# ── Momentary palette swap (#447, spec /states/player-state) ───
+# The field back palette is hold-to-activate, not a latched toggle:
+# palette_swap press shows the back page, release returns to the front,
+# and the transitions are edge-driven — exactly one switch per press and
+# per release, no double-advance from a repeat press, no buffered toggle
+# surviving the release, and no latch when a modal opens mid-hold.
+func test_palette_momentary_swap() -> void:
+	print("── Momentary palette swap (#447) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p = PlayerScript.new()  # off-tree: _is_in_city() is false → field input path
+	while GameState.modal_stack > 0:
+		GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: gameplay unblocked")
+	ActionPalette.show_front()
+	assert_eq(ActionPalette.current_page, 0, "precondition: front page shown")
+
+	var switches: Array = []
+	var on_page := func(page: int) -> void: switches.append(page)
+	ActionPalette.page_changed.connect(on_page)
+	var press := _nav_event("palette_swap")
+	var release := _nav_event("palette_swap")
+	release.pressed = false
+
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "press shows the back page")
+	p._unhandled_input(press)  # repeat press without a release (echo / double-bind)
+	assert_eq(ActionPalette.current_page, 1, "repeat press does not double-advance (no latched cycle)")
+	p._unhandled_input(release)
+	assert_eq(ActionPalette.current_page, 0, "release returns to the front page")
+	p._unhandled_input(release)  # repeat release
+	assert_eq(ActionPalette.current_page, 0, "repeat release stays on the front page")
+	assert_eq(switches, [1, 0], "edge-driven: exactly one switch per press/release pair")
+	ActionPalette.page_changed.disconnect(on_page)
+
+	# The release must still restore the front page when gameplay got
+	# blocked mid-hold (e.g. a menu opened while R1 was down) — the back
+	# page MUST NOT latch behind the gameplay-blocked gate.
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "held: back page shown before the modal opens")
+	GameState.push_modal()
+	p._unhandled_input(release)
+	GameState.pop_modal()
+	assert_eq(ActionPalette.current_page, 0, "release mid-modal still returns to the front (no latch)")
+
 	p.free()
 	print("")
 
