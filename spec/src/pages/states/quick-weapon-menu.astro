@@ -1,0 +1,64 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import LayerBadge from '../../components/LayerBadge.astro';
+
+const chart = `flowchart TD
+  open["Open Quick Menu (quick-weapon action)"] --> build["Build weapon list"]
+  build --> preselect["Cursor starts at top of list (index 0)"]
+  preselect --> sel{"Accept on row == equipped weapon?"}
+  sel -- "yes" --> un["Unequip -> barehanded (equipment.weapon = '')\\nplay common46 SFX"]
+  sel -- "no" --> eq["Equip selected weapon"]
+  un --> close["Close menu"]
+  eq --> close
+`;
+---
+
+<Concept title="Quick Weapon Menu" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p>The Quick Weapon Menu is the in-field weapon palette — a small scrolling overlay (<code>_QuickWeaponMenu</code>, an inner <code>Control</code> of the field HUD) opened with the <code>quick_weapon</code> action. It lists the inventory weapons the active character can equip and lets the player swap the held weapon without going through the full start menu. This page is the normative contract for issue #424 (the unequip path, the SFX, and the list ordering) and is the parent quick-menu spec referenced by issue #141.</p>
+
+  <h2>Which rows appear</h2>
+  <p>The list is built by <code>_build_weapon_list()</code>. Each inventory item is included <strong>iff</strong> it resolves to a weapon in <code>WeaponRegistry</code> <em>and</em> passes the single canonical equip gate <code>EquipmentUtils.item_fits_slot(item_id, "weapon")</code> (PR #419). That gate is the same predicate that drives the shop / start-menu equippability markers, and it honors <code>DebugConfig.equip_all</code>. The menu <strong>MUST NOT</strong> re-derive equippability with a hand-rolled class check — see <a href="/mechanics/equip-legality">Equip Legality</a> for the canonical <code>item_fits_slot</code> contract.</p>
+
+  <h2>List ordering</h2>
+  <p>When a weapon is equipped, its row <strong>MUST</strong> sort to the <strong>end</strong> of the list; all other (non-equipped) rows <strong>MUST</strong> precede it, ordered alphabetically by display name. Rationale: selecting the equipped row is the <em>unequip</em> action (below), so it belongs at the bottom of the palette as the "take it off" choice rather than the first thing the cursor lands on.</p>
+
+  <h2>Initial cursor position</h2>
+  <p>When the menu opens, the cursor <strong>MUST</strong> start on the <strong>first row</strong> of the built list (<code>_selected_index == 0</code>) — the top, alphabetically-first equippable weapon. It <strong>MUST NOT</strong> jump to the equipped weapon's row. Rationale (issue #141): a fixed, predictable entry point reads better than a cursor that lands in a different place each open depending on what's equipped; and since the equipped row sorts to the <em>bottom</em> (above), pre-selecting it would drop the cursor at the far end of the list rather than a natural starting point. This supersedes the earlier "pre-select the equipped row" behavior (#424), which positioned the cursor on the equipped weapon on open.</p>
+
+  <h2>Selecting a row</h2>
+  <p>Accept on a row dispatches in <code>_equip_selected()</code>:</p>
+  <ul>
+    <li>Selecting a <strong>non-equipped</strong> weapon row <strong>MUST</strong> equip it (<code>equipment.weapon = item_id</code>), refresh the player's held model, and then close the menu — unchanged behavior.</li>
+    <li>Selecting the <strong>currently-equipped</strong> weapon row <strong>MUST</strong> unequip it: set <code>equipment.weapon = ""</code> so the player becomes barehanded, refresh the held model, and <em>then</em> close the menu. Prior to this fix, selecting the equipped row only dismissed the menu with no state change (issue #424).</li>
+  </ul>
+  <p>Both branches mutate the same <code>equipment</code> dictionary returned by <code>CharacterManager.get_active_character()</code> and both refresh the player model when a <code>player</code>-group node with <code>refresh_weapon()</code> is present (guarded, so it is a no-op in a headless / no-player context). Neither branch re-checks legality — the list already only contains rows the canonical gate allowed.</p>
+
+  <h2>Barehanded attack SFX</h2>
+  <p>When the player attacks with no weapon equipped, the attack SFX <strong>MUST</strong> be the barehanded sound (<code>common46</code>), <strong>NOT</strong> <code>common35</code> (the saber swing). The defect: <code>_get_equipped_weapon_type()</code> returns <code>0</code> for barehanded, but <code>WeaponData.WeaponType.SABER == 0</code>, so the weapon→SFX map resolved barehanded to the saber sound. The fix discriminates barehanded at the SFX call site (an explicit empty-<code>weapon_id</code> check, <code>_is_barehanded()</code>) and selects <code>BAREHANDED_SFX</code>; it <strong>MUST NOT</strong> change the <code>0</code> return of <code>_get_equipped_weapon_type()</code>, which several combat callers rely on as a fallback.</p>
+  <p><strong>Caveat (asset-pack republish pending):</strong> <code>common46</code> is not yet in the asset pack. Until the republish, the SFX site <strong>MUST</strong> play <em>nothing</em> for barehanded (gated behind a <code>ResourceLoader.exists()</code> check) rather than the wrong saber sound — i.e. this contract's binding requirement today is that barehanded <strong>MUST NOT</strong> play <code>common35</code>. Wiring the actual <code>common46</code> playback is a follow-up that requires <code>upload-pack</code>.</p>
+
+  <h2>Invariants</h2>
+  <ul>
+    <li>The equipped weapon row, when present, <strong>MUST</strong> be the last entry of the built list.</li>
+    <li>On open, the cursor <strong>MUST</strong> start at the first row (<code>_selected_index == 0</code>) and <strong>MUST NOT</strong> pre-select the equipped row.</li>
+    <li>Accept on the equipped row <strong>MUST</strong> unequip to barehanded (<code>equipment.weapon == ""</code>) and then close; Accept on any other row <strong>MUST</strong> equip that weapon and then close.</li>
+    <li>Barehanded attack SFX <strong>MUST</strong> resolve to <code>common46</code> and <strong>MUST NOT</strong> be <code>common35</code>; while <code>common46</code> is absent from the pack the barehanded swing is silent.</li>
+    <li>Which rows appear <strong>MUST</strong> come from the canonical <code>EquipmentUtils.item_fits_slot</code> gate, never a re-derived class check.</li>
+  </ul>
+
+  <h2>Tests</h2>
+  <p><code>test_quick_weapon_menu_unequip_and_order()</code> in <code>scripts/tools/test_runner.gd</code> locks the ordering (equipped row sorts last), the cursor starting at the top on open (<code>_selected_index == 0</code>, not the equipped row), the unequip-on-equipped-row behavior, and that equip-on-other-row still works; it also asserts <code>BAREHANDED_SFX != WEAPON_SFX[SABER]</code> (barehanded no longer maps to <code>common35</code>). <code>test_field_weapon_swap_gate()</code> covers the canonical-gate row filtering. The menu-driven autopilot step (opening the menu, accepting the equipped row) and actual <code>common46</code> audio playback are verified on hardware — the new unequip branch emits <code>[sanity] checkpoint: quickmenu-unequip-barehanded</code> as the hook for that probe.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><LayerBadge layer="scene">scripts/3d/field/field_hud.gd</LayerBadge> — <code>_QuickWeaponMenu._build_weapon_list()</code> (row filter + ordering) and <code>_QuickWeaponMenu._equip_selected()</code> (equip / unequip dispatch).</li>
+    <li><LayerBadge layer="scene">scripts/3d/player/player.gd</LayerBadge> — <code>WEAPON_SFX</code> / <code>BAREHANDED_SFX</code> and <code>_play_and_track_attack()</code> / <code>_is_barehanded()</code> (barehanded SFX discrimination).</li>
+  </ul>
+  <p>See also <a href="/mechanics/equip-legality">Equip Legality</a> (the canonical <code>item_fits_slot</code> gate) and the <a href="/states/start-menu">Start Menu</a> (the full equip flow, a different menu).</p>
+
+</Concept>

@@ -17,6 +17,13 @@
 # CC0 textures (ambientCG) — vendored in-repo like the kenney packs; ship with
 # the main binary, kept out of the SEGA-asset pack + R2 (#356 office library).
 !/assets/cc0_textures/
+# JetBrains Mono (SIL OFL 1.1) — freely redistributable, so it's vendored in
+# source and ships in the binary like the kenney/cc0 packs (NOT pck-gated; the
+# pack split is licensing, not size). It was previously swept into the pck by
+# the broad /assets/* ignore, which made the start-menu font preload an
+# autoload-boot dependency on the pack and blacked out the menu in release
+# exports (#448 → #450). Committing it here removes that dependency.
+!/assets/fonts/
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/

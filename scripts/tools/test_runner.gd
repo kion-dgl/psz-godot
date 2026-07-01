@@ -46,17 +46,25 @@ func _run_tests_core() -> void:
 	test_shop_buy_unequippable_gear()
 	test_humar_gear_unequippable()
 	test_shop_capability_grey()
+	test_shop_row_dims_disabled_icon()
 	test_disk_capability_grey()
 	test_shop_sell_cannot_use_marker()
+	test_shop_sell_disabled_already_known()
+	test_shop_sell_disabled_renders_muted()
+	test_start_menu_disk_use_gated()
 	test_synth_unequippable_marker()
 	test_start_menu_cannot_use()
 	test_storage_cannot_use()
 	test_equip_action_matches_marker()
 	test_field_weapon_swap_gate()
+	test_quick_weapon_menu_unequip_and_order()
 	test_start_menu_data()
+	test_start_menu_palette_bg_cached()
+	test_scene_manager_fade_rect_full_size()
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
+	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
@@ -111,6 +119,7 @@ func _run_tests_systems() -> void:
 	test_character_appearance()
 	test_humarl_skin_remap()
 	test_character_create_state()
+	test_class_select_slat_crop_is_width_stable()
 	test_valley_grid()
 	test_field_config()
 	test_wetlands_field()
@@ -126,7 +135,14 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock_persistence()
 	test_input_config()
 	test_blackjack()
+	test_kill_state_survives_warp_flush()
+	test_box_state_survives_warp_flush()
+	test_drop_state_survives_warp_flush()
+	test_message_wall_questitem_persist()
+	test_keys_gates_survive_section_roundtrip()
+	test_field_state_full_contract_roundtrip()
 	test_script_parse()
+	test_autoloads_avoid_packonly_classscope_preloads()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -165,6 +181,74 @@ func _find_child_recursive(node: Node, child_name: String) -> Node:
 		if found:
 			return found
 	return null
+
+
+## #380 — class-select cutout wobble. The slat portrait must be cropped against
+## a FIXED width so the selection-tween (slat width 1<->5) only changes how much
+## of the cutout is revealed, never the crop origin. Deterministic, no RNG:
+## build the real (static) portrait frame, then resolve layout at a narrow and a
+## wide slat width and assert the frame + cover-cropped TextureRect sizes are
+## identical. Also assert every class id maps to an art file that ships in the
+## pack (asset_tree.txt), covering the hucaseal->hucasteal / racaseal->racasteal
+## filename overrides without loading the pack-only PNGs.
+func test_class_select_slat_crop_is_width_stable() -> void:
+	print("\n── Class-select slat crop stability (#380) ──")
+	var CharacterCreate := preload("res://scripts/2d/character_create.gd")
+
+	# Dummy art at hucast's real dimensions (250x347). Built in-memory so the
+	# test runs in repo-only CI where assets/images/*.png live only in the pack.
+	var img := Image.create(250, 347, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.0, 1.0, 0.0, 0.5))
+	var tex := ImageTexture.create_from_image(img)
+
+	var ref_w := 178.0
+	var slat := Control.new()
+	slat.clip_contents = true
+	var frame: Control = CharacterCreate._make_portrait_frame(ref_w, tex)
+	slat.add_child(frame)
+	add_child(slat)
+	var portrait: TextureRect = frame.get_node("Portrait")
+
+	# Narrow (unselected, stretch ratio 1) slat width.
+	slat.size = Vector2(ref_w / 5.0, 280.0)
+	var frame_w_narrow: float = frame.size.x
+	var portrait_w_narrow: float = portrait.size.x
+
+	# Wide (selected, stretch ratio 5) slat width.
+	slat.size = Vector2(ref_w, 280.0)
+	var frame_w_wide: float = frame.size.x
+	var portrait_w_wide: float = portrait.size.x
+
+	assert_gt(frame_w_narrow, 0.0, "portrait frame has positive width")
+	assert_eq(frame_w_narrow, ref_w, "portrait frame width == ref width (px-fixed)")
+	assert_eq(frame_w_narrow, frame_w_wide,
+		"portrait frame width is IDENTICAL at narrow vs wide slat (crop origin can't drift)")
+	assert_eq(portrait_w_narrow, portrait_w_wide,
+		"cover-crop TextureRect size IDENTICAL across slat widths — #380 wobble removed")
+	assert_eq(frame.anchor_left, 0.5, "frame left anchor collapsed to slat centre")
+	assert_eq(frame.anchor_right, 0.5, "frame right anchor collapsed to slat centre")
+	assert_true(frame.clip_contents, "portrait frame clips its overflow")
+	assert_true(portrait.texture != null, "portrait received its texture")
+	slat.queue_free()
+
+	# Every class id must resolve to an art file that ships in the pack.
+	# asset_tree.txt is the in-repo manifest of pack contents (res:// = repo root).
+	var tree_txt := FileAccess.get_file_as_string("res://asset_tree.txt")
+	assert_gt(tree_txt.length(), 0, "asset_tree.txt readable for art-coverage check")
+	var overrides: Dictionary = CharacterCreate.CLASS_ART_OVERRIDES
+	var all_classes: Array = ClassRegistry.get_all_classes()
+	assert_eq(all_classes.size(), 14, "ClassRegistry exposes all 14 classes")
+	var missing: Array = []
+	for cls in all_classes:
+		var art_name: String = overrides.get(cls.id, cls.id)
+		if not tree_txt.contains("assets/images/%s.png" % art_name):
+			missing.append("%s->%s" % [cls.id, art_name])
+	assert_eq(missing.size(), 0,
+		"every class id maps to a packed art file (missing: %s)" % str(missing))
+	assert_eq(overrides.get("hucaseal", "hucaseal"), "hucasteal",
+		"hucaseal art override -> hucasteal")
+	assert_eq(overrides.get("racaseal", "racaseal"), "racasteal",
+		"racaseal art override -> racasteal")
 
 
 ## Helper: check if a drop ID is a misc drop (disk, grinder, material, photon drop, unidentified)
@@ -1692,6 +1776,17 @@ func _shop_row_marker(pill: Control) -> String:
 	return "x" if cell.get_child(0) is TextureRect else "e"
 
 
+## The leading item-icon TextureRect of a shop_row pill — the first TextureRect
+## among the hbox children (the marker cell is a Control wrapper, so its inner ✕
+## TextureRect is not a direct hbox child and isn't picked up here). null when the
+## row carries no icon.
+func _shop_row_icon(pill: Control) -> TextureRect:
+	for child in pill.get_child(0).get_children():
+		if child is TextureRect:
+			return child
+	return null
+
+
 # Capability-based greying (PSOBB rule, Rozalin/Kion playtest 2026-06-22):
 # a row greys when the character CAN'T USE/EQUIP it — never for affordability or
 # inventory space. Gear that can never be equipped also carries a ✕ marker.
@@ -1728,6 +1823,26 @@ func test_shop_capability_grey() -> void:
 	cd.usable_by = PackedStringArray(["Force Newman"])
 	assert_true(cd.can_be_used_by("Force Newman"), "listed Type/Race can use it")
 	assert_true(not cd.can_be_used_by("Hunter Cast"), "unlisted Type/Race cannot use it")
+	print("")
+
+
+# A muted shop row greys its ITEM ICON, not just its text — Rozalin's #417 note
+# ("shop should be graying the icons like the inventory"). The leading icon is
+# dimmed via PszStyle.DISABLED_ICON_MOD, the SAME modulate the start-menu
+# inventory uses, so the two surfaces grey icons identically.
+func test_shop_row_dims_disabled_icon() -> void:
+	print("── Shop row — a muted row dims its item icon (matches inventory) ──")
+	var icon := PszStyle.cannot_use_icon()  # any texture; only its modulate matters here
+
+	var normal := PszStyle.shop_row("Foie Lv1", "100 M", {"icons": [icon]})
+	var normal_icon := _shop_row_icon(normal)
+	assert_true(normal_icon != null and normal_icon.modulate.is_equal_approx(Color.WHITE),
+		"usable row renders its icon at full colour")
+
+	var disabled := PszStyle.shop_row("Foie Lv1", "100 M", {"icons": [icon], "disabled": true})
+	var disabled_icon := _shop_row_icon(disabled)
+	assert_true(disabled_icon != null and disabled_icon.modulate.is_equal_approx(PszStyle.DISABLED_ICON_MOD),
+		"disabled row dims its icon (greyed like the text, same modulate as inventory)")
 	print("")
 
 
@@ -1885,6 +2000,180 @@ func test_shop_sell_cannot_use_marker() -> void:
 
 	_restore_character_state(saved)
 	print("")
+
+
+# The grey-WITHOUT-✕ tier (ShopNav.sell_disabled): a disk for a technique
+# already known at this level (or below the required player level) mutes the row
+# but carries no ✕. The same predicate backs every item-list surface (sell tabs,
+# storage, start-menu inventory), so owning N copies of a learnable disk and
+# learning one greys the rest consistently — the display half of the #417 fix.
+func test_shop_sell_disabled_already_known() -> void:
+	print("── Shop grey — already-known disk disabled (no ✕) ──")
+	var ShopNavCls = load("res://scripts/2d/shops/shop_nav.gd")
+	var saved := _isolate_character_state()
+
+	# HUmar learns Foie (attack group, cap 10). Level 20 clears the required-
+	# player-level gate so the ONLY block in play is the already-known one.
+	CharacterManager.create_character(0, "humar", "DiskGrey")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	character["level"] = 20
+	character["techniques"] = {}
+
+	# Before learning: a Lv.1 Foie disk is fully usable — no ✕, not greyed.
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"unknown Foie Lv.1: no ✕ (class can learn it)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"unknown Foie Lv.1: not greyed (still worth learning)")
+
+	# Learn Foie Lv.1 → the Lv.1 disk is now a no-op.
+	character["techniques"]["foie"] = 1
+
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1"),
+		"already-known Foie Lv.1: greyed (already learned at this level)")
+	assert_true(not ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"already-known Foie Lv.1: still NO ✕ (block is temporary, not a class bar)")
+	# A suffixed duplicate greys identically — get_base_id strips the #2 first.
+	assert_true(ShopNavCls.sell_disabled("disk_foie_1#2"),
+		"already-known Foie Lv.1#2 duplicate: greyed too (suffix stripped)")
+	# A higher-level disk is still an upgrade → not greyed.
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_2"),
+		"Foie Lv.2 while knowing Lv.1: not greyed (it upgrades)")
+
+	# Permanent class block stays the ✕ tier, never the grey tier: a CAST disk is
+	# ✕ and NOT sell_disabled (sell_disabled is the can-learn-but-not-now slice).
+	CharacterManager._characters[0] = null
+	CharacterManager.create_character(0, "hucast", "DiskGreyCast")
+	CharacterManager.set_active_slot(0)
+	assert_true(ShopNavCls.sell_cannot_use("disk_foie_1"),
+		"CAST disk: ✕ (permanent class block)")
+	assert_true(not ShopNavCls.sell_disabled("disk_foie_1"),
+		"CAST disk: NOT in the grey tier (permanent block is ✕, not grey)")
+
+	# Non-disk items never enter the grey-disk tier.
+	assert_true(not ShopNavCls.sell_disabled("monomate"),
+		"consumable: never disk-greyed")
+	assert_true(not ShopNavCls.sell_disabled("saber"),
+		"weapon: never disk-greyed")
+
+	_restore_character_state(saved)
+	print("")
+
+
+# RENDER-LEVEL guard: the predicate test above proves sell_disabled flips, but a
+# row only greys if the shop's _refresh_display actually FORWARDS that flag into
+# PszStyle.shop_row. The real #417-followup bug lived exactly there — the sell
+# render dropped "disabled" — invisible to a predicate-only test. So instantiate
+# the real item_shop, render its sell tab, and assert the disk pill's text colour.
+func test_shop_sell_disabled_renders_muted() -> void:
+	print("── Shop sell — already-known disk RENDERS muted (pixels, not predicate) ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskRender")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(5):
+		Inventory.add_item("disk_foie_1", 1)
+
+	var shop = load("res://scenes/2d/shops/item_shop.tscn").instantiate()
+	add_child(shop)  # add_child runs _ready synchronously → @onready nodes ready
+	shop.set("_tab", 3)  # Tab.SELL
+
+	# Before learning: the disk sell row renders at normal (non-muted) colour.
+	assert_eq(_sell_disk_pill_muted(shop), 0,
+		"sell row for an unknown-level Foie disk renders NOT muted")
+
+	# Learn Foie Lv.1 through the real use path, then re-render the sell tab.
+	var first_disk: String = ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first_disk = str(k); break
+	Inventory.use_item(first_disk)
+
+	# After learning: every remaining Foie Lv.1 disk row renders muted.
+	assert_eq(_sell_disk_pill_muted(shop), 1,
+		"sell row for an already-known Foie disk renders MUTED (disabled forwarded to shop_row)")
+
+	shop.free()
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Regenerate the item_shop sell list and report the rendered mute state of the
+# first disk_ row: 1 = muted (TEXT_MUTED), 0 = normal, -1 = no disk row / no label.
+func _sell_disk_pill_muted(shop) -> int:
+	shop.call("_generate_sell_list")
+	shop.call("_refresh_display")
+	var sell_items: Array = shop.get("_sell_items")
+	var pills = shop.get("_pill_nodes")
+	for i in range(sell_items.size()):
+		if not str(sell_items[i].get("id", "")).begins_with("disk_"):
+			continue
+		var pill = pills[i] if (typeof(pills) == TYPE_ARRAY and i < pills.size()) else (pills.get(i) if typeof(pills) == TYPE_DICTIONARY else null)
+		if pill == null:
+			return -1
+		var lbl := _first_label(pill)
+		if lbl == null:
+			return -1
+		return 1 if lbl.get_theme_color("font_color").is_equal_approx(PszStyle.TEXT_MUTED) else 0
+	return -1
+
+
+func _first_label(n: Node) -> Label:
+	if n is Label:
+		return n
+	for c in n.get_children():
+		var r := _first_label(c)
+		if r != null:
+			return r
+	return null
+
+
+# The start-menu item modal must NOT offer "Use" for a disk that can't be learned
+# right now (already known at this level, too-low level, or class-illegal). The
+# "Use" choice is gated on _get_inventory()'s `usable` flag, so assert that flag:
+# a learnable disk is usable, an already-known one is not (#417).
+func test_start_menu_disk_use_gated() -> void:
+	print("── Start menu — already-known disk offers no Use ──")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "DiskUse")
+	CharacterManager.set_active_slot(0)
+	var ch = CharacterManager.get_active_character()
+	ch["level"] = 20
+	ch["techniques"] = {}
+	Inventory.clear_inventory()
+	for _i in range(3):
+		Inventory.add_item("disk_foie_1", 1)
+
+	# Unknown technique → the disk is usable (offers "Use").
+	assert_eq(_disk_usable_flag("disk_foie_1"), 1,
+		"unknown Foie Lv.1 disk: usable (Use offered)")
+
+	# Learn it, then every remaining copy must be NOT usable (no Use option).
+	var first := ""
+	for k in Inventory._items.keys():
+		if str(k).begins_with("disk_foie_1"):
+			first = str(k); break
+	Inventory.use_item(first)
+	assert_eq(_disk_usable_flag("disk_foie_1"), 0,
+		"already-known Foie Lv.1 disk: NOT usable (no Use option offered)")
+
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Returns the start menu's `usable` flag for the first inventory row whose base id
+# matches `base`: 1 = usable, 0 = not usable, -1 = no such row.
+func _disk_usable_flag(base: String) -> int:
+	for it in PsoStartMenu._get_inventory():
+		var id: String = str(it.get("id", ""))
+		if Inventory.get_base_id(id) == base:
+			return 1 if bool(it.get("usable", false)) else 0
+	return -1
 
 
 # Synthesis shop marks recipes whose OUTPUT weapon the class can't equip with the
@@ -2068,6 +2357,89 @@ func test_field_weapon_swap_gate() -> void:
 	print("")
 
 
+# Quick Weapon Menu (issue #424, spec /states/quick-weapon-menu):
+#   (1) the equipped row sorts LAST in the built list;
+#   (2) selecting the equipped row UNEQUIPS to barehanded then closes;
+#   (3) selecting a non-equipped row still equips then closes;
+#   (4) barehanded SFX no longer maps to common35 (the saber swing).
+# The menu is add_child'd so _equip_selected()'s get_tree() call is safe; the
+# "player" group is empty headless, so refresh_weapon() is skipped.
+func test_quick_weapon_menu_unequip_and_order() -> void:
+	print("── Quick Weapon Menu: unequip-to-barehanded + ordering (#424) ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var saved := _isolate_character_state()
+	CharacterManager.create_character(0, "humar", "QuickMenuX")
+	CharacterManager.set_active_slot(0)
+	# saber/sword/dagger are weapon types 0/1/2 — all HUmar-equippable.
+	if not (WeaponRegistry.get_weapon("saber") and WeaponRegistry.get_weapon("sword") and WeaponRegistry.get_weapon("dagger")):
+		print("  INFO: saber/sword/dagger missing — skipped"); _restore_character_state(saved); print(""); return
+
+	Inventory.clear_inventory()
+	Inventory.add_item("saber", 1)
+	Inventory.add_item("sword", 1)
+	Inventory.add_item("dagger", 1)
+	var character = CharacterManager.get_active_character()
+	character["equipment"]["weapon"] = "saber"
+
+	var menu = FieldHud._QuickWeaponMenu.new()
+	add_child(menu)
+
+	# (1) ORDER — equipped row sorts to the END; nothing before it is equipped.
+	menu._build_weapon_list()
+	assert_true(menu._weapon_list.size() == 3, "swap list has all three HUmar weapons")
+	assert_true(bool(menu._weapon_list.back().get("equipped", false)),
+		"equipped row (Saber) sorts LAST in the list (#424)")
+	var any_earlier_equipped := false
+	for i in range(menu._weapon_list.size() - 1):
+		if bool(menu._weapon_list[i].get("equipped", false)):
+			any_earlier_equipped = true
+	assert_true(not any_earlier_equipped, "no non-final row is marked equipped")
+
+	# (1b) CURSOR — _open() starts the cursor at the TOP (index 0), NOT on the
+	# equipped row (which sorts last). Spec /states/quick-weapon-menu (#141).
+	menu._selected_index = 99  # dirty it so a stale value can't pass by accident
+	menu._open()
+	assert_eq(menu._selected_index, 0, "cursor starts at the top of the list on open (#141)")
+	assert_true(not bool(menu._weapon_list[menu._selected_index].get("equipped", false)),
+		"cursor does NOT land on the equipped row on open")
+	menu._close()
+
+	# (2) UNEQUIP — accept on the equipped row → barehanded, menu closes.
+	menu._selected_index = menu._weapon_list.size() - 1  # the equipped row
+	menu._is_open = true
+	menu._equip_selected()
+	assert_eq(str(CharacterManager.get_active_character()["equipment"]["weapon"]), "",
+		"selecting the equipped row unequips to barehanded (weapon == '')")
+	assert_true(not menu._is_open, "menu closes after unequip")
+
+	# (3) EQUIP still works — re-equip, then accept on a non-equipped row.
+	character["equipment"]["weapon"] = "saber"
+	menu._build_weapon_list()
+	var sword_idx := -1
+	for i in range(menu._weapon_list.size()):
+		if Inventory.get_base_id(str(menu._weapon_list[i].get("id", ""))) == "sword":
+			sword_idx = i
+	assert_true(sword_idx >= 0, "Sword row present for equip")
+	menu._selected_index = sword_idx
+	menu._is_open = true
+	menu._equip_selected()
+	assert_eq(Inventory.get_base_id(str(CharacterManager.get_active_character()["equipment"]["weapon"])), "sword",
+		"selecting a non-equipped row equips it (Sword)")
+	assert_true(not menu._is_open, "menu closes after equip")
+
+	# (4) SFX — barehanded no longer resolves to common35 (the saber swing).
+	# The common46 asset isn't in the pack headless, so we assert the mapping is
+	# distinct rather than loading it.
+	assert_true(PlayerScript.BAREHANDED_SFX != PlayerScript.WEAPON_SFX[WeaponData.WeaponType.SABER],
+		"barehanded SFX (common46) != saber SFX (common35)")
+
+	menu.free()
+	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
 # ── Start menu data contract ─────────────────────────────
 # Locks the pure data helpers the PSO-style start menu's rendering AND input
 # both read (PsoStartMenu autoload), as the regression net before the
@@ -2111,6 +2483,51 @@ func test_start_menu_data() -> void:
 		assert_true(not PsoStartMenu._can_use_techs(), "_can_use_techs false for a CAST (HUcast)")
 		assert_true(not PsoStartMenu._get_menu_labels().has("Techs"), "Techs view absent for a CAST")
 		sm_char["class_id"] = sm_saved_class
+	print("")
+
+
+# #421 — the Palette HUD-preview background must be CACHED on the persistent
+# PsoStartMenu autoload (like action icons), not re-load()ed on every draw. The
+# menu survives change_scene_to_file across an area transition; the pre-fix
+# renderer re-load()ed the bg each draw, so a redraw fired during the tree
+# rebuild could transiently miss and silently skip the image until the player
+# exited/re-entered the page. A cached ref re-binds from memory and can never
+# skip. Deterministic (no GPU/seed): palette_bg.png / palette_bg_r.png are
+# repo-resident and import in the editor pass CI runs before the tests.
+func test_start_menu_palette_bg_cached() -> void:
+	print("── Start Menu (palette bg cache, #421) ──")
+
+	# Both pages resolve to a non-null Texture2D (page 0 → palette_bg.png,
+	# page 1 → palette_bg_r.png).
+	var bg0: Texture2D = PsoStartMenu._get_palette_bg(0)
+	var bg1: Texture2D = PsoStartMenu._get_palette_bg(1)
+	assert_true(bg0 != null, "palette page 0 background resolves to a texture")
+	assert_true(bg1 != null, "palette page 1 background resolves to a texture")
+
+	# The cache returns the IDENTICAL instance on a second call — proving the
+	# texture ref is held on the persistent autoload and survives a redraw, so a
+	# post-transition repaint re-binds from cache instead of risking a miss.
+	var bg0_again: Texture2D = PsoStartMenu._get_palette_bg(0)
+	assert_true(bg0_again == bg0, "palette page 0 background is cached (same instance on re-fetch)")
+	var bg1_again: Texture2D = PsoStartMenu._get_palette_bg(1)
+	assert_true(bg1_again == bg1, "palette page 1 background is cached (same instance on re-fetch)")
+	print("")
+
+
+func test_scene_manager_fade_rect_full_size() -> void:
+	print("── SceneManager fade rect full-size (#421 follow-up) ──")
+
+	# The transition fade-to-black only masks the HUD/menu rebuild if the fade
+	# rect actually covers the viewport. Setting `anchors_preset` alone leaves a
+	# fresh ColorRect at size (0,0) — black, full-alpha, on the right layer, but
+	# zero-area, so it masked NOTHING (the real cause of the #421 flicker that the
+	# layer-raise didn't fix). The rect MUST be sized via
+	# set_anchors_and_offsets_preset so its area equals the viewport.
+	var fr: ColorRect = SceneManager._fade_rect
+	assert_true(fr != null, "SceneManager fade rect exists")
+	assert_true(fr.size.x > 0.0 and fr.size.y > 0.0, "fade rect has non-zero size (not 0,0)")
+	var vp: Vector2 = SceneManager.get_viewport().get_visible_rect().size
+	assert_true(fr.size.is_equal_approx(vp), "fade rect covers the full viewport (%s == %s)" % [fr.size, vp])
 	print("")
 
 
@@ -2608,6 +3025,73 @@ func test_technique_disks() -> void:
 	CombatManager.clear_combat()
 	print("  INFO: %d disk drops from 500 boss kills (expected ~150 at 30%%)" % disk_drops)
 	assert_gt(disk_drops, 50, "Disks drop from bosses (got %d)" % disk_drops)
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+# Regression for #417: a duplicate technique disk is minted as "disk_foie_3#2".
+# Parsing the RAW instance id makes int("3#2") == 32, so use_disk() rejected
+# every copy past the first as "level 32 > class max" (the "greyed out / not
+# usable" report). The fix strips the suffix via get_base_id() BEFORE parsing
+# tech/level, while remove_item still consumes the exact selected instance.
+func test_disk_duplicate_use_strips_suffix() -> void:
+	print("── Disk Duplicate Use (#417) ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# FOmar — Force class, full technique access
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	GameState.reset_game_state()
+	var fomar := CharacterManager.create_character(0, "fomar", "DupDiskForce")
+	assert_true(fomar != null, "Created FOmar character")
+	if fomar == null:
+		print("  SKIP: Could not create FOmar")
+		CharacterManager._characters = saved_characters
+		CharacterManager._active_slot = saved_slot
+		if saved_slot >= 0:
+			CharacterManager.set_active_slot(saved_slot)
+		print("")
+		return
+	fomar["level"] = 20
+	CharacterManager.set_active_slot(0)
+	fomar["techniques"].clear()
+
+	# Buy TWO copies of the same learnable disk → two per-slot instances.
+	Inventory.add_item("disk_foie_3", 1)
+	Inventory.add_item("disk_foie_3", 1)
+	var keys: Array = Inventory._items.keys()
+	assert_true(keys.has("disk_foie_3"), "First copy minted as 'disk_foie_3'")
+	# The second copy gets a '#N' instance suffix (any N, not just #2).
+	var dup_id := ""
+	for k in keys:
+		var kk := str(k)
+		if kk != "disk_foie_3" and kk.begins_with("disk_foie_3#"):
+			dup_id = kk
+			break
+	assert_true(not dup_id.is_empty(), "Second copy minted with '#' instance suffix (%s)" % dup_id)
+	# Two distinct disk instances exist (create_character seeds starter gear, so
+	# assert on the disk count specifically rather than total unique items).
+	assert_eq(Inventory.get_item_count("disk_foie_3") + Inventory.get_item_count(dup_id), 2, "Two distinct disk instances exist")
+
+	# Load-bearing: using the DUPLICATE instance must learn Foie at Lv.3, NOT 32.
+	# Under the bug this returned false and the level would parse as 32.
+	var use_ok := Inventory.use_item(dup_id)
+	assert_true(use_ok, "use_item(duplicate '%s') succeeded" % dup_id)
+	assert_eq(TechniqueManager.get_technique_level(fomar, "foie"), 3, "Foie learned at Lv.3 (not 32) from the duplicate copy")
+
+	# The exact instance the player selected is consumed; the base copy is untouched.
+	assert_eq(Inventory.get_item_count(dup_id), 0, "Selected duplicate instance consumed")
+	assert_eq(Inventory.get_item_count("disk_foie_3"), 1, "First copy left untouched")
 
 	# Restore state
 	CharacterManager._characters = saved_characters
@@ -3209,6 +3693,358 @@ func test_telepipe_round_trip() -> void:
 
 	# Cleanup
 	SessionManager.return_to_city()
+	print("")
+
+
+# ── Kill-state survives the exit flush (#423) ────────────────
+# Pins the invariant that an enemy defeated in the SAME frame the player
+# warps out of a cell is snapshotted dead by save_cell_state and MUST NOT
+# respawn on return. The capture path (CellObjectSpawner._save_cell_state)
+# builds the alive list from is_alive, so an enemy whose _die() already
+# flipped is_alive=false this frame is written as "dead" — and that dead
+# state survives a city suspend/resume round-trip. Spec:
+# /states/field-lifecycle "Flush on exit". Companion to #426 (input
+# precedence — the warp consuming the palette button is what makes this a
+# same-frame race in the first place).
+func test_kill_state_survives_warp_flush() -> void:
+	print("── Kill-state — defeated enemy persists as dead through warp flush (#423) ──")
+
+	# Clean slate for the section-state store + any suspended session.
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	# Stub field controller exposing exactly the fields _save_cell_state reads.
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "1,2",
+		"objects": [
+			{"type": "enemy", "enemy_id": "lizard", "wave": 1, "position": [1.0, 0.0, 2.0]},
+			{"type": "enemy", "enemy_id": "wolf", "wave": 1, "position": [3.0, 0.0, 4.0]},
+		],
+	}
+
+	# Two real EnemyBase nodes mirror the live room. The wolf has already had
+	# _die() flip is_alive=false THIS frame (the kill-all-then-warp case); the
+	# lizard is still alive. Not added to the tree — _save_cell_state only reads
+	# is_alive + enemy_data.id, no _ready() needed.
+	var lizard_data := EnemyData.new()
+	lizard_data.id = "lizard"
+	var wolf_data := EnemyData.new()
+	wolf_data.id = "wolf"
+	var lizard := EnemyBase.new()
+	lizard.enemy_data = lizard_data
+	lizard.is_alive = true
+	var wolf := EnemyBase.new()
+	wolf.enemy_data = wolf_data
+	wolf.is_alive = false
+	stub._room_enemies = [lizard, wolf]
+
+	# Capture the live cell state, exactly as a warp/exit flush would.
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	assert_true(stub._cell_states.has("1,2"), "Cell 1,2 flushed into _cell_states")
+	var saved_objs: Array = stub._cell_states.get("1,2", {}).get("objects", [])
+	var lizard_state: String = ""
+	var wolf_state: String = ""
+	for o in saved_objs:
+		if str(o.get("type", "")) != "enemy":
+			continue
+		if str(o.get("enemy_id", "")) == "lizard":
+			lizard_state = str(o.get("state", ""))
+		elif str(o.get("enemy_id", "")) == "wolf":
+			wolf_state = str(o.get("state", ""))
+	assert_eq(lizard_state, "alive", "Live lizard snapshotted alive")
+	assert_eq(wolf_state, "dead", "Same-frame-killed wolf snapshotted dead")
+
+	# Round-trip the snapshot through a city suspend/resume — the kill must
+	# survive (the #423 invariant: defeated enemies MUST NOT respawn on return).
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var st: Dictionary = SessionManager.get_section_state(0)
+	var rt_cells: Dictionary = st.get("cell_states", {})
+	assert_true(rt_cells.has("1,2"), "Cell 1,2 survives city round-trip")
+	var rt_wolf_state: String = ""
+	for o in rt_cells.get("1,2", {}).get("objects", []):
+		if str(o.get("type", "")) == "enemy" and str(o.get("enemy_id", "")) == "wolf":
+			rt_wolf_state = str(o.get("state", ""))
+	assert_eq(rt_wolf_state, "dead", "Killed wolf still dead after city trip (no respawn)")
+
+	# Cleanup — free the Node-derived EnemyBase instances (stub is RefCounted).
+	lizard.free()
+	wolf.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Box-state survives the warp flush (#423 / field-lifecycle §Persistence) ──
+# Broken boxes MUST NOT reappear (and MUST NOT re-drop loot). A box destroyed in
+# the field is freed, so it's absent from _room_boxes; the save's diff against
+# the authored cell records it "destroyed", and that survives a city telepipe.
+func test_box_state_survives_warp_flush() -> void:
+	print("── Box-state — broken boxes persist as destroyed through warp flush (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "5,5",
+		"objects": [
+			{"type": "box", "position": [1.0, 0.0, 1.0]},   # A — still standing
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # B — destroyed, gone from room
+		],
+	}
+	# Live room: only the intact box at A survives (B was broken → freed → absent).
+	var intact_box := Box.new()
+	intact_box.element_state = "intact"
+	intact_box.position = Vector3(1.0, 0.0, 1.0)
+	stub._room_boxes = [intact_box]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	var objs: Array = stub._cell_states.get("5,5", {}).get("objects", [])
+	var box_a := ""
+	var box_b := ""
+	for o in objs:
+		if str(o.get("type", "")) != "box":
+			continue
+		if abs(float(o.get("px", 0)) - 1.0) < 0.01:
+			box_a = str(o.get("state", ""))
+		elif abs(float(o.get("px", 0)) - 9.0) < 0.01:
+			box_b = str(o.get("state", ""))
+	assert_eq(box_a, "intact", "Intact box snapshotted intact")
+	assert_eq(box_b, "destroyed", "Broken box snapshotted destroyed")
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("5,5", {}).get("objects", [])
+	var rt_b := ""
+	for o in rt:
+		if str(o.get("type", "")) == "box" and abs(float(o.get("px", 0)) - 9.0) < 0.01:
+			rt_b = str(o.get("state", ""))
+	assert_eq(rt_b, "destroyed", "Broken box still destroyed after city trip (no reappear / no re-drop)")
+
+	intact_box.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Drop-state survives the warp flush (#423) ────────────────────────────────
+# Uncollected ground loot MUST keep its position + amount (no move, no re-roll);
+# collected drops MUST NOT reappear. The save only persists drops whose
+# element_state == "available".
+func test_drop_state_survives_warp_flush() -> void:
+	print("── Drop-state — uncollected loot persists (pos+amount), collected does not (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {"pos": "6,6", "objects": []}
+
+	var meseta := DropMeseta.new()
+	meseta.element_state = "available"
+	meseta.amount = 250
+	meseta.position = Vector3(2.0, 0.0, 3.0)
+	var material := DropMaterial.new()
+	material.element_state = "available"
+	material.item_id = "power_material"
+	material.amount = 1
+	material.position = Vector3(4.0, 0.0, 5.0)
+	var collected := DropItem.new()
+	collected.element_state = "collected"   # already picked up → excluded by the save
+	collected.item_id = "monomate"
+	collected.position = Vector3(7.0, 0.0, 8.0)
+	stub._room_drops = [meseta, material, collected]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	var drops: Array = stub._cell_states.get("6,6", {}).get("drops", [])
+	assert_eq(drops.size(), 2, "Only the 2 available drops saved (collected excluded)")
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt_drops: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("6,6", {}).get("drops", [])
+	var got_meseta := {}
+	var got_material := {}
+	var has_collected := false
+	for d in rt_drops:
+		if str(d.get("kind", "")) == "meseta":
+			got_meseta = d
+		elif str(d.get("kind", "")) == "material":
+			got_material = d
+		if str(d.get("item_id", "")) == "monomate":
+			has_collected = true
+	assert_eq(int(got_meseta.get("amount", -1)), 250, "Meseta drop keeps amount (no re-roll)")
+	assert_true(abs(float(got_meseta.get("px", -99)) - 2.0) < 0.01 and abs(float(got_meseta.get("pz", -99)) - 3.0) < 0.01,
+		"Meseta drop keeps exact position")
+	assert_eq(str(got_material.get("item_id", "")), "power_material", "Material drop keeps item_id")
+	assert_true(not has_collected, "Collected item did NOT reappear as a ground drop")
+
+	meseta.free()
+	material.free()
+	collected.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Read messages / destroyed walls / collected quest items persist (#423) ───
+func test_message_wall_questitem_persist() -> void:
+	print("── Read messages / destroyed walls / collected quest items persist (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {"pos": "7,7", "objects": []}
+
+	var msg := MessagePack.new()
+	msg.element_state = "read"
+	msg.message_text = "A cryptic note."
+	msg.position = Vector3(1.0, 0.0, 0.0)
+	stub._room_messages = [msg]
+
+	var wall := Wall.new()
+	wall.element_state = "destroyed"
+	wall.is_destructible = true
+	wall.position = Vector3(2.0, 0.0, 0.0)
+	stub._room_walls = [wall]
+
+	var qitem := QuestItemPickup.new()
+	qitem.element_state = "collected"
+	qitem.quest_item_id = "ancient_key"
+	qitem.quest_item_label = "Ancient Key"
+	qitem.position = Vector3(3.0, 0.0, 0.0)
+	stub._room_quest_items = [qitem]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.save_section_state(0, stub._cell_states, {}, {}, {})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var rt: Array = SessionManager.get_section_state(0).get("cell_states", {}).get("7,7", {}).get("objects", [])
+	var m := ""
+	var w := ""
+	var qi := ""
+	for o in rt:
+		match str(o.get("type", "")):
+			"message": m = str(o.get("state", ""))
+			"wall": w = str(o.get("state", ""))
+			"quest_item": qi = str(o.get("state", ""))
+	assert_eq(m, "read", "Read message stays read after warp")
+	assert_eq(w, "destroyed", "Destroyed wall stays destroyed after warp")
+	assert_eq(qi, "collected", "Collected quest item stays collected after warp")
+
+	msg.free()
+	wall.free()
+	qitem.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Collected keys + opened gates survive the section round-trip (#423) ──────
+# Gate/key progress is controller-level state (not in the objects array); it
+# rides along in save_section_state and MUST survive a telepipe suspend/resume.
+func test_keys_gates_survive_section_roundtrip() -> void:
+	print("── Collected keys + opened gates survive the section round-trip (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+	SessionManager.enter_field("gurhacia", "normal")
+
+	var keys := {"1,2:red_key": true, "2,3:blue_key": true}
+	var gates := {"1,2:north_gate": true}
+	SessionManager.save_section_state(0, {}, keys, gates, {"1,2": true})
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+	var st: Dictionary = SessionManager.get_section_state(0)
+	assert_eq((st.get("keys_collected", {}) as Dictionary).size(), 2, "Both collected keys survive round-trip")
+	assert_true((st.get("keys_collected", {}) as Dictionary).has("1,2:red_key"), "red_key still collected")
+	assert_true(bool((st.get("gates_opened", {}) as Dictionary).get("1,2:north_gate", false)), "north_gate still opened")
+	assert_true((st.get("visited_cells", {}) as Dictionary).has("1,2"), "visited cell preserved")
+
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
+	print("")
+
+
+# ── Full persistence contract holds across repeated city trips (#423) ────────
+# The reliability/stress case: one cell mixing every persisted category, bounced
+# to the city 3× in a row. Every category MUST hold each trip — nothing respawns.
+func test_field_state_full_contract_roundtrip() -> void:
+	print("── Full persistence contract holds across 3 consecutive city trips (#423) ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "8,8",
+		"objects": [
+			{"type": "enemy", "enemy_id": "wolf", "wave": 1, "position": [0.0, 0.0, 0.0]},
+			{"type": "enemy", "enemy_id": "lizard", "wave": 1, "position": [1.0, 0.0, 0.0]},
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # broken, absent from room
+		],
+	}
+	var dead_wolf := EnemyBase.new()
+	var wd := EnemyData.new(); wd.id = "wolf"; dead_wolf.enemy_data = wd; dead_wolf.is_alive = false
+	var live_liz := EnemyBase.new()
+	var ld := EnemyData.new(); ld.id = "lizard"; live_liz.enemy_data = ld; live_liz.is_alive = true
+	stub._room_enemies = [dead_wolf, live_liz]
+	var drop := DropMeseta.new(); drop.element_state = "available"; drop.amount = 99; drop.position = Vector3(3.0, 0.0, 3.0)
+	stub._room_drops = [drop]
+	var msg := MessagePack.new(); msg.element_state = "read"; msg.message_text = "x"; msg.position = Vector3(4.0, 0.0, 4.0)
+	stub._room_messages = [msg]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	var cells: Dictionary = stub._cell_states
+	for trip in range(1, 4):
+		SessionManager.save_section_state(0, cells, {}, {}, {})
+		SessionManager.suspend_session()
+		SessionManager.resume_session()
+		cells = SessionManager.get_section_state(0).get("cell_states", {})
+		var objs: Array = cells.get("8,8", {}).get("objects", [])
+		var n_destroyed := 0
+		var n_read := 0
+		var wolf_state := ""
+		var liz_state := ""
+		for o in objs:
+			var t := str(o.get("type", ""))
+			var s := str(o.get("state", ""))
+			if (t == "box" or t == "rare_box") and s == "destroyed":
+				n_destroyed += 1
+			elif t == "message" and s == "read":
+				n_read += 1
+			if t == "enemy" and str(o.get("enemy_id", "")) == "wolf":
+				wolf_state = s
+			elif t == "enemy" and str(o.get("enemy_id", "")) == "lizard":
+				liz_state = s
+		var n_drops: int = (cells.get("8,8", {}).get("drops", []) as Array).size()
+		assert_eq(wolf_state, "dead", "Trip %d: killed wolf stays dead" % trip)
+		assert_eq(liz_state, "alive", "Trip %d: live lizard stays alive" % trip)
+		assert_eq(n_destroyed, 1, "Trip %d: broken box stays destroyed" % trip)
+		assert_eq(n_read, 1, "Trip %d: read message stays read" % trip)
+		assert_eq(n_drops, 1, "Trip %d: ground drop still present" % trip)
+
+	dead_wolf.free()
+	live_liz.free()
+	drop.free()
+	msg.free()
+	SessionManager.return_to_city()
+	SessionManager.clear_section_states()
 	print("")
 
 
@@ -6095,3 +6931,204 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+# Regression guard for the #448 start-menu blackout (Retroid/Windows release):
+# PsoStartMenu is an *autoload*, so every script it pulls into its load-time
+# graph — a class-scope `const X = preload(...)`, or any global `class_name` it
+# references (which the engine resolves at parse time) — is loaded at engine
+# BOOT, before bootstrap.gd mounts the asset .pck. A class-scope preload of an
+# asset the release export drops via `exclude_filter` (pack-only, e.g.
+# assets/fonts/*) therefore can't resolve at boot in an exported build, and the
+# whole autoload fails — even though the editor loads it fine because assets/
+# sit on local disk there. CI is repo-only too (font present), so this can't be
+# caught at runtime; we assert it structurally instead. #448 introduced exactly
+# this by adding a class-scope preload of the pack-only assets/fonts/ JetBrains
+# Mono face to start_menu_renderer.gd, which PsoStartMenu reaches via
+# `class_name StartMenuRenderer`. (Bare res://assets/ strings are avoided in
+# these comments — check_asset_refs.py treats them as real asset references.)
+func test_autoloads_avoid_packonly_classscope_preloads() -> void:
+	print("── Autoload pack-only class-scope preload guard ──")
+	var excluded: Array = _export_excluded_globs()
+	var class_to_path: Dictionary = _build_class_name_map()
+	# BFS the boot-time script closure reachable from the autoloads.
+	var reachable: Dictionary = {}
+	var queue: Array = _autoload_script_paths()
+	while not queue.is_empty():
+		var path: String = queue.pop_back()
+		if reachable.has(path) or not path.ends_with(".gd"):
+			continue
+		reachable[path] = true
+		for dep in _load_time_script_deps(_read_text_file(path), class_to_path):
+			if not reachable.has(dep):
+				queue.append(dep)
+	# Any class-scope preload of a pack-only (export-excluded) asset in that
+	# closure is a boot-time landmine in release exports.
+	var violations: Array = []
+	for path in reachable.keys():
+		for asset_path in _classscope_asset_preloads(_read_text_file(path)):
+			if _path_matches_any_glob(asset_path.trim_prefix("res://"), excluded):
+				violations.append("%s class-scope preloads pack-only %s" % [path, asset_path])
+	if violations.is_empty():
+		_pass += 1
+		print("  PASS: %d autoload-reachable scripts, none class-scope preload a pack-only asset" % reachable.size())
+	else:
+		for v in violations:
+			print("  FAIL: %s — resolves only from the .pck, but autoloads boot before bootstrap mounts it" % v)
+		_fail += violations.size()
+
+
+# res:// script paths of the project's autoloads (project.godot [autoload]).
+func _autoload_script_paths() -> Array:
+	var out: Array = []
+	var src := _read_text_file("res://project.godot")
+	var in_section := false
+	for raw in src.split("\n"):
+		var line: String = raw.strip_edges()
+		if line.begins_with("[") and line.ends_with("]"):
+			in_section = (line == "[autoload]")
+			continue
+		if not in_section or not line.contains("="):
+			continue
+		var idx := line.find("res://")
+		if idx < 0:
+			continue
+		var rest := line.substr(idx)
+		var end := rest.find("\"")
+		if end < 0:
+			end = rest.length()
+		out.append(rest.substr(0, end))
+	return out
+
+
+# Map global class_name → its res:// script path, across all scripts.
+func _build_class_name_map() -> Dictionary:
+	var paths: Array = []
+	_collect_gd_files("res://scripts", paths)
+	var out: Dictionary = {}
+	for path in paths:
+		for raw in _read_text_file(path).split("\n"):
+			var line: String = raw.strip_edges()
+			if line.begins_with("class_name "):
+				out[line.substr(11).strip_edges().split(" ")[0]] = path
+				break
+	return out
+
+
+# Load-time script dependencies of a source: preloaded .gd files plus the script
+# behind every global class_name it references (the engine parses those at load).
+func _load_time_script_deps(src: String, class_to_path: Dictionary) -> Array:
+	var out: Array = []
+	for raw in src.split("\n"):
+		var idx := raw.find("preload(\"res://")
+		while idx >= 0:
+			var start := raw.find("\"", idx) + 1
+			var p := raw.substr(start, raw.find("\"", start) - start)
+			if p.ends_with(".gd"):
+				out.append(p)
+			idx = raw.find("preload(\"res://", start)
+	for cls in class_to_path.keys():
+		if _references_identifier(src, cls):
+			out.append(class_to_path[cls])
+	return out
+
+
+# True if `ident` appears in `src` as a whole word (not a substring of a longer
+# identifier), so class "Enemy" doesn't match "WolfEnemy"/"EnemyData".
+func _references_identifier(src: String, ident: String) -> bool:
+	var from := 0
+	while true:
+		var i := src.find(ident, from)
+		if i < 0:
+			return false
+		var before := src[i - 1] if i > 0 else " "
+		var after_i := i + ident.length()
+		var after := src[after_i] if after_i < src.length() else " "
+		if not _is_ident_char(before) and not _is_ident_char(after):
+			return true
+		from = i + 1
+	return false
+
+
+func _is_ident_char(ch: String) -> bool:
+	return ch == "_" or (ch >= "0" and ch <= "9") or (ch.to_lower() >= "a" and ch.to_lower() <= "z")
+
+
+# Asset paths preloaded at class scope (column 0 — top-level const/var, not an
+# indented function body). These resolve at script load, i.e. at autoload boot.
+func _classscope_asset_preloads(src: String) -> Array:
+	var out: Array = []
+	for raw in src.split("\n"):
+		if raw.length() == 0 or raw[0] == " " or raw[0] == "\t":
+			continue  # indented → inside a func body, runs lazily, not at boot
+		var idx := raw.find("preload(\"res://assets/")
+		if idx < 0:
+			continue
+		var start := raw.find("\"", idx) + 1
+		out.append(raw.substr(start, raw.find("\"", start) - start))
+	return out
+
+
+# Union of the exclude_filter globs of every RUNNABLE export preset — i.e. the
+# game-binary exports the player actually launches (Web/Linux/Windows/Android/
+# macOS). An asset excluded from those isn't in the binary at boot; it's only in
+# the downloaded .pck (built by the non-runnable "Asset Pack" preset, whose own
+# excludes we ignore — they describe what's left OUT of the pack, e.g. the
+# vendored assets/kenney_* that ship in the binary instead, and would be a false
+# positive here). So we read exclude_filter only from `runnable=true` presets.
+func _export_excluded_globs() -> Array:
+	var out: Array = []
+	var preset_runnable := false
+	for raw in _read_text_file("res://export_presets.cfg").split("\n"):
+		var line: String = raw.strip_edges()
+		if line.begins_with("[preset."):
+			preset_runnable = false  # reset at each preset; runnable= appears before exclude_filter=
+			continue
+		if line.begins_with("runnable="):
+			preset_runnable = (line.substr(9).strip_edges() == "true")
+			continue
+		if not preset_runnable or not line.begins_with("exclude_filter="):
+			continue
+		var val := line.substr(line.find("\"") + 1)
+		val = val.substr(0, val.rfind("\""))
+		for glob in val.split(","):
+			var g: String = glob.strip_edges()
+			if g != "":
+				out.append(g)
+	return out
+
+
+func _path_matches_any_glob(path: String, globs: Array) -> bool:
+	for g in globs:
+		if path.match(g):
+			return true
+	return false
+
+
+func _read_text_file(path: String) -> String:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return ""
+	return f.get_as_text()
+
+
+# ── Duck-typed stub for test_kill_state_survives_warp_flush (#423) ───
+# Exposes exactly the fields CellObjectSpawner._save_cell_state reads off
+# its back-reference controller (_c). RefCounted so it auto-frees; the
+# real ValleyFieldController is far heavier and not needed for the
+# capture-path assertion.
+class _KillStateStubController extends RefCounted:
+	var _current_cell: Dictionary = {}
+	var _cell_states: Dictionary = {}
+	var _room_enemies: Array = []
+	var _room_boxes: Array = []
+	var _room_drops: Array = []
+	var _room_messages: Array = []
+	var _room_props: Array = []
+	var _room_triggers: Array = []
+	var _room_npcs: Array = []
+	var _room_quest_items: Array = []
+	var _room_walls: Array = []
+	var _fence_links: Dictionary = {}
+	var _current_wave: int = 1
+	var _max_wave: int = 1

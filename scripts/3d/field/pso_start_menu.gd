@@ -10,6 +10,8 @@ signal closed()
 ## drop an in-progress technique charge on menu open (#352).
 signal opened()
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 # ── Layout ──────────────────────────────────────────────────────────────────────
 const VIEWPORT_W := 1280.0
 const VIEWPORT_H := 720.0
@@ -31,6 +33,13 @@ const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
 const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
 const C_TEXT := Color(0.10, 0.15, 0.25)
 const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
+# Grey for DISABLED inventory rows (cannot-use / already-known disks). This is
+# the SAME value the 2D shops mute their rows with (PszStyle.TEXT_MUTED), so an
+# already-known disk greys identically whether the player sees it in the start
+# menu or a shop list (#417 — Rozalin: "the graying color isn't identical between
+# the two"). Single source of truth → they can't drift. Disabled rows also dim
+# their icon (PszStyle.DISABLED_ICON_MOD), matching the shop.
+const C_TEXT_DISABLED := PszStyle.TEXT_MUTED
 const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)
 const C_SELECT := Color(0.88, 0.53, 0.13)
 const C_SELECT_TEXT := Color.WHITE
@@ -44,6 +53,9 @@ const FONT_SIZE := 15
 const FONT_SIZE_SM := 13
 const FONT_SIZE_XS := 11
 const FONT_SIZE_LG := 17
+## Inventory item-name size — matches the 2D shop row name size (PszStyle.FONT_ITEM)
+## so the start-menu items list and the shop lists read at the same weight (#417).
+const FONT_SIZE_ITEM := 14
 
 # ── State ───────────────────────────────────────────────────────────────────────
 enum Mode { MAIN, ITEMS, ITEMS_MOVE, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
@@ -59,7 +71,6 @@ var _pal_slot_idx: int = 0
 var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
-var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
 var _move_from_idx: int = -1  # Origin row when in Mode.ITEMS_MOVE (Manual sort)
 var _move_from_id: String = ""  # Origin item id, used to relocate cursor after move
@@ -67,6 +78,7 @@ var _move_from_id: String = ""  # Origin item id, used to relocate cursor after 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
+var _pal_bg_cache: Dictionary = {}  # palette page_idx → background Texture2D (#421)
 var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
 var _renderer: StartMenuRenderer  # Canvas rendering, extracted to StartMenuRenderer
 var _input: StartMenuInput  # Input / navigation routing, extracted to StartMenuInput
@@ -126,6 +138,27 @@ func _ready() -> void:
 	_nav = NavRepeat.new(NAV_ACTIONS, _input._dispatch_ui_action)
 	_canvas.draw.connect(_renderer._draw_menu)
 	add_child(_canvas)
+
+	# An area transition is a full change_scene_to_file: this autoload survives
+	# the tree rebuild, but its canvas only repaints on input/open. If the menu
+	# was open on the Palette page across a warp, the canvas could repaint at a
+	# moment a fresh load() of the background transiently missed and never repaint
+	# again until input — the player had to exit/re-enter the page to recover it
+	# (#421). Re-issue a redraw on the area-load signal so an open menu repaints
+	# in place from the cached background. SceneManager is registered before this
+	# autoload (project.godot order), so it is ready here.
+	if SceneManager and not SceneManager.scene_changed.is_connected(_on_scene_changed_rebind):
+		SceneManager.scene_changed.connect(_on_scene_changed_rebind)
+
+
+## Repaint the menu when an area transition rebuilds the scene tree. Guarded on
+## _is_open so push_scene overlays (which also emit scene_changed) don't trigger
+## spurious redraws on a closed menu. The cached palette background (#421) means
+## this redraw re-binds the image from memory and can never silently skip it.
+func _on_scene_changed_rebind(_scene_path: String) -> void:
+	if _is_open and _canvas:
+		_canvas.queue_redraw()
+		print("[sanity] checkpoint: start-menu-rebind")
 
 
 func _process(delta: float) -> void:
@@ -396,7 +429,6 @@ func open() -> void:
 	_mag_idx = 0
 	_mag_feed_idx = 0
 	_options_idx = 0
-	_item_scroll = 0.0
 	_action_message = ""
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
@@ -712,9 +744,16 @@ func _get_inventory() -> Array:
 		# Items the start-menu's "Use" action will dispatch to Inventory.use_item().
 		# Add new use-handler ids here when wiring more consumables — see
 		# inventory.gd's use_item() switchboard for the dispatch logic.
+		# A technique disk is only "usable" when it can actually be learned right
+		# now: an already-known-at-level (or too-low-level / class-illegal) disk
+		# offers NO Use action — it routes through the same shared predicates that
+		# grey its row, so the modal can't offer a Use the row says is disabled.
+		var disk_usable: bool = item_id.begins_with("disk_") \
+			and not ShopNav.sell_cannot_use(item_id) \
+			and not ShopNav.sell_disabled(item_id)
 		item["usable"] = (
 			Inventory.CONSUMABLE_EFFECTS.has(item_id)
-			or item_id.begins_with("disk_")
+			or disk_usable
 			or item_id == "telepipe"
 		)
 	return items
@@ -742,6 +781,27 @@ func _get_action_icon(action_id: String) -> Texture2D:
 	if icon:
 		_icon_cache[action_id] = icon
 	return icon
+
+
+## Lazy lookup for the Palette HUD-preview background (page 0 → palette_bg.png,
+## page 1 → palette_bg_r.png). Cached on this persistent autoload exactly like
+## _get_action_icon. The start menu survives change_scene_to_file, so an area
+## transition can fire a redraw at a moment a fresh load()/ResourceLoader.exists
+## transiently missed — the pre-#421 renderer re-load()ed on every draw and could
+## silently skip the background, forcing the player to exit/re-enter the page to
+## recover it. Caching the Texture2D ref here means a post-transition redraw
+## re-binds from memory and can never skip. Nulls are NOT cached so a later pack
+## mount recovers without a restart (mirrors the action-icon contract).
+func _get_palette_bg(page_idx: int) -> Texture2D:
+	if _pal_bg_cache.has(page_idx):
+		return _pal_bg_cache[page_idx]
+	var bg_path: String = "res://assets/ui/psz-palette/palette_bg%s.png" % ("_r" if page_idx == 1 else "")
+	if not ResourceLoader.exists(bg_path):
+		return null
+	var tex: Texture2D = load(bg_path)
+	if tex:
+		_pal_bg_cache[page_idx] = tex
+	return tex
 
 
 ## Map an inventory category ("Weapon", "Armor", ...) to one of the

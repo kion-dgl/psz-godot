@@ -471,8 +471,16 @@ func _use_telepipe() -> bool:
 ## Use a technique disk to learn or upgrade a tech.
 ## Disk id format: disk_<technique_id>_<level>, e.g. "disk_foie_3"
 func _use_disk(item_id: String) -> bool:
+	# Parse tech/level from the BASE id, never the raw instance id. A duplicate
+	# disk is minted as "disk_foie_3#2"; parsing the raw id makes int("3#2")
+	# yield 32 (Godot int() concatenates digits across '#', it does not
+	# truncate), so use_disk() rejects every copy past the first as "level 32 >
+	# class max". Strip the suffix first, but keep the full instance id for the
+	# remove_item below so the exact copy the player selected is consumed
+	# (#417, mirrors the #357 get_base_id-before-lookup pattern).
+	var base_id := get_base_id(item_id)
 	# Strip "disk_" prefix, then split off the trailing _<level>
-	var rest := item_id.substr(5)
+	var rest := base_id.substr(5)
 	var underscore := rest.rfind("_")
 	if underscore < 0:
 		return false

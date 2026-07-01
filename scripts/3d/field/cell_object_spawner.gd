@@ -653,6 +653,43 @@ func _save_cell_state() -> void:
 	}
 	print("[CellObjects] Saved state for cell %s: %d objects, %d drops (wave %d/%d)" % [
 		cell_pos, obj_states.size(), drop_states.size(), _c._current_wave, _c._max_wave])
+	# Autopilot field oracle (#423 + full persistence contract,
+	# /states/field-lifecycle §Persistence): tally how much progress this
+	# exit-flush snapshotted, so a probe can assert that clearing a room then
+	# warping out persists it. The autopilot oracle (Autopilot.observe_cell_flush)
+	# then fails the run if any of these regress on a cell re-visit (a respawn).
+	# Guarded so normal runs don't get the extra line.
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		var _tally := {
+			"dead": 0,          # enemies killed (MUST NOT respawn)
+			"boxes_destroyed": 0,  # broken boxes (MUST NOT reappear / re-drop)
+			"drops_pending": drop_states.size(),  # ground loot (MUST stay put until picked up)
+			"msgs_read": 0,     # read messages (stay read)
+			"items_collected": 0,  # collected quest items (MUST NOT reappear)
+		}
+		for _o in obj_states:
+			var _t: String = str(_o.get("type", ""))
+			var _s: String = str(_o.get("state", ""))
+			if _t == "enemy" and _s == "dead":
+				_tally["dead"] += 1
+			elif (_t == "box" or _t == "rare_box") and _s == "destroyed":
+				_tally["boxes_destroyed"] += 1
+			elif _t == "message" and _s == "read":
+				_tally["msgs_read"] += 1
+			elif _t == "quest_item" and _s == "collected":
+				_tally["items_collected"] += 1
+		# Key by SECTION + pos: the same row,col grid label exists in different
+		# sections as unrelated cells (e.g. A 3,1 'na1' vs B 3,1 'tb3'), so the
+		# re-visit oracle must only compare a cell against its own prior flush.
+		var _sec: int = int(SessionManager.get_current_section()) if SessionManager else 0
+		var _cell_key: String = "%d:%s" % [_sec, cell_pos]
+		print("[sanity] checkpoint: cell-flush cell=%s dead=%d boxes_destroyed=%d drops_pending=%d msgs_read=%d items_collected=%d" % [
+			_cell_key, _tally["dead"], _tally["boxes_destroyed"], _tally["drops_pending"],
+			_tally["msgs_read"], _tally["items_collected"]])
+		# Hand the tally to the autopilot oracle for the cross-visit
+		# non-regression check. Autopilot is an autoload, so the global is
+		# always resolvable here under PSZ_AUTOPILOT.
+		Autopilot.observe_cell_flush(_cell_key, _tally)
 
 
 func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type: String = "", drop_value: String = "") -> void:

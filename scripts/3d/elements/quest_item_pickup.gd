@@ -325,7 +325,7 @@ func _spawn_telepipe() -> void:
 	if fc and fc.has_method("_on_end_reached"):
 		telepipe.activated.connect(Callable(fc, "_on_end_reached"))
 	else:
-		telepipe.activated.connect(Callable(SceneManager, "goto_scene").bind("res://scenes/3d/city/city_warp.tscn"))
+		telepipe.activated.connect(Callable(SceneManager, "goto_scene").bind("res://scenes/3d/city/city_counter.tscn"))
 
 
 func _find_dialog_box() -> Node:

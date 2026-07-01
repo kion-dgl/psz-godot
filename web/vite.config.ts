@@ -3,12 +3,14 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import floorMeshPatchPlugin from './vite-plugin-floor-mesh-patch';
 import stageConfigSavePlugin from './vite-plugin-stage-config-save';
+import colliderExportPlugin from './vite-plugin-collider-export';
 
 export default defineConfig({
   plugins: [
     react(),
     floorMeshPatchPlugin(path.resolve(__dirname, '..')),
     stageConfigSavePlugin(path.resolve(__dirname, '..')),
+    colliderExportPlugin(path.resolve(__dirname, '..')),
   ],
   base: '/psz-godot/',
   server: {

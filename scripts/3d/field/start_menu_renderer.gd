@@ -17,6 +17,24 @@ var _c
 # composition, not inheritance (the sanctioned shop-dedup pattern).
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
+# The start menu draws its text in immediate mode (draw_string), so it doesn't
+# pick up the rpg_theme font the way the 2D Control screens do. Preload the same
+# face the shops render with (rpg_theme.tres → JetBrainsMono) and draw every
+# menu string in it, so the start menu and the shop lists share one typeface
+# (#417 — Rozalin: "the font doesn't seem identical"). ThemeDB.fallback_font
+# (the old default) is Godot's built-in sans, a different face entirely.
+#
+# This preload is at class scope, which PsoStartMenu (an autoload) resolves at
+# engine boot — BEFORE bootstrap.gd mounts the asset .pck. That is only safe
+# because JetBrains Mono is vendored in source and ships IN THE BINARY (it's
+# OFL, not a SEGA pack asset — see .gitignore !/assets/fonts/ and the runnable
+# export presets, which no longer exclude assets/fonts/). #448 hit exactly this
+# trap by preloading the font while it was still pck-gated, blacking out the
+# menu in release exports; #450 moved the font into the binary. Do NOT
+# class-scope-preload a genuinely pack-only asset here — see
+# test_autoloads_avoid_packonly_classscope_preloads.
+const MENU_FONT: Font = preload("res://assets/fonts/JetBrainsMono-Regular.ttf")
+
 
 func _init(controller) -> void:
 	_c = controller
@@ -33,9 +51,19 @@ func _item_cannot_use(item_id: String) -> bool:
 	return ShopNav.sell_cannot_use(item_id)
 
 
+## Both row-mute tiers for an inventory row, as [cannot_use, soft_disabled]:
+##   [0] cannot_use   — permanent class block → ✕ marker (_item_cannot_use).
+##   [1] soft_disabled — a temporary block (a disk already known at this level, or
+##       below the required player level) → grey WITHOUT the ✕ (ShopNav.sell_disabled).
+## Both route through the shared ShopNav predicates so the start menu greys in
+## lockstep with the shops and storage (spec /mechanics/equip-legality).
+func _item_mute_state(item_id: String) -> Array:
+	return [_item_cannot_use(item_id), ShopNav.sell_disabled(item_id)]
+
+
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
-	var font := ThemeDB.fallback_font
+	var font: Font = MENU_FONT
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
 
 	# L-shaped backdrop
@@ -191,94 +219,130 @@ func _draw_items(c: Control, font: Font) -> void:
 
 	var px: float = 5.0
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
-	var pw: float = 300.0
+	# Wider than the other sub-screens' 300px list (Kion: "make the inventory a bit
+	# wider") — the description panel shifts right to match (see the _draw_bottom_desc
+	# call below). The bottom backdrop strip is full-width, so there's ample room.
+	var pw: float = 340.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 
 	# Slot count header
 	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
-	# Two-pass scroll calc: each row is one fixed-height entry now that
-	# category banners are gone. Type is shown via the per-row icon instead.
-	var content_y: float = 20.0
-	var item_positions: Array = []
-	for _i in range(inv.size()):
-		item_positions.append(content_y)
-		content_y += 22
+	# Taller rows + the shop's name-font size, so the list reads with the same
+	# padding/weight as the 2D shop lists instead of the old cramped 22px/size-13
+	# rows (Kion: "align the inventory to have the same padding + margin as the shop").
+	const ROW_H := 26
+	const ROW_RECT_H := 24
+	# Content band the rows live in: below the slot header, inset from the panel
+	# bottom so a row never paints past the inner-panel border. The list scrolls by
+	# whole rows and is clipped to this band, so it respects the panel's bounds
+	# instead of spilling rows out the bottom of the UI (#417 — Kion: "the inventory
+	# list in the start menu doesn't respect overflow Y").
+	var list_top: float = py + 22.0
+	var list_bottom: float = py + ph - 4.0
+	var visible_rows: int = int(floor((list_bottom - list_top) / float(ROW_H)))
 
-	var view_h: float = ph - 6
-	if _c._sub_idx >= 0 and _c._sub_idx < item_positions.size():
-		var sel_y: float = item_positions[_c._sub_idx]
-		if sel_y - _c._item_scroll < 20:
-			_c._item_scroll = int(sel_y - 20)
-		elif sel_y - _c._item_scroll + 22 > view_h:
-			_c._item_scroll = int(sel_y + 22 - view_h)
-	_c._item_scroll = maxf(_c._item_scroll, 0.0)
+	# Whole-row scroll window that keeps the selection in view — same model as
+	# _draw_bottom_list (no partial rows, nothing drawn past the panel edge).
+	var scroll_offset: int = maxi(0, _c._sub_idx - (visible_rows - 1))
+	var max_scroll: int = maxi(0, inv.size() - visible_rows)
+	scroll_offset = mini(scroll_offset, max_scroll)
 
 	# Origin row index when the player is mid-Manual-sort, so we can paint
 	# it distinctively (cool blue) — distinct from the orange selection tint.
 	var move_idx: int = _c._move_from_idx if _c._mode == PsoStartMenu.Mode.ITEMS_MOVE else -1
 
-	# Draw pass
-	var draw_y: float = py + 20.0 - _c._item_scroll
+	# Draw pass — only the rows that fully fit the visible window.
 	for i in range(inv.size()):
-		if draw_y + 22 < py or draw_y > py + ph:
-			draw_y += 22
+		var draw_i: int = i - scroll_offset
+		if draw_i < 0 or draw_i >= visible_rows:
 			continue
+		var draw_y: float = list_top + draw_i * ROW_H
+		# Baseline for text vertically centered in the taller row rect.
+		var text_y: float = draw_y + ROW_RECT_H * 0.5 + 5.0
+		var icon_y: float = draw_y + (ROW_RECT_H - 16.0) * 0.5
 		var item: Dictionary = inv[i]
 		var is_sel: bool = i == _c._sub_idx
 		var is_move_origin: bool = i == move_idx
 
-		if is_sel:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), PsoStartMenu.C_SELECT)
-		elif is_move_origin:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(0.34, 0.55, 0.85))
-		else:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
+		# Rounded row pill (like the shop's list rows), tinted by state: orange when
+		# selected, cool blue for the manual-sort origin, else translucent white.
+		var row_color: Color = PsoStartMenu.C_SELECT if is_sel \
+			else (Color(0.34, 0.55, 0.85) if is_move_origin else Color(1, 1, 1, 0.85))
+		_draw_row_pill(c, Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), row_color)
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
-		var cannot_use: bool = _item_cannot_use(item_id)
+		var mute := _item_mute_state(item_id)
+		var cannot_use: bool = mute[0]
+		# Grey-without-✕: a disk already known at this level (or below the required
+		# player level) — same temporary-block predicate the shops/storage use.
+		var soft_disabled: bool = mute[1]
 
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if (is_sel or is_move_origin) else PsoStartMenu.C_TEXT
-		# Grey gear/disks the class can never use, unless this row is highlighted.
-		if cannot_use and not (is_sel or is_move_origin):
-			col = PsoStartMenu.C_TEXT_MUTED
+		var is_highlight: bool = is_sel or is_move_origin
+		# Disabled = the class can never use it (✕) OR it's temporarily useless (a
+		# disk already known at this level / below the required level). A highlighted
+		# row stays readable so the cursor is visible even on a disabled item.
+		var disabled: bool = (cannot_use or soft_disabled) and not is_highlight
+		var col: Color = PsoStartMenu.C_SELECT_TEXT if is_highlight else PsoStartMenu.C_TEXT
+		if disabled:
+			col = PsoStartMenu.C_TEXT_DISABLED
 
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
 		# reserved on every row so item names stay aligned — same convention as
 		# the shops and storage. ✕ takes precedence (equipped gear is equippable).
+		# The slot is wide enough for the "[E]" tag so it doesn't crowd the item icon.
 		if cannot_use:
-			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, draw_y + 2, 16, 16), false)
+			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, icon_y, 16, 16), false)
 		elif is_equipped:
-			c.draw_string(font, Vector2(px + 6, draw_y + 14), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
+			c.draw_string(font, Vector2(px + 6, text_y), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
 
-		# Per-item icon (PNG when known, fallback to colored letter block), shifted
-		# right past the marker slot.
-		var icon_rect := Rect2(px + 24, draw_y + 2, 16, 16)
+		# Per-item icon (PNG when known, fallback to colored letter block), past the
+		# fixed ~26px marker slot so the [E] tag and the icon never overlap.
+		var icon_rect := Rect2(px + 32, icon_y, 16, 16)
+		# Disabled rows dim their icon too (alpha modulate), so the whole row reads
+		# as greyed — not just the text. Same modulate the shops use (#417 parity).
+		var icon_mod: Color = PszStyle.DISABLED_ICON_MOD if disabled else Color.WHITE
 		var tex: Texture2D = _c._get_item_icon(item_id, category)
 		if tex:
-			c.draw_texture_rect(tex, icon_rect, false)
+			c.draw_texture_rect(tex, icon_rect, false, icon_mod)
 		else:
 			var type_key: String = _c._category_to_type(category)
 			var icon_letter: String = str(PsoStartMenu.TYPE_ICONS.get(type_key, "?"))
 			var icon_color: Color = PsoStartMenu.TYPE_COLORS.get(type_key, Color.GRAY)
-			if is_sel or is_move_origin:
+			if is_highlight:
 				icon_color = Color(1, 1, 1, 0.4)
+			elif disabled:
+				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 27, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 35, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
 		# Item name (the [E]/✕ marker lives in the leftmost slot, not the name).
-		c.draw_string(font, Vector2(px + 46, draw_y + 14), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
+		c.draw_string(font, Vector2(px + 54, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_ITEM, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
 		if qty > 1:
-			c.draw_string(font, Vector2(px + pw - 40, draw_y + 14), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
+			c.draw_string(font, Vector2(px + pw - 40, text_y), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
 
-		draw_y += 22
+	# Scroll cues when the list extends past the visible window (matches the
+	# ▲/▼ hints the other start-menu lists draw via _draw_bottom_list).
+	if scroll_offset > 0:
+		c.draw_string(font, Vector2(px + pw - 60, py + 14), "▲ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+	if scroll_offset + visible_rows < inv.size():
+		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
-	# Description
+	# Description sits to the right of the (wider) items list, not the default 310px.
+	# Built in its own helper to keep this draw routine's call fan-out down.
+	_draw_bottom_desc(c, font, _items_description(inv), 350.0)
+
+
+## The detail text for the currently-selected inventory item — stats from the
+## registries, the disk teach-line, and the contextual prompt. Split out of
+## _draw_items so that routine doesn't fan out across every registry (#295
+## god-orchestrator bound).
+func _items_description(inv: Array) -> String:
 	var desc: String = ""
 	if _c._sub_idx < inv.size():
 		var item: Dictionary = inv[_c._sub_idx]
@@ -298,9 +362,11 @@ func _draw_items(c: Control, font: Font) -> void:
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable and not str(consumable.details).is_empty():
 			desc += "\n%s" % str(consumable.details)
-		# Technique disks: show what they teach and the use prompt
+		# Technique disks: show what they teach and the use prompt. Parse from the
+		# BASE id, not the raw instance id — a duplicate disk's id is "disk_foie_3#2"
+		# and the raw suffix would leak into the teach-line as "Lv.3#2" (#417).
 		if item_id.begins_with("disk_"):
-			var rest := item_id.substr(5)
+			var rest := Inventory.get_base_id(item_id).substr(5)
 			var us := rest.rfind("_")
 			if us >= 0:
 				var tech_id := rest.substr(0, us)
@@ -315,7 +381,7 @@ func _draw_items(c: Control, font: Font) -> void:
 			desc += "\n[Enter] Open"
 	if not _c._action_message.is_empty():
 		desc += "\n\n" + _c._action_message
-	_draw_bottom_desc(c, font, desc)
+	return desc
 
 
 func _draw_equip(c: Control, font: Font) -> void:
@@ -503,12 +569,14 @@ func _draw_palette(c: Control, font: Font) -> void:
 		c.draw_string(font, Vector2(tab_x + 10, tab_y + 18), "Page %d" % (pi + 1),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_SELECT_TEXT if is_active else PsoStartMenu.C_TEXT_MUTED)
 
-	# HUD preview with palette_bg
+	# HUD preview with palette_bg. Fetch via the autoload's cached getter rather
+	# than load()-ing inline every draw: the menu survives area transitions, and
+	# an uncached load() could transiently miss on a post-transition redraw and
+	# silently skip the background until the player re-entered the page (#421).
 	var hud_y: float = tab_y + 34
 	var hud_scale: float = 1.7
-	var bg_path: String = "res://assets/ui/psz-palette/palette_bg%s.png" % ("_r" if _c._pal_page_idx == 1 else "")
-	if ResourceLoader.exists(bg_path):
-		var bg_tex: Texture2D = load(bg_path)
+	var bg_tex: Texture2D = _c._get_palette_bg(_c._pal_page_idx)
+	if bg_tex:
 		c.draw_texture_rect(bg_tex, Rect2(lx + 8, hud_y, 128.0 * hud_scale, 67.0 * hud_scale), false)
 
 	var slot_centers := [Vector2(26.0, 27.0), Vector2(58.0, 41.0), Vector2(90.0, 27.0)]
@@ -782,9 +850,41 @@ func _draw_options(c: Control, font: Font) -> void:
 
 
 # ── Draw helpers ────────────────────────────────────────────────────────────────
+# Cached rounded panel style for the inner list/desc panels — rounded corners +
+# a border, drawn via draw_style_box so the start menu's panels read like the 2D
+# shop's rounded cards (Kion: "add some border radius … closer to the look of the
+# shop") instead of the old hard-cornered draw_rect. Built once, reused per frame.
+var _panel_sbox: StyleBoxFlat = null
+
+
+func _inner_panel_sbox() -> StyleBoxFlat:
+	if _panel_sbox == null:
+		var s := StyleBoxFlat.new()
+		s.bg_color = PsoStartMenu.C_PANEL
+		s.border_color = PsoStartMenu.C_PANEL_BORDER
+		s.set_border_width_all(2)
+		s.set_corner_radius_all(6)
+		_panel_sbox = s
+	return _panel_sbox
+
+
 func _draw_inner_panel(c: Control, rect: Rect2) -> void:
-	c.draw_rect(rect, PsoStartMenu.C_PANEL)
-	c.draw_rect(rect, PsoStartMenu.C_PANEL_BORDER, false, 1.5)
+	c.draw_style_box(_inner_panel_sbox(), rect)
+
+
+# Reusable rounded-rect style for list ROWS (the inventory pills) so they read like
+# the 2D shop's rounded list rows instead of hard-cornered bars (Kion). One
+# instance, recoloured per row — draw_style_box paints with the current bg_color
+# synchronously, so reusing it across rows in a frame is safe.
+var _row_sbox: StyleBoxFlat = null
+
+
+func _draw_row_pill(c: Control, rect: Rect2, color: Color) -> void:
+	if _row_sbox == null:
+		_row_sbox = StyleBoxFlat.new()
+		_row_sbox.set_corner_radius_all(4)
+	_row_sbox.bg_color = color
+	c.draw_style_box(_row_sbox, rect)
 
 
 func _draw_section_label(c: Control, font: Font, text: String) -> void:
@@ -849,10 +949,8 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
 
-func _draw_bottom_desc(c: Control, font: Font, text: String) -> void:
-	var px: float = 310.0
+func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0) -> void:
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
-	var pw: float = 200.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 	# Simple multi-line text

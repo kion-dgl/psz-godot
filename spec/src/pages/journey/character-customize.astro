@@ -20,6 +20,46 @@ import CharacterCustomize from '../../components/screens/CharacterCustomize';
     D --> E[City · Office]
   `} />
 
+  <h2>Class Select — slat rendering (normative)</h2>
+  <p>
+    The preceding Class Select step lays the 14 classes out as horizontal
+    slats. Each slat holds a full-bleed class cutout (PNG art) and grows
+    when selected. The cutout rendering MUST obey the following so the
+    selection animation reads as a clean reveal, not a jittering image
+    (issue #380 — the HUcast / HUcaseal cutouts visibly wobbled on
+    navigation):
+  </p>
+  <ul>
+    <li>
+      Each class cutout MUST be cropped <strong>object-fit: cover</strong>,
+      anchored <strong>center-top</strong> (parity with
+      <code>SlatsView.tsx</code> <code>objectPosition: 'center top'</code>),
+      so heads are never clipped.
+    </li>
+    <li>
+      The slat-width transition (selected stretch ratio <code>5</code>,
+      unselected <code>1</code>, <code>0.32s</code> cubic ease-out) MUST
+      animate <strong>only the revealed width</strong> of the cutout. It
+      MUST NOT shift the visible crop origin of any cutout — the cover-crop
+      is solved once against a width-stable reference frame, and the
+      animating slat merely clips more or less of that fixed-size cutout.
+    </li>
+    <li>
+      The reference frame width MUST be derived from the content-area width
+      (selected reference = <code>content_width × 5 / total_ratio</code>),
+      not a hardcoded pixel value, so framing is consistent across
+      resolutions and aspect ratios.
+    </li>
+  </ul>
+  <p>
+    Rationale: a per-frame cover-crop solved against the container's
+    integer-rounded, fractional slat widths shifts the crop origin ±1px as
+    14 widths re-round each animation frame. With mipmaps disabled, that
+    moved high-contrast translucent pixels in the edge-to-edge Cast arts and
+    read as a wobble. Pinning the crop to a constant-size frame removes the
+    re-crop entirely.
+  </p>
+
   <h2>Appearance</h2>
   <p>Left panel with 4 rows — labels adapt for Cast classes (Head Parts, Body Color A/B/C). Right side shows a live 3D preview in a SubViewport. Right analog stick rotates the model.</p>
   <ul>
