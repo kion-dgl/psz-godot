@@ -38,7 +38,7 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
-const COUNTER_NPC_POS := Vector3(-8.31, 0.5, -9.5)       # inside QuestCounterNPC range
+const COUNTER_NPC_POS := Vector3(-7.86, -9.0, 113.0)     # counter front, in QuestCounterNPC's box + closer than StorageNPC (merged map, floor≈-10.67)
 const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
 # Warp teleporter merged into the counter (#city-merge): interact in-place, no
 # counter→warp scene transition.
