@@ -90,7 +90,7 @@ const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
 # happens to land at the same XZ — the interact press picks up the item
 # instead of activating the telepipe, the player ends up next to an empty
 # telepipe with no scene change. After the first attempt, poll for the
-# scene-change to CITY_WARP; if still in VALLEY_FIELD, walk back and re-press.
+# scene-change to CITY_COUNTER; if still in VALLEY_FIELD, walk back and re-press.
 # Item is gone after the first pickup, so attempt #2 unambiguously targets
 # the telepipe. 3 attempts total covers up to 2 stacked drops.
 const TELEPIPE_RETRY_DELAY := POST_INTERACT_SETTLE + 0.7
@@ -1928,6 +1928,13 @@ func _drive_city_counter() -> void:
 		_warp_pad_interacted = true
 		print("[sanity] counter: teleport to warp pad")
 		_teleport_player(WARP_PAD_POS)
+		# Targeted probe for issue #426 (Start Menu must capture the confirm press
+		# so it can't trigger the WarpTeleporter underneath). Gated behind
+		# PSZ_AUTOPILOT_MENU_GATE=1 so the standard regression matrix is unaffected
+		# — when unset, the warp-pad interact is byte-for-byte the old behavior.
+		if OS.get_environment("PSZ_AUTOPILOT_MENU_GATE") == "1":
+			_after(0.8, _probe_start_menu_blocks_interact)
+			return
 		_after(0.8, func() -> void: _press_action("interact"))
 
 
@@ -1967,6 +1974,40 @@ func _drive_guild_counter() -> void:
 
 # City warp is no longer a separate scene — the WarpTeleporter pad lives in the
 # counter (merged map) and is driven in-place by _drive_city_counter (#city-merge).
+
+
+## Issue #426 runtime probe (pack-gated — needs the city scene + the pack-only
+## WarpPad mesh, so it runs only on a pack-mounted build, not repo-only CI).
+## With the player standing on the WarpTeleporter pad: open the Start Menu,
+## press interact, and assert NO warp overlay pushed (the modal consumed the
+## press); then close the menu and confirm interact opens the overlay on the
+## next frame. Emits `[sanity] checkpoint: start-menu-blocks-interact` on pass.
+func _probe_start_menu_blocks_interact() -> void:
+	if PsoStartMenu == null:
+		_fail_and_quit("menu-gate probe — PsoStartMenu autoload missing")
+		return
+	print("[sanity] menu-gate: open Start Menu, then press interact (must be blocked)")
+	PsoStartMenu.open()
+	_after(0.4, func() -> void:
+		_press_action("interact")
+		_after(0.4, _probe_menu_blocked_check))
+
+
+func _probe_menu_blocked_check() -> void:
+	var stack_size := 0
+	if SceneManager != null:
+		stack_size = SceneManager._scene_stack.size()
+	var top := ""
+	if stack_size > 0:
+		top = String(SceneManager._scene_stack[stack_size - 1])
+	if top == WARP_TELEPORTER:
+		_fail_and_quit("menu-gate — interact opened the warp overlay while the Start Menu was open (#426)")
+		return
+	print("[sanity] checkpoint: start-menu-blocks-interact")
+	# Close the menu and confirm interact works again on the next frame (no
+	# buffered confirm leak — the press below is a fresh one).
+	PsoStartMenu.close()
+	_after(0.4, func() -> void: _press_action("interact"))
 
 
 # ── Field: per-cell driver ─────────────────────────────────────
