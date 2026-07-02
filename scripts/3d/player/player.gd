@@ -947,6 +947,39 @@ func _respawn() -> void:
 	transition_to(PlayerState.IDLE)
 
 
+# ── Field-action arbitration (issue #426 / #423) ──────────────────────────
+# Decides which effects ONE confirm/action InputEvent produces, encoding the
+# "Confirm/interact precedence" rule from spec/states/start-menu:
+#   row 2  world interaction (interact pressed + an interactable in range)
+#          CONSUMES the press and SUPPRESSES any palette/free action bound to
+#          the same button.
+#   row 3  palette / palette_swap / dodge fire only when no world interaction
+#          claimed the press, and only OUTSIDE the city (combat gate — bindings
+#          still fire in town without an explicit gate).
+# Row 1 (an open modal / Start Menu) is handled upstream by the
+# is_gameplay_blocked() early-return in _unhandled_input; that path never
+# reaches this helper. Pure + static so it is unit-testable without a live
+# Player node (Player._ready loads pack-only character models — can't run
+# repo-only headless).
+static func arbitrate_field_actions(pressed: Dictionary, has_interactable: bool, in_city: bool) -> Array[String]:
+	# Row 2: world interaction wins and consumes the press.
+	if bool(pressed.get("interact", false)) and has_interactable:
+		return ["interact"]
+
+	# Row 3: palette / free actions — suppressed entirely inside the city.
+	var effects: Array[String] = []
+	if in_city:
+		return effects
+	if bool(pressed.get("palette_swap", false)):
+		effects.append("palette_swap")
+	for slot_idx in range(3):
+		if bool(pressed.get("action_%d" % (slot_idx + 1), false)):
+			effects.append("action_%d" % (slot_idx + 1))
+	if bool(pressed.get("dodge", false)):
+		effects.append("dodge")
+	return effects
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state == PlayerState.CUTSCENE:
 		return
@@ -958,32 +991,51 @@ func _unhandled_input(event: InputEvent) -> void:
 	if GameState.is_gameplay_blocked():
 		return
 
-	# Combat input gate — palette HUD is hidden in city via field_hud, but the
-	# input bindings still fire without an explicit gate, so action_1/2/3
-	# would play attack anims and spawn projectiles in town with a weapon
-	# equipped. Interact stays available for NPC conversations.
-	if not _is_in_city():
-		# Palette swap
-		if event.is_action_pressed("palette_swap"):
-			ActionPalette.swap_page()
-			_tech_targeting_dirty = true
+	# Resolve every action this event pressed through the single precedence
+	# rule (see arbitrate_field_actions + spec/states/start-menu). Previously
+	# the palette block and the interact block ran as INDEPENDENT, non-consuming
+	# `if`s, so one confirm press bound to both a world interaction and a palette
+	# action fired BOTH (issue #423/#426 — there was no "world interaction wins
+	# and consumes" arbitration). The combat gate (palette suppressed in city) is
+	# folded into the helper via `in_city`.
+	var in_city := _is_in_city()
+	var has_interactable := nearest_interactable != null and is_instance_valid(nearest_interactable)
+	var pressed := {
+		"interact": event.is_action_pressed("interact"),
+		"palette_swap": event.is_action_pressed("palette_swap"),
+		"action_1": event.is_action_pressed("action_1"),
+		"action_2": event.is_action_pressed("action_2"),
+		"action_3": event.is_action_pressed("action_3"),
+		"dodge": event.is_action_pressed("dodge"),
+	}
+	var effects := arbitrate_field_actions(pressed, has_interactable, in_city)
 
-		# Action palette inputs — press starts charge for techniques, release casts
-		for slot_idx in range(3):
-			var action_name: String = "action_%d" % (slot_idx + 1)
-			if event.is_action_pressed(action_name):
-				_on_palette_pressed(slot_idx)
-			elif event.is_action_released(action_name):
-				_on_palette_released(slot_idx)
-
-		# Dodge has its own dedicated button (L1 on controller) — no longer on palette
-		if event.is_action_pressed("dodge"):
-			if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
-				_start_dodge()
-
-	# Handle interact input
-	if event.is_action_pressed("interact"):
+	# World interaction consumes the press: fire it, mark the event handled, and
+	# stop before any palette dispatch so a shared button can't double-trigger.
+	if effects.has("interact"):
 		_try_interact()
+		get_viewport().set_input_as_handled()
+		return
+
+	for effect in effects:
+		match effect:
+			"palette_swap":
+				ActionPalette.swap_page()
+				_tech_targeting_dirty = true
+			"action_1", "action_2", "action_3":
+				_on_palette_pressed(int(effect.substr(7)) - 1)
+			"dodge":
+				# Dodge has its own dedicated button (L1 on controller).
+				if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
+					_start_dodge()
+
+	# Palette releases are not competing presses (a held technique casts on
+	# release), so honor them regardless of the arbitration above — but only
+	# outside the city, matching the combat gate on presses.
+	if not in_city:
+		for slot_idx in range(3):
+			if event.is_action_released("action_%d" % (slot_idx + 1)):
+				_on_palette_released(slot_idx)
 
 
 func _handle_movement(delta: float) -> void:
@@ -2649,6 +2701,12 @@ func _update_nearest_interactable() -> void:
 
 
 func _try_interact() -> void:
+	# Defense-in-depth (issue #426): a world interaction must NEVER fire while a
+	# modal / Start Menu is open, even if a future input path reaches here
+	# without the _unhandled_input gate at the top of the frame. Movement is not
+	# affected — it runs from the ungated _physics_process, not this path.
+	if GameState.is_gameplay_blocked():
+		return
 	if nearest_interactable and is_instance_valid(nearest_interactable):
 		var target := nearest_interactable
 		target.interact(self)
