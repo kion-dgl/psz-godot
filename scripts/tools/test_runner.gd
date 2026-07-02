@@ -36,6 +36,7 @@ func _run_tests_core() -> void:
 	test_action_commitment()
 	test_palette_momentary_swap()
 	test_menu_carry_survives_scene_signal()
+	test_combo_three_tier()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -5068,22 +5069,22 @@ func test_free_telepipe_round_trip() -> void:
 	print("")
 
 
-# ── Mechgun root-after-fire (Rozalin): final combo step recovers ──
-# The final combo step opens no combo window, so without a safety net a looping
-# attack animation (mechgun spray never emits animation_finished) strands the
-# player in ATTACKING with movement zeroed. _handle_attack_state must end the
-# attack once the final step's animation length elapses.
+# ── Mechgun root-after-fire (Rozalin): every combo step recovers ──
+# A looping attack animation (mechgun spray) never emits animation_finished,
+# so without the elapsed-length safety net in _handle_attack_state the player
+# is stranded in ATTACKING with movement zeroed. Under the #155 queued model
+# the net is generalized to every step: at animation length the step ends —
+# firing the queued chain if one exists, otherwise breaking to IDLE.
 func test_mechgun_final_step_no_root() -> void:
-	print("── Mechgun: final combo step recovers without animation_finished ──")
+	print("── Mechgun: combo steps recover without animation_finished ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 	var pl = PlayerScript.new()
 
-	# Final step (combo_state >= max_combo), no open window, anim "looping" so
+	# Final step (combo_state >= max_combo), anim "looping" so
 	# animation_finished never fires. Tick past the anim length.
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 3)
-	pl.set("combo_window_open", false)
-	pl.set("_combo_window_opened", true)
+	pl.set("_attack_step_ended", false)
 	pl.set("_attack_anim_length", 0.4)
 	pl.set("_attack_anim_elapsed", 0.0)
 	for _i in range(10):
@@ -5092,18 +5093,140 @@ func test_mechgun_final_step_no_root() -> void:
 		"final combo step returns to IDLE once the anim length elapses (no permanent root)")
 	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the final step ends")
 
-	# Control: a non-final step with its combo window OPEN must stay attackable
-	# (the safety net must not eat the chain window even past the anim length).
+	# A non-final step with a QUEUED chain fires the next step at anim length
+	# instead of rooting or breaking (#155 — the queued model's fire point).
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
-	pl.set("combo_window_open", true)
-	pl.set("combo_timer", 0.0)
-	pl.set("_combo_window_opened", true)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NORMAL)
+	pl.set("_attack_step_ended", false)
 	pl.set("_attack_anim_length", 0.4)
 	pl.set("_attack_anim_elapsed", 0.5)
 	pl._handle_attack_state(0.05)
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
-		"non-final step stays attackable while its combo window is open")
+		"queued chain keeps ATTACKING — next step fires at the safety net")
+	assert_eq(int(pl.get("combo_state")), 2, "queued step advanced the combo at anim length")
+
+	pl.free()
+	print("")
+
+
+# ── Three-tier combo timing (#155, spec /mechanics/combos) ──
+# Windows are fractions of the current swing from WeaponComboConfig data
+# (saber = [0.45, 0.60) just / [0.60, 1.0] normal). A press queues; the queue
+# fires at step end; miss-early is unbuffered; just chains carry a damage
+# bonus; the finisher can't chain. Off-tree player, barehanded → type 0
+# (saber config) — the weapon-type fallback combat callers rely on.
+func test_combo_three_tier() -> void:
+	print("── Combo three-tier timing (#155) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# Data: saber tuned per #155, untuned types share the default config.
+	# (approx: PackedFloat32Array narrows to float32 — exact == would flake.)
+	var saber_t: Dictionary = CombatManager.get_combo_timing(0, 1)
+	assert_true(is_equal_approx(float(saber_t.just_start), 0.45), "saber just window opens at 0.45 (#155 fast-weapon tuning)")
+	assert_true(is_equal_approx(float(saber_t.just_end), 0.6), "saber just window closes at 0.60")
+	var default_t: Dictionary = CombatManager.get_combo_timing(7, 1)  # untuned type → default
+	assert_true(is_equal_approx(float(default_t.just_start), 0.55), "untuned weapon types share the default just_start 0.55")
+	assert_true(CombatManager.get_combo_timing(0, 3).is_empty(), "finisher (step 3) has no accept window")
+	assert_true(CombatManager.get_combo_timing(0, 0).is_empty(), "step 0 (not attacking) has no window")
+
+	var pl = PlayerScript.new()
+
+	# miss-early: press before just_start is a clear no-op — NOT buffered.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", 0.3)  # < 0.45
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"miss-early press queues nothing (unbuffered no-op)")
+
+	# just window: [0.45, 0.60) queues a JUST chain.
+	pl.set("_attack_anim_elapsed", 0.5)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
+		"press in [just_start, just_end) queues a just chain")
+
+	# One queue slot: a later press must not re-roll the tier.
+	pl.set("_attack_anim_elapsed", 0.8)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
+		"second press can't re-roll or downgrade the queued tier")
+
+	# Fire at step end: queued just chain advances and flags the bonus.
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+	assert_eq(int(pl.get("combo_state")), 2, "queued chain fires at step end → step 2")
+	assert_true(bool(pl.get("_is_just_attack")), "fired step carries the just flag")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "queue slot cleared on fire")
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING), "chain stays in ATTACKING")
+
+	# Just bonus lands in the damage dict. calculate_attack_damage rolls
+	# variance on the global RNG — seed identically so the just and base
+	# calls see the same roll and the assert isolates the multiplier.
+	seed(0x155)
+	var atk: Dictionary = pl._get_attack_damage()
+	assert_true(bool(atk.get("just", false)), "just swing marks the damage dict")
+	seed(0x155)
+	var base: Dictionary = CombatManager.calculate_attack_damage(2)
+	assert_eq(int(atk.get("damage", -1)), int(round(int(base.get("damage", 0)) * CombatManager.get_combo_just_mult(0))),
+		"just swing damage = base × just_damage_mult (seed-paired rolls)")
+
+	# normal window: [0.60, 1.0] queues a NORMAL chain; firing clears the just flag.
+	pl.set("_attack_anim_elapsed", 0.8)
+	pl.set("_attack_anim_length", 1.0)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"press in [just_end, 1.0] queues a normal chain")
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+	assert_eq(int(pl.get("combo_state")), 3, "normal chain fires → step 3 (finisher)")
+	assert_true(not bool(pl.get("_is_just_attack")), "normal chain clears the just flag")
+	var atk3: Dictionary = pl._get_attack_damage()
+	assert_true(not atk3.has("just"), "normal swing carries no just mark")
+
+	# Finisher: presses during step 3 are no-ops; its end breaks to IDLE.
+	pl.set("_attack_anim_elapsed", 0.7)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "finisher press queues nothing")
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE), "finisher end returns to IDLE")
+	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the finisher")
+
+	# Un-queued step end breaks the combo (too-late tier is structural).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NONE)
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"swing ending un-queued breaks the combo to IDLE (no grace window)")
+
+	# Damage interrupt clears the queue (via transition_to, with #428):
+	# the queued follow-up must never fire after a DAMAGED recovery.
+	GameState.set_hp(GameState.max_hp)
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.JUST)
+	pl.take_damage(15)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"damage interrupt clears the combo queue (#155/#428)")
+	GameState.set_hp(GameState.max_hp)
+
+	# Special chain: strong-attack press queues with the special flag. (The
+	# fire itself is the same _attack_step_finished path asserted above; the
+	# special wind-up tween needs a tree, so the flag hand-off to
+	# _is_special_attack is left to the autopilot probe.)
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_is_special_attack", false)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", 0.8)
+	pl._try_queue_combo(true)
+	assert_true(bool(pl.get("_queued_combo_special")), "strong-attack press queues a special chain")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"special press in the normal window queues a NORMAL-tier chain")
 
 	pl.free()
 	print("")

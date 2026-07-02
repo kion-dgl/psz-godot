@@ -1326,3 +1326,29 @@ func _check_wave_cleared() -> void:
 ## Get weapon type config, falling back to saber defaults
 func get_weapon_type_config(weapon_type: int) -> Dictionary:
 	return WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])
+
+
+# ── Three-tier combo timing (#155, spec /mechanics/combos) ─────────────────
+# Per-weapon-type WeaponComboConfig resources: window FRACTIONS of the current
+# swing, indexed by the step being chained FROM. Untuned types share the
+# default config; tuned types get their own .tres so playtest adjustments are
+# data edits, not code.
+const COMBO_CONFIG_DEFAULT: WeaponComboConfig = preload("res://data/combo_configs/default.tres")
+const COMBO_CONFIGS := {
+	0: preload("res://data/combo_configs/saber.tres"),  # SABER — fast, windows earlier (#155)
+	1: preload("res://data/combo_configs/sword.tres"),  # SWORD — mid defaults
+}
+
+
+func get_combo_config(weapon_type: int) -> WeaponComboConfig:
+	return COMBO_CONFIGS.get(weapon_type, COMBO_CONFIG_DEFAULT)
+
+
+## Timing windows for chaining FROM `from_step` (1-based combo_state).
+## {} when that step has no accept window (finisher / out of range).
+func get_combo_timing(weapon_type: int, from_step: int) -> Dictionary:
+	return get_combo_config(weapon_type).timing_for_step(from_step)
+
+
+func get_combo_just_mult(weapon_type: int) -> float:
+	return get_combo_config(weapon_type).just_damage_mult
