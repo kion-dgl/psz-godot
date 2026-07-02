@@ -265,6 +265,9 @@ var _defeat_meseta_before := 0
 var _commitment_probe := false      # #377/#428 action-commitment probe
 var _commitment_triggered := false  # ran the probe already (fires once)
 
+var _combo_probe := false           # #155 three-tier combo-timing probe
+var _combo_triggered := false       # ran the probe already (fires once)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -290,6 +293,9 @@ func _ready() -> void:
 	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
 	if _commitment_probe:
 		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
+	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
+	if _combo_probe:
+		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -2103,6 +2109,88 @@ func _commitment_attack_held(p, states: Dictionary) -> void:
 		_commitment_dodge_phase(p, states))
 
 
+# ── Combo three-tier probe (#155, spec /mechanics/combos) ──────────────────
+## PSZ_AUTOPILOT_COMBO=1: in the first field cell, drive a real swing and
+## press attack inside each tier — miss-early must queue nothing, the just
+## window must chain step 2 with the just flag, and the un-queued swing end
+## must break to IDLE. Frame-polled so the presses land inside the windows
+## regardless of box load / time_scale. Runs instead of the cell plan and
+## ends the run with DONE ok / FAIL.
+
+## Await cond (polled per frame) with a frame budget; false = timed out.
+func _combo_await(cond: Callable, frames: int = 1800) -> bool:
+	var n := 0
+	while n < frames:
+		if cond.call():
+			return true
+		await get_tree().process_frame
+		n += 1
+	return false
+
+
+func _run_combo_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_combo_probe(attempt + 1))
+		else:
+			print("[sanity] FAIL: combo probe — no player in field")
+			_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	_combo_probe_run(players[0])
+
+
+func _combo_probe_run(p) -> void:
+	var states: Dictionary = p.PlayerState
+	var t: Dictionary = CombatManager.get_combo_timing(p._get_equipped_weapon_type(), 1)
+	if t.is_empty():
+		print("[sanity] FAIL: combo probe — no timing config for equipped weapon")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	var just_mid: float = (float(t.just_start) + float(t.just_end)) / 2.0
+
+	# Case 1: miss-early press queues nothing (unbuffered no-op).
+	print("[sanity] checkpoint: combo probe — swing 1, miss-early press")
+	p._start_attack()
+	p._start_attack()  # frac ≈ 0 — miss-early
+	if p._queued_combo != p.ComboQueue.NONE:
+		print("[sanity] FAIL: combo probe — miss-early press queued a chain (#155)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — miss-early was a no-op")
+
+	# Case 2: press inside the just window → queues JUST, fires step 2 with
+	# the just flag at swing end.
+	var in_window := await _combo_await(func() -> bool:
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+	if not in_window or p.get_state() != states["ATTACKING"]:
+		print("[sanity] FAIL: combo probe — swing ended before the just window was reached")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	p._start_attack()
+	if p._queued_combo != p.ComboQueue.JUST:
+		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a JUST chain (#155)" % p._attack_frac())
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — just chain queued at frac %.2f" % p._attack_frac())
+	var fired := await _combo_await(func() -> bool: return p.combo_state == 2 or p.get_state() != states["ATTACKING"])
+	if not fired or p.combo_state != 2 or not p._is_just_attack:
+		print("[sanity] FAIL: combo probe — queued just chain did not fire step 2 with the just flag")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — step 2 fired with just bonus (#155)")
+
+	# Case 3: no further press — swing 2 ending un-queued breaks to IDLE.
+	var broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
+	if not broke or p.combo_state != 0:
+		print("[sanity] FAIL: combo probe — un-queued swing did not break the combo to IDLE")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — un-queued swing broke to IDLE")
+	print("[sanity] DONE ok")
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+
+
 func _commitment_dodge_phase(p, states: Dictionary) -> void:
 	print("[sanity] checkpoint: commitment probe — starting dodge, pressing attack mid-roll")
 	p._start_dodge()
@@ -2138,6 +2226,11 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _commitment_probe and not _commitment_triggered:
 		_commitment_triggered = true
 		_run_commitment_probe()
+		return
+	# Combo probe (#155): three-tier windows on a real swing chain.
+	if _combo_probe and not _combo_triggered:
+		_combo_triggered = true
+		_run_combo_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
