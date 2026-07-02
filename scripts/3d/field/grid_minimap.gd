@@ -83,15 +83,16 @@ func setup(cells: Array, current_pos: String, visited_cells: Dictionary,
 	custom_minimum_size = Vector2(total_w, total_h)
 	size = Vector2(total_w, total_h)
 
-	# Anchor top-right, below the room minimap (offset down ~150px)
+	# Anchor top-right, below the room minimap frame (top 12 + 96*1.5 frame + gap)
+	const ROOM_MINIMAP_BOTTOM := 164.0
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
 	anchor_bottom = 0.0
 	offset_left = -total_w - 12
 	offset_right = -12
-	offset_top = 150
-	offset_bottom = 150 + total_h
+	offset_top = ROOM_MINIMAP_BOTTOM
+	offset_bottom = ROOM_MINIMAP_BOTTOM + total_h
 
 	# Initialize gate states from cell connections
 	_init_gate_states()
