@@ -21,6 +21,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Stamp build number
+        # Committed sources hold the "dev" placeholder; the real build number
+        # (95 + first-parent commit count, +1 per merged PR) is stamped here
+        # so every artifact and the v<build> tag carry it. Needs the
+        # fetch-depth:0 checkout above for the commit count.
+        run: bash scripts/tools/stamp_version.sh
+
       - name: Read version
         id: version
         run: |
