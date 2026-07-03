@@ -1,0 +1,140 @@
+name: PR Windows Build
+
+# Build a Windows export for every READY (non-draft) PR — on open and on every
+# commit pushed to it — upload it to the DigitalOcean droplet, and keep a
+# sticky comment on the PR with the download link.
+#
+# Where builds land: /srv/pr-builds, served at psz.onl/pr-builds/ by Caddy.
+# NEVER /srv/game — deploy.yml `rsync --delete`s that dir on every merge to
+# main, which is how the first manually-uploaded batch of PR builds got wiped.
+#
+# The zip is named psz-godot-pr<N>.zip, so the URL is stable across pushes —
+# each new commit overwrites the previous build in place and the sticky
+# comment's link keeps working. A light prune (mtime +14d) keeps the 25 GB
+# droplet disk safe; stale zips for closed PRs age out the same way.
+#
+# REQUIRED SECRET: DO_DEPLOY_SSH_KEY (same key deploy.yml uses). Optional repo
+# variables: DO_DEPLOY_TARGET (root@159.223.133.93), DO_DEPLOY_HOST,
+# DO_PR_BUILDS_DIR (/srv/pr-builds).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# One build per PR at a time; a new push supersedes the in-flight build.
+concurrency:
+  group: pr-build-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-upload:
+    # Drafts are skipped; flipping a draft to ready fires ready_for_review.
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          # Non-mono build — matches ci.yml / deploy.yml.
+          use-dotnet: false
+          include-templates: true
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-4.5.1
+
+      - name: Import project
+        # Raw /assets/ files aren't in the repo (pack-hosted); imports log
+        # missing-file warnings, same as ci.yml's build job. The export ships
+        # repo resources only — the game downloads the asset pack at runtime,
+        # so this lean build is exactly what playtesters already test.
+        run: godot --headless --path . --import --quit || true
+
+      - name: Export Windows
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-release "Windows x86_64" "build/psz-godot-pr${PR}.zip"
+          test -s "build/psz-godot-pr${PR}.zip"
+          # The zip must contain the single embedded-pck exe, and the exe must
+          # carry this branch's version string (project settings are stored
+          # uncompressed, so strings can see it — script identifiers can't be
+          # checked this way, script_export_mode=2 compresses them).
+          unzip -l "build/psz-godot-pr${PR}.zip"
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          if ! unzip -p "build/psz-godot-pr${PR}.zip" | strings | grep -qF "$VERSION"; then
+            echo "::error::Exported exe does not embed VERSION=$VERSION — wrong ref built?"
+            exit 1
+          fi
+
+      - name: Upload to droplet (/srv/pr-builds)
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DO_DEPLOY_SSH_KEY }}
+          DEPLOY_TARGET: ${{ vars.DO_DEPLOY_TARGET || 'root@159.223.133.93' }}
+          DEPLOY_HOST: ${{ vars.DO_DEPLOY_HOST || '159.223.133.93' }}
+          PR_BUILDS_DIR: ${{ vars.DO_PR_BUILDS_DIR || '/srv/pr-builds' }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Secret DO_DEPLOY_SSH_KEY is not set — add it before this workflow can upload."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          rsync -az \
+            -e "ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes" \
+            "build/psz-godot-pr${PR}.zip" "$DEPLOY_TARGET:$PR_BUILDS_DIR/"
+          # Disk guard: age out builds no push has refreshed in 14 days
+          # (covers closed/merged PRs — their zips just stop being renewed).
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes "$DEPLOY_TARGET" \
+            "find $PR_BUILDS_DIR -name 'psz-godot-pr*.zip' -mtime +14 -delete"
+
+      - name: Verify public URL
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          URL="https://psz.onl/pr-builds/psz-godot-pr${PR}.zip"
+          LOCAL_SIZE=$(stat -c%s "build/psz-godot-pr${PR}.zip")
+          REMOTE_SIZE=$(curl -sfI "$URL" | tr -d '\r' | awk 'tolower($1)=="content-length:"{print $2}')
+          echo "local=$LOCAL_SIZE remote=${REMOTE_SIZE:-MISSING} url=$URL"
+          if [ "$LOCAL_SIZE" != "$REMOTE_SIZE" ]; then
+            echo "::error::Uploaded zip is not being served intact at $URL"
+            exit 1
+          fi
+
+      - name: Post / update sticky PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          SIZE_MB=$(( $(stat -c%s "build/psz-godot-pr${PR}.zip") / 1024 / 1024 ))
+          MARKER='<!-- pr-build-bot -->'
+          BODY="${MARKER}
+          Windows build for testing — built from \`${SHA:0:8}\` (v${VERSION}), $(date -u +%Y-%m-%d\ %H:%M) UTC:
+
+          **Download:** [psz-godot-pr${PR}.zip](https://psz.onl/pr-builds/psz-godot-pr${PR}.zip) (${SIZE_MB} MB)
+
+          _Rebuilt automatically on every push to this PR; the link stays the same._"
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+            --jq "[.[] | select(.body | startswith(\"${MARKER}\"))][0].id // empty")
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" -f body="$BODY" > /dev/null
+            echo "updated comment $COMMENT_ID"
+          else
+            gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY"
+          fi
