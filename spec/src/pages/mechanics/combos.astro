@@ -19,7 +19,7 @@ import Concept from '../../layouts/Concept.astro';
     <thead><tr><th>Tier</th><th>Window (fraction of swing)</th><th>On attack press (MUST)</th></tr></thead>
     <tbody>
       <tr><td><strong>miss-early</strong></td><td><code>[0, just_start)</code></td><td>Clear no-op — the press is <strong>NOT buffered</strong> and does not advance the combo. The player has to read the swing.</td></tr>
-      <tr><td><strong>just-attack</strong></td><td><code>[just_start, just_end)</code></td><td>Queue the next step with the <strong>just bonus</strong>: damage × <code>just_damage_mult</code> on the queued swing, distinct cyan flash.</td></tr>
+      <tr><td><strong>just-attack</strong></td><td><code>[just_start, just_end)</code></td><td>Queue the next step with the <strong>just bonus</strong>: damage × <code>just_damage_mult</code> on the queued swing, distinct bright-green flash.</td></tr>
       <tr><td><strong>normal</strong></td><td><code>[just_end, 1.0]</code></td><td>Queue the next step (standard damage, green/yellow flash).</td></tr>
       <tr><td><strong>too-late</strong></td><td>after animation end</td><td>Unreachable as a press — the swing ending un-queued has already broken the combo and returned to IDLE.</td></tr>
     </tbody>
@@ -40,10 +40,10 @@ import Concept from '../../layouts/Concept.astro';
   <p>Windows are runtime-computed from the animation fraction — PSO:BB's motion files carry no timing events (see <a href="https://github.com/kion-dgl/psobb-re">psobb-re</a>, combo-timing investigation). Motion frame counts from <code>plymotion-profile.tsv</code> inform per-weapon tuning (e.g. Saber A1 = 19 frames → wider windows; finishers A3 = 59–80 frames → no window). The in-repo starting values are feel-tuning defaults, expected to move via playtest.</p>
 
   <h2>Feedback</h2>
-  <p>Queue-time flash by tier (cyan = just, green = normal chain, yellow = special chain, red = chain broken), drawn by the combo ring and gated on the <strong>Combo Timing</strong> debug toggle exactly as before. The PSO:BB chain sounds (<code>SE_PL_CHAIN1/2/HIT</code>) are <strong>not in the pack yet</strong> — audio cues land as a follow-up with the next pack republish.</p>
+  <p>Queue-time flash by tier (bright green = just, green = normal chain, yellow = special chain, red = chain broken), drawn by the combo ring and gated on the <strong>Combo Timing</strong> debug toggle exactly as before. The PSO:BB chain sounds (<code>SE_PL_CHAIN1/2/HIT</code>) are <strong>not in the pack yet</strong> — audio cues land as a follow-up with the next pack republish.</p>
 
   <h2>Combo-timing debug overlay</h2>
-  <p>The <strong>Combo Timing</strong> debug toggle (<code>DebugConfig.show_combo_timing</code>, default <strong>OFF</strong>, toggled from the field start menu) draws the at-feet timing ring, now visualizing the fraction windows: visible from <code>just_start</code> to animation end, cyan inside the just window, green in the normal window, shrinking toward the swing's end. When the toggle is <strong>OFF</strong> it <strong>MUST</strong> hide <em>every</em> timing ring — both the combo ring (<code>_combo_ring</code>) <em>and</em> the element-tinted heavy/special-attack charge ring (<code>_charge_ring</code>); #415 fixed the charge ring leak. The heavy attack's rising particles and model glow are permanent attack VFX, <strong>not</strong> timing rings, and are unaffected by the toggle.</p>
+  <p>The <strong>Combo Timing</strong> debug toggle (<code>DebugConfig.show_combo_timing</code>, default <strong>OFF</strong>, toggled from the field start menu) draws the at-feet timing ring, now visualizing the fraction windows: visible from <code>just_start</code> to animation end, bright green inside the just window, normal green in the rest, shrinking toward the swing's end. When the toggle is <strong>OFF</strong> it <strong>MUST</strong> hide <em>every</em> timing ring — both the combo ring (<code>_combo_ring</code>) <em>and</em> the element-tinted heavy/special-attack charge ring (<code>_charge_ring</code>); #415 fixed the charge ring leak. The heavy attack's rising particles and model glow are permanent attack VFX, <strong>not</strong> timing rings, and are unaffected by the toggle.</p>
 
   <h2>Implemented by</h2>
   <ul>

@@ -160,7 +160,10 @@ var _queued_combo_special: bool = false  # Queued step is a strong attack
 var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
-const JUST_FLASH_COLOR := Color(0.55, 0.95, 1.0)  # Cyan — just-attack queued
+# Bright green — just-attack tier. Deliberately a brighter shade of the normal
+# window's green (0.2, 1.0, 0.4) rather than a third hue: the window is one
+# thing with a hot start, not two mechanics (kion's call on the #471 web tool).
+const JUST_FLASH_COLOR := Color(0.65, 1.0, 0.75)
 
 # Combo timing visual
 var _combo_ring: MeshInstance3D = null
@@ -2106,8 +2109,8 @@ func _update_combo_ring(_delta: float) -> void:
 	_ensure_combo_ring()
 
 	# Visualize the fraction windows (#155): visible from just_start to the
-	# swing's end, cyan inside the just window, green in the normal window,
-	# shrinking toward animation end.
+	# swing's end, bright green inside the just window, normal green in the
+	# rest, shrinking toward animation end.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
