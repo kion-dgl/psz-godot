@@ -15,6 +15,10 @@ import { assetUrl } from '../utils/assets';
  *    miss it and the combo resets
  *  - strong/special attacks insert a `_wait` wind-up pause before the swing
  *    (SPECIAL_ATTACK_DELAY in player.gd)
+ *  - the first justDuration seconds of the open window are the "just attack"
+ *    tier (#155 three-tier timing): chaining inside it lands the
+ *    just_damage_mult bonus — cyan in the timeline/ring, vs green for the
+ *    normal remainder of the window
  *
  * On top of that it prototypes a mechanic the game does NOT have yet:
  * per-weapon turn limits between swings. Once a swing starts the facing is
@@ -56,6 +60,8 @@ interface Tuning {
   comboSteps: number;        // steps in the chain (1-3)
   windowOpenPct: number;     // chain window opens at this fraction of the swing clip
   windowDuration: number;    // seconds the window stays open (combo_window)
+  justDuration: number;      // first N seconds of the window = "just attack" tier (#155)
+  justMult: number;          // damage bonus for a just-timed chain (just_damage_mult)
   strongWindup: number;      // wait-pose pause before a strong swing
   specialWindup: number;     // wait-pose pause before a special swing
   turnLimitDeg: number[];    // max |facing change| entering step 2, step 3
@@ -64,7 +70,10 @@ interface Tuning {
 const tune = (
   windowDuration: number, turnLimitDeg: [number, number],
   comboSteps = 3, windowOpenPct = 0.55, strongWindup = 0.4, specialWindup = 0.4,
-): Tuning => ({ comboSteps, windowOpenPct, windowDuration, strongWindup, specialWindup, turnLimitDeg });
+): Tuning => ({
+  comboSteps, windowOpenPct, windowDuration, strongWindup, specialWindup, turnLimitDeg,
+  justDuration: 0.15, justMult: 1.3,
+});
 
 // combo_window defaults come from CombatManager.WEAPON_TYPE_CONFIGS; the
 // turn limits are proposals (the game has no turn clamp yet).
@@ -186,6 +195,8 @@ function getTuning(cfg: Config, weapon: WeaponKey, gender: Gender): Tuning {
   if (!Array.isArray(t.turnLimitDeg) || t.turnLimitDeg.length !== 2) {
     t.turnLimitDeg = def.defaults.turnLimitDeg.slice();
   }
+  // The just tier is a sub-range of the chain window.
+  t.justDuration = Math.min(t.justDuration, t.windowDuration);
   return t;
 }
 
@@ -223,6 +234,7 @@ interface PressMarker {
   step: number;        // which swing bar the press landed on
   t: number;           // seconds into that swing clip
   ok: boolean;         // accepted (chained)?
+  just?: boolean;      // accepted inside the just-attack tier
 }
 
 interface Sim {
@@ -245,6 +257,7 @@ interface Sim {
   stepWindups: number[];        // wind-up seconds actually used per step
   keysDown: Set<string>;
   comboCount: number;           // completed full combos (session stat)
+  justCount: number;            // chains landed inside the just tier
   missCount: number;
 }
 
@@ -256,7 +269,7 @@ function freshSim(): Sim {
     yaw: Math.PI, displayYaw: Math.PI, desiredYaw: null,
     ghostYaw: null, ghostFade: 0, ringFlash: null,
     markers: [], stepTypes: [], stepWindups: [], keysDown: new Set(),
-    comboCount: 0, missCount: 0,
+    comboCount: 0, justCount: 0, missCount: 0,
   };
 }
 
@@ -322,7 +335,7 @@ export default function ComboDebug() {
     windowOpen: false, windowT: 0, yawDeg: 180, desiredDeg: null as number | null,
     markers: [] as PressMarker[], attackType: 'normal' as AttackType,
     stepTypes: [] as AttackType[], stepWindups: [] as number[],
-    combos: 0, misses: 0,
+    combos: 0, justs: 0, misses: 0,
   });
   const [clipLens, setClipLens] = useState<number[]>([]);
   const [packPrefix, setPackPrefix] = useState('');
@@ -498,15 +511,21 @@ export default function ComboDebug() {
     // phase === 'swing'
     if (sim.windowOpen && sim.step < t.comboSteps) {
       const intoWindow = sim.windowTimer;
-      sim.markers.push({ step: sim.step, t: sim.elapsed, ok: true });
+      // First justDuration seconds of the window = "just attack" tier (#155):
+      // the chain lands with the crit/bonus multiplier.
+      const isJust = intoWindow < t.justDuration;
+      if (isJust) sim.justCount += 1;
+      sim.markers.push({ step: sim.step, t: sim.elapsed, ok: true, just: isJust });
       sim.windowOpen = false;
       applyTurn(sim.step + 1);
       const next = sim.step + 1;
       beginStep(next, type);
-      ringFlash(type === 'normal' ? 0x33ff66 : type === 'strong' ? 0xffcc33 : 0xcc88ff);
+      // Cyan flash for a just chain (the #155 combo ring language), else the
+      // attack type's color.
+      ringFlash(isJust ? 0x44eeff : type === 'normal' ? 0x33ff66 : type === 'strong' ? 0xffcc33 : 0xcc88ff);
       pushLog(
-        `chained → ${type} atk${next} (${(intoWindow * 1000).toFixed(0)}ms into ${(t.windowDuration * 1000).toFixed(0)}ms window)`,
-        ATTACK_COLORS[type],
+        `${isJust ? `JUST ×${t.justMult.toFixed(2)} ` : ''}chained → ${type} atk${next} (${(intoWindow * 1000).toFixed(0)}ms into ${(t.windowDuration * 1000).toFixed(0)}ms window)`,
+        isJust ? '#4ef' : ATTACK_COLORS[type],
       );
       return;
     }
@@ -634,6 +653,7 @@ export default function ComboDebug() {
     let raf = 0;
     const RING_BASE = new THREE.Color(0x555577);
     const RING_WINDOW = new THREE.Color(0x33ff66);
+    const RING_JUST = new THREE.Color(0x44eeff);
     const RING_SWING = new THREE.Color(0xccccdd);
 
     const animate = () => {
@@ -728,8 +748,12 @@ export default function ComboDebug() {
         if (sim.ringFlash.ttl <= 0) sim.ringFlash = null;
       } else {
         s.ringMat.opacity = 0.55;
+        // While the window is open the ring is cyan through the just tier,
+        // then green for the rest — the #155 combo ring color language.
         s.ringMat.color.copy(
-          sim.phase === 'idle' ? RING_BASE : sim.windowOpen ? RING_WINDOW : RING_SWING,
+          sim.phase === 'idle' ? RING_BASE
+            : sim.windowOpen ? (sim.windowTimer < t.justDuration ? RING_JUST : RING_WINDOW)
+            : RING_SWING,
         );
       }
 
@@ -743,7 +767,7 @@ export default function ComboDebug() {
         yawDeg: rad2deg(sim.yaw), desiredDeg: sim.desiredYaw === null ? null : rad2deg(sim.desiredYaw),
         markers: sim.markers.slice(), attackType: sim.attackType,
         stepTypes: sim.stepTypes.slice(), stepWindups: sim.stepWindups.slice(),
-        combos: sim.comboCount, misses: sim.missCount,
+        combos: sim.comboCount, justs: sim.justCount, misses: sim.missCount,
       });
     };
     animate();
@@ -781,7 +805,12 @@ export default function ComboDebug() {
     setLoadError(null);
     setClipLens([]);
     setPackPrefix('');
-    simRef.current = { ...freshSim(), comboCount: simRef.current.comboCount, missCount: simRef.current.missCount };
+    simRef.current = {
+      ...freshSim(),
+      comboCount: simRef.current.comboCount,
+      justCount: simRef.current.justCount,
+      missCount: simRef.current.missCount,
+    };
 
     // Tear down previous model
     s.playerGroup.clear();
@@ -867,6 +896,8 @@ export default function ComboDebug() {
     lines.push(`\t\t"combo_steps": ${t.comboSteps},`);
     lines.push(`\t\t"combo_window_open_pct": ${t.windowOpenPct.toFixed(2)},  # window opens at ${(t.windowOpenPct * 100).toFixed(0)}% of the swing clip`);
     lines.push(`\t\t"combo_window": ${t.windowDuration.toFixed(2)},  # seconds the chain window stays open`);
+    lines.push(`\t\t"just_window": ${t.justDuration.toFixed(2)},  # first N s of the open window = just-attack tier (#155)`);
+    lines.push(`\t\t"just_damage_mult": ${t.justMult.toFixed(2)},  # damage bonus for a just-timed chain`);
     lines.push(`\t\t"strong_windup": ${t.strongWindup.toFixed(2)},  # wait-pose pause before a strong swing`);
     lines.push(`\t\t"special_windup": ${t.specialWindup.toFixed(2)},`);
     lines.push(`\t\t"turn_limit_deg": [${t.turnLimitDeg.map((d) => d.toFixed(1)).join(', ')}],  # max facing change entering steps 2, 3`);
@@ -981,12 +1012,22 @@ export default function ComboDebug() {
           {leadW > 0 && (
             <div style={{ position: 'absolute', left: leadW - 1, top: 0, bottom: 0, width: 1, background: '#778' }} />
           )}
-          {/* chain window (green) — absent on the last step */}
-          {!isLast && (
+          {/* chain window — absent on the last step. First justDuration
+              seconds are the just-attack tier (cyan, crit/bonus), the rest
+              is the normal chain window (green). */}
+          {!isLast && tuning.justDuration > 0 && (
             <div style={{
               position: 'absolute', left: leadW + winStart * PX_PER_SEC, top: 0, bottom: 0,
-              width: (winEnd - winStart) * PX_PER_SEC,
-              background: 'rgba(60,220,110,0.45)', borderLeft: '1px solid #3c6',
+              width: tuning.justDuration * PX_PER_SEC,
+              background: 'rgba(70,230,255,0.55)', borderLeft: '1px solid #4ef',
+            }} />
+          )}
+          {!isLast && (
+            <div style={{
+              position: 'absolute', left: leadW + (winStart + tuning.justDuration) * PX_PER_SEC, top: 0, bottom: 0,
+              width: (winEnd - winStart - tuning.justDuration) * PX_PER_SEC,
+              background: 'rgba(60,220,110,0.4)',
+              borderLeft: tuning.justDuration > 0 ? 'none' : '1px solid #3c6',
             }} />
           )}
           {/* clip end line */}
@@ -995,17 +1036,21 @@ export default function ComboDebug() {
           {active && (
             <div style={{ position: 'absolute', left: cursorX - 1, top: 0, bottom: 0, width: 2, background: '#fff' }} />
           )}
-          {/* press markers */}
+          {/* press markers — white outline on a just-tier chain */}
           {markers.map((m, i) => (
             <div key={i} style={{
               position: 'absolute', left: leadW + m.t * PX_PER_SEC - 1, top: 2, bottom: 2, width: 2,
-              background: m.ok ? '#4f4' : '#f66',
+              background: m.just ? '#fff' : m.ok ? '#4f4' : '#f66',
+              boxShadow: m.just ? '0 0 3px 1px #4ef' : undefined,
             }} />
           ))}
         </div>
         {!isLast && (
           <span style={{ fontSize: 10, color: '#4a8', whiteSpace: 'nowrap' }}>
-            window {winStart.toFixed(2)}–{winEnd.toFixed(2)}s
+            {tuning.justDuration > 0 && (
+              <span style={{ color: '#4ef' }}>just {winStart.toFixed(2)}–{(winStart + tuning.justDuration).toFixed(2)}s · </span>
+            )}
+            window …{winEnd.toFixed(2)}s
           </span>
         )}
       </div>
@@ -1050,7 +1095,7 @@ export default function ComboDebug() {
             </span>
             <span style={{ fontSize: 12, color: '#888' }}>
               facing {hud.yawDeg.toFixed(0)}°{hud.desiredDeg !== null && ` · stick ${hud.desiredDeg.toFixed(0)}°`}
-              {' · '}{hud.combos} combos · {hud.misses} misses
+              {' · '}{hud.combos} combos · <span style={{ color: hud.justs > 0 ? '#4ef' : undefined }}>{hud.justs} justs</span> · {hud.misses} misses
             </span>
             {isLoading && <span style={{ color: '#888', fontSize: 12 }}>(loading…)</span>}
             {loadError && <span style={{ color: '#f88', fontSize: 12 }}>{loadError}</span>}
@@ -1073,7 +1118,8 @@ export default function ComboDebug() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: '#6b8afd', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Swing timeline — <span style={{ color: '#fc4' }}>orange</span>/<span style={{ color: '#c8f' }}>purple</span> lead-in = strong/special wind-up,{' '}
-                <span style={{ color: '#3c6' }}>green</span> = chain window, white = cursor, ticks = your presses
+                <span style={{ color: '#4ef' }}>cyan</span> = just-attack tier (×{tuning.justMult.toFixed(2)}),{' '}
+                <span style={{ color: '#3c6' }}>green</span> = normal chain window, ticks = your presses
               </span>
               {windup > 0 && hud.phase === 'windup' && (
                 <span style={{ fontSize: 11, color: '#fc4' }}>
@@ -1163,13 +1209,20 @@ export default function ComboDebug() {
               (v) => setTuning({ windowOpenPct: v }), (v) => `${(v * 100).toFixed(0)}%`)}
             {sliderRow('Window duration', tuning.windowDuration, 0.1, 1.0, 0.01,
               (v) => setTuning({ windowDuration: v }), (v) => `${v.toFixed(2)}s`)}
+            {sliderRow('Just-attack tier (from open)', tuning.justDuration, 0, tuning.windowDuration, 0.01,
+              (v) => setTuning({ justDuration: v }), (v) => (v > 0 ? `${v.toFixed(2)}s` : 'off'))}
+            {sliderRow('Just damage mult', tuning.justMult, 1.0, 2.0, 0.05,
+              (v) => setTuning({ justMult: v }), (v) => `×${v.toFixed(2)}`)}
             {sliderRow('Strong wind-up', tuning.strongWindup, 0, 1.0, 0.05,
               (v) => setTuning({ strongWindup: v }), (v) => `${v.toFixed(2)}s`)}
             {sliderRow('Special wind-up', tuning.specialWindup, 0, 1.0, 0.05,
               (v) => setTuning({ specialWindup: v }), (v) => `${v.toFixed(2)}s`)}
             <div style={{ fontSize: 10, color: '#666' }}>
               In-game today: opens at 55% (COMBO_WINDOW_OPEN_PCT), 0.35s duration
-              (COMBO_WINDOW_DURATION), 0.4s special delay — player.gd.
+              (COMBO_WINDOW_DURATION), 0.4s special delay — player.gd. The just
+              tier is the #155 three-tier design: chain inside the first
+              (cyan) part of the window for the ×{tuning.justMult.toFixed(2)} bonus;
+              narrow it to make the reward harder to hit.
             </div>
           </div>
 
