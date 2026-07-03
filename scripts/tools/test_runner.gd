@@ -33,6 +33,8 @@ func _run_tests_core() -> void:
 	test_character_creation()
 	test_equipment()
 	test_player_states()
+	test_action_commitment()
+	test_palette_momentary_swap()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -85,6 +87,7 @@ func _run_tests_core() -> void:
 	test_telepipe_suspend_resume_keeps_telepipe()
 	test_section_state_round_trip()
 	test_telepipe_cancel_hooks()
+	test_city_state_cleared_on_title_return()
 	test_telepipe_use_item_outside_field()
 	test_telepipe_239_fixes()
 	test_dup_equipment()
@@ -134,6 +137,7 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock()
 	test_difficulty_unlock_persistence()
 	test_input_config()
+	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
 	test_box_state_survives_warp_flush()
@@ -538,9 +542,11 @@ func test_player_states() -> void:
 	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
 	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
 
-	# Dodge i-frames (spec /mechanics/dodge): the roll's move phase grants
-	# invincibility; the recovery is vulnerable. Off-tree instance —
-	# take_damage's i-frame return fires before any tree-dependent call.
+	# Dodge i-frames (spec /mechanics/dodge, tightened by #377): only the
+	# first DODGE_IFRAME_DURATION (0.2s) of the roll is invincible — NOT the
+	# whole move phase. Off-tree instance — take_damage's i-frame return
+	# fires before any tree-dependent call.
+	assert_eq(consts.get("DODGE_IFRAME_DURATION"), 0.2, "i-frame window is the fixed 0.2s (#377)")
 	var p = PlayerScript.new()
 	var hp_full: int = GameState.max_hp
 	GameState.set_hp(hp_full)
@@ -548,7 +554,14 @@ func test_player_states() -> void:
 	p.dodge_timer = 0.1
 	p.dodge_move_end = 0.5
 	p.take_damage(25)
-	assert_eq(GameState.hp, hp_full, "move-phase dodge ignores damage (i-frames)")
+	assert_eq(GameState.hp, hp_full, "hit inside the 0.2s window ignores damage (i-frames)")
+	assert_eq(p.current_state, states["DODGING"], "i-frame hit does not interrupt the roll")
+	p.dodge_timer = 0.3  # inside the move phase but PAST the i-frame window
+	p.take_damage(5)
+	assert_eq(GameState.hp, hp_full - 5, "hit past 0.2s takes damage even mid-move-phase (#377)")
+	assert_eq(p.current_state, states["DAMAGED"], "post-window hit interrupts the roll (DODGING → DAMAGED)")
+	GameState.set_hp(hp_full)
+	p.current_state = states["DODGING"]
 	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
 	p.take_damage(5)
 	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
@@ -564,6 +577,132 @@ func test_player_states() -> void:
 	p.transition_to(states["DODGING"])
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
+	p.free()
+	print("")
+
+
+# ── Action commitment + hitbox lifetime (#377/#428, spec /states/player-state) ──
+# PSZ actions commit: a swing cannot be dodge-canceled, a roll cannot be
+# attack-canceled — only damage interrupts. And the attack hitbox must not
+# outlive ATTACKING by ANY exit path (dodge-cancel was how stale hitboxes
+# stored hits; the transition_to deactivation covers every interrupt).
+func test_action_commitment() -> void:
+	print("── Action commitment (#377) + hitbox lifetime (#428) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var states: Dictionary = PlayerScript.PlayerState
+	var p = PlayerScript.new()
+	GameState.set_hp(GameState.max_hp)
+
+	# Attack commits: a player dodge input mid-swing is a no-op.
+	p.current_state = states["ATTACKING"]
+	p.dodge_timer = 0.42  # sentinel — an accepted dodge would reset it to 0
+	p._start_dodge()
+	assert_eq(p.current_state, states["ATTACKING"], "dodge input cannot cancel a swing (#377)")
+	assert_eq(p.dodge_timer, 0.42, "blocked dodge leaves dodge state untouched")
+
+	# Dodge commits: attack / strong-attack input mid-roll is a no-op, and a
+	# roll cannot restart itself.
+	p.current_state = states["DODGING"]
+	p.combo_state = 0
+	p._start_attack()
+	assert_eq(p.current_state, states["DODGING"], "attack input cannot cancel a roll (#377)")
+	assert_eq(p.combo_state, 0, "blocked attack starts no combo")
+	p._start_strong_attack()
+	assert_eq(p.current_state, states["DODGING"], "strong attack cannot cancel a roll (#377)")
+	p.dodge_timer = 0.42
+	p._start_dodge()
+	assert_eq(p.dodge_timer, 0.42, "a roll cannot restart itself mid-roll")
+
+	# Damage-initiated exits stay allowed — interrupts, not cancels.
+	p.current_state = states["ATTACKING"]
+	p.take_damage(15)  # medium hit
+	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
+	GameState.set_hp(GameState.max_hp)
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.5  # outside the i-frame window
+	p.dodge_move_end = 0.5
+	p.take_damage(25)  # heavy hit
+	assert_eq(p.current_state, states["DOWN"], "damage outside i-frames interrupts a roll (DODGING → DOWN)")
+	GameState.set_hp(GameState.max_hp)
+
+	# Hitbox lifetime (#428): EVERY exit from ATTACKING deactivates the attack
+	# hitbox and clears stored hits, same-frame, via transition_to.
+	var hb := Hitbox.new()
+	p.attack_hitbox = hb
+	# Damage interrupt path (the surviving early-exit once #377 blocks
+	# dodge-cancel): activate mid-swing, take a hit, hitbox must die with it.
+	p.transition_to(states["ATTACKING"])
+	hb.activate()
+	hb._hit_targets.append(p)  # simulate a landed hit ("stored" target slot)
+	p.take_damage(15)
+	assert_true(not hb.monitoring, "damage interrupt deactivates the attack hitbox (#428)")
+	assert_eq(hb._hit_targets.size(), 0, "deactivation clears stored hits — no carry-over (#428)")
+	GameState.set_hp(GameState.max_hp)
+	# Generic exit edge: any transition out of ATTACKING kills the hitbox even
+	# if a future code path forgets its own deactivate call.
+	p.transition_to(states["ATTACKING"])
+	hb.activate()
+	assert_true(hb.monitoring, "hitbox is live during the swing")
+	p.transition_to(states["IDLE"])
+	assert_true(not hb.monitoring, "any ATTACKING exit deactivates the hitbox (#428)")
+
+	# Quick Menu is the fifth charge-drop case (#377): its opened signal exists
+	# on the field HUD's quick-weapon menu. field_hud.gd preloads pack-only
+	# assets, so this only runs where the pack is mounted (can_instantiate()).
+	var fh := load("res://scripts/3d/field/field_hud.gd")
+	if fh != null and fh.can_instantiate():
+		var inner: Variant = fh.get_script_constant_map().get("_QuickWeaponMenu")
+		assert_true(inner != null, "field_hud exposes _QuickWeaponMenu")
+		if inner != null:
+			var qm: Control = inner.new()
+			assert_true(qm.has_signal("opened"), "Quick Menu emits opened → player._drop_charge (#377)")
+			qm.free()
+	else:
+		print("  SKIP: field_hud.gd not compilable repo-only (pack assets) — opened-signal check runs pack-mounted")
+# ── Momentary palette swap (#447, spec /states/player-state) ───
+# The field back palette is hold-to-activate, not a latched toggle:
+# palette_swap press shows the back page, release returns to the front,
+# and the transitions are edge-driven — exactly one switch per press and
+# per release, no double-advance from a repeat press, no buffered toggle
+# surviving the release, and no latch when a modal opens mid-hold.
+func test_palette_momentary_swap() -> void:
+	print("── Momentary palette swap (#447) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p = PlayerScript.new()  # off-tree: _is_in_city() is false → field input path
+	while GameState.modal_stack > 0:
+		GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: gameplay unblocked")
+	ActionPalette.show_front()
+	assert_eq(ActionPalette.current_page, 0, "precondition: front page shown")
+
+	var switches: Array = []
+	var on_page := func(page: int) -> void: switches.append(page)
+	ActionPalette.page_changed.connect(on_page)
+	var press := _nav_event("palette_swap")
+	var release := _nav_event("palette_swap")
+	release.pressed = false
+
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "press shows the back page")
+	p._unhandled_input(press)  # repeat press without a release (echo / double-bind)
+	assert_eq(ActionPalette.current_page, 1, "repeat press does not double-advance (no latched cycle)")
+	p._unhandled_input(release)
+	assert_eq(ActionPalette.current_page, 0, "release returns to the front page")
+	p._unhandled_input(release)  # repeat release
+	assert_eq(ActionPalette.current_page, 0, "repeat release stays on the front page")
+	assert_eq(switches, [1, 0], "edge-driven: exactly one switch per press/release pair")
+	ActionPalette.page_changed.disconnect(on_page)
+
+	# The release must still restore the front page when gameplay got
+	# blocked mid-hold (e.g. a menu opened while R1 was down) — the back
+	# page MUST NOT latch behind the gameplay-blocked gate.
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "held: back page shown before the modal opens")
+	GameState.push_modal()
+	p._unhandled_input(release)
+	GameState.pop_modal()
+	assert_eq(ActionPalette.current_page, 0, "release mid-modal still returns to the front (no latch)")
+
 	p.free()
 	print("")
 
@@ -4336,6 +4475,45 @@ func test_telepipe_cancel_hooks() -> void:
 	print("")
 
 
+## #425 — return-to-title must clear the city-hub position cache (CityState),
+## not just SessionManager's _session. CityState is a SECOND in-memory holder of
+## the player's position (_position/_rotation/_area/_spawn_key), written whenever
+## the player walks between city areas or up to a shop NPC (city_area_base.gd:217).
+## The return-to-title chokepoint (title.gd → SessionManager.reset_all_state())
+## historically never touched it, so a SOFT re-login restored the leftover shop
+## spot via the predicate `pos != null && area matches` in
+## city_area_base._spawn_player (city_area_base.gd:35) instead of DEFAULT_SPAWN.
+## A HARD reboot zeroes the autoload, which is why reboot didn't reproduce.
+## This test pins that reset_all_state() now empties CityState so the spawn
+## predicate is false and login falls through to the canonical DEFAULT_SPAWN.
+func test_city_state_cleared_on_title_return() -> void:
+	print("── reset_all_state clears CityState (#425 return-to-title position) ──")
+
+	# (1) Simulate having walked up to a shop NPC in the market: a non-default
+	#     position/rotation/area plus a spawn key are cached in the autoload.
+	CityState.save_player_state(Vector3(0.98, 2, 40.0), 1.5, "market")
+	CityState.set_spawn_key("market-exit")
+	assert_true(CityState.get_player_position() != null,
+		"precondition: CityState holds a cached city position before title return")
+	assert_eq(CityState.get_area(), "market",
+		"precondition: CityState area is the market the player walked in")
+
+	# (2) Take the title-return chokepoint.
+	SessionManager.reset_all_state()
+
+	# (3) The spawn-decision predicate `pos != null && area matches` in
+	#     city_area_base.gd:35 must now be FALSE, so login resolves DEFAULT_SPAWN.
+	assert_true(CityState.get_player_position() == null,
+		"reset_all_state clears CityState position (spawn predicate false → DEFAULT_SPAWN)")
+	assert_eq(CityState.get_area(), "",
+		"reset_all_state clears CityState area")
+	assert_eq(CityState.get_player_rotation(), 0.0,
+		"reset_all_state clears CityState rotation")
+	assert_eq(CityState.get_spawn_key(), "",
+		"reset_all_state clears CityState spawn key")
+	print("")
+
+
 func test_telepipe_use_item_outside_field() -> void:
 	print("── Inventory.use_item('telepipe') — field-only guard ──")
 
@@ -6959,6 +7137,57 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+
+# ── Confirm / interact precedence (issue #426 / #423) ──────────────────────
+# Pins the field-action arbitration rule from spec/states/start-menu against the
+# pure static Player.arbitrate_field_actions seam: one press resolves to exactly
+# one consumer in the order modal > world-interaction > palette/free. We exercise
+# the static helper (no live Player — Player._ready loads pack-only character
+# models, so a node can't run repo-only headless) plus the GameState modal flag
+# that encodes precedence row 1.
+func test_confirm_input_precedence() -> void:
+	print("── Confirm / interact precedence (modal > world > palette) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# (a) World interaction CONSUMES a press shared with a palette action (#423):
+	#     interact + an interactable in range → only "interact", palette dropped.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true, "action_1": true}, true, false),
+		["interact"],
+		"world interaction consumes the press and suppresses the shared palette action")
+
+	# (b) Palette fires when there is nothing to interact with.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, false, false),
+		["action_1"],
+		"palette action fires when no interactable is in range")
+
+	# (c) Interact pressed but nothing in range → no effect leaks through.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true}, false, false),
+		[],
+		"interact with no interactable produces no effect (no leak)")
+
+	# (d) In-city combat gate still suppresses palette actions.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, true, true),
+		[],
+		"in-city palette gate suppresses combat actions")
+
+	# Precedence row 1: an open modal blocks gameplay input. PsoStartMenu.open()
+	# pushes a modal (push_modal); close() pops it. Assert the flag directly so
+	# the test stays deterministic without instantiating the pack-heavy menu.
+	assert_true(not GameState.is_gameplay_blocked(),
+		"gameplay not blocked with no modal on the stack")
+	GameState.push_modal()
+	assert_true(GameState.is_gameplay_blocked(),
+		"push_modal (what Start Menu open() calls) blocks gameplay input — precedence row 1")
+	GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(),
+		"pop_modal (Start Menu close()) restores gameplay input")
+	print("")
 
 
 # Regression guard for the #448 start-menu blackout (Retroid/Windows release):

@@ -474,6 +474,18 @@ func reset_all_state() -> void:
 	_activated_links.clear()
 	# Title return ends the Free-Roam period — drop every field's retained state.
 	_free_roam_state.clear()
+	# City-hub position cache is a SECOND in-memory holder of the player's
+	# position (CityState: _position/_rotation/_area/_spawn_key, written every
+	# time the player walks between city areas or up to a shop NPC). It is NOT
+	# part of _session, so the clears above don't touch it. Without this, a soft
+	# return-to-title leaves the leftover market/shop spot in the autoload; on
+	# re-login city_area_base._spawn_player sees `pos != null && area matches`
+	# and restores that stale spot instead of the canonical DEFAULT_SPAWN — the
+	# bug a hard reboot (which zeroes the autoload) doesn't reproduce. Clearing
+	# it here, the single title-return chokepoint, makes soft return and hard
+	# reboot behaviorally identical (#425). Guarded for headless/test contexts.
+	if CityState != null and CityState.has_method("clear"):
+		CityState.clear()
 	# Reset HUD/log state too — otherwise the field action log carries
 	# across into the next session and the location flag stays "field"
 	# (per Copilot review on PR #194).

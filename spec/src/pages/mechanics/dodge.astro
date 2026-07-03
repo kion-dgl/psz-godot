@@ -3,19 +3,35 @@ import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Dodge" section="Mechanics">
-  <p><em>Placeholder — not yet specified.</em></p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <h2>Scope</h2>
-  <p>Will define the dodge roll: travel distance, duration, cooldown, and the invincibility (i-frame) window, tunable per weapon. The animation clip length scales the move phase, so distance is partly weapon-driven.</p>
+  <p>A forward roll in the facing direction at the moment the dodge starts. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>animation commitment</em> plus a short invincibility window: a poorly-timed roll is a punish (see <a href="/states/player-state">Player State Machine → Action commitment</a>).</p>
+
+  <h2>Phases and timing</h2>
+  <table>
+    <thead><tr><th>Phase</th><th>Window</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td><strong>I-frames</strong></td><td><code>0 … DODGE_IFRAME_DURATION</code> (0.2&nbsp;s ≈ 11 frames)</td><td>Invincible: a hit does no damage and does not interrupt the roll.</td></tr>
+      <tr><td><strong>Move</strong></td><td><code>0 … clip_length × DODGE_MOVE_FRACTION</code> (0.7)</td><td>Velocity at <code>DODGE_SPEED</code> (7.0) in the cached direction; edge-checked so the roll will not leave the floor.</td></tr>
+      <tr><td><strong>Recovery</strong></td><td>rest of the clip</td><td>Velocity zeroed; crouch-and-stand plays out. Fully vulnerable.</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>The i-frame window <strong>MUST</strong> be the fixed <code>DODGE_IFRAME_DURATION</code> (0.2&nbsp;s) from roll start — <strong>not</strong> the whole move phase. Past the window, a hit interrupts the roll (DODGING → DAMAGED/DOWN). <em>History: #273 used the move phase (≈ 0.47&nbsp;s for saber); #377 tightened it.</em></li>
+    <li>The roll <strong>MUST NOT</strong> be player-cancelable — not by attack, not by another dodge. It commits until the clip finishes (or damage outside the i-frames interrupts it).</li>
+    <li>A dodge input while ATTACKING <strong>MUST</strong> be ignored — the swing completes first.</li>
+    <li>Starting a dodge <strong>MUST</strong> drop an in-progress technique charge.</li>
+    <li>The move phase scales to the active weapon's <code>&lt;prefix&gt;_esc_f</code> clip length (falling back to <code>DODGE_DURATION</code>, 0.8&nbsp;s), so travel distance is partly weapon-driven. The i-frame window does <strong>not</strong> scale — it is 0.2&nbsp;s for every weapon.</li>
+  </ul>
 
   <h2>Reference</h2>
   <p>The in-repo <code>dodge-debug</code> tool (web mock at <code>#/dodge-debug</code>) visualizes the roll and i-frames for tuning — to be ported here as an interactive view.</p>
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_dodge</code> caches the facing direction and scales the move phase to the active weapon's <code>_esc_f</code> clip length; <code>_handle_dodge</code> drives the roll at <code>DODGE_SPEED</code> for the move fraction (with an edge check so it won't roll off a ledge), then zeroes velocity through the recovery and returns to IDLE.</li>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_dodge</code> guards commitment (no-op during ATTACKING/DODGING), caches the facing direction, and scales the move phase to the active weapon's <code>_esc_f</code> clip length; <code>_handle_dodge</code> drives the roll at <code>DODGE_SPEED</code> for the move fraction (with an edge check so it won't roll off a ledge), then zeroes velocity through the recovery and returns to IDLE; <code>take_damage</code> is a no-op while DODGING with <code>dodge_timer &lt; DODGE_IFRAME_DURATION</code>.</li>
   </ul>
-  <p>Status: <strong>implemented (#273)</strong> — <code>take_damage</code> is a no-op while DODGING during the move phase (<code>dodge_timer &lt; dodge_move_end</code>, the first <code>DODGE_MOVE_FRACTION</code> of the clip); the recovery crouch + rise is vulnerable. <code>test_player_states</code> pins both sides of the window.</p>
+  <p>Status: <strong>implemented (#273, tightened by #377)</strong> — <code>test_player_states</code> pins both sides of the 0.2&nbsp;s window; <code>test_action_commitment</code> pins the no-cancel rules.</p>
 
   <p><a href="/mechanics">← Mechanics</a></p>
 </Concept>

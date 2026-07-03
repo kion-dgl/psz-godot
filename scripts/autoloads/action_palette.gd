@@ -1,6 +1,7 @@
 extends Node
 ## ActionPalette — manages the player's configurable action palette.
-## 2 pages of 3 action slots, cycled with palette_swap during gameplay.
+## 2 pages of 3 action slots. During gameplay the back page is momentary:
+## shown while palette_swap is held, front page restored on release (#447).
 
 signal page_changed(new_page: int)
 signal config_changed()
@@ -74,8 +75,22 @@ func _ready() -> void:
 	pages = DEFAULT_PAGES.duplicate(true)
 
 
-func swap_page() -> void:
-	current_page = (current_page + 1) % pages.size()
+## Momentary swap (#447, spec /states/player-state): the field back page is
+## hold-to-activate. Press drives show_back(), release drives show_front();
+## set_page() is idempotent so repeat edges (echo, double-bind) can't
+## double-advance or re-emit — exactly one switch per edge.
+func show_back() -> void:
+	set_page(1)
+
+
+func show_front() -> void:
+	set_page(0)
+
+
+func set_page(page: int) -> void:
+	if page < 0 or page >= pages.size() or page == current_page:
+		return
+	current_page = page
 	page_changed.emit(current_page)
 
 

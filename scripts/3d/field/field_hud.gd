@@ -72,6 +72,11 @@ func _connect_player_charge_signals() -> void:
 		player.tech_charge_started.connect(func(_slot: int): pass)
 		player.tech_charge_ready.connect(func(slot: int): _action_palette.set_charging_slot(slot))
 		player.tech_charge_released.connect(func(_slot: int): _action_palette.set_charging_slot(-1))
+	# Quick Menu open drops an in-progress charge — the fifth drop case
+	# (spec /states/player-state, #377), mirroring the PsoStartMenu.opened
+	# connection made in player._ready.
+	if _quick_weapon and player.has_method("_drop_charge"):
+		_quick_weapon.opened.connect(player._drop_charge)
 
 
 func _process(_delta: float) -> void:
@@ -607,6 +612,11 @@ class _QuickWeaponMenu extends Control:
 	## weapons from inventory. 5 visible lines, scroll with up/down, accept to
 	## equip, cancel to close.
 
+	## Fired when the menu actually opens (list non-empty). The player drops a
+	## mid-charge technique on this — the fifth charge-drop case
+	## (spec /states/player-state, #377), matching PsoStartMenu.opened.
+	signal opened()
+
 	const MENU_W := 180.0
 	const ROW_H := 22.0
 	const VISIBLE_ROWS := 5
@@ -715,6 +725,7 @@ class _QuickWeaponMenu extends Control:
 			return
 		_is_open = true
 		visible = true
+		opened.emit()
 		# Cursor starts at the top of the list (spec /states/quick-weapon-menu,
 		# issue #141) — a fixed, predictable entry point. It deliberately does NOT
 		# pre-select the equipped row (which sorts to the bottom as the "unequip"

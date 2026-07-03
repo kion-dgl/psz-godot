@@ -93,7 +93,8 @@ check "reached city_office"                    "[sanity] checkpoint: city_office
 check "reached city_counter"                   "[sanity] checkpoint: city_counter"
 check "guild_counter opened"                   "[sanity] checkpoint: guild_counter"
 check "quest accepted"                         "[sanity] guild_counter: quest accepted"
-check "reached city_warp"                      "[sanity] checkpoint: city_warp"
+# city_warp was retired by #449 (teleporter merged into the counter map) —
+# the warp pad interaction below is the replacement checkpoint.
 check "warp_teleporter opened"                 "[sanity] checkpoint: warp_teleporter"
 check "valley_field entered"                   "[sanity] checkpoint: valley_field entered"
 # Step progress is logged via the autopilot's cell-load plan lines

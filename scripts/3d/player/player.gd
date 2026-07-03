@@ -230,6 +230,11 @@ var dodge_anim_duration: float = 0.0
 var dodge_move_end: float = 0.0
 const DODGE_DURATION: float = 0.8
 const DODGE_SPEED: float = 7.0
+# Invincibility window from roll start (spec /mechanics/dodge, #377):
+# fixed ≈11 frames for every weapon — deliberately NOT the whole move
+# phase, so a poorly-timed roll is a punish. The rest of the roll and
+# the recovery are vulnerable, and a hit there interrupts the dodge.
+const DODGE_IFRAME_DURATION: float = 0.2
 # Fraction of the dodge animation during which we apply velocity. The
 # remaining (1 - fraction) is the recovery — the character lands in a
 # crouch and stands up. Sliding through that recovery looked wrong, so
@@ -289,9 +294,9 @@ func _ready() -> void:
 		animation_player.animation_finished.connect(_on_animation_finished)
 
 	# #352: opening the Start Menu drops inputs, so it cancels an in-progress
-	# technique charge (the Quick Menu #141 should connect here too once it
-	# lands). _drop_charge no-ops when nothing is charging, so this is safe to
-	# fire on every menu open.
+	# technique charge (the Quick Menu's opened signal connects the same way
+	# from field_hud, #377). _drop_charge no-ops when nothing is charging, so
+	# this is safe to fire on every menu open.
 	var start_menu := get_node_or_null("/root/PsoStartMenu")
 	if start_menu and start_menu.has_signal("opened"):
 		start_menu.opened.connect(_drop_charge)
@@ -947,7 +952,49 @@ func _respawn() -> void:
 	transition_to(PlayerState.IDLE)
 
 
+# ── Field-action arbitration (issue #426 / #423) ──────────────────────────
+# Decides which effects ONE confirm/action InputEvent produces, encoding the
+# "Confirm/interact precedence" rule from spec/states/start-menu:
+#   row 2  world interaction (interact pressed + an interactable in range)
+#          CONSUMES the press and SUPPRESSES any palette/free action bound to
+#          the same button.
+#   row 3  palette / palette_swap / dodge fire only when no world interaction
+#          claimed the press, and only OUTSIDE the city (combat gate — bindings
+#          still fire in town without an explicit gate).
+# Row 1 (an open modal / Start Menu) is handled upstream by the
+# is_gameplay_blocked() early-return in _unhandled_input; that path never
+# reaches this helper. Pure + static so it is unit-testable without a live
+# Player node (Player._ready loads pack-only character models — can't run
+# repo-only headless).
+static func arbitrate_field_actions(pressed: Dictionary, has_interactable: bool, in_city: bool) -> Array[String]:
+	# Row 2: world interaction wins and consumes the press.
+	if bool(pressed.get("interact", false)) and has_interactable:
+		return ["interact"]
+
+	# Row 3: palette / free actions — suppressed entirely inside the city.
+	var effects: Array[String] = []
+	if in_city:
+		return effects
+	if bool(pressed.get("palette_swap", false)):
+		effects.append("palette_swap")
+	for slot_idx in range(3):
+		if bool(pressed.get("action_%d" % (slot_idx + 1), false)):
+			effects.append("action_%d" % (slot_idx + 1))
+	if bool(pressed.get("dodge", false)):
+		effects.append("dodge")
+	return effects
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	# Momentary palette swap (#447, spec /states/player-state): the back page
+	# shows only while palette_swap is HELD. The release leg runs before every
+	# gate below so a menu/cutscene/modal opening mid-hold can never latch the
+	# back page — the release always restores the front page (idempotent no-op
+	# when already there).
+	if event.is_action_released("palette_swap"):
+		ActionPalette.show_front()
+		_tech_targeting_dirty = true
+
 	if current_state == PlayerState.CUTSCENE:
 		return
 
@@ -958,32 +1005,53 @@ func _unhandled_input(event: InputEvent) -> void:
 	if GameState.is_gameplay_blocked():
 		return
 
-	# Combat input gate — palette HUD is hidden in city via field_hud, but the
-	# input bindings still fire without an explicit gate, so action_1/2/3
-	# would play attack anims and spawn projectiles in town with a weapon
-	# equipped. Interact stays available for NPC conversations.
-	if not _is_in_city():
-		# Palette swap
-		if event.is_action_pressed("palette_swap"):
-			ActionPalette.swap_page()
-			_tech_targeting_dirty = true
+	# Resolve every action this event pressed through the single precedence
+	# rule (see arbitrate_field_actions + spec/states/start-menu). Previously
+	# the palette block and the interact block ran as INDEPENDENT, non-consuming
+	# `if`s, so one confirm press bound to both a world interaction and a palette
+	# action fired BOTH (issue #423/#426 — there was no "world interaction wins
+	# and consumes" arbitration). The combat gate (palette suppressed in city) is
+	# folded into the helper via `in_city`.
+	var in_city := _is_in_city()
+	var has_interactable := nearest_interactable != null and is_instance_valid(nearest_interactable)
+	var pressed := {
+		"interact": event.is_action_pressed("interact"),
+		"palette_swap": event.is_action_pressed("palette_swap"),
+		"action_1": event.is_action_pressed("action_1"),
+		"action_2": event.is_action_pressed("action_2"),
+		"action_3": event.is_action_pressed("action_3"),
+		"dodge": event.is_action_pressed("dodge"),
+	}
+	var effects := arbitrate_field_actions(pressed, has_interactable, in_city)
 
-		# Action palette inputs — press starts charge for techniques, release casts
-		for slot_idx in range(3):
-			var action_name: String = "action_%d" % (slot_idx + 1)
-			if event.is_action_pressed(action_name):
-				_on_palette_pressed(slot_idx)
-			elif event.is_action_released(action_name):
-				_on_palette_released(slot_idx)
-
-		# Dodge has its own dedicated button (L1 on controller) — no longer on palette
-		if event.is_action_pressed("dodge"):
-			if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
-				_start_dodge()
-
-	# Handle interact input
-	if event.is_action_pressed("interact"):
+	# World interaction consumes the press: fire it, mark the event handled, and
+	# stop before any palette dispatch so a shared button can't double-trigger.
+	if effects.has("interact"):
 		_try_interact()
+		get_viewport().set_input_as_handled()
+		return
+
+	for effect in effects:
+		match effect:
+			"palette_swap":
+				# Hold-to-activate (#447): press shows the back page; the
+				# unconditional release leg at the top restores the front.
+				ActionPalette.show_back()
+				_tech_targeting_dirty = true
+			"action_1", "action_2", "action_3":
+				_on_palette_pressed(int(effect.substr(7)) - 1)
+			"dodge":
+				# Dodge has its own dedicated button (L1 on controller).
+				if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
+					_start_dodge()
+
+	# Palette releases are not competing presses (a held technique casts on
+	# release), so honor them regardless of the arbitration above — but only
+	# outside the city, matching the combat gate on presses.
+	if not in_city:
+		for slot_idx in range(3):
+			if event.is_action_released("action_%d" % (slot_idx + 1)):
+				_on_palette_released(slot_idx)
 
 
 func _handle_movement(delta: float) -> void:
@@ -1175,6 +1243,12 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
+	# Action commitment (spec /states/player-state, #377): a swing must fully
+	# execute — dodge cannot cancel it — and a roll cannot restart itself.
+	# Damage-initiated exits (take_damage → DAMAGED/DOWN) bypass this by
+	# calling transition_to directly.
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
 	# Store facing direction for dodge movement
 	dodge_direction = player_rotation
 	dodge_timer = 0.0
@@ -1245,6 +1319,10 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
+	# Action commitment (spec /states/player-state, #377): a roll must fully
+	# execute — attack cannot cancel it (mirrors _start_strong_attack's gate).
+	if current_state == PlayerState.DODGING:
+		return
 	if current_state == PlayerState.ATTACKING:
 		# Check if we're in combo window
 		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
@@ -2175,6 +2253,12 @@ func transition_to(new_state: PlayerState) -> void:
 		_set_weapon_hold("attack")
 	elif was_attacking and new_state != PlayerState.ATTACKING:
 		_set_weapon_hold("idle")
+		# Hitbox lifetime invariant (spec /states/player-state, #428): the
+		# attack hitbox must not outlive ATTACKING by ANY exit path — the
+		# swing-end paths already deactivate, but interrupts (damage now,
+		# anything future) land here. Deactivation clears _hit_targets, so
+		# no "stored" hits carry into the next swing.
+		_deactivate_attack_hitbox()
 
 	match new_state:
 		PlayerState.IDLE:
@@ -2264,9 +2348,11 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 	if current_state == PlayerState.DOWN and GameState.hp <= 0:
 		return
 
-	# Dodge i-frames (#273, spec /mechanics/dodge): the roll's move phase
-	# grants invincibility; the recovery (crouch + rise) is vulnerable.
-	if current_state == PlayerState.DODGING and dodge_timer < dodge_move_end:
+	# Dodge i-frames (spec /mechanics/dodge): only the first
+	# DODGE_IFRAME_DURATION of the roll is invincible (#377 tightened this
+	# from the whole move phase); a hit after the window damages AND
+	# interrupts the roll like any other hit.
+	if current_state == PlayerState.DODGING and dodge_timer < DODGE_IFRAME_DURATION:
 		return
 
 	GameState.set_hp(GameState.hp - damage)
@@ -2649,6 +2735,12 @@ func _update_nearest_interactable() -> void:
 
 
 func _try_interact() -> void:
+	# Defense-in-depth (issue #426): a world interaction must NEVER fire while a
+	# modal / Start Menu is open, even if a future input path reaches here
+	# without the _unhandled_input gate at the top of the frame. Movement is not
+	# affected — it runs from the ungated _physics_process, not this path.
+	if GameState.is_gameplay_blocked():
+		return
 	if nearest_interactable and is_instance_valid(nearest_interactable):
 		var target := nearest_interactable
 		target.interact(self)
