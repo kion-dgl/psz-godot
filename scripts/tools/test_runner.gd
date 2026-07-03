@@ -7098,7 +7098,9 @@ func test_minimap_enemy_markers() -> void:
 	assert_true(not minimap._is_boss_enemy(enemies[2]), "Normal enemy gets the normal dot")
 
 	# Markers follow movement through the same projection as the player.
-	# Identity map root + unit SVG transform → display = world.xz × (120/400).
+	# Identity map root + unit SVG transform → display = world.xz scaled into
+	# the frame's inner map area (DISPLAY_SIZE px over the 400-unit SVG space).
+	var disp_k: float = RoomMinimap.DISPLAY_SIZE / 400.0
 	minimap._svg_scale = 1.0
 	minimap._svg_offset_x = 0.0
 	minimap._svg_offset_y = 0.0
@@ -7112,14 +7114,14 @@ func test_minimap_enemy_markers() -> void:
 	minimap.update_enemies(map_root)
 	var marker: Dictionary = minimap._enemy_markers.get(walker.get_instance_id(), {})
 	var pos: Vector2 = marker.get("pos", Vector2.ZERO)
-	assert_true(pos.distance_to(Vector2(30.0, 60.0)) < 0.01,
+	assert_true(pos.distance_to(Vector2(100.0, 200.0) * disp_k) < 0.01,
 		"Marker projected at minimap position (got %s)" % pos)
 	assert_eq(marker.get("radius", 0.0), normal_r, "Stand-in without boss data draws a normal dot")
 	walker.position = Vector3(200.0, 0.0, 100.0)
 	minimap.update_enemies(map_root)
 	marker = minimap._enemy_markers.get(walker.get_instance_id(), {})
 	pos = marker.get("pos", Vector2.ZERO)
-	assert_true(pos.distance_to(Vector2(60.0, 30.0)) < 0.01,
+	assert_true(pos.distance_to(Vector2(200.0, 100.0) * disp_k) < 0.01,
 		"Marker follows enemy movement (got %s)" % pos)
 	minimap.untrack_enemy(walker)
 	minimap.update_enemies(map_root)
