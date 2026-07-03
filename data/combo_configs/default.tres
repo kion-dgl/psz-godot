@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="WeaponComboConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_combo_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+just_start = PackedFloat32Array(0.55, 0.55)
+just_end = PackedFloat32Array(0.7, 0.7)
+just_damage_mult = 1.3
