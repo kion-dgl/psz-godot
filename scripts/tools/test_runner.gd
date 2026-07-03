@@ -84,6 +84,7 @@ func _run_tests_core() -> void:
 	test_telepipe_suspend_resume_keeps_telepipe()
 	test_section_state_round_trip()
 	test_telepipe_cancel_hooks()
+	test_city_state_cleared_on_title_return()
 	test_telepipe_use_item_outside_field()
 	test_telepipe_239_fixes()
 	test_dup_equipment()
@@ -4260,6 +4261,45 @@ func test_telepipe_cancel_hooks() -> void:
 	SessionManager._accepted_quest.clear()
 	SessionManager._completed_quest.clear()
 	SessionManager._suspended_session.clear()
+	print("")
+
+
+## #425 — return-to-title must clear the city-hub position cache (CityState),
+## not just SessionManager's _session. CityState is a SECOND in-memory holder of
+## the player's position (_position/_rotation/_area/_spawn_key), written whenever
+## the player walks between city areas or up to a shop NPC (city_area_base.gd:217).
+## The return-to-title chokepoint (title.gd → SessionManager.reset_all_state())
+## historically never touched it, so a SOFT re-login restored the leftover shop
+## spot via the predicate `pos != null && area matches` in
+## city_area_base._spawn_player (city_area_base.gd:35) instead of DEFAULT_SPAWN.
+## A HARD reboot zeroes the autoload, which is why reboot didn't reproduce.
+## This test pins that reset_all_state() now empties CityState so the spawn
+## predicate is false and login falls through to the canonical DEFAULT_SPAWN.
+func test_city_state_cleared_on_title_return() -> void:
+	print("── reset_all_state clears CityState (#425 return-to-title position) ──")
+
+	# (1) Simulate having walked up to a shop NPC in the market: a non-default
+	#     position/rotation/area plus a spawn key are cached in the autoload.
+	CityState.save_player_state(Vector3(0.98, 2, 40.0), 1.5, "market")
+	CityState.set_spawn_key("market-exit")
+	assert_true(CityState.get_player_position() != null,
+		"precondition: CityState holds a cached city position before title return")
+	assert_eq(CityState.get_area(), "market",
+		"precondition: CityState area is the market the player walked in")
+
+	# (2) Take the title-return chokepoint.
+	SessionManager.reset_all_state()
+
+	# (3) The spawn-decision predicate `pos != null && area matches` in
+	#     city_area_base.gd:35 must now be FALSE, so login resolves DEFAULT_SPAWN.
+	assert_true(CityState.get_player_position() == null,
+		"reset_all_state clears CityState position (spawn predicate false → DEFAULT_SPAWN)")
+	assert_eq(CityState.get_area(), "",
+		"reset_all_state clears CityState area")
+	assert_eq(CityState.get_player_rotation(), 0.0,
+		"reset_all_state clears CityState rotation")
+	assert_eq(CityState.get_spawn_key(), "",
+		"reset_all_state clears CityState spawn key")
 	print("")
 
 

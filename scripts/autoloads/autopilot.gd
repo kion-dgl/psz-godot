@@ -739,15 +739,7 @@ func _drive_scene(path: String) -> void:
 	if path == INPUT_SELECT:
 		_after(STEP_DELAY, _pick_keyboard)
 	elif path == TITLE:
-		if _boot_returning_to_title:
-			# Boot phase ran "Return to Title" — DONE here, not at the office.
-			# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
-			print("[sanity] checkpoint: returned to title (boot phase complete)")
-			print("[sanity] DONE ok")
-			_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
-		else:
-			print("[sanity] checkpoint: title")
-			_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
+		_drive_title_scene()
 	elif path == CHAR_SELECT:
 		print("[sanity] checkpoint: character_select")
 		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
@@ -783,6 +775,26 @@ func _drive_scene(path: String) -> void:
 		print("[sanity] checkpoint: valley_field entered")
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
 		# same frame this scene-change does, so don't drive anything here.
+
+
+func _drive_title_scene() -> void:
+	if _boot_returning_to_title:
+		# Boot phase ran "Return to Title" — DONE here, not at the office.
+		# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
+		print("[sanity] checkpoint: returned to title (boot phase complete)")
+		# #425: title.gd::_ready already ran SessionManager.reset_all_state(),
+		# the production chokepoint that must wipe the city-hub position cache.
+		# Assert it here so a regression (reset_all_state no longer clearing
+		# CityState) is caught by the probe rather than only the unit test.
+		if CityState != null and CityState.get_player_position() == null:
+			print("[sanity] checkpoint: city-state cleared on title-return")
+		else:
+			print("[sanity] FAIL: CityState not cleared on title-return — stale city position survives reset_all_state (#425)")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+	else:
+		print("[sanity] checkpoint: title")
+		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
 
 
 func _drive_overlay(path: String) -> void:
@@ -945,17 +957,20 @@ func _drive_office_intro() -> void:
 
 
 ## Match the "Return to Title" sequence: SaveManager.save_game() →
-## CityState.clear() → goto_scene(TITLE). (The old city_menu drove this before
-## the PSO start-menu renderer replaced it; it now lives in archive/.) The TITLE
-## handler above recognises _boot_returning_to_title and DONEs there, so the
+## goto_scene(TITLE). The title scene's _ready calls SessionManager.reset_all_state(),
+## which is the SINGLE production chokepoint that wipes session + CityState (#425).
+## This autopilot path used to call CityState.clear() itself here, which masked the
+## production gap — issue #425 was exactly that the real return-to-title path never
+## cleared the city-hub position cache. We now drive ONLY the production reset (no
+## manual clear) and assert CityState is empty once the title scene has loaded, so a
+## regression where reset_all_state stops clearing CityState would fail this probe.
+## The TITLE handler above recognises _boot_returning_to_title and DONEs there, so the
 ## mp4 ends on the title screen instead of a hard cut from the office.
 func _save_and_return_to_title() -> void:
 	_boot_returning_to_title = true
 	if SaveManager != null and SaveManager.has_method("save_game"):
 		SaveManager.save_game()
 		print("[sanity] save_game()")
-	if CityState != null and CityState.has_method("clear"):
-		CityState.clear()
 	SceneManager.goto_scene(TITLE)
 
 
