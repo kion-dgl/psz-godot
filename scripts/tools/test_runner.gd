@@ -34,6 +34,7 @@ func _run_tests_core() -> void:
 	test_equipment()
 	test_player_states()
 	test_action_commitment()
+	test_palette_momentary_swap()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -85,6 +86,7 @@ func _run_tests_core() -> void:
 	test_telepipe_suspend_resume_keeps_telepipe()
 	test_section_state_round_trip()
 	test_telepipe_cancel_hooks()
+	test_city_state_cleared_on_title_return()
 	test_telepipe_use_item_outside_field()
 	test_telepipe_239_fixes()
 	test_dup_equipment()
@@ -134,6 +136,7 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock()
 	test_difficulty_unlock_persistence()
 	test_input_config()
+	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
 	test_box_state_survives_warp_flush()
@@ -655,6 +658,49 @@ func test_action_commitment() -> void:
 			qm.free()
 	else:
 		print("  SKIP: field_hud.gd not compilable repo-only (pack assets) — opened-signal check runs pack-mounted")
+# ── Momentary palette swap (#447, spec /states/player-state) ───
+# The field back palette is hold-to-activate, not a latched toggle:
+# palette_swap press shows the back page, release returns to the front,
+# and the transitions are edge-driven — exactly one switch per press and
+# per release, no double-advance from a repeat press, no buffered toggle
+# surviving the release, and no latch when a modal opens mid-hold.
+func test_palette_momentary_swap() -> void:
+	print("── Momentary palette swap (#447) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p = PlayerScript.new()  # off-tree: _is_in_city() is false → field input path
+	while GameState.modal_stack > 0:
+		GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: gameplay unblocked")
+	ActionPalette.show_front()
+	assert_eq(ActionPalette.current_page, 0, "precondition: front page shown")
+
+	var switches: Array = []
+	var on_page := func(page: int) -> void: switches.append(page)
+	ActionPalette.page_changed.connect(on_page)
+	var press := _nav_event("palette_swap")
+	var release := _nav_event("palette_swap")
+	release.pressed = false
+
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "press shows the back page")
+	p._unhandled_input(press)  # repeat press without a release (echo / double-bind)
+	assert_eq(ActionPalette.current_page, 1, "repeat press does not double-advance (no latched cycle)")
+	p._unhandled_input(release)
+	assert_eq(ActionPalette.current_page, 0, "release returns to the front page")
+	p._unhandled_input(release)  # repeat release
+	assert_eq(ActionPalette.current_page, 0, "repeat release stays on the front page")
+	assert_eq(switches, [1, 0], "edge-driven: exactly one switch per press/release pair")
+	ActionPalette.page_changed.disconnect(on_page)
+
+	# The release must still restore the front page when gameplay got
+	# blocked mid-hold (e.g. a menu opened while R1 was down) — the back
+	# page MUST NOT latch behind the gameplay-blocked gate.
+	p._unhandled_input(press)
+	assert_eq(ActionPalette.current_page, 1, "held: back page shown before the modal opens")
+	GameState.push_modal()
+	p._unhandled_input(release)
+	GameState.pop_modal()
+	assert_eq(ActionPalette.current_page, 0, "release mid-modal still returns to the front (no latch)")
 
 	p.free()
 	print("")
@@ -4355,6 +4401,45 @@ func test_telepipe_cancel_hooks() -> void:
 	print("")
 
 
+## #425 — return-to-title must clear the city-hub position cache (CityState),
+## not just SessionManager's _session. CityState is a SECOND in-memory holder of
+## the player's position (_position/_rotation/_area/_spawn_key), written whenever
+## the player walks between city areas or up to a shop NPC (city_area_base.gd:217).
+## The return-to-title chokepoint (title.gd → SessionManager.reset_all_state())
+## historically never touched it, so a SOFT re-login restored the leftover shop
+## spot via the predicate `pos != null && area matches` in
+## city_area_base._spawn_player (city_area_base.gd:35) instead of DEFAULT_SPAWN.
+## A HARD reboot zeroes the autoload, which is why reboot didn't reproduce.
+## This test pins that reset_all_state() now empties CityState so the spawn
+## predicate is false and login falls through to the canonical DEFAULT_SPAWN.
+func test_city_state_cleared_on_title_return() -> void:
+	print("── reset_all_state clears CityState (#425 return-to-title position) ──")
+
+	# (1) Simulate having walked up to a shop NPC in the market: a non-default
+	#     position/rotation/area plus a spawn key are cached in the autoload.
+	CityState.save_player_state(Vector3(0.98, 2, 40.0), 1.5, "market")
+	CityState.set_spawn_key("market-exit")
+	assert_true(CityState.get_player_position() != null,
+		"precondition: CityState holds a cached city position before title return")
+	assert_eq(CityState.get_area(), "market",
+		"precondition: CityState area is the market the player walked in")
+
+	# (2) Take the title-return chokepoint.
+	SessionManager.reset_all_state()
+
+	# (3) The spawn-decision predicate `pos != null && area matches` in
+	#     city_area_base.gd:35 must now be FALSE, so login resolves DEFAULT_SPAWN.
+	assert_true(CityState.get_player_position() == null,
+		"reset_all_state clears CityState position (spawn predicate false → DEFAULT_SPAWN)")
+	assert_eq(CityState.get_area(), "",
+		"reset_all_state clears CityState area")
+	assert_eq(CityState.get_player_rotation(), 0.0,
+		"reset_all_state clears CityState rotation")
+	assert_eq(CityState.get_spawn_key(), "",
+		"reset_all_state clears CityState spawn key")
+	print("")
+
+
 func test_telepipe_use_item_outside_field() -> void:
 	print("── Inventory.use_item('telepipe') — field-only guard ──")
 
@@ -6978,6 +7063,57 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+
+# ── Confirm / interact precedence (issue #426 / #423) ──────────────────────
+# Pins the field-action arbitration rule from spec/states/start-menu against the
+# pure static Player.arbitrate_field_actions seam: one press resolves to exactly
+# one consumer in the order modal > world-interaction > palette/free. We exercise
+# the static helper (no live Player — Player._ready loads pack-only character
+# models, so a node can't run repo-only headless) plus the GameState modal flag
+# that encodes precedence row 1.
+func test_confirm_input_precedence() -> void:
+	print("── Confirm / interact precedence (modal > world > palette) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# (a) World interaction CONSUMES a press shared with a palette action (#423):
+	#     interact + an interactable in range → only "interact", palette dropped.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true, "action_1": true}, true, false),
+		["interact"],
+		"world interaction consumes the press and suppresses the shared palette action")
+
+	# (b) Palette fires when there is nothing to interact with.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, false, false),
+		["action_1"],
+		"palette action fires when no interactable is in range")
+
+	# (c) Interact pressed but nothing in range → no effect leaks through.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true}, false, false),
+		[],
+		"interact with no interactable produces no effect (no leak)")
+
+	# (d) In-city combat gate still suppresses palette actions.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, true, true),
+		[],
+		"in-city palette gate suppresses combat actions")
+
+	# Precedence row 1: an open modal blocks gameplay input. PsoStartMenu.open()
+	# pushes a modal (push_modal); close() pops it. Assert the flag directly so
+	# the test stays deterministic without instantiating the pack-heavy menu.
+	assert_true(not GameState.is_gameplay_blocked(),
+		"gameplay not blocked with no modal on the stack")
+	GameState.push_modal()
+	assert_true(GameState.is_gameplay_blocked(),
+		"push_modal (what Start Menu open() calls) blocks gameplay input — precedence row 1")
+	GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(),
+		"pop_modal (Start Menu close()) restores gameplay input")
+	print("")
 
 
 # Regression guard for the #448 start-menu blackout (Retroid/Windows release):
