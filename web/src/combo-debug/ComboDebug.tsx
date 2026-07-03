@@ -24,12 +24,21 @@ import { assetUrl } from '../utils/assets';
  * The ground fan shows the allowed range; the yellow arrow is the requested
  * heading; a red flash + ghost arrow mark a clamped turn.
  *
+ * Selection is class-first, matching the game: each class has its equippable
+ * weapon types (ClassData.allowed_weapon_types), its own model (variation 0
+ * of PlayerConfig.CLASS_PREFIX), and a gender that picks the _m/_w animation
+ * pack — the two sets have different clip lengths, so tuning is stored per
+ * weapon+gender.
+ *
  * Controls: Z/J normal · X/K strong · C/L special · WASD/arrows steer ·
- * R reset. Tunables persist to localStorage per weapon; "Copy GDScript"
- * exports a WEAPON_TYPE_CONFIGS-style snippet.
+ * R reset. Tunables persist to localStorage; "Copy GDScript" exports a
+ * WEAPON_TYPE_CONFIGS-style snippet.
  */
 
-const STORAGE_KEY = 'psz-combo-debug:v1';
+const STORAGE_KEY = 'psz-combo-debug:v2';
+const STORAGE_KEY_V1 = 'psz-combo-debug:v1';
+
+type Gender = 'm' | 'w';
 
 type WeaponKey =
   | 'saber' | 'sword' | 'daggers' | 'claw' | 'dsaber' | 'spear' | 'slicer'
@@ -38,8 +47,7 @@ type WeaponKey =
 interface WeaponDef {
   id: WeaponKey;
   label: string;
-  glb: string;         // file under assets/player/animations/
-  prefix: string;      // animation clip prefix (male set)
+  glbBase: string;     // assets/player/animations/<base>_<m|w>.glb
   weaponType: number;  // WeaponData.WeaponType enum value
   defaults: Tuning;
 }
@@ -61,19 +69,66 @@ const tune = (
 // combo_window defaults come from CombatManager.WEAPON_TYPE_CONFIGS; the
 // turn limits are proposals (the game has no turn clamp yet).
 const WEAPONS: WeaponDef[] = [
-  { id: 'saber',   label: 'Saber',        glb: 'saver_m',      prefix: 'pmsa', weaponType: 0,  defaults: tune(0.5,  [90, 90]) },
-  { id: 'sword',   label: 'Sword',        glb: 'sword_m',      prefix: 'pmsw', weaponType: 1,  defaults: tune(0.6,  [60, 60]) },
-  { id: 'daggers', label: 'Daggers',      glb: 'dagger_m',     prefix: 'pmda', weaponType: 2,  defaults: tune(0.4,  [120, 120]) },
-  { id: 'claw',    label: 'Claw',         glb: 'claw_m',       prefix: 'pmcl', weaponType: 3,  defaults: tune(0.35, [120, 120]) },
-  { id: 'dsaber',  label: 'Double Saber', glb: 'dsaver_m',     prefix: 'pmds', weaponType: 4,  defaults: tune(0.45, [180, 180]) },
-  { id: 'spear',   label: 'Spear',        glb: 'spear_m',      prefix: 'pmsp', weaponType: 5,  defaults: tune(0.5,  [75, 75]) },
-  { id: 'slicer',  label: 'Slicer',       glb: 'slicer_m',     prefix: 'pmsl', weaponType: 6,  defaults: tune(0.5,  [90, 90]) },
-  { id: 'handgun', label: 'Handgun',      glb: 'handgun_m',    prefix: 'pmhg', weaponType: 9,  defaults: tune(0.4,  [180, 180]) },
-  { id: 'mechgun', label: 'Mechgun',      glb: 'machinegun_m', prefix: 'pmmg', weaponType: 10, defaults: tune(0.3,  [180, 180]) },
-  { id: 'rifle',   label: 'Rifle',        glb: 'rifle_m',      prefix: 'pmar', weaponType: 11, defaults: tune(0.6,  [45, 45]) },
-  { id: 'rod',     label: 'Rod',          glb: 'rod_m',        prefix: 'pmro', weaponType: 14, defaults: tune(0.5,  [90, 90]) },
-  { id: 'wand',    label: 'Wand',         glb: 'wand_m',       prefix: 'pmwa', weaponType: 15, defaults: tune(0.5,  [90, 90]) },
+  { id: 'saber',   label: 'Saber',        glbBase: 'saver',      weaponType: 0,  defaults: tune(0.5,  [90, 90]) },
+  { id: 'sword',   label: 'Sword',        glbBase: 'sword',      weaponType: 1,  defaults: tune(0.6,  [60, 60]) },
+  { id: 'daggers', label: 'Daggers',      glbBase: 'dagger',     weaponType: 2,  defaults: tune(0.4,  [120, 120]) },
+  { id: 'claw',    label: 'Claw',         glbBase: 'claw',       weaponType: 3,  defaults: tune(0.35, [120, 120]) },
+  { id: 'dsaber',  label: 'Double Saber', glbBase: 'dsaver',     weaponType: 4,  defaults: tune(0.45, [180, 180]) },
+  { id: 'spear',   label: 'Spear',        glbBase: 'spear',      weaponType: 5,  defaults: tune(0.5,  [75, 75]) },
+  { id: 'slicer',  label: 'Slicer',       glbBase: 'slicer',     weaponType: 6,  defaults: tune(0.5,  [90, 90]) },
+  { id: 'handgun', label: 'Handgun',      glbBase: 'handgun',    weaponType: 9,  defaults: tune(0.4,  [180, 180]) },
+  { id: 'mechgun', label: 'Mechgun',      glbBase: 'machinegun', weaponType: 10, defaults: tune(0.3,  [180, 180]) },
+  { id: 'rifle',   label: 'Rifle',        glbBase: 'rifle',      weaponType: 11, defaults: tune(0.6,  [45, 45]) },
+  { id: 'rod',     label: 'Rod',          glbBase: 'rod',        weaponType: 14, defaults: tune(0.5,  [90, 90]) },
+  { id: 'wand',    label: 'Wand',         glbBase: 'wand',       weaponType: 15, defaults: tune(0.5,  [90, 90]) },
 ];
+
+const WEAPON_BY_TYPE = new Map(WEAPONS.map((w) => [w.weaponType, w]));
+
+interface ClassDef {
+  id: string;
+  label: string;
+  desc: string;       // "Human Hunter" etc.
+  gender: Gender;     // picks the _m/_w animation pack, like player.gd
+  pc: string;         // model folder (variation 0 of PlayerConfig.CLASS_PREFIX)
+  allowed: number[];  // ClassData.allowed_weapon_types (WeaponType values)
+  innate: number;     // ClassData.innate_weapon_type
+}
+
+// Transcribed from data/classes/*.tres + PlayerConfig.CLASS_PREFIX.
+// Bazooka (12) appears in the rangers' allowed lists but has no dedicated
+// animation set yet (player.gd falls back to shotgun clips), so it has no
+// WeaponDef here and is filtered from the picker.
+const CLASSES: ClassDef[] = [
+  { id: 'humar',     label: 'HUmar',     desc: 'Human Hunter',  gender: 'm', pc: 'pc_000', allowed: [0, 1, 2, 5, 9],       innate: 0 },
+  { id: 'humarl',    label: 'HUmarl',    desc: 'Human Hunter',  gender: 'w', pc: 'pc_010', allowed: [0, 1, 2, 3, 9, 15],   innate: 2 },
+  { id: 'ramar',     label: 'RAmar',     desc: 'Human Ranger',  gender: 'm', pc: 'pc_020', allowed: [0, 5, 9, 10, 11, 12], innate: 11 },
+  { id: 'ramarl',    label: 'RAmarl',    desc: 'Human Ranger',  gender: 'w', pc: 'pc_030', allowed: [0, 2, 9, 10, 11, 12], innate: 9 },
+  { id: 'fomar',     label: 'FOmar',     desc: 'Human Force',   gender: 'm', pc: 'pc_040', allowed: [0, 5, 9, 14, 15],     innate: 14 },
+  { id: 'fomarl',    label: 'FOmarl',    desc: 'Human Force',   gender: 'w', pc: 'pc_050', allowed: [0, 6, 9, 14, 15],     innate: 15 },
+  { id: 'hunewm',    label: 'HUnewm',    desc: 'Newman Hunter', gender: 'm', pc: 'pc_060', allowed: [0, 1, 2, 4, 5, 9],    innate: 4 },
+  { id: 'hunewearl', label: 'HUnewearl', desc: 'Newman Hunter', gender: 'w', pc: 'pc_070', allowed: [0, 1, 2, 3, 6, 9],    innate: 6 },
+  { id: 'fonewm',    label: 'FOnewm',    desc: 'Newman Force',  gender: 'm', pc: 'pc_080', allowed: [0, 9, 14, 15],        innate: 14 },
+  { id: 'fonewearl', label: 'FOnewearl', desc: 'Newman Force',  gender: 'w', pc: 'pc_090', allowed: [0, 9, 14, 15],        innate: 15 },
+  { id: 'hucast',    label: 'HUcast',    desc: 'Cast Hunter',   gender: 'm', pc: 'pc_100', allowed: [0, 1, 2, 5, 9],       innate: 1 },
+  { id: 'hucaseal',  label: 'HUcaseal',  desc: 'Cast Hunter',   gender: 'w', pc: 'pc_110', allowed: [0, 1, 2, 3, 9, 10],   innate: 3 },
+  { id: 'racast',    label: 'RAcast',    desc: 'Cast Ranger',   gender: 'm', pc: 'pc_120', allowed: [0, 1, 9, 10, 11, 12], innate: 12 },
+  { id: 'racaseal',  label: 'RAcaseal',  desc: 'Cast Ranger',   gender: 'w', pc: 'pc_130', allowed: [0, 4, 9, 10, 11, 12], innate: 10 },
+];
+
+/** Weapons this class can equip that the tool has an animation set for. */
+function availableWeapons(cls: ClassDef): WeaponDef[] {
+  return cls.allowed
+    .map((t) => WEAPON_BY_TYPE.get(t))
+    .filter((w): w is WeaponDef => !!w);
+}
+
+function defaultWeaponFor(cls: ClassDef): WeaponKey {
+  const avail = availableWeapons(cls);
+  const innate = WEAPON_BY_TYPE.get(cls.innate);
+  if (innate && avail.includes(innate)) return innate.id;
+  return avail[0].id;
+}
 
 type AttackType = 'normal' | 'strong' | 'special';
 
@@ -82,30 +137,51 @@ const ATTACK_COLORS: Record<AttackType, string> = {
 };
 
 interface Config {
+  classId: string;
   weapon: WeaponKey;
-  perWeapon: Partial<Record<WeaponKey, Tuning>>;
+  // Tuning keyed `${weapon}_${gender}` — the male and female animation sets
+  // have different clip lengths, so their timings are tuned separately.
+  perWeapon: Partial<Record<string, Tuning>>;
 }
 
-const DEFAULT_CONFIG: Config = { weapon: 'saber', perWeapon: {} };
+const DEFAULT_CONFIG: Config = { classId: 'humar', weapon: 'saber', perWeapon: {} };
 
 function loadConfig(): Config {
   if (typeof window === 'undefined') return DEFAULT_CONFIG;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    let raw = window.localStorage.getItem(STORAGE_KEY);
+    let v1Migrated = false;
+    if (!raw) {
+      // v1 migration: no class dimension, perWeapon keyed by weapon id
+      // (implicitly the male animation set).
+      const legacy = window.localStorage.getItem(STORAGE_KEY_V1);
+      if (legacy) {
+        const parsedLegacy = JSON.parse(legacy) as { weapon?: WeaponKey; perWeapon?: Record<string, Tuning> };
+        const perWeapon: Record<string, Tuning> = {};
+        for (const [k, v] of Object.entries(parsedLegacy.perWeapon || {})) perWeapon[`${k}_m`] = v;
+        raw = JSON.stringify({ classId: 'humar', weapon: parsedLegacy.weapon, perWeapon });
+        v1Migrated = true;
+      }
+    }
     if (!raw) return DEFAULT_CONFIG;
     const parsed = JSON.parse(raw) as Partial<Config>;
     const cfg: Config = { ...DEFAULT_CONFIG, ...parsed };
-    if (!WEAPONS.some((w) => w.id === cfg.weapon)) cfg.weapon = 'saber';
     if (typeof cfg.perWeapon !== 'object' || cfg.perWeapon === null) cfg.perWeapon = {};
+    const cls = CLASSES.find((c) => c.id === cfg.classId) || CLASSES[0];
+    cfg.classId = cls.id;
+    if (!availableWeapons(cls).some((w) => w.id === cfg.weapon)) cfg.weapon = defaultWeaponFor(cls);
+    if (v1Migrated) {
+      try { window.localStorage.removeItem(STORAGE_KEY_V1); } catch { /* ignore */ }
+    }
     return cfg;
   } catch {
     return DEFAULT_CONFIG;
   }
 }
 
-function getTuning(cfg: Config, weapon: WeaponKey): Tuning {
+function getTuning(cfg: Config, weapon: WeaponKey, gender: Gender): Tuning {
   const def = WEAPONS.find((w) => w.id === weapon)!;
-  const stored = cfg.perWeapon[weapon];
+  const stored = cfg.perWeapon[`${weapon}_${gender}`];
   const t: Tuning = { ...def.defaults, ...(stored || {}) };
   if (!Array.isArray(t.turnLimitDeg) || t.turnLimitDeg.length !== 2) {
     t.turnLimitDeg = def.defaults.turnLimitDeg.slice();
@@ -246,15 +322,17 @@ export default function ComboDebug() {
     combos: 0, misses: 0,
   });
   const [clipLens, setClipLens] = useState<number[]>([]);
+  const [packPrefix, setPackPrefix] = useState('');
 
+  const classDef = CLASSES.find((c) => c.id === config.classId)!;
+  const gender = classDef.gender;
   const weaponDef = WEAPONS.find((w) => w.id === config.weapon)!;
-  const tuning = getTuning(config, config.weapon);
+  const tuning = getTuning(config, config.weapon, gender);
+  const classWeapons = availableWeapons(classDef);
 
   // Refs so the sim loop / input handlers always see current values
   const tuningRef = useRef(tuning);
   tuningRef.current = tuning;
-  const weaponRef = useRef(weaponDef);
-  weaponRef.current = weaponDef;
   const speedRef = useRef(speed);
   speedRef.current = speed;
 
@@ -271,13 +349,26 @@ export default function ComboDebug() {
   }, []);
 
   const setTuning = (patch: Partial<Tuning>) => {
-    setConfig((cfg) => ({
-      ...cfg,
-      perWeapon: {
-        ...cfg.perWeapon,
-        [cfg.weapon]: { ...getTuning(cfg, cfg.weapon), ...patch },
-      },
-    }));
+    setConfig((cfg) => {
+      const g = (CLASSES.find((c) => c.id === cfg.classId) || CLASSES[0]).gender;
+      return {
+        ...cfg,
+        perWeapon: {
+          ...cfg.perWeapon,
+          [`${cfg.weapon}_${g}`]: { ...getTuning(cfg, cfg.weapon, g), ...patch },
+        },
+      };
+    });
+  };
+
+  const setClass = (id: string) => {
+    setConfig((cfg) => {
+      const cls = CLASSES.find((c) => c.id === id);
+      if (!cls) return cfg;
+      const avail = availableWeapons(cls);
+      const weapon = avail.some((w) => w.id === cfg.weapon) ? cfg.weapon : defaultWeaponFor(cls);
+      return { ...cfg, classId: id, weapon };
+    });
   };
 
   const setTurnLimit = (idx: number, deg: number) => {
@@ -306,13 +397,16 @@ export default function ComboDebug() {
     return s.clips[name]?.duration ?? 0;
   }, []);
 
+  // Clips are stored under canonical keys ('wait', 'atk1'..'atk3') — the
+  // per-pack prefixes are irregular (pwdss, pwsls, mixed pmmg/pwmgs in
+  // machinegun_w), so the loader resolves them by suffix.
   const playIdle = useCallback(() => {
-    playClip(`${weaponRef.current.prefix}_wait`, true);
+    playClip('wait', true);
   }, [playClip]);
 
   const startSwing = useCallback((step: number) => {
     const sim = simRef.current;
-    const len = playClip(`${weaponRef.current.prefix}_atk${step}`, false);
+    const len = playClip(`atk${step}`, false);
     sim.phase = 'swing';
     sim.elapsed = 0;
     sim.clipLen = len > 0 ? len : 0.5;
@@ -372,7 +466,7 @@ export default function ComboDebug() {
       sim.clipLen = windup;
       sim.windowOpen = false;
       sim.windowOpened = false;
-      playClip(`${weaponRef.current.prefix}_wait`, true);
+      playClip('wait', true);
     } else {
       startSwing(step);
     }
@@ -678,6 +772,7 @@ export default function ComboDebug() {
     setIsLoading(true);
     setLoadError(null);
     setClipLens([]);
+    setPackPrefix('');
     simRef.current = { ...freshSim(), comboCount: simRef.current.comboCount, missCount: simRef.current.missCount };
 
     // Tear down previous model
@@ -689,10 +784,11 @@ export default function ComboDebug() {
 
     const loader = new GLTFLoader();
     const texLoader = new THREE.TextureLoader();
-    const modelPath = assetUrl('assets/player/pc_000/pc_000_000.glb');
-    const animPath = assetUrl(`assets/player/animations/${weaponDef.glb}.glb`);
-    const texPath = assetUrl('assets/player/pc_000/textures/pc_000_000.png');
-    const prefix = weaponDef.prefix;
+    const pc = classDef.pc;
+    const animGlb = `${weaponDef.glbBase}_${gender}`;
+    const modelPath = assetUrl(`assets/player/${pc}/${pc}_000.glb`);
+    const animPath = assetUrl(`assets/player/animations/${animGlb}.glb`);
+    const texPath = assetUrl(`assets/player/${pc}/textures/${pc}_000.png`);
     let cancelled = false;
 
     loader.load(modelPath, (gltf) => {
@@ -715,26 +811,30 @@ export default function ComboDebug() {
 
       loader.load(animPath, (animGltf) => {
         if (cancelled || !sceneRef.current) return;
-        const wanted = [
-          `${prefix}_wait`,
-          `${prefix}_atk1`, `${prefix}_atk2`, `${prefix}_atk3`,
+        // Resolve clips by SUFFIX: the per-pack prefixes are irregular
+        // (dsaver_w → pwdss, slicer_w → pwsls, machinegun_w mixes pmmg_atk*
+        // with pwmgs_wait), so exact prefix matching would need a per-pack
+        // table. Each pack has exactly one _wait and one _atk1..3.
+        const wanted: [string, string][] = [
+          ['wait', '_wait'], ['atk1', '_atk1'], ['atk2', '_atk2'], ['atk3', '_atk3'],
         ];
         const missing: string[] = [];
         const mixer = new THREE.AnimationMixer(gltf.scene);
-        for (const name of wanted) {
-          const clip = animGltf.animations.find((a) => a.name === name);
-          if (!clip) { missing.push(name); continue; }
+        for (const [key, suffix] of wanted) {
+          const clip = animGltf.animations.find((a) => a.name.endsWith(suffix));
+          if (!clip) { missing.push(`*${suffix}`); continue; }
           stripRootMotion(clip);
-          s.clips[name] = clip;
-          s.actions[name] = mixer.clipAction(clip);
+          s.clips[key] = clip;
+          s.actions[key] = mixer.clipAction(clip);
         }
-        if (!s.clips[`${prefix}_wait`] || !s.clips[`${prefix}_atk1`]) {
-          setLoadError(`Missing clips: ${missing.join(', ')} in ${weaponDef.glb}.glb`);
+        if (!s.clips.wait || !s.clips.atk1) {
+          setLoadError(`Missing clips: ${missing.join(', ')} in ${animGlb}.glb`);
           setIsLoading(false);
           return;
         }
         s.mixer = mixer;
-        setClipLens([1, 2, 3].map((n) => s.clips[`${prefix}_atk${n}`]?.duration ?? 0));
+        setClipLens([1, 2, 3].map((n) => s.clips[`atk${n}`]?.duration ?? 0));
+        setPackPrefix(s.clips.atk1.name.replace(/_atk1$/, ''));
         setIsLoading(false);
         resetRef.current();
       }, undefined, (err) => {
@@ -747,15 +847,15 @@ export default function ComboDebug() {
     });
 
     return () => { cancelled = true; };
-  }, [config.weapon, weaponDef.glb, weaponDef.prefix]);
+  }, [config.weapon, config.classId, classDef.pc, weaponDef.glbBase, gender]);
 
   // -------------------------------------------------------------------------
   // Export
   // -------------------------------------------------------------------------
 
-  const gdscriptFor = useCallback((w: WeaponDef, t: Tuning): string => {
+  const gdscriptFor = useCallback((w: WeaponDef, t: Tuning, g: Gender): string => {
     const lines: string[] = [];
-    lines.push(`\t${w.weaponType}: {  # ${w.label.toUpperCase()} — combo timing/turn tuning (web #/combo-debug)`);
+    lines.push(`\t${w.weaponType}: {  # ${w.label.toUpperCase()} — combo timing/turn tuning (web #/combo-debug, ${g === 'w' ? 'female' : 'male'} anim set ${w.glbBase}_${g})`);
     lines.push(`\t\t"combo_steps": ${t.comboSteps},`);
     lines.push(`\t\t"combo_window_open_pct": ${t.windowOpenPct.toFixed(2)},  # window opens at ${(t.windowOpenPct * 100).toFixed(0)}% of the swing clip`);
     lines.push(`\t\t"combo_window": ${t.windowDuration.toFixed(2)},  # seconds the chain window stays open`);
@@ -769,26 +869,37 @@ export default function ComboDebug() {
   const copyGdscript = useCallback(() => {
     const out = [
       `# Combo tuning — merge into CombatManager.WEAPON_TYPE_CONFIGS`,
-      gdscriptFor(weaponDef, tuning),
+      gdscriptFor(weaponDef, tuning, gender),
     ].join('\n');
     navigator.clipboard.writeText(out);
-    pushLog(`copied GDScript for ${weaponDef.label}`, '#6b8afd');
-  }, [weaponDef, tuning, gdscriptFor, pushLog]);
+    pushLog(`copied GDScript for ${weaponDef.label} (${gender})`, '#6b8afd');
+  }, [weaponDef, tuning, gender, gdscriptFor, pushLog]);
 
   const copyAllGdscript = useCallback(() => {
-    const out = [
-      `# Combo tuning (all weapons) — merge into CombatManager.WEAPON_TYPE_CONFIGS`,
-      ...WEAPONS.map((w) => gdscriptFor(w, getTuning(config, w.id))),
-    ].join('\n');
-    navigator.clipboard.writeText(out);
+    // One entry per weapon type for the CURRENT gender's animation set; where
+    // the other gender was tuned differently, its entry is appended commented
+    // so the discrepancy is visible instead of silently dropped.
+    const out: string[] = [
+      `# Combo tuning (all weapons, ${gender === 'w' ? 'female' : 'male'} anim set) — merge into CombatManager.WEAPON_TYPE_CONFIGS`,
+    ];
+    const other: Gender = gender === 'm' ? 'w' : 'm';
+    for (const w of WEAPONS) {
+      out.push(gdscriptFor(w, getTuning(config, w.id, gender), gender));
+      const otherStored = config.perWeapon[`${w.id}_${other}`];
+      if (otherStored && JSON.stringify(getTuning(config, w.id, other)) !== JSON.stringify(getTuning(config, w.id, gender))) {
+        out.push(gdscriptFor(w, getTuning(config, w.id, other), other).split('\n').map((l) => `#${l}`).join('\n'));
+      }
+    }
+    navigator.clipboard.writeText(out.join('\n'));
     pushLog('copied GDScript for all weapons', '#6b8afd');
-  }, [config, gdscriptFor, pushLog]);
+  }, [config, gender, gdscriptFor, pushLog]);
 
   const resetWeapon = () => {
-    if (!confirm(`Reset ${weaponDef.label} tuning to defaults?`)) return;
+    if (!confirm(`Reset ${weaponDef.label} (${gender === 'w' ? 'female' : 'male'} anims) tuning to defaults?`)) return;
     setConfig((cfg) => {
+      const g = (CLASSES.find((c) => c.id === cfg.classId) || CLASSES[0]).gender;
       const next = { ...cfg.perWeapon };
-      delete next[cfg.weapon];
+      delete next[`${cfg.weapon}_${g}`];
       return { ...cfg, perWeapon: next };
     });
   };
@@ -881,7 +992,7 @@ export default function ComboDebug() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
           }}>
             <span style={{ fontSize: 14, fontWeight: 'bold', color: '#6bf' }}>
-              Combo Debug — {weaponDef.label} ({weaponDef.prefix}_atk1..{tuning.comboSteps})
+              Combo Debug — {classDef.label} · {weaponDef.label}{packPrefix && ` (${packPrefix}_atk1..${tuning.comboSteps})`}
             </span>
             <span style={{ fontSize: 12, color: hud.windowOpen ? '#4f4' : '#888', fontWeight: hud.windowOpen ? 'bold' : 'normal' }}>
               {phaseLabel}{hud.windowOpen && ` · WINDOW OPEN ${((tuning.windowDuration - hud.windowT) * 1000).toFixed(0)}ms left`}
@@ -929,8 +1040,23 @@ export default function ComboDebug() {
           width: 330, background: '#2d2d44', borderRadius: 8, padding: 12,
           overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14,
         }}>
-          {/* Weapon */}
+          {/* Class + weapon */}
           <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: 10 }}>
+            <h3 style={{ fontSize: 12, color: '#6b8afd', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Class</h3>
+            <select
+              value={config.classId}
+              onChange={(e) => setClass(e.target.value)}
+              style={{
+                width: '100%', padding: 8, background: '#1a1a2e', color: '#fff',
+                border: '1px solid #444', borderRadius: 4, fontSize: 12, marginBottom: 10,
+              }}
+            >
+              {CLASSES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label} — {c.desc} ({c.gender === 'w' ? 'F' : 'M'})
+                </option>
+              ))}
+            </select>
             <h3 style={{ fontSize: 12, color: '#6b8afd', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Weapon</h3>
             <select
               value={config.weapon}
@@ -940,10 +1066,18 @@ export default function ComboDebug() {
                 border: '1px solid #444', borderRadius: 4, fontSize: 12,
               }}
             >
-              {WEAPONS.map((w) => (
-                <option key={w.id} value={w.id}>{w.label} ({w.prefix})</option>
+              {classWeapons.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.weaponType === classDef.innate ? '★ ' : ''}{w.label} ({w.glbBase}_{gender})
+                </option>
               ))}
             </select>
+            <div style={{ fontSize: 10, color: '#666', marginTop: 6 }}>
+              List = {classDef.label}'s equippable types (ClassData.allowed_weapon_types),
+              ★ = innate weapon. {classDef.gender === 'w' ? 'Female' : 'Male'} animation
+              pack — timings can differ between the two sets.
+              {classDef.allowed.includes(12) && ' Bazooka omitted: no dedicated animation set yet.'}
+            </div>
           </div>
 
           {/* Attack buttons (mouse alternative to Z/X/C) */}
@@ -971,7 +1105,7 @@ export default function ComboDebug() {
           {/* Timing */}
           <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: 10 }}>
             <h3 style={{ fontSize: 12, color: '#6b8afd', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
-              Timing — {weaponDef.label}
+              Timing — {weaponDef.label} ({gender === 'w' ? 'female' : 'male'} anims)
             </h3>
             {sliderRow('Window opens at (% of swing)', tuning.windowOpenPct, 0.2, 0.95, 0.01,
               (v) => setTuning({ windowOpenPct: v }), (v) => `${(v * 100).toFixed(0)}%`)}
@@ -1029,7 +1163,7 @@ export default function ComboDebug() {
               padding: 10, background: '#2a4a6a', border: '1px solid #6b8afd',
               borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 'bold',
             }}>
-              Copy GDScript — {weaponDef.label}
+              Copy GDScript — {weaponDef.label} ({gender})
             </button>
             <button onClick={copyAllGdscript} style={{
               padding: 8, background: '#1a1a2e', border: '1px solid #6b8afd',
