@@ -38,7 +38,12 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
-const COUNTER_NPC_POS := Vector3(-8.31, 0.5, -9.5)       # inside QuestCounterNPC range
+# QuestCounterNPC sits at (-7.86, -10.67, 111.39) in the merged counter map
+# (#449 — city_counter_controller._add_interactables), interaction box 3.6.
+# Stand just in front of it. The #449 autopilot update fixed WARP_PAD_POS and
+# COUNTER_TO_OFFICE_POS but missed this constant (old-scene coords), which
+# hung every sanity run at "press interact" with nothing in range.
+const COUNTER_NPC_POS := Vector3(-7.86, -9.0, 110.0)     # inside QuestCounterNPC range (merged map)
 const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
 # Warp teleporter merged into the counter (#city-merge): interact in-place, no
 # counter→warp scene transition.
@@ -85,7 +90,7 @@ const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
 # happens to land at the same XZ — the interact press picks up the item
 # instead of activating the telepipe, the player ends up next to an empty
 # telepipe with no scene change. After the first attempt, poll for the
-# scene-change to CITY_WARP; if still in VALLEY_FIELD, walk back and re-press.
+# scene-change to CITY_COUNTER; if still in VALLEY_FIELD, walk back and re-press.
 # Item is gone after the first pickup, so attempt #2 unambiguously targets
 # the telepipe. 3 attempts total covers up to 2 stacked drops.
 const TELEPIPE_RETRY_DELAY := POST_INTERACT_SETTLE + 0.7
@@ -257,6 +262,9 @@ var _defeat_triggered := false      # killed the player already (fires once)
 var _defeat_awaiting_city := false  # chose Yes, waiting to land in the city
 var _defeat_meseta_before := 0
 
+var _commitment_probe := false      # #377/#428 action-commitment probe
+var _commitment_triggered := false  # ran the probe already (fires once)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -279,6 +287,9 @@ func _ready() -> void:
 	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
 	if _defeat_probe:
 		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
+	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
+	if _commitment_probe:
+		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -734,15 +745,7 @@ func _drive_scene(path: String) -> void:
 	if path == INPUT_SELECT:
 		_after(STEP_DELAY, _pick_keyboard)
 	elif path == TITLE:
-		if _boot_returning_to_title:
-			# Boot phase ran "Return to Title" — DONE here, not at the office.
-			# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
-			print("[sanity] checkpoint: returned to title (boot phase complete)")
-			print("[sanity] DONE ok")
-			_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
-		else:
-			print("[sanity] checkpoint: title")
-			_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
+		_drive_title_scene()
 	elif path == CHAR_SELECT:
 		print("[sanity] checkpoint: character_select")
 		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
@@ -778,6 +781,26 @@ func _drive_scene(path: String) -> void:
 		print("[sanity] checkpoint: valley_field entered")
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
 		# same frame this scene-change does, so don't drive anything here.
+
+
+func _drive_title_scene() -> void:
+	if _boot_returning_to_title:
+		# Boot phase ran "Return to Title" — DONE here, not at the office.
+		# The mp4 ends with the title screen visible for a beat (QUIT_GRACE).
+		print("[sanity] checkpoint: returned to title (boot phase complete)")
+		# #425: title.gd::_ready already ran SessionManager.reset_all_state(),
+		# the production chokepoint that must wipe the city-hub position cache.
+		# Assert it here so a regression (reset_all_state no longer clearing
+		# CityState) is caught by the probe rather than only the unit test.
+		if CityState != null and CityState.get_player_position() == null:
+			print("[sanity] checkpoint: city-state cleared on title-return")
+		else:
+			print("[sanity] FAIL: CityState not cleared on title-return — stale city position survives reset_all_state (#425)")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+	else:
+		print("[sanity] checkpoint: title")
+		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
 
 
 func _drive_overlay(path: String) -> void:
@@ -940,17 +963,20 @@ func _drive_office_intro() -> void:
 
 
 ## Match the "Return to Title" sequence: SaveManager.save_game() →
-## CityState.clear() → goto_scene(TITLE). (The old city_menu drove this before
-## the PSO start-menu renderer replaced it; it now lives in archive/.) The TITLE
-## handler above recognises _boot_returning_to_title and DONEs there, so the
+## goto_scene(TITLE). The title scene's _ready calls SessionManager.reset_all_state(),
+## which is the SINGLE production chokepoint that wipes session + CityState (#425).
+## This autopilot path used to call CityState.clear() itself here, which masked the
+## production gap — issue #425 was exactly that the real return-to-title path never
+## cleared the city-hub position cache. We now drive ONLY the production reset (no
+## manual clear) and assert CityState is empty once the title scene has loaded, so a
+## regression where reset_all_state stops clearing CityState would fail this probe.
+## The TITLE handler above recognises _boot_returning_to_title and DONEs there, so the
 ## mp4 ends on the title screen instead of a hard cut from the office.
 func _save_and_return_to_title() -> void:
 	_boot_returning_to_title = true
 	if SaveManager != null and SaveManager.has_method("save_game"):
 		SaveManager.save_game()
 		print("[sanity] save_game()")
-	if CityState != null and CityState.has_method("clear"):
-		CityState.clear()
 	SceneManager.goto_scene(TITLE)
 
 
@@ -1923,6 +1949,13 @@ func _drive_city_counter() -> void:
 		_warp_pad_interacted = true
 		print("[sanity] counter: teleport to warp pad")
 		_teleport_player(WARP_PAD_POS)
+		# Targeted probe for issue #426 (Start Menu must capture the confirm press
+		# so it can't trigger the WarpTeleporter underneath). Gated behind
+		# PSZ_AUTOPILOT_MENU_GATE=1 so the standard regression matrix is unaffected
+		# — when unset, the warp-pad interact is byte-for-byte the old behavior.
+		if OS.get_environment("PSZ_AUTOPILOT_MENU_GATE") == "1":
+			_after(0.8, _probe_start_menu_blocks_interact)
+			return
 		_after(0.8, func() -> void: _press_action("interact"))
 
 
@@ -1962,6 +1995,40 @@ func _drive_guild_counter() -> void:
 
 # City warp is no longer a separate scene — the WarpTeleporter pad lives in the
 # counter (merged map) and is driven in-place by _drive_city_counter (#city-merge).
+
+
+## Issue #426 runtime probe (pack-gated — needs the city scene + the pack-only
+## WarpPad mesh, so it runs only on a pack-mounted build, not repo-only CI).
+## With the player standing on the WarpTeleporter pad: open the Start Menu,
+## press interact, and assert NO warp overlay pushed (the modal consumed the
+## press); then close the menu and confirm interact opens the overlay on the
+## next frame. Emits `[sanity] checkpoint: start-menu-blocks-interact` on pass.
+func _probe_start_menu_blocks_interact() -> void:
+	if PsoStartMenu == null:
+		_fail_and_quit("menu-gate probe — PsoStartMenu autoload missing")
+		return
+	print("[sanity] menu-gate: open Start Menu, then press interact (must be blocked)")
+	PsoStartMenu.open()
+	_after(0.4, func() -> void:
+		_press_action("interact")
+		_after(0.4, _probe_menu_blocked_check))
+
+
+func _probe_menu_blocked_check() -> void:
+	var stack_size := 0
+	if SceneManager != null:
+		stack_size = SceneManager._scene_stack.size()
+	var top := ""
+	if stack_size > 0:
+		top = String(SceneManager._scene_stack[stack_size - 1])
+	if top == WARP_TELEPORTER:
+		_fail_and_quit("menu-gate — interact opened the warp overlay while the Start Menu was open (#426)")
+		return
+	print("[sanity] checkpoint: start-menu-blocks-interact")
+	# Close the menu and confirm interact works again on the next frame (no
+	# buffered confirm leak — the press below is a fresh one).
+	PsoStartMenu.close()
+	_after(0.4, func() -> void: _press_action("interact"))
 
 
 # ── Field: per-cell driver ─────────────────────────────────────
@@ -2030,6 +2097,89 @@ func _finish_defeat_probe() -> void:
 	_after(QUIT_GRACE, func() -> void: get_tree().quit(0 if ok else 1))
 
 
+# ── Action-commitment probe (#377/#428, spec /states/player-state) ─────────
+## PSZ_AUTOPILOT_COMMITMENT=1: in the first field cell, assert commitment
+## end-to-end — a real dodge press mid-swing must not flip ATTACKING, an
+## attack input mid-roll must not flip DODGING, and the attack hitbox must be
+## off once the swing ends. Runs INSTEAD of the cell plan (defeat-probe
+## pattern) and ends the run with DONE ok / FAIL.
+
+func _commitment_fail(msg: String) -> void:
+	print("[sanity] FAIL: commitment probe — %s" % msg)
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+
+
+## Poll until the player leaves `state` (or fail after ~8s game time).
+func _commitment_wait_leave(p, state: int, next: Callable, attempt: int = 0) -> void:
+	if not is_instance_valid(p):
+		_commitment_fail("player freed mid-probe")
+		return
+	if p.get_state() != state:
+		next.call()
+		return
+	if attempt >= 40:
+		_commitment_fail("state %d never ended (stuck?)" % state)
+		return
+	_after(0.2, func() -> void: _commitment_wait_leave(p, state, next, attempt + 1))
+
+
+func _run_commitment_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_commitment_probe(attempt + 1))
+		else:
+			_commitment_fail("no player in field")
+		return
+	var p = players[0]
+	var states: Dictionary = p.PlayerState
+	print("[sanity] checkpoint: commitment probe — starting attack, pressing dodge mid-swing")
+	p._start_attack()
+	if p.get_state() != states["ATTACKING"]:
+		_commitment_fail("_start_attack did not enter ATTACKING")
+		return
+	# Real input press mid-swing — full _unhandled_input → arbitration path.
+	_after(0.15, func() -> void:
+		_press_action("dodge")
+		_after(0.1, func() -> void: _commitment_attack_held(p, states)))
+
+
+func _commitment_attack_held(p, states: Dictionary) -> void:
+	if p.get_state() != states["ATTACKING"]:
+		_commitment_fail("dodge press canceled the swing (#377)")
+		return
+	print("[sanity] checkpoint: commitment probe — swing held through dodge press")
+	_commitment_wait_leave(p, states["ATTACKING"], func() -> void:
+		# Swing over by any path — the hitbox must be off, targets cleared (#428).
+		var hb = p.attack_hitbox
+		if hb != null and (hb.monitoring or hb._hit_targets.size() > 0):
+			_commitment_fail("attack hitbox outlived the swing (#428)")
+			return
+		print("[sanity] checkpoint: commitment probe — hitbox off after swing (#428)")
+		_commitment_dodge_phase(p, states))
+
+
+func _commitment_dodge_phase(p, states: Dictionary) -> void:
+	print("[sanity] checkpoint: commitment probe — starting dodge, pressing attack mid-roll")
+	p._start_dodge()
+	if p.get_state() != states["DODGING"]:
+		_commitment_fail("_start_dodge did not enter DODGING")
+		return
+	_after(0.1, func() -> void:
+		# Both attack entry points, called directly so the assert doesn't
+		# depend on the palette layout of the staged save.
+		p._start_attack()
+		p._start_strong_attack()
+		_after(0.05, func() -> void:
+			if p.get_state() != states["DODGING"]:
+				_commitment_fail("attack press canceled the roll (#377)")
+				return
+			print("[sanity] checkpoint: commitment probe — roll held through attack press")
+			_commitment_wait_leave(p, states["DODGING"], func() -> void:
+				print("[sanity] DONE ok")
+				_after(QUIT_GRACE, func() -> void: get_tree().quit(0)))))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
 	# Defeat probe: in the first field cell, kill the player instead of running
@@ -2038,6 +2188,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _defeat_probe and not _defeat_triggered:
 		_defeat_triggered = true
 		_run_defeat_probe()
+		return
+	# Commitment probe (#377/#428): in the first field cell, drive a real
+	# swing + dodge press (and the mirror case) instead of the cell plan.
+	if _commitment_probe and not _commitment_triggered:
+		_commitment_triggered = true
+		_run_commitment_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
