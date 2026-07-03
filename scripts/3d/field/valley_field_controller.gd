@@ -513,6 +513,13 @@ func _ready() -> void:
 	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
+	# Enemy markers (#422) — enemies were spawned before the minimap existed
+	# (same ordering as the gate-lock sync below), so register the roster now.
+	# Wave 2+ spawns register directly from CellObjectSpawner._spawn_enemy.
+	for room_enemy in _room_enemies:
+		if is_instance_valid(room_enemy):
+			_room_minimap.track_enemy(room_enemy)
+
 	# Key HUD (drawn below minimap)
 	_setup_key_hud(cells)
 
@@ -604,6 +611,7 @@ func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
+		_room_minimap.update_enemies(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
 
