@@ -2267,22 +2267,48 @@ func _combo_probe_run(p) -> void:
 		return
 	var just_mid: float = (float(t.just_start) + float(t.just_end)) / 2.0
 
-	# Case 1: miss-early press queues nothing (unbuffered no-op).
+	# Case 1: miss-early press FUMBLES the swing — nothing queued, later
+	# presses inside the accept window are locked out, and the swing ending
+	# un-queued breaks the combo: mashing defeats itself (Rozalin's #459
+	# playtest fix).
 	print("[sanity] checkpoint: combo probe — swing 1, miss-early press")
 	p._start_attack()
-	p._start_attack()  # frac ≈ 0 — miss-early
-	if p._queued_combo != p.ComboQueue.NONE:
-		print("[sanity] FAIL: combo probe — miss-early press queued a chain (#155)")
+	p._start_attack()  # frac ≈ 0 — miss-early → fumble
+	if p._queued_combo != p.ComboQueue.NONE or not p._combo_fumbled:
+		print("[sanity] FAIL: combo probe — miss-early press did not fumble the swing (#155)")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — miss-early was a no-op")
+	print("[sanity] checkpoint: combo probe — miss-early fumbled the swing")
+	var in_fwindow := await _combo_await(func() -> bool:
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+	if not in_fwindow or p.get_state() != states["ATTACKING"]:
+		print("[sanity] FAIL: combo probe — fumbled swing ended before the accept window was reached")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	p._start_attack()  # inside the window, but fumbled — must be ignored
+	if p._queued_combo != p.ComboQueue.NONE:
+		print("[sanity] FAIL: combo probe — press after a fumble queued a chain (mash lockout broken)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	var fumble_broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
+	if not fumble_broke or p.combo_state != 0:
+		print("[sanity] FAIL: combo probe — fumbled swing did not break the combo to IDLE")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — fumbled swing broke to IDLE")
+	_combo_probe_chain_phase(p, states, just_mid)
 
-	# Case 2: press inside the just window → queues JUST, fires step 2 with
-	# the just flag at swing end.
+
+## Clean-combo half of the probe: a just-window press queues JUST, fires
+## step 2 with the just flag at swing end, and the un-queued swing 2 breaks
+## back to IDLE.
+func _combo_probe_chain_phase(p, states: Dictionary, just_mid: float) -> void:
+	print("[sanity] checkpoint: combo probe — swing 1 (clean), just-window press")
+	p._start_attack()
 	var in_window := await _combo_await(func() -> bool:
 		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
 	if not in_window or p.get_state() != states["ATTACKING"]:
-		print("[sanity] FAIL: combo probe — swing ended before the just window was reached")
+		print("[sanity] FAIL: combo probe — clean swing ended before the just window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	p._start_attack()
