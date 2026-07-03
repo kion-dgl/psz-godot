@@ -86,12 +86,25 @@ const fsm = `stateDiagram-v2
   <h2>Per-model SFX</h2>
   <p><code>EnemyBase.ENEMY_SFX</code> is a map keyed by <code>model_id</code>, each entry naming a <code>damage</code> / <code>death</code> / <code>attack</code> / <code>idle</code> sound. On <code>_ready</code> the enemy picks up the entry for its model; a missing key resolves to silence for that enemy.</p>
 
+  <h2>Minimap markers</h2>
+  <p>The field minimap tracks live enemies (issue #422). Each <strong>alive</strong> enemy in the currently loaded cell <strong>MUST</strong> appear as a filled <strong>orange dot</strong> at its minimap-projected position, visually distinct from the player's directional arrow. Scoping mirrors the player marker exactly: loaded cell only, no marker cap (the count is simply the alive-enemy count in the cell), and off-cell enemies <strong>MUST NOT</strong> get a marker.</p>
+  <table>
+    <tr><th>Enemy event</th><th>Minimap marker behavior (MUST)</th></tr>
+    <tr><td>Normal enemy present in loaded cell</td><td>a filled orange dot at its minimap-projected position</td></tr>
+    <tr><td><strong>Boss</strong> (<code>EnemyData.is_boss</code>) present in loaded cell</td><td>a filled orange dot <strong>≈8× the area</strong> of a normal-enemy dot</td></tr>
+    <tr><td>Enemy moves</td><td>the marker position updates to follow it</td></tr>
+    <tr><td>Enemy dies</td><td>the marker is removed</td></tr>
+    <tr><td>Enemy not in the currently loaded cell</td><td>no marker</td></tr>
+  </table>
+  <p>The marker set <strong>MUST</strong> stay in sync with the live roster via the death signals (<code>died</code> / <code>defeated</code>) — no stale dots after a kill.</p>
+
   <h2>Implemented by</h2>
   <ul>
     <li><code>scripts/autoloads/enemy_registry.gd</code> (EnemyRegistry) — loads every <code>data/enemies/*.tres</code> <code>EnemyData</code> at boot and serves the roster keyed by <code>id</code>.</li>
     <li><code>scripts/autoloads/enemy_spawner.gd</code> (EnemySpawner) — <code>generate_wave()</code> picks enemies by area/difficulty pool and rolls per-tier (common/uncommon/rare → normal/elite) stat instances.</li>
     <li><code>scripts/autoloads/combat_manager.gd</code> (CombatManager) — attack/damage resolution, the element-weakness matrix, and the status-effect table (<code>STATUS_EFFECTS</code>).</li>
     <li><code>scripts/3d/enemies/enemy_base.gd</code> (EnemyBase) — the per-enemy node: the <code>EnemyState</code> AI state machine, animation, status application, and per-model SFX.</li>
+    <li><code>scripts/3d/field/room_minimap.gd</code> (RoomMinimap) — the live enemy dot layer: <code>track_enemy</code> / death-signal untrack, per-frame <code>update_enemies</code> projection, boss-sized dots.</li>
   </ul>
 
   <p><a href="/states">← States</a></p>
