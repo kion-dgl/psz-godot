@@ -38,7 +38,12 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
-const COUNTER_NPC_POS := Vector3(-7.86, -9.0, 113.0)     # counter front, in QuestCounterNPC's box + closer than StorageNPC (merged map, floor≈-10.67)
+# QuestCounterNPC sits at (-7.86, -10.67, 111.39) in the merged counter map
+# (#449 — city_counter_controller._add_interactables), interaction box 3.6.
+# Stand just in front of it. The #449 autopilot update fixed WARP_PAD_POS and
+# COUNTER_TO_OFFICE_POS but missed this constant (old-scene coords), which
+# hung every sanity run at "press interact" with nothing in range.
+const COUNTER_NPC_POS := Vector3(-7.86, -9.0, 110.0)     # inside QuestCounterNPC range (merged map)
 const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
 # Warp teleporter merged into the counter (#city-merge): interact in-place, no
 # counter→warp scene transition.
