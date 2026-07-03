@@ -62,12 +62,7 @@ func goto_scene(scene_path: String, data: Dictionary = {}) -> void:
 	_overlay_stack.clear()
 	_scene_stack.clear()
 
-	# Dialog boxes and PsoStartMenu push GameState.modal_stack on open and pop
-	# it on _close(). When a scene transition frees them mid-dialog, _close()
-	# never runs and the stack sticks non-zero, blocking gameplay input (palette,
-	# interact, dodge) in the next scene. Reset here so the new scene starts clean.
-	GameState.modal_stack = 0
-	GameState.is_pause_menu_open = false
+	_reset_modals_for_scene_change()
 	get_tree().paused = false
 
 	# Re-enable base scene if it was disabled
@@ -76,6 +71,21 @@ func goto_scene(scene_path: String, data: Dictionary = {}) -> void:
 		base.process_mode = Node.PROCESS_MODE_INHERIT
 
 	await _fade_to_scene(scene_path)
+
+
+## Reset modal state for a full scene change. Per-scene dialog boxes push
+## GameState.modal_stack on open and pop it on _close(); when a transition
+## frees them mid-dialog, _close() never runs and the stack sticks non-zero,
+## blocking gameplay input in the next scene — so zero it. But PsoStartMenu is
+## an AUTOLOAD that survives the change with its modal live: blindly zeroing
+## it left the menu open with no block, so one confirm press fired both the
+## menu and a world interactable in the new area (#426 carried-over edge case,
+## spec /states/start-menu invariants). Re-assert the surviving menu's modal.
+func _reset_modals_for_scene_change() -> void:
+	GameState.modal_stack = 0
+	GameState.is_pause_menu_open = false
+	if PsoStartMenu != null and PsoStartMenu.is_open():
+		GameState.push_modal()
 
 
 ## Push an overlay scene on top of the current scene (no scene replacement)
