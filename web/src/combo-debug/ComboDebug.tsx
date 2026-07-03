@@ -241,6 +241,8 @@ interface Sim {
   ghostFade: number;            // seconds left on the ghost arrow
   ringFlash: { color: THREE.Color; ttl: number } | null;
   markers: PressMarker[];       // presses this combo (for the timeline)
+  stepTypes: AttackType[];      // how each step of this combo was entered
+  stepWindups: number[];        // wind-up seconds actually used per step
   keysDown: Set<string>;
   comboCount: number;           // completed full combos (session stat)
   missCount: number;
@@ -253,7 +255,7 @@ function freshSim(): Sim {
     windowOpen: false, windowOpened: false, windowTimer: 0,
     yaw: Math.PI, displayYaw: Math.PI, desiredYaw: null,
     ghostYaw: null, ghostFade: 0, ringFlash: null,
-    markers: [], keysDown: new Set(),
+    markers: [], stepTypes: [], stepWindups: [], keysDown: new Set(),
     comboCount: 0, missCount: 0,
   };
 }
@@ -319,6 +321,7 @@ export default function ComboDebug() {
     phase: 'idle' as Phase, step: 0, elapsed: 0, clipLen: 0,
     windowOpen: false, windowT: 0, yawDeg: 180, desiredDeg: null as number | null,
     markers: [] as PressMarker[], attackType: 'normal' as AttackType,
+    stepTypes: [] as AttackType[], stepWindups: [] as number[],
     combos: 0, misses: 0,
   });
   const [clipLens, setClipLens] = useState<number[]>([]);
@@ -460,6 +463,8 @@ export default function ComboDebug() {
     sim.step = step;
     sim.attackType = type;
     const windup = type === 'strong' ? t.strongWindup : type === 'special' ? t.specialWindup : 0;
+    sim.stepTypes[step - 1] = type;
+    sim.stepWindups[step - 1] = windup;
     if (windup > 0.001) {
       sim.phase = 'windup';
       sim.elapsed = 0;
@@ -479,6 +484,8 @@ export default function ComboDebug() {
 
     if (sim.phase === 'idle') {
       sim.markers = [];
+      sim.stepTypes = [];
+      sim.stepWindups = [];
       applyTurn(1);
       beginStep(1, type);
       ringFlash(type === 'normal' ? 0x33ff66 : type === 'strong' ? 0xffcc33 : 0xcc88ff);
@@ -735,6 +742,7 @@ export default function ComboDebug() {
         windowOpen: sim.windowOpen, windowT: sim.windowTimer,
         yawDeg: rad2deg(sim.yaw), desiredDeg: sim.desiredYaw === null ? null : rad2deg(sim.desiredYaw),
         markers: sim.markers.slice(), attackType: sim.attackType,
+        stepTypes: sim.stepTypes.slice(), stepWindups: sim.stepWindups.slice(),
         combos: sim.comboCount, misses: sim.missCount,
       });
     };
@@ -919,35 +927,78 @@ export default function ComboDebug() {
     const isLast = stepNum >= tuning.comboSteps;
     const winStart = openAt;
     const winEnd = openAt + tuning.windowDuration; // may overflow the clip
-    const totalW = Math.max(len, isLast ? len : winEnd) * PX_PER_SEC;
-    const active = hud.step === stepNum && hud.phase === 'swing';
+    // Wind-up lead-in: every bar reserves room for the largest configured
+    // wind-up so the swing-start (t=0) lines align across steps. The zone
+    // fills orange/purple with the wind-up actually used when this step was
+    // entered as strong/special; a normal entry leaves it empty.
+    const leadSec = Math.max(tuning.strongWindup, tuning.specialWindup);
+    const leadW = leadSec * PX_PER_SEC;
+    const swingW = Math.max(len, isLast ? len : winEnd) * PX_PER_SEC;
+    const stepType = hud.stepTypes[stepNum - 1];
+    const usedWindup = hud.stepWindups[stepNum - 1] ?? 0;
+    const hasWindup = (stepType === 'strong' || stepType === 'special') && usedWindup > 0;
+    const activeSwing = hud.step === stepNum && hud.phase === 'swing';
+    const activeWindup = hud.step === stepNum && hud.phase === 'windup';
+    const active = activeSwing || activeWindup;
     const markers = hud.markers.filter((m) => m.step === stepNum);
+    // During wind-up the cursor counts down through the lead-in toward the
+    // swing start; during the swing it advances from the swing start.
+    const cursorX = activeWindup
+      ? leadW - Math.max(0, hud.clipLen - hud.elapsed) * PX_PER_SEC
+      : leadW + Math.min(hud.elapsed, Math.max(len, winEnd)) * PX_PER_SEC;
     return (
-      <div key={stepNum} style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: stepNum > tuning.comboSteps ? 0.25 : 1 }}>
+      <div key={stepNum} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ width: 66, fontSize: 11, color: active ? '#fff' : '#888', fontWeight: active ? 'bold' : 'normal' }}>
           atk{stepNum} <span style={{ color: '#666' }}>{len.toFixed(2)}s</span>
         </span>
-        <div style={{ position: 'relative', height: 22, width: totalW, background: '#1a1a2e', borderRadius: 3, overflow: 'hidden', border: active ? '1px solid #6b8afd' : '1px solid #26263e' }}>
+        <div style={{ position: 'relative', height: 22, width: leadW + swingW, background: '#1a1a2e', borderRadius: 3, overflow: 'hidden', border: active ? '1px solid #6b8afd' : '1px solid #26263e' }}>
+          {/* wind-up lead-in zone (room for the largest configured wind-up) */}
+          {leadW > 0 && (
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: leadW, background: '#141420' }}>
+              {leadW > 52 && !hasWindup && (
+                <span style={{ position: 'absolute', right: 4, top: 5, fontSize: 8, color: '#445', letterSpacing: 0.5 }}>WIND-UP</span>
+              )}
+            </div>
+          )}
+          {/* wind-up actually used entering this step (right-aligned at swing start) */}
+          {hasWindup && (
+            <div style={{
+              position: 'absolute', left: leadW - usedWindup * PX_PER_SEC, top: 0, bottom: 0,
+              width: usedWindup * PX_PER_SEC,
+              background: stepType === 'strong' ? 'rgba(255,204,68,0.4)' : 'rgba(204,136,255,0.4)',
+              borderLeft: `1px solid ${stepType === 'strong' ? '#fc4' : '#c8f'}`,
+            }}>
+              {usedWindup * PX_PER_SEC > 44 && (
+                <span style={{ position: 'absolute', right: 4, top: 5, fontSize: 8, color: stepType === 'strong' ? '#fc4' : '#c8f', letterSpacing: 0.5 }}>
+                  {usedWindup.toFixed(2)}s
+                </span>
+              )}
+            </div>
+          )}
           {/* clip body */}
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: len * PX_PER_SEC, background: '#33334f' }} />
+          <div style={{ position: 'absolute', left: leadW, top: 0, bottom: 0, width: len * PX_PER_SEC, background: '#33334f' }} />
+          {/* swing start (t=0) line */}
+          {leadW > 0 && (
+            <div style={{ position: 'absolute', left: leadW - 1, top: 0, bottom: 0, width: 1, background: '#778' }} />
+          )}
           {/* chain window (green) — absent on the last step */}
           {!isLast && (
             <div style={{
-              position: 'absolute', left: winStart * PX_PER_SEC, top: 0, bottom: 0,
+              position: 'absolute', left: leadW + winStart * PX_PER_SEC, top: 0, bottom: 0,
               width: (winEnd - winStart) * PX_PER_SEC,
               background: 'rgba(60,220,110,0.45)', borderLeft: '1px solid #3c6',
             }} />
           )}
           {/* clip end line */}
-          <div style={{ position: 'absolute', left: len * PX_PER_SEC - 1, top: 0, bottom: 0, width: 1, background: '#667' }} />
+          <div style={{ position: 'absolute', left: leadW + len * PX_PER_SEC - 1, top: 0, bottom: 0, width: 1, background: '#667' }} />
           {/* live cursor */}
           {active && (
-            <div style={{ position: 'absolute', left: Math.min(hud.elapsed, Math.max(len, winEnd)) * PX_PER_SEC - 1, top: 0, bottom: 0, width: 2, background: '#fff' }} />
+            <div style={{ position: 'absolute', left: cursorX - 1, top: 0, bottom: 0, width: 2, background: '#fff' }} />
           )}
           {/* press markers */}
           {markers.map((m, i) => (
             <div key={i} style={{
-              position: 'absolute', left: m.t * PX_PER_SEC - 1, top: 2, bottom: 2, width: 2,
+              position: 'absolute', left: leadW + m.t * PX_PER_SEC - 1, top: 2, bottom: 2, width: 2,
               background: m.ok ? '#4f4' : '#f66',
             }} />
           ))}
@@ -1021,7 +1072,8 @@ export default function ComboDebug() {
           <div style={{ background: '#2d2d44', borderRadius: 8, padding: 10, overflowX: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: '#6b8afd', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Swing timeline — green = chain window, white = cursor, ticks = your presses
+                Swing timeline — <span style={{ color: '#fc4' }}>orange</span>/<span style={{ color: '#c8f' }}>purple</span> lead-in = strong/special wind-up,{' '}
+                <span style={{ color: '#3c6' }}>green</span> = chain window, white = cursor, ticks = your presses
               </span>
               {windup > 0 && hud.phase === 'windup' && (
                 <span style={{ fontSize: 11, color: '#fc4' }}>
