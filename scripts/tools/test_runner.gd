@@ -35,6 +35,9 @@ func _run_tests_combat() -> void:
 	test_combo_three_tier()
 	test_combo_chain_lifecycle()
 	test_combo_miss_early_fumble()
+	test_cone_targeting()
+	test_damaging_frame()
+	test_target_info_panel()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -5313,6 +5316,95 @@ func test_combo_miss_early_fumble() -> void:
 	# test_combo_chain_lifecycle's interrupt block.)
 
 	pl.free()
+	print("")
+
+
+# The hit cone (spec /mechanics/targeting): PSO's check_enemy_is_targetable
+# flattened to XZ — apex pulled back by v_dist, target radius extends reach,
+# half-angle test against the facing. Pure math, tested directly.
+func test_cone_targeting() -> void:
+	print("── Hit cone (spec /mechanics/targeting) ──")
+	var o := Vector3.ZERO
+	# yaw 0 faces +Z. Saber-ish cone: h 2.4, v 0.5, half-angle 30°.
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 2.6), 0.5),
+		"enemy straight ahead inside reach passes")
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.5), 0.5),
+		"enemy past reach fails")
+	# Reach is measured from the pulled-back apex: reach = h + v + radius vs
+	# dist = z + v — so at z = 3.2 a 0.5-radius target is out (3.7 > 3.4)
+	# but a 0.9-radius one is in (3.7 ≤ 3.8).
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.2), 0.5),
+		"0.5-radius target at 3.2 m is out of reach")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.2), 0.9),
+		"a bigger hitbox radius extends the reach (PSO)")
+	var side := Vector3(2.0, 0, 2.0)  # 45° off the facing
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, side, 0.5),
+		"45° off a 30° half-angle cone fails")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 60.0, side, 0.5),
+		"45° off a 60° half-angle cone passes")
+	# Apex pull-back widens point-blank coverage: a flank target (90° off)
+	# only passes when v_dist moves the cone's apex behind the player.
+	var flank := Vector3(0.6, 0, 0.0)
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.0, 45.0, flank, 0.3),
+		"flank target fails with no apex pull-back")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 1.0, 45.0, flank, 0.3),
+		"apex pull-back brings the flank target into the cone")
+	var d_near: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 1.0), 0.5)
+	var d_far: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 2.5), 0.5)
+	assert_true(d_near >= 0.0 and d_far > d_near, "distance_in_cone orders nearest-first")
+	assert_true(not ConeTargeting.in_cone(o, PI, 2.4, 0.5, 30.0, Vector3(0, 0, 2.6), 0.5),
+		"facing away fails the cone")
+	print("")
+
+
+# Damaging frame (spec /mechanics/targeting): hits resolve exactly once, when
+# the swing crosses the step's damaging_frac — never before. Also pins the
+# per-weapon hit-cone data every config entry must carry.
+func test_damaging_frame() -> void:
+	print("── Damaging frame + hit-cone data ──")
+	var bad := 0
+	for wt in CombatManager.WEAPON_TYPE_CONFIGS:
+		var cfg: Dictionary = CombatManager.WEAPON_TYPE_CONFIGS[wt]
+		if not (cfg.has("hit_h_dist") and cfg.has("hit_v_dist") and cfg.has("hit_h_angle_deg") and cfg.has("damaging_frac")):
+			bad += 1
+			continue
+		var fracs: Array = cfg.get("damaging_frac")
+		if fracs.size() != int(cfg.get("combo_steps", 3)):
+			bad += 1
+			continue
+		for f in fracs:
+			if float(f) <= 0.0 or float(f) >= 1.0:
+				bad += 1
+				break
+	assert_eq(bad, 0, "every weapon type carries a hit cone + per-step damaging_frac in (0,1)")
+
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = _combo_swing_player(PlayerScript, 1, 0.0)
+	pl.set("_attack_hit_done", false)
+	pl._handle_attack_state(0.2)  # elapsed 0.2 < saber damaging_frac[0] 0.40
+	assert_true(not bool(pl.get("_attack_hit_done")), "no hit before the damaging frame")
+	pl._handle_attack_state(0.25)  # elapsed 0.45 ≥ 0.40 → resolves (off-tree: empty cone)
+	assert_true(bool(pl.get("_attack_hit_done")), "hit resolves once the damaging frame is crossed")
+	pl._play_and_track_attack("no_such_anim")
+	assert_true(not bool(pl.get("_attack_hit_done")), "a new swing starts with its damaging frame pending")
+	pl.free()
+	print("")
+
+
+# Target-info HUD panel (spec /mechanics/targeting): renders NOTHING without
+# a primary target. (The quick-menu priority is enforced by field_hud._process
+# passing {} while the menu is open — same code path as "no target".)
+func test_target_info_panel() -> void:
+	print("── Target-info HUD panel ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	var panel = FieldHud._TargetInfoPanel.new()
+	panel.update_info({"kind": "enemy", "name": "Wolf", "hp": 10, "max_hp": 20})
+	assert_true(panel.visible, "enemy target → panel renders")
+	panel.update_info({})
+	assert_true(not panel.visible, "no target (or quick menu open) → panel does not render")
+	panel.update_info({"kind": "item", "name": "Monomate"})
+	assert_true(panel.visible, "ground-item target → panel renders")
+	panel.free()
 	print("")
 
 

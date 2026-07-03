@@ -161,6 +161,8 @@ var _combo_fumbled: bool = false  # Miss-early press locked out this swing's cha
 var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
+var _attack_hit_done: bool = false  # This swing's damaging frame already resolved (spec /mechanics/targeting)
+var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
 # Bright green — just-attack tier. Deliberately a brighter shade of the normal
 # window's green (0.2, 1.0, 0.4) rather than a third hue: the window is one
 # thing with a hot start, not two mechanics (kion's call on the #471 web tool).
@@ -1973,6 +1975,19 @@ func _handle_attack_state(delta: float) -> void:
 	# Track animation elapsed for the fraction-based combo windows (#155)
 	_attack_anim_elapsed += delta
 
+	# Damaging frame (spec /mechanics/targeting): the swing's hits resolve
+	# exactly once, when the animation crosses the step's damaging_frac.
+	# Before it the swing has landed nothing (a damage interrupt cancels the
+	# offense entirely); after it, enemies entering the cone later are not
+	# hit by this swing. combo_state == 0 means a technique cast — techniques
+	# spawn their own effects and never go through the weapon hit.
+	if not _attack_hit_done and combo_state > 0 and _attack_anim_length > 0:
+		var dmg_fracs: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("damaging_frac", [0.4, 0.4, 0.45])
+		var frac_idx: int = clampi(combo_state - 1, 0, dmg_fracs.size() - 1)
+		if _attack_frac() >= float(dmg_fracs[frac_idx]):
+			_attack_hit_done = true
+			_execute_attack_hit()
+
 	# Step-end safety net, generalized to EVERY step (was final-step-only —
 	# Rozalin's mechgun root bug: a looping attack animation never emits
 	# animation_finished). Under the queued model each step must end at its
@@ -2074,7 +2089,9 @@ func _play_and_track_attack(anim_name: String) -> void:
 		_attack_anim_length = animation_player.get_animation(anim_name).length
 	else:
 		_attack_anim_length = 0.5  # Fallback
-	_activate_attack_hitbox()
+	# Hits resolve at the step's damaging frame (_handle_attack_state), not
+	# at swing start — spec /mechanics/targeting.
+	_attack_hit_done = false
 	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
 	# Barehanded is discriminated here by the empty weapon_id (NOT by the weapon
 	# type, which falls back to 0 == SABER): map it to BAREHANDED_SFX (common46)
@@ -2499,7 +2516,12 @@ func _is_barehanded() -> bool:
 const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RIFLE, BAZOOKA
 
 
-func _activate_attack_hitbox() -> void:
+## Fired once per swing, at the damaging frame (spec /mechanics/targeting).
+## Ranged types launch their projectiles; melee hits the nearest max_targets
+## enemies in the weapon's hit cone — the same geometry targeting and the
+## reticles use, applied directly through each enemy's Hurtbox (the old
+## whole-swing Area3D box is retired for melee).
+func _execute_attack_hit() -> void:
 	var atk: Dictionary = _get_attack_damage()
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
@@ -2507,20 +2529,49 @@ func _activate_attack_hitbox() -> void:
 		_fire_projectile(atk)
 		return
 
-	if attack_hitbox:
-		attack_hitbox.damage = int(atk.get("damage", 10))
-		attack_hitbox.knockback = float(atk.get("knockback", 5.0))
-		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
-		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
-		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
-		# Special attacks carry weapon element for status procs
-		if _is_special_attack:
-			attack_hitbox.element = _current_attack_element
-			attack_hitbox.element_level = _current_attack_element_level
-		else:
-			attack_hitbox.element = ""
-			attack_hitbox.element_level = 0
-		attack_hitbox.activate()
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var in_cone: Array = _enemies_in_hit_cone(config)
+	var element: String = _current_attack_element if _is_special_attack else ""
+	var element_level: int = _current_attack_element_level if _is_special_attack else 0
+	for i in range(mini(int(atk.get("max_targets", 1)), in_cone.size())):
+		var enemy = in_cone[i]
+		var hb = enemy.get("hurtbox")
+		if hb == null or not is_instance_valid(hb):
+			continue
+		var knock_dir: Vector3 = enemy.global_position - global_position
+		knock_dir.y = 0
+		knock_dir = knock_dir.normalized()
+		# hits_per_step hits each, mirroring the retired Hitbox semantics
+		for _h in range(int(atk.get("hits", 1))):
+			hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level)
+
+
+## Alive enemies passing the weapon's hit cone, sorted nearest-first.
+## extra_dist/extra_angle let _update_combat_targets widen the scan for
+## equipped techniques without touching the weapon's own hit geometry.
+func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_angle: float = 0.0) -> Array:
+	if not is_inside_tree():
+		return []  # off-tree (unit tests) — no enemy group to scan
+	var h_dist: float = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
+	var v_dist: float = float(config.get("hit_v_dist", 0.5))
+	var half_angle: float = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
+	var found: Array = []
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var radius: float = 0.5
+		var ed = enemy.get("enemy_data")
+		if ed != null:
+			radius = float(ed.collision_radius)
+		var d: float = ConeTargeting.distance_in_cone(
+			global_position, player_rotation, h_dist, v_dist, half_angle,
+			enemy.global_position, radius)
+		if d >= 0.0:
+			found.append({"enemy": enemy, "dist": d})
+	found.sort_custom(func(a, b): return a.dist < b.dist)
+	return found.map(func(c): return c.enemy)
 
 
 func _fire_projectile(atk: Dictionary) -> void:
@@ -2623,21 +2674,27 @@ func _update_combat_targets() -> void:
 	var weapon_type: int = _get_equipped_weapon_type()
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	var max_targets: int = int(config.get("max_targets", 1))
-	var hitbox_size: Vector3 = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
-	var hitbox_offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
-	var weapon_range: float = hitbox_offset + hitbox_size.z * 0.5
-	var weapon_half_width: float = hitbox_size.x * 0.5 + 0.5
 
-	# Extend targeting to cover equipped techniques
+	# Extend the scan to cover equipped techniques: their box-ish reach maps
+	# onto the cone as extra distance + a widened half-angle. The weapon's
+	# own HIT geometry is untouched — _execute_attack_hit re-derives the cone
+	# without these extensions.
 	var tech_targeting: Dictionary = _get_technique_targeting()
-	var attack_range: float = maxf(weapon_range, float(tech_targeting.get("range", 0.0)))
-	var half_width: float = maxf(weapon_half_width, float(tech_targeting.get("half_width", 0.0)))
-	var has_zonde: bool = tech_targeting.get("has_zonde", false)
+	var tech_range: float = float(tech_targeting.get("range", 0.0))
+	var extra_angle: float = 0.0
+	if tech_range > 0.0:
+		extra_angle = rad_to_deg(atan2(float(tech_targeting.get("half_width", 0.0)), maxf(tech_range * 0.5, 0.001)))
+	if tech_targeting.get("has_zonde", false):
+		extra_angle = maxf(extra_angle, 25.0)
 
-	# Player's forward direction (model rotation)
-	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	# One geometry for targeting, reticles, HUD, and hits: the weapon's hit
+	# cone (spec /mechanics/targeting), sorted nearest-first.
+	var in_cone: Array = _enemies_in_hit_cone(config, tech_range, extra_angle)
 
-	# Debug: show targeting box attached to model
+	# Debug: approximate the cone as a translucent box attached to the model
+	var h_dist: float = maxf(float(config.get("hit_h_dist", 2.4)), tech_range)
+	var v_dist: float = float(config.get("hit_v_dist", 0.5))
+	var half_angle: float = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	if DebugConfig.show_hitboxes:
 		if not _debug_range_mesh:
 			_debug_range_mesh = MeshInstance3D.new()
@@ -2651,54 +2708,21 @@ func _update_combat_targets() -> void:
 			mat.no_depth_test = true
 			_debug_range_mesh.material_override = mat
 			model.add_child(_debug_range_mesh)
-		var box_depth: float = attack_range
-		_debug_range_mesh.scale = Vector3(half_width * 2.0, hitbox_size.y, box_depth)
-		_debug_range_mesh.position = Vector3(0, hitbox_size.y * 0.5 + 0.5, box_depth * 0.5)
+		var reach: float = h_dist + v_dist
+		_debug_range_mesh.scale = Vector3(2.0 * reach * sin(deg_to_rad(half_angle)), 1.0, reach)
+		_debug_range_mesh.position = Vector3(0, 1.0, reach * 0.5 - v_dist)
 		_debug_range_mesh.visible = true
 	elif _debug_range_mesh:
 		_debug_range_mesh.visible = false
 
-	# Find enemies in front of the player within range
-	var candidates: Array = []
-	var enemy_group := get_tree().get_nodes_in_group("enemies")
-	for enemy in enemy_group:
-		if not is_instance_valid(enemy):
-			continue
-		if not enemy.get("is_alive"):
-			continue
-		var to_enemy: Vector3 = enemy.global_position - global_position
-		to_enemy.y = 0
-
-		# Check distance along forward axis
-		var forward_dist: float = to_enemy.dot(forward)
-		if forward_dist < -0.5 or forward_dist > attack_range:
-			continue
-
-		# Check lateral distance (perpendicular to forward)
-		var right := Vector3(-forward.z, 0, forward.x)
-		var lateral_dist: float = absf(to_enemy.dot(right))
-
-		# For Zonde: cone widens with distance
-		var effective_width: float = half_width
-		if has_zonde and forward_dist > 0:
-			effective_width = maxf(half_width, forward_dist * 0.4)
-
-		if lateral_dist > effective_width:
-			continue
-
-		candidates.append({"enemy": enemy, "dist": forward_dist})
-
-	# Sort by distance
-	candidates.sort_custom(func(a, b): return a.dist < b.dist)
-
 	# Techniques can target more enemies than the weapon allows
 	var effective_max: int = max_targets
-	if float(tech_targeting.get("range", 0.0)) > 0:
+	if tech_range > 0:
 		effective_max = maxi(max_targets, 3)
 
 	# Show reticle on closest N enemies
-	for i in range(mini(effective_max, candidates.size())):
-		var enemy = candidates[i].enemy
+	for i in range(mini(effective_max, in_cone.size())):
+		var enemy = in_cone[i]
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
 		_targeted_enemies.append(enemy)
@@ -2707,15 +2731,15 @@ func _update_combat_targets() -> void:
 	if weapon_type == WeaponData.WeaponType.SLICER and not _targeted_enemies.is_empty():
 		var primary = _targeted_enemies[0]
 		var bounce_count := 0
-		for c in candidates:
+		for enemy in in_cone:
 			if bounce_count >= 3:
 				break
-			if c.enemy == primary or c.enemy in _targeted_enemies:
+			if enemy == primary or enemy in _targeted_enemies:
 				continue
-			var dist_to_primary: float = c.enemy.global_position.distance_to(primary.global_position)
-			if dist_to_primary <= 3.0 and c.enemy.has_method("show_reticle"):
-				c.enemy.show_reticle()
-				_targeted_enemies.append(c.enemy)
+			var dist_to_primary: float = enemy.global_position.distance_to(primary.global_position)
+			if dist_to_primary <= 3.0 and enemy.has_method("show_reticle"):
+				enemy.show_reticle()
+				_targeted_enemies.append(enemy)
 				bounce_count += 1
 
 	# Debug: color box based on targets found
@@ -2728,9 +2752,57 @@ func _update_combat_targets() -> void:
 
 	# Debug log every 2 seconds
 	if DebugConfig.show_hitboxes and Engine.get_process_frames() % 120 == 0:
-		print("[Target] enemies_in_group=%d fwd=(%.1f,%.1f) range=%.1f width=%.1f candidates=%d targets=%d" % [
-			enemy_group.size(), forward.x, forward.z, attack_range, half_width,
-			candidates.size(), _targeted_enemies.size()])
+		print("[Target] enemies_in_group=%d yaw=%.2f reach=%.1f angle=%.0f in_cone=%d targets=%d" % [
+			get_tree().get_nodes_in_group("enemies").size(), player_rotation,
+			h_dist + v_dist, half_angle, in_cone.size(), _targeted_enemies.size()])
+
+	_update_primary_target_info(in_cone, config)
+
+
+const ITEM_INFO_RANGE := 2.0  # items are HUD-primary only within pickup range
+
+
+## Maintains _primary_target_info for the target-info HUD (spec
+## /mechanics/targeting): the nearest enemy in the cone wins; a ground item
+## is primary only when NO enemy is targetable and the item sits inside the
+## cone within ITEM_INFO_RANGE. {} when there is nothing to show.
+func _update_primary_target_info(in_cone: Array, config: Dictionary) -> void:
+	if not is_inside_tree():
+		_primary_target_info = {}
+		return
+	if not in_cone.is_empty():
+		var enemy = in_cone[0]
+		var ed = enemy.get("enemy_data")
+		_primary_target_info = {
+			"kind": "enemy",
+			"name": str(ed.name) if ed != null else "Enemy",
+			"hp": int(enemy.get("current_hp")),
+			"max_hp": int(ed.hp_base) if ed != null else 0,
+		}
+		return
+	var v_dist: float = float(config.get("hit_v_dist", 0.5))
+	var half_angle: float = float(config.get("hit_h_angle_deg", 30.0))
+	var best = null
+	var best_d := INF
+	for drop in get_tree().get_nodes_in_group("drops"):
+		if not is_instance_valid(drop):
+			continue
+		if str(drop.get("element_state")) != "available":
+			continue
+		var flat: Vector3 = drop.global_position - global_position
+		flat.y = 0
+		if flat.length() > ITEM_INFO_RANGE:
+			continue
+		var d: float = ConeTargeting.distance_in_cone(
+			global_position, player_rotation, ITEM_INFO_RANGE, v_dist, half_angle,
+			drop.global_position, 0.3)
+		if d >= 0.0 and d < best_d:
+			best_d = d
+			best = drop
+	if best != null:
+		_primary_target_info = {"kind": "item", "name": str(best._get_display_name())}
+	else:
+		_primary_target_info = {}
 
 
 # Interaction System
