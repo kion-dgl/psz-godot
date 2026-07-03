@@ -6,13 +6,24 @@ extends Control
 ## Uses embedded metadata from SVG (data-scale, data-offset-x/y) for player
 ## position tracking, matching the web PreviewMinimap approach.
 
-const DISPLAY_SIZE := 120.0
-const PANEL_PAD := 5.0  # padding around map inside blue panel
-# PSZ palette — semi-transparent for single-screen
-const PANEL_BG := Color(0.66, 0.80, 0.91, 0.5)     # Pale icy blue, translucent
-const PANEL_BORDER := Color(0.48, 0.63, 0.75, 0.4)
-const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.06)
-const BG_COLOR := Color(0.08, 0.15, 0.23, 0.7)      # Dark map background
+# Frame sprite (map.png) — committed in-repo under assets/ui/, so it ships with
+# the binary rather than the asset pack (no pck republish to iterate on it). The
+# map content and key-card count are drawn on top at the pixel coordinates baked
+# into the sprite.
+const FRAME_TEX := preload("res://assets/ui/hud/map.png")
+const FRAME_W := 99.0
+const FRAME_H := 96.0
+const SCALE := 1.5  # upscale the 99x96 sprite so the HUD reads on a 1280x720 viewport
+# Map viewport inside the frame's dark square (sprite-pixel coordinates).
+const MAP_ORIGIN := Vector2(18, 15)
+const MAP_AREA := 64.0
+# Single-digit key-card count slot — right of the baked "keycard ×" glyphs.
+const KEY_DIGIT_POS := Vector2(76, 80)
+const KEY_DIGIT_SIZE := 8.0
+
+# Rendered size of the map area (sprite px × SCALE); feeds _svg_to_display.
+const DISPLAY_SIZE := MAP_AREA * SCALE
+
 const FLOOR_COLOR := Color(0.16, 0.16, 0.31)
 const BOUNDARY_COLOR := Color(1.0, 1.0, 1.0, 0.6)
 const PLAYER_COLOR := Color(0.0, 1.0, 0.0)
@@ -20,12 +31,11 @@ const GATE_OPEN := Color(0.27, 1.0, 0.27)
 const GATE_LOCKED := Color(1.0, 0.3, 0.3)
 const GATE_EXIT := Color(0.29, 0.62, 1.0)
 const GATE_WALL := Color(0.4, 0.4, 0.4)
-const KEY_LABEL_COLOR := Color(0.1, 0.1, 0.17, 0.8)
-const KEY_BG_ACTIVE := Color(0.8, 0.53, 0.27, 0.8)  # Orange for collected
-const KEY_BG_INACTIVE := Color(0.59, 0.71, 0.82, 0.3)
+const KEY_DIGIT_COLOR := Color(0.1, 0.1, 0.17)  # dark navy — reads on the light-blue frame
 # Enemy markers (#422, spec /states/enemies): filled orange dots, visually
 # distinct from the green player arrow. Bosses get ≈8× the AREA of a normal
-# dot (radius × sqrt(8)).
+# dot (radius × sqrt(8)). Radius is sized for the frame's 64px inner map
+# (96px rendered at SCALE) so dots stay legible without swallowing the arrow.
 const ENEMY_COLOR := Color(1.0, 0.55, 0.13)
 const ENEMY_DOT_RADIUS := 2.2
 const BOSS_DOT_AREA_RATIO := 8.0
@@ -46,9 +56,9 @@ var _has_player_tracking := false
 var _tracked_enemies: Array = []       # alive enemy Node3Ds in this cell
 var _enemy_markers: Dictionary = {}    # instance_id → {"pos": Vector2, "radius": float}
 
-# Key counter (drawn below minimap)
+# Key-card count — number of key cards currently held (drawn as a single digit
+# in the frame's key slot).
 var _keys_collected: int = 0
-var _keys_total: int = 0
 
 # Embedded SVG transform metadata (from data-* attributes)
 var _svg_scale := 0.0
@@ -62,8 +72,9 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		_map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
-	var total_w: float = DISPLAY_SIZE + PANEL_PAD * 2 + 22  # extra for key column
-	var total_h: float = DISPLAY_SIZE + PANEL_PAD * 2
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var total_w: float = FRAME_W * SCALE
+	var total_h: float = FRAME_H * SCALE
 	custom_minimum_size = Vector2(total_w, total_h)
 	size = Vector2(total_w, total_h)
 
@@ -247,39 +258,13 @@ func _is_boss_enemy(enemy: Node) -> bool:
 
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
-	var total_w: float = size.x
-	var total_h: float = size.y
 
-	# Blue panel background
-	var panel_rect := Rect2(Vector2.ZERO, Vector2(total_w, total_h))
-	draw_rect(panel_rect, PANEL_BG)
-	draw_rect(panel_rect, PANEL_BORDER, false, 2.0)
+	# Frame sprite fills the whole control (provides the border + dark map square
+	# + baked key-card glyph).
+	draw_texture_rect(FRAME_TEX, Rect2(Vector2.ZERO, size), false)
 
-	# Scanlines on panel
-	for sy in range(0, int(total_h), 4):
-		draw_rect(Rect2(0, sy + 2, total_w, 2), SCANLINE_COLOR)
-
-	# Key indicators — left column inside panel
-	var key_x := PANEL_PAD
-	var key_y_start := PANEL_PAD
-	if _keys_total > 0:
-		for ki in range(_keys_total):
-			var ky: float = key_y_start + ki * 18.0
-			var key_bg: Color = KEY_BG_ACTIVE if ki < _keys_collected else KEY_BG_INACTIVE
-			var key_rect := Rect2(key_x, ky, 14, 14)
-			draw_rect(key_rect, key_bg)
-			draw_rect(key_rect, Color(0, 0, 0, 0.15), false, 1.0)
-			var letter := char(65 + ki)  # A, B, C...
-			var letter_color: Color = Color(1, 1, 1) if ki < _keys_collected else KEY_LABEL_COLOR
-			draw_string(font, Vector2(key_x + 3, ky + 11), letter,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 9, letter_color)
-
-	# Map area offset — right of key column
-	var map_offset := Vector2(22 + PANEL_PAD, PANEL_PAD)
-
-	# Dark map background
-	draw_rect(Rect2(map_offset, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), BG_COLOR)
-	draw_rect(Rect2(map_offset, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), Color(0, 0, 0, 0.3), false, 1.0)
+	# Map content is drawn inside the frame's dark square.
+	var map_offset := MAP_ORIGIN * SCALE
 
 	# Floor triangles
 	for tri in _floor_triangles:
@@ -321,10 +306,14 @@ func _draw() -> void:
 			pp + fwd.rotated(-2.4) * sz * 0.6,
 		]), [PLAYER_COLOR])
 
+	# Key-card count — single digit in the slot baked into the frame sprite.
+	var digit_pos := KEY_DIGIT_POS * SCALE
+	draw_string(font, digit_pos + Vector2(0, KEY_DIGIT_SIZE * SCALE), str(_keys_collected),
+		HORIZONTAL_ALIGNMENT_LEFT, -1, int(KEY_DIGIT_SIZE * SCALE), KEY_DIGIT_COLOR)
 
-func update_keys(collected: int, total: int) -> void:
+
+func update_keys(collected: int, _total: int) -> void:
 	_keys_collected = collected
-	_keys_total = total
 	queue_redraw()
 
 

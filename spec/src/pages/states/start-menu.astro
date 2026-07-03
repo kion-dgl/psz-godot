@@ -58,6 +58,30 @@ const chart = `stateDiagram-v2
   <p>Because it is an autoload, the menu <strong>MUST</strong> be available globally — it works in both the field and the city without each scene instantiating it. It is registered with <code>process_mode = PROCESS_MODE_ALWAYS</code> and it <strong>MUST NOT</strong> pause the game: opening it pushes a modal flag (<code>GameState.push_modal()</code>) but does not set the tree paused. As a direct consequence, the player can still walk around with the analog stick while the menu is open — <code>_unhandled_input</code> explicitly lets the four movement actions pass through unconsumed, while the d-pad / right stick navigate the menu. Every other gameplay input (camera, interact, quick-weapon, palette) is consumed while the menu is open.</p>
   <p>Opening is gated: from the closed state the menu only opens on <code>pause</code> when there is no other overlay on the <code>SceneManager</code> overlay stack and the current scene is a gameplay scene. While open, the joypad Start button always closes the menu regardless of mode; ESC / <code>pause</code> closes only from <code>MAIN</code> and otherwise acts as Back into the active mode handler.</p>
 
+  <h2>Confirm / interact precedence</h2>
+  <p>A single confirm/action press can be bound to more than one consumer (a world interaction such as a teleporter / telepipe / NPC / pickup, a palette / free action, and the menu's own Accept can share a physical button under some control schemes). The field input path <strong>MUST</strong> resolve each press through exactly one consumer, in this fixed priority order (highest first):</p>
+  <table>
+    <thead><tr><th>#</th><th>Condition</th><th>Outcome</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>An active modal / the Start Menu is open (<code>GameState.is_gameplay_blocked()</code> is true)</td>
+        <td>The confirm press <strong>MUST</strong> be consumed by the modal. World interaction and palette/free actions <strong>MUST NOT</strong> fire. Movement <strong>MUST</strong> stay enabled (it runs from the ungated <code>_physics_process</code>, not the input path).</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>No modal, and a world-interaction prompt (teleporter / telepipe / NPC / pickup) is in range when <code>interact</code> is pressed</td>
+        <td>The world interaction <strong>MUST</strong> take precedence over and <strong>CONSUME</strong> the press ahead of any palette/free action bound to the same button — the palette action <strong>MUST NOT</strong> also fire on that press (cross-ref issue #423).</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Neither 1 nor 2 applies</td>
+        <td>A palette / free action (and only then) fires. Inside the city the combat palette stays suppressed regardless.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Closing the menu <strong>MUST</strong> restore world interaction on the next frame with no buffered confirm leaking through (the press that closed the menu <strong>MUST NOT</strong> also trigger a world interaction or palette action). Movement is <strong>NOT</strong> suppressed while the menu is open — the analog stick keeps the player walking (tester Sazonde99); only confirm/interact/palette are gated. This row table makes the world &gt; palette ordering explicit and is consistent with the invariant above ("movement input MUST pass through while open, all other gameplay input MUST be consumed").</p>
+
   <h2>Modes (views)</h2>
 
   <h3>MAIN</h3>
@@ -84,7 +108,7 @@ const chart = `stateDiagram-v2
   <p>Read-only view of the current quest's info / objectives. It has no sub-navigation — its only input is Back to <code>MAIN</code> (<code>_input_back</code>).</p>
 
   <h3>SYSTEM (and OPTIONS)</h3>
-  <p>A fixed three-item list (<code>SYSTEM_LABELS</code>): <code>Save</code> (writes the save and plays the saved SFX), <code>Return to Title</code> (saves, closes the menu, and navigates to the title scene — leaving the open state entirely), and <code>Options</code> (enters <strong>OPTIONS</strong>). Back returns to <code>MAIN</code>.</p>
+  <p>A fixed three-item list (<code>SYSTEM_LABELS</code>): <code>Save</code> (writes the save and plays the saved SFX), <code>Return to Title</code> (saves, closes the menu, and navigates to the title scene — leaving the open state entirely; the in-memory session teardown, including the city-hub position cache, is delegated to the title scene's <code>SessionManager.reset_all_state()</code> — see <a href="/states/session-model#city-hub-position">Session Model</a>), and <code>Options</code> (enters <strong>OPTIONS</strong>). Back returns to <code>MAIN</code>.</p>
 
   <h3>OPTIONS</h3>
   <p>An adjustable settings list (<code>_get_options_list</code>): Music Volume and SFX Volume are stepped with Left / Right; the remaining rows are toggles or actions fired with Accept — <code>Controls: Reconfigure</code> (closes the menu, clears the input config, and pushes the input-select scene as an overlay), On-Screen Controls, camera-rotation / camera-Y options, Auto-Sort Inventory, and a block of debug toggles (floor collision, gate dots, hitboxes, combo timing, time/room, frame profiler, player position). Back returns to <strong>SYSTEM</strong> with the cursor restored to the <code>Options</code> row.</p>
@@ -131,11 +155,13 @@ const chart = `stateDiagram-v2
   <ul>
     <li>Exactly one <code>Mode</code> is active at a time; every sub-view returns to <code>MAIN</code> on Back, and closing from <code>MAIN</code> closes the overlay.</li>
     <li>The menu <strong>MUST NOT</strong> pause the game (<code>PROCESS_MODE_ALWAYS</code>, modal flag only); movement input <strong>MUST</strong> pass through while open, all other gameplay input <strong>MUST</strong> be consumed.</li>
+    <li>One confirm/action press <strong>MUST</strong> resolve to exactly one consumer in the order modal &gt; world-interaction &gt; palette/free (see <em>Confirm / interact precedence</em>); a world interaction <strong>MUST</strong> consume the press and suppress a palette action bound to the same button, and closing the menu <strong>MUST NOT</strong> leak a buffered confirm into a world interaction on the next frame.</li>
     <li>The menu <strong>MUST</strong> be globally available (autoload) so it opens in both field and city.</li>
     <li><code>open()</code> <strong>MUST</strong> reset to <code>MAIN</code> and clear all per-mode cursors.</li>
     <li>The <code>Techs</code> view <strong>MUST</strong> be hidden for CAST characters and present otherwise.</li>
     <li>Rendering and input <strong>MUST</strong> derive their view contents from the same data helpers.</li>
     <li>Every menu visual drawn while open <strong>MUST</strong> be cached on the persistent autoload (never <code>load()</code>ed inline per draw), and the menu <strong>MUST</strong> repaint on <code>scene_changed</code> when open — so an open Palette page survives an area transition without an exit/re-enter to recover its background (#421).</li>
+    <li>The confirm/interact precedence <strong>MUST</strong> be invariant to whether the menu was opened in the current area or <strong>carried across an area transition</strong> (the autoload survives the <code>change_scene_to_file</code> tree rebuild with <code>_is_open</code> and the <code>GameState</code> modal block intact). After any area load, an open menu <strong>MUST</strong> still consume the confirm/interact press so a newly-spawned world interactable (teleporter / NPC / pickup) under the player does <strong>not</strong> also fire (#426 edge case, Rozalin v0.38.18: menu opened in area A + transition to area B double-fired both the menu and the teleporter). Guarded at unit scope by <code>test_menu_carry_survives_scene_signal()</code> and at runtime by the <code>PSZ_AUTOPILOT_MENU_CARRY=1</code> autopilot probe (open in office → carry across the office→counter transition → interact at the guild counter NPC must be consumed).</li>
   </ul>
 
   <h2>Implemented by</h2>
