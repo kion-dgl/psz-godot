@@ -134,6 +134,7 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock()
 	test_difficulty_unlock_persistence()
 	test_input_config()
+	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
 	test_box_state_survives_warp_flush()
@@ -6925,6 +6926,57 @@ func _collect_gd_files(dir_path: String, out: Array) -> void:
 				out.append(sub_path)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
+
+
+# ── Confirm / interact precedence (issue #426 / #423) ──────────────────────
+# Pins the field-action arbitration rule from spec/states/start-menu against the
+# pure static Player.arbitrate_field_actions seam: one press resolves to exactly
+# one consumer in the order modal > world-interaction > palette/free. We exercise
+# the static helper (no live Player — Player._ready loads pack-only character
+# models, so a node can't run repo-only headless) plus the GameState modal flag
+# that encodes precedence row 1.
+func test_confirm_input_precedence() -> void:
+	print("── Confirm / interact precedence (modal > world > palette) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# (a) World interaction CONSUMES a press shared with a palette action (#423):
+	#     interact + an interactable in range → only "interact", palette dropped.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true, "action_1": true}, true, false),
+		["interact"],
+		"world interaction consumes the press and suppresses the shared palette action")
+
+	# (b) Palette fires when there is nothing to interact with.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, false, false),
+		["action_1"],
+		"palette action fires when no interactable is in range")
+
+	# (c) Interact pressed but nothing in range → no effect leaks through.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"interact": true}, false, false),
+		[],
+		"interact with no interactable produces no effect (no leak)")
+
+	# (d) In-city combat gate still suppresses palette actions.
+	assert_eq(
+		PlayerScript.arbitrate_field_actions({"action_1": true}, true, true),
+		[],
+		"in-city palette gate suppresses combat actions")
+
+	# Precedence row 1: an open modal blocks gameplay input. PsoStartMenu.open()
+	# pushes a modal (push_modal); close() pops it. Assert the flag directly so
+	# the test stays deterministic without instantiating the pack-heavy menu.
+	assert_true(not GameState.is_gameplay_blocked(),
+		"gameplay not blocked with no modal on the stack")
+	GameState.push_modal()
+	assert_true(GameState.is_gameplay_blocked(),
+		"push_modal (what Start Menu open() calls) blocks gameplay input — precedence row 1")
+	GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(),
+		"pop_modal (Start Menu close()) restores gameplay input")
+	print("")
 
 
 # Regression guard for the #448 start-menu blackout (Retroid/Windows release):
