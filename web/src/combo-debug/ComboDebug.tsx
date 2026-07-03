@@ -17,8 +17,8 @@ import { assetUrl } from '../utils/assets';
  *    (SPECIAL_ATTACK_DELAY in player.gd)
  *  - the first justDuration seconds of the open window are the "just attack"
  *    tier (#155 three-tier timing): chaining inside it lands the
- *    just_damage_mult bonus — cyan in the timeline/ring, vs green for the
- *    normal remainder of the window
+ *    just_damage_mult bonus — bright green in the timeline/ring, vs the dim
+ *    green of the normal remainder of the window
  *
  * On top of that it prototypes a mechanic the game does NOT have yet:
  * per-weapon turn limits between swings. Once a swing starts the facing is
@@ -520,12 +520,11 @@ export default function ComboDebug() {
       applyTurn(sim.step + 1);
       const next = sim.step + 1;
       beginStep(next, type);
-      // Cyan flash for a just chain (the #155 combo ring language), else the
-      // attack type's color.
-      ringFlash(isJust ? 0x44eeff : type === 'normal' ? 0x33ff66 : type === 'strong' ? 0xffcc33 : 0xcc88ff);
+      // Bright-green flash for a just chain, else the attack type's color.
+      ringFlash(isJust ? 0x88ffaa : type === 'normal' ? 0x33ff66 : type === 'strong' ? 0xffcc33 : 0xcc88ff);
       pushLog(
         `${isJust ? `JUST ×${t.justMult.toFixed(2)} ` : ''}chained → ${type} atk${next} (${(intoWindow * 1000).toFixed(0)}ms into ${(t.windowDuration * 1000).toFixed(0)}ms window)`,
-        isJust ? '#4ef' : ATTACK_COLORS[type],
+        isJust ? '#6f9' : ATTACK_COLORS[type],
       );
       return;
     }
@@ -652,8 +651,8 @@ export default function ComboDebug() {
     const clock = new THREE.Clock();
     let raf = 0;
     const RING_BASE = new THREE.Color(0x555577);
-    const RING_WINDOW = new THREE.Color(0x33ff66);
-    const RING_JUST = new THREE.Color(0x44eeff);
+    const RING_WINDOW = new THREE.Color(0x22aa44);
+    const RING_JUST = new THREE.Color(0x88ffaa);
     const RING_SWING = new THREE.Color(0xccccdd);
 
     const animate = () => {
@@ -747,12 +746,13 @@ export default function ComboDebug() {
         s.ringMat.opacity = 0.8;
         if (sim.ringFlash.ttl <= 0) sim.ringFlash = null;
       } else {
-        s.ringMat.opacity = 0.55;
-        // While the window is open the ring is cyan through the just tier,
-        // then green for the rest — the #155 combo ring color language.
+        // While the window is open the ring runs the two greens: bright
+        // through the just tier, dim for the normal remainder.
+        const inJust = sim.windowOpen && sim.windowTimer < t.justDuration;
+        s.ringMat.opacity = inJust ? 0.85 : 0.55;
         s.ringMat.color.copy(
           sim.phase === 'idle' ? RING_BASE
-            : sim.windowOpen ? (sim.windowTimer < t.justDuration ? RING_JUST : RING_WINDOW)
+            : sim.windowOpen ? (inJust ? RING_JUST : RING_WINDOW)
             : RING_SWING,
         );
       }
@@ -1012,21 +1012,21 @@ export default function ComboDebug() {
           {leadW > 0 && (
             <div style={{ position: 'absolute', left: leadW - 1, top: 0, bottom: 0, width: 1, background: '#778' }} />
           )}
-          {/* chain window — absent on the last step. First justDuration
-              seconds are the just-attack tier (cyan, crit/bonus), the rest
-              is the normal chain window (green). */}
+          {/* chain window — absent on the last step. Two shades of green:
+              the bright band is the just-attack tier (first justDuration
+              seconds, crit/bonus), the dim band is the normal remainder. */}
           {!isLast && tuning.justDuration > 0 && (
             <div style={{
               position: 'absolute', left: leadW + winStart * PX_PER_SEC, top: 0, bottom: 0,
               width: tuning.justDuration * PX_PER_SEC,
-              background: 'rgba(70,230,255,0.55)', borderLeft: '1px solid #4ef',
+              background: 'rgba(110,255,150,0.8)', borderLeft: '1px solid #6f9',
             }} />
           )}
           {!isLast && (
             <div style={{
               position: 'absolute', left: leadW + (winStart + tuning.justDuration) * PX_PER_SEC, top: 0, bottom: 0,
               width: (winEnd - winStart - tuning.justDuration) * PX_PER_SEC,
-              background: 'rgba(60,220,110,0.4)',
+              background: 'rgba(60,220,110,0.3)',
               borderLeft: tuning.justDuration > 0 ? 'none' : '1px solid #3c6',
             }} />
           )}
@@ -1041,14 +1041,14 @@ export default function ComboDebug() {
             <div key={i} style={{
               position: 'absolute', left: leadW + m.t * PX_PER_SEC - 1, top: 2, bottom: 2, width: 2,
               background: m.just ? '#fff' : m.ok ? '#4f4' : '#f66',
-              boxShadow: m.just ? '0 0 3px 1px #4ef' : undefined,
+              boxShadow: m.just ? '0 0 3px 1px #6f9' : undefined,
             }} />
           ))}
         </div>
         {!isLast && (
           <span style={{ fontSize: 10, color: '#4a8', whiteSpace: 'nowrap' }}>
             {tuning.justDuration > 0 && (
-              <span style={{ color: '#4ef' }}>just {winStart.toFixed(2)}–{(winStart + tuning.justDuration).toFixed(2)}s · </span>
+              <span style={{ color: '#6f9' }}>just {winStart.toFixed(2)}–{(winStart + tuning.justDuration).toFixed(2)}s · </span>
             )}
             window …{winEnd.toFixed(2)}s
           </span>
@@ -1095,7 +1095,7 @@ export default function ComboDebug() {
             </span>
             <span style={{ fontSize: 12, color: '#888' }}>
               facing {hud.yawDeg.toFixed(0)}°{hud.desiredDeg !== null && ` · stick ${hud.desiredDeg.toFixed(0)}°`}
-              {' · '}{hud.combos} combos · <span style={{ color: hud.justs > 0 ? '#4ef' : undefined }}>{hud.justs} justs</span> · {hud.misses} misses
+              {' · '}{hud.combos} combos · <span style={{ color: hud.justs > 0 ? '#6f9' : undefined }}>{hud.justs} justs</span> · {hud.misses} misses
             </span>
             {isLoading && <span style={{ color: '#888', fontSize: 12 }}>(loading…)</span>}
             {loadError && <span style={{ color: '#f88', fontSize: 12 }}>{loadError}</span>}
@@ -1118,8 +1118,8 @@ export default function ComboDebug() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: '#6b8afd', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Swing timeline — <span style={{ color: '#fc4' }}>orange</span>/<span style={{ color: '#c8f' }}>purple</span> lead-in = strong/special wind-up,{' '}
-                <span style={{ color: '#4ef' }}>cyan</span> = just-attack tier (×{tuning.justMult.toFixed(2)}),{' '}
-                <span style={{ color: '#3c6' }}>green</span> = normal chain window, ticks = your presses
+                <span style={{ color: '#6f9' }}>bright green</span> = just-attack tier (×{tuning.justMult.toFixed(2)}),{' '}
+                <span style={{ color: '#3c6' }}>dim green</span> = normal chain window, ticks = your presses
               </span>
               {windup > 0 && hud.phase === 'windup' && (
                 <span style={{ fontSize: 11, color: '#fc4' }}>
@@ -1220,8 +1220,8 @@ export default function ComboDebug() {
             <div style={{ fontSize: 10, color: '#666' }}>
               In-game today: opens at 55% (COMBO_WINDOW_OPEN_PCT), 0.35s duration
               (COMBO_WINDOW_DURATION), 0.4s special delay — player.gd. The just
-              tier is the #155 three-tier design: chain inside the first
-              (cyan) part of the window for the ×{tuning.justMult.toFixed(2)} bonus;
+              tier is the #155 three-tier design: chain inside the bright-green
+              start of the window for the ×{tuning.justMult.toFixed(2)} bonus;
               narrow it to make the reward harder to hit.
             </div>
           </div>
