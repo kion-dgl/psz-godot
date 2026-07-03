@@ -33,6 +33,7 @@ func _run_tests_core() -> void:
 	test_character_creation()
 	test_equipment()
 	test_player_states()
+	test_action_commitment()
 	test_palette_momentary_swap()
 	test_element_status()
 	test_combat_math()
@@ -540,9 +541,11 @@ func test_player_states() -> void:
 	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
 	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
 
-	# Dodge i-frames (spec /mechanics/dodge): the roll's move phase grants
-	# invincibility; the recovery is vulnerable. Off-tree instance —
-	# take_damage's i-frame return fires before any tree-dependent call.
+	# Dodge i-frames (spec /mechanics/dodge, tightened by #377): only the
+	# first DODGE_IFRAME_DURATION (0.2s) of the roll is invincible — NOT the
+	# whole move phase. Off-tree instance — take_damage's i-frame return
+	# fires before any tree-dependent call.
+	assert_eq(consts.get("DODGE_IFRAME_DURATION"), 0.2, "i-frame window is the fixed 0.2s (#377)")
 	var p = PlayerScript.new()
 	var hp_full: int = GameState.max_hp
 	GameState.set_hp(hp_full)
@@ -550,7 +553,14 @@ func test_player_states() -> void:
 	p.dodge_timer = 0.1
 	p.dodge_move_end = 0.5
 	p.take_damage(25)
-	assert_eq(GameState.hp, hp_full, "move-phase dodge ignores damage (i-frames)")
+	assert_eq(GameState.hp, hp_full, "hit inside the 0.2s window ignores damage (i-frames)")
+	assert_eq(p.current_state, states["DODGING"], "i-frame hit does not interrupt the roll")
+	p.dodge_timer = 0.3  # inside the move phase but PAST the i-frame window
+	p.take_damage(5)
+	assert_eq(GameState.hp, hp_full - 5, "hit past 0.2s takes damage even mid-move-phase (#377)")
+	assert_eq(p.current_state, states["DAMAGED"], "post-window hit interrupts the roll (DODGING → DAMAGED)")
+	GameState.set_hp(hp_full)
+	p.current_state = states["DODGING"]
 	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
 	p.take_damage(5)
 	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
@@ -570,6 +580,84 @@ func test_player_states() -> void:
 	print("")
 
 
+# ── Action commitment + hitbox lifetime (#377/#428, spec /states/player-state) ──
+# PSZ actions commit: a swing cannot be dodge-canceled, a roll cannot be
+# attack-canceled — only damage interrupts. And the attack hitbox must not
+# outlive ATTACKING by ANY exit path (dodge-cancel was how stale hitboxes
+# stored hits; the transition_to deactivation covers every interrupt).
+func test_action_commitment() -> void:
+	print("── Action commitment (#377) + hitbox lifetime (#428) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var states: Dictionary = PlayerScript.PlayerState
+	var p = PlayerScript.new()
+	GameState.set_hp(GameState.max_hp)
+
+	# Attack commits: a player dodge input mid-swing is a no-op.
+	p.current_state = states["ATTACKING"]
+	p.dodge_timer = 0.42  # sentinel — an accepted dodge would reset it to 0
+	p._start_dodge()
+	assert_eq(p.current_state, states["ATTACKING"], "dodge input cannot cancel a swing (#377)")
+	assert_eq(p.dodge_timer, 0.42, "blocked dodge leaves dodge state untouched")
+
+	# Dodge commits: attack / strong-attack input mid-roll is a no-op, and a
+	# roll cannot restart itself.
+	p.current_state = states["DODGING"]
+	p.combo_state = 0
+	p._start_attack()
+	assert_eq(p.current_state, states["DODGING"], "attack input cannot cancel a roll (#377)")
+	assert_eq(p.combo_state, 0, "blocked attack starts no combo")
+	p._start_strong_attack()
+	assert_eq(p.current_state, states["DODGING"], "strong attack cannot cancel a roll (#377)")
+	p.dodge_timer = 0.42
+	p._start_dodge()
+	assert_eq(p.dodge_timer, 0.42, "a roll cannot restart itself mid-roll")
+
+	# Damage-initiated exits stay allowed — interrupts, not cancels.
+	p.current_state = states["ATTACKING"]
+	p.take_damage(15)  # medium hit
+	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
+	GameState.set_hp(GameState.max_hp)
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.5  # outside the i-frame window
+	p.dodge_move_end = 0.5
+	p.take_damage(25)  # heavy hit
+	assert_eq(p.current_state, states["DOWN"], "damage outside i-frames interrupts a roll (DODGING → DOWN)")
+	GameState.set_hp(GameState.max_hp)
+
+	# Hitbox lifetime (#428): EVERY exit from ATTACKING deactivates the attack
+	# hitbox and clears stored hits, same-frame, via transition_to.
+	var hb := Hitbox.new()
+	p.attack_hitbox = hb
+	# Damage interrupt path (the surviving early-exit once #377 blocks
+	# dodge-cancel): activate mid-swing, take a hit, hitbox must die with it.
+	p.transition_to(states["ATTACKING"])
+	hb.activate()
+	hb._hit_targets.append(p)  # simulate a landed hit ("stored" target slot)
+	p.take_damage(15)
+	assert_true(not hb.monitoring, "damage interrupt deactivates the attack hitbox (#428)")
+	assert_eq(hb._hit_targets.size(), 0, "deactivation clears stored hits — no carry-over (#428)")
+	GameState.set_hp(GameState.max_hp)
+	# Generic exit edge: any transition out of ATTACKING kills the hitbox even
+	# if a future code path forgets its own deactivate call.
+	p.transition_to(states["ATTACKING"])
+	hb.activate()
+	assert_true(hb.monitoring, "hitbox is live during the swing")
+	p.transition_to(states["IDLE"])
+	assert_true(not hb.monitoring, "any ATTACKING exit deactivates the hitbox (#428)")
+
+	# Quick Menu is the fifth charge-drop case (#377): its opened signal exists
+	# on the field HUD's quick-weapon menu. field_hud.gd preloads pack-only
+	# assets, so this only runs where the pack is mounted (can_instantiate()).
+	var fh := load("res://scripts/3d/field/field_hud.gd")
+	if fh != null and fh.can_instantiate():
+		var inner: Variant = fh.get_script_constant_map().get("_QuickWeaponMenu")
+		assert_true(inner != null, "field_hud exposes _QuickWeaponMenu")
+		if inner != null:
+			var qm: Control = inner.new()
+			assert_true(qm.has_signal("opened"), "Quick Menu emits opened → player._drop_charge (#377)")
+			qm.free()
+	else:
+		print("  SKIP: field_hud.gd not compilable repo-only (pack assets) — opened-signal check runs pack-mounted")
 # ── Momentary palette swap (#447, spec /states/player-state) ───
 # The field back palette is hold-to-activate, not a latched toggle:
 # palette_swap press shows the back page, release returns to the front,

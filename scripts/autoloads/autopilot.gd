@@ -262,6 +262,9 @@ var _defeat_triggered := false      # killed the player already (fires once)
 var _defeat_awaiting_city := false  # chose Yes, waiting to land in the city
 var _defeat_meseta_before := 0
 
+var _commitment_probe := false      # #377/#428 action-commitment probe
+var _commitment_triggered := false  # ran the probe already (fires once)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -284,6 +287,9 @@ func _ready() -> void:
 	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
 	if _defeat_probe:
 		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
+	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
+	if _commitment_probe:
+		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -2091,6 +2097,89 @@ func _finish_defeat_probe() -> void:
 	_after(QUIT_GRACE, func() -> void: get_tree().quit(0 if ok else 1))
 
 
+# ── Action-commitment probe (#377/#428, spec /states/player-state) ─────────
+## PSZ_AUTOPILOT_COMMITMENT=1: in the first field cell, assert commitment
+## end-to-end — a real dodge press mid-swing must not flip ATTACKING, an
+## attack input mid-roll must not flip DODGING, and the attack hitbox must be
+## off once the swing ends. Runs INSTEAD of the cell plan (defeat-probe
+## pattern) and ends the run with DONE ok / FAIL.
+
+func _commitment_fail(msg: String) -> void:
+	print("[sanity] FAIL: commitment probe — %s" % msg)
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+
+
+## Poll until the player leaves `state` (or fail after ~8s game time).
+func _commitment_wait_leave(p, state: int, next: Callable, attempt: int = 0) -> void:
+	if not is_instance_valid(p):
+		_commitment_fail("player freed mid-probe")
+		return
+	if p.get_state() != state:
+		next.call()
+		return
+	if attempt >= 40:
+		_commitment_fail("state %d never ended (stuck?)" % state)
+		return
+	_after(0.2, func() -> void: _commitment_wait_leave(p, state, next, attempt + 1))
+
+
+func _run_commitment_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_commitment_probe(attempt + 1))
+		else:
+			_commitment_fail("no player in field")
+		return
+	var p = players[0]
+	var states: Dictionary = p.PlayerState
+	print("[sanity] checkpoint: commitment probe — starting attack, pressing dodge mid-swing")
+	p._start_attack()
+	if p.get_state() != states["ATTACKING"]:
+		_commitment_fail("_start_attack did not enter ATTACKING")
+		return
+	# Real input press mid-swing — full _unhandled_input → arbitration path.
+	_after(0.15, func() -> void:
+		_press_action("dodge")
+		_after(0.1, func() -> void: _commitment_attack_held(p, states)))
+
+
+func _commitment_attack_held(p, states: Dictionary) -> void:
+	if p.get_state() != states["ATTACKING"]:
+		_commitment_fail("dodge press canceled the swing (#377)")
+		return
+	print("[sanity] checkpoint: commitment probe — swing held through dodge press")
+	_commitment_wait_leave(p, states["ATTACKING"], func() -> void:
+		# Swing over by any path — the hitbox must be off, targets cleared (#428).
+		var hb = p.attack_hitbox
+		if hb != null and (hb.monitoring or hb._hit_targets.size() > 0):
+			_commitment_fail("attack hitbox outlived the swing (#428)")
+			return
+		print("[sanity] checkpoint: commitment probe — hitbox off after swing (#428)")
+		_commitment_dodge_phase(p, states))
+
+
+func _commitment_dodge_phase(p, states: Dictionary) -> void:
+	print("[sanity] checkpoint: commitment probe — starting dodge, pressing attack mid-roll")
+	p._start_dodge()
+	if p.get_state() != states["DODGING"]:
+		_commitment_fail("_start_dodge did not enter DODGING")
+		return
+	_after(0.1, func() -> void:
+		# Both attack entry points, called directly so the assert doesn't
+		# depend on the palette layout of the staged save.
+		p._start_attack()
+		p._start_strong_attack()
+		_after(0.05, func() -> void:
+			if p.get_state() != states["DODGING"]:
+				_commitment_fail("attack press canceled the roll (#377)")
+				return
+			print("[sanity] checkpoint: commitment probe — roll held through attack press")
+			_commitment_wait_leave(p, states["DODGING"], func() -> void:
+				print("[sanity] DONE ok")
+				_after(QUIT_GRACE, func() -> void: get_tree().quit(0)))))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
 	# Defeat probe: in the first field cell, kill the player instead of running
@@ -2099,6 +2188,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _defeat_probe and not _defeat_triggered:
 		_defeat_triggered = true
 		_run_defeat_probe()
+		return
+	# Commitment probe (#377/#428): in the first field cell, drive a real
+	# swing + dodge press (and the mirror case) instead of the cell plan.
+	if _commitment_probe and not _commitment_triggered:
+		_commitment_triggered = true
+		_run_commitment_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""

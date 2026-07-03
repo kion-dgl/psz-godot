@@ -24,8 +24,8 @@ const chart = `stateDiagram-v2
   IDLE --> DAMAGED: take_damage (light / medium hit)
   WALKING --> DAMAGED: take_damage
   RUNNING --> DAMAGED: take_damage
-  ATTACKING --> DAMAGED: take_damage
-  DODGING --> DAMAGED: take_damage
+  ATTACKING --> DAMAGED: take_damage (interrupts the swing)
+  DODGING --> DAMAGED: take_damage (outside i-frames)
   DAMAGED --> IDLE: hit-reaction animation finished
 
   IDLE --> DOWN: take_damage (heavy hit / lethal)
@@ -74,12 +74,34 @@ const chart = `stateDiagram-v2
   <h3>STUNNED</h3>
   <p><strong>Reserved.</strong> Declared in the <code>PlayerState</code> enum but currently has no transitions into it, no handler in <code>_physics_process</code>, and no entry case in <code>transition_to</code>. It is kept as a <strong>reserved, not-yet-implemented</strong> state for a future stun/status effect — unlike SPRINTING, it stays in the enum through the refactor.</p>
 
+  <h2>Action commitment (#377)</h2>
+  <p>PSZ has <strong>no mid-animation interrupting actions</strong> — a started action commits. Dodge is free (no stamina), so its cost is animation commitment plus a short i-frame window: a poorly-timed roll is a punish. Deliberately "clunky like Castlevania — think before you act"; PSO2-style animation canceling <strong>MUST NOT</strong> be added. The authoritative table:</p>
+  <table>
+    <thead><tr><th>Action</th><th>Player-cancelable by</th><th>Interrupted by</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Attack</strong> (N/H/S swing)</td><td><strong>nothing</strong> — must fully execute</td><td>damage</td><td>the swing finishes before any dodge/next-action input registers</td></tr>
+      <tr><td><strong>Dodge / roll</strong></td><td><strong>nothing</strong> (NOT by attack)</td><td>damage <strong>outside</strong> the i-frame window</td><td>i-frames ≈ 11 frames ≈ <strong>0.2 s</strong> from roll start (mid-weight-roll feel)</td></tr>
+      <tr><td><strong>Hold-to-charge</strong> (tech)</td><td>dodge, N/H/S attack, Start Menu open, Quick Menu open</td><td>damage</td><td>the five drop cases — #352, #377</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>A player-initiated dodge input while ATTACKING <strong>MUST NOT</strong> leave ATTACKING — <code>_start_dodge</code> is a no-op during ATTACKING (and during DODGING; a roll cannot restart itself).</li>
+    <li>A player-initiated attack input while DODGING <strong>MUST NOT</strong> leave DODGING — <code>_start_attack</code> / <code>_start_strong_attack</code> are no-ops during DODGING (technique casts were already gated).</li>
+    <li>Damage-initiated transitions (<code>take_damage</code> → DAMAGED/DOWN) remain allowed out of both states; they are interrupts, not cancels.</li>
+    <li>Combo chaining (ATTACKING → ATTACKING inside the combo window) is <strong>not</strong> a cancel — the previous swing's animation has already opened the window; chaining stays legal.</li>
+  </ul>
+
+  <h2>Attack hitbox lifetime (#428)</h2>
+  <p>The attack hitbox's active window <strong>MUST</strong> be strictly bounded by the ATTACKING state — it <strong>MUST NOT</strong> outlive ATTACKING by <em>any</em> exit path. On <strong>every</strong> transition out of ATTACKING (normal swing end, damage interrupt, or any future exit), the hitbox <strong>MUST</strong> be deactivated in the same frame as the state change: <code>monitoring = false</code> and <code>_hit_targets</code> cleared, so <code>max_targets</code> / <code>hits_per_target</code> accounting starts clean on the next swing (no "stored" hits). The hitbox <strong>MUST NOT</strong> register hits while the player is in DODGING / IDLE / any locomotion state. Enforced centrally in <code>transition_to</code> on the ATTACKING-exit edge (defense in depth — it holds even if a new interrupt path is added later), in addition to the per-path deactivations at swing end.</p>
+
   <h2>Invariants</h2>
   <ul>
     <li>Exactly one state is active at all times; all changes go through <code>transition_to</code>.</li>
     <li>Entering IDLE <strong>MUST</strong> zero horizontal velocity (preserving Y).</li>
     <li>Entering ATTACKING from a non-attacking state <strong>MUST</strong> set the weapon to its <em>attack</em> hold; leaving ATTACKING <strong>MUST</strong> restore the <em>idle</em> hold.</li>
-    <li>A technique that is mid-charge <strong>MUST</strong> be cancelled when the avatar transitions to DAMAGED, DOWN, <strong>or DODGING</strong>: <code>transition_to</code> clears the charging slot, ends the charge visual, and emits <code>tech_charge_released</code> before applying the new state. <em>Implemented (#273):</em> the cancel path fires on DAMAGED, DOWN, and DODGING; <code>test_player_states</code> pins the DODGING release.</li>
+    <li>A technique that is mid-charge <strong>MUST</strong> be cancelled by exactly the five drop cases (see <em>Action commitment</em>): DAMAGED/DOWN/DODGING transitions (<code>transition_to</code> clears the slot, ends the charge visual, and emits <code>tech_charge_released</code> before applying the new state — #273), a mid-charge N/H/S attack or different-tech press (#352), the Start Menu opening, and the Quick Menu opening (#377 — both menus' <code>opened</code> signals connect to <code>_drop_charge</code>).</li>
+    <li>Player-initiated transitions between ATTACKING and DODGING (either direction) <strong>MUST NOT</strong> occur — see <em>Action commitment</em>.</li>
+    <li>Leaving ATTACKING by any path <strong>MUST</strong> deactivate the attack hitbox in the same frame — see <em>Attack hitbox lifetime</em>.</li>
     <li>ATTACKING, DAMAGED, DOWN, and CUTSCENE all hold horizontal velocity at zero in their handlers.</li>
   </ul>
 
@@ -90,7 +112,7 @@ const chart = `stateDiagram-v2
 
   <h2>Dodge</h2>
   <p><code>_start_dodge</code> caches the current facing as <code>dodge_direction</code>, resets the dodge timer, and looks up the active weapon's <code>&lt;prefix&gt;_esc_f</code> clip length so the move phase scales to that weapon's roll (falling back to <code>DODGE_DURATION</code> if the clip is missing). The move phase lasts <code>DODGE_MOVE_FRACTION</code> (0.7) of the clip; during it, <code>_handle_dodge</code> drives velocity at <code>DODGE_SPEED</code> (7.0) in the cached direction, but only if <code>_can_move_to</code> still finds floor — so the avatar will not roll off a ledge. The remaining recovery fraction holds velocity at zero while the crouch-and-stand animation plays out. Dodge is bound to a dedicated button (L1) and is gated so it cannot start while DAMAGED or DOWN. The baked root-translation track of <code>_esc_f</code> clips is stripped at load so gameplay velocity is the sole source of horizontal motion.</p>
-  <p>The dodge's move phase <strong>MUST</strong> grant <strong>invincibility frames</strong> — a hit landing on a DODGING avatar during that window does no damage and does not interrupt the roll. <em>Implemented (#273):</em> <code>take_damage</code> returns without effect while DODGING during the move phase; the recovery is vulnerable (see the <a href="/mechanics/dodge">Dodge mechanic</a> page).</p>
+  <p>The dodge <strong>MUST</strong> grant <strong>invincibility frames</strong> for the first <code>DODGE_IFRAME_DURATION</code> (0.2&nbsp;s, ≈ 11 frames) of the roll — a hit landing in that window does no damage and does not interrupt the roll. After the window, the rest of the roll (late move phase and the full recovery) is vulnerable, and a hit interrupts it (DODGING → DAMAGED/DOWN). <em>History:</em> #273 originally granted i-frames for the whole move phase (<code>dodge_timer &lt; dodge_move_end</code>, ≈ 0.47&nbsp;s for saber); #377 tightened the window to the fixed 0.2&nbsp;s per the authoritative commitment table (see the <a href="/mechanics/dodge">Dodge mechanic</a> page).</p>
 
   <h2>Attacks &amp; combos</h2>
   <p>Combos are tracked by <code>combo_state</code> (0 = not attacking, 1..N = combo step) and the <code>combo_window_open</code> / <code>combo_timer</code> pair. <code>_start_attack</code> begins a fresh combo (step 1, ATTACKING) or, if already ATTACKING with the window open and below the weapon's <code>combo_steps</code> max, advances to the next step. <code>_start_strong_attack</code> mirrors this but sets <code>_is_special_attack</code> so the swing carries the weapon's element and runs a brief charged wind-up (<code>SPECIAL_ATTACK_DELAY</code>) before the strike. During ATTACKING, <code>_handle_attack_state</code> opens the combo window at <code>COMBO_WINDOW_OPEN_PCT</code> (55%) of the attack animation and closes it after <code>COMBO_WINDOW_DURATION</code> (0.35&nbsp;s); missing the window resets the combo and returns to IDLE. Each landed step activates the attack <code>Hitbox</code> (or, for ranged weapon types, fires a <code>Projectile</code> via <code>_fire_projectile</code>). <code>_update_combat_targets</code> runs every third physics frame to maintain target reticles in a forward box whose range/width come from the weapon config (extended to cover equipped techniques). See <a href="/mechanics/combos">Combat Combos</a>.</p>
@@ -120,8 +142,10 @@ const chart = `stateDiagram-v2
   <p>Spec-vs-code gaps to resolve as part of the <code>player.gd</code> split — each is documented above as intended behavior with a "current gap"/"planned" note:</p>
   <ul>
     <li><strong>Remove SPRINTING</strong> — <em>done (#273 inc 1)</em>: dropped from the enum, locomotion, footsteps, and animation handling.</li>
-    <li><strong>Add dodge i-frames</strong> — <em>done (#273 inc 2)</em>: move phase grants invincibility, recovery stays vulnerable.</li>
+    <li><strong>Add dodge i-frames</strong> — <em>done (#273 inc 2)</em>: move phase grants invincibility, recovery stays vulnerable. <em>Superseded (#377):</em> the window is now the fixed 0.2&nbsp;s <code>DODGE_IFRAME_DURATION</code>, not the whole move phase.</li>
     <li><strong>Cancel charge on DODGING</strong> — <em>done (#273 inc 3)</em>: transition_to releases the charge on DODGING too.</li>
+    <li><strong>Action commitment</strong> — <em>done (#377)</em>: attacks and dodges cannot be player-canceled; only damage interrupts. Charge drops on Quick Menu open (the fifth drop case).</li>
+    <li><strong>Attack hitbox lifetime</strong> — <em>done (#428)</em>: every exit from ATTACKING deactivates the hitbox in <code>transition_to</code>.</li>
     <li><strong>Keep STUNNED reserved</strong> — leave in the enum as a not-yet-implemented status state.</li>
   </ul>
 </Concept>
