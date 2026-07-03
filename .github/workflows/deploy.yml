@@ -38,6 +38,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # stamp_version.sh needs the commit count
 
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
@@ -56,6 +58,9 @@ jobs:
 
       - name: Import project
         run: godot --headless --path . --import --quit || true
+
+      - name: Stamp build number
+        run: bash scripts/tools/stamp_version.sh
 
       - name: Export Web
         run: |
