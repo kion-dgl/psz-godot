@@ -981,6 +981,15 @@ static func arbitrate_field_actions(pressed: Dictionary, has_interactable: bool,
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Momentary palette swap (#447, spec /states/player-state): the back page
+	# shows only while palette_swap is HELD. The release leg runs before every
+	# gate below so a menu/cutscene/modal opening mid-hold can never latch the
+	# back page — the release always restores the front page (idempotent no-op
+	# when already there).
+	if event.is_action_released("palette_swap"):
+		ActionPalette.show_front()
+		_tech_targeting_dirty = true
+
 	if current_state == PlayerState.CUTSCENE:
 		return
 
@@ -1020,7 +1029,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	for effect in effects:
 		match effect:
 			"palette_swap":
-				ActionPalette.swap_page()
+				# Hold-to-activate (#447): press shows the back page; the
+				# unconditional release leg at the top restores the front.
+				ActionPalette.show_back()
 				_tech_targeting_dirty = true
 			"action_1", "action_2", "action_3":
 				_on_palette_pressed(int(effect.substr(7)) - 1)
