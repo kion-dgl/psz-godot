@@ -67,10 +67,8 @@ ask — opening a PR is cheap, undoing a direct-merge is expensive.
 Multiple unrelated changes in one PR is fine, and more than one PR open at a
 time is fine — the gate is that every change in a PR is verified, not how many
 PRs exist or how topically pure they are. Don't hold work back to keep a
-single-PR queue. One mechanical heads-up, not a reason to serialize: every PR
-bumps `VERSION` (all three sources), so if two PRs are open at once the second
-to merge will hit a VERSION conflict — just re-bump and `git pull` against the
-new `main`. That's a 30-second fixup.
+single-PR queue. Versioning is auto-stamped at build time (see "Versioning"
+below), so parallel PRs never conflict on version files.
 
 **Testing is the unit of a PR.** Bundle freely *as long as the bundle can
 be tested and verified together*. If several changes are exercised by the
@@ -219,9 +217,10 @@ Arweave, or any field mismatch fails CI. **CI does not auto-fix** — a
 failure means the dev needs to re-run the publish script and commit
 the updated manifest.
 
-This is the same pattern as `version-check` (which fails CI when the
-PR doesn't bump `VERSION`): the check exists to force the human to
-take a step the toolchain can't safely take for them.
+This is the same pattern as `version-check` (which fails CI when a
+PR hand-edits the stamped-at-build-time version placeholders): the
+check exists to force the human to take a step the toolchain can't
+safely take for them.
 
 ### `check-asset-refs`
 
@@ -283,17 +282,28 @@ check, but Arweave's gateway can't reliably serve the full 264 MB
 (connection drops at ~50 MB), and that check was redundant with what
 the sidecar proves at sub-KB cost.
 
-## Version bumping
+## Versioning — auto-stamped build numbers (NEVER bump by hand)
 
-CI's `version-check` requires **three** sources bumped and kept in
-sync on every PR — miss any one and CI fails:
+The version is a flat build number (400, 401, 402, …) computed at
+build time — **no PR bumps anything**, so version merge conflicts are
+structurally impossible. The three committed sources stay at the
+literal placeholder `dev`:
 
 1. `VERSION`
 2. `project.godot` `config/version`
 3. `export_presets.cfg` `version/name` (Android `dumpsys` reads this)
 
-All three must equal the same string. Patch bump (0.x.y → 0.x.y+1) is
-fine for most changes; minor bump for notable features.
+CI's `version-check` **fails if any of them is edited away from
+`dev`**. `scripts/tools/stamp_version.sh` computes
+`build = 95 + first-parent commit count` (+1 per merged PR; offset
+aligns with the retired 0.39.x semver line) and stamps all three plus
+Android `version/code` (same integer → APK upgrades always install
+over older builds). Release CD tags `v<build>`; PR playtest builds
+stamp `<build>-pr<N>.<shortsha>`. Local/dev runs show `dev` unless you
+run the stamp script yourself (then `git checkout` the three files —
+never commit a stamp). The publish scripts' pack sidecar `version`
+field reads `VERSION` too — `dev` from a dev box is fine there, the
+sha256 is the integrity anchor.
 
 ## "Run autopilot" — what the user means
 
