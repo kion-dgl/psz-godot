@@ -26,6 +26,9 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	# The player's target-info scan finds ground items through this group
+	# (spec /mechanics/targeting).
+	add_to_group("drops")
 	_setup_prompt()
 
 

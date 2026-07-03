@@ -1,0 +1,56 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Targeting, Hit Detection & Target Info" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>Weapon targeting and melee hit resolution share <strong>one geometry</strong>: the per-weapon <em>hit cone</em>, reverse-engineered from PSO:BB (<code>check_enemy_is_targetable</code> + ItemPMT; values tabulated at <a href="https://wiki.pioneer2.net/w/Weapons">wiki.pioneer2.net/w/Weapons</a>) and tuned in the <a href="https://kion-dgl.github.io/psz-godot/#/combat-room">#/combat-room</a> web tool. Reticles, the target-info HUD, and damage all read the same cone — targeting and hits MUST NOT use different shapes.</p>
+
+  <h2>The hit cone</h2>
+  <p>Per weapon type (data: <code>CombatManager.WEAPON_TYPE_CONFIGS</code>, keys <code>hit_h_dist</code>, <code>hit_v_dist</code>, <code>hit_h_angle_deg</code>):</p>
+  <ul>
+    <li>The cone's <strong>apex sits <code>hit_v_dist</code> behind the player</strong> along −facing (PSO's apex pull-back — widens point-blank coverage).</li>
+    <li><strong>Reach</strong> from the apex is <code>hit_h_dist + hit_v_dist + the target's own collision radius</code> — a bigger enemy is easier to reach, exactly as in PSO.</li>
+    <li>The <strong>half-angle</strong> is <code>hit_h_angle_deg</code>, tested in the XZ plane against the player's facing.</li>
+    <li>An enemy passes the cone iff both the reach and angle tests pass and it is alive.</li>
+  </ul>
+
+  <h2>Targetable set, primary target, reticles</h2>
+  <ul>
+    <li>Each frame the player computes the targetable set: alive enemies passing the cone, <strong>sorted nearest-first</strong>. The nearest is the <strong>primary target</strong>.</li>
+    <li>Reticles show on the nearest <code>max_targets</code> enemies (techniques MAY extend range/width/count as before; the Slicer keeps its bounce-target reticles).</li>
+    <li><strong>Ground items</strong> (DropBase, state <code>available</code>) are targetable <em>for the HUD only</em>: an item MUST NOT ever be hit by a swing, and target snap/aim assists MUST ignore items.</li>
+  </ul>
+
+  <h2>Hit resolution — the damaging frame</h2>
+  <ul>
+    <li>A swing resolves its hits <strong>once</strong>, when the animation crosses the step's <strong>damaging frame</strong> (<code>damaging_frac</code>, a per-step fraction of the swing clip — data, per weapon type). Before that frame the swing MUST NOT damage anything; after it, later arrivals into the cone MUST NOT be hit by the same swing.</li>
+    <li>At the damaging frame, melee hits the <strong>nearest <code>max_targets</code> enemies in the cone</strong>, applying the step's damage/knockback/element per the existing damage dict (<code>hits_per_step</code> hits each via <code>Hurtbox.take_hit</code>). Ranged weapon types fire their projectiles at the damaging frame instead.</li>
+    <li>A damage interrupt <em>before</em> the damaging frame means the swing lands nothing — an interrupted swing does no damage (consistent with #377 commitment and the #428 lifetime invariant: exits from ATTACKING clear all pending offense).</li>
+    <li><em>Replaced model:</em> the old always-on Area3D box (active from swing start to step end) is retired for melee; the box config keys remain only for legacy consumers until they migrate.</li>
+  </ul>
+
+  <h2>Target-info HUD (bottom-left)</h2>
+  <ul>
+    <li>The bottom-left HUD slot shows the <strong>primary target's info</strong>: an enemy → name + HP bar (live <code>current_hp</code> / max); a ground item → the item's display name.</li>
+    <li><strong>Precedence</strong> (PSO's split-reticle model): an enemy in the weapon cone always wins; an item is primary only when <em>no enemy is targetable</em> and the item is within <code>ITEM_INFO_RANGE</code> (2&nbsp;m) inside the cone.</li>
+    <li><strong>Nothing to show → the panel MUST NOT render.</strong> No empty frame, no placeholder.</li>
+    <li><strong>The Quick Weapon Menu owns the corner:</strong> while it is open the target panel MUST NOT render (see <a href="/states/quick-weapon-menu">Quick Weapon Menu</a> — its behavior contract is unchanged; only its visual style is shared with this panel).</li>
+    <li>The panel hides with the rest of the HUD for scene overlays / Start Menu (existing <code>hide_for_menu</code> behavior).</li>
+  </ul>
+
+  <h2>Visual style</h2>
+  <p>Both the target panel and the quick weapon menu draw the PSZ panel language: a chamfered-corner plate with horizontal pinstripes and a navy border (light-blue plate for target info, navy plate for the menu), via the shared <code>PszPanel</code> draw helper. Style is SHOULD-level — tune freely; the visibility/priority rules above are the MUSTs.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/combat/cone_targeting.gd</code> (ConeTargeting) — the pure cone test (unit-tested directly).</li>
+    <li><code>scripts/autoloads/combat_manager.gd</code> — <code>hit_h_dist</code> / <code>hit_v_dist</code> / <code>hit_h_angle_deg</code> / <code>damaging_frac</code> per weapon type.</li>
+    <li><code>scripts/3d/player/player.gd</code> — <code>_update_combat_targets</code> (cone scan, primary + <code>_primary_target_info</code>), <code>_handle_attack_state</code> (damaging-frame trigger), <code>_execute_attack_hit</code> (melee cone hits / ranged projectiles).</li>
+    <li><code>scripts/3d/field/field_hud.gd</code> — <code>_TargetInfoPanel</code> + the restyled <code>_QuickWeaponMenu</code>; <code>scripts/ui/psz_panel.gd</code> (PszPanel).</li>
+    <li><code>scripts/3d/elements/drop_base.gd</code> — drops join the <code>drops</code> group for the HUD scan.</li>
+  </ul>
+
+  <p><a href="/mechanics">← Mechanics</a></p>
+</Concept>
