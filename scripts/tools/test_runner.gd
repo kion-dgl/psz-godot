@@ -35,6 +35,7 @@ func _run_tests_core() -> void:
 	test_player_states()
 	test_action_commitment()
 	test_palette_momentary_swap()
+	test_menu_carry_survives_scene_signal()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -703,6 +704,48 @@ func test_palette_momentary_swap() -> void:
 	assert_eq(ActionPalette.current_page, 0, "release mid-modal still returns to the front (no latch)")
 
 	p.free()
+	print("")
+
+
+# ── Start Menu carried across an area transition (#426, spec /states/start-menu) ──
+# The carried-over edge case (Rozalin v0.38.18): a menu opened in area A and
+# carried across a change_scene_to_file into area B double-fired confirm into
+# both the menu and the teleporter. At unit scope the contract is: the autoload
+# survives the scene_changed signal with _is_open AND the GameState modal block
+# intact — the same is_gameplay_blocked() gate that consumes the press must
+# hold after the transition exactly as before it. The cross-scene interact is
+# covered at runtime by the PSZ_AUTOPILOT_MENU_CARRY=1 autopilot probe.
+func test_menu_carry_survives_scene_signal() -> void:
+	print("── Start Menu carried across a transition still blocks (#426) ──")
+	while GameState.modal_stack > 0:
+		GameState.pop_modal()
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: gameplay unblocked")
+
+	PsoStartMenu.open()
+	assert_true(PsoStartMenu.is_open(), "menu opened")
+	assert_true(GameState.is_gameplay_blocked(), "open menu blocks gameplay input")
+
+	# The area transition the autoload survives: SceneManager emits
+	# scene_changed after the tree rebuild. Menu state and the modal block
+	# must be invariant to it.
+	SceneManager.scene_changed.emit("res://scenes/3d/city/city_counter.tscn")
+	assert_true(PsoStartMenu.is_open(), "menu still open after scene_changed")
+	assert_true(GameState.is_gameplay_blocked(), "carried menu still blocks gameplay input")
+
+	# The REAL transition path (goto_scene) hard-resets modal_stack to clear
+	# per-scene dialogs freed mid-dialog without popping — the #426 double-fire
+	# was that reset also zeroing the SURVIVING menu's modal (menu open, block
+	# gone). Exercise the extracted reset directly, with a leaked dialog modal
+	# on the stack to prove the leak-clearing still works.
+	GameState.push_modal()  # simulate a per-scene dialog leaked by the transition
+	SceneManager._reset_modals_for_scene_change()
+	assert_true(PsoStartMenu.is_open(), "menu still open after the goto_scene modal reset")
+	assert_true(GameState.is_gameplay_blocked(), "carried menu still blocks after the goto_scene modal reset (#426)")
+	assert_eq(GameState.modal_stack, 1, "leaked dialog modal cleared; exactly the menu's block survives")
+
+	PsoStartMenu.close()
+	assert_true(not PsoStartMenu.is_open(), "menu closed")
+	assert_true(not GameState.is_gameplay_blocked(), "closing the carried menu unblocks")
 	print("")
 
 
