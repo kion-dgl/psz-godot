@@ -31,6 +31,7 @@ const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
 const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
 const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
 const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
+const ComboDebug = lazy(() => import('./combo-debug/ComboDebug'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
@@ -98,6 +99,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/sfx-labeler', label: 'SFX' },
       { to: '/photo-mode', label: 'Photo' },
       { to: '/dodge-debug', label: 'Dodge' },
+      { to: '/combo-debug', label: 'Combo' },
     ],
   },
 ];
@@ -256,6 +258,7 @@ export default function App() {
             <Route path="/character-select" element={<CharacterSelect />} />
             <Route path="/underground-editor" element={<UndergroundEditor />} />
             <Route path="/dodge-debug" element={<DodgeDebug />} />
+            <Route path="/combo-debug" element={<ComboDebug />} />
             <Route path="/palette-editor" element={<PaletteEditor />} />
           </Routes>
         </Suspense>
