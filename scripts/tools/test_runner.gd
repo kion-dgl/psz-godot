@@ -14,7 +14,10 @@ func _ready() -> void:
 
 	# Split across two registration helpers so neither crosses the code-health
 	# size bound as the suite grows (each new test is one more line here).
+	# Core first: it creates the active character the combat group's
+	# simulation/damage tests need (they SKIP without one).
 	_run_tests_core()
+	_run_tests_combat()
 	_run_tests_systems()
 
 	print("\n══════════════════════════════════")
@@ -24,7 +27,26 @@ func _ready() -> void:
 	get_tree().quit(1 if _fail > 0 else 0)
 
 
-# Registries, inventory, combat math, mags, shops, techniques, telepipe + the
+# Player state machine + combat: states, commitment, combos, damage math,
+# drops, and the combat-adjacent regression tests.
+func _run_tests_combat() -> void:
+	test_player_states()
+	test_action_commitment()
+	test_combo_three_tier()
+	test_combo_chain_lifecycle()
+	test_element_status()
+	test_combat_math()
+	test_combat_drops()
+	test_drop_tables()
+	test_combat_simulation()
+	test_damage_formulas()
+	test_charge_drop_paths()
+	test_mechgun_final_step_no_root()
+	test_weapon_attack_sfx_mapping()
+	test_weapon_anim_data_new_animation_sets()
+
+
+# Registries, inventory, mags, shops, techniques, telepipe + the
 # recent playtest-fix regression tests (#357/#358/#359/#352).
 func _run_tests_core() -> void:
 	test_registries()
@@ -32,16 +54,8 @@ func _run_tests_core() -> void:
 	test_inventory_capacity()
 	test_character_creation()
 	test_equipment()
-	test_player_states()
-	test_action_commitment()
 	test_palette_momentary_swap()
 	test_menu_carry_survives_scene_signal()
-	test_combo_three_tier()
-	test_element_status()
-	test_combat_math()
-	test_combat_drops()
-	test_drop_tables()
-	test_combat_simulation()
 	test_session_manager()
 	test_mag_feeding()
 	test_mag_evolution()
@@ -65,7 +79,6 @@ func _run_tests_core() -> void:
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
-	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
@@ -102,10 +115,6 @@ func _run_tests_core() -> void:
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
 	test_player_defeat_return()
-	test_charge_drop_paths()
-	test_mechgun_final_step_no_root()
-	test_weapon_attack_sfx_mapping()
-	test_weapon_anim_data_new_animation_sets()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -5172,7 +5181,22 @@ func test_combo_three_tier() -> void:
 	assert_eq(int(atk.get("damage", -1)), int(round(int(base.get("damage", 0)) * CombatManager.get_combo_just_mult(0))),
 		"just swing damage = base × just_damage_mult (seed-paired rolls)")
 
+	pl.free()
+	print("")
+
+
+# Second half of the #155 contract: the chain lifecycle — normal-window
+# chains, the finisher's structural no-window, the un-queued break to IDLE,
+# damage interrupts clearing the queue, and the special-chain flag.
+func test_combo_chain_lifecycle() -> void:
+	print("── Combo chain lifecycle (#155) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+
 	# normal window: [0.60, 1.0] queues a NORMAL chain; firing clears the just flag.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 2)
+	pl.set("_is_just_attack", true)  # as if step 2 was a just chain
 	pl.set("_attack_anim_elapsed", 0.8)
 	pl.set("_attack_anim_length", 1.0)
 	pl._try_queue_combo(false)
