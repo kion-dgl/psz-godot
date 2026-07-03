@@ -157,6 +157,7 @@ var _is_special_attack: bool = false  # True when current attack carries weapon 
 var _is_just_attack: bool = false  # Current swing was chained via the just window
 var _queued_combo: int = ComboQueue.NONE  # Next-step queue (one slot, no re-roll)
 var _queued_combo_special: bool = false  # Queued step is a strong attack
+var _combo_fumbled: bool = false  # Miss-early press locked out this swing's chain
 var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
@@ -1351,16 +1352,20 @@ func _attack_frac() -> float:
 	return clampf(_attack_anim_elapsed / _attack_anim_length, 0.0, 1.0)
 
 
-## Three-tier chain press (#155, spec /mechanics/combos): miss-early is a
-## clear NO-OP (not buffered), the just window queues with a damage bonus,
-## the normal window queues standard. The queued step fires at swing end
-## (_attack_step_finished) — never mid-swing (#377 commitment).
+## Three-tier chain press (#155, spec /mechanics/combos): miss-early FUMBLES
+## the swing (locks out chaining until the next step — a no-op alone let
+## mashing ride the wide accept window; Rozalin's #459 playtest), the just
+## window queues with a damage bonus, the normal window queues standard. The
+## queued step fires at swing end (_attack_step_finished) — never mid-swing
+## (#377 commitment).
 func _try_queue_combo(special: bool) -> void:
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if combo_state <= 0 or combo_state >= max_combo:
 		return  # technique cast or finisher — nothing to chain
 	if _queued_combo != ComboQueue.NONE:
 		return  # one queue slot — a second press can't re-roll the tier
+	if _combo_fumbled:
+		return  # a miss-early press already fumbled this swing — chain is dead
 	var t: Dictionary = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
 	if t.is_empty():
 		return
@@ -1373,7 +1378,12 @@ func _try_queue_combo(special: bool) -> void:
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
 		_combo_ring_flash(Color(1.0, 0.8, 0.2) if special else Color(0.2, 1.0, 0.4))
-	# else: miss-early — deliberately not buffered; the player reads the swing
+	else:
+		# Miss-early — the press fumbles the REST of this swing: nothing is
+		# buffered and later presses in the same swing are ignored, so the
+		# combo breaks at swing end. Mashing defeats itself.
+		_combo_fumbled = true
+		_combo_ring_flash(Color(0.75, 0.3, 0.3))  # Muted red — fumbled press
 
 
 ## Single step-end point: fires the queued step or breaks the combo. Reached
@@ -2007,6 +2017,7 @@ func _play_attack_animation(attack_num: int) -> void:
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
 	_attack_anim_length = 0.0
+	_combo_fumbled = false  # each step gets a clean chain attempt
 
 	if _is_special_attack:
 		# Pause before attack — player is exposed during wind-up
@@ -2307,6 +2318,7 @@ func transition_to(new_state: PlayerState) -> void:
 		_queued_combo = ComboQueue.NONE
 		_queued_combo_special = false
 		_is_just_attack = false
+		_combo_fumbled = false
 
 	match new_state:
 		PlayerState.IDLE:

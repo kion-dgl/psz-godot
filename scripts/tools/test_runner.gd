@@ -34,6 +34,7 @@ func _run_tests_combat() -> void:
 	test_action_commitment()
 	test_combo_three_tier()
 	test_combo_chain_lifecycle()
+	test_combo_miss_early_fumble()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -5141,14 +5142,16 @@ func test_combo_three_tier() -> void:
 
 	var pl = PlayerScript.new()
 
-	# miss-early: press before just_start is a clear no-op — NOT buffered.
+	# miss-early: press before just_start queues nothing (it FUMBLES the
+	# swing — the lockout itself is pinned in test_combo_miss_early_fumble).
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
 	pl.set("_attack_anim_length", 1.0)
 	pl.set("_attack_anim_elapsed", 0.3)  # < 0.45
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
-		"miss-early press queues nothing (unbuffered no-op)")
+		"miss-early press queues nothing (fumble, not buffered)")
+	pl.set("_combo_fumbled", false)  # fresh swing for the tier asserts below
 
 	# just window: [0.45, 0.60) queues a JUST chain.
 	pl.set("_attack_anim_elapsed", 0.5)
@@ -5187,23 +5190,34 @@ func test_combo_three_tier() -> void:
 
 # Second half of the #155 contract: the chain lifecycle — normal-window
 # chains, the finisher's structural no-window, the un-queued break to IDLE,
+# Off-tree player parked mid-swing — shared setup for the combo tests.
+func _combo_swing_player(pl_script, step: int, elapsed: float):
+	var pl = pl_script.new()
+	pl.set("current_state", pl_script.PlayerState.ATTACKING)
+	pl.set("combo_state", step)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", elapsed)
+	return pl
+
+
+# Fire the step-end point (resetting the exactly-once guard first).
+func _combo_step_end(pl) -> void:
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+
+
 # damage interrupts clearing the queue, and the special-chain flag.
 func test_combo_chain_lifecycle() -> void:
 	print("── Combo chain lifecycle (#155) ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
-	var pl = PlayerScript.new()
 
 	# normal window: [0.60, 1.0] queues a NORMAL chain; firing clears the just flag.
-	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
-	pl.set("combo_state", 2)
+	var pl = _combo_swing_player(PlayerScript, 2, 0.8)
 	pl.set("_is_just_attack", true)  # as if step 2 was a just chain
-	pl.set("_attack_anim_elapsed", 0.8)
-	pl.set("_attack_anim_length", 1.0)
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"press in [just_end, 1.0] queues a normal chain")
-	pl.set("_attack_step_ended", false)
-	pl._attack_step_finished()
+	_combo_step_end(pl)
 	assert_eq(int(pl.get("combo_state")), 3, "normal chain fires → step 3 (finisher)")
 	assert_true(not bool(pl.get("_is_just_attack")), "normal chain clears the just flag")
 	var atk3: Dictionary = pl._get_attack_damage()
@@ -5213,8 +5227,7 @@ func test_combo_chain_lifecycle() -> void:
 	pl.set("_attack_anim_elapsed", 0.7)
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "finisher press queues nothing")
-	pl.set("_attack_step_ended", false)
-	pl._attack_step_finished()
+	_combo_step_end(pl)
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE), "finisher end returns to IDLE")
 	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the finisher")
 
@@ -5222,20 +5235,22 @@ func test_combo_chain_lifecycle() -> void:
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
 	pl.set("_queued_combo", PlayerScript.ComboQueue.NONE)
-	pl.set("_attack_step_ended", false)
-	pl._attack_step_finished()
+	_combo_step_end(pl)
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
 		"swing ending un-queued breaks the combo to IDLE (no grace window)")
 
-	# Damage interrupt clears the queue (via transition_to, with #428):
-	# the queued follow-up must never fire after a DAMAGED recovery.
+	# Damage interrupt clears the queue AND the fumble flag (via
+	# transition_to, with #428): the queued follow-up must never fire after
+	# a DAMAGED recovery, and a fumble must not leak into the next combo.
 	GameState.set_hp(GameState.max_hp)
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
 	pl.set("_queued_combo", PlayerScript.ComboQueue.JUST)
+	pl.set("_combo_fumbled", true)
 	pl.take_damage(15)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
 		"damage interrupt clears the combo queue (#155/#428)")
+	assert_true(not bool(pl.get("_combo_fumbled")), "ATTACKING exit clears the fumble flag")
 	GameState.set_hp(GameState.max_hp)
 
 	# Special chain: strong-attack press queues with the special flag. (The
@@ -5251,6 +5266,51 @@ func test_combo_chain_lifecycle() -> void:
 	assert_true(bool(pl.get("_queued_combo_special")), "strong-attack press queues a special chain")
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"special press in the normal window queues a NORMAL-tier chain")
+
+	pl.free()
+	print("")
+
+
+# Miss-early FUMBLES the swing (spec /mechanics/combos): a plain no-op let
+# mashing ride the wide accept window and chain anyway (Rozalin's #459
+# playtest) — the fumble locks out chaining for the rest of the swing so
+# mash breaks its own combo. Per swing: the next step starts clean.
+func test_combo_miss_early_fumble() -> void:
+	print("── Combo miss-early fumble ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	# Park mid-swing at 0.3 — before saber's just_start (0.45): miss-early.
+	var pl = _combo_swing_player(PlayerScript, 1, 0.3)
+	pl._try_queue_combo(false)
+	assert_true(bool(pl.get("_combo_fumbled")), "miss-early press fumbles the swing")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"fumbling press queues nothing")
+
+	# Mash: presses inside the accept window are now locked out.
+	pl.set("_attack_anim_elapsed", 0.5)  # just window
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"just-window press after a fumble is ignored")
+	pl.set("_attack_anim_elapsed", 0.8)  # normal window
+	pl._try_queue_combo(true)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"normal-window press after a fumble is ignored (strong too)")
+
+	# The fumbled swing ends un-queued → combo breaks.
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"fumbled swing breaks the combo at swing end")
+
+	# Per-swing lockout: firing the next step resets the flag (synthetic
+	# fumbled+queued state — unreachable in play, but pins the reset path).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_combo_fumbled", true)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NORMAL)
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("combo_state")), 2, "queued chain fires into step 2")
+	assert_true(not bool(pl.get("_combo_fumbled")), "next step starts with a clean chain attempt")
+	# (Damage-interrupt clearing of the flag is pinned in
+	# test_combo_chain_lifecycle's interrupt block.)
 
 	pl.free()
 	print("")
