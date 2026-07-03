@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Merge-queue temp branches — required checks must also report there, or
+  # every queued PR hangs waiting on checks that never run.
+  merge_group: {}
 
 jobs:
   test:
@@ -51,53 +54,35 @@ jobs:
           exit $rc
 
   version-check:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Check version was bumped + all three sources stay synced
+      - name: Committed version sources must stay the "dev" placeholder
+        # Versions are STAMPED AT BUILD TIME (scripts/tools/stamp_version.sh:
+        # build = 95 + first-parent commit count, +1 per merged PR) — nothing
+        # is bumped per PR, so version merge conflicts are impossible. This
+        # check inverts the old "must bump" gate: it fails if anyone hand-edits
+        # the placeholder, which would silently pin every future build to one
+        # number and re-introduce the conflict cascade.
         run: |
           set -euo pipefail
-          PR_VERSION=$(cat VERSION | tr -d '[:space:]')
-          MAIN_VERSION=$(git show origin/main:VERSION 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
-
-          if [ "$PR_VERSION" = "$MAIN_VERSION" ]; then
-            echo "::error::VERSION not bumped. Current: $MAIN_VERSION. Bump VERSION (and the two synced fields below) before merging."
-            exit 1
-          fi
-
-          # Three places store the version. They MUST agree, otherwise:
-          #   - project.godot config/version drifts from VERSION → in-game
-          #     about screens / GameState lie about which build is running.
-          #   - export_presets.cfg version/name drifts from VERSION → Android
-          #     `dumpsys package`, Play Console, and any future code-signing
-          #     audit lie about which build is shipped (caused the "phone
-          #     reports 0.2.2" bug).
-          # Catching at PR time is much cheaper than catching after a release.
-          GODOT_VERSION=$(grep -oP 'config/version="\K[^"]+' project.godot)
-          ANDROID_VERSION=$(awk -F'"' '/^version\/name=/ {print $2; exit}' export_presets.cfg)
-
           fail=0
-          if [ "$GODOT_VERSION" != "$PR_VERSION" ]; then
-            echo "::error::project.godot config/version='$GODOT_VERSION' must equal VERSION='$PR_VERSION'"
+          if [ "$(tr -d '[:space:]' < VERSION)" != "dev" ]; then
+            echo "::error::VERSION must stay 'dev' — build numbers are stamped in CI by scripts/tools/stamp_version.sh, never committed."
             fail=1
           fi
-          if [ "$ANDROID_VERSION" != "$PR_VERSION" ]; then
-            echo "::error::export_presets.cfg version/name='$ANDROID_VERSION' must equal VERSION='$PR_VERSION' (Android dumpsys reads this)"
+          if ! grep -q '^config/version="dev"$' project.godot; then
+            echo "::error::project.godot config/version must stay \"dev\" (stamped at build time)."
             fail=1
           fi
-          if [ "$fail" -eq 1 ]; then
-            exit 1
+          if ! grep -q '^version/name="dev"$' export_presets.cfg; then
+            echo "::error::export_presets.cfg version/name must stay \"dev\" (stamped at build time)."
+            fail=1
           fi
-
-          echo "Version bumped: $MAIN_VERSION → $PR_VERSION ✓"
-          echo "  VERSION                          = $PR_VERSION"
-          echo "  project.godot config/version     = $GODOT_VERSION"
-          echo "  export_presets.cfg version/name  = $ANDROID_VERSION"
+          exit $fail
 
   validate-quests:
     runs-on: ubuntu-latest
