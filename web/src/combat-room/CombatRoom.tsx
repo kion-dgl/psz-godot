@@ -30,6 +30,14 @@ import { assetUrl } from '../utils/assets';
  *  the swing ([just_start, just_end) = just, then normal), a press QUEUES
  *  the chain which fires at swing end, miss-early FUMBLES the swing.
  *
+ * Target-info HUD (bottom-left, PSZ panel style): shows the primary target —
+ *  enemy name + HP bar, or a ground item's name. Contract: no primary target
+ *  → the panel does not render at all; the Quick Menu (Q) owns that corner —
+ *  while it is open the target panel MUST NOT render (menu takes priority).
+ *  Ground items join the cone scan as targetable entities (PSO's reticle
+ *  system handles item pickup through the same targeting-info slots), but
+ *  swings only ever hit enemies.
+ *
  * Controls: Z normal · X strong · C special · WASD/arrows steer · R reset ·
  * drag dummies to reposition. Tunables persist per weapon type; export as
  * GDScript.
@@ -193,20 +201,28 @@ function stripRootMotion(clip: THREE.AnimationClip): void {
 // Dummies + hit test (the PSO cone, in the XZ plane)
 // ---------------------------------------------------------------------------
 
+type EntityKind = 'enemy' | 'item';
+
 interface Dummy {
+  kind: EntityKind;
+  name: string;
   x: number; z: number;
   radius: number;        // hitbox radius — extends the weapon's reach (PSO)
+  maxHp: number;         // 0 for items
+  hp: number;
   hitFlash: number;      // seconds left on hit tint
   hitCount: number;
 }
 
-const DEFAULT_DUMMIES: Array<Pick<Dummy, 'x' | 'z' | 'radius'>> = [
-  { x: 0, z: -2.6, radius: 0.5 },
-  { x: -1.8, z: -2.2, radius: 0.5 },
-  { x: 1.8, z: -2.2, radius: 0.5 },
-  { x: -3.2, z: 0.5, radius: 0.8 },
-  { x: 3.4, z: -0.6, radius: 0.35 },
-  { x: 0.5, z: 3.0, radius: 0.5 },
+const DEFAULT_DUMMIES: Array<Pick<Dummy, 'kind' | 'name' | 'x' | 'z' | 'radius' | 'maxHp'>> = [
+  { kind: 'enemy', name: 'Dummy A',     x: 0,    z: -2.6, radius: 0.5,  maxHp: 120 },
+  { kind: 'enemy', name: 'Dummy B',     x: -1.8, z: -2.2, radius: 0.5,  maxHp: 120 },
+  { kind: 'enemy', name: 'Dummy C',     x: 1.8,  z: -2.2, radius: 0.5,  maxHp: 120 },
+  { kind: 'enemy', name: 'Heavy Dummy', x: -3.2, z: 0.5,  radius: 0.8,  maxHp: 300 },
+  { kind: 'enemy', name: 'Small Dummy', x: 3.4,  z: -0.6, radius: 0.35, maxHp: 60 },
+  { kind: 'enemy', name: 'Dummy F',     x: 0.5,  z: 3.0,  radius: 0.5,  maxHp: 120 },
+  { kind: 'item',  name: 'Monomate',    x: 1.2,  z: -1.3, radius: 0.3,  maxHp: 0 },
+  { kind: 'item',  name: 'Saber',       x: -1.1, z: 1.6,  radius: 0.3,  maxHp: 0 },
 ];
 
 /**
@@ -226,6 +242,7 @@ function targetableDummies(
   const out: Array<{ i: number; d2: number }> = [];
   for (let i = 0; i < dummies.length; i++) {
     const d = dummies[i];
+    if (d.kind === 'enemy' && d.hp <= 0) continue;  // defeated — not targetable
     const dx = d.x - ax;
     const dz = d.z - az;
     const dist = Math.hypot(dx, dz);
@@ -340,7 +357,7 @@ export default function CombatRoom() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<SceneRefs | null>(null);
   const simRef = useRef<Sim>(freshSim());
-  const dummiesRef = useRef<Dummy[]>(DEFAULT_DUMMIES.map((d) => ({ ...d, hitFlash: 0, hitCount: 0 })));
+  const dummiesRef = useRef<Dummy[]>(DEFAULT_DUMMIES.map((d) => ({ ...d, hp: d.maxHp, hitFlash: 0, hitCount: 0 })));
   const logIdRef = useRef(0);
 
   const [config, setConfig] = useState<Config>(loadConfig);
@@ -351,7 +368,9 @@ export default function CombatRoom() {
     phase: 'idle' as Phase, step: 0, frac: 0, queued: 'none' as QueueTier,
     fumbled: false, yawDeg: 180, targetable: [] as number[],
     hits: 0, whiffs: 0,
+    primary: null as null | { kind: EntityKind; name: string; hp: number; maxHp: number },
   });
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false);
 
   const classDef = CLASSES.find((c) => c.id === config.classId)!;
   const gender = classDef.gender;
@@ -435,12 +454,15 @@ export default function CombatRoom() {
   const applyChainTurn = useCallback((enteringStep: number) => {
     const sim = simRef.current;
     const t = tuningRef.current;
-    // Target snap: re-aim at the primary target like PSO does per step —
-    // unclamped, because the target was already inside the cone.
+    // Target snap: re-aim at the nearest ENEMY in the cone like PSO does per
+    // step — unclamped, because the target was already inside the cone.
+    // Items are never snap targets (PSO's weapon reticle only targets
+    // attackables; item pickup is a separate reticle slot).
     if (t.targetSnap) {
-      const targetable = targetableDummies(0, 0, sim.yaw, t, dummiesRef.current);
-      if (targetable.length > 0) {
-        const d = dummiesRef.current[targetable[0]];
+      const enemies = targetableDummies(0, 0, sim.yaw, t, dummiesRef.current)
+        .filter((i) => dummiesRef.current[i].kind === 'enemy');
+      if (enemies.length > 0) {
+        const d = dummiesRef.current[enemies[0]];
         sim.yaw = Math.atan2(d.x, d.z);
         return;
       }
@@ -534,29 +556,36 @@ export default function CombatRoom() {
     resetToIdle();
   }, [applyChainTurn, beginStep, ringFlash, resetToIdle]);
 
-  /** Damaging frame: resolve hits against the cone, nearest maxTargets. */
+  /** Damaging frame: resolve hits against the cone — nearest maxTargets
+   *  ENEMIES (items are targetable for the reticle/HUD but never hit). */
   const resolveHits = useCallback(() => {
     const sim = simRef.current;
     const t = tuningRef.current;
     const stepIdx = Math.min(Math.max(sim.step - 1, 0), 2);
     const targetable = targetableDummies(0, 0, sim.yaw, t, dummiesRef.current);
-    const hit = targetable.slice(0, t.maxTargets);
+    const enemies = targetable.filter((i) => dummiesRef.current[i].kind === 'enemy');
+    const hit = enemies.slice(0, t.maxTargets);
     const hits = t.hitsPerStep[stepIdx] ?? 1;
-    const mult = (sim.isJust ? t.justMult : 1) * (sim.step === t.comboSteps ? 1.3 : 1);
+    const dmg = Math.round(25 * hits * (sim.isJust ? t.justMult : 1));
     for (const i of hit) {
       const d = dummiesRef.current[i];
       d.hitFlash = 0.3;
       d.hitCount += hits;
+      d.hp = Math.max(0, d.hp - dmg);
     }
     if (hit.length > 0) {
       sim.hitsLanded += hit.length;
       pushLog(
-        `atk${sim.step} hit ${hit.length}/${targetable.length} in cone (${hits} hit${hits > 1 ? 's' : ''} each${sim.isJust ? `, JUST ×${t.justMult.toFixed(2)}` : ''}${mult !== 1 && !sim.isJust ? '' : ''})`,
+        `atk${sim.step} hit ${hit.length}/${enemies.length} enemies (${dmg} dmg${sim.isJust ? `, JUST ×${t.justMult.toFixed(2)}` : ''})`,
         sim.isJust ? '#6f9' : '#4f4',
       );
+      for (const i of hit) {
+        const d = dummiesRef.current[i];
+        if (d.hp <= 0) pushLog(`${d.name} defeated`, '#fa6');
+      }
     } else {
       sim.swingsMissed += 1;
-      pushLog(`atk${sim.step} whiffed — nothing in the cone`, '#888');
+      pushLog(`atk${sim.step} whiffed — no enemy in the cone`, '#888');
     }
   }, [pushLog]);
 
@@ -588,6 +617,7 @@ export default function CombatRoom() {
       if (e.code === 'KeyZ' || e.code === 'KeyJ') pressAttackRef.current('normal');
       else if (e.code === 'KeyX' || e.code === 'KeyK') pressAttackRef.current('strong');
       else if (e.code === 'KeyC' || e.code === 'KeyL') pressAttackRef.current('special');
+      else if (e.code === 'KeyQ') setQuickMenuOpen((p) => !p);
       else if (e.code === 'KeyR') resetRef.current();
     };
     const onUp = (e: KeyboardEvent) => simRef.current.keysDown.delete(e.code);
@@ -661,11 +691,15 @@ export default function CombatRoom() {
     ghostArrow.visible = false;
     scene.add(facingArrow, desiredArrow, ghostArrow);
 
-    // Dummies
+    // Entities: enemies are capsules, ground items small octahedra
     const dummyHandles: DummyHandle[] = dummiesRef.current.map((d, i) => {
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8888aa, roughness: 0.8 });
-      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(d.radius * 0.55, 1.0, 4, 12), bodyMat);
-      mesh.position.set(d.x, 0.85, d.z);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: d.kind === 'item' ? 0xddbb44 : 0x8888aa, roughness: 0.8,
+      });
+      const mesh = d.kind === 'item'
+        ? new THREE.Mesh(new THREE.OctahedronGeometry(0.22), bodyMat)
+        : new THREE.Mesh(new THREE.CapsuleGeometry(d.radius * 0.55, 1.0, 4, 12), bodyMat);
+      mesh.position.set(d.x, d.kind === 'item' ? 0.3 : 0.85, d.z);
       mesh.userData.dummyIdx = i;
       scene.add(mesh);
       const ringMat = new THREE.MeshBasicMaterial({
@@ -757,8 +791,19 @@ export default function CombatRoom() {
         if (sim.elapsed >= sim.clipLen) stepFinishedRef.current();
       }
 
-      // targetable set (live, like PSO's per-frame reticle scan)
+      // targetable set (live, like PSO's per-frame reticle scan). HUD-primary
+      // precedence mirrors PSO's split reticles: the nearest ENEMY in the
+      // weapon cone wins; an item is primary only when no enemy is targetable
+      // and the item sits within pickup range.
+      const ITEM_INFO_RANGE = 2.0;
       const targetable = targetableDummies(0, 0, sim.yaw, t, dummiesRef.current);
+      let primIdx = targetable.find((i) => dummiesRef.current[i].kind === 'enemy') ?? -1;
+      if (primIdx < 0) {
+        primIdx = targetable.find((i) => {
+          const d = dummiesRef.current[i];
+          return d.kind === 'item' && Math.hypot(d.x, d.z) <= ITEM_INFO_RANGE;
+        }) ?? -1;
+      }
 
       // visuals
       sim.displayYaw += wrapAngle(sim.yaw - sim.displayYaw) * Math.min(1, delta * 14);
@@ -799,22 +844,34 @@ export default function CombatRoom() {
         s.fan.rotation.y = sim.yaw;
       }
 
-      // dummies: primary bright, targetable green, hit flash red
+      // entities: primary bright, targetable green, hit flash red,
+      // defeated enemies slumped dark, items idle-spin
       for (let i = 0; i < s.dummies.length; i++) {
         const dh = s.dummies[i];
         const d = dummiesRef.current[i];
         dh.mesh.position.x = d.x;
         dh.mesh.position.z = d.z;
         dh.ring.position.set(d.x, 0.02, d.z);
-        const isPrimary = targetable[0] === i;
+        if (d.kind === 'item') dh.mesh.rotation.y += delta * 1.5;
+        const isPrimary = primIdx === i;
         const inSet = targetable.includes(i);
-        if (d.hitFlash > 0) {
-          d.hitFlash -= delta;
-          dh.bodyMat.color.setHex(0xff5544);
-          dh.ringMat.color.setHex(0xff5544);
+        const isItem = d.kind === 'item';
+        const dead = !isItem && d.hp <= 0;
+        if (dead) {
+          dh.mesh.scale.y = Math.max(0.25, dh.mesh.scale.y - delta * 3);
+          dh.bodyMat.color.setHex(0x44445a);
+          dh.ringMat.color.setHex(0x333344);
         } else {
-          dh.bodyMat.color.setHex(isPrimary ? 0xffee66 : inSet ? 0x66dd88 : 0x8888aa);
-          dh.ringMat.color.setHex(isPrimary ? 0xffee66 : inSet ? 0x33aa55 : 0x555577);
+          dh.mesh.scale.y = 1;
+          if (d.hitFlash > 0) {
+            d.hitFlash -= delta;
+            dh.bodyMat.color.setHex(0xff5544);
+            dh.ringMat.color.setHex(0xff5544);
+          } else {
+            const base = isItem ? 0xddbb44 : 0x8888aa;
+            dh.bodyMat.color.setHex(isPrimary ? 0xffee66 : inSet ? (isItem ? 0xeedd88 : 0x66dd88) : base);
+            dh.ringMat.color.setHex(isPrimary ? 0xffee66 : inSet ? 0x33aa55 : 0x555577);
+          }
         }
         dh.ringMat.opacity = inSet ? 0.95 : 0.5;
       }
@@ -835,12 +892,14 @@ export default function CombatRoom() {
       controls.update();
       renderer.render(scene, camera);
 
+      const prim = primIdx >= 0 ? dummiesRef.current[primIdx] : null;
       setHud({
         phase: sim.phase, step: sim.step,
         frac: sim.clipLen > 0 ? Math.min(1, sim.elapsed / sim.clipLen) : 0,
         queued: sim.queued, fumbled: sim.fumbled,
         yawDeg: rad2deg(sim.yaw), targetable: targetable.slice(),
         hits: sim.hitsLanded, whiffs: sim.swingsMissed,
+        primary: prim ? { kind: prim.kind, name: prim.name, hp: prim.hp, maxHp: prim.maxHp } : null,
       });
     };
     animate();
@@ -975,7 +1034,7 @@ export default function CombatRoom() {
   const resetDummies = () => {
     dummiesRef.current.forEach((d, i) => {
       const def = DEFAULT_DUMMIES[i];
-      d.x = def.x; d.z = def.z; d.hitFlash = 0; d.hitCount = 0;
+      d.x = def.x; d.z = def.z; d.hitFlash = 0; d.hitCount = 0; d.hp = def.maxHp;
     });
     simRef.current.hitsLanded = 0;
     simRef.current.swingsMissed = 0;
@@ -1029,16 +1088,16 @@ export default function CombatRoom() {
 
           <div style={{ flex: 1, background: '#0a0a1a', borderRadius: 8, overflow: 'hidden', position: 'relative' }} ref={containerRef}>
             <div style={{
-              position: 'absolute', left: 10, bottom: 10, fontSize: 11, color: '#99a',
+              position: 'absolute', left: 10, top: 10, fontSize: 11, color: '#99a',
               background: 'rgba(10,10,26,0.75)', padding: '6px 10px', borderRadius: 6, pointerEvents: 'none',
             }}>
               <span style={{ color: ATTACK_COLORS.normal }}>Z</span> normal ·{' '}
               <span style={{ color: ATTACK_COLORS.strong }}>X</span> strong ·{' '}
               <span style={{ color: ATTACK_COLORS.special }}>C</span> special ·{' '}
-              WASD steer · R reset · drag dummies · right-drag orbit
+              Q quick menu · WASD steer · R reset · drag dummies · right-drag orbit
             </div>
             <div style={{
-              position: 'absolute', right: 10, top: 10, fontSize: 11, color: '#99a',
+              position: 'absolute', right: 10, bottom: 10, fontSize: 11, color: '#99a',
               background: 'rgba(10,10,26,0.75)', padding: '6px 10px', borderRadius: 6, pointerEvents: 'none',
             }}>
               <span style={{ color: '#fa4' }}>orange</span> = hit cone ·{' '}
@@ -1046,6 +1105,66 @@ export default function CombatRoom() {
               <span style={{ color: '#6d8' }}>green</span> = in cone ·{' '}
               <span style={{ color: '#f54' }}>red</span> = hit
             </div>
+
+            {/* Bottom-left HUD corner. Priority contract: quick menu owns the
+                corner while open; otherwise the primary target's info panel;
+                nothing to show → nothing rendered. */}
+            {quickMenuOpen ? (
+              <div style={{
+                position: 'absolute', left: 14, bottom: 14, width: 220,
+                background: '#1a2a4a', padding: 2, pointerEvents: 'none',
+                clipPath: 'polygon(8px 0, calc(100% - 8px) 0, 100% 10px, 100% calc(100% - 16px), calc(100% - 24px) 100%, 8px 100%, 0 calc(100% - 10px), 0 10px)',
+              }}>
+                <div style={{
+                  background: 'repeating-linear-gradient(180deg, #2a3d63 0px, #2a3d63 3px, #24365a 3px, #24365a 6px)',
+                  clipPath: 'polygon(7px 0, calc(100% - 7px) 0, 100% 9px, 100% calc(100% - 15px), calc(100% - 23px) 100%, 7px 100%, 0 calc(100% - 9px), 0 9px)',
+                  padding: '8px 14px 12px',
+                }}>
+                  <div style={{ fontSize: 10, color: '#8fb4e8', letterSpacing: 1, marginBottom: 6 }}>QUICK MENU</div>
+                  {[['Monomate', '×5'], ['Dimate', '×2'], ['Telepipe', '×1']].map(([n, q], i) => (
+                    <div key={n} style={{
+                      display: 'flex', justifyContent: 'space-between', fontSize: 12,
+                      color: i === 0 ? '#fff' : '#a9c4e4', background: i === 0 ? 'rgba(90,130,190,0.45)' : 'transparent',
+                      padding: '2px 6px', borderRadius: 2,
+                    }}>
+                      <span>{n}</span><span>{q}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : hud.primary && (
+              <div style={{
+                position: 'absolute', left: 14, bottom: 14, width: 210,
+                background: '#1a2a4a', padding: 2, pointerEvents: 'none',
+                clipPath: 'polygon(8px 0, calc(100% - 8px) 0, 100% 10px, 100% calc(100% - 16px), calc(100% - 24px) 100%, 8px 100%, 0 calc(100% - 10px), 0 10px)',
+              }}>
+                <div style={{
+                  background: 'repeating-linear-gradient(180deg, #b8d4ea 0px, #b8d4ea 3px, #a8c6e0 3px, #a8c6e0 6px)',
+                  clipPath: 'polygon(7px 0, calc(100% - 7px) 0, 100% 9px, 100% calc(100% - 15px), calc(100% - 23px) 100%, 7px 100%, 0 calc(100% - 9px), 0 9px)',
+                  padding: '7px 14px 11px', color: '#16264a',
+                }}>
+                  {hud.primary.kind === 'enemy' ? (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 'bold', marginBottom: 4 }}>{hud.primary.name}</div>
+                      <div style={{ height: 8, background: '#31507c', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${hud.primary.maxHp > 0 ? (hud.primary.hp / hud.primary.maxHp) * 100 : 0}%`,
+                          background: hud.primary.hp / Math.max(1, hud.primary.maxHp) > 0.35 ? '#4dc45f' : '#d8a03a',
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 10, marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>
+                        HP {hud.primary.hp}/{hud.primary.maxHp}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 9, letterSpacing: 1, color: '#3a5a8a', marginBottom: 2 }}>ITEM</div>
+                      <div style={{ fontSize: 13, fontWeight: 'bold' }}>{hud.primary.name}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1136,6 +1255,27 @@ export default function CombatRoom() {
               Press early → fumble (swing locked out); [just_start, just_end)
               → JUST ×{tuning.justMult.toFixed(2)}; later → normal chain. The queued step fires
               at swing end.
+            </div>
+          </div>
+
+          {/* Target-info HUD contract */}
+          <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: 10 }}>
+            <h3 style={{ fontSize: 12, color: '#6b8afd', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Target info HUD (bottom-left)
+            </h3>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#aaa', marginBottom: 6 }}>
+              <input type="checkbox" checked={quickMenuOpen}
+                onChange={(e) => setQuickMenuOpen(e.target.checked)} />
+              Quick menu open (Q) — takes priority over target info
+            </label>
+            <div style={{ fontSize: 10, color: '#666' }}>
+              The panel shows the primary target: enemy → name + HP; ground
+              item → item name. No primary target → the panel does not render
+              at all. While the quick menu is open it owns the corner and the
+              target panel never shows. Defeated dummies stop being targetable.
+              Precedence (design point, PSO's split-reticle model): an enemy in
+              the cone always wins; an item is primary only when no enemy is
+              targetable and it's within ~2 m pickup range.
             </div>
           </div>
 

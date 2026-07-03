@@ -159,6 +159,7 @@ func _run_tests_systems() -> void:
 	test_message_wall_questitem_persist()
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
+	test_minimap_enemy_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 
@@ -7346,6 +7347,90 @@ func test_blackjack() -> void:
 			break
 	assert_true(found_bj, "At least one seed in [1,5000) produces a player blackjack")
 
+	print("")
+
+
+# #422 — live enemy markers on the room minimap (spec /states/enemies —
+# minimap markers). Seeded, no pack assets: projection metadata is hand-set
+# (the SVG file itself is pack-only), enemies are real EnemyBase instances
+# kept out of the tree (no _ready → no model loads), and movement is driven
+# through plain Node3D stand-ins under a bare map root.
+func test_minimap_enemy_markers() -> void:
+	print("── Room minimap enemy markers (#422) ──")
+	const RoomMinimap := preload("res://scripts/3d/field/room_minimap.gd")
+	var minimap: Control = RoomMinimap.new()
+	add_child(minimap)
+
+	# Spawn 3 enemies in a seeded cell → 3 markers.
+	var enemies: Array = []
+	for i in range(3):
+		var e := EnemyBase.new()
+		var ed := EnemyData.new()
+		ed.id = "wolf%d" % i
+		e.enemy_data = ed
+		minimap.track_enemy(e)
+		enemies.append(e)
+	assert_eq(minimap.get_enemy_marker_count(), 3, "3 alive enemies → 3 markers")
+	minimap.track_enemy(enemies[0])
+	assert_eq(minimap.get_enemy_marker_count(), 3, "Re-tracking the same enemy does not duplicate its marker")
+
+	# Kill one (EnemyBase._die emits died) → marker removed, 2 remain.
+	enemies[0].is_alive = false
+	enemies[0].died.emit(enemies[0])
+	assert_eq(minimap.get_enemy_marker_count(), 2, "Death signal removes the marker → 2 markers")
+
+	# A freed enemy (death animation finished → queue_free) is swept too.
+	enemies[1].free()
+	assert_eq(minimap.get_enemy_marker_count(), 1, "Freed instance swept from marker count")
+
+	# Boss dot area ≈8× a normal dot (radius × sqrt(8)).
+	var normal_r: float = RoomMinimap.enemy_marker_radius(false)
+	var boss_r: float = RoomMinimap.enemy_marker_radius(true)
+	var area_ratio: float = (boss_r * boss_r) / (normal_r * normal_r)
+	assert_true(absf(area_ratio - 8.0) < 0.01, "Boss dot area ≈8× normal (got %.2fx)" % area_ratio)
+	var boss := EnemyBase.new()
+	var boss_data := EnemyData.new()
+	boss_data.id = "reyburn"
+	boss_data.is_boss = true
+	boss.enemy_data = boss_data
+	assert_true(minimap._is_boss_enemy(boss), "EnemyData.is_boss drives the boss-sized dot")
+	assert_true(not minimap._is_boss_enemy(enemies[2]), "Normal enemy gets the normal dot")
+
+	# Markers follow movement through the same projection as the player.
+	# Identity map root + unit SVG transform → display = world.xz scaled into
+	# the frame's inner map area (DISPLAY_SIZE px over the 400-unit SVG space).
+	var disp_k: float = RoomMinimap.DISPLAY_SIZE / 400.0
+	minimap._svg_scale = 1.0
+	minimap._svg_offset_x = 0.0
+	minimap._svg_offset_y = 0.0
+	minimap._has_player_tracking = true
+	var map_root := Node3D.new()
+	add_child(map_root)
+	var walker := Node3D.new()  # stand-in body; _ready-safe inside the tree
+	map_root.add_child(walker)
+	walker.position = Vector3(100.0, 0.0, 200.0)
+	minimap.track_enemy(walker)
+	minimap.update_enemies(map_root)
+	var marker: Dictionary = minimap._enemy_markers.get(walker.get_instance_id(), {})
+	var pos: Vector2 = marker.get("pos", Vector2.ZERO)
+	assert_true(pos.distance_to(Vector2(100.0, 200.0) * disp_k) < 0.01,
+		"Marker projected at minimap position (got %s)" % pos)
+	assert_eq(marker.get("radius", 0.0), normal_r, "Stand-in without boss data draws a normal dot")
+	walker.position = Vector3(200.0, 0.0, 100.0)
+	minimap.update_enemies(map_root)
+	marker = minimap._enemy_markers.get(walker.get_instance_id(), {})
+	pos = marker.get("pos", Vector2.ZERO)
+	assert_true(pos.distance_to(Vector2(200.0, 100.0) * disp_k) < 0.01,
+		"Marker follows enemy movement (got %s)" % pos)
+	minimap.untrack_enemy(walker)
+	minimap.update_enemies(map_root)
+	assert_eq(minimap._enemy_markers.size(), 0, "Untracked enemy leaves no stale marker entry")
+
+	enemies[0].free()
+	enemies[2].free()
+	boss.free()
+	map_root.queue_free()
+	minimap.queue_free()
 	print("")
 
 

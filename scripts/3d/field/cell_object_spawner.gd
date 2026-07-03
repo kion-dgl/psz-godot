@@ -719,6 +719,14 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
 
 
+## Minimap enemy dot (#422). Cell-entry spawns run before the minimap is
+## created — the field controller registers that roster itself after setup —
+## so this only catches later spawns (wave 2+ via _spawn_wave).
+func _track_on_minimap(enemy: Node3D) -> void:
+	if _c._room_minimap:
+		_c._room_minimap.track_enemy(enemy)
+
+
 func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> void:
 	if state == "dead":
 		return  # Don't spawn dead enemies
@@ -747,6 +755,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_c._map_root.add_child(enemy)
 		enemy.position = pos
 		_c._room_enemies.append(enemy)
+		_track_on_minimap(enemy)
 		var spawn_id := enemy_id
 		enemy.died.connect(func(e: EnemyBase) -> void:
 			_spawn_enemy_drops(e.global_position, spawn_id)
@@ -774,6 +783,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_c._map_root.add_child(enemy)
 		enemy.position = pos
 		_c._room_enemies.append(enemy)
+		_track_on_minimap(enemy)
 		var spawn_id := enemy_id
 		enemy.died.connect(func(e: EnemyBase) -> void:
 			_spawn_enemy_drops(e.global_position, spawn_id)
@@ -787,6 +797,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_c._map_root.add_child(enemy)
 		enemy.position = pos
 		_c._room_enemies.append(enemy)
+		_track_on_minimap(enemy)
 		var enemy_ref := enemy
 		var spawn_id := enemy_id
 		enemy.defeated.connect(func() -> void:
