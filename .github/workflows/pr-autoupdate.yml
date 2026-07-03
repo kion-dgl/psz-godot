@@ -1,0 +1,65 @@
+name: PR Auto-Update
+
+# Poor-man's merge queue for a user-owned repo (GitHub's native merge queue
+# is org-only). Every time main moves, update the branch of every OPEN,
+# READY PR that has AUTO-MERGE armed — arming auto-merge is how a PR "joins
+# the queue". The update re-runs CI against the new main; auto-merge lands
+# the PR when its checks go green; that merge re-triggers this workflow for
+# the next PR in line. Versions are stamped at build time (stamp_version.sh),
+# so these updates never hit version conflicts — a real code conflict makes
+# the update call fail and is surfaced in the run log for a human.
+#
+# REQUIRED SECRET: AUTOUPDATE_TOKEN — a fine-grained PAT (repo: contents
+# read/write + pull requests read/write). The default GITHUB_TOKEN cannot be
+# used: commits it creates DO NOT trigger workflows, so updated PRs would
+# never re-run CI and auto-merge would never fire. Without the secret this
+# workflow no-ops with a warning instead of silently wedging the queue.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: pr-autoupdate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-queued-prs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Update branches of auto-merge-armed PRs
+        env:
+          GH_TOKEN: ${{ secrets.AUTOUPDATE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::AUTOUPDATE_TOKEN secret not set — queued PRs will not auto-update against the new main. Add a fine-grained PAT (contents + pull-requests write) to enable the merge-queue behavior."
+            exit 0
+          fi
+          QUEUED=$(gh pr list --repo "$REPO" --state open \
+            --json number,isDraft,autoMergeRequest \
+            --jq '.[] | select(.isDraft == false and .autoMergeRequest != null) | .number')
+          if [ -z "$QUEUED" ]; then
+            echo "No open ready PRs with auto-merge armed — nothing to update."
+            exit 0
+          fi
+          for pr in $QUEUED; do
+            echo "── PR #$pr: updating branch against new main"
+            if gh api -X PUT "repos/$REPO/pulls/$pr/update-branch" > /dev/null 2>/tmp/err; then
+              echo "   updated — CI will re-run and auto-merge lands it when green"
+            else
+              # 422 covers both "already up to date" (fine) and "merge
+              # conflict" (needs a human) — disambiguate via mergeable state.
+              STATE=$(gh pr view "$pr" --repo "$REPO" --json mergeable --jq .mergeable)
+              if [ "$STATE" = "CONFLICTING" ]; then
+                echo "::warning::PR #$pr has a real merge conflict with main — resolve manually; auto-merge is stalled until then."
+              else
+                echo "   already up to date (or update not needed): $(cat /tmp/err | head -1)"
+              fi
+            fi
+          done

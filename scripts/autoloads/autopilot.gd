@@ -962,6 +962,7 @@ func _drive_city_office() -> void:
 	else:
 		# Neither dialog active → just exit.
 		print("[sanity] office: idle, exit to counter")
+		_menu_carry_open_before_exit()
 		_teleport_player(OFFICE_EXIT_POS)
 
 
@@ -982,6 +983,7 @@ func _drive_office_intro() -> void:
 		_after(STEP_DELAY, _drive_shop_smoke)
 	else:
 		print("[sanity] office intro complete → exit to counter")
+		_menu_carry_open_before_exit()
 		_teleport_player(OFFICE_EXIT_POS)
 
 
@@ -1959,6 +1961,11 @@ func _drive_city_counter() -> void:
 			_counter_npc_interacted = true
 			print("[sanity] counter: teleport to guild NPC")
 			_teleport_player(COUNTER_NPC_POS)
+			# #426 carried-over leg: the Start Menu is still open from the office.
+			# The interact below MUST be consumed by the menu, not the NPC.
+			if _menu_carry_opened and not _menu_carry_checked:
+				_after(0.6, _probe_menu_carry_interact)
+				return
 			_after(0.6, func() -> void: _press_action("interact"))
 		return
 
@@ -2018,6 +2025,61 @@ func _drive_guild_counter() -> void:
 
 # City warp is no longer a separate scene — the WarpTeleporter pad lives in the
 # counter (merged map) and is driven in-place by _drive_city_counter (#city-merge).
+
+
+## Issue #426 carried-over probe (PSZ_AUTOPILOT_MENU_CARRY=1). The fresh-open
+## probe below covers a menu opened in the SAME area; this one covers Rozalin's
+## carried-over repro (open in the market, transition, interact at the counter):
+## the Start Menu is opened in the OFFICE and left open across the
+## office→counter transition — the autoload survives the tree rebuild — then
+## the interact press at the guild counter NPC MUST be consumed by the menu
+## (spec /states/start-menu invariants; #426 edge case 2026-06-28).
+var _menu_carry_opened := false
+var _menu_carry_checked := false
+
+
+func _menu_carry_open_before_exit() -> void:
+	if OS.get_environment("PSZ_AUTOPILOT_MENU_CARRY") != "1" or _menu_carry_opened:
+		return
+	if PsoStartMenu == null:
+		_fail_and_quit("menu-carry probe — PsoStartMenu autoload missing")
+		return
+	_menu_carry_opened = true
+	PsoStartMenu.open()
+	print("[sanity] menu-carry: Start Menu opened in office, exiting with it open")
+
+
+func _probe_menu_carry_interact() -> void:
+	if PsoStartMenu == null or not PsoStartMenu.is_open():
+		_fail_and_quit("menu-carry — Start Menu did not survive the office→counter transition")
+		return
+	print("[sanity] menu-carry: at guild NPC with carried menu open, pressing interact (must be blocked)")
+	_press_action("interact")
+	_after(0.5, _probe_menu_carry_blocked_check)
+
+
+func _probe_menu_carry_blocked_check() -> void:
+	_menu_carry_checked = true
+	var stack_size := 0
+	if SceneManager != null:
+		stack_size = SceneManager._scene_stack.size()
+	var top := ""
+	if stack_size > 0:
+		top = String(SceneManager._scene_stack[stack_size - 1])
+	if top == GUILD_COUNTER:
+		_fail_and_quit("menu-carry — interact opened the guild counter while the carried Start Menu was open (#426)")
+		return
+	if not PsoStartMenu.is_open():
+		# Not the double-fire itself, but the press should land in the menu, not
+		# close it — surface it without failing (the hard assertion is above).
+		print("[sanity] WARN: menu-carry — interact press closed the carried menu")
+	print("[sanity] checkpoint: start-menu-carry-blocks-interact")
+	# Close the menu and re-drive the counter with a fresh interact so the
+	# normal accept flow (and the rest of the run) continues.
+	if PsoStartMenu.is_open():
+		PsoStartMenu.close()
+	_counter_npc_interacted = false
+	_after(0.5, _drive_city_counter)
 
 
 ## Issue #426 runtime probe (pack-gated — needs the city scene + the pack-only

@@ -62,8 +62,13 @@ cat > "$MANIFEST" <<JSON
 JSON
 
 # 3) Drive the real game under autopilot, capture stdout+stderr.
-echo "[sanity-check] launching game under autopilot (timeout ${TIMEOUT}s)…"
-PSZ_AUTOPILOT=1 timeout "$TIMEOUT" "$GODOT" --headless --path "$REPO" >"$LOG" 2>&1
+# SANITY_MENU_CARRY=1 additionally runs the #426 carried-over-menu probe
+# (Start Menu opened in the office, carried across the office→counter
+# transition, interact at the guild NPC must be consumed by the menu).
+MENU_CARRY="${SANITY_MENU_CARRY:-0}"
+echo "[sanity-check] launching game under autopilot (timeout ${TIMEOUT}s, menu-carry=${MENU_CARRY})…"
+PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_MENU_CARRY="$MENU_CARRY" \
+	timeout "$TIMEOUT" "$GODOT" --headless --path "$REPO" >"$LOG" 2>&1
 RC=$?
 
 echo "── game log (bootstrap / sanity) ──"
@@ -91,6 +96,10 @@ check "reached character create"               "[sanity] checkpoint: character_c
 check "entered character name"                 "[sanity] entering name:"
 check "reached city_office"                    "[sanity] checkpoint: city_office"
 check "reached city_counter"                   "[sanity] checkpoint: city_counter"
+if [ "$MENU_CARRY" = "1" ]; then
+	check "menu carried across transition (#426)"  "[sanity] menu-carry: Start Menu opened in office"
+	check "carried menu blocked interact (#426)"   "[sanity] checkpoint: start-menu-carry-blocks-interact"
+fi
 check "guild_counter opened"                   "[sanity] checkpoint: guild_counter"
 check "quest accepted"                         "[sanity] guild_counter: quest accepted"
 # city_warp was retired by #449 (teleporter merged into the counter map) —
