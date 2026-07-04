@@ -585,7 +585,9 @@ func _draw_palette(c: Control, font: Font) -> void:
 		var center: Vector2 = slot_centers[si] * hud_scale + Vector2(lx + 8, hud_y)
 		var icon: Texture2D = _c._get_action_icon(page[si])
 		if icon:
-			c.draw_texture_rect(icon, Rect2(center.x - 16, center.y - 16, 32, 32), false)
+			# Icons are cropped 20x20 (content fills the frame); a 24px box
+			# centered on the slot renders them without the old up-left offset.
+			c.draw_texture_rect(icon, Rect2(center.x - 12, center.y - 12, 24, 24), false)
 		if si == _c._pal_slot_idx:
 			c.draw_rect(Rect2(center.x - 18, center.y - 18, 36, 36), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
 
