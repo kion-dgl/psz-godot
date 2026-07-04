@@ -60,7 +60,16 @@ const fsm = `stateDiagram-v2
   </table>
 
   <h3>Attack recovery — no wedging (#477)</h3>
-  <p>The <strong>ATTACKING → LOAFING</strong> transition is keyed on the attack animation ending, and the source models are inconsistent about what that animation is called (<code>_atk</code>, <code>_atk1</code>, misspelled <code>_atckwat</code>, or absent entirely — the big <code>b_*</code> rigs are the usual offenders). That naming variance <strong>MUST NOT</strong> be able to strand the state machine:</p>
+  <p>The <strong>ATTACKING → LOAFING</strong> transition is keyed on the attack animation ending, and the source models are inconsistent about what that animation is called (<code>_atk</code>, <code>_atk1</code>, misspelled <code>_atckwat</code>, suffix variants like <code>_atk_pu</code> / <code>_atk_sh</code> / <code>_atk_a</code>, or absent entirely — the big <code>b_*</code> rigs are the usual offenders). That naming variance <strong>MUST NOT</strong> be able to strand the state machine:</p>
+
+  <p>The attack-clip <strong>resolution order</strong> is normative (tool and runtime MUST resolve identically — see <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>):</p>
+  <ol>
+    <li>Exact clip name equal to the token.</li>
+    <li>Any clip ending in <code>_&lt;token&gt;</code>.</li>
+    <li>The alias table (<code>atk</code> → <code>atk1</code>, <code>atckwat</code>).</li>
+    <li><em>Attack only</em> — last-resort scan: any clip with an exact <code>atk</code> underscore-segment (<code>b062_atk_pu</code>, <code>b052_atk_sh</code>, <code>m061_atk_a</code>, <code>b072_atk_sa_a</code>…) qualifies, <strong>excluding</strong> clips whose final segment is <code>st</code>, <code>lp</code>, or <code>ed</code> — those are segmented charge-up/loop/end pieces (<code>m051_atk_sp_lp</code>, <code>b072_atk_gu_a_st</code>) and playing one alone shows a partial attack. Among qualifiers the alphabetically first <strong>MUST</strong> be picked, so resolution is deterministic per rig.</li>
+    <li>Nothing resolves → the fixed fallback duration (below). A rig whose only attack clips are segmented pieces (boss_robot's <code>z003_atk_dl_lp</code>) <strong>MUST</strong> take this path rather than play a bare segment.</li>
+  </ol>
   <ul>
     <li>ATTACKING <strong>MUST</strong> terminate for <em>every</em> model, whatever its attack animation is named — including models with <strong>no resolvable attack animation at all</strong>, which <strong>MUST</strong> recover after a fixed fallback duration instead.</li>
     <li>Attack end <strong>MUST</strong> be detected against the <em>resolved</em> animation that was actually played (or by observing that it is no longer playing), <strong>MUST NOT</strong> rely on parsing a name suffix back out of the <code>animation_finished</code> signal.</li>

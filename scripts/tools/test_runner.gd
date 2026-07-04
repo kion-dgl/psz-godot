@@ -41,6 +41,7 @@ func _run_tests_combat() -> void:
 	test_area_map_overlay()
 	test_element_status()
 	test_enemy_attack_recovery()
+	test_enemy_attack_clip_resolution()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
@@ -854,14 +855,14 @@ func test_element_status() -> void:
 ## ATTACKING must still end without a damage event — the playtest freeze was
 ## the finished-signal suffix parse never matching "atk1".
 
-func _make_recovery_enemy(anim_name: String, anim_len: float) -> EnemyBase:
+func _make_recovery_enemy(anim_names: Array, anim_len: float) -> EnemyBase:
 	var e := EnemyBase.new()
 	e.enemy_data = EnemyData.new()
 	add_child(e)
 	var ap := AnimationPlayer.new()
 	e.add_child(ap)
 	var lib := AnimationLibrary.new()
-	if not anim_name.is_empty():
+	for anim_name in anim_names:
 		var anim := Animation.new()
 		anim.length = anim_len
 		lib.add_animation(anim_name, anim)
@@ -877,7 +878,7 @@ func test_enemy_attack_recovery() -> void:
 	dummy.position = Vector3(0, 0, 2)
 
 	# Gorilla-shaped rig: only "b_014_atk1", resolved via the atk→atk1 alias.
-	var e := _make_recovery_enemy("b_014_atk1", 0.4)
+	var e := _make_recovery_enemy(["b_014_atk1"], 0.4)
 	e.target = dummy
 	assert_eq(e._find_animation("atk"), "b_014_atk1", "atk resolves atk1 rigs via alias")
 	e.current_state = EnemyBase.EnemyState.ATTACKING
@@ -901,7 +902,7 @@ func test_enemy_attack_recovery() -> void:
 
 	# Rig with no attack animation at all (armadillo): nothing plays, so the
 	# fixed fallback duration must end the attack.
-	var e2 := _make_recovery_enemy("b_035_wat1", 1.0)
+	var e2 := _make_recovery_enemy(["b_035_wat1"], 1.0)
 	e2.target = dummy
 	e2.current_state = EnemyBase.EnemyState.ATTACKING
 	e2._start_attack()
@@ -914,13 +915,52 @@ func test_enemy_attack_recovery() -> void:
 	assert_eq(e2.current_state, EnemyBase.EnemyState.LOAFING, "no-anim rig exits to LOAFING")
 
 	# Orangutan's misspelled "atck" clip is aliased so the rig still swings.
-	var e3 := _make_recovery_enemy("b_044_atckwat", 0.5)
+	var e3 := _make_recovery_enemy(["b_044_atckwat"], 0.5)
 	e3.target = dummy
 	assert_eq(e3._find_animation("atk"), "b_044_atckwat", "atk resolves orangutan's atckwat clip")
 
 	e.queue_free()
 	e2.queue_free()
 	e3.queue_free()
+	dummy.queue_free()
+	print("")
+
+
+## Last-resort atk-segment scan (spec /states/enemies resolution order §4):
+## suffix-variant rigs must swing; segmented st/lp/ed pieces must not be
+## picked alone; whole-clip variants win alphabetically for determinism.
+## Parity twin: web/src/__tests__/enemy-room-anim.test.ts pins the same table.
+func test_enemy_attack_clip_resolution() -> void:
+	print("── Enemy attack clip resolution (scan fallback) ──")
+	var dummy := Node3D.new()
+	add_child(dummy)
+	dummy.position = Vector3(0, 0, 2)
+
+	var e4 := _make_recovery_enemy(
+		["b062_atk_pu", "b062_atk_sw", "b062_atk_th_st", "b062_atk_th_ed", "b062_wat"], 0.6)
+	assert_eq(e4._find_animation("atk"), "b062_atk_pu", "swordman rig: atk scan picks atk_pu (not th_st/th_ed segments)")
+	var e5 := _make_recovery_enemy(
+		["m051_atk_sp_ed", "m051_atk_sp_lp", "m051_atk_sp_st", "m051_atk_sh"], 0.6)
+	assert_eq(e5._find_animation("atk"), "m051_atk_sh", "board rig: atk scan picks whole atk_sh over sp_* segments")
+	var e6 := _make_recovery_enemy(
+		["b072_atk_gu_a_st", "b072_atk_gu_a_lp", "b072_atk_gu_a_ed", "b072_atk_sa_a", "b072_atk_sb_a"], 0.6)
+	assert_eq(e6._find_animation("atk"), "b072_atk_sa_a", "mother rig: atk scan picks atk_sa_a (alphabetical among whole clips)")
+	var e7 := _make_recovery_enemy(["z003_atk_dl_lp", "z003_wat"], 0.6)
+	assert_eq(e7._find_animation("atk"), "", "segment-only rig resolves nothing → fallback duration path")
+	var e8 := _make_recovery_enemy(["s071_atk", "s071_atk_hi", "s071_atk_mi"], 0.6)
+	assert_eq(e8._find_animation("atk"), "s071_atk", "plain _atk suffix still wins before the scan")
+
+	# End-to-end on a suffix-variant rig: the scanned clip is the tracked
+	# attack anim and its finish clears is_attacking (no wedge, real visual).
+	e4.target = dummy
+	e4.current_state = EnemyBase.EnemyState.ATTACKING
+	e4._start_attack()
+	assert_eq(e4._attack_anim, "b062_atk_pu", "scanned clip becomes the tracked attack anim")
+	e4._on_animation_finished("b062_atk_pu")
+	assert_true(not e4.is_attacking, "scanned clip finish clears is_attacking")
+
+	for extra in [e4, e5, e6, e7, e8]:
+		extra.queue_free()
 	dummy.queue_free()
 	print("")
 

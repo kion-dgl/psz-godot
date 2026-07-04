@@ -15,6 +15,7 @@ import {
   type RosterEntry,
 } from './types';
 import { makeSim, stepEnemy, applyHurt, type EnemySim, type SimEvent } from './fsm';
+import { clipToken, resolveClip } from './anim';
 
 /**
  * Enemy room — the design mock for per-enemy ATTACK BEHAVIOR (spec
@@ -61,31 +62,6 @@ function loadStored(): StoredState {
   return { enemyId: 'booma_origin', overrides: {} };
 }
 
-/** Strip the rig prefix ("s_001_", "m051_", "z003_"…) → the Godot resolver token. */
-function clipToken(clipName: string): string {
-  return clipName.replace(/^[a-z]{1,2}_?\d{3}_/, '');
-}
-
-/** enemy_base.gd ANIM_ALIASES — keep in sync; the tool MUST resolve like the runtime. */
-const ANIM_ALIASES: Record<string, string[]> = {
-  wat: ['stt'], // wait/idle → standing
-  wlk: ['fly', 'wlk_l'], // walk → fly (airborne) / left-variant (Godot alternates wlk_l/wlk_r)
-  run: ['fly', 'wlk_l'],
-  atk: ['atk1', 'atckwat'], // attack → variant 1 / orangutan's misspelled clip (#477)
-};
-
-/** Godot _find_animation semantics: exact name, *_<token> suffix, then aliases. */
-function resolveClip(clips: THREE.AnimationClip[], token: string): THREE.AnimationClip | null {
-  if (!token) return null;
-  const direct =
-    clips.find((c) => c.name === token) ?? clips.find((c) => c.name.endsWith('_' + token)) ?? null;
-  if (direct) return direct;
-  for (const alias of ANIM_ALIASES[token] ?? []) {
-    const found = resolveClip(clips, alias);
-    if (found) return found;
-  }
-  return null;
-}
 
 /** Sector mesh: apex at local origin, aimed at +Z (combat-room pattern). */
 function buildSectorGeometry(halfAngleRad: number, radius: number, segments = 40): THREE.BufferGeometry {
@@ -500,7 +476,13 @@ export default function EnemyRoom() {
 
         // Enemy animation: crossfade to sim.anim's resolved clip.
         if (s.mixer) {
-          const clip = resolveClip(s.clips, sim.anim) ?? resolveClip(s.clips, 'wat') ?? resolveClip(s.clips, 'stt');
+          // run→wlk mirrors the runtime's "unresolved play keeps the previous
+          // clip" behavior for rigs without a run clip (swordman/tank).
+          const clip =
+            resolveClip(s.clips, sim.anim) ??
+            (sim.anim === 'run' ? resolveClip(s.clips, 'wlk') : null) ??
+            resolveClip(s.clips, 'wat') ??
+            resolveClip(s.clips, 'stt');
           if (clip && clip.name !== s.currentClipName) {
             const action = s.mixer.clipAction(clip);
             const looping = sim.state !== 'attacking' && sim.state !== 'hurt';
