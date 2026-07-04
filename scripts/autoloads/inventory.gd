@@ -37,6 +37,9 @@ var _instance_counter: int = 0
 signal item_added(item_id: String, quantity: int, total: int)
 signal item_removed(item_id: String, quantity: int, remaining: int)
 signal inventory_full()
+## Emitted whenever the held-key total changes (pickup or gate consume) so the
+## field key HUD can track keys IN HAND, not cumulative pickups.
+signal keys_changed(total: int)
 
 
 ## Extract base item ID from an instance ID (e.g., "ein_saber#3" → "ein_saber")
@@ -630,6 +633,7 @@ func clear_inventory() -> void:
 func add_key(key_id: String) -> void:
 	_keys[key_id] = int(_keys.get(key_id, 0)) + 1
 	print("[Inventory] Key collected: ", key_id)
+	keys_changed.emit(get_total_keys())
 
 
 ## Check if a key is held
@@ -642,6 +646,15 @@ func get_key_count(key_id: String) -> int:
 	return int(_keys.get(key_id, 0))
 
 
+## Total keys currently held across all key IDs — the count the field HUD
+## shows (decrements as gates consume keys).
+func get_total_keys() -> int:
+	var total := 0
+	for k in _keys:
+		total += int(_keys[k])
+	return total
+
+
 ## Remove a key (consumed when opening a gate)
 func remove_key(key_id: String) -> void:
 	if _keys.has(key_id):
@@ -650,6 +663,7 @@ func remove_key(key_id: String) -> void:
 			_keys.erase(key_id)
 		else:
 			_keys[key_id] = remaining
+		keys_changed.emit(get_total_keys())
 
 
 ## Get display name prefix for a photon element

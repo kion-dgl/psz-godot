@@ -57,6 +57,7 @@ func _run_tests_core() -> void:
 	test_registries()
 	test_inventory()
 	test_inventory_capacity()
+	test_key_hud_count()
 	test_character_creation()
 	test_equipment()
 	test_palette_momentary_swap()
@@ -427,6 +428,29 @@ func test_inventory() -> void:
 	assert_gt(info2.max_stack, 1, "Monomate is stackable")
 
 	Inventory.clear_inventory()
+	print("")
+
+
+# Held-key count for the field HUD (playtest: keys must decrement on use, not
+# just accumulate). get_total_keys tracks keys IN HAND; keys_changed fires on
+# both pickup (add_key) and gate-consume (remove_key) so the HUD refreshes.
+func test_key_hud_count() -> void:
+	print("── Held-key count + keys_changed signal ──")
+	while Inventory.get_total_keys() > 0:
+		Inventory.remove_key(Inventory._keys.keys()[0])
+	var events: Array = []
+	var cb := func(total: int): events.append(total)
+	Inventory.keys_changed.connect(cb)
+	Inventory.add_key("key_2_3")
+	assert_eq(Inventory.get_total_keys(), 1, "pickup → 1 key in hand")
+	Inventory.add_key("key_4_1")
+	assert_eq(Inventory.get_total_keys(), 2, "second distinct key → 2 in hand")
+	Inventory.remove_key("key_2_3")
+	assert_eq(Inventory.get_total_keys(), 1, "using a key drops the held count")
+	Inventory.remove_key("key_4_1")
+	assert_eq(Inventory.get_total_keys(), 0, "using the last key drops to 0 (playtest fix)")
+	assert_eq(events, [1, 2, 1, 0], "keys_changed emits the new total on every add/remove")
+	Inventory.keys_changed.disconnect(cb)
 	print("")
 
 

@@ -962,12 +962,21 @@ func _setup_key_hud(cells: Array) -> void:
 			_total_keys_in_field += 1
 		if not str(cell.get("key_drop", "")).is_empty():
 			_total_keys_in_field += 1
+	# Refresh the held-key count live on pickup AND on gate-consume.
+	if not Inventory.keys_changed.is_connected(_on_keys_changed):
+		Inventory.keys_changed.connect(_on_keys_changed)
+	_update_key_hud()
+
+
+func _on_keys_changed(_total: int) -> void:
 	_update_key_hud()
 
 
 func _update_key_hud() -> void:
+	# Show keys IN HAND (Inventory), not cumulative pickups — the count must
+	# drop as gates consume keys. _keys_collected stays the respawn guard.
 	if _room_minimap and _total_keys_in_field > 0:
-		_room_minimap.update_keys(_keys_collected.size(), _total_keys_in_field)
+		_room_minimap.update_keys(Inventory.get_total_keys(), _total_keys_in_field)
 
 
 ## Check if a cell has living enemies (from quest data or saved state).
