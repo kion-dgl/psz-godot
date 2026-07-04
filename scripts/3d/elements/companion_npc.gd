@@ -65,7 +65,16 @@ var _current_anim: String = ""
 var _is_female: bool = false
 var _anim_hold_timer: float = 0.0
 const ANIM_HOLD_TIME: float = 0.3
+
+## Locomotion animation thresholds — the companion's clip is chosen purely from
+## its OWN measured planar speed, never from the player's PlayerState. This is
+## what keeps a rooted player attack (which leaves the companion stationary)
+## from triggering a run-in-place (issue #420). See /states/companion.
+const IDLE_EPS: float = 0.15  # m/s — below this the companion plays "wait"
+const RUN_EPS: float = 4.0    # m/s — above this the companion plays "run"
+
 var _was_moving: bool = false  # Track delayed state transitions
+var _stationary_anim_time: float = 0.0  # autopilot tripwire accumulator (#420)
 var _resume_blend: float = 0.0  # Blend from frozen pos to trail pos on resume
 var _frozen_pos: Vector3 = Vector3.ZERO  # Position when companion froze
 const RESUME_BLEND_SPEED: float = 3.0  # Seconds to fully blend back to trail
@@ -199,6 +208,47 @@ func _play_companion_anim(anim_name: String) -> void:
 		_anim_player.play(anim_name)
 		_current_anim = anim_name
 		_anim_hold_timer = ANIM_HOLD_TIME
+
+
+## Pure selector: choose wait/walk/run from the companion's OWN measured planar
+## displacement between two physics frames. Vertical-only motion (gravity, the
+## y-snap to the player's height) is excluded — only X/Z count. delta <= 0 and
+## zero displacement both yield "wait" (no div-by-zero, no run-in-place). This
+## is deliberately a pure function of the body's motion so the animation can
+## never desync from where the companion actually is. See /states/companion.
+func _select_locomotion_anim(prev_pos: Vector3, curr_pos: Vector3, delta: float) -> String:
+	if delta <= 0.0:
+		return "wait"
+	var moved: Vector3 = curr_pos - prev_pos
+	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
+	if planar_speed < IDLE_EPS:
+		return "wait"
+	if planar_speed > RUN_EPS:
+		return "run"
+	return "walk"
+
+
+## Autopilot-only regression oracle for #420. Silent in normal play (gated on
+## PSZ_AUTOPILOT). If the companion holds a locomotion clip while its measured
+## planar speed stays below IDLE_EPS for longer than the anim-hold debounce, it
+## is running in place — push a [sanity] FAIL any headless/Mac run can catch.
+func _autopilot_anim_tripwire(prev_pos: Vector3, curr_pos: Vector3, delta: float) -> void:
+	if not OS.has_environment("PSZ_AUTOPILOT"):
+		return
+	if delta <= 0.0:
+		return
+	var locomoting: bool = _current_anim == "walk" or _current_anim == "run"
+	var moved: Vector3 = curr_pos - prev_pos
+	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
+	if locomoting and planar_speed < IDLE_EPS:
+		_stationary_anim_time += delta
+	else:
+		_stationary_anim_time = 0.0
+	# Beyond the debounce window this is a genuine run-in-place, not the brief
+	# 0.3s blend when the companion stops.
+	if _stationary_anim_time > ANIM_HOLD_TIME:
+		push_error("[sanity] FAIL: companion '%s' holds '%s' while stationary for %.2fs (planar speed %.3f m/s < %.2f)" % [companion_id, _current_anim, _stationary_anim_time, planar_speed, IDLE_EPS])
+		_stationary_anim_time = 0.0  # avoid log spam
 
 
 func _find_typed(root: Node, type_name: String) -> Node:
@@ -406,9 +456,17 @@ func _process_follow(_delta: float) -> void:
 	var interp_rot: float = lerp_angle(entry_a["rot"], entry_b["rot"], t)
 	var delayed_state: int = entry_a["state"]
 
-	# Mirror the delayed player animation state
-	# IDLE=0, WALKING=1, RUNNING=2 (anything past IDLE counts as moving)
-	var is_moving: bool = delayed_state >= 1
+	# Capture our position before the move so the animation can be selected from
+	# the companion's OWN measured displacement, not from the player's intent.
+	var prev_pos: Vector3 = global_position
+
+	# Position MAY consult the delayed player state — but ONLY the true
+	# locomotion states (WALKING=1, RUNNING=2) advance the trail. A rooted
+	# player state (ATTACKING=3, DAMAGED, DOWN, …) is >= 1 too, so the old
+	# `delayed_state >= 1` made the companion try to follow a stationary player
+	# and then fall into the `run` branch — running in place (#420). Restrict
+	# the follow-move to actual locomotion.
+	var is_moving: bool = delayed_state == 1 or delayed_state == 2
 
 	if is_moving:
 		# Player was moving — follow the interpolated trail
@@ -432,16 +490,20 @@ func _process_follow(_delta: float) -> void:
 		global_position = candidate_pos
 		rotation.y = interp_rot
 		_was_moving = true
-		if delayed_state == 1:
-			_play_companion_anim("walk")
-		else:
-			_play_companion_anim("run")
 	else:
-		# Player was idle — freeze in place, face player's direction
+		# Player was idle (or rooted) — freeze in place, face player's direction
 		global_position.y = _player_ref.global_position.y
 		rotation.y = lerp_angle(rotation.y, player_rot, 5.0 * _delta)
 		_was_moving = false
-		_play_companion_anim("wait")
+
+	# Animation is a PURE function of the companion's own planar displacement
+	# this frame — never the player's PlayerState. Zero planar movement always
+	# yields "wait", so a stationary companion can never play a locomotion clip
+	# (the #420 run-in-place bug). The resume-from-freeze blend naturally ramps
+	# walk -> run as the measured speed climbs.
+	var anim: String = _select_locomotion_anim(prev_pos, global_position, _delta)
+	_play_companion_anim(anim)
+	_autopilot_anim_tripwire(prev_pos, global_position, _delta)
 
 
 func _teleport_behind_player() -> void:
