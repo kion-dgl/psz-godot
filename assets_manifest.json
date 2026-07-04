@@ -2,15 +2,15 @@
   "version": "dev",
   "godot_version": "4.5",
   "pack": {
-    "sha256": "d115abcf4c917c819cec282978ee010fa52cb17561699822bdc37ff300652d08",
-    "size": 330484164,
+    "sha256": "e5e120e05ffe02ecbe4907533146acdc14bc741c62d8a6bb94720366b10b1976",
+    "size": 330482852,
     "urls": [
-      "https://pck.psz.onl/d115abcf4c917c819cec282978ee010fa52cb17561699822bdc37ff300652d08.pck"
+      "https://pck.psz.onl/e5e120e05ffe02ecbe4907533146acdc14bc741c62d8a6bb94720366b10b1976.pck"
     ]
   },
   "sidecar": {
     "urls": [
-      "https://pck.psz.onl/d115abcf4c917c819cec282978ee010fa52cb17561699822bdc37ff300652d08.sidecar.json"
+      "https://pck.psz.onl/e5e120e05ffe02ecbe4907533146acdc14bc741c62d8a6bb94720366b10b1976.sidecar.json"
     ]
   }
 }

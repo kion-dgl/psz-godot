@@ -650,7 +650,7 @@ class _ActionPalette extends Control:
 		Vector2(58.0, 41.0),
 		Vector2(90.0, 27.0),
 	]
-	const ICON_SIZE := 38.0  # Content is ~56% of 32x32 image; 38px shows ~21px visible
+	const ICON_SIZE := 24.0  # Icons are cropped 20x20 (content fills the frame); 24px box centers them on the slot
 
 	var _bg_textures: Array = [null, null]  # [page1, page2/R variant]
 	var _bg_texture: Texture2D = null
