@@ -59,6 +59,15 @@ const fsm = `stateDiagram-v2
     <tr><td><strong>DEAD</strong></td><td>Play death animation, emit <code>died</code>, free after the animation.</td></tr>
   </table>
 
+  <h3>Attack recovery — no wedging (#477)</h3>
+  <p>The <strong>ATTACKING → LOAFING</strong> transition is keyed on the attack animation ending, and the source models are inconsistent about what that animation is called (<code>_atk</code>, <code>_atk1</code>, misspelled <code>_atckwat</code>, or absent entirely — the big <code>b_*</code> rigs are the usual offenders). That naming variance <strong>MUST NOT</strong> be able to strand the state machine:</p>
+  <ul>
+    <li>ATTACKING <strong>MUST</strong> terminate for <em>every</em> model, whatever its attack animation is named — including models with <strong>no resolvable attack animation at all</strong>, which <strong>MUST</strong> recover after a fixed fallback duration instead.</li>
+    <li>Attack end <strong>MUST</strong> be detected against the <em>resolved</em> animation that was actually played (or by observing that it is no longer playing), <strong>MUST NOT</strong> rely on parsing a name suffix back out of the <code>animation_finished</code> signal.</li>
+    <li>An enemy <strong>MUST NOT</strong> require a damage event (the HURT transition) to resume AI or animation. Being hit is a recovery path, never the only one.</li>
+    <li>Player contact <strong>MUST NOT</strong> freeze an enemy: while the player stands against (or overlaps) an enemy of any size, its state machine and animation <strong>MUST</strong> keep advancing — attack, loaf, and chase cycles continue exactly as at range. Large and small enemies <strong>MUST</strong> behave identically under contact, differing only in authored stats.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

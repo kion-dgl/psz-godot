@@ -272,6 +272,9 @@ var _commitment_triggered := false  # ran the probe already (fires once)
 var _combo_probe := false           # #155 three-tier combo-timing probe
 var _combo_triggered := false       # ran the probe already (fires once)
 
+var _enemy_freeze_probe := false    # #477 big-rig attack-wedge probe
+var _enemy_freeze_triggered := false  # ran the probe already (fires once)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -288,18 +291,7 @@ func _ready() -> void:
 		_:
 			_phase = Phase.ALL
 			print("[sanity] autopilot enabled (phase=all: full run from boot to quest report)")
-	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
-	if _shops_phase:
-		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
-	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
-	if _defeat_probe:
-		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
-	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
-	if _commitment_probe:
-		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
-	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
-	if _combo_probe:
-		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
+	_parse_probe_flags()
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -353,6 +345,25 @@ func _ready() -> void:
 	if _menu_during_pickup:
 		print("[sanity] autopilot MENU_DURING_PICKUP on: will toggle the start menu during quest-item pickups (toast-persistence probe)")
 	set_process(true)
+
+
+## One env flag per optional coverage phase / first-field-cell probe.
+func _parse_probe_flags() -> void:
+	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
+	if _shops_phase:
+		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
+	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
+	if _defeat_probe:
+		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
+	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
+	if _commitment_probe:
+		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
+	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
+	if _combo_probe:
+		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
+	_enemy_freeze_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
+	if _enemy_freeze_probe:
+		print("[sanity] autopilot ENEMY-FREEZE probe enabled (big rig must exit ATTACKING unhit in first field cell)")
 
 
 ## Called every frame from _process — when floor-only mode is on, mark every
@@ -2379,6 +2390,73 @@ func _commitment_dodge_phase(p, states: Dictionary) -> void:
 				_after(QUIT_GRACE, func() -> void: get_tree().quit(0)))))
 
 
+# ── Enemy attack-recovery probe (#477, spec /states/enemies) ───────────────
+## PSZ_AUTOPILOT_ENEMY_FREEZE=1: in the first field cell, spawn Hildegigas
+## (gorilla rig — its attack clip is "b_014_atk1", the wedge case) in contact
+## with the player, let it attack, and require ATTACKING to end with the
+## player never swinging back. Runs instead of the cell plan and ends the run
+## with DONE ok / FAIL.
+
+func _enemy_freeze_fail(msg: String) -> void:
+	_fail_and_quit("enemy-freeze probe — %s" % msg)
+
+
+func _run_enemy_freeze_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_enemy_freeze_probe(attempt + 1))
+		else:
+			_enemy_freeze_fail("no player in field")
+		return
+	var p: Node3D = players[0]
+	var edata = EnemyRegistry.get_enemy("hildegigas")
+	if edata == null:
+		_enemy_freeze_fail("hildegigas missing from EnemyRegistry")
+		return
+	var enemy := EnemyBase.new()
+	enemy.enemy_data = edata
+	var col_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = edata.collision_radius
+	capsule.height = edata.collision_height
+	col_shape.shape = capsule
+	col_shape.position.y = capsule.height / 2
+	enemy.add_child(col_shape)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	p.get_parent().add_child(enemy)
+	enemy.global_position = p.global_position + p.global_transform.basis.z * 1.2
+	print("[sanity] checkpoint: enemy-freeze probe — Hildegigas spawned in contact with player")
+	_enemy_freeze_watch(enemy, {"attacked": false}, 0)
+
+
+## Poll the spawned enemy ~5/s: it must reach ATTACKING, then leave it for
+## LOAFING/CHASING with no damage event. ~20s budget before calling it wedged.
+func _enemy_freeze_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
+	if not is_instance_valid(enemy):
+		_enemy_freeze_fail("enemy freed mid-probe")
+		return
+	var s: int = enemy.current_state
+	if s == EnemyBase.EnemyState.ATTACKING:
+		seen["attacked"] = true
+	elif seen["attacked"] and (s == EnemyBase.EnemyState.LOAFING or s == EnemyBase.EnemyState.CHASING):
+		print("[sanity] checkpoint: enemy-freeze probe — attack cycle ended (state=%d) without a hit" % s)
+		enemy.queue_free()
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if tick >= 100:
+		if seen["attacked"]:
+			_enemy_freeze_fail("wedged in ATTACKING (is_attacking=%s anim_playing=%s) — the #477 freeze" % [
+				str(enemy.is_attacking),
+				str(enemy.animation_player.is_playing()) if enemy.animation_player else "n/a"])
+		else:
+			_enemy_freeze_fail("enemy never entered ATTACKING (state=%d)" % s)
+		return
+	_after(0.2, func() -> void: _enemy_freeze_watch(enemy, seen, tick + 1))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
 	# Defeat probe: in the first field cell, kill the player instead of running
@@ -2398,6 +2476,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _combo_probe and not _combo_triggered:
 		_combo_triggered = true
 		_run_combo_probe()
+		return
+	# Enemy-freeze probe (#477): spawn a big atk1 rig on the player and
+	# require its attack cycle to end without a damage event.
+	if _enemy_freeze_probe and not _enemy_freeze_triggered:
+		_enemy_freeze_triggered = true
+		_run_enemy_freeze_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
