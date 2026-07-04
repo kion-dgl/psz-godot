@@ -566,6 +566,7 @@ func _get_options_list() -> Array:
 		"Frame Profiler: %s" % (on if DebugConfig.profile_frames else off),
 		"Show Player Position: %s" % (on if DebugConfig.show_player_position else off),
 		"Equip All (debug): %s" % (on if DebugConfig.equip_all else off),
+		"Reveal Map (debug): %s" % (on if DebugConfig.reveal_map else off),
 	]
 
 
@@ -611,6 +612,8 @@ func _toggle_option(idx: int) -> void:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
 		14:
 			DebugConfig.equip_all = not DebugConfig.equip_all
+		15:
+			DebugConfig.reveal_map = not DebugConfig.reveal_map
 
 
 func _enter_sub(idx: int) -> void:

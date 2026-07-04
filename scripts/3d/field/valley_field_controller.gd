@@ -5,7 +5,7 @@ extends Node3D
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
-const MapOverlayScript := preload("res://scripts/3d/field/map_overlay.gd")
+const AreaMapOverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
@@ -14,7 +14,6 @@ const GateScript := preload("res://scripts/3d/elements/gate.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
-const GridMinimapScript := preload("res://scripts/3d/field/grid_minimap.gd")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 # Lazily loaded by CellObjectSpawner via the controller back-reference; the
@@ -53,7 +52,7 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
 var _room_minimap: Control
-var _grid_minimap: Control
+var _area_map_panel: Control  # AreaMapOverlay inside _map_overlay
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
@@ -480,17 +479,18 @@ func _ready() -> void:
 		var saved: Dictionary = TelepipeManager.get_state()
 		respawn_player_telepipe_from_state(saved.get("world_pos", Vector3.ZERO))
 
-	# Map overlay (toggle with Tab, persists across cell transitions)
+	# Area-map overlay (spec /states/area-map): centered plate toggled with
+	# the area_map action (R2 / M), fog-of-war filled as cells are visited.
+	# Hidden by default; visibility persists across cell transitions.
 	_map_overlay = CanvasLayer.new()
 	_map_overlay.layer = 100
 	_map_overlay.visible = map_overlay_visible
 	_map_overlay.name = "MapOverlay"
 	add_child(_map_overlay)
-	var map_panel := MapOverlayScript.new()
-	map_panel.cells = cells
-	map_panel.current_pos = str(_current_cell.get("pos", ""))
-	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
-	_map_overlay.add_child(map_panel)
+	_area_map_panel = AreaMapOverlayScript.new()
+	_map_overlay.add_child(_area_map_panel)
+	_area_map_panel.setup(cells, str(_current_cell.get("pos", "")),
+		_visited_cells, "Section %d" % (section_idx + 1))
 
 	# Field HUD (always visible — stats panel + meseta + minimap)
 	_field_hud = FieldHudScript.new()
@@ -511,29 +511,26 @@ func _ready() -> void:
 		_current_cell.get("connections", {}),
 		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg, _spawn_edge)
 	_field_hud.add_child(_room_minimap)
-	map_panel.top_offset = 200.0
+
+	# Enemy markers (#422) — enemies were spawned before the minimap existed
+	# (same ordering as the gate-lock sync below), so register the roster now.
+	# Wave 2+ spawns register directly from CellObjectSpawner._spawn_enemy.
+	for room_enemy in _room_enemies:
+		if is_instance_valid(room_enemy):
+			_room_minimap.track_enemy(room_enemy)
 
 	# Key HUD (drawn below minimap)
 	_setup_key_hud(cells)
 
-	# Grid minimap (toggleable with M key, shows section grid layout)
-	var grid_minimap_visible: bool = data.get("grid_minimap_visible", true)
-	_grid_minimap = GridMinimapScript.new()
-	_grid_minimap.setup(cells, str(_current_cell.get("pos", "")),
-		_visited_cells, "Section %d" % (section_idx + 1))
-	_grid_minimap.visible = grid_minimap_visible
-	_grid_minimap.set_meta("toggled_off", not grid_minimap_visible)
-	_field_hud.add_child(_grid_minimap)
-
-	# Sync initial gate lock states to minimap (gates were created before minimap)
+	# Sync initial gate lock states to the area map (gates were created first)
 	var cur_pos: String = str(_current_cell.get("pos", ""))
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			var dir := _gate_direction(gate)
 			if not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, true)
-				if _grid_minimap:
-					_grid_minimap.set_gate_state(cur_pos, dir, "locked")
+				if _area_map_panel:
+					_area_map_panel.set_gate_state(cur_pos, dir, "locked")
 	# Key-gate per-direction locked state — each direction tracks independently.
 	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
 	var kg_dirs: Array = _gate_mgr._get_locked_gates(_current_cell)
@@ -543,15 +540,15 @@ func _ready() -> void:
 			if _gates_opened.has("%s:%s" % [cur_pos, kg_dir]):
 				continue
 			_room_minimap.set_gate_locked(kg_dir, true)
-			if _grid_minimap:
-				_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
+			if _area_map_panel:
+				_area_map_panel.set_gate_state(cur_pos, kg_dir, "locked")
 
 	# Lock warp_edge on minimap if objectives are pending
 	var warp_e: String = str(_current_cell.get("warp_edge", ""))
 	if not warp_e.is_empty() and _has_pending_objectives():
 		_room_minimap.set_gate_locked(warp_e, true)
-		if _grid_minimap:
-			_grid_minimap.set_gate_state(cur_pos, warp_e, "locked")
+		if _area_map_panel:
+			_area_map_panel.set_gate_state(cur_pos, warp_e, "locked")
 
 	# Connect quest completion signal
 	if not SessionManager.quest_completed.is_connected(_on_quest_completed):
@@ -604,6 +601,7 @@ func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
+		_room_minimap.update_enemies(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
 
@@ -964,12 +962,21 @@ func _setup_key_hud(cells: Array) -> void:
 			_total_keys_in_field += 1
 		if not str(cell.get("key_drop", "")).is_empty():
 			_total_keys_in_field += 1
+	# Refresh the held-key count live on pickup AND on gate-consume.
+	if not Inventory.keys_changed.is_connected(_on_keys_changed):
+		Inventory.keys_changed.connect(_on_keys_changed)
+	_update_key_hud()
+
+
+func _on_keys_changed(_total: int) -> void:
 	_update_key_hud()
 
 
 func _update_key_hud() -> void:
+	# Show keys IN HAND (Inventory), not cumulative pickups — the count must
+	# drop as gates consume keys. _keys_collected stays the respawn guard.
 	if _room_minimap and _total_keys_in_field > 0:
-		_room_minimap.update_keys(_keys_collected.size(), _total_keys_in_field)
+		_room_minimap.update_keys(Inventory.get_total_keys(), _total_keys_in_field)
 
 
 ## Check if a cell has living enemies (from quest data or saved state).
@@ -1136,7 +1143,6 @@ func _spawn_field_elements() -> void:
 						"visited_cells": target_state.get("visited_cells", {}),
 						"cell_states": target_state.get("cell_states", {}),
 						"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-						"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 					})
 		_gate_mgr._create_fallback_trigger("GateTrigger_%s" % portal_dir, aw_trigger_pos, aw_callback, is_delayed, not is_open)
 
@@ -1256,8 +1262,8 @@ func _spawn_field_elements() -> void:
 						_fdbg("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
 					if _room_minimap:
 						_room_minimap.set_gate_locked(gate_dir_for_minimap, false)
-					if _grid_minimap:
-						_grid_minimap.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
+					if _area_map_panel:
+						_area_map_panel.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
 			_fdbg("[FieldElements] ── KEY GATE DONE ──")
 		else:
@@ -1547,8 +1553,8 @@ func _lock_gates_for_enemies() -> void:
 					_room_gates_locked.append(gate)
 					if _room_minimap:
 						_room_minimap.set_gate_locked(dir, true)
-					if _grid_minimap:
-						_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), dir, "locked")
+					if _area_map_panel:
+						_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), dir, "locked")
 					_fdbg("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
@@ -1583,8 +1589,8 @@ func _lock_gates_for_enemies() -> void:
 			_fdbg("[CellObjects] AreaWarp locked (enemies present) [dir=%s]" % aw_dir)
 			if _room_minimap:
 				_room_minimap.set_gate_locked(aw_dir, true)
-			if _grid_minimap:
-				_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "locked")
+			if _area_map_panel:
+				_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "locked")
 
 
 ## Called when an enemy is defeated — check if all cleared.
@@ -1625,8 +1631,8 @@ func _check_room_clear() -> void:
 				trigger.monitoring = true
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
-			if _grid_minimap and not dir.is_empty():
-				_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), dir, "open")
+			if _area_map_panel and not dir.is_empty():
+				_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), dir, "open")
 	_room_gates_locked.clear()
 
 	# Unlock area warps (same pattern as gates above)
@@ -1638,8 +1644,8 @@ func _check_room_clear() -> void:
 				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""
 				if _room_minimap and not aw_dir.is_empty():
 					_room_minimap.set_gate_locked(aw_dir, false)
-				if _grid_minimap and not aw_dir.is_empty():
-					_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
+				if _area_map_panel and not aw_dir.is_empty():
+					_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
 				_fdbg("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
 			elif node is StaticBody3D:
 				node.queue_free()
@@ -2028,7 +2034,6 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"visited_cells": _visited_cells,
 		"cell_states": _cell_states,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-		"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 	})
 
 
@@ -2067,7 +2072,6 @@ func _on_end_reached() -> void:
 			"visited_cells": target_state.get("visited_cells", {}),
 			"cell_states": target_state.get("cell_states", {}),
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
 	else:
 		# All sections complete. For a quest this is the player leaving the field
@@ -2090,18 +2094,15 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Area map (spec /states/area-map): R2 / M toggles the centered overlay.
+	if event.is_action_pressed("area_map"):
+		if _map_overlay:
+			_map_overlay.visible = not _map_overlay.visible
+		get_viewport().set_input_as_handled()
+		return
 	# Pause/Start handled by PsoStartMenu autoload
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_M:
-				if _grid_minimap:
-					_grid_minimap.visible = not _grid_minimap.visible
-					_grid_minimap.set_meta("toggled_off", not _grid_minimap.visible)
-				get_viewport().set_input_as_handled()
-			KEY_QUOTELEFT:
-				if _map_overlay:
-					_map_overlay.visible = not _map_overlay.visible
-				get_viewport().set_input_as_handled()
 			KEY_F3:
 				_toggle_debug_panel()
 				get_viewport().set_input_as_handled()

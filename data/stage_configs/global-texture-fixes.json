@@ -231,6 +231,26 @@
     "wrapS": "mirror",
     "wrapT": "mirror"
   },
+  "s00e_sa2_m_s00_0_bwat00.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": -0.12,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
+  "s00e_sa2_m_s00_0_hasira.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": 0.13,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
   "s01_0_bri2.png#1": {
     "offsetX": 0,
     "offsetY": 1,

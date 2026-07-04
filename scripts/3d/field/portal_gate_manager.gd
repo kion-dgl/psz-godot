@@ -409,8 +409,8 @@ func _unlock_objective_exits() -> void:
 	var we: String = str(_c._current_cell.get("warp_edge", ""))
 	if not we.is_empty() and _c._room_minimap:
 		_c._room_minimap.set_gate_locked(we, false)
-	if not we.is_empty() and _c._grid_minimap:
-		_c._grid_minimap.set_gate_state(str(_c._current_cell.get("pos", "")), we, "exit")
+	if not we.is_empty() and _c._area_map_panel:
+		_c._area_map_panel.set_gate_state(str(_c._current_cell.get("pos", "")), we, "exit")
 
 
 func _get_locked_gates(cell: Dictionary) -> Array:

@@ -95,6 +95,13 @@ const AREA_DROP_NAMES := {
 ## hitbox_offset: how far in front of player the hitbox is placed
 ## knockback: Array of knockback force per step
 ## combo_window: seconds to input next attack before combo resets
+## hit_h_dist / hit_v_dist / hit_h_angle_deg: the hit cone (spec
+##   /mechanics/targeting) — apex hit_v_dist behind the player, reach
+##   hit_h_dist + hit_v_dist + target radius, half-angle in degrees.
+## hit_v_angle_deg: vertical half-angle bounding the slope from the apex
+##   (90 = unbounded, PSO's launchers).
+##   Tuned in the #/combat-room web tool.
+## damaging_frac: fraction of each step's swing clip where the hit resolves
 const WEAPON_TYPE_CONFIGS := {
 	0: {  # SABER — reliable single hits, moderate speed
 		"combo_steps": 3,
@@ -105,6 +112,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [3.0, 3.0, 6.0],
 		"combo_window": 0.5,
+		"hit_h_dist": 2.4,
+		"hit_v_dist": 0.5,
+		"hit_h_angle_deg": 30.0,
+		"hit_v_angle_deg": 40.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
 	},
 	1: {  # SWORD — slow heavy hits, big knockback
@@ -116,6 +128,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.8,
 		"knockback": [5.0, 5.0, 10.0],
 		"combo_window": 0.6,
+		"hit_h_dist": 3.0,
+		"hit_v_dist": 1.0,
+		"hit_h_angle_deg": 45.0,
+		"hit_v_angle_deg": 45.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 3,
 	},
 	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
@@ -127,6 +144,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.2,
 		"knockback": [1.0, 1.0, 2.0],
 		"combo_window": 0.4,
+		"hit_h_dist": 2.0,
+		"hit_v_dist": 0.4,
+		"hit_h_angle_deg": 22.0,
+		"hit_v_angle_deg": 35.0,
+		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
 	},
 	3: {  # CLAW — very fast, close range
@@ -138,6 +160,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.0,
 		"knockback": [1.5, 1.5, 3.0],
 		"combo_window": 0.35,
+		"hit_h_dist": 1.8,
+		"hit_v_dist": 0.3,
+		"hit_h_angle_deg": 20.0,
+		"hit_v_angle_deg": 35.0,
+		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
 	},
 	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
@@ -149,6 +176,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [3.0, 2.0, 8.0],
 		"combo_window": 0.45,
+		"hit_h_dist": 2.6,
+		"hit_v_dist": 0.8,
+		"hit_h_angle_deg": 60.0,
+		"hit_v_angle_deg": 45.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 3,
 	},
 	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
@@ -160,6 +192,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 2.2,
 		"knockback": [4.0, 4.0, 8.0],
 		"combo_window": 0.5,
+		"hit_h_dist": 4.0,
+		"hit_v_dist": 0.6,
+		"hit_h_angle_deg": 40.0,
+		"hit_v_angle_deg": 40.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
 		"max_targets_per_step": [1, 1, 3],
 	},
@@ -172,6 +209,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 8.0,
 		"knockback": [2.0, 2.0, 4.0],
 		"combo_window": 0.5,
+		"hit_h_dist": 8.0,
+		"hit_v_dist": 0.5,
+		"hit_h_angle_deg": 15.0,
+		"hit_v_angle_deg": 30.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 4,
 	},
 	9: {  # HANDGUN — single shots
@@ -183,6 +225,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 5.0,
 		"knockback": [1.0, 1.0, 2.0],
 		"combo_window": 0.4,
+		"hit_h_dist": 9.0,
+		"hit_v_dist": 0.0,
+		"hit_h_angle_deg": 10.0,
+		"hit_v_angle_deg": 15.0,
+		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
 	},
 	10: {  # MECH_GUN — rapid fire spray
@@ -194,6 +241,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 5.0,
 		"knockback": [0.5, 0.5, 1.0],
 		"combo_window": 0.3,
+		"hit_h_dist": 6.0,
+		"hit_v_dist": 0.0,
+		"hit_h_angle_deg": 35.0,
+		"hit_v_angle_deg": 20.0,
+		"damaging_frac": [0.30, 0.30, 0.35],
 		"max_targets": 3,
 	},
 	11: {  # RIFLE — slow precision shots; deliberate 3-shot combo (pmar_atk1..3)
@@ -205,6 +257,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 8.0,
 		"knockback": [4.0, 4.0, 8.0],
 		"combo_window": 0.6,
+		"hit_h_dist": 12.0,
+		"hit_v_dist": 0.0,
+		"hit_h_angle_deg": 6.0,
+		"hit_v_angle_deg": 10.0,
+		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
 	},
 	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
@@ -216,6 +273,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 6.0,
 		"knockback": [8.0, 12.0],
 		"combo_window": 0.7,
+		"hit_h_dist": 8.0,
+		"hit_v_dist": 0.0,
+		"hit_h_angle_deg": 25.0,
+		"hit_v_angle_deg": 90.0,
+		"damaging_frac": [0.40, 0.45],
 		"max_targets": 5,
 	},
 	13: {  # LASER_CANNON — single heavy beam (l_cannon source has only atk1)
@@ -227,6 +289,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 5.0,
 		"knockback": [12.0],
 		"combo_window": 0.7,
+		"hit_h_dist": 10.0,
+		"hit_v_dist": 0.0,
+		"hit_h_angle_deg": 12.0,
+		"hit_v_angle_deg": 20.0,
+		"damaging_frac": [0.50],
 		"max_targets": 5,
 	},
 	14: {  # ROD — melee swing, tech amplifier
@@ -238,6 +305,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [2.0, 2.0, 4.0],
 		"combo_window": 0.5,
+		"hit_h_dist": 2.2,
+		"hit_v_dist": 0.4,
+		"hit_h_angle_deg": 30.0,
+		"hit_v_angle_deg": 40.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
 	},
 	15: {  # WAND — melee swing, support amplifier
@@ -249,6 +321,11 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [2.0, 2.0, 3.0],
 		"combo_window": 0.5,
+		"hit_h_dist": 2.2,
+		"hit_v_dist": 0.4,
+		"hit_h_angle_deg": 30.0,
+		"hit_v_angle_deg": 40.0,
+		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
 	},
 }
@@ -1326,3 +1403,29 @@ func _check_wave_cleared() -> void:
 ## Get weapon type config, falling back to saber defaults
 func get_weapon_type_config(weapon_type: int) -> Dictionary:
 	return WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])
+
+
+# ── Three-tier combo timing (#155, spec /mechanics/combos) ─────────────────
+# Per-weapon-type WeaponComboConfig resources: window FRACTIONS of the current
+# swing, indexed by the step being chained FROM. Untuned types share the
+# default config; tuned types get their own .tres so playtest adjustments are
+# data edits, not code.
+const COMBO_CONFIG_DEFAULT: WeaponComboConfig = preload("res://data/combo_configs/default.tres")
+const COMBO_CONFIGS := {
+	0: preload("res://data/combo_configs/saber.tres"),  # SABER — fast, windows earlier (#155)
+	1: preload("res://data/combo_configs/sword.tres"),  # SWORD — mid defaults
+}
+
+
+func get_combo_config(weapon_type: int) -> WeaponComboConfig:
+	return COMBO_CONFIGS.get(weapon_type, COMBO_CONFIG_DEFAULT)
+
+
+## Timing windows for chaining FROM `from_step` (1-based combo_state).
+## {} when that step has no accept window (finisher / out of range).
+func get_combo_timing(weapon_type: int, from_step: int) -> Dictionary:
+	return get_combo_config(weapon_type).timing_for_step(from_step)
+
+
+func get_combo_just_mult(weapon_type: int) -> float:
+	return get_combo_config(weapon_type).just_damage_mult
