@@ -156,6 +156,7 @@ assets/enemies/wolf/m_012.png
 assets/enemies/wolf/wolf.glb
 assets/fonts/JetBrainsMono-Bold.ttf
 assets/fonts/JetBrainsMono-Regular.ttf
+assets/fonts/OFL.txt
 assets/hud/Anti.png
 assets/hud/Barta.png
 assets/hud/Deband.png
