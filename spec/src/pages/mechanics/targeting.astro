@@ -8,12 +8,13 @@ import Concept from '../../layouts/Concept.astro';
   <p>Weapon targeting and melee hit resolution share <strong>one geometry</strong>: the per-weapon <em>hit cone</em>, reverse-engineered from PSO:BB (<code>check_enemy_is_targetable</code> + ItemPMT; values tabulated at <a href="https://wiki.pioneer2.net/w/Weapons">wiki.pioneer2.net/w/Weapons</a>) and tuned in the <a href="https://kion-dgl.github.io/psz-godot/#/combat-room">#/combat-room</a> web tool. Reticles, the target-info HUD, and damage all read the same cone — targeting and hits MUST NOT use different shapes.</p>
 
   <h2>The hit cone</h2>
-  <p>Per weapon type (data: <code>CombatManager.WEAPON_TYPE_CONFIGS</code>, keys <code>hit_h_dist</code>, <code>hit_v_dist</code>, <code>hit_h_angle_deg</code>):</p>
+  <p>Per weapon type (data: <code>CombatManager.WEAPON_TYPE_CONFIGS</code>, keys <code>hit_h_dist</code>, <code>hit_v_dist</code>, <code>hit_h_angle_deg</code>, <code>hit_v_angle_deg</code>):</p>
   <ul>
-    <li>The cone's <strong>apex sits <code>hit_v_dist</code> behind the player</strong> along −facing (PSO's apex pull-back — widens point-blank coverage).</li>
+    <li>The cone's <strong>apex sits <code>hit_v_dist</code> behind the player</strong> along −facing (PSO's apex pull-back — widens point-blank coverage). The origin is the <strong>weapon position</strong> (player + ~1 m); targets are tested at their <strong>hitbox center</strong>.</li>
     <li><strong>Reach</strong> from the apex is <code>hit_h_dist + hit_v_dist + the target's own collision radius</code> — a bigger enemy is easier to reach, exactly as in PSO.</li>
-    <li>The <strong>half-angle</strong> is <code>hit_h_angle_deg</code>, tested in the XZ plane against the player's facing.</li>
-    <li>An enemy passes the cone iff both the reach and angle tests pass and it is alive.</li>
+    <li>The <strong>horizontal half-angle</strong> is <code>hit_h_angle_deg</code>, tested in the XZ plane against the player's facing.</li>
+    <li>The <strong>vertical half-angle</strong> <code>hit_v_angle_deg</code> bounds the slope from the apex (the angle between the flattened and the full 3D direction to the target, per the PSO:BB decompile); <strong>90° means unbounded</strong> — PSO's launchers/cards.</li>
+    <li>An enemy passes the cone iff the reach and both angle tests pass and it is alive.</li>
   </ul>
 
   <h2>Targetable set, primary target, reticles</h2>
@@ -21,6 +22,7 @@ import Concept from '../../layouts/Concept.astro';
     <li>Each frame the player computes the targetable set: alive enemies passing the cone, <strong>sorted nearest-first</strong>. The nearest is the <strong>primary target</strong>.</li>
     <li>Reticles show on the nearest <code>max_targets</code> enemies (techniques MAY extend range/width/count as before; the Slicer keeps its bounce-target reticles).</li>
     <li><strong>Ground items</strong> (DropBase, state <code>available</code>) are targetable <em>for the HUD only</em>: an item MUST NOT ever be hit by a swing, and target snap/aim assists MUST ignore items.</li>
+    <li><strong>Destructibles (boxes)</strong> ride the <code>enemies</code> group so they can be targeted, reticled, and smashed — but they carry no <code>enemy_data</code>, and when one is the primary target the info panel <strong>MUST NOT render</strong> (PSO shows no details for containers).</li>
   </ul>
 
   <h2>Hit resolution — the damaging frame</h2>

@@ -2555,6 +2555,10 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 	var h_dist: float = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
 	var v_dist: float = float(config.get("hit_v_dist", 0.5))
 	var half_angle: float = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
+	var v_angle: float = float(config.get("hit_v_angle_deg", 40.0))
+	# The cone's origin is the weapon, not the feet; targets are tested at
+	# their hitbox center so the vertical slope reads naturally.
+	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
 	var found: Array = []
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(enemy):
@@ -2562,12 +2566,15 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 		if not enemy.get("is_alive"):
 			continue
 		var radius: float = 0.5
+		var height: float = 1.5
 		var ed = enemy.get("enemy_data")
 		if ed != null:
 			radius = float(ed.collision_radius)
+			height = float(ed.collision_height)
+		var center: Vector3 = enemy.global_position + Vector3(0, height * 0.5, 0)
 		var d: float = ConeTargeting.distance_in_cone(
-			global_position, player_rotation, h_dist, v_dist, half_angle,
-			enemy.global_position, radius)
+			origin, player_rotation, h_dist, v_dist, half_angle, v_angle,
+			center, radius)
 		if d >= 0.0:
 			found.append({"enemy": enemy, "dist": d})
 	found.sort_custom(func(a, b): return a.dist < b.dist)
@@ -2691,26 +2698,29 @@ func _update_combat_targets() -> void:
 	# cone (spec /mechanics/targeting), sorted nearest-first.
 	var in_cone: Array = _enemies_in_hit_cone(config, tech_range, extra_angle)
 
-	# Debug: approximate the cone as a translucent box attached to the model
+	# Debug: draw the ACTUAL cone — a flat sector fan from the pulled-back
+	# apex, on the ground (the vertical bound isn't drawn). Rozalin read the
+	# old bounding-box approximation as "hits are a giant box"; the debug
+	# shape must be the real hit shape.
 	var h_dist: float = maxf(float(config.get("hit_h_dist", 2.4)), tech_range)
 	var v_dist: float = float(config.get("hit_v_dist", 0.5))
 	var half_angle: float = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	if DebugConfig.show_hitboxes:
 		if not _debug_range_mesh:
 			_debug_range_mesh = MeshInstance3D.new()
-			var box_mesh := BoxMesh.new()
-			box_mesh.size = Vector3(1, 1, 1)
-			_debug_range_mesh.mesh = box_mesh
 			var mat := StandardMaterial3D.new()
 			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			mat.no_depth_test = true
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			_debug_range_mesh.material_override = mat
 			model.add_child(_debug_range_mesh)
-		var reach: float = h_dist + v_dist
-		_debug_range_mesh.scale = Vector3(2.0 * reach * sin(deg_to_rad(half_angle)), 1.0, reach)
-		_debug_range_mesh.position = Vector3(0, 1.0, reach * 0.5 - v_dist)
+		var cone_key := "%f:%f:%f" % [h_dist, v_dist, half_angle]
+		if _debug_range_mesh.get_meta("cone_key", "") != cone_key:
+			_debug_range_mesh.set_meta("cone_key", cone_key)
+			_debug_range_mesh.mesh = _build_cone_sector_mesh(h_dist + v_dist, half_angle)
+		_debug_range_mesh.position = Vector3(0, 0.06, -v_dist)
 		_debug_range_mesh.visible = true
 	elif _debug_range_mesh:
 		_debug_range_mesh.visible = false
@@ -2762,24 +2772,49 @@ func _update_combat_targets() -> void:
 const ITEM_INFO_RANGE := 2.0  # items are HUD-primary only within pickup range
 
 
+## Flat triangle-fan sector spanning ±half_angle around local +Z with the
+## apex at the local origin — the debug drawing of the hit cone.
+func _build_cone_sector_mesh(radius: float, half_angle_deg: float, segments: int = 24) -> ArrayMesh:
+	var verts := PackedVector3Array()
+	var limit := deg_to_rad(half_angle_deg)
+	for i in range(segments):
+		var a0: float = -limit + (2.0 * limit * i) / segments
+		var a1: float = -limit + (2.0 * limit * (i + 1)) / segments
+		verts.append(Vector3.ZERO)
+		verts.append(Vector3(sin(a0) * radius, 0, cos(a0) * radius))
+		verts.append(Vector3(sin(a1) * radius, 0, cos(a1) * radius))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
 ## Maintains _primary_target_info for the target-info HUD (spec
 ## /mechanics/targeting): the nearest enemy in the cone wins; a ground item
 ## is primary only when NO enemy is targetable and the item sits inside the
 ## cone within ITEM_INFO_RANGE. {} when there is nothing to show.
 func _update_primary_target_info(in_cone: Array, config: Dictionary) -> void:
-	if not is_inside_tree():
-		_primary_target_info = {}
-		return
 	if not in_cone.is_empty():
 		var enemy = in_cone[0]
 		var ed = enemy.get("enemy_data")
+		if ed == null:
+			# Boxes and other destructibles ride the "enemies" group so they
+			# can be targeted and smashed, but they carry no enemy_data and
+			# PSO shows NO details panel for them (Rozalin's "enemy 0/0").
+			_primary_target_info = {}
+			return
 		_primary_target_info = {
 			"kind": "enemy",
-			"name": str(ed.name) if ed != null else "Enemy",
+			"name": str(ed.name),
 			"hp": int(enemy.get("current_hp")),
-			"max_hp": int(ed.hp_base) if ed != null else 0,
+			"max_hp": int(ed.hp_base),
 		}
 		return
+	if not is_inside_tree():
+		_primary_target_info = {}
+		return  # off-tree (unit tests) — no drops group to scan
 	var v_dist: float = float(config.get("hit_v_dist", 0.5))
 	var half_angle: float = float(config.get("hit_h_angle_deg", 30.0))
 	var best = null
@@ -2795,7 +2830,7 @@ func _update_primary_target_info(in_cone: Array, config: Dictionary) -> void:
 			continue
 		var d: float = ConeTargeting.distance_in_cone(
 			global_position, player_rotation, ITEM_INFO_RANGE, v_dist, half_angle,
-			drop.global_position, 0.3)
+			90.0, drop.global_position, 0.3)
 		if d >= 0.0 and d < best_d:
 			best_d = d
 			best = drop

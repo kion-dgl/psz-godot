@@ -5326,35 +5326,46 @@ func test_combo_miss_early_fumble() -> void:
 func test_cone_targeting() -> void:
 	print("── Hit cone (spec /mechanics/targeting) ──")
 	var o := Vector3.ZERO
-	# yaw 0 faces +Z. Saber-ish cone: h 2.4, v 0.5, half-angle 30°.
-	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 2.6), 0.5),
+	# yaw 0 faces +Z. Saber-ish cone: h 2.4, v 0.5, half-angle 30°,
+	# vertical unbounded (90) for the horizontal cases.
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.6), 0.5),
 		"enemy straight ahead inside reach passes")
-	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.5), 0.5),
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.5), 0.5),
 		"enemy past reach fails")
 	# Reach is measured from the pulled-back apex: reach = h + v + radius vs
 	# dist = z + v — so at z = 3.2 a 0.5-radius target is out (3.7 > 3.4)
 	# but a 0.9-radius one is in (3.7 ≤ 3.8).
-	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.2), 0.5),
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.2), 0.5),
 		"0.5-radius target at 3.2 m is out of reach")
-	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 3.2), 0.9),
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.2), 0.9),
 		"a bigger hitbox radius extends the reach (PSO)")
 	var side := Vector3(2.0, 0, 2.0)  # 45° off the facing
-	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, side, 0.5),
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, side, 0.5),
 		"45° off a 30° half-angle cone fails")
-	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 60.0, side, 0.5),
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 60.0, 90.0, side, 0.5),
 		"45° off a 60° half-angle cone passes")
 	# Apex pull-back widens point-blank coverage: a flank target (90° off)
 	# only passes when v_dist moves the cone's apex behind the player.
 	var flank := Vector3(0.6, 0, 0.0)
-	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.0, 45.0, flank, 0.3),
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.0, 45.0, 90.0, flank, 0.3),
 		"flank target fails with no apex pull-back")
-	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 1.0, 45.0, flank, 0.3),
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 1.0, 45.0, 90.0, flank, 0.3),
 		"apex pull-back brings the flank target into the cone")
-	var d_near: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 1.0), 0.5)
-	var d_far: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, Vector3(0, 0, 2.5), 0.5)
+	var d_near: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 1.0), 0.5)
+	var d_far: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.5), 0.5)
 	assert_true(d_near >= 0.0 and d_far > d_near, "distance_in_cone orders nearest-first")
-	assert_true(not ConeTargeting.in_cone(o, PI, 2.4, 0.5, 30.0, Vector3(0, 0, 2.6), 0.5),
+	assert_true(not ConeTargeting.in_cone(o, PI, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.6), 0.5),
 		"facing away fails the cone")
+	# Vertical half-angle bounds the slope from the apex: a target 2 m ahead
+	# and 2 m up sits at 45° — outside a 40° bound, inside a 50° one; 90
+	# means unbounded (PSO's launchers).
+	var high := Vector3(0, 2.0, 2.0)
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 40.0, high, 0.3),
+		"45° slope fails a 40° vertical bound")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 50.0, high, 0.3),
+		"45° slope passes a 50° vertical bound")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 90.0, high, 0.3),
+		"vertical 90° is unbounded")
 	print("")
 
 
@@ -5366,7 +5377,7 @@ func test_damaging_frame() -> void:
 	var bad := 0
 	for wt in CombatManager.WEAPON_TYPE_CONFIGS:
 		var cfg: Dictionary = CombatManager.WEAPON_TYPE_CONFIGS[wt]
-		if not (cfg.has("hit_h_dist") and cfg.has("hit_v_dist") and cfg.has("hit_h_angle_deg") and cfg.has("damaging_frac")):
+		if not (cfg.has("hit_h_dist") and cfg.has("hit_v_dist") and cfg.has("hit_h_angle_deg") and cfg.has("hit_v_angle_deg") and cfg.has("damaging_frac")):
 			bad += 1
 			continue
 		var fracs: Array = cfg.get("damaging_frac")
@@ -5406,6 +5417,25 @@ func test_target_info_panel() -> void:
 	panel.update_info({"kind": "item", "name": "Monomate"})
 	assert_true(panel.visible, "ground-item target → panel renders")
 	panel.free()
+
+	# Boxes ride the "enemies" group but carry no enemy_data — the primary
+	# scan MUST show no panel for them (PSO; Rozalin's "enemy 0/0").
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+	var box := Node3D.new()  # anything without enemy_data reads as a box
+	pl._update_primary_target_info([box], CombatManager.get_weapon_type_config(0))
+	assert_true((pl.get("_primary_target_info") as Dictionary).is_empty(),
+		"box primary → no details panel (targetable, but nothing to show)")
+	box.free()
+	pl.free()
+
+	# Meseta drops have no item_id — the display name must come from amount
+	# (Rozalin's nameless meseta panel).
+	const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
+	var meseta = DropMesetaScript.new()
+	meseta.amount = 25
+	assert_eq(str(meseta._get_display_name()), "25 Meseta", "meseta drop names itself from the amount")
+	meseta.free()
 	print("")
 
 

@@ -16,6 +16,12 @@ func _setup_prompt() -> void:
 	pass
 
 
+## The target-info HUD reads this (spec /mechanics/targeting) — meseta has
+## no item_id, so without it the panel showed a nameless entry (Rozalin).
+func _get_display_name() -> String:
+	return "%d Meseta" % amount
+
+
 func _give_reward() -> bool:
 	GameState.add_meseta(amount)
 	print("[DropMeseta] Collected ", amount, " meseta (total: ", GameState.get_meseta(), ")")
