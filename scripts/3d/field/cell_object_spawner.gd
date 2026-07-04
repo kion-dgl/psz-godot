@@ -1058,7 +1058,6 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 			"visited_cells": target_state.get("visited_cells", {}),
 			"cell_states": target_state.get("cell_states", {}),
 			"map_overlay_visible": _c._map_overlay.visible if _c._map_overlay else false,
-			"grid_minimap_visible": _c._grid_minimap.visible if _c._grid_minimap else true,
 		})
 	)
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
