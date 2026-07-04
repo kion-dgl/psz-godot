@@ -1,0 +1,82 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const timeline = `stateDiagram-v2
+  direction LR
+  [*] --> Windup: attack selected, facing locks
+  Windup --> Window: t = windup_frac × duration
+  Window --> Recovery: t = damage_end_frac × duration
+  Recovery --> [*]: t = duration → LOAFING
+
+  Windup: Windup — telegraph, MUST NOT damage
+  Window: Damaging window — arc test each frame, first pass resolves
+  Recovery: Recovery — MUST NOT damage
+`;
+---
+
+<Concept title="Enemy Attacks" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>Enemy attacks share <strong>one data model</strong>: the per-enemy attack table in <code>data/enemy_attacks.json</code>, tuned in the <a href="https://kion-dgl.github.io/psz-godot/#/enemy-room">#/enemy-room</a> web tool (the enemy-side sibling of <a href="/mechanics/targeting">#/combat-room</a>). The tool's simulation, its overlays, and the Godot runtime all read the same table — they MUST NOT use different shapes or timings. The behavior <em>state machine</em> (IDLE → CHASING → ATTACKING → LOAFING → HURT) stays owned by <a href="/states/enemies">/states/enemies</a>; this page defines what happens inside ATTACKING and how an attack is chosen.</p>
+
+  <div class="diagram"><Mermaid chart={timeline} /></div>
+
+  <h2>Data model — <code>data/enemy_attacks.json</code></h2>
+  <p>Keyed by enemy id (the <code>data/enemies/*.tres</code> id). Seeded from the .tres registry by <code>scripts/tools/gen_enemy_attacks.py</code> (merge-preserving — re-runs keep hand-tuned rows); the <code>stats</code> block mirrors <code>.tres</code> values, and <strong><code>.tres</code> remains authoritative for stats</strong> until the Godot implementation PR decides otherwise (explicit open question — do not silently create two masters).</p>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td><code>clip</code></td><td>Animation-name <em>token</em> as the runtime resolver consumes it (<code>atk</code>, <code>atk2</code>, <code>atk_hi</code>…) — NOT a full clip name. Resolution = exact match, <code>*_&lt;token&gt;</code> suffix, then the <code>ANIM_ALIASES</code> table, identically in tool and runtime.</td></tr>
+    <tr><td><code>windup_frac</code> / <code>damage_end_frac</code></td><td>Fractions of the resolved clip's duration. Telegraph = <code>[0, windup_frac)</code>, damaging window = <code>[windup_frac, damage_end_frac]</code> — windup end and damage start are definitionally the same instant.</td></tr>
+    <tr><td><code>hit_half_angle_deg</code> / <code>hit_reach</code></td><td>The arc hit shape (below).</td></tr>
+    <tr><td><code>min_range</code> / <code>max_range</code></td><td>Selection band on the distance to the target at the moment ATTACKING is entered.</td></tr>
+    <tr><td><code>weight</code></td><td>Relative selection weight among in-band candidates.</td></tr>
+    <tr><td><code>damage_mult</code></td><td>Damage dealt = <code>stats.attack_base × damage_mult</code> (replaces the legacy fixed 10).</td></tr>
+    <tr><td><code>fsm</code> overrides</td><td>Per-enemy walk/charge multipliers, loaf durations, hurt duration, <code>attack_fallback_duration</code>. Defaults = today's <code>enemy_base.gd</code> constants; SHOULD-level tuning freedom.</td></tr>
+  </table>
+  <p>Every non-boss enemy MUST have an entry with ≥1 attack. An enemy missing from the file MUST fall back to the <code>defaults</code> block plus one default <code>atk</code> attack — it never crashes and never refuses to attack.</p>
+
+  <h2>Attack selection</h2>
+  <ul>
+    <li>On the CHASING → ATTACKING transition, the candidate set is the attacks whose <code>[min_range, max_range]</code> band contains the current target distance. The pick MUST be weighted-random among candidates.</li>
+    <li>An empty candidate set MUST fall back to the attack whose band is nearest to the distance — a non-empty table never yields "no attack".</li>
+    <li>Facing MUST lock at attack start (current <code>_start_attack</code> behavior, kept) — the arc does not track the target during the swing.</li>
+  </ul>
+
+  <h2>Attack timeline — frame-tied damage</h2>
+  <p><em>This section AMENDS the current runtime</em>, which deals a fixed 10 damage instantly at attack start (<code>enemy_base.gd</code> <code>_start_attack</code>) — untelegraphed and undodgeable. Per the working agreement this contract lands first; the Godot implementation follows in the next PR.</p>
+  <ul>
+    <li>An attack MUST NOT deal damage during the windup (<code>[0, windup_frac)</code>) — that interval is the player's telegraph.</li>
+    <li>During the damaging window the arc test runs each frame; the <strong>first frame the target passes resolves the hit</strong>. One attack MUST hit a given target <strong>at most once</strong>; after resolution (hit <em>or</em> dodge) the attack MUST NOT re-test that target.</li>
+    <li>After <code>damage_end_frac</code> the attack MUST NOT deal damage; the remainder of the clip is recovery.</li>
+    <li>Damage dealt = <code>attack_base × damage_mult</code>.</li>
+  </ul>
+
+  <h2>Hit shape — the arc</h2>
+  <p>A flat arc: apex at the enemy's origin, aimed along the facing locked at attack start. A target is inside iff its XZ distance ≤ <code>hit_reach + the target's collision radius</code> AND the XZ angle from the locked facing ≤ <code>hit_half_angle_deg</code>. Deliberately simpler than the player weapon cone (<a href="/mechanics/targeting">targeting</a>): no apex pull-back, no vertical bound. The tool's overlay and the runtime hit test MUST be this same shape.</p>
+
+  <h2>Dodge interaction</h2>
+  <p>A target that is invincible (dodge i-frames — the first 0.2&nbsp;s of a dodge, <a href="/mechanics/dodge">/mechanics/dodge</a>) at its first arc-test pass is <em>dodged</em>: the attack consumes its one resolution on it and MUST NOT re-test that target for the rest of the window. I-frame timing beats the window by design — a well-timed dodge through the arc is safe even if the dodge ends inside the window.</p>
+
+  <h2>Recovery &amp; missing clips (#477 layering)</h2>
+  <p>The attack-recovery MUSTs in <a href="/states/enemies">/states/enemies</a> apply unchanged: attack end is keyed on the resolved clip (or the fallback timer), never on a damage event. Layered on top:</p>
+  <ul>
+    <li>When no clip resolves for an attack's token, the timeline fractions MUST apply to <code>attack_fallback_duration</code> — frame-tied damage still functions on clip-less rigs (armadillo).</li>
+    <li>A configured <code>clip</code> token that doesn't resolve on the rig MUST degrade to that same fallback path; the tool SHOULD flag it visibly (it renders the token red with the fallback note).</li>
+  </ul>
+
+  <h2>Tooling &amp; data flow</h2>
+  <ul>
+    <li><a href="https://kion-dgl.github.io/psz-godot/#/enemy-room">#/enemy-room</a> runs the full FSM (a pure TS port, <code>web/src/enemy-room/fsm.ts</code> — the normative reference for <code>selectAttack</code> and <code>arcHitTest</code>) against a WASD player dummy with dodge i-frames, drawing detection/attack/charge rings and the arc with telegraph → hot window tints. Its clip dropdown lists the rig's <em>actual</em> clips — clip availability is never assumed.</li>
+    <li>Export replaces <code>data/enemy_attacks.json</code> wholesale; <code>scripts/tools/gen_enemy_attacks.py</code> reseeds new enemies without clobbering tuning. The committed file is validated by <code>web/src/__tests__/enemy-attacks-data.test.ts</code>.</li>
+    <li>The sandbox is a flat arena: nav-mesh, floor rays, stuck detection, and status effects are out of contract here (owned by the runtime + <a href="/states/enemies">/states/enemies</a>).</li>
+  </ul>
+
+  <h2>Implemented by (next PR)</h2>
+  <ul>
+    <li><code>scripts/3d/enemies/enemy_base.gd</code> — <code>_start_attack</code> / <code>_process_attacking</code> gain the selection, timeline, and arc test; a loader for <code>data/enemy_attacks.json</code>.</li>
+    <li>Two-layer tests per the working agreement: seeded <code>test_runner</code> units + an autopilot probe (the <code>PSZ_AUTOPILOT_ENEMY_FREEZE</code> probe pattern extends naturally).</li>
+  </ul>
+
+  <p><a href="/mechanics">← Mechanics</a></p>
+</Concept>
