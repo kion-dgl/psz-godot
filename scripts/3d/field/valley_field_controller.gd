@@ -492,7 +492,8 @@ func _ready() -> void:
 	_area_map_panel.setup(cells, str(_current_cell.get("pos", "")),
 		_visited_cells, "Section %d" % (section_idx + 1))
 
-	# Field HUD (always visible — stats panel + meseta + minimap)
+	# Per-scene field HUD (minimap host, palette, log, FPS). The HP/PP/Lv stats
+	# panel is NOT rebuilt here — it persists on the HudStats autoload (#444).
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
 

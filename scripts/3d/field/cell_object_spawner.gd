@@ -864,8 +864,10 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)
 			if _c._field_hud:
 				_c._field_hud.log_entry("LEVEL UP! Lv. %d" % result.new_level, Color(1.0, 0.9, 0.3))
-				_c._field_hud._stats_panel.char_level = result.new_level
-				_c._field_hud._stats_panel.queue_redraw()
+			# The HP/PP/Lv panel is the persistent HudStats autoload (#444) —
+			# it already refreshed via CharacterManager.level_up above; this is
+			# the same belt-and-suspenders nudge the per-scene panel used to get.
+			HudStats.set_char_level(result.new_level)
 
 	# Roll for any drop at all
 	if randf() >= DropConfig.DROP_CHANCE:

@@ -85,6 +85,7 @@ func _run_tests_core() -> void:
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
+	test_hud_stats_persistent_panel()
 	test_ranger_playthrough()
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
@@ -2750,6 +2751,79 @@ func test_scene_manager_fade_rect_full_size() -> void:
 	assert_true(fr.size.x > 0.0 and fr.size.y > 0.0, "fade rect has non-zero size (not 0,0)")
 	var vp: Vector2 = SceneManager.get_viewport().get_visible_rect().size
 	assert_true(fr.size.is_equal_approx(vp), "fade rect covers the full viewport (%s == %s)" % [fr.size, vp])
+	print("")
+
+
+# ── Persistent HUD stats panel (#444; spec /states/field-lifecycle) ──
+# The HP/PP/Lv panel MUST be a persistent autoload (HudStats): the SAME node
+# instance across an area transition (never freed/rebuilt by the per-scene
+# controller), rendered throughout the transition holding its last values,
+# reading live values from the GameState / CharacterManager autoloads. This
+# drives a simulated transition (SceneManager._transitioning + scene_changed,
+# the same signals a real goto_scene fires) and pins each clause.
+func test_hud_stats_persistent_panel() -> void:
+	print("── Persistent HUD stats panel across transitions (#444) ──")
+
+	var panel = HudStats._stats_panel
+	assert_true(panel != null, "HudStats autoload owns a stats panel")
+	assert_true(panel.is_inside_tree(), "stats panel is in the tree")
+	assert_eq(HudStats.get_parent(), get_tree().root, "HudStats is a root autoload — outside any scene")
+	assert_true(not get_tree().current_scene.is_ancestor_of(panel),
+		"panel is NOT under the current scene, so change_scene_to_file can never free it")
+
+	# Live values come from the GameState autoload (signal-driven, no polling).
+	GameState.set_max_hp(200)
+	GameState.set_hp(77)
+	GameState.set_max_mp(90)
+	GameState.set_mp(41)
+	assert_eq(panel._hp_cur_label.text, "77", "HP label reads live GameState.hp")
+	assert_eq(panel._hp_max_label.text, "200", "max-HP label reads live GameState.max_hp")
+	assert_eq(panel._pp_cur_label.text, "41", "PP label reads live GameState.mp")
+	assert_eq(panel._pp_max_label.text, "90", "max-PP label reads live GameState.max_mp")
+
+	# Level comes from the CharacterManager autoload's level_up signal.
+	CharacterManager.level_up.emit(7)
+	assert_eq(panel._level_label.text, "7", "Lv label tracks CharacterManager.level_up")
+
+	# Non-gameplay scene (this test scene) → panel hidden.
+	SceneManager._transitioning = false
+	HudStats._update_visibility()
+	assert_true(not panel.visible, "panel hidden on non-gameplay scenes (title/select/create)")
+
+	# Simulate an area transition: gameplay scene, fade running. The panel MUST
+	# stay rendered — same instance — for every step of the transition.
+	HudStats._in_gameplay = true
+	SceneManager._transitioning = true
+	HudStats._update_visibility()
+	assert_true(panel.visible, "panel rendered while in gameplay")
+	var id_before: int = panel.get_instance_id()
+	GameState.set_hp(63)  # value at the moment the warp starts
+	SceneManager.scene_changed.emit("res://scenes/3d/field/valley_field.tscn")
+	HudStats._update_visibility()  # mid-transition frame
+	assert_eq(HudStats._stats_panel.get_instance_id(), id_before,
+		"SAME panel instance after the scene change (never freed/rebuilt)")
+	assert_true(is_instance_valid(panel) and panel.is_inside_tree(),
+		"panel still in the tree after the scene change")
+	assert_true(panel.visible, "no absent frame: panel still rendered mid-transition")
+	assert_eq(panel._hp_cur_label.text, "63", "panel holds the last GameState values across the warp")
+
+	# Full-screen SceneManager overlays (shops, storage, guild) hide the panel;
+	# clearing the overlay restores it — the old FieldHud keep_stats contract,
+	# now owned by HudStats itself (the start menu is NOT in _overlay_stack, so
+	# start-menu-only keeps the panel visible by this same rule). Still inside
+	# the simulated gameplay state (_transitioning holds _in_gameplay).
+	SceneManager._overlay_stack.append({})
+	HudStats._update_visibility()
+	assert_true(not panel.visible, "panel hidden under a full-screen scene overlay")
+	SceneManager._overlay_stack.pop_back()
+	HudStats._update_visibility()
+	assert_true(panel.visible, "panel restored when the overlay clears")
+
+	# Cleanup: back to the runner's non-gameplay reality.
+	SceneManager._transitioning = false
+	HudStats._in_gameplay = false
+	HudStats._update_visibility()
+	GameState.reset_game_state()
 	print("")
 
 
@@ -7006,7 +7080,7 @@ func test_dialog_box_not_restored_after_close() -> void:
 	var hud = FieldHudScript.new()
 	add_child(hud)
 	box.reparent(hud)
-	hud.hide_for_menu(true)   # start menu opens
+	hud.hide_for_menu()   # start menu opens
 	assert_true(not box.visible, "closed dialog stays hidden while the menu is open")
 	hud.restore_after_menu()  # start menu closes
 	assert_true(not box.visible,

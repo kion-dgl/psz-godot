@@ -1,11 +1,14 @@
 extends CanvasLayer
-## Field HUD — shows player stats (HP/PP bars, level, name) top-left,
-## quest log docked left (toggleable, only when quest active),
-## and hosts the room minimap (always visible).
+## Field HUD — per-scene HUD elements: quest log docked left (toggleable, only
+## when quest active), action palette, quick weapon menu, FPS counter, and it
+## hosts the room minimap (always visible).
+##
+## The HP/PP/Lv stats panel is NOT here: it lives on the persistent HudStats
+## autoload (#444; spec /states/field-lifecycle) so it survives area
+## transitions instead of being freed/rebuilt with this per-scene layer.
 
 const MARGIN := 12.0
 
-var _stats_panel: Control
 var _target_info: Control
 var _quest_log: Control
 var _action_palette: Control
@@ -20,30 +23,12 @@ var _debug_last_section: String = ""
 var _debug_last_cell: String = ""
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
-# Tracks the keep_stats arg we last applied so we can detect transitions
-# within the "is hidden" state — e.g. start menu open (keep_stats=true) →
-# pushed scene overlay (keep_stats=false) needs to re-hide the stats panel.
-var _last_keep_stats: bool = false
-
-# Cached character info (static for session)
-var _char_name: String = ""
-var _char_level: int = 1
 
 
 func _ready() -> void:
-	layer = 200  # Above start menu (150) so HP/PP shows on top
+	layer = 200  # Same layer as the HudStats autoload; above start menu (150)
 	name = "FieldHud"
 	process_mode = Node.PROCESS_MODE_ALWAYS
-
-	var ch = CharacterManager.get_active_character()
-	if ch:
-		_char_name = str(ch.get("name", ""))
-		_char_level = int(ch.get("level", 1))
-
-	_stats_panel = _StatsPanel.new()
-	_stats_panel.char_name = _char_name
-	_stats_panel.char_level = _char_level
-	add_child(_stats_panel)
 
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
@@ -57,12 +42,6 @@ func _ready() -> void:
 	add_child(_quick_weapon)
 
 	_connect_player_charge_signals.call_deferred()
-
-	GameState.hp_changed.connect(_on_stats_changed)
-	GameState.max_hp_changed.connect(_on_stats_changed)
-	GameState.mp_changed.connect(_on_stats_changed)
-	GameState.max_mp_changed.connect(_on_stats_changed)
-	CharacterManager.level_up.connect(_on_level_up)
 
 	# FPS counter (top-right)
 	_fps_label = Label.new()
@@ -109,29 +88,17 @@ func _connect_player_charge_signals() -> void:
 func _process(_delta: float) -> void:
 	_update_fps_label()
 
-	# Hide HUD when an overlay (shop, menu, dialog) is open, or when the
-	# PSO start menu is up — the start menu isn't tracked in
-	# SceneManager._overlay_stack so we check its autoload directly.
-	# HP/PP stays visible only for the PSO start menu path; full-screen
-	# overlays (shops, storage, guild, inventory) hide everything including
-	# stats so the shop UI isn't overlaid with the gameplay HUD.
-	var has_scene_overlay: bool = not SceneManager._overlay_stack.is_empty()
-	var start_menu_open: bool = PsoStartMenu.is_open()
-	var has_overlay: bool = has_scene_overlay or start_menu_open
-	# keep_stats: HP/PP stays visible only when the start menu is the lone
-	# overlay (so the player can see their health while toggling options).
-	# Once a scene overlay is pushed (e.g. Reconfigure Controls), hide
-	# everything so the modal isn't drawn on top of stats.
-	var target_keep_stats: bool = start_menu_open and not has_scene_overlay
+	# Hide this per-scene HUD when an overlay (shop, menu, dialog) is open, or
+	# when the PSO start menu is up — the start menu isn't tracked in
+	# SceneManager._overlay_stack so we check its autoload directly. The
+	# HP/PP/Lv panel is not ours: the HudStats autoload applies its own
+	# keep-visible-under-start-menu rule (#444), so there is no keep_stats
+	# special case left here.
+	var has_overlay: bool = not SceneManager._overlay_stack.is_empty() or PsoStartMenu.is_open()
 	if has_overlay:
-		# Re-apply hide_for_menu both on first-hide AND when keep_stats
-		# changes mid-overlay (start-menu-only → start-menu + scene overlay,
-		# or close start menu while scene overlay pushes), otherwise the
-		# stats panel sticks at its earlier visibility.
-		if not _hidden_for_overlay or _last_keep_stats != target_keep_stats:
+		if not _hidden_for_overlay:
 			_hidden_for_overlay = true
-			_last_keep_stats = target_keep_stats
-			hide_for_menu(target_keep_stats)
+			hide_for_menu()
 	elif _hidden_for_overlay:
 		_hidden_for_overlay = false
 		restore_after_menu()
@@ -202,15 +169,13 @@ func _is_in_city() -> bool:
 	return SessionManager.get_location() == "city"
 
 
-## Hide all HUD elements when a menu/shop/dialog is open.
-## HP/PP stays up only for the PSO start menu (keep_stats=true); full-screen
-## SceneManager overlays (shops, storage, guild, inventory) hide everything
-## so the overlay isn't painted on top of the stats panel.
-func hide_for_menu(keep_stats: bool = false) -> void:
+## Hide all per-scene HUD elements when a menu/shop/dialog is open. The
+## persistent HP/PP/Lv panel (HudStats autoload) manages its own visibility —
+## it stays up under the PSO start menu and hides under full-screen
+## SceneManager overlays (#444).
+func hide_for_menu() -> void:
 	for child in get_children():
 		if child is Control:
-			if keep_stats and child == _stats_panel:
-				continue
 			child.visible = false
 
 
@@ -233,16 +198,6 @@ func restore_after_menu() -> void:
 	for child in get_children():
 		if child.has_meta("toggled_off") and child.get_meta("toggled_off"):
 			child.visible = false
-
-
-func _on_stats_changed(_value: int) -> void:
-	_stats_panel.update_display()
-
-
-func _on_level_up(new_level: int) -> void:
-	_char_level = new_level
-	_stats_panel.char_level = new_level
-	_stats_panel.update_display()
 
 
 ## Log companion speech to the action log.
@@ -354,109 +309,6 @@ class _DebugInfoPanel extends Control:
 		if not cell_pos.is_empty():
 			parts.append("Cell %s" % cell_pos)
 		_label.text = " | ".join(parts)
-
-
-# ── Stats Panel (top-left) ───────────────────────────────────────────────────
-
-class _StatsPanel extends Control:
-	const PANEL_W := 256.0
-	const PANEL_H := 120.0
-	const BAR_LEFT := 76.0
-	const BAR_WIDTH := 160.0
-	const BAR_HEIGHT := 7.0
-	const HP_BAR_TOP := 62.0
-	const PP_BAR_TOP := 98.0
-	const LEVEL_FONT_SIZE := 16
-	const VAL_FONT_SIZE := 14
-
-	const HP_COLOR := Color(0.27, 0.85, 0.27)
-	const PP_COLOR := Color(0.22, 0.56, 0.93)
-	const LEVEL_COLOR := Color(1, 1, 1, 1)
-	const VALUE_COLOR := Color(0, 0, 0, 1)
-	const PANEL_SCALE := 0.8
-
-	var char_name: String = ""
-	var char_level: int = 1
-
-	var _level_label: Label
-	var _hp_cur_label: Label
-	var _hp_max_label: Label
-	var _pp_cur_label: Label
-	var _pp_max_label: Label
-	var _hp_bar: ColorRect
-	var _pp_bar: ColorRect
-
-	func _ready() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-		position = Vector2(MARGIN, MARGIN)
-		size = Vector2(PANEL_W, PANEL_H)
-		custom_minimum_size = size
-		pivot_offset = Vector2.ZERO
-		scale = Vector2(PANEL_SCALE, PANEL_SCALE)
-		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-		var bg := TextureRect.new()
-		bg.texture = preload("res://assets/hud/hp-pp.png")
-		bg.position = Vector2.ZERO
-		bg.size = Vector2(PANEL_W, PANEL_H)
-		bg.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(bg)
-
-		_hp_bar = ColorRect.new()
-		_hp_bar.color = HP_COLOR
-		_hp_bar.position = Vector2(BAR_LEFT, HP_BAR_TOP)
-		_hp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
-		_hp_bar.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(_hp_bar)
-
-		_pp_bar = ColorRect.new()
-		_pp_bar.color = PP_COLOR
-		_pp_bar.position = Vector2(BAR_LEFT, PP_BAR_TOP)
-		_pp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
-		_pp_bar.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(_pp_bar)
-
-		_level_label = _make_label(Vector2(109, 13), Vector2(46, 22), LEVEL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, LEVEL_COLOR)
-		_hp_cur_label = _make_label(Vector2(109, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
-		_hp_max_label = _make_label(Vector2(190, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
-		_pp_cur_label = _make_label(Vector2(109, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
-		_pp_max_label = _make_label(Vector2(190, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
-
-		update_display()
-
-	func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
-		var lbl := Label.new()
-		lbl.position = pos
-		lbl.size = sz
-		lbl.custom_minimum_size = sz
-		lbl.horizontal_alignment = align
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", font_size)
-		lbl.add_theme_color_override("font_color", color)
-		lbl.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(lbl)
-		return lbl
-
-	func update_display() -> void:
-		if not is_inside_tree():
-			return
-		var hp: int = GameState.hp
-		var max_hp: int = GameState.max_hp
-		var pp: int = GameState.mp
-		var max_pp: int = GameState.max_mp
-
-		_level_label.text = str(char_level)
-		_hp_cur_label.text = str(hp)
-		_hp_max_label.text = str(max_hp)
-		_pp_cur_label.text = str(pp)
-		_pp_max_label.text = str(max_pp)
-
-		var hp_ratio: float = clampf(float(hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 0.0
-		var pp_ratio: float = clampf(float(pp) / float(max_pp), 0.0, 1.0) if max_pp > 0 else 0.0
-		_hp_bar.size.x = BAR_WIDTH * hp_ratio
-		_hp_bar.visible = hp_ratio > 0.0
-		_pp_bar.size.x = BAR_WIDTH * pp_ratio
-		_pp_bar.visible = pp_ratio > 0.0
 
 
 # ── Action Log (bottom-left, fixed box with scroll) ─────────────────────────
