@@ -495,14 +495,15 @@ class _ActionPalette extends Control:
 	const BG_W := 128.0
 	const BG_H := 67.0
 
-	# Slot centers measured from pixel analysis of the 128x67 source image.
-	# Slots 0 & 2 are raised (y=27), slot 1 is lower (y=41) — diamond layout.
+	# Centers of the 22x22 dark recess in each slot, pixel-analysis centroids
+	# of the 128x67 source (the black area, not the octagon rim). Slots 0 & 2
+	# are raised (y=27.5), slot 1 is lower (y=41.5) — diamond layout.
 	const SLOT_CENTERS := [
-		Vector2(26.0, 27.0),
-		Vector2(58.0, 41.0),
-		Vector2(90.0, 27.0),
+		Vector2(26.5, 27.5),
+		Vector2(58.5, 41.5),
+		Vector2(90.5, 27.5),
 	]
-	const ICON_SIZE := 38.0  # Content is ~56% of 32x32 image; 38px shows ~21px visible
+	const ICON_SIZE := 18.0  # Cropped 20x20 art drawn into an 18px box — sits centered inside the ~22px black recess with margin
 
 	var _bg_textures: Array = [null, null]  # [page1, page2/R variant]
 	var _bg_texture: Texture2D = null
