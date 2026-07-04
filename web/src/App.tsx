@@ -33,6 +33,7 @@ const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
 const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 const ComboDebug = lazy(() => import('./combo-debug/ComboDebug'));
 const CombatRoom = lazy(() => import('./combat-room/CombatRoom'));
+const TextureAnimEditor = lazy(() => import('./texture-anim/TextureAnimEditor'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
@@ -102,6 +103,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/dodge-debug', label: 'Dodge' },
       { to: '/combo-debug', label: 'Combo' },
       { to: '/combat-room', label: 'Combat Room' },
+      { to: '/texture-anim', label: 'Texture Anim' },
     ],
   },
 ];
@@ -262,6 +264,7 @@ export default function App() {
             <Route path="/dodge-debug" element={<DodgeDebug />} />
             <Route path="/combo-debug" element={<ComboDebug />} />
             <Route path="/combat-room" element={<CombatRoom />} />
+            <Route path="/texture-anim" element={<TextureAnimEditor />} />
             <Route path="/palette-editor" element={<PaletteEditor />} />
           </Routes>
         </Suspense>
