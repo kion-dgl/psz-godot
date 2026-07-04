@@ -20,7 +20,7 @@ const SPRITE_PATH := "res://assets/ui/hud/map_grid.png"
 
 # Sprite-sheet geometry (kion's map grid sprite)
 const SHEET_W := 1024.0
-const SHEET_H := 977.0
+const SHEET_H := 1004.0
 const CELL0 := Vector2(139.0, 219.0)
 const CELL_PX := 107.0
 const CELL_STRIDE := 120.0
