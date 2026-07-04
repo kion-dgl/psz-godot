@@ -1,0 +1,41 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Area Map" section="States">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>The area map is a <strong>centered overlay</strong> showing the current section's cell grid — PSZ's zoomed-out map (PSZ splits local/area maps because its rooms are generated lego-block style; the local <em>room minimap</em> in the top-right is a separate element and unaffected). It replaces both the old debug map overlay and the top-right grid minimap.</p>
+
+  <h2>Presentation</h2>
+  <ul>
+    <li>Centered on screen at <strong>50% of the viewport height</strong>, width from the map sprite's aspect ratio, at <strong>~70% opacity</strong> — a quick-reference overlay, not a modal (gameplay input stays live).</li>
+    <li>Drawn over the PSZ map-grid sprite (<code>assets/ui/hud/map_grid.png</code>, 5×5 cell windows: 107&nbsp;px cells at <code>139 + col·120</code>, <code>219 + row·120</code> in the 1024-wide sheet). Until the sprite ships in the pack, a procedural plate with identical geometry stands in.</li>
+  </ul>
+
+  <h2>Toggle</h2>
+  <ul>
+    <li>The <code>area_map</code> action toggles it: <strong>R2</strong> (right trigger, joypad axis 5) or <strong>M</strong>. R2 was the free shoulder input (L1 = dodge, R1 = palette swap, L2 = camera lock).</li>
+    <li>Visibility persists across cell transitions within a field (existing <code>map_overlay_visible</code> transition data); it defaults to hidden on field entry.</li>
+  </ul>
+
+  <h2>Fog of war</h2>
+  <ul>
+    <li>A cell MUST render only once the player has <strong>visited</strong> it (<code>_visited_cells</code>); unexplored cells stay dark windows — the map fills in as the player explores.</li>
+    <li>A revealed cell draws its <strong>doors</strong> per state: green = open, red = locked (key gates, enemy locks, pending objectives — the same gate-state feed the room minimap uses).</li>
+    <li>The <strong>start cell</strong> carries the return-warp marker (cyan ring — the warp back to the city); the section's <strong>exit edge</strong> (<code>warp_edge</code>) carries the area-warp marker (blue, locked-red while objectives are pending) to the next grid.</li>
+    <li>The current cell is highlighted (bright green).</li>
+  </ul>
+
+  <h2>Debug reveal</h2>
+  <p><code>DebugConfig.reveal_map</code> ("Reveal Map (debug)" in the start-menu options) shows the <strong>full grid</strong> regardless of visited state, so testers can see where to go in a given layout. Default <strong>OFF</strong>.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/field/area_map_overlay.gd</code> — the overlay Control (layout, fog of war, doors/warps; sprite or procedural backdrop).</li>
+    <li><code>scripts/3d/field/valley_field_controller.gd</code> — mounts it in the <code>MapOverlay</code> CanvasLayer, feeds <code>setup(cells, current, visited, label)</code> per cell load and <code>set_gate_state</code> on gate changes, handles the <code>area_map</code> action.</li>
+    <li><code>project.godot</code> — the <code>area_map</code> input action; <code>scripts/config/debug_config.gd</code> — <code>reveal_map</code>.</li>
+  </ul>
+
+  <p><a href="/states">← States</a></p>
+</Concept>

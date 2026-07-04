@@ -38,6 +38,7 @@ func _run_tests_combat() -> void:
 	test_cone_targeting()
 	test_damaging_frame()
 	test_target_info_panel()
+	test_area_map_overlay()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -5438,6 +5439,34 @@ func test_target_info_panel() -> void:
 	meseta.free()
 	print("")
 
+
+# Area-map overlay (spec /states/area-map): fog of war — cells render only
+# once visited (or with the tester reveal toggle), doors/warps track the
+# controller's gate-state feed.
+func test_area_map_overlay() -> void:
+	print("── Area map overlay (fog of war) ──")
+	const OverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
+	var map = OverlayScript.new()
+	var cells: Array = [
+		{"pos": "0,0", "connections": {"east": "0,1"}, "is_start": true},
+		{"pos": "0,1", "connections": {"west": "0,0"}, "warp_edge": "east",
+			"is_key_gate": true, "key_gate_direction": "east"},
+	]
+	map.setup(cells, "0,0", {"0,0": true}, "Section 1")
+	assert_true(map._is_revealed("0,0"), "visited/current cell is revealed")
+	assert_true(not map._is_revealed("0,1"), "unvisited cell stays fogged")
+	DebugConfig.reveal_map = true
+	assert_true(map._is_revealed("0,1"), "reveal_map debug toggle shows the full grid")
+	DebugConfig.reveal_map = false
+	assert_true(not map._is_revealed("0,1"), "toggle off restores the fog")
+	# Gate-state feed: warp edge initializes as exit; controller locks flow in.
+	assert_eq(str(map._gate_states.get("0,1>east", "")), "exit", "warp_edge initializes as the area-warp exit")
+	map.set_gate_state("0,0", "east", "locked")
+	assert_eq(str(map._gate_states.get("0,0>east", "")), "locked", "set_gate_state locks a door")
+	map.set_gate_state("0,0", "east", "open")
+	assert_eq(str(map._gate_states.get("0,0>east", "")), "open", "set_gate_state reopens it")
+	map.free()
+	print("")
 
 # ── Weapon attack SFX: one canonical sound per type (Rozalin's audit) ──
 # Each weapon MUST map to a single attack sound (no random multi-common glob),
