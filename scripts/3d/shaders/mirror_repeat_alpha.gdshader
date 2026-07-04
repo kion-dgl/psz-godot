@@ -8,15 +8,21 @@ uniform vec2 uv_offset = vec2(0.0, 0.0);
 uniform bool mirror_x = true;
 uniform bool mirror_y = true;
 
-float mirror_coord(float c) {
+float mirror_coord(float c, float half_texel) {
 	float m = mod(c, 2.0);
-	return m < 1.0 ? m : 2.0 - m;
+	float r = m < 1.0 ? m : 2.0 - m;
+	// Half-texel inset at the mirror fold: without it, linear filtering samples
+	// across the repeat wrap right at the seam and paints a 1px line of the
+	// opposite edge (the "off by a pixel" seam). Clamping to texel-center range
+	// makes the fold double the edge texel, like hardware MIRRORED_REPEAT.
+	return clamp(r, half_texel, 1.0 - half_texel);
 }
 
 void fragment() {
 	vec2 uv = UV * uv_scale + uv_offset;
-	if (mirror_x) uv.x = mirror_coord(uv.x);
-	if (mirror_y) uv.y = mirror_coord(uv.y);
+	vec2 half_texel = 0.5 / vec2(textureSize(albedo_texture, 0));
+	if (mirror_x) uv.x = mirror_coord(uv.x, half_texel.x);
+	if (mirror_y) uv.y = mirror_coord(uv.y, half_texel.y);
 	vec4 tex = texture(albedo_texture, uv);
 	ALBEDO = tex.rgb;
 	ALPHA = tex.a;
