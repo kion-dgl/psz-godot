@@ -62,7 +62,8 @@ interface Tuning {
   // Hit detection (PSO cone model; meters/degrees)
   hDist: number;             // horizontal reach from the apex
   vDist: number;             // apex pull-back behind the player (also extends reach)
-  hAngleDeg: number;         // half-angle of the cone
+  hAngleDeg: number;         // horizontal half-angle of the cone
+  vAngleDeg: number;         // vertical half-angle (slope bound; 90 = unbounded)
   maxTargets: number;        // targets a single swing can hit
   damagingFrac: number[];    // fraction of each step's clip where the hit lands
   hitsPerStep: number[];     // hits per target per step (daggers multi-hit etc)
@@ -77,7 +78,7 @@ interface WeaponDef {
 }
 
 const tune = (
-  hit: { h: number; v: number; a: number; mt: number },
+  hit: { h: number; v: number; a: number; mt: number; va?: number },
   turnLimitDeg: [number, number],
   justStart = 0.55, justEnd = 0.70,
   damagingFrac: [number, number, number] = [0.4, 0.4, 0.45],
@@ -86,7 +87,7 @@ const tune = (
   comboSteps: 3, justStart, justEnd, justMult: 1.3,
   strongWindup: 0.4, specialWindup: 0.4,
   turnLimitDeg, targetSnap: true,
-  hDist: hit.h, vDist: hit.v, hAngleDeg: hit.a, maxTargets: hit.mt,
+  hDist: hit.h, vDist: hit.v, hAngleDeg: hit.a, vAngleDeg: hit.va ?? 40, maxTargets: hit.mt,
   damagingFrac: [...damagingFrac], hitsPerStep: [...hitsPerStep],
 });
 
@@ -98,15 +99,15 @@ const tune = (
 // tune. Combo tiers: saber [0.45,0.60) per data/combo_configs, rest default.
 const WEAPONS: WeaponDef[] = [
   { id: 'saber',   label: 'Saber',        glbBase: 'saver',      weaponType: 0,  defaults: tune({ h: 2.4, v: 0.5, a: 30, mt: 1 }, [90, 90], 0.45, 0.60) },
-  { id: 'sword',   label: 'Sword',        glbBase: 'sword',      weaponType: 1,  defaults: tune({ h: 3.0, v: 1.0, a: 45, mt: 3 }, [60, 60]) },
-  { id: 'daggers', label: 'Daggers',      glbBase: 'dagger',     weaponType: 2,  defaults: tune({ h: 2.0, v: 0.4, a: 22, mt: 1 }, [120, 120], 0.55, 0.70, [0.35, 0.35, 0.4], [2, 2, 3]) },
-  { id: 'claw',    label: 'Claw',         glbBase: 'claw',       weaponType: 3,  defaults: tune({ h: 1.8, v: 0.3, a: 20, mt: 1 }, [120, 120], 0.55, 0.70, [0.35, 0.35, 0.4], [2, 2, 2]) },
-  { id: 'dsaber',  label: 'Double Saber', glbBase: 'dsaver',     weaponType: 4,  defaults: tune({ h: 2.6, v: 0.8, a: 60, mt: 2 }, [180, 180], 0.55, 0.70, [0.4, 0.4, 0.45], [1, 2, 1]) },
+  { id: 'sword',   label: 'Sword',        glbBase: 'sword',      weaponType: 1,  defaults: tune({ h: 3.0, v: 1.0, a: 45, va: 45, mt: 3 }, [60, 60]) },
+  { id: 'daggers', label: 'Daggers',      glbBase: 'dagger',     weaponType: 2,  defaults: tune({ h: 2.0, v: 0.4, a: 22, va: 35, mt: 1 }, [120, 120], 0.55, 0.70, [0.35, 0.35, 0.4], [2, 2, 3]) },
+  { id: 'claw',    label: 'Claw',         glbBase: 'claw',       weaponType: 3,  defaults: tune({ h: 1.8, v: 0.3, a: 20, va: 35, mt: 1 }, [120, 120], 0.55, 0.70, [0.35, 0.35, 0.4], [2, 2, 2]) },
+  { id: 'dsaber',  label: 'Double Saber', glbBase: 'dsaver',     weaponType: 4,  defaults: tune({ h: 2.6, v: 0.8, a: 60, va: 45, mt: 2 }, [180, 180], 0.55, 0.70, [0.4, 0.4, 0.45], [1, 2, 1]) },
   { id: 'spear',   label: 'Spear',        glbBase: 'spear',      weaponType: 5,  defaults: tune({ h: 3.6, v: 0.6, a: 40, mt: 2 }, [75, 75]) },
-  { id: 'slicer',  label: 'Slicer',       glbBase: 'slicer',     weaponType: 6,  defaults: tune({ h: 8.0, v: 0.5, a: 15, mt: 4 }, [90, 90]) },
-  { id: 'handgun', label: 'Handgun',      glbBase: 'handgun',    weaponType: 9,  defaults: tune({ h: 17.0, v: 0.0, a: 10, mt: 1 }, [180, 180]) },
-  { id: 'mechgun', label: 'Mechgun',      glbBase: 'machinegun', weaponType: 10, defaults: tune({ h: 8.5, v: 0.0, a: 35, mt: 1 }, [180, 180], 0.55, 0.70, [0.3, 0.3, 0.35], [3, 3, 4]) },
-  { id: 'rifle',   label: 'Rifle',        glbBase: 'rifle',      weaponType: 11, defaults: tune({ h: 25.0, v: 0.0, a: 6, mt: 1 }, [45, 45]) },
+  { id: 'slicer',  label: 'Slicer',       glbBase: 'slicer',     weaponType: 6,  defaults: tune({ h: 8.0, v: 0.5, a: 15, va: 30, mt: 4 }, [90, 90]) },
+  { id: 'handgun', label: 'Handgun',      glbBase: 'handgun',    weaponType: 9,  defaults: tune({ h: 17.0, v: 0.0, a: 10, va: 15, mt: 1 }, [180, 180]) },
+  { id: 'mechgun', label: 'Mechgun',      glbBase: 'machinegun', weaponType: 10, defaults: tune({ h: 8.5, v: 0.0, a: 35, va: 20, mt: 1 }, [180, 180], 0.55, 0.70, [0.3, 0.3, 0.35], [3, 3, 4]) },
+  { id: 'rifle',   label: 'Rifle',        glbBase: 'rifle',      weaponType: 11, defaults: tune({ h: 25.0, v: 0.0, a: 6, va: 10, mt: 1 }, [45, 45]) },
   { id: 'rod',     label: 'Rod',          glbBase: 'rod',        weaponType: 14, defaults: tune({ h: 2.2, v: 0.4, a: 30, mt: 1 }, [90, 90]) },
   { id: 'wand',    label: 'Wand',         glbBase: 'wand',       weaponType: 15, defaults: tune({ h: 2.2, v: 0.4, a: 30, mt: 1 }, [90, 90]) },
 ];
@@ -1010,7 +1011,8 @@ export default function CombatRoom() {
       `\t${w.weaponType}: {`,
       `\t\t"hit_h_dist": ${t.hDist.toFixed(2)},`,
       `\t\t"hit_v_dist": ${t.vDist.toFixed(2)},  # cone apex pull-back; also extends reach`,
-      `\t\t"hit_h_angle_deg": ${t.hAngleDeg.toFixed(1)},  # half-angle`,
+      `\t\t"hit_h_angle_deg": ${t.hAngleDeg.toFixed(1)},  # horizontal half-angle`,
+      `\t\t"hit_v_angle_deg": ${t.vAngleDeg.toFixed(1)},  # vertical slope bound (90 = unbounded)`,
       `\t\t"max_targets": ${t.maxTargets},`,
       `\t\t"damaging_frac": [${t.damagingFrac.map((v) => v.toFixed(2)).join(', ')}],  # hit lands at this fraction of each swing`,
       `\t\t"hits_per_step": [${t.hitsPerStep.join(', ')}],`,
@@ -1201,8 +1203,10 @@ export default function CombatRoom() {
               (v) => setTuning({ hDist: v }), (v) => `${v.toFixed(1)} m`)}
             {sliderRow('Apex pull-back (v_dist)', tuning.vDist, 0, 3, 0.05,
               (v) => setTuning({ vDist: v }), (v) => `${v.toFixed(2)} m`)}
-            {sliderRow('Half-angle', tuning.hAngleDeg, 3, 90, 1,
+            {sliderRow('Half-angle (horizontal)', tuning.hAngleDeg, 3, 90, 1,
               (v) => setTuning({ hAngleDeg: v }), (v) => `${v.toFixed(0)}°`)}
+            {sliderRow('Half-angle (vertical)', tuning.vAngleDeg, 5, 90, 1,
+              (v) => setTuning({ vAngleDeg: v }), (v) => (v >= 90 ? 'unbounded' : `${v.toFixed(0)}°`))}
             {sliderRow('Max targets per swing', tuning.maxTargets, 1, 6, 1,
               (v) => setTuning({ maxTargets: v }), (v) => `${v}`)}
             {sliderRow('Damaging frame (step 1)', tuning.damagingFrac[0], 0.1, 0.9, 0.01,
