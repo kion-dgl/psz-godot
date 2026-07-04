@@ -9,6 +9,7 @@ extends CanvasLayer
 
 const MARGIN := 12.0
 
+var _target_info: Control
 var _quest_log: Control
 var _action_palette: Control
 var _quick_weapon: Control
@@ -31,6 +32,11 @@ func _ready() -> void:
 
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
+
+	# Target info renders under the quick weapon menu in the same corner —
+	# the menu owns the corner while open (spec /mechanics/targeting).
+	_target_info = _TargetInfoPanel.new()
+	add_child(_target_info)
 
 	_quick_weapon = _QuickWeaponMenu.new()
 	add_child(_quick_weapon)
@@ -80,17 +86,7 @@ func _connect_player_charge_signals() -> void:
 
 
 func _process(_delta: float) -> void:
-	# FPS counter (only update when value changes)
-	if _fps_label:
-		var fps: int = int(Engine.get_frames_per_second())
-		if fps != _fps_label.get_meta("last_fps", -1):
-			_fps_label.set_meta("last_fps", fps)
-			_fps_label.text = "%d FPS" % fps
-			var band: int = 0 if fps < 30 else (1 if fps < 50 else 2)
-			if band != _fps_label.get_meta("band", -1):
-				_fps_label.set_meta("band", band)
-				var colors := [Color(1.0, 0.3, 0.3), Color(1.0, 0.8, 0.2), Color(0.5, 0.8, 0.3)]
-				_fps_label.add_theme_color_override("font_color", colors[band])
+	_update_fps_label()
 
 	# Hide this per-scene HUD when an overlay (shop, menu, dialog) is open, or
 	# when the PSO start menu is up — the start menu isn't tracked in
@@ -114,11 +110,46 @@ func _process(_delta: float) -> void:
 	if _action_palette and not _hidden_for_overlay:
 		_action_palette.visible = not _is_in_city()
 
+	_update_target_info_panel()
+
 	# Autopilot HUD overlay (top-center): wall-clock + quest + cell. The
 	# overlay is only instantiated when PSZ_AUTOPILOT=1, so this is a
 	# cheap nil-check in normal play.
 	if _debug_info:
 		_render_debug_info()
+
+
+## FPS counter (top-right) — only touches the label when the value changes.
+func _update_fps_label() -> void:
+	if not _fps_label:
+		return
+	var fps: int = int(Engine.get_frames_per_second())
+	if fps == _fps_label.get_meta("last_fps", -1):
+		return
+	_fps_label.set_meta("last_fps", fps)
+	_fps_label.text = "%d FPS" % fps
+	var band: int = 0 if fps < 30 else (1 if fps < 50 else 2)
+	if band != _fps_label.get_meta("band", -1):
+		_fps_label.set_meta("band", band)
+		var colors := [Color(1.0, 0.3, 0.3), Color(1.0, 0.8, 0.2), Color(0.5, 0.8, 0.3)]
+		_fps_label.add_theme_color_override("font_color", colors[band])
+
+
+## Target-info panel (spec /mechanics/targeting): the primary target's info
+## in the bottom-left. The quick weapon menu owns that corner while open —
+## the panel MUST NOT render under it. Combat HUD element, so the city hides
+## it like the palette.
+func _update_target_info_panel() -> void:
+	if not _target_info or _hidden_for_overlay:
+		return
+	var info: Dictionary = {}
+	if not _is_in_city() and not _quick_weapon.get("_is_open"):
+		var players: Array = get_tree().get_nodes_in_group("player")
+		if not players.is_empty():
+			var v = players[0].get("_primary_target_info")
+			if v is Dictionary:
+				info = v
+	_target_info.update_info(info)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -607,6 +638,65 @@ class _ActionPalette extends Control:
 
 # ── Quick Weapon Menu (bottom-left, toggled with quick_weapon input) ─────────
 
+class _TargetInfoPanel extends Control:
+	## Bottom-left primary-target plate (spec /mechanics/targeting): enemy →
+	## name + HP bar; ground item → item name. Renders NOTHING without a
+	## target; field_hud._process keeps it hidden while the quick weapon menu
+	## owns the corner. Drawn in the shared PszPanel plate style.
+
+	const PANEL_W := 200.0
+	const PANEL_H := 54.0
+	const HP_COLOR := Color(0.27, 0.85, 0.27)
+	const HP_LOW_COLOR := Color(0.92, 0.66, 0.2)
+	const HP_TRACK := Color(0.19, 0.31, 0.49)
+
+	var _info: Dictionary = {}
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+		visible = false
+		anchor_left = 0.0
+		anchor_right = 0.0
+		anchor_top = 1.0
+		anchor_bottom = 1.0
+		offset_left = MARGIN
+		offset_right = MARGIN + PANEL_W
+		offset_top = -MARGIN - PANEL_H
+		offset_bottom = -MARGIN
+		size = Vector2(PANEL_W, PANEL_H)
+
+	func update_info(info: Dictionary) -> void:
+		if info == _info:
+			return
+		_info = info.duplicate()
+		visible = not _info.is_empty()
+		queue_redraw()
+
+	func _draw() -> void:
+		if _info.is_empty():
+			return
+		var font: Font = ThemeDB.fallback_font
+		PszPanel.draw_plate(self, size, false)
+		if str(_info.get("kind")) == "enemy":
+			draw_string(font, Vector2(14, 20), str(_info.get("name", "")),
+				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - 28, 13, PszPanel.TEXT_DARK)
+			var max_hp: int = int(_info.get("max_hp", 0))
+			var hp: int = int(_info.get("hp", 0))
+			var ratio: float = clampf(float(hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 0.0
+			var bar := Rect2(14, 28, PANEL_W - 42, 7)
+			draw_rect(bar, HP_TRACK)
+			if ratio > 0.0:
+				draw_rect(Rect2(bar.position, Vector2(bar.size.x * ratio, bar.size.y)),
+					HP_COLOR if ratio > 0.35 else HP_LOW_COLOR)
+			draw_string(font, Vector2(14, 47), "HP %d/%d" % [hp, max_hp],
+				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - 28, 10, PszPanel.TEXT_DARK)
+		else:
+			draw_string(font, Vector2(14, 18), "ITEM",
+				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - 28, 9, Color(0.28, 0.42, 0.62))
+			draw_string(font, Vector2(14, 38), str(_info.get("name", "")),
+				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - 28, 14, PszPanel.TEXT_DARK)
+
+
 class _QuickWeaponMenu extends Control:
 	## Small scrollable weapon select overlay. Shows equipped weapon + equippable
 	## weapons from inventory. 5 visible lines, scroll with up/down, accept to
@@ -621,12 +711,12 @@ class _QuickWeaponMenu extends Control:
 	const ROW_H := 22.0
 	const VISIBLE_ROWS := 5
 	const MENU_H: float = ROW_H * VISIBLE_ROWS + 8.0  # 5 rows + padding
-	const BG_COLOR := Color(0.05, 0.05, 0.1, 0.85)
-	const BORDER_COLOR := Color(0.3, 0.5, 0.3, 0.6)
-	const SELECTED_BG := Color(0.15, 0.3, 0.15, 0.8)
-	const EQUIPPED_COLOR := Color(0.3, 0.8, 0.3)
-	const TEXT_COLOR := Color(0.85, 0.85, 0.85)
-	const TEXT_DIM := Color(0.5, 0.5, 0.5)
+	# PSZ plate style (PszPanel, spec /mechanics/targeting) — navy striped
+	# plate; behavior contract (spec /states/quick-weapon-menu) unchanged.
+	const SELECTED_BG := Color(0.33, 0.47, 0.72, 0.55)
+	const EQUIPPED_COLOR := Color(0.45, 0.9, 0.5)
+	const TEXT_COLOR := PszPanel.TEXT_LIGHT
+	const TEXT_DIM := Color(0.45, 0.53, 0.66)
 
 	var _is_open: bool = false
 	var _selected_index: int = 0
@@ -814,9 +904,8 @@ class _QuickWeaponMenu extends Control:
 			return
 		var font: Font = ThemeDB.fallback_font
 
-		# Background
-		draw_rect(Rect2(Vector2.ZERO, size), BG_COLOR)
-		draw_rect(Rect2(Vector2.ZERO, size), BORDER_COLOR, false, 1.0)
+		# Background — the shared PSZ plate (dark variant)
+		PszPanel.draw_plate(self, size, true)
 
 		# Draw visible rows
 		var y := 4.0

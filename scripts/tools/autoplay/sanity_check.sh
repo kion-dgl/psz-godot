@@ -47,7 +47,7 @@ rm -f "$USERDIR/input_config.json" "$USERDIR/save_data.json"
 # 2) Repoint the manifest at the local pack so bootstrap copies from disk, not
 #    Arweave. sha256/size are read from the actual file so it always verifies.
 PACK_SHA="$(sha256sum "$PACK" | awk '{print $1}')"
-PACK_SIZE="$(stat -c %s "$PACK")"
+PACK_SIZE="$(stat -c %s "$PACK" 2>/dev/null || stat -f %z "$PACK")"  # GNU / BSD(macOS)
 cp "$MANIFEST" "$MANIFEST_BAK"
 cat > "$MANIFEST" <<JSON
 {

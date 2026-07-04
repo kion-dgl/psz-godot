@@ -14,7 +14,10 @@ func _ready() -> void:
 
 	# Split across two registration helpers so neither crosses the code-health
 	# size bound as the suite grows (each new test is one more line here).
+	# Core first: it creates the active character the combat group's
+	# simulation/damage tests need (they SKIP without one).
 	_run_tests_core()
+	_run_tests_combat()
 	_run_tests_systems()
 
 	print("\n══════════════════════════════════")
@@ -24,23 +27,41 @@ func _ready() -> void:
 	get_tree().quit(1 if _fail > 0 else 0)
 
 
-# Registries, inventory, combat math, mags, shops, techniques, telepipe + the
-# recent playtest-fix regression tests (#357/#358/#359/#352).
-func _run_tests_core() -> void:
-	test_registries()
-	test_inventory()
-	test_inventory_capacity()
-	test_character_creation()
-	test_equipment()
+# Player state machine + combat: states, commitment, combos, damage math,
+# drops, and the combat-adjacent regression tests.
+func _run_tests_combat() -> void:
 	test_player_states()
 	test_action_commitment()
-	test_palette_momentary_swap()
-	test_menu_carry_survives_scene_signal()
+	test_combo_three_tier()
+	test_combo_chain_lifecycle()
+	test_combo_miss_early_fumble()
+	test_cone_targeting()
+	test_damaging_frame()
+	test_target_info_panel()
+	test_area_map_overlay()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
 	test_combat_simulation()
+	test_damage_formulas()
+	test_charge_drop_paths()
+	test_mechgun_final_step_no_root()
+	test_weapon_attack_sfx_mapping()
+	test_weapon_anim_data_new_animation_sets()
+
+
+# Registries, inventory, mags, shops, techniques, telepipe + the
+# recent playtest-fix regression tests (#357/#358/#359/#352).
+func _run_tests_core() -> void:
+	test_registries()
+	test_inventory()
+	test_inventory_capacity()
+	test_key_hud_count()
+	test_character_creation()
+	test_equipment()
+	test_palette_momentary_swap()
+	test_menu_carry_survives_scene_signal()
 	test_session_manager()
 	test_mag_feeding()
 	test_mag_evolution()
@@ -65,7 +86,6 @@ func _run_tests_core() -> void:
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
 	test_hud_stats_persistent_panel()
-	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
@@ -102,10 +122,7 @@ func _run_tests_core() -> void:
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
 	test_player_defeat_return()
-	test_charge_drop_paths()
-	test_mechgun_final_step_no_root()
-	test_weapon_attack_sfx_mapping()
-	test_weapon_anim_data_new_animation_sets()
+	test_companion_anim_from_measured_speed()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -146,6 +163,7 @@ func _run_tests_systems() -> void:
 	test_message_wall_questitem_persist()
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
+	test_minimap_enemy_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 
@@ -412,6 +430,29 @@ func test_inventory() -> void:
 	assert_gt(info2.max_stack, 1, "Monomate is stackable")
 
 	Inventory.clear_inventory()
+	print("")
+
+
+# Held-key count for the field HUD (playtest: keys must decrement on use, not
+# just accumulate). get_total_keys tracks keys IN HAND; keys_changed fires on
+# both pickup (add_key) and gate-consume (remove_key) so the HUD refreshes.
+func test_key_hud_count() -> void:
+	print("── Held-key count + keys_changed signal ──")
+	while Inventory.get_total_keys() > 0:
+		Inventory.remove_key(Inventory._keys.keys()[0])
+	var events: Array = []
+	var cb := func(total: int): events.append(total)
+	Inventory.keys_changed.connect(cb)
+	Inventory.add_key("key_2_3")
+	assert_eq(Inventory.get_total_keys(), 1, "pickup → 1 key in hand")
+	Inventory.add_key("key_4_1")
+	assert_eq(Inventory.get_total_keys(), 2, "second distinct key → 2 in hand")
+	Inventory.remove_key("key_2_3")
+	assert_eq(Inventory.get_total_keys(), 1, "using a key drops the held count")
+	Inventory.remove_key("key_4_1")
+	assert_eq(Inventory.get_total_keys(), 0, "using the last key drops to 0 (playtest fix)")
+	assert_eq(events, [1, 2, 1, 0], "keys_changed emits the new total on every add/remove")
+	Inventory.keys_changed.disconnect(cb)
 	print("")
 
 
@@ -5142,22 +5183,22 @@ func test_free_telepipe_round_trip() -> void:
 	print("")
 
 
-# ── Mechgun root-after-fire (Rozalin): final combo step recovers ──
-# The final combo step opens no combo window, so without a safety net a looping
-# attack animation (mechgun spray never emits animation_finished) strands the
-# player in ATTACKING with movement zeroed. _handle_attack_state must end the
-# attack once the final step's animation length elapses.
+# ── Mechgun root-after-fire (Rozalin): every combo step recovers ──
+# A looping attack animation (mechgun spray) never emits animation_finished,
+# so without the elapsed-length safety net in _handle_attack_state the player
+# is stranded in ATTACKING with movement zeroed. Under the #155 queued model
+# the net is generalized to every step: at animation length the step ends —
+# firing the queued chain if one exists, otherwise breaking to IDLE.
 func test_mechgun_final_step_no_root() -> void:
-	print("── Mechgun: final combo step recovers without animation_finished ──")
+	print("── Mechgun: combo steps recover without animation_finished ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 	var pl = PlayerScript.new()
 
-	# Final step (combo_state >= max_combo), no open window, anim "looping" so
+	# Final step (combo_state >= max_combo), anim "looping" so
 	# animation_finished never fires. Tick past the anim length.
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 3)
-	pl.set("combo_window_open", false)
-	pl.set("_combo_window_opened", true)
+	pl.set("_attack_step_ended", false)
 	pl.set("_attack_anim_length", 0.4)
 	pl.set("_attack_anim_elapsed", 0.0)
 	for _i in range(10):
@@ -5166,22 +5207,365 @@ func test_mechgun_final_step_no_root() -> void:
 		"final combo step returns to IDLE once the anim length elapses (no permanent root)")
 	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the final step ends")
 
-	# Control: a non-final step with its combo window OPEN must stay attackable
-	# (the safety net must not eat the chain window even past the anim length).
+	# A non-final step with a QUEUED chain fires the next step at anim length
+	# instead of rooting or breaking (#155 — the queued model's fire point).
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
-	pl.set("combo_window_open", true)
-	pl.set("combo_timer", 0.0)
-	pl.set("_combo_window_opened", true)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NORMAL)
+	pl.set("_attack_step_ended", false)
 	pl.set("_attack_anim_length", 0.4)
 	pl.set("_attack_anim_elapsed", 0.5)
 	pl._handle_attack_state(0.05)
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
-		"non-final step stays attackable while its combo window is open")
+		"queued chain keeps ATTACKING — next step fires at the safety net")
+	assert_eq(int(pl.get("combo_state")), 2, "queued step advanced the combo at anim length")
 
 	pl.free()
 	print("")
 
+
+# ── Three-tier combo timing (#155, spec /mechanics/combos) ──
+# Windows are fractions of the current swing from WeaponComboConfig data
+# (saber = [0.45, 0.60) just / [0.60, 1.0] normal). A press queues; the queue
+# fires at step end; miss-early is unbuffered; just chains carry a damage
+# bonus; the finisher can't chain. Off-tree player, barehanded → type 0
+# (saber config) — the weapon-type fallback combat callers rely on.
+func test_combo_three_tier() -> void:
+	print("── Combo three-tier timing (#155) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# Data: saber tuned per #155, untuned types share the default config.
+	# (approx: PackedFloat32Array narrows to float32 — exact == would flake.)
+	var saber_t: Dictionary = CombatManager.get_combo_timing(0, 1)
+	assert_true(is_equal_approx(float(saber_t.just_start), 0.45), "saber just window opens at 0.45 (#155 fast-weapon tuning)")
+	assert_true(is_equal_approx(float(saber_t.just_end), 0.6), "saber just window closes at 0.60")
+	var default_t: Dictionary = CombatManager.get_combo_timing(7, 1)  # untuned type → default
+	assert_true(is_equal_approx(float(default_t.just_start), 0.55), "untuned weapon types share the default just_start 0.55")
+	assert_true(CombatManager.get_combo_timing(0, 3).is_empty(), "finisher (step 3) has no accept window")
+	assert_true(CombatManager.get_combo_timing(0, 0).is_empty(), "step 0 (not attacking) has no window")
+
+	var pl = PlayerScript.new()
+
+	# miss-early: press before just_start queues nothing (it FUMBLES the
+	# swing — the lockout itself is pinned in test_combo_miss_early_fumble).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", 0.3)  # < 0.45
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"miss-early press queues nothing (fumble, not buffered)")
+	pl.set("_combo_fumbled", false)  # fresh swing for the tier asserts below
+
+	# just window: [0.45, 0.60) queues a JUST chain.
+	pl.set("_attack_anim_elapsed", 0.5)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
+		"press in [just_start, just_end) queues a just chain")
+
+	# One queue slot: a later press must not re-roll the tier.
+	pl.set("_attack_anim_elapsed", 0.8)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
+		"second press can't re-roll or downgrade the queued tier")
+
+	# Fire at step end: queued just chain advances and flags the bonus.
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+	assert_eq(int(pl.get("combo_state")), 2, "queued chain fires at step end → step 2")
+	assert_true(bool(pl.get("_is_just_attack")), "fired step carries the just flag")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "queue slot cleared on fire")
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING), "chain stays in ATTACKING")
+
+	# Just bonus lands in the damage dict. calculate_attack_damage rolls
+	# variance on the global RNG — seed identically so the just and base
+	# calls see the same roll and the assert isolates the multiplier.
+	seed(0x155)
+	var atk: Dictionary = pl._get_attack_damage()
+	assert_true(bool(atk.get("just", false)), "just swing marks the damage dict")
+	seed(0x155)
+	var base: Dictionary = CombatManager.calculate_attack_damage(2)
+	assert_eq(int(atk.get("damage", -1)), int(round(int(base.get("damage", 0)) * CombatManager.get_combo_just_mult(0))),
+		"just swing damage = base × just_damage_mult (seed-paired rolls)")
+
+	pl.free()
+	print("")
+
+
+# Second half of the #155 contract: the chain lifecycle — normal-window
+# chains, the finisher's structural no-window, the un-queued break to IDLE,
+# Off-tree player parked mid-swing — shared setup for the combo tests.
+func _combo_swing_player(pl_script, step: int, elapsed: float):
+	var pl = pl_script.new()
+	pl.set("current_state", pl_script.PlayerState.ATTACKING)
+	pl.set("combo_state", step)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", elapsed)
+	return pl
+
+
+# Fire the step-end point (resetting the exactly-once guard first).
+func _combo_step_end(pl) -> void:
+	pl.set("_attack_step_ended", false)
+	pl._attack_step_finished()
+
+
+# damage interrupts clearing the queue, and the special-chain flag.
+func test_combo_chain_lifecycle() -> void:
+	print("── Combo chain lifecycle (#155) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+
+	# normal window: [0.60, 1.0] queues a NORMAL chain; firing clears the just flag.
+	var pl = _combo_swing_player(PlayerScript, 2, 0.8)
+	pl.set("_is_just_attack", true)  # as if step 2 was a just chain
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"press in [just_end, 1.0] queues a normal chain")
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("combo_state")), 3, "normal chain fires → step 3 (finisher)")
+	assert_true(not bool(pl.get("_is_just_attack")), "normal chain clears the just flag")
+	var atk3: Dictionary = pl._get_attack_damage()
+	assert_true(not atk3.has("just"), "normal swing carries no just mark")
+
+	# Finisher: presses during step 3 are no-ops; its end breaks to IDLE.
+	pl.set("_attack_anim_elapsed", 0.7)
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "finisher press queues nothing")
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE), "finisher end returns to IDLE")
+	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the finisher")
+
+	# Un-queued step end breaks the combo (too-late tier is structural).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NONE)
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"swing ending un-queued breaks the combo to IDLE (no grace window)")
+
+	# Damage interrupt clears the queue AND the fumble flag (via
+	# transition_to, with #428): the queued follow-up must never fire after
+	# a DAMAGED recovery, and a fumble must not leak into the next combo.
+	GameState.set_hp(GameState.max_hp)
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.JUST)
+	pl.set("_combo_fumbled", true)
+	pl.take_damage(15)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"damage interrupt clears the combo queue (#155/#428)")
+	assert_true(not bool(pl.get("_combo_fumbled")), "ATTACKING exit clears the fumble flag")
+	GameState.set_hp(GameState.max_hp)
+
+	# Special chain: strong-attack press queues with the special flag. (The
+	# fire itself is the same _attack_step_finished path asserted above; the
+	# special wind-up tween needs a tree, so the flag hand-off to
+	# _is_special_attack is left to the autopilot probe.)
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_is_special_attack", false)
+	pl.set("_attack_anim_length", 1.0)
+	pl.set("_attack_anim_elapsed", 0.8)
+	pl._try_queue_combo(true)
+	assert_true(bool(pl.get("_queued_combo_special")), "strong-attack press queues a special chain")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"special press in the normal window queues a NORMAL-tier chain")
+
+	pl.free()
+	print("")
+
+
+# Miss-early FUMBLES the swing (spec /mechanics/combos): a plain no-op let
+# mashing ride the wide accept window and chain anyway (Rozalin's #459
+# playtest) — the fumble locks out chaining for the rest of the swing so
+# mash breaks its own combo. Per swing: the next step starts clean.
+func test_combo_miss_early_fumble() -> void:
+	print("── Combo miss-early fumble ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	# Park mid-swing at 0.3 — before saber's just_start (0.45): miss-early.
+	var pl = _combo_swing_player(PlayerScript, 1, 0.3)
+	pl._try_queue_combo(false)
+	assert_true(bool(pl.get("_combo_fumbled")), "miss-early press fumbles the swing")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"fumbling press queues nothing")
+
+	# Mash: presses inside the accept window are now locked out.
+	pl.set("_attack_anim_elapsed", 0.5)  # just window
+	pl._try_queue_combo(false)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"just-window press after a fumble is ignored")
+	pl.set("_attack_anim_elapsed", 0.8)  # normal window
+	pl._try_queue_combo(true)
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
+		"normal-window press after a fumble is ignored (strong too)")
+
+	# The fumbled swing ends un-queued → combo breaks.
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"fumbled swing breaks the combo at swing end")
+
+	# Per-swing lockout: firing the next step resets the flag (synthetic
+	# fumbled+queued state — unreachable in play, but pins the reset path).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("_combo_fumbled", true)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NORMAL)
+	_combo_step_end(pl)
+	assert_eq(int(pl.get("combo_state")), 2, "queued chain fires into step 2")
+	assert_true(not bool(pl.get("_combo_fumbled")), "next step starts with a clean chain attempt")
+	# (Damage-interrupt clearing of the flag is pinned in
+	# test_combo_chain_lifecycle's interrupt block.)
+
+	pl.free()
+	print("")
+
+
+# The hit cone (spec /mechanics/targeting): PSO's check_enemy_is_targetable
+# flattened to XZ — apex pulled back by v_dist, target radius extends reach,
+# half-angle test against the facing. Pure math, tested directly.
+func test_cone_targeting() -> void:
+	print("── Hit cone (spec /mechanics/targeting) ──")
+	var o := Vector3.ZERO
+	# yaw 0 faces +Z. Saber-ish cone: h 2.4, v 0.5, half-angle 30°,
+	# vertical unbounded (90) for the horizontal cases.
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.6), 0.5),
+		"enemy straight ahead inside reach passes")
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.5), 0.5),
+		"enemy past reach fails")
+	# Reach is measured from the pulled-back apex: reach = h + v + radius vs
+	# dist = z + v — so at z = 3.2 a 0.5-radius target is out (3.7 > 3.4)
+	# but a 0.9-radius one is in (3.7 ≤ 3.8).
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.2), 0.5),
+		"0.5-radius target at 3.2 m is out of reach")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 3.2), 0.9),
+		"a bigger hitbox radius extends the reach (PSO)")
+	var side := Vector3(2.0, 0, 2.0)  # 45° off the facing
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, side, 0.5),
+		"45° off a 30° half-angle cone fails")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 0.5, 60.0, 90.0, side, 0.5),
+		"45° off a 60° half-angle cone passes")
+	# Apex pull-back widens point-blank coverage: a flank target (90° off)
+	# only passes when v_dist moves the cone's apex behind the player.
+	var flank := Vector3(0.6, 0, 0.0)
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 2.4, 0.0, 45.0, 90.0, flank, 0.3),
+		"flank target fails with no apex pull-back")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 2.4, 1.0, 45.0, 90.0, flank, 0.3),
+		"apex pull-back brings the flank target into the cone")
+	var d_near: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 1.0), 0.5)
+	var d_far: float = ConeTargeting.distance_in_cone(o, 0.0, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.5), 0.5)
+	assert_true(d_near >= 0.0 and d_far > d_near, "distance_in_cone orders nearest-first")
+	assert_true(not ConeTargeting.in_cone(o, PI, 2.4, 0.5, 30.0, 90.0, Vector3(0, 0, 2.6), 0.5),
+		"facing away fails the cone")
+	# Vertical half-angle bounds the slope from the apex: a target 2 m ahead
+	# and 2 m up sits at 45° — outside a 40° bound, inside a 50° one; 90
+	# means unbounded (PSO's launchers).
+	var high := Vector3(0, 2.0, 2.0)
+	assert_true(not ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 40.0, high, 0.3),
+		"45° slope fails a 40° vertical bound")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 50.0, high, 0.3),
+		"45° slope passes a 50° vertical bound")
+	assert_true(ConeTargeting.in_cone(o, 0.0, 4.0, 0.0, 30.0, 90.0, high, 0.3),
+		"vertical 90° is unbounded")
+	print("")
+
+
+# Damaging frame (spec /mechanics/targeting): hits resolve exactly once, when
+# the swing crosses the step's damaging_frac — never before. Also pins the
+# per-weapon hit-cone data every config entry must carry.
+func test_damaging_frame() -> void:
+	print("── Damaging frame + hit-cone data ──")
+	var bad := 0
+	for wt in CombatManager.WEAPON_TYPE_CONFIGS:
+		var cfg: Dictionary = CombatManager.WEAPON_TYPE_CONFIGS[wt]
+		if not (cfg.has("hit_h_dist") and cfg.has("hit_v_dist") and cfg.has("hit_h_angle_deg") and cfg.has("hit_v_angle_deg") and cfg.has("damaging_frac")):
+			bad += 1
+			continue
+		var fracs: Array = cfg.get("damaging_frac")
+		if fracs.size() != int(cfg.get("combo_steps", 3)):
+			bad += 1
+			continue
+		for f in fracs:
+			if float(f) <= 0.0 or float(f) >= 1.0:
+				bad += 1
+				break
+	assert_eq(bad, 0, "every weapon type carries a hit cone + per-step damaging_frac in (0,1)")
+
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = _combo_swing_player(PlayerScript, 1, 0.0)
+	pl.set("_attack_hit_done", false)
+	pl._handle_attack_state(0.2)  # elapsed 0.2 < saber damaging_frac[0] 0.40
+	assert_true(not bool(pl.get("_attack_hit_done")), "no hit before the damaging frame")
+	pl._handle_attack_state(0.25)  # elapsed 0.45 ≥ 0.40 → resolves (off-tree: empty cone)
+	assert_true(bool(pl.get("_attack_hit_done")), "hit resolves once the damaging frame is crossed")
+	pl._play_and_track_attack("no_such_anim")
+	assert_true(not bool(pl.get("_attack_hit_done")), "a new swing starts with its damaging frame pending")
+	pl.free()
+	print("")
+
+
+# Target-info HUD panel (spec /mechanics/targeting): renders NOTHING without
+# a primary target. (The quick-menu priority is enforced by field_hud._process
+# passing {} while the menu is open — same code path as "no target".)
+func test_target_info_panel() -> void:
+	print("── Target-info HUD panel ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	var panel = FieldHud._TargetInfoPanel.new()
+	panel.update_info({"kind": "enemy", "name": "Wolf", "hp": 10, "max_hp": 20})
+	assert_true(panel.visible, "enemy target → panel renders")
+	panel.update_info({})
+	assert_true(not panel.visible, "no target (or quick menu open) → panel does not render")
+	panel.update_info({"kind": "item", "name": "Monomate"})
+	assert_true(panel.visible, "ground-item target → panel renders")
+	panel.free()
+
+	# Boxes ride the "enemies" group but carry no enemy_data — the primary
+	# scan MUST show no panel for them (PSO; Rozalin's "enemy 0/0").
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+	var box := Node3D.new()  # anything without enemy_data reads as a box
+	pl._update_primary_target_info([box], CombatManager.get_weapon_type_config(0))
+	assert_true((pl.get("_primary_target_info") as Dictionary).is_empty(),
+		"box primary → no details panel (targetable, but nothing to show)")
+	box.free()
+	pl.free()
+
+	# Meseta drops have no item_id — the display name must come from amount
+	# (Rozalin's nameless meseta panel).
+	const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
+	var meseta = DropMesetaScript.new()
+	meseta.amount = 25
+	assert_eq(str(meseta._get_display_name()), "25 Meseta", "meseta drop names itself from the amount")
+	meseta.free()
+	print("")
+
+
+# Area-map overlay (spec /states/area-map): fog of war — cells render only
+# once visited (or with the tester reveal toggle), doors/warps track the
+# controller's gate-state feed.
+func test_area_map_overlay() -> void:
+	print("── Area map overlay (fog of war) ──")
+	const OverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
+	var map = OverlayScript.new()
+	var cells: Array = [
+		{"pos": "0,0", "connections": {"east": "0,1"}, "is_start": true},
+		{"pos": "0,1", "connections": {"west": "0,0"}, "warp_edge": "east",
+			"is_key_gate": true, "key_gate_direction": "east"},
+	]
+	map.setup(cells, "0,0", {"0,0": true}, "Section 1")
+	assert_true(map._is_revealed("0,0"), "visited/current cell is revealed")
+	assert_true(not map._is_revealed("0,1"), "unvisited cell stays fogged")
+	DebugConfig.reveal_map = true
+	assert_true(map._is_revealed("0,1"), "reveal_map debug toggle shows the full grid")
+	DebugConfig.reveal_map = false
+	assert_true(not map._is_revealed("0,1"), "toggle off restores the fog")
+	# Gate-state feed: warp edge initializes as exit; controller locks flow in.
+	assert_eq(str(map._gate_states.get("0,1>east", "")), "exit", "warp_edge initializes as the area-warp exit")
+	map.set_gate_state("0,0", "east", "locked")
+	assert_eq(str(map._gate_states.get("0,0>east", "")), "locked", "set_gate_state locks a door")
+	map.set_gate_state("0,0", "east", "open")
+	assert_eq(str(map._gate_states.get("0,0>east", "")), "open", "set_gate_state reopens it")
+	map.free()
+	print("")
 
 # ── Weapon attack SFX: one canonical sound per type (Rozalin's audit) ──
 # Each weapon MUST map to a single attack sound (no random multi-common glob),
@@ -5252,6 +5636,51 @@ func test_weapon_anim_data_new_animation_sets() -> void:
 		var cfg: Dictionary = CombatManager.get_weapon_type_config(wtype)
 		assert_eq(int(cfg.get("combo_steps", -1)), expected_combo[wtype],
 			"type %d combo_steps" % wtype)
+	print("")
+
+
+# ── #420: companion locomotion clip is keyed to MEASURED displacement ──
+# The bug: _process_follow chose the companion's walk/run/wait clip from the
+# delayed *player* PlayerState (IDLE=0/WALKING=1/RUNNING=2/ATTACKING=3/…). A
+# rooted player attack (state 3) is >= 1 and != 1, so the companion fell into
+# the `run` branch while its trail-follow position never advanced — it ran in
+# place. The fix makes the clip a pure function of the companion's own planar
+# displacement via _select_locomotion_anim, which takes NO player state at all.
+# Off-tree instance (no _ready / scene / AnimationPlayer needed) — the selector
+# is pure, so this is fully deterministic.
+func test_companion_anim_from_measured_speed() -> void:
+	print("── Companion locomotion clip from measured planar speed (#420) ──")
+	const CompanionScript := preload("res://scripts/3d/elements/companion_npc.gd")
+	var c = CompanionScript.new()
+	var dt: float = 1.0 / 60.0  # one physics frame
+
+	# The bug case: zero displacement MUST be "wait" — proves the selector reads
+	# the companion's motion, not the player's state. (Under the old code a
+	# rooted-attack player here produced "run" while the companion stood still.)
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3.ZERO, dt), "wait",
+		"zero displacement -> wait (no run-in-place)")
+
+	# Sub-IDLE_EPS jitter (0.002 m/frame ≈ 0.12 m/s < IDLE_EPS 0.15) stays wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.002, 0, 0), dt), "wait",
+		"sub-threshold jitter -> wait")
+
+	# 0.02 m/frame = 1.2 m/s — between IDLE_EPS and RUN_EPS -> walk.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.02, 0, 0), dt), "walk",
+		"0.02 m/frame (1.2 m/s) -> walk")
+
+	# 0.1 m/frame = 6 m/s — above RUN_EPS (4.0) -> run.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0, 0, 0.1), dt), "run",
+		"0.1 m/frame (6 m/s) -> run")
+
+	# Pure vertical displacement is planar-excluded (gravity / height-snap) -> wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0, 1.0, 0), dt), "wait",
+		"pure vertical motion -> wait (planar only)")
+
+	# delta == 0 must not divide-by-zero — defaults to wait.
+	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.1, 0, 0.1), 0.0), "wait",
+		"delta == 0 -> wait (no div-by-zero)")
+
+	c.free()
 	print("")
 
 
@@ -7121,6 +7550,90 @@ func test_blackjack() -> void:
 			break
 	assert_true(found_bj, "At least one seed in [1,5000) produces a player blackjack")
 
+	print("")
+
+
+# #422 — live enemy markers on the room minimap (spec /states/enemies —
+# minimap markers). Seeded, no pack assets: projection metadata is hand-set
+# (the SVG file itself is pack-only), enemies are real EnemyBase instances
+# kept out of the tree (no _ready → no model loads), and movement is driven
+# through plain Node3D stand-ins under a bare map root.
+func test_minimap_enemy_markers() -> void:
+	print("── Room minimap enemy markers (#422) ──")
+	const RoomMinimap := preload("res://scripts/3d/field/room_minimap.gd")
+	var minimap: Control = RoomMinimap.new()
+	add_child(minimap)
+
+	# Spawn 3 enemies in a seeded cell → 3 markers.
+	var enemies: Array = []
+	for i in range(3):
+		var e := EnemyBase.new()
+		var ed := EnemyData.new()
+		ed.id = "wolf%d" % i
+		e.enemy_data = ed
+		minimap.track_enemy(e)
+		enemies.append(e)
+	assert_eq(minimap.get_enemy_marker_count(), 3, "3 alive enemies → 3 markers")
+	minimap.track_enemy(enemies[0])
+	assert_eq(minimap.get_enemy_marker_count(), 3, "Re-tracking the same enemy does not duplicate its marker")
+
+	# Kill one (EnemyBase._die emits died) → marker removed, 2 remain.
+	enemies[0].is_alive = false
+	enemies[0].died.emit(enemies[0])
+	assert_eq(minimap.get_enemy_marker_count(), 2, "Death signal removes the marker → 2 markers")
+
+	# A freed enemy (death animation finished → queue_free) is swept too.
+	enemies[1].free()
+	assert_eq(minimap.get_enemy_marker_count(), 1, "Freed instance swept from marker count")
+
+	# Boss dot area ≈8× a normal dot (radius × sqrt(8)).
+	var normal_r: float = RoomMinimap.enemy_marker_radius(false)
+	var boss_r: float = RoomMinimap.enemy_marker_radius(true)
+	var area_ratio: float = (boss_r * boss_r) / (normal_r * normal_r)
+	assert_true(absf(area_ratio - 8.0) < 0.01, "Boss dot area ≈8× normal (got %.2fx)" % area_ratio)
+	var boss := EnemyBase.new()
+	var boss_data := EnemyData.new()
+	boss_data.id = "reyburn"
+	boss_data.is_boss = true
+	boss.enemy_data = boss_data
+	assert_true(minimap._is_boss_enemy(boss), "EnemyData.is_boss drives the boss-sized dot")
+	assert_true(not minimap._is_boss_enemy(enemies[2]), "Normal enemy gets the normal dot")
+
+	# Markers follow movement through the same projection as the player.
+	# Identity map root + unit SVG transform → display = world.xz scaled into
+	# the frame's inner map area (DISPLAY_SIZE px over the 400-unit SVG space).
+	var disp_k: float = RoomMinimap.DISPLAY_SIZE / 400.0
+	minimap._svg_scale = 1.0
+	minimap._svg_offset_x = 0.0
+	minimap._svg_offset_y = 0.0
+	minimap._has_player_tracking = true
+	var map_root := Node3D.new()
+	add_child(map_root)
+	var walker := Node3D.new()  # stand-in body; _ready-safe inside the tree
+	map_root.add_child(walker)
+	walker.position = Vector3(100.0, 0.0, 200.0)
+	minimap.track_enemy(walker)
+	minimap.update_enemies(map_root)
+	var marker: Dictionary = minimap._enemy_markers.get(walker.get_instance_id(), {})
+	var pos: Vector2 = marker.get("pos", Vector2.ZERO)
+	assert_true(pos.distance_to(Vector2(100.0, 200.0) * disp_k) < 0.01,
+		"Marker projected at minimap position (got %s)" % pos)
+	assert_eq(marker.get("radius", 0.0), normal_r, "Stand-in without boss data draws a normal dot")
+	walker.position = Vector3(200.0, 0.0, 100.0)
+	minimap.update_enemies(map_root)
+	marker = minimap._enemy_markers.get(walker.get_instance_id(), {})
+	pos = marker.get("pos", Vector2.ZERO)
+	assert_true(pos.distance_to(Vector2(200.0, 100.0) * disp_k) < 0.01,
+		"Marker follows enemy movement (got %s)" % pos)
+	minimap.untrack_enemy(walker)
+	minimap.update_enemies(map_root)
+	assert_eq(minimap._enemy_markers.size(), 0, "Untracked enemy leaves no stale marker entry")
+
+	enemies[0].free()
+	enemies[2].free()
+	boss.free()
+	map_root.queue_free()
+	minimap.queue_free()
 	print("")
 
 

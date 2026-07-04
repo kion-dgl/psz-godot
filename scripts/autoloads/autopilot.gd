@@ -269,6 +269,9 @@ var _defeat_meseta_before := 0
 var _commitment_probe := false      # #377/#428 action-commitment probe
 var _commitment_triggered := false  # ran the probe already (fires once)
 
+var _combo_probe := false           # #155 three-tier combo-timing probe
+var _combo_triggered := false       # ran the probe already (fires once)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -294,6 +297,9 @@ func _ready() -> void:
 	_commitment_probe = OS.has_environment("PSZ_AUTOPILOT_COMMITMENT")
 	if _commitment_probe:
 		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
+	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
+	if _combo_probe:
+		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -2244,6 +2250,114 @@ func _commitment_attack_held(p, states: Dictionary) -> void:
 		_commitment_dodge_phase(p, states))
 
 
+# ── Combo three-tier probe (#155, spec /mechanics/combos) ──────────────────
+## PSZ_AUTOPILOT_COMBO=1: in the first field cell, drive a real swing and
+## press attack inside each tier — miss-early must queue nothing, the just
+## window must chain step 2 with the just flag, and the un-queued swing end
+## must break to IDLE. Frame-polled so the presses land inside the windows
+## regardless of box load / time_scale. Runs instead of the cell plan and
+## ends the run with DONE ok / FAIL.
+
+## Await cond (polled per frame) with a frame budget; false = timed out.
+func _combo_await(cond: Callable, frames: int = 1800) -> bool:
+	var n := 0
+	while n < frames:
+		if cond.call():
+			return true
+		await get_tree().process_frame
+		n += 1
+	return false
+
+
+func _run_combo_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_combo_probe(attempt + 1))
+		else:
+			print("[sanity] FAIL: combo probe — no player in field")
+			_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	_combo_probe_run(players[0])
+
+
+func _combo_probe_run(p) -> void:
+	var states: Dictionary = p.PlayerState
+	var t: Dictionary = CombatManager.get_combo_timing(p._get_equipped_weapon_type(), 1)
+	if t.is_empty():
+		print("[sanity] FAIL: combo probe — no timing config for equipped weapon")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	var just_mid: float = (float(t.just_start) + float(t.just_end)) / 2.0
+
+	# Case 1: miss-early press FUMBLES the swing — nothing queued, later
+	# presses inside the accept window are locked out, and the swing ending
+	# un-queued breaks the combo: mashing defeats itself (Rozalin's #459
+	# playtest fix).
+	print("[sanity] checkpoint: combo probe — swing 1, miss-early press")
+	p._start_attack()
+	p._start_attack()  # frac ≈ 0 — miss-early → fumble
+	if p._queued_combo != p.ComboQueue.NONE or not p._combo_fumbled:
+		print("[sanity] FAIL: combo probe — miss-early press did not fumble the swing (#155)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — miss-early fumbled the swing")
+	var in_fwindow := await _combo_await(func() -> bool:
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+	if not in_fwindow or p.get_state() != states["ATTACKING"]:
+		print("[sanity] FAIL: combo probe — fumbled swing ended before the accept window was reached")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	p._start_attack()  # inside the window, but fumbled — must be ignored
+	if p._queued_combo != p.ComboQueue.NONE:
+		print("[sanity] FAIL: combo probe — press after a fumble queued a chain (mash lockout broken)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	var fumble_broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
+	if not fumble_broke or p.combo_state != 0:
+		print("[sanity] FAIL: combo probe — fumbled swing did not break the combo to IDLE")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — fumbled swing broke to IDLE")
+	_combo_probe_chain_phase(p, states, just_mid)
+
+
+## Clean-combo half of the probe: a just-window press queues JUST, fires
+## step 2 with the just flag at swing end, and the un-queued swing 2 breaks
+## back to IDLE.
+func _combo_probe_chain_phase(p, states: Dictionary, just_mid: float) -> void:
+	print("[sanity] checkpoint: combo probe — swing 1 (clean), just-window press")
+	p._start_attack()
+	var in_window := await _combo_await(func() -> bool:
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+	if not in_window or p.get_state() != states["ATTACKING"]:
+		print("[sanity] FAIL: combo probe — clean swing ended before the just window was reached")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	p._start_attack()
+	if p._queued_combo != p.ComboQueue.JUST:
+		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a JUST chain (#155)" % p._attack_frac())
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — just chain queued at frac %.2f" % p._attack_frac())
+	var fired := await _combo_await(func() -> bool: return p.combo_state == 2 or p.get_state() != states["ATTACKING"])
+	if not fired or p.combo_state != 2 or not p._is_just_attack:
+		print("[sanity] FAIL: combo probe — queued just chain did not fire step 2 with the just flag")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — step 2 fired with just bonus (#155)")
+
+	# Case 3: no further press — swing 2 ending un-queued breaks to IDLE.
+	var broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
+	if not broke or p.combo_state != 0:
+		print("[sanity] FAIL: combo probe — un-queued swing did not break the combo to IDLE")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — un-queued swing broke to IDLE")
+	print("[sanity] DONE ok")
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+
+
 func _commitment_dodge_phase(p, states: Dictionary) -> void:
 	print("[sanity] checkpoint: commitment probe — starting dodge, pressing attack mid-roll")
 	p._start_dodge()
@@ -2279,6 +2393,11 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _commitment_probe and not _commitment_triggered:
 		_commitment_triggered = true
 		_run_commitment_probe()
+		return
+	# Combo probe (#155): three-tier windows on a real swing chain.
+	if _combo_probe and not _combo_triggered:
+		_combo_triggered = true
+		_run_combo_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
@@ -2378,7 +2497,37 @@ func _run_next_action(field: Node) -> void:
 const KILL_ALL_MAX_WAVES := 5
 
 func _do_kill_all(field: Node) -> void:
+	_minimap_enemy_probe(field)
 	_kill_all_wave(field, 0)
+
+
+## #422 minimap enemy-marker probe: the room minimap's live dot count MUST
+## match the alive count of the cell's enemy roster (spec /states/enemies —
+## minimap markers). Reads the field's privates via node.get(), same as the
+## other screen probes. Cheap — one pass over _room_enemies per kill_all.
+func _minimap_enemy_probe(field: Node) -> void:
+	var minimap: Variant = field.get("_room_minimap")
+	var room_enemies: Variant = field.get("_room_enemies")
+	if minimap == null or not (room_enemies is Array):
+		return
+	if not minimap.has_method("get_enemy_marker_count"):
+		return
+	var alive: int = 0
+	for enemy in room_enemies:
+		if not is_instance_valid(enemy):
+			continue
+		# EnemyBase carries is_alive; legacy EnemySpawn carries element_state.
+		var alive_flag: Variant = enemy.get("is_alive")
+		if alive_flag != null:
+			if bool(alive_flag):
+				alive += 1
+		elif str(enemy.get("element_state")) != "dead":
+			alive += 1
+	var markers: int = minimap.get_enemy_marker_count()
+	if markers == alive:
+		print("[sanity] minimap-probe: enemy markers=%d alive=%d ok" % [markers, alive])
+	else:
+		print("[sanity] FAIL: minimap enemy markers=%d != alive=%d" % [markers, alive])
 
 
 func _kill_all_wave(field: Node, attempt: int) -> void:
