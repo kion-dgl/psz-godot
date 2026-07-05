@@ -128,6 +128,17 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
       const clips = e.attacks.map((a: { clip: string }) => a.clip);
       expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2', 'atk3']));
     }
+    for (const id of ['rohjade', 'rohcrysta']) {
+      const roll = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'roll');
+      expect(roll?.charge_segments, `${id} roll segments`).toEqual({ st: 'trf1', lp: 'wat3', ed: 'trf2' });
+      expect(roll?.stop_on_hit, `${id} roll-through`).toBe(false);
+    }
+    for (const id of ['froutang', 'frunaked']) {
+      const punch = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'charged_punch');
+      expect(punch?.windup_clips, `${id} punch windup`).toEqual(['atckstt', 'atckwat']);
+      const kinds = config.enemies[id].attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds.filter((k: string) => k === 'projectile'), `${id} pistols`).toHaveLength(2);
+    }
     // Shared seal rig, divergent tables: Hypao casts barta, Vespao gibarta.
     const hypaoTechs = config.enemies.hypao.attacks.map((a: { tech?: string }) => a.tech);
     const vespaoTechs = config.enemies.vespao.attacks.map((a: { tech?: string }) => a.tech);

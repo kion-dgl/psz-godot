@@ -16,6 +16,8 @@ export interface AttackDef {
   kind?: AttackKind;
   /** Optional named game technique this attack casts (barta, gibarta…) — the Godot runtime MUST deliver it via the real tech system; the sim approximates via `kind`. */
   tech?: string;
+  /** Clip tokens played sequentially BEFORE the attack clip as pure telegraph (ape gunner's charged punch: atckstt → atckwat → atckswg). */
+  windup_clips?: string[];
   /** kind: charge — explicit segment clip tokens when the rig doesn't use _st/_lp/_ed suffixes (roller: trf1/wat3/trf2). */
   charge_segments?: { st: string; lp: string; ed: string };
   /** kind: charge — travel target = start distance + overshoot (capped by max_range) instead of always max_range. */

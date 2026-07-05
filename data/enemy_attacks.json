@@ -613,18 +613,62 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "pistol_shot",
+          "clip": "atcksht",
+          "kind": "projectile",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 9.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "pistol_shot_alt",
+          "clip": "atcktuki",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 7.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 7.0,
+          "damage_mult": 1.1
+        },
+        {
+          "id": "charged_punch",
+          "clip": "atckswg",
+          "kind": "melee_arc",
+          "windup_clips": [
+            "atckstt",
+            "atckwat"
+          ],
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.4,
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atcksht": "the shoot attack (pistol)",
+        "atcktuki": "looks like a DIFFERENT shoot attack (kion \u2014 uncertain, authored as a second projectile variant)",
+        "atckstt": "charged punch: winds up (telegraph segment 1)",
+        "atckwat": "charged punch: holds the charge (telegraph segment 2)",
+        "atckswg": "charged punch: the swing (the damaging clip)",
+        "stt": "goes from sitting down to stand up (aggro start animation)",
+        "wat": "wait \u2014 scratches stomach",
+        "wlk": "walk",
+        "wtclp": "raises hands above head, maybe intimidation \u2014 UNUSED pending confirmation (open question)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "frunaked": {
       "archetype": "ape_gunner",
@@ -638,18 +682,62 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "pistol_shot",
+          "clip": "atcksht",
+          "kind": "projectile",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 9.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "pistol_shot_alt",
+          "clip": "atcktuki",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 7.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 7.0,
+          "damage_mult": 1.1
+        },
+        {
+          "id": "charged_punch",
+          "clip": "atckswg",
+          "kind": "melee_arc",
+          "windup_clips": [
+            "atckstt",
+            "atckwat"
+          ],
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.4,
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atcksht": "the shoot attack (pistol)",
+        "atcktuki": "looks like a DIFFERENT shoot attack (kion \u2014 uncertain, authored as a second projectile variant)",
+        "atckstt": "charged punch: winds up (telegraph segment 1)",
+        "atckwat": "charged punch: holds the charge (telegraph segment 2)",
+        "atckswg": "charged punch: the swing (the damaging clip)",
+        "stt": "goes from sitting down to stand up (aggro start animation)",
+        "wat": "wait \u2014 scratches stomach",
+        "wlk": "walk",
+        "wtclp": "raises hands above head, maybe intimidation \u2014 UNUSED pending confirmation (open question)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "garahadan": {
       "archetype": "stance_riser",

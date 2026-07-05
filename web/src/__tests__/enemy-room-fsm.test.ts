@@ -651,6 +651,58 @@ describe('enemy-room FSM — roller (spec /states/enemies §roller)', () => {
   });
 });
 
+describe('enemy-room FSM — ape gunner windup_clips (spec /states/enemies §ape-gunner)', () => {
+  const punch = atk({
+    id: 'charged_punch', clip: 'atckswg', windup_clips: ['atckstt', 'atckwat'],
+    min_range: 0, max_range: 2.4, windup_frac: 0.2, damage_end_frac: 0.6,
+    hit_half_angle_deg: 55, hit_reach: 2.4, damage_mult: 1.6,
+  });
+  const apeConfig = (): EnemyAttackConfig => {
+    const c = config([punch]);
+    c.enemies.dummy.archetype = 'ape_gunner';
+    return c;
+  };
+  // atckstt 0.5s, atckwat 0.7s hold, atckswg 1.0s swing.
+  const durations = (token: string) => (token === 'atckstt' ? 0.5 : token === 'atckwat' ? 0.7 : 1.0);
+
+  it('plays the windup chain as pure telegraph, then the swing carries the window', () => {
+    const entry = resolveEntry(apeConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1.5 }, clipDurationFor: durations });
+    stepEnemy(sim, entry, input); // aggro → stt hold
+    expect(sim.anim).toBe('stt');
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input); // → attacking
+    expect(sim.anim).toBe('atckstt');
+    expect(sim.currentAttack?.duration).toBeCloseTo(0.5 + 0.7 + 1.0, 5);
+    // Through the wind-up (0.5s) into the hold (0.7s): telegraph only.
+    let events = run(sim, entry, input, 0.55);
+    expect(sim.anim).toBe('atckwat');
+    expect(events.filter((e) => e.type === 'hit' || e.type === 'window_open')).toHaveLength(0);
+    events = run(sim, entry, input, 0.7);
+    expect(sim.anim).toBe('atckswg');
+    // Swing: window opens at 1.2 + 0.2×1.0 = 1.4s; one hit, charged damage.
+    events = events.concat(run(sim, entry, input, 1.2));
+    expect(events.filter((e) => e.type === 'window_open')).toHaveLength(1);
+    const hits = events.filter((e) => e.type === 'hit');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].type === 'hit' && hits[0].damage).toBe(16); // 10 × 1.6
+    expect(['loafing', 'chasing']).toContain(sim.state);
+  });
+
+  it('no damage is possible during any windup clip even with the player inside the arc', () => {
+    const entry = resolveEntry(apeConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1.0 }, clipDurationFor: durations });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 1.15); // all of atckstt + most of atckwat
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+    expect(sim.currentAttack?.windowOpened).toBe(false);
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

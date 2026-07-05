@@ -50,6 +50,8 @@ export interface CurrentAttack {
   };
   /** kind: 'leap' — travel from → target during the damaging window, AoE at landing. */
   leap?: { from: Vec2; target: Vec2 };
+  /** windup_clips prelude: cumulative end-times per clip; pure telegraph before the attack clip. */
+  windup?: { clips: string[]; ends: number[]; total: number };
 }
 
 export interface EnemySim {
@@ -267,7 +269,8 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         if (
           entry.archetype === 'bigrig_combo' ||
           entry.archetype === 'flyer_combo' ||
-          entry.archetype === 'roller'
+          entry.archetype === 'roller' ||
+          entry.archetype === 'ape_gunner'
         ) {
           // Aggro display, held before pursuit: bigrig beats its chest, the
           // flyer TAKES OFF, the roller becomes active — each is its rig's
@@ -368,8 +371,18 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       sim.velocity = { x: 0, z: 0 };
       atk.t += dt;
-      const windowStart = atk.def.windup_frac * atk.duration;
-      const windowEnd = atk.def.damage_end_frac * atk.duration;
+      // windup_clips prelude: advance through the telegraph clips; the
+      // timeline fractions apply to the attack clip itself, offset past it.
+      const windupTotal = atk.windup?.total ?? 0;
+      if (atk.windup && atk.t < windupTotal) {
+        const idx = atk.windup.ends.findIndex((end) => atk.t < end);
+        sim.anim = atk.windup.clips[idx === -1 ? atk.windup.clips.length - 1 : idx];
+      } else if (atk.windup) {
+        sim.anim = atk.def.clip;
+      }
+      const mainDur = atk.duration - windupTotal;
+      const windowStart = windupTotal + atk.def.windup_frac * mainDur;
+      const windowEnd = windupTotal + atk.def.damage_end_frac * mainDur;
       if (!atk.windowOpened && atk.t >= windowStart) {
         atk.windowOpened = true;
         events.push({ type: 'window_open', attack: atk.def });
@@ -668,20 +681,38 @@ function startAttack(
   const clipDuration = input.clipDurationFor(def.clip);
   // No resolvable clip → the timeline fractions apply to the fallback
   // duration (extends the #477 attack-recovery contract).
-  const duration = clipDuration ?? entry.fsm.attack_fallback_duration;
-  sim.anim = def.clip;
+  const mainDuration = clipDuration ?? entry.fsm.attack_fallback_duration;
+  // windup_clips prelude: pure telegraph played before the attack clip;
+  // the timeline fractions apply to the attack clip, offset past it.
+  let windup: CurrentAttack['windup'];
+  if (def.windup_clips?.length) {
+    const ends: number[] = [];
+    let acc = 0;
+    for (const token of def.windup_clips) {
+      acc += input.clipDurationFor(token) ?? 0.4;
+      ends.push(acc);
+    }
+    windup = { clips: [...def.windup_clips], ends, total: acc };
+  }
+  sim.anim = windup ? windup.clips[0] : def.clip;
   sim.currentAttack = {
     def,
-    duration,
+    duration: (windup?.total ?? 0) + mainDuration,
     resolvedClip: clipDuration !== null ? def.clip : '',
     t: 0,
     facing,
     resolved: false,
     windowOpened: false,
     windowClosed: false,
+    windup,
   };
   sim.attackCooldown = entry.stats.attack_cooldown;
-  events.push({ type: 'attack_start', attack: def, resolvedClip: sim.currentAttack.resolvedClip, duration });
+  events.push({
+    type: 'attack_start',
+    attack: def,
+    resolvedClip: sim.currentAttack.resolvedClip,
+    duration: sim.currentAttack.duration,
+  });
 }
 
 /**

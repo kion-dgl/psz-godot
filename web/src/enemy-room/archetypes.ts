@@ -77,8 +77,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'ape_gunner',
     label: 'Ape gunner',
-    blurb: 'Apes that pull out a pistol to shoot (atcksht) plus melee swings (atckswg / atcktuki): Froutang, Frunaked.',
-    simNote: 'Baseline sim; pistol/melee behavior notes pending — split out per kion, module to follow.',
+    blurb: 'Two pistol shots (atcksht + atcktuki, the latter uncertain) and a charged punch sequence (atckstt wind-up → atckwat hold → atckswg swing); stt = sit-to-stand aggro; wat scratches its stomach: Froutang, Frunaked.',
+    simNote: 'Implemented: projectile shots + windup_clips charged punch (spec /states/enemies §ape-gunner). Kion flags the family as an EP2-replacement candidate; wtclp intimidation is an open question.',
   },
   {
     id: 'box_mimic',

@@ -954,7 +954,7 @@ export default function EnemyRoom() {
                 {chargeSegs
                   ? `→ segments: ${chargeSegs.join(' · ')}`
                   : resolved
-                    ? `→ ${resolved.name} (${resolved.duration.toFixed(2)}s)`
+                    ? `${a.windup_clips?.length ? `windup: ${a.windup_clips.join(' · ')} → ` : '→ '}${resolved.name} (${resolved.duration.toFixed(2)}s)`
                     : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
               </div>
               {entry.clip_notes[a.clip] && (

@@ -132,6 +132,15 @@ const fsm = `stateDiagram-v2
     <li><strong>The vulnerability window is the counterplay</strong>: while <code>trf2</code> plays (the fall-over recovery), the roller <strong>MUST take increased damage</strong> (<code>recovery_vulnerable_mult</code>). Evade the roll → punish the sprawl. An implementation MUST NOT shorten or skip this window.</li>
   </ul>
 
+  <h3>Archetype: Ape gunner (Froutang family) — normative</h3>
+  <p>Applies to <code>archetype: ape_gunner</code> (orangutan rigs — Froutang, Frunaked). <em>Design note (kion)</em>: this family is flagged as the most immersion-breaking content in the game — pistol-wielding monkeys — and is a <strong>candidate for replacement with EP2 enemies</strong>. The behavior is authored regardless, so the game plays correctly until that call is made.</p>
+  <ul>
+    <li><strong>Aggro</strong>: <code>stt</code> goes from sitting to standing — held on aggro like the other display clips (fifth <code>stt</code> meaning). Idle <code>wat</code> scratches its stomach.</li>
+    <li><strong>Two pistol shots</strong>: <code>atcksht</code> is the shoot attack; <code>atcktuki</code> <em>looks like a different shoot attack</em> (kion — uncertain, authored as a second projectile variant pending confirmation).</li>
+    <li><strong>Charged punch is a clip sequence</strong> (kion): <code>atckstt</code> winds up → <code>atckwat</code> holds the charge → <code>atckswg</code> swings. Authored via <code>windup_clips</code>: the windup clips play sequentially as <strong>pure telegraph</strong> (MUST NOT damage), then the swing clip carries the normal damaging window. The long telegraph is the trade for the charged damage.</li>
+    <li><strong><code>wtclp</code></strong> (raises hands above head — maybe intimidation) is <strong>unused pending confirmation</strong> — an open question; a taunt/display slot if it proves real.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>
