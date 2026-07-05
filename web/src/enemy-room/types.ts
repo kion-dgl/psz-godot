@@ -92,6 +92,7 @@ export const DEFAULT_STATS: EnemyStats = {
 
 /** Entry with defaults applied — what the sim actually runs. */
 export interface ResolvedEntry {
+  archetype: string;
   stats: EnemyStats;
   fsm: FsmParams;
   attacks: AttackDef[];
@@ -107,7 +108,13 @@ export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string):
     ...(config?.defaults?.attack ?? {}),
     ...a,
   }));
-  return { stats, fsm, attacks, clip_notes: entry?.clip_notes ?? {} };
+  return {
+    archetype: entry?.archetype ?? 'simple_melee',
+    stats,
+    fsm,
+    attacks,
+    clip_notes: entry?.clip_notes ?? {},
+  };
 }
 
 /** Spec: an enemy missing from the file falls back to one default attack — it never refuses to attack. */

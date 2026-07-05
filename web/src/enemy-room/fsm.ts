@@ -53,6 +53,11 @@ export interface EnemySim {
   currentAttack: CurrentAttack | null;
   /** Animation token the UI should play (wat/wlk/run/dmg or the attack clip token). */
   anim: string;
+  // Quadruped archetype (spec /states/enemies §quadruped): arc-only approach
+  // with an stt dash-charge as the only straight-line movement.
+  chaseMode: 'arc' | 'dash';
+  arcSide: 1 | -1;
+  arcTimer: number;
 }
 
 export interface SimInput {
@@ -99,6 +104,9 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     loafCurveRate: LOAF_CURVE_RATE,
     currentAttack: null,
     anim: 'wat',
+    chaseMode: 'arc',
+    arcSide: 1,
+    arcTimer: 0,
   };
 }
 
@@ -232,6 +240,10 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         startAttack(sim, entry, input, dist, events);
         break;
       }
+      if (entry.archetype === 'quadruped') {
+        processChasingQuadruped(sim, entry, input, dist);
+        break;
+      }
       const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
       const charging = dist <= chargeRange;
       const speed =
@@ -317,6 +329,52 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
   return events;
 }
 
+/**
+ * Quadruped circler chase (spec /states/enemies §quadruped, normative):
+ * wlk_l/wlk_r rigs have the head turned that way, so the approach MUST arc
+ * (never straight at the target) with the clip matching the target's side;
+ * the stt dash-charge is the only straight-line movement. First real
+ * per-archetype behavior (#494) — extract to archetypes/ when a third lands.
+ */
+function processChasingQuadruped(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
+  const { dt, playerPos, rng } = input;
+  const radial = norm(sub(playerPos, sim.pos));
+  const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
+
+  if (sim.chaseMode !== 'dash' && dist <= chargeRange && sim.attackCooldown <= 0) {
+    sim.chaseMode = 'dash';
+  }
+  if (sim.chaseMode === 'dash' && dist > chargeRange * 1.5) {
+    sim.chaseMode = 'arc'; // lost the charge — fall back to circling
+  }
+
+  if (sim.chaseMode === 'dash') {
+    const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+    sim.velocity = { x: radial.x * speed, z: radial.z * speed };
+    sim.facing = radial;
+    sim.anim = 'stt'; // the dash clip — the ONLY straight-forward locomotion
+    return;
+  }
+
+  // Arc approach: tangent around the target blended with a gentle inward
+  // spiral. Re-pick the side occasionally so circling doesn't look scripted.
+  sim.arcTimer -= dt;
+  if (sim.arcTimer <= 0) {
+    sim.arcTimer = 2.0 + rng() * 3.0;
+    if (rng() < 0.35) sim.arcSide = sim.arcSide === 1 ? -1 : 1;
+  }
+  const tangent: Vec2 = { x: -radial.z * sim.arcSide, z: radial.x * sim.arcSide };
+  const dir = norm({ x: tangent.x + radial.x * 0.45, z: tangent.z + radial.z * 0.45 });
+  const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+  sim.velocity = { x: dir.x * speed, z: dir.z * speed };
+  sim.facing = dir;
+  // Clip matches geometry: head turned toward the target's side.
+  // left-of-facing (y-up) = (facing.z, -facing.x).
+  const leftDot = radial.x * dir.z + radial.z * -dir.x;
+  sim.anim = leftDot > 0 ? 'wlk_l' : 'wlk_r';
+}
+
+
 function startAttack(
   sim: EnemySim,
   entry: ResolvedEntry,
@@ -332,6 +390,7 @@ function startAttack(
   // duration (extends the #477 attack-recovery contract).
   const duration = clipDuration ?? entry.fsm.attack_fallback_duration;
   changeState(sim, 'attacking', events);
+  sim.chaseMode = 'arc'; // next approach starts as an arc again
   sim.facing = facing;
   sim.anim = def.clip;
   sim.currentAttack = {

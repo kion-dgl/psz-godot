@@ -816,7 +816,16 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "helion": {
       "archetype": "simple_melee",
@@ -1016,7 +1025,16 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "korse": {
       "archetype": "machine_soldier",
@@ -1391,7 +1409,16 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "rohcrysta": {
       "archetype": "transformer",
@@ -1541,7 +1568,16 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "tormatible": {
       "archetype": "quadruped",
@@ -1566,7 +1602,16 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "usanimere": {
       "archetype": "simple_melee",

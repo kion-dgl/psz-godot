@@ -233,6 +233,75 @@ describe('enemy-room FSM — frame-tied attack timeline', () => {
   });
 });
 
+describe('enemy-room FSM — quadruped circler (spec /states/enemies §quadruped)', () => {
+  const quadConfig = (): EnemyAttackConfig => {
+    const c = config([atk()]);
+    c.enemies.dummy.archetype = 'quadruped';
+    return c;
+  };
+
+  it('never walks straight at the target while arcing — velocity stays ≥30° off the radial', () => {
+    const entry = resolveEntry(quadConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 9 } }); // outside charge ring (4)
+    stepEnemy(sim, entry, input); // idle → chasing
+    for (let i = 0; i < 120; i++) {
+      stepEnemy(sim, entry, input);
+      if (sim.state !== 'chasing' || sim.chaseMode !== 'arc') break;
+      const toPlayer = { x: input.playerPos.x - sim.pos.x, z: input.playerPos.z - sim.pos.z
+      };
+      const tl = Math.hypot(toPlayer.x, toPlayer.z);
+      const vl = Math.hypot(sim.velocity.x, sim.velocity.z);
+      const cos = (sim.velocity.x * toPlayer.x + sim.velocity.z * toPlayer.z) / (tl * vl);
+      const angle = (Math.acos(Math.min(Math.max(cos, -1), 1)) * 180) / Math.PI;
+      expect(angle, `tick ${i}: straight-walking at the player`).toBeGreaterThanOrEqual(30);
+      expect(['wlk_l', 'wlk_r'], `tick ${i}: anim ${sim.anim}`).toContain(sim.anim);
+    }
+  });
+
+  it('walk clip matches the side the target is on (head turned toward the player)', () => {
+    const entry = resolveEntry(quadConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 9 } });
+    stepEnemy(sim, entry, input);
+    for (let i = 0; i < 120; i++) {
+      stepEnemy(sim, entry, input);
+      if (sim.state !== 'chasing' || sim.chaseMode !== 'arc') break;
+      const radial = { x: input.playerPos.x - sim.pos.x, z: input.playerPos.z - sim.pos.z };
+      const leftDot = radial.x * sim.facing.z + radial.z * -sim.facing.x;
+      expect(sim.anim).toBe(leftDot > 0 ? 'wlk_l' : 'wlk_r');
+    }
+  });
+
+  it('dashes straight with stt inside the charge ring, then attacks', () => {
+    const entry = resolveEntry(quadConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 3.5 } }); // inside charge ring, outside attack range
+    stepEnemy(sim, entry, input); // idle → chasing
+    stepEnemy(sim, entry, input); // chasing tick → dash
+    expect(sim.chaseMode).toBe('dash');
+    expect(sim.anim).toBe('stt');
+    // Dash velocity is parallel to the radial (straight line at the target).
+    const toPlayer = { x: 0 - sim.pos.x, z: 3.5 - sim.pos.z };
+    const cos =
+      (sim.velocity.x * toPlayer.x + sim.velocity.z * toPlayer.z) /
+      (Math.hypot(toPlayer.x, toPlayer.z) * Math.hypot(sim.velocity.x, sim.velocity.z));
+    expect(cos).toBeGreaterThan(0.999);
+    // Dash carries into the attack.
+    const events = run(sim, entry, input, 2.0);
+    expect(events.some((e) => e.type === 'attack_start')).toBe(true);
+  });
+
+  it('non-quadruped entries keep the straight walk/run chase', () => {
+    const entry = resolveEntry(config([atk()]), 'dummy'); // simple_melee default
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 9 } });
+    stepEnemy(sim, entry, input);
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wlk');
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

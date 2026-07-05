@@ -78,6 +78,15 @@ const fsm = `stateDiagram-v2
   </ul>
   <p>What happens <em>inside</em> ATTACKING — attack selection, the windup → damaging-window timeline, and the arc hit shape — is defined in <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>.</p>
 
+  <h3>Archetype: Quadruped circler (normative)</h3>
+  <p>Applies to enemies with <code>archetype: quadruped</code> (wolf, hyena, deer, tiger rigs — Reyhound, Grimble, Tormatible, Stagg, Kapantha). Their <code>wlk_l</code> / <code>wlk_r</code> clips have the <strong>head turned</strong> to that side, so straight-ahead walking reads visibly wrong:</p>
+  <ul>
+    <li>While CHASING outside the charge ring, a quadruped <strong>MUST NOT</strong> walk straight toward its target. It <strong>MUST</strong> approach on an arc (circling / spiraling in), and the walk clip <strong>MUST</strong> match the geometry: <code>wlk_l</code> when the target is on the enemy's left, <code>wlk_r</code> when on its right — the turned head faces the target.</li>
+    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — the generic <code>wat → stt</code> alias never fires here since these rigs have a real <code>wat</code>.)</li>
+    <li>The arc side MAY change over time (re-picked on wander-like timers); a dash that loses its target (distance grows past ~1.5× the charge ring) SHOULD fall back to arcing.</li>
+  </ul>
+  <p><em>Current Godot runtime diverges</em>: it walks straight and fakes circling by alternating <code>wlk_l</code>/<code>wlk_r</code> on a timer (<code>_walk_variant_timer</code>) — that hack is retired when this contract is implemented (the enemy-attacks runtime PR). The #/enemy-room quadruped room implements this contract as the reference. Per-enemy quirks (Kapantha SHOULD prefer attacking from behind) and rare-as-leader pack behavior are open design — see the pack-behavior issue.</p>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

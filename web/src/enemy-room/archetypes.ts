@@ -29,8 +29,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'quadruped',
     label: 'Quadruped circler',
-    blurb: 'wlk_l/wlk_r directional walks + stp — four-legged rigs that circle their target: wolf, hyena, deer, tiger.',
-    simNote: 'Baseline sim; circling locomotion (wlk_l/wlk_r steering) needs its module (#494).',
+    blurb: 'wlk_l/wlk_r walks have the head turned that way — approach is arc-only (clip matches the target\'s side); stt is the straight dash-charge: wolf, hyena, deer, tiger.',
+    simNote: 'Implemented: arc-only approach + stt dash-charge (spec /states/enemies §quadruped). Godot runtime still walks straight — lands with the runtime PR.',
   },
   {
     id: 'quad_machine',
