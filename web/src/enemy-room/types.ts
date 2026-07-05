@@ -24,6 +24,8 @@ export interface AttackDef {
   overshoot?: number;
   /** kind: charge — false lets the charge roll through the target instead of ending on contact (default true). */
   stop_on_hit?: boolean;
+  /** Excluded from the normal attack gate; used only by a berserk mode (shooter leader-loss kamikaze). */
+  berserk_only?: boolean;
   /** A hit knocks the player down (denies the follow-up punish) — runtime maps to the knockdown reaction. */
   knockdown?: boolean;
   /** While the recovery clip plays the enemy takes this damage multiplier (the roller's fall-over window). */

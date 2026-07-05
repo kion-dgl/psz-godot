@@ -87,6 +87,10 @@ export interface EnemySim {
   /** Box mimic: countdown to the next possible wlk2 sway tell / remaining tk2 play-out. */
   dormantTimer: number;
   dormantSwaying: boolean;
+  /** Shooter leader-loss berserk (spec §shooter): confusion display, then kamikaze. */
+  berserk: boolean;
+  /** Kamikaze self-destructed — the sim is done (room hides the enemy). */
+  exploded: boolean;
 }
 
 export interface SimInput {
@@ -113,7 +117,9 @@ export type SimEvent =
   | { type: 'lob_fired'; attack: AttackDef; at: Vec2 }
   | { type: 'lob_landed'; attack: AttackDef; at: Vec2 }
   | { type: 'leap_landed'; attack: AttackDef; at: Vec2 }
-  | { type: 'vulnerable_open'; attack: AttackDef; mult: number };
+  | { type: 'vulnerable_open'; attack: AttackDef; mult: number }
+  | { type: 'berserk'; }
+  | { type: 'exploded'; attack: AttackDef };
 
 /** Straight projectile in flight (kind: 'projectile') — hits on contact. */
 export interface Projectile {
@@ -171,6 +177,8 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     animHold: false,
     dormantTimer: 0,
     dormantSwaying: false,
+    berserk: false,
+    exploded: false,
   };
 }
 
@@ -242,6 +250,28 @@ export function arcHitTest(
 
 }
 
+/**
+ * Leader death (the sandbox "kill leader" trigger — in-game this comes from
+ * the pack wiring, #495): the shooter goes berserk (spec §shooter). Plays
+ * atk_an — confused, spinning — as a display hold, then the chasing state
+ * loops atk_ji straight at the player and explodes on contact.
+ * No-op unless the entry has a berserk_only attack.
+ */
+export function applyBerserk(sim: EnemySim, entry: ResolvedEntry, input: SimInput): SimEvent[] {
+  if (sim.berserk || sim.exploded) return [];
+  if (!entry.attacks.some((a) => a.berserk_only)) return [];
+  const events: SimEvent[] = [];
+  sim.berserk = true;
+  sim.currentAttack = null;
+  changeState(sim, 'chasing', events);
+  sim.anim = 'atk_an';
+  sim.threatTimer = input.clipDurationFor('atk_an') ?? 1.0;
+  sim.threatDuration = sim.threatTimer;
+  events.push({ type: 'berserk' });
+  return events;
+}
+
+
 /** External hurt (the sandbox "Hit enemy" button) — mirrors _on_hit_received's stagger path. */
 export function applyHurt(sim: EnemySim, entry: ResolvedEntry): SimEvent[] {
   const events: SimEvent[] = [];
@@ -266,6 +296,11 @@ function changeState(sim: EnemySim, to: EnemyStateName, events: SimEvent[]): voi
 export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput): SimEvent[] {
   const events: SimEvent[] = [];
   const { dt, playerPos, rng } = input;
+  if (sim.exploded) {
+    // Self-destructed — nothing left to simulate (deliveries may outlive us).
+    stepDeliveries(sim, entry, input, events);
+    return events;
+  }
   const dist = len(sub(playerPos, sim.pos));
 
   if (sim.attackCooldown > 0) sim.attackCooldown -= dt;
@@ -379,12 +414,37 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         }
         break;
       }
+      // Berserk kamikaze (spec §shooter, the Canadine dynamic): loop atk_ji
+      // straight at the player; explode on contact — regardless of i-frames
+      // (the blast happens; i-frames dodge the damage, not the explosion).
+      if (sim.berserk) {
+        const kamikaze = entry.attacks.find((a) => a.berserk_only);
+        if (kamikaze) {
+          const radial = norm(sub(playerPos, sim.pos));
+          const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult * 1.2;
+          sim.velocity = { x: radial.x * speed, z: radial.z * speed };
+          sim.facing = radial;
+          sim.anim = kamikaze.clip; // atk_ji, looped while diving
+          if (dist <= kamikaze.hit_reach + input.playerRadius) {
+            sim.exploded = true;
+            sim.velocity = { x: 0, z: 0 };
+            events.push({ type: 'exploded', attack: kamikaze });
+            if (input.playerInvincible) {
+              events.push({ type: 'hit_dodged', attack: kamikaze });
+            } else {
+              const damage = Math.round(entry.stats.attack_base * kamikaze.damage_mult);
+              events.push({ type: 'hit', attack: kamikaze, damage });
+            }
+          }
+          break;
+        }
+      }
       // Trigger (spec /mechanics/enemy-attacks §selection): cooldown ready AND
-      // some attack's band contains the distance. Identical to the old melee
-      // gate for all-melee tables (default bands end at attack_range).
+      // some non-berserk attack's band contains the distance. Identical to
+      // the old melee gate for all-melee tables.
       if (
         sim.attackCooldown <= 0 &&
-        entry.attacks.some((a) => dist >= a.min_range && dist <= a.max_range)
+        entry.attacks.some((a) => !a.berserk_only && dist >= a.min_range && dist <= a.max_range)
       ) {
         startAttack(sim, entry, input, dist, events);
         break;
@@ -399,6 +459,10 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       if (entry.archetype === 'quad_machine') {
         processChasingQuadMachine(sim, entry, input, dist);
+        break;
+      }
+      if (entry.archetype === 'shooter') {
+        processChasingShooter(sim, entry, input, dist);
         break;
       }
       if (entry.archetype === 'quadruped') {
@@ -819,6 +883,35 @@ function processChasingFlyer(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
   sim.velocity = { x: tangent.x * speed, z: tangent.z * speed };
   sim.facing = radial; // watches the target while circling
   sim.anim = 'tk';
+}
+
+
+/**
+ * Shooter chase (spec /states/enemies §shooter, normative): hovers at
+ * standoff, holding position (wat) and adjusting with run, firing atk_sh
+ * from its band via the gate. Single locomotion clip — no strafe variants.
+ */
+function processChasingShooter(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
+  const { playerPos } = input;
+  const radial = norm(sub(playerPos, sim.pos));
+  sim.facing = radial; // hovering shooter tracks the target
+  const standoff = entry.fsm.standoff_range;
+
+  if (dist < standoff * 0.8) {
+    const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+    sim.velocity = { x: -radial.x * speed, z: -radial.z * speed };
+    sim.anim = 'run';
+    return;
+  }
+  if (dist > standoff * 1.2) {
+    const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+    sim.velocity = { x: radial.x * speed, z: radial.z * speed };
+    sim.anim = 'run';
+    return;
+  }
+  // In the band: hold position and shoot from here.
+  sim.velocity = { x: 0, z: 0 };
+  sim.anim = 'wat';
 }
 
 

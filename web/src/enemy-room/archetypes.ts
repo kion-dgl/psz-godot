@@ -101,8 +101,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'shooter',
     label: 'Shooter',
-    blurb: 'Hovering enemies that shoot projectiles — as the name says (atk_an / atk_ji / atk_sh variants): Korse, Akorse.',
-    simNote: 'Baseline sim; hover/shoot behavior notes pending — module to follow.',
+    blurb: 'PSO Canadine/Canane: hovers at standoff shooting atk_sh projectiles; on leader death (Akorse = the Canane) goes berserk — atk_an confusion spin, then atk_ji kamikaze loop, exploding on contact. Press B to kill the leader: Korse, Akorse.',
+    simNote: 'Implemented: standoff hover-shoot + berserk kamikaze via the B trigger (spec /states/enemies §shooter). Whether original PSZ uses the leader dynamic is an open question; pack wiring is #495.',
   },
   {
     id: 'missile_tank',

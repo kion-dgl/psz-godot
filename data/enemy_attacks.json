@@ -35,21 +35,48 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "kamikaze",
+          "clip": "atk_ji",
+          "kind": "melee_arc",
+          "berserk_only": true,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 0.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.5,
+          "damage_mult": 2.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "shooting attack (the normal-mode projectile)",
+        "atk_an": "confused, spinning \u2014 plays once after losing the leader (the berserk trigger display)",
+        "atk_ji": "lunge attack toward the character \u2014 LOOPED while diving at the player in berserk; explodes on contact",
+        "run": "moving (standoff adjustments)",
+        "wat": "wait (holding at standoff)",
+        "stt": "start (semantics unconfirmed). Akorse is the LEADER (PSO Canane analog) \u2014 its death triggers the followers' berserk (#495)",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "ar_rappy": {
       "archetype": "rappy",
@@ -1358,21 +1385,48 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "kamikaze",
+          "clip": "atk_ji",
+          "kind": "melee_arc",
+          "berserk_only": true,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 0.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.5,
+          "damage_mult": 2.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "shooting attack (the normal-mode projectile)",
+        "atk_an": "confused, spinning \u2014 plays once after losing the leader (the berserk trigger display)",
+        "atk_ji": "lunge attack toward the character \u2014 LOOPED while diving at the player in berserk; explodes on contact",
+        "run": "moving (standoff adjustments)",
+        "wat": "wait (holding at standoff)",
+        "stt": "start (semantics beyond that unconfirmed)",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "mother_trinity": {
       "archetype": "mother_caster",

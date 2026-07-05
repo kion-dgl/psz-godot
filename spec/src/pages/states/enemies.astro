@@ -159,6 +159,15 @@ const fsm = `stateDiagram-v2
     <li><strong>Hop locomotion pending</strong>: <code>jmp</code> (leap) and <code>tur</code> (turn) clearly encode hopping movement, but its behavior isn't authored yet — the frogs use the baseline walk chase until those notes land. <code>stt</code> semantics unconfirmed.</li>
   </ul>
 
+  <h3>Archetype: Shooter (Korse family) — normative + leader dynamic</h3>
+  <p>Applies to <code>archetype: shooter</code> (s050 rigs — Korse, and Akorse the leader variant). Modeled on PSO's <a href="https://wiki.pioneer2.net/w/Canadine">Canadine</a> / <a href="https://wiki.pioneer2.net/w/Canane">Canane</a>: hovering shooters that fly with a leader. <em>Whether the original PSZ actually implements the leader dynamic is an open question (kion)</em> — it is specced here as the design.</p>
+  <ul>
+    <li><strong>Normal mode</strong>: hovers at standoff (<code>fsm.standoff_range</code>), holding position (<code>wat</code>) and adjusting with <code>run</code>, firing the <code>atk_sh</code> shooting attack as a projectile from its band.</li>
+    <li><strong>Leader-loss berserk</strong> (the Canadine dynamic): when its leader (Akorse — the Canane analog) dies, a shooter SHOULD go berserk: it plays <code>atk_an</code> — confused, spinning — once, then <strong>loops <code>atk_ji</code> lunging straight at the player and explodes on contact</strong> (self-destruct: one AoE hit, the shooter dies). The explosion triggers on contact regardless of i-frames; i-frames dodge the damage, not the blast.</li>
+    <li>The berserk kamikaze is authored as a <code>berserk_only</code> attack (excluded from the normal attack gate); the room previews the sequence via a debug trigger since single-enemy rooms cannot host the leader relationship — pack wiring is the pack-behavior issue (#495), and Akorse-as-leader is its first concrete data point.</li>
+    <li><code>atk_ji</code>'s remaining question: kion reads <code>_ji</code> as the lunge (self-destruct dive); <code>atk_an</code> as the confusion spin; <code>stt</code> = "start" (semantics beyond that unconfirmed).</li>
+  </ul>
+
   <h3>Poison Lily — normative (backported from the implementation)</h3>
   <p>Unlike every section above, this one was <strong>implemented first</strong>: <code>scripts/3d/enemies/poison_lily.gd</code> is already correct in Godot (kion), and this contract is backported <em>from</em> it. The lily keeps its own script (the sanctioned <code>EnemyBase</code> subclass exception).</p>
   <ul>

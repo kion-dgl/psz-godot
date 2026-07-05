@@ -15,7 +15,7 @@ import {
   type ResolvedEntry,
   type RosterEntry,
 } from './types';
-import { makeSim, stepEnemy, applyHurt, type EnemySim, type SimEvent } from './fsm';
+import { makeSim, stepEnemy, applyHurt, applyBerserk, type EnemySim, type SimEvent } from './fsm';
 import { clipToken, resolveClip } from './anim';
 import { ARCHETYPE_BY_ID } from './archetypes';
 
@@ -419,6 +419,22 @@ export default function EnemyRoom() {
         const events = applyHurt(simRef.current, entryRef.current);
         handleEvents(events);
         pushLog('hit enemy → HURT', '#fa6');
+      } else if (e.code === 'KeyB') {
+        // Leader-death trigger (spec §shooter) — the pack wiring is #495.
+        const s = sceneRef.current;
+        const events = applyBerserk(simRef.current, entryRef.current, {
+          dt: 0,
+          playerPos: playerRef.current.pos,
+          playerRadius: PLAYER_RADIUS,
+          playerInvincible: false,
+          rng: Math.random,
+          clipDurationFor: (token) => resolveClip(s?.clips ?? [], token)?.duration ?? null,
+        });
+        if (events.length) {
+          handleEvents(events);
+        } else {
+          pushLog('no berserk behavior on this enemy (needs a berserk_only attack)', '#667');
+        }
       } else if (e.code === 'KeyP') {
         pausedRef.current = !pausedRef.current;
         setPaused(pausedRef.current);
@@ -486,6 +502,12 @@ export default function EnemyRoom() {
             break;
           case 'leap_landed':
             pushLog(`belly flop landed (AoE r=${e.attack.hit_reach})`, '#f96');
+            break;
+          case 'berserk':
+            pushLog('LEADER DOWN — berserk: confusion spin, then kamikaze', '#f4f');
+            break;
+          case 'exploded':
+            pushLog('kamikaze contact — EXPLODED (shooter destroyed) — R to reset', '#f4f');
             break;
           case 'attack_end':
             pushLog(`attack '${e.attack.id}' end → loaf`, '#889');
@@ -602,6 +624,7 @@ export default function EnemyRoom() {
       s.enemyGroup.position.set(sim.pos.x, sim.altitude + hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
       s.enemyGroup.scale.setScalar(e.model_scale); // poison lily's GLB needs 0.09
+      s.enemyGroup.visible = !sim.exploded; // kamikaze self-destruct
       // Roller ball travel: the curled clip has no motion of its own — the
       // engine rotates it (spec §roller). Forward tumble while lp plays.
       if (atkNow?.charge?.phase === 'lp' && atkNow.def.charge_segments) {
@@ -809,7 +832,7 @@ export default function EnemyRoom() {
             </span>{' '}
             {hud.hp} {hud.dodging && <span style={{ color: '#4f8' }}>· dodging</span>}
           </div>
-          <div style={{ color: '#667', marginTop: 4 }}>WASD move · Space dodge · H hit enemy · P pause · R reset</div>
+          <div style={{ color: '#667', marginTop: 4 }}>WASD move · Space dodge · H hit enemy · B kill leader · P pause · R reset</div>
         </div>
         {/* Log */}
         <div style={{ position: 'absolute', bottom: 10, left: 10, fontFamily: 'monospace', fontSize: 11, pointerEvents: 'none' }}>

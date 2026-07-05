@@ -10,6 +10,7 @@ import {
   selectAttack,
   arcHitTest,
   applyHurt,
+  applyBerserk,
   type SimEvent,
   type SimInput,
 } from '../enemy-room/fsm';
@@ -774,6 +775,67 @@ describe('enemy-room FSM — stationary (poison lily, spec §poison-lily)', () =
     expect(sim.pos).toEqual({ x: 0, z: 0 }); // rooted through idle/chase/attack/loaf
     expect(events.some((e) => e.type === 'projectile_fired')).toBe(true);
     expect(sim.facing.z).toBeCloseTo(1, 2); // faces the target
+  });
+});
+
+describe('enemy-room FSM — shooter berserk (spec /states/enemies §shooter)', () => {
+  const shot = atk({ id: 'shot', clip: 'atk_sh', kind: 'projectile', min_range: 3, max_range: 10, hit_reach: 10, hit_half_angle_deg: 8 });
+  const kamikaze = atk({ id: 'kamikaze', clip: 'atk_ji', berserk_only: true, min_range: 0, max_range: 0, hit_reach: 1.5, hit_half_angle_deg: 180, damage_mult: 2.5 });
+  const shooterConfig = (): EnemyAttackConfig => {
+    const c = config([shot, kamikaze]);
+    c.enemies.dummy.archetype = 'shooter';
+    c.enemies.dummy.fsm = { standoff_range: 5 };
+    return c;
+  };
+  const setup = (playerZ: number, invincible = false) => {
+    const entry = resolveEntry(shooterConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: playerZ }, playerInvincible: invincible });
+    stepEnemy(sim, entry, input); // idle → chasing
+    return { entry, sim, input };
+  };
+
+  it('normal mode holds standoff (wat) and fires the shot; the kamikaze never fires from the gate', () => {
+    const { entry, sim, input } = setup(5);
+    const events = run(sim, entry, input, 3.0);
+    expect(events.filter((e) => e.type === 'projectile_fired').length).toBeGreaterThan(0);
+    const fired = events.filter((e) => e.type === 'attack_start').map((e) => e.type === 'attack_start' && e.attack.id);
+    expect(fired).not.toContain('kamikaze');
+  });
+
+  it('berserk: atk_an display, then atk_ji dive at the player, contact explosion kills the shooter', () => {
+    const { entry, sim, input } = setup(6);
+    const events = applyBerserk(sim, entry, input);
+    expect(events.some((e) => e.type === 'berserk')).toBe(true);
+    expect(sim.anim).toBe('atk_an'); // confusion spin display
+    const all = run(sim, entry, input, 4.0);
+    // After the display, dives with atk_ji and explodes on contact.
+    expect(all.some((e) => e.type === 'exploded')).toBe(true);
+    const hits = all.filter((e) => e.type === 'hit');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].type === 'hit' && hits[0].damage).toBe(25); // 10 × 2.5
+    expect(sim.exploded).toBe(true);
+    // Post-explosion the sim is inert.
+    const after = stepEnemy(sim, entry, input);
+    expect(after.filter((e) => e.type === 'hit')).toHaveLength(0);
+  });
+
+  it('i-frames dodge the blast damage but the explosion still consumes the shooter', () => {
+    const { entry, sim, input } = setup(6, true);
+    applyBerserk(sim, entry, input);
+    const all = run(sim, entry, input, 4.0);
+    expect(all.some((e) => e.type === 'exploded')).toBe(true);
+    expect(all.filter((e) => e.type === 'hit_dodged')).toHaveLength(1);
+    expect(all.filter((e) => e.type === 'hit')).toHaveLength(0);
+    expect(sim.exploded).toBe(true);
+  });
+
+  it('berserk is a no-op for enemies without a berserk_only attack', () => {
+    const entry = resolveEntry(config([atk()]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput();
+    expect(applyBerserk(sim, entry, input)).toEqual([]);
+    expect(sim.berserk).toBe(false);
   });
 });
 

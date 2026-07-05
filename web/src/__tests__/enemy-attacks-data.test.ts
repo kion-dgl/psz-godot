@@ -66,7 +66,8 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
         const weight = a.weight ?? config.defaults.attack.weight;
         const reach = a.hit_reach ?? config.defaults.attack.hit_reach;
         const angle = a.hit_half_angle_deg ?? config.defaults.attack.hit_half_angle_deg;
-        if (!(min >= 0 && min < max)) bad.push(`${id}/${a.id} range`);
+        // berserk_only attacks are excluded from the gate — their band is unused.
+        if (!a.berserk_only && !(min >= 0 && min < max)) bad.push(`${id}/${a.id} range`);
         if (!(weight > 0)) bad.push(`${id}/${a.id} weight`);
         if (!(reach > 0)) bad.push(`${id}/${a.id} reach`);
         if (!(angle > 0 && angle <= 180)) bad.push(`${id}/${a.id} angle`);
