@@ -139,6 +139,13 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
       const kinds = config.enemies[id].attacks.map((a: { kind?: string }) => a.kind);
       expect(kinds.filter((k: string) => k === 'projectile'), `${id} pistols`).toHaveLength(2);
     }
+    for (const id of ['porel', 'pobomma', 'pomarr']) {
+      const bubble = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'bubble');
+      expect(bubble?.kind, `${id} bubble`).toBe('projectile');
+    }
+    for (const id of ['bolix', 'goldix']) {
+      expect(config.enemies[id].fsm?.reveal_range, `${id} reveal_range`).toBeGreaterThan(0);
+    }
     // Shared seal rig, divergent tables: Hypao casts barta, Vespao gibarta.
     const hypaoTechs = config.enemies.hypao.attacks.map((a: { tech?: string }) => a.tech);
     const vespaoTechs = config.enemies.vespao.attacks.map((a: { tech?: string }) => a.tech);

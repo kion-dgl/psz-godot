@@ -89,8 +89,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'hopper',
     label: 'Hopper',
-    blurb: 'Frogs that leap and turn (jmp, tur): Porel, Pobomma, Pomarr.',
-    simNote: 'Baseline sim; hop behavior notes pending — module to follow.',
+    blurb: 'Frogs that shoot a bubble projectile from close-to-mid range (definite); a second melee attack is an open question; jmp/tur encode hopping: Porel, Pobomma, Pomarr.',
+    simNote: 'Partial: bubble projectile authored (spec /states/enemies §hopper); hop locomotion (jmp/tur) pending its notes — baseline walk chase until then.',
   },
   {
     id: 'rappy',

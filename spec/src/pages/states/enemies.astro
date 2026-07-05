@@ -151,6 +151,14 @@ const fsm = `stateDiagram-v2
     <li><strong>Room-clear MUST count mimics</strong>: gates stay locked until disguised mimics are found and killed — that IS the Paru experience; the field controller's room-clear logic must include dormant mimics in the alive-enemy count.</li>
   </ul>
 
+  <h3>Archetype: Hopper (Porel family) — partial</h3>
+  <p>Applies to <code>archetype: hopper</code> (frog rigs — Porel, Pobomma, Pomarr). Authored so far (kion):</p>
+  <ul>
+    <li><strong>Bubble projectile</strong> (definite): the frog shoots a bubble at the player from <strong>close-to-mid range</strong> — authored as a <code>projectile</code> attack on the <code>atk</code> clip.</li>
+    <li><strong>A second melee attack is an open question</strong> — kion is unsure whether they have bubble + melee or just bubbles; the rig has only one <code>atk</code> clip, so a melee would share it. Not authored pending confirmation.</li>
+    <li><strong>Hop locomotion pending</strong>: <code>jmp</code> (leap) and <code>tur</code> (turn) clearly encode hopping movement, but its behavior isn't authored yet — the frogs use the baseline walk chase until those notes land. <code>stt</code> semantics unconfirmed.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

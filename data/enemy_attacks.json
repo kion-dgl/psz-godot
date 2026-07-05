@@ -1615,18 +1615,29 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "poison_lily": {
       "archetype": "unique",
@@ -1665,18 +1676,29 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "porel": {
       "archetype": "hopper",
@@ -1690,18 +1712,29 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "rab_rappy": {
       "archetype": "rappy",
