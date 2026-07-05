@@ -34,6 +34,7 @@ const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
 const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 const ComboDebug = lazy(() => import('./combo-debug/ComboDebug'));
 const CombatRoom = lazy(() => import('./combat-room/CombatRoom'));
+const TechRoom = lazy(() => import('./tech-room/TechRoom'));
 const EnemyRoom = lazy(() => import('./enemy-room/EnemyRoom'));
 const EnemyRoomIndex = lazy(() => import('./enemy-room/EnemyRoomIndex'));
 const BossRoom = lazy(() => import('./boss-room/BossRoom'));
@@ -109,6 +110,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/dodge-debug', label: 'Dodge' },
       { to: '/combo-debug', label: 'Combo' },
       { to: '/combat-room', label: 'Combat Room' },
+      { to: '/tech-room', label: 'Tech Room' },
       { to: '/enemy-room', label: 'Enemy Rooms' },
       { to: '/boss-room', label: 'Boss Rooms' },
       { to: '/texture-anim', label: 'Texture Anim' },
@@ -273,6 +275,7 @@ export default function App() {
             <Route path="/dodge-debug" element={<DodgeDebug />} />
             <Route path="/combo-debug" element={<ComboDebug />} />
             <Route path="/combat-room" element={<CombatRoom />} />
+            <Route path="/tech-room" element={<TechRoom />} />
             <Route path="/enemy-room" element={<EnemyRoomIndex />} />
             <Route path="/enemy-room/:archetype" element={<EnemyRoom />} />
             <Route path="/boss-room" element={<BossRoomIndex />} />
