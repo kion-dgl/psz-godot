@@ -67,6 +67,7 @@ const fsm = `stateDiagram-v2
     <li>An enemy <strong>MUST NOT</strong> require a damage event (the HURT transition) to resume AI or animation. Being hit is a recovery path, never the only one.</li>
     <li>Player contact <strong>MUST NOT</strong> freeze an enemy: while the player stands against (or overlaps) an enemy of any size, its state machine and animation <strong>MUST</strong> keep advancing — attack, loaf, and chase cycles continue exactly as at range. Large and small enemies <strong>MUST</strong> behave identically under contact, differing only in authored stats.</li>
   </ul>
+  <p>What happens <em>inside</em> ATTACKING — attack selection, the windup → damaging-window timeline, and the arc hit shape — is defined in <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>.</p>
 
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
