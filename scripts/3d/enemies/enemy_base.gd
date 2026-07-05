@@ -44,6 +44,14 @@ const HURT_DURATION: float = 0.3
 ## Animation state tracking
 var is_attacking: bool = false
 var current_anim: String = ""
+## Resolved (full) name of the attack animation in flight — attack end is
+## detected against this, never by parsing a suffix out of the finished
+## signal (big rigs name the clip atk1/atckwat and used to wedge ATTACKING
+## until a hit forced HURT — #477, spec /states/enemies).
+var _attack_anim: String = ""
+## Ticks down when no attack animation resolved at all (armadillo has none).
+var _attack_fallback_timer: float = 0.0
+const ATTACK_FALLBACK_DURATION: float = 0.8
 
 ## Stuck detection — try perpendicular direction when blocked
 var _stuck_time: float = 0.0
@@ -508,11 +516,22 @@ func _process_chasing(_delta: float) -> void:
 		_face_direction(direction)
 
 
-func _process_attacking(_delta: float) -> void:
+func _process_attacking(delta: float) -> void:
 	velocity.x = 0
 	velocity.z = 0
 
-	# Wait for attack animation to finish, then loaf off
+	# Attack end: the resolved animation finished (signal path or the
+	# watchdog below), or the fallback duration elapsed when no attack
+	# animation resolved. Never wait on a damage event to recover (#477).
+	if is_attacking:
+		if _attack_anim.is_empty():
+			_attack_fallback_timer -= delta
+			if _attack_fallback_timer <= 0.0:
+				is_attacking = false
+		elif animation_player and not animation_player.is_playing():
+			is_attacking = false
+			_attack_anim = ""
+
 	if not is_attacking:
 		_start_loafing()
 
@@ -584,7 +603,10 @@ func _start_attack() -> void:
 		return
 
 	is_attacking = true
-	_play_animation("atk", true)  # Force play attack animation
+	_attack_anim = _play_animation("atk", true)  # Force play attack animation
+	if _attack_anim.is_empty():
+		# Rig has no resolvable attack clip — end the attack on a timer.
+		_attack_fallback_timer = ATTACK_FALLBACK_DURATION
 	_play_sfx("attack")
 
 	# Face the target
@@ -644,6 +666,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
+		_attack_anim = ""
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION
 		velocity = Vector3.ZERO  # Stop movement during stagger
@@ -711,14 +734,15 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 	return not result.is_empty()
 
 
-## Play an animation by name (short name like "atk" will match "s_001_atk")
-func _play_animation(anim_name: String, force: bool = false) -> void:
+## Play an animation by name (short name like "atk" will match "s_001_atk").
+## Returns the resolved full animation name, or "" if nothing played.
+func _play_animation(anim_name: String, force: bool = false) -> String:
 	if not animation_player:
-		return
+		return ""
 
 	# Don't interrupt same animation unless forced
 	if not force and current_anim == anim_name:
-		return
+		return ""
 
 	# Try to find the animation - GLB animations are named like "s_001_atk"
 	var full_name := _find_animation(anim_name)
@@ -732,7 +756,7 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 			_uses_walk_variants = true
 
 	if full_name.is_empty():
-		return
+		return ""
 
 	# Ensure looping animations actually loop
 	var anim := animation_player.get_animation(full_name)
@@ -741,6 +765,7 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 
 	animation_player.play(full_name)
 	current_anim = anim_name
+	return full_name
 
 
 ## Find animation by short name (e.g., "atk" matches "s_001_atk")
@@ -749,7 +774,7 @@ const ANIM_ALIASES := {
 	"wat": ["stt"],       # wait/idle → standing
 	"wlk": ["fly"],       # walk → fly (for airborne enemies)
 	"run": ["fly"],       # run → fly
-	"atk": ["atk1"],      # attack → attack variant 1
+	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
 }
 
 func _find_animation(short_name: String) -> String:
@@ -788,15 +813,20 @@ func _find_animation(short_name: String) -> String:
 
 ## Called when animation finishes
 func _on_animation_finished(anim_name: String) -> void:
-	# Extract short name (e.g., "s_001_atk" -> "atk")
+	# Attack end is matched against the resolved name that _start_attack
+	# actually played — suffix parsing wedged atk1/atckwat rigs (#477).
+	if anim_name == _attack_anim:
+		is_attacking = false
+		_attack_anim = ""
+		return
+
+	# Extract short name (e.g., "s_001_tht" -> "tht")
 	var short_name := anim_name
 	if "_" in anim_name:
 		var parts := anim_name.split("_")
 		short_name = parts[parts.size() - 1]  # Get last part after underscore
 
 	match short_name:
-		"atk":
-			is_attacking = false
 		"tht":
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:

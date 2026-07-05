@@ -40,6 +40,7 @@ func _run_tests_combat() -> void:
 	test_target_info_panel()
 	test_area_map_overlay()
 	test_element_status()
+	test_enemy_attack_recovery()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
@@ -845,6 +846,82 @@ func test_element_status() -> void:
 	assert_true(procced.has("devil"), "dark procs devil through the live path")
 	assert_true(devil_hp_ok, "devil drops 400 HP to ¼ (100) every time")
 	assert_true(procced.has("poison"), "dark procs poison through the live path")
+	print("")
+
+
+# ── Enemy attack recovery (#477, spec /states/enemies) ─────
+## Big rigs name their attack clip atk1 / atckwat (or lack one entirely);
+## ATTACKING must still end without a damage event — the playtest freeze was
+## the finished-signal suffix parse never matching "atk1".
+
+func _make_recovery_enemy(anim_name: String, anim_len: float) -> EnemyBase:
+	var e := EnemyBase.new()
+	e.enemy_data = EnemyData.new()
+	add_child(e)
+	var ap := AnimationPlayer.new()
+	e.add_child(ap)
+	var lib := AnimationLibrary.new()
+	if not anim_name.is_empty():
+		var anim := Animation.new()
+		anim.length = anim_len
+		lib.add_animation(anim_name, anim)
+	ap.add_animation_library("", lib)
+	e.animation_player = ap
+	return e
+
+
+func test_enemy_attack_recovery() -> void:
+	print("── Enemy attack recovery (#477) ──")
+	var dummy := Node3D.new()
+	add_child(dummy)
+	dummy.position = Vector3(0, 0, 2)
+
+	# Gorilla-shaped rig: only "b_014_atk1", resolved via the atk→atk1 alias.
+	var e := _make_recovery_enemy("b_014_atk1", 0.4)
+	e.target = dummy
+	assert_eq(e._find_animation("atk"), "b_014_atk1", "atk resolves atk1 rigs via alias")
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._start_attack()
+	assert_true(e.is_attacking, "attack starts on atk1 rig")
+	assert_eq(e._attack_anim, "b_014_atk1", "resolved attack anim tracked by full name")
+	e._on_animation_finished("b_014_atk1")
+	assert_true(not e.is_attacking, "atk1 finish clears is_attacking — no hit needed")
+	e._process_attacking(0.016)
+	assert_eq(e.current_state, EnemyBase.EnemyState.LOAFING, "ATTACKING exits to LOAFING")
+
+	# Watchdog: resolved anim stopped without a matching finished signal —
+	# the ATTACKING tick itself must notice and recover.
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._start_attack()
+	assert_true(e.is_attacking, "second attack starts")
+	e.animation_player.stop()
+	e._process_attacking(0.016)
+	assert_true(not e.is_attacking, "stopped attack anim recovers via ATTACKING watchdog")
+	assert_eq(e.current_state, EnemyBase.EnemyState.LOAFING, "watchdog exit lands in LOAFING")
+
+	# Rig with no attack animation at all (armadillo): nothing plays, so the
+	# fixed fallback duration must end the attack.
+	var e2 := _make_recovery_enemy("b_035_wat1", 1.0)
+	e2.target = dummy
+	e2.current_state = EnemyBase.EnemyState.ATTACKING
+	e2._start_attack()
+	assert_true(e2.is_attacking, "attack starts even with no attack anim")
+	assert_eq(e2._attack_anim, "", "no resolvable attack anim → fallback armed")
+	e2._process_attacking(0.1)
+	assert_true(e2.is_attacking, "fallback does not end the attack early")
+	e2._process_attacking(EnemyBase.ATTACK_FALLBACK_DURATION)
+	assert_true(not e2.is_attacking, "fallback duration ends the attack")
+	assert_eq(e2.current_state, EnemyBase.EnemyState.LOAFING, "no-anim rig exits to LOAFING")
+
+	# Orangutan's misspelled "atck" clip is aliased so the rig still swings.
+	var e3 := _make_recovery_enemy("b_044_atckwat", 0.5)
+	e3.target = dummy
+	assert_eq(e3._find_animation("atk"), "b_044_atckwat", "atk resolves orangutan's atckwat clip")
+
+	e.queue_free()
+	e2.queue_free()
+	e3.queue_free()
+	dummy.queue_free()
 	print("")
 
 
