@@ -26,7 +26,9 @@ export default function EnemyRoomIndex() {
       : [];
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 60px)', background: '#0a0a1a', color: '#fff', padding: 20 }}>
+    // The app shell clips routes with overflow:hidden (canvas tools fill the
+    // viewport), so a document-style page must scroll itself.
+    <div style={{ height: '100%', overflowY: 'auto', background: '#0a0a1a', color: '#fff', padding: 20 }}>
       <h2 style={{ margin: '0 0 4px' }}>Enemy Rooms</h2>
       <p style={{ color: '#9ab', fontSize: 13, maxWidth: 720 }}>
         One room per behavior archetype — the taxonomy from spec <code>/mechanics/enemy-attacks</code>, stamped
