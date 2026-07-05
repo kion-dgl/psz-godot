@@ -5,6 +5,7 @@ const BUBBLE_WIDTH := 400
 const BUBBLE_HEIGHT := 180
 
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+const TeleporterDressingScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
 
 # Positions probed on the merged mesh (floor at y≈-10.67). Spawns sit a touch
 # above the floor so the player settles onto it. Rotations are provisional
@@ -122,6 +123,9 @@ func _add_interactables() -> void:
 	)
 	# Warp teleporter — empty area_id = central pad that opens the teleporter menu.
 	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.33, 60.96), "", "Warp Teleporter")
+	# Decorative special_c3 dressing around the pad — positions itself from
+	# data/city_teleporter.json (authored in the web #/teleporter-mock).
+	add_child(TeleporterDressingScript.new())
 
 
 func _maybe_spawn_city_telepipe() -> void:

@@ -94,6 +94,7 @@ func _run_tests_core() -> void:
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
+	test_teleporter_dressing()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -368,6 +369,77 @@ func test_element_collision_setup() -> void:
 	if shape.shape is BoxShape3D:
 		assert_eq((shape.shape as BoxShape3D).size, el.collision_size, "box sized to collision_size")
 	assert_true(is_equal_approx(shape.position.y, el.collision_size.y / 2.0), "shape offset half-height")
+	el.free()
+	print("")
+
+
+# ── Teleporter dressing (special_c3 warp-pad set) ───────
+# Pins the mock→Godot contract: data/city_teleporter.json parses, pieces get
+# re-pivoted to bbox bottom-center (what makes mock offsets land in-world),
+# and the layout's uv/scroll config maps onto uv_dressing.gdshader uniforms.
+# Pack-free: synthetic BoxMesh + ImageTexture, no GLB loads (assets aren't in
+# git on CI).
+func test_teleporter_dressing() -> void:
+	print("── TeleporterDressing (special_c3 layout + pivot + materials) ──")
+	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
+	var el = DressScript.new()
+
+	# Layout contract, as authored in the web #/teleporter-mock.
+	var layout: Dictionary = el._load_layout()
+	assert_true(not layout.is_empty(), "data/city_teleporter.json loads")
+	assert_eq(layout.get("set", ""), "special_c3", "layout set is special_c3")
+	var pieces: Dictionary = layout.get("pieces", {})
+	assert_eq(pieces.size(), 6, "layout has 6 pieces")
+	var anchor: Array = layout.get("anchor", [])
+	assert_true(anchor.size() == 3 and is_equal_approx(float(anchor[2]), 60.83), "anchor sits at the warp pad")
+	var warpcb: Dictionary = pieces.get("o0s_warpcb", {})
+	assert_eq(warpcb.get("scroll", {}).get("v", 0.0), 0.15, "warp ring scrolls v=0.15")
+	# Only the two compass plates are live in-game; the warp-ring variants are
+	# parked (visible:false keeps their authored transforms without spawning).
+	var visible_names := []
+	for n in pieces:
+		if pieces[n].get("visible", true):
+			visible_names.append(n)
+	visible_names.sort()
+	assert_eq(visible_names, ["o00_compass", "o00_compass2"], "only the compass plates spawn")
+
+	# Pivot math: a mesh authored away from its scene root gets re-pivoted to
+	# bbox bottom-center before the cfg offset applies.
+	var model := Node3D.new()
+	var mi := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(2, 2, 2)
+	mi.mesh = box
+	mi.position = Vector3(5, 3, -2)
+	model.add_child(mi)
+	var pivot = el._build_piece("test_piece", model, {"pos": [0, 1, 0], "ry": 0.5, "s": 2})
+	assert_eq(String(pivot.name), "test_piece", "pivot named after the piece")
+	assert_eq(pivot.position, Vector3(0, 1, 0), "pivot at cfg pos offset")
+	assert_true(is_equal_approx(pivot.rotation.y, 0.5), "pivot yaw from cfg")
+	assert_eq(pivot.scale, Vector3(2, 2, 2), "pivot scale from cfg")
+	assert_eq(model.position, Vector3(-5, -2, 2), "model shifted to bbox bottom-center")
+
+	# Material mapping: layout uv/scroll → shader uniforms, scissor carried
+	# over from the imported material (glTF MASK).
+	var src := StandardMaterial3D.new()
+	src.albedo_texture = ImageTexture.create_from_image(Image.create(4, 4, false, Image.FORMAT_RGBA8))
+	src.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	src.alpha_scissor_threshold = 0.5
+	var cfg := {
+		"uv": {"wrap": ["repeat", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0},
+		"scroll": {"u": 0, "v": 0.15},
+	}
+	var smat: ShaderMaterial = el._make_dress_material(src, cfg)
+	assert_eq(smat.get_shader_parameter("wrap_u"), 1, "wrap_u repeat")
+	assert_eq(smat.get_shader_parameter("wrap_v"), 0, "wrap_v mirror")
+	assert_eq(smat.get_shader_parameter("scroll_speed"), Vector2(0, 0.15), "scroll_speed from cfg")
+	assert_true(is_equal_approx(float(smat.get_shader_parameter("alpha_scissor")), 0.5), "alpha scissor carried")
+	assert_true(smat.get_shader_parameter("albedo_tex") == src.albedo_texture, "albedo texture carried")
+	var smat_default: ShaderMaterial = el._make_dress_material(src, {})
+	assert_eq(smat_default.get_shader_parameter("wrap_u"), 0, "default wrap is mirror (source sampler mode)")
+	assert_eq(smat_default.get_shader_parameter("scroll_speed"), Vector2.ZERO, "default has no scroll")
+
+	pivot.free()
 	el.free()
 	print("")
 
