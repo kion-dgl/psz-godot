@@ -6,10 +6,30 @@
  * scripts/tools/gen_enemy_attacks.py.
  */
 
+export type AttackKind = 'melee_arc' | 'projectile' | 'lob' | 'charge' | 'leap';
+
 export interface AttackDef {
   id: string;
   /** Animation-name token as Godot's resolver consumes it (atk, atk2, atk_hi…) — NOT a full clip name. */
   clip: string;
+  /** Hit delivery (spec /mechanics/enemy-attacks): melee arc test (default), straight projectile, or grenade lob. */
+  kind?: AttackKind;
+  /** Optional named game technique this attack casts (barta, gibarta…) — the Godot runtime MUST deliver it via the real tech system; the sim approximates via `kind`. */
+  tech?: string;
+  /** Clip tokens played sequentially BEFORE the attack clip as pure telegraph (ape gunner's charged punch: atckstt → atckwat → atckswg). */
+  windup_clips?: string[];
+  /** kind: charge — explicit segment clip tokens when the rig doesn't use _st/_lp/_ed suffixes (roller: trf1/wat3/trf2). */
+  charge_segments?: { st: string; lp: string; ed: string };
+  /** kind: charge — travel target = start distance + overshoot (capped by max_range) instead of always max_range. */
+  overshoot?: number;
+  /** kind: charge — false lets the charge roll through the target instead of ending on contact (default true). */
+  stop_on_hit?: boolean;
+  /** Excluded from the normal attack gate; used only by a berserk mode (shooter leader-loss kamikaze). */
+  berserk_only?: boolean;
+  /** A hit knocks the player down (denies the follow-up punish) — runtime maps to the knockdown reaction. */
+  knockdown?: boolean;
+  /** While the recovery clip plays the enemy takes this damage multiplier (the roller's fall-over window). */
+  recovery_vulnerable_mult?: number;
   weight: number;
   min_range: number;
   max_range: number;
@@ -38,12 +58,32 @@ export interface FsmParams {
   loaf_duration_max: number;
   hurt_duration: number;
   attack_fallback_duration: number;
+  /** Kiter archetypes (quad_machine): preferred distance from the target. Flyers reuse it as the orbit radius. */
+  standoff_range: number;
+  /** Flyer archetypes: airborne height while engaged (0 = grounded). */
+  hover_height: number;
+  /** Box mimic: disguise-break distance — replaces detection_range entirely while dormant. */
+  reveal_range: number;
+  /** Rooted enemies (poison lily): never move; face the target and attack from the bands. */
+  stationary: boolean;
 }
 
 export interface EnemyAttackEntry {
+  /** Behavior archetype id (spec /mechanics/enemy-attacks table) — stamped by gen_enemy_attacks.py from model_id. */
+  archetype?: string;
   stats: EnemyStats;
   fsm: Partial<FsmParams>;
   attacks: AttackDef[];
+  /**
+   * Authored clip semantics, keyed by clip token — documentational (MAY),
+   * e.g. garapython: stt = "rise: wlk → wat2". Shown in the tool next to
+   * the clip picker; input for the future stance model (spec open question).
+   */
+  clip_notes?: Record<string, string>;
+  /** Render scale for the model (poison lily's raw GLB needs 0.09) — the runtime applies the same factor. */
+  model_scale?: number;
+  /** Engaged idle clip token for stationary enemies (poison lily's waito loop). */
+  idle_clip?: string;
 }
 
 export interface EnemyAttackConfig {
@@ -61,6 +101,10 @@ export const DEFAULT_FSM: FsmParams = {
   loaf_duration_max: 4.0,
   hurt_duration: 0.3,
   attack_fallback_duration: 0.8,
+  standoff_range: 6.0,
+  hover_height: 0.0,
+  reveal_range: 3.5,
+  stationary: false,
 };
 
 export const DEFAULT_ATTACK: Omit<AttackDef, 'id' | 'clip'> = {
@@ -84,9 +128,13 @@ export const DEFAULT_STATS: EnemyStats = {
 
 /** Entry with defaults applied — what the sim actually runs. */
 export interface ResolvedEntry {
+  archetype: string;
   stats: EnemyStats;
   fsm: FsmParams;
   attacks: AttackDef[];
+  clip_notes: Record<string, string>;
+  model_scale: number;
+  idle_clip?: string;
 }
 
 export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string): ResolvedEntry {
@@ -98,7 +146,15 @@ export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string):
     ...(config?.defaults?.attack ?? {}),
     ...a,
   }));
-  return { stats, fsm, attacks };
+  return {
+    archetype: entry?.archetype ?? 'simple_melee',
+    stats,
+    fsm,
+    attacks,
+    clip_notes: entry?.clip_notes ?? {},
+    model_scale: entry?.model_scale ?? 1,
+    idle_clip: entry?.idle_clip,
+  };
 }
 
 /** Spec: an enemy missing from the file falls back to one default attack — it never refuses to attack. */

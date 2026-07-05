@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -14,7 +15,9 @@ import {
   type ResolvedEntry,
   type RosterEntry,
 } from './types';
-import { makeSim, stepEnemy, applyHurt, type EnemySim, type SimEvent } from './fsm';
+import { makeSim, stepEnemy, applyHurt, applyBerserk, type EnemySim, type SimEvent } from './fsm';
+import { clipToken, resolveClip } from './anim';
+import { ARCHETYPE_BY_ID } from './archetypes';
 
 /**
  * Enemy room — the design mock for per-enemy ATTACK BEHAVIOR (spec
@@ -44,7 +47,8 @@ const PLAYER_MAX_HP = 100;
 const ARENA_HALF = 11;
 
 interface StoredState {
-  enemyId: string;
+  /** Last-selected enemy per archetype room. */
+  enemyByArchetype: Record<string, string>;
   overrides: Record<string, EnemyAttackEntry>;
 }
 
@@ -53,39 +57,19 @@ function loadStored(): StoredState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed.enemyId === 'string' && parsed.overrides) return parsed;
+      if (parsed && parsed.overrides) {
+        return {
+          enemyByArchetype: parsed.enemyByArchetype ?? {},
+          overrides: parsed.overrides,
+        };
+      }
     }
   } catch {
     /* ignore */
   }
-  return { enemyId: 'booma_origin', overrides: {} };
+  return { enemyByArchetype: {}, overrides: {} };
 }
 
-/** Strip the rig prefix ("s_001_", "m051_", "z003_"…) → the Godot resolver token. */
-function clipToken(clipName: string): string {
-  return clipName.replace(/^[a-z]{1,2}_?\d{3}_/, '');
-}
-
-/** enemy_base.gd ANIM_ALIASES — keep in sync; the tool MUST resolve like the runtime. */
-const ANIM_ALIASES: Record<string, string[]> = {
-  wat: ['stt'], // wait/idle → standing
-  wlk: ['fly', 'wlk_l'], // walk → fly (airborne) / left-variant (Godot alternates wlk_l/wlk_r)
-  run: ['fly', 'wlk_l'],
-  atk: ['atk1', 'atckwat'], // attack → variant 1 / orangutan's misspelled clip (#477)
-};
-
-/** Godot _find_animation semantics: exact name, *_<token> suffix, then aliases. */
-function resolveClip(clips: THREE.AnimationClip[], token: string): THREE.AnimationClip | null {
-  if (!token) return null;
-  const direct =
-    clips.find((c) => c.name === token) ?? clips.find((c) => c.name.endsWith('_' + token)) ?? null;
-  if (direct) return direct;
-  for (const alias of ANIM_ALIASES[token] ?? []) {
-    const found = resolveClip(clips, alias);
-    if (found) return found;
-  }
-  return null;
-}
 
 /** Sector mesh: apex at local origin, aimed at +Z (combat-room pattern). */
 function buildSectorGeometry(halfAngleRad: number, radius: number, segments = 40): THREE.BufferGeometry {
@@ -139,6 +123,10 @@ interface SceneRefs {
   clips: THREE.AnimationClip[];
   currentAction: THREE.AnimationAction | null;
   currentClipName: string;
+  /** Pooled visuals for ranged deliveries (quad_machine projectiles/lobs). */
+  projPool: THREE.Mesh[];
+  lobBallPool: THREE.Mesh[];
+  lobRingPool: THREE.Mesh[];
 }
 
 interface LogEntry {
@@ -182,10 +170,26 @@ export default function EnemyRoom() {
     };
   }, []);
 
-  const enemyId = stored.enemyId;
+  const { archetype: archetypeParam } = useParams();
+  const archetypeId = archetypeParam ?? 'simple_melee';
+  const archetype = ARCHETYPE_BY_ID.get(archetypeId);
+
+  // This room's roster: enemies stamped with this archetype.
   const enemyIds = useMemo(
-    () => (baseConfig ? Object.keys(baseConfig.enemies).sort() : []),
-    [baseConfig],
+    () =>
+      baseConfig
+        ? Object.keys(baseConfig.enemies)
+            .filter((id) => (baseConfig.enemies[id].archetype ?? 'unclassified') === archetypeId)
+            .sort()
+        : [],
+    [baseConfig, archetypeId],
+  );
+  const storedPick = stored.enemyByArchetype[archetypeId];
+  const enemyId = storedPick && enemyIds.includes(storedPick) ? storedPick : (enemyIds[0] ?? '');
+  const setEnemyId = useCallback(
+    (id: string) =>
+      setStored((prev) => ({ ...prev, enemyByArchetype: { ...prev.enemyByArchetype, [archetypeId]: id } })),
+    [archetypeId],
   );
 
   // Effective entry: file config with the local override applied, defaults resolved.
@@ -300,10 +304,39 @@ export default function EnemyRoom() {
     const arc = new THREE.Mesh(buildSectorGeometry(THREE.MathUtils.degToRad(45), 2), arcMat);
     scene.add(arc);
 
+    // Pooled ranged-delivery visuals (hidden until used).
+    const projPool: THREE.Mesh[] = [];
+    for (let i = 0; i < 8; i++) {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffcc33 }),
+      );
+      m.visible = false;
+      m.position.y = 0.9;
+      scene.add(m);
+      projPool.push(m);
+    }
+    const lobBallPool: THREE.Mesh[] = [];
+    const lobRingPool: THREE.Mesh[] = [];
+    for (let i = 0; i < 4; i++) {
+      const ball = new THREE.Mesh(
+        new THREE.SphereGeometry(0.22, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xff6633 }),
+      );
+      ball.visible = false;
+      scene.add(ball);
+      lobBallPool.push(ball);
+      const ring = buildRing(1.6, 0xff6633, 0.4);
+      ring.visible = false;
+      scene.add(ring);
+      lobRingPool.push(ring);
+    }
+
     sceneRef.current = {
       scene, camera, renderer, controls, enemyGroup, playerGroup, playerBodyMat,
       detectionRing, attackRing, chargeRing, arc, arcMat, arcKey: '',
       mixer: null, clips: [], currentAction: null, currentClipName: '',
+      projPool, lobBallPool, lobRingPool,
     };
 
     const onResize = () => {
@@ -323,7 +356,7 @@ export default function EnemyRoom() {
   // ── Enemy model load (per enemy) ──────────────────────────────────────
   useEffect(() => {
     const s = sceneRef.current;
-    if (!s) return;
+    if (!s || !enemyId) return;
     let cancelled = false;
     setClipNames([]);
     setModelError(null);
@@ -386,6 +419,22 @@ export default function EnemyRoom() {
         const events = applyHurt(simRef.current, entryRef.current);
         handleEvents(events);
         pushLog('hit enemy → HURT', '#fa6');
+      } else if (e.code === 'KeyB') {
+        // Leader-death trigger (spec §shooter) — the pack wiring is #495.
+        const s = sceneRef.current;
+        const events = applyBerserk(simRef.current, entryRef.current, {
+          dt: 0,
+          playerPos: playerRef.current.pos,
+          playerRadius: PLAYER_RADIUS,
+          playerInvincible: false,
+          rng: Math.random,
+          clipDurationFor: (token) => resolveClip(s?.clips ?? [], token)?.duration ?? null,
+        });
+        if (events.length) {
+          handleEvents(events);
+        } else {
+          pushLog('no berserk behavior on this enemy (needs a berserk_only attack)', '#667');
+        }
       } else if (e.code === 'KeyP') {
         pausedRef.current = !pausedRef.current;
         setPaused(pausedRef.current);
@@ -427,17 +476,38 @@ export default function EnemyRoom() {
           case 'hit': {
             const p = playerRef.current;
             p.hp = Math.max(0, p.hp - e.damage);
-            pushLog(`HIT for ${e.damage} (hp ${p.hp})`, '#f44');
+            pushLog(`HIT for ${e.damage} (hp ${p.hp})${e.attack.knockdown ? ' — KNOCKED DOWN' : ''}`, '#f44');
             if (p.hp <= 0) {
               pushLog('player down — R to reset', '#f44');
             }
             break;
           }
+          case 'vulnerable_open':
+            pushLog(`VULNERABLE ×${e.mult} while recovery plays — punish window`, '#4fd');
+            break;
           case 'hit_dodged':
             pushLog('dodged through the window (i-frames)', '#4f8');
             break;
           case 'window_close':
             pushLog('window closed', '#666');
+            break;
+          case 'projectile_fired':
+            pushLog(`projectile '${e.attack.id}' fired`, '#fc3');
+            break;
+          case 'lob_fired':
+            pushLog(`grenade '${e.attack.id}' lobbed`, '#f63');
+            break;
+          case 'lob_landed':
+            pushLog(`grenade landed (AoE r=${e.attack.hit_reach})`, '#f63');
+            break;
+          case 'leap_landed':
+            pushLog(`belly flop landed (AoE r=${e.attack.hit_reach})`, '#f96');
+            break;
+          case 'berserk':
+            pushLog('LEADER DOWN — berserk: confusion spin, then kamikaze', '#f4f');
+            break;
+          case 'exploded':
+            pushLog('kamikaze contact — EXPLODED (shooter destroyed) — R to reset', '#f4f');
             break;
           case 'attack_end':
             pushLog(`attack '${e.attack.id}' end → loaf`, '#889');
@@ -500,10 +570,20 @@ export default function EnemyRoom() {
 
         // Enemy animation: crossfade to sim.anim's resolved clip.
         if (s.mixer) {
-          const clip = resolveClip(s.clips, sim.anim) ?? resolveClip(s.clips, 'wat') ?? resolveClip(s.clips, 'stt');
+          // run→wlk mirrors the runtime's "unresolved play keeps the previous
+          // clip" behavior for rigs without a run clip (swordman/tank).
+          const clip =
+            resolveClip(s.clips, sim.anim) ??
+            (sim.anim === 'run' ? resolveClip(s.clips, 'wlk') : null) ??
+            resolveClip(s.clips, 'wat') ??
+            resolveClip(s.clips, 'stt');
           if (clip && clip.name !== s.currentClipName) {
             const action = s.mixer.clipAction(clip);
-            const looping = sim.state !== 'attacking' && sim.state !== 'hurt';
+            // Charge loop segments repeat while the charge travels (bigrig
+            // _lp suffixes AND explicit segments like the roller's wat3).
+            const looping =
+              (sim.state !== 'attacking' && sim.state !== 'hurt') ||
+              sim.currentAttack?.charge?.phase === 'lp';
             action.reset();
             action.setLoop(looping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
             action.clampWhenFinished = true;
@@ -512,7 +592,13 @@ export default function EnemyRoom() {
             s.currentAction = action;
             s.currentClipName = clip.name;
           }
-          s.mixer.update(clock.dt);
+          // Box-mimic disguise: hold the clip's first frame (the boxed pose).
+          if (sim.animHold && s.currentAction) {
+            s.currentAction.time = 0;
+            s.mixer.update(0);
+          } else {
+            s.mixer.update(clock.dt);
+          }
         }
       } else if (s.mixer && sim.state === 'attacking' && sim.currentAttack && s.currentAction) {
         // Paused scrub: keep action time in sync with the sim's attack t.
@@ -526,12 +612,53 @@ export default function EnemyRoom() {
       const invNow = p.dodgeTimer > DODGE_DURATION - DODGE_IFRAME_DURATION;
       s.playerBodyMat.color.setHex(invNow ? 0x88ffcc : p.dodgeTimer > 0 ? 0x2288aa : 0x44ccff);
 
-      s.enemyGroup.position.set(sim.pos.x, 0, sim.pos.z);
+      // Leap gets a visual hop (parabola over the damaging window).
+      let hopY = 0;
+      const atkNow = sim.currentAttack;
+      if (atkNow?.leap && atkNow.windowOpened && !atkNow.windowClosed) {
+        const ws = atkNow.def.windup_frac * atkNow.duration;
+        const we = atkNow.def.damage_end_frac * atkNow.duration;
+        const f = Math.min(Math.max((atkNow.t - ws) / (we - ws), 0), 1);
+        hopY = 3.0 * f * (1 - f);
+      }
+      s.enemyGroup.position.set(sim.pos.x, sim.altitude + hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
+      s.enemyGroup.scale.setScalar(e.model_scale); // poison lily's GLB needs 0.09
+      s.enemyGroup.visible = !sim.exploded; // kamikaze self-destruct
+      // Roller ball travel: the curled clip has no motion of its own — the
+      // engine rotates it (spec §roller). Forward tumble while lp plays.
+      if (atkNow?.charge?.phase === 'lp' && atkNow.def.charge_segments) {
+        s.enemyGroup.rotation.x += clock.dt * 8;
+      } else {
+        s.enemyGroup.rotation.x = 0;
+      }
       for (const ring of [s.detectionRing, s.attackRing, s.chargeRing]) {
         ring.position.x = sim.pos.x;
         ring.position.z = sim.pos.z;
       }
+
+      // Ranged deliveries: sync pools to the sim's in-flight lists.
+      s.projPool.forEach((m, i) => {
+        const p = sim.projectiles[i];
+        m.visible = !!p;
+        if (p) m.position.set(p.pos.x, 0.9, p.pos.z);
+      });
+      s.lobBallPool.forEach((m, i) => {
+        const l = sim.lobs[i];
+        m.visible = !!l;
+        if (l) {
+          const f = 1 - l.timer / l.flightTime;
+          const x = l.from.x + (l.target.x - l.from.x) * f;
+          const z = l.from.z + (l.target.z - l.from.z) * f;
+          m.position.set(x, 0.9 + 4.5 * f * (1 - f), z); // parabola
+        }
+        const ring = s.lobRingPool[i];
+        ring.visible = !!l;
+        if (l) {
+          ring.position.x = l.target.x;
+          ring.position.z = l.target.z;
+        }
+      });
 
       // Attack arc overlay
       const atk = sim.currentAttack;
@@ -544,11 +671,10 @@ export default function EnemyRoom() {
         }
         s.arc.position.set(sim.pos.x, 0, sim.pos.z);
         s.arc.rotation.y = Math.atan2(atk.facing.x, atk.facing.z);
-        const frac = atk.t / atk.duration;
-        if (frac < atk.def.windup_frac) {
+        if (!atk.windowOpened) {
           s.arcMat.color.setHex(0xffee44); // telegraph
           s.arcMat.opacity = 0.18;
-        } else if (frac <= atk.def.damage_end_frac) {
+        } else if (!atk.windowClosed) {
           s.arcMat.color.setHex(0xff3333); // damaging window
           s.arcMat.opacity = 0.35;
         } else {
@@ -706,7 +832,7 @@ export default function EnemyRoom() {
             </span>{' '}
             {hud.hp} {hud.dodging && <span style={{ color: '#4f8' }}>· dodging</span>}
           </div>
-          <div style={{ color: '#667', marginTop: 4 }}>WASD move · Space dodge · H hit enemy · P pause · R reset</div>
+          <div style={{ color: '#667', marginTop: 4 }}>WASD move · Space dodge · H hit enemy · B kill leader · P pause · R reset</div>
         </div>
         {/* Log */}
         <div style={{ position: 'absolute', bottom: 10, left: 10, fontFamily: 'monospace', fontSize: 11, pointerEvents: 'none' }}>
@@ -752,14 +878,28 @@ export default function EnemyRoom() {
         {(loadError || modelError) && (
           <div style={{ position: 'absolute', top: '40%', width: '100%', textAlign: 'center', color: '#f66' }}>{loadError || modelError}</div>
         )}
+        {!archetype && (
+          <div style={{ position: 'absolute', top: '40%', width: '100%', textAlign: 'center', color: '#f66' }}>
+            unknown archetype '{archetypeId}' — <Link to="/enemy-room" style={{ color: '#6bf' }}>pick one</Link>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
       <div style={{ width: 340, overflowY: 'auto', padding: 12, background: '#12122a', fontSize: 12 }}>
-        <h3 style={{ margin: '0 0 8px' }}>Enemy Room</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <h3 style={{ margin: '0 0 4px' }}>{archetype?.label ?? archetypeId} Room</h3>
+          <Link to="/enemy-room" style={{ color: '#6bf', fontSize: 11 }}>all archetypes</Link>
+        </div>
+        {archetype && (
+          <>
+            <div style={{ color: '#9ab', fontSize: 11, marginBottom: 4 }}>{archetype.blurb}</div>
+            <div style={{ color: '#786', fontSize: 10, marginBottom: 8, fontStyle: 'italic' }}>{archetype.simNote}</div>
+          </>
+        )}
         <select
           value={enemyId}
-          onChange={(ev) => setStored((prev) => ({ ...prev, enemyId: ev.target.value }))}
+          onChange={(ev) => setEnemyId(ev.target.value)}
           style={{ width: '100%', padding: 6, marginBottom: 8, background: '#1a1a3a', color: '#fff', border: '1px solid #334' }}
         >
           {grouped.map(([label, ids]) => (
@@ -793,10 +933,30 @@ export default function EnemyRoom() {
         {sliderRow('loaf_duration_min', entry.fsm.loaf_duration_min, 0.5, 6, 0.1, (v) => setFsm('loaf_duration_min', v))}
         {sliderRow('loaf_duration_max', entry.fsm.loaf_duration_max, 0.5, 8, 0.1, (v) => setFsm('loaf_duration_max', v))}
         {sliderRow('attack_fallback_dur', entry.fsm.attack_fallback_duration, 0.2, 3, 0.05, (v) => setFsm('attack_fallback_duration', v))}
+        {entry.archetype === 'quad_machine' &&
+          sliderRow('standoff_range', entry.fsm.standoff_range, 1, 14, 0.5, (v) => setFsm('standoff_range', v))}
+        {entry.archetype === 'flyer_combo' && (
+          <>
+            {sliderRow('orbit (standoff)', entry.fsm.standoff_range, 1, 8, 0.25, (v) => setFsm('standoff_range', v))}
+            {sliderRow('hover_height', entry.fsm.hover_height, 0, 3, 0.1, (v) => setFsm('hover_height', v))}
+          </>
+        )}
+        {entry.archetype === 'roller' &&
+          sliderRow('standoff_range', entry.fsm.standoff_range, 2, 10, 0.25, (v) => setFsm('standoff_range', v))}
+        {entry.archetype === 'box_mimic' &&
+          sliderRow('reveal_range', entry.fsm.reveal_range, 1, 8, 0.25, (v) => setFsm('reveal_range', v))}
 
         <h4 style={h4Style}>Attacks ({entry.attacks.length})</h4>
         {entry.attacks.map((a, i) => {
-          const resolved = resolveClip(sceneRef.current?.clips ?? [], a.clip);
+          const clips = sceneRef.current?.clips ?? [];
+          const isCharge = a.kind === 'charge';
+          // Charge kind resolves its st/lp/ed segments (suffix-derived or
+          // explicit charge_segments), not the base token.
+          const segTokens = a.charge_segments ?? { st: `${a.clip}_st`, lp: `${a.clip}_lp`, ed: `${a.clip}_ed` };
+          const resolved = isCharge ? resolveClip(clips, segTokens.lp) : resolveClip(clips, a.clip);
+          const chargeSegs = isCharge
+            ? (['st', 'lp', 'ed'] as const).map((k) => resolveClip(clips, segTokens[k])?.name ?? `${segTokens[k]}?`)
+            : null;
           return (
             <div key={i} style={{ border: '1px solid #334', borderRadius: 6, padding: 8, marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -825,9 +985,39 @@ export default function EnemyRoom() {
                 </select>
               </div>
               <div style={{ fontSize: 10, color: resolved ? '#667' : '#f66', marginBottom: 4 }}>
-                {resolved
-                  ? `→ ${resolved.name} (${resolved.duration.toFixed(2)}s)`
-                  : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
+                {chargeSegs
+                  ? `→ segments: ${chargeSegs.join(' · ')}`
+                  : resolved
+                    ? `${a.windup_clips?.length ? `windup: ${a.windup_clips.join(' · ')} → ` : '→ '}${resolved.name} (${resolved.duration.toFixed(2)}s)`
+                    : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
+              </div>
+              {entry.clip_notes[a.clip] && (
+                <div style={{ fontSize: 10, color: '#9ab', marginBottom: 4, fontStyle: 'italic' }}>
+                  {entry.clip_notes[a.clip]}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ width: 60, fontSize: 11, color: '#aab' }}>tech</span>
+                <input
+                  value={a.tech ?? ''}
+                  placeholder="— (not a tech cast)"
+                  onChange={(ev) => setAttack(i, { tech: ev.target.value || undefined })}
+                  style={{ flex: 1, background: '#1a1a3a', color: '#9cf', border: '1px solid #334', padding: 2, fontSize: 11 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ width: 60, fontSize: 11, color: '#aab' }}>kind</span>
+                <select
+                  value={a.kind ?? 'melee_arc'}
+                  onChange={(ev) => setAttack(i, { kind: ev.target.value as AttackDef['kind'] })}
+                  style={{ flex: 1, background: '#1a1a3a', color: '#fff', border: '1px solid #334', padding: 2 }}
+                >
+                  <option value="melee_arc">melee_arc</option>
+                  <option value="projectile">projectile</option>
+                  <option value="lob">lob (grenade AoE)</option>
+                  <option value="charge">charge (st/lp/ed, moves)</option>
+                  <option value="leap">leap (AoE on landing)</option>
+                </select>
               </div>
               {sliderRow('weight', a.weight, 0.1, 10, 0.1, (v) => setAttack(i, { weight: v }))}
               {sliderRow('min_range', a.min_range, 0, 12, 0.1, (v) => setAttack(i, { min_range: v }))}

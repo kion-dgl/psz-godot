@@ -8,7 +8,11 @@
       "loaf_duration_min": 2.5,
       "loaf_duration_max": 4.0,
       "hurt_duration": 0.3,
-      "attack_fallback_duration": 0.8
+      "attack_fallback_duration": 0.8,
+      "standoff_range": 6.0,
+      "hover_height": 0.0,
+      "reveal_range": 3.5,
+      "stationary": false
     },
     "attack": {
       "windup_frac": 0.35,
@@ -23,6 +27,7 @@
   },
   "enemies": {
     "akorse": {
+      "archetype": "shooter",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -30,23 +35,51 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "kamikaze",
+          "clip": "atk_ji",
+          "kind": "melee_arc",
+          "berserk_only": true,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 0.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.5,
+          "damage_mult": 2.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "shooting attack (the normal-mode projectile)",
+        "atk_an": "confused, spinning \u2014 plays once after losing the leader (the berserk trigger display)",
+        "atk_ji": "lunge attack toward the character \u2014 LOOPED while diving at the player in berserk; explodes on contact",
+        "run": "moving (standoff adjustments)",
+        "wat": "wait (holding at standoff)",
+        "stt": "start (semantics unconfirmed). Akorse is the LEADER (PSO Canane analog) \u2014 its death triggers the followers' berserk (#495)",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "ar_rappy": {
+      "archetype": "rappy",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -71,6 +104,7 @@
       ]
     },
     "arkzein": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -95,6 +129,7 @@
       ]
     },
     "arkzein_r": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -119,6 +154,7 @@
       ]
     },
     "azherowa_b2": {
+      "archetype": "quad_machine",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -126,23 +162,51 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 6.0
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "shot",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 3.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "grenade",
+          "clip": "atkb",
+          "kind": "lob",
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 4.0,
+          "max_range": 12.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.6,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "projectile shot (released at the damaging-window open)",
+        "atkb": "grenade lob \u2014 area damage where it lands",
+        "wlk_f": "hover strafe forward (closing) \u2014 body keeps facing the target",
+        "wlk_b": "hover strafe backward (retreating out of melee reach)",
+        "wlk_l": "hover strafe left",
+        "wlk_r": "hover strafe right",
+        "wat": "hover idle",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "batt": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -167,6 +231,7 @@
       ]
     },
     "blade_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -191,6 +256,7 @@
       ]
     },
     "blaze_helion": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -215,6 +281,7 @@
       ]
     },
     "bolix": {
+      "archetype": "box_mimic",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -222,23 +289,37 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "reveal_range": 3.5
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "strike",
           "clip": "atk",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "attack",
+        "stt": "pokes head out of box to become active \u2014 while DORMANT the mimic holds this clip's first frames (fully boxed)",
+        "tk1": "idles with head out of box (active idle)",
+        "tk2": "partially comes out of box, but retreats \u2014 authored as the reveal-cancel when the player backs off mid-reveal (kion's theory)",
+        "wlk1": "walking (active locomotion)",
+        "wlk2": "box sways around \u2014 authored as the rare disguised-movement tell (kion: 'the game might give subtle hints'; uncertain)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "booma_origin": {
+      "archetype": "bruiser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -263,6 +344,7 @@
       ]
     },
     "bullbatt": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -287,6 +369,7 @@
       ]
     },
     "chaos_mobius": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -311,6 +394,7 @@
       ]
     },
     "dark_falz": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -335,6 +419,7 @@
       ]
     },
     "derreo": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -359,6 +444,7 @@
       ]
     },
     "eulada": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -383,6 +469,7 @@
       ]
     },
     "euladaveil": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -407,6 +494,7 @@
       ]
     },
     "eulid": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -431,6 +519,7 @@
       ]
     },
     "eulidveil": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -455,6 +544,7 @@
       ]
     },
     "finjer_b": {
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -479,6 +569,7 @@
       ]
     },
     "finjer_g": {
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -503,6 +594,7 @@
       ]
     },
     "finjer_r": {
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -527,6 +619,7 @@
       ]
     },
     "force_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -551,6 +644,7 @@
       ]
     },
     "froutang": {
+      "archetype": "ape_gunner",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -561,20 +655,65 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "pistol_shot",
+          "clip": "atcksht",
+          "kind": "projectile",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 9.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "pistol_shot_alt",
+          "clip": "atcktuki",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 7.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 7.0,
+          "damage_mult": 1.1
+        },
+        {
+          "id": "charged_punch",
+          "clip": "atckswg",
+          "kind": "melee_arc",
+          "windup_clips": [
+            "atckstt",
+            "atckwat"
+          ],
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.4,
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atcksht": "the shoot attack (pistol)",
+        "atcktuki": "looks like a DIFFERENT shoot attack (kion \u2014 uncertain, authored as a second projectile variant)",
+        "atckstt": "charged punch: winds up (telegraph segment 1)",
+        "atckwat": "charged punch: holds the charge (telegraph segment 2)",
+        "atckswg": "charged punch: the swing (the damaging clip)",
+        "stt": "goes from sitting down to stand up (aggro start animation)",
+        "wat": "wait \u2014 scratches stomach",
+        "wlk": "walk",
+        "wtclp": "raises hands above head, maybe intimidation \u2014 UNUSED pending confirmation (open question)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "frunaked": {
+      "archetype": "ape_gunner",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -585,20 +724,65 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "pistol_shot",
+          "clip": "atcksht",
+          "kind": "projectile",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 9.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "pistol_shot_alt",
+          "clip": "atcktuki",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 7.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 7.0,
+          "damage_mult": 1.1
+        },
+        {
+          "id": "charged_punch",
+          "clip": "atckswg",
+          "kind": "melee_arc",
+          "windup_clips": [
+            "atckstt",
+            "atckwat"
+          ],
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.4,
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atcksht": "the shoot attack (pistol)",
+        "atcktuki": "looks like a DIFFERENT shoot attack (kion \u2014 uncertain, authored as a second projectile variant)",
+        "atckstt": "charged punch: winds up (telegraph segment 1)",
+        "atckwat": "charged punch: holds the charge (telegraph segment 2)",
+        "atckswg": "charged punch: the swing (the damaging clip)",
+        "stt": "goes from sitting down to stand up (aggro start animation)",
+        "wat": "wait \u2014 scratches stomach",
+        "wlk": "walk",
+        "wtclp": "raises hands above head, maybe intimidation \u2014 UNUSED pending confirmation (open question)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "garahadan": {
+      "archetype": "stance_riser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -609,20 +793,44 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "normal",
+          "clip": "atk1",
+          "weight": 3.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "strong",
+          "clip": "atk2",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 45.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "normal attack, launched from the wat2 (raised) pose",
+        "atk2": "strong attack, launched from the wat2 (raised) pose",
+        "ded": "dying",
+        "dmg": "taking damage",
+        "stt": "rise transition: wlk (low) -> wat2 (attack-ready)",
+        "wat1": "idle, low to the ground (player not around)",
+        "wat2": "attack-ready idle (raised)",
+        "wlk": "slithering locomotion",
+        "wt2w": "lower transition: wat2 -> wlk without attacking"
+      }
     },
     "garapython": {
+      "archetype": "stance_riser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -633,20 +841,44 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "normal",
+          "clip": "atk1",
+          "weight": 3.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "strong",
+          "clip": "atk2",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 45.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "normal attack, launched from the wat2 (raised) pose",
+        "atk2": "strong attack, launched from the wat2 (raised) pose",
+        "ded": "dying",
+        "dmg": "taking damage",
+        "stt": "rise transition: wlk (low) -> wat2 (attack-ready)",
+        "wat1": "idle, low to the ground (player not around)",
+        "wat2": "attack-ready idle (raised)",
+        "wlk": "slithering locomotion",
+        "wt2w": "lower transition: wat2 -> wlk without attacking"
+      }
     },
     "ghowl": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -671,6 +903,7 @@
       ]
     },
     "gigobooma_origin": {
+      "archetype": "bruiser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -695,6 +928,7 @@
       ]
     },
     "goldix": {
+      "archetype": "box_mimic",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -702,23 +936,37 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "reveal_range": 3.5
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "strike",
           "clip": "atk",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "attack",
+        "stt": "pokes head out of box to become active \u2014 while DORMANT the mimic holds this clip's first frames (fully boxed)",
+        "tk1": "idles with head out of box (active idle)",
+        "tk2": "partially comes out of box, but retreats \u2014 authored as the reveal-cancel when the player backs off mid-reveal (kion's theory)",
+        "wlk1": "walking (active locomotion)",
+        "wlk2": "box sways around \u2014 authored as the rare disguised-movement tell (kion: 'the game might give subtle hints'; uncertain)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "grimble": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -740,9 +988,19 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "helion": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -767,6 +1025,7 @@
       ]
     },
     "hildegao": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -777,20 +1036,60 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "hildeghana": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -801,20 +1100,60 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "hildegigas": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -825,20 +1164,60 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "humilias": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -863,6 +1242,7 @@
       ]
     },
     "hypao": {
+      "archetype": "two_attack",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -873,20 +1253,45 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "tail_swipe",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 70.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "cast_barta",
+          "clip": "atk2",
+          "kind": "projectile",
+          "tech": "barta",
+          "weight": 1.5,
+          "min_range": 2.5,
+          "max_range": 8.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 8.0,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "tail swipe (close range)",
+        "wat": "idle",
+        "wlk": "locomotion",
+        "dmg": "taking damage",
+        "ded": "dead",
+        "stt": "(semantics unconfirmed)",
+        "atk2": "cast tech animation (barta-family) \u2014 Hypao casts Barta"
+      }
     },
     "izhirak_s6": {
+      "archetype": "quad_machine",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -894,23 +1299,51 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 6.0
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "shot",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 3.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "grenade",
+          "clip": "atkb",
+          "kind": "lob",
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 4.0,
+          "max_range": 12.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.6,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "projectile shot (released at the damaging-window open)",
+        "atkb": "grenade lob \u2014 area damage where it lands",
+        "wlk_f": "hover strafe forward (closing) \u2014 body keeps facing the target",
+        "wlk_b": "hover strafe backward (retreating out of melee reach)",
+        "wlk_l": "hover strafe left",
+        "wlk_r": "hover strafe right",
+        "wat": "hover idle",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "kapantha": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -932,9 +1365,19 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "korse": {
+      "archetype": "shooter",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -942,23 +1385,51 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 10.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 10.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "kamikaze",
+          "clip": "atk_ji",
+          "kind": "melee_arc",
+          "berserk_only": true,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 0.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 1.5,
+          "damage_mult": 2.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "shooting attack (the normal-mode projectile)",
+        "atk_an": "confused, spinning \u2014 plays once after losing the leader (the berserk trigger display)",
+        "atk_ji": "lunge attack toward the character \u2014 LOOPED while diving at the player in berserk; explodes on contact",
+        "run": "moving (standoff adjustments)",
+        "wat": "wait (holding at standoff)",
+        "stt": "start (semantics beyond that unconfirmed)",
+        "dmg": "taking damage",
+        "ded": "dying"
+      }
     },
     "mother_trinity": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -983,6 +1454,7 @@
       ]
     },
     "octo_diablo": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1007,6 +1479,7 @@
       ]
     },
     "pelcatobur": {
+      "archetype": "flyer_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1014,23 +1487,64 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "hover_height": 1.3,
+        "standoff_range": 2.5
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "beak",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "gust",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 1.5,
+          "max_range": 4.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.5,
+          "damage_mult": 0.8
+        },
+        {
+          "id": "wing_swipe",
+          "clip": "atk3",
+          "kind": "melee_arc",
+          "weight": 2.0,
+          "min_range": 0.0,
+          "max_range": 2.5,
+          "windup_frac": 0.35,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "attack with beak",
+        "atk2": "flapping wings \u2014 UNCERTAIN: maybe a gust attack? (authored provisionally as a wide weak mid-range arc)",
+        "atk3": "wing swipe attack",
+        "fly": "flaps wings to propel forward (approach locomotion)",
+        "tk": "flaps wings to move around or turn (hover / orbit locomotion)",
+        "stt": "start, from idle \u2014 takes flight into the air (takeoff on aggro)",
+        "dmg": "take damage",
+        "ded": "dead"
+      }
     },
     "pelcatraz": {
+      "archetype": "flyer_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1038,23 +1552,64 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "hover_height": 1.3,
+        "standoff_range": 2.5
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "beak",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "gust",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 1.5,
+          "max_range": 4.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.5,
+          "damage_mult": 0.8
+        },
+        {
+          "id": "wing_swipe",
+          "clip": "atk3",
+          "kind": "melee_arc",
+          "weight": 2.0,
+          "min_range": 0.0,
+          "max_range": 2.5,
+          "windup_frac": 0.35,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "attack with beak",
+        "atk2": "flapping wings \u2014 UNCERTAIN: maybe a gust attack? (authored provisionally as a wide weak mid-range arc)",
+        "atk3": "wing swipe attack",
+        "fly": "flaps wings to propel forward (approach locomotion)",
+        "tk": "flaps wings to move around or turn (hover / orbit locomotion)",
+        "stt": "start, from idle \u2014 takes flight into the air (takeoff on aggro)",
+        "dmg": "take damage",
+        "ded": "dead"
+      }
     },
     "phobos": {
+      "archetype": "missile_tank",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1079,6 +1634,7 @@
       ]
     },
     "phobos_dyna": {
+      "archetype": "missile_tank",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1103,6 +1659,7 @@
       ]
     },
     "pobomma": {
+      "archetype": "hopper",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1113,20 +1670,32 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "poison_lily": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 0.0,
         "attack_range": 3.0,
@@ -1134,23 +1703,51 @@
         "detection_range": 12.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "stationary": true
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "bite",
+          "clip": "attack_re2_b_root",
+          "kind": "melee_arc",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 3.0
+          "max_range": 3.0,
+          "windup_frac": 0.5,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "poison_spit",
+          "clip": "attack_re2_b_root",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.5,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 5.0,
+          "hit_reach": 18.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "attack_re2_b_root": "the attack clip \u2014 melee bite within 3m, poison projectile beyond; damage/projectile released at the clip MIDPOINT (backported from poison_lily.gd)",
+        "waitc_re2_b_root": "sleeping idle (closed) \u2014 loops while no target within detection range",
+        "wake_re2_b_root": "wake-up transition \u2014 plays once on detection or on being hit while asleep",
+        "waito_re2_b_root": "awake idle (open) \u2014 loops while engaged, rotating to face the target",
+        "damege_re2_b_root": "take damage (source clip name misspells 'damage')",
+        "die_re2_b_root": "die",
+        "laugh_re2_b_root": "laugh \u2014 unused by the implementation (open question)"
+      },
+      "model_scale": 0.09,
+      "idle_clip": "waito_re2_b_root"
     },
     "pomarr": {
+      "archetype": "hopper",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1161,20 +1758,32 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "porel": {
+      "archetype": "hopper",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1185,20 +1794,32 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "bubble",
           "clip": "atk",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 2.0,
+          "max_range": 6.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 6.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "shoots a bubble projectile at the player (definite \u2014 kion); whether a melee attack also exists is an open question (it would share this clip)",
+        "jmp": "leap \u2014 hop locomotion, behavior not yet authored",
+        "tur": "turn \u2014 hop locomotion, behavior not yet authored",
+        "stt": "(semantics unconfirmed)",
+        "wat": "idle",
+        "wlk": "walk",
+        "dmg": "take damage",
+        "ded": "die"
+      }
     },
     "rab_rappy": {
+      "archetype": "rappy",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1223,6 +1844,7 @@
       ]
     },
     "rappy": {
+      "archetype": "rappy",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1247,6 +1869,7 @@
       ]
     },
     "reyburn": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1271,6 +1894,7 @@
       ]
     },
     "reyhound": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1292,9 +1916,19 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "rohcrysta": {
+      "archetype": "roller",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1302,23 +1936,47 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "roll",
+          "clip": "wat3",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "trf1",
+            "lp": "wat3",
+            "ed": "trf2"
+          },
+          "stop_on_hit": false,
+          "overshoot": 3.0,
+          "knockdown": true,
+          "recovery_vulnerable_mult": 2.0,
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 1.3,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "trf1": "starts to roll into ball (roll windup)",
+        "wat3": "curled into a ball \u2014 the rolling travel pose; the ENGINE rotates it (clip has no motion)",
+        "trf2": "ends roll and falls over \u2014 TAKES MORE DAMAGE during this recovery (the punish window)",
+        "wat1": "idle, standing",
+        "wat2": "idle, lying down",
+        "wlk": "walk (medium-distance adjustments before rolling)",
+        "stt": "become active (aggro display)",
+        "dmg": "take damage",
+        "ded": "dying"
+      }
     },
     "rohjade": {
+      "archetype": "roller",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1326,23 +1984,47 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "roll",
+          "clip": "wat3",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "trf1",
+            "lp": "wat3",
+            "ed": "trf2"
+          },
+          "stop_on_hit": false,
+          "overshoot": 3.0,
+          "knockdown": true,
+          "recovery_vulnerable_mult": 2.0,
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 1.3,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "trf1": "starts to roll into ball (roll windup)",
+        "wat3": "curled into a ball \u2014 the rolling travel pose; the ENGINE rotates it (clip has no motion)",
+        "trf2": "ends roll and falls over \u2014 TAKES MORE DAMAGE during this recovery (the punish window)",
+        "wat1": "idle, standing",
+        "wat2": "idle, lying down",
+        "wlk": "walk (medium-distance adjustments before rolling)",
+        "stt": "become active (aggro display)",
+        "dmg": "take damage",
+        "ded": "dying"
+      }
     },
     "rumole": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1367,6 +2049,7 @@
       ]
     },
     "shinowa": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 4.0,
         "attack_range": 2.5,
@@ -1391,6 +2074,7 @@
       ]
     },
     "shot_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1415,6 +2099,7 @@
       ]
     },
     "stagg": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1436,9 +2121,19 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "tormatible": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1460,9 +2155,19 @@
           "min_range": 0.0,
           "max_range": 2.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "wlk_l": "arc walk, head turned LEFT \u2014 play when the target is on the enemy's left; never used to walk straight",
+        "wlk_r": "arc walk, head turned RIGHT \u2014 play when the target is on the enemy's right; never used to walk straight",
+        "stt": "dashing charge, straight line at the target \u2014 the only straight-forward locomotion for this rig",
+        "atk": "bite/strike on arrival",
+        "dmg": "taking damage",
+        "ded": "dying",
+        "wat": "idle"
+      }
     },
     "usanimere": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1487,6 +2192,7 @@
       ]
     },
     "usanny": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1511,6 +2217,7 @@
       ]
     },
     "vespao": {
+      "archetype": "two_attack",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1521,20 +2228,45 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "tail_swipe",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 70.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "cast_gibarta",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "tech": "gibarta",
+          "weight": 1.5,
+          "min_range": 1.5,
+          "max_range": 5.5,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 5.5,
+          "damage_mult": 1.4
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "tail swipe (close range)",
+        "wat": "idle",
+        "wlk": "locomotion",
+        "dmg": "taking damage",
+        "ded": "dead",
+        "stt": "(semantics unconfirmed)",
+        "atk2": "cast tech animation (barta-family) \u2014 Vespao casts the upgraded tech: gibarta authored, rabarta the open alternative (kion)"
+      }
     },
     "vulkure": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1559,6 +2291,7 @@
       ]
     },
     "zaphobos": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1583,6 +2316,7 @@
       ]
     },
     "zaphobos_dyna": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1607,6 +2341,7 @@
       ]
     },
     "zerreo": {
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,

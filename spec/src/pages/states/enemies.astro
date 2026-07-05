@@ -60,7 +60,16 @@ const fsm = `stateDiagram-v2
   </table>
 
   <h3>Attack recovery — no wedging (#477)</h3>
-  <p>The <strong>ATTACKING → LOAFING</strong> transition is keyed on the attack animation ending, and the source models are inconsistent about what that animation is called (<code>_atk</code>, <code>_atk1</code>, misspelled <code>_atckwat</code>, or absent entirely — the big <code>b_*</code> rigs are the usual offenders). That naming variance <strong>MUST NOT</strong> be able to strand the state machine:</p>
+  <p>The <strong>ATTACKING → LOAFING</strong> transition is keyed on the attack animation ending, and the source models are inconsistent about what that animation is called (<code>_atk</code>, <code>_atk1</code>, misspelled <code>_atckwat</code>, suffix variants like <code>_atk_pu</code> / <code>_atk_sh</code> / <code>_atk_a</code>, or absent entirely — the big <code>b_*</code> rigs are the usual offenders). That naming variance <strong>MUST NOT</strong> be able to strand the state machine:</p>
+
+  <p>The attack-clip <strong>resolution order</strong> is normative (tool and runtime MUST resolve identically — see <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>):</p>
+  <ol>
+    <li>Exact clip name equal to the token.</li>
+    <li>Any clip ending in <code>_&lt;token&gt;</code>.</li>
+    <li>The alias table (<code>atk</code> → <code>atk1</code>, <code>atckwat</code>; <code>dmg</code> → <code>dam</code> — five rigs name their damage clip <code>dam</code>: booma, swordman, tank, orangutan, shrimp).</li>
+    <li><em>Attack only</em> — last-resort scan: any clip with an exact <code>atk</code> underscore-segment (<code>b062_atk_pu</code>, <code>b052_atk_sh</code>, <code>m061_atk_a</code>, <code>b072_atk_sa_a</code>…) qualifies, <strong>excluding</strong> clips whose final segment is <code>st</code>, <code>lp</code>, or <code>ed</code> — those are segmented charge-up/loop/end pieces (<code>m051_atk_sp_lp</code>, <code>b072_atk_gu_a_st</code>) and playing one alone shows a partial attack. Among qualifiers the alphabetically first <strong>MUST</strong> be picked, so resolution is deterministic per rig.</li>
+    <li>Nothing resolves → the fixed fallback duration (below). A rig whose only attack clips are segmented pieces (boss_robot's <code>z003_atk_dl_lp</code>) <strong>MUST</strong> take this path rather than play a bare segment.</li>
+  </ol>
   <ul>
     <li>ATTACKING <strong>MUST</strong> terminate for <em>every</em> model, whatever its attack animation is named — including models with <strong>no resolvable attack animation at all</strong>, which <strong>MUST</strong> recover after a fixed fallback duration instead.</li>
     <li>Attack end <strong>MUST</strong> be detected against the <em>resolved</em> animation that was actually played (or by observing that it is no longer playing), <strong>MUST NOT</strong> rely on parsing a name suffix back out of the <code>animation_finished</code> signal.</li>
@@ -68,6 +77,106 @@ const fsm = `stateDiagram-v2
     <li>Player contact <strong>MUST NOT</strong> freeze an enemy: while the player stands against (or overlaps) an enemy of any size, its state machine and animation <strong>MUST</strong> keep advancing — attack, loaf, and chase cycles continue exactly as at range. Large and small enemies <strong>MUST</strong> behave identically under contact, differing only in authored stats.</li>
   </ul>
   <p>What happens <em>inside</em> ATTACKING — attack selection, the windup → damaging-window timeline, and the arc hit shape — is defined in <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>.</p>
+
+  <h3>Archetype: Quadruped circler (normative)</h3>
+  <p>Applies to enemies with <code>archetype: quadruped</code> (wolf, hyena, deer, tiger rigs — Reyhound, Grimble, Tormatible, Stagg, Kapantha). Their <code>wlk_l</code> / <code>wlk_r</code> clips have the <strong>head turned</strong> to that side, so straight-ahead walking reads visibly wrong:</p>
+  <ul>
+    <li>While CHASING outside the charge ring, a quadruped <strong>MUST NOT</strong> walk straight toward its target. It <strong>MUST</strong> approach on an arc (circling / spiraling in), and the walk clip <strong>MUST</strong> match the geometry: <code>wlk_l</code> when the target is on the enemy's left, <code>wlk_r</code> when on its right — the turned head faces the target.</li>
+    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — the generic <code>wat → stt</code> alias never fires here since these rigs have a real <code>wat</code>.)</li>
+    <li>The arc side MAY change over time (re-picked on wander-like timers); a dash that loses its target (distance grows past ~1.5× the charge ring) SHOULD fall back to arcing.</li>
+  </ul>
+  <p><em>Current Godot runtime diverges</em>: it walks straight and fakes circling by alternating <code>wlk_l</code>/<code>wlk_r</code> on a timer (<code>_walk_variant_timer</code>) — that hack is retired when this contract is implemented (the enemy-attacks runtime PR). The #/enemy-room quadruped room implements this contract as the reference. Per-enemy quirks (Kapantha SHOULD prefer attacking from behind) and rare-as-leader pack behavior are open design — see the pack-behavior issue.</p>
+
+  <h3>Archetype: Quad machine — hover kiter (normative)</h3>
+  <p>Applies to <code>archetype: quad_machine</code> (quad rigs — Izhirak-S6, Azherowa-B2). These robots <strong>hover</strong>: four directional walks (<code>wlk_f</code>/<code>wlk_b</code>/<code>wlk_l</code>/<code>wlk_r</code>) are strafes relative to a body that keeps facing its target.</p>
+  <ul>
+    <li>While engaged, a quad machine's <strong>facing MUST stay on the target</strong> — it never turns its body to travel. Movement is strafing, and the clip <strong>MUST</strong> match the movement direction <em>relative to facing</em>: <code>wlk_f</code> closing, <code>wlk_b</code> retreating, <code>wlk_l</code>/<code>wlk_r</code> lateral.</li>
+    <li>It <strong>MUST</strong> hold a <strong>standoff band</strong> around <code>fsm.standoff_range</code> to stay out of melee reach: target inside the band → retreat (<code>wlk_b</code>); target beyond it → close (<code>wlk_f</code>); at standoff → strafe laterally (side re-picked on a timer). It <strong>MUST NOT</strong> voluntarily close to melee range.</li>
+    <li>Attacks are ranged, fired from standoff when off cooldown and the target is inside an attack's range band: <code>atk</code> is a <strong>projectile</strong>, <code>atkb</code> <strong>lobs a grenade</strong> (area damage where it lands). Per the shared timing contract, ranged attacks release their projectile at the damaging-window open (<a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a> — attack <code>kind</code>).</li>
+    <li><strong>Counterplay is intentional</strong>: the kiter does no pathfinding escape, so room geometry beats it — backing one into a corner collapses the standoff band and forces melee exposure. An implementation MUST NOT add wall-aware escape routing that defeats cornering.</li>
+  </ul>
+
+  <h3>Archetype: Big-rig combo (Hildegao family) — normative</h3>
+  <p>Applies to <code>archetype: bigrig_combo</code> (gorilla rigs — Hildegao, Hildeghana, Hildegigas). Three authored attacks plus a threat display:</p>
+  <ul>
+    <li><strong>Aggro threat</strong>: on noticing the target (IDLE → CHASING) the gorilla <strong>MUST</strong> play <code>stt</code> — beating its chest — and hold position for the clip before pursuing. (For this family <code>stt</code> is the threat display, not a stand/idle clip; the melee archetypes' equivalent is <code>tht</code>.)</li>
+    <li><strong><code>atk1</code> punch combo</strong> (melee arc): heavy right-handed punch with a quick left uppercut, at melee reach.</li>
+    <li><strong><code>atk2</code> running shoulder slam</strong> — the segmented <code>charge</code> kind: <code>atk2_st</code> is the stationary windup, then <code>atk2_lp</code> <strong>loops while the gorilla charges forward</strong> along the facing locked at attack start, hitting on first contact (arc test each tick, one hit max — an i-frame dodge lets the slam pass by and keep going), ending after the hit or after <code>max_range</code> of travel with the <code>atk2_ed</code> recovery clip. The timeline fractions do not apply to this kind; the segments ARE the timeline.</li>
+    <li><strong><code>atk3</code> belly flop</strong> — the <code>leap</code> kind: the gorilla jumps to the target's position (captured at the damaging-window open), traveling during the window and landing at its close for <strong>area damage</strong> (<code>hit_reach</code> radius); i-frames are tested at landing.</li>
+    <li><strong>Attack trigger, generalized</strong>: CHASING → ATTACKING fires when the cooldown is ready and <em>at least one attack's range band contains the target distance</em> (the slam and flop fire from range). For enemies whose bands all end at melee reach this is identical to the old melee gate.</li>
+  </ul>
+
+  <h3>Archetype: Flyer combo (Pelcatraz family) — normative</h3>
+  <p>Applies to <code>archetype: flyer_combo</code> (roc rigs — Pelcatraz, Pelcatobur). The rig's transitions are sparse (per kion: it feels disconnected, and it felt that way in the original game too — do not over-smooth what the source didn't have):</p>
+  <ul>
+    <li><strong>Takeoff on aggro</strong>: idle is grounded; on noticing the target the roc <strong>MUST</strong> play <code>stt</code> — taking flight — and rise to its hover height before pursuing. (Third meaning of <code>stt</code> so far: quadrupeds dash, gorillas beat their chest, rocs take off — per-archetype clip semantics are the rule, not the exception.)</li>
+    <li><strong>Shoulder-height hover is the design</strong>: while engaged the roc <strong>MUST</strong> stay airborne at roughly the player's shoulder height (<code>fsm.hover_height</code>) — this is what makes it hard to hit with melee weapons, and an implementation MUST NOT ground it during combat.</li>
+    <li><strong>Two locomotion clips</strong>: <code>fly</code> (flaps to propel forward) while closing distance; <code>tk</code> (flaps to move around / turn) while hovering and orbiting near the target (orbit radius = <code>fsm.standoff_range</code>).</li>
+    <li><strong>Attacks from the air</strong>: <code>atk1</code> beak strike and <code>atk3</code> wing swipe are close melee arcs; <code>atk2</code> (flapping wings) is <em>uncertain — possibly a gust attack</em> (kion). Authored provisionally as a wider, weaker mid-range arc; an <strong>explicit open question</strong> until confirmed in-game.</li>
+  </ul>
+
+  <h3>Archetype: Two-attack melee + tech (Hypao family) — normative</h3>
+  <p>Applies to <code>archetype: two_attack</code> (seal rigs — Hypao, Vespao). Standard ground locomotion; two attacks:</p>
+  <ul>
+    <li><strong><code>atk1</code> tail swipe</strong> — close-range melee arc (wide sweep).</li>
+    <li><strong><code>atk2</code> is a tech cast</strong> (barta-family ice). The attack's <code>tech</code> field names the technique, and the Godot runtime <strong>MUST</strong> deliver it through the real technique system (element, freeze procs, tech visuals) — the room sim only approximates the delivery shape via <code>kind</code>.</li>
+    <li><strong>Per-enemy divergence on a shared rig</strong>: Hypao casts <strong>Barta</strong>; Vespao (the rare) SHOULD cast the upgraded family tech — <strong>Gibarta authored; Rabarta is the open alternative</strong> (kion: "gibarta or rabarta"). First case of one rig with two different attack tables — the per-enemy table model exists exactly for this, and it feeds the rare-as-upgraded/leader theme (pack-behavior issue).</li>
+  </ul>
+
+  <h3>Archetype: Roller (Rohjade family) — normative</h3>
+  <p>Applies to <code>archetype: roller</code> (armadillo rigs — Rohjade, Rohcrysta). The rig has <em>no attack clip</em> because the transform sequence IS the attack (sequence per kion's read of the clips — <em>confirm in-game</em>): <code>trf1</code> rolls up → <code>wat3</code> is the curled ball, which <strong>the engine MUST rotate while it travels</strong> (the clip has no motion of its own) → <code>trf2</code> unrolls and <strong>falls over</strong>.</p>
+  <ul>
+    <li><strong>Locomotion</strong>: walks (<code>wlk</code>) at <em>medium distance</em> from the target (<code>fsm.standoff_range</code>), adjusting position until it has a straight path, then rolls. Idles: <code>wat1</code> standing, <code>wat2</code> lying down; <code>stt</code> is "become active" — held on aggro like the other display clips (fourth <code>stt</code> meaning).</li>
+    <li><strong>The roll</strong> is a <code>charge</code>-kind attack with explicit segment clips (<code>charge_segments</code>). It <strong>MUST NOT stop on hitting the player</strong> (<code>stop_on_hit: false</code>) — the same animation plays whether it bowls the player over or hits a wall — and it travels <strong>past</strong> where the target stood at roll start (<code>overshoot</code> meters beyond the start distance, capped by <code>max_range</code>), forcing an evade.</li>
+    <li><strong>Knockdown denies the punish</strong>: a roll hit <strong>MUST</strong> knock the player down (<code>knockdown: true</code>) — a hit player cannot capitalize on what follows. An i-frame dodge avoids the roll entirely.</li>
+    <li><strong>The vulnerability window is the counterplay</strong>: while <code>trf2</code> plays (the fall-over recovery), the roller <strong>MUST take increased damage</strong> (<code>recovery_vulnerable_mult</code>). Evade the roll → punish the sprawl. An implementation MUST NOT shorten or skip this window.</li>
+  </ul>
+
+  <h3>Archetype: Ape gunner (Froutang family) — normative</h3>
+  <p>Applies to <code>archetype: ape_gunner</code> (orangutan rigs — Froutang, Frunaked). <em>Design note (kion)</em>: this family is flagged as the most immersion-breaking content in the game — pistol-wielding monkeys — and is a <strong>candidate for replacement with EP2 enemies</strong>. The behavior is authored regardless, so the game plays correctly until that call is made.</p>
+  <ul>
+    <li><strong>Aggro</strong>: <code>stt</code> goes from sitting to standing — held on aggro like the other display clips (fifth <code>stt</code> meaning). Idle <code>wat</code> scratches its stomach.</li>
+    <li><strong>Two pistol shots</strong>: <code>atcksht</code> is the shoot attack; <code>atcktuki</code> <em>looks like a different shoot attack</em> (kion — uncertain, authored as a second projectile variant pending confirmation).</li>
+    <li><strong>Charged punch is a clip sequence</strong> (kion): <code>atckstt</code> winds up → <code>atckwat</code> holds the charge → <code>atckswg</code> swings. Authored via <code>windup_clips</code>: the windup clips play sequentially as <strong>pure telegraph</strong> (MUST NOT damage), then the swing clip carries the normal damaging window. The long telegraph is the trade for the charged damage.</li>
+    <li><strong><code>wtclp</code></strong> (raises hands above head — maybe intimidation) is <strong>unused pending confirmation</strong> — an open question; a taunt/display slot if it proves real.</li>
+  </ul>
+
+  <h3>Archetype: Box mimic (Bolix family) — normative</h3>
+  <p>Applies to <code>archetype: box_mimic</code> (shrimp rigs — Bolix, Goldix). Hermit-crab behavior: it pretends to be a box and stays hidden until the player gets close, at which point it comes out and attacks. In Paru this is the "cleared the room but the gates won't unlock" moment.</p>
+  <ul>
+    <li><strong>Dormant disguise</strong>: while idle the mimic <strong>MUST</strong> be stationary and disguised — holding the <em>first frames</em> of <code>stt</code> (kion's read: the clip starts fully boxed). It <strong>MUST NOT</strong> wander and <strong>MUST NOT</strong> aggro at <code>detection_range</code> — the disguise overrides normal detection entirely.</li>
+    <li><strong>Reveal</strong>: when the target comes within <code>fsm.reveal_range</code> (much smaller than detection range), the mimic plays <code>stt</code> — poking its head out of the box — as an aggro-display hold (sixth <code>stt</code> meaning), then fights as a normal melee walker: <code>tk1</code> active idle, <code>wlk1</code> walk, <code>atk</code> strike.</li>
+    <li><strong>Reveal-cancel</strong> (kion's theory, authored provisionally): if the target backs out past ~1.5× the reveal range mid-reveal, the mimic plays <code>tk2</code> — partially out, then retreats — and returns to the disguise. Whether it re-hides after a <em>full</em> reveal is an <strong>open question</strong> (authored: it stays active).</li>
+    <li><strong>The sway tell</strong> (uncertain): <code>wlk2</code> — the box sways around — MAY play occasionally while disguised as the subtle hint that a box is alive ("the game might give subtle hints that some boxes are actually moving"). Authored as a rare idle sway; confirm in-game.</li>
+    <li><strong>Room-clear MUST count mimics</strong>: gates stay locked until disguised mimics are found and killed — that IS the Paru experience; the field controller's room-clear logic must include dormant mimics in the alive-enemy count.</li>
+  </ul>
+
+  <h3>Archetype: Hopper (Porel family) — partial</h3>
+  <p>Applies to <code>archetype: hopper</code> (frog rigs — Porel, Pobomma, Pomarr). Authored so far (kion):</p>
+  <ul>
+    <li><strong>Bubble projectile</strong> (definite): the frog shoots a bubble at the player from <strong>close-to-mid range</strong> — authored as a <code>projectile</code> attack on the <code>atk</code> clip.</li>
+    <li><strong>A second melee attack is an open question</strong> — kion is unsure whether they have bubble + melee or just bubbles; the rig has only one <code>atk</code> clip, so a melee would share it. Not authored pending confirmation.</li>
+    <li><strong>Hop locomotion pending</strong>: <code>jmp</code> (leap) and <code>tur</code> (turn) clearly encode hopping movement, but its behavior isn't authored yet — the frogs use the baseline walk chase until those notes land. <code>stt</code> semantics unconfirmed.</li>
+  </ul>
+
+  <h3>Archetype: Shooter (Korse family) — normative + leader dynamic</h3>
+  <p>Applies to <code>archetype: shooter</code> (s050 rigs — Korse, and Akorse the leader variant). Modeled on PSO's <a href="https://wiki.pioneer2.net/w/Canadine">Canadine</a> / <a href="https://wiki.pioneer2.net/w/Canane">Canane</a>: hovering shooters that fly with a leader. <em>Whether the original PSZ actually implements the leader dynamic is an open question (kion)</em> — it is specced here as the design.</p>
+  <ul>
+    <li><strong>Normal mode</strong>: hovers at standoff (<code>fsm.standoff_range</code>), holding position (<code>wat</code>) and adjusting with <code>run</code>, firing the <code>atk_sh</code> shooting attack as a projectile from its band.</li>
+    <li><strong>Leader-loss berserk</strong> (the Canadine dynamic): when its leader (Akorse — the Canane analog) dies, a shooter SHOULD go berserk: it plays <code>atk_an</code> — confused, spinning — once, then <strong>loops <code>atk_ji</code> lunging straight at the player and explodes on contact</strong> (self-destruct: one AoE hit, the shooter dies). The explosion triggers on contact regardless of i-frames; i-frames dodge the damage, not the blast.</li>
+    <li>The berserk kamikaze is authored as a <code>berserk_only</code> attack (excluded from the normal attack gate); the room previews the sequence via a debug trigger since single-enemy rooms cannot host the leader relationship — pack wiring is the pack-behavior issue (#495), and Akorse-as-leader is its first concrete data point.</li>
+    <li><code>atk_ji</code>'s remaining question: kion reads <code>_ji</code> as the lunge (self-destruct dive); <code>atk_an</code> as the confusion spin; <code>stt</code> = "start" (semantics beyond that unconfirmed).</li>
+  </ul>
+
+  <h3>Poison Lily — normative (backported from the implementation)</h3>
+  <p>Unlike every section above, this one was <strong>implemented first</strong>: <code>scripts/3d/enemies/poison_lily.gd</code> is already correct in Godot (kion), and this contract is backported <em>from</em> it. The lily keeps its own script (the sanctioned <code>EnemyBase</code> subclass exception).</p>
+  <ul>
+    <li><strong>Stationary</strong>: the lily never moves; while awake it rotates to face its target. Model scale is <code>0.09</code> (the raw GLB is ~11× too large — the tool renders with the same <code>model_scale</code>).</li>
+    <li><strong>Sleep/wake cycle</strong>: SLEEPING (<code>waitc</code> looping, closed) → within <code>detection_range</code> (12) <em>or on being hit</em> → WAKING (<code>wake</code> plays once) → IDLE_AWAKE (<code>waito</code> looping, tracking the target). Target beyond detection range → back to SLEEPING.</li>
+    <li><strong>Attacks</strong> (cooldown 3s), both released at the <strong>attack clip's midpoint</strong>: within melee range (3) → a bite for <code>attack_base</code>; beyond it → a <strong>poison projectile</strong> (speed 5, spawned at +1m, max flight = detection × 1.5) that deals <code>attack_base</code> on contact <em>plus a poison DoT: 3 damage per second for 5 seconds</em>.</li>
+    <li><strong>Clip map</strong> (custom names, no rig prefix): <code>waitc</code> sleep · <code>wake</code> wake · <code>waito</code> awake idle · <code>attack</code> · <code>damege</code> (sic) damage · <code>die</code>.</li>
+    <li>The #/enemy-room sim renders scale + stationary facing + both attacks; the sleep/wake cycle itself is <em>not</em> simulated there (it lives in the implementation and this contract).</li>
+  </ul>
 
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>

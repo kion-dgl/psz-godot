@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { ARCHETYPES } from '../enemy-room/archetypes';
 
 const ATTACKS_PATH = path.resolve(__dirname, '../../public/data/enemy_attacks.json');
 const ENEMIES_PATH = path.resolve(__dirname, '../../public/data/enemies.json');
@@ -65,13 +66,121 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
         const weight = a.weight ?? config.defaults.attack.weight;
         const reach = a.hit_reach ?? config.defaults.attack.hit_reach;
         const angle = a.hit_half_angle_deg ?? config.defaults.attack.hit_half_angle_deg;
-        if (!(min >= 0 && min < max)) bad.push(`${id}/${a.id} range`);
+        // berserk_only attacks are excluded from the gate — their band is unused.
+        if (!a.berserk_only && !(min >= 0 && min < max)) bad.push(`${id}/${a.id} range`);
         if (!(weight > 0)) bad.push(`${id}/${a.id} weight`);
         if (!(reach > 0)) bad.push(`${id}/${a.id} reach`);
         if (!(angle > 0 && angle <= 180)) bad.push(`${id}/${a.id} angle`);
       }
     }
     expect(bad, `attacks with bad geometry: ${bad.join(', ')}`).toHaveLength(0);
+  });
+
+  it('every enemy carries a known archetype (spec /mechanics/enemy-attacks table)', () => {
+    const known = new Set(ARCHETYPES.map((a) => a.id));
+    const bad = entries.filter(([, e]) => !known.has(e.archetype));
+    expect(
+      bad.map(([id, e]) => `${id}=${e.archetype}`),
+      'enemies with missing/unknown archetype — classify the model in gen_enemy_attacks.py MODEL_ARCHETYPES',
+    ).toHaveLength(0);
+    // Every in-scope archetype room has at least one enemy to show.
+    for (const a of ARCHETYPES.filter((a) => !a.outOfScope)) {
+      const members = entries.filter(([, e]) => e.archetype === a.id);
+      expect(members.length, `archetype '${a.id}' has no enemies`).toBeGreaterThan(0);
+    }
+  });
+
+  it('clip_notes, when present, map clip tokens to non-empty strings', () => {
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      if (!e.clip_notes) continue;
+      for (const [token, note] of Object.entries(e.clip_notes)) {
+        if (typeof note !== 'string' || note.length === 0) bad.push(`${id}/${token}`);
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
+  });
+
+  it('hand-authored tables survive the seeder (merge guard)', () => {
+    // If any of these fail, gen_enemy_attacks.py clobbered hand tuning.
+    for (const id of ['garapython', 'garahadan']) {
+      const e = config.enemies[id];
+      const clips = e.attacks.map((a: { clip: string }) => a.clip);
+      expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2']));
+      expect(e.clip_notes?.wat2, `${id} clip_notes`).toContain('attack-ready');
+    }
+    for (const id of ['izhirak_s6', 'azherowa_b2']) {
+      const kinds = config.enemies[id].attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds, `${id} kinds`).toEqual(expect.arrayContaining(['projectile', 'lob']));
+    }
+    for (const id of ['hildegao', 'hildeghana', 'hildegigas']) {
+      const e = config.enemies[id];
+      const kinds = e.attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds, `${id} kinds`).toEqual(expect.arrayContaining(['melee_arc', 'charge', 'leap']));
+      expect(e.clip_notes?.stt, `${id} stt note`).toContain('chest');
+    }
+    for (const id of ['reyhound', 'grimble', 'tormatible', 'stagg', 'kapantha']) {
+      expect(config.enemies[id].clip_notes?.stt, `${id} stt note`).toContain('dash');
+    }
+    for (const id of ['pelcatraz', 'pelcatobur']) {
+      const e = config.enemies[id];
+      expect(e.clip_notes?.fly, `${id} fly note`).toContain('propel');
+      expect(e.fsm?.hover_height, `${id} hover_height`).toBeGreaterThan(0);
+      const clips = e.attacks.map((a: { clip: string }) => a.clip);
+      expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2', 'atk3']));
+    }
+    for (const id of ['rohjade', 'rohcrysta']) {
+      const roll = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'roll');
+      expect(roll?.charge_segments, `${id} roll segments`).toEqual({ st: 'trf1', lp: 'wat3', ed: 'trf2' });
+      expect(roll?.stop_on_hit, `${id} roll-through`).toBe(false);
+    }
+    for (const id of ['froutang', 'frunaked']) {
+      const punch = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'charged_punch');
+      expect(punch?.windup_clips, `${id} punch windup`).toEqual(['atckstt', 'atckwat']);
+      const kinds = config.enemies[id].attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds.filter((k: string) => k === 'projectile'), `${id} pistols`).toHaveLength(2);
+    }
+    for (const id of ['porel', 'pobomma', 'pomarr']) {
+      const bubble = config.enemies[id].attacks.find((a: { id: string }) => a.id === 'bubble');
+      expect(bubble?.kind, `${id} bubble`).toBe('projectile');
+    }
+    for (const id of ['bolix', 'goldix']) {
+      expect(config.enemies[id].fsm?.reveal_range, `${id} reveal_range`).toBeGreaterThan(0);
+    }
+    // Poison lily backport from poison_lily.gd: rooted, scaled, two attacks.
+    const lily = config.enemies.poison_lily;
+    expect(lily.model_scale).toBe(0.09);
+    expect(lily.fsm?.stationary).toBe(true);
+    expect(lily.idle_clip).toBe('waito_re2_b_root');
+    expect(lily.attacks.map((a: { id: string }) => a.id)).toEqual(['bite', 'poison_spit']);
+    // Shared seal rig, divergent tables: Hypao casts barta, Vespao gibarta.
+    const hypaoTechs = config.enemies.hypao.attacks.map((a: { tech?: string }) => a.tech);
+    const vespaoTechs = config.enemies.vespao.attacks.map((a: { tech?: string }) => a.tech);
+    expect(hypaoTechs).toContain('barta');
+    expect(vespaoTechs).toContain('gibarta');
+  });
+
+  it('tech, when present, is a non-empty string', () => {
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      for (const a of e.attacks) {
+        if (a.tech !== undefined && (typeof a.tech !== 'string' || a.tech.length === 0)) {
+          bad.push(`${id}/${a.id}`);
+        }
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
+  });
+
+  it('attack kind, when present, is a known delivery', () => {
+    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap']);
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      for (const a of e.attacks) {
+        if (a.kind !== undefined && !known.has(a.kind)) bad.push(`${id}/${a.id}=${a.kind}`);
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
   });
 
   it('attack ids are unique per enemy and clips are non-empty tokens', () => {

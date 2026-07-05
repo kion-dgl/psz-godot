@@ -274,6 +274,7 @@ var _combo_triggered := false       # ran the probe already (fires once)
 
 var _enemy_freeze_probe := false    # #477 big-rig attack-wedge probe
 var _enemy_freeze_triggered := false  # ran the probe already (fires once)
+var _enemy_freeze_id := "hildegigas"  # roster id to spawn ("1" = default)
 
 
 func _ready() -> void:
@@ -363,7 +364,10 @@ func _parse_probe_flags() -> void:
 		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
 	_enemy_freeze_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
 	if _enemy_freeze_probe:
-		print("[sanity] autopilot ENEMY-FREEZE probe enabled (big rig must exit ATTACKING unhit in first field cell)")
+		var freeze_val := OS.get_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
+		if freeze_val != "" and freeze_val != "1":
+			_enemy_freeze_id = freeze_val
+		print("[sanity] autopilot ENEMY-FREEZE probe enabled (%s must exit ATTACKING unhit in first field cell)" % _enemy_freeze_id)
 
 
 ## Called every frame from _process — when floor-only mode is on, mark every
@@ -2410,9 +2414,9 @@ func _run_enemy_freeze_probe(attempt: int = 0) -> void:
 			_enemy_freeze_fail("no player in field")
 		return
 	var p: Node3D = players[0]
-	var edata = EnemyRegistry.get_enemy("hildegigas")
+	var edata = EnemyRegistry.get_enemy(_enemy_freeze_id)
 	if edata == null:
-		_enemy_freeze_fail("hildegigas missing from EnemyRegistry")
+		_enemy_freeze_fail("%s missing from EnemyRegistry" % _enemy_freeze_id)
 		return
 	var enemy := EnemyBase.new()
 	enemy.enemy_data = edata
@@ -2427,7 +2431,7 @@ func _run_enemy_freeze_probe(attempt: int = 0) -> void:
 	enemy.collision_mask = 1
 	p.get_parent().add_child(enemy)
 	enemy.global_position = p.global_position + p.global_transform.basis.z * 1.2
-	print("[sanity] checkpoint: enemy-freeze probe — Hildegigas spawned in contact with player")
+	print("[sanity] checkpoint: enemy-freeze probe — %s spawned in contact with player" % _enemy_freeze_id)
 	_enemy_freeze_watch(enemy, {"attacked": false}, 0)
 
 
@@ -2439,6 +2443,10 @@ func _enemy_freeze_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
 		return
 	var s: int = enemy.current_state
 	if s == EnemyBase.EnemyState.ATTACKING:
+		if not seen["attacked"]:
+			# Resolved clip visibility: '' = no attack clip → fallback-duration
+			# path. The harness greps this to pin per-rig resolution.
+			print("[sanity] checkpoint: enemy-freeze probe — ATTACKING (attack_anim='%s')" % enemy._attack_anim)
 		seen["attacked"] = true
 	elif seen["attacked"] and (s == EnemyBase.EnemyState.LOAFING or s == EnemyBase.EnemyState.CHASING):
 		print("[sanity] checkpoint: enemy-freeze probe — attack cycle ended (state=%d) without a hit" % s)

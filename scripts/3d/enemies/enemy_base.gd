@@ -775,6 +775,7 @@ const ANIM_ALIASES := {
 	"wlk": ["fly"],       # walk → fly (for airborne enemies)
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
+	"dmg": ["dam"],       # five rigs name the damage clip dam (booma/swordman/tank/orangutan/shrimp)
 }
 
 func _find_animation(short_name: String) -> String:
@@ -808,7 +809,30 @@ func _find_animation(short_name: String) -> String:
 			if not result.is_empty():
 				return result
 
+	# Last-resort ATTACK scan — suffix-variant rigs (b062_atk_pu,
+	# b052_atk_sh, m061_atk_a, b072_atk_sa_a…) must still swing. Normative
+	# order in spec /states/enemies "Attack recovery".
+	if short_name == "atk":
+		return _find_attack_clip_fallback()
+
 	return ""
+
+
+## Any clip with an exact "atk" underscore-segment qualifies, EXCEPT
+## segmented charge/loop/end pieces (…_st/_lp/_ed — playing one alone shows
+## a partial attack). Alphabetically first for deterministic resolution.
+func _find_attack_clip_fallback() -> String:
+	var best := ""
+	for anim_name in animation_player.get_animation_list():
+		var n := String(anim_name)
+		var parts := n.split("_")
+		if not ("atk" in parts):
+			continue
+		if parts[parts.size() - 1] in ["st", "lp", "ed"]:
+			continue
+		if best.is_empty() or n < best:
+			best = n
+	return best
 
 
 ## Called when animation finishes
