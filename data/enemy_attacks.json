@@ -11,7 +11,8 @@
       "attack_fallback_duration": 0.8,
       "standoff_range": 6.0,
       "hover_height": 0.0,
-      "reveal_range": 3.5
+      "reveal_range": 3.5,
+      "stationary": false
     },
     "attack": {
       "windup_frac": 0.35,
@@ -1648,21 +1649,48 @@
         "detection_range": 12.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "stationary": true
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "bite",
+          "clip": "attack_re2_b_root",
+          "kind": "melee_arc",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 3.0
+          "max_range": 3.0,
+          "windup_frac": 0.5,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "poison_spit",
+          "clip": "attack_re2_b_root",
+          "kind": "projectile",
+          "weight": 1.0,
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.5,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 5.0,
+          "hit_reach": 18.0,
+          "damage_mult": 1.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "attack_re2_b_root": "the attack clip \u2014 melee bite within 3m, poison projectile beyond; damage/projectile released at the clip MIDPOINT (backported from poison_lily.gd)",
+        "waitc_re2_b_root": "sleeping idle (closed) \u2014 loops while no target within detection range",
+        "wake_re2_b_root": "wake-up transition \u2014 plays once on detection or on being hit while asleep",
+        "waito_re2_b_root": "awake idle (open) \u2014 loops while engaged, rotating to face the target",
+        "damege_re2_b_root": "take damage (source clip name misspells 'damage')",
+        "die_re2_b_root": "die",
+        "laugh_re2_b_root": "laugh \u2014 unused by the implementation (open question)"
+      },
+      "model_scale": 0.09,
+      "idle_clip": "waito_re2_b_root"
     },
     "pomarr": {
       "archetype": "hopper",

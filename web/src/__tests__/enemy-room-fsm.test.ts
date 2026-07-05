@@ -758,6 +758,25 @@ describe('enemy-room FSM — box mimic (spec /states/enemies §box-mimic)', () =
   });
 });
 
+describe('enemy-room FSM — stationary (poison lily, spec §poison-lily)', () => {
+  it('never moves, faces the target, and fires from its bands', () => {
+    const c = config([
+      atk({ id: 'bite', clip: 'attack_re2_b_root', min_range: 0, max_range: 3 }),
+      atk({ id: 'poison_spit', clip: 'attack_re2_b_root', kind: 'projectile', min_range: 3, max_range: 12, hit_reach: 18, hit_half_angle_deg: 5 }),
+    ]);
+    c.enemies.dummy.fsm = { stationary: true } as Partial<import('../enemy-room/types').FsmParams>;
+    c.enemies.dummy.idle_clip = 'waito_re2_b_root';
+    const entry = resolveEntry(c, 'dummy');
+    expect(entry.fsm.stationary).toBe(true);
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 7 } }); // spit band
+    const events = run(sim, entry, input, 3.0);
+    expect(sim.pos).toEqual({ x: 0, z: 0 }); // rooted through idle/chase/attack/loaf
+    expect(events.some((e) => e.type === 'projectile_fired')).toBe(true);
+    expect(sim.facing.z).toBeCloseTo(1, 2); // faces the target
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

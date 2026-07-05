@@ -37,6 +37,7 @@ DEFAULTS = {
         'standoff_range': 6.0,  # kiter archetypes (quad_machine); flyers reuse as orbit radius
         'hover_height': 0.0,  # flyer archetypes: airborne height while engaged
         'reveal_range': 3.5,  # box_mimic: disguise-break distance (replaces detection)
+        'stationary': False,  # rooted enemies (poison lily): never move
     },
     'attack': {
         'windup_frac': 0.35,
@@ -159,6 +160,9 @@ def main() -> None:
             }
             if prev.get('clip_notes'):
                 entry['clip_notes'] = prev['clip_notes']
+            for extra in ('model_scale', 'idle_clip'):
+                if prev.get(extra) is not None:
+                    entry[extra] = prev[extra]
         else:
             entry = {
                 'archetype': archetype,

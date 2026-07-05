@@ -306,6 +306,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         }
         break;
       }
+      if (entry.fsm.stationary) {
+        // Rooted: no wander out of combat either (sleep/wake cycle is spec-
+        // documented but not simulated — see §poison-lily).
+        sim.velocity = { x: 0, z: 0 };
+        sim.anim = entry.idle_clip ?? 'wat';
+        if (dist <= entry.stats.detection_range) changeState(sim, 'chasing', events);
+        break;
+      }
       if (dist <= entry.stats.detection_range) {
         changeState(sim, 'chasing', events);
         if (
@@ -379,6 +387,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         entry.attacks.some((a) => dist >= a.min_range && dist <= a.max_range)
       ) {
         startAttack(sim, entry, input, dist, events);
+        break;
+      }
+      // Rooted enemies (poison lily): never move — face the target and let
+      // the band gate above fire the attacks.
+      if (entry.fsm.stationary) {
+        sim.velocity = { x: 0, z: 0 };
+        sim.facing = norm(sub(playerPos, sim.pos));
+        sim.anim = entry.idle_clip ?? 'wat';
         break;
       }
       if (entry.archetype === 'quad_machine') {
@@ -528,6 +544,11 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       sim.loafTimer -= dt;
       if (sim.loafTimer <= 0) {
         changeState(sim, 'chasing', events);
+        break;
+      }
+      if (entry.fsm.stationary) {
+        sim.velocity = { x: 0, z: 0 };
+        sim.anim = entry.idle_clip ?? 'wat';
         break;
       }
       sim.loafDir = rot(sim.loafDir, sim.loafCurveRate * dt);

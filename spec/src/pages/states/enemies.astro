@@ -159,6 +159,16 @@ const fsm = `stateDiagram-v2
     <li><strong>Hop locomotion pending</strong>: <code>jmp</code> (leap) and <code>tur</code> (turn) clearly encode hopping movement, but its behavior isn't authored yet — the frogs use the baseline walk chase until those notes land. <code>stt</code> semantics unconfirmed.</li>
   </ul>
 
+  <h3>Poison Lily — normative (backported from the implementation)</h3>
+  <p>Unlike every section above, this one was <strong>implemented first</strong>: <code>scripts/3d/enemies/poison_lily.gd</code> is already correct in Godot (kion), and this contract is backported <em>from</em> it. The lily keeps its own script (the sanctioned <code>EnemyBase</code> subclass exception).</p>
+  <ul>
+    <li><strong>Stationary</strong>: the lily never moves; while awake it rotates to face its target. Model scale is <code>0.09</code> (the raw GLB is ~11× too large — the tool renders with the same <code>model_scale</code>).</li>
+    <li><strong>Sleep/wake cycle</strong>: SLEEPING (<code>waitc</code> looping, closed) → within <code>detection_range</code> (12) <em>or on being hit</em> → WAKING (<code>wake</code> plays once) → IDLE_AWAKE (<code>waito</code> looping, tracking the target). Target beyond detection range → back to SLEEPING.</li>
+    <li><strong>Attacks</strong> (cooldown 3s), both released at the <strong>attack clip's midpoint</strong>: within melee range (3) → a bite for <code>attack_base</code>; beyond it → a <strong>poison projectile</strong> (speed 5, spawned at +1m, max flight = detection × 1.5) that deals <code>attack_base</code> on contact <em>plus a poison DoT: 3 damage per second for 5 seconds</em>.</li>
+    <li><strong>Clip map</strong> (custom names, no rig prefix): <code>waitc</code> sleep · <code>wake</code> wake · <code>waito</code> awake idle · <code>attack</code> · <code>damege</code> (sic) damage · <code>die</code>.</li>
+    <li>The #/enemy-room sim renders scale + stationary facing + both attacks; the sleep/wake cycle itself is <em>not</em> simulated there (it lives in the implementation and this contract).</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

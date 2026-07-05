@@ -601,6 +601,7 @@ export default function EnemyRoom() {
       }
       s.enemyGroup.position.set(sim.pos.x, sim.altitude + hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
+      s.enemyGroup.scale.setScalar(e.model_scale); // poison lily's GLB needs 0.09
       // Roller ball travel: the curled clip has no motion of its own — the
       // engine rotates it (spec §roller). Forward tumble while lp plays.
       if (atkNow?.charge?.phase === 'lp' && atkNow.def.charge_segments) {

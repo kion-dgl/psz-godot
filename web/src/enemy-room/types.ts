@@ -62,6 +62,8 @@ export interface FsmParams {
   hover_height: number;
   /** Box mimic: disguise-break distance — replaces detection_range entirely while dormant. */
   reveal_range: number;
+  /** Rooted enemies (poison lily): never move; face the target and attack from the bands. */
+  stationary: boolean;
 }
 
 export interface EnemyAttackEntry {
@@ -76,6 +78,10 @@ export interface EnemyAttackEntry {
    * the clip picker; input for the future stance model (spec open question).
    */
   clip_notes?: Record<string, string>;
+  /** Render scale for the model (poison lily's raw GLB needs 0.09) — the runtime applies the same factor. */
+  model_scale?: number;
+  /** Engaged idle clip token for stationary enemies (poison lily's waito loop). */
+  idle_clip?: string;
 }
 
 export interface EnemyAttackConfig {
@@ -96,6 +102,7 @@ export const DEFAULT_FSM: FsmParams = {
   standoff_range: 6.0,
   hover_height: 0.0,
   reveal_range: 3.5,
+  stationary: false,
 };
 
 export const DEFAULT_ATTACK: Omit<AttackDef, 'id' | 'clip'> = {
@@ -124,6 +131,8 @@ export interface ResolvedEntry {
   fsm: FsmParams;
   attacks: AttackDef[];
   clip_notes: Record<string, string>;
+  model_scale: number;
+  idle_clip?: string;
 }
 
 export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string): ResolvedEntry {
@@ -141,6 +150,8 @@ export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string):
     fsm,
     attacks,
     clip_notes: entry?.clip_notes ?? {},
+    model_scale: entry?.model_scale ?? 1,
+    idle_clip: entry?.idle_clip,
   };
 }
 

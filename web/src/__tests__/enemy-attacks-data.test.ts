@@ -146,6 +146,12 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
     for (const id of ['bolix', 'goldix']) {
       expect(config.enemies[id].fsm?.reveal_range, `${id} reveal_range`).toBeGreaterThan(0);
     }
+    // Poison lily backport from poison_lily.gd: rooted, scaled, two attacks.
+    const lily = config.enemies.poison_lily;
+    expect(lily.model_scale).toBe(0.09);
+    expect(lily.fsm?.stationary).toBe(true);
+    expect(lily.idle_clip).toBe('waito_re2_b_root');
+    expect(lily.attacks.map((a: { id: string }) => a.id)).toEqual(['bite', 'poison_spit']);
     // Shared seal rig, divergent tables: Hypao casts barta, Vespao gibarta.
     const hypaoTechs = config.enemies.hypao.attacks.map((a: { tech?: string }) => a.tech);
     const vespaoTechs = config.enemies.vespao.attacks.map((a: { tech?: string }) => a.tech);
