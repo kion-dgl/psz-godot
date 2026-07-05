@@ -35,6 +35,8 @@ const ComboDebug = lazy(() => import('./combo-debug/ComboDebug'));
 const CombatRoom = lazy(() => import('./combat-room/CombatRoom'));
 const EnemyRoom = lazy(() => import('./enemy-room/EnemyRoom'));
 const EnemyRoomIndex = lazy(() => import('./enemy-room/EnemyRoomIndex'));
+const BossRoom = lazy(() => import('./boss-room/BossRoom'));
+const BossRoomIndex = lazy(() => import('./boss-room/BossRoomIndex'));
 const TextureAnimEditor = lazy(() => import('./texture-anim/TextureAnimEditor'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
@@ -106,6 +108,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/combo-debug', label: 'Combo' },
       { to: '/combat-room', label: 'Combat Room' },
       { to: '/enemy-room', label: 'Enemy Rooms' },
+      { to: '/boss-room', label: 'Boss Rooms' },
       { to: '/texture-anim', label: 'Texture Anim' },
     ],
   },
@@ -269,6 +272,8 @@ export default function App() {
             <Route path="/combat-room" element={<CombatRoom />} />
             <Route path="/enemy-room" element={<EnemyRoomIndex />} />
             <Route path="/enemy-room/:archetype" element={<EnemyRoom />} />
+            <Route path="/boss-room" element={<BossRoomIndex />} />
+            <Route path="/boss-room/:bossId" element={<BossRoom />} />
             <Route path="/texture-anim" element={<TextureAnimEditor />} />
             <Route path="/palette-editor" element={<PaletteEditor />} />
           </Routes>

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "comment": "Boss debug-room mapping (#493, tool at #/boss-room). Bosses are arena-bound: behavior is mapped inside the boss's own stage, not a flat sandbox. `arena` is the default (taken from the quest that spawns the boss today); the tool can load any z-arena. Sibling file to enemy_attacks.json — phase/attack tables land here once behavior notes are taken.",
+  "arenas": {
+    "s01z_na1": { "area": "valley_z", "label": "Gurhacia Valley arena" },
+    "s02z_na1": { "area": "wetlands_z", "label": "Ozette Wetlands arena", "skybox": true },
+    "s03z_na1": { "area": "snowfield_z", "label": "Rioh Snowfield arena", "unassigned": true },
+    "s04z_na1": { "area": "makara_z", "label": "Makara Ruins arena", "unassigned": true, "note": "the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)" },
+    "s05z_na1": { "area": "paru_z", "label": "Oblivion City Paru arena", "unassigned": true },
+    "s06z_na1": { "area": "arca_z", "label": "Arca Plant arena" },
+    "s07z_na1": { "area": "shrine_z", "label": "Dark Shrine arena A" },
+    "s07z_na2": { "area": "shrine_z", "label": "Dark Shrine arena B" }
+  },
+  "bosses": {
+    "reyburn": {
+      "model_id": "boss_dragon",
+      "arena": "s01z_na1",
+      "quest_source": "claiming_a_stake",
+      "model_scale": 1.0,
+      "clip_notes": {}
+    },
+    "octo_diablo": {
+      "model_id": "boss_octopus",
+      "arena": "s02z_na1",
+      "quest_source": "poisoned_water",
+      "model_scale": 1.0,
+      "clip_notes": {}
+    },
+    "humilias": {
+      "model_id": "boss_mother",
+      "arena": "s07z_na1",
+      "quest_source": "control_system",
+      "model_scale": 1.0,
+      "clip_notes": {}
+    },
+    "chaos_mobius": {
+      "model_id": "boss_robot",
+      "arena": "s06z_na1",
+      "quest_source": "heretic",
+      "model_scale": 1.0,
+      "note": "GLB carries a single clip (z003_atk_dl_lp) — the rest of the kit's segmented pieces (ve_*) never imported; see storybook/enemyData.ts import notes",
+      "clip_notes": {}
+    },
+    "dark_falz": {
+      "model_id": "boss_darkfalz",
+      "arena": "s07z_na2",
+      "quest_source": "dark_castle",
+      "model_scale": 1.0,
+      "clip_notes": {}
+    }
+  }
+}
