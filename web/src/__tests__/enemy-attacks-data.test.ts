@@ -121,6 +121,13 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
     for (const id of ['reyhound', 'grimble', 'tormatible', 'stagg', 'kapantha']) {
       expect(config.enemies[id].clip_notes?.stt, `${id} stt note`).toContain('dash');
     }
+    for (const id of ['pelcatraz', 'pelcatobur']) {
+      const e = config.enemies[id];
+      expect(e.clip_notes?.fly, `${id} fly note`).toContain('propel');
+      expect(e.fsm?.hover_height, `${id} hover_height`).toBeGreaterThan(0);
+      const clips = e.attacks.map((a: { clip: string }) => a.clip);
+      expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2', 'atk3']));
+    }
   });
 
   it('attack kind, when present, is a known delivery', () => {

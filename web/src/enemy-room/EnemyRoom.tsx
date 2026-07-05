@@ -588,7 +588,7 @@ export default function EnemyRoom() {
         const f = Math.min(Math.max((atkNow.t - ws) / (we - ws), 0), 1);
         hopY = 3.0 * f * (1 - f);
       }
-      s.enemyGroup.position.set(sim.pos.x, hopY, sim.pos.z);
+      s.enemyGroup.position.set(sim.pos.x, sim.altitude + hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
       for (const ring of [s.detectionRing, s.attackRing, s.chargeRing]) {
         ring.position.x = sim.pos.x;
@@ -893,6 +893,12 @@ export default function EnemyRoom() {
         {sliderRow('attack_fallback_dur', entry.fsm.attack_fallback_duration, 0.2, 3, 0.05, (v) => setFsm('attack_fallback_duration', v))}
         {entry.archetype === 'quad_machine' &&
           sliderRow('standoff_range', entry.fsm.standoff_range, 1, 14, 0.5, (v) => setFsm('standoff_range', v))}
+        {entry.archetype === 'flyer_combo' && (
+          <>
+            {sliderRow('orbit (standoff)', entry.fsm.standoff_range, 1, 8, 0.25, (v) => setFsm('standoff_range', v))}
+            {sliderRow('hover_height', entry.fsm.hover_height, 0, 3, 0.1, (v) => setFsm('hover_height', v))}
+          </>
+        )}
 
         <h4 style={h4Style}>Attacks ({entry.attacks.length})</h4>
         {entry.attacks.map((a, i) => {

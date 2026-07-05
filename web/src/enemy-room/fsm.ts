@@ -65,8 +65,11 @@ export interface EnemySim {
   // Ranged deliveries in flight (quad_machine etc.) — stepped every tick.
   projectiles: Projectile[];
   lobs: Lob[];
-  /** Aggro threat display hold (bigrig_combo stt chest-beat): seconds remaining. */
+  /** Aggro display hold (bigrig chest-beat / flyer takeoff): seconds remaining + total. */
   threatTimer: number;
+  threatDuration: number;
+  /** Flyer archetypes: current airborne height (rises during the stt takeoff). */
+  altitude: number;
 }
 
 export interface SimInput {
@@ -145,6 +148,8 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     projectiles: [],
     lobs: [],
     threatTimer: 0,
+    threatDuration: 0,
+    altitude: 0,
   };
 }
 
@@ -248,11 +253,13 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     case 'idle': {
       if (dist <= entry.stats.detection_range) {
         changeState(sim, 'chasing', events);
-        if (entry.archetype === 'bigrig_combo') {
-          // Chest-beat threat (spec §big-rig): stt is this family's threat
-          // display — hold position for the clip before pursuing.
+        if (entry.archetype === 'bigrig_combo' || entry.archetype === 'flyer_combo') {
+          // Aggro display, held before pursuit: bigrig beats its chest,
+          // the flyer TAKES OFF — both are this rig's stt (spec §big-rig,
+          // §flyer; third stt meaning after the quadruped dash).
           sim.anim = 'stt';
           sim.threatTimer = input.clipDurationFor('stt') ?? 1.0;
+          sim.threatDuration = sim.threatTimer;
         } else {
           sim.anim = 'tht';
         }
@@ -281,10 +288,15 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     }
 
     case 'chasing': {
-      // Aggro threat hold (bigrig chest-beat): stand and display, then pursue.
+      // Aggro display hold (bigrig chest-beat / flyer takeoff): stand and
+      // display, then pursue. Flyers rise to hover height during the hold.
       if (sim.threatTimer > 0) {
         sim.threatTimer -= dt;
         sim.velocity = { x: 0, z: 0 };
+        if (sim.threatDuration > 0 && entry.fsm.hover_height > 0) {
+          const progress = 1 - Math.max(sim.threatTimer, 0) / sim.threatDuration;
+          sim.altitude = entry.fsm.hover_height * progress;
+        }
         break;
       }
       // Trigger (spec /mechanics/enemy-attacks §selection): cooldown ready AND
@@ -303,6 +315,10 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       if (entry.archetype === 'quadruped') {
         processChasingQuadruped(sim, entry, input, dist);
+        break;
+      }
+      if (entry.archetype === 'flyer_combo') {
+        processChasingFlyer(sim, entry, input, dist);
         break;
       }
       const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
@@ -635,6 +651,39 @@ function startAttack(
   sim.attackCooldown = entry.stats.attack_cooldown;
   events.push({ type: 'attack_start', attack: def, resolvedClip: sim.currentAttack.resolvedClip, duration });
 }
+
+/**
+ * Flyer combo chase (spec /states/enemies §flyer, normative): airborne at
+ * shoulder height (the anti-melee design), fly clip to close distance,
+ * tk clip to hover-orbit near the target (orbit radius = standoff_range).
+ */
+function processChasingFlyer(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
+  const { dt, playerPos, rng } = input;
+  sim.altitude = entry.fsm.hover_height; // airborne while engaged — MUST NOT ground
+  const radial = norm(sub(playerPos, sim.pos));
+  const orbit = entry.fsm.standoff_range;
+
+  if (dist > orbit * 1.4) {
+    // Approach: flaps to propel forward.
+    const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+    sim.velocity = { x: radial.x * speed, z: radial.z * speed };
+    sim.facing = radial;
+    sim.anim = 'fly';
+    return;
+  }
+  // Hover-orbit: flaps to move around / turn.
+  sim.arcTimer -= dt;
+  if (sim.arcTimer <= 0) {
+    sim.arcTimer = 1.5 + rng() * 2.5;
+    if (rng() < 0.4) sim.arcSide = sim.arcSide === 1 ? -1 : 1;
+  }
+  const tangent: Vec2 = { x: -radial.z * sim.arcSide, z: radial.x * sim.arcSide };
+  const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+  sim.velocity = { x: tangent.x * speed, z: tangent.z * speed };
+  sim.facing = radial; // watches the target while circling
+  sim.anim = 'tk';
+}
+
 
 /**
  * Charge attack phases (bigrig shoulder slam, spec §big-rig): st windup

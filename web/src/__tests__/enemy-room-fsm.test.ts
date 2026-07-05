@@ -515,6 +515,61 @@ describe('enemy-room FSM — big-rig combo (spec /states/enemies §big-rig)', ()
   });
 });
 
+describe('enemy-room FSM — flyer combo (spec /states/enemies §flyer)', () => {
+  const beak = atk({ id: 'beak', clip: 'atk1', min_range: 0, max_range: 2.2 });
+  const flyerConfig = (): EnemyAttackConfig => {
+    const c = config([beak]);
+    c.enemies.dummy.archetype = 'flyer_combo';
+    c.enemies.dummy.fsm = { hover_height: 1.3, standoff_range: 2.5 };
+    return c;
+  };
+
+  it('takes off on aggro: stt hold while rising to hover height', () => {
+    const entry = resolveEntry(flyerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 10 } }); // clip durations 1.0
+    stepEnemy(sim, entry, input); // idle → chasing + takeoff
+    expect(sim.anim).toBe('stt');
+    run(sim, entry, input, 0.5);
+    expect(sim.pos.z).toBeCloseTo(0, 3); // held in place
+    expect(sim.altitude).toBeGreaterThan(0.3);
+    expect(sim.altitude).toBeLessThan(1.3);
+    run(sim, entry, input, 0.6);
+    expect(sim.altitude).toBeCloseTo(1.3, 1); // airborne
+  });
+
+  it('approaches with fly, then hover-orbits with tk at the orbit radius', () => {
+    const entry = resolveEntry(flyerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 10 } });
+    sim.attackCooldown = 99;
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0; // skip takeoff for locomotion probing
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('fly');
+    expect(sim.velocity.z).toBeGreaterThan(0); // toward the player
+    expect(sim.altitude).toBeCloseTo(1.3, 5); // MUST NOT ground while engaged
+    // Now close: orbit
+    const near = makeInput({ playerPos: { x: 0, z: sim.pos.z + 2.5 } });
+    stepEnemy(sim, entry, near);
+    expect(sim.anim).toBe('tk');
+    // Lateral: velocity ⊥ radial, facing on the target.
+    const vl = Math.hypot(sim.velocity.x, sim.velocity.z);
+    expect(Math.abs(sim.velocity.z) / vl).toBeLessThan(0.1);
+    expect(sim.facing.z).toBeCloseTo(1, 3);
+  });
+
+  it('attacks from the air via the band gate (beak at melee band)', () => {
+    const entry = resolveEntry(flyerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1.5 } });
+    stepEnemy(sim, entry, input); // aggro → takeoff hold (1.0s)
+    const events = run(sim, entry, input, 1.2); // takeoff completes, gate fires
+    expect(events.some((e) => e.type === 'attack_start')).toBe(true);
+    expect(sim.altitude).toBeCloseTo(1.3, 1); // still airborne when striking
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

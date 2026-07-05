@@ -42,8 +42,10 @@ export interface FsmParams {
   loaf_duration_max: number;
   hurt_duration: number;
   attack_fallback_duration: number;
-  /** Kiter archetypes (quad_machine): preferred distance from the target. */
+  /** Kiter archetypes (quad_machine): preferred distance from the target. Flyers reuse it as the orbit radius. */
   standoff_range: number;
+  /** Flyer archetypes: airborne height while engaged (0 = grounded). */
+  hover_height: number;
 }
 
 export interface EnemyAttackEntry {
@@ -76,6 +78,7 @@ export const DEFAULT_FSM: FsmParams = {
   hurt_duration: 0.3,
   attack_fallback_duration: 0.8,
   standoff_range: 6.0,
+  hover_height: 0.0,
 };
 
 export const DEFAULT_ATTACK: Omit<AttackDef, 'id' | 'clip'> = {

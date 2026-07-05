@@ -9,7 +9,8 @@
       "loaf_duration_max": 4.0,
       "hurt_duration": 0.3,
       "attack_fallback_duration": 0.8,
-      "standoff_range": 6.0
+      "standoff_range": 6.0,
+      "hover_height": 0.0
     },
     "attack": {
       "windup_frac": 0.35,
@@ -1292,21 +1293,61 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "hover_height": 1.3,
+        "standoff_range": 2.5
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "beak",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "gust",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 1.5,
+          "max_range": 4.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.5,
+          "damage_mult": 0.8
+        },
+        {
+          "id": "wing_swipe",
+          "clip": "atk3",
+          "kind": "melee_arc",
+          "weight": 2.0,
+          "min_range": 0.0,
+          "max_range": 2.5,
+          "windup_frac": 0.35,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "attack with beak",
+        "atk2": "flapping wings \u2014 UNCERTAIN: maybe a gust attack? (authored provisionally as a wide weak mid-range arc)",
+        "atk3": "wing swipe attack",
+        "fly": "flaps wings to propel forward (approach locomotion)",
+        "tk": "flaps wings to move around or turn (hover / orbit locomotion)",
+        "stt": "start, from idle \u2014 takes flight into the air (takeoff on aggro)",
+        "dmg": "take damage",
+        "ded": "dead"
+      }
     },
     "pelcatraz": {
       "archetype": "flyer_combo",
@@ -1317,21 +1358,61 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "hover_height": 1.3,
+        "standoff_range": 2.5
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "beak",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "gust",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 1.5,
+          "max_range": 4.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 60.0,
+          "hit_reach": 3.5,
+          "damage_mult": 0.8
+        },
+        {
+          "id": "wing_swipe",
+          "clip": "atk3",
+          "kind": "melee_arc",
+          "weight": 2.0,
+          "min_range": 0.0,
+          "max_range": 2.5,
+          "windup_frac": 0.35,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80.0,
+          "hit_reach": 2.4,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "attack with beak",
+        "atk2": "flapping wings \u2014 UNCERTAIN: maybe a gust attack? (authored provisionally as a wide weak mid-range arc)",
+        "atk3": "wing swipe attack",
+        "fly": "flaps wings to propel forward (approach locomotion)",
+        "tk": "flaps wings to move around or turn (hover / orbit locomotion)",
+        "stt": "start, from idle \u2014 takes flight into the air (takeoff on aggro)",
+        "dmg": "take damage",
+        "ded": "dead"
+      }
     },
     "phobos": {
       "archetype": "machine_soldier",

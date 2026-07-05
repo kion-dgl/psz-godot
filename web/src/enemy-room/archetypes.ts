@@ -53,8 +53,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'flyer_combo',
     label: 'Flyer combo',
-    blurb: 'atk1/2/3 + fly + tk (takeoff) — airborne attackers: Pelcatraz, Pelcatobur.',
-    simNote: 'Baseline sim on the ground plane; flight/altitude needs its module (#494).',
+    blurb: 'stt takeoff on aggro, hovers at shoulder height (hard to melee), fly = approach / tk = orbit; atk1 beak, atk2 gust (uncertain), atk3 wing swipe: Pelcatraz, Pelcatobur.',
+    simNote: 'Implemented: takeoff rise, shoulder-height hover, fly/tk locomotion (spec /states/enemies §flyer). atk2 gust semantics are an open question.',
   },
   {
     id: 'two_attack',

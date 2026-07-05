@@ -34,7 +34,8 @@ DEFAULTS = {
         'loaf_duration_max': 4.0,
         'hurt_duration': 0.3,
         'attack_fallback_duration': 0.8,
-        'standoff_range': 6.0,  # kiter archetypes (quad_machine)
+        'standoff_range': 6.0,  # kiter archetypes (quad_machine); flyers reuse as orbit radius
+        'hover_height': 0.0,  # flyer archetypes: airborne height while engaged
     },
     'attack': {
         'windup_frac': 0.35,
