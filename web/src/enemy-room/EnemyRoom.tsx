@@ -811,6 +811,11 @@ export default function EnemyRoom() {
                   ? `→ ${resolved.name} (${resolved.duration.toFixed(2)}s)`
                   : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
               </div>
+              {entry.clip_notes[a.clip] && (
+                <div style={{ fontSize: 10, color: '#9ab', marginBottom: 4, fontStyle: 'italic' }}>
+                  {entry.clip_notes[a.clip]}
+                </div>
+              )}
               {sliderRow('weight', a.weight, 0.1, 10, 0.1, (v) => setAttack(i, { weight: v }))}
               {sliderRow('min_range', a.min_range, 0, 12, 0.1, (v) => setAttack(i, { min_range: v }))}
               {sliderRow('max_range', Math.min(a.max_range, 20), 0.5, 20, 0.1, (v) => setAttack(i, { max_range: v }))}

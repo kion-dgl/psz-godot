@@ -609,18 +609,41 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "normal",
+          "clip": "atk1",
+          "weight": 3.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "strong",
+          "clip": "atk2",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 45.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "normal attack, launched from the wat2 (raised) pose",
+        "atk2": "strong attack, launched from the wat2 (raised) pose",
+        "ded": "dying",
+        "dmg": "taking damage",
+        "stt": "rise transition: wlk (low) -> wat2 (attack-ready)",
+        "wat1": "idle, low to the ground (player not around)",
+        "wat2": "attack-ready idle (raised)",
+        "wlk": "slithering locomotion",
+        "wt2w": "lower transition: wat2 -> wlk without attacking"
+      }
     },
     "garapython": {
       "stats": {
@@ -633,18 +656,41 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
+          "id": "normal",
+          "clip": "atk1",
+          "weight": 3.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "strong",
+          "clip": "atk2",
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 45.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.6
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "normal attack, launched from the wat2 (raised) pose",
+        "atk2": "strong attack, launched from the wat2 (raised) pose",
+        "ded": "dying",
+        "dmg": "taking damage",
+        "stt": "rise transition: wlk (low) -> wat2 (attack-ready)",
+        "wat1": "idle, low to the ground (player not around)",
+        "wat2": "attack-ready idle (raised)",
+        "wlk": "slithering locomotion",
+        "wt2w": "lower transition: wat2 -> wlk without attacking"
+      }
     },
     "ghowl": {
       "stats": {

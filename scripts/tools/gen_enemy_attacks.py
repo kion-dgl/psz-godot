@@ -112,6 +112,8 @@ def main() -> None:
                 'fsm': prev.get('fsm', {}),
                 'attacks': prev.get('attacks') or [default_attack(stats['attack_range'])],
             }
+            if prev.get('clip_notes'):
+                entry['clip_notes'] = prev['clip_notes']
         else:
             entry = {
                 'stats': stats,

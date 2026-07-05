@@ -33,6 +33,7 @@ const timeline = `stateDiagram-v2
     <tr><td><code>weight</code></td><td>Relative selection weight among in-band candidates.</td></tr>
     <tr><td><code>damage_mult</code></td><td>Damage dealt = <code>stats.attack_base × damage_mult</code> (replaces the legacy fixed 10).</td></tr>
     <tr><td><code>fsm</code> overrides</td><td>Per-enemy walk/charge multipliers, loaf durations, hurt duration, <code>attack_fallback_duration</code>. Defaults = today's <code>enemy_base.gd</code> constants; SHOULD-level tuning freedom.</td></tr>
+    <tr><td><code>clip_notes</code></td><td>Optional, documentational (MAY): authored clip semantics keyed by token — what each clip on the rig <em>is</em> (idle vs attack-ready vs transition). Shown in the tool next to the clip picker; the runtime ignores it. First worked example: garapython.</td></tr>
   </table>
   <p>Every non-boss enemy MUST have an entry with ≥1 attack. An enemy missing from the file MUST fall back to the <code>defaults</code> block plus one default <code>atk</code> attack — it never crashes and never refuses to attack.</p>
 
@@ -64,6 +65,9 @@ const timeline = `stateDiagram-v2
     <li>When no clip resolves for an attack's token, the timeline fractions MUST apply to <code>attack_fallback_duration</code> — frame-tied damage still functions on clip-less rigs (armadillo).</li>
     <li>A configured <code>clip</code> token that doesn't resolve on the rig MUST degrade to that same fallback path; the tool SHOULD flag it visibly (it renders the token red with the fallback note).</li>
   </ul>
+
+  <h2>Open question — stance model</h2>
+  <p>Some rigs encode a two-stance structure the FSM cannot yet express. Garapython (<code>m_003</code>) is the worked example, captured in its <code>clip_notes</code>: a <strong>low</strong> stance (<code>wat1</code> idle, <code>wlk</code> slither) and a <strong>raised attack-ready</strong> stance (<code>wat2</code>), with authored transitions — <code>stt</code> rises <code>wlk → wat2</code>, <code>wt2w</code> lowers <code>wat2 → wlk</code> without attacking — and both attacks launching from the raised pose. A faithful runtime would rise before striking and lower to travel. Whether stances become FSM sub-states (with per-enemy transition clips in this data file) is an <strong>explicit open design question</strong> — not contracted here yet. Until it is decided, the runtime MAY play attacks directly from locomotion, and <code>clip_notes</code> preserves the authored intent.</p>
 
   <h2>Tooling &amp; data flow</h2>
   <ul>

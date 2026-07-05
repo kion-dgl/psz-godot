@@ -44,6 +44,12 @@ export interface EnemyAttackEntry {
   stats: EnemyStats;
   fsm: Partial<FsmParams>;
   attacks: AttackDef[];
+  /**
+   * Authored clip semantics, keyed by clip token — documentational (MAY),
+   * e.g. garapython: stt = "rise: wlk → wat2". Shown in the tool next to
+   * the clip picker; input for the future stance model (spec open question).
+   */
+  clip_notes?: Record<string, string>;
 }
 
 export interface EnemyAttackConfig {
@@ -87,6 +93,7 @@ export interface ResolvedEntry {
   stats: EnemyStats;
   fsm: FsmParams;
   attacks: AttackDef[];
+  clip_notes: Record<string, string>;
 }
 
 export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string): ResolvedEntry {
@@ -98,7 +105,7 @@ export function resolveEntry(config: EnemyAttackConfig | null, enemyId: string):
     ...(config?.defaults?.attack ?? {}),
     ...a,
   }));
-  return { stats, fsm, attacks };
+  return { stats, fsm, attacks, clip_notes: entry?.clip_notes ?? {} };
 }
 
 /** Spec: an enemy missing from the file falls back to one default attack — it never refuses to attack. */

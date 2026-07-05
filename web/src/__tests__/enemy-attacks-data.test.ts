@@ -74,6 +74,28 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
     expect(bad, `attacks with bad geometry: ${bad.join(', ')}`).toHaveLength(0);
   });
 
+  it('clip_notes, when present, map clip tokens to non-empty strings', () => {
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      if (!e.clip_notes) continue;
+      for (const [token, note] of Object.entries(e.clip_notes)) {
+        if (typeof note !== 'string' || note.length === 0) bad.push(`${id}/${token}`);
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
+  });
+
+  it('garapython/garahadan keep their authored snake attack tables (seeder merge guard)', () => {
+    // Authored from the m_003 rig semantics (atk1 normal / atk2 strong from
+    // the raised wat2 pose). If this fails, the seeder clobbered hand tuning.
+    for (const id of ['garapython', 'garahadan']) {
+      const e = config.enemies[id];
+      const clips = e.attacks.map((a: { clip: string }) => a.clip);
+      expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2']));
+      expect(e.clip_notes?.wat2, `${id} clip_notes`).toContain('attack-ready');
+    }
+  });
+
   it('attack ids are unique per enemy and clips are non-empty tokens', () => {
     const bad: string[] = [];
     for (const [id, e] of entries) {
