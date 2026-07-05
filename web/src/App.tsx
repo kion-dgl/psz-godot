@@ -12,6 +12,7 @@ const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 const FloorMeshEditor = lazy(() => import('./floor-mesh-editor/FloorMeshEditor'));
 const FloorColliderBuilder = lazy(() => import('./floor-collider-builder/FloorColliderBuilder'));
 const CityWalkMock = lazy(() => import('./city-walk-mock/CityWalkMock'));
+const TeleporterMock = lazy(() => import('./teleporter-mock/TeleporterMock'));
 const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
@@ -68,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/floor-mesh-editor', label: 'Floor Mesh' },
       { to: '/floor-collider-builder', label: 'Floor Collider' },
       { to: '/city-walk-mock', label: 'City Walk Mock' },
+      { to: '/teleporter-mock', label: 'Teleporter' },
       { to: '/svg-check', label: 'SVG Check' },
       { to: '/office-editor', label: 'Office' },
       { to: '/market-editor', label: 'Market' },
@@ -247,6 +249,7 @@ export default function App() {
             <Route path="/floor-mesh-editor" element={<FloorMeshEditor />} />
             <Route path="/floor-collider-builder" element={<FloorColliderBuilder />} />
             <Route path="/city-walk-mock" element={<CityWalkMock />} />
+            <Route path="/teleporter-mock" element={<TeleporterMock />} />
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
             <Route path="/market-editor" element={<MarketEditor />} />

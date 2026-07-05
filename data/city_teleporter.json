@@ -1,0 +1,29 @@
+{
+  "_comment": "City warp-pad dressing layout (special_c3 set). Authored in the web mock at #/teleporter-mock and consumed by scripts/3d/elements/teleporter_dressing.gd. Positions are offsets from `anchor` (world frame, matches the s00e_sa2 stage GLB); each piece is re-pivoted to its bbox bottom-center before the offset applies. `scroll` = UV offset speed in units/sec; `uv.wrap` per axis is mirror|repeat|clamp; `uv.rot` is radians.",
+  "set": "special_c3",
+  "anchor": [0.03, -7.08, 60.83],
+  "pieces": {
+    "o00_compass": {
+      "pos": [0, 0, 0],
+      "ry": 0,
+      "s": 1,
+      "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 }
+    },
+    "o00_compass2": {
+      "pos": [0, 0.5, 0],
+      "ry": 0,
+      "s": 1,
+      "scroll": { "u": 0, "v": -0.15 }
+    },
+    "o0s_warpcb": {
+      "pos": [0, 1, 0],
+      "ry": 0,
+      "s": 1,
+      "scroll": { "u": 0, "v": 0.15 },
+      "uv": { "wrap": ["repeat", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 }
+    },
+    "o0s_warpch": { "pos": [0, 0, 0], "ry": 0, "s": 1 },
+    "o0s_warpcn": { "pos": [0, 0, 0], "ry": 0, "s": 1 },
+    "o0s_warpcv": { "pos": [0, 0, 0], "ry": 0, "s": 1 }
+  }
+}
