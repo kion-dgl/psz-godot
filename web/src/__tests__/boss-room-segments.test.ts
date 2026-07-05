@@ -9,6 +9,11 @@ import path from 'path';
 import { segmentFamilies } from '../boss-room/types';
 
 const ASSETS = path.resolve(__dirname, '../../public/assets');
+// The /assets/ tree is not in git (ships via R2/pack) — these pins need the
+// real GLB bytes, so they only run where a local tree exists (dev boxes).
+// CI's coverage of the referenced paths is boss-arenas-data.test.ts, which
+// validates against the committed asset_tree.txt.
+const HAS_ASSETS = fs.existsSync(path.join(ASSETS, 'enemies', 'boss_dragon', 'boss_dragon.glb'));
 
 /** Clip names from a GLB's JSON chunk (glTF binary: 12-byte header, then chunks). */
 function glbClipNames(modelId: string): string[] {
@@ -29,7 +34,7 @@ describe('segmentFamilies — synthetic', () => {
   });
 });
 
-describe('segmentFamilies — real boss rigs', () => {
+describe.skipIf(!HAS_ASSETS)('segmentFamilies — real boss rigs (local assets only)', () => {
   it('boss_mother: cmb chains st→lp→end; laser/swing/hedb chain st→lp', () => {
     const fams = segmentFamilies(glbClipNames('boss_mother'));
     const byPrefix = new Map(fams.map((f) => [f.prefix, f]));

@@ -1,7 +1,10 @@
 /**
  * Data validation for data/boss_arenas.json (#493, tool at #/boss-room).
  * Boss rooms load the boss inside its own arena, so every referenced asset
- * (boss GLB, arena visual + floor GLBs) must actually exist on disk.
+ * (boss GLB, arena visual + floor GLBs) must be in the published pack.
+ * Existence is checked against the committed asset_tree.txt — the /assets/
+ * tree itself is not in git (it ships via R2/pack), so CI has no files on
+ * disk; asset_tree.txt is the same source of truth check-asset-refs uses.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
@@ -9,8 +12,13 @@ import path from 'path';
 
 const CONFIG_PATH = path.resolve(__dirname, '../../public/data/boss_arenas.json');
 const ENEMIES_PATH = path.resolve(__dirname, '../../public/data/enemies.json');
-// Through the web/public/assets symlinks — same tree the dev server serves.
-const ASSETS = path.resolve(__dirname, '../../public/assets');
+const ASSET_TREE = new Set(
+  fs
+    .readFileSync(path.resolve(__dirname, '../../../asset_tree.txt'), 'utf-8')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean),
+);
 
 const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
 const roster: Array<{ id: string; model_id?: string; is_boss?: boolean }> = JSON.parse(
@@ -48,10 +56,10 @@ describe('boss_arenas.json — bosses', () => {
     }
   });
 
-  it('boss model GLBs exist on disk', () => {
+  it('boss model GLBs are in the published pack (asset_tree.txt)', () => {
     for (const [id, b] of bosses) {
-      const glb = path.join(ASSETS, 'enemies', b.model_id, `${b.model_id}.glb`);
-      expect(fs.existsSync(glb), `${id}: missing ${glb}`).toBe(true);
+      const glb = `assets/enemies/${b.model_id}/${b.model_id}.glb`;
+      expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
     }
   });
 
@@ -75,19 +83,19 @@ describe('boss_arenas.json — bosses', () => {
 });
 
 describe('boss_arenas.json — arenas', () => {
-  it('every arena has its visual + floor GLBs on disk', () => {
+  it('every arena has its visual + floor GLBs in the published pack', () => {
     for (const [stageId, a] of arenas) {
-      const dir = path.join(ASSETS, 'stages', a.area, stageId, 'lndmd');
+      const dir = `assets/stages/${a.area}/${stageId}/lndmd`;
       for (const file of [`${stageId}_m.glb`, `${stageId}-floor.glb`]) {
-        expect(fs.existsSync(path.join(dir, file)), `${stageId}: missing ${file}`).toBe(true);
+        expect(ASSET_TREE.has(`${dir}/${file}`), `${stageId}: ${file} not in asset_tree.txt`).toBe(true);
       }
     }
   });
 
-  it('skybox flag matches the skybox GLB on disk', () => {
+  it('skybox flag matches the skybox GLB in the published pack', () => {
     for (const [stageId, a] of arenas) {
-      const sky = path.join(ASSETS, 'stages', a.area, stageId, 'lndmd', 'skybox', 'o0s_zsky.glb');
-      expect(fs.existsSync(sky), `${stageId}: skybox=${!!a.skybox} but disk disagrees`).toBe(!!a.skybox);
+      const sky = `assets/stages/${a.area}/${stageId}/lndmd/skybox/o0s_zsky.glb`;
+      expect(ASSET_TREE.has(sky), `${stageId}: skybox=${!!a.skybox} but asset_tree.txt disagrees`).toBe(!!a.skybox);
     }
   });
 
