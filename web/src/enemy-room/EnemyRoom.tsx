@@ -570,7 +570,13 @@ export default function EnemyRoom() {
             s.currentAction = action;
             s.currentClipName = clip.name;
           }
-          s.mixer.update(clock.dt);
+          // Box-mimic disguise: hold the clip's first frame (the boxed pose).
+          if (sim.animHold && s.currentAction) {
+            s.currentAction.time = 0;
+            s.mixer.update(0);
+          } else {
+            s.mixer.update(clock.dt);
+          }
         }
       } else if (s.mixer && sim.state === 'attacking' && sim.currentAttack && s.currentAction) {
         // Paused scrub: keep action time in sync with the sim's attack t.
@@ -911,6 +917,10 @@ export default function EnemyRoom() {
             {sliderRow('hover_height', entry.fsm.hover_height, 0, 3, 0.1, (v) => setFsm('hover_height', v))}
           </>
         )}
+        {entry.archetype === 'roller' &&
+          sliderRow('standoff_range', entry.fsm.standoff_range, 2, 10, 0.25, (v) => setFsm('standoff_range', v))}
+        {entry.archetype === 'box_mimic' &&
+          sliderRow('reveal_range', entry.fsm.reveal_range, 1, 8, 0.25, (v) => setFsm('reveal_range', v))}
 
         <h4 style={h4Style}>Attacks ({entry.attacks.length})</h4>
         {entry.attacks.map((a, i) => {

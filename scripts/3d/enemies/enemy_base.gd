@@ -775,6 +775,7 @@ const ANIM_ALIASES := {
 	"wlk": ["fly"],       # walk → fly (for airborne enemies)
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
+	"dmg": ["dam"],       # five rigs name the damage clip dam (booma/swordman/tank/orangutan/shrimp)
 }
 
 func _find_animation(short_name: String) -> String:

@@ -703,6 +703,61 @@ describe('enemy-room FSM — ape gunner windup_clips (spec /states/enemies §ape
   });
 });
 
+describe('enemy-room FSM — box mimic (spec /states/enemies §box-mimic)', () => {
+  const strike = atk({ id: 'strike', clip: 'atk', min_range: 0, max_range: 2 });
+  const mimicConfig = (): EnemyAttackConfig => {
+    const c = config([strike]);
+    c.enemies.dummy.archetype = 'box_mimic';
+    c.enemies.dummy.fsm = { reveal_range: 3.5 };
+    return c;
+  };
+
+  it('stays dormant inside detection range but outside reveal range — no wander, boxed pose held', () => {
+    const entry = resolveEntry(mimicConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 6 } }); // well inside detection 15
+    run(sim, entry, input, 5.0);
+    expect(sim.state).toBe('idle');
+    expect(sim.pos).toEqual({ x: 0, z: 0 }); // never wanders
+    // Disguise pose: stt held at frame 0, or the rare wlk2 sway tell.
+    expect(['stt', 'wlk2']).toContain(sim.anim);
+    if (sim.anim === 'stt') expect(sim.animHold).toBe(true);
+  });
+
+  it('reveals inside reveal_range: stt pop-out hold, then walks on wlk1 and attacks', () => {
+    const entry = resolveEntry(mimicConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 3 } });
+    const events = run(sim, entry, input, 0.1);
+    expect(events.some((e) => e.type === 'state_change' && e.to === 'chasing')).toBe(true);
+    expect(sim.anim).toBe('stt');
+    expect(sim.animHold).toBe(false); // the reveal PLAYS, not held
+    expect(sim.threatTimer).toBeGreaterThan(0);
+    const later = run(sim, entry, input, 2.0);
+    expect(later.some((e) => e.type === 'attack_start')).toBe(true);
+  });
+
+  it('reveal-cancel: backing off mid-reveal plays tk2 and returns to the disguise, then re-reveals', () => {
+    const entry = resolveEntry(mimicConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const near = makeInput({ playerPos: { x: 0, z: 3 } });
+    stepEnemy(sim, entry, near); // reveal starts (hold 1.0s)
+    expect(sim.state).toBe('chasing');
+    const far = makeInput({ playerPos: { x: 0, z: 9 } }); // > 1.5 × reveal_range
+    stepEnemy(sim, entry, far);
+    expect(sim.state).toBe('idle');
+    expect(sim.anim).toBe('tk2'); // retreats into the box
+    run(sim, entry, far, 1.2); // tk2 plays out
+    // Boxed again (or already rolling its random wlk2 sway tell).
+    expect(['stt', 'wlk2']).toContain(sim.anim);
+    if (sim.anim === 'stt') expect(sim.animHold).toBe(true);
+    expect(sim.state).toBe('idle');
+    // Approach again → re-reveals.
+    const again = run(sim, entry, near, 0.1);
+    expect(again.some((e) => e.type === 'state_change' && e.to === 'chasing')).toBe(true);
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

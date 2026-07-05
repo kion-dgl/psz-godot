@@ -51,6 +51,14 @@ describe('enemy-room clip resolution — Godot parity', () => {
     expect(resolveClip(clips('b062_atk_pu'), 'wat')).toBeNull();
   });
 
+  it('dmg resolves the dam-named damage clips via the alias table', () => {
+    // Five rigs name their damage clip dam: booma, swordman, tank, orangutan, shrimp.
+    expect(resolveClip(clips('s_040_dam', 's_040_atk'), 'dmg')?.name).toBe('s_040_dam');
+    expect(resolveClip(clips('b_044_dam', 'b_044_wat'), 'dmg')?.name).toBe('b_044_dam');
+    // Rigs with a real dmg clip are unaffected (direct suffix wins).
+    expect(resolveClip(clips('m_012_dmg', 'm_012_dam_x'), 'dmg')?.name).toBe('m_012_dmg');
+  });
+
   it('clipToken strips rig prefixes', () => {
     expect(clipToken('s_001_atk')).toBe('atk');
     expect(clipToken('m051_atk_sh')).toBe('atk_sh');

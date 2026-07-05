@@ -60,6 +60,8 @@ export interface FsmParams {
   standoff_range: number;
   /** Flyer archetypes: airborne height while engaged (0 = grounded). */
   hover_height: number;
+  /** Box mimic: disguise-break distance — replaces detection_range entirely while dormant. */
+  reveal_range: number;
 }
 
 export interface EnemyAttackEntry {
@@ -93,6 +95,7 @@ export const DEFAULT_FSM: FsmParams = {
   attack_fallback_duration: 0.8,
   standoff_range: 6.0,
   hover_height: 0.0,
+  reveal_range: 3.5,
 };
 
 export const DEFAULT_ATTACK: Omit<AttackDef, 'id' | 'clip'> = {

@@ -83,8 +83,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'box_mimic',
     label: 'Box mimic',
-    blurb: 'Look like boxes and wait for the player to approach before attacking (tk1/tk2, wlk1/wlk2): Bolix, Goldix.',
-    simNote: 'Baseline sim; ambush behavior notes pending — split out per kion, module to follow.',
+    blurb: 'Hermit crab: pretends to be a box (holds stt\'s boxed first frame, rare wlk2 sway tell) and ignores normal detection — reveals only inside reveal_range, tk2 peek-retreat if you back off mid-reveal, then tk1/wlk1/atk melee. The Paru "gates won\'t unlock" enemy: Bolix, Goldix.',
+    simNote: 'Implemented: dormant disguise + reveal_range + peek-cancel (spec /states/enemies §box-mimic; tk2/wlk2 roles are kion\'s theories — confirm in-game). Room-clear MUST count dormant mimics.',
   },
   {
     id: 'trickster',

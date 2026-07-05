@@ -950,6 +950,12 @@ func test_enemy_attack_clip_resolution() -> void:
 	var e8 := _make_recovery_enemy(["s071_atk", "s071_atk_hi", "s071_atk_mi"], 0.6)
 	assert_eq(e8._find_animation("atk"), "s071_atk", "plain _atk suffix still wins before the scan")
 
+	# dmg → dam alias: five rigs (booma/swordman/tank/orangutan/shrimp) name
+	# their damage clip dam — the hurt reaction must still resolve a clip.
+	var e9 := _make_recovery_enemy(["s_040_dam", "s_040_atk"], 0.5)
+	assert_eq(e9._find_animation("dmg"), "s_040_dam", "dmg resolves dam-named damage clips via alias")
+	e9.queue_free()
+
 	# End-to-end on a suffix-variant rig: the scanned clip is the tracked
 	# attack anim and its finish clears is_attacking (no wedge, real visual).
 	e4.target = dummy

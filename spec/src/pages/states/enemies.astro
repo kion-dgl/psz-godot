@@ -66,7 +66,7 @@ const fsm = `stateDiagram-v2
   <ol>
     <li>Exact clip name equal to the token.</li>
     <li>Any clip ending in <code>_&lt;token&gt;</code>.</li>
-    <li>The alias table (<code>atk</code> → <code>atk1</code>, <code>atckwat</code>).</li>
+    <li>The alias table (<code>atk</code> → <code>atk1</code>, <code>atckwat</code>; <code>dmg</code> → <code>dam</code> — five rigs name their damage clip <code>dam</code>: booma, swordman, tank, orangutan, shrimp).</li>
     <li><em>Attack only</em> — last-resort scan: any clip with an exact <code>atk</code> underscore-segment (<code>b062_atk_pu</code>, <code>b052_atk_sh</code>, <code>m061_atk_a</code>, <code>b072_atk_sa_a</code>…) qualifies, <strong>excluding</strong> clips whose final segment is <code>st</code>, <code>lp</code>, or <code>ed</code> — those are segmented charge-up/loop/end pieces (<code>m051_atk_sp_lp</code>, <code>b072_atk_gu_a_st</code>) and playing one alone shows a partial attack. Among qualifiers the alphabetically first <strong>MUST</strong> be picked, so resolution is deterministic per rig.</li>
     <li>Nothing resolves → the fixed fallback duration (below). A rig whose only attack clips are segmented pieces (boss_robot's <code>z003_atk_dl_lp</code>) <strong>MUST</strong> take this path rather than play a bare segment.</li>
   </ol>
@@ -139,6 +139,16 @@ const fsm = `stateDiagram-v2
     <li><strong>Two pistol shots</strong>: <code>atcksht</code> is the shoot attack; <code>atcktuki</code> <em>looks like a different shoot attack</em> (kion — uncertain, authored as a second projectile variant pending confirmation).</li>
     <li><strong>Charged punch is a clip sequence</strong> (kion): <code>atckstt</code> winds up → <code>atckwat</code> holds the charge → <code>atckswg</code> swings. Authored via <code>windup_clips</code>: the windup clips play sequentially as <strong>pure telegraph</strong> (MUST NOT damage), then the swing clip carries the normal damaging window. The long telegraph is the trade for the charged damage.</li>
     <li><strong><code>wtclp</code></strong> (raises hands above head — maybe intimidation) is <strong>unused pending confirmation</strong> — an open question; a taunt/display slot if it proves real.</li>
+  </ul>
+
+  <h3>Archetype: Box mimic (Bolix family) — normative</h3>
+  <p>Applies to <code>archetype: box_mimic</code> (shrimp rigs — Bolix, Goldix). Hermit-crab behavior: it pretends to be a box and stays hidden until the player gets close, at which point it comes out and attacks. In Paru this is the "cleared the room but the gates won't unlock" moment.</p>
+  <ul>
+    <li><strong>Dormant disguise</strong>: while idle the mimic <strong>MUST</strong> be stationary and disguised — holding the <em>first frames</em> of <code>stt</code> (kion's read: the clip starts fully boxed). It <strong>MUST NOT</strong> wander and <strong>MUST NOT</strong> aggro at <code>detection_range</code> — the disguise overrides normal detection entirely.</li>
+    <li><strong>Reveal</strong>: when the target comes within <code>fsm.reveal_range</code> (much smaller than detection range), the mimic plays <code>stt</code> — poking its head out of the box — as an aggro-display hold (sixth <code>stt</code> meaning), then fights as a normal melee walker: <code>tk1</code> active idle, <code>wlk1</code> walk, <code>atk</code> strike.</li>
+    <li><strong>Reveal-cancel</strong> (kion's theory, authored provisionally): if the target backs out past ~1.5× the reveal range mid-reveal, the mimic plays <code>tk2</code> — partially out, then retreats — and returns to the disguise. Whether it re-hides after a <em>full</em> reveal is an <strong>open question</strong> (authored: it stays active).</li>
+    <li><strong>The sway tell</strong> (uncertain): <code>wlk2</code> — the box sways around — MAY play occasionally while disguised as the subtle hint that a box is alive ("the game might give subtle hints that some boxes are actually moving"). Authored as a rare idle sway; confirm in-game.</li>
+    <li><strong>Room-clear MUST count mimics</strong>: gates stay locked until disguised mimics are found and killed — that IS the Paru experience; the field controller's room-clear logic must include dormant mimics in the alive-enemy count.</li>
   </ul>
 
   <h2>Status effects &amp; elements</h2>

@@ -15,6 +15,7 @@ export const ANIM_ALIASES: Record<string, string[]> = {
   wlk: ['fly', 'wlk_l'], // walk → fly (airborne) / left-variant (Godot alternates wlk_l/wlk_r)
   run: ['fly', 'wlk_l'],
   atk: ['atk1', 'atckwat'], // attack → variant 1 / orangutan's misspelled clip (#477)
+  dmg: ['dam'], // five rigs name the damage clip dam: booma, swordman, tank, orangutan, shrimp
 };
 
 /** Strip the rig prefix ("s_001_", "m051_", "z003_"…) → the Godot resolver token. */

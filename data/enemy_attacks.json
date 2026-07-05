@@ -10,7 +10,8 @@
       "hurt_duration": 0.3,
       "attack_fallback_duration": 0.8,
       "standoff_range": 6.0,
-      "hover_height": 0.0
+      "hover_height": 0.0,
+      "reveal_range": 3.5
     },
     "attack": {
       "windup_frac": 0.35,
@@ -260,21 +261,34 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "reveal_range": 3.5
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "strike",
           "clip": "atk",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "attack",
+        "stt": "pokes head out of box to become active \u2014 while DORMANT the mimic holds this clip's first frames (fully boxed)",
+        "tk1": "idles with head out of box (active idle)",
+        "tk2": "partially comes out of box, but retreats \u2014 authored as the reveal-cancel when the player backs off mid-reveal (kion's theory)",
+        "wlk1": "walking (active locomotion)",
+        "wlk2": "box sways around \u2014 authored as the rare disguised-movement tell (kion: 'the game might give subtle hints'; uncertain)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "booma_origin": {
       "archetype": "bruiser",
@@ -894,21 +908,34 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "reveal_range": 3.5
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "strike",
           "clip": "atk",
+          "kind": "melee_arc",
+          "weight": 1.0,
+          "min_range": 0.0,
+          "max_range": 2.0,
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
           "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "attack",
+        "stt": "pokes head out of box to become active \u2014 while DORMANT the mimic holds this clip's first frames (fully boxed)",
+        "tk1": "idles with head out of box (active idle)",
+        "tk2": "partially comes out of box, but retreats \u2014 authored as the reveal-cancel when the player backs off mid-reveal (kion's theory)",
+        "wlk1": "walking (active locomotion)",
+        "wlk2": "box sways around \u2014 authored as the rare disguised-movement tell (kion: 'the game might give subtle hints'; uncertain)",
+        "dam": "take damage",
+        "ded": "die"
+      }
     },
     "grimble": {
       "archetype": "quadruped",

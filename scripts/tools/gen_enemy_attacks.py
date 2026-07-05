@@ -36,6 +36,7 @@ DEFAULTS = {
         'attack_fallback_duration': 0.8,
         'standoff_range': 6.0,  # kiter archetypes (quad_machine); flyers reuse as orbit radius
         'hover_height': 0.0,  # flyer archetypes: airborne height while engaged
+        'reveal_range': 3.5,  # box_mimic: disguise-break distance (replaces detection)
     },
     'attack': {
         'windup_frac': 0.35,

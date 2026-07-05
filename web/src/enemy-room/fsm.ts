@@ -82,6 +82,11 @@ export interface EnemySim {
   threatDuration: number;
   /** Flyer archetypes: current airborne height (rises during the stt takeoff). */
   altitude: number;
+  /** Box mimic: hold the current clip's first frame (the disguise pose). */
+  animHold: boolean;
+  /** Box mimic: countdown to the next possible wlk2 sway tell / remaining tk2 play-out. */
+  dormantTimer: number;
+  dormantSwaying: boolean;
 }
 
 export interface SimInput {
@@ -163,6 +168,9 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     threatTimer: 0,
     threatDuration: 0,
     altitude: 0,
+    animHold: false,
+    dormantTimer: 0,
+    dormantSwaying: false,
   };
 }
 
@@ -264,6 +272,40 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
 
   switch (sim.state) {
     case 'idle': {
+      // Box mimic (spec §box-mimic): dormant disguise — stationary, holding
+      // the first frames of stt, ignoring detection_range entirely. Only
+      // reveal_range breaks the disguise.
+      if (entry.archetype === 'box_mimic') {
+        sim.velocity = { x: 0, z: 0 };
+        if (dist <= entry.fsm.reveal_range) {
+          changeState(sim, 'chasing', events);
+          sim.animHold = false;
+          sim.dormantSwaying = false;
+          sim.anim = 'stt'; // pokes its head out of the box (sixth stt meaning)
+          sim.threatTimer = input.clipDurationFor('stt') ?? 1.0;
+          sim.threatDuration = sim.threatTimer;
+          break;
+        }
+        sim.dormantTimer -= dt;
+        if (sim.dormantSwaying) {
+          // Playing out a one-shot (wlk2 sway tell, or tk2 reveal-cancel
+          // retreat) — keep whatever clip started it, then re-hold.
+          sim.animHold = false;
+          if (sim.dormantTimer <= 0) sim.dormantSwaying = false;
+        } else {
+          sim.anim = 'stt';
+          sim.animHold = true; // frozen on the boxed-up first frame
+          if (sim.dormantTimer <= 0) {
+            sim.dormantTimer = 3 + rng() * 4;
+            if (rng() < 0.35) {
+              sim.dormantSwaying = true;
+              sim.anim = 'wlk2'; // the box sways — the subtle "it's alive" tell
+              sim.dormantTimer = input.clipDurationFor('wlk2') ?? 1.0;
+            }
+          }
+        }
+        break;
+      }
       if (dist <= entry.stats.detection_range) {
         changeState(sim, 'chasing', events);
         if (
@@ -308,14 +350,24 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     }
 
     case 'chasing': {
-      // Aggro display hold (bigrig chest-beat / flyer takeoff): stand and
-      // display, then pursue. Flyers rise to hover height during the hold.
+      // Aggro display hold (bigrig chest-beat / flyer takeoff / mimic
+      // pop-out): stand and display, then pursue. Flyers rise during it.
       if (sim.threatTimer > 0) {
         sim.threatTimer -= dt;
         sim.velocity = { x: 0, z: 0 };
         if (sim.threatDuration > 0 && entry.fsm.hover_height > 0) {
           const progress = 1 - Math.max(sim.threatTimer, 0) / sim.threatDuration;
           sim.altitude = entry.fsm.hover_height * progress;
+        }
+        // Reveal-cancel (spec §box-mimic, kion's theory): the target backed
+        // off mid-reveal — tk2 retreats into the box, back to the disguise.
+        if (entry.archetype === 'box_mimic' && dist > entry.fsm.reveal_range * 1.5) {
+          changeState(sim, 'idle', events);
+          sim.threatTimer = 0;
+          sim.anim = 'tk2';
+          sim.animHold = false;
+          sim.dormantSwaying = true; // reuse: play tk2 out, then re-hold
+          sim.dormantTimer = input.clipDurationFor('tk2') ?? 1.0;
         }
         break;
       }
@@ -352,7 +404,8 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       const dir = norm(sub(playerPos, sim.pos));
       sim.velocity = { x: dir.x * speed, z: dir.z * speed };
       sim.facing = dir;
-      sim.anim = charging ? 'run' : 'wlk';
+      // Revealed mimic walks on wlk1 (its rig has no plain wlk/run).
+      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : charging ? 'run' : 'wlk';
       break;
     }
 
@@ -481,7 +534,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       const speed = entry.stats.move_speed * LOAF_SPEED_MULT;
       sim.velocity = { x: sim.loafDir.x * speed, z: sim.loafDir.z * speed };
       sim.facing = { ...sim.loafDir };
-      sim.anim = 'wlk';
+      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : 'wlk';
       break;
     }
 
