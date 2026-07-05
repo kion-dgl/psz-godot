@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { ARCHETYPES } from '../enemy-room/archetypes';
 
 const ATTACKS_PATH = path.resolve(__dirname, '../../public/data/enemy_attacks.json');
 const ENEMIES_PATH = path.resolve(__dirname, '../../public/data/enemies.json');
@@ -72,6 +73,20 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
       }
     }
     expect(bad, `attacks with bad geometry: ${bad.join(', ')}`).toHaveLength(0);
+  });
+
+  it('every enemy carries a known archetype (spec /mechanics/enemy-attacks table)', () => {
+    const known = new Set(ARCHETYPES.map((a) => a.id));
+    const bad = entries.filter(([, e]) => !known.has(e.archetype));
+    expect(
+      bad.map(([id, e]) => `${id}=${e.archetype}`),
+      'enemies with missing/unknown archetype — classify the model in gen_enemy_attacks.py MODEL_ARCHETYPES',
+    ).toHaveLength(0);
+    // Every in-scope archetype room has at least one enemy to show.
+    for (const a of ARCHETYPES.filter((a) => !a.outOfScope)) {
+      const members = entries.filter(([, e]) => e.archetype === a.id);
+      expect(members.length, `archetype '${a.id}' has no enemies`).toBeGreaterThan(0);
+    }
   });
 
   it('clip_notes, when present, map clip tokens to non-empty strings', () => {

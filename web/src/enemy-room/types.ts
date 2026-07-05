@@ -41,6 +41,8 @@ export interface FsmParams {
 }
 
 export interface EnemyAttackEntry {
+  /** Behavior archetype id (spec /mechanics/enemy-attacks table) — stamped by gen_enemy_attacks.py from model_id. */
+  archetype?: string;
   stats: EnemyStats;
   fsm: Partial<FsmParams>;
   attacks: AttackDef[];

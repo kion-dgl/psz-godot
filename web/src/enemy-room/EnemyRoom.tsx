@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -16,6 +17,7 @@ import {
 } from './types';
 import { makeSim, stepEnemy, applyHurt, type EnemySim, type SimEvent } from './fsm';
 import { clipToken, resolveClip } from './anim';
+import { ARCHETYPE_BY_ID } from './archetypes';
 
 /**
  * Enemy room — the design mock for per-enemy ATTACK BEHAVIOR (spec
@@ -45,7 +47,8 @@ const PLAYER_MAX_HP = 100;
 const ARENA_HALF = 11;
 
 interface StoredState {
-  enemyId: string;
+  /** Last-selected enemy per archetype room. */
+  enemyByArchetype: Record<string, string>;
   overrides: Record<string, EnemyAttackEntry>;
 }
 
@@ -54,12 +57,17 @@ function loadStored(): StoredState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed.enemyId === 'string' && parsed.overrides) return parsed;
+      if (parsed && parsed.overrides) {
+        return {
+          enemyByArchetype: parsed.enemyByArchetype ?? {},
+          overrides: parsed.overrides,
+        };
+      }
     }
   } catch {
     /* ignore */
   }
-  return { enemyId: 'booma_origin', overrides: {} };
+  return { enemyByArchetype: {}, overrides: {} };
 }
 
 
@@ -158,10 +166,26 @@ export default function EnemyRoom() {
     };
   }, []);
 
-  const enemyId = stored.enemyId;
+  const { archetype: archetypeParam } = useParams();
+  const archetypeId = archetypeParam ?? 'simple_melee';
+  const archetype = ARCHETYPE_BY_ID.get(archetypeId);
+
+  // This room's roster: enemies stamped with this archetype.
   const enemyIds = useMemo(
-    () => (baseConfig ? Object.keys(baseConfig.enemies).sort() : []),
-    [baseConfig],
+    () =>
+      baseConfig
+        ? Object.keys(baseConfig.enemies)
+            .filter((id) => (baseConfig.enemies[id].archetype ?? 'unclassified') === archetypeId)
+            .sort()
+        : [],
+    [baseConfig, archetypeId],
+  );
+  const storedPick = stored.enemyByArchetype[archetypeId];
+  const enemyId = storedPick && enemyIds.includes(storedPick) ? storedPick : (enemyIds[0] ?? '');
+  const setEnemyId = useCallback(
+    (id: string) =>
+      setStored((prev) => ({ ...prev, enemyByArchetype: { ...prev.enemyByArchetype, [archetypeId]: id } })),
+    [archetypeId],
   );
 
   // Effective entry: file config with the local override applied, defaults resolved.
@@ -299,7 +323,7 @@ export default function EnemyRoom() {
   // ── Enemy model load (per enemy) ──────────────────────────────────────
   useEffect(() => {
     const s = sceneRef.current;
-    if (!s) return;
+    if (!s || !enemyId) return;
     let cancelled = false;
     setClipNames([]);
     setModelError(null);
@@ -734,14 +758,28 @@ export default function EnemyRoom() {
         {(loadError || modelError) && (
           <div style={{ position: 'absolute', top: '40%', width: '100%', textAlign: 'center', color: '#f66' }}>{loadError || modelError}</div>
         )}
+        {!archetype && (
+          <div style={{ position: 'absolute', top: '40%', width: '100%', textAlign: 'center', color: '#f66' }}>
+            unknown archetype '{archetypeId}' — <Link to="/enemy-room" style={{ color: '#6bf' }}>pick one</Link>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
       <div style={{ width: 340, overflowY: 'auto', padding: 12, background: '#12122a', fontSize: 12 }}>
-        <h3 style={{ margin: '0 0 8px' }}>Enemy Room</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <h3 style={{ margin: '0 0 4px' }}>{archetype?.label ?? archetypeId} Room</h3>
+          <Link to="/enemy-room" style={{ color: '#6bf', fontSize: 11 }}>all archetypes</Link>
+        </div>
+        {archetype && (
+          <>
+            <div style={{ color: '#9ab', fontSize: 11, marginBottom: 4 }}>{archetype.blurb}</div>
+            <div style={{ color: '#786', fontSize: 10, marginBottom: 8, fontStyle: 'italic' }}>{archetype.simNote}</div>
+          </>
+        )}
         <select
           value={enemyId}
-          onChange={(ev) => setStored((prev) => ({ ...prev, enemyId: ev.target.value }))}
+          onChange={(ev) => setEnemyId(ev.target.value)}
           style={{ width: '100%', padding: 6, marginBottom: 8, background: '#1a1a3a', color: '#fff', border: '1px solid #334' }}
         >
           {grouped.map(([label, ids]) => (

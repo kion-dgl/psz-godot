@@ -57,9 +57,42 @@ TRES_STAT_DEFAULTS = {
     'attack_base': 10,
 }
 
+# model_id → behavior archetype (spec /mechanics/enemy-attacks "Rig groups
+# & behavior archetypes"; derived from the enemy_anim_groups.py scan — run
+# it to audit when rigs change). Every roster model MUST be classified; the
+# data test fails on 'unclassified' so new rigs force a decision here.
+MODEL_ARCHETYPES = {
+    'simple_melee': [
+        'bat', 'bat_blue', 'circle', 'circle_black', 'vulture', 'lizard',
+        'rabbit', 'rabbit_rare', 'lion', 'lion_rare',
+    ],
+    'quadruped': ['wolf', 'hyena', 'hyena_rare', 'deer', 'tiger'],
+    'quad_machine': ['quad', 'quad_rare'],
+    'bruiser': ['booma', 'jigobooma'],
+    'bigrig_combo': ['gorilla', 'gorilla_female', 'gorilla_rare'],
+    'flyer_combo': ['roc', 'roc_rare'],
+    'two_attack': ['seal', 'seal_rare'],
+    'stance_riser': ['snake', 'snake_rare'],
+    'transformer': [
+        'armadillo', 'armadillo_rare', 'shrimp', 'shrimp_rare',
+        'orangutan', 'orangutan_rare',
+    ],
+    'trickster': ['frog', 'frog_bomb', 'frog_rare', 'rappy', 'rappy_blue', 'rappy_red'],
+    'machine_soldier': [
+        'leg', 'leg_black', 'lower', 'lower_black',
+        'swordman', 'swordman_b', 'swordman_rare', 'swordman_rare_b',
+        'board', 'board_blue', 'board_green',
+        'tank', 'tank_rare', 'shooter', 'shooter_leader',
+    ],
+    'mother_caster': ['mother', 'mother_sword', 'mother_gun', 'mother_tech'],
+    'unique': ['mole', 'shinowa', 'poison_lily'],
+    'boss': ['boss_dragon', 'boss_octopus', 'boss_mother', 'boss_darkfalz', 'boss_robot'],
+}
+ARCHETYPE_BY_MODEL = {m: a for a, ms in MODEL_ARCHETYPES.items() for m in ms}
 
-def parse_tres_stats(path: str) -> tuple[str, dict] | None:
-    """Extract (id, stats) from a .tres; None if it has no id field."""
+
+def parse_tres_stats(path: str) -> tuple[str, str, dict] | None:
+    """Extract (id, model_id, stats) from a .tres; None if it has no id field."""
     with open(path, 'r') as f:
         text = f.read()
 
@@ -71,6 +104,7 @@ def parse_tres_stats(path: str) -> tuple[str, dict] | None:
     if not raw_id:
         return None
     enemy_id = raw_id.strip('"')
+    model_id = (get_field('model_id') or '').strip('"')
 
     stats = {}
     for field, default in TRES_STAT_DEFAULTS.items():
@@ -81,7 +115,7 @@ def parse_tres_stats(path: str) -> tuple[str, dict] | None:
             stats[field] = int(float(raw))
         else:
             stats[field] = float(raw)
-    return enemy_id, stats
+    return enemy_id, model_id, stats
 
 
 def default_attack(attack_range: float) -> dict:
@@ -104,10 +138,14 @@ def main() -> None:
         parsed = parse_tres_stats(os.path.join(ENEMIES_DIR, fname))
         if not parsed:
             continue
-        enemy_id, stats = parsed
+        enemy_id, model_id, stats = parsed
+        # Always re-derived from model_id — classification lives in
+        # MODEL_ARCHETYPES, not in hand edits of the output file.
+        archetype = ARCHETYPE_BY_MODEL.get(model_id, 'unclassified')
         prev = existing.get('enemies', {}).get(enemy_id)
         if prev:
             entry = {
+                'archetype': archetype,
                 'stats': stats,  # always refreshed from .tres (authoritative)
                 'fsm': prev.get('fsm', {}),
                 'attacks': prev.get('attacks') or [default_attack(stats['attack_range'])],
@@ -116,6 +154,7 @@ def main() -> None:
                 entry['clip_notes'] = prev['clip_notes']
         else:
             entry = {
+                'archetype': archetype,
                 'stats': stats,
                 'fsm': {},
                 'attacks': [default_attack(stats['attack_range'])],

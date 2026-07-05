@@ -34,6 +34,7 @@ const timeline = `stateDiagram-v2
     <tr><td><code>damage_mult</code></td><td>Damage dealt = <code>stats.attack_base × damage_mult</code> (replaces the legacy fixed 10).</td></tr>
     <tr><td><code>fsm</code> overrides</td><td>Per-enemy walk/charge multipliers, loaf durations, hurt duration, <code>attack_fallback_duration</code>. Defaults = today's <code>enemy_base.gd</code> constants; SHOULD-level tuning freedom.</td></tr>
     <tr><td><code>clip_notes</code></td><td>Optional, documentational (MAY): authored clip semantics keyed by token — what each clip on the rig <em>is</em> (idle vs attack-ready vs transition). Shown in the tool next to the clip picker; the runtime ignores it. First worked example: garapython.</td></tr>
+    <tr><td><code>archetype</code></td><td>Behavior-archetype id from the table below, <strong>stamped by the seeder</strong> from <code>model_id</code> (classification lives in <code>gen_enemy_attacks.py MODEL_ARCHETYPES</code>, not in hand edits). Every enemy MUST carry a known archetype — an unclassified model fails the data test, forcing a decision when new rigs land. Selects the enemy's room at <code>#/enemy-room/&lt;archetype&gt;</code> and, later, the runtime behavior module.</td></tr>
   </table>
   <p>Every non-boss enemy MUST have an entry with ≥1 attack. An enemy missing from the file MUST fall back to the <code>defaults</code> block plus one default <code>atk</code> attack — it never crashes and never refuses to attack.</p>
 
@@ -74,6 +75,7 @@ const timeline = `stateDiagram-v2
   <ul>
     <li><strong>Exact sharing</strong>: models with an identical clip-name set share one rig — behavior defined for one member <strong>MUST</strong> apply to all of them, with only data deltas (stats, damage, weights) per enemy. 22 such groups exist; the non-obvious ones: booma+jigobooma (<code>s071</code>), leg+lower+blacks (<code>m061</code> — Derreo, Zerreo, Eulid, Eulidveil), board×3, swordman×4, mother_gun+mother_tech.</li>
     <li><strong>Token vocabularies</strong> (clip names minus the rig prefix) collapse the 47 regular models into the archetype table below. Each row SHOULD get <em>one</em> worked, authored example (garapython-style <code>clip_notes</code> + attack table); the rest of the row inherits its definition. A row's behavior becomes normative when it is specced in <a href="/states/enemies">/states/enemies</a> — until then rows are descriptive intake targets (#492).</li>
+    <li><strong>One room per archetype</strong>: each in-scope row has a dedicated capture/preview room at <code>#/enemy-room/&lt;archetype&gt;</code> (index at <a href="https://kion-dgl.github.io/psz-godot/#/enemy-room">#/enemy-room</a>), scoped to that archetype's enemies and stating what the sim does and does not yet model for the row (per-archetype sim modules are #494).</li>
   </ul>
   <table>
     <tr><th>Archetype</th><th>Vocabulary signature</th><th>Models</th></tr>

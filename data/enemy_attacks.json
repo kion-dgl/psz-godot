@@ -23,6 +23,7 @@
   },
   "enemies": {
     "akorse": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -47,6 +48,7 @@
       ]
     },
     "ar_rappy": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -71,6 +73,7 @@
       ]
     },
     "arkzein": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -95,6 +98,7 @@
       ]
     },
     "arkzein_r": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -119,6 +123,7 @@
       ]
     },
     "azherowa_b2": {
+      "archetype": "quad_machine",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -143,6 +148,7 @@
       ]
     },
     "batt": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -167,6 +173,7 @@
       ]
     },
     "blade_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -191,6 +198,7 @@
       ]
     },
     "blaze_helion": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -215,6 +223,7 @@
       ]
     },
     "bolix": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -239,6 +248,7 @@
       ]
     },
     "booma_origin": {
+      "archetype": "bruiser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -263,6 +273,7 @@
       ]
     },
     "bullbatt": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -287,6 +298,7 @@
       ]
     },
     "chaos_mobius": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -311,6 +323,7 @@
       ]
     },
     "dark_falz": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -335,6 +348,7 @@
       ]
     },
     "derreo": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -359,6 +373,7 @@
       ]
     },
     "eulada": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -383,6 +398,7 @@
       ]
     },
     "euladaveil": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -407,6 +423,7 @@
       ]
     },
     "eulid": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -431,6 +448,7 @@
       ]
     },
     "eulidveil": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -455,6 +473,7 @@
       ]
     },
     "finjer_b": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -479,6 +498,7 @@
       ]
     },
     "finjer_g": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -503,6 +523,7 @@
       ]
     },
     "finjer_r": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -527,6 +548,7 @@
       ]
     },
     "force_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -551,6 +573,7 @@
       ]
     },
     "froutang": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -575,6 +598,7 @@
       ]
     },
     "frunaked": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -599,6 +623,7 @@
       ]
     },
     "garahadan": {
+      "archetype": "stance_riser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -646,6 +671,7 @@
       }
     },
     "garapython": {
+      "archetype": "stance_riser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -693,6 +719,7 @@
       }
     },
     "ghowl": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -717,6 +744,7 @@
       ]
     },
     "gigobooma_origin": {
+      "archetype": "bruiser",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -741,6 +769,7 @@
       ]
     },
     "goldix": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -765,6 +794,7 @@
       ]
     },
     "grimble": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -789,6 +819,7 @@
       ]
     },
     "helion": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -813,6 +844,7 @@
       ]
     },
     "hildegao": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -837,6 +869,7 @@
       ]
     },
     "hildeghana": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -861,6 +894,7 @@
       ]
     },
     "hildegigas": {
+      "archetype": "bigrig_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -885,6 +919,7 @@
       ]
     },
     "humilias": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -909,6 +944,7 @@
       ]
     },
     "hypao": {
+      "archetype": "two_attack",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -933,6 +969,7 @@
       ]
     },
     "izhirak_s6": {
+      "archetype": "quad_machine",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -957,6 +994,7 @@
       ]
     },
     "kapantha": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -981,6 +1019,7 @@
       ]
     },
     "korse": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1005,6 +1044,7 @@
       ]
     },
     "mother_trinity": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1029,6 +1069,7 @@
       ]
     },
     "octo_diablo": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1053,6 +1094,7 @@
       ]
     },
     "pelcatobur": {
+      "archetype": "flyer_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1077,6 +1119,7 @@
       ]
     },
     "pelcatraz": {
+      "archetype": "flyer_combo",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1101,6 +1144,7 @@
       ]
     },
     "phobos": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1125,6 +1169,7 @@
       ]
     },
     "phobos_dyna": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1149,6 +1194,7 @@
       ]
     },
     "pobomma": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1173,6 +1219,7 @@
       ]
     },
     "poison_lily": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 0.0,
         "attack_range": 3.0,
@@ -1197,6 +1244,7 @@
       ]
     },
     "pomarr": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1221,6 +1269,7 @@
       ]
     },
     "porel": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1245,6 +1294,7 @@
       ]
     },
     "rab_rappy": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1269,6 +1319,7 @@
       ]
     },
     "rappy": {
+      "archetype": "trickster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1293,6 +1344,7 @@
       ]
     },
     "reyburn": {
+      "archetype": "boss",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1317,6 +1369,7 @@
       ]
     },
     "reyhound": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1341,6 +1394,7 @@
       ]
     },
     "rohcrysta": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1365,6 +1419,7 @@
       ]
     },
     "rohjade": {
+      "archetype": "transformer",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1389,6 +1444,7 @@
       ]
     },
     "rumole": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1413,6 +1469,7 @@
       ]
     },
     "shinowa": {
+      "archetype": "unique",
       "stats": {
         "move_speed": 4.0,
         "attack_range": 2.5,
@@ -1437,6 +1494,7 @@
       ]
     },
     "shot_mother": {
+      "archetype": "mother_caster",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1461,6 +1519,7 @@
       ]
     },
     "stagg": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1485,6 +1544,7 @@
       ]
     },
     "tormatible": {
+      "archetype": "quadruped",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1509,6 +1569,7 @@
       ]
     },
     "usanimere": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1533,6 +1594,7 @@
       ]
     },
     "usanny": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1557,6 +1619,7 @@
       ]
     },
     "vespao": {
+      "archetype": "two_attack",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1581,6 +1644,7 @@
       ]
     },
     "vulkure": {
+      "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1605,6 +1669,7 @@
       ]
     },
     "zaphobos": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1629,6 +1694,7 @@
       ]
     },
     "zaphobos_dyna": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1653,6 +1719,7 @@
       ]
     },
     "zerreo": {
+      "archetype": "machine_soldier",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
