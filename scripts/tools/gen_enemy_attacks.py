@@ -86,11 +86,15 @@ MODEL_ARCHETYPES = {
     # rappies don't actually trick anyone — they're just the rare enemies.
     'hopper': ['frog', 'frog_bomb', 'frog_rare'],
     'rappy': ['rappy', 'rappy_blue', 'rappy_red'],
-    'machine_soldier': [
+    # Former 'machine_soldier' bucket, split per kion (2026-07-05) into four:
+    # hovering projectile shooters, missile tanks, surfboard riders, and the
+    # Dark Shrine heartless-lookalikes. Behavior notes pending per group.
+    'shooter': ['shooter', 'shooter_leader'],
+    'missile_tank': ['tank', 'tank_rare'],
+    'boarder': ['board', 'board_blue', 'board_green'],
+    'shade': [
         'leg', 'leg_black', 'lower', 'lower_black',
         'swordman', 'swordman_b', 'swordman_rare', 'swordman_rare_b',
-        'board', 'board_blue', 'board_green',
-        'tank', 'tank_rare', 'shooter', 'shooter_leader',
     ],
     'mother_caster': ['mother', 'mother_sword', 'mother_gun', 'mother_tech'],
     'unique': ['mole', 'shinowa', 'poison_lily'],

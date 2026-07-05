@@ -27,7 +27,7 @@
   },
   "enemies": {
     "akorse": {
-      "archetype": "machine_soldier",
+      "archetype": "shooter",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -77,7 +77,7 @@
       ]
     },
     "arkzein": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -102,7 +102,7 @@
       ]
     },
     "arkzein_r": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -392,7 +392,7 @@
       ]
     },
     "derreo": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -467,7 +467,7 @@
       ]
     },
     "eulid": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -492,7 +492,7 @@
       ]
     },
     "eulidveil": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -517,7 +517,7 @@
       ]
     },
     "finjer_b": {
-      "archetype": "machine_soldier",
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -542,7 +542,7 @@
       ]
     },
     "finjer_g": {
-      "archetype": "machine_soldier",
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -567,7 +567,7 @@
       ]
     },
     "finjer_r": {
-      "archetype": "machine_soldier",
+      "archetype": "boarder",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1350,7 +1350,7 @@
       }
     },
     "korse": {
-      "archetype": "machine_soldier",
+      "archetype": "shooter",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1555,7 +1555,7 @@
       }
     },
     "phobos": {
-      "archetype": "machine_soldier",
+      "archetype": "missile_tank",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1580,7 +1580,7 @@
       ]
     },
     "phobos_dyna": {
-      "archetype": "machine_soldier",
+      "archetype": "missile_tank",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -2237,7 +2237,7 @@
       ]
     },
     "zaphobos": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -2262,7 +2262,7 @@
       ]
     },
     "zaphobos_dyna": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -2287,7 +2287,7 @@
       ]
     },
     "zerreo": {
-      "archetype": "machine_soldier",
+      "archetype": "shade",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,

@@ -99,10 +99,28 @@ export const ARCHETYPES: ArchetypeDef[] = [
     simNote: 'Baseline sim; rare-enemy behavior notes pending (flee/loot identity ties into the rares design, #495).',
   },
   {
-    id: 'machine_soldier',
-    label: 'Machine soldier',
-    blurb: 'atk_* variant trios (ranged/melee modes) + segmented run_st/lp/ed or stp_* locomotion: leg/lower, swordman, board, tank, shooter families.',
-    simNote: 'Baseline sim (attack-clip scan picks one variant); ranged attacks + segmented locomotion need their module (#494).',
+    id: 'shooter',
+    label: 'Shooter',
+    blurb: 'Hovering enemies that shoot projectiles — as the name says (atk_an / atk_ji / atk_sh variants): Korse, Akorse.',
+    simNote: 'Baseline sim; hover/shoot behavior notes pending — module to follow.',
+  },
+  {
+    id: 'missile_tank',
+    label: 'Missile tank',
+    blurb: 'Fires missiles at the player (atk_bz / atk_mi / atk_sh, segmented run_st/lp/ed locomotion): Phobos, Phobos Dyna.',
+    simNote: 'Baseline sim; missile behavior notes pending — module to follow.',
+  },
+  {
+    id: 'boarder',
+    label: 'Boarder',
+    blurb: 'Robots riding a surfboard — highly mobile, difficult to track down (atk_sh shot, atk_sp_st/lp/ed special, run_st/lp/ed): Finjer R, Finjer B, Finjer G.',
+    simNote: 'Baseline sim; the high-mobility ride locomotion needs its module — notes pending.',
+  },
+  {
+    id: 'shade',
+    label: 'Shade',
+    blurb: 'The Dark Shrine enemies — they look like the heartless from Kingdom Hearts (leg/lower m061 + swordman b062 rigs): Derreo, Zerreo, Eulid, Eulidveil, Arkzein(s), Zaphobos(es).',
+    simNote: 'Baseline sim; behavior notes pending per kion — grouped as one category.',
   },
   {
     id: 'mother_caster',
