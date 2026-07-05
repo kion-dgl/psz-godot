@@ -128,6 +128,23 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
       const clips = e.attacks.map((a: { clip: string }) => a.clip);
       expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2', 'atk3']));
     }
+    // Shared seal rig, divergent tables: Hypao casts barta, Vespao gibarta.
+    const hypaoTechs = config.enemies.hypao.attacks.map((a: { tech?: string }) => a.tech);
+    const vespaoTechs = config.enemies.vespao.attacks.map((a: { tech?: string }) => a.tech);
+    expect(hypaoTechs).toContain('barta');
+    expect(vespaoTechs).toContain('gibarta');
+  });
+
+  it('tech, when present, is a non-empty string', () => {
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      for (const a of e.attacks) {
+        if (a.tech !== undefined && (typeof a.tech !== 'string' || a.tech.length === 0)) {
+          bad.push(`${id}/${a.id}`);
+        }
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
   });
 
   it('attack kind, when present, is a known delivery', () => {

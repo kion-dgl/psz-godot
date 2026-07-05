@@ -115,6 +115,14 @@ const fsm = `stateDiagram-v2
     <li><strong>Attacks from the air</strong>: <code>atk1</code> beak strike and <code>atk3</code> wing swipe are close melee arcs; <code>atk2</code> (flapping wings) is <em>uncertain — possibly a gust attack</em> (kion). Authored provisionally as a wider, weaker mid-range arc; an <strong>explicit open question</strong> until confirmed in-game.</li>
   </ul>
 
+  <h3>Archetype: Two-attack melee + tech (Hypao family) — normative</h3>
+  <p>Applies to <code>archetype: two_attack</code> (seal rigs — Hypao, Vespao). Standard ground locomotion; two attacks:</p>
+  <ul>
+    <li><strong><code>atk1</code> headbutt</strong> — close-range melee arc.</li>
+    <li><strong><code>atk2</code> is a tech cast</strong> (barta-family ice). The attack's <code>tech</code> field names the technique, and the Godot runtime <strong>MUST</strong> deliver it through the real technique system (element, freeze procs, tech visuals) — the room sim only approximates the delivery shape via <code>kind</code>.</li>
+    <li><strong>Per-enemy divergence on a shared rig</strong>: Hypao casts <strong>Barta</strong>; Vespao (the rare) SHOULD cast the upgraded family tech — <strong>Gibarta authored; Rabarta is the open alternative</strong> (kion: "gibarta or rabarta"). First case of one rig with two different attack tables — the per-enemy table model exists exactly for this, and it feeds the rare-as-upgraded/leader theme (pack-behavior issue).</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

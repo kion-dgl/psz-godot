@@ -949,6 +949,15 @@ export default function EnemyRoom() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ width: 60, fontSize: 11, color: '#aab' }}>tech</span>
+                <input
+                  value={a.tech ?? ''}
+                  placeholder="— (not a tech cast)"
+                  onChange={(ev) => setAttack(i, { tech: ev.target.value || undefined })}
+                  style={{ flex: 1, background: '#1a1a3a', color: '#9cf', border: '1px solid #334', padding: 2, fontSize: 11 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                 <span style={{ width: 60, fontSize: 11, color: '#aab' }}>kind</span>
                 <select
                   value={a.kind ?? 'melee_arc'}

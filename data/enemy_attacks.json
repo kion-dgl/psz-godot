@@ -1110,18 +1110,42 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "headbutt",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 30.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "cast_barta",
+          "clip": "atk2",
+          "kind": "projectile",
+          "tech": "barta",
+          "weight": 1.5,
+          "min_range": 2.5,
+          "max_range": 8.0,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 8.0,
+          "hit_reach": 8.0,
+          "damage_mult": 1.2
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "headbutt (close range)",
+        "wat": "idle",
+        "wlk": "locomotion",
+        "dmg": "taking damage",
+        "ded": "dead",
+        "stt": "(semantics unconfirmed)",
+        "atk2": "cast tech animation (barta-family) \u2014 Hypao casts Barta"
+      }
     },
     "izhirak_s6": {
       "archetype": "quad_machine",
@@ -1928,18 +1952,42 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "headbutt",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 30.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "cast_gibarta",
+          "clip": "atk2",
+          "kind": "melee_arc",
+          "tech": "gibarta",
+          "weight": 1.5,
+          "min_range": 1.5,
+          "max_range": 5.5,
+          "windup_frac": 0.45,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 55.0,
+          "hit_reach": 5.5,
+          "damage_mult": 1.4
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "headbutt (close range)",
+        "wat": "idle",
+        "wlk": "locomotion",
+        "dmg": "taking damage",
+        "ded": "dead",
+        "stt": "(semantics unconfirmed)",
+        "atk2": "cast tech animation (barta-family) \u2014 Vespao casts the upgraded tech: gibarta authored, rabarta the open alternative (kion)"
+      }
     },
     "vulkure": {
       "archetype": "simple_melee",

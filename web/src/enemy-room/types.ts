@@ -14,6 +14,8 @@ export interface AttackDef {
   clip: string;
   /** Hit delivery (spec /mechanics/enemy-attacks): melee arc test (default), straight projectile, or grenade lob. */
   kind?: AttackKind;
+  /** Optional named game technique this attack casts (barta, gibarta…) — the Godot runtime MUST deliver it via the real tech system; the sim approximates via `kind`. */
+  tech?: string;
   weight: number;
   min_range: number;
   max_range: number;
