@@ -11,10 +11,10 @@ import { assetUrl } from '../utils/assets';
  * (level 1-3 photon art) clips alongside the atk1-3 combo. In PSZ the PA
  * fires as the finisher input at the end of a full combo, so the tool's
  * "combo → PA" playback chains atk1 → atk2 → atk3 → PA the way the game
- * sequences them. NOTE: the shipped packs currently only contain `_pa3` —
- * the psz-asset-viewer extractor collapsed the three pa NARCs into one GLB
- * (fixed there; packs regain pa1/pa2 on the next re-extract + reimport).
- * The level buttons light up per what the loaded pack actually has.
+ * sequences them. All three PA levels ship in every weapon pack (the
+ * psz-asset-viewer extractor used to collapse the three pa NARCs into one
+ * GLB, keeping only pa3 — fixed and reimported). The level buttons still
+ * light up per what the loaded pack actually has, as a guard.
  *
  * Photon Blasts — the four mag blasts (fb_bird/kenta/hebi/rabbit from
  * raw/player/pb_*.narc, extracted via psz-asset-viewer). Every weapon pack
@@ -40,8 +40,8 @@ interface WeaponDef {
   glbBase: string; // assets/player/animations/<base>_<m|w>.glb
 }
 
-// Every imported animation pack (all carry _pa3 + _pb/_pb_lp). `common` is
-// the unarmed/bare pack — its pa clips are the fist photon art.
+// Every imported animation pack (all carry _pa1/2/3 + _pb/_pb_lp). `common`
+// is the unarmed/bare pack — its pa clips are the fist photon art.
 const WEAPONS: WeaponDef[] = [
   { id: 'fists',   label: 'Fists',        glbBase: 'common' },
   { id: 'saber',   label: 'Saber',        glbBase: 'saver' },
@@ -751,7 +751,7 @@ export default function PhotonRoom() {
                   key={lvl}
                   style={btnStyle(config.paLevel === lvl && available, !available)}
                   disabled={!available}
-                  title={available ? `${packInfo.clips[`pa${lvl}`]?.toFixed(2)}s` : 'not in the pack yet — pa1/pa2 return after the psz-asset-viewer re-extract'}
+                  title={available ? `${packInfo.clips[`pa${lvl}`]?.toFixed(2)}s` : 'clip missing from this pack'}
                   onClick={() => setConfig((c) => ({ ...c, paLevel: lvl }))}
                 >
                   PA {lvl}{available ? '' : ' ✕'}
@@ -760,9 +760,9 @@ export default function PhotonRoom() {
             </div>
             {!packInfo.clips.pa1 && !isLoading && (
               <div style={{ fontSize: 10, color: '#a86', marginBottom: 10 }}>
-                Only pa3 is in the shipped packs — the extractor was overwriting the
-                pa00/pa01 NARCs (fixed in psz-asset-viewer; levels 1-2 arrive with
-                the next re-extract + reimport).
+                This pack is missing pa1 — all packs should carry pa1/pa2/pa3 since
+                the psz-asset-viewer pa-NARC merge fix; a stale pack or asset mirror
+                is the likely cause.
               </div>
             )}
             <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
