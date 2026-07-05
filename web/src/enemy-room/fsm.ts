@@ -37,7 +37,17 @@ export interface CurrentAttack {
   windowOpened: boolean;
   windowClosed: boolean;
   /** kind: 'charge' — segmented st → lp(move) → ed phases (the segments ARE the timeline). */
-  charge?: { phase: 'st' | 'lp' | 'ed'; phaseT: number; stDur: number; edDur: number; traveled: number };
+  charge?: {
+    phase: 'st' | 'lp' | 'ed';
+    phaseT: number;
+    stDur: number;
+    edDur: number;
+    traveled: number;
+    /** Segment clip tokens (suffix-derived or explicit charge_segments). */
+    tokens: { st: string; lp: string; ed: string };
+    /** Meters to travel in lp (max_range, or start distance + overshoot). */
+    travelTarget: number;
+  };
   /** kind: 'leap' — travel from → target during the damaging window, AoE at landing. */
   leap?: { from: Vec2; target: Vec2 };
 }
@@ -95,7 +105,8 @@ export type SimEvent =
   | { type: 'projectile_fired'; attack: AttackDef }
   | { type: 'lob_fired'; attack: AttackDef; at: Vec2 }
   | { type: 'lob_landed'; attack: AttackDef; at: Vec2 }
-  | { type: 'leap_landed'; attack: AttackDef; at: Vec2 };
+  | { type: 'leap_landed'; attack: AttackDef; at: Vec2 }
+  | { type: 'vulnerable_open'; attack: AttackDef; mult: number };
 
 /** Straight projectile in flight (kind: 'projectile') — hits on contact. */
 export interface Projectile {
@@ -253,10 +264,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     case 'idle': {
       if (dist <= entry.stats.detection_range) {
         changeState(sim, 'chasing', events);
-        if (entry.archetype === 'bigrig_combo' || entry.archetype === 'flyer_combo') {
-          // Aggro display, held before pursuit: bigrig beats its chest,
-          // the flyer TAKES OFF — both are this rig's stt (spec §big-rig,
-          // §flyer; third stt meaning after the quadruped dash).
+        if (
+          entry.archetype === 'bigrig_combo' ||
+          entry.archetype === 'flyer_combo' ||
+          entry.archetype === 'roller'
+        ) {
+          // Aggro display, held before pursuit: bigrig beats its chest, the
+          // flyer TAKES OFF, the roller becomes active — each is its rig's
+          // stt (spec §big-rig, §flyer, §roller; after the quadruped dash).
           sim.anim = 'stt';
           sim.threatTimer = input.clipDurationFor('stt') ?? 1.0;
           sim.threatDuration = sim.threatTimer;
@@ -282,7 +297,9 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         sim.anim = 'wlk';
       } else {
         sim.velocity = { x: 0, z: 0 };
-        sim.anim = 'wat';
+        // Roller rigs have wat1 (standing) / wat2 (lying) instead of a
+        // plain wat — a bare 'wat' would mis-alias to stt (become active).
+        sim.anim = entry.archetype === 'roller' ? 'wat1' : 'wat';
       }
       break;
     }
@@ -319,6 +336,10 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       if (entry.archetype === 'flyer_combo') {
         processChasingFlyer(sim, entry, input, dist);
+        break;
+      }
+      if (entry.archetype === 'roller') {
+        processChasingRoller(sim, entry, input, dist);
         break;
       }
       const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
@@ -611,25 +632,36 @@ function startAttack(
   sim.facing = facing;
 
   if (kind === 'charge') {
-    // Segmented st → lp(move) → ed; the segments ARE the timeline.
-    const stDur = input.clipDurationFor(`${def.clip}_st`) ?? 0.4;
-    const edDur = input.clipDurationFor(`${def.clip}_ed`) ?? 0.4;
+    // Segmented st → lp(move) → ed; the segments ARE the timeline. Tokens
+    // come from _st/_lp/_ed suffixes, or explicitly (roller trf1/wat3/trf2).
+    const tokens = def.charge_segments ?? {
+      st: `${def.clip}_st`,
+      lp: `${def.clip}_lp`,
+      ed: `${def.clip}_ed`,
+    };
+    const stDur = input.clipDurationFor(tokens.st) ?? 0.4;
+    const edDur = input.clipDurationFor(tokens.ed) ?? 0.4;
     const chargeSpeed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
-    const lpMax = Math.max(def.max_range, 1) / chargeSpeed;
-    sim.anim = `${def.clip}_st`;
+    // Overshoot: roll PAST where the target stood at start (spec §roller).
+    const travelTarget =
+      def.overshoot !== undefined
+        ? Math.min(dist + def.overshoot, Math.max(def.max_range, 1))
+        : Math.max(def.max_range, 1);
+    const lpMax = travelTarget / chargeSpeed;
+    sim.anim = tokens.st;
     sim.currentAttack = {
       def,
       duration: stDur + lpMax + edDur, // estimate, for the HUD
-      resolvedClip: `${def.clip}_lp`,
+      resolvedClip: tokens.lp,
       t: 0,
       facing,
       resolved: false,
       windowOpened: false,
       windowClosed: false,
-      charge: { phase: 'st', phaseT: 0, stDur, edDur, traveled: 0 },
+      charge: { phase: 'st', phaseT: 0, stDur, edDur, traveled: 0, tokens, travelTarget },
     };
     sim.attackCooldown = entry.stats.attack_cooldown;
-    events.push({ type: 'attack_start', attack: def, resolvedClip: `${def.clip}_lp`, duration: sim.currentAttack.duration });
+    events.push({ type: 'attack_start', attack: def, resolvedClip: tokens.lp, duration: sim.currentAttack.duration });
     return;
   }
 
@@ -686,6 +718,39 @@ function processChasingFlyer(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 
 
 /**
+ * Roller chase (spec /states/enemies §roller, normative): walks at medium
+ * distance from the target (standoff_range), adjusting position until it has
+ * a straight path, then rolls (the charge-kind attack fires via the band
+ * gate). Ground walker: facing follows movement, wlk everywhere.
+ */
+function processChasingRoller(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
+  const { dt, playerPos, rng } = input;
+  const radial = norm(sub(playerPos, sim.pos));
+  const standoff = entry.fsm.standoff_range;
+  const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+
+  let move: Vec2;
+  if (dist < standoff * 0.75) {
+    move = { x: -radial.x, z: -radial.z }; // too close — open distance
+  } else if (dist > standoff * 1.3) {
+    move = radial; // too far — close in
+  } else {
+    // At medium distance: sidle around, re-picking the side ("making
+    // adjustments until they have a straight path").
+    sim.arcTimer -= dt;
+    if (sim.arcTimer <= 0) {
+      sim.arcTimer = 1.5 + rng() * 2.5;
+      if (rng() < 0.4) sim.arcSide = sim.arcSide === 1 ? -1 : 1;
+    }
+    move = { x: -radial.z * sim.arcSide, z: radial.x * sim.arcSide };
+  }
+  sim.velocity = { x: move.x * speed, z: move.z * speed };
+  sim.facing = move; // ground walker: faces where it walks
+  sim.anim = 'wlk';
+}
+
+
+/**
  * Charge attack phases (bigrig shoulder slam, spec §big-rig): st windup
  * (stationary) → lp loop charging forward along the locked facing, hitting
  * on first contact (dodge lets it pass and keep going), capped at max_range
@@ -701,12 +766,12 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
   switch (c.phase) {
     case 'st': {
       sim.velocity = { x: 0, z: 0 };
-      sim.anim = `${atk.def.clip}_st`;
+      sim.anim = c.tokens.st;
       if (c.phaseT >= c.stDur) {
         c.phase = 'lp';
         c.phaseT = 0;
         atk.windowOpened = true;
-        sim.anim = `${atk.def.clip}_lp`;
+        sim.anim = c.tokens.lp;
         events.push({ type: 'window_open', attack: atk.def });
       }
       break;
@@ -715,7 +780,7 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
       const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
       sim.velocity = { x: atk.facing.x * speed, z: atk.facing.z * speed };
       c.traveled += speed * dt;
-      sim.anim = `${atk.def.clip}_lp`;
+      sim.anim = c.tokens.lp;
       let endCharge = false;
       if (!atk.resolved) {
         const contact = arcHitTest(
@@ -725,16 +790,18 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
         if (contact) {
           atk.resolved = true;
           if (input.playerInvincible) {
-            // Dodged — the slam passes by and keeps going.
+            // Dodged — the charge passes by and keeps going.
             events.push({ type: 'hit_dodged', attack: atk.def });
           } else {
             const damage = Math.round(entry.stats.attack_base * atk.def.damage_mult);
             events.push({ type: 'hit', attack: atk.def, damage });
-            endCharge = true; // slam connected
+            // stop_on_hit: false (roller) bowls the player over and keeps
+            // rolling — the same animation whether it hits player or wall.
+            if (atk.def.stop_on_hit !== false) endCharge = true;
           }
         }
       }
-      if (c.traveled >= Math.max(atk.def.max_range, 1) || c.phaseT > 8) {
+      if (c.traveled >= c.travelTarget || c.phaseT > 8) {
         endCharge = true;
       }
       if (endCharge) {
@@ -742,12 +809,16 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
         c.phaseT = 0;
         atk.windowClosed = true;
         events.push({ type: 'window_close', attack: atk.def });
+        if (atk.def.recovery_vulnerable_mult !== undefined) {
+          // The fall-over punish window (spec §roller).
+          events.push({ type: 'vulnerable_open', attack: atk.def, mult: atk.def.recovery_vulnerable_mult });
+        }
       }
       break;
     }
     case 'ed': {
       sim.velocity = { x: 0, z: 0 };
-      sim.anim = `${atk.def.clip}_ed`;
+      sim.anim = c.tokens.ed;
       if (c.phaseT >= c.edDur) {
         endAttack(sim, entry, events, rng);
       }

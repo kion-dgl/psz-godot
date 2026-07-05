@@ -460,12 +460,15 @@ export default function EnemyRoom() {
           case 'hit': {
             const p = playerRef.current;
             p.hp = Math.max(0, p.hp - e.damage);
-            pushLog(`HIT for ${e.damage} (hp ${p.hp})`, '#f44');
+            pushLog(`HIT for ${e.damage} (hp ${p.hp})${e.attack.knockdown ? ' — KNOCKED DOWN' : ''}`, '#f44');
             if (p.hp <= 0) {
               pushLog('player down — R to reset', '#f44');
             }
             break;
           }
+          case 'vulnerable_open':
+            pushLog(`VULNERABLE ×${e.mult} while recovery plays — punish window`, '#4fd');
+            break;
           case 'hit_dodged':
             pushLog('dodged through the window (i-frames)', '#4f8');
             break;
@@ -554,9 +557,11 @@ export default function EnemyRoom() {
             resolveClip(s.clips, 'stt');
           if (clip && clip.name !== s.currentClipName) {
             const action = s.mixer.clipAction(clip);
-            // Charge loop segments (_lp) repeat while the charge travels.
+            // Charge loop segments repeat while the charge travels (bigrig
+            // _lp suffixes AND explicit segments like the roller's wat3).
             const looping =
-              (sim.state !== 'attacking' && sim.state !== 'hurt') || sim.anim.endsWith('_lp');
+              (sim.state !== 'attacking' && sim.state !== 'hurt') ||
+              sim.currentAttack?.charge?.phase === 'lp';
             action.reset();
             action.setLoop(looping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
             action.clampWhenFinished = true;
@@ -590,6 +595,13 @@ export default function EnemyRoom() {
       }
       s.enemyGroup.position.set(sim.pos.x, sim.altitude + hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
+      // Roller ball travel: the curled clip has no motion of its own — the
+      // engine rotates it (spec §roller). Forward tumble while lp plays.
+      if (atkNow?.charge?.phase === 'lp' && atkNow.def.charge_segments) {
+        s.enemyGroup.rotation.x += clock.dt * 8;
+      } else {
+        s.enemyGroup.rotation.x = 0;
+      }
       for (const ring of [s.detectionRing, s.attackRing, s.chargeRing]) {
         ring.position.x = sim.pos.x;
         ring.position.z = sim.pos.z;
@@ -904,10 +916,12 @@ export default function EnemyRoom() {
         {entry.attacks.map((a, i) => {
           const clips = sceneRef.current?.clips ?? [];
           const isCharge = a.kind === 'charge';
-          // Charge kind resolves its st/lp/ed segments, not the base token.
-          const resolved = isCharge ? resolveClip(clips, `${a.clip}_lp`) : resolveClip(clips, a.clip);
+          // Charge kind resolves its st/lp/ed segments (suffix-derived or
+          // explicit charge_segments), not the base token.
+          const segTokens = a.charge_segments ?? { st: `${a.clip}_st`, lp: `${a.clip}_lp`, ed: `${a.clip}_ed` };
+          const resolved = isCharge ? resolveClip(clips, segTokens.lp) : resolveClip(clips, a.clip);
           const chargeSegs = isCharge
-            ? (['st', 'lp', 'ed'] as const).map((s) => resolveClip(clips, `${a.clip}_${s}`)?.name ?? `${a.clip}_${s}?`)
+            ? (['st', 'lp', 'ed'] as const).map((k) => resolveClip(clips, segTokens[k])?.name ?? `${segTokens[k]}?`)
             : null;
           return (
             <div key={i} style={{ border: '1px solid #334', borderRadius: 6, padding: 8, marginBottom: 8 }}>

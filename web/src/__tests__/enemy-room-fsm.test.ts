@@ -570,6 +570,87 @@ describe('enemy-room FSM — flyer combo (spec /states/enemies §flyer)', () => 
   });
 });
 
+describe('enemy-room FSM — roller (spec /states/enemies §roller)', () => {
+  const roll = atk({
+    id: 'roll', clip: 'wat3', kind: 'charge',
+    charge_segments: { st: 'trf1', lp: 'wat3', ed: 'trf2' },
+    stop_on_hit: false, overshoot: 3, knockdown: true, recovery_vulnerable_mult: 2,
+    min_range: 3, max_range: 12, hit_half_angle_deg: 35, hit_reach: 1.3, damage_mult: 1.5,
+  });
+  const rollerConfig = (): EnemyAttackConfig => {
+    const c = config([roll]);
+    c.enemies.dummy.archetype = 'roller';
+    c.enemies.dummy.fsm = { standoff_range: 5 };
+    return c;
+  };
+  const segDurations = (token: string) => (token === 'trf1' ? 0.3 : token === 'trf2' ? 0.6 : 1.0);
+
+  it('walks at medium distance (standoff band) with wlk, facing its movement', () => {
+    const entry = resolveEntry(rollerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations });
+    sim.attackCooldown = 99;
+    stepEnemy(sim, entry, input); // aggro (stt hold)
+    expect(sim.anim).toBe('stt');
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wlk');
+    // In-band → sidling laterally, facing along movement
+    const vl = Math.hypot(sim.velocity.x, sim.velocity.z);
+    expect(Math.abs(sim.velocity.z) / vl).toBeLessThan(0.15);
+    expect(sim.facing.x).toBeCloseTo(sim.velocity.x / vl, 3);
+  });
+
+  it('roll plays trf1 → wat3 (traveling) → trf2, bowls THROUGH the player with knockdown, overshoots', () => {
+    const entry = resolveEntry(rollerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input); // band 3–12 contains 5 → roll starts
+    expect(sim.currentAttack?.charge?.tokens).toEqual({ st: 'trf1', lp: 'wat3', ed: 'trf2' });
+    expect(sim.anim).toBe('trf1');
+    // Overshoot: travel target = start dist (≈5) + 3.
+    expect(sim.currentAttack?.charge?.travelTarget).toBeCloseTo(8, 0);
+    const events = run(sim, entry, input, 4.0);
+    const hits = events.filter((e) => e.type === 'hit');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].type === 'hit' && hits[0].attack.knockdown).toBe(true);
+    // Rolled THROUGH the player (z≈5) and well past — no stop on hit.
+    expect(sim.pos.z).toBeGreaterThan(6.5);
+    // Fall-over vulnerability announced when the roll ends.
+    const vuln = events.find((e) => e.type === 'vulnerable_open');
+    expect(vuln && vuln.type === 'vulnerable_open' && vuln.mult).toBe(2);
+    // Sequence: window_open (wat3 travel) before hit before vulnerable_open.
+    const order = events.map((e) => e.type);
+    expect(order.indexOf('window_open')).toBeLessThan(order.indexOf('hit'));
+    expect(order.indexOf('hit')).toBeLessThan(order.indexOf('vulnerable_open'));
+  });
+
+  it('an i-frame dodge lets the roll pass without a hit', () => {
+    const entry = resolveEntry(rollerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations, playerInvincible: true });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 4.0);
+    expect(events.filter((e) => e.type === 'hit_dodged')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+    expect(events.some((e) => e.type === 'vulnerable_open')).toBe(true); // punish window still opens
+  });
+
+  it('roller idles standing (wat1), never the mis-aliased stt', () => {
+    const entry = resolveEntry(rollerConfig(), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 40 } }); // out of detection
+    run(sim, entry, input, 6.0);
+    expect(sim.state).toBe('idle');
+    expect(['wat1', 'wlk']).toContain(sim.anim);
+    expect(sim.anim).not.toBe('wat');
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

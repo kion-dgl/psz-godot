@@ -16,6 +16,16 @@ export interface AttackDef {
   kind?: AttackKind;
   /** Optional named game technique this attack casts (barta, gibarta…) — the Godot runtime MUST deliver it via the real tech system; the sim approximates via `kind`. */
   tech?: string;
+  /** kind: charge — explicit segment clip tokens when the rig doesn't use _st/_lp/_ed suffixes (roller: trf1/wat3/trf2). */
+  charge_segments?: { st: string; lp: string; ed: string };
+  /** kind: charge — travel target = start distance + overshoot (capped by max_range) instead of always max_range. */
+  overshoot?: number;
+  /** kind: charge — false lets the charge roll through the target instead of ending on contact (default true). */
+  stop_on_hit?: boolean;
+  /** A hit knocks the player down (denies the follow-up punish) — runtime maps to the knockdown reaction. */
+  knockdown?: boolean;
+  /** While the recovery clip plays the enemy takes this damage multiplier (the roller's fall-over window). */
+  recovery_vulnerable_mult?: number;
   weight: number;
   min_range: number;
   max_range: number;

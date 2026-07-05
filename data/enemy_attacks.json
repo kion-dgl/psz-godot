@@ -1706,21 +1706,44 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "roll",
+          "clip": "wat3",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "trf1",
+            "lp": "wat3",
+            "ed": "trf2"
+          },
+          "stop_on_hit": false,
+          "overshoot": 3.0,
+          "knockdown": true,
+          "recovery_vulnerable_mult": 2.0,
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 1.3,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "trf1": "starts to roll into ball (roll windup)",
+        "wat3": "curled into a ball \u2014 the rolling travel pose; the ENGINE rotates it (clip has no motion)",
+        "trf2": "ends roll and falls over \u2014 TAKES MORE DAMAGE during this recovery (the punish window)",
+        "wat1": "idle, standing",
+        "wat2": "idle, lying down",
+        "wlk": "walk (medium-distance adjustments before rolling)",
+        "stt": "become active (aggro display)",
+        "dmg": "take damage",
+        "ded": "dying"
+      }
     },
     "rohjade": {
       "archetype": "roller",
@@ -1731,21 +1754,44 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "standoff_range": 5.0
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
+          "id": "roll",
+          "clip": "wat3",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "trf1",
+            "lp": "wat3",
+            "ed": "trf2"
+          },
+          "stop_on_hit": false,
+          "overshoot": 3.0,
+          "knockdown": true,
+          "recovery_vulnerable_mult": 2.0,
           "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "min_range": 3.0,
+          "max_range": 12.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 35.0,
+          "hit_reach": 1.3,
+          "damage_mult": 1.5
         }
-      ]
+      ],
+      "clip_notes": {
+        "trf1": "starts to roll into ball (roll windup)",
+        "wat3": "curled into a ball \u2014 the rolling travel pose; the ENGINE rotates it (clip has no motion)",
+        "trf2": "ends roll and falls over \u2014 TAKES MORE DAMAGE during this recovery (the punish window)",
+        "wat1": "idle, standing",
+        "wat2": "idle, lying down",
+        "wlk": "walk (medium-distance adjustments before rolling)",
+        "stt": "become active (aggro display)",
+        "dmg": "take damage",
+        "ded": "dying"
+      }
     },
     "rumole": {
       "archetype": "unique",

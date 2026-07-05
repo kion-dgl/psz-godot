@@ -71,8 +71,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'roller',
     label: 'Roller',
-    blurb: 'Rolls up into a ball to attack (trf1/trf2 transform clips, wat1–3 idles, no standard attack clip): Rohjade, Rohcrysta.',
-    simNote: 'Baseline sim (fallback-duration attack); roll behavior notes pending — split out per kion, module to follow.',
+    blurb: 'Walks at medium distance until it has a straight path, then rolls: trf1 roll-up → wat3 engine-rotated ball THROUGH the player (knockdown, overshoots past you) → trf2 fall-over where it takes ×2 damage: Rohjade, Rohcrysta.',
+    simNote: 'Implemented: standoff walk, roll-through charge with overshoot + knockdown, trf2 vulnerability window (spec /states/enemies §roller; sequence is kion\'s read of the clips — confirm in-game).',
   },
   {
     id: 'ape_gunner',

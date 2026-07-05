@@ -123,6 +123,15 @@ const fsm = `stateDiagram-v2
     <li><strong>Per-enemy divergence on a shared rig</strong>: Hypao casts <strong>Barta</strong>; Vespao (the rare) SHOULD cast the upgraded family tech — <strong>Gibarta authored; Rabarta is the open alternative</strong> (kion: "gibarta or rabarta"). First case of one rig with two different attack tables — the per-enemy table model exists exactly for this, and it feeds the rare-as-upgraded/leader theme (pack-behavior issue).</li>
   </ul>
 
+  <h3>Archetype: Roller (Rohjade family) — normative</h3>
+  <p>Applies to <code>archetype: roller</code> (armadillo rigs — Rohjade, Rohcrysta). The rig has <em>no attack clip</em> because the transform sequence IS the attack (sequence per kion's read of the clips — <em>confirm in-game</em>): <code>trf1</code> rolls up → <code>wat3</code> is the curled ball, which <strong>the engine MUST rotate while it travels</strong> (the clip has no motion of its own) → <code>trf2</code> unrolls and <strong>falls over</strong>.</p>
+  <ul>
+    <li><strong>Locomotion</strong>: walks (<code>wlk</code>) at <em>medium distance</em> from the target (<code>fsm.standoff_range</code>), adjusting position until it has a straight path, then rolls. Idles: <code>wat1</code> standing, <code>wat2</code> lying down; <code>stt</code> is "become active" — held on aggro like the other display clips (fourth <code>stt</code> meaning).</li>
+    <li><strong>The roll</strong> is a <code>charge</code>-kind attack with explicit segment clips (<code>charge_segments</code>). It <strong>MUST NOT stop on hitting the player</strong> (<code>stop_on_hit: false</code>) — the same animation plays whether it bowls the player over or hits a wall — and it travels <strong>past</strong> where the target stood at roll start (<code>overshoot</code> meters beyond the start distance, capped by <code>max_range</code>), forcing an evade.</li>
+    <li><strong>Knockdown denies the punish</strong>: a roll hit <strong>MUST</strong> knock the player down (<code>knockdown: true</code>) — a hit player cannot capitalize on what follows. An i-frame dodge avoids the roll entirely.</li>
+    <li><strong>The vulnerability window is the counterplay</strong>: while <code>trf2</code> plays (the fall-over recovery), the roller <strong>MUST take increased damage</strong> (<code>recovery_vulnerable_mult</code>). Evade the roll → punish the sprawl. An implementation MUST NOT shorten or skip this window.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>
