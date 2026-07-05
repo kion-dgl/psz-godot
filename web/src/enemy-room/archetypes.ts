@@ -47,8 +47,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'bigrig_combo',
     label: 'Big-rig combo',
-    blurb: 'atk1 + segmented atk2_st/lp/ed + atk3 — chained heavy combos: Hilde gorillas.',
-    simNote: 'Baseline sim plays single clips; segmented st/lp/ed attack chains need their module (#494).',
+    blurb: 'atk1 punch combo, atk2_st/lp/ed running shoulder slam (charge), atk3 belly-flop leap, stt chest-beat threat on aggro: Hilde gorillas.',
+    simNote: 'Implemented: chest-beat threat hold, charge phases (st→lp moves→ed), belly-flop leap with landing AoE (spec /states/enemies §big-rig).',
   },
   {
     id: 'flyer_combo',

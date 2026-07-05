@@ -481,6 +481,9 @@ export default function EnemyRoom() {
           case 'lob_landed':
             pushLog(`grenade landed (AoE r=${e.attack.hit_reach})`, '#f63');
             break;
+          case 'leap_landed':
+            pushLog(`belly flop landed (AoE r=${e.attack.hit_reach})`, '#f96');
+            break;
           case 'attack_end':
             pushLog(`attack '${e.attack.id}' end → loaf`, '#889');
             break;
@@ -551,7 +554,9 @@ export default function EnemyRoom() {
             resolveClip(s.clips, 'stt');
           if (clip && clip.name !== s.currentClipName) {
             const action = s.mixer.clipAction(clip);
-            const looping = sim.state !== 'attacking' && sim.state !== 'hurt';
+            // Charge loop segments (_lp) repeat while the charge travels.
+            const looping =
+              (sim.state !== 'attacking' && sim.state !== 'hurt') || sim.anim.endsWith('_lp');
             action.reset();
             action.setLoop(looping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
             action.clampWhenFinished = true;
@@ -574,7 +579,16 @@ export default function EnemyRoom() {
       const invNow = p.dodgeTimer > DODGE_DURATION - DODGE_IFRAME_DURATION;
       s.playerBodyMat.color.setHex(invNow ? 0x88ffcc : p.dodgeTimer > 0 ? 0x2288aa : 0x44ccff);
 
-      s.enemyGroup.position.set(sim.pos.x, 0, sim.pos.z);
+      // Leap gets a visual hop (parabola over the damaging window).
+      let hopY = 0;
+      const atkNow = sim.currentAttack;
+      if (atkNow?.leap && atkNow.windowOpened && !atkNow.windowClosed) {
+        const ws = atkNow.def.windup_frac * atkNow.duration;
+        const we = atkNow.def.damage_end_frac * atkNow.duration;
+        const f = Math.min(Math.max((atkNow.t - ws) / (we - ws), 0), 1);
+        hopY = 3.0 * f * (1 - f);
+      }
+      s.enemyGroup.position.set(sim.pos.x, hopY, sim.pos.z);
       s.enemyGroup.rotation.y = Math.atan2(sim.facing.x, sim.facing.z);
       for (const ring of [s.detectionRing, s.attackRing, s.chargeRing]) {
         ring.position.x = sim.pos.x;
@@ -615,11 +629,10 @@ export default function EnemyRoom() {
         }
         s.arc.position.set(sim.pos.x, 0, sim.pos.z);
         s.arc.rotation.y = Math.atan2(atk.facing.x, atk.facing.z);
-        const frac = atk.t / atk.duration;
-        if (frac < atk.def.windup_frac) {
+        if (!atk.windowOpened) {
           s.arcMat.color.setHex(0xffee44); // telegraph
           s.arcMat.opacity = 0.18;
-        } else if (frac <= atk.def.damage_end_frac) {
+        } else if (!atk.windowClosed) {
           s.arcMat.color.setHex(0xff3333); // damaging window
           s.arcMat.opacity = 0.35;
         } else {
@@ -883,7 +896,13 @@ export default function EnemyRoom() {
 
         <h4 style={h4Style}>Attacks ({entry.attacks.length})</h4>
         {entry.attacks.map((a, i) => {
-          const resolved = resolveClip(sceneRef.current?.clips ?? [], a.clip);
+          const clips = sceneRef.current?.clips ?? [];
+          const isCharge = a.kind === 'charge';
+          // Charge kind resolves its st/lp/ed segments, not the base token.
+          const resolved = isCharge ? resolveClip(clips, `${a.clip}_lp`) : resolveClip(clips, a.clip);
+          const chargeSegs = isCharge
+            ? (['st', 'lp', 'ed'] as const).map((s) => resolveClip(clips, `${a.clip}_${s}`)?.name ?? `${a.clip}_${s}?`)
+            : null;
           return (
             <div key={i} style={{ border: '1px solid #334', borderRadius: 6, padding: 8, marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -912,9 +931,11 @@ export default function EnemyRoom() {
                 </select>
               </div>
               <div style={{ fontSize: 10, color: resolved ? '#667' : '#f66', marginBottom: 4 }}>
-                {resolved
-                  ? `→ ${resolved.name} (${resolved.duration.toFixed(2)}s)`
-                  : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
+                {chargeSegs
+                  ? `→ segments: ${chargeSegs.join(' · ')}`
+                  : resolved
+                    ? `→ ${resolved.name} (${resolved.duration.toFixed(2)}s)`
+                    : `no clip resolves — timeline uses fallback ${entry.fsm.attack_fallback_duration}s (#477 path)`}
               </div>
               {entry.clip_notes[a.clip] && (
                 <div style={{ fontSize: 10, color: '#9ab', marginBottom: 4, fontStyle: 'italic' }}>
@@ -931,6 +952,8 @@ export default function EnemyRoom() {
                   <option value="melee_arc">melee_arc</option>
                   <option value="projectile">projectile</option>
                   <option value="lob">lob (grenade AoE)</option>
+                  <option value="charge">charge (st/lp/ed, moves)</option>
+                  <option value="leap">leap (AoE on landing)</option>
                 </select>
               </div>
               {sliderRow('weight', a.weight, 0.1, 10, 0.1, (v) => setAttack(i, { weight: v }))}

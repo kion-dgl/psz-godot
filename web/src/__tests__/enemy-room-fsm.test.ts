@@ -410,6 +410,111 @@ describe('enemy-room FSM — quad machine kiter (spec /states/enemies §quad-mac
   });
 });
 
+describe('enemy-room FSM — big-rig combo (spec /states/enemies §big-rig)', () => {
+  const slam = atk({ id: 'shoulder_slam', clip: 'atk2', kind: 'charge', min_range: 3, max_range: 9, hit_half_angle_deg: 40, hit_reach: 1.4, damage_mult: 1.4 });
+  const flop = atk({ id: 'belly_flop', clip: 'atk3', kind: 'leap', min_range: 2.5, max_range: 7, windup_frac: 0.4, damage_end_frac: 0.75, hit_half_angle_deg: 180, hit_reach: 2.0, damage_mult: 1.8 });
+  const bigrigConfig = (attacks: AttackDef[]): EnemyAttackConfig => {
+    const c = config(attacks);
+    c.enemies.dummy.archetype = 'bigrig_combo';
+    return c;
+  };
+  // Segment-aware clip durations: st 0.3s, lp 1.0s (looped), ed 0.4s, else 1.0s.
+  const segDurations = (token: string) =>
+    token.endsWith('_st') ? 0.3 : token.endsWith('_ed') ? 0.4 : 1.0;
+
+  it('holds the chest-beat threat (stt) on aggro before pursuing', () => {
+    const entry = resolveEntry(bigrigConfig([slam]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 10 }, clipDurationFor: segDurations });
+    stepEnemy(sim, entry, input); // idle → chasing + threat
+    expect(sim.anim).toBe('stt');
+    // Held in place for the stt clip (1.0s), then moves.
+    const events = run(sim, entry, input, 0.9);
+    expect(sim.pos.z).toBeCloseTo(0, 3);
+    run(sim, entry, input, 0.3);
+    expect(Math.hypot(sim.velocity.x, sim.velocity.z)).toBeGreaterThan(0);
+    expect(events.filter((e) => e.type === 'attack_start')).toHaveLength(0);
+  });
+
+  it('charge: st windup is stationary, lp charges forward and hits on contact once, ed recovers', () => {
+    const entry = resolveEntry(bigrigConfig([slam]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.threatTimer = 0;
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations });
+    stepEnemy(sim, entry, input); // idle → chasing (threat)
+    sim.threatTimer = 0; // skip the display for this test
+    stepEnemy(sim, entry, input); // gate: band 3–9 contains 5 → attacking
+    expect(sim.currentAttack?.charge?.phase).toBe('st');
+    expect(sim.anim).toBe('atk2_st');
+    // st: stationary, no damage
+    let events = run(sim, entry, input, 0.29);
+    expect(sim.pos.z).toBeCloseTo(0, 2);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+    // lp: charges forward, contact hit ends the charge
+    events = run(sim, entry, input, 2.0);
+    const hits = events.filter((e) => e.type === 'hit');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].type === 'hit' && hits[0].damage).toBe(14); // 10 × 1.4
+    expect(events.some((e) => e.type === 'window_open')).toBe(true);
+    expect(events.some((e) => e.type === 'window_close')).toBe(true);
+    expect(sim.pos.z).toBeGreaterThan(2); // actually traveled
+    // recovers to loafing (never wedges)
+    expect(['loafing', 'chasing']).toContain(sim.state);
+  });
+
+  it('charge: a dodged slam passes by and keeps traveling to its max_range', () => {
+    const entry = resolveEntry(bigrigConfig([slam]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations, playerInvincible: true });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input); // → attacking (charge)
+    const events = run(sim, entry, input, 4.0);
+    expect(events.filter((e) => e.type === 'hit_dodged')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+    // Traveled well past the player — the slam kept going.
+    expect(sim.pos.z).toBeGreaterThan(6);
+  });
+
+  it('leap: travels to the window-open target and deals AoE damage on landing', () => {
+    const entry = resolveEntry(bigrigConfig([flop]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input); // → attacking (leap)
+    const events = run(sim, entry, input, 1.5);
+    const landed = events.find((e) => e.type === 'leap_landed');
+    expect(landed && landed.type === 'leap_landed' && landed.at.z).toBeCloseTo(5, 5);
+    const hit = events.find((e) => e.type === 'hit');
+    expect(hit && hit.type === 'hit' && hit.damage).toBe(18); // 10 × 1.8
+    // Near the landing point (it loafs away after the attack ends).
+    expect(sim.pos.z).toBeGreaterThan(4);
+  });
+
+  it('leap: i-frames at landing register as dodged', () => {
+    const entry = resolveEntry(bigrigConfig([flop]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations, playerInvincible: true });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 1.5);
+    expect(events.filter((e) => e.type === 'hit_dodged')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+  });
+
+  it('band gate fires ranged attacks from distance (slam at 5m) without closing to melee', () => {
+    const entry = resolveEntry(bigrigConfig([slam]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 5 }, clipDurationFor: segDurations });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    const events = stepEnemy(sim, entry, input);
+    expect(events.some((e) => e.type === 'attack_start')).toBe(true);
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

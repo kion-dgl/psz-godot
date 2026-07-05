@@ -96,6 +96,16 @@ const fsm = `stateDiagram-v2
     <li><strong>Counterplay is intentional</strong>: the kiter does no pathfinding escape, so room geometry beats it — backing one into a corner collapses the standoff band and forces melee exposure. An implementation MUST NOT add wall-aware escape routing that defeats cornering.</li>
   </ul>
 
+  <h3>Archetype: Big-rig combo (Hildegao family) — normative</h3>
+  <p>Applies to <code>archetype: bigrig_combo</code> (gorilla rigs — Hildegao, Hildeghana, Hildegigas). Three authored attacks plus a threat display:</p>
+  <ul>
+    <li><strong>Aggro threat</strong>: on noticing the target (IDLE → CHASING) the gorilla <strong>MUST</strong> play <code>stt</code> — beating its chest — and hold position for the clip before pursuing. (For this family <code>stt</code> is the threat display, not a stand/idle clip; the melee archetypes' equivalent is <code>tht</code>.)</li>
+    <li><strong><code>atk1</code> punch combo</strong> (melee arc): heavy right-handed punch with a quick left uppercut, at melee reach.</li>
+    <li><strong><code>atk2</code> running shoulder slam</strong> — the segmented <code>charge</code> kind: <code>atk2_st</code> is the stationary windup, then <code>atk2_lp</code> <strong>loops while the gorilla charges forward</strong> along the facing locked at attack start, hitting on first contact (arc test each tick, one hit max — an i-frame dodge lets the slam pass by and keep going), ending after the hit or after <code>max_range</code> of travel with the <code>atk2_ed</code> recovery clip. The timeline fractions do not apply to this kind; the segments ARE the timeline.</li>
+    <li><strong><code>atk3</code> belly flop</strong> — the <code>leap</code> kind: the gorilla jumps to the target's position (captured at the damaging-window open), traveling during the window and landing at its close for <strong>area damage</strong> (<code>hit_reach</code> radius); i-frames are tested at landing.</li>
+    <li><strong>Attack trigger, generalized</strong>: CHASING → ATTACKING fires when the cooldown is ready and <em>at least one attack's range band contains the target distance</em> (the slam and flop fire from range). For enemies whose bands all end at melee reach this is identical to the old melee gate.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

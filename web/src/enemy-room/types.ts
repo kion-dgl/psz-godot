@@ -6,7 +6,7 @@
  * scripts/tools/gen_enemy_attacks.py.
  */
 
-export type AttackKind = 'melee_arc' | 'projectile' | 'lob';
+export type AttackKind = 'melee_arc' | 'projectile' | 'lob' | 'charge' | 'leap';
 
 export interface AttackDef {
   id: string;

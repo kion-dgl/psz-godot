@@ -36,6 +36,10 @@ export interface CurrentAttack {
   resolved: boolean;
   windowOpened: boolean;
   windowClosed: boolean;
+  /** kind: 'charge' — segmented st → lp(move) → ed phases (the segments ARE the timeline). */
+  charge?: { phase: 'st' | 'lp' | 'ed'; phaseT: number; stDur: number; edDur: number; traveled: number };
+  /** kind: 'leap' — travel from → target during the damaging window, AoE at landing. */
+  leap?: { from: Vec2; target: Vec2 };
 }
 
 export interface EnemySim {
@@ -61,6 +65,8 @@ export interface EnemySim {
   // Ranged deliveries in flight (quad_machine etc.) — stepped every tick.
   projectiles: Projectile[];
   lobs: Lob[];
+  /** Aggro threat display hold (bigrig_combo stt chest-beat): seconds remaining. */
+  threatTimer: number;
 }
 
 export interface SimInput {
@@ -85,7 +91,8 @@ export type SimEvent =
   | { type: 'attack_end'; attack: AttackDef }
   | { type: 'projectile_fired'; attack: AttackDef }
   | { type: 'lob_fired'; attack: AttackDef; at: Vec2 }
-  | { type: 'lob_landed'; attack: AttackDef; at: Vec2 };
+  | { type: 'lob_landed'; attack: AttackDef; at: Vec2 }
+  | { type: 'leap_landed'; attack: AttackDef; at: Vec2 };
 
 /** Straight projectile in flight (kind: 'projectile') — hits on contact. */
 export interface Projectile {
@@ -137,6 +144,7 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     arcTimer: 0,
     projectiles: [],
     lobs: [],
+    threatTimer: 0,
   };
 }
 
@@ -240,7 +248,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     case 'idle': {
       if (dist <= entry.stats.detection_range) {
         changeState(sim, 'chasing', events);
-        sim.anim = 'tht';
+        if (entry.archetype === 'bigrig_combo') {
+          // Chest-beat threat (spec §big-rig): stt is this family's threat
+          // display — hold position for the clip before pursuing.
+          sim.anim = 'stt';
+          sim.threatTimer = input.clipDurationFor('stt') ?? 1.0;
+        } else {
+          sim.anim = 'tht';
+        }
         break;
       }
       sim.wanderTimer -= dt;
@@ -266,20 +281,24 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     }
 
     case 'chasing': {
-      // Kiter: ranged gate + standoff locomotion (never the melee gate).
-      if (entry.archetype === 'quad_machine') {
-        if (
-          sim.attackCooldown <= 0 &&
-          entry.attacks.some((a) => dist >= a.min_range && dist <= a.max_range)
-        ) {
-          startAttack(sim, entry, input, dist, events);
-          break;
-        }
-        processChasingQuadMachine(sim, entry, input, dist);
+      // Aggro threat hold (bigrig chest-beat): stand and display, then pursue.
+      if (sim.threatTimer > 0) {
+        sim.threatTimer -= dt;
+        sim.velocity = { x: 0, z: 0 };
         break;
       }
-      if (dist <= entry.stats.attack_range && sim.attackCooldown <= 0) {
+      // Trigger (spec /mechanics/enemy-attacks §selection): cooldown ready AND
+      // some attack's band contains the distance. Identical to the old melee
+      // gate for all-melee tables (default bands end at attack_range).
+      if (
+        sim.attackCooldown <= 0 &&
+        entry.attacks.some((a) => dist >= a.min_range && dist <= a.max_range)
+      ) {
         startAttack(sim, entry, input, dist, events);
+        break;
+      }
+      if (entry.archetype === 'quad_machine') {
+        processChasingQuadMachine(sim, entry, input, dist);
         break;
       }
       if (entry.archetype === 'quadruped') {
@@ -298,13 +317,19 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     }
 
     case 'attacking': {
-      sim.velocity = { x: 0, z: 0 };
       const atk = sim.currentAttack;
       if (!atk) {
         // Shouldn't happen; recover like the #477 contract — never wedge.
         endAttack(sim, entry, events, rng);
         break;
       }
+      // Segmented charge (bigrig shoulder slam): its own phase machine —
+      // the st/lp/ed segments ARE the timeline (spec §big-rig).
+      if ((atk.def.kind ?? 'melee_arc') === 'charge' && atk.charge) {
+        processAttackCharge(sim, entry, input, events);
+        break;
+      }
+      sim.velocity = { x: 0, z: 0 };
       atk.t += dt;
       const windowStart = atk.def.windup_frac * atk.duration;
       const windowEnd = atk.def.damage_end_frac * atk.duration;
@@ -335,10 +360,24 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
             attack: atk.def,
           });
           events.push({ type: 'lob_fired', attack: atk.def, at: target });
+        } else if (kind === 'leap') {
+          // Belly flop: jump to the target's window-open position, landing
+          // at window close for AoE (spec §big-rig).
+          atk.leap = { from: { ...sim.pos }, target: { ...playerPos } };
         }
       }
-      // Damaging window: first arc pass resolves the hit — at most once per attack.
-      if (atk.windowOpened && !atk.windowClosed && !atk.resolved && atk.t <= windowEnd) {
+      // Leap flight: the enemy itself travels during the window.
+      if (atk.leap && atk.windowOpened && !atk.windowClosed) {
+        const f = Math.min(Math.max((atk.t - windowStart) / (windowEnd - windowStart), 0), 1);
+        sim.pos.x = atk.leap.from.x + (atk.leap.target.x - atk.leap.from.x) * f;
+        sim.pos.z = atk.leap.from.z + (atk.leap.target.z - atk.leap.from.z) * f;
+      }
+      // Damaging window: first arc pass resolves the hit — at most once per
+      // attack. Melee only — ranged/leap kinds resolve at impact/landing.
+      if (
+        (atk.def.kind ?? 'melee_arc') === 'melee_arc' &&
+        atk.windowOpened && !atk.windowClosed && !atk.resolved && atk.t <= windowEnd
+      ) {
         const inArc = arcHitTest(
           sim.pos,
           atk.facing,
@@ -360,6 +399,21 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       if (!atk.windowClosed && atk.t > windowEnd) {
         atk.windowClosed = true;
         events.push({ type: 'window_close', attack: atk.def });
+        // Leap landing: AoE around the landing point, i-frames at landing.
+        if (atk.leap && !atk.resolved) {
+          atk.resolved = true;
+          sim.pos.x = atk.leap.target.x;
+          sim.pos.z = atk.leap.target.z;
+          events.push({ type: 'leap_landed', attack: atk.def, at: { ...atk.leap.target } });
+          if (len(sub(playerPos, atk.leap.target)) <= atk.def.hit_reach + input.playerRadius) {
+            if (input.playerInvincible) {
+              events.push({ type: 'hit_dodged', attack: atk.def });
+            } else {
+              const damage = Math.round(entry.stats.attack_base * atk.def.damage_mult);
+              events.push({ type: 'hit', attack: atk.def, damage });
+            }
+          }
+        }
       }
       if (atk.t >= atk.duration) {
         endAttack(sim, entry, events, rng);
@@ -535,13 +589,38 @@ function startAttack(
   const def = selectAttack(entry.attacks, dist, input.rng);
   if (!def) return; // resolveEntry guarantees ≥1 attack; guard anyway
   const facing = norm(sub(input.playerPos, sim.pos));
+  const kind = def.kind ?? 'melee_arc';
+  changeState(sim, 'attacking', events);
+  sim.chaseMode = 'arc'; // next approach starts as an arc again
+  sim.facing = facing;
+
+  if (kind === 'charge') {
+    // Segmented st → lp(move) → ed; the segments ARE the timeline.
+    const stDur = input.clipDurationFor(`${def.clip}_st`) ?? 0.4;
+    const edDur = input.clipDurationFor(`${def.clip}_ed`) ?? 0.4;
+    const chargeSpeed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+    const lpMax = Math.max(def.max_range, 1) / chargeSpeed;
+    sim.anim = `${def.clip}_st`;
+    sim.currentAttack = {
+      def,
+      duration: stDur + lpMax + edDur, // estimate, for the HUD
+      resolvedClip: `${def.clip}_lp`,
+      t: 0,
+      facing,
+      resolved: false,
+      windowOpened: false,
+      windowClosed: false,
+      charge: { phase: 'st', phaseT: 0, stDur, edDur, traveled: 0 },
+    };
+    sim.attackCooldown = entry.stats.attack_cooldown;
+    events.push({ type: 'attack_start', attack: def, resolvedClip: `${def.clip}_lp`, duration: sim.currentAttack.duration });
+    return;
+  }
+
   const clipDuration = input.clipDurationFor(def.clip);
   // No resolvable clip → the timeline fractions apply to the fallback
   // duration (extends the #477 attack-recovery contract).
   const duration = clipDuration ?? entry.fsm.attack_fallback_duration;
-  changeState(sim, 'attacking', events);
-  sim.chaseMode = 'arc'; // next approach starts as an arc again
-  sim.facing = facing;
   sim.anim = def.clip;
   sim.currentAttack = {
     def,
@@ -556,6 +635,78 @@ function startAttack(
   sim.attackCooldown = entry.stats.attack_cooldown;
   events.push({ type: 'attack_start', attack: def, resolvedClip: sim.currentAttack.resolvedClip, duration });
 }
+
+/**
+ * Charge attack phases (bigrig shoulder slam, spec §big-rig): st windup
+ * (stationary) → lp loop charging forward along the locked facing, hitting
+ * on first contact (dodge lets it pass and keep going), capped at max_range
+ * of travel → ed recovery (stationary) → loafing.
+ */
+function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInput, events: SimEvent[]): void {
+  const { dt, playerPos, rng } = input;
+  const atk = sim.currentAttack!;
+  const c = atk.charge!;
+  atk.t += dt;
+  c.phaseT += dt;
+
+  switch (c.phase) {
+    case 'st': {
+      sim.velocity = { x: 0, z: 0 };
+      sim.anim = `${atk.def.clip}_st`;
+      if (c.phaseT >= c.stDur) {
+        c.phase = 'lp';
+        c.phaseT = 0;
+        atk.windowOpened = true;
+        sim.anim = `${atk.def.clip}_lp`;
+        events.push({ type: 'window_open', attack: atk.def });
+      }
+      break;
+    }
+    case 'lp': {
+      const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+      sim.velocity = { x: atk.facing.x * speed, z: atk.facing.z * speed };
+      c.traveled += speed * dt;
+      sim.anim = `${atk.def.clip}_lp`;
+      let endCharge = false;
+      if (!atk.resolved) {
+        const contact = arcHitTest(
+          sim.pos, atk.facing, playerPos, input.playerRadius,
+          atk.def.hit_half_angle_deg, atk.def.hit_reach,
+        );
+        if (contact) {
+          atk.resolved = true;
+          if (input.playerInvincible) {
+            // Dodged — the slam passes by and keeps going.
+            events.push({ type: 'hit_dodged', attack: atk.def });
+          } else {
+            const damage = Math.round(entry.stats.attack_base * atk.def.damage_mult);
+            events.push({ type: 'hit', attack: atk.def, damage });
+            endCharge = true; // slam connected
+          }
+        }
+      }
+      if (c.traveled >= Math.max(atk.def.max_range, 1) || c.phaseT > 8) {
+        endCharge = true;
+      }
+      if (endCharge) {
+        c.phase = 'ed';
+        c.phaseT = 0;
+        atk.windowClosed = true;
+        events.push({ type: 'window_close', attack: atk.def });
+      }
+      break;
+    }
+    case 'ed': {
+      sim.velocity = { x: 0, z: 0 };
+      sim.anim = `${atk.def.clip}_ed`;
+      if (c.phaseT >= c.edDur) {
+        endAttack(sim, entry, events, rng);
+      }
+      break;
+    }
+  }
+}
+
 
 function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng: () => number): void {
   if (sim.currentAttack) {

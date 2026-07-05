@@ -100,19 +100,31 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
     expect(bad, bad.join(', ')).toHaveLength(0);
   });
 
-  it('garapython/garahadan keep their authored snake attack tables (seeder merge guard)', () => {
-    // Authored from the m_003 rig semantics (atk1 normal / atk2 strong from
-    // the raised wat2 pose). If this fails, the seeder clobbered hand tuning.
+  it('hand-authored tables survive the seeder (merge guard)', () => {
+    // If any of these fail, gen_enemy_attacks.py clobbered hand tuning.
     for (const id of ['garapython', 'garahadan']) {
       const e = config.enemies[id];
       const clips = e.attacks.map((a: { clip: string }) => a.clip);
       expect(clips, `${id} attack clips`).toEqual(expect.arrayContaining(['atk1', 'atk2']));
       expect(e.clip_notes?.wat2, `${id} clip_notes`).toContain('attack-ready');
     }
+    for (const id of ['izhirak_s6', 'azherowa_b2']) {
+      const kinds = config.enemies[id].attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds, `${id} kinds`).toEqual(expect.arrayContaining(['projectile', 'lob']));
+    }
+    for (const id of ['hildegao', 'hildeghana', 'hildegigas']) {
+      const e = config.enemies[id];
+      const kinds = e.attacks.map((a: { kind?: string }) => a.kind);
+      expect(kinds, `${id} kinds`).toEqual(expect.arrayContaining(['melee_arc', 'charge', 'leap']));
+      expect(e.clip_notes?.stt, `${id} stt note`).toContain('chest');
+    }
+    for (const id of ['reyhound', 'grimble', 'tormatible', 'stagg', 'kapantha']) {
+      expect(config.enemies[id].clip_notes?.stt, `${id} stt note`).toContain('dash');
+    }
   });
 
   it('attack kind, when present, is a known delivery', () => {
-    const known = new Set(['melee_arc', 'projectile', 'lob']);
+    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap']);
     const bad: string[] = [];
     for (const [id, e] of entries) {
       for (const a of e.attacks) {

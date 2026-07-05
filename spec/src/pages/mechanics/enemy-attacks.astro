@@ -30,7 +30,7 @@ const timeline = `stateDiagram-v2
     <tr><td><code>windup_frac</code> / <code>damage_end_frac</code></td><td>Fractions of the resolved clip's duration. Telegraph = <code>[0, windup_frac)</code>, damaging window = <code>[windup_frac, damage_end_frac]</code> — windup end and damage start are definitionally the same instant.</td></tr>
     <tr><td><code>hit_half_angle_deg</code> / <code>hit_reach</code></td><td>The arc hit shape (below).</td></tr>
     <tr><td><code>min_range</code> / <code>max_range</code></td><td>Selection band on the distance to the target at the moment ATTACKING is entered.</td></tr>
-    <tr><td><code>kind</code></td><td>Hit delivery: <code>melee_arc</code> (default — the arc test below), <code>projectile</code> (a straight projectile released at the damaging-window open; hits on contact, i-frames tested at impact), or <code>lob</code> (a grenade released at window open toward the target's position, landing after a short flight for area damage; i-frames tested at landing). Ranged kinds release exactly <strong>once</strong> per attack — the one-resolution rule applies at impact/landing instead of the arc test.</td></tr>
+    <tr><td><code>kind</code></td><td>Hit delivery: <code>melee_arc</code> (default — the arc test below), <code>projectile</code> (straight projectile released at window open; hits on contact, i-frames at impact), <code>lob</code> (grenade released at window open toward the target's position, landing for area damage; i-frames at landing), <code>charge</code> (segmented <code>_st</code> windup → <code>_lp</code> loop while moving forward along the locked facing, hitting on first contact, → <code>_ed</code> recovery; travel capped at <code>max_range</code>; timeline fractions do not apply — the segments are the timeline), or <code>leap</code> (the enemy itself travels to the target's window-open position during the window, landing at its close for area damage; i-frames at landing). All kinds resolve at most <strong>once</strong> per attack.</td></tr>
     <tr><td><code>weight</code></td><td>Relative selection weight among in-band candidates.</td></tr>
     <tr><td><code>damage_mult</code></td><td>Damage dealt = <code>stats.attack_base × damage_mult</code> (replaces the legacy fixed 10).</td></tr>
     <tr><td><code>fsm</code> overrides</td><td>Per-enemy walk/charge multipliers, loaf durations, hurt duration, <code>attack_fallback_duration</code>. Defaults = today's <code>enemy_base.gd</code> constants; SHOULD-level tuning freedom.</td></tr>
@@ -41,7 +41,8 @@ const timeline = `stateDiagram-v2
 
   <h2>Attack selection</h2>
   <ul>
-    <li>On the CHASING → ATTACKING transition, the candidate set is the attacks whose <code>[min_range, max_range]</code> band contains the current target distance. The pick MUST be weighted-random among candidates.</li>
+    <li>CHASING → ATTACKING <strong>triggers</strong> when the attack cooldown is ready and at least one attack's <code>[min_range, max_range]</code> band contains the target distance (ranged/charge attacks fire from range; for all-melee tables this is identical to reaching attack range).</li>
+    <li>On the transition, the candidate set is the attacks whose band contains the current target distance. The pick MUST be weighted-random among candidates.</li>
     <li>An empty candidate set MUST fall back to the attack whose band is nearest to the distance — a non-empty table never yields "no attack".</li>
     <li>Facing MUST lock at attack start (current <code>_start_attack</code> behavior, kept) — the arc does not track the target during the swing.</li>
   </ul>
@@ -84,7 +85,7 @@ const timeline = `stateDiagram-v2
     <tr><td>Quadruped circler <em>(specced — <a href="/states/enemies">/states/enemies §quadruped</a>)</em></td><td><code>wlk_l/wlk_r</code> head-turned arc walks + <code>stt</code> straight dash-charge + <code>stp</code></td><td>wolf, hyena, deer, tiger</td></tr>
     <tr><td>Quad machine <em>(specced — <a href="/states/enemies">/states/enemies §quad-machine</a>)</em></td><td>hover kiter: 4-dir strafes <code>wlk_b/f/l/r</code>, <code>atk</code> projectile + <code>atkb</code> grenade lob</td><td>quad</td></tr>
     <tr><td>Bruiser (height swings)</td><td><code>atk / atk_hi / atk_mi</code></td><td>booma (=jigobooma)</td></tr>
-    <tr><td>Big-rig combo</td><td><code>atk1</code> + segmented <code>atk2_st/lp/ed</code> + <code>atk3</code></td><td>gorilla</td></tr>
+    <tr><td>Big-rig combo <em>(specced — <a href="/states/enemies">/states/enemies §big-rig</a>)</em></td><td><code>atk1</code> punch combo, <code>atk2_st/lp/ed</code> running shoulder slam (<code>charge</code>), <code>atk3</code> belly-flop <code>leap</code>, <code>stt</code> chest-beat threat</td><td>gorilla</td></tr>
     <tr><td>Flyer combo</td><td><code>atk1/2/3, fly, tk</code> (takeoff)</td><td>roc</td></tr>
     <tr><td>Two-attack melee</td><td><code>atk1 / atk2</code></td><td>seal</td></tr>
     <tr><td>Stance riser (#491)</td><td><code>wat1/wat2</code> + <code>stt</code> rise / <code>wt2w</code> lower</td><td>snake <em>(authored)</em>; shinowa's <code>wat2/backstep/transform</code> is adjacent</td></tr>

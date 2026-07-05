@@ -892,18 +892,57 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "hildeghana": {
       "archetype": "bigrig_combo",
@@ -917,18 +956,57 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "hildegigas": {
       "archetype": "bigrig_combo",
@@ -942,18 +1020,57 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
+          "id": "punch_combo",
+          "clip": "atk1",
+          "kind": "melee_arc",
+          "weight": 3.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 2.2,
+          "windup_frac": 0.3,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 50.0,
+          "hit_reach": 2.2,
+          "damage_mult": 1.0
+        },
+        {
+          "id": "shoulder_slam",
+          "clip": "atk2",
+          "kind": "charge",
+          "weight": 2.0,
+          "min_range": 3.0,
+          "max_range": 9.0,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
+          "hit_half_angle_deg": 40.0,
+          "hit_reach": 1.4,
+          "damage_mult": 1.4
+        },
+        {
+          "id": "belly_flop",
+          "clip": "atk3",
+          "kind": "leap",
+          "weight": 1.0,
+          "min_range": 2.5,
+          "max_range": 7.0,
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.75,
+          "hit_half_angle_deg": 180.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.8
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk1": "heavy right-handed punch with a quick left uppercut (melee combo)",
+        "atk2_st": "shoulder slam windup \u2014 starts attack 2",
+        "atk2_lp": "running shoulder slam \u2014 loops while charging forward",
+        "atk2_ed": "shoulder slam recovery \u2014 ends the animation",
+        "atk3": "jump into belly flop \u2014 area damage on landing",
+        "stt": "beating chest \u2014 threat display when they notice the player and become active",
+        "wat": "wait",
+        "wlk": "walk",
+        "dmg": "taking damage",
+        "ded": "dead"
+      }
     },
     "humilias": {
       "archetype": "boss",
