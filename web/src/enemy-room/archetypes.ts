@@ -87,10 +87,16 @@ export const ARCHETYPES: ArchetypeDef[] = [
     simNote: 'Implemented: dormant disguise + reveal_range + peek-cancel (spec /states/enemies §box-mimic; tk2/wlk2 roles are kion\'s theories — confirm in-game). Room-clear MUST count dormant mimics.',
   },
   {
-    id: 'trickster',
-    label: 'Hopper / trickster',
-    blurb: 'frog jmp + tur (leaps, turns), rappy ded1/ded2 + stt1/stt2 (plays dead, flees).',
-    simNote: 'Baseline sim; leap and play-dead behaviors need their module (#494).',
+    id: 'hopper',
+    label: 'Hopper',
+    blurb: 'Frogs that leap and turn (jmp, tur): Porel, Pobomma, Pomarr.',
+    simNote: 'Baseline sim; hop behavior notes pending — module to follow.',
+  },
+  {
+    id: 'rappy',
+    label: 'Rappy',
+    blurb: 'The iconic rare bonus enemies — not really tricksters (kion), just rare. Dual ded1/ded2 + stt1/stt2 clips suggest the classic fall-down-then-flee: Rappy, Ar Rappy, Rab Rappy.',
+    simNote: 'Baseline sim; rare-enemy behavior notes pending (flee/loot identity ties into the rares design, #495).',
   },
   {
     id: 'machine_soldier',

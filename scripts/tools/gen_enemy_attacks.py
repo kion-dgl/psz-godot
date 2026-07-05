@@ -81,7 +81,10 @@ MODEL_ARCHETYPES = {
     'roller': ['armadillo', 'armadillo_rare'],
     'ape_gunner': ['orangutan', 'orangutan_rare'],
     'box_mimic': ['shrimp', 'shrimp_rare'],
-    'trickster': ['frog', 'frog_bomb', 'frog_rare', 'rappy', 'rappy_blue', 'rappy_red'],
+    # Former 'trickster' bucket, split per kion (2026-07-05): frogs hop; the
+    # rappies don't actually trick anyone — they're just the rare enemies.
+    'hopper': ['frog', 'frog_bomb', 'frog_rare'],
+    'rappy': ['rappy', 'rappy_blue', 'rappy_red'],
     'machine_soldier': [
         'leg', 'leg_black', 'lower', 'lower_black',
         'swordman', 'swordman_b', 'swordman_rare', 'swordman_rare_b',
