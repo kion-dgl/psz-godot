@@ -87,6 +87,15 @@ const fsm = `stateDiagram-v2
   </ul>
   <p><em>Current Godot runtime diverges</em>: it walks straight and fakes circling by alternating <code>wlk_l</code>/<code>wlk_r</code> on a timer (<code>_walk_variant_timer</code>) — that hack is retired when this contract is implemented (the enemy-attacks runtime PR). The #/enemy-room quadruped room implements this contract as the reference. Per-enemy quirks (Kapantha SHOULD prefer attacking from behind) and rare-as-leader pack behavior are open design — see the pack-behavior issue.</p>
 
+  <h3>Archetype: Quad machine — hover kiter (normative)</h3>
+  <p>Applies to <code>archetype: quad_machine</code> (quad rigs — Izhirak-S6, Azherowa-B2). These robots <strong>hover</strong>: four directional walks (<code>wlk_f</code>/<code>wlk_b</code>/<code>wlk_l</code>/<code>wlk_r</code>) are strafes relative to a body that keeps facing its target.</p>
+  <ul>
+    <li>While engaged, a quad machine's <strong>facing MUST stay on the target</strong> — it never turns its body to travel. Movement is strafing, and the clip <strong>MUST</strong> match the movement direction <em>relative to facing</em>: <code>wlk_f</code> closing, <code>wlk_b</code> retreating, <code>wlk_l</code>/<code>wlk_r</code> lateral.</li>
+    <li>It <strong>MUST</strong> hold a <strong>standoff band</strong> around <code>fsm.standoff_range</code> to stay out of melee reach: target inside the band → retreat (<code>wlk_b</code>); target beyond it → close (<code>wlk_f</code>); at standoff → strafe laterally (side re-picked on a timer). It <strong>MUST NOT</strong> voluntarily close to melee range.</li>
+    <li>Attacks are ranged, fired from standoff when off cooldown and the target is inside an attack's range band: <code>atk</code> is a <strong>projectile</strong>, <code>atkb</code> <strong>lobs a grenade</strong> (area damage where it lands). Per the shared timing contract, ranged attacks release their projectile at the damaging-window open (<a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a> — attack <code>kind</code>).</li>
+    <li><strong>Counterplay is intentional</strong>: the kiter does no pathfinding escape, so room geometry beats it — backing one into a corner collapses the standoff band and forces melee exposure. An implementation MUST NOT add wall-aware escape routing that defeats cornering.</li>
+  </ul>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

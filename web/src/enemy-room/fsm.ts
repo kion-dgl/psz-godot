@@ -58,6 +58,9 @@ export interface EnemySim {
   chaseMode: 'arc' | 'dash';
   arcSide: 1 | -1;
   arcTimer: number;
+  // Ranged deliveries in flight (quad_machine etc.) — stepped every tick.
+  projectiles: Projectile[];
+  lobs: Lob[];
 }
 
 export interface SimInput {
@@ -79,7 +82,32 @@ export type SimEvent =
   | { type: 'hit'; attack: AttackDef; damage: number }
   | { type: 'hit_dodged'; attack: AttackDef }
   | { type: 'window_close'; attack: AttackDef }
-  | { type: 'attack_end'; attack: AttackDef };
+  | { type: 'attack_end'; attack: AttackDef }
+  | { type: 'projectile_fired'; attack: AttackDef }
+  | { type: 'lob_fired'; attack: AttackDef; at: Vec2 }
+  | { type: 'lob_landed'; attack: AttackDef; at: Vec2 };
+
+/** Straight projectile in flight (kind: 'projectile') — hits on contact. */
+export interface Projectile {
+  pos: Vec2;
+  dir: Vec2;
+  traveled: number;
+  maxRange: number;
+  attack: AttackDef;
+}
+
+/** Grenade in flight (kind: 'lob') — area damage at `target` when it lands. */
+export interface Lob {
+  from: Vec2;
+  target: Vec2;
+  timer: number;
+  flightTime: number;
+  attack: AttackDef;
+}
+
+export const PROJECTILE_SPEED = 10.0;
+export const PROJECTILE_RADIUS = 0.25;
+export const LOB_FLIGHT_TIME = 0.9;
 
 // enemy_base.gd wander/loaf constants (not per-enemy data)
 const WANDER_INTERVAL_MIN = 2.0;
@@ -107,6 +135,8 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     chaseMode: 'arc',
     arcSide: 1,
     arcTimer: 0,
+    projectiles: [],
+    lobs: [],
   };
 }
 
@@ -236,6 +266,18 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
     }
 
     case 'chasing': {
+      // Kiter: ranged gate + standoff locomotion (never the melee gate).
+      if (entry.archetype === 'quad_machine') {
+        if (
+          sim.attackCooldown <= 0 &&
+          entry.attacks.some((a) => dist >= a.min_range && dist <= a.max_range)
+        ) {
+          startAttack(sim, entry, input, dist, events);
+          break;
+        }
+        processChasingQuadMachine(sim, entry, input, dist);
+        break;
+      }
       if (dist <= entry.stats.attack_range && sim.attackCooldown <= 0) {
         startAttack(sim, entry, input, dist, events);
         break;
@@ -269,6 +311,31 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       if (!atk.windowOpened && atk.t >= windowStart) {
         atk.windowOpened = true;
         events.push({ type: 'window_open', attack: atk.def });
+        // Ranged kinds release exactly once, at window open (spec: kind) —
+        // resolution then happens at impact/landing, not via the arc test.
+        const kind = atk.def.kind ?? 'melee_arc';
+        if (kind === 'projectile') {
+          atk.resolved = true;
+          sim.projectiles.push({
+            pos: { ...sim.pos },
+            dir: { ...atk.facing },
+            traveled: 0,
+            maxRange: Math.max(atk.def.hit_reach, 1),
+            attack: atk.def,
+          });
+          events.push({ type: 'projectile_fired', attack: atk.def });
+        } else if (kind === 'lob') {
+          atk.resolved = true;
+          const target = { ...playerPos };
+          sim.lobs.push({
+            from: { ...sim.pos },
+            target,
+            timer: LOB_FLIGHT_TIME,
+            flightTime: LOB_FLIGHT_TIME,
+            attack: atk.def,
+          });
+          events.push({ type: 'lob_fired', attack: atk.def, at: target });
+        }
       }
       // Damaging window: first arc pass resolves the hit — at most once per attack.
       if (atk.windowOpened && !atk.windowClosed && !atk.resolved && atk.t <= windowEnd) {
@@ -326,7 +393,48 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
 
   sim.pos.x += sim.velocity.x * dt;
   sim.pos.z += sim.velocity.z * dt;
+
+  stepDeliveries(sim, entry, input, events);
   return events;
+}
+
+
+/** Step in-flight projectiles and lobs; i-frames are tested at impact/landing. */
+function stepDeliveries(sim: EnemySim, entry: ResolvedEntry, input: SimInput, events: SimEvent[]): void {
+  const { dt, playerPos, playerRadius, playerInvincible } = input;
+
+  sim.projectiles = sim.projectiles.filter((p) => {
+    p.pos.x += p.dir.x * PROJECTILE_SPEED * dt;
+    p.pos.z += p.dir.z * PROJECTILE_SPEED * dt;
+    p.traveled += PROJECTILE_SPEED * dt;
+    const hitDist = playerRadius + PROJECTILE_RADIUS;
+    if (len(sub(playerPos, p.pos)) <= hitDist) {
+      if (playerInvincible) {
+        events.push({ type: 'hit_dodged', attack: p.attack });
+      } else {
+        const damage = Math.round(entry.stats.attack_base * p.attack.damage_mult);
+        events.push({ type: 'hit', attack: p.attack, damage });
+      }
+      return false;
+    }
+    return p.traveled < p.maxRange;
+  });
+
+  sim.lobs = sim.lobs.filter((l) => {
+    l.timer -= dt;
+    if (l.timer > 0) return true;
+    events.push({ type: 'lob_landed', attack: l.attack, at: l.target });
+    // AoE at the landing point: hit_reach is the blast radius.
+    if (len(sub(playerPos, l.target)) <= l.attack.hit_reach + playerRadius) {
+      if (playerInvincible) {
+        events.push({ type: 'hit_dodged', attack: l.attack });
+      } else {
+        const damage = Math.round(entry.stats.attack_base * l.attack.damage_mult);
+        events.push({ type: 'hit', attack: l.attack, damage });
+      }
+    }
+    return false;
+  });
 }
 
 /**
@@ -371,6 +479,48 @@ function processChasingQuadruped(sim: EnemySim, entry: ResolvedEntry, input: Sim
   // Clip matches geometry: head turned toward the target's side.
   // left-of-facing (y-up) = (facing.z, -facing.x).
   const leftDot = radial.x * dir.z + radial.z * -dir.x;
+  sim.anim = leftDot > 0 ? 'wlk_l' : 'wlk_r';
+}
+
+
+/**
+ * Quad-machine hover kiter (spec /states/enemies §quad-machine, normative):
+ * the body always faces the target; movement is strafing with the clip
+ * matching the direction relative to facing (wlk_f close / wlk_b retreat /
+ * wlk_l·wlk_r lateral). Holds fsm.standoff_range to stay out of melee reach;
+ * retreat is fast (charge mult) — cornering it is the intended counterplay,
+ * so there is deliberately NO wall-aware escape routing.
+ */
+function processChasingQuadMachine(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
+  const { dt, playerPos, rng } = input;
+  const radial = norm(sub(playerPos, sim.pos));
+  sim.facing = radial; // hover body tracks the target
+  const standoff = entry.fsm.standoff_range;
+
+  if (dist < standoff * 0.85) {
+    // Too close — back straight out at retreat speed.
+    const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
+    sim.velocity = { x: -radial.x * speed, z: -radial.z * speed };
+    sim.anim = 'wlk_b';
+    return;
+  }
+  if (dist > standoff * 1.25) {
+    const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+    sim.velocity = { x: radial.x * speed, z: radial.z * speed };
+    sim.anim = 'wlk_f';
+    return;
+  }
+  // At standoff: lateral strafe, side re-picked on a timer.
+  sim.arcTimer -= dt;
+  if (sim.arcTimer <= 0) {
+    sim.arcTimer = 1.5 + rng() * 2.5;
+    if (rng() < 0.4) sim.arcSide = sim.arcSide === 1 ? -1 : 1;
+  }
+  const tangent: Vec2 = { x: -radial.z * sim.arcSide, z: radial.x * sim.arcSide };
+  const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
+  sim.velocity = { x: tangent.x * speed, z: tangent.z * speed };
+  // Movement relative to facing: left-of-facing = (facing.z, -facing.x).
+  const leftDot = tangent.x * radial.z + tangent.z * -radial.x;
   sim.anim = leftDot > 0 ? 'wlk_l' : 'wlk_r';
 }
 

@@ -111,6 +111,17 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
     }
   });
 
+  it('attack kind, when present, is a known delivery', () => {
+    const known = new Set(['melee_arc', 'projectile', 'lob']);
+    const bad: string[] = [];
+    for (const [id, e] of entries) {
+      for (const a of e.attacks) {
+        if (a.kind !== undefined && !known.has(a.kind)) bad.push(`${id}/${a.id}=${a.kind}`);
+      }
+    }
+    expect(bad, bad.join(', ')).toHaveLength(0);
+  });
+
   it('attack ids are unique per enemy and clips are non-empty tokens', () => {
     const bad: string[] = [];
     for (const [id, e] of entries) {

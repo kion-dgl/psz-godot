@@ -35,8 +35,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'quad_machine',
     label: 'Quad machine',
-    blurb: '4-directional wlk_b/f/l/r + atkb — strafing machine quads: Izhirak-S6, Azherowa-B2.',
-    simNote: 'Baseline sim; 4-dir strafing needs its module (#494).',
+    blurb: 'Hover kiter: body faces the target while strafing wlk_f/b/l/r; holds standoff range; atk = projectile, atkb = grenade lob. Corner it to beat it: Izhirak-S6, Azherowa-B2.',
+    simNote: 'Implemented: standoff kiting + projectile/lob deliveries (spec /states/enemies §quad-machine).',
   },
   {
     id: 'bruiser',

@@ -302,6 +302,114 @@ describe('enemy-room FSM — quadruped circler (spec /states/enemies §quadruped
   });
 });
 
+describe('enemy-room FSM — quad machine kiter (spec /states/enemies §quad-machine)', () => {
+  const shot = atk({ id: 'shot', clip: 'atk', kind: 'projectile', min_range: 3, max_range: 10, hit_half_angle_deg: 8, hit_reach: 10 });
+  const grenade = atk({ id: 'grenade', clip: 'atkb', kind: 'lob', min_range: 4, max_range: 12, hit_reach: 1.6, damage_mult: 1.5 });
+  const kiterConfig = (attacks: AttackDef[]): EnemyAttackConfig => {
+    const c = config(attacks);
+    c.enemies.dummy.archetype = 'quad_machine';
+    c.enemies.dummy.fsm = { standoff_range: 6 };
+    return c;
+  };
+
+  it('faces the target while strafing at standoff, clip matching lateral movement', () => {
+    const entry = resolveEntry(kiterConfig([shot]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 6 } });
+    sim.attackCooldown = 99; // suppress attacks — locomotion under test
+    stepEnemy(sim, entry, input); // idle → chasing
+    for (let i = 0; i < 60; i++) {
+      stepEnemy(sim, entry, input);
+      const radial = { x: 0 - sim.pos.x, z: 6 - sim.pos.z };
+      const rl = Math.hypot(radial.x, radial.z);
+      const facingDot = (sim.facing.x * radial.x + sim.facing.z * radial.z) / rl;
+      expect(facingDot, `tick ${i}: body must face the target`).toBeGreaterThan(0.999);
+      expect(['wlk_l', 'wlk_r'], `tick ${i}`).toContain(sim.anim);
+      // lateral: velocity ⊥ radial
+      const vl = Math.hypot(sim.velocity.x, sim.velocity.z);
+      const cos = Math.abs((sim.velocity.x * radial.x + sim.velocity.z * radial.z) / (vl * rl));
+      expect(cos, `tick ${i}: strafe must be lateral`).toBeLessThan(0.1);
+    }
+  });
+
+  it('retreats fast with wlk_b when the player closes inside the standoff band', () => {
+    const entry = resolveEntry(kiterConfig([shot]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 2 } }); // well inside standoff 6
+    sim.attackCooldown = 99;
+    stepEnemy(sim, entry, input);
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wlk_b');
+    // Moving away from the player, at retreat (charge-mult) speed.
+    const away = sim.velocity.z < 0;
+    expect(away).toBe(true);
+    expect(Math.hypot(sim.velocity.x, sim.velocity.z)).toBeCloseTo(3 * 1.5, 5);
+  });
+
+  it('closes with wlk_f when beyond the band', () => {
+    const entry = resolveEntry(kiterConfig([shot]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 12 } });
+    sim.attackCooldown = 99;
+    stepEnemy(sim, entry, input);
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wlk_f');
+    expect(sim.velocity.z).toBeGreaterThan(0);
+  });
+
+  it('fires a projectile at window open that hits a stationary player exactly once', () => {
+    const entry = resolveEntry(kiterConfig([shot]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 6 } });
+    stepEnemy(sim, entry, input); // idle → chasing
+    const events = run(sim, entry, input, 3.0);
+    expect(events.filter((e) => e.type === 'projectile_fired')).toHaveLength(1);
+    const hits = events.filter((e) => e.type === 'hit');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].type === 'hit' && hits[0].damage).toBe(10);
+    // Ranged release means the melee arc never resolves a second hit.
+    expect(events.filter((e) => e.type === 'hit_dodged')).toHaveLength(0);
+  });
+
+  it('lobs a grenade that lands on the target point for AoE damage', () => {
+    const entry = resolveEntry(kiterConfig([grenade]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 6 } });
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 4.0);
+    expect(events.filter((e) => e.type === 'lob_fired')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'lob_landed')).toHaveLength(1);
+    const hit = events.find((e) => e.type === 'hit');
+    expect(hit && hit.type === 'hit' && hit.damage).toBe(15); // 10 × 1.5
+  });
+
+  it('grenade misses when the player leaves the blast radius before landing', () => {
+    const entry = resolveEntry(kiterConfig([grenade]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const near = makeInput({ playerPos: { x: 0, z: 6 } });
+    stepEnemy(sim, entry, near);
+    // step until the lob is in the air, then move the player away
+    let events: SimEvent[] = [];
+    let guard = 0;
+    while (sim.lobs.length === 0 && guard++ < 600) events.push(...stepEnemy(sim, entry, near));
+    expect(sim.lobs.length).toBe(1);
+    const far = makeInput({ playerPos: { x: 8, z: -6 } });
+    events = events.concat(run(sim, entry, far, 1.5));
+    expect(events.some((e) => e.type === 'lob_landed')).toBe(true);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+  });
+
+  it('i-frames at projectile impact register as dodged', () => {
+    const entry = resolveEntry(kiterConfig([shot]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 6 }, playerInvincible: true });
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 3.0);
+    expect(events.filter((e) => e.type === 'hit_dodged')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'hit')).toHaveLength(0);
+  });
+});
+
 describe('enemy-room FSM — attack selection', () => {
   const near = atk({ id: 'bite', min_range: 0, max_range: 2, weight: 1 });
   const far = atk({ id: 'lunge', min_range: 2, max_range: 6, weight: 3 });

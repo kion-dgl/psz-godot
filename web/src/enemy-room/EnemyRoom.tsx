@@ -123,6 +123,10 @@ interface SceneRefs {
   clips: THREE.AnimationClip[];
   currentAction: THREE.AnimationAction | null;
   currentClipName: string;
+  /** Pooled visuals for ranged deliveries (quad_machine projectiles/lobs). */
+  projPool: THREE.Mesh[];
+  lobBallPool: THREE.Mesh[];
+  lobRingPool: THREE.Mesh[];
 }
 
 interface LogEntry {
@@ -300,10 +304,39 @@ export default function EnemyRoom() {
     const arc = new THREE.Mesh(buildSectorGeometry(THREE.MathUtils.degToRad(45), 2), arcMat);
     scene.add(arc);
 
+    // Pooled ranged-delivery visuals (hidden until used).
+    const projPool: THREE.Mesh[] = [];
+    for (let i = 0; i < 8; i++) {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffcc33 }),
+      );
+      m.visible = false;
+      m.position.y = 0.9;
+      scene.add(m);
+      projPool.push(m);
+    }
+    const lobBallPool: THREE.Mesh[] = [];
+    const lobRingPool: THREE.Mesh[] = [];
+    for (let i = 0; i < 4; i++) {
+      const ball = new THREE.Mesh(
+        new THREE.SphereGeometry(0.22, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xff6633 }),
+      );
+      ball.visible = false;
+      scene.add(ball);
+      lobBallPool.push(ball);
+      const ring = buildRing(1.6, 0xff6633, 0.4);
+      ring.visible = false;
+      scene.add(ring);
+      lobRingPool.push(ring);
+    }
+
     sceneRef.current = {
       scene, camera, renderer, controls, enemyGroup, playerGroup, playerBodyMat,
       detectionRing, attackRing, chargeRing, arc, arcMat, arcKey: '',
       mixer: null, clips: [], currentAction: null, currentClipName: '',
+      projPool, lobBallPool, lobRingPool,
     };
 
     const onResize = () => {
@@ -439,6 +472,15 @@ export default function EnemyRoom() {
           case 'window_close':
             pushLog('window closed', '#666');
             break;
+          case 'projectile_fired':
+            pushLog(`projectile '${e.attack.id}' fired`, '#fc3');
+            break;
+          case 'lob_fired':
+            pushLog(`grenade '${e.attack.id}' lobbed`, '#f63');
+            break;
+          case 'lob_landed':
+            pushLog(`grenade landed (AoE r=${e.attack.hit_reach})`, '#f63');
+            break;
           case 'attack_end':
             pushLog(`attack '${e.attack.id}' end → loaf`, '#889');
             break;
@@ -538,6 +580,29 @@ export default function EnemyRoom() {
         ring.position.x = sim.pos.x;
         ring.position.z = sim.pos.z;
       }
+
+      // Ranged deliveries: sync pools to the sim's in-flight lists.
+      s.projPool.forEach((m, i) => {
+        const p = sim.projectiles[i];
+        m.visible = !!p;
+        if (p) m.position.set(p.pos.x, 0.9, p.pos.z);
+      });
+      s.lobBallPool.forEach((m, i) => {
+        const l = sim.lobs[i];
+        m.visible = !!l;
+        if (l) {
+          const f = 1 - l.timer / l.flightTime;
+          const x = l.from.x + (l.target.x - l.from.x) * f;
+          const z = l.from.z + (l.target.z - l.from.z) * f;
+          m.position.set(x, 0.9 + 4.5 * f * (1 - f), z); // parabola
+        }
+        const ring = s.lobRingPool[i];
+        ring.visible = !!l;
+        if (l) {
+          ring.position.x = l.target.x;
+          ring.position.z = l.target.z;
+        }
+      });
 
       // Attack arc overlay
       const atk = sim.currentAttack;
@@ -813,6 +878,8 @@ export default function EnemyRoom() {
         {sliderRow('loaf_duration_min', entry.fsm.loaf_duration_min, 0.5, 6, 0.1, (v) => setFsm('loaf_duration_min', v))}
         {sliderRow('loaf_duration_max', entry.fsm.loaf_duration_max, 0.5, 8, 0.1, (v) => setFsm('loaf_duration_max', v))}
         {sliderRow('attack_fallback_dur', entry.fsm.attack_fallback_duration, 0.2, 3, 0.05, (v) => setFsm('attack_fallback_duration', v))}
+        {entry.archetype === 'quad_machine' &&
+          sliderRow('standoff_range', entry.fsm.standoff_range, 1, 14, 0.5, (v) => setFsm('standoff_range', v))}
 
         <h4 style={h4Style}>Attacks ({entry.attacks.length})</h4>
         {entry.attacks.map((a, i) => {
@@ -854,6 +921,18 @@ export default function EnemyRoom() {
                   {entry.clip_notes[a.clip]}
                 </div>
               )}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ width: 60, fontSize: 11, color: '#aab' }}>kind</span>
+                <select
+                  value={a.kind ?? 'melee_arc'}
+                  onChange={(ev) => setAttack(i, { kind: ev.target.value as AttackDef['kind'] })}
+                  style={{ flex: 1, background: '#1a1a3a', color: '#fff', border: '1px solid #334', padding: 2 }}
+                >
+                  <option value="melee_arc">melee_arc</option>
+                  <option value="projectile">projectile</option>
+                  <option value="lob">lob (grenade AoE)</option>
+                </select>
+              </div>
               {sliderRow('weight', a.weight, 0.1, 10, 0.1, (v) => setAttack(i, { weight: v }))}
               {sliderRow('min_range', a.min_range, 0, 12, 0.1, (v) => setAttack(i, { min_range: v }))}
               {sliderRow('max_range', Math.min(a.max_range, 20), 0.5, 20, 0.1, (v) => setAttack(i, { max_range: v }))}

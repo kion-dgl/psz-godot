@@ -6,10 +6,14 @@
  * scripts/tools/gen_enemy_attacks.py.
  */
 
+export type AttackKind = 'melee_arc' | 'projectile' | 'lob';
+
 export interface AttackDef {
   id: string;
   /** Animation-name token as Godot's resolver consumes it (atk, atk2, atk_hi…) — NOT a full clip name. */
   clip: string;
+  /** Hit delivery (spec /mechanics/enemy-attacks): melee arc test (default), straight projectile, or grenade lob. */
+  kind?: AttackKind;
   weight: number;
   min_range: number;
   max_range: number;
@@ -38,6 +42,8 @@ export interface FsmParams {
   loaf_duration_max: number;
   hurt_duration: number;
   attack_fallback_duration: number;
+  /** Kiter archetypes (quad_machine): preferred distance from the target. */
+  standoff_range: number;
 }
 
 export interface EnemyAttackEntry {
@@ -69,6 +75,7 @@ export const DEFAULT_FSM: FsmParams = {
   loaf_duration_max: 4.0,
   hurt_duration: 0.3,
   attack_fallback_duration: 0.8,
+  standoff_range: 6.0,
 };
 
 export const DEFAULT_ATTACK: Omit<AttackDef, 'id' | 'clip'> = {
