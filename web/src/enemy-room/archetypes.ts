@@ -69,10 +69,22 @@ export const ARCHETYPES: ArchetypeDef[] = [
     simNote: 'Baseline sim attacks from locomotion; the stance sub-state model is specced as #491.',
   },
   {
-    id: 'transformer',
-    label: 'Transformer',
-    blurb: 'No standard attack clip: armadillo trf1/trf2 (roll), shrimp tk1/tk2, orangutan atck* family — attacks via transform/mechanics.',
-    simNote: 'Baseline sim uses the fallback-duration attack (no clip); transform mechanics need their module (#494).',
+    id: 'roller',
+    label: 'Roller',
+    blurb: 'Rolls up into a ball to attack (trf1/trf2 transform clips, wat1–3 idles, no standard attack clip): Rohjade, Rohcrysta.',
+    simNote: 'Baseline sim (fallback-duration attack); roll behavior notes pending — split out per kion, module to follow.',
+  },
+  {
+    id: 'ape_gunner',
+    label: 'Ape gunner',
+    blurb: 'Apes that pull out a pistol to shoot (atcksht) plus melee swings (atckswg / atcktuki): Froutang, Frunaked.',
+    simNote: 'Baseline sim; pistol/melee behavior notes pending — split out per kion, module to follow.',
+  },
+  {
+    id: 'box_mimic',
+    label: 'Box mimic',
+    blurb: 'Look like boxes and wait for the player to approach before attacking (tk1/tk2, wlk1/wlk2): Bolix, Goldix.',
+    simNote: 'Baseline sim; ambush behavior notes pending — split out per kion, module to follow.',
   },
   {
     id: 'trickster',

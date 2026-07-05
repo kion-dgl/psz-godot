@@ -252,7 +252,7 @@
       ]
     },
     "bolix": {
-      "archetype": "transformer",
+      "archetype": "box_mimic",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -602,7 +602,7 @@
       ]
     },
     "froutang": {
-      "archetype": "transformer",
+      "archetype": "ape_gunner",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -627,7 +627,7 @@
       ]
     },
     "frunaked": {
-      "archetype": "transformer",
+      "archetype": "ape_gunner",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -798,7 +798,7 @@
       ]
     },
     "goldix": {
-      "archetype": "transformer",
+      "archetype": "box_mimic",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1110,7 +1110,7 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "headbutt",
+          "id": "tail_swipe",
           "clip": "atk1",
           "kind": "melee_arc",
           "weight": 3.0,
@@ -1118,7 +1118,7 @@
           "max_range": 2.2,
           "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 30.0,
+          "hit_half_angle_deg": 70.0,
           "hit_reach": 2.0,
           "damage_mult": 1.0
         },
@@ -1138,7 +1138,7 @@
         }
       ],
       "clip_notes": {
-        "atk1": "headbutt (close range)",
+        "atk1": "tail swipe (close range)",
         "wat": "idle",
         "wlk": "locomotion",
         "dmg": "taking damage",
@@ -1698,7 +1698,7 @@
       }
     },
     "rohcrysta": {
-      "archetype": "transformer",
+      "archetype": "roller",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1723,7 +1723,7 @@
       ]
     },
     "rohjade": {
-      "archetype": "transformer",
+      "archetype": "roller",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1952,7 +1952,7 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "headbutt",
+          "id": "tail_swipe",
           "clip": "atk1",
           "kind": "melee_arc",
           "weight": 3.0,
@@ -1960,7 +1960,7 @@
           "max_range": 2.2,
           "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 30.0,
+          "hit_half_angle_deg": 70.0,
           "hit_reach": 2.0,
           "damage_mult": 1.0
         },
@@ -1980,7 +1980,7 @@
         }
       ],
       "clip_notes": {
-        "atk1": "headbutt (close range)",
+        "atk1": "tail swipe (close range)",
         "wat": "idle",
         "wlk": "locomotion",
         "dmg": "taking damage",

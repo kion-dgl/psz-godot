@@ -75,10 +75,11 @@ MODEL_ARCHETYPES = {
     'flyer_combo': ['roc', 'roc_rare'],
     'two_attack': ['seal', 'seal_rare'],
     'stance_riser': ['snake', 'snake_rare'],
-    'transformer': [
-        'armadillo', 'armadillo_rare', 'shrimp', 'shrimp_rare',
-        'orangutan', 'orangutan_rare',
-    ],
+    # Former 'transformer' bucket, split per kion (2026-07-05): three genuinely
+    # different behaviors. Detailed behavior notes pending per group.
+    'roller': ['armadillo', 'armadillo_rare'],
+    'ape_gunner': ['orangutan', 'orangutan_rare'],
+    'box_mimic': ['shrimp', 'shrimp_rare'],
     'trickster': ['frog', 'frog_bomb', 'frog_rare', 'rappy', 'rappy_blue', 'rappy_red'],
     'machine_soldier': [
         'leg', 'leg_black', 'lower', 'lower_black',
