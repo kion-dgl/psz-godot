@@ -36,6 +36,9 @@ func build(layout: Dictionary) -> void:
 	var set_id: String = layout.get("set", "")
 	var pieces: Dictionary = layout.get("pieces", {})
 	for piece_name in pieces:
+		# visible:false = authored-but-parked piece; skip the load entirely.
+		if not pieces[piece_name].get("visible", true):
+			continue
 		var packed := load(OBJECTS_DIR + set_id + "/" + piece_name + ".glb") as PackedScene
 		if not packed:
 			push_warning("TeleporterDressing: missing model %s/%s.glb" % [set_id, piece_name])

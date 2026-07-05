@@ -394,6 +394,14 @@ func test_teleporter_dressing() -> void:
 	assert_true(anchor.size() == 3 and is_equal_approx(float(anchor[2]), 60.83), "anchor sits at the warp pad")
 	var warpcb: Dictionary = pieces.get("o0s_warpcb", {})
 	assert_eq(warpcb.get("scroll", {}).get("v", 0.0), 0.15, "warp ring scrolls v=0.15")
+	# Only the two compass plates are live in-game; the warp-ring variants are
+	# parked (visible:false keeps their authored transforms without spawning).
+	var visible_names := []
+	for n in pieces:
+		if pieces[n].get("visible", true):
+			visible_names.append(n)
+	visible_names.sort()
+	assert_eq(visible_names, ["o00_compass", "o00_compass2"], "only the compass plates spawn")
 
 	# Pivot math: a mesh authored away from its scene root gets re-pivoted to
 	# bbox bottom-center before the cfg offset applies.
