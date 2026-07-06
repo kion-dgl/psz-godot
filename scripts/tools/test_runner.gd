@@ -52,6 +52,7 @@ func _run_tests_combat() -> void:
 	test_weapon_attack_sfx_mapping()
 	test_weapon_anim_data_new_animation_sets()
 	test_companion_combat_decisions()
+	test_companion_defense()
 
 
 # Registries, inventory, mags, shops, techniques, telepipe + the
@@ -5950,6 +5951,61 @@ func test_companion_combat_decisions() -> void:
 		"past the damaging frame -> no second hit")
 	assert_eq(CompanionCombat.swing_crossed_damaging_frac(0.0, 0.1, 0.0, 0.4), false,
 		"zero-length swing never fires")
+	print("")
+
+
+# ── Companion combat phase 2: survivability + enemy nearest-ally targeting ──
+# Spec /states/companion-combat. HP/down/recover math on CompanionCombat and
+# the nearest-ally chooser on EnemyBase are pure statics — pinned off-tree.
+func test_companion_defense() -> void:
+	print("── Companion defense: HP / down / recover + nearest-ally (spec /states/companion-combat) ──")
+
+	# Max HP scales with player level (clamped to >= 1); level 1 = base.
+	assert_eq(CompanionCombat.max_hp_for(1), CompanionCombat.COMPANION_BASE_HP,
+		"level 1 -> base HP")
+	assert_eq(CompanionCombat.max_hp_for(5),
+		CompanionCombat.COMPANION_BASE_HP + CompanionCombat.COMPANION_HP_PER_LEVEL * 4,
+		"level 5 -> base + 4 per-level")
+	assert_eq(CompanionCombat.max_hp_for(0), CompanionCombat.COMPANION_BASE_HP,
+		"level 0 clamps to level 1")
+
+	# hp_after_hit floors at 0 and ignores negative damage.
+	assert_eq(CompanionCombat.hp_after_hit(50, 20), 30, "50 - 20 = 30")
+	assert_eq(CompanionCombat.hp_after_hit(10, 999), 0, "overkill floors at 0")
+	assert_eq(CompanionCombat.hp_after_hit(10, -5), 10, "negative damage is a no-op")
+
+	# recover_hp is a fraction of max, at least 1.
+	assert_eq(CompanionCombat.recover_hp(120),
+		int(round(120.0 * CompanionCombat.DOWNED_RECOVER_FRAC)), "recover = frac of max")
+	assert_eq(CompanionCombat.recover_hp(1), 1, "recover is at least 1")
+
+	# Nearest-eligible-ally chooser: picks the closest targetable ally.
+	var self_pos := Vector3.ZERO
+	var cands: Array = [
+		{"pos": Vector3(6, 0, 0), "targetable": true},
+		{"pos": Vector3(3, 0, 0), "targetable": true},
+	]
+	assert_eq(EnemyBase.select_nearest_ally(cands, self_pos), 1, "nearest targetable ally wins")
+
+	# A downed (non-targetable) nearer ally is skipped for the standing one.
+	cands = [
+		{"pos": Vector3(2, 0, 0), "targetable": false},  # downed companion, closer
+		{"pos": Vector3(5, 0, 0), "targetable": true},   # player, farther
+	]
+	assert_eq(EnemyBase.select_nearest_ally(cands, self_pos), 1,
+		"downed ally is skipped even when nearer")
+
+	# No targetable ally -> -1.
+	cands = [{"pos": Vector3(2, 0, 0), "targetable": false}]
+	assert_eq(EnemyBase.select_nearest_ally(cands, self_pos), -1, "no targetable ally -> -1")
+	assert_eq(EnemyBase.select_nearest_ally([], self_pos), -1, "empty candidate list -> -1")
+
+	# Selection is planar: a huge Y offset doesn't change nearest.
+	cands = [
+		{"pos": Vector3(3, 50, 0), "targetable": true},
+		{"pos": Vector3(4, 0, 0), "targetable": true},
+	]
+	assert_eq(EnemyBase.select_nearest_ally(cands, self_pos), 0, "nearest is XZ-planar")
 	print("")
 
 

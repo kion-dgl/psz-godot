@@ -284,6 +284,13 @@ var _companion_combat_probe := false
 var _companion_combat_triggered := false
 var _companion_combat_id := "kai"   # companion to spawn ("1" = default)
 
+# Companion-defense probe (spec /states/companion-combat phase 2): when
+# PSZ_AUTOPILOT_COMPANION_DEFENSE=1, the first field cell spawns a companion +
+# an enemy, damages the companion to 0 HP, and requires it to go DOWNED (enemy
+# retargets the player) and then recover. Success is the same DONE ok line.
+var _companion_defense_probe := false
+var _companion_defense_triggered := false
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -382,6 +389,9 @@ func _parse_probe_flags() -> void:
 		if comp_val != "" and comp_val != "1":
 			_companion_combat_id = comp_val
 		print("[sanity] autopilot COMPANION-COMBAT probe enabled (%s must land a hit on its own in first field cell)" % _companion_combat_id)
+	_companion_defense_probe = OS.has_environment("PSZ_AUTOPILOT_COMPANION_DEFENSE")
+	if _companion_defense_probe:
+		print("[sanity] autopilot COMPANION-DEFENSE probe enabled (companion must go DOWNED and recover in first field cell)")
 
 
 ## Called every frame from _process — when floor-only mode is on, mark every
@@ -2561,6 +2571,80 @@ func _companion_combat_watch(companion: Node3D, enemy: Node3D, tick: int) -> voi
 	_after(0.2, func() -> void: _companion_combat_watch(companion, enemy, tick + 1))
 
 
+## PSZ_AUTOPILOT_COMPANION_DEFENSE=1: spawn a companion + an enemy, damage the
+## companion to 0 HP, and require it to go DOWNED (enemy retargets the player)
+## then recover (spec /states/companion-combat phase 2). Runs instead of the
+## cell plan; ends with DONE ok / FAIL.
+func _companion_defense_fail(msg: String) -> void:
+	_fail_and_quit("companion-defense probe — %s" % msg)
+
+
+func _run_companion_defense_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_companion_defense_probe(attempt + 1))
+		else:
+			_companion_defense_fail("no player in field")
+		return
+	var p: Node3D = players[0]
+	var edata = EnemyRegistry.get_enemy("froutang")
+	if edata == null:
+		_companion_defense_fail("froutang missing from EnemyRegistry")
+		return
+	var companion := CompanionNpcProbeScript.new()
+	companion.companion_id = _companion_combat_id
+	companion.name = "ProbeCompanionDef"
+	p.get_parent().add_child(companion)
+	companion.global_position = p.global_position + p.global_transform.basis.x * 1.0
+
+	var enemy := EnemyBase.new()
+	enemy.enemy_data = edata
+	var col := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = edata.collision_radius
+	cap.height = edata.collision_height
+	col.shape = cap
+	col.position.y = cap.height / 2
+	enemy.add_child(col)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	p.get_parent().add_child(enemy)
+	enemy.global_position = companion.global_position + p.global_transform.basis.x * 1.5
+	print("[sanity] checkpoint: companion-defense probe — %s + froutang spawned" % _companion_combat_id)
+	_companion_defense_watch(companion, enemy, p, {"downed": false, "retargeted": false}, 0)
+
+
+## Poll ~5/s. Deal lethal damage to force DOWNED, confirm the enemy retargets
+## the standing player, then confirm recovery. ~40s budget (10s recover timer).
+func _companion_defense_watch(companion: Node3D, enemy: Node3D, player: Node3D, seen: Dictionary, tick: int) -> void:
+	if not is_instance_valid(companion) or not is_instance_valid(enemy):
+		_companion_defense_fail("a node was freed mid-probe")
+		return
+	var state: int = int(companion.get("_combat_state"))  # 4 == DOWNED, 0 == FOLLOW
+	if not seen["downed"]:
+		# Chip the companion down fast rather than waiting on enemy cadence.
+		if companion.has_method("take_damage"):
+			companion.take_damage(40)
+		if state == 4:
+			seen["downed"] = true
+	elif not seen["retargeted"]:
+		enemy._find_target()
+		if enemy.target == player:
+			seen["retargeted"] = true
+			print("[sanity] checkpoint: companion-defense probe — enemy retargeted player while companion downed")
+	elif state == 0 and bool(companion.get("is_ally_targetable")):
+		print("[sanity] checkpoint: companion-defense probe — companion recovered and rejoined allies")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if tick >= 250:
+		_companion_defense_fail("incomplete in 50s (downed=%s retargeted=%s state=%d)" % [
+			str(seen["downed"]), str(seen["retargeted"]), state])
+		return
+	_after(0.2, func() -> void: _companion_defense_watch(companion, enemy, player, seen, tick + 1))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
 	# Defeat probe: in the first field cell, kill the player instead of running
@@ -2592,6 +2676,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _companion_combat_probe and not _companion_combat_triggered:
 		_companion_combat_triggered = true
 		_run_companion_combat_probe()
+		return
+	# Companion-defense probe (spec /states/companion-combat phase 2): down the
+	# companion, require enemy retarget to the player, then recovery.
+	if _companion_defense_probe and not _companion_defense_triggered:
+		_companion_defense_triggered = true
+		_run_companion_defense_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""

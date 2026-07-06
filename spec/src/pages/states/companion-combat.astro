@@ -13,6 +13,12 @@ const chart = `stateDiagram-v2
   ATTACK --> REGROUP: target lost
   REGROUP --> FOLLOW: back within START_DISTANCE of player
 
+  FOLLOW --> DOWNED: HP reaches 0
+  ENGAGE --> DOWNED: HP reaches 0
+  ATTACK --> DOWNED: HP reaches 0
+  REGROUP --> DOWNED: HP reaches 0
+  DOWNED --> FOLLOW: recover timer elapses (partial HP)
+
   note right of FOLLOW
     FOLLOW is the trail-replay
     contract from /states/companion.
@@ -20,15 +26,20 @@ const chart = `stateDiagram-v2
     companion is speaking or
     dismissed.
   end note
+
+  note right of DOWNED
+    Phase 2. The companion never
+    dies — it kneels, then recovers.
+  end note
 `;
 ---
 
-<Concept title="Companion Combat (Phase 1 — offense)" section="States">
+<Concept title="Companion Combat" section="States">
   <div class="diagram"><Mermaid chart={chart} /></div>
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
-  <p>Phase 1 makes the companion NPC a <em>combatant on offense only</em>, modeled on PSO's partner NPCs (which the original client implements as player objects in a party slot, sharing the player's entity-vs-entity damage pipeline). The companion acquires targets near the player, closes, and attacks through the same hit geometry and damage entry points the player uses. <strong>Out of scope for phase 1</strong> (deferred to phase 2): the companion taking damage, enemies targeting the companion, incapacitation/recovery, techniques, healing, and ranged weapons.</p>
+  <p>The companion NPC is a combatant modeled on PSO's partner NPCs (which the original client implements as player objects in a party slot, sharing the player's entity-vs-entity damage pipeline). <strong>Phase 1</strong> is offense: the companion acquires targets near the player, closes, and attacks through the same hit geometry and damage entry points the player uses. <strong>Phase 2</strong> makes the companion attackable: it joins the shared <code>allies</code> group so enemies target it, it takes damage through a Hurtbox, and instead of dying it kneels and recovers. Still out of scope (later phases): hate/threat weighting on enemy target choice, techniques, healing, and ranged weapons.</p>
 
   <h2>Combat states</h2>
 
@@ -76,16 +87,40 @@ const chart = `stateDiagram-v2
     <li>In <code>ATTACK</code> the companion is rooted and plays the non-looping <code>atk1</code> clip from the same animation pack its locomotion clips come from; the locomotion selector is suspended for the swing. Zero displacement while a <em>locomotion</em> clip plays is still a violation (#420's tripwire watches only <code>walk</code>/<code>run</code>, so a rooted <code>atk1</code> never trips it). A rig with no resolvable <code>atk1</code> <strong>MUST</strong> still resolve the swing on a fixed 0.5&nbsp;s timer — damage never depends on the clip existing.</li>
   </ul>
 
+  <h2>Phase 2 — taking damage, aggro, and recovery</h2>
+
+  <h3>The <code>allies</code> group</h3>
+  <ul>
+    <li>The player and every combat-capable companion <strong>MUST</strong> belong to a shared <code>allies</code> group. The player joins it in its scene; the companion joins on ready and leaves it only while <code>DOWNED</code>.</li>
+    <li>Enemy target selection (<code>EnemyBase._find_target</code>) <strong>MUST</strong> choose the nearest <em>eligible</em> ally — a member of <code>allies</code> that is alive/targetable — rather than the hardcoded player. With only the player present this is identical to the old behavior, so single-actor quests are unchanged. When a companion is present and nearer, the enemy engages it. <em>Threat/hate weighting (prefer the ally that last hit me) is a later phase; phase 2 is pure nearest-ally.</em></li>
+    <li>A <code>DOWNED</code> companion <strong>MUST NOT</strong> be an eligible ally target: it leaves the <code>allies</code> group while kneeling, so enemies retarget the player (or another standing ally) immediately.</li>
+  </ul>
+
+  <h3>Taking damage</h3>
+  <ul>
+    <li>The companion <strong>MUST</strong> expose a <code>take_damage(amount, knockback)</code> entry point — the same call an enemy uses on the player (<code>EnemyBase._start_attack</code> calls <code>target.take_damage()</code> directly, not through a Hurtbox). Damage reduces the companion's HP (<code>max_hp_for(player level)</code>). Enemy melee is a direct call, so no Hurtbox is added: a Hurtbox on the shared hit layer would only expose the companion to the <em>player's</em> own projectiles (friendly fire), which phase 2 does not want. A receive-side Hurtbox can arrive later alongside any enemy attack that resolves through hitboxes.</li>
+    <li>Taking a hit while <code>ATTACK</code>/<code>ENGAGE</code>/<code>REGROUP</code> does not interrupt the FSM (no stagger-lock in phase 2) — only reaching 0 HP changes state, to <code>DOWNED</code>.</li>
+  </ul>
+
+  <h3>Down and recover — the companion never dies</h3>
+  <ul>
+    <li>When HP reaches 0 the companion <strong>MUST</strong> enter <code>DOWNED</code>: drop its combat target, leave <code>allies</code>, root in place, and play a kneel/downed clip. This is authentic to the DS game and avoids escort-quest failure on companion death.</li>
+    <li>After <code>DOWNED_RECOVER_TIME</code> (10&nbsp;s) the companion <strong>MUST</strong> recover: restore HP to <code>DOWNED_RECOVER_FRAC</code> (0.5) of max, rejoin <code>allies</code>, and return to <code>FOLLOW</code> (re-seeding the resume-blend). A companion <strong>MUST NOT</strong> be permanently removed by damage.</li>
+    <li>While <code>DOWNED</code> the companion runs no combat scan and no follow-move; it is inert until it recovers.</li>
+  </ul>
+
   <h2>Autopilot oracles</h2>
   <ul>
     <li><strong>Checkpoint (positive):</strong> under <code>PSZ_AUTOPILOT</code>, the first landed hit prints <code>[sanity] companion-combat: first hit &lt;enemy&gt; dmg=&lt;n&gt;</code> — the probe line a companion-bearing combat run (Search and Rescue carries Kai) is expected to produce.</li>
     <li><strong>Tripwire (negative):</strong> under <code>PSZ_AUTOPILOT</code>, accumulating more than <code>COMBAT_STUCK_TIME</code> (60&nbsp;s) continuously in <code>ENGAGE</code>/<code>ATTACK</code> without landing a hit pushes <code>[sanity] FAIL: companion '&lt;id&gt;' stuck in combat …</code> — caught by the matrix's <code>FAIL:</code> grep. The 8&nbsp;s no-progress drop should make this unreachable; the tripwire is the backstop.</li>
+    <li><strong>Phase 2 checkpoint:</strong> under <code>PSZ_AUTOPILOT</code>, a companion that is knocked down and then recovers prints <code>[sanity] companion-combat: downed &lt;id&gt;</code> then <code>[sanity] companion-combat: recovered &lt;id&gt; hp=&lt;n&gt;</code> — the down/recover oracle a defense probe requires.</li>
   </ul>
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/elements/companion_combat.gd</code> (<code>CompanionCombat</code>) — the pure decision functions: <code>select_target</code>, <code>combat_stats</code>, <code>compute_attack</code>, <code>swing_crossed_damaging_frac</code>, <code>weapon_type_for</code>.</li>
-    <li><code>scripts/3d/elements/companion_npc.gd</code> — the FSM driver (<code>_process_combat</code> and per-state helpers), attack clip loading, and the autopilot checkpoint/tripwire.</li>
+    <li><code>scripts/3d/elements/companion_combat.gd</code> (<code>CompanionCombat</code>) — the pure decision functions: <code>select_target</code>, <code>compute_attack</code>, <code>swing_crossed_damaging_frac</code>, <code>weapon_type_for</code>, plus phase-2 <code>max_hp_for</code>, <code>hp_after_hit</code>, and <code>recover_hp</code>.</li>
+    <li><code>scripts/3d/enemies/enemy_base.gd</code> (<code>EnemyBase</code>) — <code>select_nearest_ally</code> (the pure nearest-eligible-ally chooser) and the <code>_find_target</code> that scans the <code>allies</code> group through it.</li>
+    <li><code>scripts/3d/elements/companion_npc.gd</code> — the FSM driver (<code>_process_combat</code> and per-state helpers incl. <code>DOWNED</code>), <code>take_damage</code>, <code>allies</code> membership, attack clip loading, and the autopilot checkpoints/tripwire.</li>
   </ul>
-  <p>Pinned by <code>test_companion_combat_decisions</code> in <code>scripts/tools/test_runner.gd</code> (target priority, leash filtering, damage math, damaging-frame crossing — all against the pure functions, no scene needed).</p>
+  <p>Pinned by <code>test_companion_combat_decisions</code> and <code>test_companion_defense</code> in <code>scripts/tools/test_runner.gd</code> — target priority, leash filtering, damage math, damaging-frame crossing, nearest-ally selection (incl. downed-ally exclusion), and the HP/down/recover math, all against the pure functions with no scene needed.</p>
 </Concept>

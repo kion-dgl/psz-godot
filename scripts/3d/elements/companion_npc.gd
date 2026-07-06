@@ -87,7 +87,8 @@ const TRAIL_MAX_ENTRIES: int = 150  # ~2.5s at 60fps
 
 ## Combat FSM (spec /states/companion-combat). FOLLOW is the trail-replay
 ## behavior above; the combat states move the companion under its own steering.
-enum CombatState { FOLLOW, ENGAGE, ATTACK, REGROUP }
+## DOWNED (phase 2): kneeling after HP hit 0, inert until it recovers.
+enum CombatState { FOLLOW, ENGAGE, ATTACK, REGROUP, DOWNED }
 var _combat_state: int = CombatState.FOLLOW
 var _combat_target: Node3D = null
 var _weapon_config: Dictionary = {}
@@ -100,6 +101,15 @@ var _engage_last_dist: float = INF
 var _engage_no_progress: float = 0.0
 var _combat_stuck_time: float = 0.0  # autopilot tripwire accumulator
 var _combat_hits_landed: int = 0
+
+## Phase-2 survivability (spec /states/companion-combat). The companion never
+## dies: at 0 HP it enters DOWNED, leaves the "allies" group so enemies
+## retarget, kneels for DOWNED_RECOVER_TIME, then recovers to a fraction of max.
+var _max_hp: int = CompanionCombat.COMPANION_BASE_HP
+var _hp: int = CompanionCombat.COMPANION_BASE_HP
+var _downed_timer: float = 0.0
+## Enemies read this via node.get("is_ally_targetable"); false while DOWNED.
+var is_ally_targetable: bool = true
 
 
 func _ready() -> void:
@@ -119,6 +129,15 @@ func _ready() -> void:
 	col_shape.shape = capsule
 	col_shape.position.y = 0.7
 	add_child(col_shape)
+
+	# Phase 2: a targetable ally with its own HP (spec /states/companion-combat).
+	add_to_group("allies")
+	var level := 1
+	var character: Variant = CharacterManager.get_active_character()
+	if character != null:
+		level = int(character.get("level", 1))
+	_max_hp = CompanionCombat.max_hp_for(level)
+	_hp = _max_hp
 
 
 func _build_capsule() -> void:
@@ -190,6 +209,7 @@ func _setup_companion_anims(npc_model: Node) -> void:
 		"run": [prefix + "_run_pso", prefix + "_run"],
 		"walk": [prefix + "_walk", prefix + "_run"],
 		"atk1": [prefix + "_atk1"],
+		"down": [prefix + "_slp", prefix + "_dam_d"],  # kneel/downed (phase 2)
 	}
 
 	var lib := AnimationLibrary.new()
@@ -624,6 +644,11 @@ func _enter_regroup() -> void:
 
 
 func _process_combat(delta: float) -> void:
+	# DOWNED is inert and ignores dismiss/speech — it only counts down to
+	# recovery (spec /states/companion-combat phase 2).
+	if _combat_state == CombatState.DOWNED:
+		_process_downed(delta)
+		return
 	if _dismissed:
 		_combat_state = CombatState.FOLLOW
 		_combat_target = null
@@ -639,6 +664,66 @@ func _process_combat(delta: float) -> void:
 		CombatState.REGROUP:
 			_process_regroup(delta)
 	_combat_tripwire(delta)
+
+
+# ── Phase 2: taking damage + down/recover (spec /states/companion-combat) ──
+
+## Damage entry point — the same call enemies make on the player
+## (EnemyBase._start_attack → target.take_damage()). Ignored while already
+## downed or dismissed. Reaching 0 HP knocks the companion down; it never dies.
+func take_damage(amount: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+	if _combat_state == CombatState.DOWNED or _dismissed:
+		return
+	_hp = CompanionCombat.hp_after_hit(_hp, amount)
+	if _hp <= 0:
+		_enter_downed()
+
+
+## Hurtbox-routed hits (if any ever reach the companion) funnel to take_damage.
+func _on_hit_received(damage: int, knockback: Vector3, _accuracy: int = 100, _element: String = "", _element_level: int = 0) -> void:
+	take_damage(damage, knockback)
+
+
+func _enter_downed() -> void:
+	_combat_state = CombatState.DOWNED
+	_combat_target = null
+	_swing_elapsed = -1.0
+	_downed_timer = CompanionCombat.DOWNED_RECOVER_TIME
+	velocity = Vector3.ZERO
+	# Leave the ally pool so enemies retarget the player immediately.
+	is_ally_targetable = false
+	remove_from_group("allies")
+	# Kneel: a down clip if the rig has one, else just hold "wait".
+	_current_anim = ""
+	if _anim_player and _anim_player.has_animation("down"):
+		_play_companion_anim("down")
+	else:
+		_play_companion_anim("wait")
+	print("[Companion] %s downed" % companion_id)
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		print("[sanity] companion-combat: downed %s" % companion_id)
+
+
+func _process_downed(delta: float) -> void:
+	# Inert: face the player, no scan, no follow-move.
+	if is_instance_valid(_player_ref):
+		global_position.y = _player_ref.global_position.y
+	_downed_timer -= delta
+	if _downed_timer <= 0.0:
+		_recover_from_downed()
+
+
+func _recover_from_downed() -> void:
+	_hp = CompanionCombat.recover_hp(_max_hp)
+	is_ally_targetable = true
+	if not is_in_group("allies"):
+		add_to_group("allies")
+	_combat_state = CombatState.FOLLOW
+	_was_moving = false  # re-seed the resume-blend into trail-follow
+	_play_companion_anim("wait")
+	print("[Companion] %s recovered (hp=%d)" % [companion_id, _hp])
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		print("[sanity] companion-combat: recovered %s hp=%d" % [companion_id, _hp])
 
 
 ## Target still worth fighting: alive and inside the player's leash.

@@ -312,11 +312,53 @@ func _setup_navigation() -> void:
 	add_child(nav_agent)
 
 
+## Pure nearest-eligible-ally chooser (spec /states/companion-combat phase 2).
+## candidates: [{pos: Vector3, targetable: bool}, …]. Returns the index of the
+## targetable candidate nearest self_pos in the XZ plane, or -1 when none is
+## eligible. Delegates the nearest-in-XZ pick to the shared helper so the loop
+## lives in one place. Kept pure/static so test_runner exercises it off-tree.
+static func select_nearest_ally(candidates: Array, self_pos: Vector3) -> int:
+	var elig: Array = []
+	for c in candidates:
+		elig.append({"pos": c.get("pos", Vector3.ZERO), "eligible": bool(c.get("targetable", false))})
+	return CompanionCombat.nearest_eligible_index(elig, self_pos)
+
+
 func _find_target() -> void:
-	# Find the player in the scene
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target = players[0]
+	# Nearest ally in the shared "allies" group (player + any standing
+	# companion). A DOWNED companion leaves the group, so it is never chosen.
+	# Fallback to the "player" group keeps single-actor scenes (and any scene
+	# that predates the allies group) working unchanged.
+	var allies := get_tree().get_nodes_in_group("allies")
+	if allies.is_empty():
+		var players := get_tree().get_nodes_in_group("player")
+		if players.size() > 0:
+			target = players[0]
+		return
+	var candidates: Array = []
+	for a in allies:
+		if not is_instance_valid(a):
+			continue
+		candidates.append({"pos": (a as Node3D).global_position, "targetable": _ally_targetable(a)})
+	var idx := select_nearest_ally(candidates, global_position)
+	if idx >= 0:
+		target = allies[idx]
+
+
+## An ally is targetable unless it advertises itself as not (a DOWNED companion
+## sets is_ally_targetable=false). Plain players have no such field → true.
+func _ally_targetable(a: Node) -> bool:
+	var flag: Variant = a.get("is_ally_targetable")
+	return flag == null or bool(flag)
+
+
+## Drop a target that stopped being a valid ally (a companion that went DOWNED
+## leaves the "allies" group and clears is_ally_targetable, but its node stays
+## valid) so the next _find_target retargets the player.
+func _drop_untargetable_target() -> void:
+	if target and (not is_instance_valid(target) or not _ally_targetable(target)):
+		target = null
+		_find_target()
 
 
 func _physics_process(delta: float) -> void:
@@ -327,6 +369,8 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < -10.0:
 		_die()
 		return
+
+	_drop_untargetable_target()
 
 	# Process status effects
 	FrameProfiler.mark("enemy_status")
@@ -374,30 +418,35 @@ func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("enemy_move_slide")
 	var pos_before := global_position
 	move_and_slide()
-
-	# Stuck detection: if we tried to move but barely displaced, try going around
-	if current_state == EnemyState.CHASING:
-		var attempted_speed := Vector2(velocity.x, velocity.z).length()
-		var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
-		if attempted_speed > 0.5 and actual_disp < delta * 0.5:
-			_stuck_time += delta
-			if _stuck_time > STUCK_THRESHOLD and target and is_instance_valid(target):
-				var to_target := (target.global_position - global_position)
-				var dir := Vector3(to_target.x, 0, to_target.z).normalized()
-				var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
-				velocity.x = perp.x * attempted_speed * 0.7
-				velocity.z = perp.z * attempted_speed * 0.7
-				if _stuck_time > STUCK_THRESHOLD * 3:
-					_stuck_side *= -1.0
-					_stuck_time = STUCK_THRESHOLD
-		else:
-			_stuck_time = 0.0
+	_apply_stuck_avoidance(delta, pos_before)
 
 	# Safety: if enemy ends up over empty space, stop horizontal movement
 	if (velocity.x * velocity.x + velocity.z * velocity.z) > 0.001:
 		if not _has_floor_at(global_position):
 			velocity.x = 0
 			velocity.z = 0
+
+
+## Chasing enemies that tried to move but barely displaced (blocked by geometry)
+## veer perpendicular to work around the obstacle, flipping side if still stuck.
+func _apply_stuck_avoidance(delta: float, pos_before: Vector3) -> void:
+	if current_state != EnemyState.CHASING:
+		return
+	var attempted_speed := Vector2(velocity.x, velocity.z).length()
+	var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
+	if attempted_speed > 0.5 and actual_disp < delta * 0.5:
+		_stuck_time += delta
+		if _stuck_time > STUCK_THRESHOLD and target and is_instance_valid(target):
+			var to_target := (target.global_position - global_position)
+			var dir := Vector3(to_target.x, 0, to_target.z).normalized()
+			var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
+			velocity.x = perp.x * attempted_speed * 0.7
+			velocity.z = perp.z * attempted_speed * 0.7
+			if _stuck_time > STUCK_THRESHOLD * 3:
+				_stuck_side *= -1.0
+				_stuck_time = STUCK_THRESHOLD
+	else:
+		_stuck_time = 0.0
 
 
 func _process_idle(delta: float) -> void:

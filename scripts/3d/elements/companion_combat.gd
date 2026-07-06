@@ -14,6 +14,14 @@ const ENGAGE_NO_PROGRESS_TIME: float = 8.0  # blocked-approach self-heal → reg
 const COMBAT_STUCK_TIME: float = 60.0  # autopilot tripwire backstop
 const FALLBACK_SWING_TIME: float = 0.5  # swing length when no atk1 clip resolves
 
+## Phase-2 survivability (spec /states/companion-combat). The companion never
+## dies: at 0 HP it kneels for DOWNED_RECOVER_TIME, then recovers to a fraction
+## of max HP. Max HP scales gently with the player's level.
+const COMPANION_BASE_HP: int = 120     # max HP at level 1
+const COMPANION_HP_PER_LEVEL: int = 12 # added per player level above 1
+const DOWNED_RECOVER_TIME: float = 10.0
+const DOWNED_RECOVER_FRAC: float = 0.5
+
 ## Melee weapon type per companion (CombatManager.WEAPON_TYPE_CONFIGS keys).
 ## Phase 1 is melee-only; unlisted companions default to SABER (0).
 const COMPANION_WEAPON_TYPES: Dictionary = {
@@ -34,6 +42,25 @@ static func within_leash(pos: Vector3, player_pos: Vector3) -> bool:
 	return Vector2(pos.x - player_pos.x, pos.z - player_pos.z).length() <= LEASH_RADIUS
 
 
+## Index of the eligible candidate nearest from_pos in the XZ plane, or -1.
+## candidates: [{pos: Vector3, eligible: bool}, …]. Shared by the companion's
+## target pick and the enemy's ally pick (EnemyBase.select_nearest_ally) so
+## "nearest eligible in XZ" lives in exactly one place.
+static func nearest_eligible_index(candidates: Array, from_pos: Vector3) -> int:
+	var best_idx := -1
+	var best_dist := INF
+	for i in range(candidates.size()):
+		var c: Dictionary = candidates[i]
+		if not bool(c.get("eligible", false)):
+			continue
+		var pos: Vector3 = c.get("pos", Vector3.ZERO)
+		var d := Vector2(pos.x - from_pos.x, pos.z - from_pos.z).length()
+		if d < best_dist:
+			best_dist = d
+			best_idx = i
+	return best_idx
+
+
 ## Pick a target from candidate dicts [{pos: Vector3, alive: bool}, …].
 ## preferred_idx is the index of the player's primary reticle target (-1 for
 ## none): if that candidate is eligible it wins outright (assist priority);
@@ -41,22 +68,15 @@ static func within_leash(pos: Vector3, player_pos: Vector3) -> bool:
 ## alive and within the leash of the PLAYER. Returns the chosen index, -1
 ## when nothing is eligible.
 static func select_target(candidates: Array, player_pos: Vector3, companion_pos: Vector3, preferred_idx: int = -1) -> int:
-	var best_idx := -1
-	var best_dist := INF
-	for i in range(candidates.size()):
-		var c: Dictionary = candidates[i]
-		if not bool(c.get("alive", false)):
-			continue
+	var elig: Array = []
+	for c in candidates:
 		var pos: Vector3 = c.get("pos", Vector3.ZERO)
-		if not within_leash(pos, player_pos):
-			continue
-		if i == preferred_idx:
-			return i
-		var d := Vector2(pos.x - companion_pos.x, pos.z - companion_pos.z).length()
-		if d < best_dist:
-			best_dist = d
-			best_idx = i
-	return best_idx
+		var ok: bool = bool(c.get("alive", false)) and within_leash(pos, player_pos)
+		elig.append({"pos": pos, "eligible": ok})
+	# Assist priority: the player's reticle target wins if it is eligible.
+	if preferred_idx >= 0 and preferred_idx < elig.size() and bool(elig[preferred_idx].eligible):
+		return preferred_idx
+	return nearest_eligible_index(elig, companion_pos)
 
 
 ## Attack payload for one swing (always combo step 1 — no companion combos in
@@ -85,3 +105,20 @@ static func swing_crossed_damaging_frac(prev_elapsed: float, elapsed: float, swi
 		return false
 	var t := frac * swing_length
 	return prev_elapsed < t and elapsed >= t
+
+
+# ── Phase 2: survivability (spec /states/companion-combat) ──────────────
+
+## Companion max HP at a given player level (level clamped to >= 1).
+static func max_hp_for(player_level: int) -> int:
+	return COMPANION_BASE_HP + COMPANION_HP_PER_LEVEL * (maxi(player_level, 1) - 1)
+
+
+## HP after taking damage, floored at 0 (0 means "should go DOWNED").
+static func hp_after_hit(current_hp: int, damage: int) -> int:
+	return maxi(current_hp - maxi(damage, 0), 0)
+
+
+## HP restored on recovery from DOWNED — a fraction of max, at least 1.
+static func recover_hp(max_hp: int) -> int:
+	return maxi(int(round(float(max_hp) * DOWNED_RECOVER_FRAC)), 1)
