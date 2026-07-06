@@ -280,6 +280,14 @@ var _enemy_freeze_probe := false    # #477 big-rig attack-wedge probe
 var _enemy_freeze_triggered := false  # ran the probe already (fires once)
 var _enemy_freeze_id := "hildegigas"  # roster id to spawn ("1" = default)
 
+# Companion-combat probe (spec /states/companion-combat): when
+# PSZ_AUTOPILOT_COMPANION_COMBAT=1, the first field cell spawns a companion
+# and an enemy near it and requires the companion to land a hit on its own —
+# the phase-1 offense oracle. Success is the same DONE ok line.
+var _companion_combat_probe := false
+var _companion_combat_triggered := false
+var _companion_combat_id := "kai"   # companion to spawn ("1" = default)
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -372,6 +380,12 @@ func _parse_probe_flags() -> void:
 		if freeze_val != "" and freeze_val != "1":
 			_enemy_freeze_id = freeze_val
 		print("[sanity] autopilot ENEMY-FREEZE probe enabled (%s must exit ATTACKING unhit in first field cell)" % _enemy_freeze_id)
+	_companion_combat_probe = OS.has_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
+	if _companion_combat_probe:
+		var comp_val := OS.get_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
+		if comp_val != "" and comp_val != "1":
+			_companion_combat_id = comp_val
+		print("[sanity] autopilot COMPANION-COMBAT probe enabled (%s must land a hit on its own in first field cell)" % _companion_combat_id)
 
 
 ## Called every frame from _process — when floor-only mode is on, mark every
@@ -2469,6 +2483,88 @@ func _enemy_freeze_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
 	_after(0.2, func() -> void: _enemy_freeze_watch(enemy, seen, tick + 1))
 
 
+## PSZ_AUTOPILOT_COMPANION_COMBAT=1: in the first field cell, spawn a companion
+## and an enemy near it and require the companion to land a hit ON ITS OWN
+## (spec /states/companion-combat phase 1). Runs instead of the cell plan and
+## ends the run with DONE ok / FAIL. Proves the end-to-end offense wiring:
+## target pick → ENGAGE → ATTACK → real enemy Hurtbox damage.
+const CompanionNpcProbeScript := preload("res://scripts/3d/elements/companion_npc.gd")
+
+
+func _companion_combat_fail(msg: String) -> void:
+	_fail_and_quit("companion-combat probe — %s" % msg)
+
+
+func _run_companion_combat_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_companion_combat_probe(attempt + 1))
+		else:
+			_companion_combat_fail("no player in field")
+		return
+	var p: Node3D = players[0]
+	var edata = EnemyRegistry.get_enemy("wolf")
+	if edata == null:
+		_companion_combat_fail("wolf missing from EnemyRegistry")
+		return
+
+	# Spawn the companion beside the player (its own trail-follow won't matter —
+	# the enemy is close enough that it enters ATTACK within a swing or two).
+	var companion := CompanionNpcProbeScript.new()
+	companion.companion_id = _companion_combat_id
+	companion.name = "ProbeCompanion"
+	p.get_parent().add_child(companion)
+	var forward: Vector3 = p.global_transform.basis.z
+	companion.global_position = p.global_position + p.global_transform.basis.x * 2.0
+
+	# Spawn a real enemy just in front of the companion, within the player's
+	# leash — the companion must acquire it, close, and swing.
+	var enemy := EnemyBase.new()
+	enemy.enemy_data = edata
+	var col_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = edata.collision_radius
+	capsule.height = edata.collision_height
+	col_shape.shape = capsule
+	col_shape.position.y = capsule.height / 2
+	enemy.add_child(col_shape)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	p.get_parent().add_child(enemy)
+	enemy.global_position = companion.global_position + forward * 2.0
+	enemy.global_position.y = p.global_position.y
+	print("[sanity] checkpoint: companion-combat probe — %s + wolf spawned near player" % _companion_combat_id)
+	_companion_combat_watch(companion, enemy, 0)
+
+
+## Poll ~5/s: success when the companion's own hit counter goes positive (it
+## landed a hit through the enemy's real Hurtbox). ~30s budget before wedged.
+func _companion_combat_watch(companion: Node3D, enemy: Node3D, tick: int) -> void:
+	if not is_instance_valid(companion):
+		_companion_combat_fail("companion freed mid-probe")
+		return
+	var hits: int = int(companion.get("_combat_hits_landed"))
+	if hits >= 1:
+		var state: int = int(companion.get("_combat_state"))
+		print("[sanity] checkpoint: companion-combat probe — companion landed %d hit(s), state=%d" % [hits, state])
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if not is_instance_valid(enemy) or not enemy.get("is_alive"):
+		# Enemy died before our counter caught a hit — still a companion kill.
+		print("[sanity] checkpoint: companion-combat probe — enemy down")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if tick >= 150:
+		_companion_combat_fail("companion never landed a hit in 30s (state=%d target=%s)" % [
+			int(companion.get("_combat_state")),
+			str(companion.get("_combat_target"))])
+		return
+	_after(0.2, func() -> void: _companion_combat_watch(companion, enemy, tick + 1))
+
+
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
 	# Defeat probe: in the first field cell, kill the player instead of running
@@ -2494,6 +2590,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _enemy_freeze_probe and not _enemy_freeze_triggered:
 		_enemy_freeze_triggered = true
 		_run_enemy_freeze_probe()
+		return
+	# Companion-combat probe (spec /states/companion-combat): spawn a
+	# companion + an enemy and require the companion to land a hit unaided.
+	if _companion_combat_probe and not _companion_combat_triggered:
+		_companion_combat_triggered = true
+		_run_companion_combat_probe()
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""

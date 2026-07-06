@@ -1,0 +1,92 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> FOLLOW
+
+  FOLLOW --> ENGAGE: target acquired (scan tick)
+  ENGAGE --> ATTACK: target within reach
+  ENGAGE --> REGROUP: target lost / leash break / no progress
+  ATTACK --> ATTACK: swing + cooldown done, target still in reach
+  ATTACK --> ENGAGE: cooldown done, target valid but out of reach
+  ATTACK --> REGROUP: target lost
+  REGROUP --> FOLLOW: back within START_DISTANCE of player
+
+  note right of FOLLOW
+    FOLLOW is the trail-replay
+    contract from /states/companion.
+    Combat never runs while the
+    companion is speaking or
+    dismissed.
+  end note
+`;
+---
+
+<Concept title="Companion Combat (Phase 1 — offense)" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p>Phase 1 makes the companion NPC a <em>combatant on offense only</em>, modeled on PSO's partner NPCs (which the original client implements as player objects in a party slot, sharing the player's entity-vs-entity damage pipeline). The companion acquires targets near the player, closes, and attacks through the same hit geometry and damage entry points the player uses. <strong>Out of scope for phase 1</strong> (deferred to phase 2): the companion taking damage, enemies targeting the companion, incapacitation/recovery, techniques, healing, and ranged weapons.</p>
+
+  <h2>Combat states</h2>
+
+  <p>A combat FSM (<code>FOLLOW</code> / <code>ENGAGE</code> / <code>ATTACK</code> / <code>REGROUP</code>) sits alongside the existing follow behavior:</p>
+
+  <ul>
+    <li><strong>FOLLOW</strong> — the trail-replay behavior defined in <a href="/states/companion">Companion Locomotion</a>, unchanged. Every <code>COMBAT_SCAN_INTERVAL</code> (0.25&nbsp;s) the companion scans for a target; acquiring one transitions to <code>ENGAGE</code>.</li>
+    <li><strong>ENGAGE</strong> — steer directly toward the target at <code>FOLLOW_SPEED</code>. When the target is within reach (<code>ENGAGE_REACH_FRAC</code>&nbsp;(0.8) × the weapon's <code>hit_h_dist</code>), transition to <code>ATTACK</code>.</li>
+    <li><strong>ATTACK</strong> — face the target, root in place, swing once (see "Attack resolution"), then wait <code>ATTACK_COOLDOWN</code> (1.2&nbsp;s ÷ the weapon's <code>speed_mult</code>). After the cooldown: target still valid and in reach → swing again; valid but out of reach → <code>ENGAGE</code>; invalid → <code>REGROUP</code>.</li>
+    <li><strong>REGROUP</strong> — steer back toward the player. Within <code>START_DISTANCE</code> (3.0) of the player, transition to <code>FOLLOW</code> (re-seeding the resume-blend so the handoff back to trail-replay is smooth). <code>REGROUP</code> always completes to <code>FOLLOW</code>; re-engagement happens from <code>FOLLOW</code>'s next scan tick.</li>
+  </ul>
+
+  <h3>Combat gating</h3>
+  <ul>
+    <li>The FSM <strong>MUST NOT</strong> leave <code>FOLLOW</code> while the companion is speaking (<code>_speaking</code>) or dismissed (<code>_dismissed</code>). A speech that starts mid-combat <strong>MUST</strong> force <code>REGROUP</code> on its next combat tick.</li>
+    <li>Combat is offense-only: the companion has no Hurtbox in phase 1 and <strong>MUST NOT</strong> register in any group enemies target.</li>
+  </ul>
+
+  <h2>Target selection</h2>
+
+  <p>Target selection is a pure function (<code>CompanionCombat.select_target</code>) of candidate data — no scene access — so the unit tests exercise it directly. Candidates are the alive members of the <code>"enemies"</code> group. The rules:</p>
+
+  <ul>
+    <li><strong>Leash.</strong> A candidate is eligible only while within <code>LEASH_RADIUS</code> (12.0&nbsp;m, XZ-planar) <em>of the player</em> — the companion fights near the player, never chases across the stage. A target that leaves the leash <strong>MUST</strong> be dropped.</li>
+    <li><strong>Assist priority.</strong> If the player's current primary target (the first entry of the player's reticle list) is eligible, the companion <strong>MUST</strong> pick it — partner-assists-the-player is the core PSO behavior. Otherwise the companion picks the eligible candidate nearest to <em>itself</em>.</li>
+    <li><strong>Re-evaluation.</strong> Selection re-runs on every scan tick and whenever the current target dies or breaks the leash.</li>
+    <li><strong>No progress.</strong> If <code>ENGAGE</code> fails to reduce the distance to the target for <code>ENGAGE_NO_PROGRESS_TIME</code> (8&nbsp;s, e.g. blocked by geometry), the companion <strong>MUST</strong> drop the target and <code>REGROUP</code>. This is the self-healing path that keeps a blocked companion from wedging in combat.</li>
+  </ul>
+
+  <h2>Attack resolution</h2>
+
+  <p>The companion reuses the player's hit pipeline end-to-end; it introduces <strong>no new damage path</strong>:</p>
+
+  <ul>
+    <li><strong>Weapon config.</strong> Each companion has a weapon type (<code>COMPANION_WEAPON_TYPES</code>, default SABER) resolving to the shared <code>CombatManager.WEAPON_TYPE_CONFIGS</code> entry — the same cone geometry, <code>damage_mult</code>, <code>knockback</code>, <code>max_targets</code>, and <code>damaging_frac</code> tables the player uses. A type with no dedicated config falls back to SABER's cone (via <code>get_weapon_type_config</code>). In phase 1 the swing is always melee and always combo step&nbsp;1 (no combos), even for a gunblade — the ranged mode is phase-2 work. <strong>Kai</strong> carries the Axeon gunblade (<code>GUN_BLADE</code>): its type drives both the swing animation pack (<code>shotgun_*.glb</code>) and the held model.</li>
+    <li><strong>Held model &amp; swing animations.</strong> A companion listed in <code>COMPANION_WEAPONS</code> (Kai → <code>wgbr02_1_o</code>, the Axeon) attaches that GLB to its right-hand bone (<code>070_RArm02</code>), mirroring the player's <code>_attach_weapon_to_bone</code>; psz-native models render at scale&nbsp;1.0 (no PSO down-scale). Clip sourcing mirrors the player exactly (<code>player.gd _load_weapon_animations</code>): <code>wait</code> and <code>atk1</code> load from the equipped weapon type's pack (gunblade → <code>shotgun_*.glb</code>), while <code>walk</code> and <code>run</code> <strong>MUST</strong> always load from the shared PSO-retargeted locomotion set (the SABER pack's <code>pmsa/pwsa</code> <code>_walk</code>&nbsp;/&nbsp;<code>_run_pso</code>) — the weapon packs carry only the psz <code>_run</code> "dash", so locomotion is never taken from them. A missing bone, GLB, or texture degrades to empty-handed rather than failing.</li>
+    <li><strong>Stats.</strong> Companion attack/accuracy come from <code>ClassRegistry</code> at the <em>player's current level</em>, using the companion's class (<code>COMPANION_CLASSES</code>). Raw damage is <code>class attack × damage_mult[0] × COMPANION_DAMAGE_SCALE</code> (0.7) — the scale keeps the companion a helper, not the main DPS. No weapon-attack, mag, material, or buff terms in phase 1.</li>
+    <li><strong>Hit test.</strong> At <code>damaging_frac[0]</code> of the swing clip, the companion runs the same <code>ConeTargeting.distance_in_cone</code> scan the player's <code>_execute_attack_hit</code> uses (origin = companion + 1.0&nbsp;y, yaw = its facing), takes the nearest <code>max_targets</code> passers, and applies <code>hits_per_step[0]</code> hits to each via <code>enemy.hurtbox.take_hit(damage, knockback, accuracy)</code>. Exactly one damaging frame per swing.</li>
+    <li><strong>Receiver-side math unchanged.</strong> Defense, evasion, crits, status, HURT stagger, death, and drops all resolve in the enemy's <code>_on_hit_received</code> → <code>CombatManager.apply_damage_to_enemy</code>, identically to a player hit.</li>
+  </ul>
+
+  <h2>Animation contract (reconciles /states/companion)</h2>
+
+  <ul>
+    <li>Each behavior state sets the frame's <strong>movement intent</strong>: <code>ENGAGE</code> and <code>REGROUP</code> are steering, so <code>intent_moving = true</code>; a frozen <code>FOLLOW</code> and the <code>ATTACK</code> post-swing cooldown are rooted, so <code>intent_moving = false</code>. The locomotion clip then follows the <a href="/states/companion">Companion Locomotion</a> contract verbatim — <code>locomotion_clip(intent_moving, measured planar speed)</code>, resolved centrally each frame. Because the companion genuinely moves in <code>ENGAGE</code>/<code>REGROUP</code>, <code>walk</code>/<code>run</code> select naturally; because intent flips to steering the same frame the state starts driving the body, the switch out of <code>wait</code> is immediate and the companion <strong>MUST NOT</strong> slide across a state transition.</li>
+    <li>In <code>ATTACK</code> the companion is rooted and plays the non-looping <code>atk1</code> clip from the same animation pack its locomotion clips come from; the central locomotion update is <strong>suspended</strong> for the duration of the swing (it defers whenever a swing is in flight). Zero displacement while a <em>locomotion</em> clip plays is still a violation (#420's tripwire watches only <code>walk</code>/<code>run</code>, so a rooted <code>atk1</code> never trips it). A rig with no resolvable <code>atk1</code> <strong>MUST</strong> still resolve the swing on a fixed 0.5&nbsp;s timer — damage never depends on the clip existing.</li>
+  </ul>
+
+  <h2>Autopilot oracles</h2>
+  <ul>
+    <li><strong>Checkpoint (positive):</strong> under <code>PSZ_AUTOPILOT</code>, the first landed hit prints <code>[sanity] companion-combat: first hit &lt;enemy&gt; dmg=&lt;n&gt;</code> — the probe line a companion-bearing combat run (Search and Rescue carries Kai) is expected to produce.</li>
+    <li><strong>Tripwire (negative):</strong> under <code>PSZ_AUTOPILOT</code>, accumulating more than <code>COMBAT_STUCK_TIME</code> (60&nbsp;s) continuously in <code>ENGAGE</code>/<code>ATTACK</code> without landing a hit pushes <code>[sanity] FAIL: companion '&lt;id&gt;' stuck in combat …</code> — caught by the matrix's <code>FAIL:</code> grep. The 8&nbsp;s no-progress drop should make this unreachable; the tripwire is the backstop.</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/elements/companion_combat.gd</code> (<code>CompanionCombat</code>) — the pure decision functions: <code>select_target</code>, <code>compute_attack</code>, <code>swing_crossed_damaging_frac</code>, <code>weapon_type_for</code>, and <code>locomotion_clip</code> (the intent×speed animation selector).</li>
+    <li><code>scripts/3d/elements/companion_npc.gd</code> — the FSM driver (<code>_process_combat</code> and per-state helpers), the weapon-type animation pack + held-model attach (<code>_setup_companion_anims</code>, <code>_attach_companion_weapon</code>, <code>WEAPON_ANIM</code>, <code>COMPANION_WEAPONS</code>), the central intent-driven animation update, and the autopilot checkpoint/tripwire.</li>
+  </ul>
+  <p>Pinned by <code>test_companion_combat_decisions</code> in <code>scripts/tools/test_runner.gd</code> (target priority, leash filtering, damage math, damaging-frame crossing — all against the pure functions, no scene needed).</p>
+</Concept>

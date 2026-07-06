@@ -21,6 +21,37 @@ static func in_cone(
 	return distance_in_cone(origin, yaw, h_dist, v_dist, half_angle_deg, v_angle_deg, target_pos, target_radius) >= 0.0
 
 
+## Alive members of `enemies` passing the cone described by a weapon-type
+## config dict (hit_h_dist / hit_v_dist / hit_h_angle_deg / hit_v_angle_deg),
+## sorted nearest-first. Targets are tested at their hitbox center using the
+## EnemyData collision shape when present. Used by the companion's swing
+## (spec /states/companion-combat); the player's _enemies_in_hit_cone is the
+## same geometry with technique-widened bounds layered on.
+static func scan_enemies(enemies: Array, origin: Vector3, yaw: float, config: Dictionary) -> Array:
+	var found: Array = []
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var radius: float = 0.5
+		var height: float = 1.5
+		var ed = enemy.get("enemy_data")
+		if ed != null:
+			radius = float(ed.collision_radius)
+			height = float(ed.collision_height)
+		var center: Vector3 = enemy.global_position + Vector3(0, height * 0.5, 0)
+		var d := distance_in_cone(
+			origin, yaw,
+			float(config.get("hit_h_dist", 2.4)), float(config.get("hit_v_dist", 0.5)),
+			float(config.get("hit_h_angle_deg", 30.0)), float(config.get("hit_v_angle_deg", 40.0)),
+			center, radius)
+		if d >= 0.0:
+			found.append({"enemy": enemy, "dist": d})
+	found.sort_custom(func(a, b): return a.dist < b.dist)
+	return found.map(func(c): return c.enemy)
+
+
 ## Distance from the apex to the target (XZ) when it passes the cone,
 ## -1.0 when it does not. The distance is what candidates sort by.
 static func distance_in_cone(

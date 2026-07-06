@@ -51,6 +51,7 @@ func _run_tests_combat() -> void:
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
 	test_weapon_anim_data_new_animation_sets()
+	test_companion_combat_decisions()
 
 
 # Registries, inventory, mags, shops, techniques, telepipe + the
@@ -5875,7 +5876,96 @@ func test_companion_anim_from_measured_speed() -> void:
 	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.1, 0, 0.1), 0.0), "wait",
 		"delta == 0 -> wait (no div-by-zero)")
 
+	# Intent gate (pure CompanionCombat.locomotion_clip): the FSM's movement
+	# intent selects wait vs locomote, the measured speed selects walk vs run.
+	# intent=false is ALWAYS wait, even at run speed (rooted/frozen states never
+	# slide); intent=true still yields wait below IDLE_EPS (the #420 veto — a
+	# blocked-but-steering companion never plays a locomotion clip in place).
+	assert_eq(CompanionCombat.locomotion_clip(false, 6.0), "wait",
+		"intent=false -> wait even at run speed (no slide)")
+	assert_eq(CompanionCombat.locomotion_clip(true, 0.05), "wait",
+		"intent=true but sub-IDLE_EPS -> wait (#420 veto)")
+	assert_eq(CompanionCombat.locomotion_clip(true, 1.2), "walk",
+		"intent=true, mid speed -> walk")
+	assert_eq(CompanionCombat.locomotion_clip(true, 6.0), "run",
+		"intent=true, above RUN_EPS -> run")
+
 	c.free()
+	print("")
+
+
+# ── Companion combat phase 1: the pure decision functions ──
+# Spec /states/companion-combat. All decisions are statics on CompanionCombat
+# (data-in/data-out), so this pins target priority, leash filtering, damage
+# math, and the damaging-frame crossing without a scene or player.
+func test_companion_combat_decisions() -> void:
+	print("── Companion combat: target selection / attack math (spec /states/companion-combat) ──")
+	var player_pos := Vector3.ZERO
+	var comp_pos := Vector3(2, 0, 0)
+
+	# Nearest eligible candidate wins when the player has no reticle target.
+	var cands: Array = [
+		{"pos": Vector3(8, 0, 0), "alive": true},
+		{"pos": Vector3(4, 0, 0), "alive": true},
+	]
+	assert_eq(CompanionCombat.select_target(cands, player_pos, comp_pos), 1,
+		"nearest eligible enemy wins without a preferred target")
+
+	# Assist priority: the player's reticle target wins even when another
+	# candidate is nearer to the companion.
+	assert_eq(CompanionCombat.select_target(cands, player_pos, comp_pos, 0), 0,
+		"player's reticle target wins over a nearer candidate")
+
+	# Leash: candidates beyond LEASH_RADIUS of the PLAYER are ineligible —
+	# including a preferred target, which falls back to nearest-eligible.
+	var far := Vector3(CompanionCombat.LEASH_RADIUS + 1.0, 0, 0)
+	cands = [
+		{"pos": far, "alive": true},
+		{"pos": Vector3(4, 0, 0), "alive": true},
+	]
+	assert_eq(CompanionCombat.select_target(cands, player_pos, comp_pos, 0), 1,
+		"out-of-leash preferred target falls back to nearest eligible")
+
+	# Dead candidates are filtered; nothing eligible returns -1.
+	cands = [
+		{"pos": Vector3(3, 0, 0), "alive": false},
+		{"pos": far, "alive": true},
+	]
+	assert_eq(CompanionCombat.select_target(cands, player_pos, comp_pos), -1,
+		"dead + out-of-leash candidates -> no target (-1)")
+
+	# Leash is XZ-planar: a big Y offset never breaks the leash.
+	cands = [{"pos": Vector3(4, 30, 0), "alive": true}]
+	assert_eq(CompanionCombat.select_target(cands, player_pos, comp_pos), 0,
+		"leash test is planar — vertical offset is ignored")
+
+	# Damage math: class attack x damage_mult[0] x COMPANION_DAMAGE_SCALE,
+	# step-1 knockback/hits/max_targets straight from the shared config.
+	var saber: Dictionary = CombatManager.get_weapon_type_config(0)
+	var atk: Dictionary = CompanionCombat.compute_attack(100, 120, saber)
+	assert_eq(int(atk.damage), int(100.0 * float(saber.damage_mult[0]) * CompanionCombat.COMPANION_DAMAGE_SCALE),
+		"raw damage = attack x damage_mult[0] x damage scale")
+	assert_eq(int(atk.accuracy), 120, "accuracy passes through to the hit")
+	assert_eq(int(atk.hits), int(saber.hits_per_step[0]), "hits = step-1 hits_per_step")
+	assert_eq(int(atk.max_targets), int(saber.max_targets), "max_targets from config")
+
+	# Weapon assignment: per-companion types, default SABER. Kai carries the
+	# Axeon gunblade (GUN_BLADE = 7) — the swing still resolves through the
+	# shared melee cone in phase 1.
+	assert_eq(CompanionCombat.weapon_type_for("dorn"), 1, "dorn swings a sword")
+	assert_eq(CompanionCombat.weapon_type_for("kai"), 7, "kai carries a gunblade")
+	assert_eq(CompanionCombat.weapon_type_for("someone_new"), 0, "unknown companion defaults to saber")
+
+	# Damaging-frame crossing: fires exactly on the tick that crosses
+	# frac x length, never before, never twice, never on a zero-length swing.
+	assert_eq(CompanionCombat.swing_crossed_damaging_frac(0.0, 0.1, 1.0, 0.4), false,
+		"before the damaging frame -> no hit")
+	assert_eq(CompanionCombat.swing_crossed_damaging_frac(0.35, 0.45, 1.0, 0.4), true,
+		"crossing the damaging frame -> hit")
+	assert_eq(CompanionCombat.swing_crossed_damaging_frac(0.45, 0.55, 1.0, 0.4), false,
+		"past the damaging frame -> no second hit")
+	assert_eq(CompanionCombat.swing_crossed_damaging_frac(0.0, 0.1, 0.0, 0.4), false,
+		"zero-length swing never fires")
 	print("")
 
 
