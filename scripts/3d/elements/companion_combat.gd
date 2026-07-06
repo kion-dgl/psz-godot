@@ -14,19 +14,42 @@ const ENGAGE_NO_PROGRESS_TIME: float = 8.0  # blocked-approach self-heal → reg
 const COMBAT_STUCK_TIME: float = 60.0  # autopilot tripwire backstop
 const FALLBACK_SWING_TIME: float = 0.5  # swing length when no atk1 clip resolves
 
-## Melee weapon type per companion (CombatManager.WEAPON_TYPE_CONFIGS keys).
-## Phase 1 is melee-only; unlisted companions default to SABER (0).
+## Weapon type per companion (CombatManager.WEAPON_TYPE_CONFIGS keys). Phase 1
+## resolves the hit cone / damage from this type; unlisted companions default to
+## SABER (0). Kai carries the Axeon gunblade (GUN_BLADE = 7) — a melee swing in
+## phase 1 (its ranged mode is phase-2 work), so the shared cone geometry still
+## applies. The visual model + swing animation set follow from this type in
+## companion_npc.gd (COMPANION_WEAPONS / WEAPON_ANIM).
 const COMPANION_WEAPON_TYPES: Dictionary = {
-	"kai": 0,     # saber
+	"kai": 7,     # gunblade (Axeon)
 	"sarisa": 2,  # daggers
 	"dorn": 1,    # sword
 	"elio": 1,    # sword
 	"fern": 2,    # daggers
 }
 
+## Locomotion clip thresholds (m/s of the companion's OWN measured planar
+## speed). The pure selector below and companion_npc's tripwire share them so
+## there is a single source (spec /states/companion).
+const IDLE_EPS: float = 0.15  # below this the companion plays "wait"
+const RUN_EPS: float = 4.0    # above this the companion plays "run"
+
 
 static func weapon_type_for(companion_id: String) -> int:
 	return int(COMPANION_WEAPON_TYPES.get(companion_id, 0))
+
+
+## Locomotion clip from the FSM's movement INTENT reconciled with the
+## companion's own measured planar speed (spec /states/companion,
+## /states/companion-combat). intent_moving=false always yields "wait"; and even
+## when the FSM intends to move, a measured planar speed below IDLE_EPS still
+## yields "wait" — the #420 veto, so a body pinned by geometry or the personal-
+## space cap never plays a locomotion clip while standing still. Above RUN_EPS
+## is "run", between is "walk". Pure so test_runner pins it off-tree.
+static func locomotion_clip(intent_moving: bool, planar_speed: float) -> String:
+	if not intent_moving or planar_speed < IDLE_EPS:
+		return "wait"
+	return "run" if planar_speed > RUN_EPS else "walk"
 
 
 ## True when pos is within LEASH_RADIUS (XZ) of the player.

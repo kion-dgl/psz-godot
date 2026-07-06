@@ -47,6 +47,36 @@ const COMPANION_CLASSES: Dictionary = {
 	"vash": "ramar", "ren": "humar", "mira": "fomarl",
 }
 
+## Weapon-type → animation pack + name prefix, keyed by WeaponData.WeaponType,
+## the same packs the player uses (player.gd WEAPON_ANIM_DATA). The companion's
+## type comes from CompanionCombat.weapon_type_for(). wait + atk1 load from the
+## equipped type's pack; walk + run always load from the SABER entry (index 0),
+## the shared PSO-retargeted locomotion — see _setup_companion_anims. Only the
+## types companions carry are listed; anything else falls back to SABER.
+const WEAPON_ANIM: Dictionary = {
+	0: {"glb_m": "res://assets/player/animations/saber_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},    # SABER
+	1: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},    # SWORD
+	2: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},  # DAGGERS
+	7: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},  # GUN_BLADE
+}
+
+## Per-companion held weapon model, attached to the right-hand bone (mirrors the
+## player's _attach_weapon_to_bone). psz-native models render at scale 1.0 (no
+## PSO down-scale). Kai carries the Axeon gunblade (wgbr02_1_o).
+const COMPANION_WEAPONS: Dictionary = {
+	"kai": {
+		"glb": "res://assets/weapons/wgbr02/wgbr02/wgbr02_1_o/wgbr02_1_o.glb",
+		"texture": "res://assets/weapons/wgbr02/wgbr02/wgbr02_1_o/wgbr02_1_o.png",
+		"scale": 1.0,
+	},
+}
+
+## Right-hand weapon bone + idle hold pose (player.gd WEAPON_BONE_NAME /
+## WEAPON_HOLD_DEFAULT — gunblade has no per-type override, so default holds).
+const WEAPON_BONE_NAME: String = "070_RArm02"
+const WEAPON_HOLD_POS: Vector3 = Vector3(0.31, 0, 0)
+const WEAPON_HOLD_ROT: Vector3 = Vector3(0, 90, 0)
+
 ## Viewport size for speech bubble
 const BUBBLE_WIDTH := 400
 const BUBBLE_HEIGHT := 180
@@ -66,12 +96,14 @@ var _is_female: bool = false
 var _anim_hold_timer: float = 0.0
 const ANIM_HOLD_TIME: float = 0.3
 
-## Locomotion animation thresholds — the companion's clip is chosen purely from
-## its OWN measured planar speed, never from the player's PlayerState. This is
-## what keeps a rooted player attack (which leaves the companion stationary)
-## from triggering a run-in-place (issue #420). See /states/companion.
-const IDLE_EPS: float = 0.15  # m/s — below this the companion plays "wait"
-const RUN_EPS: float = 4.0    # m/s — above this the companion plays "run"
+## Locomotion clip = f(movement INTENT, own measured planar speed). The FSM sets
+## _move_intent each frame (steering states true, frozen/rooted false); the clip
+## is resolved centrally in _physics_process (spec /states/companion). Thresholds
+## live on CompanionCombat (IDLE_EPS / RUN_EPS) so there is a single source. The
+## measured-speed veto keeps a stationary companion out of a locomotion clip
+## (the #420 run-in-place invariant), and the intent layer keeps a moving one
+## out of "wait" (the combat-transition slide).
+var _move_intent: bool = false  # Set true by whichever state is steering this frame
 
 var _was_moving: bool = false  # Track delayed state transitions
 var _stationary_anim_time: float = 0.0  # autopilot tripwire accumulator (#420)
@@ -138,6 +170,7 @@ func _build_capsule() -> void:
 					if texture:
 						MeshUtils.apply_texture(npc_model, texture)
 				_setup_companion_anims(npc_model)
+				_attach_companion_weapon(npc_model)
 				return
 
 	# Fallback: colored capsule
@@ -158,76 +191,153 @@ func _build_capsule() -> void:
 
 
 func _setup_companion_anims(npc_model: Node) -> void:
-	## Load walk/run/idle animations (saber_m.glb for male, saver_w.glb for female)
+	## Build the companion's clip set the same way the player does
+	## (player.gd _load_weapon_animations):
+	##   • wait + atk1 come from the equipped WEAPON pack (gunblade → shotgun_*),
+	##     so the idle stance and swing match the weapon.
+	##   • walk + run ALWAYS come from the shared PSO-retargeted locomotion set
+	##     (the saber pack's pmsa/pwsa _walk / _run_pso) — never the weapon pack's
+	##     psz "dash" (_run). Gunblade/sword/dagger packs have no _run_pso, so
+	##     using them for locomotion is what made Kai dash instead of PSO-run.
 	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
 	_is_female = class_id in FEMALE_CLASSES
-	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saber_m.glb"
-	if not ResourceLoader.exists(anim_glb):
-		return
+	var wtype: int = CompanionCombat.weapon_type_for(companion_id)
+	var wa: Dictionary = WEAPON_ANIM.get(wtype, WEAPON_ANIM[0])
+	var loco: Dictionary = WEAPON_ANIM[0]  # shared PSO locomotion (saber retarget)
 
 	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 
-	var anim_packed := load(anim_glb) as PackedScene
-	if not anim_packed:
+	var wpref: String = wa["prefix_w"] if _is_female else wa["prefix_m"]
+	var wglb: String = wa["glb_w"] if _is_female else wa["glb_m"]
+	var lpref: String = loco["prefix_w"] if _is_female else loco["prefix_m"]
+	var lglb: String = loco["glb_w"] if _is_female else loco["glb_m"]
+
+	# Weapon pack (wait + swing) and locomotion pack (walk + run). For a saber
+	# companion these are the same GLB — load it once.
+	var wscene: Node = _load_anim_scene(wglb)
+	if wscene == null:
 		return
-	var anim_scene := anim_packed.instantiate()
-	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
-	if not source_player:
-		anim_scene.queue_free()
+	var wsrc: AnimationPlayer = _find_typed(wscene, "AnimationPlayer") as AnimationPlayer
+	var lscene: Node = wscene if lglb == wglb else _load_anim_scene(lglb)
+	var lsrc: AnimationPlayer = wsrc if lglb == wglb else \
+		(_find_typed(lscene, "AnimationPlayer") as AnimationPlayer if lscene else null)
+	if wsrc == null:
+		wscene.queue_free()
+		if lscene and lscene != wscene:
+			lscene.queue_free()
 		return
+
+	var lib := AnimationLibrary.new()
+	# wait/atk1 from the weapon pack; run/walk from the shared PSO locomotion.
+	# The swing plays once; everything else loops (spec /states/companion-combat
+	# — the swing clock, not the clip, ends the ATTACK swing).
+	_add_remapped_anim(lib, skel, wsrc, "wait", [wpref + "_wait"], true)
+	_add_remapped_anim(lib, skel, wsrc, "atk1", [wpref + "_atk1"], false)
+	_add_remapped_anim(lib, skel, lsrc, "run", [lpref + "_run_pso", lpref + "_run"], true)
+	_add_remapped_anim(lib, skel, lsrc, "walk", [lpref + "_walk", lpref + "_run"], true)
 
 	_anim_player = AnimationPlayer.new()
 	_anim_player.name = "CompanionAnimPlayer"
 	skel.get_parent().add_child(_anim_player)
-
-	var prefix: String = "pwsa" if _is_female else "pmsa"
-	# Map companion anim keys to source anim names, with fallbacks
-	# Male GLB lacks _run_pso and _walk — fall back to _run for both
-	var needed := {
-		"wait": [prefix + "_wait"],
-		"run": [prefix + "_run_pso", prefix + "_run"],
-		"walk": [prefix + "_walk", prefix + "_run"],
-		"atk1": [prefix + "_atk1"],
-	}
-
-	var lib := AnimationLibrary.new()
-	for key in needed:
-		var candidates: Array = needed[key]
-		for anim_name: String in candidates:
-			if source_player.has_animation(anim_name):
-				var anim := source_player.get_animation(anim_name).duplicate() as Animation
-				# Locomotion loops; the attack swing plays once (spec
-				# /states/companion-combat — the swing clock, not the clip,
-				# ends the ATTACK swing).
-				anim.loop_mode = Animation.LOOP_NONE if key == "atk1" else Animation.LOOP_LINEAR
-				# Remap skeleton tracks
-				for i in range(anim.get_track_count()):
-					var track_path := String(anim.track_get_path(i))
-					if "Skeleton3D" in track_path:
-						var skel_idx := track_path.find("Skeleton3D")
-						var prop_part := track_path.substr(skel_idx + 10)
-						anim.track_set_path(i, NodePath(skel.name + prop_part))
-				lib.add_animation(key, anim)
-				break
-
 	_anim_player.add_animation_library("", lib)
 	_play_companion_anim("wait")
-	anim_scene.queue_free()
-	print("[Companion] Loaded anims for %s (female=%s)" % [companion_id, _is_female])
+	wscene.queue_free()
+	if lscene and lscene != wscene:
+		lscene.queue_free()
+	print("[Companion] Loaded anims for %s (female=%s, weapon=%s, loco=%s)" % [companion_id, _is_female, wpref, lpref])
+
+
+## Instantiate an animation-source GLB scene, or null if missing/unloadable.
+func _load_anim_scene(glb_path: String) -> Node:
+	if not ResourceLoader.exists(glb_path):
+		return null
+	var packed := load(glb_path) as PackedScene
+	if not packed:
+		return null
+	return packed.instantiate()
+
+
+## Copy the first matching candidate clip from source_player into lib under key,
+## remapping its skeleton tracks onto skel and setting the loop mode.
+func _add_remapped_anim(lib: AnimationLibrary, skel: Skeleton3D, source_player: AnimationPlayer, key: String, candidates: Array, loops: bool) -> void:
+	if source_player == null:
+		return
+	for anim_name: String in candidates:
+		if not source_player.has_animation(anim_name):
+			continue
+		var anim := source_player.get_animation(anim_name).duplicate() as Animation
+		anim.loop_mode = Animation.LOOP_LINEAR if loops else Animation.LOOP_NONE
+		for i in range(anim.get_track_count()):
+			var track_path := String(anim.track_get_path(i))
+			if "Skeleton3D" in track_path:
+				var skel_idx := track_path.find("Skeleton3D")
+				var prop_part := track_path.substr(skel_idx + 10)
+				anim.track_set_path(i, NodePath(skel.name + prop_part))
+		lib.add_animation(key, anim)
+		return
+
+
+## Attach the companion's held weapon model to the right-hand bone, mirroring
+## the player's _attach_weapon_to_bone. Only companions in COMPANION_WEAPONS
+## carry a visible model (Kai → Axeon gunblade); everyone else swings empty-
+## handed. Degrades gracefully (warn + skip) if the skeleton, bone, or GLB is
+## missing so a bad path never breaks the companion.
+func _attach_companion_weapon(npc_model: Node) -> void:
+	var entry: Variant = COMPANION_WEAPONS.get(companion_id, null)
+	if entry == null:
+		return
+	var glb_path: String = entry["glb"]
+	if not ResourceLoader.exists(glb_path):
+		push_warning("[Companion] %s weapon GLB missing: %s" % [companion_id, glb_path])
+		return
+	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		return
+	var bone_idx: int = skel.find_bone(WEAPON_BONE_NAME)
+	if bone_idx == -1:
+		push_warning("[Companion] %s: bone '%s' not found for weapon" % [companion_id, WEAPON_BONE_NAME])
+		return
+	var packed := load(glb_path) as PackedScene
+	if not packed:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "WeaponAttachment_R"
+	attach.bone_name = skel.get_bone_name(bone_idx)
+	skel.add_child(attach)
+	var wnode := packed.instantiate() as Node3D
+	attach.add_child(wnode)
+	wnode.position = WEAPON_HOLD_POS
+	wnode.rotation_degrees = WEAPON_HOLD_ROT
+	var s: float = float(entry.get("scale", 1.0))
+	wnode.scale = Vector3(s, s, s)
+	var tex_path: String = String(entry.get("texture", ""))
+	if tex_path != "" and ResourceLoader.exists(tex_path):
+		var tex := load(tex_path) as Texture2D
+		if tex:
+			MeshUtils.apply_texture(wnode, tex)
+	print("[Companion] %s equipped weapon %s" % [companion_id, glb_path.get_file()])
 
 
 func _play_companion_anim(anim_name: String) -> void:
 	if not _anim_player or _current_anim == anim_name:
 		return
-	# Don't switch animations until hold timer expires
-	if _anim_hold_timer > 0.0:
+	if not _anim_player.has_animation(anim_name):
 		return
-	if _anim_player.has_animation(anim_name):
-		_anim_player.play(anim_name)
-		_current_anim = anim_name
-		_anim_hold_timer = ANIM_HOLD_TIME
+	# Debounce ONLY the walk<->run borderline, so a companion hovering near
+	# RUN_EPS can't flicker frame to frame. Transitions to/from "wait" (and into
+	# "atk1") apply immediately, so the clip never lags the body: a moving
+	# companion is never stuck mid-"wait" (the combat-transition slide) and a
+	# stopped one is never stuck mid-"run" (the #420 run-in-place). Previously
+	# the hold blocked *every* switch, which is what produced the sliding.
+	var both_locomotion: bool = (_current_anim == "walk" or _current_anim == "run") \
+		and (anim_name == "walk" or anim_name == "run")
+	if both_locomotion and _anim_hold_timer > 0.0:
+		return
+	_anim_player.play(anim_name)
+	_current_anim = anim_name
+	_anim_hold_timer = ANIM_HOLD_TIME
 
 
 ## Pure selector: choose wait/walk/run from the companion's OWN measured planar
@@ -241,11 +351,10 @@ func _select_locomotion_anim(prev_pos: Vector3, curr_pos: Vector3, delta: float)
 		return "wait"
 	var moved: Vector3 = curr_pos - prev_pos
 	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
-	if planar_speed < IDLE_EPS:
-		return "wait"
-	if planar_speed > RUN_EPS:
-		return "run"
-	return "walk"
+	# Measured-speed selector (intent-to-move assumed here; the intent gate is
+	# applied by the caller). Shares the pure clip mapping + thresholds with the
+	# unit tests via CompanionCombat.
+	return CompanionCombat.locomotion_clip(true, planar_speed)
 
 
 ## Autopilot-only regression oracle for #420. Silent in normal play (gated on
@@ -260,14 +369,14 @@ func _autopilot_anim_tripwire(prev_pos: Vector3, curr_pos: Vector3, delta: float
 	var locomoting: bool = _current_anim == "walk" or _current_anim == "run"
 	var moved: Vector3 = curr_pos - prev_pos
 	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
-	if locomoting and planar_speed < IDLE_EPS:
+	if locomoting and planar_speed < CompanionCombat.IDLE_EPS:
 		_stationary_anim_time += delta
 	else:
 		_stationary_anim_time = 0.0
 	# Beyond the debounce window this is a genuine run-in-place, not the brief
 	# 0.3s blend when the companion stops.
 	if _stationary_anim_time > ANIM_HOLD_TIME:
-		push_error("[sanity] FAIL: companion '%s' holds '%s' while stationary for %.2fs (planar speed %.3f m/s < %.2f)" % [companion_id, _current_anim, _stationary_anim_time, planar_speed, IDLE_EPS])
+		push_error("[sanity] FAIL: companion '%s' holds '%s' while stationary for %.2fs (planar speed %.3f m/s < %.2f)" % [companion_id, _current_anim, _stationary_anim_time, planar_speed, CompanionCombat.IDLE_EPS])
 		_stationary_anim_time = 0.0  # avoid log spam
 
 
@@ -389,11 +498,29 @@ func _physics_process(delta: float) -> void:
 		return
 	_anim_hold_timer = maxf(_anim_hold_timer - delta, 0.0)
 	_record_trail()
+	# Capture position before any state moves us so the locomotion clip is a
+	# pure function of THIS frame's own displacement. Each state sets
+	# _move_intent (true while steering); the clip is resolved once, centrally,
+	# below — like the player's single per-frame animation update.
+	var prev_pos: Vector3 = global_position
+	_move_intent = false
 	if _combat_state == CombatState.FOLLOW:
 		_process_follow(delta)
 		_tick_combat_scan(delta)
 	else:
 		_process_combat(delta)
+	_update_locomotion_anim(_move_intent, prev_pos, delta)
+
+
+## Resolve and apply the locomotion clip from the FSM's intent and the frame's
+## measured displacement. Suspended during an ATTACK swing (the atk1 clip owns
+## the rig then — spec /states/companion-combat).
+func _update_locomotion_anim(intent_moving: bool, prev_pos: Vector3, delta: float) -> void:
+	if _swing_elapsed >= 0.0:
+		return
+	var clip: String = _select_locomotion_anim(prev_pos, global_position, delta) if intent_moving else "wait"
+	_play_companion_anim(clip)
+	_autopilot_anim_tripwire(prev_pos, global_position, delta)
 
 
 ## Cache the player reference; false while no player exists yet.
@@ -493,10 +620,6 @@ func _process_follow(_delta: float) -> void:
 	var interp_rot: float = lerp_angle(entry_a["rot"], entry_b["rot"], t)
 	var delayed_state: int = entry_a["state"]
 
-	# Capture our position before the move so the animation can be selected from
-	# the companion's OWN measured displacement, not from the player's intent.
-	var prev_pos: Vector3 = global_position
-
 	# Position MAY consult the delayed player state — but ONLY the true
 	# locomotion states (WALKING=1, RUNNING=2) advance the trail. A rooted
 	# player state (ATTACKING=3, DAMAGED, DOWN, …) is >= 1 too, so the old
@@ -527,20 +650,18 @@ func _process_follow(_delta: float) -> void:
 		global_position = candidate_pos
 		rotation.y = interp_rot
 		_was_moving = true
+		_move_intent = true
 	else:
 		# Player was idle (or rooted) — freeze in place, face player's direction
 		global_position.y = _player_ref.global_position.y
 		rotation.y = lerp_angle(rotation.y, player_rot, 5.0 * _delta)
 		_was_moving = false
-
-	# Animation is a PURE function of the companion's own planar displacement
-	# this frame — never the player's PlayerState. Zero planar movement always
-	# yields "wait", so a stationary companion can never play a locomotion clip
-	# (the #420 run-in-place bug). The resume-from-freeze blend naturally ramps
+		_move_intent = false
+	# The locomotion clip is resolved centrally in _physics_process from
+	# _move_intent + this frame's measured displacement (spec /states/companion):
+	# intent gates out the combat-transition slide, the measured-speed veto gates
+	# out the #420 run-in-place, and the resume-from-freeze blend naturally ramps
 	# walk -> run as the measured speed climbs.
-	var anim: String = _select_locomotion_anim(prev_pos, global_position, _delta)
-	_play_companion_anim(anim)
-	_autopilot_anim_tripwire(prev_pos, global_position, _delta)
 
 
 func _teleport_behind_player() -> void:
@@ -651,21 +772,20 @@ func _target_valid() -> bool:
 		_combat_target.global_position, _player_ref.global_position)
 
 
-## Steer toward dir at speed with environment collision; locomotion clip
-## stays the pure displacement selector (spec /states/companion invariants).
-func _combat_step(dir: Vector3, speed: float, delta: float) -> void:
+## Steer toward dir at speed with environment collision. Flags _move_intent so
+## the central animation update plays a locomotion clip this frame; the clip
+## itself still comes from measured displacement (spec /states/companion).
+func _combat_step(dir: Vector3, speed: float, _delta: float) -> void:
 	dir.y = 0
 	if dir.length() < 0.01:
 		return
 	dir = dir.normalized()
-	var prev_pos := global_position
 	velocity = dir * speed
 	velocity.y = 0
 	move_and_slide()
 	global_position.y = _player_ref.global_position.y
 	rotation.y = atan2(dir.x, dir.z)
-	_play_companion_anim(_select_locomotion_anim(prev_pos, global_position, delta))
-	_autopilot_anim_tripwire(prev_pos, global_position, delta)
+	_move_intent = true
 
 
 func _process_engage(delta: float) -> void:
