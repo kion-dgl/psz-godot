@@ -40,10 +40,14 @@ const STORAGE := "res://scenes/2d/storage.tscn"
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
 # QuestCounterNPC sits at (-7.86, -10.67, 111.39) in the merged counter map
 # (#449 — city_counter_controller._add_interactables), interaction box 3.6.
-# Stand just in front of it. The #449 autopilot update fixed WARP_PAD_POS and
-# COUNTER_TO_OFFICE_POS but missed this constant (old-scene coords), which
-# hung every sanity run at "press interact" with nothing in range.
-const COUNTER_NPC_POS := Vector3(-7.86, -9.0, 110.0)     # inside QuestCounterNPC range (merged map)
+# The player stands in FRONT of the counter to talk to it. The prior fix moved
+# this constant into the merged frame but landed at (-7.86, z=110), which is
+# inside a NOTCH in the floor collider (s00e_sa2-floor.glb has no floor at
+# x=-7.86 for z<115) — so the warped player fell through before it could
+# interact, hanging every sanity run at "press interact". The floored spot the
+# player actually talks to the NPC from in-game is (-6.20, -10.67, 112.84);
+# teleport a touch above it so the settle-onto-floor motion fires area_entered.
+const COUNTER_NPC_POS := Vector3(-6.20, -9.0, 112.84)    # floored, in front of QuestCounterNPC
 const COUNTER_TO_OFFICE_POS := Vector3(14.30, -9.0, 107.47)    # counter Area3D → office (merged map)
 # Warp teleporter merged into the counter (#city-merge): interact in-place, no
 # counter→warp scene transition.
