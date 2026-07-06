@@ -26,7 +26,7 @@ const chart = `stateDiagram-v2
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
-  <p>A companion NPC (<code>CompanionNpc</code>, a <code>CharacterBody3D</code>) follows the player through field exploration by replaying a delayed copy of the player's recorded path — a <em>trail</em> sampled every physics frame and played back <code>TRAIL_DELAY</code> (0.5&nbsp;s) behind. This page defines the contract for which locomotion animation the companion plays while following.</p>
+  <p>A companion NPC (<code>CompanionNpc</code>, a <code>CharacterBody3D</code>) follows the player through field exploration by replaying a delayed copy of the player's recorded path — a <em>trail</em> sampled every physics frame and played back <code>TRAIL_DELAY</code> (0.5&nbsp;s) behind. This page defines the contract for which locomotion animation the companion plays while following. The trail-replay behavior defined here is the <code>FOLLOW</code> state of the combat FSM — see <a href="/states/companion-combat">Companion Combat</a> for the <code>ENGAGE</code>/<code>ATTACK</code>/<code>REGROUP</code> states layered on top; this page's animation invariants hold in every state where a locomotion clip plays.</p>
 
   <h2>The position / animation split</h2>
 

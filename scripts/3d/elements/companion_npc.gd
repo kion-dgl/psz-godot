@@ -85,6 +85,22 @@ var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
 const TRAIL_DELAY: float = 0.5  # Seconds behind the player
 const TRAIL_MAX_ENTRIES: int = 150  # ~2.5s at 60fps
 
+## Combat FSM (spec /states/companion-combat). FOLLOW is the trail-replay
+## behavior above; the combat states move the companion under its own steering.
+enum CombatState { FOLLOW, ENGAGE, ATTACK, REGROUP }
+var _combat_state: int = CombatState.FOLLOW
+var _combat_target: Node3D = null
+var _weapon_config: Dictionary = {}
+var _scan_timer: float = 0.0
+var _swing_elapsed: float = -1.0  # -1 = not mid-swing
+var _swing_length: float = 0.0
+var _swing_hit_done: bool = false
+var _attack_cooldown: float = 0.0
+var _engage_last_dist: float = INF
+var _engage_no_progress: float = 0.0
+var _combat_stuck_time: float = 0.0  # autopilot tripwire accumulator
+var _combat_hits_landed: int = 0
+
 
 func _ready() -> void:
 	_build_capsule()
@@ -173,6 +189,7 @@ func _setup_companion_anims(npc_model: Node) -> void:
 		"wait": [prefix + "_wait"],
 		"run": [prefix + "_run_pso", prefix + "_run"],
 		"walk": [prefix + "_walk", prefix + "_run"],
+		"atk1": [prefix + "_atk1"],
 	}
 
 	var lib := AnimationLibrary.new()
@@ -181,7 +198,10 @@ func _setup_companion_anims(npc_model: Node) -> void:
 		for anim_name: String in candidates:
 			if source_player.has_animation(anim_name):
 				var anim := source_player.get_animation(anim_name).duplicate() as Animation
-				anim.loop_mode = Animation.LOOP_LINEAR
+				# Locomotion loops; the attack swing plays once (spec
+				# /states/companion-combat — the swing clock, not the clip,
+				# ends the ATTACK swing).
+				anim.loop_mode = Animation.LOOP_NONE if key == "atk1" else Animation.LOOP_LINEAR
 				# Remap skeleton tracks
 				for i in range(anim.get_track_count()):
 					var track_path := String(anim.track_get_path(i))
@@ -365,7 +385,43 @@ func _assign_bubble_texture() -> void:
 
 func _physics_process(delta: float) -> void:
 	_process_speech_timer(delta)
-	_process_follow(delta)
+	if not _ensure_player_ref():
+		return
+	_anim_hold_timer = maxf(_anim_hold_timer - delta, 0.0)
+	_record_trail()
+	if _combat_state == CombatState.FOLLOW:
+		_process_follow(delta)
+		_tick_combat_scan(delta)
+	else:
+		_process_combat(delta)
+
+
+## Cache the player reference; false while no player exists yet.
+func _ensure_player_ref() -> bool:
+	if is_instance_valid(_player_ref):
+		return true
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return false
+	_player_ref = players[0]
+	return true
+
+
+## Record the player's position every physics frame — in every combat state,
+## so the trail never has a combat-shaped hole when FOLLOW resumes.
+func _record_trail() -> void:
+	var ps: int = 0
+	if "current_state" in _player_ref:
+		ps = _player_ref.current_state
+	var player_rot: float = _player_ref.player_rotation if "player_rotation" in _player_ref else _player_ref.rotation.y
+	_trail.append({
+		"pos": _player_ref.global_position,
+		"rot": player_rot,
+		"state": ps,
+		"time": Time.get_ticks_msec() / 1000.0,
+	})
+	while _trail.size() > TRAIL_MAX_ENTRIES:
+		_trail.remove_at(0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -389,6 +445,9 @@ func _process_speech_timer(delta: float) -> void:
 
 func dismiss() -> void:
 	_dismissed = true
+	_combat_state = CombatState.FOLLOW
+	_combat_target = null
+	_swing_elapsed = -1.0
 	_play_companion_anim("wait")
 	print("[Companion] %s dismissed — stopped following" % companion_id)
 
@@ -396,32 +455,10 @@ func dismiss() -> void:
 func _process_follow(_delta: float) -> void:
 	if _dismissed:
 		return
-	# Cache player reference
-	if not is_instance_valid(_player_ref):
-		var players := get_tree().get_nodes_in_group("player")
-		if players.is_empty():
-			return
-		_player_ref = players[0]
-
-	# Tick animation hold timer
-	_anim_hold_timer = maxf(_anim_hold_timer - _delta, 0.0)
-
-	# Record player state every physics frame
-	var ps: int = 0
-	if "current_state" in _player_ref:
-		ps = _player_ref.current_state
+	# Player ref caching, anim-hold ticking, and trail recording live in
+	# _physics_process so they run in every combat state, not just FOLLOW.
 	var player_rot: float = _player_ref.player_rotation if "player_rotation" in _player_ref else _player_ref.rotation.y
 	var now: float = Time.get_ticks_msec() / 1000.0
-	_trail.append({
-		"pos": _player_ref.global_position,
-		"rot": player_rot,
-		"state": ps,
-		"time": now,
-	})
-
-	# Prune oldest entries
-	while _trail.size() > TRAIL_MAX_ENTRIES:
-		_trail.remove_at(0)
 
 	# Teleport if too far
 	var dist_to_player := global_position.distance_to(_player_ref.global_position)
@@ -515,6 +552,265 @@ func _teleport_behind_player() -> void:
 	var behind := -Vector3(sin(player_rot), 0, cos(player_rot)) * 3.0
 	global_position = _player_ref.global_position + behind
 	global_position.y = _player_ref.global_position.y
+
+
+# ── Combat FSM (spec /states/companion-combat) ──────────────────────────
+# Phase 1: offense only. FOLLOW is the trail-replay above; ENGAGE/ATTACK/
+# REGROUP move the companion under its own steering. Decisions are pure
+# functions on CompanionCombat; this block is the stateful driver.
+
+
+## Scan for a target on a fixed cadence while following. Combat never
+## starts while speaking or dismissed.
+func _tick_combat_scan(delta: float) -> void:
+	if _dismissed or _speaking:
+		return
+	_scan_timer -= delta
+	if _scan_timer > 0.0:
+		return
+	_scan_timer = CompanionCombat.COMBAT_SCAN_INTERVAL
+	var target := _pick_combat_target()
+	if target != null:
+		_combat_target = target
+		_enter_engage()
+
+
+## Build candidate data from the "enemies" group and delegate the choice to
+## the pure selector. The player's primary reticle target (read defensively —
+## a rename must degrade to nearest-enemy, never crash) gets assist priority.
+func _pick_combat_target() -> Node3D:
+	if not is_inside_tree():
+		return null
+	var player_target: Node3D = _player_primary_target()
+	var candidates: Array = []
+	var nodes: Array = []
+	var preferred_idx := -1
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e) or not e is Node3D:
+			continue
+		candidates.append({"pos": e.global_position, "alive": bool(e.get("is_alive"))})
+		nodes.append(e)
+		if e == player_target:
+			preferred_idx = candidates.size() - 1
+	var idx := CompanionCombat.select_target(
+		candidates, _player_ref.global_position, global_position, preferred_idx)
+	if idx < 0:
+		return null
+	return nodes[idx]
+
+
+func _player_primary_target() -> Node3D:
+	var tlist: Variant = _player_ref.get("_targeted_enemies")
+	if tlist is Array and not (tlist as Array).is_empty():
+		var t: Variant = (tlist as Array)[0]
+		if t is Node3D and is_instance_valid(t):
+			return t
+	return null
+
+
+func _enter_engage() -> void:
+	_combat_state = CombatState.ENGAGE
+	_engage_last_dist = INF
+	_engage_no_progress = 0.0
+	if _weapon_config.is_empty():
+		_weapon_config = CombatManager.get_weapon_type_config(
+			CompanionCombat.weapon_type_for(companion_id))
+
+
+func _enter_regroup() -> void:
+	_combat_state = CombatState.REGROUP
+	_combat_target = null
+	_swing_elapsed = -1.0
+
+
+func _process_combat(delta: float) -> void:
+	if _dismissed:
+		_combat_state = CombatState.FOLLOW
+		_combat_target = null
+		_swing_elapsed = -1.0
+		return
+	if _speaking and _combat_state != CombatState.REGROUP:
+		_enter_regroup()
+	match _combat_state:
+		CombatState.ENGAGE:
+			_process_engage(delta)
+		CombatState.ATTACK:
+			_process_attack(delta)
+		CombatState.REGROUP:
+			_process_regroup(delta)
+	_combat_tripwire(delta)
+
+
+## Target still worth fighting: alive and inside the player's leash.
+func _target_valid() -> bool:
+	if _combat_target == null or not is_instance_valid(_combat_target):
+		return false
+	if not _combat_target.get("is_alive"):
+		return false
+	return CompanionCombat.within_leash(
+		_combat_target.global_position, _player_ref.global_position)
+
+
+## Steer toward dir at speed with environment collision; locomotion clip
+## stays the pure displacement selector (spec /states/companion invariants).
+func _combat_step(dir: Vector3, speed: float, delta: float) -> void:
+	dir.y = 0
+	if dir.length() < 0.01:
+		return
+	dir = dir.normalized()
+	var prev_pos := global_position
+	velocity = dir * speed
+	velocity.y = 0
+	move_and_slide()
+	global_position.y = _player_ref.global_position.y
+	rotation.y = atan2(dir.x, dir.z)
+	_play_companion_anim(_select_locomotion_anim(prev_pos, global_position, delta))
+	_autopilot_anim_tripwire(prev_pos, global_position, delta)
+
+
+func _process_engage(delta: float) -> void:
+	if not _target_valid():
+		_enter_regroup()
+		return
+	var to_target := _combat_target.global_position - global_position
+	to_target.y = 0
+	var dist := to_target.length()
+	if dist <= CompanionCombat.ENGAGE_REACH_FRAC * float(_weapon_config.get("hit_h_dist", 2.4)):
+		_start_companion_swing()
+		return
+	# Blocked-approach self-heal: no closing progress for too long → drop
+	# the target and regroup (keeps the autopilot tripwire unreachable).
+	if dist >= _engage_last_dist - 0.05:
+		_engage_no_progress += delta
+		if _engage_no_progress >= CompanionCombat.ENGAGE_NO_PROGRESS_TIME:
+			_enter_regroup()
+			return
+	else:
+		_engage_no_progress = 0.0
+	_engage_last_dist = dist
+	_combat_step(to_target, FOLLOW_SPEED, delta)
+
+
+func _start_companion_swing() -> void:
+	_combat_state = CombatState.ATTACK
+	_swing_elapsed = 0.0
+	_swing_hit_done = false
+	_swing_length = CompanionCombat.FALLBACK_SWING_TIME
+	velocity = Vector3.ZERO
+	var dir := _combat_target.global_position - global_position
+	dir.y = 0
+	if dir.length() > 0.01:
+		rotation.y = atan2(dir.x, dir.z)
+	if _anim_player and _anim_player.has_animation("atk1"):
+		_swing_length = _anim_player.get_animation("atk1").length
+		_anim_player.play("atk1")
+		_current_anim = "atk1"
+		_anim_hold_timer = 0.0
+
+
+func _process_attack(delta: float) -> void:
+	if _swing_elapsed >= 0.0:
+		var prev := _swing_elapsed
+		_swing_elapsed += delta
+		var frac_arr: Array = _weapon_config.get("damaging_frac", [0.4])
+		if not _swing_hit_done and CompanionCombat.swing_crossed_damaging_frac(
+				prev, _swing_elapsed, _swing_length, float(frac_arr[0])):
+			_swing_hit_done = true
+			_execute_companion_hit()
+		if _swing_elapsed >= _swing_length:
+			_swing_elapsed = -1.0
+			_attack_cooldown = CompanionCombat.ATTACK_COOLDOWN \
+				/ maxf(float(_weapon_config.get("speed_mult", 1.0)), 0.1)
+			_current_anim = ""
+			_play_companion_anim("wait")
+		return
+	_attack_cooldown -= delta
+	if _attack_cooldown > 0.0:
+		return
+	if not _target_valid():
+		_enter_regroup()
+		return
+	var to_target := _combat_target.global_position - global_position
+	to_target.y = 0
+	if to_target.length() <= CompanionCombat.ENGAGE_REACH_FRAC * float(_weapon_config.get("hit_h_dist", 2.4)):
+		_start_companion_swing()
+	else:
+		_enter_engage()
+
+
+## The damaging frame: same cone scan and hurtbox entry point as the player's
+## _execute_attack_hit — receiver-side defense/evasion/crit stay in the enemy.
+func _execute_companion_hit() -> void:
+	if not is_inside_tree():
+		return
+	var stats := _companion_stats()
+	var atk := CompanionCombat.compute_attack(
+		int(stats.attack), int(stats.accuracy), _weapon_config)
+	var origin := global_position + Vector3(0, 1.0, 0)
+	var in_cone: Array = ConeTargeting.scan_enemies(
+		get_tree().get_nodes_in_group("enemies"), origin, rotation.y, _weapon_config)
+	for i in range(mini(int(atk.max_targets), in_cone.size())):
+		var enemy: Node3D = in_cone[i]
+		var hb: Variant = enemy.get("hurtbox")
+		if hb == null or not is_instance_valid(hb):
+			continue
+		var knock_dir: Vector3 = enemy.global_position - global_position
+		knock_dir.y = 0
+		knock_dir = knock_dir.normalized()
+		for _h in range(int(atk.hits)):
+			hb.take_hit(int(atk.damage), knock_dir * float(atk.knockback), int(atk.accuracy), "", 0)
+		_note_companion_hit(enemy, int(atk.damage))
+
+
+## Companion attack/accuracy: its class (COMPANION_CLASSES) at the player's
+## current level — no weapon/mag/material/buff terms in phase 1.
+func _companion_stats() -> Dictionary:
+	var level := 1
+	var character: Variant = CharacterManager.get_active_character()
+	if character != null:
+		level = int(character.get("level", 1))
+	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
+	var class_data: Variant = ClassRegistry.get_class_data(class_id)
+	if class_data == null:
+		return {"attack": 10, "accuracy": 100}
+	var s: Dictionary = class_data.get_stats_at_level(maxi(level, 1))
+	return {"attack": int(s.get("attack", 10)), "accuracy": int(s.get("accuracy", 100))}
+
+
+func _process_regroup(delta: float) -> void:
+	var to_player := _player_ref.global_position - global_position
+	to_player.y = 0
+	if to_player.length() > TELEPORT_DISTANCE:
+		_teleport_behind_player()
+		_trail.clear()
+	if to_player.length() <= START_DISTANCE:
+		_combat_state = CombatState.FOLLOW
+		_was_moving = false
+		_play_companion_anim("wait")
+		return
+	_combat_step(to_player, CATCHUP_SPEED, delta)
+
+
+func _note_companion_hit(enemy: Node, damage: int) -> void:
+	_combat_hits_landed += 1
+	_combat_stuck_time = 0.0
+	if _combat_hits_landed == 1 and OS.has_environment("PSZ_AUTOPILOT"):
+		print("[sanity] companion-combat: first hit %s dmg=%d" % [str(enemy.name), damage])
+
+
+## Autopilot-only backstop (spec /states/companion-combat): too long in
+## ENGAGE/ATTACK without landing a hit is a wedged companion. The 8s
+## no-progress drop should make this unreachable; silent in normal play.
+func _combat_tripwire(delta: float) -> void:
+	if not OS.has_environment("PSZ_AUTOPILOT"):
+		return
+	if _combat_state == CombatState.ENGAGE or _combat_state == CombatState.ATTACK:
+		_combat_stuck_time += delta
+		if _combat_stuck_time > CompanionCombat.COMBAT_STUCK_TIME:
+			push_error("[sanity] FAIL: companion '%s' stuck in combat state %d for %.1fs without landing a hit" % [companion_id, _combat_state, _combat_stuck_time])
+			_combat_stuck_time = 0.0  # avoid log spam
+	else:
+		_combat_stuck_time = 0.0
 
 
 func _dismiss_speech() -> void:
