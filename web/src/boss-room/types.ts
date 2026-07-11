@@ -192,8 +192,13 @@ export interface BossDef {
    * imported via import_objects.py parts). Rendered with the body; a part
    * carrying the body's clip names plays them in sync (octopus tentacles,
    * mother faces), a static part just rides the group (dragon horn).
+   * The object form places INSTANCES of one part around the body — the
+   * octopus's four tentacles are the same z_002_tt rig cloned four times,
+   * positioned/rotated in the boss's local frame (+z = facing).
    */
-  parts?: string[];
+  parts?: BossPartDef[];
+  /** Visual y offset for the whole boss group — sinks the octopus to the waterline. */
+  model_offset_y?: number;
   /** Draft sim tuning knobs (partial — defaults below fill the rest). */
   stats?: Partial<BossStats>;
   fsm?: Partial<BossFsmParams>;
@@ -225,6 +230,21 @@ export async function loadRoster(): Promise<Map<string, RosterEntry>> {
   const list: RosterEntry[] = await res.json();
   return new Map(list.map((e) => [e.id, e]));
 }
+
+/** One placed copy of a part, in the boss's local frame (+z = facing). */
+export interface BossPartInstance {
+  pos: [number, number, number];
+  /** Turn around the up axis (degrees) — point the part outward. */
+  yaw_deg?: number;
+  /** Tilt (degrees, negative = nose up) — bend a tentacle up out of the water. */
+  pitch_deg?: number;
+}
+
+export type BossPartDef = string | { part: string; instances?: BossPartInstance[] };
+
+export const partName = (p: BossPartDef): string => (typeof p === 'string' ? p : p.part);
+export const partInstances = (p: BossPartDef): BossPartInstance[] =>
+  typeof p === 'string' ? [{ pos: [0, 0, 0] }] : (p.instances ?? [{ pos: [0, 0, 0] }]);
 
 export function bossPartUrl(modelId: string, part: string): string {
   return assetUrl(`assets/enemies/${modelId}/parts/${part}/${part}.glb`);

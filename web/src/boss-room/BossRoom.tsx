@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import {
   arenaFloorUrl,
@@ -24,6 +25,8 @@ import {
   bossPartUrl,
   loadBossConfig,
   loadRoster,
+  partInstances,
+  partName,
   resolveBoss,
   resolveClipToken,
   segmentFamilies,
@@ -359,16 +362,29 @@ export default function BossRoom() {
       action: THREE.AnimationAction | null;
     }
     const partRigs: PartRig[] = [];
-    for (const part of boss.parts ?? []) {
+    for (const partDef of boss.parts ?? []) {
+      const name = partName(partDef);
       loader.load(
-        bossPartUrl(boss.model_id, part),
+        bossPartUrl(boss.model_id, name),
         (g) => {
           if (disposed) return;
-          bossGroup.add(g.scene);
-          partRigs.push({ mixer: new THREE.AnimationMixer(g.scene), animations: g.animations, action: null });
+          // One wrapper per instance (position/yaw/pitch in the boss's local
+          // frame, +z = facing); skinned rigs are cloned via SkeletonUtils so
+          // every instance animates independently of its siblings.
+          for (const inst of partInstances(partDef)) {
+            const rig = cloneSkinned(g.scene);
+            const wrapper = new THREE.Group();
+            wrapper.position.set(inst.pos[0], inst.pos[1], inst.pos[2]);
+            wrapper.rotation.order = 'YXZ';
+            wrapper.rotation.y = ((inst.yaw_deg ?? 0) * Math.PI) / 180;
+            wrapper.rotation.x = ((inst.pitch_deg ?? 0) * Math.PI) / 180;
+            wrapper.add(rig);
+            bossGroup.add(wrapper);
+            partRigs.push({ mixer: new THREE.AnimationMixer(rig), animations: g.animations, action: null });
+          }
         },
         undefined,
-        () => setStatus(`part failed: ${part}`),
+        () => setStatus(`part failed: ${name}`),
       );
     }
 
@@ -395,10 +411,14 @@ export default function BossRoom() {
       return hits.length ? hits[0].point.y : null;
     }
 
+    // Visual waterline offset — the octopus body sits IN the pool, not on
+    // the walkable collider. Logical bossPos (readouts, sim) stays on the
+    // floor; only the rendered group sinks.
+    const modelOffsetY = boss.model_offset_y ?? 0;
     function settleBoss() {
       const y = dropToFloor(bossPos);
       if (y !== null) bossPos.y = y;
-      bossGroup.position.copy(bossPos);
+      bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
     }
 
     // ——— clip playback ———
@@ -753,7 +773,7 @@ export default function BossRoom() {
         handleSimEvents(stepBoss(sim, entry, { dt, player: { x: feet.x, z: feet.z }, clipDur, rng: Math.random }));
         const gy2 = dropToFloor(new THREE.Vector3(sim.pos.x, bossPos.y + 2, sim.pos.z));
         bossPos.set(sim.pos.x, (gy2 ?? bossPos.y) + sim.alt, sim.pos.z);
-        bossGroup.position.copy(bossPos);
+        bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
         bossGroup.rotation.y = sim.yaw;
         syncOrdnance();
       } else if (facePlayerLocal) {

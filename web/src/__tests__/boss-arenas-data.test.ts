@@ -170,15 +170,25 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
     }
   });
 
-  it('parts are unique non-empty names', () => {
+  it('parts are unique non-empty names; instances carry [x,y,z] + finite angles', () => {
     // Existence in the pack is NOT checked here: parts ship with the next
     // pack publish; until then the room loads them from the R2 mirror.
     for (const [id, b] of bosses) {
       const seen = new Set<string>();
       for (const p of b.parts ?? []) {
-        expect(typeof p === 'string' && p.length > 0, `${id} part name`).toBe(true);
-        expect(seen.has(p), `${id}: duplicate part '${p}'`).toBe(false);
-        seen.add(p);
+        const name = typeof p === 'string' ? p : p.part;
+        expect(typeof name === 'string' && name.length > 0, `${id} part name`).toBe(true);
+        expect(seen.has(name), `${id}: duplicate part '${name}'`).toBe(false);
+        seen.add(name);
+        for (const inst of (typeof p === 'string' ? [] : p.instances ?? [])) {
+          expect(
+            Array.isArray(inst.pos) && inst.pos.length === 3 && inst.pos.every((n: unknown) => Number.isFinite(n)),
+            `${id}/${name} instance pos`,
+          ).toBe(true);
+          for (const f of ['yaw_deg', 'pitch_deg']) {
+            if (inst[f] !== undefined) expect(Number.isFinite(inst[f]), `${id}/${name} ${f}`).toBe(true);
+          }
+        }
       }
     }
   });
