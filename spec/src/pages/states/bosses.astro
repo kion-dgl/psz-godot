@@ -1,0 +1,113 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> INTRO
+  INTRO --> ACTIVE: threat display done
+
+  ACTIVE --> ACTIVE: attack picked from the\ncurrent phase's table
+  ACTIVE --> RELOCATE: arena move trigger\n(takeoff / submerge / swim)
+  RELOCATE --> ACTIVE: arrived at anchor
+  ACTIVE --> PUNISH: break threshold /\npost-string fatigue
+  PUNISH --> ACTIVE: recovery clip done
+  ACTIVE --> DEAD: HP 0
+  PUNISH --> DEAD: HP 0
+
+  note right of RELOCATE
+    Arena-bound: relocation
+    targets are named anchors
+    in boss_arenas.json, authored
+    in #/boss-room.
+  end note
+`;
+---
+
+<Concept title="Boss Behavior (DRAFT)" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p><strong>Status: DRAFT.</strong> The <em>shared contract</em> below (schema, timeline reuse, anchor semantics) is normative now — it is what the tooling and data are built against. The <em>per-boss tables</em> are first drafts read off the rig clip vocabularies (<code>#/boss-room</code>, #493) and <strong>MUST</strong> be verified by observation — in the boss rooms and against original-game capture — before any Godot implementation starts. Unverified clip readings are marked in the data's <code>clip_notes</code> / <code>note</code> fields. Godot work on a boss <strong>MUST NOT</strong> begin while its table still carries unresolved readings for the attacks being implemented.</p>
+
+  <h2>Why bosses are not enemy-room archetypes</h2>
+  <p>Per <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>, bosses are out of scope for the flat enemy sandbox: each of the five vocabularies is unique, and the behavior is <strong>arena-bound</strong> — fly passes, surfacing pools, relocation spots are positions in the boss's own stage. The observation tool is <a href="https://kion-dgl.github.io/psz-godot/#/boss-room">#/boss-room</a> (one room per boss, loaded inside its arena); the data is <code>data/boss_arenas.json</code> (<code>schema_version: 2</code>).</p>
+
+  <h2>Shared contract</h2>
+
+  <h3>Data model (boss_arenas.json v2)</h3>
+  <table>
+    <tr><th>Field</th><th>Semantics</th></tr>
+    <tr><td><code>phases[]</code></td><td>Ordered; the first phase is the opener. <code>hp_frac</code> on a phase means it is entered when the boss's HP fraction drops to that value; a phase without <code>hp_frac</code> has a per-boss trigger (documented in its <code>note</code> — timer, attack-string completion, break threshold).</td></tr>
+    <tr><td><code>attacks[]</code></td><td>Reuses the <a href="/mechanics/enemy-attacks">enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random).</td></tr>
+    <tr><td><code>attacks[].chain</code></td><td>Explicit clip-token sequence — the generalization of the enemy model's <code>windup_clips</code>. Tokens resolve per the enemy clip-resolution order (exact, then <code>*_&lt;token&gt;</code> suffix); tokens ending in <code>lp</code> loop. Every clip before the last is <strong>pure telegraph</strong>; the timeline fractions (<code>windup_frac</code> / <code>damage_end_frac</code>) apply to the <strong>final</strong> clip of the chain.</td></tr>
+    <tr><td><code>anchors[]</code></td><td>Named positions in the boss's <strong>default arena frame</strong> (meaningless elsewhere), authored with the room's click tool and round-tripped via its config export. Relocation targets and anchor-bound attacks (<code>attacks[].anchor</code>) reference them by name.</td></tr>
+    <tr><td><code>clip_notes</code></td><td>Documentational clip semantics (MAY), same as the enemy schema — the draft's observation notebook. Unverified readings say so.</td></tr>
+  </table>
+
+  <h3>Attack kinds</h3>
+  <p>Boss attacks reuse the enemy kinds (<code>melee_arc</code>, <code>projectile</code>, <code>lob</code>, <code>charge</code>, <code>leap</code>) and add five boss-only kinds. The additions extend — and MUST NOT alter — the enemy set:</p>
+  <table>
+    <tr><th>Kind</th><th>Draft semantics</th></tr>
+    <tr><td><code>beam_sweep</code></td><td>A sustained beam/breath swept across an angle while the release clip plays (Reyburn's fire breath, Humilias's laser). Damage is continuous inside the sweep during the window — not a one-shot arc test.</td></tr>
+    <tr><td><code>aoe_burst</code></td><td>Radial burst centered on the boss at the window open (Dark Falz's radiate).</td></tr>
+    <tr><td><code>grab</code></td><td>On connect, the target is held and takes the attack's damage over the hold; damaging the boss past a threshold cancels it (Octo Diablo's absorb→eat, whose rig carries explicit <code>*cnc</code> cancel clips).</td></tr>
+    <tr><td><code>fly_pass</code></td><td>An airborne strafing run along an anchor path (Reyburn). Anchor-bound by definition.</td></tr>
+    <tr><td><code>spout</code></td><td>An aimed sustained jet from a fixed emplacement/surfacing spot (Octo Diablo). Like <code>beam_sweep</code> but position-locked rather than angle-swept.</td></tr>
+  </table>
+
+  <h3>Punish windows</h3>
+  <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>
+  <ul>
+    <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>).</li>
+    <li><strong>Knockdown</strong> — a break threshold topples the boss into a fallen loop until a stand-up clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions read as this). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
+  </ul>
+
+  <h2>Per-boss drafts</h2>
+  <p>Numbers live in <code>data/boss_arenas.json</code> — these sections describe the fight <em>shape</em> and flag what is unverified.</p>
+
+  <h3>Reyburn (boss_dragon — Gurhacia Valley, claiming_a_stake)</h3>
+  <ul>
+    <li><strong>Ground ⇄ flight cycle.</strong> Grounded: walks, bites (<code>atkh1/atkh2</code>), wide sweeps (<code>atkrl/atkrr</code>), wing buffet (<code>atkwg</code>), and the segmented fire breath (<code>brsst→brslp→brs2</code>, <code>beam_sweep</code>). Airborne: takeoff (<code>flst</code>) into anchor-path fly passes.</li>
+    <li><strong>Open:</strong> flight-entry cadence (HP step vs timer); whether <code>rdst/rdg</code> are the dive; <code>brs1</code> as a short-burst breath variant; the left/right reading of <code>rl/rr</code>.</li>
+  </ul>
+
+  <h3>Octo Diablo (boss_octopus — Ozette Wetlands, poisoned_water)</h3>
+  <ul>
+    <li><strong>Submerge/surface loop.</strong> Untargetable while submerged, relocating between surfacing anchors (to be authored — the pool spots); surfaced it runs spout (water jet), vomit (lob AoE), and the cancellable absorb→eat grab; a post-string <em>tired</em> idle is the punish window.</li>
+    <li><strong>Open:</strong> no death clip in the rig (scripted sink?); tentacle clips (<code>tt*/st*</code>) never imported; whether <code>collisn</code> is a wall-stun or an attack.</li>
+  </ul>
+
+  <h3>Humilias (boss_mother — Dark Shrine A, control_system)</h3>
+  <ul>
+    <li><strong>Advancing juggernaut.</strong> Slow advance (<code>move</code>); laser sweep at range, arm swing / headbutt press / full <code>cmb</code> combo string up close; break threshold → knockdown punish cycle (<code>fall → fallwat → stdup</code>).</li>
+    <li><strong>Open:</strong> what drives the knockdown (cumulative damage vs weak-point hits); <code>hedbhitlp</code> grinding-on-hit semantics (sustained contact damage?).</li>
+  </ul>
+
+  <h3>Chaos Mobius (boss_robot — Arca Plant, heretic)</h3>
+  <ul>
+    <li><strong>Blocked on clip import.</strong> The GLB carries one clip (<code>z003_atk_dl_lp</code> — a bare loop segment, unplayable alone per the enemy segment rules); the kit's <code>ve_*</code> pieces never imported (see <code>storybook/enemyData.ts</code>). No behavior draft until the rig is complete.</li>
+  </ul>
+
+  <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
+  <ul>
+    <li><strong>Relocating ranged finale.</strong> Walks and runs a ranged kit — looping throw volley (<code>thr*</code>), diffusion spread (<code>dif*</code>), radiate AoE burst (<code>rad*</code>), single heavy shot (<code>bhsht</code>) — with the wide <code>nagi</code> mow-down sweep up close; submerges (<code>down/swm/up</code>) to relocate between anchors.</li>
+    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair; <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
+  </ul>
+
+  <h2>Draft → normative workflow</h2>
+  <ol>
+    <li>Observe in <code>#/boss-room</code> (attack buttons play the drafted chains; anchors are authored with the click tool and round-tripped via the config export) and against original-game capture.</li>
+    <li>Correct <code>data/boss_arenas.json</code>; resolve or strike each "open" item above.</li>
+    <li>Lift this page's DRAFT marker per boss — only then does the Godot implementation for that boss start, with the two test layers (seeded <code>test_runner</code> unit test + autopilot probe on the boss's quest) pinned against these tables.</li>
+  </ol>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><em>No Godot implementation yet — by design (spec-first).</em></li>
+    <li><code>web/src/boss-room/</code> — the observation/authoring instrument: behavior-panel playback of the drafted attacks, anchor authoring, config round-trip.</li>
+    <li><code>data/boss_arenas.json</code> (v2) — the tables; validated by <code>web/src/__tests__/boss-arenas-data.test.ts</code>.</li>
+  </ul>
+
+  <p><a href="/states">← States</a></p>
+</Concept>

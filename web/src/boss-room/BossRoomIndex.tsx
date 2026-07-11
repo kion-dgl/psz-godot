@@ -41,7 +41,12 @@ export default function BossRoomIndex() {
                   <div style={{ color: '#9ab', fontSize: 11, margin: '6px 0' }}>
                     {arena?.label ?? b.arena} ({b.arena}) · from {b.quest_source}
                   </div>
-                  {b.note && <div style={{ color: '#a86', fontSize: 10, fontStyle: 'italic' }}>{b.note}</div>}
+                  <div style={{ color: (b.attacks?.length ?? 0) > 0 ? '#7c9' : '#667', fontSize: 11 }}>
+                    {(b.attacks?.length ?? 0) > 0
+                      ? `behavior draft: ${b.phases?.length ?? 0} phases · ${b.attacks!.length} attacks`
+                      : 'behavior draft pending'}
+                  </div>
+                  {b.note && <div style={{ color: '#a86', fontSize: 10, fontStyle: 'italic', marginTop: 4 }}>{b.note}</div>}
                 </div>
               </Link>
             );

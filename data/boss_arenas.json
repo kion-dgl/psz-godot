@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "comment": "Boss debug-room mapping (#493, tool at #/boss-room). Bosses are arena-bound: behavior is mapped inside the boss's own stage, not a flat sandbox. `arena` is the default (taken from the quest that spawns the boss today); the tool can load any z-arena. Sibling file to enemy_attacks.json — phase/attack tables land here once behavior notes are taken.",
+  "schema_version": 2,
+  "comment": "Boss debug-room mapping + behavior draft (#493, tool at #/boss-room). Bosses are arena-bound: behavior is mapped inside the boss's own stage, not a flat sandbox. `arena` is the default (taken from the quest that spawns the boss today); the tool can load any z-arena. Sibling file to enemy_attacks.json. v2 adds per-boss `phases` / `attacks` / `anchors` — DRAFT tables read off the rig clip vocabularies (spec /states/bosses), to be corrected by observation in the room before any Godot implementation. Unset attack fields default per /mechanics/enemy-attacks. `chain` is a clip-token sequence (tokens ending in `lp` loop); `anchors` are authored with the room's click tool and are positions in the boss's default arena frame.",
   "arenas": {
     "s01z_na1": { "area": "valley_z", "label": "Gurhacia Valley arena" },
     "s02z_na1": { "area": "wetlands_z", "label": "Ozette Wetlands arena", "skybox": true },
@@ -17,36 +17,141 @@
       "arena": "s01z_na1",
       "quest_source": "claiming_a_stake",
       "model_scale": 1.0,
-      "clip_notes": {}
+      "phases": [
+        { "id": "ground", "label": "Grounded", "note": "walks the arena (wlk1/wlk2), full melee + breath kit; opens with the tht roar" },
+        { "id": "flight", "label": "Airborne", "note": "takes off (flst) and strafes the arena on fly passes; entry cadence (HP step vs timer) is an open question" }
+      ],
+      "attacks": [
+        { "id": "bite_quick", "clip": "atkh1", "kind": "melee_arc", "phases": ["ground"], "max_range": 4, "note": "short head bite (0.42s)" },
+        { "id": "bite_heavy", "clip": "atkh2", "kind": "melee_arc", "phases": ["ground"], "max_range": 5, "damage_mult": 1.5, "note": "heavier bite (0.83s)" },
+        { "id": "sweep_left", "clip": "atkrl", "kind": "melee_arc", "phases": ["ground"], "hit_half_angle_deg": 75, "max_range": 6, "note": "wide sweep — rl/rr = left/right reading unverified" },
+        { "id": "sweep_right", "clip": "atkrr", "kind": "melee_arc", "phases": ["ground"], "hit_half_angle_deg": 75, "max_range": 6 },
+        { "id": "wing_buffet", "clip": "atkwg", "chain": ["wat2atkwg", "atkwg"], "kind": "melee_arc", "phases": ["ground"], "hit_half_angle_deg": 90, "max_range": 5, "note": "wing flap — likely knockback; wat2atkwg is the wind-up transition" },
+        { "id": "fire_breath", "clip": "brs2", "chain": ["brsst", "brslp", "brs2"], "kind": "beam_sweep", "phases": ["ground"], "min_range": 2, "max_range": 12, "note": "segmented breath st→lp→release; brs1 (0.5s) reads as a short-burst variant" },
+        { "id": "fly_pass", "clip": "fly", "chain": ["flst", "fly"], "kind": "fly_pass", "phases": ["flight"], "note": "anchor-bound strafing run — author fly waypoints in the room; rdst/rdg read as the dive/rush-down but are unverified" }
+      ],
+      "anchors": [],
+      "clip_notes": {
+        "wat": "grounded idle",
+        "wlk1": "walk (slow)",
+        "wlk2": "walk (fast)",
+        "tht": "fight-opening roar / threat display",
+        "flst": "takeoff",
+        "fly": "airborne loop",
+        "gl2tr": "glide→turn transition",
+        "tr2gl": "turn→glide transition",
+        "gld2claw": "glide→landing (onto claws)",
+        "claw": "landed-on-claws pose (0.17s — stance, not an attack)",
+        "claw2wat": "landing→grounded idle",
+        "rdst": "rush-down start? (dive entry — unverified)",
+        "rdg": "rush-down glide? (dive loop — unverified)",
+        "dmg1": "long stagger (2.17s) — reads as a knockdown/weak-point-break punish reaction",
+        "dmg2": "long stagger variant (1.83s)",
+        "ded": "death"
+      }
     },
     "octo_diablo": {
       "model_id": "boss_octopus",
       "arena": "s02z_na1",
       "quest_source": "poisoned_water",
       "model_scale": 1.0,
-      "clip_notes": {}
+      "phases": [
+        { "id": "submerged", "label": "Submerged", "note": "untargetable; relocates between surfacing anchors (float reads as the underwater move)" },
+        { "id": "surfaced", "label": "Surfaced", "note": "attack set runs from a surfacing spot; body is the target" },
+        { "id": "tired", "label": "Tired (punish)", "note": "wattir idle after an attack string — the punish window; recovers via wttr2wt then submerges" }
+      ],
+      "attacks": [
+        { "id": "spout", "clip": "spout", "chain": ["wt2spwt", "spout"], "kind": "spout", "phases": ["surfaced"], "min_range": 3, "max_range": 15, "note": "water jet at the player; spwat/sp2wat are the spout-stance idles/transitions" },
+        { "id": "vomit", "clip": "vomit", "kind": "lob", "phases": ["surfaced"], "min_range": 2, "max_range": 10, "note": "spew AoE — vmply/vmwat read as the vomit-stance loop/idle; payload (poison?) unverified" },
+        { "id": "absorb_eat", "clip": "eat", "chain": ["wt2abs", "absorb", "abs2eat", "eat"], "kind": "grab", "phases": ["surfaced"], "max_range": 8, "damage_mult": 2.0, "note": "suck-in → grab-eat; abscnc/eatcnc are the damage-interrupt cancels — the grab is breakable" }
+      ],
+      "anchors": [],
+      "clip_notes": {
+        "wat": "surfaced idle",
+        "wattir": "tired idle — the post-string punish window",
+        "wttr2wt": "tired→idle recover",
+        "float": "floating/underwater move",
+        "collisn": "collision reaction — reads as the ram-into-wall (or player-collision) stun, not an attack",
+        "dmg": "flinch",
+        "absorb": "suck-in loop (pulls the player)",
+        "abscnc": "absorb cancelled (damage interrupt)",
+        "eat": "grab-eat (caught player)",
+        "eatcnc": "eat cancelled (damage interrupt)"
+      },
+      "note": "no ded clip in the rig — death presentation is likely scripted (sinks?); tentacle clips (tt*/st*) never imported (see storybook/enemyData.ts import notes)"
     },
     "humilias": {
       "model_id": "boss_mother",
       "arena": "s07z_na1",
       "quest_source": "control_system",
       "model_scale": 1.0,
-      "clip_notes": {}
+      "phases": [
+        { "id": "active", "label": "Active", "note": "slow advance (move); full kit" },
+        { "id": "downed", "label": "Downed (punish)", "note": "fall → fallwat fallen idle (weak point exposed) → stdup; entered on a damage/break threshold — open question which" }
+      ],
+      "attacks": [
+        { "id": "laser_sweep", "clip": "laser", "chain": ["laserst", "laserlp", "laser"], "kind": "beam_sweep", "phases": ["active"], "min_range": 4, "max_range": 20, "note": "charge st→lp then the 1.92s firing sweep" },
+        { "id": "arm_swing", "clip": "swing", "chain": ["swingst", "swinglp", "swing"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 80, "max_range": 7 },
+        { "id": "headbutt", "clip": "hedb", "chain": ["hedbst", "hedblp", "hedb"], "kind": "charge", "phases": ["active"], "max_range": 10, "note": "press/grind — hedbhitlp is the grinding-on-hit loop, hedb2wt2/hedb2lp the recover transitions" },
+        { "id": "combo", "clip": "cmblp", "chain": ["cmbst", "cmblp", "cmbend"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 60, "max_range": 7, "note": "full st/lp/ed combo string (the only complete 3-piece family on the rig)" }
+      ],
+      "anchors": [],
+      "clip_notes": {
+        "wat1": "idle",
+        "wat2": "idle variant",
+        "move": "locomotion — slow advance",
+        "fall": "knockdown — falls over",
+        "fallwat": "fallen idle — the punish window",
+        "stdup": "stand back up",
+        "hit": "big stagger (1.92s)",
+        "dam1": "flinch",
+        "ded": "death"
+      }
     },
     "chaos_mobius": {
       "model_id": "boss_robot",
       "arena": "s06z_na1",
       "quest_source": "heretic",
       "model_scale": 1.0,
-      "note": "GLB carries a single clip (z003_atk_dl_lp) — the rest of the kit's segmented pieces (ve_*) never imported; see storybook/enemyData.ts import notes",
-      "clip_notes": {}
+      "phases": [],
+      "attacks": [],
+      "anchors": [],
+      "note": "behavior draft blocked on clip import: GLB carries a single clip (z003_atk_dl_lp, a bare lp segment) — the rest of the kit's segmented pieces (ve_*) never imported; see storybook/enemyData.ts import notes",
+      "clip_notes": {
+        "atk_dl_lp": "the only imported clip — a loop segment of a segmented attack (dl = drill?); unplayable alone per /mechanics/enemy-attacks segment rules"
+      }
     },
     "dark_falz": {
       "model_id": "boss_darkfalz",
       "arena": "s07z_na2",
       "quest_source": "dark_castle",
       "model_scale": 1.0,
-      "clip_notes": {}
+      "phases": [
+        { "id": "engaged", "label": "Engaged", "note": "walks (walk) and runs the ranged kit; nagi sweep up close" },
+        { "id": "submerged", "label": "Submerged", "note": "sinks (down) and swims (swm) to relocate between anchors, rises (up) — up/down could instead be a knockdown punish pair, verify in the room" }
+      ],
+      "attacks": [
+        { "id": "arm_sweep", "clip": "nagi", "kind": "melee_arc", "phases": ["engaged"], "hit_half_angle_deg": 90, "max_range": 8, "note": "2.17s wide mow-down sweep" },
+        { "id": "throw_volley", "clip": "thrlp", "chain": ["thrst", "thrlp", "thr2wat"], "kind": "projectile", "phases": ["engaged"], "min_range": 5, "max_range": 25, "note": "looping throw volley — lp repeats while firing" },
+        { "id": "diffusion", "clip": "diffusn", "chain": ["difst", "diflp", "diffusn"], "kind": "projectile", "phases": ["engaged"], "min_range": 4, "max_range": 20, "note": "spread shot (diffusion release after the charge loop)" },
+        { "id": "radiate", "clip": "radiate", "chain": ["radst", "radlp", "radiate"], "kind": "aoe_burst", "phases": ["engaged"], "max_range": 12, "damage_mult": 1.5, "note": "big radial burst; radwat/rad2wat are the radiating idle/recover" },
+        { "id": "bh_shot", "clip": "bhsht", "kind": "projectile", "phases": ["engaged"], "min_range": 6, "max_range": 25, "note": "single heavy shot — bhsht reading uncertain (black-hole shot?)" }
+      ],
+      "anchors": [],
+      "clip_notes": {
+        "wat": "idle",
+        "walk": "locomotion",
+        "swm": "swim — submerged travel",
+        "wat2swm": "idle→swim (submerge entry)",
+        "swm2wat": "swim→idle (emerge)",
+        "down": "sink (or knockdown — verify)",
+        "up": "rise (or knockdown recover — verify)",
+        "orca": "unknown (0.67s) — open question",
+        "dam1": "flinch (small)",
+        "dam2": "stagger (medium)",
+        "dam3": "stagger (large)",
+        "ded": "death (4.33s)"
+      }
     }
   }
 }

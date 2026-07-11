@@ -16,12 +16,62 @@ export interface ArenaDef {
   note?: string;
 }
 
+/** Draft phase of a boss fight (v2). Order matters; the first phase is the opener. */
+export interface BossPhase {
+  id: string;
+  label: string;
+  /** Phase entered when HP fraction drops to this (omitted = non-HP trigger; see note). */
+  hp_frac?: number;
+  note?: string;
+}
+
+/**
+ * Draft boss attack (v2) — reuses the /mechanics/enemy-attacks timeline model
+ * (unset numeric fields default per that spec's `defaults`). Boss-only
+ * extensions: `chain` (explicit clip-token sequence — tokens ending in `lp`
+ * loop), `phases` (availability gate), `anchor` (named arena anchor the
+ * attack is bound to), and the boss `kind` values beam_sweep / aoe_burst /
+ * grab / fly_pass / spout on top of the enemy kinds.
+ */
+export interface BossAttackDef {
+  id: string;
+  /** Representative clip token (suffix-matched against the rig, `*_<token>`). */
+  clip: string;
+  /** Full token sequence played in order; tokens ending in `lp` repeat lp-loops times. */
+  chain?: string[];
+  kind?: string;
+  /** Phase ids this attack is available in (omitted = all phases). */
+  phases?: string[];
+  /** Named anchor (from BossDef.anchors) the attack is bound to / aimed from. */
+  anchor?: string;
+  weight?: number;
+  min_range?: number;
+  max_range?: number;
+  windup_frac?: number;
+  damage_end_frac?: number;
+  hit_half_angle_deg?: number;
+  hit_reach?: number;
+  damage_mult?: number;
+  note?: string;
+}
+
+/** Arena-anchored named position (authored with the room's click tool). */
+export interface BossAnchor {
+  name: string;
+  pos: [number, number, number];
+  note?: string;
+}
+
 export interface BossDef {
   model_id: string; // assets/enemies/<model_id>/<model_id>.glb
   arena: string; // default arena stage_id — the tool can load any
   quest_source: string; // quest whose boss segment spawns this boss
   model_scale: number;
   note?: string;
+  phases?: BossPhase[];
+  attacks?: BossAttackDef[];
+  /** Positions in the boss's DEFAULT arena frame — meaningless in an override arena. */
+  anchors?: BossAnchor[];
   clip_notes: Record<string, string>;
 }
 
@@ -62,6 +112,17 @@ export function arenaFloorUrl(stageId: string, arena: ArenaDef): string {
 export function arenaSkyboxUrl(stageId: string, arena: ArenaDef): string | null {
   if (!arena.skybox) return null;
   return assetUrl(`assets/stages/${arena.area}/${stageId}/lndmd/skybox/o0s_zsky.glb`);
+}
+
+/**
+ * Resolve a clip token against the rig's actual clip names, in the
+ * /mechanics/enemy-attacks order: exact match, then `*_<token>` suffix.
+ * The underscore in the suffix rule keeps short tokens honest (`wat` must
+ * not match `claw2wat`). Returns null when nothing resolves.
+ */
+export function resolveClipToken(clipNames: string[], token: string): string | null {
+  if (clipNames.includes(token)) return token;
+  return clipNames.find((n) => n.endsWith(`_${token}`)) ?? null;
 }
 
 /**

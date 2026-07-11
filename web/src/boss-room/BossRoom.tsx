@@ -23,8 +23,10 @@ import {
   arenaSkyboxUrl,
   loadBossConfig,
   loadRoster,
+  resolveClipToken,
   segmentFamilies,
   type BossArenaConfig,
+  type BossAttackDef,
   type RosterEntry,
   type SegmentFamily,
 } from './types';
@@ -67,6 +69,8 @@ function saveStore(store: Record<string, Overrides>) {
 interface SceneApi {
   playClip(name: string, loop: boolean): void;
   playChain(family: SegmentFamily, lpLoops: number): void;
+  /** Behavior-draft attack playback: clip-token sequence, `lp` tokens loop. */
+  playTokens(tokens: string[], lpLoops: number): void;
   stopClips(): void;
   setSpeed(v: number): void;
   setPaused(p: boolean): void;
@@ -124,6 +128,28 @@ export default function BossRoom() {
     saveStore(next);
   };
 
+  // Round-trip export: the whole config with this boss's clicked markers
+  // merged into its authored anchors — paste over data/boss_arenas.json.
+  // Markers only merge in the default arena (anchors ride that frame).
+  const copyConfig = () => {
+    if (!config || !boss) return;
+    const merged =
+      arenaId === boss.arena
+        ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
+        : (boss.anchors ?? []);
+    const cfg: BossArenaConfig = {
+      ...config,
+      bosses: { ...config.bosses, [bossId]: { ...boss, anchors: merged } },
+    };
+    navigator.clipboard?.writeText(JSON.stringify(cfg, null, 2) + '\n');
+  };
+
+  const attackMeta = (a: BossAttackDef) => {
+    const range = ` · ${a.min_range ?? 0}–${a.max_range ?? '∞'}m`;
+    const phases = a.phases ? ` · ${a.phases.join('/')}` : '';
+    return `${a.kind ?? 'melee_arc'}${range}${phases}`;
+  };
+
   // ——— scene ———
   useEffect(() => {
     const el = mountRef.current;
@@ -175,6 +201,36 @@ export default function BossRoom() {
     const markerGroup = new THREE.Group();
     scene.add(markerGroup);
     let markerSeq = 0;
+
+    // Marker mesh (post + ground ring) — yellow for ad-hoc clicks, cyan for
+    // config-authored anchors from boss_arenas.json.
+    function buildMarker(color: number): THREE.Group {
+      const grp = new THREE.Group();
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 4, 8),
+        new THREE.MeshBasicMaterial({ color }),
+      );
+      post.position.y = 2;
+      grp.add(post);
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.6, 1.0, 24),
+        new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.05;
+      grp.add(ring);
+      return grp;
+    }
+
+    // Authored anchors are positions in the boss's DEFAULT arena frame —
+    // meaningless in an override arena, so only render them at home.
+    if (boss.anchors?.length && arenaId === boss.arena) {
+      for (const a of boss.anchors) {
+        const grp = buildMarker(0x22d3ee);
+        grp.position.set(a.pos[0], a.pos[1], a.pos[2]);
+        scene.add(grp);
+      }
+    }
 
     const loader = new GLTFLoader();
     let disposed = false;
@@ -320,9 +376,33 @@ export default function BossRoom() {
       startAction(next, reps > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps);
     }
 
+    // Behavior-draft attack playback: resolve each token per the
+    // /mechanics/enemy-attacks order, chain them, loop the `lp` pieces.
+    function playTokens(tokens: string[], loops: number) {
+      const names = animations.map((a) => a.name);
+      const seq: THREE.AnimationClip[] = [];
+      const reps: number[] = [];
+      const missing: string[] = [];
+      for (const t of tokens) {
+        const name = resolveClipToken(names, t);
+        const clip = name ? animations.find((a) => a.name === name) : undefined;
+        if (!clip) {
+          missing.push(t);
+          continue;
+        }
+        seq.push(clip);
+        reps.push(t.endsWith('lp') ? Math.max(1, loops) : 1);
+      }
+      if (missing.length) setStatus(`unresolved clip token(s): ${missing.join(', ')}`);
+      if (!seq.length) return;
+      chain = { queue: seq.slice(1), loops: reps.slice(1) };
+      startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
+    }
+
     apiRef.current = {
       playClip,
       playChain,
+      playTokens,
       stopClips,
       setSpeed: (v) => {
         if (mixer) mixer.timeScale = v;
@@ -419,20 +499,7 @@ export default function BossRoom() {
       } else {
         markerSeq++;
         const name = `anchor_${markerSeq}`;
-        const grp = new THREE.Group();
-        const post = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.15, 0.15, 4, 8),
-          new THREE.MeshBasicMaterial({ color: 0xfacc15 }),
-        );
-        post.position.y = 2;
-        grp.add(post);
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(0.6, 1.0, 24),
-          new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide }),
-        );
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.05;
-        grp.add(ring);
+        const grp = buildMarker(0xfacc15);
         grp.position.copy(p);
         markerGroup.add(grp);
         setMarkers((ms) => [...ms, { name, pos: [+p.x.toFixed(2), +p.y.toFixed(2), +p.z.toFixed(2)] }]);
@@ -675,6 +742,42 @@ export default function BossRoom() {
               </button>
             </div>
           </div>
+        )}
+
+        {boss && ((boss.phases?.length ?? 0) > 0 || (boss.attacks?.length ?? 0) > 0) && (
+          <>
+            <span style={label}>Behavior draft (schema v2 — verify by observation)</span>
+            {boss.phases?.map((p) => (
+              <div key={p.id} title={p.note} style={{ color: '#9ab', fontSize: 11, marginTop: 2 }}>
+                <code style={{ color: '#cdf' }}>{p.id}</code> — {p.label}
+                {p.hp_frac !== undefined && <span style={{ color: '#889' }}> (≤{Math.round(p.hp_frac * 100)}% HP)</span>}
+              </div>
+            ))}
+            {boss.attacks?.map((a) => (
+              <button
+                key={a.id}
+                title={a.note}
+                onClick={() => apiRef.current?.playTokens(a.chain ?? [a.clip], lpLoops)}
+                style={{ ...btn, display: 'block', width: '100%', textAlign: 'left', marginTop: 4 }}
+              >
+                ▶ {a.id} <span style={{ color: '#889' }}>{attackMeta(a)}</span>
+              </button>
+            ))}
+            {(boss.anchors?.length ?? 0) > 0 && (
+              <div style={{ color: '#2cd', fontSize: 11, marginTop: 4 }}>
+                {boss.anchors!.length} authored anchor(s){arenaId !== boss.arena ? ' (hidden — default arena only)' : ''}
+              </div>
+            )}
+          </>
+        )}
+        {boss && (
+          <button
+            onClick={copyConfig}
+            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors — paste over the file (rename anchors by hand)."
+            style={{ ...btn, display: 'block', width: '100%' }}
+          >
+            copy boss_arenas.json (markers → anchors)
+          </button>
         )}
 
         <span style={label}>Playback</span>
