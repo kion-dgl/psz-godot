@@ -200,6 +200,7 @@ export default function BossRoom() {
 
     let floorMesh: THREE.Object3D | null = null;
     let floorMinY = 0; // lowest point of the floor collider (fall-guard floor)
+    let floorMaxY = 0; // top of the collider — settle fallback where it has holes (the octopus pool)
     let arenaMesh: THREE.Object3D | null = null;
     const raycaster = new THREE.Raycaster();
     const DOWN = new THREE.Vector3(0, -1, 0);
@@ -307,6 +308,7 @@ export default function BossRoom() {
         // center+12 lands past the edge and the player falls forever).
         const box = new THREE.Box3().setFromObject(g.scene);
         floorMinY = box.min.y;
+        floorMaxY = box.max.y;
         const c = box.getCenter(new THREE.Vector3());
         const back = Math.min(12, Math.max(2, (box.max.z - box.min.z) * 0.3));
         const side = Math.min(12, Math.max(2, (box.max.x - box.min.x) * 0.3));
@@ -416,7 +418,10 @@ export default function BossRoom() {
     // floor; only the rendered group sinks.
     const modelOffsetY = boss.model_offset_y ?? 0;
     function settleBoss() {
-      const y = dropToFloor(bossPos);
+      // Colliders can have holes where only the boss lives (the octopus
+      // pool) — settle to the collider's top there instead of dangling at
+      // the spawn height, so model_offset_y has a stable reference.
+      const y = dropToFloor(bossPos) ?? (floorMesh ? floorMaxY : null);
       if (y !== null) bossPos.y = y;
       bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
     }
@@ -771,7 +776,7 @@ export default function BossRoom() {
           }
         }
         handleSimEvents(stepBoss(sim, entry, { dt, player: { x: feet.x, z: feet.z }, clipDur, rng: Math.random }));
-        const gy2 = dropToFloor(new THREE.Vector3(sim.pos.x, bossPos.y + 2, sim.pos.z));
+        const gy2 = dropToFloor(new THREE.Vector3(sim.pos.x, bossPos.y + 2, sim.pos.z)) ?? (floorMesh ? floorMaxY : null);
         bossPos.set(sim.pos.x, (gy2 ?? bossPos.y) + sim.alt, sim.pos.z);
         bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
         bossGroup.rotation.y = sim.yaw;

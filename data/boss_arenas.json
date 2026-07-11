@@ -73,15 +73,15 @@
         { "id": "vomit", "clip": "vomit", "kind": "lob", "phases": ["surfaced"], "min_range": 2, "max_range": 10, "hit_reach": 2.5, "note": "spew AoE lobbed at the player; vmply/vmwat read as the vomit-stance loop/idle; payload (poison?) unverified" },
         { "id": "absorb_eat", "clip": "eat", "chain": ["wt2abs", "absorb", "abs2eat", "eat"], "kind": "grab", "phases": ["surfaced"], "max_range": 8, "hit_reach": 8, "hit_half_angle_deg": 40, "damage_mult": 2.0, "cancel_clip": "eatcnc", "note": "suck-in → grab-eat: damage ticks while held; damaging the boss breaks the grip (eatcnc); draft skips the pull-in" }
       ],
-      "model_offset_y": -4.0,
+      "model_offset_y": -3.0,
       "parts": [
         {
           "part": "z_002_tt",
           "instances": [
-            { "pos": [7, -1, 7], "yaw_deg": -135 },
-            { "pos": [-7, -1, 7], "yaw_deg": 135 },
-            { "pos": [7, -1, -7], "yaw_deg": -45 },
-            { "pos": [-7, -1, -7], "yaw_deg": 45 }
+            { "pos": [8, -1, 8], "yaw_deg": 45 },
+            { "pos": [-8, -1, 8], "yaw_deg": -45 },
+            { "pos": [8, -1, -8], "yaw_deg": 135 },
+            { "pos": [-8, -1, -8], "yaw_deg": -135 }
           ]
         }
       ],
