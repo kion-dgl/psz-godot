@@ -6,13 +6,23 @@ const chart = `stateDiagram-v2
   [*] --> INTRO
   INTRO --> ACTIVE: threat display done
 
-  ACTIVE --> ACTIVE: attack picked from the\ncurrent phase's table
+  ACTIVE --> ATTACKING: attack picked from the\ncurrent phase's table
+  ATTACKING --> LOAF: attack resolved
+  LOAF --> ACTIVE: disengage walk done
   ACTIVE --> RELOCATE: arena move trigger\n(takeoff / submerge / swim)
   RELOCATE --> ACTIVE: arrived at anchor
   ACTIVE --> PUNISH: break threshold /\npost-string fatigue
   PUNISH --> ACTIVE: recovery clip done
   ACTIVE --> DEAD: HP 0
   PUNISH --> DEAD: HP 0
+
+  note right of LOAF
+    Breathing room: after every
+    attack the boss walks off on
+    a curving path (the enemy
+    model's loafing) instead of
+    camping the player.
+  end note
 
   note right of RELOCATE
     Arena-bound: relocation
@@ -56,6 +66,9 @@ const chart = `stateDiagram-v2
     <tr><td><code>fly_pass</code></td><td>An airborne strafing run along an anchor path (Reyburn). Anchor-bound by definition.</td></tr>
     <tr><td><code>spout</code></td><td>An aimed sustained jet from a fixed emplacement/surfacing spot (Octo Diablo). Like <code>beam_sweep</code> but position-locked rather than angle-swept.</td></tr>
   </table>
+
+  <h3>Breathing room (post-attack disengage)</h3>
+  <p>After an attack resolves the boss <strong>MUST</strong> disengage — a loafing walk away from the player on a slowly curving path (<code>fsm.loaf_duration_min/max</code> seconds, the enemy model's LOAFING) — before it re-engages. This is the fairness contract: a boss that re-acquires the player immediately after every attack pins them permanently (a downed player could never stand up). Aggression modifiers scale it: an enrage phase's <code>cooldown_mult</code> shortens the disengage along with the cooldown, so "more aggressive" compresses the breathing room without removing it.</p>
 
   <h3>Punish windows</h3>
   <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>

@@ -23,10 +23,15 @@
 import { arcHitTest, selectAttack, type Vec2 } from '../enemy-room/fsm';
 import type { BossPhase, ResolvedBoss, ResolvedBossAttack } from './types';
 
-export type BossStateName = 'intro' | 'active' | 'attacking' | 'relocate' | 'punish' | 'dead';
+export type BossStateName = 'intro' | 'active' | 'attacking' | 'loaf' | 'relocate' | 'punish' | 'dead';
 
 export const PLAYER_RADIUS = 0.4;
 export const MELEE_STOP_RANGE = 3.5;
+/** Post-attack disengage walk speed (× move_speed) — the enemy model's loaf. */
+export const LOAF_SPEED_MULT = 0.6;
+/** Max random deviation from straight-away for the loaf direction (radians). */
+export const LOAF_SPREAD = (2 * Math.PI) / 3;
+export const LOAF_CURVE_MAX = 0.4; // rad/s drift of the loaf path (gentle arc, never a curl-back)
 export const BEAM_TICK_INTERVAL = 0.4;
 export const CHARGE_SPEED_MULT = 2.0;
 export const CHARGE_STOP_RANGE = 2.0;
@@ -105,6 +110,10 @@ export interface BossSim {
   sinceFlight: number;
   punishAccum: number;
   enraged: boolean;
+  /** Loaf (post-attack disengage): time left, walk direction, curve drift. */
+  loafT: number;
+  loafDir: Vec2;
+  loafCurve: number;
   current: CurrentAttack | null;
   fly: FlightState | null;
   projectiles: SimProjectile[];
@@ -127,6 +136,9 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number): BossSi
     sinceFlight: 0,
     punishAccum: 0,
     enraged: false,
+    loafT: 0,
+    loafDir: { x: 0, z: 1 },
+    loafCurve: 0,
     current: null,
     fly: null,
     projectiles: [],
@@ -288,8 +300,45 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   if (cur.t >= cur.total) {
     sim.current = null;
     sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
-    setState(sim, 'active', events);
+    beginLoaf(sim, entry, input, events);
   }
+}
+
+/**
+ * Post-attack disengage (the enemy model's LOAFING, spec /states/enemies):
+ * walk away from the player on a slowly curving path for a few seconds so
+ * the fight breathes — without it the boss camps the player between
+ * cooldowns and a downed player never gets to stand up. Enrage shortens it
+ * via the phase's cooldown_mult (more aggressive = less breathing room).
+ */
+function beginLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
+  const { loaf_duration_min: min, loaf_duration_max: max } = entry.fsm;
+  sim.loafT = (min + input.rng() * Math.max(0, max - min)) * mods(sim, entry).cooldown;
+  // Straight away from the player, deflected by a random spread.
+  const dx = sim.pos.x - input.player.x;
+  const dz = sim.pos.z - input.player.z;
+  const away = Math.atan2(dx, dz) + (input.rng() - 0.5) * LOAF_SPREAD;
+  sim.loafDir = { x: Math.sin(away), z: Math.cos(away) };
+  sim.loafCurve = (input.rng() - 0.5) * 2 * LOAF_CURVE_MAX;
+  setState(sim, 'loaf', events);
+}
+
+function stepLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
+  sim.cooldown -= input.dt; // cooldown keeps ticking while it wanders
+  sim.loafT -= input.dt;
+  if (sim.loafT <= 0) {
+    setState(sim, 'active', events);
+    return;
+  }
+  // Curving drift, walking where it faces.
+  const rot = sim.loafCurve * input.dt;
+  const { x, z } = sim.loafDir;
+  sim.loafDir = { x: x * Math.cos(rot) + z * Math.sin(rot), z: -x * Math.sin(rot) + z * Math.cos(rot) };
+  sim.yaw = Math.atan2(sim.loafDir.x, sim.loafDir.z);
+  const speed = entry.stats.move_speed * LOAF_SPEED_MULT * mods(sim, entry).speed;
+  sim.pos.x += sim.loafDir.x * speed * input.dt;
+  sim.pos.z += sim.loafDir.z * speed * input.dt;
+  ensureLoop(sim, 'wlk1', events);
 }
 
 function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
@@ -458,6 +507,9 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
     case 'attacking':
       stepAttacking(sim, entry, input, events);
       break;
+    case 'loaf':
+      stepLoaf(sim, entry, input, events);
+      break;
     case 'relocate':
       stepRelocate(sim, entry, input, events);
       break;
@@ -502,9 +554,9 @@ export function damageBoss(sim: BossSim, entry: ResolvedBoss, amount: number): B
     sim.enraged = true;
     events.push({ type: 'enrage' });
     // The growl replaces the current grounded animation; airborne it only tints.
-    if (sim.state === 'active') playOnce(sim, ['tht'], events);
+    if (sim.state === 'active' || sim.state === 'loaf') playOnce(sim, ['tht'], events);
   }
-  if ((sim.state === 'active' || sim.state === 'attacking') && entry.fsm.punish_break_damage > 0) {
+  if ((sim.state === 'active' || sim.state === 'attacking' || sim.state === 'loaf') && entry.fsm.punish_break_damage > 0) {
     sim.punishAccum += amount;
     if (sim.punishAccum >= entry.fsm.punish_break_damage) {
       sim.current = null;

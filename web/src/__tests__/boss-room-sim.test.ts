@@ -55,6 +55,8 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     flight_attacks: 1,
     hover_height: 8,
     fly_speed_mult: 2.5,
+    loaf_duration_min: 2.5,
+    loaf_duration_max: 4.0,
     punish_break_damage: 30,
     punish_vulnerable_mult: 2,
     punish_clip: 'dmg1',
@@ -122,8 +124,22 @@ describe('boss sim — chain timeline', () => {
     }
     expect(hits).toHaveLength(1);
     expect(hits[0]).toMatchObject({ type: 'player-hit', damage: 10, via: 'bite' });
-    expect(sim.state).toBe('active');
+    expect(sim.state).toBe('loaf'); // recovery disengages — never straight back to chase
     expect(sim.cooldown).toBeCloseTo(entry.stats.attack_cooldown, 5);
+  });
+
+  it('after the attack it loafs away from the player, then re-engages', () => {
+    const entry = makeEntry();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 2 };
+    run(sim, entry, player, 100, () => sim.state === 'loaf');
+    expect(sim.state).toBe('loaf');
+    const d0 = Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z);
+    // walk the whole loaf out — the boss gains distance instead of camping
+    run(sim, entry, player, 100, () => sim.state !== 'loaf');
+    const d1 = Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z);
+    expect(d1).toBeGreaterThan(d0 + 1.5);
+    expect(sim.state).toBe('active'); // and then it comes back for more
   });
 
   it('misses when the player leaves the arc before the window', () => {

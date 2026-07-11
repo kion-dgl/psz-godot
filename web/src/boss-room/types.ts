@@ -88,6 +88,9 @@ export interface BossFsmParams {
   flight_attacks: number;
   hover_height: number;
   fly_speed_mult: number;
+  /** Post-attack disengage walk (the enemy model's loafing): duration range in seconds. */
+  loaf_duration_min: number;
+  loaf_duration_max: number;
   /** Damage accumulated in ground phases that triggers the knockdown punish window. */
   punish_break_damage: number;
   /** Damage multiplier while the punish reaction plays (enemy model's recovery_vulnerable_mult). */
@@ -109,6 +112,8 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   flight_attacks: 1,
   hover_height: 8,
   fly_speed_mult: 2.5,
+  loaf_duration_min: 2.5,
+  loaf_duration_max: 4.0,
   punish_break_damage: 60,
   punish_vulnerable_mult: 2.0,
   punish_clip: 'dmg1',

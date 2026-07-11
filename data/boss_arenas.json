@@ -18,7 +18,7 @@
       "quest_source": "claiming_a_stake",
       "model_scale": 1.0,
       "stats": { "hp": 300, "move_speed": 4.0, "attack_cooldown": 2.5, "attack_base": 12, "turn_speed_deg": 120 },
-      "fsm": { "flight_interval": 22, "flight_attacks": 1, "hover_height": 8, "fly_speed_mult": 2.5, "punish_break_damage": 60, "punish_vulnerable_mult": 2.0, "punish_clip": "dmg1" },
+      "fsm": { "flight_interval": 22, "flight_attacks": 1, "hover_height": 8, "fly_speed_mult": 2.5, "loaf_duration_min": 2.5, "loaf_duration_max": 4.5, "punish_break_damage": 60, "punish_vulnerable_mult": 2.0, "punish_clip": "dmg1" },
       "phases": [
         { "id": "ground", "label": "Grounded", "note": "walks the arena (wlk1), full melee + fireball kit; opens with the tht roar" },
         { "id": "flight", "label": "Airborne", "note": "takes off (flst), flies away, drops the sky cluster-fireball, and deals damage where it lands" },
