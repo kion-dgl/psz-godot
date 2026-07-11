@@ -21,6 +21,7 @@ import {
   arenaFloorUrl,
   arenaModelUrl,
   arenaSkyboxUrl,
+  bossPartUrl,
   loadBossConfig,
   loadRoster,
   resolveBoss,
@@ -349,6 +350,44 @@ export default function BossRoom() {
       () => setStatus(`boss model failed: ${boss.model_id}`),
     );
 
+    // Multi-part pieces (tentacles, faces, horn) — ride the boss group and
+    // mirror the body's clips by name. Decorative: loading doesn't gate the
+    // room, a missing part just logs to the status line.
+    interface PartRig {
+      mixer: THREE.AnimationMixer;
+      animations: THREE.AnimationClip[];
+      action: THREE.AnimationAction | null;
+    }
+    const partRigs: PartRig[] = [];
+    for (const part of boss.parts ?? []) {
+      loader.load(
+        bossPartUrl(boss.model_id, part),
+        (g) => {
+          if (disposed) return;
+          bossGroup.add(g.scene);
+          partRigs.push({ mixer: new THREE.AnimationMixer(g.scene), animations: g.animations, action: null });
+        },
+        undefined,
+        () => setStatus(`part failed: ${part}`),
+      );
+    }
+
+    /** Play the same-named clip on every part rig (parts share the body's clip names). */
+    function syncParts(clipName: string, loopMode: THREE.AnimationActionLoopStyles, reps: number) {
+      for (const rig of partRigs) {
+        rig.mixer.stopAllAction();
+        rig.action = null;
+        const clip = rig.animations.find((a) => a.name === clipName);
+        if (!clip) continue; // static part (dragon horn) just rides the group
+        const action = rig.mixer.clipAction(clip);
+        action.reset();
+        action.setLoop(loopMode, reps);
+        action.clampWhenFinished = true;
+        action.play();
+        rig.action = action;
+      }
+    }
+
     function dropToFloor(p: THREE.Vector3): number | null {
       if (!floorMesh) return null;
       raycaster.set(new THREE.Vector3(p.x, p.y + STEP_UP + 100, p.z), DOWN);
@@ -365,6 +404,10 @@ export default function BossRoom() {
     // ——— clip playback ———
     function stopClips() {
       mixer?.stopAllAction();
+      for (const rig of partRigs) {
+        rig.mixer.stopAllAction();
+        rig.action = null;
+      }
       currentAction = null;
       chain = null;
       setActiveClip(null);
@@ -380,6 +423,7 @@ export default function BossRoom() {
       action.clampWhenFinished = true;
       action.play();
       currentAction = action;
+      syncParts(clip.name, loopMode, reps);
       setActiveClip(clip.name);
       setClipDuration(clip.duration);
       return action;
@@ -539,6 +583,7 @@ export default function BossRoom() {
       stopClips,
       setSpeed: (v) => {
         if (mixer) mixer.timeScale = v;
+        for (const rig of partRigs) rig.mixer.timeScale = v;
       },
       setPaused: (p) => {
         animPaused = p;
@@ -547,6 +592,12 @@ export default function BossRoom() {
         if (!currentAction || !mixer) return;
         currentAction.time = t;
         mixer.update(0);
+        for (const rig of partRigs) {
+          if (rig.action) {
+            rig.action.time = t;
+            rig.mixer.update(0);
+          }
+        }
       },
       setFacePlayer: (v) => {
         facePlayerLocal = v;
@@ -711,7 +762,10 @@ export default function BossRoom() {
         if (dx * dx + dz * dz > 1e-6) bossGroup.rotation.y = Math.atan2(dx, dz);
       }
 
-      if (mixer && !animPaused) mixer.update(dt);
+      if (mixer && !animPaused) {
+        mixer.update(dt);
+        for (const rig of partRigs) rig.mixer.update(dt);
+      }
 
       // Follow cam orbiting the player.
       const cx = feet.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist;

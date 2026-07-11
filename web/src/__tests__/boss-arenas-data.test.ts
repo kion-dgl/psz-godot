@@ -170,6 +170,19 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
     }
   });
 
+  it('parts are unique non-empty names', () => {
+    // Existence in the pack is NOT checked here: parts ship with the next
+    // pack publish; until then the room loads them from the R2 mirror.
+    for (const [id, b] of bosses) {
+      const seen = new Set<string>();
+      for (const p of b.parts ?? []) {
+        expect(typeof p === 'string' && p.length > 0, `${id} part name`).toBe(true);
+        expect(seen.has(p), `${id}: duplicate part '${p}'`).toBe(false);
+        seen.add(p);
+      }
+    }
+  });
+
   it('anchors have unique names and [x,y,z] positions', () => {
     for (const [id, b] of bosses) {
       const names = new Set<string>();

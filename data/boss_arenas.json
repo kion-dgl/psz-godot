@@ -35,6 +35,7 @@
         { "id": "land_slam", "clip": "gld2claw", "kind": "aoe_burst", "phases": ["flight"], "hit_half_angle_deg": 180, "hit_reach": 6, "damage_mult": 1.5, "note": "flies away, then deals damage in a circle where it lands" },
         { "id": "sky_fireball", "clip": "brs2", "kind": "lob", "phases": ["flight"], "split": 3, "hit_reach": 2.5, "note": "from the air: a fireball at the ground that splits into 3 parts" }
       ],
+      "parts": ["z_001_horn"],
       "anchors": [],
       "clip_notes": {
         "wat": "grounded idle",
@@ -72,6 +73,7 @@
         { "id": "vomit", "clip": "vomit", "kind": "lob", "phases": ["surfaced"], "min_range": 2, "max_range": 10, "hit_reach": 2.5, "note": "spew AoE lobbed at the player; vmply/vmwat read as the vomit-stance loop/idle; payload (poison?) unverified" },
         { "id": "absorb_eat", "clip": "eat", "chain": ["wt2abs", "absorb", "abs2eat", "eat"], "kind": "grab", "phases": ["surfaced"], "max_range": 8, "hit_reach": 8, "hit_half_angle_deg": 40, "damage_mult": 2.0, "cancel_clip": "eatcnc", "note": "suck-in → grab-eat: damage ticks while held; damaging the boss breaks the grip (eatcnc); draft skips the pull-in" }
       ],
+      "parts": ["z_002_tt", "z_002_st"],
       "anchors": [],
       "clip_notes": {
         "wat": "surfaced idle",
@@ -85,7 +87,7 @@
         "eat": "grab-eat (caught player)",
         "eatcnc": "eat cancelled (damage interrupt)"
       },
-      "note": "no ded clip in the rig — death presentation is likely scripted (sinks?); tentacle clips (tt*/st*) never imported (see storybook/enemyData.ts import notes)"
+      "note": "no ded clip in the rig — death presentation is likely scripted (sinks?); tentacle parts z_002_tt/z_002_st imported (import_objects.py parts) and rendered in sync; o0b_kaeru (a static frog prop in the same parts set) is not attached — placement unknown"
     },
     "humilias": {
       "model_id": "boss_mother",
@@ -102,6 +104,7 @@
         { "id": "headbutt", "clip": "hedb", "chain": ["hedbst", "hedblp", "hedb"], "kind": "charge", "phases": ["active"], "max_range": 10, "note": "press/grind — hedbhitlp is the grinding-on-hit loop, hedb2wt2/hedb2lp the recover transitions" },
         { "id": "combo", "clip": "cmblp", "chain": ["cmbst", "cmblp", "cmbend"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 60, "max_range": 7, "note": "full st/lp/ed combo string (the only complete 3-piece family on the rig)" }
       ],
+      "parts": ["z_004_kao_a", "z_004_kao_b"],
       "anchors": [],
       "clip_notes": {
         "wat1": "idle",
@@ -123,7 +126,8 @@
       "phases": [],
       "attacks": [],
       "anchors": [],
-      "note": "behavior draft blocked on clip import: GLB carries a single clip (z003_atk_dl_lp, a bare lp segment) — the rest of the kit's segmented pieces (ve_*) never imported; see storybook/enemyData.ts import notes",
+      "note": "behavior draft blocked on clip import: GLB carries a single clip (z003_atk_dl_lp, a bare lp segment) — the rest of the kit's segmented pieces (ve_*) never imported; parts z_003n/z_003u (imported) carry only the same single clip, so the gap is upstream in the viewer's animation import",
+      "parts": ["z_003n", "z_003u"],
       "clip_notes": {
         "atk_dl_lp": "the only imported clip — a loop segment of a segmented attack (dl = drill?); unplayable alone per /mechanics/enemy-attacks segment rules"
       }

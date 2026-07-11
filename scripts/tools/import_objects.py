@@ -15,6 +15,13 @@ Two import modes:
       Copy public/enemies/<enemy_id>/effects/{name}/ subdirs (glb + png)
       preserving the per-effect subdir, plus the enemy's effects.json.
 
+  parts <viewer_root> <enemy_id> [--dst assets/enemies/<id>/parts]
+      Copy public/enemies/<enemy_id>/parts/{name}/ subdirs (glb + png)
+      preserving the per-part subdir, plus the enemy's parts.json. Parts are
+      the multi-part boss pieces (octopus tentacles z_002_tt/z_002_st,
+      mother faces z_004_kao_*) — separate skinned meshes carrying the same
+      clip names as the body, played in sync.
+
 Only .glb and .png are copied — Godot regenerates .import/.uid sidecars on
 next editor open. Run `npm run sync-tree` (R2) after importing new files.
 """
@@ -105,6 +112,36 @@ def import_effects(viewer_root: str, enemy_id: str, dst: str) -> int:
     return 1 if conflict else 0
 
 
+def import_parts(viewer_root: str, enemy_id: str, dst: str) -> int:
+    src_parts = os.path.join(viewer_root, "public", "enemies", enemy_id, "parts")
+    if not os.path.isdir(src_parts):
+        print(f"  SKIP {enemy_id}: no parts/ dir")
+        return 0
+    dst = dst or os.path.join(GODOT_ROOT, "assets", "enemies", enemy_id, "parts")
+    new = same = conflict = 0
+    for name in sorted(os.listdir(src_parts)):
+        part_dir = os.path.join(src_parts, name)
+        if not os.path.isdir(part_dir):
+            continue
+        for f in sorted(os.listdir(part_dir)):
+            if not f.lower().endswith(COPY_EXTS):
+                continue
+            r = _copy_file(os.path.join(part_dir, f), os.path.join(dst, name, f))
+            if r == "new":
+                new += 1
+            elif r == "same":
+                same += 1
+            else:
+                conflict += 1
+                print(f"  CONFLICT: {name}/{f} already exists with different bytes", file=sys.stderr)
+    # parts.json indexes the part names for tooling.
+    parts_json = os.path.join(viewer_root, "public", "enemies", enemy_id, "parts.json")
+    if os.path.exists(parts_json):
+        _copy_file(parts_json, os.path.join(os.path.dirname(dst), "parts.json"))
+    print(f"{enemy_id}: {new} new, {same} shared, {conflict} conflict")
+    return 1 if conflict else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="mode", required=True)
@@ -119,11 +156,18 @@ def main() -> int:
     pe.add_argument("enemy_id")
     pe.add_argument("--dst", default="", help="target dir (default assets/enemies/<id>/effects)")
 
+    pp = sub.add_parser("parts", help="import an enemy's multi-part boss pieces")
+    pp.add_argument("viewer_root")
+    pp.add_argument("enemy_id")
+    pp.add_argument("--dst", default="", help="target dir (default assets/enemies/<id>/parts)")
+
     a = ap.parse_args()
     if a.mode == "objects":
         return import_objects(a.viewer_root, a.set_id, a.dst)
     if a.mode == "effects":
         return import_effects(a.viewer_root, a.enemy_id, a.dst)
+    if a.mode == "parts":
+        return import_parts(a.viewer_root, a.enemy_id, a.dst)
     return 2
 
 

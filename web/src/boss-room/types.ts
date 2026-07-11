@@ -187,6 +187,13 @@ export interface BossDef {
   attacks?: BossAttackDef[];
   /** Positions in the boss's DEFAULT arena frame — meaningless in an override arena. */
   anchors?: BossAnchor[];
+  /**
+   * Multi-part boss pieces (assets/enemies/<model_id>/parts/<name>/<name>.glb,
+   * imported via import_objects.py parts). Rendered with the body; a part
+   * carrying the body's clip names plays them in sync (octopus tentacles,
+   * mother faces), a static part just rides the group (dragon horn).
+   */
+  parts?: string[];
   /** Draft sim tuning knobs (partial — defaults below fill the rest). */
   stats?: Partial<BossStats>;
   fsm?: Partial<BossFsmParams>;
@@ -217,6 +224,10 @@ export async function loadRoster(): Promise<Map<string, RosterEntry>> {
   if (!res.ok) throw new Error(`enemies.json: HTTP ${res.status}`);
   const list: RosterEntry[] = await res.json();
   return new Map(list.map((e) => [e.id, e]));
+}
+
+export function bossPartUrl(modelId: string, part: string): string {
+  return assetUrl(`assets/enemies/${modelId}/parts/${part}/${part}.glb`);
 }
 
 export function arenaModelUrl(stageId: string, arena: ArenaDef): string {

@@ -104,8 +104,9 @@ const chart = `stateDiagram-v2
     <li><strong>Submerged (relocate)</strong> — the tired window ends in a submerge, not a re-engage: sinks below the floor (<code>relocate_untargetable</code> — hits don't land), swims (<code>float</code>) to the next surfacing spot, rises rested. Surfacing spots are the <strong>first real use of authored anchors</strong>: with none authored it falls back to resurfacing ~10&nbsp;u from the player — author the pool spots in the room and the sim uses them.</li>
   </ul>
   <ul>
+    <li><strong>Multi-part rig.</strong> The tentacles are separate skinned meshes — <code>parts/z_002_tt</code> and <code>parts/z_002_st</code>, each carrying all 20 of the body's clip names — imported via <code>import_objects.py parts</code> (they live under the viewer's <em>enemy parts</em>, not the object sets) and rendered in the room in sync with the body (<code>BossDef.parts</code>). The same mechanism covers Humilias's faces (<code>z_004_kao_a/b</code>) and Reyburn's static horn.</li>
     <li><strong>Draft simplifications:</strong> the absorb pull-in is skipped (the grab ticks in place); the spout is a ticked wide arc, not a swept jet; submerging is a plain sink below the floor mesh.</li>
-    <li><strong>Open:</strong> the real attack-string length and tired duration; no death clip in the rig (scripted sink?); tentacle clips (<code>tt*/st*</code>) never imported; whether <code>collisn</code> is a wall-stun or an attack; whether surfacing spots are fixed pools (likely — author and verify).</li>
+    <li><strong>Open:</strong> the real attack-string length and tired duration; no death clip in the rig (scripted sink?); whether <code>collisn</code> is a wall-stun or an attack; whether surfacing spots are fixed pools (likely — author and verify); where the <code>o0b_kaeru</code> frog prop from the parts set belongs.</li>
   </ul>
 
   <h3>Humilias (boss_mother — Dark Shrine A, control_system)</h3>
