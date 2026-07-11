@@ -155,6 +155,19 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
     }
   });
 
+  it('sim knobs (stats/fsm) are positive numbers when present', () => {
+    for (const [id, b] of bosses) {
+      for (const [group, obj] of [['stats', b.stats], ['fsm', b.fsm]] as const) {
+        for (const [k, v] of Object.entries(obj ?? {})) {
+          if (typeof v === 'number') {
+            const min = ['flight_interval'].includes(k) ? 0 : Number.MIN_VALUE; // 0 = flight disabled
+            expect(v >= min, `${id} ${group}.${k} = ${v}`).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
   it('anchors have unique names and [x,y,z] positions', () => {
     for (const [id, b] of bosses) {
       const names = new Set<string>();

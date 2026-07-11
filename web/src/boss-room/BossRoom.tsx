@@ -23,6 +23,7 @@ import {
   arenaSkyboxUrl,
   loadBossConfig,
   loadRoster,
+  resolveBoss,
   resolveClipToken,
   segmentFamilies,
   type BossArenaConfig,
@@ -30,6 +31,12 @@ import {
   type RosterEntry,
   type SegmentFamily,
 } from './types';
+import { damageBoss, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+
+const PLAYER_MAX_HP = 100;
+const SWING_RANGE = 4.5;
+const SWING_DAMAGE = 15;
+const SWING_COOLDOWN = 0.5;
 
 const STORAGE_KEY = 'psz-boss-room:v1';
 
@@ -71,6 +78,8 @@ interface SceneApi {
   playChain(family: SegmentFamily, lpLoops: number): void;
   /** Behavior-draft attack playback: clip-token sequence, `lp` tokens loop. */
   playTokens(tokens: string[], lpLoops: number): void;
+  /** Toggle the behavior sim (spec /states/bosses) — drives the boss against the player. */
+  setSimulate(on: boolean): void;
   stopClips(): void;
   setSpeed(v: number): void;
   setPaused(p: boolean): void;
@@ -105,6 +114,8 @@ export default function BossRoom() {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [readout, setReadout] = useState({ player: [0, 0, 0], boss: [0, 0, 0], dist: 0 });
   const [overrides, setOverrides] = useState<Record<string, Overrides>>(loadStore);
+  const [simOn, setSimOn] = useState(false);
+  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName } | null>(null);
 
   useEffect(() => {
     clickModeRef.current = clickMode;
@@ -198,6 +209,17 @@ export default function BossRoom() {
     let animPaused = false;
     let facePlayerLocal = true;
     const bossPos = new THREE.Vector3();
+
+    // Behavior sim (spec /states/bosses) — owns the boss transform while on.
+    const entry = resolveBoss(boss);
+    let sim: BossSim | null = null;
+    let playerHp = PLAYER_MAX_HP;
+    let swingCd = 0;
+    const clipDur = (token: string): number | null => {
+      const name = resolveClipToken(animations.map((a) => a.name), token);
+      const clip = name ? animations.find((a) => a.name === name) : undefined;
+      return clip ? clip.duration : null;
+    };
 
     const markerGroup = new THREE.Group();
     scene.add(markerGroup);
@@ -413,10 +435,48 @@ export default function BossRoom() {
       startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
     }
 
+    // Sim events → the existing playback machinery + player HP.
+    function handleSimEvents(events: BossEvent[]) {
+      for (const ev of events) {
+        if (ev.type === 'anim') {
+          if (ev.loop && ev.tokens.length === 1) {
+            const name = resolveClipToken(animations.map((a) => a.name), ev.tokens[0]);
+            if (name) playClip(name, true);
+          } else {
+            playTokens(ev.tokens, 2);
+          }
+        } else if (ev.type === 'player-hit') {
+          playerHp = Math.max(0, playerHp - ev.damage);
+          if (playerHp <= 0) {
+            feet.copy(spawn); // downed → respawn with full HP, sim keeps running
+            velY = 0;
+            playerHp = PLAYER_MAX_HP;
+          }
+        }
+      }
+    }
+
+    function setSimulate(on: boolean) {
+      if (on && entry.attacks.length > 0) {
+        sim = makeBossSim(entry, { x: bossPos.x, z: bossPos.z }, bossGroup.rotation.y);
+        playerHp = PLAYER_MAX_HP;
+        swingCd = 0;
+      } else {
+        sim = null;
+        mixer?.stopAllAction();
+        currentAction = null;
+        chain = null;
+        setActiveClip(null);
+        setSimHud(null);
+        settleBoss();
+      }
+    }
+
     apiRef.current = {
       playClip,
       playChain,
       playTokens,
+      setSimulate,
       stopClips,
       setSpeed: (v) => {
         if (mixer) mixer.timeScale = v;
@@ -451,7 +511,7 @@ export default function BossRoom() {
     const onKey = (e: KeyboardEvent, d: boolean) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       const k = e.key.toLowerCase();
-      if (['w', 'a', 's', 'd', ' '].includes(k)) {
+      if (['w', 'a', 's', 'd', 'j', ' '].includes(k)) {
         keys[k] = d;
         if (k === ' ') e.preventDefault();
       }
@@ -571,7 +631,21 @@ export default function BossRoom() {
       }
       capsule.position.set(feet.x, feet.y + HEIGHT / 2, feet.z);
 
-      if (facePlayerLocal) {
+      // Behavior sim: step the FSM, apply its transform, take the J-swing.
+      if (sim) {
+        swingCd -= dt;
+        if (keys['j'] && swingCd <= 0) {
+          swingCd = SWING_COOLDOWN;
+          if (Math.hypot(feet.x - sim.pos.x, feet.z - sim.pos.z) <= SWING_RANGE) {
+            handleSimEvents(damageBoss(sim, entry, SWING_DAMAGE));
+          }
+        }
+        handleSimEvents(stepBoss(sim, entry, { dt, player: { x: feet.x, z: feet.z }, clipDur, rng: Math.random }));
+        const gy2 = dropToFloor(new THREE.Vector3(sim.pos.x, bossPos.y + 2, sim.pos.z));
+        bossPos.set(sim.pos.x, (gy2 ?? bossPos.y) + sim.alt, sim.pos.z);
+        bossGroup.position.copy(bossPos);
+        bossGroup.rotation.y = sim.yaw;
+      } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
         if (dx * dx + dz * dz > 1e-6) bossGroup.rotation.y = Math.atan2(dx, dz);
@@ -596,6 +670,7 @@ export default function BossRoom() {
           boss: [+bossPos.x.toFixed(1), +bossPos.y.toFixed(1), +bossPos.z.toFixed(1)],
           dist: +d.toFixed(1),
         });
+        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state });
       }
 
       renderer.render(scene, camera);
@@ -630,6 +705,8 @@ export default function BossRoom() {
       setClips([]);
       setActiveClip(null);
       setMarkers([]);
+      setSimOn(false);
+      setSimHud(null);
       setStatus('loading…');
     };
     // modelScale applies live via apiRef — not a scene-rebuild dependency.
@@ -763,6 +840,33 @@ export default function BossRoom() {
         {boss && ((boss.phases?.length ?? 0) > 0 || (boss.attacks?.length ?? 0) > 0) && (
           <>
             <span style={label}>Behavior draft (schema v2 — verify by observation)</span>
+            {(boss.attacks?.length ?? 0) > 0 && (
+              <label style={{ ...label, cursor: 'pointer', color: simOn ? '#7c9' : undefined }}>
+                <input
+                  type="checkbox"
+                  checked={simOn}
+                  onChange={(e) => {
+                    setSimOn(e.target.checked);
+                    apiRef.current?.setSimulate(e.target.checked);
+                  }}
+                />{' '}
+                simulate behavior (draft) — J swings ({SWING_DAMAGE} dmg)
+              </label>
+            )}
+            {simOn && simHud && (
+              <div style={{ fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: '#f88' }}>
+                  boss {Math.ceil(simHud.bossHp)}/{simHud.maxHp} · <code>{simHud.state}</code>
+                </div>
+                <div style={{ background: '#311', borderRadius: 3, height: 6, marginTop: 2 }}>
+                  <div style={{ background: '#e55', borderRadius: 3, height: 6, width: `${(simHud.bossHp / simHud.maxHp) * 100}%` }} />
+                </div>
+                <div style={{ color: '#8c8', marginTop: 4 }}>player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}</div>
+                <div style={{ background: '#131', borderRadius: 3, height: 6, marginTop: 2 }}>
+                  <div style={{ background: '#5e5', borderRadius: 3, height: 6, width: `${(simHud.playerHp / PLAYER_MAX_HP) * 100}%` }} />
+                </div>
+              </div>
+            )}
             {boss.phases?.map((p) => (
               <div key={p.id} title={p.note} style={{ color: '#9ab', fontSize: 11, marginTop: 2 }}>
                 <code style={{ color: '#cdf' }}>{p.id}</code> — {p.label}

@@ -43,6 +43,7 @@ const chart = `stateDiagram-v2
     <tr><td><code>attacks[].chain</code></td><td>Explicit clip-token sequence — the generalization of the enemy model's <code>windup_clips</code>. Tokens resolve per the enemy clip-resolution order (exact, then <code>*_&lt;token&gt;</code> suffix); tokens ending in <code>lp</code> loop. Every clip before the last is <strong>pure telegraph</strong>; the timeline fractions (<code>windup_frac</code> / <code>damage_end_frac</code>) apply to the <strong>final</strong> clip of the chain.</td></tr>
     <tr><td><code>anchors[]</code></td><td>Named positions in the boss's <strong>default arena frame</strong> (meaningless elsewhere), authored with the room's click tool and round-tripped via its config export. Relocation targets and anchor-bound attacks (<code>attacks[].anchor</code>) reference them by name.</td></tr>
     <tr><td><code>clip_notes</code></td><td>Documentational clip semantics (MAY), same as the enemy schema — the draft's observation notebook. Unverified readings say so.</td></tr>
+    <tr><td><code>stats</code> / <code>fsm</code></td><td>Draft sim tuning (hp, move/turn speed, attack cooldown, flight cadence, punish break/multiplier) driving the room's <em>behavior sim</em> — <code>web/src/boss-room/sim.ts</code>, the runnable form of these tables (attack selection and the melee arc are imported from the enemy room's normative <code>fsm.ts</code>). Sim numbers are tuning draft, not observed truth; they harden through the same workflow below.</td></tr>
   </table>
 
   <h3>Attack kinds</h3>
@@ -69,6 +70,7 @@ const chart = `stateDiagram-v2
   <h3>Reyburn (boss_dragon — Gurhacia Valley, claiming_a_stake)</h3>
   <ul>
     <li><strong>Ground ⇄ flight cycle.</strong> Grounded: walks, bites (<code>atkh1/atkh2</code>), wide sweeps (<code>atkrl/atkrr</code>), wing buffet (<code>atkwg</code>), and the segmented fire breath (<code>brsst→brslp→brs2</code>, <code>beam_sweep</code>). Airborne: takeoff (<code>flst</code>) into anchor-path fly passes.</li>
+    <li><strong>Sim'd first.</strong> Reyburn is the first boss the room's behavior sim runs end-to-end: intro roar → grounded chase/attack from the table's bands → timer-driven flight cycle (climb, contact passes over the player, land) → damage-break punish (<code>dmg1</code>, ×2 damage) → death. The J-swing drives boss HP so the break and death paths are observable. Draft simplifications, to revisit: the flight trigger is a flat timer, passes aim <em>through the player</em> rather than along authored anchors (anchors take over once authored), and the breath sweep is approximated as a wide static arc.</li>
     <li><strong>Open:</strong> flight-entry cadence (HP step vs timer); whether <code>rdst/rdg</code> are the dive; <code>brs1</code> as a short-burst breath variant; the left/right reading of <code>rl/rr</code>.</li>
   </ul>
 

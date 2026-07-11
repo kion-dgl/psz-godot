@@ -17,6 +17,8 @@
       "arena": "s01z_na1",
       "quest_source": "claiming_a_stake",
       "model_scale": 1.0,
+      "stats": { "hp": 300, "move_speed": 4.0, "attack_cooldown": 2.5, "attack_base": 12, "turn_speed_deg": 120 },
+      "fsm": { "flight_interval": 22, "flight_passes": 2, "hover_height": 8, "fly_speed_mult": 2.5, "punish_break_damage": 60, "punish_vulnerable_mult": 2.0, "punish_clip": "dmg1" },
       "phases": [
         { "id": "ground", "label": "Grounded", "note": "walks the arena (wlk1/wlk2), full melee + breath kit; opens with the tht roar" },
         { "id": "flight", "label": "Airborne", "note": "takes off (flst) and strafes the arena on fly passes; entry cadence (HP step vs timer) is an open question" }

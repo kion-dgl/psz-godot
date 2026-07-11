@@ -62,6 +62,78 @@ export interface BossAnchor {
   note?: string;
 }
 
+/** Draft sim tuning (v2) — drives the room's behavior sim, not observed truth. */
+export interface BossStats {
+  hp: number;
+  move_speed: number;
+  attack_cooldown: number;
+  attack_base: number;
+  turn_speed_deg: number;
+}
+
+export interface BossFsmParams {
+  /** Seconds of grounded ACTIVE time before a flight cycle (0 = never; needs a fly_pass attack). */
+  flight_interval: number;
+  flight_passes: number;
+  hover_height: number;
+  fly_speed_mult: number;
+  /** Damage accumulated in ground phases that triggers the knockdown punish window. */
+  punish_break_damage: number;
+  /** Damage multiplier while the punish reaction plays (enemy model's recovery_vulnerable_mult). */
+  punish_vulnerable_mult: number;
+  /** Clip token for the punish reaction (reyburn: dmg1). */
+  punish_clip: string;
+}
+
+export const DEFAULT_BOSS_STATS: BossStats = {
+  hp: 300,
+  move_speed: 4.0,
+  attack_cooldown: 2.5,
+  attack_base: 12,
+  turn_speed_deg: 120,
+};
+
+export const DEFAULT_BOSS_FSM: BossFsmParams = {
+  flight_interval: 0,
+  flight_passes: 2,
+  hover_height: 8,
+  fly_speed_mult: 2.5,
+  punish_break_damage: 60,
+  punish_vulnerable_mult: 2.0,
+  punish_clip: 'dmg1',
+};
+
+/** Mirrors the enemy DEFAULT_ATTACK (spec: unset boss fields take the enemy defaults). */
+export const DEFAULT_BOSS_ATTACK = {
+  windup_frac: 0.35,
+  damage_end_frac: 0.6,
+  hit_half_angle_deg: 45.0,
+  hit_reach: 2.0,
+  damage_mult: 1.0,
+  weight: 1.0,
+  min_range: 0.0,
+  max_range: 999.0,
+};
+
+/** BossAttackDef with every numeric field applied — what the sim runs. */
+export type ResolvedBossAttack = BossAttackDef & typeof DEFAULT_BOSS_ATTACK;
+
+export interface ResolvedBoss {
+  stats: BossStats;
+  fsm: BossFsmParams;
+  phases: BossPhase[];
+  attacks: ResolvedBossAttack[];
+}
+
+export function resolveBoss(def: BossDef): ResolvedBoss {
+  return {
+    stats: { ...DEFAULT_BOSS_STATS, ...(def.stats ?? {}) },
+    fsm: { ...DEFAULT_BOSS_FSM, ...(def.fsm ?? {}) },
+    phases: def.phases ?? [],
+    attacks: (def.attacks ?? []).map((a) => ({ ...DEFAULT_BOSS_ATTACK, ...a })),
+  };
+}
+
 export interface BossDef {
   model_id: string; // assets/enemies/<model_id>/<model_id>.glb
   arena: string; // default arena stage_id — the tool can load any
@@ -72,6 +144,9 @@ export interface BossDef {
   attacks?: BossAttackDef[];
   /** Positions in the boss's DEFAULT arena frame — meaningless in an override arena. */
   anchors?: BossAnchor[];
+  /** Draft sim tuning knobs (partial — defaults below fill the rest). */
+  stats?: Partial<BossStats>;
+  fsm?: Partial<BossFsmParams>;
   clip_notes: Record<string, string>;
 }
 
