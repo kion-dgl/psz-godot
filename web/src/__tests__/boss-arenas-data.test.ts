@@ -160,7 +160,9 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
       for (const [group, obj] of [['stats', b.stats], ['fsm', b.fsm]] as const) {
         for (const [k, v] of Object.entries(obj ?? {})) {
           if (typeof v === 'number') {
-            const min = ['flight_interval'].includes(k) ? 0 : Number.MIN_VALUE; // 0 = flight disabled
+            // 0 = feature disabled for these
+            const zeroOk = ['flight_interval', 'fatigue_attacks', 'punish_duration', 'punish_break_damage'];
+            const min = zeroOk.includes(k) ? 0 : Number.MIN_VALUE;
             expect(v >= min, `${id} ${group}.${k} = ${v}`).toBe(true);
           }
         }

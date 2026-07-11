@@ -43,6 +43,12 @@ export const LOB_SPLIT_RADIUS = 3.0;
 export const FLY_AWAY_DIST = 15.0;
 export const CLIMB_TIME = 1.0;
 export const LAND_TIME = 0.8;
+export const SINK_TIME = 1.0;
+/** kind: grab — damage tick cadence and per-tick fraction of the attack's damage. */
+export const GRAB_TICK_INTERVAL = 0.6;
+export const GRAB_TICK_FRAC = 0.4;
+/** Submerge relocation fallback (no authored anchors): resurface this far from the player. */
+export const RELOCATE_FALLBACK_RADIUS = 10.0;
 /** Fallback duration when a clip token doesn't resolve (enemy model's attack_fallback_duration). */
 export const FALLBACK_CLIP_DURATION = 0.8;
 
@@ -92,7 +98,7 @@ export interface SimLob {
 }
 
 interface FlightState {
-  mode: 'climb' | 'away' | 'return' | 'land';
+  mode: 'climb' | 'away' | 'return' | 'land' | 'sink' | 'swim' | 'rise';
   target: Vec2;
   attacksLeft: number;
 }
@@ -109,6 +115,9 @@ export interface BossSim {
   cooldown: number;
   sinceFlight: number;
   punishAccum: number;
+  /** Attacks since last rest (surfacing / fatigue punish) — drives the fatigue trigger. */
+  attacksSinceRest: number;
+  punishCause: 'break' | 'fatigue' | null;
   enraged: boolean;
   /** Loaf (post-attack disengage): time left, walk direction, curve drift. */
   loafT: number;
@@ -135,6 +144,8 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number): BossSi
     cooldown: 1.0, // grace before the first attack
     sinceFlight: 0,
     punishAccum: 0,
+    attacksSinceRest: 0,
+    punishCause: null,
     enraged: false,
     loafT: 0,
     loafDir: { x: 0, z: 1 },
@@ -286,11 +297,34 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
 
   const inWindow = cur.t >= cur.windowStart && cur.t <= cur.windowEnd;
   if (inWindow && cur.atk.kind !== 'projectile') {
-    if (cur.atk.kind === 'beam_sweep') {
+    if (cur.atk.kind === 'lob') {
+      // Ground-fired lob (octo diablo's vomit): released once at window open,
+      // aimed at the player's position at release.
+      if (!cur.didHit) {
+        cur.didHit = true;
+        sim.lobs.push({
+          target: { ...input.player },
+          t: LOB_FLIGHT_TIME,
+          split: cur.atk.split ?? 1,
+          reach: cur.atk.hit_reach,
+          damage,
+          via: cur.atk.id,
+        });
+      }
+    } else if (cur.atk.kind === 'beam_sweep' || cur.atk.kind === 'spout') {
+      // Sustained jet: ticked wide arc (spout is the position-locked variant).
       cur.beamTick -= input.dt;
       if (cur.beamTick <= 0 && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach + cur.atk.max_range * 0.5)) {
         events.push(hitEvent(cur.atk, damage, cur.facing));
         cur.beamTick = BEAM_TICK_INTERVAL;
+      }
+    } else if (cur.atk.kind === 'grab') {
+      // Hold: damage ticks while the player stays in reach; damaging the
+      // boss during the hold cancels it (see damageBoss).
+      cur.beamTick -= input.dt;
+      if (cur.beamTick <= 0 && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach)) {
+        events.push(hitEvent(cur.atk, damage * GRAB_TICK_FRAC, cur.facing));
+        cur.beamTick = GRAB_TICK_INTERVAL;
       }
     } else if (!cur.didHit && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach)) {
       events.push(hitEvent(cur.atk, damage, cur.facing));
@@ -300,8 +334,35 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   if (cur.t >= cur.total) {
     sim.current = null;
     sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
-    beginLoaf(sim, entry, input, events);
+    endAttack(sim, entry, input, events);
   }
+}
+
+/** Attack resolved: count it toward fatigue, then rest (tired) or disengage. */
+function endAttack(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
+  sim.attacksSinceRest += 1;
+  if (entry.fsm.fatigue_attacks > 0 && sim.attacksSinceRest >= entry.fsm.fatigue_attacks) {
+    beginPunish(sim, entry, 'fatigue', events);
+    return;
+  }
+  beginLoaf(sim, entry, input, events);
+}
+
+/**
+ * Punish entry — both shapes from the spec: 'break' (damage threshold, clip
+ * plays once: reyburn's dmg1) and 'fatigue' (post-string rest, clip LOOPS for
+ * punish_duration: octo diablo's wattir tired idle).
+ */
+function beginPunish(sim: BossSim, entry: ResolvedBoss, cause: 'break' | 'fatigue', events: BossEvent[]) {
+  sim.current = null;
+  sim.punishCause = cause;
+  if (cause === 'fatigue' && entry.fsm.punish_duration > 0) {
+    sim.loopToken = null;
+    ensureLoop(sim, entry.fsm.punish_clip, events);
+  } else {
+    playOnce(sim, [entry.fsm.punish_clip], events);
+  }
+  setState(sim, 'punish', events);
 }
 
 /**
@@ -328,6 +389,11 @@ function stepLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events
   sim.loafT -= input.dt;
   if (sim.loafT <= 0) {
     setState(sim, 'active', events);
+    return;
+  }
+  // A rooted boss can't walk off — its breathing room is a rest beat in place.
+  if (entry.fsm.stationary) {
+    ensureLoop(sim, 'wat', events);
     return;
   }
   // Curving drift, walking where it faces.
@@ -376,7 +442,7 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
     }
   }
 
-  if (dist > MELEE_STOP_RANGE) {
+  if (!entry.fsm.stationary && dist > MELEE_STOP_RANGE) {
     const speed = entry.stats.move_speed * mods(sim, entry).speed;
     sim.pos.x += facing.x * speed * input.dt;
     sim.pos.z += facing.z * speed * input.dt;
@@ -386,6 +452,28 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
   }
 }
 
+/**
+ * Submerge relocation (octo diablo): sink below the floor, swim to the next
+ * surfacing spot — an authored anchor when they exist, else a fallback point
+ * around the player — and rise. Untargetable throughout when
+ * relocate_untargetable is set.
+ */
+function beginSubmerge(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
+  const spots = entry.anchors.filter((a) => distXZ({ x: a.pos[0], z: a.pos[2] }, sim.pos) > 2);
+  let target: Vec2;
+  if (spots.length > 0) {
+    const pick = spots[Math.min(spots.length - 1, Math.floor(input.rng() * spots.length))];
+    target = { x: pick.pos[0], z: pick.pos[2] };
+  } else {
+    const a = input.rng() * 2 * Math.PI;
+    target = { x: input.player.x + Math.cos(a) * RELOCATE_FALLBACK_RADIUS, z: input.player.z + Math.sin(a) * RELOCATE_FALLBACK_RADIUS };
+  }
+  sim.fly = { mode: 'sink', target, attacksLeft: 0 };
+  sim.loopToken = null;
+  ensureLoop(sim, 'float', events);
+  setState(sim, 'relocate', events);
+}
+
 function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   const fly = sim.fly;
   if (!fly) {
@@ -393,6 +481,32 @@ function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, ev
     return;
   }
   const flySpeed = entry.stats.move_speed * entry.fsm.fly_speed_mult * mods(sim, entry).speed;
+  // — submerge-swim modes (octo diablo) —
+  if (fly.mode === 'sink') {
+    sim.alt = Math.max(-entry.fsm.submerge_depth, sim.alt - (entry.fsm.submerge_depth / SINK_TIME) * input.dt);
+    if (sim.alt <= -entry.fsm.submerge_depth) fly.mode = 'swim';
+    return;
+  }
+  if (fly.mode === 'swim') {
+    const facing = turnToward(sim, fly.target, entry.stats.turn_speed_deg * 3, input.dt);
+    sim.pos.x += facing.x * flySpeed * input.dt;
+    sim.pos.z += facing.z * flySpeed * input.dt;
+    if (distXZ(sim.pos, fly.target) < 1.5) fly.mode = 'rise';
+    return;
+  }
+  if (fly.mode === 'rise') {
+    sim.alt = Math.min(0, sim.alt + (entry.fsm.submerge_depth / SINK_TIME) * input.dt);
+    if (sim.alt >= 0) {
+      sim.fly = null;
+      sim.attacksSinceRest = 0;
+      sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
+      sim.loopToken = null;
+      ensureLoop(sim, 'wat', events);
+      setState(sim, 'active', events);
+    }
+    return;
+  }
+  // — flight modes (reyburn) —
   if (fly.mode === 'climb') {
     sim.alt = Math.min(entry.fsm.hover_height, sim.alt + (entry.fsm.hover_height / CLIMB_TIME) * input.dt);
     if (sim.alt >= entry.fsm.hover_height) {
@@ -494,11 +608,15 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
   sim.stateT += input.dt;
   switch (sim.state) {
     case 'intro': {
+      if (entry.fsm.intro_clip === '') {
+        setState(sim, 'active', events);
+        break;
+      }
       if (!sim.introDone) {
         sim.introDone = true;
-        playOnce(sim, ['tht'], events);
+        playOnce(sim, [entry.fsm.intro_clip], events);
       }
-      if (sim.stateT >= dur(input, 'tht')) setState(sim, 'active', events);
+      if (sim.stateT >= dur(input, entry.fsm.intro_clip)) setState(sim, 'active', events);
       break;
     }
     case 'active':
@@ -514,10 +632,21 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
       stepRelocate(sim, entry, input, events);
       break;
     case 'punish': {
-      if (sim.stateT >= dur(input, entry.fsm.punish_clip)) {
+      const punishLen = sim.punishCause === 'fatigue' && entry.fsm.punish_duration > 0
+        ? entry.fsm.punish_duration
+        : dur(input, entry.fsm.punish_clip);
+      if (sim.stateT >= punishLen) {
+        const cause = sim.punishCause;
+        sim.punishCause = null;
         sim.punishAccum = 0;
+        sim.attacksSinceRest = 0;
         sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
-        setState(sim, 'active', events);
+        // The octopus's tired window ends in a submerge-relocate, not a re-engage.
+        if (cause === 'fatigue' && entry.fsm.relocate_kind === 'submerge') {
+          beginSubmerge(sim, entry, input, events);
+        } else {
+          setState(sim, 'active', events);
+        }
       }
       break;
     }
@@ -538,6 +667,8 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
 export function damageBoss(sim: BossSim, entry: ResolvedBoss, amount: number): BossEvent[] {
   const events: BossEvent[] = [];
   if (sim.state === 'dead') return events;
+  // Submerged and untargetable: the hit simply doesn't land.
+  if (sim.state === 'relocate' && entry.fsm.relocate_untargetable) return events;
   const mult = sim.state === 'punish' ? entry.fsm.punish_vulnerable_mult : 1;
   sim.hp = Math.max(0, sim.hp - amount * mult);
   if (sim.hp <= 0) {
@@ -549,19 +680,28 @@ export function damageBoss(sim: BossSim, entry: ResolvedBoss, amount: number): B
     events.push({ type: 'died' });
     return events;
   }
+  // Grab hold: damaging the boss breaks the grip (octo diablo's *cnc clips).
+  const cur = sim.current;
+  if (sim.state === 'attacking' && cur?.atk.kind === 'grab' && cur.t >= cur.windowStart) {
+    sim.current = null;
+    sim.attacksSinceRest += 1;
+    sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
+    if (cur.atk.cancel_clip) playOnce(sim, [cur.atk.cancel_clip], events);
+    setState(sim, 'active', events);
+  }
   const phase = enragePhase(entry);
   if (!sim.enraged && phase?.hp_frac !== undefined && sim.hp / sim.maxHp <= phase.hp_frac) {
     sim.enraged = true;
     events.push({ type: 'enrage' });
     // The growl replaces the current grounded animation; airborne it only tints.
-    if (sim.state === 'active' || sim.state === 'loaf') playOnce(sim, ['tht'], events);
+    if ((sim.state === 'active' || sim.state === 'loaf') && entry.fsm.intro_clip !== '') {
+      playOnce(sim, [entry.fsm.intro_clip], events);
+    }
   }
   if ((sim.state === 'active' || sim.state === 'attacking' || sim.state === 'loaf') && entry.fsm.punish_break_damage > 0) {
     sim.punishAccum += amount;
     if (sim.punishAccum >= entry.fsm.punish_break_damage) {
-      sim.current = null;
-      playOnce(sim, [entry.fsm.punish_clip], events);
-      setState(sim, 'punish', events);
+      beginPunish(sim, entry, 'break', events);
     }
   }
   return events;

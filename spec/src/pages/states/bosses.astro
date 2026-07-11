@@ -73,8 +73,8 @@ const chart = `stateDiagram-v2
   <h3>Punish windows</h3>
   <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>
   <ul>
-    <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>).</li>
-    <li><strong>Knockdown</strong> — a break threshold topples the boss into a fallen loop until a stand-up clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions <em>might</em> be this, but the observed pattern list has no knockdown — unconfirmed). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
+    <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>): triggered by <code>fsm.fatigue_attacks</code> attacks since the last rest, the punish clip <em>loops</em> for <code>fsm.punish_duration</code>, and for a submerge-relocating boss the window ends in the relocation.</li>
+    <li><strong>Knockdown</strong> — a break threshold (<code>fsm.punish_break_damage</code>) topples the boss into a one-shot reaction clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions <em>might</em> be this, but the observed pattern list has no knockdown — unconfirmed). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
   </ul>
 
   <h2>Per-boss drafts</h2>
@@ -97,9 +97,15 @@ const chart = `stateDiagram-v2
   </ul>
 
   <h3>Octo Diablo (boss_octopus — Ozette Wetlands, poisoned_water)</h3>
+  <p>A different fight <em>shape</em> from Reyburn: a <strong>rooted surfacing emplacement</strong> (<code>fsm.stationary</code>) that relocates by submerging. The cycle:</p>
   <ul>
-    <li><strong>Submerge/surface loop.</strong> Untargetable while submerged, relocating between surfacing anchors (to be authored — the pool spots); surfaced it runs spout (water jet), vomit (lob AoE), and the cancellable absorb→eat grab; a post-string <em>tired</em> idle is the punish window.</li>
-    <li><strong>Open:</strong> no death clip in the rig (scripted sink?); tentacle clips (<code>tt*/st*</code>) never imported; whether <code>collisn</code> is a wall-stun or an attack.</li>
+    <li><strong>Surfaced</strong> — rooted at a spot, faces the player, attacks from the bands: <strong>spout</strong> (sustained water jet, the position-locked <code>beam</code> variant), <strong>vomit</strong> (a ground-fired <code>lob</code> at the player), and <strong>absorb→eat</strong> — a <code>grab</code>: damage ticks while the player is held, and damaging the boss <em>breaks the grip</em> (<code>cancel_clip: eatcnc</code> — the rig carries explicit cancel clips, so the mechanic is native). Its breathing room is a rest beat in place (a rooted boss can't loaf-walk).</li>
+    <li><strong>Tired (punish)</strong> — after a 3-attack string (<code>fsm.fatigue_attacks</code>) the <code>wattir</code> idle <em>loops</em> for <code>fsm.punish_duration</code> (4&nbsp;s, ×2 damage) — the fatigue shape of the punish contract.</li>
+    <li><strong>Submerged (relocate)</strong> — the tired window ends in a submerge, not a re-engage: sinks below the floor (<code>relocate_untargetable</code> — hits don't land), swims (<code>float</code>) to the next surfacing spot, rises rested. Surfacing spots are the <strong>first real use of authored anchors</strong>: with none authored it falls back to resurfacing ~10&nbsp;u from the player — author the pool spots in the room and the sim uses them.</li>
+  </ul>
+  <ul>
+    <li><strong>Draft simplifications:</strong> the absorb pull-in is skipped (the grab ticks in place); the spout is a ticked wide arc, not a swept jet; submerging is a plain sink below the floor mesh.</li>
+    <li><strong>Open:</strong> the real attack-string length and tired duration; no death clip in the rig (scripted sink?); tentacle clips (<code>tt*/st*</code>) never imported; whether <code>collisn</code> is a wall-stun or an attack; whether surfacing spots are fixed pools (likely — author and verify).</li>
   </ul>
 
   <h3>Humilias (boss_mother — Dark Shrine A, control_system)</h3>

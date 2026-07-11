@@ -51,12 +51,19 @@ const skyFireball = atk({ id: 'sky_fireball', clip: 'brs2', kind: 'lob', phases:
 const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
   stats: { hp: 100, move_speed: 4, attack_cooldown: 2, attack_base: 10, turn_speed_deg: 720 },
   fsm: {
+    intro_clip: 'tht',
+    stationary: false,
+    relocate_kind: 'flight',
+    relocate_untargetable: false,
+    submerge_depth: 3,
     flight_interval: 0,
     flight_attacks: 1,
     hover_height: 8,
     fly_speed_mult: 2.5,
     loaf_duration_min: 2.5,
     loaf_duration_max: 4.0,
+    fatigue_attacks: 0,
+    punish_duration: 0,
     punish_break_damage: 30,
     punish_vulnerable_mult: 2,
     punish_clip: 'dmg1',
@@ -67,6 +74,37 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     { id: 'enrage', label: 'Enraged', hp_frac: 0.35, speed_mult: 1.3, cooldown_mult: 0.6 },
   ],
   attacks: [bite],
+  anchors: [],
+  ...over,
+});
+
+// — Octo Diablo shape: rooted surfacing emplacement with a submerge cycle —
+const spout = atk({ id: 'spout', clip: 'spout', chain: ['wt2spwt', 'spout'], kind: 'spout', phases: ['surfaced'], min_range: 3, max_range: 15, windup_frac: 0.3, damage_end_frac: 0.9 });
+const grab = atk({ id: 'absorb_eat', clip: 'eat', kind: 'grab', phases: ['surfaced'], max_range: 8, hit_reach: 8, hit_half_angle_deg: 40, damage_mult: 2, cancel_clip: 'eatcnc', windup_frac: 0.1, damage_end_frac: 1 });
+
+const makeOcto = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => makeEntry({
+  stats: { hp: 200, move_speed: 5, attack_cooldown: 1, attack_base: 10, turn_speed_deg: 90 },
+  fsm: {
+    ...makeEntry().fsm,
+    intro_clip: '',
+    stationary: true,
+    relocate_kind: 'submerge',
+    relocate_untargetable: true,
+    submerge_depth: 3,
+    fly_speed_mult: 2,
+    loaf_duration_min: 1,
+    loaf_duration_max: 1,
+    fatigue_attacks: 3,
+    punish_duration: 4,
+    punish_break_damage: 0,
+    punish_clip: 'wattir',
+  },
+  phases: [
+    { id: 'surfaced', label: 'Surfaced' },
+    { id: 'tired', label: 'Tired' },
+    { id: 'submerged', label: 'Submerged' },
+  ],
+  attacks: [spout],
   ...over,
 });
 
@@ -230,6 +268,82 @@ describe('boss sim — flight cycle', () => {
     for (const p of impacts.slice(1)) {
       expect(Math.hypot(p.x - 5, p.z - 5)).toBeCloseTo(3, 3);
     }
+  });
+});
+
+describe('boss sim — octo diablo cycle', () => {
+  it('skips the intro (no clip) and never walks — a rooted emplacement', () => {
+    const entry = makeOcto();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    stepBoss(sim, entry, input({ x: 0, z: 30 }));
+    expect(sim.state).toBe('active'); // intro_clip '' → straight in
+    run(sim, entry, { x: 0, z: 30 }, 50); // out of every band → would walk if it could
+    expect(sim.pos).toEqual({ x: 0, z: 0 });
+  });
+
+  it('three attacks → tired loop (×2 damage) → submerge → resurface rested', () => {
+    const entry = makeOcto();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 10 }; // inside the spout band
+    // ride through 3 attack/loaf rounds into the fatigue punish
+    const evs = run(sim, entry, player, 800, () => sim.state === 'punish');
+    expect(sim.state).toBe('punish');
+    expect(sim.attacksSinceRest).toBe(3);
+    expect(evs).toContainEqual({ type: 'anim', tokens: ['wattir'], loop: true }); // tired LOOPS
+    const before = sim.hp;
+    damageBoss(sim, entry, 10);
+    expect(before - sim.hp).toBe(20); // vulnerable ×2
+    // tired window ends in a submerge, untargetable, then resurfaces rested
+    run(sim, entry, player, 50, () => sim.state === 'relocate');
+    expect(sim.state).toBe('relocate');
+    run(sim, entry, player, 30, () => sim.alt <= -entry.fsm.submerge_depth);
+    expect(sim.alt).toBe(-3);
+    const hpBefore = sim.hp;
+    expect(damageBoss(sim, entry, 50)).toHaveLength(0); // submerged: hit doesn't land
+    expect(sim.hp).toBe(hpBefore);
+    run(sim, entry, player, 600, () => sim.state === 'active');
+    expect(sim.state).toBe('active');
+    expect(sim.alt).toBe(0);
+    expect(sim.attacksSinceRest).toBe(0);
+    // fallback spot: ~10u from the player (no anchors authored)
+    expect(Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z)).toBeGreaterThan(6);
+  });
+
+  it('with authored anchors it resurfaces at one of them', () => {
+    const entry = makeOcto({
+      anchors: [
+        { name: 'pool_a', pos: [20, 0, 0] },
+        { name: 'pool_b', pos: [-20, 0, 0] },
+      ],
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 10 };
+    run(sim, entry, player, 800, () => sim.state === 'relocate');
+    run(sim, entry, player, 900, () => sim.state === 'active');
+    const dA = Math.hypot(sim.pos.x - 20, sim.pos.z);
+    const dB = Math.hypot(sim.pos.x + 20, sim.pos.z);
+    expect(Math.min(dA, dB)).toBeLessThan(2); // surfaced at an authored spot
+  });
+
+  it('the grab ticks while held and breaks when the boss is damaged', () => {
+    const entry = makeOcto({ attacks: [grab] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 5 }; // inside the grab band and cone
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    expect(sim.state).toBe('attacking');
+    // hold ticks: damage × GRAB_TICK_FRAC per tick, multiple ticks
+    const ticks: BossEvent[] = [];
+    for (let i = 0; i < 12; i++) {
+      ticks.push(...stepBoss(sim, entry, input(player)).filter((e) => e.type === 'player-hit'));
+      if (ticks.length >= 2) break;
+    }
+    expect(ticks.length).toBeGreaterThanOrEqual(2);
+    expect(ticks[0]).toMatchObject({ damage: 8, via: 'absorb_eat' }); // 10 × 2 × 0.4
+    // damaging the boss mid-hold breaks the grip
+    const evs = damageBoss(sim, entry, 5);
+    expect(evs).toContainEqual({ type: 'anim', tokens: ['eatcnc'], loop: false });
+    expect(sim.state).toBe('active');
+    expect(sim.current).toBeNull();
   });
 });
 

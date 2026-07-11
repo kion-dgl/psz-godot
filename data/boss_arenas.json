@@ -60,15 +60,17 @@
       "arena": "s02z_na1",
       "quest_source": "poisoned_water",
       "model_scale": 1.0,
+      "stats": { "hp": 350, "move_speed": 5.0, "attack_cooldown": 2.0, "attack_base": 14, "turn_speed_deg": 90 },
+      "fsm": { "intro_clip": "", "stationary": true, "relocate_kind": "submerge", "relocate_untargetable": true, "submerge_depth": 3, "fly_speed_mult": 2.0, "loaf_duration_min": 1.5, "loaf_duration_max": 2.5, "fatigue_attacks": 3, "punish_duration": 4.0, "punish_break_damage": 0, "punish_vulnerable_mult": 2.0, "punish_clip": "wattir" },
       "phases": [
-        { "id": "submerged", "label": "Submerged", "note": "untargetable; relocates between surfacing anchors (float reads as the underwater move)" },
-        { "id": "surfaced", "label": "Surfaced", "note": "attack set runs from a surfacing spot; body is the target" },
-        { "id": "tired", "label": "Tired (punish)", "note": "wattir idle after an attack string — the punish window; recovers via wttr2wt then submerges" }
+        { "id": "surfaced", "label": "Surfaced", "note": "the opener: rooted at a surfacing spot; faces the player and attacks from the bands" },
+        { "id": "tired", "label": "Tired (punish)", "note": "wattir loop after a 3-attack string — the punish window (×2 damage); ends in a submerge, not a re-engage" },
+        { "id": "submerged", "label": "Submerged", "note": "untargetable; swims (float) between surfacing anchors — author the pool spots in the room; until then it resurfaces ~10u from the player" }
       ],
       "attacks": [
         { "id": "spout", "clip": "spout", "chain": ["wt2spwt", "spout"], "kind": "spout", "phases": ["surfaced"], "min_range": 3, "max_range": 15, "note": "water jet at the player; spwat/sp2wat are the spout-stance idles/transitions" },
-        { "id": "vomit", "clip": "vomit", "kind": "lob", "phases": ["surfaced"], "min_range": 2, "max_range": 10, "note": "spew AoE — vmply/vmwat read as the vomit-stance loop/idle; payload (poison?) unverified" },
-        { "id": "absorb_eat", "clip": "eat", "chain": ["wt2abs", "absorb", "abs2eat", "eat"], "kind": "grab", "phases": ["surfaced"], "max_range": 8, "damage_mult": 2.0, "note": "suck-in → grab-eat; abscnc/eatcnc are the damage-interrupt cancels — the grab is breakable" }
+        { "id": "vomit", "clip": "vomit", "kind": "lob", "phases": ["surfaced"], "min_range": 2, "max_range": 10, "hit_reach": 2.5, "note": "spew AoE lobbed at the player; vmply/vmwat read as the vomit-stance loop/idle; payload (poison?) unverified" },
+        { "id": "absorb_eat", "clip": "eat", "chain": ["wt2abs", "absorb", "abs2eat", "eat"], "kind": "grab", "phases": ["surfaced"], "max_range": 8, "hit_reach": 8, "hit_half_angle_deg": 40, "damage_mult": 2.0, "cancel_clip": "eatcnc", "note": "suck-in → grab-eat: damage ticks while held; damaging the boss breaks the grip (eatcnc); draft skips the pull-in" }
       ],
       "anchors": [],
       "clip_notes": {

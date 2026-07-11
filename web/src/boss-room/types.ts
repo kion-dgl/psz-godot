@@ -62,6 +62,8 @@ export interface BossAttackDef {
   lp_loops?: number;
   /** kind: lob — the payload splits into this many impact points around the target. */
   split?: number;
+  /** kind: grab — clip played when damaging the boss cancels the hold (octo diablo's eatcnc). */
+  cancel_clip?: string;
   note?: string;
 }
 
@@ -82,20 +84,35 @@ export interface BossStats {
 }
 
 export interface BossFsmParams {
+  /** Fight-opening threat display clip token ('' = none, straight to active). */
+  intro_clip: string;
+  /** Rooted emplacement (octo diablo): never walks; faces the target and attacks from the bands. */
+  stationary: boolean;
+  /** What RELOCATE looks like: the dragon's flight cycle or the octopus's submerge-swim. */
+  relocate_kind: 'flight' | 'submerge';
+  /** Damage into the boss is ignored while relocating (submerged octopus). */
+  relocate_untargetable: boolean;
+  /** relocate_kind submerge: how far below the floor the boss sinks. */
+  submerge_depth: number;
   /** Seconds of grounded ACTIVE time before a flight cycle (0 = never; needs a flight-phase attack). */
   flight_interval: number;
   /** Airborne attack repetitions per flight (reyburn: sky fireballs fired before landing). */
   flight_attacks: number;
   hover_height: number;
+  /** Relocation travel speed (× move_speed) — flight and submerged swim alike. */
   fly_speed_mult: number;
   /** Post-attack disengage walk (the enemy model's loafing): duration range in seconds. */
   loaf_duration_min: number;
   loaf_duration_max: number;
-  /** Damage accumulated in ground phases that triggers the knockdown punish window. */
+  /** Attacks since surfacing/resting that trigger the fatigue punish (0 = no fatigue). */
+  fatigue_attacks: number;
+  /** Fatigue punish length; the punish clip LOOPS for it (0 = play punish_clip once, its duration). */
+  punish_duration: number;
+  /** Damage accumulated in ground phases that triggers the knockdown punish window (0 = no break). */
   punish_break_damage: number;
   /** Damage multiplier while the punish reaction plays (enemy model's recovery_vulnerable_mult). */
   punish_vulnerable_mult: number;
-  /** Clip token for the punish reaction (reyburn: dmg1). */
+  /** Clip token for the punish reaction (reyburn: dmg1; octo diablo: wattir). */
   punish_clip: string;
 }
 
@@ -108,12 +125,19 @@ export const DEFAULT_BOSS_STATS: BossStats = {
 };
 
 export const DEFAULT_BOSS_FSM: BossFsmParams = {
+  intro_clip: 'tht',
+  stationary: false,
+  relocate_kind: 'flight',
+  relocate_untargetable: false,
+  submerge_depth: 3,
   flight_interval: 0,
   flight_attacks: 1,
   hover_height: 8,
   fly_speed_mult: 2.5,
   loaf_duration_min: 2.5,
   loaf_duration_max: 4.0,
+  fatigue_attacks: 0,
+  punish_duration: 0,
   punish_break_damage: 60,
   punish_vulnerable_mult: 2.0,
   punish_clip: 'dmg1',
@@ -139,6 +163,8 @@ export interface ResolvedBoss {
   fsm: BossFsmParams;
   phases: BossPhase[];
   attacks: ResolvedBossAttack[];
+  /** Authored arena anchors — submerge relocation targets (surfacing spots). */
+  anchors: BossAnchor[];
 }
 
 export function resolveBoss(def: BossDef): ResolvedBoss {
@@ -147,6 +173,7 @@ export function resolveBoss(def: BossDef): ResolvedBoss {
     fsm: { ...DEFAULT_BOSS_FSM, ...(def.fsm ?? {}) },
     phases: def.phases ?? [],
     attacks: (def.attacks ?? []).map((a) => ({ ...DEFAULT_BOSS_ATTACK, ...a })),
+    anchors: def.anchors ?? [],
   };
 }
 
