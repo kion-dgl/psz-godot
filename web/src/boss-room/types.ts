@@ -22,6 +22,10 @@ export interface BossPhase {
   label: string;
   /** Phase entered when HP fraction drops to this (omitted = non-HP trigger; see note). */
   hp_frac?: number;
+  /** Modifier phases (enrage): movement speed multiplier while entered. */
+  speed_mult?: number;
+  /** Modifier phases (enrage): attack-cooldown multiplier while entered (<1 = more aggressive). */
+  cooldown_mult?: number;
   note?: string;
 }
 
@@ -52,6 +56,12 @@ export interface BossAttackDef {
   hit_half_angle_deg?: number;
   hit_reach?: number;
   damage_mult?: number;
+  /** A hit also shoves the player this many units along the boss's facing (wing flap). */
+  knockback?: number;
+  /** Loop count for `lp` chain tokens — for projectile volleys, one shot per rep (fireball ×3). */
+  lp_loops?: number;
+  /** kind: lob — the payload splits into this many impact points around the target. */
+  split?: number;
   note?: string;
 }
 
@@ -72,9 +82,10 @@ export interface BossStats {
 }
 
 export interface BossFsmParams {
-  /** Seconds of grounded ACTIVE time before a flight cycle (0 = never; needs a fly_pass attack). */
+  /** Seconds of grounded ACTIVE time before a flight cycle (0 = never; needs a flight-phase attack). */
   flight_interval: number;
-  flight_passes: number;
+  /** Airborne attack repetitions per flight (reyburn: sky fireballs fired before landing). */
+  flight_attacks: number;
   hover_height: number;
   fly_speed_mult: number;
   /** Damage accumulated in ground phases that triggers the knockdown punish window. */
@@ -95,7 +106,7 @@ export const DEFAULT_BOSS_STATS: BossStats = {
 
 export const DEFAULT_BOSS_FSM: BossFsmParams = {
   flight_interval: 0,
-  flight_passes: 2,
+  flight_attacks: 1,
   hover_height: 8,
   fly_speed_mult: 2.5,
   punish_break_damage: 60,

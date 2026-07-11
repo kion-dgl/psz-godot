@@ -38,8 +38,8 @@ const chart = `stateDiagram-v2
   <h3>Data model (boss_arenas.json v2)</h3>
   <table>
     <tr><th>Field</th><th>Semantics</th></tr>
-    <tr><td><code>phases[]</code></td><td>Ordered; the first phase is the opener. <code>hp_frac</code> on a phase means it is entered when the boss's HP fraction drops to that value; a phase without <code>hp_frac</code> has a per-boss trigger (documented in its <code>note</code> — timer, attack-string completion, break threshold).</td></tr>
-    <tr><td><code>attacks[]</code></td><td>Reuses the <a href="/mechanics/enemy-attacks">enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random).</td></tr>
+    <tr><td><code>phases[]</code></td><td>Ordered; the first phase is the opener. <code>hp_frac</code> on a phase means it is entered when the boss's HP fraction drops to that value; a phase without <code>hp_frac</code> has a per-boss trigger (documented in its <code>note</code> — timer, attack-string completion, break threshold). A phase MAY be a <em>modifier overlay</em> rather than a moveset switch: <code>speed_mult</code> / <code>cooldown_mult</code> apply from entry onward (Reyburn's enrage).</td></tr>
+    <tr><td><code>attacks[]</code></td><td>Reuses the <a href="/mechanics/enemy-attacks">enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random). Boss-only attack fields: <code>knockback</code> (a hit also shoves the player that many units along the boss's facing — Reyburn's wing flap), <code>lp_loops</code> (repeat count for <code>lp</code> chain tokens; for <code>projectile</code> attacks one shot fires per rep — the fireball volley), <code>split</code> (a <code>lob</code> payload splits into this many impact points around the target).</td></tr>
     <tr><td><code>attacks[].chain</code></td><td>Explicit clip-token sequence — the generalization of the enemy model's <code>windup_clips</code>. Tokens resolve per the enemy clip-resolution order (exact, then <code>*_&lt;token&gt;</code> suffix); tokens ending in <code>lp</code> loop. Every clip before the last is <strong>pure telegraph</strong>; the timeline fractions (<code>windup_frac</code> / <code>damage_end_frac</code>) apply to the <strong>final</strong> clip of the chain.</td></tr>
     <tr><td><code>anchors[]</code></td><td>Named positions in the boss's <strong>default arena frame</strong> (meaningless elsewhere), authored with the room's click tool and round-tripped via its config export. Relocation targets and anchor-bound attacks (<code>attacks[].anchor</code>) reference them by name.</td></tr>
     <tr><td><code>clip_notes</code></td><td>Documentational clip semantics (MAY), same as the enemy schema — the draft's observation notebook. Unverified readings say so.</td></tr>
@@ -61,17 +61,26 @@ const chart = `stateDiagram-v2
   <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>
   <ul>
     <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>).</li>
-    <li><strong>Knockdown</strong> — a break threshold topples the boss into a fallen loop until a stand-up clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions read as this). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
+    <li><strong>Knockdown</strong> — a break threshold topples the boss into a fallen loop until a stand-up clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions <em>might</em> be this, but the observed pattern list has no knockdown — unconfirmed). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
   </ul>
 
   <h2>Per-boss drafts</h2>
   <p>Numbers live in <code>data/boss_arenas.json</code> — these sections describe the fight <em>shape</em> and flag what is unverified.</p>
 
   <h3>Reyburn (boss_dragon — Gurhacia Valley, claiming_a_stake)</h3>
+  <p><strong>Observed patterns</strong> (from the real fight — these supersede the earlier clip-derived guesses and are what the table encodes):</p>
   <ul>
-    <li><strong>Ground ⇄ flight cycle.</strong> Grounded: walks, bites (<code>atkh1/atkh2</code>), wide sweeps (<code>atkrl/atkrr</code>), wing buffet (<code>atkwg</code>), and the segmented fire breath (<code>brsst→brslp→brs2</code>, <code>beam_sweep</code>). Airborne: takeoff (<code>flst</code>) into anchor-path fly passes.</li>
-    <li><strong>Sim'd first.</strong> Reyburn is the first boss the room's behavior sim runs end-to-end: intro roar → grounded chase/attack from the table's bands → timer-driven flight cycle (climb, contact passes over the player, land) → damage-break punish (<code>dmg1</code>, ×2 damage) → death. The J-swing drives boss HP so the break and death paths are observable. Draft simplifications, to revisit: the flight trigger is a flat timer, passes aim <em>through the player</em> rather than along authored anchors (anchors take over once authored), and the breath sweep is approximated as a wide static arc.</li>
-    <li><strong>Open:</strong> flight-entry cadence (HP step vs timer); whether <code>rdst/rdg</code> are the dive; <code>brs1</code> as a short-burst breath variant; the left/right reading of <code>rl/rr</code>.</li>
+    <li><strong>Walk + bite</strong> (<code>atkh1</code>) and <strong>walk + tail swipe</strong> (<code>atkrl</code>/<code>atkrr</code>, wide arcs).</li>
+    <li><strong>Wing flap</strong> (<code>atkwg</code>) — damages <em>and blows the player away</em> along the facing (<code>knockback: 8</code>).</li>
+    <li><strong>War cry</strong> (<code>tht</code>) — a blast radius in a circle around the dragon (<code>aoe_burst</code>, 360°). The same clip serves as the fight opener and the enrage growl.</li>
+    <li><strong>Fireball volley</strong> — three fireballs while standing (<code>brsst→brslp×3→brs2</code>, <code>projectile</code>, one shot per <code>lp</code> rep).</li>
+    <li><strong>Rush bite</strong> — runs toward the player (<code>wlk2</code>) and bites (<code>atkh2</code>) — <code>charge</code>, closes during the telegraph.</li>
+    <li><strong>Flight cycle</strong> — takes off (<code>flst</code>), flies away, and deals damage in a circle <em>where it lands</em> (<code>land_slam</code>); from the air it can drop a <strong>fireball that splits into 3 parts</strong> on the ground (<code>sky_fireball</code>, <code>lob split: 3</code> — impact rings shown in the room).</li>
+    <li><strong>Low-HP enrage</strong> — the boss growls and its edges turn red, becoming more aggressive: the <code>enrage</code> modifier phase (<code>hp_frac 0.35</code>, <code>speed_mult 1.3</code>, <code>cooldown_mult 0.6</code>). The room approximates the red edges with an emissive tint.</li>
+  </ul>
+  <p><strong>Sim'd end-to-end</strong> in <code>#/boss-room/reyburn</code>: intro roar → grounded chase/attack from the bands → timer-driven flight cycle → enrage → death, with the J-swing driving HP so every transition is observable.</p>
+  <ul>
+    <li><strong>Open:</strong> flight-entry cadence (flat 22 s timer is a draft; HP-step?); whether <code>rdst/rdg</code> are the landing dive; <code>brs1</code> as the single-fireball variant; whether a knockdown punish exists at all — the observed list has none, so the draft's damage-break (<code>dmg1</code>, ×2) stays <em>unconfirmed</em> until checked against the real fight.</li>
   </ul>
 
   <h3>Octo Diablo (boss_octopus — Ozette Wetlands, poisoned_water)</h3>

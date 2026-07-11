@@ -31,7 +31,7 @@ import {
   type RosterEntry,
   type SegmentFamily,
 } from './types';
-import { damageBoss, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
 
 const PLAYER_MAX_HP = 100;
 const SWING_RANGE = 4.5;
@@ -435,6 +435,15 @@ export default function BossRoom() {
       startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
     }
 
+    // Enrage tint: "turns red on the edges" — approximated with a red
+    // emissive on the rig's materials; cleared when the sim resets.
+    function tintBoss(on: boolean) {
+      bossGroup.traverse((o) => {
+        const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+        if (mat?.emissive) mat.emissive.setHex(on ? 0x881111 : 0x000000);
+      });
+    }
+
     // Sim events → the existing playback machinery + player HP.
     function handleSimEvents(events: BossEvent[]) {
       for (const ev of events) {
@@ -443,15 +452,63 @@ export default function BossRoom() {
             const name = resolveClipToken(animations.map((a) => a.name), ev.tokens[0]);
             if (name) playClip(name, true);
           } else {
-            playTokens(ev.tokens, 2);
+            playTokens(ev.tokens, ev.lpLoops ?? 2);
           }
         } else if (ev.type === 'player-hit') {
           playerHp = Math.max(0, playerHp - ev.damage);
+          if (ev.knockback) {
+            // wing flap: shove the player along the boss's facing
+            feet.x += ev.knockback.x;
+            feet.z += ev.knockback.z;
+            const ky = dropToFloor(feet);
+            if (ky !== null) feet.y = Math.max(feet.y, ky);
+          }
           if (playerHp <= 0) {
             feet.copy(spawn); // downed → respawn with full HP, sim keeps running
             velY = 0;
             playerHp = PLAYER_MAX_HP;
           }
+        } else if (ev.type === 'enrage') {
+          tintBoss(true);
+        }
+      }
+    }
+
+    // Sim ordnance visuals: pooled fireball spheres + lob impact rings.
+    const ordnanceGroup = new THREE.Group();
+    scene.add(ordnanceGroup);
+    const projPool: THREE.Mesh[] = [];
+    const ringPool: THREE.Mesh[] = [];
+    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
+      while (pool.length <= i) {
+        const m = make();
+        pool.push(m);
+        ordnanceGroup.add(m);
+      }
+      pool[i].visible = true;
+      return pool[i];
+    }
+    function syncOrdnance() {
+      for (const m of [...projPool, ...ringPool]) m.visible = false;
+      if (!sim) return;
+      sim.projectiles.forEach((p, i) => {
+        const m = poolGet(projPool, i, () => new THREE.Mesh(
+          new THREE.SphereGeometry(0.5, 10, 8),
+          new THREE.MeshBasicMaterial({ color: 0xff7722 }),
+        ));
+        const gy = dropToFloor(new THREE.Vector3(p.pos.x, bossPos.y + 2, p.pos.z));
+        m.position.set(p.pos.x, (gy ?? bossPos.y) + 1.5, p.pos.z);
+      });
+      let ringIdx = 0;
+      for (const l of sim.lobs) {
+        for (const impact of lobImpacts(l)) {
+          const m = poolGet(ringPool, ringIdx++, () => new THREE.Mesh(
+            new THREE.RingGeometry(0.4, 2.5, 24),
+            new THREE.MeshBasicMaterial({ color: 0xff3311, side: THREE.DoubleSide, transparent: true, opacity: 0.5 }),
+          ));
+          const gy = dropToFloor(new THREE.Vector3(impact.x, bossPos.y + 2, impact.z));
+          m.position.set(impact.x, (gy ?? 0) + 0.06, impact.z);
+          m.rotation.x = -Math.PI / 2;
         }
       }
     }
@@ -468,6 +525,8 @@ export default function BossRoom() {
         chain = null;
         setActiveClip(null);
         setSimHud(null);
+        tintBoss(false);
+        syncOrdnance();
         settleBoss();
       }
     }
@@ -645,6 +704,7 @@ export default function BossRoom() {
         bossPos.set(sim.pos.x, (gy2 ?? bossPos.y) + sim.alt, sim.pos.z);
         bossGroup.position.copy(bossPos);
         bossGroup.rotation.y = sim.yaw;
+        syncOrdnance();
       } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
