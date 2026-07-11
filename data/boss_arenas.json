@@ -76,12 +76,12 @@
       "model_offset_y": -1.5,
       "parts": [
         {
-          "part": "z_002_tt",
+          "part": "z_002_st",
           "instances": [
-            { "pos": [8, 1, 8], "yaw_deg": 45 },
-            { "pos": [-8, 1, 8], "yaw_deg": -45 },
-            { "pos": [8, 1, -8], "yaw_deg": 135 },
-            { "pos": [-8, 1, -8], "yaw_deg": -135 }
+            { "pos": [8, -0.5, 8], "yaw_deg": -135 },
+            { "pos": [-8, -0.5, 8], "yaw_deg": 135 },
+            { "pos": [8, -0.5, -8], "yaw_deg": -45 },
+            { "pos": [-8, -0.5, -8], "yaw_deg": 45 }
           ]
         }
       ],
@@ -98,7 +98,7 @@
         "eat": "grab-eat (caught player)",
         "eatcnc": "eat cancelled (damage interrupt)"
       },
-      "note": "no ded clip in the rig — death presentation is likely scripted (sinks?); tentacle parts z_002_tt/z_002_st imported (import_objects.py parts) and rendered in sync; o0b_kaeru (a static frog prop in the same parts set) is not attached — placement unknown"
+      "note": "no ded clip in the rig — death presentation is likely scripted (sinks?); z_002_st = the coiled SURFACING tentacle (posed: dips 5.7 below its base, crests 4.2 above on wat / 5.2 on spout) — the four placed instances; z_002_tt = the long straight arm (posed: plunges 11.4 below base — pierces the pool bed if surfaced; likely the strike/sweep arm, unplaced); o0b_kaeru (static frog prop) unattached — placement unknown"
     },
     "humilias": {
       "model_id": "boss_mother",
