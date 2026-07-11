@@ -184,6 +184,7 @@ export default function BossRoom() {
     let camDist = 14;
 
     let floorMesh: THREE.Object3D | null = null;
+    let floorMinY = 0; // lowest point of the floor collider (fall-guard floor)
     let arenaMesh: THREE.Object3D | null = null;
     const raycaster = new THREE.Raycaster();
     const DOWN = new THREE.Vector3(0, -1, 0);
@@ -274,10 +275,23 @@ export default function BossRoom() {
         g.scene.visible = false;
         scene.add(g.scene);
         floorMesh = g.scene;
-        // Spawn the player near the floor center, boss a bit ahead.
+        // Spawn the player near the floor center, boss a bit ahead. The
+        // offset is probed against the actual floor — boss-arena colliders
+        // vary wildly in extent (the shrine's is only 20×20, so a blind
+        // center+12 lands past the edge and the player falls forever).
         const box = new THREE.Box3().setFromObject(g.scene);
+        floorMinY = box.min.y;
         const c = box.getCenter(new THREE.Vector3());
-        spawn.set(c.x, box.max.y + 5, c.z + 12);
+        const back = Math.min(12, Math.max(2, (box.max.z - box.min.z) * 0.3));
+        const side = Math.min(12, Math.max(2, (box.max.x - box.min.x) * 0.3));
+        const candidates = [
+          new THREE.Vector3(c.x, box.max.y + 5, c.z + back),
+          new THREE.Vector3(c.x, box.max.y + 5, c.z - back),
+          new THREE.Vector3(c.x + side, box.max.y + 5, c.z),
+          new THREE.Vector3(c.x - side, box.max.y + 5, c.z),
+          new THREE.Vector3(c.x, box.max.y + 5, c.z),
+        ];
+        spawn.copy(candidates.find((p) => dropToFloor(p) !== null) ?? candidates[candidates.length - 1]);
         feet.copy(spawn);
         bossPos.set(c.x, box.max.y + 5, c.z);
         settleBoss();
@@ -549,7 +563,9 @@ export default function BossRoom() {
           velY = 0;
         }
       }
-      if (gy !== null && feet.y < gy - FALL_LIMIT) {
+      // Fall guard — must also catch the off-floor case (gy === null, e.g.
+      // walked/spawned past the collider's edge), or the fall never ends.
+      if (floorMesh && feet.y < Math.min(gy ?? Infinity, floorMinY) - FALL_LIMIT) {
         feet.copy(spawn);
         velY = 0;
       }
