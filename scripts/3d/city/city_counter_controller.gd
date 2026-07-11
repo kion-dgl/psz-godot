@@ -3,6 +3,8 @@ extends "res://scripts/3d/city/city_area_base.gd"
 
 const BUBBLE_WIDTH := 400
 const BUBBLE_HEIGHT := 180
+## Head-height offset above the NPC origin (feet) for the speech bubble anchor.
+const BUBBLE_OFFSET := Vector3(0, 2.5, 0)
 
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const TeleporterDressingScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
@@ -216,7 +218,9 @@ func _check_quest_accepted() -> void:
 		return
 	if counter_npc.has_method("play_oneshot"):
 		counter_npc.play_oneshot("pso_f_emote_bow")
-	_show_npc_speech_bubble(counter_npc, Vector3(-8.31, 2.8, -10.37),
+	# Anchor the bubble to the NPC's live position + head offset. (A stale
+	# hardcoded world pos left it floating far from the repositioned counter.)
+	_show_npc_speech_bubble(counter_npc, counter_npc.global_position + BUBBLE_OFFSET,
 		"Please head to the Principal's office for your briefing.")
 
 
