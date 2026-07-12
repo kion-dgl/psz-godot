@@ -110,6 +110,11 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   boss_mother: { displayName: 'Humilias', element: 'Dark', location: 'Ruins' },
   boss_darkfalz: { displayName: 'Dark Falz', element: 'Dark', location: 'Dark Shrine' },
   boss_robot: { displayName: 'Chaos Mobius', element: 'Machine', location: 'Moon Facility' },
+  // PSO stand-in bosses (assets scaled 0.09 and baked). Paru = Sinow Beat/Gold
+  // (Gold is the rare variant); Makara = Chaos Sorcerer.
+  sinow_beat: { displayName: 'Sinow Beat', element: 'Machine', location: 'Oblivion City Paru' },
+  sinow_gold: { displayName: 'Sinow Gold', element: 'Machine', location: 'Oblivion City Paru', isRare: true },
+  chaos_sorcerer: { displayName: 'Chaos Sorcerer', element: 'Dark', location: 'Makara Ruins' },
 };
 
 // Enemies appear under every category listed here. Most have a single
@@ -137,6 +142,7 @@ const ENEMY_CATEGORY_MAP: Record<string, string | string[]> = {
   booma: 'rare', jigobooma: 'rare', rappy: 'rare', rappy_blue: 'rare', rappy_red: 'rare',
   boss_dragon: 'bosses', boss_octopus: 'bosses', boss_mother: 'bosses',
   boss_darkfalz: 'bosses', boss_robot: 'bosses',
+  sinow_beat: ['bosses', 'paru'], sinow_gold: ['bosses', 'paru'], chaos_sorcerer: ['bosses', 'makara'],
 };
 
 // All 65 enemies imported into psz-godot. Multi-part bosses (boss_octopus,
@@ -163,6 +169,7 @@ export const ALL_ENEMY_IDS = [
   'swordman', 'swordman_b', 'swordman_rare', 'swordman_rare_b',
   'tank', 'tank_rare', 'tiger', 'vulture', 'wolf',
   'boss_dragon', 'boss_octopus', 'boss_mother', 'boss_darkfalz', 'boss_robot',
+  'sinow_beat', 'sinow_gold', 'chaos_sorcerer',
 ];
 
 /** Animation source sharing — rare variants load animations from base model */
