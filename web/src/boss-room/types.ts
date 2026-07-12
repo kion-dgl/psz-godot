@@ -111,6 +111,8 @@ export interface BossFsmParams {
   gem_caster: boolean;
   /** Gem caster: seconds after a gem is spent before a new one spawns in the empty slot. */
   gem_respawn_delay: number;
+  /** Gem caster: telegraph window — seconds both gems are visible after a refill before the next cast. */
+  gem_cast_delay: number;
   /** Chaos Sorcerer: seconds between cancel-cast teleport repositions (0 = never). */
   teleport_interval: number;
   /** Teleport reposition radius around the arena origin. */
@@ -165,6 +167,7 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   hover_hold: 0,
   gem_caster: false,
   gem_respawn_delay: 2.5,
+  gem_cast_delay: 1.5,
   teleport_interval: 0,
   teleport_radius: 10,
   relocate_kind: 'flight',

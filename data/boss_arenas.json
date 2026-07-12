@@ -672,7 +672,8 @@
         "stationary": true,
         "hover_hold": 2.5,
         "gem_caster": true,
-        "gem_respawn_delay": 1.2,
+        "gem_respawn_delay": 1.0,
+        "gem_cast_delay": 1.5,
         "teleport_interval": 9.0,
         "teleport_radius": 9.0,
         "loaf_duration_min": 0.5,
@@ -743,7 +744,7 @@
         }
       ],
       "anchors": [],
-      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = PSO Chaos Sorcerer. Gem-caster behavior: two gems float on either side (purple=dark, red=fire, blue=ice, green=self-heal) \u2014 they telegraph the two possible next spells but not which fires. To cast, one gem moves in FRONT of the sorcerer, spins rapidly, and disappears as the spell releases; then a cooldown of a few seconds (attack_cooldown) with no casting, during which a new gem respawns (after gem_respawn_delay) to replace the used one \u2014 back to two. It hovers at a fixed height off the floor, stays mostly static, and periodically cancel-casts to teleport. clips: attack1/2/3 -> fire/ice/dark (guess), cure -> heal, enter/wait/damage/die. Tune clip->element by observation.",
+      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = PSO Chaos Sorcerer. Gem-caster behavior: two gems float on either side (purple=dark, red=fire, blue=ice, green=self-heal) \u2014 they telegraph the two possible next spells but not which fires (a genuine 50/50 coin flip). Cast cycle (per Kion): start with two gems -> one gem is used to cast (50/50), moving in FRONT of the sorcerer, spinning rapidly, and vanishing as the spell releases -> small cooldown until a new gem respawns (gem_respawn_delay) -> ONLY THEN a small cooldown until it casts again (gem_cast_delay), the telegraph window where BOTH gems are visible -> cast again (50/50). The next-cast timer starts after the refill so a fresh gem is always shown before it can be used (attack_cooldown is unused for the gem caster \u2014 timing is the two fsm delays). It hovers at a fixed height off the floor, stays mostly static, and periodically cancel-casts to teleport. clips: attack1/2/3 -> fire/ice/dark (guess), cure -> heal, enter/wait/damage/die. Tune clip->element by observation.",
       "clip_notes": {
         "enter_re4_b_body": "entrance",
         "wait_re4_b_body": "idle (float)",

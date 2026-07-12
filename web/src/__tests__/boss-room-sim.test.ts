@@ -57,6 +57,7 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     hover_hold: 0,
     gem_caster: false,
     gem_respawn_delay: 2.5,
+    gem_cast_delay: 1.5,
     teleport_interval: 0,
     teleport_radius: 10,
     stationary: false,
@@ -434,12 +435,13 @@ describe('boss sim — chaos sorcerer gem caster', () => {
   const gemAtk = (id: string, gem: string, kind: string, over: Partial<ResolvedBossAttack> = {}): ResolvedBossAttack =>
     atk({ id, clip: id, gem: gem as any, kind: kind as any, phases: ['engaged'], min_range: 0, max_range: 30, ...over });
   const makeSorcerer = (): ResolvedBoss => makeEntry({
-    // cooldown (3s) >> respawn (0.5s), so a spent gem refills to a stable
-    // two-gem state well before the next cast.
+    // Cast → respawn (0.5s) → the two gems are back → telegraph window
+    // (gem_cast_delay 1.0s, both gems visible) → next cast. The next-cast
+    // timer only starts AFTER the refill, so a fresh gem always shows before use.
     stats: { hp: 200, move_speed: 0, attack_cooldown: 3, attack_base: 10, turn_speed_deg: 120 },
     fsm: {
       ...makeEntry().fsm, intro_clip: '', idle_clip: 'wait', walk_clip: '', stationary: true,
-      hover_hold: 2.5, gem_caster: true, gem_respawn_delay: 0.5, teleport_interval: 0,
+      hover_hold: 2.5, gem_caster: true, gem_respawn_delay: 0.5, gem_cast_delay: 1.0, teleport_interval: 0,
       loaf_duration_min: 0.3, loaf_duration_max: 0.3, punish_break_damage: 0,
     },
     phases: [{ id: 'engaged', label: 'Engaged' }],
@@ -487,6 +489,30 @@ describe('boss sim — chaos sorcerer gem caster', () => {
     run(sim, entry, player, 60, () => sim.gems.filter(Boolean).length === 2);
     expect(sim.gems.filter(Boolean)).toHaveLength(2);
     expect(sim.gems[0]).not.toBe(sim.gems[1]);
+  });
+
+  it('a freshly-respawned gem is visible for the telegraph window before the next cast', () => {
+    const entry = makeSorcerer();
+    let k = 0;
+    const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
+    const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, rng);
+    const player = { x: 0, z: 5 };
+    // first cast leaves one gem, then wait for the refill back to two
+    run(sim, entry, player, 40, () => sim.castingGem !== null);
+    run(sim, entry, player, 40, () => sim.castingGem === null);
+    run(sim, entry, player, 60, () => sim.gems.filter(Boolean).length === 2);
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    // both gems must stay present through the whole telegraph window: it is NOT
+    // consumed the instant it spawns. Count frames with two gems before the cast.
+    let visibleFrames = 0;
+    for (let i = 0; i < 40; i++) {
+      if (sim.gems.filter(Boolean).length < 2) break;
+      stepBoss(sim, entry, inp(player));
+      visibleFrames++;
+    }
+    // gem_cast_delay 1.0s at dt=0.1 → ~10 frames of two-gem telegraph before the cast
+    expect(visibleFrames).toBeGreaterThanOrEqual(8);
   });
 
   it('the gem caster never loaf-walks — it stays put between casts', () => {

@@ -504,7 +504,11 @@ function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   turnToward(sim, input.player, entry.stats.turn_speed_deg, input.dt);
   ensureLoop(sim, entry.fsm.idle_clip, events);
 
-  // Refill the spent gem during the cooldown — a color distinct from the held one.
+  // Respawn phase: a slot is empty after a cast. Wait gem_respawn_delay, then
+  // refill it (a color distinct from the held one) and START the telegraph
+  // window before the next cast — so the two gems are BOTH visible for
+  // gem_cast_delay seconds before the sorcerer picks one. The next-cast timer
+  // only begins once the gem is back, never overlapping the respawn.
   if (sim.gems.includes(null)) {
     sim.gemRespawnT -= input.dt;
     if (sim.gemRespawnT <= 0) {
@@ -512,6 +516,7 @@ function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
       const options = gemPool(entry).filter((c) => c !== other);
       const slot = sim.gems.indexOf(null);
       sim.gems[slot] = pickFrom(options.length ? options : gemPool(entry), input.rng);
+      sim.cooldown = entry.fsm.gem_cast_delay; // telegraph window before casting
     }
   }
 
@@ -532,6 +537,7 @@ function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   // its side slot for the casting animation.
   const held = sim.gems.filter(Boolean) as GemColor[];
   if (sim.cooldown <= 0 && held.length >= 2) {
+    // 50/50 coin flip: either held gem may fire — the player can't predict which.
     const gem = pickFrom(held, input.rng);
     const atk = attackForGem(entry, gem);
     if (atk) {
