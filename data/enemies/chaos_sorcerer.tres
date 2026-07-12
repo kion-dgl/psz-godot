@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chaos_sorcerer"
+name = "Chaos Sorcerer"
+japanese_name = ""
+element = 3
+locations = PackedStringArray("Makara Ruins")
+is_rare = false
+is_boss = true
+model_id = "chaos_sorcerer"
+hp_base = 800
+attack_base = 20
+defense_base = 10
+evasion_base = 25
+move_speed = 2.0
+attack_range = 3.0
+detection_range = 22.0
+exp_reward = 200
+meseta_min = 100
+meseta_max = 300
+behavior = 5
+attack_cooldown = 2.5
+collision_radius = 0.6
+collision_height = 2.7

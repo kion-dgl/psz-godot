@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sinow_beat"
+name = "Sinow Beat"
+japanese_name = ""
+element = 2
+locations = PackedStringArray("Oblivion City Paru")
+is_rare = false
+is_boss = true
+model_id = "sinow_beat"
+hp_base = 700
+attack_base = 22
+defense_base = 12
+evasion_base = 45
+move_speed = 5.0
+attack_range = 3.5
+detection_range = 18.0
+exp_reward = 180
+meseta_min = 90
+meseta_max = 260
+behavior = 5
+attack_cooldown = 1.8
+collision_radius = 0.5
+collision_height = 2.2

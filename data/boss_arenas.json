@@ -658,7 +658,6 @@
       "arena": "s04z_na1",
       "quest_source": "debug_boss_makara",
       "model_scale": 1.0,
-      "pack_pending": true,
       "stats": {
         "hp": 350,
         "move_speed": 2.0,
@@ -740,7 +739,6 @@
       "arena": "s05z_na1",
       "quest_source": "debug_boss_paru",
       "model_scale": 1.0,
-      "pack_pending": true,
       "forms": [
         {
           "roster_id": "sinow_beat",
