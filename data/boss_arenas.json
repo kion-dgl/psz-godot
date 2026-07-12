@@ -492,7 +492,7 @@
         "z_004_kao_a",
         "z_004_kao_b"
       ],
-      "spawn_pos": [0, 0, -7],
+      "spawn_pos": [0, 0, -8],
       "anchors": [],
       "clip_notes": {
         "wat1": "idle",
@@ -656,9 +656,9 @@
       "quest_source": "",
       "model_scale": 1.0,
       "forms": [
-        { "roster_id": "chaos_mobius_paru", "model_id": "boss_robot", "label": "Combined (z_003)" },
-        { "roster_id": "chaos_mobius_paru", "model_id": "z_003n", "label": "Split — upper (arms/head/daggers)", "part_of": "boss_robot" },
-        { "roster_id": "chaos_mobius_paru", "model_id": "z_103u", "label": "Split — lower (legs/body core)", "part_of": "boss_robot" }
+        { "roster_id": "chaos_mobius_paru", "model_id": "z_003n", "label": "Robot — arms/daggers, floats wide (z_003n)", "part_of": "boss_robot" },
+        { "roster_id": "chaos_mobius_paru", "model_id": "z_103u", "label": "Robot — tall drill-like core (z_103u)", "part_of": "boss_robot" },
+        { "roster_id": "chaos_mobius_paru", "model_id": "boss_robot", "label": "Union — combined robot (z_003)" }
       ],
       "stats": {
         "hp": 450,
@@ -776,7 +776,7 @@
         }
       ],
       "anchors": [],
-      "note": "ENCOUNTER 1 of 2 (per Kion): Paru is the FIRST encounter \u2014 Chaos & Mobius fight as two separated parts (top + bottom); Arca (chaos_mobius, heretic quest) is the SECOND \u2014 they JOIN into the larger combined robot. Rig anatomy confirms it: the robot separates at the core into an UPPER combat unit z_003n (spine/arms/hands/HEAD + the two daggers, 13 anim objects) and a LOWER base z_103u (legs/feet/thighs + the put01/put02 body core, 8 objects); joined they form z_003 (21 objects) at put01. The form picker loads Combined / Upper / Lower. Clip distribution: the full 26-clip attack kit (drills/guns/sweep/dwn/mov/stp) lives ONLY on the joined z_003 \u2014 each half carries just ve_wat (idle), stt (entrance), ch_in/ch_out (combine/split), ded (death) [verified: no half has any attack or move clip in either narc]; the plain boss_robot narc adds ve_ded_a/ve_ded_b two-variant separated deaths. IMPLICATION for the Paru fight: the halves can't attack from their own clips \u2014 either they periodically ch_in to the joined form to attack then ch_out, or they deal contact/slide damage without a dedicated clip. That, plus which half moves and the split positions, is the open observation question. Draft kit below is the joined form (shared with the arca entry).",
+      "note": "ENCOUNTER 1 of 2 (per Kion): Paru is TWO different floating robots (Chaos & Mobius), one drill-like, both hover; Arca (chaos_mobius, heretic) is the SECOND encounter where they UNION into the larger combined robot (and the split there is likely just a short cutscene). The two robots are z_003n (wide, arms + the two daggers, floats high at Y 3.3-8.2) and z_103u (tall/narrow, the put01/put02 core \u2014 the drill-like one); they union (ef_e_l_union) into z_003. The `n`/`u` suffixes and the union/hover effects (ef_e_l_union, ef_e_l_hov) confirm these are the two units, not anatomical halves. The form picker loads each robot + the union. GAP 1 (animations): the two robots have ONLY ve_wat (idle/hover), stt (entrance), ch_in/ch_out (union/split), ded (death) \u2014 verified NO attack or locomotion clip on either in either narc. The full 26-clip attack kit (drills/guns/sweep/dwn/mov/stp) lives only on the unioned z_003. So the Paru robots must union to attack, OR their attacks are missing from these narcs \u2014 open. GAP 2 (effects, in the viewer but NOT imported to psz-godot): ef_e_l_union (combine VFX), ef_e_l_hov (hover), ef_e_l_drill1/drill2 (the drill), ef_e_l_wave/flash/warp \u2014 if the Paru fight needs the drill/hover/union VFX these are the pieces to import. Draft kit below is the unioned form (shared with arca).",
       "parts": [],
       "clip_notes": {
         "wat": "combined idle",

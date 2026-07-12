@@ -67,7 +67,15 @@ describe('boss_arenas.json — bosses', () => {
             expect(e!.model_id, `${id} form ${f.roster_id} model_id mismatch`).toBe(f.model_id);
           }
         }
-        expect(b.model_id, `${id}: composite model_id must be forms[0]`).toBe(b.forms[0].model_id);
+        // Consistency of the boss's primary model_id with its forms:
+        // - split boss (any part_of form): model_id is the parent enemy rig.
+        // - composite boss (heaven's mother): model_id is forms[0]'s rig.
+        const splitParent = b.forms.find((f: any) => f.part_of)?.part_of;
+        if (splitParent) {
+          expect(b.model_id, `${id}: split boss model_id is the parent rig`).toBe(splitParent);
+        } else {
+          expect(b.model_id, `${id}: composite model_id must be forms[0]`).toBe(b.forms[0].model_id);
+        }
         continue;
       }
       const e = rosterById.get(id);
