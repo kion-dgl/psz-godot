@@ -60,7 +60,7 @@ export interface BossAttackDef {
   knockback?: number;
   /** Loop count for `lp` chain tokens — for projectile volleys, one shot per rep (fireball ×3). */
   lp_loops?: number;
-  /** kind: lob — the payload splits into this many impact points around the target. */
+  /** kind: lob — impact points around the target; kind: projectile — shots fanned across the spread (falz's diffusion). */
   split?: number;
   /** kind: grab — clip played when damaging the boss cancels the hold (octo diablo's eatcnc). */
   cancel_clip?: string;
@@ -86,6 +86,10 @@ export interface BossStats {
 export interface BossFsmParams {
   /** Fight-opening threat display clip token ('' = none, straight to active). */
   intro_clip: string;
+  /** Locomotion loop while chasing/loafing (reyburn wlk1; humilias move; falz walk). */
+  walk_clip: string;
+  /** Grounded idle loop (humilias wat1). */
+  idle_clip: string;
   /** Rooted emplacement (octo diablo): never walks; faces the target and attacks from the bands. */
   stationary: boolean;
   /** What RELOCATE looks like: the dragon's flight cycle or the octopus's submerge-swim. */
@@ -112,8 +116,14 @@ export interface BossFsmParams {
   punish_break_damage: number;
   /** Damage multiplier while the punish reaction plays (enemy model's recovery_vulnerable_mult). */
   punish_vulnerable_mult: number;
-  /** Clip token for the punish reaction (reyburn: dmg1; octo diablo: wattir). */
+  /** Clip token for the punish reaction (reyburn: dmg1; octo diablo: wattir; humilias: fallwat). */
   punish_clip: string;
+  /** Knockdown chain (humilias): one-shot entry clip before the punish loop ('' = none). */
+  punish_start_clip: string;
+  /** Knockdown chain (humilias): one-shot recovery clip after the punish window ('' = none). */
+  punish_end_clip: string;
+  /** relocate_kind submerge: locomotion loop while relocating (octopus float; falz swm). */
+  relocate_loop_clip: string;
 }
 
 export const DEFAULT_BOSS_STATS: BossStats = {
@@ -126,6 +136,8 @@ export const DEFAULT_BOSS_STATS: BossStats = {
 
 export const DEFAULT_BOSS_FSM: BossFsmParams = {
   intro_clip: 'tht',
+  walk_clip: 'wlk1',
+  idle_clip: 'wat',
   stationary: false,
   relocate_kind: 'flight',
   relocate_untargetable: false,
@@ -141,6 +153,9 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   punish_break_damage: 60,
   punish_vulnerable_mult: 2.0,
   punish_clip: 'dmg1',
+  punish_start_clip: '',
+  punish_end_clip: '',
+  relocate_loop_clip: 'float',
 };
 
 /** Mirrors the enemy DEFAULT_ATTACK (spec: unset boss fields take the enemy defaults). */

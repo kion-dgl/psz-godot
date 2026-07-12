@@ -38,6 +38,8 @@ export const CHARGE_STOP_RANGE = 2.0;
 export const PROJECTILE_SPEED = 12.0;
 export const PROJECTILE_RADIUS = 0.5;
 export const PROJECTILE_LIFE = 4.0;
+/** kind: projectile with split — half-spread of the fan (dark falz's diffusion). */
+export const PROJECTILE_FAN_DEG = 25.0;
 export const LOB_FLIGHT_TIME = 1.2;
 export const LOB_SPLIT_RADIUS = 3.0;
 export const FLY_AWAY_DIST = 15.0;
@@ -118,6 +120,8 @@ export interface BossSim {
   /** Attacks since last rest (surfacing / fatigue punish) — drives the fatigue trigger. */
   attacksSinceRest: number;
   punishCause: 'break' | 'fatigue' | null;
+  /** Knockdown chain progress (humilias: fall → fallwat loop → stdup). */
+  punishPhase: 'start' | 'loop' | 'end' | null;
   enraged: boolean;
   /** Loaf (post-attack disengage): time left, walk direction, curve drift. */
   loafT: number;
@@ -146,6 +150,7 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number): BossSi
     punishAccum: 0,
     attacksSinceRest: 0,
     punishCause: null,
+    punishPhase: null,
     enraged: false,
     loafT: 0,
     loafDir: { x: 0, z: 1 },
@@ -286,13 +291,18 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   }
 
   // kind: projectile — fire when t crosses each shot time, aimed at the
-  // player's position at that moment.
+  // player's position at that moment. `split` fans the shot into that many
+  // projectiles spread across ±PROJECTILE_FAN_DEG (dark falz's diffusion).
   while (cur.shotTimes.length > 0 && cur.t >= cur.shotTimes[0]) {
     cur.shotTimes.shift();
     const dx = input.player.x - sim.pos.x;
     const dz = input.player.z - sim.pos.z;
-    const d = Math.hypot(dx, dz) || 1;
-    sim.projectiles.push({ pos: { ...sim.pos }, dir: { x: dx / d, z: dz / d }, age: 0, damage, via: cur.atk.id });
+    const aim = Math.atan2(dx, dz);
+    const split = cur.atk.split ?? 1;
+    for (let i = 0; i < split; i++) {
+      const a = aim + (split > 1 ? ((i / (split - 1)) - 0.5) * 2 * (PROJECTILE_FAN_DEG * Math.PI / 180) : 0);
+      sim.projectiles.push({ pos: { ...sim.pos }, dir: { x: Math.sin(a), z: Math.cos(a) }, age: 0, damage, via: cur.atk.id });
+    }
   }
 
   const inWindow = cur.t >= cur.windowStart && cur.t <= cur.windowEnd;
@@ -349,20 +359,39 @@ function endAttack(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, event
 }
 
 /**
- * Punish entry — both shapes from the spec: 'break' (damage threshold, clip
- * plays once: reyburn's dmg1) and 'fatigue' (post-string rest, clip LOOPS for
- * punish_duration: octo diablo's wattir tired idle).
+ * Punish entry — the spec's punish window, in all three observed shapes:
+ * a one-shot reaction (reyburn's dmg1), a timed loop (octo diablo's wattir
+ * tired idle), and the full knockdown chain (humilias: fall one-shot →
+ * fallwat loop → stdup one-shot recovery).
  */
 function beginPunish(sim: BossSim, entry: ResolvedBoss, cause: 'break' | 'fatigue', events: BossEvent[]) {
   sim.current = null;
   sim.punishCause = cause;
-  if (cause === 'fatigue' && entry.fsm.punish_duration > 0) {
+  if (entry.fsm.punish_start_clip !== '') {
+    sim.punishPhase = 'start';
+    playOnce(sim, [entry.fsm.punish_start_clip], events);
+  } else {
+    enterPunishLoop(sim, entry, events);
+  }
+  setState(sim, 'punish', events);
+}
+
+function enterPunishLoop(sim: BossSim, entry: ResolvedBoss, events: BossEvent[]) {
+  sim.punishPhase = 'loop';
+  if (entry.fsm.punish_duration > 0) {
     sim.loopToken = null;
     ensureLoop(sim, entry.fsm.punish_clip, events);
   } else {
     playOnce(sim, [entry.fsm.punish_clip], events);
   }
-  setState(sim, 'punish', events);
+}
+
+/** Chain boundaries in punish stateT time: [start end, loop end, total]. */
+function punishTimes(entry: ResolvedBoss, input: BossSimInput): [number, number, number] {
+  const startLen = entry.fsm.punish_start_clip !== '' ? dur(input, entry.fsm.punish_start_clip) : 0;
+  const loopLen = entry.fsm.punish_duration > 0 ? entry.fsm.punish_duration : dur(input, entry.fsm.punish_clip);
+  const endLen = entry.fsm.punish_end_clip !== '' ? dur(input, entry.fsm.punish_end_clip) : 0;
+  return [startLen, startLen + loopLen, startLen + loopLen + endLen];
 }
 
 /**
@@ -393,7 +422,7 @@ function stepLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events
   }
   // A rooted boss can't walk off — its breathing room is a rest beat in place.
   if (entry.fsm.stationary) {
-    ensureLoop(sim, 'wat', events);
+    ensureLoop(sim, entry.fsm.idle_clip, events);
     return;
   }
   // Curving drift, walking where it faces.
@@ -404,17 +433,23 @@ function stepLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events
   const speed = entry.stats.move_speed * LOAF_SPEED_MULT * mods(sim, entry).speed;
   sim.pos.x += sim.loafDir.x * speed * input.dt;
   sim.pos.z += sim.loafDir.z * speed * input.dt;
-  ensureLoop(sim, 'wlk1', events);
+  ensureLoop(sim, entry.fsm.walk_clip, events);
 }
 
 function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   sim.cooldown -= input.dt;
 
-  // Flight cycle: interval elapsed + the table has flight-phase attacks.
+  // Relocation cycle on the interval: the dragon's flight (needs its
+  // flight-phase attacks) or a timer-driven submerge (dark falz's swim —
+  // the octopus relocates via its fatigue cycle instead, interval 0).
   const hasFlight = entry.attacks.some((a) => a.phases?.includes('flight'));
-  if (hasFlight && entry.fsm.flight_interval > 0) {
+  if (entry.fsm.flight_interval > 0 && (entry.fsm.relocate_kind === 'submerge' || hasFlight)) {
     sim.sinceFlight += input.dt;
     if (sim.sinceFlight >= entry.fsm.flight_interval) {
+      if (entry.fsm.relocate_kind === 'submerge') {
+        beginSubmerge(sim, entry, input, events);
+        return;
+      }
       const away = turnToward(sim, input.player, 1e9, 1);
       sim.fly = {
         mode: 'climb',
@@ -446,9 +481,9 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
     const speed = entry.stats.move_speed * mods(sim, entry).speed;
     sim.pos.x += facing.x * speed * input.dt;
     sim.pos.z += facing.z * speed * input.dt;
-    ensureLoop(sim, 'wlk1', events);
+    ensureLoop(sim, entry.fsm.walk_clip, events);
   } else {
-    ensureLoop(sim, 'wat', events);
+    ensureLoop(sim, entry.fsm.idle_clip, events);
   }
 }
 
@@ -469,8 +504,9 @@ function beginSubmerge(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     target = { x: input.player.x + Math.cos(a) * RELOCATE_FALLBACK_RADIUS, z: input.player.z + Math.sin(a) * RELOCATE_FALLBACK_RADIUS };
   }
   sim.fly = { mode: 'sink', target, attacksLeft: 0 };
+  sim.sinceFlight = 0;
   sim.loopToken = null;
-  ensureLoop(sim, 'float', events);
+  ensureLoop(sim, entry.fsm.relocate_loop_clip, events);
   setState(sim, 'relocate', events);
 }
 
@@ -501,7 +537,7 @@ function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, ev
       sim.attacksSinceRest = 0;
       sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
       sim.loopToken = null;
-      ensureLoop(sim, 'wat', events);
+      ensureLoop(sim, entry.fsm.idle_clip, events);
       setState(sim, 'active', events);
     }
     return;
@@ -632,12 +668,16 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
       stepRelocate(sim, entry, input, events);
       break;
     case 'punish': {
-      const punishLen = sim.punishCause === 'fatigue' && entry.fsm.punish_duration > 0
-        ? entry.fsm.punish_duration
-        : dur(input, entry.fsm.punish_clip);
-      if (sim.stateT >= punishLen) {
+      const [startEnd, loopEnd, total] = punishTimes(entry, input);
+      if (sim.punishPhase === 'start' && sim.stateT >= startEnd) {
+        enterPunishLoop(sim, entry, events);
+      } else if (sim.punishPhase === 'loop' && sim.stateT >= loopEnd && entry.fsm.punish_end_clip !== '') {
+        sim.punishPhase = 'end';
+        playOnce(sim, [entry.fsm.punish_end_clip], events);
+      } else if (sim.stateT >= total) {
         const cause = sim.punishCause;
         sim.punishCause = null;
+        sim.punishPhase = null;
         sim.punishAccum = 0;
         sim.attacksSinceRest = 0;
         sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;

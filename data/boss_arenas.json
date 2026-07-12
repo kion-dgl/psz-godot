@@ -105,15 +105,17 @@
       "arena": "s07z_na1",
       "quest_source": "control_system",
       "model_scale": 1.0,
+      "stats": { "hp": 400, "move_speed": 2.0, "attack_cooldown": 3.0, "attack_base": 16, "turn_speed_deg": 60 },
+      "fsm": { "intro_clip": "", "walk_clip": "move", "idle_clip": "wat1", "loaf_duration_min": 2.0, "loaf_duration_max": 3.5, "punish_break_damage": 80, "punish_vulnerable_mult": 2.0, "punish_start_clip": "fall", "punish_clip": "fallwat", "punish_duration": 4.0, "punish_end_clip": "stdup" },
       "phases": [
         { "id": "active", "label": "Active", "note": "slow advance (move); full kit" },
-        { "id": "downed", "label": "Downed (punish)", "note": "fall → fallwat fallen idle (weak point exposed) → stdup; entered on a damage/break threshold — open question which" }
+        { "id": "downed", "label": "Downed (punish)", "note": "the knockdown chain: fall → fallwat loop (4s, ×2 damage, weak point exposed) → stdup; entered at 80 accumulated damage — the real trigger (cumulative vs weak-point hits) is an open question" }
       ],
       "attacks": [
         { "id": "laser_sweep", "clip": "laser", "chain": ["laserst", "laserlp", "laser"], "kind": "beam_sweep", "phases": ["active"], "min_range": 4, "max_range": 20, "note": "charge st→lp then the 1.92s firing sweep" },
-        { "id": "arm_swing", "clip": "swing", "chain": ["swingst", "swinglp", "swing"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 80, "max_range": 7 },
-        { "id": "headbutt", "clip": "hedb", "chain": ["hedbst", "hedblp", "hedb"], "kind": "charge", "phases": ["active"], "max_range": 10, "note": "press/grind — hedbhitlp is the grinding-on-hit loop, hedb2wt2/hedb2lp the recover transitions" },
-        { "id": "combo", "clip": "cmblp", "chain": ["cmbst", "cmblp", "cmbend"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 60, "max_range": 7, "note": "full st/lp/ed combo string (the only complete 3-piece family on the rig)" }
+        { "id": "arm_swing", "clip": "swing", "chain": ["swingst", "swinglp", "swing"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 80, "max_range": 7, "hit_reach": 6 },
+        { "id": "headbutt", "clip": "hedb", "chain": ["hedbst", "hedblp", "hedb"], "kind": "charge", "phases": ["active"], "min_range": 4, "max_range": 10, "hit_reach": 5, "damage_mult": 1.5, "note": "press/grind — hedbhitlp is the grinding-on-hit loop, hedb2wt2/hedb2lp the recover transitions" },
+        { "id": "combo", "clip": "cmblp", "chain": ["cmbst", "cmblp", "cmbend"], "kind": "melee_arc", "phases": ["active"], "hit_half_angle_deg": 60, "max_range": 7, "hit_reach": 6, "note": "full st/lp/ed combo string (the only complete 3-piece family on the rig)" }
       ],
       "parts": ["z_004_kao_a", "z_004_kao_b"],
       "anchors": [],
@@ -148,16 +150,18 @@
       "arena": "s07z_na2",
       "quest_source": "dark_castle",
       "model_scale": 1.0,
+      "stats": { "hp": 500, "move_speed": 3.0, "attack_cooldown": 2.5, "attack_base": 18, "turn_speed_deg": 100 },
+      "fsm": { "intro_clip": "", "walk_clip": "walk", "relocate_kind": "submerge", "relocate_untargetable": true, "relocate_loop_clip": "swm", "submerge_depth": 4, "flight_interval": 25, "fly_speed_mult": 2.5, "loaf_duration_min": 2.0, "loaf_duration_max": 3.5, "punish_break_damage": 90, "punish_vulnerable_mult": 2.0, "punish_clip": "dam3" },
       "phases": [
         { "id": "engaged", "label": "Engaged", "note": "walks (walk) and runs the ranged kit; nagi sweep up close" },
-        { "id": "submerged", "label": "Submerged", "note": "sinks (down) and swims (swm) to relocate between anchors, rises (up) — up/down could instead be a knockdown punish pair, verify in the room" }
+        { "id": "submerged", "label": "Submerged", "note": "every ~25s: sinks and swims (swm, untargetable) to relocate between anchors — up/down could instead be a knockdown punish pair, verify in the room" }
       ],
       "attacks": [
-        { "id": "arm_sweep", "clip": "nagi", "kind": "melee_arc", "phases": ["engaged"], "hit_half_angle_deg": 90, "max_range": 8, "note": "2.17s wide mow-down sweep" },
-        { "id": "throw_volley", "clip": "thrlp", "chain": ["thrst", "thrlp", "thr2wat"], "kind": "projectile", "phases": ["engaged"], "min_range": 5, "max_range": 25, "note": "looping throw volley — lp repeats while firing" },
-        { "id": "diffusion", "clip": "diffusn", "chain": ["difst", "diflp", "diffusn"], "kind": "projectile", "phases": ["engaged"], "min_range": 4, "max_range": 20, "note": "spread shot (diffusion release after the charge loop)" },
-        { "id": "radiate", "clip": "radiate", "chain": ["radst", "radlp", "radiate"], "kind": "aoe_burst", "phases": ["engaged"], "max_range": 12, "damage_mult": 1.5, "note": "big radial burst; radwat/rad2wat are the radiating idle/recover" },
-        { "id": "bh_shot", "clip": "bhsht", "kind": "projectile", "phases": ["engaged"], "min_range": 6, "max_range": 25, "note": "single heavy shot — bhsht reading uncertain (black-hole shot?)" }
+        { "id": "arm_sweep", "clip": "nagi", "kind": "melee_arc", "phases": ["engaged"], "hit_half_angle_deg": 90, "max_range": 8, "hit_reach": 7, "note": "2.17s wide mow-down sweep" },
+        { "id": "throw_volley", "clip": "thrlp", "chain": ["thrst", "thrlp", "thr2wat"], "kind": "projectile", "phases": ["engaged"], "min_range": 5, "max_range": 25, "lp_loops": 3, "note": "looping throw volley — one shot per thrlp rep" },
+        { "id": "diffusion", "clip": "diffusn", "chain": ["difst", "diflp", "diffusn"], "kind": "projectile", "phases": ["engaged"], "min_range": 4, "max_range": 20, "split": 5, "note": "spread shot — the release fans 5 projectiles across ±25°" },
+        { "id": "radiate", "clip": "radiate", "chain": ["radst", "radlp", "radiate"], "kind": "aoe_burst", "phases": ["engaged"], "hit_half_angle_deg": 180, "hit_reach": 12, "max_range": 10, "damage_mult": 1.5, "note": "big radial burst; radwat/rad2wat are the radiating idle/recover" },
+        { "id": "bh_shot", "clip": "bhsht", "kind": "projectile", "phases": ["engaged"], "min_range": 6, "max_range": 25, "damage_mult": 1.5, "note": "single heavy shot — bhsht reading uncertain (black-hole shot?)" }
       ],
       "anchors": [],
       "clip_notes": {

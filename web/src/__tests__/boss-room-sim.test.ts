@@ -52,6 +52,8 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
   stats: { hp: 100, move_speed: 4, attack_cooldown: 2, attack_base: 10, turn_speed_deg: 720 },
   fsm: {
     intro_clip: 'tht',
+    walk_clip: 'wlk1',
+    idle_clip: 'wat',
     stationary: false,
     relocate_kind: 'flight',
     relocate_untargetable: false,
@@ -67,6 +69,9 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     punish_break_damage: 30,
     punish_vulnerable_mult: 2,
     punish_clip: 'dmg1',
+    punish_start_clip: '',
+    punish_end_clip: '',
+    relocate_loop_clip: 'float',
   },
   phases: [
     { id: 'ground', label: 'Ground' },
@@ -344,6 +349,79 @@ describe('boss sim — octo diablo cycle', () => {
     expect(evs).toContainEqual({ type: 'anim', tokens: ['eatcnc'], loop: false });
     expect(sim.state).toBe('active');
     expect(sim.current).toBeNull();
+  });
+});
+
+describe('boss sim — humilias knockdown chain & falz relocation', () => {
+  it('knockdown: fall → fallwat loop (vulnerable) → stdup → active', () => {
+    const entry = makeEntry({
+      fsm: {
+        ...makeEntry().fsm,
+        punish_start_clip: 'fall',
+        punish_clip: 'fallwat',
+        punish_duration: 2,
+        punish_end_clip: 'stdup',
+      },
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    run(sim, entry, { x: 0, z: 20 }, 12, () => sim.state === 'active');
+    const evs = damageBoss(sim, entry, 30); // break
+    expect(sim.state).toBe('punish');
+    expect(evs).toContainEqual({ type: 'anim', tokens: ['fall'], loop: false });
+    // after the fall clip (1s), the fallen idle LOOPS
+    const all = run(sim, entry, { x: 0, z: 20 }, 12); // 1.2s
+    expect(all).toContainEqual({ type: 'anim', tokens: ['fallwat'], loop: true });
+    const before = sim.hp;
+    damageBoss(sim, entry, 10); // ×2 while down
+    expect(before - sim.hp).toBe(20);
+    // loop runs 2s, then the stand-up plays, then it re-engages
+    const rest = run(sim, entry, { x: 0, z: 20 }, 40, () => sim.state === 'active');
+    expect(rest).toContainEqual({ type: 'anim', tokens: ['stdup'], loop: false });
+    expect(sim.state).toBe('active');
+    expect(sim.punishAccum).toBe(0);
+  });
+
+  it('falz: interval-driven submerge relocation with the swim loop', () => {
+    const entry = makeEntry({
+      attacks: [bite],
+      fsm: {
+        ...makeEntry().fsm,
+        relocate_kind: 'submerge',
+        relocate_untargetable: true,
+        relocate_loop_clip: 'swm',
+        flight_interval: 2,
+        punish_break_damage: 0,
+      },
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 30 }; // out of band: walks, interval accrues
+    const evs = run(sim, entry, player, 60, () => sim.state === 'relocate');
+    expect(sim.state).toBe('relocate');
+    expect(evs).toContainEqual({ type: 'anim', tokens: ['swm'], loop: true });
+    run(sim, entry, player, 30, () => sim.alt < 0);
+    expect(damageBoss(sim, entry, 50)).toHaveLength(0); // untargetable under
+    run(sim, entry, player, 900, () => sim.state === 'active');
+    expect(sim.state).toBe('active');
+    expect(sim.sinceFlight).toBeLessThan(2);
+  });
+
+  it('diffusion: a split projectile release fans the shots', () => {
+    const diffusion = atk({
+      id: 'diffusion', clip: 'diffusn', chain: ['difst', 'diflp', 'diffusn'], kind: 'projectile',
+      phases: ['ground'], min_range: 4, max_range: 20, split: 5, windup_frac: 0,
+    });
+    const entry = makeEntry({ attacks: [diffusion] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 10 };
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    let maxLive = 0;
+    for (let i = 0; i < 40 && sim.state === 'attacking'; i++) {
+      stepBoss(sim, entry, input(player));
+      maxLive = Math.max(maxLive, sim.projectiles.length);
+    }
+    expect(maxLive).toBe(5); // one release, five fanned shots
+    const dirs = new Set(sim.projectiles.map((p) => p.dir.x.toFixed(2)));
+    expect(dirs.size).toBeGreaterThan(1); // actually spread, not stacked
   });
 });
 

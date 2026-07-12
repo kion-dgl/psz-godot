@@ -74,7 +74,7 @@ const chart = `stateDiagram-v2
   <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>
   <ul>
     <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>): triggered by <code>fsm.fatigue_attacks</code> attacks since the last rest, the punish clip <em>loops</em> for <code>fsm.punish_duration</code>, and for a submerge-relocating boss the window ends in the relocation.</li>
-    <li><strong>Knockdown</strong> — a break threshold (<code>fsm.punish_break_damage</code>) topples the boss into a one-shot reaction clip (Humilias's <code>fall → fallwat → stdup</code>; Reyburn's 2s <code>dmg1/dmg2</code> reactions <em>might</em> be this, but the observed pattern list has no knockdown — unconfirmed). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
+    <li><strong>Knockdown</strong> — a break threshold (<code>fsm.punish_break_damage</code>) topples the boss: either a one-shot reaction clip (Reyburn's <code>dmg1</code> — though the observed pattern list has no knockdown, unconfirmed) or the full chain <code>punish_start_clip → punish_clip loop → punish_end_clip</code> (Humilias's <code>fall → fallwat → stdup</code>). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
   </ul>
 
   <h2>Per-boss drafts</h2>
@@ -112,8 +112,9 @@ const chart = `stateDiagram-v2
 
   <h3>Humilias (boss_mother — Dark Shrine A, control_system)</h3>
   <ul>
-    <li><strong>Advancing juggernaut.</strong> Slow advance (<code>move</code>); laser sweep at range, arm swing / headbutt press / full <code>cmb</code> combo string up close; break threshold → knockdown punish cycle (<code>fall → fallwat → stdup</code>).</li>
-    <li><strong>Open:</strong> what drives the knockdown (cumulative damage vs weak-point hits); <code>hedbhitlp</code> grinding-on-hit semantics (sustained contact damage?).</li>
+    <li><strong>Advancing juggernaut — sim'd.</strong> Slow advance (<code>move_speed 2</code>, narrow turn); laser sweep at range (<code>beam_sweep</code>), arm swing / headbutt press (<code>charge</code>) / full <code>cmb</code> combo string up close. The face parts (<code>z_004_kao_a/b</code>) render in sync.</li>
+    <li><strong>Knockdown chain — the punish contract's third shape.</strong> 80 accumulated damage topples her: <code>punish_start_clip fall</code> (one-shot) → <code>punish_clip fallwat</code> <em>loops</em> for <code>punish_duration</code> (4&nbsp;s, ×2 damage — the weak point exposed) → <code>punish_end_clip stdup</code> (one-shot recovery) → re-engage.</li>
+    <li><strong>Open:</strong> what drives the knockdown (cumulative damage vs weak-point hits — the faces?); <code>hedbhitlp</code> grinding-on-hit semantics (sustained contact damage?).</li>
   </ul>
 
   <h3>Chaos Mobius (boss_robot — Arca Plant, heretic)</h3>
@@ -123,8 +124,8 @@ const chart = `stateDiagram-v2
 
   <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
   <ul>
-    <li><strong>Relocating ranged finale.</strong> Walks and runs a ranged kit — looping throw volley (<code>thr*</code>), diffusion spread (<code>dif*</code>), radiate AoE burst (<code>rad*</code>), single heavy shot (<code>bhsht</code>) — with the wide <code>nagi</code> mow-down sweep up close; submerges (<code>down/swm/up</code>) to relocate between anchors.</li>
-    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair; <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
+    <li><strong>Relocating ranged finale — sim'd.</strong> Walks and runs the ranged kit: throw volley (<code>thr*</code>, one projectile per <code>thrlp</code> rep), <strong>diffusion spread</strong> (<code>dif*</code> — the release fans <code>split: 5</code> projectiles across ±25°), radiate AoE burst (<code>rad*</code>, 360°), single heavy shot (<code>bhsht</code>), and the wide <code>nagi</code> mow-down sweep up close. Every ~25&nbsp;s (<code>flight_interval</code> + <code>relocate_kind submerge</code>) it sinks untargetable and <em>swims</em> (<code>relocate_loop_clip swm</code>) to a new spot — the timer-driven variant of the octopus's fatigue-driven cycle.</li>
+    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
   </ul>
 
   <h2>Draft → normative workflow</h2>
