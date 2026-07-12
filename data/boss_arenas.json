@@ -4,7 +4,7 @@
   "arenas": {
     "s01z_na1": { "area": "valley_z", "label": "Gurhacia Valley arena" },
     "s02z_na1": { "area": "wetlands_z", "label": "Ozette Wetlands arena", "skybox": true },
-    "s03z_na1": { "area": "snowfield_z", "label": "Rioh Snowfield arena", "unassigned": true },
+    "s03z_na1": { "area": "snowfield_z", "label": "Rioh Snowfield arena", "unassigned": true, "note": "no unique boss: the snowfield boss room is a Hildegao pack fight (per Kion) — the debug-mission work covers it with regular-enemy spawns, not a boss_arenas entry" },
     "s04z_na1": { "area": "makara_z", "label": "Makara Ruins arena", "unassigned": true, "note": "the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)" },
     "s05z_na1": { "area": "paru_z", "label": "Oblivion City Paru arena", "unassigned": true },
     "s06z_na1": { "area": "arca_z", "label": "Arca Plant arena" },
@@ -136,13 +136,31 @@
       "arena": "s06z_na1",
       "quest_source": "heretic",
       "model_scale": 1.0,
-      "phases": [],
-      "attacks": [],
+      "stats": { "hp": 450, "move_speed": 3.5, "attack_cooldown": 2.5, "attack_base": 16, "turn_speed_deg": 90 },
+      "fsm": { "intro_clip": "", "walk_clip": "mov_lp", "loaf_duration_min": 2.0, "loaf_duration_max": 3.5, "punish_break_damage": 80, "punish_vulnerable_mult": 2.0, "punish_start_clip": "dwn_st", "punish_clip": "dwn_lp", "punish_duration": 4.0, "punish_end_clip": "dwn_ed" },
+      "phases": [
+        { "id": "engaged", "label": "Engaged", "note": "the combined robot: mov_lp locomotion, drill/gun/sweep kit" },
+        { "id": "downed", "label": "Downed (punish)", "note": "the dwn_st → dwn_lp loop → dwn_ed knockdown chain — same shape as humilias" }
+      ],
+      "attacks": [
+        { "id": "drill_left", "clip": "atk_dl_at", "chain": ["atk_dl_st", "atk_dl_lp", "atk_dl_at"], "kind": "melee_arc", "phases": ["engaged"], "max_range": 6, "hit_reach": 5, "weight": 0.7, "note": "left drill — st/lp telegraph then the at hit piece; the ed recovery clip is not played by the draft chain" },
+        { "id": "drill_right", "clip": "atk_dr_at", "chain": ["atk_dr_st", "atk_dr_lp", "atk_dr_at"], "kind": "melee_arc", "phases": ["engaged"], "max_range": 6, "hit_reach": 5, "weight": 0.7 },
+        { "id": "gun_left", "clip": "atk_gl_at", "chain": ["atk_gl_st", "atk_gl_at"], "kind": "projectile", "phases": ["engaged"], "min_range": 5, "max_range": 20, "weight": 0.7, "note": "gl/gr = gun left/right (reading unverified)" },
+        { "id": "gun_right", "clip": "atk_gr_at", "chain": ["atk_gr_st", "atk_gr_at"], "kind": "projectile", "phases": ["engaged"], "min_range": 5, "max_range": 20, "weight": 0.7 },
+        { "id": "sweep", "clip": "atk_sw_at", "chain": ["atk_sw_st", "atk_sw_lp", "atk_sw_at"], "kind": "melee_arc", "phases": ["engaged"], "hit_half_angle_deg": 100, "max_range": 7, "hit_reach": 6, "damage_mult": 1.5, "note": "the big sweep — 66-frame telegraph" }
+      ],
       "anchors": [],
-      "note": "behavior draft blocked on clip import: GLB carries a single clip (z003_atk_dl_lp, a bare lp segment) — the rest of the kit's segmented pieces (ve_*) never imported; parts z_003n/z_003u (imported) carry only the same single clip, so the gap is upstream in the viewer's animation import",
-      "parts": ["z_003n", "z_003u"],
+      "note": "UNBLOCKED: full 26-clip kit imported via the patched apicula (viewer processBossRobot.ts) — the rigs carry one extra unanimated root object the clips don't cover, which apicula's exact-count match rejected. The game rig is boss_robot_cmb's combined z_003. Two-robot mechanics pending design: stt_n/stt_u entrances, ch_in/ch_out combine-split, ded_n/ded_u deaths (parts z_003n/z_103u carry them), ve_* separated forms, and the floor_lazer arena props.",
+      "parts": [],
       "clip_notes": {
-        "atk_dl_lp": "the only imported clip — a loop segment of a segmented attack (dl = drill?); unplayable alone per /mechanics/enemy-attacks segment rules"
+        "wat": "combined idle",
+        "mov_st": "move start", "mov_lp": "move loop", "mov_ed": "move end",
+        "stp": "stomp/step (13KB — big one-shot, reading unverified)",
+        "dwn_st": "knockdown — falls", "dwn_lp": "downed loop (punish window)", "dwn_ed": "gets back up",
+        "atk_sw_st": "sweep windup (66 frames)", "atk_sw_lp": "sweep loop", "atk_sw_at": "sweep hit", "atk_sw_ed": "sweep recovery",
+        "ch_in_n": "n robot combine-in", "ch_out_n": "n robot split-out (same for _u)",
+        "stt_n": "n robot entrance (25KB)", "stt_u": "u robot entrance",
+        "ded_n": "n robot death", "ded_u": "u robot death"
       }
     },
     "dark_falz": {

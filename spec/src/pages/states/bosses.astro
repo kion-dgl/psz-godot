@@ -119,7 +119,9 @@ const chart = `stateDiagram-v2
 
   <h3>Chaos Mobius (boss_robot — Arca Plant, heretic)</h3>
   <ul>
-    <li><strong>Blocked on clip import.</strong> The GLB carries one clip (<code>z003_atk_dl_lp</code> — a bare loop segment, unplayable alone per the enemy segment rules); the kit's <code>ve_*</code> pieces never imported (see <code>storybook/enemyData.ts</code>). No behavior draft until the rig is complete.</li>
+    <li><strong>Unblocked.</strong> The full 26-clip kit imported via the patched apicula (<code>psz-asset-viewer scripts/processBossRobot.ts</code>): the PSZ boss rigs carry one extra <em>unanimated root object</em> — named after the model, last in the object list — that the clips don't cover, and apicula's exact object-count match rejected every clip. The patch (local <code>~/Projects/apicula</code>) accepts animations with exactly one fewer object. The game rig is <code>boss_robot_cmb</code>'s combined <code>z_003</code>.</li>
+    <li><strong>Draft table — sim'd.</strong> Left/right drills and the big sweep (segmented <code>st→lp→at</code> chains; the <code>ed</code> recovery clips are not yet played), left/right gun projectiles, <code>mov_lp</code> locomotion, and the <code>dwn_st → dwn_lp → dwn_ed</code> knockdown chain (same shape as Humilias).</li>
+    <li><strong>Open — the two-robot mechanics:</strong> "Chaos &amp; Mobius" are two robots. The narc carries their entrances (<code>stt_n/stt_u</code>), combine/split transitions (<code>ch_in/ch_out</code> per robot), separate deaths (<code>ded_n/ded_u</code>), and separated idle forms (<code>ve_*</code>, the plain <code>boss_robot</code> narc) — all now converted onto the <code>z_003n/z_103u</code> part rigs, pending fight design. The <code>floor_lazer</code> arena props (colored floor tiles!) ride the cmb narc too. <code>gl/gr</code> = gun left/right and <code>stp</code> readings unverified.</li>
   </ul>
 
   <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
