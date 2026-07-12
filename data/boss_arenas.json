@@ -492,6 +492,7 @@
         "z_004_kao_a",
         "z_004_kao_b"
       ],
+      "spawn_pos": [0, 0, -6],
       "anchors": [],
       "clip_notes": {
         "wat1": "idle",
