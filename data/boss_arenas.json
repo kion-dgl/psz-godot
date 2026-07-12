@@ -21,7 +21,7 @@
       "area": "makara_z",
       "label": "Makara Ruins arena",
       "unassigned": true,
-      "note": "no unique boss: an enemy-arena fight like the snowfield (per Kion) \u2014 composition TBD; the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)"
+      "note": "no unique boss: an enemy-arena fight like the snowfield (per Kion). debug_boss_makara spawns a PLACEHOLDER pack (2x gigobooma_origin + 2x kapantha) pending the real composition; the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)"
     },
     "s05z_na1": {
       "area": "paru_z",

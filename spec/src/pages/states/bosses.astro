@@ -136,7 +136,10 @@ const chart = `stateDiagram-v2
   </ul>
 
   <h3>Enemy-arena boss rooms (Snowfield & Makara)</h3>
-  <p>Two boss rooms are <em>pack fights</em>, not unique bosses: the <strong>Rioh Snowfield</strong> arena (<code>s03z_na1</code>) spawns a Hildegao pack, and the <strong>Makara Ruins</strong> arena (<code>s04z_na1</code>) is the same shape with composition TBD (its story quest, the_broken_seal, loads the stage for a scripted event and spawns nothing). These need no <code>boss_arenas.json</code> boss entries — regular enemy spawns in the arena cell cover them.</p>
+  <p>Two boss rooms are <em>pack fights</em>, not unique bosses: the <strong>Rioh Snowfield</strong> arena (<code>s03z_na1</code>) spawns a Hildegao pack, and the <strong>Makara Ruins</strong> arena (<code>s04z_na1</code>) is the same shape (its story quest, the_broken_seal, loads the stage for a scripted event and spawns nothing). These need no <code>boss_arenas.json</code> boss entries — regular enemy spawns in the arena cell cover them, and each has a <code>debug_boss_*</code> mission. Makara's debug pack is a <strong>placeholder</strong> (2× gigobooma_origin + 2× kapantha) pending the real arena composition.</p>
+
+  <h3>Missing: the Paru robots</h3>
+  <p>The Paru <em>first</em> encounter — two floating robots, one drill-like (per Kion) — is <strong>absent from the PSZ extraction</strong>. All 66 enemy narcs were checked: the only robot boss is <code>boss_robot</code> (Chaos Mobius, the humanoid dagger robot), which is the Arca/<em>union</em> form; there is no two-floating-robots rig, no separate drill-robot model, no <code>z_103</code> recolor palette, and nothing robot-boss-shaped in the Paru stage or specials. The <code>finjer</code>/board machines (<code>board</code>/<code>circle</code>/<code>leg</code>/<code>lower</code>, Machine element) are small regular enemies (~2–3&nbsp;m), not a boss. Open decision: source the missing rig if it exists elsewhere in the ROM data, or substitute a fitting robot from PSO (e.g. Sinow-line) as a creative stand-in.</p>
 
   <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
   <ul>

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "last_updated": "2026-07-12",
+  "id": "debug_boss_makara",
+  "name": "DEBUG: Makara Ruins Arena",
+  "description": "Debug mission: warp straight into the Makara Ruins arena. Enemy-arena fight (no unique boss, like the snowfield) \u2014 placeholder Native/Beast pack pending the real composition. Always unlocked; no rewards.",
+  "area_id": "makara",
+  "rewards": {},
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "Debug warp: straight to the boss arena. Good hunting."
+    }
+  ],
+  "sections": [
+    {
+      "type": "boss",
+      "area": "z",
+      "area_id": "makara",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s04z_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "gigobooma_origin",
+              "position": [
+                0,
+                0,
+                5
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "gigobooma_origin",
+              "position": [
+                -5,
+                0,
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "kapantha",
+              "position": [
+                5,
+                0,
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "kapantha",
+              "position": [
+                0,
+                0,
+                -6
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
