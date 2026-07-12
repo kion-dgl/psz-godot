@@ -7449,6 +7449,11 @@ func test_quest_reward_data() -> void:
 	for qid in QuestLoader.list_quests():
 		if qid == "manifest" or qid == "hello_quest":
 			continue
+		# Debug missions award nothing BY CONTRACT (spec /states/bosses
+		# §debug-missions: always unlocked, zero rewards) — the complete-
+		# rewards invariant guards canon quests only.
+		if qid.begins_with("debug_"):
+			continue
 		if _assert_quest_reward_tiers(qid):
 			ok_quests += 1
 	assert_gt(ok_quests, 0, "all canon quests define complete reward tiers (%d ok)" % ok_quests)
