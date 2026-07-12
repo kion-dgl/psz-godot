@@ -465,25 +465,37 @@ describe('boss sim — chaos sorcerer gem caster', () => {
     for (const g of sim.gems) expect(['red', 'blue', 'purple', 'green']).toContain(g);
   });
 
-  it('always shows two distinct gems while casting repeatedly', () => {
+  it('casts a gem to the casting slot, then refills during cooldown to two', () => {
     const entry = makeSorcerer();
-    // a cycling rng so gem refills actually vary color
     let k = 0;
     const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
     const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
     const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, rng);
     const player = { x: 0, z: 5 };
-    let castsSeen = 0;
-    let wasAttacking = false;
-    for (let i = 0; i < 400; i++) {
-      stepBoss(sim, entry, inp(player));
-      // the two gems are ALWAYS present and distinct (the telegraph invariant)
-      expect(sim.gems.filter(Boolean), `frame ${i}: not two gems`).toHaveLength(2);
-      expect(sim.gems[0]).not.toBe(sim.gems[1]);
-      if (sim.state === 'attacking' && !wasAttacking) castsSeen++;
-      wasAttacking = sim.state === 'attacking';
-    }
-    expect(castsSeen).toBeGreaterThan(3); // it kept casting
+    // opens with two distinct gems (the telegraph), nothing casting
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+    expect(sim.castingGem).toBeNull();
+    // reach a cast: the chosen gem leaves its slot for the casting slot
+    run(sim, entry, player, 40, () => sim.castingGem !== null);
+    expect(sim.castingGem).toBeTruthy();
+    expect(sim.gems.filter(Boolean)).toHaveLength(1); // one side gem left
+    // the casting gem clears at the spell release
+    run(sim, entry, player, 40, () => sim.castingGem === null);
+    expect(sim.castingGem).toBeNull();
+    // during the cooldown a new gem refills to two distinct again
+    run(sim, entry, player, 60, () => sim.gems.filter(Boolean).length === 2);
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+  });
+
+  it('the gem caster never loaf-walks — it stays put between casts', () => {
+    const entry = makeSorcerer();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0.5]));
+    const states = new Set<string>();
+    for (let i = 0; i < 200; i++) { stepBoss(sim, entry, input({ x: 0, z: 5 })); states.add(sim.state); }
+    expect(states.has('loaf')).toBe(false);
+    expect(sim.pos).toEqual({ x: 0, z: 0 }); // teleport off in this entry, so it never moves
   });
 
   it('green gem self-heals — boss HP goes up', () => {

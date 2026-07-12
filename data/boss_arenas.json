@@ -661,7 +661,7 @@
       "stats": {
         "hp": 350,
         "move_speed": 2.0,
-        "attack_cooldown": 2.5,
+        "attack_cooldown": 3.0,
         "attack_base": 14,
         "turn_speed_deg": 120
       },
@@ -672,7 +672,7 @@
         "stationary": true,
         "hover_hold": 2.5,
         "gem_caster": true,
-        "gem_respawn_delay": 2.5,
+        "gem_respawn_delay": 1.2,
         "teleport_interval": 9.0,
         "teleport_radius": 9.0,
         "loaf_duration_min": 0.5,
@@ -743,7 +743,7 @@
         }
       ],
       "anchors": [],
-      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = PSO Chaos Sorcerer. Gem-caster behavior (per Kion): two gems float on either side; color -> school: purple=dark, red=fire, blue=ice, green=self-heal. It casts the spell of one held gem, consumes it, and after gem_respawn_delay a new gem fills the empty slot (random, never the same color as the one still held). Hovers at a fixed height off the floor, mostly static, and periodically cancel-casts to teleport elsewhere in the arena. clips: attack1/2/3 mapped to fire/ice/dark, cure -> heal, enter/wait/damage/die. Draft mapping of clip->element is a guess; tune by observation.",
+      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = PSO Chaos Sorcerer. Gem-caster behavior: two gems float on either side (purple=dark, red=fire, blue=ice, green=self-heal) \u2014 they telegraph the two possible next spells but not which fires. To cast, one gem moves in FRONT of the sorcerer, spins rapidly, and disappears as the spell releases; then a cooldown of a few seconds (attack_cooldown) with no casting, during which a new gem respawns (after gem_respawn_delay) to replace the used one \u2014 back to two. It hovers at a fixed height off the floor, stays mostly static, and periodically cancel-casts to teleport. clips: attack1/2/3 -> fire/ice/dark (guess), cure -> heal, enter/wait/damage/die. Tune clip->element by observation.",
       "clip_notes": {
         "enter_re4_b_body": "entrance",
         "wait_re4_b_body": "idle (float)",

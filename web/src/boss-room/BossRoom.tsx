@@ -594,9 +594,19 @@ export default function BossRoom() {
       bossGroup.add(m);
       return m;
     });
+    // The casting gem: sits in front of the sorcerer and spins rapidly while a
+    // spell is being cast, then vanishes at release.
+    const castGemMesh = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.45),
+      new THREE.MeshBasicMaterial({ color: 0xffffff }),
+    );
+    castGemMesh.position.set(0, 1.7, 2.6);
+    castGemMesh.visible = false;
+    bossGroup.add(castGemMesh);
     function syncGems() {
       if (!sim || !sim.gems) {
         for (const m of gemMeshes) m.visible = false;
+        castGemMesh.visible = false;
         return;
       }
       sim.gems.forEach((color, i) => {
@@ -604,8 +614,15 @@ export default function BossRoom() {
         if (!color) { m.visible = false; return; }
         m.visible = true;
         (m.material as THREE.MeshBasicMaterial).color.setHex(GEM_HEX[color]);
-        m.rotation.y += 0.03; // slow spin
+        m.rotation.y += 0.03; // slow idle spin
       });
+      if (sim.castingGem) {
+        castGemMesh.visible = true;
+        (castGemMesh.material as THREE.MeshBasicMaterial).color.setHex(GEM_HEX[sim.castingGem]);
+        castGemMesh.rotation.y += 0.5; // rapid spin while casting
+      } else {
+        castGemMesh.visible = false;
+      }
     }
     function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
       while (pool.length <= i) {
