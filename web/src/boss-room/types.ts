@@ -192,11 +192,18 @@ export function resolveBoss(def: BossDef): ResolvedBoss {
   };
 }
 
-/** Composite-boss form (heaven's mother): a regular roster enemy the fight cycles through. */
+/**
+ * A selectable rig in the form picker. Two shapes:
+ * - composite boss (heaven's mother): a regular roster enemy the fight cycles through.
+ * - split boss (chaos & mobius at Paru): a PART rig of a parent enemy — set
+ *   `part_of` and the room loads assets/enemies/<part_of>/parts/<model_id>/.
+ */
 export interface BossForm {
   roster_id: string;
   model_id: string;
   label: string;
+  /** When set, model_id is a part under this parent enemy (the robot's split halves). */
+  part_of?: string;
 }
 
 export interface BossDef {

@@ -627,7 +627,7 @@
         }
       ],
       "anchors": [],
-      "note": "UNBLOCKED: full 26-clip kit imported via the patched apicula (viewer processBossRobot.ts) \u2014 the rigs carry one extra unanimated root object the clips don't cover, which apicula's exact-count match rejected. The game rig is boss_robot_cmb's combined z_003. Two-robot mechanics pending design: stt_n/stt_u entrances, ch_in/ch_out combine-split, ded_n/ded_u deaths (parts z_003n/z_103u carry them), ve_* separated forms, and the floor_lazer arena props.",
+      "note": "ENCOUNTER 2 of 2 (per Kion): Arca is the SECOND encounter \u2014 Chaos & Mobius JOIN into the larger combined robot (z_003, the full 26-clip kit). The first encounter is the split top+bottom at Paru (chaos_mobius_paru). Full kit imported via the patched apicula (viewer processBossRobot.ts) \u2014 the rigs carry one extra unanimated root object apicula's exact-count match rejected; the game rig is boss_robot_cmb's combined z_003. The ch_in/ch_out combine-split transitions (parts z_003n/z_103u) are the join animation from the split form; ded_n/ded_u deaths and the floor_lazer arena props also ride the cmb narc.",
       "parts": [],
       "clip_notes": {
         "wat": "combined idle",
@@ -655,6 +655,11 @@
       "arena": "s05z_na1",
       "quest_source": "",
       "model_scale": 1.0,
+      "forms": [
+        { "roster_id": "chaos_mobius_paru", "model_id": "boss_robot", "label": "Combined (z_003)" },
+        { "roster_id": "chaos_mobius_paru", "model_id": "z_003n", "label": "Split — upper (arms/head/daggers)", "part_of": "boss_robot" },
+        { "roster_id": "chaos_mobius_paru", "model_id": "z_103u", "label": "Split — lower (legs/body core)", "part_of": "boss_robot" }
+      ],
       "stats": {
         "hp": 450,
         "move_speed": 3.5,
@@ -771,7 +776,7 @@
         }
       ],
       "anchors": [],
-      "note": "the OTHER encounter of Chaos & Mobius (per Kion: the Paru boss is a different form). Which encounter is which form is OPEN: the boss_robot narc carries the separated-robot ve_* idles/entrances/deaths, boss_robot_cmb carries the full 26-clip fight kit with the z_103u RECOLOR of the u robot (variant-numbering = second encounter?) plus the floor_lazer props. The roster's original chaos_mobius entry lists paru as its location while the heretic quest spawns it in arca \u2014 ids/rigs may want swapping once the two fight designs are settled. Draft kit copied from the arca entry meanwhile.",
+      "note": "ENCOUNTER 1 of 2 (per Kion): Paru is the FIRST encounter \u2014 Chaos & Mobius fight as two separated parts (top + bottom); Arca (chaos_mobius, heretic quest) is the SECOND \u2014 they JOIN into the larger combined robot. Rig anatomy confirms it: the robot separates at the core into an UPPER combat unit z_003n (spine/arms/hands/HEAD + the two daggers, 13 anim objects) and a LOWER base z_103u (legs/feet/thighs + the put01/put02 body core, 8 objects); joined they form z_003 (21 objects) at put01. The form picker loads Combined / Upper / Lower. Clip distribution: the full 26-clip attack kit (drills/guns/sweep/dwn/mov/stp) lives ONLY on the joined z_003 \u2014 each half carries just ve_wat (idle), stt (entrance), ch_in/ch_out (combine/split), ded (death) [verified: no half has any attack or move clip in either narc]; the plain boss_robot narc adds ve_ded_a/ve_ded_b two-variant separated deaths. IMPLICATION for the Paru fight: the halves can't attack from their own clips \u2014 either they periodically ch_in to the joined form to attack then ch_out, or they deal contact/slide damage without a dedicated clip. That, plus which half moves and the split positions, is the open observation question. Draft kit below is the joined form (shared with the arca entry).",
       "parts": [],
       "clip_notes": {
         "wat": "combined idle",

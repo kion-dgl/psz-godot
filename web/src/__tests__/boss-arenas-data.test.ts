@@ -58,7 +58,14 @@ describe('boss_arenas.json — bosses', () => {
         for (const f of b.forms) {
           const e = rosterById.get(f.roster_id);
           expect(e, `${id} form ${f.roster_id} missing from enemies.json`).toBeTruthy();
-          expect(e!.model_id, `${id} form ${f.roster_id} model_id mismatch`).toBe(f.model_id);
+          if (f.part_of) {
+            // Split-boss form (chaos & mobius): model_id is a PART rig under
+            // part_of, not the roster model — the roster still resolves to
+            // the parent enemy's rig.
+            expect(e!.model_id, `${id} form ${f.roster_id} parent rig`).toBe(f.part_of);
+          } else {
+            expect(e!.model_id, `${id} form ${f.roster_id} model_id mismatch`).toBe(f.model_id);
+          }
         }
         expect(b.model_id, `${id}: composite model_id must be forms[0]`).toBe(b.forms[0].model_id);
         continue;
@@ -72,7 +79,11 @@ describe('boss_arenas.json — bosses', () => {
 
   it('boss model GLBs are in the published pack (asset_tree.txt)', () => {
     for (const [id, b] of bosses) {
-      const models: string[] = b.forms ? b.forms.map((f: any) => f.model_id) : [b.model_id];
+      // part_of forms are PART rigs — they ship with the parts on the next
+      // pack publish (like the tentacle/face parts), not asserted here.
+      const models: string[] = b.forms
+        ? b.forms.filter((f: any) => !f.part_of).map((f: any) => f.model_id)
+        : [b.model_id];
       for (const m of models) {
         const glb = `assets/enemies/${m}/${m}.glb`;
         expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);

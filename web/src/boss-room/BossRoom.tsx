@@ -137,10 +137,15 @@ export default function BossRoom() {
   const arenaId = ov.arena ?? boss?.arena ?? '';
   const arena = config?.arenas[arenaId];
   const modelScale = ov.model_scale ?? boss?.model_scale ?? 1;
-  // Composite boss (forms): the picked form's rig is what loads.
+  // Composite boss (forms): the picked form's rig is what loads. A form with
+  // `part_of` is a part rig (the robot's split halves), loaded from the
+  // parent enemy's parts/ dir instead of a top-level model.
   const formIdx = ov.form ?? 0;
   const activeForm = boss?.forms?.[formIdx] ?? boss?.forms?.[0];
   const effectiveModelId = activeForm?.model_id ?? boss?.model_id ?? '';
+  const effectiveGlbUrl = activeForm?.part_of
+    ? bossPartUrl(activeForm.part_of, effectiveModelId)
+    : assetUrl(`assets/enemies/${effectiveModelId}/${effectiveModelId}.glb`);
   const families = useMemo(() => segmentFamilies(clips), [clips]);
 
   const setOverride = (patch: Overrides) => {
@@ -359,7 +364,7 @@ export default function BossRoom() {
 
     // Boss rig — clips come from the loaded GLB, never assumed.
     loader.load(
-      assetUrl(`assets/enemies/${effectiveModelId}/${effectiveModelId}.glb`),
+      effectiveGlbUrl,
       (g) => {
         if (disposed) return;
         bossGroup.add(g.scene);
@@ -877,7 +882,7 @@ export default function BossRoom() {
     };
     // modelScale applies live via apiRef — not a scene-rebuild dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, bossId, arenaId, effectiveModelId]);
+  }, [config, bossId, arenaId, effectiveModelId, effectiveGlbUrl]);
 
   // Live-apply UI state to the scene without rebuilding it.
   useEffect(() => {
