@@ -21,7 +21,7 @@
  * the input, animation/damage go out as events. Unit-tested directly.
  */
 import { arcHitTest, selectAttack, type Vec2 } from '../enemy-room/fsm';
-import type { BossPhase, ResolvedBoss, ResolvedBossAttack } from './types';
+import { GEM_COLORS, type BossPhase, type GemColor, type ResolvedBoss, type ResolvedBossAttack } from './types';
 
 export type BossStateName = 'intro' | 'active' | 'attacking' | 'loaf' | 'relocate' | 'punish' | 'dead';
 
@@ -59,6 +59,8 @@ export type BossEvent =
   | { type: 'player-hit'; damage: number; via: string; knockback?: Vec2 }
   | { type: 'state'; state: BossStateName }
   | { type: 'enrage' }
+  | { type: 'boss-heal'; amount: number }
+  | { type: 'teleport' }
   | { type: 'died' };
 
 export interface BossSimInput {
@@ -131,17 +133,29 @@ export interface BossSim {
   fly: FlightState | null;
   projectiles: SimProjectile[];
   lobs: SimLob[];
+  /** Gem caster (Chaos Sorcerer): the two held gems (null = empty slot). */
+  gems: [GemColor | null, GemColor | null];
+  gemRespawnT: number;
+  sinceTeleport: number;
   /** Token of the loop clip currently requested (dedupes anim events). */
   loopToken: string | null;
   introDone: boolean;
 }
 
-export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number): BossSim {
+export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number, rng: () => number = Math.random): BossSim {
+  // Gem caster opens with two distinct gems from the colors its attacks use.
+  let gems: [GemColor | null, GemColor | null] = [null, null];
+  if (entry.fsm.gem_caster) {
+    const pool = gemPool(entry);
+    const first = pickFrom(pool, rng);
+    const second = pickFrom(pool.filter((c) => c !== first), rng);
+    gems = [first, second];
+  }
   return {
     state: 'intro',
     stateT: 0,
     pos: { ...pos },
-    alt: 0,
+    alt: entry.fsm.hover_hold ?? 0, // gem caster / hoverers start aloft
     yaw,
     hp: entry.stats.hp,
     maxHp: entry.stats.hp,
@@ -159,9 +173,23 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number): BossSi
     fly: null,
     projectiles: [],
     lobs: [],
+    gems,
+    gemRespawnT: 0,
+    sinceTeleport: 0,
     loopToken: null,
     introDone: false,
   };
+}
+
+/** Gem colors the boss's attacks actually use (so refills stay in-kit). */
+function gemPool(entry: ResolvedBoss): GemColor[] {
+  const used = new Set<GemColor>();
+  for (const a of entry.attacks) if (a.gem) used.add(a.gem);
+  return used.size ? [...used] : GEM_COLORS;
+}
+
+function pickFrom<T>(arr: T[], rng: () => number): T {
+  return arr[Math.min(arr.length - 1, Math.floor(rng() * arr.length))];
 }
 
 const dur = (input: BossSimInput, token: string) => input.clipDur(token) ?? FALLBACK_CLIP_DURATION;
@@ -307,7 +335,16 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
 
   const inWindow = cur.t >= cur.windowStart && cur.t <= cur.windowEnd;
   if (inWindow && cur.atk.kind !== 'projectile') {
-    if (cur.atk.kind === 'lob') {
+    if (cur.atk.kind === 'heal') {
+      // Green gem (Chaos Sorcerer): self-heal once at the window open. Interrupting
+      // is a follow-up (damaging mid-cast should cancel it); for now it lands.
+      if (!cur.didHit) {
+        cur.didHit = true;
+        const amount = Math.round(sim.maxHp * (cur.atk.damage_mult >= 1 ? 0.15 : cur.atk.damage_mult));
+        sim.hp = Math.min(sim.maxHp, sim.hp + amount);
+        events.push({ type: 'boss-heal', amount });
+      }
+    } else if (cur.atk.kind === 'lob') {
       // Ground-fired lob (octo diablo's vomit): released once at window open,
       // aimed at the player's position at release.
       if (!cur.didHit) {
@@ -436,8 +473,68 @@ function stepLoaf(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events
   ensureLoop(sim, entry.fsm.walk_clip, events);
 }
 
+/** The attack for a held gem color (Chaos Sorcerer). */
+function attackForGem(entry: ResolvedBoss, gem: GemColor): ResolvedBossAttack | undefined {
+  return entry.attacks.find((a) => a.gem === gem);
+}
+
+/**
+ * Chaos Sorcerer's turn: hover in place, refill a spent gem after its delay,
+ * occasionally cancel-cast and teleport, and when a gem is ready cast its
+ * spell (consuming that gem). Gems are always two distinct colors; a refill
+ * rolls any color except the one still held.
+ */
+function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
+  // Hold altitude and face the player without moving (mostly static).
+  sim.alt = entry.fsm.hover_hold;
+  turnToward(sim, input.player, entry.stats.turn_speed_deg, input.dt);
+  ensureLoop(sim, entry.fsm.idle_clip, events);
+
+  // Refill a spent gem after the delay — never matching the gem still held.
+  const held = sim.gems.filter(Boolean) as GemColor[];
+  if (sim.gems.includes(null)) {
+    sim.gemRespawnT -= input.dt;
+    if (sim.gemRespawnT <= 0) {
+      const options = gemPool(entry).filter((c) => !held.includes(c));
+      const slot = sim.gems[0] === null ? 0 : 1;
+      sim.gems[slot] = options.length ? pickFrom(options, input.rng) : pickFrom(gemPool(entry), input.rng);
+    }
+  }
+
+  // Teleport reposition on its own timer.
+  if (entry.fsm.teleport_interval > 0) {
+    sim.sinceTeleport += input.dt;
+    if (sim.sinceTeleport >= entry.fsm.teleport_interval) {
+      sim.sinceTeleport = 0;
+      const a = input.rng() * 2 * Math.PI;
+      const r = entry.fsm.teleport_radius * (0.4 + 0.6 * input.rng());
+      sim.pos = { x: Math.cos(a) * r, z: Math.sin(a) * r };
+      events.push({ type: 'teleport' });
+    }
+  }
+
+  // Cast a held gem's spell when the cooldown is ready.
+  if (sim.cooldown <= 0 && held.length > 0) {
+    const gem = pickFrom(held, input.rng);
+    const atk = attackForGem(entry, gem);
+    if (atk) {
+      const slot = sim.gems.indexOf(gem);
+      sim.gems[slot] = null;
+      sim.gemRespawnT = entry.fsm.gem_respawn_delay;
+      beginAttack(sim, entry, atk, input, events);
+    }
+  }
+}
+
 function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   sim.cooldown -= input.dt;
+
+  // Gem caster (Chaos Sorcerer): hovers, refills spent gems, teleports, and
+  // selects its attack by a held gem rather than by range bands.
+  if (entry.fsm.gem_caster) {
+    stepGemCaster(sim, entry, input, events);
+    return;
+  }
 
   // Relocation cycle on the interval: the dragon's flight (needs its
   // flight-phase attacks) or a timer-driven submerge (dark falz's swim —

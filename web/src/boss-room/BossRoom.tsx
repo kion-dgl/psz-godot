@@ -19,6 +19,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import {
+  GEM_HEX,
   arenaFloorUrl,
   arenaModelUrl,
   arenaSkyboxUrl,
@@ -580,6 +581,32 @@ export default function BossRoom() {
     scene.add(ordnanceGroup);
     const projPool: THREE.Mesh[] = [];
     const ringPool: THREE.Mesh[] = [];
+
+    // Gem caster visuals (Chaos Sorcerer): two gems flanking the boss, tinted
+    // by the held colors. Children of bossGroup so they ride the hover/teleport.
+    const gemMeshes: THREE.Mesh[] = [0, 1].map((slot) => {
+      const m = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.35),
+        new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      );
+      m.position.set(slot === 0 ? -2.2 : 2.2, 1.6, 0.3);
+      m.visible = false;
+      bossGroup.add(m);
+      return m;
+    });
+    function syncGems() {
+      if (!sim || !sim.gems) {
+        for (const m of gemMeshes) m.visible = false;
+        return;
+      }
+      sim.gems.forEach((color, i) => {
+        const m = gemMeshes[i];
+        if (!color) { m.visible = false; return; }
+        m.visible = true;
+        (m.material as THREE.MeshBasicMaterial).color.setHex(GEM_HEX[color]);
+        m.rotation.y += 0.03; // slow spin
+      });
+    }
     function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
       while (pool.length <= i) {
         const m = make();
@@ -628,6 +655,7 @@ export default function BossRoom() {
         setSimHud(null);
         tintBoss(false);
         syncOrdnance();
+        syncGems();
         settleBoss();
       }
     }
@@ -813,6 +841,7 @@ export default function BossRoom() {
         bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
         bossGroup.rotation.y = sim.yaw;
         syncOrdnance();
+        syncGems();
       } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;

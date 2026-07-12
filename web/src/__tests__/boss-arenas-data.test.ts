@@ -129,7 +129,7 @@ describe('boss_arenas.json — bosses', () => {
 // archetype rule: new vocabulary demands a spec decision, not a typo.
 const KNOWN_KINDS = new Set([
   'melee_arc', 'projectile', 'lob', 'charge', 'leap', // /mechanics/enemy-attacks
-  'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', // /states/bosses
+  'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', 'heal', // /states/bosses
 ]);
 
 describe('boss_arenas.json — behavior draft (v2)', () => {

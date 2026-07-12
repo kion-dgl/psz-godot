@@ -64,8 +64,21 @@ export interface BossAttackDef {
   split?: number;
   /** kind: grab — clip played when damaging the boss cancels the hold (octo diablo's eatcnc). */
   cancel_clip?: string;
+  /** Gem caster (Chaos Sorcerer): the gem color that triggers this attack. */
+  gem?: GemColor;
   note?: string;
 }
+
+/** Chaos Sorcerer gem colors → spell school: purple dark, red fire, blue ice, green heal. */
+export type GemColor = 'purple' | 'red' | 'blue' | 'green';
+export const GEM_COLORS: GemColor[] = ['purple', 'red', 'blue', 'green'];
+/** Render tint per gem (hex). */
+export const GEM_HEX: Record<GemColor, number> = {
+  purple: 0xa855f7,
+  red: 0xef4444,
+  blue: 0x3b82f6,
+  green: 0x22c55e,
+};
 
 /** Arena-anchored named position (authored with the room's click tool). */
 export interface BossAnchor {
@@ -92,6 +105,16 @@ export interface BossFsmParams {
   idle_clip: string;
   /** Rooted emplacement (octo diablo): never walks; faces the target and attacks from the bands. */
   stationary: boolean;
+  /** Chaos Sorcerer: hovers at this fixed height above the floor (0 = grounded). Distinct from the flyer hover_height. */
+  hover_hold: number;
+  /** Gem caster (Chaos Sorcerer): holds two gems; each attack is chosen by a held gem, consumed, then a new gem refills the empty slot. */
+  gem_caster: boolean;
+  /** Gem caster: seconds after a gem is spent before a new one spawns in the empty slot. */
+  gem_respawn_delay: number;
+  /** Chaos Sorcerer: seconds between cancel-cast teleport repositions (0 = never). */
+  teleport_interval: number;
+  /** Teleport reposition radius around the arena origin. */
+  teleport_radius: number;
   /** What RELOCATE looks like: the dragon's flight cycle or the octopus's submerge-swim. */
   relocate_kind: 'flight' | 'submerge';
   /** Damage into the boss is ignored while relocating (submerged octopus). */
@@ -139,6 +162,11 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   walk_clip: 'wlk1',
   idle_clip: 'wat',
   stationary: false,
+  hover_hold: 0,
+  gem_caster: false,
+  gem_respawn_delay: 2.5,
+  teleport_interval: 0,
+  teleport_radius: 10,
   relocate_kind: 'flight',
   relocate_untargetable: false,
   submerge_depth: 3,

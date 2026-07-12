@@ -54,6 +54,11 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     intro_clip: 'tht',
     walk_clip: 'wlk1',
     idle_clip: 'wat',
+    hover_hold: 0,
+    gem_caster: false,
+    gem_respawn_delay: 2.5,
+    teleport_interval: 0,
+    teleport_radius: 10,
     stationary: false,
     relocate_kind: 'flight',
     relocate_untargetable: false,
@@ -422,6 +427,78 @@ describe('boss sim — humilias knockdown chain & falz relocation', () => {
     expect(maxLive).toBe(5); // one release, five fanned shots
     const dirs = new Set(sim.projectiles.map((p) => p.dir.x.toFixed(2)));
     expect(dirs.size).toBeGreaterThan(1); // actually spread, not stacked
+  });
+});
+
+describe('boss sim — chaos sorcerer gem caster', () => {
+  const gemAtk = (id: string, gem: string, kind: string, over: Partial<ResolvedBossAttack> = {}): ResolvedBossAttack =>
+    atk({ id, clip: id, gem: gem as any, kind: kind as any, phases: ['engaged'], min_range: 0, max_range: 30, ...over });
+  const makeSorcerer = (): ResolvedBoss => makeEntry({
+    // cooldown (3s) >> respawn (0.5s), so a spent gem refills to a stable
+    // two-gem state well before the next cast.
+    stats: { hp: 200, move_speed: 0, attack_cooldown: 3, attack_base: 10, turn_speed_deg: 120 },
+    fsm: {
+      ...makeEntry().fsm, intro_clip: '', idle_clip: 'wait', walk_clip: '', stationary: true,
+      hover_hold: 2.5, gem_caster: true, gem_respawn_delay: 0.5, teleport_interval: 0,
+      loaf_duration_min: 0.3, loaf_duration_max: 0.3, punish_break_damage: 0,
+    },
+    phases: [{ id: 'engaged', label: 'Engaged' }],
+    attacks: [
+      gemAtk('fire', 'red', 'projectile'),
+      gemAtk('ice', 'blue', 'projectile', { split: 3 }),
+      gemAtk('dark', 'purple', 'aoe_burst', { hit_reach: 9, hit_half_angle_deg: 180 }),
+      gemAtk('heal', 'green', 'heal', { damage_mult: 0.15 }),
+    ],
+  });
+
+  // Deterministic rng so gem rolls are reproducible.
+  const seq = (vals: number[]) => { let i = 0; return () => vals[i++ % vals.length]; };
+
+  it('hovers at hover_hold and holds two distinct gems from the kit', () => {
+    const entry = makeSorcerer();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0.5]));
+    expect(sim.alt).toBe(2.5);
+    const [a, b] = sim.gems;
+    expect(a).toBeTruthy();
+    expect(b).toBeTruthy();
+    expect(a).not.toBe(b);
+    for (const g of sim.gems) expect(['red', 'blue', 'purple', 'green']).toContain(g);
+  });
+
+  it('casts a held gem, consumes it, and refills a distinct color after the delay', () => {
+    const entry = makeSorcerer();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0]));
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+    const player = { x: 0, z: 5 };
+    // step to a cast: consumes one gem (a slot goes null)
+    run(sim, entry, player, 30, () => sim.gems.includes(null));
+    expect(sim.gems.filter(Boolean)).toHaveLength(1);
+    const remaining = sim.gems.find(Boolean)!;
+    // let the attack finish + the refill delay elapse
+    run(sim, entry, player, 60, () => !sim.gems.includes(null));
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    // the two gems are still distinct colors
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+    expect(sim.gems).toContain(remaining);
+  });
+
+  it('green gem self-heals — boss HP goes up', () => {
+    const entry = makeSorcerer();
+    // rng picks green first (index 3 of the pool) — pool order = attack order
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0.99, 0]));
+    sim.gems = ['green', 'red'];
+    sim.hp = 100; // damaged
+    const player = { x: 0, z: 5 };
+    const heals: BossEvent[] = [];
+    // force green to be the cast: only green available
+    sim.gems = ['green', null];
+    for (let i = 0; i < 40; i++) {
+      heals.push(...stepBoss(sim, entry, input(player)).filter((e) => e.type === 'boss-heal'));
+      if (heals.length) break;
+    }
+    expect(heals.length).toBeGreaterThan(0);
+    expect(sim.hp).toBeGreaterThan(100);
   });
 });
 

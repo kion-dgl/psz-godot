@@ -668,10 +668,15 @@
       "fsm": {
         "intro_clip": "enter_re4_b_body",
         "idle_clip": "wait_re4_b_body",
-        "walk_clip": "wait_re4_b_body",
+        "walk_clip": "",
         "stationary": true,
-        "loaf_duration_min": 1.5,
-        "loaf_duration_max": 2.5,
+        "hover_hold": 2.5,
+        "gem_caster": true,
+        "gem_respawn_delay": 2.5,
+        "teleport_interval": 9.0,
+        "teleport_radius": 9.0,
+        "loaf_duration_min": 0.5,
+        "loaf_duration_max": 1.2,
         "punish_break_damage": 0,
         "punish_vulnerable_mult": 2.0,
         "punish_clip": "damage_re4_b_body"
@@ -680,49 +685,65 @@
         {
           "id": "engaged",
           "label": "Engaged",
-          "note": "stationary Dark caster: floats, casts from range, heals itself"
+          "note": "hovers off the floor, mostly static; holds two gems and casts the spell of a used gem, which is then consumed and refilled (random, never matching the remaining gem); can cancel-cast and teleport"
         }
       ],
       "attacks": [
         {
-          "id": "cast_bolt",
+          "id": "fire_bolt",
           "clip": "attack1_re4_b_body",
           "kind": "projectile",
+          "gem": "red",
           "phases": [
             "engaged"
           ],
-          "min_range": 4,
-          "max_range": 22,
-          "note": "single tech bolt"
+          "min_range": 0,
+          "max_range": 30,
+          "note": "RED gem = fire spell (bolt)"
         },
         {
-          "id": "cast_spread",
+          "id": "ice_shards",
           "clip": "attack2_re4_b_body",
           "kind": "projectile",
+          "gem": "blue",
           "phases": [
             "engaged"
           ],
-          "min_range": 4,
-          "max_range": 20,
-          "split": 5,
-          "note": "spread tech"
+          "min_range": 0,
+          "max_range": 30,
+          "split": 3,
+          "note": "BLUE gem = ice spell (spread shards)"
         },
         {
-          "id": "cast_burst",
+          "id": "dark_burst",
           "clip": "attack3_re4_b_body",
           "kind": "aoe_burst",
+          "gem": "purple",
           "phases": [
             "engaged"
           ],
           "hit_half_angle_deg": 180,
-          "hit_reach": 8,
-          "max_range": 6,
+          "hit_reach": 9,
+          "max_range": 30,
           "damage_mult": 1.5,
-          "note": "radial tech burst"
+          "note": "PURPLE gem = dark spell (radial burst around the sorcerer)"
+        },
+        {
+          "id": "self_heal",
+          "clip": "cure_re4_b_body",
+          "kind": "heal",
+          "gem": "green",
+          "phases": [
+            "engaged"
+          ],
+          "min_range": 0,
+          "max_range": 30,
+          "damage_mult": 0.15,
+          "note": "GREEN gem = self-heal (restores 15% max HP)"
         }
       ],
       "anchors": [],
-      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = the PSO Chaos Sorcerer, a Dark caster. cure_re4_b_body is a SELF-HEAL \u2014 its signature (heals unless interrupted); a heal kind isn't in the sim yet (follow-up). No locomotion clip -> stationary caster. Draft behavior \u2014 tune by observation.",
+      "note": "STAND-IN (PSO asset, per Kion): the Makara boss = PSO Chaos Sorcerer. Gem-caster behavior (per Kion): two gems float on either side; color -> school: purple=dark, red=fire, blue=ice, green=self-heal. It casts the spell of one held gem, consumes it, and after gem_respawn_delay a new gem fills the empty slot (random, never the same color as the one still held). Hovers at a fixed height off the floor, mostly static, and periodically cancel-casts to teleport elsewhere in the arena. clips: attack1/2/3 mapped to fire/ice/dark, cure -> heal, enter/wait/damage/die. Draft mapping of clip->element is a guess; tune by observation.",
       "clip_notes": {
         "enter_re4_b_body": "entrance",
         "wait_re4_b_body": "idle (float)",
