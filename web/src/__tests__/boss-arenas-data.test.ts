@@ -32,7 +32,7 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(5);
+    expect(bosses.length).toBe(6); // 5 uniques + the heaven's mother composite
   });
 
   it('every roster boss has a room', () => {
@@ -47,8 +47,22 @@ describe('boss_arenas.json — structure', () => {
 });
 
 describe('boss_arenas.json — bosses', () => {
-  it('every boss resolves to an is_boss roster entry with a matching model_id', () => {
+  it('every boss resolves to roster entries with matching model_ids', () => {
     for (const [id, b] of bosses) {
+      if (b.forms) {
+        // Composite boss (heaven's mother): the forms are REGULAR roster
+        // enemies the fight cycles through (blade_mother also spawns in
+        // investigate_tower), so no is_boss requirement — each form must
+        // simply resolve with a matching rig.
+        expect(b.forms.length, `${id} forms`).toBeGreaterThan(1);
+        for (const f of b.forms) {
+          const e = rosterById.get(f.roster_id);
+          expect(e, `${id} form ${f.roster_id} missing from enemies.json`).toBeTruthy();
+          expect(e!.model_id, `${id} form ${f.roster_id} model_id mismatch`).toBe(f.model_id);
+        }
+        expect(b.model_id, `${id}: composite model_id must be forms[0]`).toBe(b.forms[0].model_id);
+        continue;
+      }
       const e = rosterById.get(id);
       expect(e, `${id} missing from enemies.json`).toBeTruthy();
       expect(e!.is_boss, `${id} is not flagged is_boss in enemies.json`).toBe(true);
@@ -58,8 +72,11 @@ describe('boss_arenas.json — bosses', () => {
 
   it('boss model GLBs are in the published pack (asset_tree.txt)', () => {
     for (const [id, b] of bosses) {
-      const glb = `assets/enemies/${b.model_id}/${b.model_id}.glb`;
-      expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
+      const models: string[] = b.forms ? b.forms.map((f: any) => f.model_id) : [b.model_id];
+      for (const m of models) {
+        const glb = `assets/enemies/${m}/${m}.glb`;
+        expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
+      }
     }
   });
 
@@ -226,9 +243,12 @@ describe('boss_arenas.json — arenas', () => {
     }
   });
 
-  it('arena area folders follow the boss-stage naming (…_z)', () => {
+  it('arena area folders follow the boss-stage naming (…_z, tower excepted)', () => {
     for (const [stageId, a] of arenas) {
-      expect(a.area.endsWith('_z'), `${stageId}: area ${a.area}`).toBe(true);
+      // The Eternal Tower summit (s087_na1) is the one boss arena outside
+      // the *_z convention — it lives on tower floor 7.
+      const ok = a.area.endsWith('_z') || a.area === 'tower_7';
+      expect(ok, `${stageId}: area ${a.area}`).toBe(true);
       expect(typeof a.label === 'string' && a.label.length > 0, `${stageId} label`).toBe(true);
     }
   });

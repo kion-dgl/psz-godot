@@ -5,11 +5,12 @@
     "s01z_na1": { "area": "valley_z", "label": "Gurhacia Valley arena" },
     "s02z_na1": { "area": "wetlands_z", "label": "Ozette Wetlands arena", "skybox": true },
     "s03z_na1": { "area": "snowfield_z", "label": "Rioh Snowfield arena", "unassigned": true, "note": "no unique boss: the snowfield boss room is a Hildegao pack fight (per Kion) — the debug-mission work covers it with regular-enemy spawns, not a boss_arenas entry" },
-    "s04z_na1": { "area": "makara_z", "label": "Makara Ruins arena", "unassigned": true, "note": "the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)" },
+    "s04z_na1": { "area": "makara_z", "label": "Makara Ruins arena", "unassigned": true, "note": "no unique boss: an enemy-arena fight like the snowfield (per Kion) — composition TBD; the_broken_seal's boss segment loads this stage but spawns no enemy (scripted event)" },
     "s05z_na1": { "area": "paru_z", "label": "Oblivion City Paru arena", "unassigned": true },
     "s06z_na1": { "area": "arca_z", "label": "Arca Plant arena" },
     "s07z_na1": { "area": "shrine_z", "label": "Dark Shrine arena A" },
-    "s07z_na2": { "area": "shrine_z", "label": "Dark Shrine arena B" }
+    "s07z_na2": { "area": "shrine_z", "label": "Dark Shrine arena B" },
+    "s087_na1": { "area": "tower_7", "label": "Eternal Tower summit arena", "note": "the one boss arena outside the *_z convention — tower floor 7; ships with real minimap SVGs" }
   },
   "bosses": {
     "reyburn": {
@@ -161,6 +162,40 @@
         "ch_in_n": "n robot combine-in", "ch_out_n": "n robot split-out (same for _u)",
         "stt_n": "n robot entrance (25KB)", "stt_u": "u robot entrance",
         "ded_n": "n robot death", "ded_u": "u robot death"
+      }
+    },
+    "heavens_mother": {
+      "model_id": "mother_sword",
+      "arena": "s087_na1",
+      "quest_source": "debug_boss_heavens_mother",
+      "model_scale": 1.0,
+      "forms": [
+        { "roster_id": "blade_mother", "model_id": "mother_sword", "label": "Blade" },
+        { "roster_id": "force_mother", "model_id": "mother_tech", "label": "Force" },
+        { "roster_id": "shot_mother", "model_id": "mother_gun", "label": "Shot" }
+      ],
+      "phases": [
+        { "id": "form_blade", "label": "Blade form", "note": "draft: the fight cycles the three forms as phases — order and trigger (hp thirds? warp on break?) TBD by observation" },
+        { "id": "form_force", "label": "Force form" },
+        { "id": "form_shot", "label": "Shot form" }
+      ],
+      "attacks": [
+        { "id": "swing_a", "clip": "atk_sa_s", "kind": "melee_arc", "max_range": 5, "hit_reach": 4, "note": "shared vocabulary across all three forms" },
+        { "id": "swing_b", "clip": "atk_sb_s", "kind": "melee_arc", "max_range": 5, "hit_reach": 4 },
+        { "id": "gun_volley", "clip": "atk_gu_a_ed", "chain": ["atk_gu_a_st", "atk_gu_a_lp", "atk_gu_a_ed"], "kind": "projectile", "min_range": 4, "max_range": 18, "lp_loops": 3, "note": "blade form's chain is atk_gu_a_*; force/shot use atk_gu_g_* — the form picker resolves whichever the loaded rig has" },
+        { "id": "tech_charged", "clip": "tec_t_ed", "chain": ["tec_t_st", "tec_t_lp", "tec_t_ed"], "kind": "projectile", "min_range": 4, "max_range": 20, "note": "charged technique — which tech per form is an open question (tec_a is the instant variant)" }
+      ],
+      "anchors": [],
+      "note": "composite boss: Heaven's Mother is the three tower mother elites (blade/force/shot) cycling as phases; warp_st/warp_ed is the teleport (likely the form transition AND relocation). boss_mother_piece rig (km* clips, 9) in the viewer looks like the fight's floating pieces/adds — import pending observation. Forms are regular roster enemies (blade_mother spawns in investigate_tower), so no is_boss flags.",
+      "clip_notes": {
+        "wat": "idle",
+        "stt": "threat/entrance",
+        "warp_st": "teleport out",
+        "warp_ed": "teleport in — the phase/relocation mechanic",
+        "atk_gu_a_st": "gun volley windup (blade form; g variant on force/shot)",
+        "tec_a": "instant technique cast",
+        "dmg": "flinch",
+        "ded": "death"
       }
     },
     "dark_falz": {

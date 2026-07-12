@@ -192,11 +192,20 @@ export function resolveBoss(def: BossDef): ResolvedBoss {
   };
 }
 
+/** Composite-boss form (heaven's mother): a regular roster enemy the fight cycles through. */
+export interface BossForm {
+  roster_id: string;
+  model_id: string;
+  label: string;
+}
+
 export interface BossDef {
-  model_id: string; // assets/enemies/<model_id>/<model_id>.glb
+  model_id: string; // assets/enemies/<model_id>/<model_id>.glb (forms[0] for composite bosses)
   arena: string; // default arena stage_id — the tool can load any
   quest_source: string; // quest whose boss segment spawns this boss
   model_scale: number;
+  /** Composite boss (heaven's mother): the fight cycles these roster enemies as its phases. */
+  forms?: BossForm[];
   note?: string;
   phases?: BossPhase[];
   attacks?: BossAttackDef[];

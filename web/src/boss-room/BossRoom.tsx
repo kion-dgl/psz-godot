@@ -62,6 +62,8 @@ interface Marker {
 interface Overrides {
   arena?: string;
   model_scale?: number;
+  /** Composite boss: index into boss.forms (which rig is loaded). */
+  form?: number;
 }
 
 function loadStore(): Record<string, Overrides> {
@@ -135,6 +137,10 @@ export default function BossRoom() {
   const arenaId = ov.arena ?? boss?.arena ?? '';
   const arena = config?.arenas[arenaId];
   const modelScale = ov.model_scale ?? boss?.model_scale ?? 1;
+  // Composite boss (forms): the picked form's rig is what loads.
+  const formIdx = ov.form ?? 0;
+  const activeForm = boss?.forms?.[formIdx] ?? boss?.forms?.[0];
+  const effectiveModelId = activeForm?.model_id ?? boss?.model_id ?? '';
   const families = useMemo(() => segmentFamilies(clips), [clips]);
 
   const setOverride = (patch: Overrides) => {
@@ -340,7 +346,7 @@ export default function BossRoom() {
 
     // Boss rig — clips come from the loaded GLB, never assumed.
     loader.load(
-      assetUrl(`assets/enemies/${boss.model_id}/${boss.model_id}.glb`),
+      assetUrl(`assets/enemies/${effectiveModelId}/${effectiveModelId}.glb`),
       (g) => {
         if (disposed) return;
         bossGroup.add(g.scene);
@@ -352,7 +358,7 @@ export default function BossRoom() {
         oneLoaded();
       },
       undefined,
-      () => setStatus(`boss model failed: ${boss.model_id}`),
+      () => setStatus(`boss model failed: ${effectiveModelId}`),
     );
 
     // Multi-part pieces (tentacles, faces, horn) — ride the boss group and
@@ -367,7 +373,7 @@ export default function BossRoom() {
     for (const partDef of boss.parts ?? []) {
       const name = partName(partDef);
       loader.load(
-        bossPartUrl(boss.model_id, name),
+        bossPartUrl(effectiveModelId, name),
         (g) => {
           if (disposed) return;
           // One wrapper per instance (position/yaw/pitch in the boss's local
@@ -850,7 +856,7 @@ export default function BossRoom() {
     };
     // modelScale applies live via apiRef — not a scene-rebuild dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, bossId, arenaId]);
+  }, [config, bossId, arenaId, effectiveModelId]);
 
   // Live-apply UI state to the scene without rebuilding it.
   useEffect(() => {
@@ -886,7 +892,9 @@ export default function BossRoom() {
       <div ref={mountRef} style={{ flex: 1, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 12, color: '#9ab', pointerEvents: 'none' }}>
           <div style={{ fontSize: 15, color: '#fff', fontWeight: 600 }}>
-            {rosterName} <span style={{ color: '#667', fontWeight: 400 }}>({boss?.model_id})</span>
+            {rosterName}
+            {activeForm ? ` — ${activeForm.label}` : ''}{' '}
+            <span style={{ color: '#667', fontWeight: 400 }}>({effectiveModelId})</span>
           </div>
           <div>{arena?.label} · {arenaId}{arena?.unassigned ? ' · unassigned arena' : ''}</div>
           <div>{status}</div>
@@ -906,6 +914,23 @@ export default function BossRoom() {
           <Link to="/boss-room" style={{ color: '#88aaff', fontSize: 11 }}>all bosses</Link>
         </div>
         {boss?.note && <div style={{ color: '#a86', fontSize: 11, marginTop: 6 }}>{boss.note}</div>}
+
+        {boss?.forms && boss.forms.length > 0 && (
+          <>
+            <span style={label}>Form (composite boss — the fight cycles these)</span>
+            <select
+              value={formIdx}
+              onChange={(e) => setOverride({ form: +e.target.value })}
+              style={{ width: '100%', background: '#1a1a35', color: '#fff', border: '1px solid #334' }}
+            >
+              {boss.forms.map((f, i) => (
+                <option key={f.roster_id} value={i}>
+                  {f.label} — {f.roster_id} ({f.model_id})
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         <span style={label}>Arena</span>
         <select
