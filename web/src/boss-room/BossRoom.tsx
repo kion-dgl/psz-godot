@@ -154,13 +154,22 @@ export default function BossRoom() {
   // Markers only merge in the default arena (anchors ride that frame).
   const copyConfig = () => {
     if (!config || !boss) return;
-    const merged =
-      arenaId === boss.arena
-        ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
-        : (boss.anchors ?? []);
+    const inHomeArena = arenaId === boss.arena;
+    const merged = inHomeArena
+      ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
+      : (boss.anchors ?? []);
+    // The CURRENT boss position (wherever "move boss" put it) is authored
+    // as spawn_pos — this is how staging like humilias's broken-ledge spot
+    // gets captured without reading numbers off the HUD.
+    const spawnPos: [number, number, number] | undefined = inHomeArena
+      ? [+readout.boss[0].toFixed(2), +readout.boss[1].toFixed(2), +readout.boss[2].toFixed(2)]
+      : boss.spawn_pos;
     const cfg: BossArenaConfig = {
       ...config,
-      bosses: { ...config.bosses, [bossId]: { ...boss, anchors: merged } },
+      bosses: {
+        ...config.bosses,
+        [bossId]: { ...boss, anchors: merged, ...(spawnPos ? { spawn_pos: spawnPos } : {}) },
+      },
     };
     navigator.clipboard?.writeText(JSON.stringify(cfg, null, 2) + '\n');
   };
@@ -327,8 +336,12 @@ export default function BossRoom() {
         ];
         spawn.copy(candidates.find((p) => dropToFloor(p) !== null) ?? candidates[candidates.length - 1]);
         feet.copy(spawn);
-        bossPos.set(c.x, box.max.y + 5, c.z);
-        settleBoss();
+        if (authoredPos) {
+          placeBossAuthored(authoredPos);
+        } else {
+          bossPos.set(c.x, box.max.y + 5, c.z);
+          settleBoss();
+        }
         oneLoaded();
       },
       undefined,
@@ -423,12 +436,20 @@ export default function BossRoom() {
     // the walkable collider. Logical bossPos (readouts, sim) stays on the
     // floor; only the rendered group sinks.
     const modelOffsetY = boss.model_offset_y ?? 0;
+    // Authored staging (humilias at the broken stage edge): spawn_pos is
+    // trusted verbatim — including y, since the spot may be OFF the walkable
+    // collider — and only applies in the boss's default arena.
+    const authoredPos = arenaId === boss.arena ? boss.spawn_pos : undefined;
     function settleBoss() {
       // Colliders can have holes where only the boss lives (the octopus
       // pool) — settle to the collider's top there instead of dangling at
       // the spawn height, so model_offset_y has a stable reference.
       const y = dropToFloor(bossPos) ?? (floorMesh ? floorMaxY : null);
       if (y !== null) bossPos.y = y;
+      bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
+    }
+    function placeBossAuthored(pos: [number, number, number]) {
+      bossPos.set(pos[0], pos[1], pos[2]);
       bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
     }
 
@@ -1057,7 +1078,7 @@ export default function BossRoom() {
         {boss && (
           <button
             onClick={copyConfig}
-            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors — paste over the file (rename anchors by hand)."
+            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors AND the current boss position as spawn_pos (use 'move boss' to stage it first) — paste over the file (rename anchors by hand)."
             style={{ ...btn, display: 'block', width: '100%' }}
           >
             copy boss_arenas.json (markers → anchors)

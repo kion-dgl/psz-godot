@@ -209,6 +209,13 @@ export interface BossDef {
   note?: string;
   phases?: BossPhase[];
   attacks?: BossAttackDef[];
+  /**
+   * Authored boss position in the DEFAULT arena frame (humilias stands at
+   * the broken stage edge, not the arena center). Omitted = the room settles
+   * the boss at the floor-collider center. The room's "move boss" click +
+   * config export author this.
+   */
+  spawn_pos?: [number, number, number];
   /** Positions in the boss's DEFAULT arena frame — meaningless in an override arena. */
   anchors?: BossAnchor[];
   /**

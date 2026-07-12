@@ -393,6 +393,34 @@
         }
       ]
     },
+    "chaos_mobius_paru": {
+      "archetype": "boss",
+      "stats": {
+        "move_speed": 3.0,
+        "attack_range": 2.0,
+        "attack_cooldown": 1.5,
+        "detection_range": 15.0,
+        "attack_base": 25
+      },
+      "fsm": {},
+      "attacks": [
+        {
+          "id": "basic",
+          "clip": "atk",
+          "windup_frac": 0.35,
+          "damage_end_frac": 0.6,
+          "hit_half_angle_deg": 45.0,
+          "hit_reach": 2.0,
+          "damage_mult": 1.0,
+          "weight": 1.0,
+          "min_range": 0.0,
+          "max_range": 2.0
+        }
+      ],
+      "clip_notes": {
+        "_paru": "paru encounter of the same rig (see boss_arenas chaos_mobius_paru) \u2014 entry mirrors chaos_mobius until the two fight designs diverge"
+      }
+    },
     "dark_falz": {
       "archetype": "boss",
       "stats": {

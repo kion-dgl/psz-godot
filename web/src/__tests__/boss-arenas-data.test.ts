@@ -32,7 +32,7 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(6); // 5 uniques + the heaven's mother composite
+    expect(bosses.length).toBe(7); // 5 uniques + heaven's mother composite + the paru robot encounter
   });
 
   it('every roster boss has a room', () => {
@@ -207,6 +207,16 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
           }
         }
       }
+    }
+  });
+
+  it('spawn_pos, when authored, is a finite [x,y,z]', () => {
+    for (const [id, b] of bosses) {
+      if (b.spawn_pos === undefined) continue;
+      expect(
+        Array.isArray(b.spawn_pos) && b.spawn_pos.length === 3 && b.spawn_pos.every((n: unknown) => Number.isFinite(n)),
+        `${id} spawn_pos`,
+      ).toBe(true);
     }
   });
 
