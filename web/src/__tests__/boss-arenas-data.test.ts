@@ -32,14 +32,17 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(5);
+    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + 2 PSO stand-ins (chaos_sorcerer, sinow_beat)
   });
 
   it('every roster boss has a room', () => {
     // mother_trinity is flagged is_boss but rides the regular `mother` rig,
     // spawns in no quest, and has no designed fight — the mother_caster
     // enemy room covers the rig until the fight exists.
-    const NOT_ROOMED = new Set(['mother_trinity']);
+    // mother_trinity: rides the `mother` rig, no designed fight yet.
+    // sinow_gold: the rare form of the sinow_beat boss room (a form, not its
+    // own room).
+    const NOT_ROOMED = new Set(['mother_trinity', 'sinow_gold']);
     const rosterBosses = roster.filter((e) => e.is_boss).map((e) => e.id);
     const missing = rosterBosses.filter((id) => !config.bosses[id] && !NOT_ROOMED.has(id));
     expect(missing, `is_boss roster entries without a boss room: ${missing.join(', ')}`).toHaveLength(0);
@@ -47,8 +50,37 @@ describe('boss_arenas.json — structure', () => {
 });
 
 describe('boss_arenas.json — bosses', () => {
-  it('every boss resolves to an is_boss roster entry with a matching model_id', () => {
+  it('every boss resolves to roster entries with matching model_ids', () => {
     for (const [id, b] of bosses) {
+      if (b.forms) {
+        // Composite boss (heaven's mother): the forms are REGULAR roster
+        // enemies the fight cycles through (blade_mother also spawns in
+        // investigate_tower), so no is_boss requirement — each form must
+        // simply resolve with a matching rig.
+        expect(b.forms.length, `${id} forms`).toBeGreaterThan(1);
+        for (const f of b.forms) {
+          const e = rosterById.get(f.roster_id);
+          expect(e, `${id} form ${f.roster_id} missing from enemies.json`).toBeTruthy();
+          if (f.part_of) {
+            // Split-boss form (chaos & mobius): model_id is a PART rig under
+            // part_of, not the roster model — the roster still resolves to
+            // the parent enemy's rig.
+            expect(e!.model_id, `${id} form ${f.roster_id} parent rig`).toBe(f.part_of);
+          } else {
+            expect(e!.model_id, `${id} form ${f.roster_id} model_id mismatch`).toBe(f.model_id);
+          }
+        }
+        // Consistency of the boss's primary model_id with its forms:
+        // - split boss (any part_of form): model_id is the parent enemy rig.
+        // - composite boss (heaven's mother): model_id is forms[0]'s rig.
+        const splitParent = b.forms.find((f: any) => f.part_of)?.part_of;
+        if (splitParent) {
+          expect(b.model_id, `${id}: split boss model_id is the parent rig`).toBe(splitParent);
+        } else {
+          expect(b.model_id, `${id}: composite model_id must be forms[0]`).toBe(b.forms[0].model_id);
+        }
+        continue;
+      }
       const e = rosterById.get(id);
       expect(e, `${id} missing from enemies.json`).toBeTruthy();
       expect(e!.is_boss, `${id} is not flagged is_boss in enemies.json`).toBe(true);
@@ -58,8 +90,18 @@ describe('boss_arenas.json — bosses', () => {
 
   it('boss model GLBs are in the published pack (asset_tree.txt)', () => {
     for (const [id, b] of bosses) {
-      const glb = `assets/enemies/${b.model_id}/${b.model_id}.glb`;
-      expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
+      // pack_pending stand-ins (PSO substitutes) live on R2 but aren't in the
+      // game pack yet — skip, like the part rigs.
+      if (b.pack_pending) continue;
+      // part_of forms are PART rigs — they ship with the parts on the next
+      // pack publish (like the tentacle/face parts), not asserted here.
+      const models: string[] = b.forms
+        ? b.forms.filter((f: any) => !f.part_of).map((f: any) => f.model_id)
+        : [b.model_id];
+      for (const m of models) {
+        const glb = `assets/enemies/${m}/${m}.glb`;
+        expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
+      }
     }
   });
 
@@ -87,7 +129,7 @@ describe('boss_arenas.json — bosses', () => {
 // archetype rule: new vocabulary demands a spec decision, not a typo.
 const KNOWN_KINDS = new Set([
   'melee_arc', 'projectile', 'lob', 'charge', 'leap', // /mechanics/enemy-attacks
-  'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', // /states/bosses
+  'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', 'heal', // /states/bosses
 ]);
 
 describe('boss_arenas.json — behavior draft (v2)', () => {
@@ -193,6 +235,16 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
     }
   });
 
+  it('spawn_pos, when authored, is a finite [x,y,z]', () => {
+    for (const [id, b] of bosses) {
+      if (b.spawn_pos === undefined) continue;
+      expect(
+        Array.isArray(b.spawn_pos) && b.spawn_pos.length === 3 && b.spawn_pos.every((n: unknown) => Number.isFinite(n)),
+        `${id} spawn_pos`,
+      ).toBe(true);
+    }
+  });
+
   it('anchors have unique names and [x,y,z] positions', () => {
     for (const [id, b] of bosses) {
       const names = new Set<string>();
@@ -226,9 +278,12 @@ describe('boss_arenas.json — arenas', () => {
     }
   });
 
-  it('arena area folders follow the boss-stage naming (…_z)', () => {
+  it('arena area folders follow the boss-stage naming (…_z, tower excepted)', () => {
     for (const [stageId, a] of arenas) {
-      expect(a.area.endsWith('_z'), `${stageId}: area ${a.area}`).toBe(true);
+      // The Eternal Tower summit (s087_na1) is the one boss arena outside
+      // the *_z convention — it lives on tower floor 7.
+      const ok = a.area.endsWith('_z') || a.area === 'tower_7';
+      expect(ok, `${stageId}: area ${a.area}`).toBe(true);
       expect(typeof a.label === 'string' && a.label.length > 0, `${stageId} label`).toBe(true);
     }
   });

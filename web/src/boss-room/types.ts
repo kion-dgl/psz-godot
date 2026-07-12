@@ -64,8 +64,21 @@ export interface BossAttackDef {
   split?: number;
   /** kind: grab — clip played when damaging the boss cancels the hold (octo diablo's eatcnc). */
   cancel_clip?: string;
+  /** Gem caster (Chaos Sorcerer): the gem color that triggers this attack. */
+  gem?: GemColor;
   note?: string;
 }
+
+/** Chaos Sorcerer gem colors → spell school: purple dark, red fire, blue ice, green heal. */
+export type GemColor = 'purple' | 'red' | 'blue' | 'green';
+export const GEM_COLORS: GemColor[] = ['purple', 'red', 'blue', 'green'];
+/** Render tint per gem (hex). */
+export const GEM_HEX: Record<GemColor, number> = {
+  purple: 0xa855f7,
+  red: 0xef4444,
+  blue: 0x3b82f6,
+  green: 0x22c55e,
+};
 
 /** Arena-anchored named position (authored with the room's click tool). */
 export interface BossAnchor {
@@ -92,6 +105,18 @@ export interface BossFsmParams {
   idle_clip: string;
   /** Rooted emplacement (octo diablo): never walks; faces the target and attacks from the bands. */
   stationary: boolean;
+  /** Chaos Sorcerer: hovers at this fixed height above the floor (0 = grounded). Distinct from the flyer hover_height. */
+  hover_hold: number;
+  /** Gem caster (Chaos Sorcerer): holds two gems; each attack is chosen by a held gem, consumed, then a new gem refills the empty slot. */
+  gem_caster: boolean;
+  /** Gem caster: seconds after a gem is spent before a new one spawns in the empty slot. */
+  gem_respawn_delay: number;
+  /** Gem caster: telegraph window — seconds both gems are visible after a refill before the next cast. */
+  gem_cast_delay: number;
+  /** Chaos Sorcerer: seconds between cancel-cast teleport repositions (0 = never). */
+  teleport_interval: number;
+  /** Teleport reposition radius around the arena origin. */
+  teleport_radius: number;
   /** What RELOCATE looks like: the dragon's flight cycle or the octopus's submerge-swim. */
   relocate_kind: 'flight' | 'submerge';
   /** Damage into the boss is ignored while relocating (submerged octopus). */
@@ -139,6 +164,12 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   walk_clip: 'wlk1',
   idle_clip: 'wat',
   stationary: false,
+  hover_hold: 0,
+  gem_caster: false,
+  gem_respawn_delay: 2.5,
+  gem_cast_delay: 1.5,
+  teleport_interval: 0,
+  teleport_radius: 10,
   relocate_kind: 'flight',
   relocate_untargetable: false,
   submerge_depth: 3,
@@ -192,14 +223,39 @@ export function resolveBoss(def: BossDef): ResolvedBoss {
   };
 }
 
+/**
+ * A selectable rig in the form picker. Two shapes:
+ * - composite boss (heaven's mother): a regular roster enemy the fight cycles through.
+ * - split boss (chaos & mobius at Paru): a PART rig of a parent enemy — set
+ *   `part_of` and the room loads assets/enemies/<part_of>/parts/<model_id>/.
+ */
+export interface BossForm {
+  roster_id: string;
+  model_id: string;
+  label: string;
+  /** When set, model_id is a part under this parent enemy (the robot's split halves). */
+  part_of?: string;
+}
+
 export interface BossDef {
-  model_id: string; // assets/enemies/<model_id>/<model_id>.glb
+  model_id: string; // assets/enemies/<model_id>/<model_id>.glb (forms[0] for composite bosses)
   arena: string; // default arena stage_id — the tool can load any
   quest_source: string; // quest whose boss segment spawns this boss
   model_scale: number;
+  /** Composite boss (heaven's mother): the fight cycles these roster enemies as its phases. */
+  forms?: BossForm[];
+  /** PSO stand-in whose rig is on R2 but not yet in the game pack — skip the asset_tree assertion. */
+  pack_pending?: boolean;
   note?: string;
   phases?: BossPhase[];
   attacks?: BossAttackDef[];
+  /**
+   * Authored boss position in the DEFAULT arena frame (humilias stands at
+   * the broken stage edge, not the arena center). Omitted = the room settles
+   * the boss at the floor-collider center. The room's "move boss" click +
+   * config export author this.
+   */
+  spawn_pos?: [number, number, number];
   /** Positions in the boss's DEFAULT arena frame — meaningless in an override arena. */
   anchors?: BossAnchor[];
   /**

@@ -19,6 +19,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import {
+  GEM_HEX,
   arenaFloorUrl,
   arenaModelUrl,
   arenaSkyboxUrl,
@@ -62,6 +63,8 @@ interface Marker {
 interface Overrides {
   arena?: string;
   model_scale?: number;
+  /** Composite boss: index into boss.forms (which rig is loaded). */
+  form?: number;
 }
 
 function loadStore(): Record<string, Overrides> {
@@ -135,6 +138,15 @@ export default function BossRoom() {
   const arenaId = ov.arena ?? boss?.arena ?? '';
   const arena = config?.arenas[arenaId];
   const modelScale = ov.model_scale ?? boss?.model_scale ?? 1;
+  // Composite boss (forms): the picked form's rig is what loads. A form with
+  // `part_of` is a part rig (the robot's split halves), loaded from the
+  // parent enemy's parts/ dir instead of a top-level model.
+  const formIdx = ov.form ?? 0;
+  const activeForm = boss?.forms?.[formIdx] ?? boss?.forms?.[0];
+  const effectiveModelId = activeForm?.model_id ?? boss?.model_id ?? '';
+  const effectiveGlbUrl = activeForm?.part_of
+    ? bossPartUrl(activeForm.part_of, effectiveModelId)
+    : assetUrl(`assets/enemies/${effectiveModelId}/${effectiveModelId}.glb`);
   const families = useMemo(() => segmentFamilies(clips), [clips]);
 
   const setOverride = (patch: Overrides) => {
@@ -148,13 +160,22 @@ export default function BossRoom() {
   // Markers only merge in the default arena (anchors ride that frame).
   const copyConfig = () => {
     if (!config || !boss) return;
-    const merged =
-      arenaId === boss.arena
-        ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
-        : (boss.anchors ?? []);
+    const inHomeArena = arenaId === boss.arena;
+    const merged = inHomeArena
+      ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
+      : (boss.anchors ?? []);
+    // The CURRENT boss position (wherever "move boss" put it) is authored
+    // as spawn_pos — this is how staging like humilias's broken-ledge spot
+    // gets captured without reading numbers off the HUD.
+    const spawnPos: [number, number, number] | undefined = inHomeArena
+      ? [+readout.boss[0].toFixed(2), +readout.boss[1].toFixed(2), +readout.boss[2].toFixed(2)]
+      : boss.spawn_pos;
     const cfg: BossArenaConfig = {
       ...config,
-      bosses: { ...config.bosses, [bossId]: { ...boss, anchors: merged } },
+      bosses: {
+        ...config.bosses,
+        [bossId]: { ...boss, anchors: merged, ...(spawnPos ? { spawn_pos: spawnPos } : {}) },
+      },
     };
     navigator.clipboard?.writeText(JSON.stringify(cfg, null, 2) + '\n');
   };
@@ -321,8 +342,12 @@ export default function BossRoom() {
         ];
         spawn.copy(candidates.find((p) => dropToFloor(p) !== null) ?? candidates[candidates.length - 1]);
         feet.copy(spawn);
-        bossPos.set(c.x, box.max.y + 5, c.z);
-        settleBoss();
+        if (authoredPos) {
+          placeBossAuthored(authoredPos);
+        } else {
+          bossPos.set(c.x, box.max.y + 5, c.z);
+          settleBoss();
+        }
         oneLoaded();
       },
       undefined,
@@ -340,7 +365,7 @@ export default function BossRoom() {
 
     // Boss rig — clips come from the loaded GLB, never assumed.
     loader.load(
-      assetUrl(`assets/enemies/${boss.model_id}/${boss.model_id}.glb`),
+      effectiveGlbUrl,
       (g) => {
         if (disposed) return;
         bossGroup.add(g.scene);
@@ -352,7 +377,7 @@ export default function BossRoom() {
         oneLoaded();
       },
       undefined,
-      () => setStatus(`boss model failed: ${boss.model_id}`),
+      () => setStatus(`boss model failed: ${effectiveModelId}`),
     );
 
     // Multi-part pieces (tentacles, faces, horn) — ride the boss group and
@@ -367,7 +392,7 @@ export default function BossRoom() {
     for (const partDef of boss.parts ?? []) {
       const name = partName(partDef);
       loader.load(
-        bossPartUrl(boss.model_id, name),
+        bossPartUrl(effectiveModelId, name),
         (g) => {
           if (disposed) return;
           // One wrapper per instance (position/yaw/pitch in the boss's local
@@ -417,12 +442,20 @@ export default function BossRoom() {
     // the walkable collider. Logical bossPos (readouts, sim) stays on the
     // floor; only the rendered group sinks.
     const modelOffsetY = boss.model_offset_y ?? 0;
+    // Authored staging (humilias at the broken stage edge): spawn_pos is
+    // trusted verbatim — including y, since the spot may be OFF the walkable
+    // collider — and only applies in the boss's default arena.
+    const authoredPos = arenaId === boss.arena ? boss.spawn_pos : undefined;
     function settleBoss() {
       // Colliders can have holes where only the boss lives (the octopus
       // pool) — settle to the collider's top there instead of dangling at
       // the spawn height, so model_offset_y has a stable reference.
       const y = dropToFloor(bossPos) ?? (floorMesh ? floorMaxY : null);
       if (y !== null) bossPos.y = y;
+      bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
+    }
+    function placeBossAuthored(pos: [number, number, number]) {
+      bossPos.set(pos[0], pos[1], pos[2]);
       bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
     }
 
@@ -548,6 +581,49 @@ export default function BossRoom() {
     scene.add(ordnanceGroup);
     const projPool: THREE.Mesh[] = [];
     const ringPool: THREE.Mesh[] = [];
+
+    // Gem caster visuals (Chaos Sorcerer): two gems flanking the boss, tinted
+    // by the held colors. Children of bossGroup so they ride the hover/teleport.
+    const gemMeshes: THREE.Mesh[] = [0, 1].map((slot) => {
+      const m = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.35),
+        new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      );
+      m.position.set(slot === 0 ? -2.2 : 2.2, 1.6, 0.3);
+      m.visible = false;
+      bossGroup.add(m);
+      return m;
+    });
+    // The casting gem: sits in front of the sorcerer and spins rapidly while a
+    // spell is being cast, then vanishes at release.
+    const castGemMesh = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.45),
+      new THREE.MeshBasicMaterial({ color: 0xffffff }),
+    );
+    castGemMesh.position.set(0, 1.7, 2.6);
+    castGemMesh.visible = false;
+    bossGroup.add(castGemMesh);
+    function syncGems() {
+      if (!sim || !sim.gems) {
+        for (const m of gemMeshes) m.visible = false;
+        castGemMesh.visible = false;
+        return;
+      }
+      sim.gems.forEach((color, i) => {
+        const m = gemMeshes[i];
+        if (!color) { m.visible = false; return; }
+        m.visible = true;
+        (m.material as THREE.MeshBasicMaterial).color.setHex(GEM_HEX[color]);
+        m.rotation.y += 0.03; // slow idle spin
+      });
+      if (sim.castingGem) {
+        castGemMesh.visible = true;
+        (castGemMesh.material as THREE.MeshBasicMaterial).color.setHex(GEM_HEX[sim.castingGem]);
+        castGemMesh.rotation.y += 0.5; // rapid spin while casting
+      } else {
+        castGemMesh.visible = false;
+      }
+    }
     function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
       while (pool.length <= i) {
         const m = make();
@@ -596,6 +672,7 @@ export default function BossRoom() {
         setSimHud(null);
         tintBoss(false);
         syncOrdnance();
+        syncGems();
         settleBoss();
       }
     }
@@ -781,6 +858,7 @@ export default function BossRoom() {
         bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
         bossGroup.rotation.y = sim.yaw;
         syncOrdnance();
+        syncGems();
       } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
@@ -850,7 +928,7 @@ export default function BossRoom() {
     };
     // modelScale applies live via apiRef — not a scene-rebuild dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, bossId, arenaId]);
+  }, [config, bossId, arenaId, effectiveModelId, effectiveGlbUrl]);
 
   // Live-apply UI state to the scene without rebuilding it.
   useEffect(() => {
@@ -886,7 +964,9 @@ export default function BossRoom() {
       <div ref={mountRef} style={{ flex: 1, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 12, color: '#9ab', pointerEvents: 'none' }}>
           <div style={{ fontSize: 15, color: '#fff', fontWeight: 600 }}>
-            {rosterName} <span style={{ color: '#667', fontWeight: 400 }}>({boss?.model_id})</span>
+            {rosterName}
+            {activeForm ? ` — ${activeForm.label}` : ''}{' '}
+            <span style={{ color: '#667', fontWeight: 400 }}>({effectiveModelId})</span>
           </div>
           <div>{arena?.label} · {arenaId}{arena?.unassigned ? ' · unassigned arena' : ''}</div>
           <div>{status}</div>
@@ -906,6 +986,23 @@ export default function BossRoom() {
           <Link to="/boss-room" style={{ color: '#88aaff', fontSize: 11 }}>all bosses</Link>
         </div>
         {boss?.note && <div style={{ color: '#a86', fontSize: 11, marginTop: 6 }}>{boss.note}</div>}
+
+        {boss?.forms && boss.forms.length > 0 && (
+          <>
+            <span style={label}>Form (composite boss — the fight cycles these)</span>
+            <select
+              value={formIdx}
+              onChange={(e) => setOverride({ form: +e.target.value })}
+              style={{ width: '100%', background: '#1a1a35', color: '#fff', border: '1px solid #334' }}
+            >
+              {boss.forms.map((f, i) => (
+                <option key={f.roster_id} value={i}>
+                  {f.label} — {f.roster_id} ({f.model_id})
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         <span style={label}>Arena</span>
         <select
@@ -1032,7 +1129,7 @@ export default function BossRoom() {
         {boss && (
           <button
             onClick={copyConfig}
-            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors — paste over the file (rename anchors by hand)."
+            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors AND the current boss position as spawn_pos (use 'move boss' to stage it first) — paste over the file (rename anchors by hand)."
             style={{ ...btn, display: 'block', width: '100%' }}
           >
             copy boss_arenas.json (markers → anchors)
@@ -1089,7 +1186,10 @@ export default function BossRoom() {
                 ...btn,
                 flex: 1,
                 textAlign: 'left',
-                background: activeClip === c ? '#2a4a2a' : undefined,
+                // Keep the dark theme background when inactive — `undefined`
+                // here reverted to the browser's light default button, leaving
+                // the light-blue label unreadable.
+                background: activeClip === c ? '#2a4a2a' : btn.background,
                 borderColor: activeClip === c ? '#4a4' : '#334',
               }}
             >

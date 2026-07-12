@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "last_updated": "2026-07-12",
+  "id": "debug_boss_paru",
+  "name": "DEBUG: Paru Arena (Sinow)",
+  "description": "Debug mission: warp straight into the Oblivion City Paru arena. PSO Sinow stand-in for the two-floating-robots boss \u2014 a Sinow Beat + a Sinow Gold (rare). Always unlocked; no rewards.",
+  "area_id": "paru",
+  "rewards": {},
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "Debug warp: straight to the boss arena. Good hunting."
+    }
+  ],
+  "sections": [
+    {
+      "type": "boss",
+      "area": "z",
+      "area_id": "paru",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s05z_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "sinow_beat",
+              "position": [
+                -4,
+                0,
+                3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "sinow_gold",
+              "position": [
+                4,
+                0,
+                3
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

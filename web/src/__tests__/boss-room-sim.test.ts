@@ -54,6 +54,12 @@ const makeEntry = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => ({
     intro_clip: 'tht',
     walk_clip: 'wlk1',
     idle_clip: 'wat',
+    hover_hold: 0,
+    gem_caster: false,
+    gem_respawn_delay: 2.5,
+    gem_cast_delay: 1.5,
+    teleport_interval: 0,
+    teleport_radius: 10,
     stationary: false,
     relocate_kind: 'flight',
     relocate_untargetable: false,
@@ -422,6 +428,118 @@ describe('boss sim — humilias knockdown chain & falz relocation', () => {
     expect(maxLive).toBe(5); // one release, five fanned shots
     const dirs = new Set(sim.projectiles.map((p) => p.dir.x.toFixed(2)));
     expect(dirs.size).toBeGreaterThan(1); // actually spread, not stacked
+  });
+});
+
+describe('boss sim — chaos sorcerer gem caster', () => {
+  const gemAtk = (id: string, gem: string, kind: string, over: Partial<ResolvedBossAttack> = {}): ResolvedBossAttack =>
+    atk({ id, clip: id, gem: gem as any, kind: kind as any, phases: ['engaged'], min_range: 0, max_range: 30, ...over });
+  const makeSorcerer = (): ResolvedBoss => makeEntry({
+    // Cast → respawn (0.5s) → the two gems are back → telegraph window
+    // (gem_cast_delay 1.0s, both gems visible) → next cast. The next-cast
+    // timer only starts AFTER the refill, so a fresh gem always shows before use.
+    stats: { hp: 200, move_speed: 0, attack_cooldown: 3, attack_base: 10, turn_speed_deg: 120 },
+    fsm: {
+      ...makeEntry().fsm, intro_clip: '', idle_clip: 'wait', walk_clip: '', stationary: true,
+      hover_hold: 2.5, gem_caster: true, gem_respawn_delay: 0.5, gem_cast_delay: 1.0, teleport_interval: 0,
+      loaf_duration_min: 0.3, loaf_duration_max: 0.3, punish_break_damage: 0,
+    },
+    phases: [{ id: 'engaged', label: 'Engaged' }],
+    attacks: [
+      gemAtk('fire', 'red', 'projectile'),
+      gemAtk('ice', 'blue', 'projectile', { split: 3 }),
+      gemAtk('dark', 'purple', 'aoe_burst', { hit_reach: 9, hit_half_angle_deg: 180 }),
+      gemAtk('heal', 'green', 'heal', { damage_mult: 0.15 }),
+    ],
+  });
+
+  // Deterministic rng so gem rolls are reproducible.
+  const seq = (vals: number[]) => { let i = 0; return () => vals[i++ % vals.length]; };
+
+  it('hovers at hover_hold and holds two distinct gems from the kit', () => {
+    const entry = makeSorcerer();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0.5]));
+    expect(sim.alt).toBe(2.5);
+    const [a, b] = sim.gems;
+    expect(a).toBeTruthy();
+    expect(b).toBeTruthy();
+    expect(a).not.toBe(b);
+    for (const g of sim.gems) expect(['red', 'blue', 'purple', 'green']).toContain(g);
+  });
+
+  it('casts a gem to the casting slot, then refills during cooldown to two', () => {
+    const entry = makeSorcerer();
+    let k = 0;
+    const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
+    const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, rng);
+    const player = { x: 0, z: 5 };
+    // opens with two distinct gems (the telegraph), nothing casting
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+    expect(sim.castingGem).toBeNull();
+    // reach a cast: the chosen gem leaves its slot for the casting slot
+    run(sim, entry, player, 40, () => sim.castingGem !== null);
+    expect(sim.castingGem).toBeTruthy();
+    expect(sim.gems.filter(Boolean)).toHaveLength(1); // one side gem left
+    // the casting gem clears at the spell release
+    run(sim, entry, player, 40, () => sim.castingGem === null);
+    expect(sim.castingGem).toBeNull();
+    // during the cooldown a new gem refills to two distinct again
+    run(sim, entry, player, 60, () => sim.gems.filter(Boolean).length === 2);
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+  });
+
+  it('a freshly-respawned gem is visible for the telegraph window before the next cast', () => {
+    const entry = makeSorcerer();
+    let k = 0;
+    const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
+    const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, rng);
+    const player = { x: 0, z: 5 };
+    // first cast leaves one gem, then wait for the refill back to two
+    run(sim, entry, player, 40, () => sim.castingGem !== null);
+    run(sim, entry, player, 40, () => sim.castingGem === null);
+    run(sim, entry, player, 60, () => sim.gems.filter(Boolean).length === 2);
+    expect(sim.gems.filter(Boolean)).toHaveLength(2);
+    // both gems must stay present through the whole telegraph window: it is NOT
+    // consumed the instant it spawns. Count frames with two gems before the cast.
+    let visibleFrames = 0;
+    for (let i = 0; i < 40; i++) {
+      if (sim.gems.filter(Boolean).length < 2) break;
+      stepBoss(sim, entry, inp(player));
+      visibleFrames++;
+    }
+    // gem_cast_delay 1.0s at dt=0.1 → ~10 frames of two-gem telegraph before the cast
+    expect(visibleFrames).toBeGreaterThanOrEqual(8);
+  });
+
+  it('the gem caster never loaf-walks — it stays put between casts', () => {
+    const entry = makeSorcerer();
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0.5]));
+    const states = new Set<string>();
+    for (let i = 0; i < 200; i++) { stepBoss(sim, entry, input({ x: 0, z: 5 })); states.add(sim.state); }
+    expect(states.has('loaf')).toBe(false);
+    expect(sim.pos).toEqual({ x: 0, z: 0 }); // teleport off in this entry, so it never moves
+  });
+
+  it('green gem self-heals — boss HP goes up', () => {
+    const entry = makeSorcerer();
+    // rng picks green first (index 3 of the pool) — pool order = attack order
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0.99, 0]));
+    sim.gems = ['green', 'red'];
+    sim.hp = 100; // damaged
+    const player = { x: 0, z: 5 };
+    const heals: BossEvent[] = [];
+    // force green to be the cast: only green available
+    sim.gems = ['green', null];
+    for (let i = 0; i < 40; i++) {
+      heals.push(...stepBoss(sim, entry, input(player)).filter((e) => e.type === 'boss-heal'));
+      if (heals.length) break;
+    }
+    expect(heals.length).toBeGreaterThan(0);
+    expect(sim.hp).toBeGreaterThan(100);
   });
 });
 

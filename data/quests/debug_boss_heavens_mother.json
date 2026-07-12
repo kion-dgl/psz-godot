@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "last_updated": "2026-07-12",
+  "id": "debug_boss_heavens_mother",
+  "name": "DEBUG: Heaven's Mother Arena",
+  "description": "Debug mission: warp straight into the Eternal Tower summit arena. Spawns all three mother forms together for observation; the real fight cycles them as phases. Always unlocked; no rewards.",
+  "area_id": "tower",
+  "rewards": {},
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "Debug warp: straight to the boss arena. Good hunting."
+    }
+  ],
+  "sections": [
+    {
+      "type": "boss",
+      "area": "z",
+      "area_id": "tower",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s087_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "blade_mother",
+              "position": [
+                0,
+                0,
+                4
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "force_mother",
+              "position": [
+                -4,
+                0,
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "shot_mother",
+              "position": [
+                4,
+                0,
+                -3
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
