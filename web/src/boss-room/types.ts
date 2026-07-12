@@ -213,6 +213,8 @@ export interface BossDef {
   model_scale: number;
   /** Composite boss (heaven's mother): the fight cycles these roster enemies as its phases. */
   forms?: BossForm[];
+  /** PSO stand-in whose rig is on R2 but not yet in the game pack — skip the asset_tree assertion. */
+  pack_pending?: boolean;
   note?: string;
   phases?: BossPhase[];
   attacks?: BossAttackDef[];

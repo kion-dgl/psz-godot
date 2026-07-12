@@ -32,14 +32,17 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(7); // 5 uniques + heaven's mother composite + the paru robot encounter
+    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + 2 PSO stand-ins (chaos_sorcerer, sinow_beat)
   });
 
   it('every roster boss has a room', () => {
     // mother_trinity is flagged is_boss but rides the regular `mother` rig,
     // spawns in no quest, and has no designed fight — the mother_caster
     // enemy room covers the rig until the fight exists.
-    const NOT_ROOMED = new Set(['mother_trinity']);
+    // mother_trinity: rides the `mother` rig, no designed fight yet.
+    // sinow_gold: the rare form of the sinow_beat boss room (a form, not its
+    // own room).
+    const NOT_ROOMED = new Set(['mother_trinity', 'sinow_gold']);
     const rosterBosses = roster.filter((e) => e.is_boss).map((e) => e.id);
     const missing = rosterBosses.filter((id) => !config.bosses[id] && !NOT_ROOMED.has(id));
     expect(missing, `is_boss roster entries without a boss room: ${missing.join(', ')}`).toHaveLength(0);
@@ -87,6 +90,9 @@ describe('boss_arenas.json — bosses', () => {
 
   it('boss model GLBs are in the published pack (asset_tree.txt)', () => {
     for (const [id, b] of bosses) {
+      // pack_pending stand-ins (PSO substitutes) live on R2 but aren't in the
+      // game pack yet — skip, like the part rigs.
+      if (b.pack_pending) continue;
       // part_of forms are PART rigs — they ship with the parts on the next
       // pack publish (like the tentacle/face parts), not asserted here.
       const models: string[] = b.forms

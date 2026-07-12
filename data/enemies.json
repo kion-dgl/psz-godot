@@ -149,17 +149,6 @@
   "is_boss": true
  },
  {
-  "id": "chaos_mobius_paru",
-  "name": "Chaos & Mobius (Paru)",
-  "model_id": "boss_robot",
-  "element": "Machine",
-  "locations": [
-   "paru"
-  ],
-  "is_rare": false,
-  "is_boss": true
- },
- {
   "id": "dark_falz",
   "name": "Dark Falz",
   "model_id": "boss_darkfalz",
@@ -805,5 +794,38 @@
   ],
   "is_rare": false,
   "is_boss": false
+ },
+ {
+  "id": "sinow_beat",
+  "name": "Sinow Beat",
+  "model_id": "sinow_beat",
+  "element": "Machine",
+  "locations": [
+   "paru"
+  ],
+  "is_rare": false,
+  "is_boss": true
+ },
+ {
+  "id": "sinow_gold",
+  "name": "Sinow Gold",
+  "model_id": "sinow_gold",
+  "element": "Machine",
+  "locations": [
+   "paru"
+  ],
+  "is_rare": true,
+  "is_boss": true
+ },
+ {
+  "id": "chaos_sorcerer",
+  "name": "Chaos Sorcerer",
+  "model_id": "chaos_sorcerer",
+  "element": "Dark",
+  "locations": [
+   "makara"
+  ],
+  "is_rare": false,
+  "is_boss": true
  }
 ]
