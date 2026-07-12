@@ -1135,7 +1135,10 @@ export default function BossRoom() {
                 ...btn,
                 flex: 1,
                 textAlign: 'left',
-                background: activeClip === c ? '#2a4a2a' : undefined,
+                // Keep the dark theme background when inactive — `undefined`
+                // here reverted to the browser's light default button, leaving
+                // the light-blue label unreadable.
+                background: activeClip === c ? '#2a4a2a' : btn.background,
                 borderColor: activeClip === c ? '#4a4' : '#334',
               }}
             >
