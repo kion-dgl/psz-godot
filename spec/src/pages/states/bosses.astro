@@ -1,0 +1,157 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> INTRO
+  INTRO --> ACTIVE: threat display done
+
+  ACTIVE --> ATTACKING: attack picked from the\ncurrent phase's table
+  ATTACKING --> LOAF: attack resolved
+  LOAF --> ACTIVE: disengage walk done
+  ACTIVE --> RELOCATE: arena move trigger\n(takeoff / submerge / swim)
+  RELOCATE --> ACTIVE: arrived at anchor
+  ACTIVE --> PUNISH: break threshold /\npost-string fatigue
+  PUNISH --> ACTIVE: recovery clip done
+  ACTIVE --> DEAD: HP 0
+  PUNISH --> DEAD: HP 0
+
+  note right of LOAF
+    Breathing room: after every
+    attack the boss walks off on
+    a curving path (the enemy
+    model's loafing) instead of
+    camping the player.
+  end note
+
+  note right of RELOCATE
+    Arena-bound: relocation
+    targets are named anchors
+    in boss_arenas.json, authored
+    in #/boss-room.
+  end note
+`;
+---
+
+<Concept title="Boss Behavior (DRAFT)" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p><strong>Status: DRAFT.</strong> The <em>shared contract</em> below (schema, timeline reuse, anchor semantics) is normative now — it is what the tooling and data are built against. The <em>per-boss tables</em> are first drafts read off the rig clip vocabularies (<code>#/boss-room</code>, #493) and <strong>MUST</strong> be verified by observation — in the boss rooms and against original-game capture — before any Godot implementation starts. Unverified clip readings are marked in the data's <code>clip_notes</code> / <code>note</code> fields. Godot work on a boss <strong>MUST NOT</strong> begin while its table still carries unresolved readings for the attacks being implemented.</p>
+
+  <h2>Why bosses are not enemy-room archetypes</h2>
+  <p>Per <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>, bosses are out of scope for the flat enemy sandbox: each of the five vocabularies is unique, and the behavior is <strong>arena-bound</strong> — fly passes, surfacing pools, relocation spots are positions in the boss's own stage. The observation tool is <a href="https://kion-dgl.github.io/psz-godot/#/boss-room">#/boss-room</a> (one room per boss, loaded inside its arena); the data is <code>data/boss_arenas.json</code> (<code>schema_version: 2</code>).</p>
+
+  <h2>Shared contract</h2>
+
+  <h3>Data model (boss_arenas.json v2)</h3>
+  <table>
+    <tr><th>Field</th><th>Semantics</th></tr>
+    <tr><td><code>phases[]</code></td><td>Ordered; the first phase is the opener. <code>hp_frac</code> on a phase means it is entered when the boss's HP fraction drops to that value; a phase without <code>hp_frac</code> has a per-boss trigger (documented in its <code>note</code> — timer, attack-string completion, break threshold). A phase MAY be a <em>modifier overlay</em> rather than a moveset switch: <code>speed_mult</code> / <code>cooldown_mult</code> apply from entry onward (Reyburn's enrage).</td></tr>
+    <tr><td><code>attacks[]</code></td><td>Reuses the <a href="/mechanics/enemy-attacks">enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random). Boss-only attack fields: <code>knockback</code> (a hit also shoves the player that many units along the boss's facing — Reyburn's wing flap), <code>lp_loops</code> (repeat count for <code>lp</code> chain tokens; for <code>projectile</code> attacks one shot fires per rep — the fireball volley), <code>split</code> (a <code>lob</code> payload splits into this many impact points around the target).</td></tr>
+    <tr><td><code>attacks[].chain</code></td><td>Explicit clip-token sequence — the generalization of the enemy model's <code>windup_clips</code>. Tokens resolve per the enemy clip-resolution order (exact, then <code>*_&lt;token&gt;</code> suffix); tokens ending in <code>lp</code> loop. Every clip before the last is <strong>pure telegraph</strong>; the timeline fractions (<code>windup_frac</code> / <code>damage_end_frac</code>) apply to the <strong>final</strong> clip of the chain.</td></tr>
+    <tr><td><code>anchors[]</code></td><td>Named positions in the boss's <strong>default arena frame</strong> (meaningless elsewhere), authored with the room's click tool and round-tripped via its config export. Relocation targets and anchor-bound attacks (<code>attacks[].anchor</code>) reference them by name.</td></tr>
+    <tr><td><code>clip_notes</code></td><td>Documentational clip semantics (MAY), same as the enemy schema — the draft's observation notebook. Unverified readings say so.</td></tr>
+    <tr><td><code>stats</code> / <code>fsm</code></td><td>Draft sim tuning (hp, move/turn speed, attack cooldown, flight cadence, punish break/multiplier) driving the room's <em>behavior sim</em> — <code>web/src/boss-room/sim.ts</code>, the runnable form of these tables (attack selection and the melee arc are imported from the enemy room's normative <code>fsm.ts</code>). Sim numbers are tuning draft, not observed truth; they harden through the same workflow below.</td></tr>
+  </table>
+
+  <h3>Attack kinds</h3>
+  <p>Boss attacks reuse the enemy kinds (<code>melee_arc</code>, <code>projectile</code>, <code>lob</code>, <code>charge</code>, <code>leap</code>) and add five boss-only kinds. The additions extend — and MUST NOT alter — the enemy set:</p>
+  <table>
+    <tr><th>Kind</th><th>Draft semantics</th></tr>
+    <tr><td><code>beam_sweep</code></td><td>A sustained beam/breath swept across an angle while the release clip plays (Reyburn's fire breath, Humilias's laser). Damage is continuous inside the sweep during the window — not a one-shot arc test.</td></tr>
+    <tr><td><code>aoe_burst</code></td><td>Radial burst centered on the boss at the window open (Dark Falz's radiate).</td></tr>
+    <tr><td><code>grab</code></td><td>On connect, the target is held and takes the attack's damage over the hold; damaging the boss past a threshold cancels it (Octo Diablo's absorb→eat, whose rig carries explicit <code>*cnc</code> cancel clips).</td></tr>
+    <tr><td><code>fly_pass</code></td><td>An airborne strafing run along an anchor path (Reyburn). Anchor-bound by definition.</td></tr>
+    <tr><td><code>spout</code></td><td>An aimed sustained jet from a fixed emplacement/surfacing spot (Octo Diablo). Like <code>beam_sweep</code> but position-locked rather than angle-swept.</td></tr>
+  </table>
+
+  <h3>Breathing room (post-attack disengage)</h3>
+  <p>After an attack resolves the boss <strong>MUST</strong> disengage — a loafing walk away from the player on a slowly curving path (<code>fsm.loaf_duration_min/max</code> seconds, the enemy model's LOAFING) — before it re-engages. This is the fairness contract: a boss that re-acquires the player immediately after every attack pins them permanently (a downed player could never stand up). Aggression modifiers scale it: an enrage phase's <code>cooldown_mult</code> shortens the disengage along with the cooldown, so "more aggressive" compresses the breathing room without removing it.</p>
+
+  <h3>Punish windows</h3>
+  <p>Every boss fight <strong>MUST</strong> expose deliberate vulnerability windows — that is the genre contract. The draft recognizes two shapes, both visible in the rigs:</p>
+  <ul>
+    <li><strong>Fatigue</strong> — a tired idle after an attack string (Octo Diablo's <code>wattir</code>): triggered by <code>fsm.fatigue_attacks</code> attacks since the last rest, the punish clip <em>loops</em> for <code>fsm.punish_duration</code>, and for a submerge-relocating boss the window ends in the relocation.</li>
+    <li><strong>Knockdown</strong> — a break threshold (<code>fsm.punish_break_damage</code>) topples the boss: either a one-shot reaction clip (Reyburn's <code>dmg1</code> — though the observed pattern list has no knockdown, unconfirmed) or the full chain <code>punish_start_clip → punish_clip loop → punish_end_clip</code> (Humilias's <code>fall → fallwat → stdup</code>). Damage taken during the window reuses the enemy model's <code>recovery_vulnerable_mult</code> semantics.</li>
+  </ul>
+
+  <h2>Per-boss drafts</h2>
+  <p>Numbers live in <code>data/boss_arenas.json</code> — these sections describe the fight <em>shape</em> and flag what is unverified.</p>
+
+  <h3>Reyburn (boss_dragon — Gurhacia Valley, claiming_a_stake)</h3>
+  <p><strong>Observed patterns</strong> (from the real fight — these supersede the earlier clip-derived guesses and are what the table encodes):</p>
+  <ul>
+    <li><strong>Walk + bite</strong> (<code>atkh1</code>) and <strong>walk + tail swipe</strong> (<code>atkrl</code>/<code>atkrr</code>, wide arcs).</li>
+    <li><strong>Wing flap</strong> (<code>atkwg</code>) — damages <em>and blows the player away</em> along the facing (<code>knockback: 8</code>).</li>
+    <li><strong>War cry</strong> (<code>tht</code>) — a blast radius in a circle around the dragon (<code>aoe_burst</code>, 360°). The same clip serves as the fight opener and the enrage growl.</li>
+    <li><strong>Fireball volley</strong> — three fireballs while standing (<code>brsst→brslp×3→brs2</code>, <code>projectile</code>, one shot per <code>lp</code> rep).</li>
+    <li><strong>Rush bite</strong> — runs toward the player (<code>wlk2</code>) and bites (<code>atkh2</code>) — <code>charge</code>, closes during the telegraph.</li>
+    <li><strong>Flight cycle</strong> — takes off (<code>flst</code>), flies away, and deals damage in a circle <em>where it lands</em> (<code>land_slam</code>); from the air it can drop a <strong>fireball that splits into 3 parts</strong> on the ground (<code>sky_fireball</code>, <code>lob split: 3</code> — impact rings shown in the room).</li>
+    <li><strong>Low-HP enrage</strong> — the boss growls and its edges turn red, becoming more aggressive: the <code>enrage</code> modifier phase (<code>hp_frac 0.35</code>, <code>speed_mult 1.3</code>, <code>cooldown_mult 0.6</code>). The room approximates the red edges with an emissive tint.</li>
+  </ul>
+  <p><strong>Sim'd end-to-end</strong> in <code>#/boss-room/reyburn</code>: intro roar → grounded chase/attack from the bands → timer-driven flight cycle → enrage → death, with the J-swing driving HP so every transition is observable.</p>
+  <ul>
+    <li><strong>Open:</strong> flight-entry cadence (flat 22 s timer is a draft; HP-step?); whether <code>rdst/rdg</code> are the landing dive; <code>brs1</code> as the single-fireball variant; whether a knockdown punish exists at all — the observed list has none, so the draft's damage-break (<code>dmg1</code>, ×2) stays <em>unconfirmed</em> until checked against the real fight.</li>
+  </ul>
+
+  <h3>Octo Diablo (boss_octopus — Ozette Wetlands, poisoned_water)</h3>
+  <p>A different fight <em>shape</em> from Reyburn: a <strong>rooted surfacing emplacement</strong> (<code>fsm.stationary</code>) that relocates by submerging. The cycle:</p>
+  <ul>
+    <li><strong>Surfaced</strong> — rooted at a spot, faces the player, attacks from the bands: <strong>spout</strong> (sustained water jet, the position-locked <code>beam</code> variant), <strong>vomit</strong> (a ground-fired <code>lob</code> at the player), and <strong>absorb→eat</strong> — a <code>grab</code>: damage ticks while the player is held, and damaging the boss <em>breaks the grip</em> (<code>cancel_clip: eatcnc</code> — the rig carries explicit cancel clips, so the mechanic is native). Its breathing room is a rest beat in place (a rooted boss can't loaf-walk).</li>
+    <li><strong>Tired (punish)</strong> — after a 3-attack string (<code>fsm.fatigue_attacks</code>) the <code>wattir</code> idle <em>loops</em> for <code>fsm.punish_duration</code> (4&nbsp;s, ×2 damage) — the fatigue shape of the punish contract.</li>
+    <li><strong>Submerged (relocate)</strong> — the tired window ends in a submerge, not a re-engage: sinks below the floor (<code>relocate_untargetable</code> — hits don't land), swims (<code>float</code>) to the next surfacing spot, rises rested. Surfacing spots are the <strong>first real use of authored anchors</strong>: with none authored it falls back to resurfacing ~10&nbsp;u from the player — author the pool spots in the room and the sim uses them.</li>
+  </ul>
+  <ul>
+    <li><strong>Multi-part rig.</strong> The tentacles are separate skinned meshes — <code>parts/z_002_tt</code> and <code>parts/z_002_st</code>, each carrying all 20 of the body's clip names — imported via <code>import_objects.py parts</code> (they live under the viewer's <em>enemy parts</em>, not the object sets) and rendered in the room in sync with the body (<code>BossDef.parts</code>). The same mechanism covers Humilias's faces (<code>z_004_kao_a/b</code>) and Reyburn's static horn.</li>
+    <li><strong>Staging.</strong> The body sits <em>in</em> the pool (<code>model_offset_y</code> sinks the rendered group to the waterline; the logical position stays on the collider), and <strong>four tentacle instances</strong> of the <code>z_002_tt</code> rig are placed evenly around it in the boss's facing frame — two flanking the face, two behind (<code>parts[].instances</code>: local pos + yaw). The clips themselves provide the bend: the base segment runs horizontal below the waterline and the animated arm rises out of the water. Placement numbers are draft — tune in the room, hand-edit the data.</li>
+    <li><strong>Draft simplifications:</strong> the absorb pull-in is skipped (the grab ticks in place); the spout is a ticked wide arc, not a swept jet; submerging is a plain sink below the floor mesh.</li>
+    <li><strong>Open:</strong> the real attack-string length and tired duration; no death clip in the rig (scripted sink?); whether <code>collisn</code> is a wall-stun or an attack; whether surfacing spots are fixed pools (likely — author and verify); where the <code>o0b_kaeru</code> frog prop from the parts set belongs.</li>
+  </ul>
+
+  <h3>Humilias (boss_mother — Dark Shrine A, control_system)</h3>
+  <ul>
+    <li><strong>Advancing juggernaut — sim'd.</strong> Slow advance (<code>move_speed 2</code>, narrow turn); laser sweep at range (<code>beam_sweep</code>), arm swing / headbutt press (<code>charge</code>) / full <code>cmb</code> combo string up close. The face parts (<code>z_004_kao_a/b</code>) render in sync.</li>
+    <li><strong>Knockdown chain — the punish contract's third shape.</strong> 80 accumulated damage topples her: <code>punish_start_clip fall</code> (one-shot) → <code>punish_clip fallwat</code> <em>loops</em> for <code>punish_duration</code> (4&nbsp;s, ×2 damage — the weak point exposed) → <code>punish_end_clip stdup</code> (one-shot recovery) → re-engage.</li>
+    <li><strong>Open:</strong> what drives the knockdown (cumulative damage vs weak-point hits — the faces?); <code>hedbhitlp</code> grinding-on-hit semantics (sustained contact damage?).</li>
+  </ul>
+
+  <h3>Chaos Mobius (boss_robot — Arca Plant, heretic)</h3>
+  <ul>
+    <li><strong>Unblocked.</strong> The full 26-clip kit imported via the patched apicula (<code>psz-asset-viewer scripts/processBossRobot.ts</code>): the PSZ boss rigs carry one extra <em>unanimated root object</em> — named after the model, last in the object list — that the clips don't cover, and apicula's exact object-count match rejected every clip. The patch (local <code>~/Projects/apicula</code>) accepts animations with exactly one fewer object. The game rig is <code>boss_robot_cmb</code>'s combined <code>z_003</code>.</li>
+    <li><strong>Draft table — sim'd.</strong> Left/right drills and the big sweep (segmented <code>st→lp→at</code> chains; the <code>ed</code> recovery clips are not yet played), left/right gun projectiles, <code>mov_lp</code> locomotion, and the <code>dwn_st → dwn_lp → dwn_ed</code> knockdown chain (same shape as Humilias).</li>
+    <li><strong>Open — the two-robot mechanics:</strong> "Chaos &amp; Mobius" are two robots. The narc carries their entrances (<code>stt_n/stt_u</code>), combine/split transitions (<code>ch_in/ch_out</code> per robot), separate deaths (<code>ded_n/ded_u</code>), and separated idle forms (<code>ve_*</code>, the plain <code>boss_robot</code> narc) — all now converted onto the <code>z_003n/z_103u</code> part rigs, pending fight design. The <code>floor_lazer</code> arena props (colored floor tiles!) ride the cmb narc too. <code>gl/gr</code> = gun left/right and <code>stp</code> readings unverified.</li>
+  </ul>
+
+  <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
+  <ul>
+    <li><strong>Relocating ranged finale — sim'd.</strong> Walks and runs the ranged kit: throw volley (<code>thr*</code>, one projectile per <code>thrlp</code> rep), <strong>diffusion spread</strong> (<code>dif*</code> — the release fans <code>split: 5</code> projectiles across ±25°), radiate AoE burst (<code>rad*</code>, 360°), single heavy shot (<code>bhsht</code>), and the wide <code>nagi</code> mow-down sweep up close. Every ~25&nbsp;s (<code>flight_interval</code> + <code>relocate_kind submerge</code>) it sinks untargetable and <em>swims</em> (<code>relocate_loop_clip swm</code>) to a new spot — the timer-driven variant of the octopus's fatigue-driven cycle.</li>
+    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
+  </ul>
+
+  <h2>Debug missions (the in-game instrument)</h2>
+  <p>Each boss arena has a <strong>debug mission</strong> — <code>debug_boss_&lt;id&gt;</code> in <code>data/quests/</code> — that warps the player straight into the boss cell. They are <strong>always unlocked</strong> (no <code>parent_quest</code>, never <code>disabled</code>), sit at the end of the guild-counter list with a <code>DEBUG:</code> name prefix, and award <strong>nothing</strong> (empty rewards). They deliberately ship in beta builds: zero-friction boss testing on real hardware. Remove them from <code>data/quests/manifest.json</code> for a real release.</p>
+  <ul>
+    <li>Structure: a single <code>type: "boss"</code> section whose one cell is both start and end, spawning the boss (roster id) at the arena origin — the same shape as the story quests' boss sections.</li>
+    <li><strong>Snowfield</strong> (<code>s03z_na1</code>) has no unique boss: its debug mission spawns a <strong>Hildegao pack</strong> (×4) — matching the real game's snowfield boss room.</li>
+    <li>Each has a matching <code>data/quest_plans/</code> entry (one <code>kill_all + wait_quest_complete</code> step), so <code>PSZ_AUTOPILOT_QUEST=debug_boss_&lt;id&gt;</code> drives the whole accept → warp → clear → report loop headlessly — the autopilot probe for boss work.</li>
+    <li>Bosses currently spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
+  </ul>
+
+  <h2>Draft → normative workflow</h2>
+  <ol>
+    <li>Observe in <code>#/boss-room</code> (attack buttons play the drafted chains; anchors are authored with the click tool and round-tripped via the config export) and against original-game capture.</li>
+    <li>Correct <code>data/boss_arenas.json</code>; resolve or strike each "open" item above.</li>
+    <li>Lift this page's DRAFT marker per boss — only then does the Godot implementation for that boss start, with the two test layers (seeded <code>test_runner</code> unit test + autopilot probe on the boss's quest) pinned against these tables.</li>
+  </ol>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><em>No Godot implementation yet — by design (spec-first).</em></li>
+    <li><code>web/src/boss-room/</code> — the observation/authoring instrument: behavior-panel playback of the drafted attacks, anchor authoring, config round-trip.</li>
+    <li><code>data/boss_arenas.json</code> (v2) — the tables; validated by <code>web/src/__tests__/boss-arenas-data.test.ts</code>.</li>
+  </ul>
+
+  <p><a href="/states">← States</a></p>
+</Concept>

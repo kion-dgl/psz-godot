@@ -16,18 +16,31 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import {
   arenaFloorUrl,
   arenaModelUrl,
   arenaSkyboxUrl,
+  bossPartUrl,
   loadBossConfig,
   loadRoster,
+  partInstances,
+  partName,
+  resolveBoss,
+  resolveClipToken,
   segmentFamilies,
   type BossArenaConfig,
+  type BossAttackDef,
   type RosterEntry,
   type SegmentFamily,
 } from './types';
+import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+
+const PLAYER_MAX_HP = 100;
+const SWING_RANGE = 4.5;
+const SWING_DAMAGE = 15;
+const SWING_COOLDOWN = 0.5;
 
 const STORAGE_KEY = 'psz-boss-room:v1';
 
@@ -67,6 +80,10 @@ function saveStore(store: Record<string, Overrides>) {
 interface SceneApi {
   playClip(name: string, loop: boolean): void;
   playChain(family: SegmentFamily, lpLoops: number): void;
+  /** Behavior-draft attack playback: clip-token sequence, `lp` tokens loop. */
+  playTokens(tokens: string[], lpLoops: number): void;
+  /** Toggle the behavior sim (spec /states/bosses) — drives the boss against the player. */
+  setSimulate(on: boolean): void;
   stopClips(): void;
   setSpeed(v: number): void;
   setPaused(p: boolean): void;
@@ -101,6 +118,8 @@ export default function BossRoom() {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [readout, setReadout] = useState({ player: [0, 0, 0], boss: [0, 0, 0], dist: 0 });
   const [overrides, setOverrides] = useState<Record<string, Overrides>>(loadStore);
+  const [simOn, setSimOn] = useState(false);
+  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName } | null>(null);
 
   useEffect(() => {
     clickModeRef.current = clickMode;
@@ -122,6 +141,28 @@ export default function BossRoom() {
     const next = { ...overrides, [bossId]: { ...overrides[bossId], ...patch } };
     setOverrides(next);
     saveStore(next);
+  };
+
+  // Round-trip export: the whole config with this boss's clicked markers
+  // merged into its authored anchors — paste over data/boss_arenas.json.
+  // Markers only merge in the default arena (anchors ride that frame).
+  const copyConfig = () => {
+    if (!config || !boss) return;
+    const merged =
+      arenaId === boss.arena
+        ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
+        : (boss.anchors ?? []);
+    const cfg: BossArenaConfig = {
+      ...config,
+      bosses: { ...config.bosses, [bossId]: { ...boss, anchors: merged } },
+    };
+    navigator.clipboard?.writeText(JSON.stringify(cfg, null, 2) + '\n');
+  };
+
+  const attackMeta = (a: BossAttackDef) => {
+    const range = ` · ${a.min_range ?? 0}–${a.max_range ?? '∞'}m`;
+    const phases = a.phases ? ` · ${a.phases.join('/')}` : '';
+    return `${a.kind ?? 'melee_arc'}${range}${phases}`;
   };
 
   // ——— scene ———
@@ -158,6 +199,8 @@ export default function BossRoom() {
     let camDist = 14;
 
     let floorMesh: THREE.Object3D | null = null;
+    let floorMinY = 0; // lowest point of the floor collider (fall-guard floor)
+    let floorMaxY = 0; // top of the collider — settle fallback where it has holes (the octopus pool)
     let arenaMesh: THREE.Object3D | null = null;
     const raycaster = new THREE.Raycaster();
     const DOWN = new THREE.Vector3(0, -1, 0);
@@ -172,9 +215,50 @@ export default function BossRoom() {
     let facePlayerLocal = true;
     const bossPos = new THREE.Vector3();
 
+    // Behavior sim (spec /states/bosses) — owns the boss transform while on.
+    const entry = resolveBoss(boss);
+    let sim: BossSim | null = null;
+    let playerHp = PLAYER_MAX_HP;
+    let swingCd = 0;
+    const clipDur = (token: string): number | null => {
+      const name = resolveClipToken(animations.map((a) => a.name), token);
+      const clip = name ? animations.find((a) => a.name === name) : undefined;
+      return clip ? clip.duration : null;
+    };
+
     const markerGroup = new THREE.Group();
     scene.add(markerGroup);
     let markerSeq = 0;
+
+    // Marker mesh (post + ground ring) — yellow for ad-hoc clicks, cyan for
+    // config-authored anchors from boss_arenas.json.
+    function buildMarker(color: number): THREE.Group {
+      const grp = new THREE.Group();
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 4, 8),
+        new THREE.MeshBasicMaterial({ color }),
+      );
+      post.position.y = 2;
+      grp.add(post);
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.6, 1.0, 24),
+        new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.05;
+      grp.add(ring);
+      return grp;
+    }
+
+    // Authored anchors are positions in the boss's DEFAULT arena frame —
+    // meaningless in an override arena, so only render them at home.
+    if (boss.anchors?.length && arenaId === boss.arena) {
+      for (const a of boss.anchors) {
+        const grp = buildMarker(0x22d3ee);
+        grp.position.set(a.pos[0], a.pos[1], a.pos[2]);
+        scene.add(grp);
+      }
+    }
 
     const loader = new GLTFLoader();
     let disposed = false;
@@ -218,10 +302,24 @@ export default function BossRoom() {
         g.scene.visible = false;
         scene.add(g.scene);
         floorMesh = g.scene;
-        // Spawn the player near the floor center, boss a bit ahead.
+        // Spawn the player near the floor center, boss a bit ahead. The
+        // offset is probed against the actual floor — boss-arena colliders
+        // vary wildly in extent (the shrine's is only 20×20, so a blind
+        // center+12 lands past the edge and the player falls forever).
         const box = new THREE.Box3().setFromObject(g.scene);
+        floorMinY = box.min.y;
+        floorMaxY = box.max.y;
         const c = box.getCenter(new THREE.Vector3());
-        spawn.set(c.x, box.max.y + 5, c.z + 12);
+        const back = Math.min(12, Math.max(2, (box.max.z - box.min.z) * 0.3));
+        const side = Math.min(12, Math.max(2, (box.max.x - box.min.x) * 0.3));
+        const candidates = [
+          new THREE.Vector3(c.x, box.max.y + 5, c.z + back),
+          new THREE.Vector3(c.x, box.max.y + 5, c.z - back),
+          new THREE.Vector3(c.x + side, box.max.y + 5, c.z),
+          new THREE.Vector3(c.x - side, box.max.y + 5, c.z),
+          new THREE.Vector3(c.x, box.max.y + 5, c.z),
+        ];
+        spawn.copy(candidates.find((p) => dropToFloor(p) !== null) ?? candidates[candidates.length - 1]);
         feet.copy(spawn);
         bossPos.set(c.x, box.max.y + 5, c.z);
         settleBoss();
@@ -257,6 +355,57 @@ export default function BossRoom() {
       () => setStatus(`boss model failed: ${boss.model_id}`),
     );
 
+    // Multi-part pieces (tentacles, faces, horn) — ride the boss group and
+    // mirror the body's clips by name. Decorative: loading doesn't gate the
+    // room, a missing part just logs to the status line.
+    interface PartRig {
+      mixer: THREE.AnimationMixer;
+      animations: THREE.AnimationClip[];
+      action: THREE.AnimationAction | null;
+    }
+    const partRigs: PartRig[] = [];
+    for (const partDef of boss.parts ?? []) {
+      const name = partName(partDef);
+      loader.load(
+        bossPartUrl(boss.model_id, name),
+        (g) => {
+          if (disposed) return;
+          // One wrapper per instance (position/yaw/pitch in the boss's local
+          // frame, +z = facing); skinned rigs are cloned via SkeletonUtils so
+          // every instance animates independently of its siblings.
+          for (const inst of partInstances(partDef)) {
+            const rig = cloneSkinned(g.scene);
+            const wrapper = new THREE.Group();
+            wrapper.position.set(inst.pos[0], inst.pos[1], inst.pos[2]);
+            wrapper.rotation.order = 'YXZ';
+            wrapper.rotation.y = ((inst.yaw_deg ?? 0) * Math.PI) / 180;
+            wrapper.rotation.x = ((inst.pitch_deg ?? 0) * Math.PI) / 180;
+            wrapper.add(rig);
+            bossGroup.add(wrapper);
+            partRigs.push({ mixer: new THREE.AnimationMixer(rig), animations: g.animations, action: null });
+          }
+        },
+        undefined,
+        () => setStatus(`part failed: ${name}`),
+      );
+    }
+
+    /** Play the same-named clip on every part rig (parts share the body's clip names). */
+    function syncParts(clipName: string, loopMode: THREE.AnimationActionLoopStyles, reps: number) {
+      for (const rig of partRigs) {
+        rig.mixer.stopAllAction();
+        rig.action = null;
+        const clip = rig.animations.find((a) => a.name === clipName);
+        if (!clip) continue; // static part (dragon horn) just rides the group
+        const action = rig.mixer.clipAction(clip);
+        action.reset();
+        action.setLoop(loopMode, reps);
+        action.clampWhenFinished = true;
+        action.play();
+        rig.action = action;
+      }
+    }
+
     function dropToFloor(p: THREE.Vector3): number | null {
       if (!floorMesh) return null;
       raycaster.set(new THREE.Vector3(p.x, p.y + STEP_UP + 100, p.z), DOWN);
@@ -264,15 +413,26 @@ export default function BossRoom() {
       return hits.length ? hits[0].point.y : null;
     }
 
+    // Visual waterline offset — the octopus body sits IN the pool, not on
+    // the walkable collider. Logical bossPos (readouts, sim) stays on the
+    // floor; only the rendered group sinks.
+    const modelOffsetY = boss.model_offset_y ?? 0;
     function settleBoss() {
-      const y = dropToFloor(bossPos);
+      // Colliders can have holes where only the boss lives (the octopus
+      // pool) — settle to the collider's top there instead of dangling at
+      // the spawn height, so model_offset_y has a stable reference.
+      const y = dropToFloor(bossPos) ?? (floorMesh ? floorMaxY : null);
       if (y !== null) bossPos.y = y;
-      bossGroup.position.copy(bossPos);
+      bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
     }
 
     // ——— clip playback ———
     function stopClips() {
       mixer?.stopAllAction();
+      for (const rig of partRigs) {
+        rig.mixer.stopAllAction();
+        rig.action = null;
+      }
       currentAction = null;
       chain = null;
       setActiveClip(null);
@@ -288,6 +448,7 @@ export default function BossRoom() {
       action.clampWhenFinished = true;
       action.play();
       currentAction = action;
+      syncParts(clip.name, loopMode, reps);
       setActiveClip(clip.name);
       setClipDuration(clip.duration);
       return action;
@@ -320,12 +481,134 @@ export default function BossRoom() {
       startAction(next, reps > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps);
     }
 
+    // Behavior-draft attack playback: resolve each token per the
+    // /mechanics/enemy-attacks order, chain them, loop the `lp` pieces.
+    function playTokens(tokens: string[], loops: number) {
+      const names = animations.map((a) => a.name);
+      const seq: THREE.AnimationClip[] = [];
+      const reps: number[] = [];
+      const missing: string[] = [];
+      for (const t of tokens) {
+        const name = resolveClipToken(names, t);
+        const clip = name ? animations.find((a) => a.name === name) : undefined;
+        if (!clip) {
+          missing.push(t);
+          continue;
+        }
+        seq.push(clip);
+        reps.push(t.endsWith('lp') ? Math.max(1, loops) : 1);
+      }
+      if (missing.length) setStatus(`unresolved clip token(s): ${missing.join(', ')}`);
+      if (!seq.length) return;
+      chain = { queue: seq.slice(1), loops: reps.slice(1) };
+      startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
+    }
+
+    // Enrage tint: "turns red on the edges" — approximated with a red
+    // emissive on the rig's materials; cleared when the sim resets.
+    function tintBoss(on: boolean) {
+      bossGroup.traverse((o) => {
+        const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+        if (mat?.emissive) mat.emissive.setHex(on ? 0x881111 : 0x000000);
+      });
+    }
+
+    // Sim events → the existing playback machinery + player HP.
+    function handleSimEvents(events: BossEvent[]) {
+      for (const ev of events) {
+        if (ev.type === 'anim') {
+          if (ev.loop && ev.tokens.length === 1) {
+            const name = resolveClipToken(animations.map((a) => a.name), ev.tokens[0]);
+            if (name) playClip(name, true);
+          } else {
+            playTokens(ev.tokens, ev.lpLoops ?? 2);
+          }
+        } else if (ev.type === 'player-hit') {
+          playerHp = Math.max(0, playerHp - ev.damage);
+          if (ev.knockback) {
+            // wing flap: shove the player along the boss's facing
+            feet.x += ev.knockback.x;
+            feet.z += ev.knockback.z;
+            const ky = dropToFloor(feet);
+            if (ky !== null) feet.y = Math.max(feet.y, ky);
+          }
+          if (playerHp <= 0) {
+            feet.copy(spawn); // downed → respawn with full HP, sim keeps running
+            velY = 0;
+            playerHp = PLAYER_MAX_HP;
+          }
+        } else if (ev.type === 'enrage') {
+          tintBoss(true);
+        }
+      }
+    }
+
+    // Sim ordnance visuals: pooled fireball spheres + lob impact rings.
+    const ordnanceGroup = new THREE.Group();
+    scene.add(ordnanceGroup);
+    const projPool: THREE.Mesh[] = [];
+    const ringPool: THREE.Mesh[] = [];
+    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
+      while (pool.length <= i) {
+        const m = make();
+        pool.push(m);
+        ordnanceGroup.add(m);
+      }
+      pool[i].visible = true;
+      return pool[i];
+    }
+    function syncOrdnance() {
+      for (const m of [...projPool, ...ringPool]) m.visible = false;
+      if (!sim) return;
+      sim.projectiles.forEach((p, i) => {
+        const m = poolGet(projPool, i, () => new THREE.Mesh(
+          new THREE.SphereGeometry(0.5, 10, 8),
+          new THREE.MeshBasicMaterial({ color: 0xff7722 }),
+        ));
+        const gy = dropToFloor(new THREE.Vector3(p.pos.x, bossPos.y + 2, p.pos.z));
+        m.position.set(p.pos.x, (gy ?? bossPos.y) + 1.5, p.pos.z);
+      });
+      let ringIdx = 0;
+      for (const l of sim.lobs) {
+        for (const impact of lobImpacts(l)) {
+          const m = poolGet(ringPool, ringIdx++, () => new THREE.Mesh(
+            new THREE.RingGeometry(0.4, 2.5, 24),
+            new THREE.MeshBasicMaterial({ color: 0xff3311, side: THREE.DoubleSide, transparent: true, opacity: 0.5 }),
+          ));
+          const gy = dropToFloor(new THREE.Vector3(impact.x, bossPos.y + 2, impact.z));
+          m.position.set(impact.x, (gy ?? 0) + 0.06, impact.z);
+          m.rotation.x = -Math.PI / 2;
+        }
+      }
+    }
+
+    function setSimulate(on: boolean) {
+      if (on && entry.attacks.length > 0) {
+        sim = makeBossSim(entry, { x: bossPos.x, z: bossPos.z }, bossGroup.rotation.y);
+        playerHp = PLAYER_MAX_HP;
+        swingCd = 0;
+      } else {
+        sim = null;
+        mixer?.stopAllAction();
+        currentAction = null;
+        chain = null;
+        setActiveClip(null);
+        setSimHud(null);
+        tintBoss(false);
+        syncOrdnance();
+        settleBoss();
+      }
+    }
+
     apiRef.current = {
       playClip,
       playChain,
+      playTokens,
+      setSimulate,
       stopClips,
       setSpeed: (v) => {
         if (mixer) mixer.timeScale = v;
+        for (const rig of partRigs) rig.mixer.timeScale = v;
       },
       setPaused: (p) => {
         animPaused = p;
@@ -334,6 +617,12 @@ export default function BossRoom() {
         if (!currentAction || !mixer) return;
         currentAction.time = t;
         mixer.update(0);
+        for (const rig of partRigs) {
+          if (rig.action) {
+            rig.action.time = t;
+            rig.mixer.update(0);
+          }
+        }
       },
       setFacePlayer: (v) => {
         facePlayerLocal = v;
@@ -357,7 +646,7 @@ export default function BossRoom() {
     const onKey = (e: KeyboardEvent, d: boolean) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       const k = e.key.toLowerCase();
-      if (['w', 'a', 's', 'd', ' '].includes(k)) {
+      if (['w', 'a', 's', 'd', 'j', ' '].includes(k)) {
         keys[k] = d;
         if (k === ' ') e.preventDefault();
       }
@@ -419,20 +708,7 @@ export default function BossRoom() {
       } else {
         markerSeq++;
         const name = `anchor_${markerSeq}`;
-        const grp = new THREE.Group();
-        const post = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.15, 0.15, 4, 8),
-          new THREE.MeshBasicMaterial({ color: 0xfacc15 }),
-        );
-        post.position.y = 2;
-        grp.add(post);
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(0.6, 1.0, 24),
-          new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide }),
-        );
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.05;
-        grp.add(ring);
+        const grp = buildMarker(0xfacc15);
         grp.position.copy(p);
         markerGroup.add(grp);
         setMarkers((ms) => [...ms, { name, pos: [+p.x.toFixed(2), +p.y.toFixed(2), +p.z.toFixed(2)] }]);
@@ -482,19 +758,39 @@ export default function BossRoom() {
           velY = 0;
         }
       }
-      if (gy !== null && feet.y < gy - FALL_LIMIT) {
+      // Fall guard — must also catch the off-floor case (gy === null, e.g.
+      // walked/spawned past the collider's edge), or the fall never ends.
+      if (floorMesh && feet.y < Math.min(gy ?? Infinity, floorMinY) - FALL_LIMIT) {
         feet.copy(spawn);
         velY = 0;
       }
       capsule.position.set(feet.x, feet.y + HEIGHT / 2, feet.z);
 
-      if (facePlayerLocal) {
+      // Behavior sim: step the FSM, apply its transform, take the J-swing.
+      if (sim) {
+        swingCd -= dt;
+        if (keys['j'] && swingCd <= 0) {
+          swingCd = SWING_COOLDOWN;
+          if (Math.hypot(feet.x - sim.pos.x, feet.z - sim.pos.z) <= SWING_RANGE) {
+            handleSimEvents(damageBoss(sim, entry, SWING_DAMAGE));
+          }
+        }
+        handleSimEvents(stepBoss(sim, entry, { dt, player: { x: feet.x, z: feet.z }, clipDur, rng: Math.random }));
+        const gy2 = dropToFloor(new THREE.Vector3(sim.pos.x, bossPos.y + 2, sim.pos.z)) ?? (floorMesh ? floorMaxY : null);
+        bossPos.set(sim.pos.x, (gy2 ?? bossPos.y) + sim.alt, sim.pos.z);
+        bossGroup.position.set(bossPos.x, bossPos.y + modelOffsetY, bossPos.z);
+        bossGroup.rotation.y = sim.yaw;
+        syncOrdnance();
+      } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
         if (dx * dx + dz * dz > 1e-6) bossGroup.rotation.y = Math.atan2(dx, dz);
       }
 
-      if (mixer && !animPaused) mixer.update(dt);
+      if (mixer && !animPaused) {
+        mixer.update(dt);
+        for (const rig of partRigs) rig.mixer.update(dt);
+      }
 
       // Follow cam orbiting the player.
       const cx = feet.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist;
@@ -513,6 +809,7 @@ export default function BossRoom() {
           boss: [+bossPos.x.toFixed(1), +bossPos.y.toFixed(1), +bossPos.z.toFixed(1)],
           dist: +d.toFixed(1),
         });
+        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state });
       }
 
       renderer.render(scene, camera);
@@ -547,6 +844,8 @@ export default function BossRoom() {
       setClips([]);
       setActiveClip(null);
       setMarkers([]);
+      setSimOn(false);
+      setSimHud(null);
       setStatus('loading…');
     };
     // modelScale applies live via apiRef — not a scene-rebuild dependency.
@@ -675,6 +974,69 @@ export default function BossRoom() {
               </button>
             </div>
           </div>
+        )}
+
+        {boss && ((boss.phases?.length ?? 0) > 0 || (boss.attacks?.length ?? 0) > 0) && (
+          <>
+            <span style={label}>Behavior draft (schema v2 — verify by observation)</span>
+            {(boss.attacks?.length ?? 0) > 0 && (
+              <label style={{ ...label, cursor: 'pointer', color: simOn ? '#7c9' : undefined }}>
+                <input
+                  type="checkbox"
+                  checked={simOn}
+                  onChange={(e) => {
+                    setSimOn(e.target.checked);
+                    apiRef.current?.setSimulate(e.target.checked);
+                  }}
+                />{' '}
+                simulate behavior (draft) — J swings ({SWING_DAMAGE} dmg)
+              </label>
+            )}
+            {simOn && simHud && (
+              <div style={{ fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: '#f88' }}>
+                  boss {Math.ceil(simHud.bossHp)}/{simHud.maxHp} · <code>{simHud.state}</code>
+                </div>
+                <div style={{ background: '#311', borderRadius: 3, height: 6, marginTop: 2 }}>
+                  <div style={{ background: '#e55', borderRadius: 3, height: 6, width: `${(simHud.bossHp / simHud.maxHp) * 100}%` }} />
+                </div>
+                <div style={{ color: '#8c8', marginTop: 4 }}>player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}</div>
+                <div style={{ background: '#131', borderRadius: 3, height: 6, marginTop: 2 }}>
+                  <div style={{ background: '#5e5', borderRadius: 3, height: 6, width: `${(simHud.playerHp / PLAYER_MAX_HP) * 100}%` }} />
+                </div>
+              </div>
+            )}
+            {boss.phases?.map((p) => (
+              <div key={p.id} title={p.note} style={{ color: '#9ab', fontSize: 11, marginTop: 2 }}>
+                <code style={{ color: '#cdf' }}>{p.id}</code> — {p.label}
+                {p.hp_frac !== undefined && <span style={{ color: '#889' }}> (≤{Math.round(p.hp_frac * 100)}% HP)</span>}
+              </div>
+            ))}
+            {boss.attacks?.map((a) => (
+              <button
+                key={a.id}
+                title={a.note}
+                onClick={() => apiRef.current?.playTokens(a.chain ?? [a.clip], lpLoops)}
+                style={{ ...btn, display: 'block', width: '100%', textAlign: 'left', marginTop: 4 }}
+              >
+                ▶ {a.id} <span style={{ color: '#889' }}>{attackMeta(a)}</span>
+              </button>
+            ))}
+            {(boss.anchors?.length ?? 0) > 0 && (
+              <div style={{ color: '#2cd', fontSize: 11, marginTop: 4 }}>
+                {boss.anchors!.length} authored anchor(s){arenaId !== boss.arena ? ' (hidden — default arena only)' : ''}
+              </div>
+            )}
+          </>
+        )}
+        {boss && (
+          <button
+            onClick={copyConfig}
+            title="Copies data/boss_arenas.json with this boss's clicked markers merged into its anchors — paste over the file (rename anchors by hand)."
+            style={{ ...btn, display: 'block', width: '100%' }}
+          >
+            copy boss_arenas.json (markers → anchors)
+          </button>
         )}
 
         <span style={label}>Playback</span>

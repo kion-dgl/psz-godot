@@ -60,7 +60,12 @@ describe.skipIf(!HAS_ASSETS)('segmentFamilies — real boss rigs (local assets o
     expect(fams.map((f) => f.prefix)).toContain('z_001_brs');
   });
 
-  it('boss_robot: single orphan lp clip forms no family', () => {
-    expect(segmentFamilies(glbClipNames('boss_robot'))).toEqual([]);
+  it('boss_robot: the full kit chains — drills, guns, sweep, knockdown, move', () => {
+    // The 26-clip kit imported via the patched apicula (the rigs carry one
+    // extra unanimated root object apicula's exact-count match rejected).
+    const prefixes = segmentFamilies(glbClipNames('boss_robot')).map((f) => f.prefix);
+    for (const fam of ['z003_atk_dl', 'z003_atk_dr', 'z003_atk_sw', 'z003_dwn', 'z003_mov']) {
+      expect(prefixes).toContain(fam);
+    }
   });
 });

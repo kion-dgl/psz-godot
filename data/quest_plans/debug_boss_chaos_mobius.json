@@ -1,0 +1,30 @@
+{
+  "questId": "debug_boss_chaos_mobius",
+  "questName": "DEBUG: Chaos & Mobius Arena",
+  "areaId": "arca",
+  "sections": [
+    {
+      "type": "boss",
+      "area": "z",
+      "startPos": "0,0",
+      "endPos": "0,0",
+      "entryDirection": "south",
+      "steps": [
+        {
+          "label": "Z 0,0",
+          "do": [
+            "kill_all",
+            "wait_quest_complete"
+          ],
+          "exit": "",
+          "exit_portal_id": "",
+          "target": "",
+          "_section_idx": 0,
+          "_pos": "0,0",
+          "stageId": "s06z_na1",
+          "rotation": 0
+        }
+      ]
+    }
+  ]
+}
