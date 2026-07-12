@@ -130,6 +130,15 @@ const chart = `stateDiagram-v2
     <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
   </ul>
 
+  <h2>Debug missions (the in-game instrument)</h2>
+  <p>Each boss arena has a <strong>debug mission</strong> — <code>debug_boss_&lt;id&gt;</code> in <code>data/quests/</code> — that warps the player straight into the boss cell. They are <strong>always unlocked</strong> (no <code>parent_quest</code>, never <code>disabled</code>), sit at the end of the guild-counter list with a <code>DEBUG:</code> name prefix, and award <strong>nothing</strong> (empty rewards). They deliberately ship in beta builds: zero-friction boss testing on real hardware. Remove them from <code>data/quests/manifest.json</code> for a real release.</p>
+  <ul>
+    <li>Structure: a single <code>type: "boss"</code> section whose one cell is both start and end, spawning the boss (roster id) at the arena origin — the same shape as the story quests' boss sections.</li>
+    <li><strong>Snowfield</strong> (<code>s03z_na1</code>) has no unique boss: its debug mission spawns a <strong>Hildegao pack</strong> (×4) — matching the real game's snowfield boss room.</li>
+    <li>Each has a matching <code>data/quest_plans/</code> entry (one <code>kill_all + wait_quest_complete</code> step), so <code>PSZ_AUTOPILOT_QUEST=debug_boss_&lt;id&gt;</code> drives the whole accept → warp → clear → report loop headlessly — the autopilot probe for boss work.</li>
+    <li>Bosses currently spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
+  </ul>
+
   <h2>Draft → normative workflow</h2>
   <ol>
     <li>Observe in <code>#/boss-room</code> (attack buttons play the drafted chains; anchors are authored with the click tool and round-tripped via the config export) and against original-game capture.</li>

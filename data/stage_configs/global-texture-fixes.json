@@ -703,12 +703,42 @@
     "wrapS": "mirror",
     "wrapT": "mirror"
   },
+  "s07_1_zkona.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": 0.3,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
   "s07_1_ztou01.png#1": {
     "offsetX": 0,
     "offsetY": 0,
     "repeatX": 2,
     "repeatY": 1,
     "wrapS": "mirror"
+  },
+  "s07_2_kemuri.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": 0.3,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
+  "s07_2_zmoya3.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": -0.3,
+    "scrollY": 0,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
   },
   "s08_0_dr01.png#1": {
     "offsetX": 0,
