@@ -465,22 +465,25 @@ describe('boss sim — chaos sorcerer gem caster', () => {
     for (const g of sim.gems) expect(['red', 'blue', 'purple', 'green']).toContain(g);
   });
 
-  it('casts a held gem, consumes it, and refills a distinct color after the delay', () => {
+  it('always shows two distinct gems while casting repeatedly', () => {
     const entry = makeSorcerer();
-    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, seq([0, 0]));
-    expect(sim.gems.filter(Boolean)).toHaveLength(2);
-    expect(sim.gems[0]).not.toBe(sim.gems[1]);
+    // a cycling rng so gem refills actually vary color
+    let k = 0;
+    const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
+    const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0, rng);
     const player = { x: 0, z: 5 };
-    // step to a cast: consumes one gem (a slot goes null)
-    run(sim, entry, player, 30, () => sim.gems.includes(null));
-    expect(sim.gems.filter(Boolean)).toHaveLength(1);
-    const remaining = sim.gems.find(Boolean)!;
-    // let the attack finish + the refill delay elapse
-    run(sim, entry, player, 60, () => !sim.gems.includes(null));
-    expect(sim.gems.filter(Boolean)).toHaveLength(2);
-    // the two gems are still distinct colors
-    expect(sim.gems[0]).not.toBe(sim.gems[1]);
-    expect(sim.gems).toContain(remaining);
+    let castsSeen = 0;
+    let wasAttacking = false;
+    for (let i = 0; i < 400; i++) {
+      stepBoss(sim, entry, inp(player));
+      // the two gems are ALWAYS present and distinct (the telegraph invariant)
+      expect(sim.gems.filter(Boolean), `frame ${i}: not two gems`).toHaveLength(2);
+      expect(sim.gems[0]).not.toBe(sim.gems[1]);
+      if (sim.state === 'attacking' && !wasAttacking) castsSeen++;
+      wasAttacking = sim.state === 'attacking';
+    }
+    expect(castsSeen).toBeGreaterThan(3); // it kept casting
   });
 
   it('green gem self-heals — boss HP goes up', () => {

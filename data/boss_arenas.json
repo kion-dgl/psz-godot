@@ -657,7 +657,7 @@
       "model_id": "chaos_sorcerer",
       "arena": "s04z_na1",
       "quest_source": "debug_boss_makara",
-      "model_scale": 1.0,
+      "model_scale": 1.5,
       "stats": {
         "hp": 350,
         "move_speed": 2.0,

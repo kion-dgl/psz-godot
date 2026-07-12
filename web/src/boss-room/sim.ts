@@ -478,28 +478,30 @@ function attackForGem(entry: ResolvedBoss, gem: GemColor): ResolvedBossAttack | 
   return entry.attacks.find((a) => a.gem === gem);
 }
 
+/** Fill any empty gem slots so two distinct gems are always held. */
+function fillGems(sim: BossSim, entry: ResolvedBoss, rng: () => number) {
+  for (let slot = 0; slot < 2; slot++) {
+    if (sim.gems[slot]) continue;
+    const other = sim.gems[1 - slot];
+    const options = gemPool(entry).filter((c) => c !== other);
+    sim.gems[slot] = pickFrom(options.length ? options : gemPool(entry), rng);
+  }
+}
+
 /**
- * Chaos Sorcerer's turn: hover in place, refill a spent gem after its delay,
- * occasionally cancel-cast and teleport, and when a gem is ready cast its
- * spell (consuming that gem). Gems are always two distinct colors; a refill
- * rolls any color except the one still held.
+ * Chaos Sorcerer's turn: hover in place, occasionally cancel-cast and teleport,
+ * and when ready cast the spell of ONE of its two held gems. The two gems are
+ * always present and distinct — they telegraph the two possible next spells,
+ * and the player can't tell which will fire. A cast consumes its gem and
+ * IMMEDIATELY replaces it with a new one (distinct from the one still held),
+ * so there are always two gems on display.
  */
 function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   // Hold altitude and face the player without moving (mostly static).
   sim.alt = entry.fsm.hover_hold;
   turnToward(sim, input.player, entry.stats.turn_speed_deg, input.dt);
   ensureLoop(sim, entry.fsm.idle_clip, events);
-
-  // Refill a spent gem after the delay — never matching the gem still held.
-  const held = sim.gems.filter(Boolean) as GemColor[];
-  if (sim.gems.includes(null)) {
-    sim.gemRespawnT -= input.dt;
-    if (sim.gemRespawnT <= 0) {
-      const options = gemPool(entry).filter((c) => !held.includes(c));
-      const slot = sim.gems[0] === null ? 0 : 1;
-      sim.gems[slot] = options.length ? pickFrom(options, input.rng) : pickFrom(gemPool(entry), input.rng);
-    }
-  }
+  fillGems(sim, entry, input.rng); // guarantee two gems
 
   // Teleport reposition on its own timer.
   if (entry.fsm.teleport_interval > 0) {
@@ -513,14 +515,17 @@ function stepGemCaster(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     }
   }
 
-  // Cast a held gem's spell when the cooldown is ready.
-  if (sim.cooldown <= 0 && held.length > 0) {
+  // Cast one of the two gems when the cooldown is ready; the used slot is
+  // instantly refilled with a color distinct from the one still held.
+  const held = sim.gems.filter(Boolean) as GemColor[];
+  if (sim.cooldown <= 0 && held.length >= 1) {
     const gem = pickFrom(held, input.rng);
     const atk = attackForGem(entry, gem);
     if (atk) {
       const slot = sim.gems.indexOf(gem);
-      sim.gems[slot] = null;
-      sim.gemRespawnT = entry.fsm.gem_respawn_delay;
+      const other = sim.gems[1 - slot];
+      const options = gemPool(entry).filter((c) => c !== other);
+      sim.gems[slot] = pickFrom(options.length ? options : gemPool(entry), input.rng);
       beginAttack(sim, entry, atk, input, events);
     }
   }
