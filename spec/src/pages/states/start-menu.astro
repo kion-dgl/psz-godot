@@ -40,6 +40,9 @@ const chart = `stateDiagram-v2
   SYSTEM --> OPTIONS: select "Options"
   OPTIONS --> SYSTEM: Back
 
+  SYSTEM --> DEBUG: select "Debug"
+  DEBUG --> SYSTEM: Back
+
   SYSTEM --> CLOSED: "Return to Title" (save + goto title)
 `;
 ---
@@ -107,11 +110,15 @@ const chart = `stateDiagram-v2
   <h3>QUEST</h3>
   <p>Read-only view of the current quest's info / objectives. It has no sub-navigation — its only input is Back to <code>MAIN</code> (<code>_input_back</code>).</p>
 
-  <h3>SYSTEM (and OPTIONS)</h3>
-  <p>A fixed three-item list (<code>SYSTEM_LABELS</code>): <code>Save</code> (writes the save and plays the saved SFX), <code>Return to Title</code> (saves, closes the menu, and navigates to the title scene — leaving the open state entirely; the in-memory session teardown, including the city-hub position cache, is delegated to the title scene's <code>SessionManager.reset_all_state()</code> — see <a href="/states/session-model#city-hub-position">Session Model</a>), and <code>Options</code> (enters <strong>OPTIONS</strong>). Back returns to <code>MAIN</code>.</p>
+  <h3>SYSTEM (and OPTIONS, DEBUG)</h3>
+  <p>A fixed four-item list (<code>SYSTEM_LABELS</code>): <code>Save</code> (writes the save and plays the saved SFX), <code>Return to Title</code> (saves, closes the menu, and navigates to the title scene — leaving the open state entirely; the in-memory session teardown, including the city-hub position cache, is delegated to the title scene's <code>SessionManager.reset_all_state()</code> — see <a href="/states/session-model#city-hub-position">Session Model</a>), <code>Options</code> (enters <strong>OPTIONS</strong>), and <code>Debug</code> (enters <strong>DEBUG</strong>). Back returns to <code>MAIN</code>. Player-facing settings and developer tooling are separated: everyday settings live under <strong>OPTIONS</strong>, and all debug toggles and cheats live under <strong>DEBUG</strong>. Each submenu's Back <strong>MUST</strong> return to <strong>SYSTEM</strong> with the cursor restored to the row that opened it (<code>Options</code> for OPTIONS, <code>Debug</code> for DEBUG).</p>
 
   <h3>OPTIONS</h3>
-  <p>An adjustable settings list (<code>_get_options_list</code>): Music Volume and SFX Volume are stepped with Left / Right; the remaining rows are toggles or actions fired with Accept — <code>Controls: Reconfigure</code> (closes the menu, clears the input config, and pushes the input-select scene as an overlay), On-Screen Controls, camera-rotation / camera-Y options, Auto-Sort Inventory, and a block of debug toggles (floor collision, gate dots, hitboxes, combo timing, time/room, frame profiler, player position). Back returns to <strong>SYSTEM</strong> with the cursor restored to the <code>Options</code> row.</p>
+  <p>An adjustable settings list (<code>_get_options_list</code>) of player-facing settings only: Music Volume and SFX Volume are stepped with Left / Right; the remaining rows are toggles or actions fired with Accept — <code>Controls: Reconfigure</code> (closes the menu, clears the input config, and pushes the input-select scene as an overlay), On-Screen Controls, camera-rotation / camera-Y options, and Auto-Sort Inventory. OPTIONS <strong>MUST NOT</strong> contain debug toggles or cheats; those belong to <strong>DEBUG</strong>. Back returns to <strong>SYSTEM</strong> with the cursor restored to the <code>Options</code> row.</p>
+
+  <h3>DEBUG</h3>
+  <p>A developer-tools list (<code>_get_debug_list</code>) reached from <code>System → Debug</code>, dispatched by <code>_toggle_debug</code>. Row 0 is <strong>Unlock All Missions</strong>, a one-shot action (not a toggle); the remaining rows are the <code>DebugConfig</code> boolean flags (floor collision, gate dots, hitboxes, combo timing, time/room, frame profiler, player position, equip-all, reveal-map), fired ON/OFF with Accept. Up / Down navigate; Accept fires the highlighted row; Back returns to <strong>SYSTEM</strong> with the cursor on the <code>Debug</code> row.</p>
+  <p><strong>Unlock All Missions</strong> (<code>GameState.unlock_all_missions()</code>) <strong>MUST</strong> mark every real quest complete — appending each quest id from <code>QuestLoader.list_quests()</code> to <code>GameState.completed_missions</code>, skipping the <code>manifest</code> sentinel and <code>hello_quest</code> (which are not missions) — so the guild counter, whose availability gates read <code>is_mission_completed</code> for <code>parent_quest</code> / <code>required_quests</code>, surfaces the whole roster as available. It <strong>MUST</strong> be idempotent (re-running adds nothing) and <strong>MUST</strong> return the count of newly cleared missions. It affects mission availability only; it <strong>MUST NOT</strong> unlock difficulty tiers (that axis is governed by <a href="/states/difficulty-unlock">Difficulty Unlock</a>). Beta/disabled quests stay hard-locked by the guild's own <code>disabled</code> flag regardless. The menu action <strong>MUST</strong> persist the result via <code>SaveManager.save_game()</code> and report the count in the description line.</p>
 
   <h2>Techs gating</h2>
   <p>The <code>Techs</code> view <strong>MAY</strong> be absent. <code>_can_use_techs()</code> looks up the active character's class and returns <code>false</code> when its race is <code>CAST</code>; <code>_get_menu_labels()</code> (and the parallel <code>_get_menu_descs()</code>) omit the <code>Techs</code> entry in that case. Therefore, for a CAST character the main menu <strong>MUST NOT</strong> offer Techs, and for any non-CAST character it <strong>MUST</strong>. Because the label list is the cursor's wrap bound, the same gate that hides the label also keeps the cursor from ever landing on a missing row.</p>

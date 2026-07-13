@@ -127,6 +127,23 @@ func is_mission_completed(mission_id: String) -> bool:
 	return mission_id in completed_missions
 
 
+## Debug cheat: mark every real quest complete so the guild counter surfaces
+## the whole roster as available (its parent_quest / required_quests gates all
+## read is_mission_completed). Skips the manifest sentinel and hello_quest,
+## which are not missions. Beta/disabled quests stay hard-locked by the guild's
+## own `disabled` flag regardless. Returns how many were newly marked complete.
+## Caller is responsible for persisting via SaveManager.save_game().
+func unlock_all_missions() -> int:
+	var newly: int = 0
+	for qid in QuestLoader.list_quests():
+		if qid == "hello_quest" or qid == "manifest":
+			continue
+		if qid not in completed_missions:
+			completed_missions.append(qid)
+			newly += 1
+	return newly
+
+
 # ── Difficulty unlock loop (#344, spec /states/difficulty-unlock) ──
 
 ## The story-finale quest whose clear unlocks the next difficulty tier.
