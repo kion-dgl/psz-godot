@@ -15,6 +15,7 @@ import { useSearchParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import AssetDriftWarning from '../components/AssetDriftWarning';
 
 const DEFAULT_MODEL = '/psz-godot/assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2_m.glb';
 const DEFAULT_FLOOR = '/psz-godot/assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb';
@@ -300,6 +301,9 @@ export default function CityWalkMock() {
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
         <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>
           {status}
+        </div>
+        <div style={{ position: 'absolute', top: 40, left: 8 }}>
+          <AssetDriftWarning paths={[modelUrl, floorUrl]} shows="local" />
         </div>
         <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', padding: '8px 10px', borderRadius: 4, fontSize: 13, fontFamily: 'monospace' }}>
           <span style={{ color: '#8b949e' }}>pos </span>
