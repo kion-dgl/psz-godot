@@ -22,6 +22,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetUrl } from '../utils/assets';
+import AssetDriftWarning from '../components/AssetDriftWarning';
 
 const AREA_FOLDER: Record<string, string> = {
   '00': 'city', '01': 'valley', '02': 'wetlands', '03': 'snowfield',
@@ -264,6 +265,9 @@ export default function FloorColliderBuilder() {
     || (glbParam ? outPathFromGlb(glbParam) : '')
     || (stageId ? defaultOutPath(stageId) : '')
     || '';
+  // What the auto-load effect fetches — drift-checked against the local copy,
+  // since assetUrl() reads R2 while the game (and city-walk-mock) read local.
+  const loadedUrl = glbParam || (stageId ? visualGlbUrl(stageId) : '');
 
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -739,6 +743,9 @@ export default function FloorColliderBuilder() {
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
         <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>
           {status}
+        </div>
+        <div style={{ position: 'absolute', top: 40, left: 8 }}>
+          <AssetDriftWarning paths={[loadedUrl]} shows="cdn" />
         </div>
         <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
           {(['orbit', 'paint', 'erase', 'probe'] as Mode[]).map((m) => (
