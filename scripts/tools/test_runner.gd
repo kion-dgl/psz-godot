@@ -158,6 +158,7 @@ func _run_tests_systems() -> void:
 	test_scaled_rewards()
 	test_difficulty_unlock()
 	test_difficulty_unlock_persistence()
+	test_debug_unlock_all_missions()
 	test_input_config()
 	test_confirm_input_precedence()
 	test_blackjack()
@@ -7493,6 +7494,51 @@ func _reward_item_resolvable(iid: String) -> bool:
 	return ConsumableRegistry.get_consumable(iid) != null \
 		or ItemRegistry.get_item(iid) != null \
 		or WeaponRegistry.get_weapon(iid) != null
+
+
+# ── Debug: Unlock All Missions (spec /states/start-menu §DEBUG) ──
+# The System → Debug "Unlock All Missions" cheat marks every real quest
+# complete so the guild counter surfaces the whole roster. Deterministic,
+# no RNG: clear completion, unlock, and assert every non-sentinel quest id
+# is now completed and the count is right; then assert idempotency.
+func test_debug_unlock_all_missions() -> void:
+	print("── Debug Unlock All Missions ──")
+
+	# Snapshot + clear so the run is independent of prior test order.
+	var saved: Array = GameState.completed_missions.duplicate()
+	GameState.completed_missions.clear()
+
+	# The set the cheat should cover: every quest id minus the sentinels.
+	var expected: Array = []
+	for qid in QuestLoader.list_quests():
+		if qid == "manifest" or qid == "hello_quest":
+			continue
+		expected.append(qid)
+	assert_gt(expected.size(), 0, "roster has real quests to unlock")
+
+	var newly: int = GameState.unlock_all_missions()
+	assert_eq(newly, expected.size(), "unlock_all_missions clears every real quest")
+
+	# Every parent/required gate reads is_mission_completed — all must pass now.
+	var all_completed := true
+	for qid in expected:
+		if not GameState.is_mission_completed(qid):
+			all_completed = false
+			assert_true(false, "quest marked complete: %s" % qid)
+	assert_true(all_completed, "all real quests report completed after unlock")
+
+	# The sentinels MUST NOT be marked complete.
+	assert_true(not GameState.is_mission_completed("manifest"), "manifest sentinel not marked complete")
+	assert_true(not GameState.is_mission_completed("hello_quest"), "hello_quest not marked complete")
+
+	# Idempotent: re-running adds nothing.
+	var again: int = GameState.unlock_all_missions()
+	assert_eq(again, 0, "second unlock is a no-op (idempotent)")
+	assert_eq(GameState.completed_missions.size(), expected.size(), "no duplicate mission entries")
+
+	# Restore the pre-test completion set.
+	GameState.completed_missions = saved
+	print("")
 
 
 # ── Completion-scaled rewards (#190) ────────────────────────────

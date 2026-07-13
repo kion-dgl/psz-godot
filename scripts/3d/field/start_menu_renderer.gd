@@ -93,6 +93,7 @@ func _draw_menu() -> void:
 		PsoStartMenu.Mode.QUEST: _draw_quest(c, font)
 		PsoStartMenu.Mode.SYSTEM: _draw_system(c, font)
 		PsoStartMenu.Mode.OPTIONS: _draw_options(c, font)
+		PsoStartMenu.Mode.DEBUG: _draw_debug(c, font)
 
 
 func _draw_main(c: Control, font: Font) -> void:
@@ -848,7 +849,18 @@ func _draw_options(c: Control, font: Font) -> void:
 	for o in opts:
 		items.append({"name": o, "type": "tool"})
 	_draw_bottom_list(c, font, items, _c._options_idx)
-	_draw_bottom_desc(c, font, "Toggle debug settings.\n\n[Enter] Toggle\n[Esc] Back")
+	_draw_bottom_desc(c, font, "Adjust game settings.\n\n[Enter] Select\n[Esc] Back")
+
+
+func _draw_debug(c: Control, font: Font) -> void:
+	_draw_section_label(c, font, "Debug")
+	var rows: Array = _c._get_debug_list()
+	var items: Array = []
+	for o in rows:
+		items.append({"name": o, "type": "tool"})
+	_draw_bottom_list(c, font, items, _c._debug_idx)
+	var desc: String = _c._debug_msg if _c._debug_msg != "" else "Debug tools and cheats.\n\n[Enter] Select\n[Esc] Back"
+	_draw_bottom_desc(c, font, desc)
 
 
 # ── Draw helpers ────────────────────────────────────────────────────────────────
