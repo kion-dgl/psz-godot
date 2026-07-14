@@ -147,6 +147,9 @@ export default function BossRoom() {
   const curveTargetRef = useRef<string | null>(null);
   const [curves, setCurves] = useState<Record<string, Vec3Tuple[]>>({});
   const curvesRef = useRef<Record<string, Vec3Tuple[]>>({});
+  // Roll about the tube axis per instance (suckers down) — curve pose only.
+  const [rolls, setRolls] = useState<Record<string, number>>({});
+  const rollsRef = useRef<Record<string, number>>({});
   const [curveOverlay, setCurveOverlay] = useState(true);
   const curveOverlayRef = useRef(true);
   // Start depth used when PLACING a fresh arch (the emergence sits this far
@@ -195,14 +198,17 @@ export default function BossRoom() {
     const b = config?.bosses[bossId];
     if (!b) return;
     const seeded: Record<string, Vec3Tuple[]> = {};
+    const seededRolls: Record<string, number> = {};
     for (const p of b.parts ?? []) {
       partInstances(p).forEach((inst, i) => {
         if (inst.curve && inst.curve.length >= 2) {
           seeded[`${partName(p)}:${i}`] = inst.curve.map((pt) => [...pt] as Vec3Tuple);
         }
+        if (inst.roll_deg !== undefined) seededRolls[`${partName(p)}:${i}`] = inst.roll_deg;
       });
     }
     setCurves(seeded);
+    setRolls(seededRolls);
     setCurveTarget(null);
   }, [config, bossId]);
 
@@ -216,17 +222,18 @@ export default function BossRoom() {
       const name = partName(p);
       let touched = false;
       const instances = partInstances(p).map((inst, i) => {
-        const c = curves[`${name}:${i}`];
-        const { curve: authored, ...rest } = inst;
-        if (c && c.length >= 2) {
-          touched = true;
-          return { ...rest, curve: round(c) } as BossPartInstance;
-        }
-        if (authored && (!c || c.length < 2)) {
-          touched = true;
-          return rest as BossPartInstance;
-        }
-        return inst;
+        const key = `${name}:${i}`;
+        const c = curves[key];
+        const roll = rolls[key] ?? 0;
+        const { curve: _c, roll_deg: _r, ...rest } = inst;
+        const next = {
+          ...rest,
+          ...(roll !== 0 ? { roll_deg: +roll.toFixed(1) } : {}),
+          ...(c && c.length >= 2 ? { curve: round(c) } : {}),
+        } as BossPartInstance;
+        if (JSON.stringify(next) === JSON.stringify(inst)) return inst;
+        touched = true;
+        return next;
       });
       // Spread the object form so part-level fields (animated) survive the merge.
       return touched ? { ...(typeof p === 'string' ? {} : p), part: name, instances } : p;
@@ -561,10 +568,11 @@ export default function BossRoom() {
         return;
       }
       // The curve — not the wrapper — places the piece (spec parts contract).
-      rig.sampler = makeSampler(pts);
+      const roll = rollsRef.current[rig.key] ?? 0;
+      rig.sampler = makeSampler(pts, roll);
       rig.wrapper.position.set(0, 0, 0);
       rig.wrapper.rotation.set(0, 0, 0);
-      poseBonesWorld(rig, poseBonesAlongCurve(info.rest, pts));
+      poseBonesWorld(rig, poseBonesAlongCurve(info.rest, pts, roll));
     }
 
     // Control-point gizmos + fitted-spline line for the instance being edited.
@@ -1280,6 +1288,10 @@ export default function BossRoom() {
   useEffect(() => {
     dipRef.current = dip;
   }, [dip]);
+  useEffect(() => {
+    rollsRef.current = rolls;
+    apiRef.current?.refreshCurves();
+  }, [rolls]);
 
   if (error) return <div style={{ padding: 20, color: '#f66' }}>{error}</div>;
   if (config && !boss) {
@@ -1451,6 +1463,20 @@ export default function BossRoom() {
                       onChange={(e) =>
                         setCurves((cur) => ({ ...cur, [curveTarget]: setLift(cur[curveTarget]!, +e.target.value) }))
                       }
+                      style={{ width: '100%' }}
+                    />
+                  </>
+                )}
+                {(curves[curveTarget]?.length ?? 0) >= 2 && (
+                  <>
+                    <span style={label}>Roll (turn the suckers): {(rolls[curveTarget] ?? 0).toFixed(0)}°</span>
+                    <input
+                      type="range"
+                      min={-180}
+                      max={180}
+                      step={5}
+                      value={rolls[curveTarget] ?? 0}
+                      onChange={(e) => setRolls((cur) => ({ ...cur, [curveTarget]: +e.target.value }))}
                       style={{ width: '100%' }}
                     />
                   </>

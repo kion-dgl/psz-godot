@@ -230,7 +230,7 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
             Array.isArray(inst.pos) && inst.pos.length === 3 && inst.pos.every((n: unknown) => Number.isFinite(n)),
             `${id}/${name} instance pos`,
           ).toBe(true);
-          for (const f of ['yaw_deg', 'pitch_deg']) {
+          for (const f of ['yaw_deg', 'pitch_deg', 'roll_deg']) {
             if (inst[f] !== undefined) expect(Number.isFinite(inst[f]), `${id}/${name} ${f}`).toBe(true);
           }
           if (inst.curve !== undefined) {

@@ -319,6 +319,12 @@ export interface BossPartInstance {
    * /states/bosses parts contract (see curvePose.ts).
    */
   curve?: [number, number, number][];
+  /**
+   * Roll (degrees) about the tube axis, on top of the twist-free frame —
+   * turns the rig's sucker side to face down (which bone-local side carries
+   * the suckers is a modeling artifact). Curve pose only.
+   */
+  roll_deg?: number;
 }
 
 export type BossPartDef =

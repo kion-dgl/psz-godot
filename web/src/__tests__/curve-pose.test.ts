@@ -111,6 +111,16 @@ describe('curvePose — twist-free tangent frame', () => {
     }
   });
 
+  it('roll_deg turns the tube about its axis: +90 sends the local +Z (sucker) side down', () => {
+    const s = makeSampler([[0, 0, 0], [0, 0, 20]], 90);
+    const suckerSide = new THREE.Vector3(0, 0, 1).applyQuaternion(s.poseAt(10).quat);
+    expect(suckerSide.y).toBeCloseTo(-1, 4);
+    // lateral offsets (tip prongs) roll with the tube
+    const spine = s.poseAt(10);
+    const prong = s.poseAt(10, [0, 1]);
+    expect(prong.pos.clone().sub(spine.pos).y).toBeCloseTo(-1, 4);
+  });
+
   it('does not corkscrew along a 3D arc (roll stays pinned bone to bone)', () => {
     // An arc that bends sideways AND vertically — the minimal-rotation
     // alignment would roll progressively here.

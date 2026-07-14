@@ -41,7 +41,7 @@ export interface CurveSampler {
   poseAt(arc: number, lateral?: [number, number]): BonePose;
 }
 
-export function makeSampler(points: Vec3Tuple[]): CurveSampler {
+export function makeSampler(points: Vec3Tuple[], rollDeg = 0): CurveSampler {
   if (points.length < 2) throw new Error('curve needs >= 2 control points');
   const curve = new THREE.CatmullRomCurve3(
     points.map((p) => new THREE.Vector3(...p)),
@@ -49,6 +49,10 @@ export function makeSampler(points: Vec3Tuple[]): CurveSampler {
     'centripetal',
   );
   const length = curve.getLength();
+  // Constant roll about the tube axis, applied on top of the twist-free
+  // frame — which bone-local side is the sucker side is a modeling artifact
+  // of the rig, so the data can turn it to face down (instances[].roll_deg).
+  const qRoll = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), (rollDeg * Math.PI) / 180);
   const poseAt = (arc: number, lateral: [number, number] = [0, 0]): BonePose => {
     const pos = new THREE.Vector3();
     const tangent = new THREE.Vector3();
@@ -72,7 +76,9 @@ export function makeSampler(points: Vec3Tuple[]): CurveSampler {
     const upRef = Math.abs(tangent.y) > 0.99 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0);
     const side = new THREE.Vector3().crossVectors(tangent, upRef).normalize();
     const up = new THREE.Vector3().crossVectors(side, tangent);
-    const quat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangent, up, side));
+    const quat = new THREE.Quaternion()
+      .setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangent, up, side))
+      .multiply(qRoll); // the lateral offsets (tip prongs) roll with the tube
     if (lateral[0] !== 0 || lateral[1] !== 0) {
       pos.add(new THREE.Vector3(0, lateral[0], lateral[1]).applyQuaternion(quat));
     }
@@ -82,8 +88,8 @@ export function makeSampler(points: Vec3Tuple[]): CurveSampler {
 }
 
 /** Static pose for each rest bone along the authored curve (order preserved). */
-export function poseBonesAlongCurve(rest: RestBone[], points: Vec3Tuple[]): BonePose[] {
-  const sampler = makeSampler(points);
+export function poseBonesAlongCurve(rest: RestBone[], points: Vec3Tuple[], rollDeg = 0): BonePose[] {
+  const sampler = makeSampler(points, rollDeg);
   return rest.map((b) => sampler.poseAt(b.arc, b.lateral));
 }
 
