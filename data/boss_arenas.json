@@ -364,6 +364,19 @@
               "yaw_deg": 45
             }
           ]
+        },
+        {
+          "part": "z_002_tt",
+          "instances": [
+            {
+              "pos": [
+                0,
+                -0.5,
+                5
+              ],
+              "yaw_deg": 0
+            }
+          ]
         }
       ],
       "anchors": [],
@@ -379,7 +392,7 @@
         "eat": "grab-eat (caught player)",
         "eatcnc": "eat cancelled (damage interrupt)"
       },
-      "note": "no ded clip in the rig \u2014 death presentation is likely scripted (sinks?); z_002_st = the coiled SURFACING tentacle (posed: dips 5.7 below its base, crests 4.2 above on wat / 5.2 on spout) \u2014 the four placed instances; z_002_tt = the long straight arm (posed: plunges 11.4 below base \u2014 pierces the pool bed if surfaced; likely the strike/sweep arm, unplaced); o0b_kaeru (static frog prop) unattached \u2014 placement unknown"
+      "note": "no ded clip in the rig \u2014 death presentation is likely scripted (sinks?); z_002_st = the coiled SURFACING tentacle (posed: dips 5.7 below its base, crests 4.2 above on wat / 5.2 on spout) \u2014 the four placed instances; z_002_tt = the long straight arm (posed: plunges 11.4 below base \u2014 pierces the pool bed if surfaced; likely the strike/sweep arm \u2014 placed front-center as a DRAFT; stage it with the room's tentacle poser (#508, instances[].curve)); o0b_kaeru (static frog prop) unattached \u2014 placement unknown"
     },
     "humilias": {
       "model_id": "boss_mother",

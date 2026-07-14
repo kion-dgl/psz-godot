@@ -309,6 +309,13 @@ export interface BossPartInstance {
   yaw_deg?: number;
   /** Tilt (degrees, negative = nose up) — bend a tentacle up out of the water. */
   pitch_deg?: number;
+  /**
+   * Spline-poser control points (#508), boss-local frame — ≥2 points
+   * (emergence → apex → tip). When set, the curve — not pos/yaw/pitch —
+   * places the piece: bones pose along the Catmull-Rom fit per the
+   * /states/bosses parts contract (see curvePose.ts).
+   */
+  curve?: [number, number, number][];
 }
 
 export type BossPartDef = string | { part: string; instances?: BossPartInstance[] };

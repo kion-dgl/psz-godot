@@ -230,6 +230,16 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
           for (const f of ['yaw_deg', 'pitch_deg']) {
             if (inst[f] !== undefined) expect(Number.isFinite(inst[f]), `${id}/${name} ${f}`).toBe(true);
           }
+          if (inst.curve !== undefined) {
+            // Spline-poser curve (#508): >= 2 finite [x,y,z] control points.
+            expect(Array.isArray(inst.curve) && inst.curve.length >= 2, `${id}/${name} curve length`).toBe(true);
+            for (const pt of inst.curve) {
+              expect(
+                Array.isArray(pt) && pt.length === 3 && pt.every((n: unknown) => Number.isFinite(n)),
+                `${id}/${name} curve point`,
+              ).toBe(true);
+            }
+          }
         }
       }
     }
