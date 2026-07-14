@@ -206,27 +206,13 @@ export default function BossRoom() {
     setCurveTarget(null);
   }, [config, bossId]);
 
-  // Round-trip export: the whole config with this boss's clicked markers
-  // merged into its authored anchors — paste over data/boss_arenas.json.
-  // Markers only merge in the default arena (anchors ride that frame).
-  const copyConfig = () => {
-    if (!config || !boss) return;
-    const inHomeArena = arenaId === boss.arena;
-    const merged = inHomeArena
-      ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
-      : (boss.anchors ?? []);
-    // The CURRENT boss position (wherever "move boss" put it) is authored
-    // as spawn_pos — this is how staging like humilias's broken-ledge spot
-    // gets captured without reading numbers off the HUD.
-    const spawnPos: [number, number, number] | undefined = inHomeArena
-      ? [+readout.boss[0].toFixed(2), +readout.boss[1].toFixed(2), +readout.boss[2].toFixed(2)]
-      : boss.spawn_pos;
-    // Poser curves merge into parts[].instances[].curve. They live in the
-    // BOSS's local frame (not the arena frame), so — unlike anchors — they
-    // merge regardless of which arena is loaded. An empty session curve
-    // strips a previously authored one (revert to pos/yaw placement).
+  // Poser curves merge into parts[].instances[].curve. They live in the
+  // BOSS's local frame (not the arena frame), so — unlike anchors — they
+  // merge regardless of which arena is loaded. An empty session curve
+  // strips a previously authored one (revert to pos/yaw placement).
+  const mergeSessionCurves = () => {
     const round = (pts: Vec3Tuple[]) => pts.map((pt) => pt.map((n) => +n.toFixed(2)) as Vec3Tuple);
-    const mergedParts = boss.parts?.map((p) => {
+    return boss?.parts?.map((p) => {
       const name = partName(p);
       let touched = false;
       const instances = partInstances(p).map((inst, i) => {
@@ -245,6 +231,31 @@ export default function BossRoom() {
       // Spread the object form so part-level fields (animated) survive the merge.
       return touched ? { ...(typeof p === 'string' ? {} : p), part: name, instances } : p;
     });
+  };
+
+  // Just the tentacles: this boss's parts with the session curves merged —
+  // paste over the boss's "parts": field in data/boss_arenas.json.
+  const copyParts = () => {
+    const parts = mergeSessionCurves();
+    if (parts) navigator.clipboard?.writeText(JSON.stringify(parts, null, 2) + '\n');
+  };
+
+  // Round-trip export: the whole config with this boss's clicked markers
+  // merged into its authored anchors — paste over data/boss_arenas.json.
+  // Markers only merge in the default arena (anchors ride that frame).
+  const copyConfig = () => {
+    if (!config || !boss) return;
+    const inHomeArena = arenaId === boss.arena;
+    const merged = inHomeArena
+      ? [...(boss.anchors ?? []), ...markers.map((m) => ({ name: m.name, pos: m.pos }))]
+      : (boss.anchors ?? []);
+    // The CURRENT boss position (wherever "move boss" put it) is authored
+    // as spawn_pos — this is how staging like humilias's broken-ledge spot
+    // gets captured without reading numbers off the HUD.
+    const spawnPos: [number, number, number] | undefined = inHomeArena
+      ? [+readout.boss[0].toFixed(2), +readout.boss[1].toFixed(2), +readout.boss[2].toFixed(2)]
+      : boss.spawn_pos;
+    const mergedParts = mergeSessionCurves();
     const cfg: BossArenaConfig = {
       ...config,
       bosses: {
@@ -1516,6 +1527,13 @@ export default function BossRoom() {
                 </label>
               </>
             )}
+            <button
+              onClick={copyParts}
+              title='Copies this boss&apos;s "parts" array with the session curves merged in — paste over the parts field in data/boss_arenas.json.'
+              style={{ ...btn, display: 'block', width: '100%' }}
+            >
+              copy tentacles (parts JSON, curves merged)
+            </button>
           </>
         )}
 
