@@ -330,6 +330,7 @@
       "parts": [
         {
           "part": "z_002_st",
+          "animated": false,
           "instances": [
             {
               "pos": [
@@ -367,6 +368,7 @@
         },
         {
           "part": "z_002_tt",
+          "animated": false,
           "instances": [
             {
               "pos": [

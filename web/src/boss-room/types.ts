@@ -318,11 +318,23 @@ export interface BossPartInstance {
   curve?: [number, number, number][];
 }
 
-export type BossPartDef = string | { part: string; instances?: BossPartInstance[] };
+export type BossPartDef =
+  | string
+  | {
+      part: string;
+      instances?: BossPartInstance[];
+      /**
+       * false = the piece never mirrors the body's clips — it holds its
+       * wrapper/curve pose while only the body animates (the octopus
+       * tentacles). Default true (Humilias's faces play in sync).
+       */
+      animated?: boolean;
+    };
 
 export const partName = (p: BossPartDef): string => (typeof p === 'string' ? p : p.part);
 export const partInstances = (p: BossPartDef): BossPartInstance[] =>
   typeof p === 'string' ? [{ pos: [0, 0, 0] }] : (p.instances ?? [{ pos: [0, 0, 0] }]);
+export const partAnimated = (p: BossPartDef): boolean => (typeof p === 'string' ? true : (p.animated ?? true));
 
 export function bossPartUrl(modelId: string, part: string): string {
   return assetUrl(`assets/enemies/${modelId}/parts/${part}/${part}.glb`);

@@ -220,6 +220,9 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
       for (const p of b.parts ?? []) {
         const name = typeof p === 'string' ? p : p.part;
         expect(typeof name === 'string' && name.length > 0, `${id} part name`).toBe(true);
+        if (typeof p !== 'string' && p.animated !== undefined) {
+          expect(typeof p.animated, `${id}/${name} animated`).toBe('boolean');
+        }
         expect(seen.has(name), `${id}: duplicate part '${name}'`).toBe(false);
         seen.add(name);
         for (const inst of (typeof p === 'string' ? [] : p.instances ?? [])) {

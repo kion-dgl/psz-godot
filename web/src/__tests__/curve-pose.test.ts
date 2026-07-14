@@ -7,13 +7,16 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import {
+  DEFAULT_DIP,
   DEFAULT_LIFT,
   DEFAULT_REACH,
+  curveDip,
   curveLift,
   defaultArch,
   makeSampler,
   poseBonesAlongCurve,
   retargetTip,
+  setDip,
   setLift,
   translateCurve,
   type RestBone,
@@ -148,6 +151,26 @@ describe('curvePose — parametric authoring (place → bend)', () => {
     expect(bent[0]).toEqual(arch[0]);
     expect(bent[2]).toEqual([0, 0, 20]);
     expect(curveLift(bent)).toBeCloseTo(curveLift(arch), 4);
+  });
+
+  it('defaultArch dips the emergence below the clicked water surface', () => {
+    // Click on the water at y=-0.85 — the tentacles start IN the water.
+    const arch = defaultArch([6, -0.85, 8], undefined, DEFAULT_REACH, DEFAULT_LIFT, DEFAULT_DIP);
+    expect(arch[0][1]).toBeCloseTo(-0.85 - DEFAULT_DIP, 4); // emergence submerged
+    expect(arch[2][1]).toBeCloseTo(-0.85, 4); // tip back at the surface
+    expect(arch[1][1]).toBeCloseTo(-0.85 + DEFAULT_LIFT, 4); // apex above the surface
+    expect(curveDip(arch)).toBeCloseTo(DEFAULT_DIP, 4);
+    expect(curveLift(arch)).toBeCloseTo(DEFAULT_LIFT, 4);
+  });
+
+  it('setDip sinks/raises only the emergence, relative to the tip end', () => {
+    const arch = defaultArch([6, -0.85, 8], undefined, DEFAULT_REACH, DEFAULT_LIFT, 2);
+    const deeper = setDip(arch, 5);
+    expect(curveDip(deeper)).toBeCloseTo(5, 4);
+    expect(deeper[0][0]).toBe(arch[0][0]); // xz untouched
+    expect(deeper[0][2]).toBe(arch[0][2]);
+    expect(deeper.slice(1)).toEqual(arch.slice(1)); // apex + tip untouched
+    expect(curveDip(setDip(deeper, 0))).toBeCloseTo(0, 4);
   });
 
   it('setLift shifts interior points to the target lift; ends stay put', () => {

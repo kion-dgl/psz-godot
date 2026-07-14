@@ -26,6 +26,7 @@ import {
   bossPartUrl,
   loadBossConfig,
   loadRoster,
+  partAnimated,
   partInstances,
   partName,
   resolveBoss,
@@ -39,11 +40,16 @@ import {
 } from './types';
 import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
 import {
+  DEFAULT_DIP,
+  DEFAULT_LIFT,
+  DEFAULT_REACH,
+  curveDip,
   curveLift,
   defaultArch,
   makeSampler,
   poseBonesAlongCurve,
   retargetTip,
+  setDip,
   setLift,
   translateCurve,
   type BonePose,
@@ -143,6 +149,11 @@ export default function BossRoom() {
   const curvesRef = useRef<Record<string, Vec3Tuple[]>>({});
   const [curveOverlay, setCurveOverlay] = useState(true);
   const curveOverlayRef = useRef(true);
+  // Start depth used when PLACING a fresh arch (the emergence sits this far
+  // below the clicked water surface); once a curve exists the slider edits
+  // the curve itself.
+  const [dip, setDipDefault] = useState(DEFAULT_DIP);
+  const dipRef = useRef(DEFAULT_DIP);
   const [readout, setReadout] = useState({ player: [0, 0, 0], boss: [0, 0, 0], dist: 0 });
   const [overrides, setOverrides] = useState<Record<string, Overrides>>(loadStore);
   const [simOn, setSimOn] = useState(false);
@@ -231,7 +242,8 @@ export default function BossRoom() {
         }
         return inst;
       });
-      return touched ? { part: name, instances } : p;
+      // Spread the object form so part-level fields (animated) survive the merge.
+      return touched ? { ...(typeof p === 'string' ? {} : p), part: name, instances } : p;
     });
     const cfg: BossArenaConfig = {
       ...config,
@@ -291,6 +303,7 @@ export default function BossRoom() {
     let floorMinY = 0; // lowest point of the floor collider (fall-guard floor)
     let floorMaxY = 0; // top of the collider — settle fallback where it has holes (the octopus pool)
     let arenaMesh: THREE.Object3D | null = null;
+    let skyMesh: THREE.Object3D | null = null; // carries the pool water plane (o0s_zsky 1_water2)
     const raycaster = new THREE.Raycaster();
     const DOWN = new THREE.Vector3(0, -1, 0);
 
@@ -427,6 +440,7 @@ export default function BossRoom() {
       loader.load(skyUrl, (g) => {
         if (disposed) return;
         scene.add(g.scene);
+        skyMesh = g.scene;
         oneLoaded();
       }, undefined, oneLoaded); // skybox is decorative — missing is fine
     }
@@ -466,6 +480,8 @@ export default function BossRoom() {
       key: string; // `${part}:${instanceIndex}` — matches the curves store
       wrapper: THREE.Group;
       authored: BossPartInstance;
+      /** false = never mirrors the body's clips (octopus tentacles) — holds its wrapper/curve pose. */
+      animated: boolean;
       mixer: THREE.AnimationMixer;
       animations: THREE.AnimationClip[];
       action: THREE.AnimationAction | null;
@@ -595,6 +611,7 @@ export default function BossRoom() {
               key: `${name}:${i}`,
               wrapper,
               authored: inst,
+              animated: partAnimated(partDef),
               mixer: new THREE.AnimationMixer(rig),
               animations: g.animations,
               action: null,
@@ -652,9 +669,10 @@ export default function BossRoom() {
       }
     }
 
-    /** Play the same-named clip on every part rig (parts share the body's clip names). */
+    /** Play the same-named clip on every ANIMATED part rig (parts share the body's clip names). */
     function syncParts(clipName: string, loopMode: THREE.AnimationActionLoopStyles, reps: number) {
       for (const rig of partRigs) {
+        if (!rig.animated) continue; // only the boss moves — the tentacles hold their pose
         rig.mixer.stopAllAction();
         rig.action = null;
         const clip = rig.animations.find((a) => a.name === clipName);
@@ -1005,10 +1023,11 @@ export default function BossRoom() {
     const onClick = (ev: MouseEvent) => {
       const mode = clickModeRef.current;
       // Curve points also live on the pool water, which is a HOLE in the
-      // walkable collider — so curve modes raycast the arena visual too and
-      // take the nearest hit.
+      // walkable collider AND lives in the skybox GLB (o0s_zsky 1_water2) —
+      // so curve modes raycast the arena visual and skybox too, nearest hit
+      // wins (the water plane beats the sky dome anywhere that matters).
       const curveMode = mode === 'curve' || mode === 'curve-base' || mode === 'curve-tip';
-      const targets = (curveMode ? [floorMesh, arenaMesh] : [floorMesh ?? arenaMesh]).filter(
+      const targets = (curveMode ? [floorMesh, arenaMesh, skyMesh] : [floorMesh ?? arenaMesh]).filter(
         (t): t is THREE.Object3D => !!t,
       );
       if (!mode || !targets.length) return;
@@ -1037,12 +1056,17 @@ export default function BossRoom() {
           const prev = cur[key] ?? [];
           let next: Vec3Tuple[];
           if (mode === 'curve-base') {
-            // PLACE: a fresh default arch at the click, or move the whole
-            // authored curve there with its bend preserved.
-            next = prev.length >= 2 ? translateCurve(prev, pt) : defaultArch(pt);
+            // PLACE: a fresh default arch at the click (emergence dipped
+            // below the clicked water surface), or move the whole authored
+            // curve there with its bend AND start depth preserved.
+            next = prev.length >= 2
+              ? translateCurve(prev, [pt[0], pt[1] - curveDip(prev), pt[2]])
+              : defaultArch(pt, undefined, DEFAULT_REACH, DEFAULT_LIFT, dipRef.current);
           } else if (mode === 'curve-tip') {
             // BEND: keep the base, re-aim the tip (needs a placed curve).
-            next = prev.length >= 2 ? retargetTip(prev, pt) : defaultArch(pt);
+            next = prev.length >= 2
+              ? retargetTip(prev, pt)
+              : defaultArch(pt, undefined, DEFAULT_REACH, DEFAULT_LIFT, dipRef.current);
           } else {
             next = [...prev, pt]; // free-form append
           }
@@ -1174,7 +1198,12 @@ export default function BossRoom() {
     animate();
 
     if (import.meta.env.DEV) {
-      (window as any).__bossRoom = { scene, feet, bossPos, playClip, playChain, get mixer() { return mixer; } };
+      (window as any).__bossRoom = {
+        scene, feet, bossPos, playClip, playChain,
+        get mixer() { return mixer; },
+        refs: { curvesRef, curveTargetRef, clickModeRef, dipRef },
+        get partRigs() { return partRigs; },
+      };
     }
 
     const onResize = () => {
@@ -1237,6 +1266,9 @@ export default function BossRoom() {
     curveOverlayRef.current = curveOverlay;
     apiRef.current?.refreshCurves();
   }, [curveOverlay]);
+  useEffect(() => {
+    dipRef.current = dip;
+  }, [dip]);
 
   if (error) return <div style={{ padding: 20, color: '#f66' }}>{error}</div>;
   if (config && !boss) {
@@ -1412,6 +1444,25 @@ export default function BossRoom() {
                     />
                   </>
                 )}
+                <span style={label}>
+                  Start depth: {((curves[curveTarget]?.length ?? 0) >= 2 ? curveDip(curves[curveTarget]!) : dip).toFixed(2)}{' '}
+                  (emergence below the click — in the water)
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={8}
+                  step={0.25}
+                  value={(curves[curveTarget]?.length ?? 0) >= 2 ? curveDip(curves[curveTarget]!) : dip}
+                  onChange={(e) => {
+                    const v = +e.target.value;
+                    setDipDefault(v);
+                    if ((curves[curveTarget]?.length ?? 0) >= 2) {
+                      setCurves((cur) => ({ ...cur, [curveTarget]: setDip(cur[curveTarget]!, v) }));
+                    }
+                  }}
+                  style={{ width: '100%' }}
+                />
                 <button
                   onClick={() => setClickMode(clickMode === 'curve' ? null : 'curve')}
                   style={{

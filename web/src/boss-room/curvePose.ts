@@ -93,6 +93,8 @@ export function poseBonesAlongCurve(rest: RestBone[], points: Vec3Tuple[]): Bone
 export const DEFAULT_REACH = 14;
 /** Default apex lift of a placed arch. */
 export const DEFAULT_LIFT = 5;
+/** Default start depth: the emergence point sits this far below the clicked surface (the tentacles start in the water). */
+export const DEFAULT_DIP = 2;
 
 const apexBetween = (b: Vec3Tuple, t: Vec3Tuple, lift: number): Vec3Tuple => [
   (b[0] + t[0]) / 2,
@@ -101,18 +103,21 @@ const apexBetween = (b: Vec3Tuple, t: Vec3Tuple, lift: number): Vec3Tuple => [
 ];
 
 /**
- * Emergence → apex → tip arch at a clicked base. The tip runs `reach` units
- * along `outward` (default: away from the boss origin through the base;
- * straight +z when the base is at the origin), the apex halfway, `lift`
- * above the higher end.
+ * Emergence → apex → tip arch at a clicked point. The emergence (base)
+ * sits `dip` BELOW the click — the tentacles start in the water, and the
+ * click lands on the water surface. The tip runs `reach` units along
+ * `outward` (default: away from the boss origin through the click;
+ * straight +z when the click is at the origin) at the click's height,
+ * the apex halfway, `lift` above the higher end.
  */
 export function defaultArch(
-  base: Vec3Tuple,
+  click: Vec3Tuple,
   outward?: [number, number],
   reach = DEFAULT_REACH,
   lift = DEFAULT_LIFT,
+  dip = 0,
 ): Vec3Tuple[] {
-  let [dx, dz] = outward ?? [base[0], base[2]];
+  let [dx, dz] = outward ?? [click[0], click[2]];
   const len = Math.hypot(dx, dz);
   if (len < 1e-3) {
     dx = 0;
@@ -121,7 +126,8 @@ export function defaultArch(
     dx /= len;
     dz /= len;
   }
-  const tip: Vec3Tuple = [base[0] + dx * reach, base[1], base[2] + dz * reach];
+  const base: Vec3Tuple = [click[0], click[1] - dip, click[2]];
+  const tip: Vec3Tuple = [click[0] + dx * reach, click[1], click[2] + dz * reach];
   return [base, apexBetween(base, tip, lift), tip];
 }
 
@@ -145,6 +151,17 @@ export function curveLift(pts: Vec3Tuple[]): number {
 export function retargetTip(pts: Vec3Tuple[], tip: Vec3Tuple): Vec3Tuple[] {
   const base = pts[0];
   return [base, apexBetween(base, tip, curveLift(pts)), tip];
+}
+
+/** The start depth read out of a curve: how far the emergence sits below the tip end. */
+export function curveDip(pts: Vec3Tuple[]): number {
+  return pts[pts.length - 1][1] - pts[0][1];
+}
+
+/** Set the start depth: sink/raise the emergence point relative to the tip end. */
+export function setDip(pts: Vec3Tuple[], dip: number): Vec3Tuple[] {
+  const base: Vec3Tuple = [pts[0][0], pts[pts.length - 1][1] - dip, pts[0][2]];
+  return [base, ...pts.slice(1)];
 }
 
 /** Set the lift: shift every interior point's y so the apex sits `lift` above the ends. */
