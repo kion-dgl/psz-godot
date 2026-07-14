@@ -6,7 +6,19 @@
  */
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { makeSampler, poseBonesAlongCurve, type RestBone, type Vec3Tuple } from '../boss-room/curvePose';
+import {
+  DEFAULT_LIFT,
+  DEFAULT_REACH,
+  curveLift,
+  defaultArch,
+  makeSampler,
+  poseBonesAlongCurve,
+  retargetTip,
+  setLift,
+  translateCurve,
+  type RestBone,
+  type Vec3Tuple,
+} from '../boss-room/curvePose';
 
 // The real z_002_tt layout read off the GLB: root at 0, siblings ~2.5u apart.
 const TT_REST: RestBone[] = [0, 4.98, 7.48, 9.99, 12.48, 14.99, 17.47, 19.96].map((arc) => ({
@@ -97,5 +109,56 @@ describe('curvePose — bone spacing on a bend', () => {
 
   it('rejects fewer than 2 control points', () => {
     expect(() => makeSampler([[0, 0, 0]])).toThrow();
+  });
+});
+
+describe('curvePose — parametric authoring (place → bend)', () => {
+  it('defaultArch arcs outward from the boss origin through the base', () => {
+    const arch = defaultArch([6, -0.8, 8]);
+    expect(arch).toHaveLength(3);
+    expect(arch[0]).toEqual([6, -0.8, 8]);
+    // tip = base + outward(normalize(6,8)) * reach
+    expect(arch[2][0]).toBeCloseTo(6 + 0.6 * DEFAULT_REACH, 4);
+    expect(arch[2][2]).toBeCloseTo(8 + 0.8 * DEFAULT_REACH, 4);
+    expect(arch[2][1]).toBeCloseTo(-0.8, 4);
+    // apex halfway, lifted above the higher end
+    expect(arch[1][0]).toBeCloseTo((arch[0][0] + arch[2][0]) / 2, 4);
+    expect(arch[1][1]).toBeCloseTo(-0.8 + DEFAULT_LIFT, 4);
+  });
+
+  it('defaultArch at the origin falls back to +z (facing)', () => {
+    const arch = defaultArch([0, 0, 0]);
+    expect(arch[2]).toEqual([0, 0, DEFAULT_REACH]);
+  });
+
+  it('translateCurve moves the curve to a new base, bend preserved', () => {
+    const arch = defaultArch([6, 0, 8]);
+    const moved = translateCurve(arch, [-3, -1, 4]);
+    expect(moved[0]).toEqual([-3, -1, 4]);
+    for (let i = 1; i < arch.length; i++) {
+      for (let a = 0; a < 3; a++) {
+        expect(moved[i][a] - moved[0][a]).toBeCloseTo(arch[i][a] - arch[0][a], 6);
+      }
+    }
+  });
+
+  it('retargetTip keeps the base and lift, re-aims the tip', () => {
+    const arch = defaultArch([6, 0, 8]);
+    const bent = retargetTip(arch, [0, 0, 20]);
+    expect(bent[0]).toEqual(arch[0]);
+    expect(bent[2]).toEqual([0, 0, 20]);
+    expect(curveLift(bent)).toBeCloseTo(curveLift(arch), 4);
+  });
+
+  it('setLift shifts interior points to the target lift; ends stay put', () => {
+    const arch = defaultArch([6, 0, 8]);
+    const lifted = setLift(arch, 9);
+    expect(curveLift(lifted)).toBeCloseTo(9, 4);
+    expect(lifted[0]).toEqual(arch[0]);
+    expect(lifted[2]).toEqual(arch[2]);
+    const flat = setLift(lifted, 0);
+    expect(curveLift(flat)).toBeCloseTo(0, 4);
+    // 2-point curves have no interior to lift
+    expect(setLift([[0, 0, 0], [0, 0, 5]], 4)).toEqual([[0, 0, 0], [0, 0, 5]]);
   });
 });

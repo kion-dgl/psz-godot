@@ -39,8 +39,13 @@ import {
 } from './types';
 import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
 import {
+  curveLift,
+  defaultArch,
   makeSampler,
   poseBonesAlongCurve,
+  retargetTip,
+  setLift,
+  translateCurve,
   type BonePose,
   type CurveSampler,
   type RestBone,
@@ -127,7 +132,7 @@ export default function BossRoom() {
   const [lpLoops, setLpLoops] = useState(2);
   const [facePlayer, setFacePlayer] = useState(true);
   const [showFloor, setShowFloor] = useState(false);
-  const [clickMode, setClickMode] = useState<'anchor' | 'boss' | 'curve' | null>(null);
+  const [clickMode, setClickMode] = useState<'anchor' | 'boss' | 'curve' | 'curve-base' | 'curve-tip' | null>(null);
   const clickModeRef = useRef(clickMode);
   const [markers, setMarkers] = useState<Marker[]>([]);
   // Tentacle poser (#508): session curves keyed `${part}:${instanceIndex}`,
@@ -1000,9 +1005,10 @@ export default function BossRoom() {
     const onClick = (ev: MouseEvent) => {
       const mode = clickModeRef.current;
       // Curve points also live on the pool water, which is a HOLE in the
-      // walkable collider — so curve mode raycasts the arena visual too and
-      // takes the nearest hit.
-      const targets = (mode === 'curve' ? [floorMesh, arenaMesh] : [floorMesh ?? arenaMesh]).filter(
+      // walkable collider — so curve modes raycast the arena visual too and
+      // take the nearest hit.
+      const curveMode = mode === 'curve' || mode === 'curve-base' || mode === 'curve-tip';
+      const targets = (curveMode ? [floorMesh, arenaMesh] : [floorMesh ?? arenaMesh]).filter(
         (t): t is THREE.Object3D => !!t,
       );
       if (!mode || !targets.length) return;
@@ -1019,18 +1025,32 @@ export default function BossRoom() {
       targets.forEach((t, i) => (t.visible = wasVisible[i]));
       if (!hits.length) return;
       const p = hits[0].point;
-      if (mode === 'curve') {
+      if (curveMode) {
         const key = curveTargetRef.current;
         if (!key) {
           setClickMode(null);
           return;
         }
         const local = bossGroup.worldToLocal(p.clone());
-        setCurves((cur) => ({
-          ...cur,
-          [key]: [...(cur[key] ?? []), [+local.x.toFixed(2), +local.y.toFixed(2), +local.z.toFixed(2)] as Vec3Tuple],
-        }));
-        return; // sticky — keep clicking to add more points
+        const pt: Vec3Tuple = [+local.x.toFixed(2), +local.y.toFixed(2), +local.z.toFixed(2)];
+        setCurves((cur) => {
+          const prev = cur[key] ?? [];
+          let next: Vec3Tuple[];
+          if (mode === 'curve-base') {
+            // PLACE: a fresh default arch at the click, or move the whole
+            // authored curve there with its bend preserved.
+            next = prev.length >= 2 ? translateCurve(prev, pt) : defaultArch(pt);
+          } else if (mode === 'curve-tip') {
+            // BEND: keep the base, re-aim the tip (needs a placed curve).
+            next = prev.length >= 2 ? retargetTip(prev, pt) : defaultArch(pt);
+          } else {
+            next = [...prev, pt]; // free-form append
+          }
+          return { ...cur, [key]: next };
+        });
+        // place/bend are one-shot; free-form point adding stays sticky.
+        if (mode !== 'curve') setClickMode(null);
+        return;
       }
       if (mode === 'boss') {
         bossPos.set(p.x, p.y, p.z);
@@ -1350,6 +1370,48 @@ export default function BossRoom() {
             </select>
             {curveTarget && (
               <>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => setClickMode(clickMode === 'curve-base' ? null : 'curve-base')}
+                    title="Click the ground/water to place the tentacle there — a fresh default arch, or the authored curve moved with its bend preserved."
+                    style={{
+                      ...btn,
+                      flex: 1,
+                      background: clickMode === 'curve-base' ? '#4ade80' : btn.background,
+                      color: clickMode === 'curve-base' ? '#000' : btn.color,
+                    }}
+                  >
+                    {clickMode === 'curve-base' ? 'click ground to place…' : 'place (click ground)'}
+                  </button>
+                  <button
+                    onClick={() => setClickMode(clickMode === 'curve-tip' ? null : 'curve-tip')}
+                    title="Click where the tip should reach — keeps the base, re-aims the arch at the current lift."
+                    style={{
+                      ...btn,
+                      flex: 1,
+                      background: clickMode === 'curve-tip' ? '#facc15' : btn.background,
+                      color: clickMode === 'curve-tip' ? '#000' : btn.color,
+                    }}
+                  >
+                    {clickMode === 'curve-tip' ? 'click tip target…' : 'bend (click tip)'}
+                  </button>
+                </div>
+                {(curves[curveTarget]?.length ?? 0) >= 3 && (
+                  <>
+                    <span style={label}>Lift: {curveLift(curves[curveTarget]!).toFixed(2)}</span>
+                    <input
+                      type="range"
+                      min={-2}
+                      max={12}
+                      step={0.25}
+                      value={curveLift(curves[curveTarget]!)}
+                      onChange={(e) =>
+                        setCurves((cur) => ({ ...cur, [curveTarget]: setLift(cur[curveTarget]!, +e.target.value) }))
+                      }
+                      style={{ width: '100%' }}
+                    />
+                  </>
+                )}
                 <button
                   onClick={() => setClickMode(clickMode === 'curve' ? null : 'curve')}
                   style={{
@@ -1368,7 +1430,7 @@ export default function BossRoom() {
                         key={axis}
                         type="number"
                         step={0.25}
-                        value={pt[axis]}
+                        value={+pt[axis].toFixed(2)}
                         onChange={(e) => {
                           const v = +e.target.value;
                           if (!Number.isFinite(v)) return;
