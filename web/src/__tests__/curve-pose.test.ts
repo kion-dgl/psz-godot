@@ -91,6 +91,45 @@ describe('curvePose — lateral offsets (tip prongs)', () => {
   });
 });
 
+describe('curvePose — twist-free tangent frame', () => {
+  it('keeps bone +Y aligned to world up regardless of heading (no per-tentacle roll)', () => {
+    // Four straight horizontal curves at different headings — the sucker
+    // side must face the same way on all of them.
+    const headings: Vec3Tuple[] = [
+      [0, 0, 1],
+      [1, 0, 0],
+      [0.7071, 0, -0.7071],
+      [-1, 0, 0],
+    ];
+    for (const [dx, , dz] of headings) {
+      const s = makeSampler([
+        [0, 0, 0],
+        [dx * 20, 0, dz * 20],
+      ]);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(s.poseAt(10).quat);
+      expect(up.y, `heading ${dx},${dz}`).toBeCloseTo(1, 4);
+    }
+  });
+
+  it('does not corkscrew along a 3D arc (roll stays pinned bone to bone)', () => {
+    // An arc that bends sideways AND vertically — the minimal-rotation
+    // alignment would roll progressively here.
+    const arc: Vec3Tuple[] = [
+      [0, -1.4, 6],
+      [4, 5.6, 12],
+      [10, 0.6, 17],
+    ];
+    const poses = poseBonesAlongCurve(TT_REST, arc);
+    for (const p of poses) {
+      const tangent = X.clone().applyQuaternion(p.quat);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(p.quat);
+      // roll = how far bone-up leans out of the tangent/world-up plane
+      const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), tangent).normalize();
+      expect(Math.abs(up.dot(side))).toBeLessThan(1e-6);
+    }
+  });
+});
+
 describe('curvePose — bone spacing on a bend', () => {
   it('keeps consecutive bones ~rest spacing apart (arc-length parameterization)', () => {
     // Emergence → apex → tip target, the poser's authoring shape.

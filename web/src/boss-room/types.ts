@@ -283,7 +283,10 @@ export interface BossArenaConfig {
 }
 
 export async function loadBossConfig(): Promise<BossArenaConfig> {
-  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`);
+  // no-store: this is an authoring tool — the file changes on disk between
+  // reloads (config exports pasted over it), and a cached copy reads as
+  // "my edit didn't take".
+  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`boss_arenas.json: HTTP ${res.status}`);
   return res.json();
 }

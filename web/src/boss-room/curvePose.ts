@@ -26,8 +26,6 @@ export interface BonePose {
   quat: THREE.Quaternion;
 }
 
-const X_AXIS = new THREE.Vector3(1, 0, 0);
-
 /**
  * Reusable arc-length sampler over the authored control points. Cache one
  * per curve edit — the clip-overlay path samples it every frame.
@@ -65,9 +63,16 @@ export function makeSampler(points: Vec3Tuple[]): CurveSampler {
       tangent.copy(curve.getTangentAt(u));
       pos.copy(curve.getPointAt(u));
     }
-    // Minimal rotation taking the rig's rest tube axis (+X) to the tangent.
-    // Twist about the tube axis is not controlled — the tube is round.
-    const quat = new THREE.Quaternion().setFromUnitVectors(X_AXIS, tangent);
+    // Twist-free tangent frame: bone +X along the tangent, bone +Y kept as
+    // close to world up as possible. A minimal rotation (setFromUnitVectors)
+    // rolls the tube on 3D arcs and between headings — the sucker side would
+    // corkscrew along the arm and differ per tentacle. Building the basis
+    // from a world-up reference pins the roll everywhere (near-vertical
+    // tangents fall back to +Z as the reference).
+    const upRef = Math.abs(tangent.y) > 0.99 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(tangent, upRef).normalize();
+    const up = new THREE.Vector3().crossVectors(side, tangent);
+    const quat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangent, up, side));
     if (lateral[0] !== 0 || lateral[1] !== 0) {
       pos.add(new THREE.Vector3(0, lateral[0], lateral[1]).applyQuaternion(quat));
     }
