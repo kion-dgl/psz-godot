@@ -283,7 +283,10 @@ export interface BossArenaConfig {
 }
 
 export async function loadBossConfig(): Promise<BossArenaConfig> {
-  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`);
+  // no-store: this is an authoring tool — the file changes on disk between
+  // reloads (config exports pasted over it), and a cached copy reads as
+  // "my edit didn't take".
+  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`boss_arenas.json: HTTP ${res.status}`);
   return res.json();
 }
@@ -309,13 +312,38 @@ export interface BossPartInstance {
   yaw_deg?: number;
   /** Tilt (degrees, negative = nose up) — bend a tentacle up out of the water. */
   pitch_deg?: number;
+  /**
+   * Spline-poser control points (#508), boss-local frame — ≥2 points
+   * (emergence → apex → tip). When set, the curve — not pos/yaw/pitch —
+   * places the piece: bones pose along the Catmull-Rom fit per the
+   * /states/bosses parts contract (see curvePose.ts).
+   */
+  curve?: [number, number, number][];
+  /**
+   * Roll (degrees) about the tube axis, on top of the twist-free frame —
+   * turns the rig's sucker side to face down (which bone-local side carries
+   * the suckers is a modeling artifact). Curve pose only.
+   */
+  roll_deg?: number;
 }
 
-export type BossPartDef = string | { part: string; instances?: BossPartInstance[] };
+export type BossPartDef =
+  | string
+  | {
+      part: string;
+      instances?: BossPartInstance[];
+      /**
+       * false = the piece never mirrors the body's clips — it holds its
+       * wrapper/curve pose while only the body animates (the octopus
+       * tentacles). Default true (Humilias's faces play in sync).
+       */
+      animated?: boolean;
+    };
 
 export const partName = (p: BossPartDef): string => (typeof p === 'string' ? p : p.part);
 export const partInstances = (p: BossPartDef): BossPartInstance[] =>
   typeof p === 'string' ? [{ pos: [0, 0, 0] }] : (p.instances ?? [{ pos: [0, 0, 0] }]);
+export const partAnimated = (p: BossPartDef): boolean => (typeof p === 'string' ? true : (p.animated ?? true));
 
 export function bossPartUrl(modelId: string, part: string): string {
   return assetUrl(`assets/enemies/${modelId}/parts/${part}/${part}.glb`);

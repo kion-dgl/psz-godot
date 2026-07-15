@@ -220,6 +220,9 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
       for (const p of b.parts ?? []) {
         const name = typeof p === 'string' ? p : p.part;
         expect(typeof name === 'string' && name.length > 0, `${id} part name`).toBe(true);
+        if (typeof p !== 'string' && p.animated !== undefined) {
+          expect(typeof p.animated, `${id}/${name} animated`).toBe('boolean');
+        }
         expect(seen.has(name), `${id}: duplicate part '${name}'`).toBe(false);
         seen.add(name);
         for (const inst of (typeof p === 'string' ? [] : p.instances ?? [])) {
@@ -227,8 +230,18 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
             Array.isArray(inst.pos) && inst.pos.length === 3 && inst.pos.every((n: unknown) => Number.isFinite(n)),
             `${id}/${name} instance pos`,
           ).toBe(true);
-          for (const f of ['yaw_deg', 'pitch_deg']) {
+          for (const f of ['yaw_deg', 'pitch_deg', 'roll_deg']) {
             if (inst[f] !== undefined) expect(Number.isFinite(inst[f]), `${id}/${name} ${f}`).toBe(true);
+          }
+          if (inst.curve !== undefined) {
+            // Spline-poser curve (#508): >= 2 finite [x,y,z] control points.
+            expect(Array.isArray(inst.curve) && inst.curve.length >= 2, `${id}/${name} curve length`).toBe(true);
+            for (const pt of inst.curve) {
+              expect(
+                Array.isArray(pt) && pt.length === 3 && pt.every((n: unknown) => Number.isFinite(n)),
+                `${id}/${name} curve point`,
+              ).toBe(true);
+            }
           }
         }
       }
