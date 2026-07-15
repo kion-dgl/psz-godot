@@ -625,7 +625,8 @@
           "chain": [
             "atk_dl_st",
             "atk_dl_lp",
-            "atk_dl_at"
+            "atk_dl_at",
+            "atk_dl_ed"
           ],
           "kind": "melee_arc",
           "phases": [
@@ -634,7 +635,7 @@
           "max_range": 6,
           "hit_reach": 5,
           "weight": 0.7,
-          "note": "left drill \u2014 st/lp telegraph then the at hit piece; the ed recovery clip is not played by the draft chain"
+          "note": "left drill — st/lp telegraph, at hit piece, ed recovery clip"
         },
         {
           "id": "drill_right",
@@ -642,7 +643,8 @@
           "chain": [
             "atk_dr_st",
             "atk_dr_lp",
-            "atk_dr_at"
+            "atk_dr_at",
+            "atk_dr_ed"
           ],
           "kind": "melee_arc",
           "phases": [
@@ -650,7 +652,8 @@
           ],
           "max_range": 6,
           "hit_reach": 5,
-          "weight": 0.7
+          "weight": 0.7,
+          "note": "right drill — st/lp telegraph, at hit piece, ed recovery clip"
         },
         {
           "id": "gun_left",
@@ -689,7 +692,8 @@
           "chain": [
             "atk_sw_st",
             "atk_sw_lp",
-            "atk_sw_at"
+            "atk_sw_at",
+            "atk_sw_ed"
           ],
           "kind": "melee_arc",
           "phases": [
@@ -699,7 +703,7 @@
           "max_range": 7,
           "hit_reach": 6,
           "damage_mult": 1.5,
-          "note": "the big sweep \u2014 66-frame telegraph"
+          "note": "the big sweep — 66-frame telegraph, at hit piece, ed recovery clip"
         }
       ],
       "anchors": [],
@@ -857,6 +861,9 @@
         "intro_clip": "apper_me3_y_me3",
         "idle_clip": "wait_me3_y_me3",
         "walk_clip": "",
+        "teleport_interval": 10.0,
+        "teleport_radius": 8.0,
+        "relocate_loop_clip": "transform_me3_y_me3",
         "loaf_duration_min": 0.8,
         "loaf_duration_max": 1.6,
         "punish_break_damage": 60,
@@ -937,6 +944,26 @@
           "label": "Shot"
         }
       ],
+      "stats": {
+        "hp": 600,
+        "move_speed": 3.0,
+        "attack_cooldown": 2.5,
+        "attack_base": 20,
+        "turn_speed_deg": 120
+      },
+      "fsm": {
+        "intro_clip": "stt",
+        "idle_clip": "wat",
+        "walk_clip": "",
+        "teleport_interval": 14.0,
+        "teleport_radius": 10.0,
+        "relocate_loop_clip": "warp_st",
+        "loaf_duration_min": 1.5,
+        "loaf_duration_max": 3.0,
+        "punish_break_damage": 80,
+        "punish_vulnerable_mult": 2.0,
+        "punish_clip": "dmg"
+      },
       "phases": [
         {
           "id": "form_blade",
@@ -957,14 +984,20 @@
           "id": "swing_a",
           "clip": "atk_sa_s",
           "kind": "melee_arc",
+          "phases": [
+            "form_blade"
+          ],
           "max_range": 5,
           "hit_reach": 4,
-          "note": "shared vocabulary across all three forms"
+          "note": "shared vocabulary across all three forms; gated to blade form"
         },
         {
           "id": "swing_b",
           "clip": "atk_sb_s",
           "kind": "melee_arc",
+          "phases": [
+            "form_blade"
+          ],
           "max_range": 5,
           "hit_reach": 4
         },
@@ -977,6 +1010,9 @@
             "atk_gu_a_ed"
           ],
           "kind": "projectile",
+          "phases": [
+            "form_shot"
+          ],
           "min_range": 4,
           "max_range": 18,
           "lp_loops": 3,
@@ -991,9 +1027,23 @@
             "tec_t_ed"
           ],
           "kind": "projectile",
+          "phases": [
+            "form_force"
+          ],
           "min_range": 4,
           "max_range": 20,
-          "note": "charged technique \u2014 which tech per form is an open question (tec_a is the instant variant)"
+          "note": "charged technique gated to force form"
+        },
+        {
+          "id": "tech_instant",
+          "clip": "tec_a",
+          "kind": "projectile",
+          "phases": [
+            "form_force"
+          ],
+          "min_range": 3,
+          "max_range": 15,
+          "note": "instant technique cast gated to force form"
         }
       ],
       "anchors": [],

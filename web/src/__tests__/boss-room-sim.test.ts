@@ -591,3 +591,52 @@ describe('boss sim — punish, enrage, death', () => {
     expect(damageBoss(sim, entry, 10)).toHaveLength(0);
   });
 });
+
+describe('boss sim — mechanics follow-ups', () => {
+  it('grab attack pulls the player toward the boss during windup and hold', () => {
+    const entry = makeOcto({ attacks: [grab] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 7 }; // inside max_range
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    expect(sim.state).toBe('attacking');
+    const pulls = stepBoss(sim, entry, input(player)).filter((e) => e.type === 'player-pull') as Extract<BossEvent, { type: 'player-pull' }>[];
+    expect(pulls.length).toBeGreaterThan(0);
+    expect(pulls[0].dz).toBeLessThan(0); // player at z=7 pulled toward boss at z=0 (negative dz)
+  });
+
+  it('attack chain ending in recovery token (_ed) treats preceding token as release window', () => {
+    const drill = atk({
+      id: 'drill',
+      clip: 'atk_dl_at',
+      chain: ['atk_dl_st', 'atk_dl_lp', 'atk_dl_at', 'atk_dl_ed'],
+      kind: 'melee_arc',
+      phases: ['ground'],
+      min_range: 0,
+      max_range: 6,
+      windup_frac: 0.5,
+      damage_end_frac: 1.0,
+      hit_half_angle_deg: 60,
+      hit_reach: 5,
+    });
+    const entry = makeEntry({ attacks: [drill] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 3 };
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    expect(sim.state).toBe('attacking');
+    // st(1s) + lp(1s) = telegraph 2s. release = at(1s) from [2.0, 3.0]. recovery = ed(1s) from [3.0, 4.0].
+    expect(sim.current?.windowStart).toBeCloseTo(2.5, 3);
+    expect(sim.current?.windowEnd).toBeCloseTo(3.0, 3);
+    expect(sim.current?.total).toBeCloseTo(4.0, 3);
+  });
+
+  it('active state teleport_interval triggers teleport and plays relocate loop clip', () => {
+    const entry = makeEntry({
+      fsm: { ...makeEntry().fsm, teleport_interval: 2.0, teleport_radius: 8.0, relocate_loop_clip: 'transform_me3' },
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const evs = run(sim, entry, { x: 0, z: 30 }, 40, (e) => e.some((ev) => ev.type === 'teleport'));
+    expect(evs).toContainEqual({ type: 'teleport' });
+    expect(evs).toContainEqual({ type: 'anim', tokens: ['transform_me3'], loop: false });
+  });
+});
+

@@ -638,6 +638,9 @@ export default function BossRoom() {
               sampler: null,
             };
             partRigs.push(partRig);
+            if (name.startsWith('z_002_tt')) {
+              wrapper.visible = false; // strike arm starts hidden until an attack presentation
+            }
             applyCurvePose(partRig); // authored/session curve, if any
           });
         },
@@ -702,6 +705,10 @@ export default function BossRoom() {
         action.clampWhenFinished = true;
         action.play();
         rig.action = action;
+        if (rig.key.startsWith('z_002_tt')) {
+          const isAttackClip = !['wat', 'wattir', 'float', 'wttr2wt'].includes(clipName);
+          rig.wrapper.visible = isAttackClip;
+        }
       }
     }
 
@@ -845,6 +852,11 @@ export default function BossRoom() {
             velY = 0;
             playerHp = PLAYER_MAX_HP;
           }
+        } else if (ev.type === 'player-pull') {
+          feet.x += ev.dx;
+          feet.z += ev.dz;
+          const ky = dropToFloor(feet);
+          if (ky !== null) feet.y = Math.max(feet.y, ky);
         } else if (ev.type === 'enrage') {
           tintBoss(true);
         }

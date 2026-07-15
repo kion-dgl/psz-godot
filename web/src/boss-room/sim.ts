@@ -49,6 +49,8 @@ export const SINK_TIME = 1.0;
 /** kind: grab — damage tick cadence and per-tick fraction of the attack's damage. */
 export const GRAB_TICK_INTERVAL = 0.6;
 export const GRAB_TICK_FRAC = 0.4;
+export const GRAB_PULL_SPEED = 6.0;
+export const GRAB_HOLD_RANGE = 1.5;
 /** Submerge relocation fallback (no authored anchors): resurface this far from the player. */
 export const RELOCATE_FALLBACK_RADIUS = 10.0;
 /** Fallback duration when a clip token doesn't resolve (enemy model's attack_fallback_duration). */
@@ -57,6 +59,7 @@ export const FALLBACK_CLIP_DURATION = 0.8;
 export type BossEvent =
   | { type: 'anim'; tokens: string[]; loop: boolean; lpLoops?: number }
   | { type: 'player-hit'; damage: number; via: string; knockback?: Vec2 }
+  | { type: 'player-pull'; dx: number; dz: number }
   | { type: 'state'; state: BossStateName }
   | { type: 'enrage' }
   | { type: 'boss-heal'; amount: number }
@@ -254,15 +257,18 @@ function flightAttack(entry: ResolvedBoss, kind: string): ResolvedBossAttack | n
 }
 
 /** Chain expansion: lp tokens repeat lp_loops times. Returns per-piece durations. */
-function chainTiming(atk: ResolvedBossAttack, input: BossSimInput): { telegraph: number; release: number; shotTimes: number[] } {
+function chainTiming(atk: ResolvedBossAttack, input: BossSimInput): { telegraph: number; release: number; recovery: number; shotTimes: number[] } {
   const tokens = atk.chain ?? [atk.clip];
   const reps = atk.lp_loops ?? 1;
+  const hasRecovery = tokens.length >= 2 && /(?:_ed|_end|2wat|recover)$/i.test(tokens[tokens.length - 1]);
+  const releaseIndex = hasRecovery ? tokens.length - 2 : tokens.length - 1;
   let telegraph = 0;
   const shotTimes: number[] = [];
-  for (const t of tokens.slice(0, -1)) {
+  for (let i = 0; i < releaseIndex; i++) {
+    const t = tokens[i];
     const d = dur(input, t);
     if (t.endsWith('lp')) {
-      for (let i = 0; i < reps; i++) {
+      for (let j = 0; j < reps; j++) {
         telegraph += d;
         if (atk.kind === 'projectile') shotTimes.push(telegraph); // one shot per lp rep
       }
@@ -270,22 +276,23 @@ function chainTiming(atk: ResolvedBossAttack, input: BossSimInput): { telegraph:
       telegraph += d;
     }
   }
-  const release = dur(input, tokens[tokens.length - 1]);
+  const release = dur(input, tokens[releaseIndex]);
+  const recovery = hasRecovery ? dur(input, tokens[tokens.length - 1]) : 0;
   // Projectile with no lp piece in the chain: single shot at the window open.
   if (atk.kind === 'projectile' && shotTimes.length === 0) shotTimes.push(telegraph + atk.windup_frac * release);
-  return { telegraph, release, shotTimes };
+  return { telegraph, release, recovery, shotTimes };
 }
 
 function beginAttack(sim: BossSim, entry: ResolvedBoss, atk: ResolvedBossAttack, input: BossSimInput, events: BossEvent[]) {
   const tokens = atk.chain ?? [atk.clip];
-  const { telegraph, release, shotTimes } = chainTiming(atk, input);
+  const { telegraph, release, recovery, shotTimes } = chainTiming(atk, input);
   const facing = turnToward(sim, input.player, 1e9, 1); // face the target at attack start, then lock
   sim.current = {
     atk,
     t: 0,
     windowStart: telegraph + atk.windup_frac * release,
     windowEnd: telegraph + atk.damage_end_frac * release,
-    total: telegraph + release,
+    total: telegraph + release + recovery,
     facing,
     didHit: false,
     beamTick: 0,
@@ -319,6 +326,15 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     const speed = entry.stats.move_speed * CHARGE_SPEED_MULT * mods(sim, entry).speed;
     sim.pos.x += cur.facing.x * speed * input.dt;
     sim.pos.z += cur.facing.z * speed * input.dt;
+  }
+
+  // kind: grab — pull the player toward the boss during the telegraph window (absorb suck-in loop).
+  if (cur.atk.kind === 'grab' && cur.t < cur.windowStart && distXZ(sim.pos, input.player) <= cur.atk.max_range + 2 && distXZ(sim.pos, input.player) > GRAB_HOLD_RANGE) {
+    const dx = sim.pos.x - input.player.x;
+    const dz = sim.pos.z - input.player.z;
+    const dist = Math.hypot(dx, dz);
+    const pull = Math.min(dist - GRAB_HOLD_RANGE, GRAB_PULL_SPEED * input.dt);
+    events.push({ type: 'player-pull', dx: (dx / dist) * pull, dz: (dz / dist) * pull });
   }
 
   // kind: projectile — fire when t crosses each shot time, aimed at the
@@ -373,10 +389,23 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     } else if (cur.atk.kind === 'grab') {
       // Hold: damage ticks while the player stays in reach; damaging the
       // boss during the hold cancels it (see damageBoss).
-      cur.beamTick -= input.dt;
-      if (cur.beamTick <= 0 && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach)) {
-        events.push(hitEvent(cur.atk, damage * GRAB_TICK_FRAC, cur.facing));
-        cur.beamTick = GRAB_TICK_INTERVAL;
+      const inCone = arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach);
+      if (!cur.didHit && inCone) {
+        cur.didHit = true;
+      }
+      if (cur.didHit || inCone) {
+        const dx = sim.pos.x - input.player.x;
+        const dz = sim.pos.z - input.player.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist > GRAB_HOLD_RANGE) {
+          const pull = Math.min(dist - GRAB_HOLD_RANGE, GRAB_PULL_SPEED * 1.5 * input.dt);
+          events.push({ type: 'player-pull', dx: (dx / dist) * pull, dz: (dz / dist) * pull });
+        }
+        cur.beamTick -= input.dt;
+        if (cur.beamTick <= 0) {
+          events.push(hitEvent(cur.atk, damage * GRAB_TICK_FRAC, cur.facing));
+          cur.beamTick = GRAB_TICK_INTERVAL;
+        }
       }
     } else if (!cur.didHit && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach)) {
       events.push(hitEvent(cur.atk, damage, cur.facing));
@@ -559,6 +588,21 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
     return;
   }
 
+  // Teleport reposition on interval for active non-gem-caster bosses (e.g. Sinow Beat transform, Heaven's Mother warp).
+  if (entry.fsm.teleport_interval > 0) {
+    sim.sinceTeleport += input.dt;
+    if (sim.sinceTeleport >= entry.fsm.teleport_interval) {
+      sim.sinceTeleport = 0;
+      const a = input.rng() * 2 * Math.PI;
+      const r = entry.fsm.teleport_radius * (0.4 + 0.6 * input.rng());
+      sim.pos = { x: input.player.x + Math.cos(a) * r, z: input.player.z + Math.sin(a) * r };
+      if (entry.fsm.relocate_loop_clip) {
+        playOnce(sim, [entry.fsm.relocate_loop_clip], events);
+      }
+      events.push({ type: 'teleport' });
+    }
+  }
+
   // Relocation cycle on the interval: the dragon's flight (needs its
   // flight-phase attacks) or a timer-driven submerge (dark falz's swim —
   // the octopus relocates via its fatigue cycle instead, interval 0).
@@ -619,6 +663,8 @@ function beginSubmerge(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   if (spots.length > 0) {
     const pick = spots[Math.min(spots.length - 1, Math.floor(input.rng() * spots.length))];
     target = { x: pick.pos[0], z: pick.pos[2] };
+  } else if (entry.fsm.stationary) {
+    target = { ...sim.pos };
   } else {
     const a = input.rng() * 2 * Math.PI;
     target = { x: input.player.x + Math.cos(a) * RELOCATE_FALLBACK_RADIUS, z: input.player.z + Math.sin(a) * RELOCATE_FALLBACK_RADIUS };
