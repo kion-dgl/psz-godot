@@ -32,7 +32,7 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + 2 PSO stand-ins (chaos_sorcerer, sinow_beat)
+    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + sinow_beat (real shinowa rig, #516) + chaos_sorcerer (PSO stand-in)
   });
 
   it('every roster boss has a room', () => {
@@ -40,8 +40,9 @@ describe('boss_arenas.json — structure', () => {
     // spawns in no quest, and has no designed fight — the mother_caster
     // enemy room covers the rig until the fight exists.
     // mother_trinity: rides the `mother` rig, no designed fight yet.
-    // sinow_gold: the rare form of the sinow_beat boss room (a form, not its
-    // own room).
+    // sinow_gold: rare palette-swap of Sinow Beat — the Paru boss room now
+    // runs the single real shinowa rig (#516), so Gold has no room of its own
+    // (it shares the encounter; a tinted variant is a later follow-up).
     const NOT_ROOMED = new Set(['mother_trinity', 'sinow_gold']);
     const rosterBosses = roster.filter((e) => e.is_boss).map((e) => e.id);
     const missing = rosterBosses.filter((id) => !config.bosses[id] && !NOT_ROOMED.has(id));
@@ -130,6 +131,7 @@ describe('boss_arenas.json — bosses', () => {
 const KNOWN_KINDS = new Set([
   'melee_arc', 'projectile', 'lob', 'charge', 'leap', // /mechanics/enemy-attacks
   'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', 'heal', // /states/bosses
+  'evade', 'clone', 'trap', // /states/bosses §Sinow Beat
 ]);
 
 describe('boss_arenas.json — behavior draft (v2)', () => {

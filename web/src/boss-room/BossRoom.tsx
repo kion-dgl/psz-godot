@@ -38,7 +38,7 @@ import {
   type RosterEntry,
   type SegmentFamily,
 } from './types';
-import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+import { damageBoss, hitClones, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
 import {
   DEFAULT_DIP,
   DEFAULT_LIFT,
@@ -160,7 +160,7 @@ export default function BossRoom() {
   const [readout, setReadout] = useState({ player: [0, 0, 0], boss: [0, 0, 0], dist: 0 });
   const [overrides, setOverrides] = useState<Record<string, Overrides>>(loadStore);
   const [simOn, setSimOn] = useState(false);
-  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName } | null>(null);
+  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName; playerFrozen: boolean; bossFrozen: boolean } | null>(null);
 
   useEffect(() => {
     clickModeRef.current = clickMode;
@@ -340,6 +340,8 @@ export default function BossRoom() {
     let sim: BossSim | null = null;
     let playerHp = PLAYER_MAX_HP;
     let swingCd = 0;
+    let playerFreeze = 0; // Sinow Beat's Zonde froze the player: WASD locked while >0
+    let bossScene: THREE.Object3D | null = null; // the loaded rig, cloned for the decoy ring
     const clipDur = (token: string): number | null => {
       const name = resolveClipToken(animations.map((a) => a.name), token);
       const clip = name ? animations.find((a) => a.name === name) : undefined;
@@ -469,6 +471,7 @@ export default function BossRoom() {
       (g) => {
         if (disposed) return;
         bossGroup.add(g.scene);
+        bossScene = g.scene;
         mixer = new THREE.AnimationMixer(g.scene);
         animations = g.animations;
         setClips(g.animations.map((a) => a.name).sort());
@@ -812,12 +815,16 @@ export default function BossRoom() {
       startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
     }
 
-    // Enrage tint: "turns red on the edges" — approximated with a red
-    // emissive on the rig's materials; cleared when the sim resets.
-    function tintBoss(on: boolean) {
+    // Emissive tint overlay on the rig — enrage "turns red on the edges"
+    // (0x881111), Sinow Beat's Zonde self-freeze glows electric blue
+    // (0x1133aa). Tracked so it's only re-applied on change, not per frame.
+    let tintHex = 0x000000;
+    function tintBoss(hex: number) {
+      if (hex === tintHex) return;
+      tintHex = hex;
       bossGroup.traverse((o) => {
         const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
-        if (mat?.emissive) mat.emissive.setHex(on ? 0x881111 : 0x000000);
+        if (mat?.emissive) mat.emissive.setHex(hex);
       });
     }
 
@@ -833,6 +840,7 @@ export default function BossRoom() {
           }
         } else if (ev.type === 'player-hit') {
           playerHp = Math.max(0, playerHp - ev.damage);
+          if (ev.freeze) playerFreeze = Math.max(playerFreeze, ev.freeze); // Zonde: locked in place
           if (ev.knockback) {
             // wing flap: shove the player along the boss's facing
             feet.x += ev.knockback.x;
@@ -844,9 +852,12 @@ export default function BossRoom() {
             feet.copy(spawn); // downed → respawn with full HP, sim keeps running
             velY = 0;
             playerHp = PLAYER_MAX_HP;
+            playerFreeze = 0;
           }
+        } else if (ev.type === 'zap') {
+          spawnZap(ev.pos.x, ev.pos.z);
         } else if (ev.type === 'enrage') {
-          tintBoss(true);
+          tintBoss(0x881111);
         }
       }
     }
@@ -856,6 +867,99 @@ export default function BossRoom() {
     scene.add(ordnanceGroup);
     const projPool: THREE.Mesh[] = [];
     const ringPool: THREE.Mesh[] = [];
+
+    // Sinow Beat visuals: the decoy clone ring, floor traps, and Zonde zaps.
+    const decoyGroup = new THREE.Group();
+    scene.add(decoyGroup);
+    // Each decoy carries its own mixer so it fake-attacks (loops the slash)
+    // while the real boss does the actual damage.
+    const decoyPool: Array<{ root: THREE.Object3D; mixer: THREE.AnimationMixer }> = [];
+    const trapGroup = new THREE.Group();
+    scene.add(trapGroup);
+    const trapPool: THREE.Mesh[] = [];
+    const zapGroup = new THREE.Group();
+    scene.add(zapGroup);
+    const zaps: Array<{ mesh: THREE.Mesh; t: number }> = [];
+
+    // Decoy clones: transparent copies of the boss rig (spec §Sinow Beat). Cloned
+    // lazily from the loaded rig, held in a pool, posed statically (draft — the
+    // decoys don't run their own attack clips), tinted to clone_alpha.
+    function syncClones() {
+      for (const d of decoyPool) d.root.visible = false;
+      if (!sim || !bossScene || !sim.clones.length) return;
+      sim.clones.forEach((c, i) => {
+        while (decoyPool.length <= i) {
+          const rig = cloneSkinned(bossScene!);
+          rig.traverse((o) => {
+            const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+            if (mat) {
+              const m = mat.clone();
+              m.transparent = true;
+              m.opacity = entry.fsm.clone_alpha;
+              (o as THREE.Mesh).material = m;
+            }
+          });
+          // Fake-attack: loop the slash clip, staggered so they don't move in
+          // lockstep — the ring reads as several Sinow Beats all lunging.
+          const dm = new THREE.AnimationMixer(rig);
+          const atkName = resolveClipToken(animations.map((a) => a.name), 'atk');
+          const atkClip = atkName ? animations.find((a) => a.name === atkName) : undefined;
+          if (atkClip) {
+            const act = dm.clipAction(atkClip);
+            act.play();
+            act.time = (decoyPool.length * 0.37) % atkClip.duration;
+          }
+          decoyPool.push({ root: rig, mixer: dm });
+          decoyGroup.add(rig);
+        }
+        const d = decoyPool[i];
+        d.root.visible = true;
+        d.root.scale.setScalar(bossGroup.scale.x); // track the live boss scale
+        const gy = dropToFloor(new THREE.Vector3(c.pos.x, bossPos.y + 2, c.pos.z)) ?? bossPos.y;
+        d.root.position.set(c.pos.x, gy, c.pos.z);
+        d.root.rotation.y = c.yaw;
+      });
+    }
+
+    // Floor traps: flat armed discs that pulse; a Zonde zap fires on trigger.
+    function syncTraps() {
+      for (const m of trapPool) m.visible = false;
+      if (!sim) return;
+      sim.traps.forEach((t, i) => {
+        const m = poolGet(trapPool, i, () => new THREE.Mesh(
+          new THREE.RingGeometry(0.5, entry.fsm.trap_radius, 20),
+          new THREE.MeshBasicMaterial({ color: 0xaa66ff, side: THREE.DoubleSide, transparent: true, opacity: 0.7 }),
+        ), trapGroup);
+        const gy = dropToFloor(new THREE.Vector3(t.pos.x, bossPos.y + 2, t.pos.z)) ?? bossPos.y;
+        m.position.set(t.pos.x, gy + 0.05, t.pos.z);
+        m.rotation.x = -Math.PI / 2;
+      });
+    }
+
+    // A Zonde discharge: a short bright column that fades over ~0.35s.
+    function spawnZap(x: number, z: number) {
+      const gy = dropToFloor(new THREE.Vector3(x, bossPos.y + 2, z)) ?? bossPos.y;
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xccddff, transparent: true, opacity: 0.9 }),
+      );
+      mesh.position.set(x, gy + 3, z);
+      zapGroup.add(mesh);
+      zaps.push({ mesh, t: 0.35 });
+    }
+    function stepZaps(dt: number) {
+      for (let i = zaps.length - 1; i >= 0; i--) {
+        const z = zaps[i];
+        z.t -= dt;
+        (z.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, z.t / 0.35) * 0.9;
+        if (z.t <= 0) {
+          zapGroup.remove(z.mesh);
+          z.mesh.geometry.dispose();
+          (z.mesh.material as THREE.Material).dispose();
+          zaps.splice(i, 1);
+        }
+      }
+    }
 
     // Gem caster visuals (Chaos Sorcerer): two gems flanking the boss, tinted
     // by the held colors. Children of bossGroup so they ride the hover/teleport.
@@ -899,11 +1003,11 @@ export default function BossRoom() {
         castGemMesh.visible = false;
       }
     }
-    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
+    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh, group: THREE.Group = ordnanceGroup): THREE.Mesh {
       while (pool.length <= i) {
         const m = make();
         pool.push(m);
-        ordnanceGroup.add(m);
+        group.add(m);
       }
       pool[i].visible = true;
       return pool[i];
@@ -940,14 +1044,17 @@ export default function BossRoom() {
         swingCd = 0;
       } else {
         sim = null;
+        playerFreeze = 0;
         mixer?.stopAllAction();
         currentAction = null;
         chain = null;
         setActiveClip(null);
         setSimHud(null);
-        tintBoss(false);
+        tintBoss(0x000000);
         syncOrdnance();
         syncGems();
+        syncClones();
+        syncTraps();
         settleBoss();
         refreshCurves();
       }
@@ -1126,6 +1233,11 @@ export default function BossRoom() {
       if (keys['s']) move.sub(fwd);
       if (keys['d']) move.add(right);
       if (keys['a']) move.sub(right);
+      // Zonde freeze (Sinow Beat): WASD locked while it lasts; gravity still applies.
+      if (playerFreeze > 0) {
+        playerFreeze = Math.max(0, playerFreeze - dt);
+        move.set(0, 0, 0);
+      }
       if (move.lengthSq() > 0) {
         move.normalize().multiplyScalar(SPEED * dt);
         const nx = feet.x + move.x;
@@ -1164,6 +1276,9 @@ export default function BossRoom() {
         swingCd -= dt;
         if (keys['j'] && swingCd <= 0) {
           swingCd = SWING_COOLDOWN;
+          // The swing pops any decoy clones it overlaps, and damages the real
+          // boss only when the real boss is in reach.
+          hitClones(sim, { x: feet.x, z: feet.z }, SWING_RANGE);
           if (Math.hypot(feet.x - sim.pos.x, feet.z - sim.pos.z) <= SWING_RANGE) {
             handleSimEvents(damageBoss(sim, entry, SWING_DAMAGE));
           }
@@ -1175,6 +1290,9 @@ export default function BossRoom() {
         bossGroup.rotation.y = sim.yaw;
         syncOrdnance();
         syncGems();
+        syncClones();
+        syncTraps();
+        tintBoss(sim.frozen > 0 ? 0x1133aa : sim.enraged ? 0x881111 : 0x000000);
       } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
@@ -1183,6 +1301,7 @@ export default function BossRoom() {
 
       if (mixer && !animPaused) {
         mixer.update(dt);
+        for (const d of decoyPool) if (d.root.visible) d.mixer.update(dt); // decoys fake-attack
         for (const rig of partRigs) {
           // Pure-curve mode freezes the rig on the authored pose; with the
           // overlay on, the clip plays and is re-mapped onto the curve below.
@@ -1191,6 +1310,8 @@ export default function BossRoom() {
         }
         overlayCurvePoses();
       }
+
+      stepZaps(dt); // Zonde discharges fade out independently of the sim toggle
 
       // Follow cam orbiting the player.
       const cx = feet.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist;
@@ -1209,7 +1330,7 @@ export default function BossRoom() {
           boss: [+bossPos.x.toFixed(1), +bossPos.y.toFixed(1), +bossPos.z.toFixed(1)],
           dist: +d.toFixed(1),
         });
-        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state });
+        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state, playerFrozen: playerFreeze > 0, bossFrozen: sim.frozen > 0 });
       }
 
       renderer.render(scene, camera);
@@ -1604,11 +1725,15 @@ export default function BossRoom() {
               <div style={{ fontSize: 11, marginTop: 4 }}>
                 <div style={{ color: '#f88' }}>
                   boss {Math.ceil(simHud.bossHp)}/{simHud.maxHp} · <code>{simHud.state}</code>
+                  {simHud.bossFrozen && <span style={{ color: '#9cf' }}> · ⚡frozen</span>}
                 </div>
                 <div style={{ background: '#311', borderRadius: 3, height: 6, marginTop: 2 }}>
                   <div style={{ background: '#e55', borderRadius: 3, height: 6, width: `${(simHud.bossHp / simHud.maxHp) * 100}%` }} />
                 </div>
-                <div style={{ color: '#8c8', marginTop: 4 }}>player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}</div>
+                <div style={{ color: '#8c8', marginTop: 4 }}>
+                  player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}
+                  {simHud.playerFrozen && <span style={{ color: '#9cf' }}> · ⚡frozen (WASD locked)</span>}
+                </div>
                 <div style={{ background: '#131', borderRadius: 3, height: 6, marginTop: 2 }}>
                   <div style={{ background: '#5e5', borderRadius: 3, height: 6, width: `${(simHud.playerHp / PLAYER_MAX_HP) * 100}%` }} />
                 </div>
