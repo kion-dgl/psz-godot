@@ -53,14 +53,25 @@ export const GRAB_TICK_FRAC = 0.4;
 export const RELOCATE_FALLBACK_RADIUS = 10.0;
 /** Fallback duration when a clip token doesn't resolve (enemy model's attack_fallback_duration). */
 export const FALLBACK_CLIP_DURATION = 0.8;
+// — Sinow Beat (Paru) —
+/** Self-trap / Zonde freeze fallback duration when the attack sets no `freeze`. */
+export const DEFAULT_FREEZE = 2.0;
+/** kind: evade (backstep) — leap-back distance as a multiple of move_speed·clipDur. */
+export const BACKSTEP_SPEED_MULT = 3.0;
+/** relocate_kind post: seconds perched on the post before the leap-down. */
+export const PERCH_TIME = 1.2;
+/** relocate_kind post: leap-down travel time from the post onto the player. */
+export const POST_LEAP_TIME = 0.5;
 
 export type BossEvent =
   | { type: 'anim'; tokens: string[]; loop: boolean; lpLoops?: number }
-  | { type: 'player-hit'; damage: number; via: string; knockback?: Vec2 }
+  | { type: 'player-hit'; damage: number; via: string; knockback?: Vec2; freeze?: number }
   | { type: 'state'; state: BossStateName }
   | { type: 'enrage' }
   | { type: 'boss-heal'; amount: number }
   | { type: 'teleport' }
+  /** Sinow Beat's Zonde discharge (trap / cast / self-trap) — lightning VFX at a spot. */
+  | { type: 'zap'; pos: Vec2 }
   | { type: 'died' };
 
 export interface BossSimInput {
@@ -90,6 +101,8 @@ export interface SimProjectile {
   age: number;
   damage: number;
   via: string;
+  /** Sinow Beat's Zonde bolt: freezes the player on hit for this long. */
+  freeze?: number;
 }
 
 export interface SimLob {
@@ -102,9 +115,30 @@ export interface SimLob {
 }
 
 interface FlightState {
-  mode: 'climb' | 'away' | 'return' | 'land' | 'sink' | 'swim' | 'rise';
+  mode: 'climb' | 'away' | 'return' | 'land' | 'sink' | 'swim' | 'rise' | 'toPost' | 'perch' | 'drop';
   target: Vec2;
   attacksLeft: number;
+  /** relocate_kind post: the post-leap attack (kind: leap) fired from the perch. */
+  postAttack?: ResolvedBossAttack;
+  perchT?: number;
+}
+
+/** Decoy Sinow Beat (kind: clone) — a zero-damage fake that dispels when hit. */
+export interface SimClone {
+  pos: Vec2;
+  yaw: number;
+}
+
+/** Deployed floor trap (kind: trap) — casts Zonde when stepped on. */
+export interface SimTrap {
+  pos: Vec2;
+  age: number;
+  /** Seconds it stays armed before it fizzles. */
+  life: number;
+  /** Zonde damage + freeze it discharges. */
+  damage: number;
+  freeze: number;
+  via: string;
 }
 
 export interface BossSim {
@@ -133,6 +167,12 @@ export interface BossSim {
   fly: FlightState | null;
   projectiles: SimProjectile[];
   lobs: SimLob[];
+  /** Sinow Beat: the decoy ring (empty when no clone burst is active). */
+  clones: SimClone[];
+  /** Sinow Beat: deployed floor traps. */
+  traps: SimTrap[];
+  /** Sinow Beat: frozen-in-place timer (self-trap) — while >0 the boss can't act. */
+  frozen: number;
   /** Gem caster (Chaos Sorcerer): the two held gems (null = empty slot). */
   gems: [GemColor | null, GemColor | null];
   gemRespawnT: number;
@@ -175,6 +215,9 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number, rng: ()
     fly: null,
     projectiles: [],
     lobs: [],
+    clones: [],
+    traps: [],
+    frozen: 0,
     gems,
     gemRespawnT: 0,
     sinceTeleport: 0,
@@ -276,6 +319,51 @@ function chainTiming(atk: ResolvedBossAttack, input: BossSimInput): { telegraph:
   return { telegraph, release, shotTimes };
 }
 
+/**
+ * Transform → spawn a ring of decoy Sinow Beats around the player (spec
+ * /states/bosses §Sinow Beat). `count` fakes at clone_ring_radius, each facing
+ * the player. They deal no damage; they dispel when hit (hitClones) and clear
+ * when the real boss's next slash lands or it takes a hit.
+ */
+function spawnClones(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, count: number) {
+  const r = entry.fsm.clone_ring_radius;
+  const clones: SimClone[] = [];
+  for (let i = 0; i < count; i++) {
+    const a = (2 * Math.PI * i) / count + (input.rng() - 0.5) * 0.2;
+    const pos = { x: input.player.x + Math.cos(a) * r, z: input.player.z + Math.sin(a) * r };
+    clones.push({ pos, yaw: Math.atan2(input.player.x - pos.x, input.player.z - pos.z) });
+  }
+  sim.clones = clones;
+}
+
+/** Deploy `split` floor traps scattered within hit_reach of the player. */
+function dropTraps(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, atk: ResolvedBossAttack, damage: number) {
+  const count = atk.split ?? 3;
+  for (let i = 0; i < count; i++) {
+    const a = input.rng() * 2 * Math.PI;
+    const rr = atk.hit_reach * (0.3 + 0.7 * input.rng());
+    sim.traps.push({
+      pos: { x: input.player.x + Math.cos(a) * rr, z: input.player.z + Math.sin(a) * rr },
+      age: 0,
+      life: entry.fsm.trap_life,
+      damage,
+      freeze: atk.freeze ?? DEFAULT_FREEZE,
+      via: atk.id,
+    });
+  }
+}
+
+/**
+ * Player attack into the decoy ring — dispel every clone within `range` of the
+ * swing (spec: "if a clone is hit by any player attack, it disappears").
+ * Returns how many were dispelled. Called by the room's J-swing.
+ */
+export function hitClones(sim: BossSim, playerPos: Vec2, range: number): number {
+  const before = sim.clones.length;
+  sim.clones = sim.clones.filter((c) => distXZ(c.pos, playerPos) > range);
+  return before - sim.clones.length;
+}
+
 function beginAttack(sim: BossSim, entry: ResolvedBoss, atk: ResolvedBossAttack, input: BossSimInput, events: BossEvent[]) {
   const tokens = atk.chain ?? [atk.clip];
   const { telegraph, release, shotTimes } = chainTiming(atk, input);
@@ -301,6 +389,7 @@ function hitEvent(atk: ResolvedBossAttack, damage: number, facing: Vec2): BossEv
     damage,
     via: atk.id,
     ...(atk.knockback ? { knockback: { x: facing.x * atk.knockback, z: facing.z * atk.knockback } } : {}),
+    ...(atk.freeze ? { freeze: atk.freeze } : {}),
   };
 }
 
@@ -321,6 +410,14 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     sim.pos.z += cur.facing.z * speed * input.dt;
   }
 
+  // kind: evade (Sinow Beat's backstep) — leap AWAY from the locked facing
+  // during the telegraph, dealing no damage. Pure disengage.
+  if (cur.atk.kind === 'evade' && cur.t < cur.windowStart) {
+    const speed = entry.stats.move_speed * BACKSTEP_SPEED_MULT * mods(sim, entry).speed;
+    sim.pos.x -= cur.facing.x * speed * input.dt;
+    sim.pos.z -= cur.facing.z * speed * input.dt;
+  }
+
   // kind: projectile — fire when t crosses each shot time, aimed at the
   // player's position at that moment. `split` fans the shot into that many
   // projectiles spread across ±PROJECTILE_FAN_DEG (dark falz's diffusion).
@@ -332,7 +429,7 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
     const split = cur.atk.split ?? 1;
     for (let i = 0; i < split; i++) {
       const a = aim + (split > 1 ? ((i / (split - 1)) - 0.5) * 2 * (PROJECTILE_FAN_DEG * Math.PI / 180) : 0);
-      sim.projectiles.push({ pos: { ...sim.pos }, dir: { x: Math.sin(a), z: Math.cos(a) }, age: 0, damage, via: cur.atk.id });
+      sim.projectiles.push({ pos: { ...sim.pos }, dir: { x: Math.sin(a), z: Math.cos(a) }, age: 0, damage, via: cur.atk.id, ...(cur.atk.freeze ? { freeze: cur.atk.freeze } : {}) });
     }
   }
 
@@ -378,12 +475,32 @@ function stepAttacking(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
         events.push(hitEvent(cur.atk, damage * GRAB_TICK_FRAC, cur.facing));
         cur.beamTick = GRAB_TICK_INTERVAL;
       }
+    } else if (cur.atk.kind === 'clone') {
+      // Transform → spawn a ring of decoy Sinow Beats around the player. The
+      // clones are zero-damage (no player-hit here); they dispel when hit and
+      // clear when the real boss's next slash lands (see endAttack/damageBoss).
+      if (!cur.didHit) {
+        cur.didHit = true;
+        spawnClones(sim, entry, input, cur.atk.split ?? 4);
+      }
+    } else if (cur.atk.kind === 'trap') {
+      // Deploy floor traps scattered around the player. Each casts Zonde when
+      // stepped on (player OR the boss itself — see stepOrdnance / boss-trap).
+      if (!cur.didHit) {
+        cur.didHit = true;
+        dropTraps(sim, entry, input, cur.atk, damage);
+      }
+    } else if (cur.atk.kind === 'evade') {
+      // No damage — the backstep is pure repositioning (handled above).
     } else if (!cur.didHit && arcHitTest(sim.pos, cur.facing, input.player, PLAYER_RADIUS, cur.atk.hit_half_angle_deg, cur.atk.hit_reach)) {
       events.push(hitEvent(cur.atk, damage, cur.facing));
       cur.didHit = true;
     }
   }
   if (cur.t >= cur.total) {
+    // The slash is the payoff of the clone ring: once it lands, the decoys
+    // vanish and the cycle repeats (spec /states/bosses §Sinow Beat).
+    if (cur.atk.kind === 'melee_arc' && sim.clones.length) sim.clones = [];
     sim.current = null;
     sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
     endAttack(sim, entry, input, events);
@@ -563,22 +680,32 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
   // flight-phase attacks) or a timer-driven submerge (dark falz's swim —
   // the octopus relocates via its fatigue cycle instead, interval 0).
   const hasFlight = entry.attacks.some((a) => a.phases?.includes('flight'));
-  if (entry.fsm.flight_interval > 0 && (entry.fsm.relocate_kind === 'submerge' || hasFlight)) {
+  if (
+    entry.fsm.flight_interval > 0 &&
+    (entry.fsm.relocate_kind === 'submerge' || entry.fsm.relocate_kind === 'post' || hasFlight)
+  ) {
     sim.sinceFlight += input.dt;
     if (sim.sinceFlight >= entry.fsm.flight_interval) {
       if (entry.fsm.relocate_kind === 'submerge') {
         beginSubmerge(sim, entry, input, events);
         return;
       }
-      const away = turnToward(sim, input.player, 1e9, 1);
-      sim.fly = {
-        mode: 'climb',
-        target: { x: sim.pos.x - away.x * FLY_AWAY_DIST, z: sim.pos.z - away.z * FLY_AWAY_DIST },
-        attacksLeft: entry.fsm.flight_attacks,
-      };
-      playOnce(sim, ['flst'], events);
-      setState(sim, 'relocate', events);
-      return;
+      if (entry.fsm.relocate_kind === 'post') {
+        // Post hop, unless no posts are authored — then fall through and keep
+        // fighting on the ground (do NOT drop into the flight cycle below).
+        if (beginPostHop(sim, entry, input, events)) return;
+      } else {
+        // Reyburn's flight cycle (relocate_kind flight).
+        const away = turnToward(sim, input.player, 1e9, 1);
+        sim.fly = {
+          mode: 'climb',
+          target: { x: sim.pos.x - away.x * FLY_AWAY_DIST, z: sim.pos.z - away.z * FLY_AWAY_DIST },
+          attacksLeft: entry.fsm.flight_attacks,
+        };
+        playOnce(sim, ['flst'], events);
+        setState(sim, 'relocate', events);
+        return;
+      }
     }
   }
 
@@ -630,6 +757,41 @@ function beginSubmerge(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, e
   setState(sim, 'relocate', events);
 }
 
+/**
+ * Post hop (Sinow Beat): leap onto one of the arena's 4 perimeter posts
+ * (authored anchors) for the high-ground stance, perch briefly, then leap
+ * down onto the player with atk2 (the kind: leap attack). Returns false — so
+ * the caller keeps fighting on the ground — when no posts are authored.
+ */
+function beginPostHop(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]): boolean {
+  const posts = entry.anchors;
+  if (!posts.length) {
+    sim.sinceFlight = 0;
+    return false;
+  }
+  // Take the post farthest from the player (a real high-ground reposition).
+  let pick = posts[0];
+  let best = -Infinity;
+  for (const p of posts) {
+    const d = distXZ({ x: p.pos[0], z: p.pos[2] }, input.player);
+    if (d > best) {
+      best = d;
+      pick = p;
+    }
+  }
+  sim.fly = {
+    mode: 'toPost',
+    target: { x: pick.pos[0], z: pick.pos[2] },
+    attacksLeft: 1,
+    postAttack: entry.attacks.find((a) => a.kind === 'leap'),
+    perchT: PERCH_TIME,
+  };
+  sim.sinceFlight = 0;
+  sim.loopToken = null;
+  setState(sim, 'relocate', events);
+  return true;
+}
+
 function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   const fly = sim.fly;
   if (!fly) {
@@ -637,6 +799,66 @@ function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, ev
     return;
   }
   const flySpeed = entry.stats.move_speed * entry.fsm.fly_speed_mult * mods(sim, entry).speed;
+  // — post-hop modes (Sinow Beat) —
+  if (fly.mode === 'toPost') {
+    // Move straight at the post, clamped so it never overshoots and orbits.
+    turnToward(sim, fly.target, entry.stats.turn_speed_deg * 3, input.dt);
+    const dx = fly.target.x - sim.pos.x;
+    const dz = fly.target.z - sim.pos.z;
+    const dd = Math.hypot(dx, dz);
+    const step = flySpeed * input.dt;
+    if (dd > step) {
+      sim.pos.x += (dx / dd) * step;
+      sim.pos.z += (dz / dd) * step;
+      ensureLoop(sim, entry.fsm.walk_clip, events);
+    } else {
+      sim.pos.x = fly.target.x;
+      sim.pos.z = fly.target.z;
+    }
+    sim.alt = Math.min(entry.fsm.post_height, sim.alt + (entry.fsm.post_height / CLIMB_TIME) * input.dt);
+    if (distXZ(sim.pos, fly.target) <= 0.5 && sim.alt >= entry.fsm.post_height - 1e-6) {
+      sim.alt = entry.fsm.post_height;
+      fly.mode = 'perch';
+      sim.loopToken = null;
+      ensureLoop(sim, entry.fsm.idle_clip, events);
+    }
+    return;
+  }
+  if (fly.mode === 'perch') {
+    turnToward(sim, input.player, entry.stats.turn_speed_deg, input.dt);
+    fly.perchT = (fly.perchT ?? PERCH_TIME) - input.dt;
+    if (fly.perchT <= 0) {
+      fly.mode = 'drop';
+      fly.target = { ...input.player }; // leap onto where the player is now
+      playOnce(sim, [fly.postAttack?.clip ?? 'atk2'], events);
+    }
+    return;
+  }
+  if (fly.mode === 'drop') {
+    const step = entry.stats.move_speed * entry.fsm.fly_speed_mult * 2 * input.dt;
+    const dx = fly.target.x - sim.pos.x;
+    const dz = fly.target.z - sim.pos.z;
+    const dd = Math.hypot(dx, dz);
+    if (dd > step) {
+      sim.pos.x += (dx / dd) * step;
+      sim.pos.z += (dz / dd) * step;
+    } else {
+      sim.pos.x = fly.target.x;
+      sim.pos.z = fly.target.z;
+    }
+    sim.alt = Math.max(0, sim.alt - (entry.fsm.post_height / POST_LEAP_TIME) * input.dt);
+    if (sim.alt <= 0) {
+      sim.alt = 0;
+      const leap = fly.postAttack;
+      if (leap && distXZ(sim.pos, input.player) <= leap.hit_reach + PLAYER_RADIUS) {
+        events.push(hitEvent(leap, entry.stats.attack_base * leap.damage_mult, turnToward(sim, input.player, 1e9, 1)));
+      }
+      sim.fly = null;
+      sim.cooldown = entry.stats.attack_cooldown * mods(sim, entry).cooldown;
+      setState(sim, 'active', events);
+    }
+    return;
+  }
   // — submerge-swim modes (octo diablo) —
   if (fly.mode === 'sink') {
     sim.alt = Math.max(-entry.fsm.submerge_depth, sim.alt - (entry.fsm.submerge_depth / SINK_TIME) * input.dt);
@@ -720,18 +942,35 @@ function stepRelocate(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, ev
   }
 }
 
-/** Projectiles + lob payloads fly independently of the boss state. */
-function stepOrdnance(sim: BossSim, input: BossSimInput, events: BossEvent[]) {
+/** Projectiles + lob payloads + floor traps evolve independently of the boss state. */
+function stepOrdnance(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, events: BossEvent[]) {
   for (let i = sim.projectiles.length - 1; i >= 0; i--) {
     const p = sim.projectiles[i];
     p.age += input.dt;
     p.pos.x += p.dir.x * PROJECTILE_SPEED * input.dt;
     p.pos.z += p.dir.z * PROJECTILE_SPEED * input.dt;
     if (distXZ(p.pos, input.player) <= PROJECTILE_RADIUS + PLAYER_RADIUS) {
-      events.push({ type: 'player-hit', damage: p.damage, via: p.via });
+      events.push({ type: 'player-hit', damage: p.damage, via: p.via, ...(p.freeze ? { freeze: p.freeze } : {}) });
+      if (p.freeze) events.push({ type: 'zap', pos: { ...p.pos } });
       sim.projectiles.splice(i, 1);
     } else if (p.age > PROJECTILE_LIFE) {
       sim.projectiles.splice(i, 1);
+    }
+  }
+  // Floor traps (Sinow Beat's Zonde): armed until stepped on or fizzled. A
+  // trap the PLAYER steps on discharges Zonde — damage + freeze. (The boss's
+  // own traps are checked against the boss in stepBoss when self_trap is set.)
+  for (let i = sim.traps.length - 1; i >= 0; i--) {
+    const t = sim.traps[i];
+    t.age += input.dt;
+    if (t.age >= t.life) {
+      sim.traps.splice(i, 1);
+      continue;
+    }
+    if (distXZ(t.pos, input.player) <= entry.fsm.trap_radius + PLAYER_RADIUS) {
+      events.push({ type: 'player-hit', damage: t.damage, via: t.via, freeze: t.freeze });
+      events.push({ type: 'zap', pos: { ...t.pos } });
+      sim.traps.splice(i, 1);
     }
   }
   for (let i = sim.lobs.length - 1; i >= 0; i--) {
@@ -762,6 +1001,17 @@ export function lobImpacts(l: Pick<SimLob, 'target' | 'split'>): Vec2[] {
 export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput): BossEvent[] {
   const events: BossEvent[] = [];
   sim.stateT += input.dt;
+
+  // Frozen in place (Sinow Beat stepped on its own Zonde trap): inert until
+  // the freeze wears off — ordnance/traps keep evolving so the player can
+  // still be caught, but the boss takes no action and holds the stun pose.
+  if (sim.state !== 'dead' && sim.frozen > 0) {
+    sim.frozen -= input.dt;
+    ensureLoop(sim, entry.fsm.frozen_clip, events);
+    stepOrdnance(sim, entry, input, events);
+    return events;
+  }
+
   switch (sim.state) {
     case 'intro': {
       if (entry.fsm.intro_clip === '') {
@@ -813,7 +1063,38 @@ export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput)
     case 'dead':
       return events; // ordnance dies with the boss
   }
-  stepOrdnance(sim, input, events);
+
+  // Self-trap (Sinow Beat): if it walks/lands on one of its own armed Zonde
+  // traps, the trap discharges — damage + freeze the boss in place.
+  if (
+    entry.fsm.self_trap &&
+    sim.frozen <= 0 &&
+    (sim.state === 'active' || sim.state === 'attacking' || sim.state === 'loaf')
+  ) {
+    for (let i = sim.traps.length - 1; i >= 0; i--) {
+      if (distXZ(sim.traps[i].pos, sim.pos) > entry.fsm.trap_radius) continue;
+      const t = sim.traps[i];
+      sim.traps.splice(i, 1);
+      sim.current = null;
+      sim.hp = Math.max(0, sim.hp - t.damage);
+      events.push({ type: 'zap', pos: { ...sim.pos } });
+      if (sim.hp <= 0) {
+        sim.fly = null;
+        sim.alt = 0;
+        sim.clones = [];
+        playOnce(sim, ['ded'], events);
+        setState(sim, 'dead', events);
+        events.push({ type: 'died' });
+      } else {
+        sim.frozen = t.freeze;
+        sim.clones = []; // getting zapped drops the decoy ring too
+        setState(sim, 'active', events);
+      }
+      break;
+    }
+  }
+
+  stepOrdnance(sim, entry, input, events);
   return events;
 }
 
@@ -829,6 +1110,8 @@ export function damageBoss(sim: BossSim, entry: ResolvedBoss, amount: number): B
   if (sim.state === 'dead') return events;
   // Submerged and untargetable: the hit simply doesn't land.
   if (sim.state === 'relocate' && entry.fsm.relocate_untargetable) return events;
+  // Hitting the REAL Sinow Beat pops the whole decoy ring (spec §Sinow Beat).
+  if (sim.clones.length) sim.clones = [];
   const mult = sim.state === 'punish' ? entry.fsm.punish_vulnerable_mult : 1;
   sim.hp = Math.max(0, sim.hp - amount * mult);
   if (sim.hp <= 0) {

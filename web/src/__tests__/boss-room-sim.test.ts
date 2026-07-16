@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   damageBoss,
+  hitClones,
   lobImpacts,
   makeBossSim,
   stepBoss,
@@ -540,6 +541,181 @@ describe('boss sim — chaos sorcerer gem caster', () => {
     }
     expect(heals.length).toBeGreaterThan(0);
     expect(sim.hp).toBeGreaterThan(100);
+  });
+});
+
+// — Sinow Beat (Paru): decoy clones, Zonde traps/cast/freeze, the 4-post hop —
+const sinowFsm = () => ({
+  ...makeEntry().fsm,
+  intro_clip: '',
+  walk_clip: 'wlk',
+  idle_clip: 'wat',
+  punish_break_damage: 0,
+  clone_ring_radius: 8,
+  clone_alpha: 0.9,
+  trap_radius: 1.6,
+  trap_life: 12,
+  self_trap: true,
+  relocate_kind: 'post' as const,
+  post_height: 6,
+  flight_interval: 0,
+  fly_speed_mult: 2.5,
+  frozen_clip: 'dmg',
+});
+const makeSinow = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => makeEntry({
+  stats: { hp: 400, move_speed: 5, attack_cooldown: 1.8, attack_base: 15, turn_speed_deg: 200 },
+  fsm: sinowFsm(),
+  phases: [{ id: 'engaged', label: 'Engaged' }, { id: 'high_ground', label: 'High ground' }],
+  attacks: [],
+  ...over,
+});
+const sinowAtk = {
+  slash: atk({ id: 'slash', clip: 'atk', kind: 'melee_arc', phases: ['engaged'], min_range: 0, max_range: 4.5, hit_half_angle_deg: 60, hit_reach: 3.5 }),
+  backstep: atk({ id: 'backstep', clip: 'backstep', kind: 'evade', phases: ['engaged'], min_range: 0, max_range: 3 }),
+  clone: atk({ id: 'clone_ring', clip: 'transform', kind: 'clone', phases: ['engaged'], min_range: 4, max_range: 16, split: 6 }),
+  zonde: atk({ id: 'zonde', clip: 'tht', kind: 'projectile', phases: ['engaged'], min_range: 6, max_range: 22, freeze: 2 }),
+  traps: atk({ id: 'traps', clip: 'wat2', kind: 'trap', phases: ['engaged'], min_range: 3, max_range: 18, split: 3, hit_reach: 6, freeze: 2 }),
+  postLeap: atk({ id: 'post_leap', clip: 'atk2', kind: 'leap', phases: ['high_ground'], hit_reach: 4, hit_half_angle_deg: 120, damage_mult: 1.5, freeze: 2 }),
+};
+
+describe('boss sim — sinow beat decoy clones', () => {
+  it('transform spawns a decoy ring around the player, no damage from the decoys', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.clone] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 12 };
+    const evs = run(sim, entry, player, 200, () => sim.clones.length > 0);
+    expect(sim.clones).toHaveLength(6);
+    for (const c of sim.clones) {
+      expect(Math.hypot(c.pos.x - player.x, c.pos.z - player.z)).toBeCloseTo(8, 1);
+    }
+    expect(evs.filter((e) => e.type === 'player-hit')).toHaveLength(0); // decoys never hurt
+  });
+
+  it('a player swing dispels only the decoys it overlaps', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.clone] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    run(sim, entry, { x: 0, z: 12 }, 200, () => sim.clones.length > 0);
+    const target = sim.clones[0].pos;
+    const popped = hitClones(sim, { x: target.x, z: target.z }, 1.0);
+    expect(popped).toBe(1);
+    expect(sim.clones).toHaveLength(5);
+  });
+
+  it('the real slash landing clears the whole ring', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.slash] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    sim.clones = [{ pos: { x: 5, z: 5 }, yaw: 0 }, { pos: { x: -5, z: 5 }, yaw: 0 }];
+    run(sim, entry, { x: 0, z: 2 }, 200, () => sim.state === 'loaf'); // one slash resolved
+    expect(sim.clones).toHaveLength(0);
+  });
+
+  it('hitting the real boss pops the whole ring', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.clone] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    sim.clones = [{ pos: { x: 5, z: 5 }, yaw: 0 }, { pos: { x: -5, z: 5 }, yaw: 0 }];
+    damageBoss(sim, entry, 5);
+    expect(sim.clones).toHaveLength(0);
+  });
+});
+
+describe('boss sim — sinow beat Zonde traps & freeze', () => {
+  it('deploys traps; the player stepping on one is zapped, damaged, and frozen', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.traps], fsm: { ...sinowFsm(), self_trap: false } });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    // seeded rng so the 3 traps scatter to the full hit_reach around the
+    // player, not stack on top of them (which would self-trigger on deploy).
+    let k = 1;
+    const rng = () => ((k = (k * 9301 + 49297) % 233280) / 233280);
+    const inp = (player: { x: number; z: number }) => ({ dt: 0.1, player, clipDur: () => CLIP_DUR, rng });
+    const player = { x: 0, z: 10 };
+    for (let i = 0; i < 200 && sim.traps.length === 0; i++) stepBoss(sim, entry, inp(player));
+    expect(sim.traps).toHaveLength(3);
+    const t = sim.traps[0];
+    const evs = stepBoss(sim, entry, input({ x: t.pos.x, z: t.pos.z }));
+    const hit = evs.find((e) => e.type === 'player-hit') as Extract<BossEvent, { type: 'player-hit' }>;
+    expect(hit).toMatchObject({ damage: 15, freeze: 2, via: 'traps' });
+    expect(evs.some((e) => e.type === 'zap')).toBe(true);
+    expect(sim.traps).not.toContain(t); // consumed
+  });
+
+  it('a trap fizzles after trap_life without a trigger', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.traps] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    sim.traps = [{ pos: { x: 30, z: 30 }, age: 0, life: 2, damage: 15, freeze: 2, via: 'traps' }];
+    run(sim, entry, { x: 0, z: 0 }, 40); // player nowhere near it, 4s > life
+    expect(sim.traps).toHaveLength(0);
+  });
+
+  it('self_trap: the boss freezes on its own trap — damaged, inert, no movement', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.slash] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    sim.traps = [{ pos: { x: 0, z: 0.4 }, age: 0, life: 12, damage: 20, freeze: 2, via: 'traps' }];
+    const before = sim.hp;
+    const evs = run(sim, entry, { x: 0, z: 20 }, 20, () => sim.frozen > 0);
+    expect(sim.frozen).toBeGreaterThan(0);
+    expect(sim.hp).toBe(before - 20);
+    expect(evs.some((e) => e.type === 'zap')).toBe(true);
+    const pos0 = { ...sim.pos };
+    run(sim, entry, { x: 0, z: 20 }, 3); // still frozen → inert
+    expect(sim.pos).toEqual(pos0);
+  });
+
+  it('direct Zonde: the bolt freezes the player on hit', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.zonde] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 12 };
+    run(sim, entry, player, 300, () => sim.projectiles.length > 0);
+    expect(sim.projectiles[0].freeze).toBe(2);
+    const hits = run(sim, entry, player, 60).filter((e) => e.type === 'player-hit') as Extract<BossEvent, { type: 'player-hit' }>[];
+    expect(hits.some((h) => h.freeze === 2 && h.via === 'zonde')).toBe(true);
+  });
+});
+
+describe('boss sim — sinow beat backstep & post hop', () => {
+  it('backstep evade leaps away and deals no damage', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.backstep] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 1.5 };
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    const d0 = Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z);
+    const hits = run(sim, entry, player, 30).filter((e) => e.type === 'player-hit');
+    const d1 = Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z);
+    expect(hits).toHaveLength(0);
+    expect(d1).toBeGreaterThan(d0 + 1); // gained distance
+  });
+
+  it('post hop: climbs a post, perches, then leaps down onto the player (freeze)', () => {
+    const entry = makeSinow({
+      attacks: [sinowAtk.postLeap], // high_ground gate → never ground-selected, so active time accrues
+      anchors: [{ name: 'post', pos: [10, 0, 10] }],
+      fsm: { ...sinowFsm(), flight_interval: 2 },
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 5 };
+    run(sim, entry, player, 200, () => sim.state === 'relocate');
+    expect(sim.fly?.mode).toBe('toPost');
+    run(sim, entry, player, 300, () => sim.alt >= entry.fsm.post_height - 0.01); // reached the perch
+    const hits = run(sim, entry, player, 400, () => sim.state === 'active').filter(
+      (e) => e.type === 'player-hit',
+    ) as Extract<BossEvent, { type: 'player-hit' }>[];
+    expect(sim.alt).toBe(0);
+    expect(hits.some((h) => h.via === 'post_leap' && h.freeze === 2)).toBe(true);
+  });
+
+  it('no posts authored → the post hop is skipped, the boss stays grounded', () => {
+    const entry = makeSinow({
+      attacks: [sinowAtk.slash],
+      anchors: [],
+      fsm: { ...sinowFsm(), flight_interval: 2 },
+    });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const states = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      stepBoss(sim, entry, input({ x: 0, z: 5 }));
+      states.add(sim.state);
+      expect(sim.alt).toBe(0); // never leaves the ground
+    }
+    expect(states.has('relocate')).toBe(false);
   });
 });
 

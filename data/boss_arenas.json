@@ -830,22 +830,10 @@
       }
     },
     "sinow_beat": {
-      "model_id": "sinow_beat",
+      "model_id": "shinowa",
       "arena": "s05z_na1",
       "quest_source": "debug_boss_paru",
-      "model_scale": 1.0,
-      "forms": [
-        {
-          "roster_id": "sinow_beat",
-          "model_id": "sinow_beat",
-          "label": "Sinow Beat"
-        },
-        {
-          "roster_id": "sinow_gold",
-          "model_id": "sinow_gold",
-          "label": "Sinow Gold (rare)"
-        }
-      ],
+      "model_scale": 2.0,
       "stats": {
         "hp": 400,
         "move_speed": 5.0,
@@ -854,65 +842,153 @@
         "turn_speed_deg": 200
       },
       "fsm": {
-        "intro_clip": "apper_me3_y_me3",
-        "idle_clip": "wait_me3_y_me3",
-        "walk_clip": "",
+        "intro_clip": "tht",
+        "idle_clip": "wat",
+        "walk_clip": "wlk",
         "loaf_duration_min": 0.8,
         "loaf_duration_max": 1.6,
         "punish_break_damage": 60,
         "punish_vulnerable_mult": 2.0,
-        "punish_clip": "damage_me3_y_me3"
+        "punish_clip": "dmg",
+        "frozen_clip": "dmg",
+        "clone_ring_radius": 8,
+        "clone_alpha": 0.9,
+        "trap_radius": 1.6,
+        "trap_life": 12,
+        "self_trap": true,
+        "relocate_kind": "post",
+        "post_height": 6,
+        "flight_interval": 16,
+        "fly_speed_mult": 2.5
       },
       "phases": [
         {
           "id": "engaged",
           "label": "Engaged",
-          "note": "fast floating melee bot: sword + lunge, backstep evade, transform to cloak/reposition"
+          "note": "grounded kit: walk-in jumping slash, backstep evade, transform \u2192 decoy ring, direct Zonde, and Zonde floor traps"
+        },
+        {
+          "id": "high_ground",
+          "label": "High ground",
+          "note": "atop one of the 4 arena posts (relocate_kind post, every flight_interval s) \u2014 leaps down onto the player with atk2. Gate-only phase so the leap is never picked from the ground bands."
         }
       ],
       "attacks": [
         {
-          "id": "sword",
-          "clip": "sword_me3_y_me3",
+          "id": "slash",
+          "clip": "atk",
           "kind": "melee_arc",
           "phases": [
             "engaged"
           ],
+          "min_range": 0,
+          "max_range": 4.5,
           "hit_half_angle_deg": 60,
-          "max_range": 4,
           "hit_reach": 3.5,
-          "note": "sword slash"
+          "weight": 1.4,
+          "note": "shinowa_atk \u2014 the jumping slash; also the payoff that pops the decoy ring"
         },
         {
-          "id": "lunge",
-          "clip": "f_attack_me3_y_me3",
-          "chain": [
-            "backstep_me3_y_me3",
-            "f_attack_me3_y_me3"
+          "id": "backstep",
+          "clip": "backstep",
+          "kind": "evade",
+          "phases": [
+            "engaged"
           ],
-          "kind": "charge",
+          "min_range": 0,
+          "max_range": 3,
+          "weight": 0.6,
+          "note": "shinowa_backstep \u2014 occasional backward leap to open distance (no damage)"
+        },
+        {
+          "id": "clone_ring",
+          "clip": "transform",
+          "kind": "clone",
+          "phases": [
+            "engaged"
+          ],
+          "min_range": 4,
+          "max_range": 16,
+          "split": 6,
+          "weight": 0.5,
+          "note": "shinowa_transform \u2014 spawns 6 decoy clones (alpha 0.9) in a ring around the player; the decoys attack for 0 damage, dispel when hit, and clear when the real slash lands or the boss is hit"
+        },
+        {
+          "id": "zonde_cast",
+          "clip": "tht",
+          "kind": "projectile",
+          "phases": [
+            "engaged"
+          ],
+          "min_range": 6,
+          "max_range": 22,
+          "freeze": 2,
+          "weight": 0.6,
+          "note": "direct Zonde \u2014 a lightning bolt that freezes the player on hit. REUSED clip (tht): shinowa has no dedicated cast animation \u2014 verify."
+        },
+        {
+          "id": "zonde_traps",
+          "clip": "wat2",
+          "kind": "trap",
           "phases": [
             "engaged"
           ],
           "min_range": 3,
-          "max_range": 12,
-          "hit_reach": 3,
-          "damage_mult": 1.3,
-          "note": "backstep then forward lunge"
+          "max_range": 18,
+          "split": 3,
+          "hit_reach": 6,
+          "freeze": 2,
+          "weight": 0.5,
+          "note": "deploys 3 Zonde floor traps scattered near the player; stepping on one casts Zonde (damage + freeze). self_trap: the boss freezes on its own traps too. REUSED clip (wat2): no dedicated deploy animation \u2014 verify."
+        },
+        {
+          "id": "post_leap",
+          "clip": "atk2",
+          "kind": "leap",
+          "phases": [
+            "high_ground"
+          ],
+          "hit_reach": 4,
+          "hit_half_angle_deg": 120,
+          "damage_mult": 1.5,
+          "freeze": 2,
+          "note": "shinowa_atk2 \u2014 the leap down from a post onto the player (damage + Zonde freeze). Fired from the perch by the post relocate, not band-selected (high_ground gate)."
         }
       ],
-      "anchors": [],
-      "note": "STAND-IN (PSO asset, per Kion): the Paru boss = the PSO Sinow line, Sinow Beat (base) + Sinow Gold (rare form). The real Paru fight is two floating robots, so debug_boss_paru can spawn a Beat + a Gold. Clips: appear, backstep, damage, death, f_attack, sword, transform (cloak/teleport), t_wait, wait. No locomotion clip (it slides/teleports); transform-cloak and backstep-evade aren't in the sim yet (follow-ups). Draft behavior \u2014 tune by observation.",
+      "anchors": [
+        {
+          "name": "post_ne",
+          "pos": [10, 0, 10],
+          "note": "DRAFT post position \u2014 re-author against the real s05z_na1 posts in the room (move/anchor tool)"
+        },
+        {
+          "name": "post_nw",
+          "pos": [-10, 0, 10],
+          "note": "DRAFT post position"
+        },
+        {
+          "name": "post_se",
+          "pos": [10, 0, -10],
+          "note": "DRAFT post position"
+        },
+        {
+          "name": "post_sw",
+          "pos": [-10, 0, -10],
+          "note": "DRAFT post position"
+        }
+      ],
+      "note": "Paru boss \u2014 the real PSZ mission extraction (shinowa), replacing the PSO Sinow stand-in. model_scale 2.0 for boss presentation. Clips: tht (threat/intro), wlk (walk), wat/wat2 (idle), backstep, atk (jumping slash), atk2 (post leap-down), transform (decoy clones), dmg (flinch/frozen), ded (death). Enhanced boss kit beyond field PSO/PSZ behavior (#516): transform \u2192 decoy ring, direct Zonde + Zonde floor traps (freeze on step; self_trap freezes the boss on its own traps), and the 4-post high-ground leap. Draft simplifications: zonde_cast/zonde_traps REUSE tht/wat2 (no dedicated cast/deploy clips); post anchors are DRAFT positions to author in the room; clones present a cosmetic ring, not per-clone attack animations. Draft behavior \u2014 tune by observation.",
       "clip_notes": {
-        "apper_me3_y_me3": "appear (intro warp-in)",
-        "wait_me3_y_me3": "idle (hover)",
-        "t_wait_me3_y_me3": "cloaked/transformed idle",
-        "transform_me3_y_me3": "transform \u2014 cloak/teleport reposition",
-        "sword_me3_y_me3": "sword slash",
-        "f_attack_me3_y_me3": "forward lunge attack",
-        "backstep_me3_y_me3": "backstep evade",
-        "damage_me3_y_me3": "flinch",
-        "death_me3_y_me3": "death"
+        "tht": "threat display (fight intro); reused as the Zonde cast telegraph (no dedicated cast clip)",
+        "wlk": "walk / approach locomotion",
+        "wat": "idle (hover)",
+        "wat2": "alternate idle; reused as the trap-deploy pose (no dedicated deploy clip)",
+        "backstep": "backward evade leap",
+        "atk": "jumping slash (primary melee)",
+        "atk2": "leap-down attack from a post",
+        "transform": "transform \u2014 spawns the decoy clone ring",
+        "dmg": "flinch; also the frozen/stunned pose",
+        "ded": "death"
       }
     },
     "heavens_mother": {
