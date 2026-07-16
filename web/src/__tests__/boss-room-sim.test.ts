@@ -553,6 +553,7 @@ const sinowFsm = () => ({
   punish_break_damage: 0,
   clone_ring_radius: 8,
   clone_alpha: 0.9,
+  clone_life: 15,
   trap_radius: 1.6,
   trap_life: 12,
   self_trap: true,
@@ -572,6 +573,7 @@ const makeSinow = (over: Partial<ResolvedBoss> = {}): ResolvedBoss => makeEntry(
 const sinowAtk = {
   slash: atk({ id: 'slash', clip: 'atk', kind: 'melee_arc', phases: ['engaged'], min_range: 0, max_range: 4.5, hit_half_angle_deg: 60, hit_reach: 3.5 }),
   backstep: atk({ id: 'backstep', clip: 'backstep', kind: 'evade', phases: ['engaged'], min_range: 0, max_range: 3 }),
+  dashIn: atk({ id: 'dash_in', clip: 'atk', chain: ['tht', 'atk'], kind: 'charge', phases: ['engaged'], min_range: 5, max_range: 12, hit_reach: 3.5, hit_half_angle_deg: 60 }),
   clone: atk({ id: 'clone_ring', clip: 'transform', kind: 'clone', phases: ['engaged'], min_range: 4, max_range: 16, split: 6 }),
   zonde: atk({ id: 'zonde', clip: 'tht', kind: 'projectile', phases: ['engaged'], min_range: 6, max_range: 22, freeze: 2 }),
   traps: atk({ id: 'traps', clip: 'wat2', kind: 'trap', phases: ['engaged'], min_range: 3, max_range: 18, split: 3, hit_reach: 6, freeze: 2 }),
@@ -615,6 +617,25 @@ describe('boss sim — sinow beat decoy clones', () => {
     sim.clones = [{ pos: { x: 5, z: 5 }, yaw: 0 }, { pos: { x: -5, z: 5 }, yaw: 0 }];
     damageBoss(sim, entry, 5);
     expect(sim.clones).toHaveLength(0);
+  });
+
+  it('the ring auto-clears after clone_life even without a slash', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.clone] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 12 };
+    run(sim, entry, player, 200, () => sim.clones.length > 0);
+    expect(sim.cloneT).toBeGreaterThan(0);
+    run(sim, entry, player, 160); // 16s > clone_life 15 (no slash in this kit)
+    expect(sim.clones).toHaveLength(0);
+  });
+
+  it('while the ring is up the real boss commits to melee, not more clones/techs', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.slash, sinowAtk.clone, sinowAtk.zonde] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    sim.clones = [{ pos: { x: 5, z: 5 }, yaw: 0 }];
+    sim.cloneT = 15;
+    run(sim, entry, { x: 0, z: 2 }, 60, () => sim.state === 'attacking');
+    expect(sim.current?.atk.kind).toBe('melee_arc'); // the slash, not clone/projectile
   });
 });
 
@@ -682,6 +703,17 @@ describe('boss sim — sinow beat backstep & post hop', () => {
     const d1 = Math.hypot(sim.pos.x - player.x, sim.pos.z - player.z);
     expect(hits).toHaveLength(0);
     expect(d1).toBeGreaterThan(d0 + 1); // gained distance
+  });
+
+  it('dash_in closes the mid-range gap (front-roll charge) then the slash lands', () => {
+    const entry = makeSinow({ attacks: [sinowAtk.dashIn] });
+    const sim = makeBossSim(entry, { x: 0, z: 0 }, 0);
+    const player = { x: 0, z: 15 }; // walks in until it enters the 5–12 band, then dashes
+    run(sim, entry, player, 60, () => sim.state === 'attacking');
+    const z0 = sim.pos.z;
+    const hits = run(sim, entry, player, 40).filter((e) => e.type === 'player-hit');
+    expect(sim.pos.z).toBeGreaterThan(z0 + 2); // rolled in during the telegraph
+    expect(hits.length).toBeGreaterThan(0); // then the slash connects
   });
 
   it('post hop: climbs a post, perches, then leaps down onto the player (freeze)', () => {

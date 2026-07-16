@@ -169,6 +169,8 @@ export interface BossSim {
   lobs: SimLob[];
   /** Sinow Beat: the decoy ring (empty when no clone burst is active). */
   clones: SimClone[];
+  /** Sinow Beat: seconds left before the decoy ring auto-clears (0 = no timer). */
+  cloneT: number;
   /** Sinow Beat: deployed floor traps. */
   traps: SimTrap[];
   /** Sinow Beat: frozen-in-place timer (self-trap) — while >0 the boss can't act. */
@@ -216,6 +218,7 @@ export function makeBossSim(entry: ResolvedBoss, pos: Vec2, yaw: number, rng: ()
     projectiles: [],
     lobs: [],
     clones: [],
+    cloneT: 0,
     traps: [],
     frozen: 0,
     gems,
@@ -334,6 +337,7 @@ function spawnClones(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, cou
     clones.push({ pos, yaw: Math.atan2(input.player.x - pos.x, input.player.z - pos.z) });
   }
   sim.clones = clones;
+  sim.cloneT = entry.fsm.clone_life; // start the lifetime countdown (0 = no timeout)
 }
 
 /** Deploy `split` floor traps scattered within hit_reach of the player. */
@@ -713,7 +717,15 @@ function stepActive(sim: BossSim, entry: ResolvedBoss, input: BossSimInput, even
   const facing = turnToward(sim, input.player, entry.stats.turn_speed_deg, input.dt);
 
   // Spec trigger: cooldown ready AND some grounded attack's band contains dist.
-  const attacks = groundedAttacks(entry);
+  // While the decoy ring is up, the REAL boss commits to closing in and
+  // slashing (the decoys are the distraction) — no stacking more clones or
+  // casting techs from range (spec §Sinow Beat).
+  let attacks = groundedAttacks(entry);
+  if (sim.clones.length) {
+    // Only closing kinds while decoys are up — never stack another ring or
+    // cast from range. If none are in-band the boss just walks in to slash.
+    attacks = attacks.filter((a) => a.kind === 'melee_arc' || a.kind === 'charge' || a.kind === 'evade');
+  }
   if (sim.cooldown <= 0 && attacks.some((a) => dist >= a.min_range && dist <= a.max_range)) {
     // selectAttack only reads weight/min_range/max_range; the boss `kind`
     // string is wider than the enemy AttackKind union, hence the cast.
@@ -1001,6 +1013,14 @@ export function lobImpacts(l: Pick<SimLob, 'target' | 'split'>): Vec2[] {
 export function stepBoss(sim: BossSim, entry: ResolvedBoss, input: BossSimInput): BossEvent[] {
   const events: BossEvent[] = [];
   sim.stateT += input.dt;
+
+  // Decoy ring lifetime: the fakes linger at most clone_life seconds — the
+  // real boss's slash usually pops them first, but the timer guarantees they
+  // never overstay (spec §Sinow Beat).
+  if (sim.clones.length && sim.cloneT > 0) {
+    sim.cloneT -= input.dt;
+    if (sim.cloneT <= 0) sim.clones = [];
+  }
 
   // Frozen in place (Sinow Beat stepped on its own Zonde trap): inert until
   // the freeze wears off — ordnance/traps keep evolving so the player can

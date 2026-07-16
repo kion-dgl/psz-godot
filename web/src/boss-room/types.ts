@@ -162,6 +162,8 @@ export interface BossFsmParams {
   clone_ring_radius: number;
   /** Render alpha of the decoy clones (the real one is opaque). */
   clone_alpha: number;
+  /** Max seconds the decoy ring lingers before it auto-clears (0 = no timeout). */
+  clone_life: number;
   /** kind: trap — step-on trigger radius of a deployed floor trap. */
   trap_radius: number;
   /** kind: trap — seconds a deployed trap stays armed before it fizzles. */
@@ -212,6 +214,7 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   relocate_loop_clip: 'float',
   clone_ring_radius: 8,
   clone_alpha: 0.9,
+  clone_life: 0,
   trap_radius: 1.5,
   trap_life: 10,
   self_trap: false,

@@ -871,7 +871,9 @@ export default function BossRoom() {
     // Sinow Beat visuals: the decoy clone ring, floor traps, and Zonde zaps.
     const decoyGroup = new THREE.Group();
     scene.add(decoyGroup);
-    const decoyPool: THREE.Object3D[] = [];
+    // Each decoy carries its own mixer so it fake-attacks (loops the slash)
+    // while the real boss does the actual damage.
+    const decoyPool: Array<{ root: THREE.Object3D; mixer: THREE.AnimationMixer }> = [];
     const trapGroup = new THREE.Group();
     scene.add(trapGroup);
     const trapPool: THREE.Mesh[] = [];
@@ -883,7 +885,7 @@ export default function BossRoom() {
     // lazily from the loaded rig, held in a pool, posed statically (draft — the
     // decoys don't run their own attack clips), tinted to clone_alpha.
     function syncClones() {
-      for (const d of decoyPool) d.visible = false;
+      for (const d of decoyPool) d.root.visible = false;
       if (!sim || !bossScene || !sim.clones.length) return;
       sim.clones.forEach((c, i) => {
         while (decoyPool.length <= i) {
@@ -897,15 +899,25 @@ export default function BossRoom() {
               (o as THREE.Mesh).material = m;
             }
           });
-          decoyPool.push(rig);
+          // Fake-attack: loop the slash clip, staggered so they don't move in
+          // lockstep — the ring reads as several Sinow Beats all lunging.
+          const dm = new THREE.AnimationMixer(rig);
+          const atkName = resolveClipToken(animations.map((a) => a.name), 'atk');
+          const atkClip = atkName ? animations.find((a) => a.name === atkName) : undefined;
+          if (atkClip) {
+            const act = dm.clipAction(atkClip);
+            act.play();
+            act.time = (decoyPool.length * 0.37) % atkClip.duration;
+          }
+          decoyPool.push({ root: rig, mixer: dm });
           decoyGroup.add(rig);
         }
         const d = decoyPool[i];
-        d.visible = true;
-        d.scale.setScalar(bossGroup.scale.x); // track the live boss scale
+        d.root.visible = true;
+        d.root.scale.setScalar(bossGroup.scale.x); // track the live boss scale
         const gy = dropToFloor(new THREE.Vector3(c.pos.x, bossPos.y + 2, c.pos.z)) ?? bossPos.y;
-        d.position.set(c.pos.x, gy, c.pos.z);
-        d.rotation.y = c.yaw;
+        d.root.position.set(c.pos.x, gy, c.pos.z);
+        d.root.rotation.y = c.yaw;
       });
     }
 
@@ -1289,6 +1301,7 @@ export default function BossRoom() {
 
       if (mixer && !animPaused) {
         mixer.update(dt);
+        for (const d of decoyPool) if (d.root.visible) d.mixer.update(dt); // decoys fake-attack
         for (const rig of partRigs) {
           // Pure-curve mode freezes the rig on the authored pose; with the
           // overlay on, the clip plays and is re-mapped onto the curve below.
