@@ -55,12 +55,8 @@ var _desc_label: Label
 var _preview_viewport: SubViewport
 var _preview_root: Node3D = null
 
-# Hold-to-scroll repeat (matches PSO start menu / NPC shop timing)
-const SCROLL_HOLD := 0.2
-const SCROLL_REPEAT := 1.0 / 30.0
-const NAV_ACTIONS := ["ui_up", "ui_down"]
-var _nav_hold: Dictionary = {}
-var _nav_next: Dictionary = {}
+# Hold-to-scroll repeat (matches PSO start menu / NPC shop timing) — shared helper.
+var _nav: NavRepeat = null
 
 
 # --- Inner Banner Control: draws the 6-vertex polygon + outline ---
@@ -92,10 +88,6 @@ class BannerPolygon extends Control:
 func _ready() -> void:
 	MusicManager.play_location_music("character_select")
 
-	for action in NAV_ACTIONS:
-		_nav_hold[action] = 0.0
-		_nav_next[action] = 0.0
-
 	# Drop tscn placeholders, build everything programmatically.
 	for child in get_children():
 		child.queue_free()
@@ -112,6 +104,9 @@ func _ready() -> void:
 	_build_description()
 	_build_next_button()
 	_build_hint_bar()
+
+	# Shared hold-to-repeat for list nav (same helper the shops use).
+	_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
 
 	_refresh_selection()
 
@@ -528,7 +523,7 @@ func _update_preview() -> void:
 
 
 func _play_idle_animation(model: Node3D, is_female: bool) -> void:
-	var skeleton := _find_skeleton(model)
+	var skeleton := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	if skeleton == null:
 		return
 	var anim_glb := "res://assets/player/animations/common_w.glb" if is_female else "res://assets/player/animations/common_m.glb"
@@ -538,7 +533,7 @@ func _play_idle_animation(model: Node3D, is_female: bool) -> void:
 	if packed == null:
 		return
 	var anim_scene := packed.instantiate()
-	var src_player: AnimationPlayer = _find_animation_player(anim_scene)
+	var src_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if src_player == null:
 		anim_scene.queue_free()
 		return
@@ -573,26 +568,6 @@ func _play_idle_animation(model: Node3D, is_female: bool) -> void:
 	anim_scene.queue_free()
 
 
-func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node
-	for child in node.get_children():
-		var found := _find_skeleton(child)
-		if found:
-			return found
-	return null
-
-
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
-		if found:
-			return found
-	return null
-
-
 func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
 	# Original track paths look like "pc_000_000/Skeleton3D:BoneName" or
 	# "pc_000_000/Skeleton3D::blend_shapes/shape". The destination skeleton
@@ -620,30 +595,21 @@ func _filled_count() -> int:
 # --- Input handling ---
 
 func _process(delta: float) -> void:
-	# PSO-style auto-repeat scroll: hold ui_up/ui_down, after SCROLL_HOLD
-	# fire one synthetic press every SCROLL_REPEAT. Skipped while a delete
-	# confirmation is up so it doesn't blow past the prompt.
+	# PSO-style auto-repeat scroll (_nav built in _ready). Held nav is paused
+	# while a delete confirmation is up so it doesn't blow past the prompt.
 	if _confirming_delete:
-		for action in NAV_ACTIONS:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
-		return
-	for action in NAV_ACTIONS:
-		if Input.is_action_pressed(action):
-			var held: float = float(_nav_hold[action]) + delta
-			_nav_hold[action] = held
-			if held >= SCROLL_HOLD:
-				var next_at: float = float(_nav_next[action]) - delta
-				while next_at <= 0.0:
-					var ev := InputEventAction.new()
-					ev.action = action
-					ev.pressed = true
-					_unhandled_input(ev)
-					next_at += SCROLL_REPEAT
-				_nav_next[action] = next_at
-		else:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
+		_nav.reset()
+	else:
+		_nav.tick(delta)
+
+
+## NavRepeat callback: re-emit a held nav action as a synthetic input event
+## so this screen's own _unhandled_input handles it (hold-to-repeat nav).
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
 
 
 func _unhandled_input(event: InputEvent) -> void:

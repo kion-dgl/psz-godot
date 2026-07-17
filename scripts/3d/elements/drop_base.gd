@@ -14,7 +14,6 @@ class_name DropBase
 const SPIN_SPEED: float = 2.0
 
 var _prompt_label: Label3D
-var _player_nearby: bool = false
 
 
 func _init() -> void:
@@ -83,14 +82,12 @@ func _on_body_entered(body: Node3D) -> void:
 		if auto_collect:
 			_collect(body)
 			return
-		_player_nearby = true
 		if element_state == "available" and _prompt_label:
 			_prompt_label.visible = true
 
 
 func _on_body_exited(body: Node3D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
-		_player_nearby = false
 		if _prompt_label:
 			_prompt_label.visible = false
 

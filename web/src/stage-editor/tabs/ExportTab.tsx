@@ -4,7 +4,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import JSZip from 'jszip';
 import type { UnifiedStageConfig, FloorTriangle, PortalData, SpawnPointData, TextureFix } from '../types';
-import { STAGE_AREAS, getGlbPath, getAreaFromMapId } from '../constants';
+import { STAGE_AREAS, getGlbPath, getAreaFromMapId, getStageSubfolder } from '../constants';
 import { DIRECTION_ROTATIONS, getPortalRotation } from '../types';
 import { loadGlobalFixes } from './TextureTab';
 import { loadAllConfigs } from '../useStageConfig';
@@ -947,14 +947,6 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
     link.click();
     URL.revokeObjectURL(url);
     setExportStatus(`Exported ${mapId}_config.json`);
-  };
-
-  // Derive the assets/stages/ subfolder from a mapId and area folder.
-  // e.g. mapId="s01a_ga1", folder="valley" → "valley_a"
-  //      mapId="s080_sa0", folder="tower"  → "tower_0"
-  const getStageSubfolder = (mid: string, folder: string): string => {
-    if (mid.length >= 4) return `${folder}_${mid[3]}`;
-    return folder;
   };
 
   // Export All - floor GLBs + SVGs organized to merge into assets/stages/

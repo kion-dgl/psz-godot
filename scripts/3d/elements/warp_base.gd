@@ -51,12 +51,3 @@ func _on_collected(_player: Node3D) -> void:
 	# Trigger map transition via game controller
 	get_tree().call_group("map_controller", "on_trigger_activated", target_map, spawn_index)
 
-
-## Activate the warp gate
-func activate() -> void:
-	set_state("active")
-
-
-## Deactivate the warp gate
-func deactivate() -> void:
-	set_state("inactive")

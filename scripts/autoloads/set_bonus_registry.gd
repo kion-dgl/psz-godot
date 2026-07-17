@@ -6,8 +6,6 @@ const SET_BONUSES_PATH = "res://data/set_bonuses/"
 
 var _set_bonuses: Dictionary = {}
 
-signal set_bonuses_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(SET_BONUSES_PATH, _set_bonuses, "SetBonusRegistry", "set bonuses")
-	set_bonuses_loaded.emit()
 
 
 func get_set_bonus(id: String):

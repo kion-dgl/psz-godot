@@ -13,19 +13,6 @@ const START_DISTANCE: float = 3.0  # Must exceed START to begin moving (hysteres
 const CATCHUP_DISTANCE: float = 5.0
 const TELEPORT_DISTANCE: float = 20.0
 
-## Companion models — maps companion_id to { glb, texture } paths
-const COMPANION_MODELS: Dictionary = {
-	"kai": {"glb": "res://assets/npcs/kai/pc_a01_000.glb", "texture": "res://assets/npcs/kai/pc_a01_000.png"},
-	"sarisa": {"glb": "res://assets/npcs/sarisa/pc_a00_000.glb", "texture": "res://assets/npcs/sarisa/pc_a00_000.png"},
-	"dorn": {"glb": "res://assets/npcs/dorn/dorn.glb", "texture": "res://assets/npcs/dorn/dorn.png"},
-	"dr_carlo": {"glb": "res://assets/npcs/dr_carlo/dr_carlo.glb", "texture": "res://assets/npcs/dr_carlo/dr_carlo.png"},
-	"elio": {"glb": "res://assets/npcs/elio/elio.glb", "texture": "res://assets/npcs/elio/elio.png"},
-	"fern": {"glb": "res://assets/npcs/fern/fern.glb", "texture": "res://assets/npcs/fern/fern.png"},
-	"vash": {"glb": "res://assets/npcs/vash/vash.glb", "texture": "res://assets/npcs/vash/vash.png"},
-	"ren": {"glb": "res://assets/npcs/ren/ren.glb", "texture": "res://assets/npcs/ren/ren.png"},
-	"mira": {"glb": "res://assets/npcs/mira/mira.glb", "texture": "res://assets/npcs/mira/mira.png"},
-}
-
 ## Fallback colors for NPCs without GLB models
 const COMPANION_COLORS: Dictionary = {
 	"kai": Color(1.0, 0.9, 0.1),
@@ -36,16 +23,6 @@ const COMPANION_COLORS: Dictionary = {
 	"sarisa": Color(1.0, 0.5, 0.7),
 }
 const DEFAULT_COLOR := Color(1.0, 1.0, 1.0)
-
-## Gender detection for animation prefix (female classes)
-const FEMALE_CLASSES := ["humarl", "ramarl", "fomarl", "hunewearl", "fonewearl", "hucaseal", "racaseal"]
-
-## Companion class IDs for animation selection
-const COMPANION_CLASSES: Dictionary = {
-	"kai": "humar", "sarisa": "hunewearl", "dorn": "hucast",
-	"dr_carlo": "fomar", "elio": "racaseal", "fern": "humarl",
-	"vash": "ramar", "ren": "humar", "mira": "fomarl",
-}
 
 ## Weapon-type → animation pack + name prefix, keyed by WeaponData.WeaponType,
 ## the same packs the player uses (player.gd WEAPON_ANIM_DATA). The companion's
@@ -155,7 +132,7 @@ func _ready() -> void:
 
 func _build_capsule() -> void:
 	# Try to load a real model first
-	var entry: Variant = COMPANION_MODELS.get(companion_id, null)
+	var entry: Variant = NpcAssets.MODELS.get(companion_id, null)
 	if entry != null:
 		var glb_path: String = entry["glb"]
 		var tex_path: String = entry["texture"]
@@ -199,13 +176,13 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	##     (the saber pack's pmsa/pwsa _walk / _run_pso) — never the weapon pack's
 	##     psz "dash" (_run). Gunblade/sword/dagger packs have no _run_pso, so
 	##     using them for locomotion is what made Kai dash instead of PSO-run.
-	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
-	_is_female = class_id in FEMALE_CLASSES
+	var class_id: String = NpcAssets.CLASSES.get(companion_id, "humar")
+	_is_female = class_id in NpcAssets.FEMALE_CLASSES
 	var wtype: int = CompanionCombat.weapon_type_for(companion_id)
 	var wa: Dictionary = WEAPON_ANIM.get(wtype, WEAPON_ANIM[0])
 	var loco: Dictionary = WEAPON_ANIM[0]  # shared PSO locomotion (saber retarget)
 
-	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(npc_model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 
@@ -219,10 +196,10 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	var wscene: Node = _load_anim_scene(wglb)
 	if wscene == null:
 		return
-	var wsrc: AnimationPlayer = _find_typed(wscene, "AnimationPlayer") as AnimationPlayer
+	var wsrc: AnimationPlayer = NodeUtils.first_of_type(wscene, "AnimationPlayer") as AnimationPlayer
 	var lscene: Node = wscene if lglb == wglb else _load_anim_scene(lglb)
 	var lsrc: AnimationPlayer = wsrc if lglb == wglb else \
-		(_find_typed(lscene, "AnimationPlayer") as AnimationPlayer if lscene else null)
+		(NodeUtils.first_of_type(lscene, "AnimationPlayer") as AnimationPlayer if lscene else null)
 	if wsrc == null:
 		wscene.queue_free()
 		if lscene and lscene != wscene:
@@ -292,7 +269,7 @@ func _attach_companion_weapon(npc_model: Node) -> void:
 	if not ResourceLoader.exists(glb_path):
 		push_warning("[Companion] %s weapon GLB missing: %s" % [companion_id, glb_path])
 		return
-	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(npc_model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 	var bone_idx: int = skel.find_bone(WEAPON_BONE_NAME)
@@ -378,16 +355,6 @@ func _autopilot_anim_tripwire(prev_pos: Vector3, curr_pos: Vector3, delta: float
 	if _stationary_anim_time > ANIM_HOLD_TIME:
 		push_error("[sanity] FAIL: companion '%s' holds '%s' while stationary for %.2fs (planar speed %.3f m/s < %.2f)" % [companion_id, _current_anim, _stationary_anim_time, planar_speed, CompanionCombat.IDLE_EPS])
 		_stationary_anim_time = 0.0  # avoid log spam
-
-
-func _find_typed(root: Node, type_name: String) -> Node:
-	if root.get_class() == type_name:
-		return root
-	for child in root.get_children():
-		var found := _find_typed(child, type_name)
-		if found:
-			return found
-	return null
 
 
 func _build_name_label() -> void:
@@ -882,14 +849,14 @@ func _execute_companion_hit() -> void:
 		_note_companion_hit(enemy, int(atk.damage))
 
 
-## Companion attack/accuracy: its class (COMPANION_CLASSES) at the player's
+## Companion attack/accuracy: its class (NpcAssets.CLASSES) at the player's
 ## current level — no weapon/mag/material/buff terms in phase 1.
 func _companion_stats() -> Dictionary:
 	var level := 1
 	var character: Variant = CharacterManager.get_active_character()
 	if character != null:
 		level = int(character.get("level", 1))
-	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
+	var class_id: String = NpcAssets.CLASSES.get(companion_id, "humar")
 	var class_data: Variant = ClassRegistry.get_class_data(class_id)
 	if class_data == null:
 		return {"attack": 10, "accuracy": 100}
@@ -952,22 +919,3 @@ func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> 
 	_speech_timer = duration
 	_name_label.visible = false
 	speech_started.emit()
-	# Log to action log
-	var speaker_name: String = _speaker if not _speaker.is_empty() else companion_id.capitalize()
-	_log_to_hud(speaker_name, text)
-
-
-func _log_to_hud(speaker: String, text: String) -> void:
-	var hud := _find_field_hud()
-	if hud and hud.has_method("log_speech"):
-		hud.log_speech(speaker, text)
-
-
-func _find_field_hud() -> Node:
-	var node := get_parent()
-	while node:
-		for child in node.get_children():
-			if child is CanvasLayer and child.name == "FieldHud":
-				return child
-		node = node.get_parent()
-	return null

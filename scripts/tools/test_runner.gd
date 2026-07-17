@@ -6584,12 +6584,12 @@ func test_valley_grid() -> void:
 	var gen := GridGen.new()
 
 	# Rotation system
-	assert_eq(gen.rotate_direction("north", 0), "north", "Rotate north by 0")
-	assert_eq(gen.rotate_direction("north", 90), "east", "Rotate north by 90")
-	assert_eq(gen.rotate_direction("north", 180), "south", "Rotate north by 180")
-	assert_eq(gen.rotate_direction("north", 270), "west", "Rotate north by 270")
-	assert_eq(gen.rotate_direction("east", 90), "south", "Rotate east by 90")
-	assert_eq(gen.rotate_direction("west", 180), "east", "Rotate west by 180")
+	assert_eq(StageRotation.rotate_dir("north", 0), "north", "Rotate north by 0")
+	assert_eq(StageRotation.rotate_dir("north", 90), "east", "Rotate north by 90")
+	assert_eq(StageRotation.rotate_dir("north", 180), "south", "Rotate north by 180")
+	assert_eq(StageRotation.rotate_dir("north", 270), "west", "Rotate north by 270")
+	assert_eq(StageRotation.rotate_dir("east", 90), "south", "Rotate east by 90")
+	assert_eq(StageRotation.rotate_dir("west", 180), "east", "Rotate west by 180")
 
 	# Rotated gates
 	var sa1_gates: Array[String] = gen.get_rotated_gates("s01a_sa1", 0)

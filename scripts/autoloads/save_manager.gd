@@ -105,11 +105,6 @@ func load_game() -> void:
 	game_loaded.emit()
 
 
-## Auto-save (called on key events)
-func auto_save() -> void:
-	save_game()
-
-
 ## Check if a save file exists
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)

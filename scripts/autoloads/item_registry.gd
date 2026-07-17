@@ -9,9 +9,6 @@ const ITEMS_PATH = "res://data/items/"
 ## Dictionary of item_id -> ItemData
 var _items: Dictionary = {}
 
-## Signal emitted when all items are loaded
-signal items_loaded()
-
 
 func _ready() -> void:
 	_load_all_items()
@@ -28,7 +25,6 @@ func _load_all_items() -> void:
 		else:
 			push_warning("[ItemRegistry] Invalid item at: ", path)
 	print("[ItemRegistry] Loaded ", _items.size(), " items")
-	items_loaded.emit()
 
 
 ## Get an item by its ID, returns null if not found

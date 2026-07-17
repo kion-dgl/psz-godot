@@ -46,7 +46,6 @@ const RARE_LEVEL_BONUS := 3
 
 ## Techniques available in the shop (exclude advanced tier — field drops only)
 const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "grants", "megid", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
-const SHOP_MID_TECHS: Array = []
 
 ## Base technique → charged variant (hold-to-charge).
 ## Support techs map to themselves — charge may boost potency later.
@@ -75,10 +74,8 @@ func get_charged_technique(base_id: String) -> String:
 
 
 func get_base_technique(technique_id: String) -> String:
-	for base_id in CHARGE_MAP:
-		if CHARGE_MAP[base_id] == technique_id:
-			return base_id
-	return technique_id
+	var base = CHARGE_MAP.find_key(technique_id)
+	return base if base != null else technique_id
 
 
 ## Get required player level to use a disk of a given level

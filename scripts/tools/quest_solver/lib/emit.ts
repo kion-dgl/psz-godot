@@ -9,29 +9,13 @@
 // path adds 5-10 new nodes and the graph explodes.
 
 import type { NavGrid } from "./grid.ts";
-import type { Tri2D } from "./floor.ts";
 import { solvePath } from "./pathfinder.ts";
 import type { StagePoint } from "./quest_walk.ts";
+import { GraphBuilder } from "./emit_common.ts";
+import type { EmittedGraph } from "./emit_common.ts";
 
-export interface EmittedWaypoint {
-	id: string;
-	position: [number, number, number];
-	kind: string;
-	label?: string;
-}
-
-export interface EmittedGraph {
-	waypoints: EmittedWaypoint[];
-	waypointEdges: [string, string][];
-	stats: {
-		stagePoints: number;
-		pathsAttempted: number;
-		pathsFailed: number;
-		pathsSolved: number;
-		uniqueWaypoints: number;
-		edges: number;
-	};
-}
+export type { EmittedWaypoint, EmittedGraph } from "./emit_common.ts";
+export { applyGraphToStageConfig as applyToStageConfig } from "./emit_common.ts";
 
 // Larger than the autopilot's 1.5m arrive radius so waypoints from different
 // A* runs (e.g. spawn→spawn and spawn→objective) snap into shared nodes.
@@ -47,36 +31,13 @@ export function solveStageGraph(
 ): EmittedGraph {
 	const mergeDist = opts.mergeDist ?? MERGE_DIST;
 	const decimate = opts.decimate ?? true;
-	const mergeDistSq = mergeDist * mergeDist;
 
-	const waypoints: EmittedWaypoint[] = [];
-	const edges = new Set<string>();
-	let nextAutoId = 0;
-
-	// First pass: seed the graph with the StagePoints themselves. These are
-	// the "anchored" waypoints (spawn/exit/objective) that must keep their
-	// stable IDs because the autopilot looks them up by kind.
-	for (const p of points) {
-		waypoints.push({ id: p.id, position: [p.x, 0, p.z], kind: p.kind, label: p.label });
-	}
-
-	const addEdge = (a: string, b: string) => {
-		if (a === b) return;
-		const k = a < b ? `${a}|${b}` : `${b}|${a}`;
-		edges.add(k);
-	};
-
-	const addOrMerge = (x: number, z: number): string => {
-		// Find any existing waypoint within mergeDist; if so, snap to it.
-		for (const w of waypoints) {
-			const dx = w.position[0] - x;
-			const dz = w.position[2] - z;
-			if (dx * dx + dz * dz < mergeDistSq) return w.id;
-		}
-		const id = `wp_auto_${nextAutoId++}_${stageId}`;
-		waypoints.push({ id, position: [x, 0, z], kind: "point" });
-		return id;
-	};
+	const builder = new GraphBuilder(stageId, mergeDist);
+	// Seed the graph with the StagePoints themselves — the "anchored"
+	// waypoints (spawn/exit/objective) that must keep their stable IDs
+	// because the autopilot looks them up by kind.
+	builder.seed(points);
+	const { addEdge, addOrMerge } = builder;
 
 	// Pair every spawn with every other useful point (spawn, exit, objective).
 	// Exit-to-exit pairs aren't useful (you don't walk between scene-change
@@ -128,35 +89,10 @@ export function solveStageGraph(
 		for (const o of objectives) trySolve(s, o);
 	}
 
-	return {
-		waypoints,
-		waypointEdges: [...edges].map((k) => k.split("|") as [string, string]),
-		stats: {
-			stagePoints: points.length,
-			pathsAttempted: attempted,
-			pathsFailed: failed,
-			pathsSolved: solved,
-			uniqueWaypoints: waypoints.length,
-			edges: edges.size,
-		},
-	};
-}
-
-/**
- * Merge an emitted graph into the existing unified-stage-configs entry.
- * Returns the new config block (caller writes it back to disk).
- */
-export function applyToStageConfig(
-	existing: any,
-	graph: EmittedGraph,
-): any {
-	const next = { ...existing };
-	next.waypoints = graph.waypoints.map((w) => ({
-		id: w.id,
-		position: w.position,
-		kind: w.kind,
-		...(w.label ? { label: w.label } : {}),
-	}));
-	next.waypointEdges = graph.waypointEdges;
-	return next;
+	return builder.finish({
+		stagePoints: points.length,
+		pathsAttempted: attempted,
+		pathsFailed: failed,
+		pathsSolved: solved,
+	});
 }

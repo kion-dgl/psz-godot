@@ -109,15 +109,6 @@ func reset_game_state() -> void:
 	game_state_reset.emit()
 
 
-# Utility functions
-func heal(amount: int) -> void:
-	set_hp(hp + amount)
-
-
-func restore_mp(amount: int) -> void:
-	set_mp(mp + amount)
-
-
 func complete_mission(mission_id: String) -> void:
 	if mission_id not in completed_missions:
 		completed_missions.append(mission_id)

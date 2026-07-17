@@ -185,7 +185,7 @@ func _setup_model() -> void:
 				MeshUtils.apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
-	animation_player = _find_animation_player(model)
+	animation_player = NodeUtils.first_of_type(model, "AnimationPlayer") as AnimationPlayer
 
 	# If no animations in the model, load from animation_model_id source
 	if animation_player:
@@ -201,15 +201,15 @@ func _setup_model() -> void:
 			var anim_scene: PackedScene = load(anim_glb_path)
 			if anim_scene:
 				var anim_model := anim_scene.instantiate()
-				var source_player := _find_animation_player(anim_model)
+				var source_player := NodeUtils.first_of_type(anim_model, "AnimationPlayer") as AnimationPlayer
 				if source_player:
 					# Find the skeleton parents on both models so we can remap
 					# track paths from source mesh root → destination mesh root.
 					# Guard get_parent() in case the Skeleton3D ends up at the
 					# scene root with no parent (shouldn't happen for these GLBs
 					# but is cheap to handle).
-					var dst_skel := _find_skeleton(model)
-					var src_skel := _find_skeleton(anim_model)
+					var dst_skel := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
+					var src_skel := NodeUtils.first_of_type(anim_model, "Skeleton3D") as Skeleton3D
 					var src_root_name: String = ""
 					var dst_root_name: String = ""
 					if src_skel and src_skel.get_parent():
@@ -258,26 +258,6 @@ func _cache_model_materials() -> void:
 				var mat := mi.get_active_material(i)
 				if mat is StandardMaterial3D:
 					_cached_materials.append(mat)
-
-
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
-		if found:
-			return found
-	return null
-
-
-func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node
-	for child in node.get_children():
-		var found := _find_skeleton(child)
-		if found:
-			return found
-	return null
 
 
 func _setup_hurtbox() -> void:
@@ -886,33 +866,10 @@ func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
 
 
 func _setup_reticle() -> void:
-	_reticle = Sprite3D.new()
-	_reticle.name = "TargetReticle"
-	_reticle.pixel_size = 0.008
-	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_reticle.no_depth_test = true
-	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
-	_reticle.visible = false
-
-	# Draw a filled downward-pointing triangle
-	var size := 48
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	var half: int = size / 2
-	for y in range(size):
-		# Triangle: top row is full width, narrows to a point at bottom
-		var progress: float = float(y) / float(size - 1)
-		var half_width: int = int(float(half) * (1.0 - progress))
-		for x in range(half - half_width, half + half_width + 1):
-			if x >= 0 and x < size:
-				img.set_pixel(x, y, Color.WHITE)
-	var tex := ImageTexture.create_from_image(img)
-	_reticle.texture = tex
-
 	var height := 1.5
 	if enemy_data:
 		height = enemy_data.collision_height
-	_reticle.position = Vector3(0, height + 0.5, 0)
+	_reticle = TargetReticle.build(height + 0.5)
 	add_child(_reticle)
 
 
@@ -973,11 +930,6 @@ func _process_status_effects(delta: float) -> void:
 	if _status_effects.is_empty():
 		return
 
-	# TODO(#291 combat window): hp_before is currently unused — remove it (and
-	# this annotation) when the combat pass revisits status-effect damage. Kept
-	# now to avoid churning enemy_base.gd outside the combat-last window.
-	@warning_ignore("unused_variable")
-	var hp_before := current_hp
 	var expired: Array = []
 
 	for fx in _status_effects:

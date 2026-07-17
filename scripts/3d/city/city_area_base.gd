@@ -167,7 +167,7 @@ func _process(_delta: float) -> void:
 	for trigger in _interactive_triggers:
 		if is_instance_valid(trigger):
 			var label: Label3D = trigger.get_meta("_prompt_label")
-			label.visible = player.get_nearest_interactable() == trigger
+			label.visible = player.nearest_interactable == trigger
 	_update_position_overlay()
 
 

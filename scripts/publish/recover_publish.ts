@@ -18,7 +18,7 @@ import { createHash } from "crypto";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { loadWallet } from "./lib/wallet.js";
-import { uploadFileToArweave } from "./lib/ardrive.js";
+import { uploadFileToArweave, gatewayUrls } from "./lib/ardrive.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,14 +31,6 @@ const PCK_OUT = join(DIST_DIR, "assets.pck");
 const SIDECAR_OUT = join(DIST_DIR, "pack.manifest.json");
 
 const GODOT_VERSION = "4.5";
-
-function gatewayUrls(txId: string): string[] {
-  return [
-    `https://arweave.net/${txId}`,
-    `https://ar-io.dev/${txId}`,
-    `https://permagate.io/${txId}`,
-  ];
-}
 
 function parsePackTx(): string {
   const i = process.argv.indexOf("--pack-tx");

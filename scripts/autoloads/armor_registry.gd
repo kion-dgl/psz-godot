@@ -6,8 +6,6 @@ const ARMORS_PATH = "res://data/armors/"
 
 var _armors: Dictionary = {}
 
-signal armors_loaded()
-
 
 func _ready() -> void:
 	_load_all_armors()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all_armors() -> void:
 	_RH.load_dir(ARMORS_PATH, _armors, "ArmorRegistry", "armors")
-	armors_loaded.emit()
 
 
 func get_armor(armor_id: String):

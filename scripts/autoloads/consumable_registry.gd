@@ -6,8 +6,6 @@ const CONSUMABLES_PATH = "res://data/consumables/"
 
 var _consumables: Dictionary = {}
 
-signal consumables_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(CONSUMABLES_PATH, _consumables, "ConsumableRegistry", "consumables")
-	consumables_loaded.emit()
 
 
 func get_consumable(id: String):

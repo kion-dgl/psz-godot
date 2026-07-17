@@ -576,7 +576,6 @@ func _save_cell_state() -> void:
 			var prop_entry := {
 				"type": "story_prop",
 				"px": prop.position.x, "py": prop.position.y, "pz": prop.position.z,
-				"state": prop.element_state,
 				"prop_path": prop.prop_path,
 				"prop_scale": prop.prop_scale,
 			}
@@ -858,12 +857,8 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 	if exp_amount > 0:
 		var result := CharacterManager.add_experience(exp_amount)
 		print("[EnemyDrop] +%d EXP for %s" % [exp_amount, enemy_name])
-		if _c._field_hud:
-			_c._field_hud.log_entry("+%d EXP" % exp_amount, Color(0.4, 0.9, 1.0))
 		if result.leveled_up:
 			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)
-			if _c._field_hud:
-				_c._field_hud.log_entry("LEVEL UP! Lv. %d" % result.new_level, Color(1.0, 0.9, 0.3))
 			# The HP/PP/Lv panel is the persistent HudStats autoload (#444) —
 			# it already refreshed via CharacterManager.level_up above; this is
 			# the same belt-and-suspenders nudge the per-scene panel used to get.

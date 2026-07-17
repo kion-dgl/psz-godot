@@ -12,14 +12,6 @@ const DIR_OFFSET := {
 }
 
 
-## Rotate a direction clockwise by the given degrees (0, 90, 180, 270).
-## CW from above: 90 → N→E, E→S, S→W, W→N.
-## Thin alias over StageRotation.rotate_dir — kept so callers/tests that use
-## the grid-generator name don't have to change (#215-C8).
-static func rotate_direction(dir: String, rotation: int) -> String:
-	return StageRotation.rotate_dir(dir, rotation)
-
-
 ## Get gate directions in grid-space for a cell, applying its rotation.
 func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 	var stage_id: String = str(cell.get("stage_id", ""))
@@ -29,7 +21,7 @@ func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 		return original
 	var rotated: Array[String] = []
 	for g in original:
-		rotated.append(rotate_direction(g, rotation))
+		rotated.append(StageRotation.rotate_dir(g, rotation))
 	return rotated
 
 ## Area configuration: maps area_id → prefix, folder, display name.
@@ -760,7 +752,7 @@ func _place_dead_end(grid: Dictionary, pos_key: String, entry_dir: String,
 			continue
 		# Try each rotation to see if the single gate maps to entry_dir
 		for rot in [0, 90, 180, 270]:
-			if rotate_direction(gates[0], rot) == entry_dir:
+			if StageRotation.rotate_dir(gates[0], rot) == entry_dir:
 				grid[pos_key] = {
 					"stage_id": stage_id, "rotation": rot,
 					"entry_direction": entry_dir, "is_start": false,

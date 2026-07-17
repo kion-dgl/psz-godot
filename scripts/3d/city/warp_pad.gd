@@ -103,7 +103,7 @@ func _process(delta: float) -> void:
 		_prompt_label.visible = false
 		return
 
-	var is_nearest: bool = _player_ref.get_nearest_interactable() == self
+	var is_nearest: bool = _player_ref.nearest_interactable == self
 
 	if _is_central_pad():
 		_process_central_prompt(is_nearest)

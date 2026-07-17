@@ -107,7 +107,7 @@ func _load_enemy_model() -> void:
 	add_child(model)
 
 	# Find and play idle animation
-	_anim_player = _find_anim_player(model)
+	_anim_player = NodeUtils.first_of_type(model, "AnimationPlayer") as AnimationPlayer
 
 	# Rare variants without embedded animations — load from base model
 	if ANIM_SOURCE.has(_model_id):
@@ -135,13 +135,13 @@ func _load_anims_from_source(source_id: String) -> void:
 	if not src_packed:
 		return
 	var src_scene := src_packed.instantiate()
-	var src_anim: AnimationPlayer = _find_anim_player(src_scene)
+	var src_anim: AnimationPlayer = NodeUtils.first_of_type(src_scene, "AnimationPlayer") as AnimationPlayer
 	if not src_anim:
 		src_scene.queue_free()
 		return
 
 	# Find skeleton in our model for track remapping
-	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		src_scene.queue_free()
 		return
@@ -154,7 +154,7 @@ func _load_anims_from_source(source_id: String) -> void:
 		model.add_child(_anim_player)
 
 	# Copy animations, remapping skeleton paths to our model
-	var src_skel: Skeleton3D = _find_typed(src_scene, "Skeleton3D") as Skeleton3D
+	var src_skel: Skeleton3D = NodeUtils.first_of_type(src_scene, "Skeleton3D") as Skeleton3D
 	var src_skel_parent_name: String = src_skel.get_parent().name if src_skel else ""
 	var dst_skel_parent_name: String = skel.get_parent().name
 
@@ -295,26 +295,6 @@ func _die() -> void:
 	print("[EnemySpawn] %s defeated!" % enemy_id)
 
 
-func _find_anim_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_anim_player(child)
-		if found:
-			return found
-	return null
-
-
-func _find_typed(root: Node, type_name: String) -> Node:
-	if root.get_class() == type_name:
-		return root
-	for child in root.get_children():
-		var found := _find_typed(child, type_name)
-		if found:
-			return found
-	return null
-
-
 func _find_animation(short_name: String) -> String:
 	if not _anim_player:
 		return ""
@@ -342,26 +322,7 @@ func _find_animation(short_name: String) -> String:
 
 
 func _setup_reticle() -> void:
-	_reticle = Sprite3D.new()
-	_reticle.name = "TargetReticle"
-	_reticle.pixel_size = 0.008
-	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_reticle.no_depth_test = true
-	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
-	_reticle.visible = false
-
-	var size := 48
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	var half: int = size / 2
-	for y in range(size):
-		var progress: float = float(y) / float(size - 1)
-		var half_width: int = int(float(half) * (1.0 - progress))
-		for x in range(half - half_width, half + half_width + 1):
-			if x >= 0 and x < size:
-				img.set_pixel(x, y, Color.WHITE)
-	_reticle.texture = ImageTexture.create_from_image(img)
-	_reticle.position = Vector3(0, collision_size.y + 0.5, 0)
+	_reticle = TargetReticle.build(collision_size.y + 0.5)
 	add_child(_reticle)
 
 

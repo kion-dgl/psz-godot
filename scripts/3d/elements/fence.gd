@@ -82,19 +82,6 @@ func _apply_state() -> void:
 				collision_body.collision_layer = 0
 
 
-## Activate the fence (block passage)
-func activate() -> void:
-	set_state("active")
-
-
 ## Disable the fence (allow passage, hide lasers)
 func disable() -> void:
 	set_state("disabled")
-
-
-## Toggle fence state
-func toggle() -> void:
-	if element_state == "active":
-		disable()
-	else:
-		activate()

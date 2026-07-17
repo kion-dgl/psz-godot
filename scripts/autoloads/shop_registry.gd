@@ -6,8 +6,6 @@ const SHOPS_PATH = "res://data/shops/"
 
 var _shops: Dictionary = {}
 
-signal shops_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(SHOPS_PATH, _shops, "ShopRegistry", "shops")
-	shops_loaded.emit()
 
 
 func get_shop(id: String):
