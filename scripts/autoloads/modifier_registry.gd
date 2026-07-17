@@ -6,8 +6,6 @@ const MODIFIERS_PATH = "res://data/modifiers/"
 
 var _modifiers: Dictionary = {}
 
-signal modifiers_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(MODIFIERS_PATH, _modifiers, "ModifierRegistry", "modifiers")
-	modifiers_loaded.emit()
 
 
 func get_modifier(id: String):

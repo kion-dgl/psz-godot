@@ -12,7 +12,6 @@ enum Outcome { PLAYER_BLACKJACK, PLAYER_WIN, DEALER_WIN, PLAYER_BUST, PUSH }
 
 const SUITS := ["clubs", "diamonds", "hearts", "spades"]
 const RANKS := ["02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "K", "A"]
-const DEALER_HITS_SOFT_17 := false  # Stand on soft 17 (player-friendly H17 vs S17 toggle)
 
 var state: int = State.IDLE
 var bet: int = 0
@@ -151,14 +150,11 @@ func _dealer_play() -> void:
 	while true:
 		var t := hand_total(_dealer_hand)
 		var total: int = t[0]
-		var soft: bool = t[1]
 		if total > 21:
 			break
+		# Dealer stands on 17+, including soft 17 (S17 rule, player-friendly).
 		if total >= 17:
-			if soft and total == 17 and DEALER_HITS_SOFT_17:
-				pass  # hit soft 17
-			else:
-				break
+			break
 		_deal_to(_dealer_hand, 1, false)
 	_resolve()
 

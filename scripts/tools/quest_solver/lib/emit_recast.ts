@@ -6,26 +6,11 @@
 import type { NavMeshQuery } from "recast-navigation";
 import { solvePathRecast, isPointOnNavMesh } from "./recast_solver.ts";
 import type { StagePoint } from "./quest_walk.ts";
+import { GraphBuilder } from "./emit_common.ts";
+import type { EmittedGraph } from "./emit_common.ts";
 
-export interface EmittedWaypoint {
-	id: string;
-	position: [number, number, number];
-	kind: string;
-	label?: string;
-}
-
-export interface EmittedGraph {
-	waypoints: EmittedWaypoint[];
-	waypointEdges: [string, string][];
-	stats: {
-		stagePoints: number;
-		pathsAttempted: number;
-		pathsFailed: number;
-		pathsSolved: number;
-		uniqueWaypoints: number;
-		edges: number;
-	};
-}
+export type { EmittedWaypoint, EmittedGraph } from "./emit_common.ts";
+export { applyGraphToStageConfig as applyToStageConfigRecast } from "./emit_common.ts";
 
 const MERGE_DIST = 2.5;
 const MAX_LEG = 3.0; // re-split recast paths so no autopilot leg exceeds this
@@ -39,33 +24,10 @@ export function solveStageGraphRecast(
 	const lShape = opts.lShape ?? false;
 	const mergeDist = opts.mergeDist ?? MERGE_DIST;
 	const maxLeg = opts.maxLeg ?? MAX_LEG;
-	const mergeDistSq = mergeDist * mergeDist;
 
-	const waypoints: EmittedWaypoint[] = [];
-	const edges = new Set<string>();
-	let nextAutoId = 0;
-
-	// Seed graph with the anchored StagePoints (kept by stable ID).
-	for (const p of points) {
-		waypoints.push({ id: p.id, position: [p.x, 0, p.z], kind: p.kind, label: p.label });
-	}
-
-	const addEdge = (a: string, b: string) => {
-		if (a === b) return;
-		const k = a < b ? `${a}|${b}` : `${b}|${a}`;
-		edges.add(k);
-	};
-
-	const addOrMerge = (x: number, z: number): string => {
-		for (const w of waypoints) {
-			const dx = w.position[0] - x;
-			const dz = w.position[2] - z;
-			if (dx * dx + dz * dz < mergeDistSq) return w.id;
-		}
-		const id = `wp_auto_${nextAutoId++}_${stageId}`;
-		waypoints.push({ id, position: [x, 0, z], kind: "point" });
-		return id;
-	};
+	const builder = new GraphBuilder(stageId, mergeDist);
+	builder.seed(points);
+	const { addEdge, addOrMerge } = builder;
 
 	// Convert each diagonal leg into an L-shape: walk axis-aligned first
 	// (longest axis), then the perpendicular axis. The autopilot's camera-
@@ -186,31 +148,10 @@ export function solveStageGraphRecast(
 		}
 	}
 
-	return {
-		waypoints,
-		waypointEdges: [...edges].map((k) => k.split("|") as [string, string]),
-		stats: {
-			stagePoints: points.length,
-			pathsAttempted: attempted,
-			pathsFailed: failed,
-			pathsSolved: solved,
-			uniqueWaypoints: waypoints.length,
-			edges: edges.size,
-		},
-	};
-}
-
-export function applyToStageConfigRecast(
-	existing: any,
-	graph: EmittedGraph,
-): any {
-	const next = { ...existing };
-	next.waypoints = graph.waypoints.map((w) => ({
-		id: w.id,
-		position: w.position,
-		kind: w.kind,
-		...(w.label ? { label: w.label } : {}),
-	}));
-	next.waypointEdges = graph.waypointEdges;
-	return next;
+	return builder.finish({
+		stagePoints: points.length,
+		pathsAttempted: attempted,
+		pathsFailed: failed,
+		pathsSolved: solved,
+	});
 }

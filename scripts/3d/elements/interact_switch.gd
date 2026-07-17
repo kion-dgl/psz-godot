@@ -4,7 +4,6 @@ class_name InteractSwitch
 ## States: off, on
 
 signal activated
-signal deactivated
 
 # MIRROR_SHADER is inherited from GameElement (same mirror_repeat shader).
 
@@ -78,7 +77,6 @@ func turn_off() -> void:
 	if element_state == "off":
 		return
 	set_state("off")
-	deactivated.emit()
 	print("[InteractSwitch] Deactivated")
 
 

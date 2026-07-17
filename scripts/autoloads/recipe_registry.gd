@@ -6,8 +6,6 @@ const RECIPES_PATH = "res://data/recipes/"
 
 var _recipes: Dictionary = {}
 
-signal recipes_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(RECIPES_PATH, _recipes, "RecipeRegistry", "recipes")
-	recipes_loaded.emit()
 
 
 func get_recipe(id: String):

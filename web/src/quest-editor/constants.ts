@@ -3,6 +3,9 @@
  * Asset paths use raw stage layout: /assets/stages/{subfolder}/{stageId}/lndmd/{stageId}_m.glb
  */
 import { assetUrl } from '../utils/assets';
+import { getStageSubfolder } from '../stage-editor/constants';
+
+export { getStageSubfolder };
 
 export const STANDARD_SUFFIXES = [
   'ga1', 'ib1', 'ib2', 'ic1', 'ic3', 'lb1', 'lb3', 'lc1', 'lc2',
@@ -26,12 +29,6 @@ export const STAGE_AREAS: Record<string, StageAreaConfig> = {
   shrine:   { name: 'Dark Shrine',       prefix: 's07', folder: 'shrine' },
   tower:    { name: 'Eternal Tower',     prefix: 's08', folder: 'tower' },
 };
-
-/** Derive the assets/stages/ subfolder from a mapId and area folder */
-export function getStageSubfolder(mapId: string, folder: string): string {
-  if (mapId.length >= 4) return `${folder}_${mapId[3]}`;
-  return folder;
-}
 
 /** Get the raw stage GLB path for a stage */
 export function getGlbPath(areaKey: string, mapId: string): string {

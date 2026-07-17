@@ -9,26 +9,11 @@ import { solveManhattan } from "./manhattan.ts";
 import type { StagePoint } from "./quest_walk.ts";
 import type { Tri2D } from "./floor.ts";
 import { pointInTriangle } from "./floor.ts";
+import { GraphBuilder } from "./emit_common.ts";
+import type { EmittedGraph } from "./emit_common.ts";
 
-export interface EmittedWaypoint {
-	id: string;
-	position: [number, number, number];
-	kind: string;
-	label?: string;
-}
-
-export interface EmittedGraph {
-	waypoints: EmittedWaypoint[];
-	waypointEdges: [string, string][];
-	stats: {
-		stagePoints: number;
-		pathsAttempted: number;
-		pathsFailed: number;
-		pathsSolved: number;
-		uniqueWaypoints: number;
-		edges: number;
-	};
-}
+export type { EmittedWaypoint, EmittedGraph } from "./emit_common.ts";
+export { applyGraphToStageConfig as applyToStageConfigManhattan } from "./emit_common.ts";
 
 // MERGE_DIST collapses path corners onto existing waypoints if they're
 // closer than this. Keep it BELOW the grid resolution so we don't eat
@@ -58,7 +43,6 @@ export function solveStageGraphManhattan(
 ): EmittedGraph {
 	const mergeDist = opts.mergeDist ?? MERGE_DIST;
 	const maxLeg = opts.maxLeg ?? MAX_LEG;
-	const mergeDistSq = mergeDist * mergeDist;
 	// preSwitchGrid is the variant with closed fences stamped as obstacles.
 	// If absent we just route everything against the open grid (stages with
 	// no fences have nothing to vary). Spawn→switch and spawn↔spawn run on
@@ -93,30 +77,9 @@ export function solveStageGraphManhattan(
 		return null;
 	};
 
-	const waypoints: EmittedWaypoint[] = [];
-	const edges = new Set<string>();
-	let nextAutoId = 0;
-
-	for (const p of points) {
-		waypoints.push({ id: p.id, position: [p.x, 0, p.z], kind: p.kind, label: p.label });
-	}
-
-	const addEdge = (a: string, b: string) => {
-		if (a === b) return;
-		const k = a < b ? `${a}|${b}` : `${b}|${a}`;
-		edges.add(k);
-	};
-
-	const addOrMerge = (x: number, z: number): string => {
-		for (const w of waypoints) {
-			const dx = w.position[0] - x;
-			const dz = w.position[2] - z;
-			if (dx * dx + dz * dz < mergeDistSq) return w.id;
-		}
-		const id = `wp_auto_${nextAutoId++}_${stageId}`;
-		waypoints.push({ id, position: [x, 0, z], kind: "point" });
-		return id;
-	};
+	const builder = new GraphBuilder(stageId, mergeDist);
+	builder.seed(points);
+	const { addEdge, addOrMerge } = builder;
 
 	// Manhattan paths are already axis-aligned. Re-split any leg longer
 	// than maxLeg so the autopilot has frequent direction-correction
@@ -229,28 +192,10 @@ export function solveStageGraphManhattan(
 		}
 	}
 
-	return {
-		waypoints,
-		waypointEdges: [...edges].map((k) => k.split("|") as [string, string]),
-		stats: {
-			stagePoints: points.length,
-			pathsAttempted: attempted,
-			pathsFailed: failed,
-			pathsSolved: solved,
-			uniqueWaypoints: waypoints.length,
-			edges: edges.size,
-		},
-	};
-}
-
-export function applyToStageConfigManhattan(existing: any, graph: EmittedGraph): any {
-	const next = { ...existing };
-	next.waypoints = graph.waypoints.map((w) => ({
-		id: w.id,
-		position: w.position,
-		kind: w.kind,
-		...(w.label ? { label: w.label } : {}),
-	}));
-	next.waypointEdges = graph.waypointEdges;
-	return next;
+	return builder.finish({
+		stagePoints: points.length,
+		pathsAttempted: attempted,
+		pathsFailed: failed,
+		pathsSolved: solved,
+	});
 }

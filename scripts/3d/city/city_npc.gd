@@ -225,7 +225,7 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	# Show prompt when player's nearest interactable is this NPC
 	if _player_ref and is_instance_valid(_player_ref):
-		_prompt_label.visible = _player_ref.get_nearest_interactable() == self
+		_prompt_label.visible = _player_ref.nearest_interactable == self
 	else:
 		_prompt_label.visible = false
 

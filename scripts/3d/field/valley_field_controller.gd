@@ -1159,9 +1159,9 @@ func _spawn_field_elements() -> void:
 				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		)
 		if is_spawn_edge:
-			waypoint.mark_unvisited()
+			waypoint.set_state("unvisited")
 		else:
-			waypoint.mark_new()
+			waypoint.set_state("new")
 
 		# Debug spheres (gate=yellow, spawn=green, trigger=red)
 		_add_debug_sphere(aw_gate_pos, Color(1, 1, 0), "GateMark_%s" % portal_dir)
@@ -1299,13 +1299,13 @@ func _spawn_field_elements() -> void:
 		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			gate_waypoint.mark_unvisited()
+			gate_waypoint.set_state("unvisited")
 			wp_state = "came_from"
 		elif _visited_cells.has(target_cell_pos):
-			gate_waypoint.mark_visited()
+			gate_waypoint.set_state("visited")
 			wp_state = "visited_prior"
 		else:
-			gate_waypoint.mark_new()
+			gate_waypoint.set_state("new")
 			wp_state = "unvisited"
 		_fdbg("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
 
@@ -1878,48 +1878,42 @@ func _toggle_debug_panel() -> void:
 		_debug_panel.visible = not _debug_panel.visible
 
 
+# Shared tail of every debug toggle: set visibility on the (possibly freed)
+# mesh group, then refresh the debug label.
+func _apply_group_visibility(meshes: Array, vis: bool) -> void:
+	for m in meshes:
+		if is_instance_valid(m):
+			m.visible = vis
+	_update_debug_label()
+
+
 func _toggle_triggers() -> void:
 	_show_triggers = not _show_triggers
-	for m in _debug_trigger_meshes:
-		if is_instance_valid(m):
-			m.visible = _show_triggers
-	_update_debug_label()
+	_apply_group_visibility(_debug_trigger_meshes, _show_triggers)
 
 
 func _toggle_gate_markers() -> void:
 	_show_gate_markers = not _show_gate_markers
 	DebugConfig.show_gate_dots = _show_gate_markers
-	for m in _debug_gate_meshes:
-		if is_instance_valid(m):
-			m.visible = _show_gate_markers
-	_update_debug_label()
+	_apply_group_visibility(_debug_gate_meshes, _show_gate_markers)
 
 
 func _toggle_floor_collision() -> void:
 	_show_floor_collision = not _show_floor_collision
 	DebugConfig.show_floor_collision = _show_floor_collision
-	for m in _debug_collision_meshes:
-		if is_instance_valid(m):
-			m.visible = _show_floor_collision
-	_update_debug_label()
+	_apply_group_visibility(_debug_collision_meshes, _show_floor_collision)
 
 
 func _toggle_spawn_points() -> void:
 	_show_spawn_points = not _show_spawn_points
-	for m in _debug_spawn_meshes:
-		if is_instance_valid(m):
-			m.visible = _show_spawn_points
-	_update_debug_label()
+	_apply_group_visibility(_debug_spawn_meshes, _show_spawn_points)
 
 
 func _toggle_all_collision() -> void:
 	_show_all_collision = not _show_all_collision
 	if _show_all_collision and _debug_all_collision_meshes.is_empty():
 		_build_all_collision_debug()
-	for m in _debug_all_collision_meshes:
-		if is_instance_valid(m):
-			m.visible = _show_all_collision
-	_update_debug_label()
+	_apply_group_visibility(_debug_all_collision_meshes, _show_all_collision)
 
 
 func _sync_debug_config() -> void:

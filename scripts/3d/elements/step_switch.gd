@@ -4,7 +4,6 @@ class_name StepSwitch
 ## States: off, on
 
 signal activated
-signal deactivated
 
 
 func _init() -> void:
@@ -47,11 +46,3 @@ func turn_on() -> void:
 	activated.emit()
 	print("[StepSwitch] Activated")
 
-
-## Turn switch off
-func turn_off() -> void:
-	if element_state == "off":
-		return
-	set_state("off")
-	deactivated.emit()
-	print("[StepSwitch] Deactivated")

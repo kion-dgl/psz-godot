@@ -639,7 +639,7 @@ func _return_to_city() -> void:
 		_heal_to_full()
 
 	SessionManager.return_to_city()
-	SaveManager.auto_save()
+	SaveManager.save_game()
 	SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 
 

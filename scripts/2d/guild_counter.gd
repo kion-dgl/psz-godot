@@ -351,7 +351,7 @@ func _report_quest() -> void:
 	msg += _format_rewards(data.get("rewards_granted", {}))
 	hint_label.text = msg
 	# Auto-save after quest completion so progress isn't lost
-	SaveManager.auto_save()
+	SaveManager.save_game()
 	_selected_index = 0
 	_load_entries()
 	_refresh_display()

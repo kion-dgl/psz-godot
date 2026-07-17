@@ -761,15 +761,8 @@ func _resolve_footstep_clip() -> String:
 
 
 func _find_node_of_type(root: Node, type_name: String) -> Node:
-	if root.get_class() == type_name:
-		return root
-
-	for child in root.get_children():
-		var found := _find_node_of_type(child, type_name)
-		if found:
-			return found
-
-	return null
+	var hit := root.find_children("*", type_name, true, false)
+	return hit[0] if not hit.is_empty() else null
 
 
 func _load_character_model() -> void:
@@ -2552,33 +2545,14 @@ func _execute_attack_hit() -> void:
 func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_angle: float = 0.0) -> Array:
 	if not is_inside_tree():
 		return []  # off-tree (unit tests) — no enemy group to scan
-	var h_dist: float = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
-	var v_dist: float = float(config.get("hit_v_dist", 0.5))
-	var half_angle: float = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
-	var v_angle: float = float(config.get("hit_v_angle_deg", 40.0))
-	# The cone's origin is the weapon, not the feet; targets are tested at
-	# their hitbox center so the vertical slope reads naturally.
+	# Same geometry as the companion's swing (ConeTargeting.scan_enemies), with
+	# the technique-widened reach/angle layered onto the weapon cone. The cone's
+	# origin is the weapon, not the feet.
+	var widened: Dictionary = config.duplicate()
+	widened["hit_h_dist"] = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
+	widened["hit_h_angle_deg"] = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
-	var found: Array = []
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(enemy):
-			continue
-		if not enemy.get("is_alive"):
-			continue
-		var radius: float = 0.5
-		var height: float = 1.5
-		var ed = enemy.get("enemy_data")
-		if ed != null:
-			radius = float(ed.collision_radius)
-			height = float(ed.collision_height)
-		var center: Vector3 = enemy.global_position + Vector3(0, height * 0.5, 0)
-		var d: float = ConeTargeting.distance_in_cone(
-			origin, player_rotation, h_dist, v_dist, half_angle, v_angle,
-			center, radius)
-		if d >= 0.0:
-			found.append({"enemy": enemy, "dist": d})
-	found.sort_custom(func(a, b): return a.dist < b.dist)
-	return found.map(func(c): return c.enemy)
+	return ConeTargeting.scan_enemies(get_tree().get_nodes_in_group("enemies"), origin, player_rotation, widened)
 
 
 func _fire_projectile(atk: Dictionary) -> void:
@@ -2910,7 +2884,3 @@ func _try_interact() -> void:
 		interacted_with.emit(target)
 		if is_instance_valid(target):
 			print("[Player] Interacted with: ", target.name)
-
-
-func get_nearest_interactable() -> Node3D:
-	return nearest_interactable

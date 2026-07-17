@@ -6,8 +6,6 @@ const ENEMIES_PATH = "res://data/enemies/"
 
 var _enemies: Dictionary = {}
 
-signal enemies_loaded()
-
 
 func _ready() -> void:
 	_load_all_enemies()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all_enemies() -> void:
 	_RH.load_dir(ENEMIES_PATH, _enemies, "EnemyRegistry", "enemies")
-	enemies_loaded.emit()
 
 
 func get_enemy(enemy_id: String):

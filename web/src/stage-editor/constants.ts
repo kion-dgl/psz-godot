@@ -8,7 +8,7 @@ export const STANDARD_SUFFIXES = [
 ];
 
 // Generate maps for a stage prefix (e.g., 's01' for valley)
-export function generateStageMaps(prefix: string, variants: string[] = ['a', 'b', 'e', 'z']): Record<string, string[]> {
+function generateStageMaps(prefix: string, variants: string[] = ['a', 'b', 'e', 'z']): Record<string, string[]> {
   const result: Record<string, string[]> = {};
   for (const variant of variants) {
     if (variant === 'e') {
@@ -143,58 +143,4 @@ export function getSkyboxPath(areaKey: string, mapId: string): string | null {
   const folder = area?.folder ?? 'valley';
   const subfolder = getStageSubfolder(mapId, folder);
   return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/skybox/o0s_zsky.glb`);
-}
-
-// Calculate portal positions based on edge, offset along edge, and grid settings
-export function calculatePortalPositions(
-  edge: 'north' | 'south' | 'east' | 'west',
-  offsetAlongEdge: number,
-  gridSize: number,
-  gridOffset: [number, number]
-): { gate: [number, number, number]; spawn: [number, number, number]; trigger: [number, number, number]; rotation: number } {
-  const halfSize = gridSize / 2;
-  const spawnInset = 3;
-  const triggerOutset = 2;
-  const y = 1;
-
-  switch (edge) {
-    case 'north':
-      return {
-        gate: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] - halfSize],
-        spawn: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] - halfSize + spawnInset],
-        trigger: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] - halfSize - triggerOutset],
-        rotation: 0,
-      };
-    case 'south':
-      return {
-        gate: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] + halfSize],
-        spawn: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] + halfSize - spawnInset],
-        trigger: [gridOffset[0] + offsetAlongEdge, y, gridOffset[1] + halfSize + triggerOutset],
-        rotation: Math.PI,
-      };
-    case 'east':
-      return {
-        gate: [gridOffset[0] + halfSize, y, gridOffset[1] + offsetAlongEdge],
-        spawn: [gridOffset[0] + halfSize - spawnInset, y, gridOffset[1] + offsetAlongEdge],
-        trigger: [gridOffset[0] + halfSize + triggerOutset, y, gridOffset[1] + offsetAlongEdge],
-        rotation: -Math.PI / 2,
-      };
-    case 'west':
-      return {
-        gate: [gridOffset[0] - halfSize, y, gridOffset[1] + offsetAlongEdge],
-        spawn: [gridOffset[0] - halfSize + spawnInset, y, gridOffset[1] + offsetAlongEdge],
-        trigger: [gridOffset[0] - halfSize - triggerOutset, y, gridOffset[1] + offsetAlongEdge],
-        rotation: Math.PI / 2,
-      };
-  }
-}
-
-// Get gate rotation for visual display
-export function getGateRotation(edge: 'north' | 'south' | 'east' | 'west'): number {
-  switch (edge) {
-    case 'north': return Math.PI;
-    case 'south': return 0;
-    case 'east': return Math.PI / 2;
-    case 'west': return -Math.PI / 2;
-  }
 }

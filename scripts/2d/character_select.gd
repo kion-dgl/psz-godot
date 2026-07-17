@@ -55,12 +55,8 @@ var _desc_label: Label
 var _preview_viewport: SubViewport
 var _preview_root: Node3D = null
 
-# Hold-to-scroll repeat (matches PSO start menu / NPC shop timing)
-const SCROLL_HOLD := 0.2
-const SCROLL_REPEAT := 1.0 / 30.0
-const NAV_ACTIONS := ["ui_up", "ui_down"]
-var _nav_hold: Dictionary = {}
-var _nav_next: Dictionary = {}
+# Hold-to-scroll repeat (matches PSO start menu / NPC shop timing) — shared helper.
+var _nav: NavRepeat = null
 
 
 # --- Inner Banner Control: draws the 6-vertex polygon + outline ---
@@ -91,10 +87,6 @@ class BannerPolygon extends Control:
 
 func _ready() -> void:
 	MusicManager.play_location_music("character_select")
-
-	for action in NAV_ACTIONS:
-		_nav_hold[action] = 0.0
-		_nav_next[action] = 0.0
 
 	# Drop tscn placeholders, build everything programmatically.
 	for child in get_children():
@@ -574,23 +566,13 @@ func _play_idle_animation(model: Node3D, is_female: bool) -> void:
 
 
 func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node
-	for child in node.get_children():
-		var found := _find_skeleton(child)
-		if found:
-			return found
-	return null
+	var hit := node.find_children("*", "Skeleton3D", true, false)
+	return hit[0] if not hit.is_empty() else null
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
-		if found:
-			return found
-	return null
+	var hit := node.find_children("*", "AnimationPlayer", true, false)
+	return hit[0] if not hit.is_empty() else null
 
 
 func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
@@ -620,30 +602,23 @@ func _filled_count() -> int:
 # --- Input handling ---
 
 func _process(delta: float) -> void:
-	# PSO-style auto-repeat scroll: hold ui_up/ui_down, after SCROLL_HOLD
-	# fire one synthetic press every SCROLL_REPEAT. Skipped while a delete
-	# confirmation is up so it doesn't blow past the prompt.
+	# PSO-style auto-repeat scroll via the shared NavRepeat helper. Skipped
+	# while a delete confirmation is up so it doesn't blow past the prompt.
+	if _nav == null:
+		_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
 	if _confirming_delete:
-		for action in NAV_ACTIONS:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
+		_nav.reset()
 		return
-	for action in NAV_ACTIONS:
-		if Input.is_action_pressed(action):
-			var held: float = float(_nav_hold[action]) + delta
-			_nav_hold[action] = held
-			if held >= SCROLL_HOLD:
-				var next_at: float = float(_nav_next[action]) - delta
-				while next_at <= 0.0:
-					var ev := InputEventAction.new()
-					ev.action = action
-					ev.pressed = true
-					_unhandled_input(ev)
-					next_at += SCROLL_REPEAT
-				_nav_next[action] = next_at
-		else:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
+	_nav.tick(delta)
+
+
+## NavRepeat callback: re-emit a held nav action as a synthetic input event
+## so this screen's own _unhandled_input handles it (hold-to-repeat nav).
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
 
 
 func _unhandled_input(event: InputEvent) -> void:
