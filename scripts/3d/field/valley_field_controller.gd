@@ -1594,6 +1594,46 @@ func _lock_gates_for_enemies() -> void:
 				_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "locked")
 
 
+## Open every gate locked for this room's clear condition, updating the
+## minimap/area panel. Extracted from _check_room_clear.
+func _unlock_room_gates() -> void:
+	if _room_gates_locked.size() > 0:
+		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
+	for gate in _room_gates_locked:
+		if is_instance_valid(gate):
+			gate.open()
+			var dir := _gate_direction(gate)
+			# Enable the gate's trigger
+			var trigger := _find_child_by_name(self, "GateTrigger_%s" % dir) as Area3D
+			if trigger:
+				trigger.monitoring = true
+			if _room_minimap and not dir.is_empty():
+				_room_minimap.set_gate_locked(dir, false)
+			if _area_map_panel and not dir.is_empty():
+				_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), dir, "open")
+	_room_gates_locked.clear()
+
+
+## Unlock every area-warp edge locked for this room (same pattern as gates).
+func _unlock_area_warps() -> void:
+	for node in _warp_edge_locked:
+		if is_instance_valid(node):
+			if node is AreaWarp:
+				node.element_state = "open"
+				node._apply_state()
+				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""
+				if _room_minimap and not aw_dir.is_empty():
+					_room_minimap.set_gate_locked(aw_dir, false)
+				if _area_map_panel and not aw_dir.is_empty():
+					_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
+				_fdbg("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
+			elif node is StaticBody3D:
+				node.queue_free()
+			elif node is Area3D:
+				node.monitoring = true
+	_warp_edge_locked.clear()
+
+
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
 	var alive_count: int = 0
@@ -1620,39 +1660,8 @@ func _check_room_clear() -> void:
 		return
 
 	_fdbg("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
-	if _room_gates_locked.size() > 0:
-		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
-	for gate in _room_gates_locked:
-		if is_instance_valid(gate):
-			gate.open()
-			var dir := _gate_direction(gate)
-			# Enable the gate's trigger
-			var trigger := _find_child_by_name(self, "GateTrigger_%s" % dir) as Area3D
-			if trigger:
-				trigger.monitoring = true
-			if _room_minimap and not dir.is_empty():
-				_room_minimap.set_gate_locked(dir, false)
-			if _area_map_panel and not dir.is_empty():
-				_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), dir, "open")
-	_room_gates_locked.clear()
-
-	# Unlock area warps (same pattern as gates above)
-	for node in _warp_edge_locked:
-		if is_instance_valid(node):
-			if node is AreaWarp:
-				node.element_state = "open"
-				node._apply_state()
-				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""
-				if _room_minimap and not aw_dir.is_empty():
-					_room_minimap.set_gate_locked(aw_dir, false)
-				if _area_map_panel and not aw_dir.is_empty():
-					_area_map_panel.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
-				_fdbg("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
-			elif node is StaticBody3D:
-				node.queue_free()
-			elif node is Area3D:
-				node.monitoring = true
-	_warp_edge_locked.clear()
+	_unlock_room_gates()
+	_unlock_area_warps()
 
 	# Drop key on room clear if configured. If the quest just completed,
 	# spawn a telepipe at the same drop position instead — the player has

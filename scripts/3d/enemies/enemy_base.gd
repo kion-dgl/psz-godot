@@ -185,7 +185,7 @@ func _setup_model() -> void:
 				MeshUtils.apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
-	animation_player = _find_animation_player(model)
+	animation_player = NodeUtils.first_of_type(model, "AnimationPlayer") as AnimationPlayer
 
 	# If no animations in the model, load from animation_model_id source
 	if animation_player:
@@ -201,15 +201,15 @@ func _setup_model() -> void:
 			var anim_scene: PackedScene = load(anim_glb_path)
 			if anim_scene:
 				var anim_model := anim_scene.instantiate()
-				var source_player := _find_animation_player(anim_model)
+				var source_player := NodeUtils.first_of_type(anim_model, "AnimationPlayer") as AnimationPlayer
 				if source_player:
 					# Find the skeleton parents on both models so we can remap
 					# track paths from source mesh root → destination mesh root.
 					# Guard get_parent() in case the Skeleton3D ends up at the
 					# scene root with no parent (shouldn't happen for these GLBs
 					# but is cheap to handle).
-					var dst_skel := _find_skeleton(model)
-					var src_skel := _find_skeleton(anim_model)
+					var dst_skel := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
+					var src_skel := NodeUtils.first_of_type(anim_model, "Skeleton3D") as Skeleton3D
 					var src_root_name: String = ""
 					var dst_root_name: String = ""
 					if src_skel and src_skel.get_parent():
@@ -258,16 +258,6 @@ func _cache_model_materials() -> void:
 				var mat := mi.get_active_material(i)
 				if mat is StandardMaterial3D:
 					_cached_materials.append(mat)
-
-
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	var hit := node.find_children("*", "AnimationPlayer", true, false)
-	return hit[0] if not hit.is_empty() else null
-
-
-func _find_skeleton(node: Node) -> Skeleton3D:
-	var hit := node.find_children("*", "Skeleton3D", true, false)
-	return hit[0] if not hit.is_empty() else null
 
 
 func _setup_hurtbox() -> void:

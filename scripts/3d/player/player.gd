@@ -330,13 +330,13 @@ func _ready() -> void:
 func _setup_animations() -> void:
 	# Find the skeleton in the model
 	var model_node := $PlayerModel/Model
-	skeleton = _find_node_of_type(model_node, "Skeleton3D") as Skeleton3D
+	skeleton = NodeUtils.first_of_type(model_node, "Skeleton3D") as Skeleton3D
 
 	# Find the AnimationPlayer in the Animations node (scene-baked saber anims)
 	var anims_node := $PlayerModel/Animations
 	var source_anim_player: AnimationPlayer
 	if anims_node:
-		source_anim_player = _find_node_of_type(anims_node, "AnimationPlayer") as AnimationPlayer
+		source_anim_player = NodeUtils.first_of_type(anims_node, "AnimationPlayer") as AnimationPlayer
 
 	if not source_anim_player or not skeleton:
 		push_warning("Could not set up animations - skeleton: %s, anim_player: %s" % [skeleton != null, source_anim_player != null])
@@ -400,7 +400,7 @@ func _load_weapon_animations() -> void:
 		return
 
 	var anim_scene := packed.instantiate()
-	var source_player: AnimationPlayer = _find_node_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
+	var source_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if not source_player:
 		push_warning("[Player] No AnimationPlayer found in animation GLB: %s" % anim_glb)
 		anim_scene.queue_free()
@@ -435,7 +435,7 @@ func _load_weapon_animations() -> void:
 	# Also load shared PSO locomotion from the scene-baked Animations node
 	var scene_anims_node := $PlayerModel/Animations
 	if scene_anims_node:
-		var scene_player: AnimationPlayer = _find_node_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
+		var scene_player: AnimationPlayer = NodeUtils.first_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
 		if scene_player:
 			for anim_name in ["pmsa_walk", "pmsa_run_pso"]:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
@@ -758,11 +758,6 @@ func _resolve_footstep_clip() -> String:
 		race = "racast"
 	# Fall back to human if the specific race isn't labeled for this terrain yet.
 	return clips.get(race, clips.get("human", ""))
-
-
-func _find_node_of_type(root: Node, type_name: String) -> Node:
-	var hit := root.find_children("*", type_name, true, false)
-	return hit[0] if not hit.is_empty() else null
 
 
 func _load_character_model() -> void:

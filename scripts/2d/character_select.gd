@@ -105,6 +105,9 @@ func _ready() -> void:
 	_build_next_button()
 	_build_hint_bar()
 
+	# Shared hold-to-repeat for list nav (same helper the shops use).
+	_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
+
 	_refresh_selection()
 
 
@@ -520,7 +523,7 @@ func _update_preview() -> void:
 
 
 func _play_idle_animation(model: Node3D, is_female: bool) -> void:
-	var skeleton := _find_skeleton(model)
+	var skeleton := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	if skeleton == null:
 		return
 	var anim_glb := "res://assets/player/animations/common_w.glb" if is_female else "res://assets/player/animations/common_m.glb"
@@ -530,7 +533,7 @@ func _play_idle_animation(model: Node3D, is_female: bool) -> void:
 	if packed == null:
 		return
 	var anim_scene := packed.instantiate()
-	var src_player: AnimationPlayer = _find_animation_player(anim_scene)
+	var src_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if src_player == null:
 		anim_scene.queue_free()
 		return
@@ -565,16 +568,6 @@ func _play_idle_animation(model: Node3D, is_female: bool) -> void:
 	anim_scene.queue_free()
 
 
-func _find_skeleton(node: Node) -> Skeleton3D:
-	var hit := node.find_children("*", "Skeleton3D", true, false)
-	return hit[0] if not hit.is_empty() else null
-
-
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	var hit := node.find_children("*", "AnimationPlayer", true, false)
-	return hit[0] if not hit.is_empty() else null
-
-
 func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
 	# Original track paths look like "pc_000_000/Skeleton3D:BoneName" or
 	# "pc_000_000/Skeleton3D::blend_shapes/shape". The destination skeleton
@@ -602,14 +595,12 @@ func _filled_count() -> int:
 # --- Input handling ---
 
 func _process(delta: float) -> void:
-	# PSO-style auto-repeat scroll via the shared NavRepeat helper. Skipped
+	# PSO-style auto-repeat scroll (_nav built in _ready). Held nav is paused
 	# while a delete confirmation is up so it doesn't blow past the prompt.
-	if _nav == null:
-		_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
 	if _confirming_delete:
 		_nav.reset()
-		return
-	_nav.tick(delta)
+	else:
+		_nav.tick(delta)
 
 
 ## NavRepeat callback: re-emit a held nav action as a synthetic input event

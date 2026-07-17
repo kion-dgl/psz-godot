@@ -138,7 +138,7 @@ func _apply_state() -> void:
 func _load_and_play_animation(anim_field: String) -> void:
 	if not model:
 		return
-	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 
@@ -161,7 +161,7 @@ func _load_and_play_animation(anim_field: String) -> void:
 	if not anim_packed:
 		return
 	var anim_scene := anim_packed.instantiate()
-	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+	var source_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if not source_player or not source_player.has_animation(anim_name):
 		push_warning("[FieldNpc] Animation '%s' not found in %s" % [anim_name, anim_glb])
 		anim_scene.queue_free()
@@ -185,8 +185,3 @@ func _load_and_play_animation(anim_field: String) -> void:
 	player.play(anim_name)
 	anim_scene.queue_free()
 	print("[FieldNpc] Playing '%s' on %s" % [anim_name, npc_id])
-
-
-func _find_typed(root: Node, type_name: String) -> Node:
-	var hit := root.find_children("*", type_name, true, false)
-	return hit[0] if not hit.is_empty() else null

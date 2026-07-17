@@ -182,7 +182,7 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	var wa: Dictionary = WEAPON_ANIM.get(wtype, WEAPON_ANIM[0])
 	var loco: Dictionary = WEAPON_ANIM[0]  # shared PSO locomotion (saber retarget)
 
-	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(npc_model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 
@@ -196,10 +196,10 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	var wscene: Node = _load_anim_scene(wglb)
 	if wscene == null:
 		return
-	var wsrc: AnimationPlayer = _find_typed(wscene, "AnimationPlayer") as AnimationPlayer
+	var wsrc: AnimationPlayer = NodeUtils.first_of_type(wscene, "AnimationPlayer") as AnimationPlayer
 	var lscene: Node = wscene if lglb == wglb else _load_anim_scene(lglb)
 	var lsrc: AnimationPlayer = wsrc if lglb == wglb else \
-		(_find_typed(lscene, "AnimationPlayer") as AnimationPlayer if lscene else null)
+		(NodeUtils.first_of_type(lscene, "AnimationPlayer") as AnimationPlayer if lscene else null)
 	if wsrc == null:
 		wscene.queue_free()
 		if lscene and lscene != wscene:
@@ -269,7 +269,7 @@ func _attach_companion_weapon(npc_model: Node) -> void:
 	if not ResourceLoader.exists(glb_path):
 		push_warning("[Companion] %s weapon GLB missing: %s" % [companion_id, glb_path])
 		return
-	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(npc_model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 	var bone_idx: int = skel.find_bone(WEAPON_BONE_NAME)
@@ -355,11 +355,6 @@ func _autopilot_anim_tripwire(prev_pos: Vector3, curr_pos: Vector3, delta: float
 	if _stationary_anim_time > ANIM_HOLD_TIME:
 		push_error("[sanity] FAIL: companion '%s' holds '%s' while stationary for %.2fs (planar speed %.3f m/s < %.2f)" % [companion_id, _current_anim, _stationary_anim_time, planar_speed, CompanionCombat.IDLE_EPS])
 		_stationary_anim_time = 0.0  # avoid log spam
-
-
-func _find_typed(root: Node, type_name: String) -> Node:
-	var hit := root.find_children("*", type_name, true, false)
-	return hit[0] if not hit.is_empty() else null
 
 
 func _build_name_label() -> void:
