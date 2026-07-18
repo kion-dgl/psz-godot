@@ -53,6 +53,35 @@ var _attack_anim: String = ""
 var _attack_fallback_timer: float = 0.0
 const ATTACK_FALLBACK_DURATION: float = 0.8
 
+## Frame-tied attack model (#509, spec /mechanics/enemy-attacks). The instant
+## hardcoded-10 hit is replaced by: select an attack from data/enemy_attacks.json by
+## range band, lock facing at start, then during the clip's damage window run an arc
+## test and deal attack_base × damage_mult once.
+var _attacks: Array = []                    # resolved attack defs for this enemy (cached)
+var _attack_def: Dictionary = {}            # the attack chosen for the swing in flight
+var _attack_facing: Vector3 = Vector3.FORWARD  # facing locked at attack start
+var _attack_hit_resolved: bool = false      # one resolution (hit or dodge) per attack
+var _attack_clip_len: float = ATTACK_FALLBACK_DURATION  # resolved clip length (or fallback)
+var _attack_pos: float = 0.0                # position within the attack clip (seconds)
+var _rng := RandomNumberGenerator.new()
+## Player collision radius used by the arc test (the target's radius). Real value isn't
+## exposed cheaply; melee reach dwarfs it, so a constant is fine.
+## ponytail: constant player radius, read the real shape if arc precision ever matters.
+const PLAYER_HIT_RADIUS: float = 0.5
+
+## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
+## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
+## cadence/telegraph. cadence/reaction < 1 = faster attacks / shorter windup.
+## ponytail: starting calibration table — tune the three rows by play-test.
+const AGGRO_SCALING := {
+	"normal":     {"detection": 1.0,  "cadence": 1.0,  "reaction": 1.0},
+	"hard":       {"detection": 1.25, "cadence": 0.80, "reaction": 0.85},
+	"super-hard": {"detection": 1.5,  "cadence": 0.65, "reaction": 0.70},
+}
+var _aggro_cadence: float = 1.0
+var _aggro_reaction: float = 1.0
+var _detection_range: float = 15.0
+
 ## Stuck detection — try perpendicular direction when blocked
 var _stuck_time: float = 0.0
 var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
@@ -147,6 +176,10 @@ func _ready() -> void:
 
 	if enemy_data:
 		_sfx = ENEMY_SFX.get(enemy_data.model_id, {})
+		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
+
+	_rng.randomize()
+	_apply_difficulty()
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
@@ -388,7 +421,7 @@ func _process_idle(delta: float) -> void:
 	# Check if target is in detection range - become alert!
 	if target and is_instance_valid(target):
 		var dist := global_position.distance_to(target.global_position)
-		if enemy_data and dist <= enemy_data.detection_range:
+		if enemy_data and dist <= _detection_range:
 			current_state = EnemyState.CHASING
 			is_wandering = false
 			_play_animation("tht", true)  # Threat/war cry when becoming active
@@ -449,7 +482,10 @@ func _process_chasing(_delta: float) -> void:
 	if enemy_data:
 		attack_range = enemy_data.attack_range
 
-	if dist <= attack_range and attack_cooldown_timer <= 0 and not _stun_no_attack:
+	# Gate: cooldown ready AND some non-berserk attack band contains the distance
+	# (spec /mechanics/enemy-attacks "Selection"). Falls back to the flat attack_range
+	# only when this enemy has no attack table.
+	if attack_cooldown_timer <= 0 and not _stun_no_attack and _has_attack_in_band(dist, attack_range):
 		current_state = EnemyState.ATTACKING
 		_start_attack()
 		return
@@ -499,6 +535,22 @@ func _process_chasing(_delta: float) -> void:
 func _process_attacking(delta: float) -> void:
 	velocity.x = 0
 	velocity.z = 0
+
+	# Advance the position within the attack clip. Prefer the real animation
+	# position; fall back to an accumulating timer for no-clip rigs (and tests).
+	if _attack_anim != "" and animation_player and animation_player.current_animation == _attack_anim:
+		_attack_pos = animation_player.current_animation_position
+	else:
+		_attack_pos += delta
+
+	# Frame-tied damage window: [windup_frac, damage_end_frac] of the clip length.
+	# Difficulty shortens the windup (reaction). Damage lands on the first frame the
+	# target passes the arc test; one resolution (hit or dodge) per attack (#509).
+	if is_attacking and not _attack_hit_resolved and not _attack_def.is_empty():
+		var window_start: float = float(_attack_def.get("windup_frac", 0.35)) * _attack_clip_len * _aggro_reaction
+		var window_end: float = float(_attack_def.get("damage_end_frac", 0.6)) * _attack_clip_len
+		if _attack_pos >= window_start and _attack_pos <= window_end:
+			_try_attack_hit()
 
 	# Attack end: the resolved animation finished (signal path or the
 	# watchdog below), or the fallback duration elapsed when no attack
@@ -583,29 +635,97 @@ func _start_attack() -> void:
 		return
 
 	is_attacking = true
-	_attack_anim = _play_animation("atk", true)  # Force play attack animation
+
+	# Select the attack by range band + weight, then resolve its clip.
+	var dist := global_position.distance_to(target.global_position)
+	_attack_def = _select_attack_for(dist)
+	_attack_hit_resolved = false
+	_attack_pos = 0.0
+
+	_attack_anim = _play_animation(String(_attack_def.get("clip", "atk")), true)
 	if _attack_anim.is_empty():
-		# Rig has no resolvable attack clip — end the attack on a timer.
+		# Rig has no resolvable attack clip — timeline fractions apply to the
+		# fixed fallback duration; end the attack on that same timer.
 		_attack_fallback_timer = ATTACK_FALLBACK_DURATION
+		_attack_clip_len = ATTACK_FALLBACK_DURATION
+	else:
+		var anim := animation_player.get_animation(_attack_anim)
+		_attack_clip_len = anim.length if anim else ATTACK_FALLBACK_DURATION
 	_play_sfx("attack")
 
-	# Face the target
-	var dir_to_target := (target.global_position - global_position).normalized()
+	# Lock facing at attack start — the arc does not track during the swing.
+	var dir_to_target := target.global_position - global_position
 	dir_to_target.y = 0
 	if dir_to_target.length() > 0.1:
-		_face_direction(dir_to_target)
+		_attack_facing = dir_to_target.normalized()
+		_face_direction(_attack_facing)
 
-	# Deal damage to player (fixed 10 damage for now, per user request)
-	var damage := 10
-
-	if target.has_method("take_damage"):
-		target.take_damage(damage)
-
-	# Set cooldown
+	# Set cooldown (difficulty tightens cadence).
 	var cooldown := 1.5
 	if enemy_data:
 		cooldown = enemy_data.attack_cooldown
-	attack_cooldown_timer = cooldown
+	attack_cooldown_timer = cooldown * _aggro_cadence
+
+
+## True when a non-berserk attack's band contains `dist`. Falls back to the flat
+## attack_range when this enemy has no attack table.
+func _has_attack_in_band(dist: float, attack_range: float) -> bool:
+	if _attacks.is_empty():
+		return dist <= attack_range
+	for a in _attacks:
+		if a.get("berserk_only", false):
+			continue
+		if dist >= float(a.get("min_range", 0.0)) and dist <= float(a.get("max_range", 999.0)):
+			return true
+	return false
+
+
+## Pick the attack for this swing (berserk excluded — not implemented in this slice).
+func _select_attack_for(dist: float) -> Dictionary:
+	var pool: Array = []
+	for a in _attacks:
+		if not a.get("berserk_only", false):
+			pool.append(a)
+	var chosen := EnemyAttackLogic.select_attack(pool, dist, _rng)
+	if chosen.is_empty():
+		# No table at all — a basic melee swing (mirrors the registry default).
+		chosen = {"clip": "atk", "windup_frac": 0.35, "damage_end_frac": 0.6,
+			"hit_half_angle_deg": 45.0, "hit_reach": 2.0, "damage_mult": 1.0, "kind": "melee_arc"}
+	return chosen
+
+
+## Run the arc test against the target during the damage window and, on a pass, deal
+## attack_base × damage_mult once. A pass consumes the attack's one resolution even if
+## the player dodges (take_damage no-ops during i-frames — player.gd), matching the spec.
+## ponytail: projectile/lob/charge/leap resolve through this same arc as an interim —
+## their travel mechanics are deferred (#494); no enemy is left on instant damage.
+func _try_attack_hit() -> void:
+	if not target or not is_instance_valid(target):
+		return
+	var reach := float(_attack_def.get("hit_reach", 2.0))
+	var half := float(_attack_def.get("hit_half_angle_deg", 45.0))
+	if not EnemyAttackLogic.arc_hit_test(global_position, _attack_facing,
+			target.global_position, PLAYER_HIT_RADIUS, half, reach):
+		return
+	_attack_hit_resolved = true
+	var base_attack: int = enemy_data.attack_base if enemy_data else 10
+	var dmg := int(round(float(base_attack) * float(_attack_def.get("damage_mult", 1.0))))
+	if target.has_method("take_damage"):
+		target.take_damage(dmg)
+
+
+## Difficulty-scaled aggression + timing (#522). Reads the session difficulty (default
+## "normal" when no session — keeps tests isolated) and sets the aggro/cadence/reaction
+## multipliers + the scaled detection range.
+func _apply_difficulty() -> void:
+	var diff := "normal"
+	if SessionManager and SessionManager.has_method("get_session"):
+		diff = str(SessionManager.get_session().get("difficulty", "normal"))
+	var s: Dictionary = AGGRO_SCALING.get(diff, AGGRO_SCALING["normal"])
+	_aggro_cadence = float(s["cadence"])
+	_aggro_reaction = float(s["reaction"])
+	var base_det: float = enemy_data.detection_range if enemy_data else 15.0
+	_detection_range = base_det * float(s["detection"])
 
 
 func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:

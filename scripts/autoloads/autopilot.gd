@@ -280,6 +280,10 @@ var _enemy_freeze_probe := false    # #477 big-rig attack-wedge probe
 var _enemy_freeze_triggered := false  # ran the probe already (fires once)
 var _enemy_freeze_id := "hildegigas"  # roster id to spawn ("1" = default)
 
+var _enemy_attack_probe := false    # #509 frame-tied attack-model probe
+var _enemy_attack_triggered := false
+var _enemy_attack_id := "reyhound"  # basic melee rig to spawn
+
 # Companion-combat probe (spec /states/companion-combat): when
 # PSZ_AUTOPILOT_COMPANION_COMBAT=1, the first field cell spawns a companion
 # and an enemy near it and requires the companion to land a hit on its own —
@@ -380,6 +384,12 @@ func _parse_probe_flags() -> void:
 		if freeze_val != "" and freeze_val != "1":
 			_enemy_freeze_id = freeze_val
 		print("[sanity] autopilot ENEMY-FREEZE probe enabled (%s must exit ATTACKING unhit in first field cell)" % _enemy_freeze_id)
+	_enemy_attack_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_ATTACK")
+	if _enemy_attack_probe:
+		var atk_val := OS.get_environment("PSZ_AUTOPILOT_ENEMY_ATTACK")
+		if atk_val != "" and atk_val != "1":
+			_enemy_attack_id = atk_val
+		print("[sanity] autopilot ENEMY-ATTACK probe enabled (%s must damage the player through the windup→arc window)" % _enemy_attack_id)
 	_companion_combat_probe = OS.has_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
 	if _companion_combat_probe:
 		var comp_val := OS.get_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
@@ -2483,6 +2493,70 @@ func _enemy_freeze_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
 	_after(0.2, func() -> void: _enemy_freeze_watch(enemy, seen, tick + 1))
 
 
+func _enemy_attack_fail(msg: String) -> void:
+	_fail_and_quit("enemy-attack probe — %s" % msg)
+
+
+## PSZ_AUTOPILOT_ENEMY_ATTACK=1: spawn an enemy in front of the player and require it
+## to damage the player through the frame-tied attack model (#509) — proves the live
+## wiring end to end: registry load → band selection → arc test vs the real player →
+## take_damage. The precise windup/damage-window timing is pinned by the seeded
+## test_enemy_attack_timeline; here we assert it lands in a real field.
+func _run_enemy_attack_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_enemy_attack_probe(attempt + 1))
+		else:
+			_enemy_attack_fail("no player in field")
+		return
+	var p: Node3D = players[0]
+	var edata = EnemyRegistry.get_enemy(_enemy_attack_id)
+	if edata == null:
+		_enemy_attack_fail("%s missing from EnemyRegistry" % _enemy_attack_id)
+		return
+	var enemy := EnemyBase.new()
+	enemy.enemy_data = edata
+	var col_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = edata.collision_radius
+	capsule.height = edata.collision_height
+	col_shape.shape = capsule
+	col_shape.position.y = capsule.height / 2
+	enemy.add_child(col_shape)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	p.get_parent().add_child(enemy)
+	enemy.global_position = p.global_position + p.global_transform.basis.z * 1.2
+	print("[sanity] checkpoint: enemy-attack probe — %s spawned in front of player (hp=%d)" % [_enemy_attack_id, GameState.hp])
+	_enemy_attack_watch(enemy, {"attacked": false, "hp0": GameState.hp}, 0)
+
+
+## Poll ~5/s: the enemy must reach ATTACKING and the player HP must drop (the damage
+## window landed a hit through the arc). ~20s budget before calling it a miss.
+func _enemy_attack_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
+	if not is_instance_valid(enemy):
+		_enemy_attack_fail("enemy freed mid-probe")
+		return
+	var s: int = enemy.current_state
+	if s == EnemyBase.EnemyState.ATTACKING and not seen["attacked"]:
+		seen["attacked"] = true
+		print("[sanity] checkpoint: enemy-attack probe — ATTACKING (attack_anim='%s', player hp=%d)" % [enemy._attack_anim, GameState.hp])
+	if seen["attacked"] and GameState.hp < int(seen["hp0"]):
+		print("[sanity] checkpoint: enemy-attack probe — player took %d damage via the attack window" % (int(seen["hp0"]) - GameState.hp))
+		enemy.queue_free()
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if tick >= 100:
+		if not seen["attacked"]:
+			_enemy_attack_fail("enemy never entered ATTACKING (state=%d)" % s)
+		else:
+			_enemy_attack_fail("attacked but player never took damage — the window/arc dealt no hit")
+		return
+	_after(0.2, func() -> void: _enemy_attack_watch(enemy, seen, tick + 1))
+
+
 ## PSZ_AUTOPILOT_COMPANION_COMBAT=1: in the first field cell, spawn a companion
 ## and an enemy near it and require the companion to land a hit ON ITS OWN
 ## (spec /states/companion-combat phase 1). Runs instead of the cell plan and
@@ -2590,6 +2664,12 @@ func _on_field_cell_loaded(field: Node) -> void:
 	if _enemy_freeze_probe and not _enemy_freeze_triggered:
 		_enemy_freeze_triggered = true
 		_run_enemy_freeze_probe()
+		return
+	# Enemy-attack probe (#509): spawn an enemy on the player and require it to
+	# deal damage through the frame-tied windup→arc window (not instant).
+	if _enemy_attack_probe and not _enemy_attack_triggered:
+		_enemy_attack_triggered = true
+		_run_enemy_attack_probe()
 		return
 	# Companion-combat probe (spec /states/companion-combat): spawn a
 	# companion + an enemy and require the companion to land a hit unaided.
