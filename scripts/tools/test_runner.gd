@@ -177,6 +177,7 @@ func _run_tests_systems() -> void:
 	test_minimap_enemy_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
+	test_texture_fix_shader_double_sided()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -8314,6 +8315,24 @@ func test_autoloads_avoid_packonly_classscope_preloads() -> void:
 		for v in violations:
 			print("  FAIL: %s — resolves only from the .pck, but autoloads boot before bootstrap mounts it" % v)
 		_fail += violations.size()
+
+
+# ── Texture-fix shader stays double-sided (#537) ──
+# city_area_base._fix_materials_recursive swaps mirror-wrapped stage surfaces to
+# texture_fix_shader. Those source materials are authored double-sided (glTF
+# doubleSided → CULL_DISABLED), so the shader must not re-cull back faces — that
+# dropped the far side of double-sided geometry (the Dairon counter's back read
+# as "missing triangles"). Every sibling fix shader is cull_disabled; guard it.
+func test_texture_fix_shader_double_sided() -> void:
+	print("── Texture-Fix Shader Cull Mode ──")
+	var shader: Shader = load("res://scripts/3d/field/texture_fix_shader.gdshader")
+	assert_true(shader != null, "texture_fix_shader loads")
+	var code: String = shader.code if shader else ""
+	assert_true("cull_disabled" in code,
+		"texture_fix_shader renders double-sided (cull_disabled) so back faces survive (#537)")
+	assert_true(not ("cull_back" in code),
+		"texture_fix_shader no longer force-culls back faces")
+	print("")
 
 
 # res:// script paths of the project's autoloads (project.godot [autoload]).

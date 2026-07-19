@@ -1,5 +1,10 @@
 shader_type spatial;
-render_mode cull_back, vertex_lighting;
+// cull_disabled: the stage materials this shader replaces are authored
+// double-sided (glTF doubleSided → CULL_DISABLED), so culling back faces here
+// dropped the far side of double-sided geometry — e.g. the back of the Dairon
+// quest counter read as "missing triangles" (#537). Matches every sibling fix
+// shader (waterfall, uv_dressing, mirror_repeat_alpha), which are all cull_disabled.
+render_mode cull_disabled, vertex_lighting;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
