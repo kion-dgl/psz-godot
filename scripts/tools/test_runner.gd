@@ -723,9 +723,11 @@ func test_player_anim_library_cache() -> void:
 		"library build split into _build_animation_library() so it can be cached")
 
 	# Shared static store: an entry written via one instance is visible to another.
+	# (Synthetic keys — real "<glb>|<skeleton>" keys with res:// paths would trip
+	# check_asset_refs; the dict semantics are what matter here.)
 	p1._anim_lib_cache.clear()
 	var lib := AnimationLibrary.new()
-	var key := "res://assets/player/animations/saver_m.glb|GeneralSkeleton"
+	var key := "saver_m|GeneralSkeleton"
 	p1._anim_lib_cache[key] = lib
 	assert_true(p2._anim_lib_cache.has(key),
 		"anim library cache is a shared static store across player instances")
@@ -735,7 +737,7 @@ func test_player_anim_library_cache() -> void:
 		"a cache hit returns the same AnimationLibrary instance (no rebuild)")
 
 	# Key captures the GLB, so a different animation set is a distinct entry.
-	assert_true(not p1._anim_lib_cache.has("res://assets/player/animations/sword_m.glb|GeneralSkeleton"),
+	assert_true(not p1._anim_lib_cache.has("sword_m|GeneralSkeleton"),
 		"a different animation GLB is a different cache key")
 
 	p1._anim_lib_cache.clear()
