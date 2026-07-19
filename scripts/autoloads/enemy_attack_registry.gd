@@ -39,6 +39,22 @@ func get_attacks(enemy_id: String, attack_range: float = 2.0) -> Array:
 	return out
 
 
+## Behavior archetype for an enemy id (drives the per-archetype locomotion dispatch,
+## #494). Defaults to "simple_melee" (the baseline straight-line chase).
+func get_archetype(enemy_id: String) -> String:
+	return str(_enemies.get(enemy_id, {}).get("archetype", "simple_melee"))
+
+
+## Resolved fsm params for an enemy id (its `fsm` merged over defaults.fsm) —
+## standoff_range, hover_height, reveal_range, stationary, walk/charge mults, etc.
+func get_fsm(enemy_id: String) -> Dictionary:
+	var out: Dictionary = _defaults.get("fsm", {}).duplicate(true)
+	var entry: Dictionary = _enemies.get(enemy_id, {})
+	for k in entry.get("fsm", {}):
+		out[k] = entry["fsm"][k]
+	return out
+
+
 func get_enemy_count() -> int:
 	return _enemies.size()
 

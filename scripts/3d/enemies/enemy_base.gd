@@ -76,6 +76,17 @@ const TELEGRAPH_HOLD: float = 0.7
 var _telegraphing: bool = false
 var _telegraph_rising: bool = false
 var _telegraph_timer: float = 0.0
+
+## Per-archetype locomotion (#494, spec /states/enemies). `_archetype` selects the chase
+## behavior (quadruped arc-circle, quad_machine/shooter/roller standoff-hold, else the
+## baseline straight chase); `_fsm` carries standoff_range etc. `_arc_side` (±1) is the
+## circling/strafe side, re-picked on `_arc_timer`; `_chase_mode` is the quadruped
+## arc↔dash sub-mode. Movement math is ported in EnemyLocomotionLogic (fsm.ts).
+var _archetype: String = "simple_melee"
+var _fsm: Dictionary = {}
+var _arc_side: float = 1.0
+var _arc_timer: float = 0.0
+var _chase_mode: String = "arc"
 ## Player collision radius used by the arc test (the target's radius). Real value isn't
 ## exposed cheaply; melee reach dwarfs it, so a constant is fine.
 ## ponytail: constant player radius, read the real shape if arc precision ever matters.
@@ -189,6 +200,8 @@ func _ready() -> void:
 	if enemy_data:
 		_sfx = ENEMY_SFX.get(enemy_data.model_id, {})
 		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
+		_archetype = EnemyAttackRegistry.get_archetype(enemy_data.id)
+		_fsm = EnemyAttackRegistry.get_fsm(enemy_data.id)
 
 	_rng.randomize()
 	_apply_difficulty()
@@ -489,59 +502,150 @@ func _process_chasing(_delta: float) -> void:
 
 	var dist := global_position.distance_to(target.global_position)
 
-	# Check if in attack range
 	var attack_range := 2.0
 	if enemy_data:
 		attack_range = enemy_data.attack_range
 
-	# Gate: cooldown ready AND some non-berserk attack band contains the distance
-	# (spec /mechanics/enemy-attacks "Selection"). Falls back to the flat attack_range
-	# only when this enemy has no attack table.
+	# Gate FIRST (every archetype): cooldown ready AND some non-berserk attack band
+	# contains the distance (spec /mechanics/enemy-attacks "Selection"). Keeps kiters
+	# firing from their bands. Falls back to the flat attack_range with no attack table.
 	if attack_cooldown_timer <= 0 and not _stun_no_attack and _has_attack_in_band(dist, attack_range):
 		current_state = EnemyState.ATTACKING
 		_begin_telegraph()
 		return
 
-	# Determine if charging (close to target) or walking (far from target)
-	var charge_range := attack_range * CHARGE_RANGE_MULT
-	var is_charging := dist <= charge_range
+	# Per-archetype locomotion (#494, spec /states/enemies). Distinct ground movers circle
+	# or hold a standoff; every baseline archetype chases straight. Math: EnemyLocomotionLogic.
+	var radial := _radial_to_target()
+	match _archetype:
+		"quadruped":
+			_chase_quadruped(dist, radial, attack_range)
+		"quad_machine", "shooter", "roller":
+			_chase_standoff(_archetype, dist, radial)
+		_:
+			_chase_baseline(dist, attack_range)
 
-	# Use appropriate animation and speed
-	if is_charging:
-		_play_animation("run")
-	else:
-		_play_animation("wlk")
 
-	# Calculate direction to target (horizontal only, properly normalized)
+## Baseline straight-line chase (simple_melee and every non-distinct archetype): walk
+## beyond the charge ring, run inside it, nav-pathing around obstacles.
+func _chase_baseline(dist: float, attack_range: float) -> void:
+	var is_charging := dist <= attack_range * CHARGE_RANGE_MULT
+	_play_animation("run" if is_charging else "wlk")
+
 	var to_target := target.global_position - global_position
 	var horizontal_dir := Vector3(to_target.x, 0, to_target.z)
 	var direction := horizontal_dir.normalized() if horizontal_dir.length() > 0.1 else Vector3.ZERO
 
-	# Try navigation if available (update path every 10th frame to save CPU)
+	# Nav pathing (refresh every 10th frame, staggered per instance)
 	if Engine.get_physics_frames() % 10 == (get_index() % 10):
 		nav_agent.target_position = target.global_position
 	if not nav_agent.is_navigation_finished():
 		var next_pos := nav_agent.get_next_path_position()
-		var nav_dir := (next_pos - global_position)
+		var nav_dir := next_pos - global_position
 		nav_dir.y = 0
-		# Only use nav direction if it's valid (not pointing at ourselves)
 		if nav_dir.length() > 0.5:
 			direction = nav_dir.normalized()
 
-	# Apply movement - walk normally, run when charging
-	var base_speed := 3.0
-	if enemy_data:
-		base_speed = enemy_data.move_speed
-
-	var speed := base_speed * WALK_SPEED_MULT
-	if is_charging:
-		speed = base_speed * CHARGE_SPEED_MULT
-
-	# Apply movement toward target
+	var speed := _base_move_speed() * (CHARGE_SPEED_MULT if is_charging else WALK_SPEED_MULT)
 	if direction.length() > 0.1 and _can_move_to(direction):
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
 		_face_direction(direction)
+
+
+## Quadruped arc-circler (fsm.ts:689-725): circles on an arc (wlk_l/wlk_r by side) and
+## only dashes straight (stt) to close inside the charge ring when armed.
+func _chase_quadruped(dist: float, radial: Vector3, attack_range: float) -> void:
+	var charge_range := attack_range * CHARGE_RANGE_MULT
+	if _chase_mode != "dash" and dist <= charge_range and attack_cooldown_timer <= 0.0:
+		_chase_mode = "dash"
+	if _chase_mode == "dash" and dist > charge_range * 1.5:
+		_chase_mode = "arc"
+	var dashing := _chase_mode == "dash"
+	if not dashing:
+		_tick_arc_side(2.0, 3.0, 0.35)
+	var m := EnemyLocomotionLogic.quadruped_move(radial, _arc_side, dashing)
+	if m["dash"]:
+		_apply_move(m["dir"], _base_move_speed() * CHARGE_SPEED_MULT, m["dir"], "stt")
+	else:
+		_apply_move(m["dir"], _base_move_speed() * WALK_SPEED_MULT, m["dir"],
+			"wlk_l" if m["side_left"] else "wlk_r")
+
+
+## Standoff holder (fsm.ts:736-767/894-915/924-948): quad_machine kites & strafes facing
+## the target, shooter holds radial-only and stops to fire, roller sidles facing its
+## movement. All hold fsm.standoff_range.
+func _chase_standoff(kind: String, dist: float, radial: Vector3) -> void:
+	var standoff := float(_fsm.get("standoff_range", 6.0))
+	var near_mult := 0.85
+	var far_mult := 1.25
+	var strafe := true
+	var faces_target := true
+	if kind == "shooter":
+		near_mult = 0.8
+		far_mult = 1.2
+		strafe = false
+	elif kind == "roller":
+		near_mult = 0.75
+		far_mult = 1.3
+		faces_target = false
+	if strafe:
+		_tick_arc_side(1.5, 2.5, 0.4)
+	var m := EnemyLocomotionLogic.standoff_move(dist, standoff, radial, _arc_side, near_mult, far_mult, strafe)
+	var mode := String(m["mode"])
+	# Retreat is fast (charge mult) for the kiters; the roller walks everywhere.
+	var speed := _base_move_speed() * WALK_SPEED_MULT
+	if mode == "retreat" and kind != "roller":
+		speed = _base_move_speed() * CHARGE_SPEED_MULT
+	var face: Vector3 = radial if faces_target else m["dir"]
+	_apply_move(m["dir"], speed, face, _standoff_clip(kind, mode, bool(m["side_left"])))
+
+
+func _standoff_clip(kind: String, mode: String, side_left: bool) -> String:
+	if kind == "shooter":
+		return "wat" if mode == "hold" else "run"
+	if kind == "roller":
+		return "wlk"
+	# quad_machine: clip matches movement relative to the target-facing body.
+	if mode == "retreat":
+		return "wlk_b"
+	if mode == "close":
+		return "wlk_f"
+	return "wlk_l" if side_left else "wlk_r"
+
+
+## Resolve a movement intent to velocity: move along `dir` at `speed` when the floor
+## ahead holds (else stop), face `face_dir`, play `clip`. Shared by the archetype chases.
+func _apply_move(dir: Vector3, speed: float, face_dir: Vector3, clip: String) -> void:
+	if dir.length() > 0.1 and _can_move_to(dir):
+		velocity.x = dir.x * speed
+		velocity.z = dir.z * speed
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	if face_dir.length() > 0.1:
+		_face_direction(face_dir)
+	if not clip.is_empty():
+		_play_animation(clip)
+
+
+func _radial_to_target() -> Vector3:
+	var to := target.global_position - global_position
+	to.y = 0.0
+	return to.normalized() if to.length() > 0.001 else Vector3.FORWARD
+
+
+func _base_move_speed() -> float:
+	return float(enemy_data.move_speed) if enemy_data else 3.0
+
+
+## Tick the circling/strafe-side timer; re-pick the side after a random interval.
+func _tick_arc_side(base: float, span: float, flip_chance: float) -> void:
+	_arc_timer -= get_physics_process_delta_time()
+	if _arc_timer <= 0.0:
+		_arc_timer = base + _rng.randf() * span
+		if _rng.randf() < flip_chance:
+			_arc_side = -_arc_side
 
 
 func _process_attacking(delta: float) -> void:
