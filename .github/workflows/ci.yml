@@ -310,9 +310,11 @@ jobs:
 
       - name: Export Android
         continue-on-error: true
+        # Debug export so the APK is signed with the debug keystore configured above
+        # (release signing lives in release.yml) — the artifact must install on-device.
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-release "Android" build/android/psz-godot.apk
+          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
 
       - name: Upload Android APK (fat armeabi-v7a + arm64-v8a, for 32-bit Android TV)
         continue-on-error: true
