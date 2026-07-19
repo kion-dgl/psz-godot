@@ -42,6 +42,10 @@ func _run_tests_combat() -> void:
 	test_element_status()
 	test_enemy_attack_recovery()
 	test_enemy_attack_clip_resolution()
+	test_enemy_attack_selection()
+	test_enemy_attack_arc()
+	test_enemy_attack_timeline()
+	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
@@ -943,6 +947,119 @@ func _make_recovery_enemy(anim_names: Array, anim_len: float) -> EnemyBase:
 	ap.add_animation_library("", lib)
 	e.animation_player = ap
 	return e
+
+
+## Node3D target that records the damage values passed to take_damage — stands in for
+## the player when driving an enemy's attack timeline.
+class _DamageCapture extends Node3D:
+	var hits: Array = []
+	func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+		hits.append(damage)
+
+
+# ── Enemy attack model (#509, spec /mechanics/enemy-attacks) ─────
+## Seeded ports of web/src/__tests__/enemy-room-fsm.test.ts — selection + arc + timeline.
+
+func test_enemy_attack_selection() -> void:
+	print("── Enemy attack selection (#509) ──")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x5E1EC7
+	var bite := {"id": "bite", "weight": 1.0, "min_range": 0.0, "max_range": 2.0}
+	var lunge := {"id": "lunge", "weight": 1.0, "min_range": 2.0, "max_range": 6.0}
+	var atks := [bite, lunge]
+	assert_eq(EnemyAttackLogic.select_attack(atks, 1.0, rng)["id"], "bite", "dist 1 picks the 0-2 band")
+	assert_eq(EnemyAttackLogic.select_attack(atks, 5.0, rng)["id"], "lunge", "dist 5 picks the 2-6 band")
+
+	# Weighted split: weight 9 vs 1 in overlapping bands → ~90% the heavy one.
+	var a := {"id": "a", "weight": 1.0, "min_range": 0.0, "max_range": 6.0}
+	var b := {"id": "b", "weight": 9.0, "min_range": 0.0, "max_range": 6.0}
+	var count_b := 0
+	for _i in range(1000):
+		if EnemyAttackLogic.select_attack([a, b], 3.0, rng)["id"] == "b":
+			count_b += 1
+	assert_true(count_b > 800 and count_b < 980, "weight 9 vs 1 picks b heavily (got %d/1000)" % count_b)
+
+	# Nearest-band fallback when no band contains the distance; empty → {}.
+	assert_eq(EnemyAttackLogic.select_attack(atks, 10.0, rng)["id"], "lunge", "beyond all bands → nearest")
+	var far := {"id": "far", "weight": 1.0, "min_range": 4.0, "max_range": 6.0}
+	assert_eq(EnemyAttackLogic.select_attack([far], 0.5, rng)["id"], "far", "below all bands → nearest")
+	assert_true(EnemyAttackLogic.select_attack([], 1.0, rng).is_empty(), "empty table → {}")
+	print("")
+
+
+func test_enemy_attack_arc() -> void:
+	print("── Enemy attack arc hit test (#509) ──")
+	var o := Vector3.ZERO
+	var fwd := Vector3(0, 0, 1)
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, 2.3), 0.4, 45.0, 2.0), "inside reach+radius (2.3 <= 2.4)")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, 2.5), 0.4, 45.0, 2.0), "beyond reach+radius (2.5 > 2.4)")
+	var diag := Vector3(sin(deg_to_rad(45.0)), 0, cos(deg_to_rad(45.0)))
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, diag, 0.1, 45.0, 2.0), "45deg target inside 45deg half-angle")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, diag, 0.1, 30.0, 2.0), "45deg target outside 30deg half-angle")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, -1), 0.1, 90.0, 2.0), "behind (180deg) outside 90deg")
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, o, 0.4, 45.0, 2.0), "target inside the enemy hits")
+	print("")
+
+
+func test_enemy_attack_timeline() -> void:
+	print("── Enemy attack timeline / arc damage (#509) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)  # in front, within reach
+
+	var e := _make_recovery_enemy(["atk"], 1.0)
+	e.enemy_data.attack_base = 10
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	# Inject a known attack def and force the accumulator path (no real playback).
+	e._attack_def = {"clip": "atk", "windup_frac": 0.35, "damage_end_frac": 0.6,
+		"hit_half_angle_deg": 45.0, "hit_reach": 2.0, "damage_mult": 2.5, "kind": "melee_arc"}
+	e._attack_anim = ""
+	e._attack_clip_len = 1.0
+	e._attack_fallback_timer = 5.0  # keep the attack alive through the window
+	e._attack_hit_resolved = false
+	e._attack_facing = Vector3(0, 0, 1)
+	e.is_attacking = true
+
+	var dt := 1.0 / 60.0
+	var hit_pos := -1.0
+	for _i in range(45):  # ~0.75s covers the window [0.35, 0.6]
+		var before := dummy.hits.size()
+		e._process_attacking(dt)
+		if dummy.hits.size() > before and hit_pos < 0.0:
+			hit_pos = e._attack_pos
+	assert_eq(dummy.hits.size(), 1, "exactly one hit lands")
+	assert_true(hit_pos >= 0.35 and hit_pos <= 0.6 + dt, "hit occurs within [windup, damage_end] (got %.3f)" % hit_pos)
+	if dummy.hits.size() >= 1:
+		assert_eq(dummy.hits[0], 25, "damage = attack_base(10) x damage_mult(2.5)")
+
+	e.queue_free()
+	dummy.queue_free()
+	print("")
+
+
+func test_enemy_difficulty_scaling() -> void:
+	print("── Enemy difficulty scaling (#522) ──")
+	assert_eq(EnemyBase.AGGRO_SCALING["normal"]["cadence"], 1.0, "normal cadence is identity")
+	assert_true(EnemyBase.AGGRO_SCALING["hard"]["cadence"] < 1.0, "hard tightens cadence")
+	assert_true(EnemyBase.AGGRO_SCALING["super-hard"]["detection"] > 1.0, "super-hard widens aggro")
+
+	# No session → normal (identity): detection unscaled, cadence 1.0.
+	var en := _make_recovery_enemy(["wat"], 0.5)
+	assert_eq(en._aggro_cadence, 1.0, "no session -> normal cadence")
+	assert_true(abs(en._detection_range - en.enemy_data.detection_range) < 0.001, "no session -> base detection")
+	en.queue_free()
+
+	# Hard session → scaled aggro/cadence (enemy reads difficulty at _ready).
+	var prev_diff := str(SessionManager.get_session().get("difficulty", ""))
+	SessionManager.enter_field("gurhacia-valley", "hard")
+	var eh := _make_recovery_enemy(["wat"], 0.5)
+	var exp_det: float = eh.enemy_data.detection_range * EnemyBase.AGGRO_SCALING["hard"]["detection"]
+	assert_true(abs(eh._detection_range - exp_det) < 0.001, "hard widens detection range")
+	assert_eq(eh._aggro_cadence, EnemyBase.AGGRO_SCALING["hard"]["cadence"], "hard sets cadence mult")
+	eh.queue_free()
+	SessionManager.enter_field("gurhacia-valley", prev_diff if prev_diff != "" else "normal")
+	print("")
 
 
 func test_enemy_attack_recovery() -> void:
