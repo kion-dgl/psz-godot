@@ -65,6 +65,14 @@ var _walk_anim: String = "pmsa_walk"
 var _run_anim: String = "pmsa_run_pso"
 var _is_female: bool = false
 
+# Cache of built animation libraries, keyed by "<anim_glb>|<skeleton_name>".
+# Building a library duplicates + track-remaps ~26 clips; the result is identical
+# for a given (GLB, skeleton) and is safe to share across player instances
+# (libraries are read-only during playback). This is the dominant per-transition
+# cost when the city rebuilds the player rig on every area load (#531) — build
+# once, reuse thereafter.
+static var _anim_lib_cache: Dictionary = {}
+
 # Default asset paths (fallback when no character data)
 const DEFAULT_TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
 
@@ -394,17 +402,55 @@ func _load_weapon_animations() -> void:
 		_anim_prefix = DEFAULT_ANIM_PREFIX_M
 		_is_female = false
 
+	# Build the remapped library once per (GLB, skeleton) and reuse it — the
+	# instantiate + per-clip duplicate/remap below is the dominant cost the city
+	# otherwise pays on every area transition (#531). Keyed by skeleton.name
+	# because _remap_animation rewrites every track NodePath to target it.
+	var cache_key := anim_glb + "|" + skeleton.name
+	var lib: AnimationLibrary = _anim_lib_cache.get(cache_key, null)
+	if lib == null:
+		lib = _build_animation_library(anim_glb)
+		if lib == null:
+			return
+		_anim_lib_cache[cache_key] = lib
+		print("[Player] Built animation library: %s (%d clips)" % [anim_glb, lib.get_animation_list().size()])
+	else:
+		print("[Player] Reused cached animation library: %s" % anim_glb)
+
+	# Set gender-aware walk/run animation names
+	if _is_female:
+		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
+		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
+	else:
+		_walk_anim = "pmsa_walk"
+		_run_anim = "pmsa_run_pso"
+	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
+
+	# Replace existing library
+	if animation_player.has_animation_library(""):
+		animation_player.remove_animation_library("")
+	animation_player.add_animation_library("", lib)
+
+	var anim_list := animation_player.get_animation_list()
+	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
+
+
+## Build the remapped AnimationLibrary for an animation GLB. Split out from
+## _load_weapon_animations so the result can be cached (see _anim_lib_cache):
+## the per-clip duplicate + track-path remap is the expensive part, and it's
+## identical for a given (GLB, skeleton). Returns null on failure.
+func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 	var packed: PackedScene = load(anim_glb) as PackedScene
 	if packed == null:
 		push_warning("[Player] Failed to load animation GLB: %s" % anim_glb)
-		return
+		return null
 
 	var anim_scene := packed.instantiate()
 	var source_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if not source_player:
 		push_warning("[Player] No AnimationPlayer found in animation GLB: %s" % anim_glb)
 		anim_scene.queue_free()
-		return
+		return null
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
 	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr"]
@@ -444,24 +490,8 @@ func _load_weapon_animations() -> void:
 					new_anim.loop_mode = Animation.LOOP_LINEAR
 					lib.add_animation(anim_name, new_anim)
 
-	# Set gender-aware walk/run animation names
-	if _is_female:
-		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
-		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
-	else:
-		_walk_anim = "pmsa_walk"
-		_run_anim = "pmsa_run_pso"
-	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
-
-	# Replace existing library
-	if animation_player.has_animation_library(""):
-		animation_player.remove_animation_library("")
-	animation_player.add_animation_library("", lib)
-
-	var anim_list := animation_player.get_animation_list()
-	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
-
 	anim_scene.queue_free()
+	return lib
 
 
 ## Call this after equipment changes to update the 3D weapon model.

@@ -31,6 +31,7 @@ func _ready() -> void:
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
 	test_player_states()
+	test_player_anim_library_cache()
 	test_action_commitment()
 	test_combo_three_tier()
 	test_combo_chain_lifecycle()
@@ -702,6 +703,44 @@ func test_player_states() -> void:
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
 	p.free()
+	print("")
+
+
+# ── Player animation-library cache (#531) ──
+# The player rig was rebuilt on every city area transition; the expensive part
+# is instantiate + per-clip duplicate/track-remap of ~26 animations. That build
+# is now split into _build_animation_library() and memoized on a static cache
+# keyed by (anim_glb, skeleton.name), so it runs once and the library resource
+# is shared across player instances. (The full build path needs the model GLB —
+# only in the pack — so this locks the cache CONTRACT; the autopilot city→field
+# probe exercises the real build+reuse.)
+func test_player_anim_library_cache() -> void:
+	print("── Player Anim Library Cache ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p1 = PlayerScript.new()
+	var p2 = PlayerScript.new()
+	assert_true(p1.has_method("_build_animation_library"),
+		"library build split into _build_animation_library() so it can be cached")
+
+	# Shared static store: an entry written via one instance is visible to another.
+	p1._anim_lib_cache.clear()
+	var lib := AnimationLibrary.new()
+	var key := "res://assets/player/animations/saver_m.glb|GeneralSkeleton"
+	p1._anim_lib_cache[key] = lib
+	assert_true(p2._anim_lib_cache.has(key),
+		"anim library cache is a shared static store across player instances")
+
+	# A hit hands back the identical resource — reused, not rebuilt.
+	assert_true(is_same(p2._anim_lib_cache[key], lib),
+		"a cache hit returns the same AnimationLibrary instance (no rebuild)")
+
+	# Key captures the GLB, so a different animation set is a distinct entry.
+	assert_true(not p1._anim_lib_cache.has("res://assets/player/animations/sword_m.glb|GeneralSkeleton"),
+		"a different animation GLB is a different cache key")
+
+	p1._anim_lib_cache.clear()
+	p1.free()
+	p2.free()
 	print("")
 
 
