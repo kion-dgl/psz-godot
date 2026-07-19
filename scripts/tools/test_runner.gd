@@ -46,6 +46,7 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_arc()
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
+	test_enemy_locomotion()
 	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
@@ -1060,6 +1061,34 @@ func test_enemy_difficulty_scaling() -> void:
 	assert_eq(eh._aggro_cadence, EnemyBase.AGGRO_SCALING["hard"]["cadence"], "hard sets cadence mult")
 	eh.queue_free()
 	SessionManager.enter_field("gurhacia-valley", prev_diff if prev_diff != "" else "normal")
+	print("")
+
+
+func test_enemy_locomotion() -> void:
+	print("── Enemy per-archetype locomotion (#494) ──")
+	var fwd := Vector3(0, 0, 1)  # unit vector toward the target
+
+	# Standoff 3-band (quad_machine / shooter / roller share this geometry).
+	var r := EnemyLocomotionLogic.standoff_move(3.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "retreat", "inside standoff -> retreat")
+	assert_true(r["dir"].dot(fwd) < -0.99, "retreat backs straight away from target")
+	r = EnemyLocomotionLogic.standoff_move(8.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "close", "beyond standoff -> close")
+	assert_true(r["dir"].dot(fwd) > 0.99, "close moves straight toward target")
+	r = EnemyLocomotionLogic.standoff_move(6.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "strafe", "in band + strafe -> lateral strafe")
+	assert_true(abs(r["dir"].dot(fwd)) < 0.01, "strafe is perpendicular to the target line")
+	r = EnemyLocomotionLogic.standoff_move(6.0, 6.0, fwd, 1.0, 0.8, 1.2, false)
+	assert_eq(r["mode"], "hold", "in band + no strafe (shooter) -> hold")
+	assert_true(r["dir"].length() < 0.001, "hold has zero move direction")
+
+	# Quadruped arc vs dash.
+	var q := EnemyLocomotionLogic.quadruped_move(fwd, 1.0, true)
+	assert_true(q["dash"] and q["dir"].dot(fwd) > 0.99, "quadruped dash goes straight at target")
+	q = EnemyLocomotionLogic.quadruped_move(fwd, 1.0, false)
+	assert_true(not q["dash"], "quadruped arc is not a dash")
+	assert_true(q["dir"].dot(fwd) < 0.95, "quadruped arc never walks straight at the target")
+	assert_true(abs(q["dir"].x) > 0.1, "quadruped arc has a lateral (circling) component")
 	print("")
 
 

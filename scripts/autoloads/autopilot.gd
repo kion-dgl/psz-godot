@@ -284,6 +284,10 @@ var _enemy_attack_probe := false    # #509 frame-tied attack-model probe
 var _enemy_attack_triggered := false
 var _enemy_attack_id := "reyhound"  # basic melee rig to spawn
 
+var _enemy_kite_probe := false      # #494 kiter-locomotion probe
+var _enemy_kite_triggered := false
+var _enemy_kite_id := "izhirak_s6"  # quad_machine (standoff 6.0) to spawn
+
 # Companion-combat probe (spec /states/companion-combat): when
 # PSZ_AUTOPILOT_COMPANION_COMBAT=1, the first field cell spawns a companion
 # and an enemy near it and requires the companion to land a hit on its own —
@@ -390,6 +394,12 @@ func _parse_probe_flags() -> void:
 		if atk_val != "" and atk_val != "1":
 			_enemy_attack_id = atk_val
 		print("[sanity] autopilot ENEMY-ATTACK probe enabled (%s must damage the player through the windup→arc window)" % _enemy_attack_id)
+	_enemy_kite_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_KITE")
+	if _enemy_kite_probe:
+		var kite_val := OS.get_environment("PSZ_AUTOPILOT_ENEMY_KITE")
+		if kite_val != "" and kite_val != "1":
+			_enemy_kite_id = kite_val
+		print("[sanity] autopilot ENEMY-KITE probe enabled (%s must back off to hold its standoff, not close to melee)" % _enemy_kite_id)
 	_companion_combat_probe = OS.has_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
 	if _companion_combat_probe:
 		var comp_val := OS.get_environment("PSZ_AUTOPILOT_COMPANION_COMBAT")
@@ -2551,6 +2561,51 @@ func _enemy_attack_watch(enemy: EnemyBase, seen: Dictionary, tick: int) -> void:
 	_after(0.2, func() -> void: _enemy_attack_watch(enemy, seen, tick + 1))
 
 
+func _enemy_kite_fail(msg: String) -> void:
+	_fail_and_quit("enemy-kite probe — %s" % msg)
+
+
+## PSZ_AUTOPILOT_ENEMY_KITE=1: spawn a kiter (quad_machine) in contact with the player
+## and require it to BACK OFF toward its standoff_range instead of closing to melee like
+## a baseline chaser (#494 per-archetype locomotion, spec /states/enemies §quad-machine).
+func _run_enemy_kite_probe(attempt: int = 0) -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		if attempt < 60:
+			_after(STEP_DELAY, func() -> void: _run_enemy_kite_probe(attempt + 1))
+		else:
+			_enemy_kite_fail("no player in field")
+		return
+	var p: Node3D = players[0]
+	var enemy := _spawn_probe_enemy(p, _enemy_kite_id)
+	if enemy == null:
+		_enemy_kite_fail("%s missing from EnemyRegistry" % _enemy_kite_id)
+		return
+	var d0: float = enemy.global_position.distance_to(p.global_position)
+	print("[sanity] checkpoint: enemy-kite probe — %s spawned at %.1fm from player" % [_enemy_kite_id, d0])
+	_enemy_kite_watch(enemy, p, d0, 0)
+
+
+## Poll ~5/s: the kiter must open the gap to near its standoff. Success = distance grows
+## past 4m (it was spawned ~1.2m away). Fail if it closes to melee or never backs off.
+func _enemy_kite_watch(enemy: EnemyBase, p: Node3D, best: float, tick: int) -> void:
+	if not is_instance_valid(enemy) or not is_instance_valid(p):
+		_enemy_kite_fail("enemy or player freed mid-probe")
+		return
+	var d: float = enemy.global_position.distance_to(p.global_position)
+	best = maxf(best, d)
+	if best >= 4.0:
+		print("[sanity] checkpoint: enemy-kite probe — held standoff (backed off to %.1fm)" % best)
+		enemy.queue_free()
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		return
+	if tick >= 100:
+		_enemy_kite_fail("never opened the gap (best=%.1fm) — closed to melee like a baseline chaser" % best)
+		return
+	_after(0.2, func() -> void: _enemy_kite_watch(enemy, p, best, tick + 1))
+
+
 ## PSZ_AUTOPILOT_COMPANION_COMBAT=1: in the first field cell, spawn a companion
 ## and an enemy near it and require the companion to land a hit ON ITS OWN
 ## (spec /states/companion-combat phase 1). Runs instead of the cell plan and
@@ -2656,6 +2711,10 @@ func _try_run_first_cell_probe() -> bool:
 	if _enemy_attack_probe and not _enemy_attack_triggered:
 		_enemy_attack_triggered = true
 		_run_enemy_attack_probe()
+		return true
+	if _enemy_kite_probe and not _enemy_kite_triggered:
+		_enemy_kite_triggered = true
+		_run_enemy_kite_probe()
 		return true
 	if _companion_combat_probe and not _companion_combat_triggered:
 		_companion_combat_triggered = true
