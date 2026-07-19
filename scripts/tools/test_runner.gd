@@ -42,6 +42,12 @@ func _run_tests_combat() -> void:
 	test_element_status()
 	test_enemy_attack_recovery()
 	test_enemy_attack_clip_resolution()
+	test_enemy_attack_selection()
+	test_enemy_attack_arc()
+	test_enemy_attack_timeline()
+	test_enemy_telegraph()
+	test_enemy_locomotion()
+	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
@@ -158,6 +164,7 @@ func _run_tests_systems() -> void:
 	test_scaled_rewards()
 	test_difficulty_unlock()
 	test_difficulty_unlock_persistence()
+	test_debug_unlock_all_missions()
 	test_input_config()
 	test_confirm_input_precedence()
 	test_blackjack()
@@ -942,6 +949,189 @@ func _make_recovery_enemy(anim_names: Array, anim_len: float) -> EnemyBase:
 	ap.add_animation_library("", lib)
 	e.animation_player = ap
 	return e
+
+
+## Node3D target that records the damage values passed to take_damage — stands in for
+## the player when driving an enemy's attack timeline.
+class _DamageCapture extends Node3D:
+	var hits: Array = []
+	func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+		hits.append(damage)
+
+
+# ── Enemy attack model (#509, spec /mechanics/enemy-attacks) ─────
+## Seeded ports of web/src/__tests__/enemy-room-fsm.test.ts — selection + arc + timeline.
+
+func test_enemy_attack_selection() -> void:
+	print("── Enemy attack selection (#509) ──")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x5E1EC7
+	var bite := {"id": "bite", "weight": 1.0, "min_range": 0.0, "max_range": 2.0}
+	var lunge := {"id": "lunge", "weight": 1.0, "min_range": 2.0, "max_range": 6.0}
+	var atks := [bite, lunge]
+	assert_eq(EnemyAttackLogic.select_attack(atks, 1.0, rng)["id"], "bite", "dist 1 picks the 0-2 band")
+	assert_eq(EnemyAttackLogic.select_attack(atks, 5.0, rng)["id"], "lunge", "dist 5 picks the 2-6 band")
+
+	# Weighted split: weight 9 vs 1 in overlapping bands → ~90% the heavy one.
+	var a := {"id": "a", "weight": 1.0, "min_range": 0.0, "max_range": 6.0}
+	var b := {"id": "b", "weight": 9.0, "min_range": 0.0, "max_range": 6.0}
+	var count_b := 0
+	for _i in range(1000):
+		if EnemyAttackLogic.select_attack([a, b], 3.0, rng)["id"] == "b":
+			count_b += 1
+	assert_true(count_b > 800 and count_b < 980, "weight 9 vs 1 picks b heavily (got %d/1000)" % count_b)
+
+	# Nearest-band fallback when no band contains the distance; empty → {}.
+	assert_eq(EnemyAttackLogic.select_attack(atks, 10.0, rng)["id"], "lunge", "beyond all bands → nearest")
+	var far := {"id": "far", "weight": 1.0, "min_range": 4.0, "max_range": 6.0}
+	assert_eq(EnemyAttackLogic.select_attack([far], 0.5, rng)["id"], "far", "below all bands → nearest")
+	assert_true(EnemyAttackLogic.select_attack([], 1.0, rng).is_empty(), "empty table → {}")
+	print("")
+
+
+func test_enemy_attack_arc() -> void:
+	print("── Enemy attack arc hit test (#509) ──")
+	var o := Vector3.ZERO
+	var fwd := Vector3(0, 0, 1)
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, 2.3), 0.4, 45.0, 2.0), "inside reach+radius (2.3 <= 2.4)")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, 2.5), 0.4, 45.0, 2.0), "beyond reach+radius (2.5 > 2.4)")
+	var diag := Vector3(sin(deg_to_rad(45.0)), 0, cos(deg_to_rad(45.0)))
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, diag, 0.1, 45.0, 2.0), "45deg target inside 45deg half-angle")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, diag, 0.1, 30.0, 2.0), "45deg target outside 30deg half-angle")
+	assert_true(not EnemyAttackLogic.arc_hit_test(o, fwd, Vector3(0, 0, -1), 0.1, 90.0, 2.0), "behind (180deg) outside 90deg")
+	assert_true(EnemyAttackLogic.arc_hit_test(o, fwd, o, 0.4, 45.0, 2.0), "target inside the enemy hits")
+	print("")
+
+
+func test_enemy_attack_timeline() -> void:
+	print("── Enemy attack timeline / arc damage (#509) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)  # in front, within reach
+
+	var e := _make_recovery_enemy(["atk"], 1.0)
+	e.enemy_data.attack_base = 10
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	# Inject a known attack def and force the accumulator path (no real playback).
+	e._attack_def = {"clip": "atk", "windup_frac": 0.35, "damage_end_frac": 0.6,
+		"hit_half_angle_deg": 45.0, "hit_reach": 2.0, "damage_mult": 2.5, "kind": "melee_arc"}
+	e._attack_anim = ""
+	e._attack_clip_len = 1.0
+	e._attack_fallback_timer = 5.0  # keep the attack alive through the window
+	e._attack_hit_resolved = false
+	e._attack_facing = Vector3(0, 0, 1)
+	e.is_attacking = true
+
+	var dt := 1.0 / 60.0
+	var hit_pos := -1.0
+	for _i in range(45):  # ~0.75s covers the window [0.35, 0.6]
+		var before := dummy.hits.size()
+		e._process_attacking(dt)
+		if dummy.hits.size() > before and hit_pos < 0.0:
+			hit_pos = e._attack_pos
+	assert_eq(dummy.hits.size(), 1, "exactly one hit lands")
+	assert_true(hit_pos >= 0.35 and hit_pos <= 0.6 + dt, "hit occurs within [windup, damage_end] (got %.3f)" % hit_pos)
+	if dummy.hits.size() >= 1:
+		assert_eq(dummy.hits[0], 25, "damage = attack_base(10) x damage_mult(2.5)")
+
+	e.queue_free()
+	dummy.queue_free()
+	print("")
+
+
+func test_enemy_difficulty_scaling() -> void:
+	print("── Enemy difficulty scaling (#522) ──")
+	assert_eq(EnemyBase.AGGRO_SCALING["normal"]["cadence"], 1.0, "normal cadence is identity")
+	assert_true(EnemyBase.AGGRO_SCALING["hard"]["cadence"] < 1.0, "hard tightens cadence")
+	assert_true(EnemyBase.AGGRO_SCALING["super-hard"]["detection"] > 1.0, "super-hard widens aggro")
+
+	# No session → normal (identity): detection unscaled, cadence 1.0.
+	var en := _make_recovery_enemy(["wat"], 0.5)
+	assert_eq(en._aggro_cadence, 1.0, "no session -> normal cadence")
+	assert_true(abs(en._detection_range - en.enemy_data.detection_range) < 0.001, "no session -> base detection")
+	en.queue_free()
+
+	# Hard session → scaled aggro/cadence (enemy reads difficulty at _ready).
+	var prev_diff := str(SessionManager.get_session().get("difficulty", ""))
+	SessionManager.enter_field("gurhacia-valley", "hard")
+	var eh := _make_recovery_enemy(["wat"], 0.5)
+	var exp_det: float = eh.enemy_data.detection_range * EnemyBase.AGGRO_SCALING["hard"]["detection"]
+	assert_true(abs(eh._detection_range - exp_det) < 0.001, "hard widens detection range")
+	assert_eq(eh._aggro_cadence, EnemyBase.AGGRO_SCALING["hard"]["cadence"], "hard sets cadence mult")
+	eh.queue_free()
+	SessionManager.enter_field("gurhacia-valley", prev_diff if prev_diff != "" else "normal")
+	print("")
+
+
+func test_enemy_locomotion() -> void:
+	print("── Enemy per-archetype locomotion (#494) ──")
+	var fwd := Vector3(0, 0, 1)  # unit vector toward the target
+
+	# Standoff 3-band (quad_machine / shooter / roller share this geometry).
+	var r := EnemyLocomotionLogic.standoff_move(3.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "retreat", "inside standoff -> retreat")
+	assert_true(r["dir"].dot(fwd) < -0.99, "retreat backs straight away from target")
+	r = EnemyLocomotionLogic.standoff_move(8.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "close", "beyond standoff -> close")
+	assert_true(r["dir"].dot(fwd) > 0.99, "close moves straight toward target")
+	r = EnemyLocomotionLogic.standoff_move(6.0, 6.0, fwd, 1.0, 0.85, 1.25, true)
+	assert_eq(r["mode"], "strafe", "in band + strafe -> lateral strafe")
+	assert_true(abs(r["dir"].dot(fwd)) < 0.01, "strafe is perpendicular to the target line")
+	r = EnemyLocomotionLogic.standoff_move(6.0, 6.0, fwd, 1.0, 0.8, 1.2, false)
+	assert_eq(r["mode"], "hold", "in band + no strafe (shooter) -> hold")
+	assert_true(r["dir"].length() < 0.001, "hold has zero move direction")
+
+	# Quadruped arc vs dash.
+	var q := EnemyLocomotionLogic.quadruped_move(fwd, 1.0, true)
+	assert_true(q["dash"] and q["dir"].dot(fwd) > 0.99, "quadruped dash goes straight at target")
+	q = EnemyLocomotionLogic.quadruped_move(fwd, 1.0, false)
+	assert_true(not q["dash"], "quadruped arc is not a dash")
+	assert_true(q["dir"].dot(fwd) < 0.95, "quadruped arc never walks straight at the target")
+	assert_true(abs(q["dir"].x) > 0.1, "quadruped arc has a lateral (circling) component")
+	print("")
+
+
+func test_enemy_telegraph() -> void:
+	print("── Enemy telegraph / stance wind-up (#491) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)
+
+	# Stance riser: rig has stt (rise) + wat2 (hold) + atk.
+	var e := _make_recovery_enemy(["m_003_stt", "m_003_wat2", "m_003_atk1"], 0.3)
+	e.enemy_data.attack_base = 10
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._begin_telegraph()
+	assert_true(e._telegraphing, "telegraph begins on ATTACKING entry")
+	assert_true(e._telegraph_rising, "stance riser rises (stt) first")
+	assert_eq(e.current_anim, "stt", "plays the rise clip")
+
+	# Drive through rise + hold; damage MUST NOT land during the telegraph.
+	var dt := 1.0 / 60.0
+	var telegraph_dmg := false
+	var ticks := 0
+	while e._telegraphing and ticks < 300:
+		e._process_attacking(dt)
+		if dummy.hits.size() > 0:
+			telegraph_dmg = true
+		ticks += 1
+	assert_true(not telegraph_dmg, "no damage during the telegraph")
+	assert_true(not e._telegraphing, "telegraph ends and commits to the strike")
+	assert_true(e.is_attacking, "strike is in flight after the telegraph")
+	e.queue_free()
+
+	# Generic rig: no stt/wat2 → holds its idle (wat), no rise phase.
+	var g := _make_recovery_enemy(["b_001_wat", "b_001_atk"], 0.3)
+	g.target = dummy
+	g.current_state = EnemyBase.EnemyState.ATTACKING
+	g._begin_telegraph()
+	assert_true(g._telegraphing and not g._telegraph_rising, "generic rig holds without a rise phase")
+	assert_eq(g.current_anim, "wat", "generic telegraph holds idle (wat)")
+	g.queue_free()
+	dummy.queue_free()
+	print("")
 
 
 func test_enemy_attack_recovery() -> void:
@@ -6583,12 +6773,12 @@ func test_valley_grid() -> void:
 	var gen := GridGen.new()
 
 	# Rotation system
-	assert_eq(gen.rotate_direction("north", 0), "north", "Rotate north by 0")
-	assert_eq(gen.rotate_direction("north", 90), "east", "Rotate north by 90")
-	assert_eq(gen.rotate_direction("north", 180), "south", "Rotate north by 180")
-	assert_eq(gen.rotate_direction("north", 270), "west", "Rotate north by 270")
-	assert_eq(gen.rotate_direction("east", 90), "south", "Rotate east by 90")
-	assert_eq(gen.rotate_direction("west", 180), "east", "Rotate west by 180")
+	assert_eq(StageRotation.rotate_dir("north", 0), "north", "Rotate north by 0")
+	assert_eq(StageRotation.rotate_dir("north", 90), "east", "Rotate north by 90")
+	assert_eq(StageRotation.rotate_dir("north", 180), "south", "Rotate north by 180")
+	assert_eq(StageRotation.rotate_dir("north", 270), "west", "Rotate north by 270")
+	assert_eq(StageRotation.rotate_dir("east", 90), "south", "Rotate east by 90")
+	assert_eq(StageRotation.rotate_dir("west", 180), "east", "Rotate west by 180")
 
 	# Rotated gates
 	var sa1_gates: Array[String] = gen.get_rotated_gates("s01a_sa1", 0)
@@ -7493,6 +7683,51 @@ func _reward_item_resolvable(iid: String) -> bool:
 	return ConsumableRegistry.get_consumable(iid) != null \
 		or ItemRegistry.get_item(iid) != null \
 		or WeaponRegistry.get_weapon(iid) != null
+
+
+# ── Debug: Unlock All Missions (spec /states/start-menu §DEBUG) ──
+# The System → Debug "Unlock All Missions" cheat marks every real quest
+# complete so the guild counter surfaces the whole roster. Deterministic,
+# no RNG: clear completion, unlock, and assert every non-sentinel quest id
+# is now completed and the count is right; then assert idempotency.
+func test_debug_unlock_all_missions() -> void:
+	print("── Debug Unlock All Missions ──")
+
+	# Snapshot + clear so the run is independent of prior test order.
+	var saved: Array = GameState.completed_missions.duplicate()
+	GameState.completed_missions.clear()
+
+	# The set the cheat should cover: every quest id minus the sentinels.
+	var expected: Array = []
+	for qid in QuestLoader.list_quests():
+		if qid == "manifest" or qid == "hello_quest":
+			continue
+		expected.append(qid)
+	assert_gt(expected.size(), 0, "roster has real quests to unlock")
+
+	var newly: int = GameState.unlock_all_missions()
+	assert_eq(newly, expected.size(), "unlock_all_missions clears every real quest")
+
+	# Every parent/required gate reads is_mission_completed — all must pass now.
+	var all_completed := true
+	for qid in expected:
+		if not GameState.is_mission_completed(qid):
+			all_completed = false
+			assert_true(false, "quest marked complete: %s" % qid)
+	assert_true(all_completed, "all real quests report completed after unlock")
+
+	# The sentinels MUST NOT be marked complete.
+	assert_true(not GameState.is_mission_completed("manifest"), "manifest sentinel not marked complete")
+	assert_true(not GameState.is_mission_completed("hello_quest"), "hello_quest not marked complete")
+
+	# Idempotent: re-running adds nothing.
+	var again: int = GameState.unlock_all_missions()
+	assert_eq(again, 0, "second unlock is a no-op (idempotent)")
+	assert_eq(GameState.completed_missions.size(), expected.size(), "no duplicate mission entries")
+
+	# Restore the pre-test completion set.
+	GameState.completed_missions = saved
+	print("")
 
 
 # ── Completion-scaled rewards (#190) ────────────────────────────

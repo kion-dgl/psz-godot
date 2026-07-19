@@ -66,6 +66,13 @@ export interface BossAttackDef {
   cancel_clip?: string;
   /** Gem caster (Chaos Sorcerer): the gem color that triggers this attack. */
   gem?: GemColor;
+  /**
+   * Sinow Beat's Zonde: a hit (direct cast, a stepped-on trap, or the
+   * post leap) also FREEZES the target in place for this many seconds
+   * (0 / unset = no freeze). kind: trap uses `split` for the number of
+   * traps dropped; kind: clone uses `split` for the decoy ring size.
+   */
+  freeze?: number;
   note?: string;
 }
 
@@ -117,8 +124,8 @@ export interface BossFsmParams {
   teleport_interval: number;
   /** Teleport reposition radius around the arena origin. */
   teleport_radius: number;
-  /** What RELOCATE looks like: the dragon's flight cycle or the octopus's submerge-swim. */
-  relocate_kind: 'flight' | 'submerge';
+  /** What RELOCATE looks like: the dragon's flight, the octopus's submerge-swim, or Sinow Beat's post hop. */
+  relocate_kind: 'flight' | 'submerge' | 'post';
   /** Damage into the boss is ignored while relocating (submerged octopus). */
   relocate_untargetable: boolean;
   /** relocate_kind submerge: how far below the floor the boss sinks. */
@@ -149,6 +156,24 @@ export interface BossFsmParams {
   punish_end_clip: string;
   /** relocate_kind submerge: locomotion loop while relocating (octopus float; falz swm). */
   relocate_loop_clip: string;
+
+  // — Sinow Beat (Paru) — all default off so no other boss is affected. —
+  /** Decoy ring (kind: clone) radius around the player the fake Sinow Beats spawn at. */
+  clone_ring_radius: number;
+  /** Render alpha of the decoy clones (the real one is opaque). */
+  clone_alpha: number;
+  /** Max seconds the decoy ring lingers before it auto-clears (0 = no timeout). */
+  clone_life: number;
+  /** kind: trap — step-on trigger radius of a deployed floor trap. */
+  trap_radius: number;
+  /** kind: trap — seconds a deployed trap stays armed before it fizzles. */
+  trap_life: number;
+  /** kind: trap — the boss triggers (and freezes on) its OWN traps when it walks over them. */
+  self_trap: boolean;
+  /** relocate_kind post: perch height the boss leaps to on top of an arena post. */
+  post_height: number;
+  /** Clip played while frozen (Zonde self-trap / on the boss) — the flinch/stun pose. */
+  frozen_clip: string;
 }
 
 export const DEFAULT_BOSS_STATS: BossStats = {
@@ -187,6 +212,14 @@ export const DEFAULT_BOSS_FSM: BossFsmParams = {
   punish_start_clip: '',
   punish_end_clip: '',
   relocate_loop_clip: 'float',
+  clone_ring_radius: 8,
+  clone_alpha: 0.9,
+  clone_life: 0,
+  trap_radius: 1.5,
+  trap_life: 10,
+  self_trap: false,
+  post_height: 6,
+  frozen_clip: 'dmg',
 };
 
 /** Mirrors the enemy DEFAULT_ATTACK (spec: unset boss fields take the enemy defaults). */
@@ -283,7 +316,10 @@ export interface BossArenaConfig {
 }
 
 export async function loadBossConfig(): Promise<BossArenaConfig> {
-  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`);
+  // no-store: this is an authoring tool — the file changes on disk between
+  // reloads (config exports pasted over it), and a cached copy reads as
+  // "my edit didn't take".
+  const res = await fetch(`${import.meta.env.BASE_URL}data/boss_arenas.json`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`boss_arenas.json: HTTP ${res.status}`);
   return res.json();
 }
@@ -309,13 +345,38 @@ export interface BossPartInstance {
   yaw_deg?: number;
   /** Tilt (degrees, negative = nose up) — bend a tentacle up out of the water. */
   pitch_deg?: number;
+  /**
+   * Spline-poser control points (#508), boss-local frame — ≥2 points
+   * (emergence → apex → tip). When set, the curve — not pos/yaw/pitch —
+   * places the piece: bones pose along the Catmull-Rom fit per the
+   * /states/bosses parts contract (see curvePose.ts).
+   */
+  curve?: [number, number, number][];
+  /**
+   * Roll (degrees) about the tube axis, on top of the twist-free frame —
+   * turns the rig's sucker side to face down (which bone-local side carries
+   * the suckers is a modeling artifact). Curve pose only.
+   */
+  roll_deg?: number;
 }
 
-export type BossPartDef = string | { part: string; instances?: BossPartInstance[] };
+export type BossPartDef =
+  | string
+  | {
+      part: string;
+      instances?: BossPartInstance[];
+      /**
+       * false = the piece never mirrors the body's clips — it holds its
+       * wrapper/curve pose while only the body animates (the octopus
+       * tentacles). Default true (Humilias's faces play in sync).
+       */
+      animated?: boolean;
+    };
 
 export const partName = (p: BossPartDef): string => (typeof p === 'string' ? p : p.part);
 export const partInstances = (p: BossPartDef): BossPartInstance[] =>
   typeof p === 'string' ? [{ pos: [0, 0, 0] }] : (p.instances ?? [{ pos: [0, 0, 0] }]);
+export const partAnimated = (p: BossPartDef): boolean => (typeof p === 'string' ? true : (p.animated ?? true));
 
 export function bossPartUrl(modelId: string, part: string): string {
   return assetUrl(`assets/enemies/${modelId}/parts/${part}/${part}.glb`);

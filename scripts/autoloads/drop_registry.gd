@@ -4,14 +4,12 @@ extends Node
 const _RH = preload("res://scripts/utils/registry_helper.gd")
 const DROPS_PATH = "res://data/drop_tables/"
 var _drops: Dictionary = {}
-signal drops_loaded()
 
 func _ready() -> void:
 	_load_all()
 
 func _load_all() -> void:
 	_RH.load_dir(DROPS_PATH, _drops, "DropRegistry", "drop tables")
-	drops_loaded.emit()
 
 func get_drop_table(difficulty: String):
 	return _drops.get(difficulty, null)

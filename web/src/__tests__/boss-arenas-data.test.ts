@@ -32,7 +32,7 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + 2 PSO stand-ins (chaos_sorcerer, sinow_beat)
+    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + sinow_beat (real shinowa rig, #516) + chaos_sorcerer (PSO stand-in)
   });
 
   it('every roster boss has a room', () => {
@@ -40,8 +40,9 @@ describe('boss_arenas.json — structure', () => {
     // spawns in no quest, and has no designed fight — the mother_caster
     // enemy room covers the rig until the fight exists.
     // mother_trinity: rides the `mother` rig, no designed fight yet.
-    // sinow_gold: the rare form of the sinow_beat boss room (a form, not its
-    // own room).
+    // sinow_gold: rare palette-swap of Sinow Beat — the Paru boss room now
+    // runs the single real shinowa rig (#516), so Gold has no room of its own
+    // (it shares the encounter; a tinted variant is a later follow-up).
     const NOT_ROOMED = new Set(['mother_trinity', 'sinow_gold']);
     const rosterBosses = roster.filter((e) => e.is_boss).map((e) => e.id);
     const missing = rosterBosses.filter((id) => !config.bosses[id] && !NOT_ROOMED.has(id));
@@ -130,6 +131,7 @@ describe('boss_arenas.json — bosses', () => {
 const KNOWN_KINDS = new Set([
   'melee_arc', 'projectile', 'lob', 'charge', 'leap', // /mechanics/enemy-attacks
   'beam_sweep', 'aoe_burst', 'grab', 'fly_pass', 'spout', 'heal', // /states/bosses
+  'evade', 'clone', 'trap', // /states/bosses §Sinow Beat
 ]);
 
 describe('boss_arenas.json — behavior draft (v2)', () => {
@@ -220,6 +222,9 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
       for (const p of b.parts ?? []) {
         const name = typeof p === 'string' ? p : p.part;
         expect(typeof name === 'string' && name.length > 0, `${id} part name`).toBe(true);
+        if (typeof p !== 'string' && p.animated !== undefined) {
+          expect(typeof p.animated, `${id}/${name} animated`).toBe('boolean');
+        }
         expect(seen.has(name), `${id}: duplicate part '${name}'`).toBe(false);
         seen.add(name);
         for (const inst of (typeof p === 'string' ? [] : p.instances ?? [])) {
@@ -227,8 +232,18 @@ describe('boss_arenas.json — behavior draft (v2)', () => {
             Array.isArray(inst.pos) && inst.pos.length === 3 && inst.pos.every((n: unknown) => Number.isFinite(n)),
             `${id}/${name} instance pos`,
           ).toBe(true);
-          for (const f of ['yaw_deg', 'pitch_deg']) {
+          for (const f of ['yaw_deg', 'pitch_deg', 'roll_deg']) {
             if (inst[f] !== undefined) expect(Number.isFinite(inst[f]), `${id}/${name} ${f}`).toBe(true);
+          }
+          if (inst.curve !== undefined) {
+            // Spline-poser curve (#508): >= 2 finite [x,y,z] control points.
+            expect(Array.isArray(inst.curve) && inst.curve.length >= 2, `${id}/${name} curve length`).toBe(true);
+            for (const pt of inst.curve) {
+              expect(
+                Array.isArray(pt) && pt.length === 3 && pt.every((n: unknown) => Number.isFinite(n)),
+                `${id}/${name} curve point`,
+              ).toBe(true);
+            }
           }
         }
       }

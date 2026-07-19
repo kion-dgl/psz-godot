@@ -7,6 +7,7 @@
 import type { QuestProject, QuestSection, EditorGridCell, CellObject, SectionType } from '../types';
 import { getProjectSections, EDITOR_AREAS } from '../types';
 import { AREA_KEY_TO_ID } from '../constants';
+import { getPortalRotation } from '../../stage-editor/directions';
 import {
   getRotatedGates,
   getNeighbor,
@@ -95,18 +96,6 @@ export type { FloorCollisionConfig, SvgSettings };
 // ============================================================================
 // Portal position helpers (matches ExportTab.tsx computePortalPositions)
 // ============================================================================
-
-// Outward vector = [-sin(r), -cos(r)]: north→-Z, south→+Z, east→+X, west→-X
-const DIRECTION_ROTATIONS: Record<string, number> = {
-  north: 0,
-  south: Math.PI,
-  east: -Math.PI / 2,
-  west: Math.PI / 2,
-};
-
-function getPortalRotation(portal: PortalConfig): number {
-  return (DIRECTION_ROTATIONS[portal.direction] ?? 0) + ((portal.rotationOffset || 0) * Math.PI) / 180;
-}
 
 type Vec3 = [number, number, number];
 
@@ -444,7 +433,6 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
 
   // Auto-compute entry/exit directions for sections that don't have them.
   // Two passes: first infer exits (from warp_edge / next entry), then entries (from prev exit).
-  const OPPOSITE_DIR: Record<string, string> = { north: 'south', south: 'north', east: 'west', west: 'east' };
 
   // Pass 1: infer exit_direction from end cell warp_edge or next section's entry
   for (let i = 0; i < godotSections.length; i++) {
@@ -460,8 +448,8 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
       } else {
         const next = godotSections[i + 1] as Record<string, unknown>;
         const nextEntry = next.entry_direction as string | undefined;
-        if (nextEntry && OPPOSITE_DIR[nextEntry]) {
-          sec.exit_direction = OPPOSITE_DIR[nextEntry];
+        if (nextEntry && oppositeDirection(nextEntry as Direction)) {
+          sec.exit_direction = oppositeDirection(nextEntry as Direction);
         }
       }
     }
@@ -473,8 +461,8 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
     if (!sec.entry_direction) {
       const prev = godotSections[i - 1] as Record<string, unknown>;
       const prevExit = prev.exit_direction as string | undefined;
-      if (prevExit && OPPOSITE_DIR[prevExit]) {
-        sec.entry_direction = OPPOSITE_DIR[prevExit];
+      if (prevExit && oppositeDirection(prevExit as Direction)) {
+        sec.entry_direction = oppositeDirection(prevExit as Direction);
       }
     }
   }

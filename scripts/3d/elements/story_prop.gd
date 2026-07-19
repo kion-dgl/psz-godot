@@ -9,8 +9,6 @@ class_name StoryProp
 ## needs to walk through (e.g. Apothecary's Supply plants).
 @export var no_collision: bool = false
 
-var element_state: String = "default"
-
 
 func _ready() -> void:
 	if prop_path.is_empty():
@@ -99,7 +97,3 @@ func _get_combined_aabb(node: Node) -> AABB:
 			else:
 				result = result.merge(child_aabb)
 	return result
-
-
-func set_state(new_state: String) -> void:
-	element_state = new_state

@@ -346,7 +346,7 @@ export default function TitleScreen() {
         return v / tot; // 0..1
       };
 
-      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      const lerp = THREE.MathUtils.lerp;
       // Color ramp: dark purple → mid purple → blue-purple → pale blue-white
       const ramp = (t: number): [number, number, number] => {
         t = Math.max(0, Math.min(1, t));
@@ -558,7 +558,7 @@ export default function TitleScreen() {
       const data = img.data;
       const n2 = createNoise2D();
       const n2b = createNoise2D();
-      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      const lerp = THREE.MathUtils.lerp;
       // Tileable noise: sample on a torus in 4D (approximated here by
       // blending two offset 2D noises with the domain wrapped).
       const tileNoise = (x: number, y: number, freq: number) => {

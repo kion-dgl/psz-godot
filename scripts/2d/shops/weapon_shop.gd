@@ -38,16 +38,6 @@ const SHOP_WEAPON_TIER2 := [
 	"autogun", "sniper", "assault", "pole", "staff",
 	"spinner",
 ]
-const SHOP_WEAPON_TIER3 := [
-	"buster", "breaker", "blade", "glaive",
-	"lockgun", "blaster", "repeater", "pillar", "baton",
-	"cutter",
-]
-const SHOP_WEAPON_TIER4 := [
-	"pallasch", "claymore", "edge", "berdys",
-	"railgun", "beam", "gatling", "striker", "scepter",
-	"sawcer",
-]
 
 ## Shop armor pool — 3 tiers of each type
 const SHOP_ARMOR_IDS := [
@@ -97,8 +87,8 @@ func _generate_inventory() -> void:
 	_armors.clear()
 	_units.clear()
 
-	# Two weapons per type: tier 1 + tier 2. Tiers 3-4 stay in the catalog
-	# (drops, future stock) but the shop stocks only two of each kind.
+	# Two weapons per type: tier 1 + tier 2. Higher tiers come from drops, not
+	# the shop.
 	var weapon_ids: Array = SHOP_WEAPON_TIER1.duplicate()
 	weapon_ids.append_array(SHOP_WEAPON_TIER2)
 	for wid in weapon_ids:

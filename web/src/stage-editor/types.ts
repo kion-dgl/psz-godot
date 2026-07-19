@@ -3,8 +3,6 @@ import * as THREE from 'three';
 // =============== Core Types ===============
 
 export type GateDirection = 'north' | 'south' | 'east' | 'west';
-export type GateEdge = GateDirection; // Alias for compatibility
-export type GateType = 'Gate' | 'KeyGate' | 'AreaWarp'; // Still used for preview only
 export type PreviewModel = 'Gate' | 'AreaWarp';
 export type ObstacleType = 'box' | 'cylinder';
 export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'waypoints' | 'svg' | 'export';
@@ -42,19 +40,8 @@ export interface SpawnPointData {
   direction: GateDirection;
 }
 
-// Rotation values for each direction (radians, Y-axis rotation)
-// Outward vector = [-sin(r), -cos(r)]: north→-Z, south→+Z, east→+X, west→-X
-export const DIRECTION_ROTATIONS: Record<GateDirection, number> = {
-  north: 0,
-  south: Math.PI,
-  east: -Math.PI / 2,
-  west: Math.PI / 2,
-};
-
-// Get effective rotation for a portal (base direction + optional offset)
-export function getPortalRotation(portal: PortalData): number {
-  return DIRECTION_ROTATIONS[portal.direction] + ((portal.rotationOffset || 0) * Math.PI) / 180;
-}
+// Portal rotation math lives in ./directions (shared with quest-io).
+export { DIRECTION_ROTATIONS, getPortalRotation } from './directions';
 
 // =============== Texture Fixes ===============
 
@@ -119,39 +106,6 @@ export interface UnifiedStageConfig {
   exportedAt?: string;
 }
 
-// =============== Editor State ===============
-
-export interface FloorEditorState {
-  hoveredTriangle: string | null;
-  selectedTriangles: Set<string>;
-  yTolerance: number;
-  meshFilter: string;
-}
-
-export interface PortalEditorState {
-  selectedPortal: string | null;
-  placementMode: boolean;
-  placementDirection: GateDirection;
-  previewModel: PreviewModel;
-}
-
-export interface ObstacleEditorState {
-  selectedObstacle: string | null;
-  placementType: ObstacleType | null;
-}
-
-export interface EditorState {
-  activeTab: EditorTab;
-  selectedMapId: string;
-  selectedArea: string;
-  floorState: FloorEditorState;
-  portalState: PortalEditorState;
-  obstacleState: ObstacleEditorState;
-  showFloorMesh: boolean;
-  showGrid: boolean;
-  zoom: number;
-}
-
 // =============== Stage Area Configuration ===============
 
 export interface StageAreaConfig {
@@ -159,26 +113,6 @@ export interface StageAreaConfig {
   prefix: string;
   folder: string;
   maps: Record<string, string[]>;
-}
-
-// =============== Export Options ===============
-
-export interface ExportOptions {
-  includeLambert: boolean;
-  includeFloorCollision: boolean;
-  includeObstacles: boolean;
-  includeMarkers: boolean;
-  stripSkinning: boolean;
-}
-
-export interface SvgOptions {
-  width: number;
-  height: number;
-  padding: number;
-  strokeWidth: number;
-  floorFill: string;
-  outlineColor: string;
-  gateColors: Record<GateType, string>;
 }
 
 // SVG Tab Settings (saved per-map)
@@ -196,28 +130,6 @@ export const DEFAULT_FLOOR_CONFIG: FloorCollisionConfig = {
   yTolerance: 0.25,
   excludedMeshPatterns: [],
   triangles: {},
-};
-
-export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
-  includeLambert: true,
-  includeFloorCollision: true,
-  includeObstacles: true,
-  includeMarkers: true,
-  stripSkinning: true,
-};
-
-export const DEFAULT_SVG_OPTIONS: SvgOptions = {
-  width: 512,
-  height: 512,
-  padding: 20,
-  strokeWidth: 2,
-  floorFill: '#2a2a4e',
-  outlineColor: '#ffffff',
-  gateColors: {
-    Gate: '#ff4444',
-    KeyGate: '#ffaa00',
-    AreaWarp: '#4444ff',
-  },
 };
 
 export const DEFAULT_SVG_SETTINGS: SvgSettings = {

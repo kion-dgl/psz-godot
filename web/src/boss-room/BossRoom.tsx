@@ -26,6 +26,7 @@ import {
   bossPartUrl,
   loadBossConfig,
   loadRoster,
+  partAnimated,
   partInstances,
   partName,
   resolveBoss,
@@ -33,10 +34,29 @@ import {
   segmentFamilies,
   type BossArenaConfig,
   type BossAttackDef,
+  type BossPartInstance,
   type RosterEntry,
   type SegmentFamily,
 } from './types';
-import { damageBoss, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+import { damageBoss, hitClones, lobImpacts, makeBossSim, stepBoss, type BossEvent, type BossSim, type BossStateName } from './sim';
+import {
+  DEFAULT_DIP,
+  DEFAULT_LIFT,
+  DEFAULT_REACH,
+  curveDip,
+  curveLift,
+  defaultArch,
+  makeSampler,
+  poseBonesAlongCurve,
+  retargetTip,
+  setDip,
+  setLift,
+  translateCurve,
+  type BonePose,
+  type CurveSampler,
+  type RestBone,
+  type Vec3Tuple,
+} from './curvePose';
 
 const PLAYER_MAX_HP = 100;
 const SWING_RANGE = 4.5;
@@ -95,6 +115,8 @@ interface SceneApi {
   setShowFloor(v: boolean): void;
   setBossScale(v: number): void;
   clearMarkers(): void;
+  /** Re-apply the session curves (curvesRef) to every part rig + rebuild the gizmos. */
+  refreshCurves(): void;
 }
 
 export default function BossRoom() {
@@ -116,13 +138,29 @@ export default function BossRoom() {
   const [lpLoops, setLpLoops] = useState(2);
   const [facePlayer, setFacePlayer] = useState(true);
   const [showFloor, setShowFloor] = useState(false);
-  const [clickMode, setClickMode] = useState<'anchor' | 'boss' | null>(null);
+  const [clickMode, setClickMode] = useState<'anchor' | 'boss' | 'curve' | 'curve-base' | 'curve-tip' | null>(null);
   const clickModeRef = useRef(clickMode);
   const [markers, setMarkers] = useState<Marker[]>([]);
+  // Tentacle poser (#508): session curves keyed `${part}:${instanceIndex}`,
+  // control points in the boss's local frame (spec /states/bosses parts).
+  const [curveTarget, setCurveTarget] = useState<string | null>(null);
+  const curveTargetRef = useRef<string | null>(null);
+  const [curves, setCurves] = useState<Record<string, Vec3Tuple[]>>({});
+  const curvesRef = useRef<Record<string, Vec3Tuple[]>>({});
+  // Roll about the tube axis per instance (suckers down) — curve pose only.
+  const [rolls, setRolls] = useState<Record<string, number>>({});
+  const rollsRef = useRef<Record<string, number>>({});
+  const [curveOverlay, setCurveOverlay] = useState(true);
+  const curveOverlayRef = useRef(true);
+  // Start depth used when PLACING a fresh arch (the emergence sits this far
+  // below the clicked water surface); once a curve exists the slider edits
+  // the curve itself.
+  const [dip, setDipDefault] = useState(DEFAULT_DIP);
+  const dipRef = useRef(DEFAULT_DIP);
   const [readout, setReadout] = useState({ player: [0, 0, 0], boss: [0, 0, 0], dist: 0 });
   const [overrides, setOverrides] = useState<Record<string, Overrides>>(loadStore);
   const [simOn, setSimOn] = useState(false);
-  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName } | null>(null);
+  const [simHud, setSimHud] = useState<{ bossHp: number; maxHp: number; playerHp: number; state: BossStateName; playerFrozen: boolean; bossFrozen: boolean } | null>(null);
 
   useEffect(() => {
     clickModeRef.current = clickMode;
@@ -155,6 +193,60 @@ export default function BossRoom() {
     saveStore(next);
   };
 
+  // Seed the session curves from the authored data whenever the boss changes.
+  useEffect(() => {
+    const b = config?.bosses[bossId];
+    if (!b) return;
+    const seeded: Record<string, Vec3Tuple[]> = {};
+    const seededRolls: Record<string, number> = {};
+    for (const p of b.parts ?? []) {
+      partInstances(p).forEach((inst, i) => {
+        if (inst.curve && inst.curve.length >= 2) {
+          seeded[`${partName(p)}:${i}`] = inst.curve.map((pt) => [...pt] as Vec3Tuple);
+        }
+        if (inst.roll_deg !== undefined) seededRolls[`${partName(p)}:${i}`] = inst.roll_deg;
+      });
+    }
+    setCurves(seeded);
+    setRolls(seededRolls);
+    setCurveTarget(null);
+  }, [config, bossId]);
+
+  // Poser curves merge into parts[].instances[].curve. They live in the
+  // BOSS's local frame (not the arena frame), so — unlike anchors — they
+  // merge regardless of which arena is loaded. An empty session curve
+  // strips a previously authored one (revert to pos/yaw placement).
+  const mergeSessionCurves = () => {
+    const round = (pts: Vec3Tuple[]) => pts.map((pt) => pt.map((n) => +n.toFixed(2)) as Vec3Tuple);
+    return boss?.parts?.map((p) => {
+      const name = partName(p);
+      let touched = false;
+      const instances = partInstances(p).map((inst, i) => {
+        const key = `${name}:${i}`;
+        const c = curves[key];
+        const roll = rolls[key] ?? 0;
+        const { curve: _c, roll_deg: _r, ...rest } = inst;
+        const next = {
+          ...rest,
+          ...(roll !== 0 ? { roll_deg: +roll.toFixed(1) } : {}),
+          ...(c && c.length >= 2 ? { curve: round(c) } : {}),
+        } as BossPartInstance;
+        if (JSON.stringify(next) === JSON.stringify(inst)) return inst;
+        touched = true;
+        return next;
+      });
+      // Spread the object form so part-level fields (animated) survive the merge.
+      return touched ? { ...(typeof p === 'string' ? {} : p), part: name, instances } : p;
+    });
+  };
+
+  // Just the tentacles: this boss's parts with the session curves merged —
+  // paste over the boss's "parts": field in data/boss_arenas.json.
+  const copyParts = () => {
+    const parts = mergeSessionCurves();
+    if (parts) navigator.clipboard?.writeText(JSON.stringify(parts, null, 2) + '\n');
+  };
+
   // Round-trip export: the whole config with this boss's clicked markers
   // merged into its authored anchors — paste over data/boss_arenas.json.
   // Markers only merge in the default arena (anchors ride that frame).
@@ -170,11 +262,17 @@ export default function BossRoom() {
     const spawnPos: [number, number, number] | undefined = inHomeArena
       ? [+readout.boss[0].toFixed(2), +readout.boss[1].toFixed(2), +readout.boss[2].toFixed(2)]
       : boss.spawn_pos;
+    const mergedParts = mergeSessionCurves();
     const cfg: BossArenaConfig = {
       ...config,
       bosses: {
         ...config.bosses,
-        [bossId]: { ...boss, anchors: merged, ...(spawnPos ? { spawn_pos: spawnPos } : {}) },
+        [bossId]: {
+          ...boss,
+          anchors: merged,
+          ...(spawnPos ? { spawn_pos: spawnPos } : {}),
+          ...(mergedParts ? { parts: mergedParts } : {}),
+        },
       },
     };
     navigator.clipboard?.writeText(JSON.stringify(cfg, null, 2) + '\n');
@@ -223,6 +321,7 @@ export default function BossRoom() {
     let floorMinY = 0; // lowest point of the floor collider (fall-guard floor)
     let floorMaxY = 0; // top of the collider — settle fallback where it has holes (the octopus pool)
     let arenaMesh: THREE.Object3D | null = null;
+    let skyMesh: THREE.Object3D | null = null; // carries the pool water plane (o0s_zsky 1_water2)
     const raycaster = new THREE.Raycaster();
     const DOWN = new THREE.Vector3(0, -1, 0);
 
@@ -241,6 +340,8 @@ export default function BossRoom() {
     let sim: BossSim | null = null;
     let playerHp = PLAYER_MAX_HP;
     let swingCd = 0;
+    let playerFreeze = 0; // Sinow Beat's Zonde froze the player: WASD locked while >0
+    let bossScene: THREE.Object3D | null = null; // the loaded rig, cloned for the decoy ring
     const clipDur = (token: string): number | null => {
       const name = resolveClipToken(animations.map((a) => a.name), token);
       const clip = name ? animations.find((a) => a.name === name) : undefined;
@@ -359,6 +460,7 @@ export default function BossRoom() {
       loader.load(skyUrl, (g) => {
         if (disposed) return;
         scene.add(g.scene);
+        skyMesh = g.scene;
         oneLoaded();
       }, undefined, oneLoaded); // skybox is decorative — missing is fine
     }
@@ -369,6 +471,7 @@ export default function BossRoom() {
       (g) => {
         if (disposed) return;
         bossGroup.add(g.scene);
+        bossScene = g.scene;
         mixer = new THREE.AnimationMixer(g.scene);
         animations = g.animations;
         setClips(g.animations.map((a) => a.name).sort());
@@ -383,12 +486,131 @@ export default function BossRoom() {
     // Multi-part pieces (tentacles, faces, horn) — ride the boss group and
     // mirror the body's clips by name. Decorative: loading doesn't gate the
     // room, a missing part just logs to the status line.
+    //
+    // Tube rigs (the tentacles) can additionally be POSED along an authored
+    // curve (#508, spec /states/bosses parts contract): flat sibling bones
+    // under a root, rest-spaced along local +X, so a Catmull-Rom through the
+    // control points arc-length-sampled at the rest offsets IS the pose.
+    interface PartBoneInfo {
+      root: THREE.Bone;
+      children: THREE.Bone[]; // direct bone children of root, sorted by rest x
+      rest: RestBone[]; // [root, ...children] order
+      restLocal: Array<{ pos: THREE.Vector3; quat: THREE.Quaternion }>;
+    }
     interface PartRig {
+      key: string; // `${part}:${instanceIndex}` — matches the curves store
+      wrapper: THREE.Group;
+      authored: BossPartInstance;
+      /** false = never mirrors the body's clips (octopus tentacles) — holds its wrapper/curve pose. */
+      animated: boolean;
       mixer: THREE.AnimationMixer;
       animations: THREE.AnimationClip[];
       action: THREE.AnimationAction | null;
+      boneInfo: PartBoneInfo | null;
+      /** Non-null while an authored curve poses this rig. */
+      sampler: CurveSampler | null;
     }
     const partRigs: PartRig[] = [];
+
+    function extractBoneInfo(rig: THREE.Object3D): PartBoneInfo | null {
+      let root: THREE.Bone | null = null;
+      rig.traverse((o) => {
+        const b = o as THREE.Bone;
+        if (b.isBone && !(b.parent as THREE.Bone | null)?.isBone && !root) root = b;
+      });
+      if (!root) return null;
+      const children = (root as THREE.Bone).children
+        .filter((c): c is THREE.Bone => (c as THREE.Bone).isBone)
+        .sort((a, b) => a.position.x - b.position.x);
+      const bones = [root as THREE.Bone, ...children];
+      return {
+        root,
+        children,
+        rest: bones.map((b, i) =>
+          i === 0
+            ? { arc: 0, lateral: [0, 0] as [number, number] }
+            : { arc: b.position.x, lateral: [b.position.y, b.position.z] as [number, number] },
+        ),
+        restLocal: bones.map((b) => ({ pos: b.position.clone(), quat: b.quaternion.clone() })),
+      };
+    }
+
+    /** Write boss-local {pos, quat} poses ([root, ...children] order) into the bones. */
+    function poseBonesWorld(rig: PartRig, poses: BonePose[]) {
+      const info = rig.boneInfo!;
+      bossGroup.updateWorldMatrix(true, false);
+      rig.wrapper.updateWorldMatrix(true, true);
+      const bossQuat = bossGroup.getWorldQuaternion(new THREE.Quaternion());
+      const setBone = (bone: THREE.Bone, parent: THREE.Object3D, pose: BonePose) => {
+        const posW = bossGroup.localToWorld(pose.pos.clone());
+        bone.position.copy(parent.worldToLocal(posW));
+        const parentQuatW = parent.getWorldQuaternion(new THREE.Quaternion());
+        bone.quaternion.copy(parentQuatW.invert().multiply(bossQuat.clone().multiply(pose.quat)));
+      };
+      const rootParent = info.root.parent as THREE.Object3D;
+      setBone(info.root, rootParent, poses[0]);
+      info.root.updateWorldMatrix(true, false);
+      info.children.forEach((b, i) => setBone(b, info.root, poses[i + 1]));
+    }
+
+    /** Apply (or revert) the session curve for one rig. */
+    function applyCurvePose(rig: PartRig) {
+      const info = rig.boneInfo;
+      if (!info) return;
+      const pts = curvesRef.current[rig.key];
+      if (!pts || pts.length < 2) {
+        // Revert: authored wrapper placement + rest bone pose.
+        rig.sampler = null;
+        const a = rig.authored;
+        rig.wrapper.position.set(a.pos[0], a.pos[1], a.pos[2]);
+        rig.wrapper.rotation.set(((a.pitch_deg ?? 0) * Math.PI) / 180, ((a.yaw_deg ?? 0) * Math.PI) / 180, 0);
+        [info.root, ...info.children].forEach((b, i) => {
+          b.position.copy(info.restLocal[i].pos);
+          b.quaternion.copy(info.restLocal[i].quat);
+        });
+        return;
+      }
+      // The curve — not the wrapper — places the piece (spec parts contract).
+      const roll = rollsRef.current[rig.key] ?? 0;
+      rig.sampler = makeSampler(pts, roll);
+      rig.wrapper.position.set(0, 0, 0);
+      rig.wrapper.rotation.set(0, 0, 0);
+      poseBonesWorld(rig, poseBonesAlongCurve(info.rest, pts, roll));
+    }
+
+    // Control-point gizmos + fitted-spline line for the instance being edited.
+    // A child of bossGroup: curve points are boss-local, so the viz rides the
+    // boss's transform exactly like the tentacles do.
+    const curveViz = new THREE.Group();
+    bossGroup.add(curveViz);
+    function rebuildCurveViz() {
+      curveViz.clear();
+      const key = curveTargetRef.current;
+      const pts = key ? curvesRef.current[key] : undefined;
+      if (!pts?.length) return;
+      pts.forEach((p, i) => {
+        const dot = new THREE.Mesh(
+          new THREE.SphereGeometry(i === 0 ? 0.4 : 0.3, 12, 8),
+          new THREE.MeshBasicMaterial({ color: i === 0 ? 0x4ade80 : 0xfacc15 }),
+        );
+        dot.position.set(p[0], p[1], p[2]);
+        curveViz.add(dot);
+      });
+      if (pts.length >= 2) {
+        const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), false, 'centripetal');
+        const line = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(curve.getPoints(60)),
+          new THREE.LineBasicMaterial({ color: 0xfacc15 }),
+        );
+        curveViz.add(line);
+      }
+    }
+
+    function refreshCurves() {
+      for (const rig of partRigs) applyCurvePose(rig);
+      rebuildCurveViz();
+    }
+
     for (const partDef of boss.parts ?? []) {
       const name = partName(partDef);
       loader.load(
@@ -398,7 +620,7 @@ export default function BossRoom() {
           // One wrapper per instance (position/yaw/pitch in the boss's local
           // frame, +z = facing); skinned rigs are cloned via SkeletonUtils so
           // every instance animates independently of its siblings.
-          for (const inst of partInstances(partDef)) {
+          partInstances(partDef).forEach((inst, i) => {
             const rig = cloneSkinned(g.scene);
             const wrapper = new THREE.Group();
             wrapper.position.set(inst.pos[0], inst.pos[1], inst.pos[2]);
@@ -407,17 +629,72 @@ export default function BossRoom() {
             wrapper.rotation.x = ((inst.pitch_deg ?? 0) * Math.PI) / 180;
             wrapper.add(rig);
             bossGroup.add(wrapper);
-            partRigs.push({ mixer: new THREE.AnimationMixer(rig), animations: g.animations, action: null });
-          }
+            const partRig: PartRig = {
+              key: `${name}:${i}`,
+              wrapper,
+              authored: inst,
+              animated: partAnimated(partDef),
+              mixer: new THREE.AnimationMixer(rig),
+              animations: g.animations,
+              action: null,
+              boneInfo: extractBoneInfo(rig),
+              sampler: null,
+            };
+            partRigs.push(partRig);
+            applyCurvePose(partRig); // authored/session curve, if any
+          });
         },
         undefined,
         () => setStatus(`part failed: ${name}`),
       );
     }
 
-    /** Play the same-named clip on every part rig (parts share the body's clip names). */
+    // Clip-overlay support: which nodes a clip actually animates. An
+    // untracked bone keeps its rest curvilinear coords in the remap —
+    // reading its live transform would feed back our own written pose.
+    const trackedCache = new WeakMap<THREE.AnimationClip, { pos: Set<string>; quat: Set<string> }>();
+    function clipTrackSets(clip: THREE.AnimationClip) {
+      let sets = trackedCache.get(clip);
+      if (!sets) {
+        sets = { pos: new Set(), quat: new Set() };
+        for (const t of clip.tracks) {
+          const dot = t.name.lastIndexOf('.');
+          const node = t.name.slice(0, dot);
+          const prop = t.name.slice(dot + 1);
+          if (prop === 'position') sets.pos.add(node);
+          else if (prop === 'quaternion') sets.quat.add(node);
+        }
+        trackedCache.set(clip, sets);
+      }
+      return sets;
+    }
+
+    /**
+     * Wave-along-curve overlay (#508 blend mode): the clip's bone positions
+     * are curvilinear coords in the root's rest frame (arc = x, lateral =
+     * y/z) — re-map them onto the authored curve each frame.
+     */
+    function overlayCurvePoses() {
+      for (const rig of partRigs) {
+        if (!rig.sampler || !rig.boneInfo || !rig.action?.isRunning()) continue;
+        const info = rig.boneInfo;
+        const sets = clipTrackSets(rig.action.getClip());
+        const poses: BonePose[] = [rig.sampler.poseAt(0)];
+        info.children.forEach((b, i) => {
+          const rest = info.restLocal[i + 1];
+          const clipPos = sets.pos.has(b.name) ? b.position : rest.pos;
+          const pose = rig.sampler!.poseAt(clipPos.x, [clipPos.y, clipPos.z]);
+          pose.quat.multiply(sets.quat.has(b.name) ? b.quaternion : rest.quat);
+          poses.push(pose);
+        });
+        poseBonesWorld(rig, poses);
+      }
+    }
+
+    /** Play the same-named clip on every ANIMATED part rig (parts share the body's clip names). */
     function syncParts(clipName: string, loopMode: THREE.AnimationActionLoopStyles, reps: number) {
       for (const rig of partRigs) {
+        if (!rig.animated) continue; // only the boss moves — the tentacles hold their pose
         rig.mixer.stopAllAction();
         rig.action = null;
         const clip = rig.animations.find((a) => a.name === clipName);
@@ -470,6 +747,7 @@ export default function BossRoom() {
       chain = null;
       setActiveClip(null);
       setClipDuration(0);
+      refreshCurves(); // curve-posed rigs snap back to the static authored pose
     }
 
     function startAction(clip: THREE.AnimationClip, loopMode: THREE.AnimationActionLoopStyles, reps: number) {
@@ -537,12 +815,16 @@ export default function BossRoom() {
       startAction(seq[0], reps[0] > 1 ? THREE.LoopRepeat : THREE.LoopOnce, reps[0]);
     }
 
-    // Enrage tint: "turns red on the edges" — approximated with a red
-    // emissive on the rig's materials; cleared when the sim resets.
-    function tintBoss(on: boolean) {
+    // Emissive tint overlay on the rig — enrage "turns red on the edges"
+    // (0x881111), Sinow Beat's Zonde self-freeze glows electric blue
+    // (0x1133aa). Tracked so it's only re-applied on change, not per frame.
+    let tintHex = 0x000000;
+    function tintBoss(hex: number) {
+      if (hex === tintHex) return;
+      tintHex = hex;
       bossGroup.traverse((o) => {
         const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
-        if (mat?.emissive) mat.emissive.setHex(on ? 0x881111 : 0x000000);
+        if (mat?.emissive) mat.emissive.setHex(hex);
       });
     }
 
@@ -558,6 +840,7 @@ export default function BossRoom() {
           }
         } else if (ev.type === 'player-hit') {
           playerHp = Math.max(0, playerHp - ev.damage);
+          if (ev.freeze) playerFreeze = Math.max(playerFreeze, ev.freeze); // Zonde: locked in place
           if (ev.knockback) {
             // wing flap: shove the player along the boss's facing
             feet.x += ev.knockback.x;
@@ -569,9 +852,12 @@ export default function BossRoom() {
             feet.copy(spawn); // downed → respawn with full HP, sim keeps running
             velY = 0;
             playerHp = PLAYER_MAX_HP;
+            playerFreeze = 0;
           }
+        } else if (ev.type === 'zap') {
+          spawnZap(ev.pos.x, ev.pos.z);
         } else if (ev.type === 'enrage') {
-          tintBoss(true);
+          tintBoss(0x881111);
         }
       }
     }
@@ -581,6 +867,99 @@ export default function BossRoom() {
     scene.add(ordnanceGroup);
     const projPool: THREE.Mesh[] = [];
     const ringPool: THREE.Mesh[] = [];
+
+    // Sinow Beat visuals: the decoy clone ring, floor traps, and Zonde zaps.
+    const decoyGroup = new THREE.Group();
+    scene.add(decoyGroup);
+    // Each decoy carries its own mixer so it fake-attacks (loops the slash)
+    // while the real boss does the actual damage.
+    const decoyPool: Array<{ root: THREE.Object3D; mixer: THREE.AnimationMixer }> = [];
+    const trapGroup = new THREE.Group();
+    scene.add(trapGroup);
+    const trapPool: THREE.Mesh[] = [];
+    const zapGroup = new THREE.Group();
+    scene.add(zapGroup);
+    const zaps: Array<{ mesh: THREE.Mesh; t: number }> = [];
+
+    // Decoy clones: transparent copies of the boss rig (spec §Sinow Beat). Cloned
+    // lazily from the loaded rig, held in a pool, posed statically (draft — the
+    // decoys don't run their own attack clips), tinted to clone_alpha.
+    function syncClones() {
+      for (const d of decoyPool) d.root.visible = false;
+      if (!sim || !bossScene || !sim.clones.length) return;
+      sim.clones.forEach((c, i) => {
+        while (decoyPool.length <= i) {
+          const rig = cloneSkinned(bossScene!);
+          rig.traverse((o) => {
+            const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+            if (mat) {
+              const m = mat.clone();
+              m.transparent = true;
+              m.opacity = entry.fsm.clone_alpha;
+              (o as THREE.Mesh).material = m;
+            }
+          });
+          // Fake-attack: loop the slash clip, staggered so they don't move in
+          // lockstep — the ring reads as several Sinow Beats all lunging.
+          const dm = new THREE.AnimationMixer(rig);
+          const atkName = resolveClipToken(animations.map((a) => a.name), 'atk');
+          const atkClip = atkName ? animations.find((a) => a.name === atkName) : undefined;
+          if (atkClip) {
+            const act = dm.clipAction(atkClip);
+            act.play();
+            act.time = (decoyPool.length * 0.37) % atkClip.duration;
+          }
+          decoyPool.push({ root: rig, mixer: dm });
+          decoyGroup.add(rig);
+        }
+        const d = decoyPool[i];
+        d.root.visible = true;
+        d.root.scale.setScalar(bossGroup.scale.x); // track the live boss scale
+        const gy = dropToFloor(new THREE.Vector3(c.pos.x, bossPos.y + 2, c.pos.z)) ?? bossPos.y;
+        d.root.position.set(c.pos.x, gy, c.pos.z);
+        d.root.rotation.y = c.yaw;
+      });
+    }
+
+    // Floor traps: flat armed discs that pulse; a Zonde zap fires on trigger.
+    function syncTraps() {
+      for (const m of trapPool) m.visible = false;
+      if (!sim) return;
+      sim.traps.forEach((t, i) => {
+        const m = poolGet(trapPool, i, () => new THREE.Mesh(
+          new THREE.RingGeometry(0.5, entry.fsm.trap_radius, 20),
+          new THREE.MeshBasicMaterial({ color: 0xaa66ff, side: THREE.DoubleSide, transparent: true, opacity: 0.7 }),
+        ), trapGroup);
+        const gy = dropToFloor(new THREE.Vector3(t.pos.x, bossPos.y + 2, t.pos.z)) ?? bossPos.y;
+        m.position.set(t.pos.x, gy + 0.05, t.pos.z);
+        m.rotation.x = -Math.PI / 2;
+      });
+    }
+
+    // A Zonde discharge: a short bright column that fades over ~0.35s.
+    function spawnZap(x: number, z: number) {
+      const gy = dropToFloor(new THREE.Vector3(x, bossPos.y + 2, z)) ?? bossPos.y;
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xccddff, transparent: true, opacity: 0.9 }),
+      );
+      mesh.position.set(x, gy + 3, z);
+      zapGroup.add(mesh);
+      zaps.push({ mesh, t: 0.35 });
+    }
+    function stepZaps(dt: number) {
+      for (let i = zaps.length - 1; i >= 0; i--) {
+        const z = zaps[i];
+        z.t -= dt;
+        (z.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, z.t / 0.35) * 0.9;
+        if (z.t <= 0) {
+          zapGroup.remove(z.mesh);
+          z.mesh.geometry.dispose();
+          (z.mesh.material as THREE.Material).dispose();
+          zaps.splice(i, 1);
+        }
+      }
+    }
 
     // Gem caster visuals (Chaos Sorcerer): two gems flanking the boss, tinted
     // by the held colors. Children of bossGroup so they ride the hover/teleport.
@@ -624,11 +1003,11 @@ export default function BossRoom() {
         castGemMesh.visible = false;
       }
     }
-    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh): THREE.Mesh {
+    function poolGet(pool: THREE.Mesh[], i: number, make: () => THREE.Mesh, group: THREE.Group = ordnanceGroup): THREE.Mesh {
       while (pool.length <= i) {
         const m = make();
         pool.push(m);
-        ordnanceGroup.add(m);
+        group.add(m);
       }
       pool[i].visible = true;
       return pool[i];
@@ -665,15 +1044,19 @@ export default function BossRoom() {
         swingCd = 0;
       } else {
         sim = null;
+        playerFreeze = 0;
         mixer?.stopAllAction();
         currentAction = null;
         chain = null;
         setActiveClip(null);
         setSimHud(null);
-        tintBoss(false);
+        tintBoss(0x000000);
         syncOrdnance();
         syncGems();
+        syncClones();
+        syncTraps();
         settleBoss();
+        refreshCurves();
       }
     }
 
@@ -715,6 +1098,7 @@ export default function BossRoom() {
         markerSeq = 0;
         setMarkers([]);
       },
+      refreshCurves,
     };
     apiRef.current.setBossScale(modelScale);
 
@@ -764,8 +1148,15 @@ export default function BossRoom() {
 
     const onClick = (ev: MouseEvent) => {
       const mode = clickModeRef.current;
-      const target = floorMesh ?? arenaMesh;
-      if (!mode || !target) return;
+      // Curve points also live on the pool water, which is a HOLE in the
+      // walkable collider AND lives in the skybox GLB (o0s_zsky 1_water2) —
+      // so curve modes raycast the arena visual and skybox too, nearest hit
+      // wins (the water plane beats the sky dome anywhere that matters).
+      const curveMode = mode === 'curve' || mode === 'curve-base' || mode === 'curve-tip';
+      const targets = (curveMode ? [floorMesh, arenaMesh, skyMesh] : [floorMesh ?? arenaMesh]).filter(
+        (t): t is THREE.Object3D => !!t,
+      );
+      if (!mode || !targets.length) return;
       if (Math.abs(ev.clientX - downX) > 4 || Math.abs(ev.clientY - downY) > 4) return; // drag
       const rect = renderer.domElement.getBoundingClientRect();
       const m = new THREE.Vector2(
@@ -773,12 +1164,44 @@ export default function BossRoom() {
         -((ev.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(m, camera);
-      const wasVisible = target.visible;
-      target.visible = true; // raycast needs the floor even when hidden
-      const hits = raycaster.intersectObject(target, true);
-      target.visible = wasVisible;
+      const wasVisible = targets.map((t) => t.visible);
+      for (const t of targets) t.visible = true; // raycast needs the floor even when hidden
+      const hits = raycaster.intersectObjects(targets, true);
+      targets.forEach((t, i) => (t.visible = wasVisible[i]));
       if (!hits.length) return;
       const p = hits[0].point;
+      if (curveMode) {
+        const key = curveTargetRef.current;
+        if (!key) {
+          setClickMode(null);
+          return;
+        }
+        const local = bossGroup.worldToLocal(p.clone());
+        const pt: Vec3Tuple = [+local.x.toFixed(2), +local.y.toFixed(2), +local.z.toFixed(2)];
+        setCurves((cur) => {
+          const prev = cur[key] ?? [];
+          let next: Vec3Tuple[];
+          if (mode === 'curve-base') {
+            // PLACE: a fresh default arch at the click (emergence dipped
+            // below the clicked water surface), or move the whole authored
+            // curve there with its bend AND start depth preserved.
+            next = prev.length >= 2
+              ? translateCurve(prev, [pt[0], pt[1] - curveDip(prev), pt[2]])
+              : defaultArch(pt, undefined, DEFAULT_REACH, DEFAULT_LIFT, dipRef.current);
+          } else if (mode === 'curve-tip') {
+            // BEND: keep the base, re-aim the tip (needs a placed curve).
+            next = prev.length >= 2
+              ? retargetTip(prev, pt)
+              : defaultArch(pt, undefined, DEFAULT_REACH, DEFAULT_LIFT, dipRef.current);
+          } else {
+            next = [...prev, pt]; // free-form append
+          }
+          return { ...cur, [key]: next };
+        });
+        // place/bend are one-shot; free-form point adding stays sticky.
+        if (mode !== 'curve') setClickMode(null);
+        return;
+      }
       if (mode === 'boss') {
         bossPos.set(p.x, p.y, p.z);
         bossGroup.position.copy(bossPos);
@@ -810,6 +1233,11 @@ export default function BossRoom() {
       if (keys['s']) move.sub(fwd);
       if (keys['d']) move.add(right);
       if (keys['a']) move.sub(right);
+      // Zonde freeze (Sinow Beat): WASD locked while it lasts; gravity still applies.
+      if (playerFreeze > 0) {
+        playerFreeze = Math.max(0, playerFreeze - dt);
+        move.set(0, 0, 0);
+      }
       if (move.lengthSq() > 0) {
         move.normalize().multiplyScalar(SPEED * dt);
         const nx = feet.x + move.x;
@@ -848,6 +1276,9 @@ export default function BossRoom() {
         swingCd -= dt;
         if (keys['j'] && swingCd <= 0) {
           swingCd = SWING_COOLDOWN;
+          // The swing pops any decoy clones it overlaps, and damages the real
+          // boss only when the real boss is in reach.
+          hitClones(sim, { x: feet.x, z: feet.z }, SWING_RANGE);
           if (Math.hypot(feet.x - sim.pos.x, feet.z - sim.pos.z) <= SWING_RANGE) {
             handleSimEvents(damageBoss(sim, entry, SWING_DAMAGE));
           }
@@ -859,6 +1290,9 @@ export default function BossRoom() {
         bossGroup.rotation.y = sim.yaw;
         syncOrdnance();
         syncGems();
+        syncClones();
+        syncTraps();
+        tintBoss(sim.frozen > 0 ? 0x1133aa : sim.enraged ? 0x881111 : 0x000000);
       } else if (facePlayerLocal) {
         const dx = feet.x - bossPos.x;
         const dz = feet.z - bossPos.z;
@@ -867,8 +1301,17 @@ export default function BossRoom() {
 
       if (mixer && !animPaused) {
         mixer.update(dt);
-        for (const rig of partRigs) rig.mixer.update(dt);
+        for (const d of decoyPool) if (d.root.visible) d.mixer.update(dt); // decoys fake-attack
+        for (const rig of partRigs) {
+          // Pure-curve mode freezes the rig on the authored pose; with the
+          // overlay on, the clip plays and is re-mapped onto the curve below.
+          if (rig.sampler && !curveOverlayRef.current) continue;
+          rig.mixer.update(dt);
+        }
+        overlayCurvePoses();
       }
+
+      stepZaps(dt); // Zonde discharges fade out independently of the sim toggle
 
       // Follow cam orbiting the player.
       const cx = feet.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist;
@@ -887,7 +1330,7 @@ export default function BossRoom() {
           boss: [+bossPos.x.toFixed(1), +bossPos.y.toFixed(1), +bossPos.z.toFixed(1)],
           dist: +d.toFixed(1),
         });
-        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state });
+        if (sim) setSimHud({ bossHp: sim.hp, maxHp: sim.maxHp, playerHp, state: sim.state, playerFrozen: playerFreeze > 0, bossFrozen: sim.frozen > 0 });
       }
 
       renderer.render(scene, camera);
@@ -895,7 +1338,12 @@ export default function BossRoom() {
     animate();
 
     if (import.meta.env.DEV) {
-      (window as any).__bossRoom = { scene, feet, bossPos, playClip, playChain, get mixer() { return mixer; } };
+      (window as any).__bossRoom = {
+        scene, feet, bossPos, playClip, playChain,
+        get mixer() { return mixer; },
+        refs: { curvesRef, curveTargetRef, clickModeRef, dipRef },
+        get partRigs() { return partRigs; },
+      };
     }
 
     const onResize = () => {
@@ -946,6 +1394,25 @@ export default function BossRoom() {
   useEffect(() => {
     apiRef.current?.setBossScale(modelScale);
   }, [modelScale]);
+  useEffect(() => {
+    curvesRef.current = curves;
+    apiRef.current?.refreshCurves();
+  }, [curves]);
+  useEffect(() => {
+    curveTargetRef.current = curveTarget;
+    apiRef.current?.refreshCurves();
+  }, [curveTarget]);
+  useEffect(() => {
+    curveOverlayRef.current = curveOverlay;
+    apiRef.current?.refreshCurves();
+  }, [curveOverlay]);
+  useEffect(() => {
+    dipRef.current = dip;
+  }, [dip]);
+  useEffect(() => {
+    rollsRef.current = rolls;
+    apiRef.current?.refreshCurves();
+  }, [rolls]);
 
   if (error) return <div style={{ padding: 20, color: '#f66' }}>{error}</div>;
   if (config && !boss) {
@@ -1052,6 +1519,171 @@ export default function BossRoom() {
             move boss
           </button>
         </div>
+        {boss && (boss.parts?.length ?? 0) > 0 && (
+          <>
+            <span style={label}>Tentacle poser (#508) — points are boss-local, +z = facing</span>
+            <select
+              value={curveTarget ?? ''}
+              onChange={(e) => {
+                setCurveTarget(e.target.value || null);
+                if (!e.target.value) setClickMode((m) => (m === 'curve' ? null : m));
+              }}
+              style={{ width: '100%', background: '#1a1a35', color: '#fff', border: '1px solid #334' }}
+            >
+              <option value="">— pick a part instance —</option>
+              {(boss.parts ?? []).flatMap((p) =>
+                partInstances(p).map((_, i) => {
+                  const k = `${partName(p)}:${i}`;
+                  const n = curves[k]?.length ?? 0;
+                  return (
+                    <option key={k} value={k}>
+                      {partName(p)} #{i + 1}
+                      {n ? ` · ${n} pt${n === 1 ? '' : 's'}` : ''}
+                    </option>
+                  );
+                }),
+              )}
+            </select>
+            {curveTarget && (
+              <>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => setClickMode(clickMode === 'curve-base' ? null : 'curve-base')}
+                    title="Click the ground/water to place the tentacle there — a fresh default arch, or the authored curve moved with its bend preserved."
+                    style={{
+                      ...btn,
+                      flex: 1,
+                      background: clickMode === 'curve-base' ? '#4ade80' : btn.background,
+                      color: clickMode === 'curve-base' ? '#000' : btn.color,
+                    }}
+                  >
+                    {clickMode === 'curve-base' ? 'click ground to place…' : 'place (click ground)'}
+                  </button>
+                  <button
+                    onClick={() => setClickMode(clickMode === 'curve-tip' ? null : 'curve-tip')}
+                    title="Click where the tip should reach — keeps the base, re-aims the arch at the current lift."
+                    style={{
+                      ...btn,
+                      flex: 1,
+                      background: clickMode === 'curve-tip' ? '#facc15' : btn.background,
+                      color: clickMode === 'curve-tip' ? '#000' : btn.color,
+                    }}
+                  >
+                    {clickMode === 'curve-tip' ? 'click tip target…' : 'bend (click tip)'}
+                  </button>
+                </div>
+                {(curves[curveTarget]?.length ?? 0) >= 3 && (
+                  <>
+                    <span style={label}>Lift: {curveLift(curves[curveTarget]!).toFixed(2)}</span>
+                    <input
+                      type="range"
+                      min={-2}
+                      max={12}
+                      step={0.25}
+                      value={curveLift(curves[curveTarget]!)}
+                      onChange={(e) =>
+                        setCurves((cur) => ({ ...cur, [curveTarget]: setLift(cur[curveTarget]!, +e.target.value) }))
+                      }
+                      style={{ width: '100%' }}
+                    />
+                  </>
+                )}
+                {(curves[curveTarget]?.length ?? 0) >= 2 && (
+                  <>
+                    <span style={label}>Roll (turn the suckers): {(rolls[curveTarget] ?? 0).toFixed(0)}°</span>
+                    <input
+                      type="range"
+                      min={-180}
+                      max={180}
+                      step={5}
+                      value={rolls[curveTarget] ?? 0}
+                      onChange={(e) => setRolls((cur) => ({ ...cur, [curveTarget]: +e.target.value }))}
+                      style={{ width: '100%' }}
+                    />
+                  </>
+                )}
+                <span style={label}>
+                  Start depth: {((curves[curveTarget]?.length ?? 0) >= 2 ? curveDip(curves[curveTarget]!) : dip).toFixed(2)}{' '}
+                  (emergence below the click — in the water)
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={8}
+                  step={0.25}
+                  value={(curves[curveTarget]?.length ?? 0) >= 2 ? curveDip(curves[curveTarget]!) : dip}
+                  onChange={(e) => {
+                    const v = +e.target.value;
+                    setDipDefault(v);
+                    if ((curves[curveTarget]?.length ?? 0) >= 2) {
+                      setCurves((cur) => ({ ...cur, [curveTarget]: setDip(cur[curveTarget]!, v) }));
+                    }
+                  }}
+                  style={{ width: '100%' }}
+                />
+                <button
+                  onClick={() => setClickMode(clickMode === 'curve' ? null : 'curve')}
+                  style={{
+                    ...btn,
+                    background: clickMode === 'curve' ? '#4ade80' : btn.background,
+                    color: clickMode === 'curve' ? '#000' : btn.color,
+                  }}
+                >
+                  {clickMode === 'curve' ? 'adding points — click floor/water (click again to stop)' : 'add points (click)'}
+                </button>
+                {(curves[curveTarget] ?? []).map((pt, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                    <span style={{ color: i === 0 ? '#4ade80' : '#889', fontSize: 10, width: 12 }}>{i === 0 ? '●' : i}</span>
+                    {([0, 1, 2] as const).map((axis) => (
+                      <input
+                        key={axis}
+                        type="number"
+                        step={0.25}
+                        value={+pt[axis].toFixed(2)}
+                        onChange={(e) => {
+                          const v = +e.target.value;
+                          if (!Number.isFinite(v)) return;
+                          setCurves((cur) => {
+                            const arr = cur[curveTarget]!.map((q) => [...q] as Vec3Tuple);
+                            arr[i][axis] = v;
+                            return { ...cur, [curveTarget]: arr };
+                          });
+                        }}
+                        style={{ width: 52, background: '#1a1a35', color: '#cdf', border: '1px solid #334', fontSize: 11 }}
+                      />
+                    ))}
+                    <button
+                      onClick={() => setCurves((cur) => ({ ...cur, [curveTarget]: cur[curveTarget]!.filter((_, j) => j !== i) }))}
+                      style={btn}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {(curves[curveTarget]?.length ?? 0) === 1 && (
+                  <div style={{ color: '#a86', fontSize: 11, marginTop: 2 }}>need ≥2 points to pose (emergence → apex → tip)</div>
+                )}
+                {(curves[curveTarget]?.length ?? 0) > 0 && (
+                  <button onClick={() => setCurves((cur) => ({ ...cur, [curveTarget]: [] }))} style={btn}>
+                    clear curve (revert to pos/yaw)
+                  </button>
+                )}
+                <label style={{ ...label, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={curveOverlay} onChange={(e) => setCurveOverlay(e.target.checked)} /> clip
+                  overlay — the wave rides the authored curve
+                </label>
+              </>
+            )}
+            <button
+              onClick={copyParts}
+              title='Copies this boss&apos;s "parts" array with the session curves merged in — paste over the parts field in data/boss_arenas.json.'
+              style={{ ...btn, display: 'block', width: '100%' }}
+            >
+              copy tentacles (parts JSON, curves merged)
+            </button>
+          </>
+        )}
+
         {markers.length > 0 && (
           <div style={{ marginTop: 6 }}>
             {markers.map((m) => (
@@ -1093,11 +1725,15 @@ export default function BossRoom() {
               <div style={{ fontSize: 11, marginTop: 4 }}>
                 <div style={{ color: '#f88' }}>
                   boss {Math.ceil(simHud.bossHp)}/{simHud.maxHp} · <code>{simHud.state}</code>
+                  {simHud.bossFrozen && <span style={{ color: '#9cf' }}> · ⚡frozen</span>}
                 </div>
                 <div style={{ background: '#311', borderRadius: 3, height: 6, marginTop: 2 }}>
                   <div style={{ background: '#e55', borderRadius: 3, height: 6, width: `${(simHud.bossHp / simHud.maxHp) * 100}%` }} />
                 </div>
-                <div style={{ color: '#8c8', marginTop: 4 }}>player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}</div>
+                <div style={{ color: '#8c8', marginTop: 4 }}>
+                  player {Math.ceil(simHud.playerHp)}/{PLAYER_MAX_HP}
+                  {simHud.playerFrozen && <span style={{ color: '#9cf' }}> · ⚡frozen (WASD locked)</span>}
+                </div>
                 <div style={{ background: '#131', borderRadius: 3, height: 6, marginTop: 2 }}>
                   <div style={{ background: '#5e5', borderRadius: 3, height: 6, width: `${(simHud.playerHp / PLAYER_MAX_HP) * 100}%` }} />
                 </div>

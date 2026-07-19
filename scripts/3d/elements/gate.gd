@@ -81,10 +81,3 @@ func open() -> void:
 func lock() -> void:
 	set_state("locked")
 
-
-## Toggle gate state
-func toggle() -> void:
-	if element_state == "locked":
-		open()
-	else:
-		lock()

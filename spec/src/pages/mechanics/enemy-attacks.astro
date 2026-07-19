@@ -23,7 +23,7 @@ const timeline = `stateDiagram-v2
   <div class="diagram"><Mermaid chart={timeline} /></div>
 
   <h2>Data model — <code>data/enemy_attacks.json</code></h2>
-  <p>Keyed by enemy id (the <code>data/enemies/*.tres</code> id). Seeded from the .tres registry by <code>scripts/tools/gen_enemy_attacks.py</code> (merge-preserving — re-runs keep hand-tuned rows); the <code>stats</code> block mirrors <code>.tres</code> values, and <strong><code>.tres</code> remains authoritative for stats</strong> until the Godot implementation PR decides otherwise (explicit open question — do not silently create two masters).</p>
+  <p>Keyed by enemy id (the <code>data/enemies/*.tres</code> id). Seeded from the .tres registry by <code>scripts/tools/gen_enemy_attacks.py</code> (merge-preserving — re-runs keep hand-tuned rows); the <code>stats</code> block mirrors <code>.tres</code> values. <strong>Resolved (#509 Godot PR):</strong> <code>.tres</code> is authoritative for <em>stats</em> (attack_base, ranges, cooldown) and the JSON is authoritative for the <em>attack tables</em> + <code>fsm</code> params only — the runtime (<code>EnemyAttackRegistry</code>) reads attack defs from the JSON and stats from <code>EnemyData</code>, and ignores the JSON <code>stats</code> block (it stays purely a mirror for the web sim). No two masters.</p>
   <table>
     <tr><th>Field</th><th>Meaning</th></tr>
     <tr><td><code>clip</code></td><td>Animation-name <em>token</em> as the runtime resolver consumes it (<code>atk</code>, <code>atk2</code>, <code>atk_hi</code>…) — NOT a full clip name. Resolution = exact match, <code>*_&lt;token&gt;</code> suffix, the <code>ANIM_ALIASES</code> table, then (attack only) the last-resort <code>atk</code>-segment scan excluding <code>st</code>/<code>lp</code>/<code>ed</code> segment pieces — the normative order lives in <a href="/states/enemies">/states/enemies</a> and MUST be identical in tool and runtime.</td></tr>
@@ -75,8 +75,29 @@ const timeline = `stateDiagram-v2
     <li>A configured <code>clip</code> token that doesn't resolve on the rig MUST degrade to that same fallback path; the tool SHOULD flag it visibly (it renders the token red with the fallback note).</li>
   </ul>
 
-  <h2>Open question — stance model</h2>
-  <p>Some rigs encode a two-stance structure the FSM cannot yet express. Garapython (<code>m_003</code>) is the worked example, captured in its <code>clip_notes</code>: a <strong>low</strong> stance (<code>wat1</code> idle, <code>wlk</code> slither) and a <strong>raised attack-ready</strong> stance (<code>wat2</code>), with authored transitions — <code>stt</code> rises <code>wlk → wat2</code>, <code>wt2w</code> lowers <code>wat2 → wlk</code> without attacking — and both attacks launching from the raised pose. A faithful runtime would rise before striking and lower to travel. Whether stances become FSM sub-states (with per-enemy transition clips in this data file) is an <strong>explicit open design question</strong> — not contracted here yet. Until it is decided, the runtime MAY play attacks directly from locomotion, and <code>clip_notes</code> preserves the authored intent.</p>
+  <h2>Difficulty scaling — aggression &amp; timing (#522)</h2>
+  <p>Enemies scale their <em>aggression and timing</em> by the session difficulty (<code>SessionManager.get_session().difficulty</code>, one of <code>normal</code> / <code>hard</code> / <code>super-hard</code>). <strong>Normal is the identity baseline</strong> — the current passive feel is preserved exactly. Higher tiers widen aggro and tighten cadence/telegraph; this is deliberately the <em>only</em> knob difficulty turns here — HP and damage scaling stay with <a href="/mechanics/enemy-attacks">damage math (#157)</a> / the attack model, not this section.</p>
+  <ul>
+    <li><code>detection</code> — multiplies <code>detection_range</code> (the IDLE → CHASING aggro radius). Higher = spotted from farther.</li>
+    <li><code>cadence</code> — multiplies <code>attack_cooldown</code>. Lower = attacks more often.</li>
+    <li><code>reaction</code> — multiplies the windup portion of the timeline (<code>windup_frac × duration</code>). Lower = shorter telegraph, strikes sooner. The damage-window end is unchanged.</li>
+  </ul>
+  <table>
+    <tr><th>Tier</th><th><code>detection</code></th><th><code>cadence</code></th><th><code>reaction</code></th></tr>
+    <tr><td><code>normal</code></td><td>1.0</td><td>1.0</td><td>1.0</td></tr>
+    <tr><td><code>hard</code></td><td>1.25</td><td>0.80</td><td>0.85</td></tr>
+    <tr><td><code>super-hard</code></td><td>1.5</td><td>0.65</td><td>0.70</td></tr>
+  </table>
+  <p>The table is SHOULD-level starting calibration (<code>EnemyBase.AGGRO_SCALING</code>) — tuned by play-test, not normative to the decimal. What is normative: Normal MUST be identity, higher tiers MUST NOT <em>reduce</em> aggro/cadence pressure, and the scaling MUST apply to aggro/timing only (never HP/damage from this path).</p>
+
+  <h2>Pre-strike telegraph &amp; stance model (#491)</h2>
+  <p><strong>Resolved (playtest #491):</strong> striking straight from locomotion read as "walk up, freeze, cheap hit" — no anticipation, unreadable. So ATTACKING MUST open with a <strong>telegraph sub-phase</strong> before the damage window: the enemy holds a readable attack-ready pose, facing the target, long enough to react (run, evade, or commit). The telegraph deals <strong>no</strong> damage; it is <em>not</em> a 7th FSM state — it is the head of ATTACKING (the six states in <a href="/states/enemies">/states/enemies</a> stand).</p>
+  <ul>
+    <li><strong>Stance risers</strong> (garapython/garahadan, <code>m_003</code>) MUST <strong>rise</strong> via <code>stt</code> (<code>wlk → wat2</code>), <strong>hold</strong> <code>wat2</code> (raised attack-ready) for the telegraph beat, strike from that pose (<code>atk1</code>/<code>atk2</code>), then <strong>lower</strong> via <code>wt2w</code> as they peel off. The authored <code>clip_notes</code> are the contract.</li>
+    <li><strong>Every other rig</strong> holds its idle (<code>wat</code>) for the same beat — a best-effort readable wind-up so nothing strikes instantly. Per-archetype anticipation clips refine this later (<a href="https://github.com/kion-dgl/psz-godot/issues/494">#494</a>).</li>
+    <li>Hold duration = <code>TELEGRAPH_HOLD</code> (SHOULD-level, tuned by feel) × the difficulty <code>reaction</code> multiplier — Normal is generous, higher tiers shorten it. A hit during the telegraph (HURT) cancels it, like any attack.</li>
+  </ul>
+  <p>The deeper stance <em>sub-state</em> question (persistent low/raised modes with per-enemy transition tables beyond attack telegraphs) remains open under <a href="https://github.com/kion-dgl/psz-godot/issues/491">#491</a>; this contract covers the attack-time telegraph, which is what the feel needs first.</p>
 
   <h2>Rig groups &amp; behavior archetypes</h2>
   <p>PSZ enemies behave differently <strong>by type and by interaction</strong> — the single chase → attack → loaf melee loop this page's FSM parameters tune is only one archetype. The rigs themselves define the minimum behavior set (generated by <code>scripts/tools/enemy_anim_groups.py</code>, which parses every enemy GLB's clip names; re-run it and reconcile this table when rigs change):</p>

@@ -7,8 +7,8 @@ extends Node3D
 ## Player movement is camera-relative (handled in player.gd via get_viewport().get_camera_3d()).
 
 # Camera settings
-@export var distance: float = 6.0
-@export var height: float = 3.0
+@export var distance: float = 4.5
+@export var height: float = 1.9
 @export var rotation_speed: float = 0.05
 @export var mouse_sensitivity: float = 0.005
 ## Min/max pitch as offset from the default look angle (which is set by

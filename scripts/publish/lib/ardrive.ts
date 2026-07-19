@@ -10,7 +10,7 @@ export interface UploadResult {
 
 // Three public gateways pointing at the same Arweave tx. Listed in the
 // manifest so bootstrap.gd can try all of them if one lags propagation.
-function gatewayUrls(txId: string): string[] {
+export function gatewayUrls(txId: string): string[] {
   return [
     `https://arweave.net/${txId}`,
     `https://ar-io.dev/${txId}`,

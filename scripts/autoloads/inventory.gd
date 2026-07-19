@@ -416,14 +416,14 @@ func use_item(item_id: String) -> bool:
 		if GameState.hp >= GameState.max_hp:
 			return false  # Already full
 		var amount: int = int(float(GameState.max_hp) * percent)
-		GameState.heal(amount)
+		GameState.set_hp(GameState.hp + amount)
 		_last_use_type = "hp"
 		_last_use_amount = amount
 	elif effect_type == "pp":
 		if GameState.mp >= GameState.max_mp:
 			return false  # Already full
 		var amount: int = int(float(GameState.max_mp) * percent)
-		GameState.restore_mp(amount)
+		GameState.set_mp(GameState.mp + amount)
 		_last_use_type = "pp"
 		_last_use_amount = amount
 	else:

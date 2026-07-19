@@ -11,28 +11,6 @@ signal dialog_finished
 @export var dialog: Array = []  # Array of {speaker: String, text: String}
 @export var npc_animation: String = ""  # e.g. "~dam_d_lp" — tilde prefix resolved to gender
 
-## NPC class IDs for animation prefix selection
-const NPC_CLASSES: Dictionary = {
-	"kai": "humar", "sarisa": "hunewearl", "dorn": "hucast",
-	"dr_carlo": "fomar", "elio": "racaseal", "fern": "humarl",
-	"vash": "ramar", "ren": "humar", "mira": "fomarl",
-}
-const FEMALE_CLASSES := ["humarl", "ramarl", "fomarl", "hunewearl", "fonewearl", "hucaseal", "racaseal"]
-
-## Known NPC models — maps npc_id to { glb, texture } paths
-const NPC_MODELS: Dictionary = {
-	"kai": {"glb": "res://assets/npcs/kai/pc_a01_000.glb", "texture": "res://assets/npcs/kai/pc_a01_000.png"},
-	"sarisa": {"glb": "res://assets/npcs/sarisa/pc_a00_000.glb", "texture": "res://assets/npcs/sarisa/pc_a00_000.png"},
-	"dorn": {"glb": "res://assets/npcs/dorn/dorn.glb", "texture": "res://assets/npcs/dorn/dorn.png"},
-	"dr_carlo": {"glb": "res://assets/npcs/dr_carlo/dr_carlo.glb", "texture": "res://assets/npcs/dr_carlo/dr_carlo.png"},
-	"elio": {"glb": "res://assets/npcs/elio/elio.glb", "texture": "res://assets/npcs/elio/elio.png"},
-	"fern": {"glb": "res://assets/npcs/fern/fern.glb", "texture": "res://assets/npcs/fern/fern.png"},
-	"vash": {"glb": "res://assets/npcs/vash/vash.glb", "texture": "res://assets/npcs/vash/vash.png"},
-	"ren": {"glb": "res://assets/npcs/ren/ren.glb", "texture": "res://assets/npcs/ren/ren.png"},
-	"mira": {"glb": "res://assets/npcs/mira/mira.glb", "texture": "res://assets/npcs/mira/mira.png"},
-}
-
-
 func _init() -> void:
 	interactable = true
 	auto_collect = false
@@ -63,7 +41,7 @@ const CAPSULE_COLORS: Dictionary = {
 
 
 func _load_npc_model() -> void:
-	var entry: Variant = NPC_MODELS.get(npc_id, null)
+	var entry: Variant = NpcAssets.MODELS.get(npc_id, null)
 	if entry == null:
 		_spawn_capsule_placeholder()
 		return
@@ -160,21 +138,21 @@ func _apply_state() -> void:
 func _load_and_play_animation(anim_field: String) -> void:
 	if not model:
 		return
-	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	var skel: Skeleton3D = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	if not skel:
 		return
 
 	# Resolve animation name: "~dam_d_lp" → "pwsa_dam_d_lp" (female) or "pmsa_dam_d_lp" (male)
 	var anim_name := anim_field
 	if anim_name.begins_with("~"):
-		var class_id: String = NPC_CLASSES.get(npc_id, "humar")
-		var is_female: bool = class_id in FEMALE_CLASSES
+		var class_id: String = NpcAssets.CLASSES.get(npc_id, "humar")
+		var is_female: bool = class_id in NpcAssets.FEMALE_CLASSES
 		var prefix: String = "pwsa_" if is_female else "pmsa_"
 		anim_name = prefix + anim_name.substr(1)
 
 	# Pick animation source GLB based on gender
-	var class_id: String = NPC_CLASSES.get(npc_id, "humar")
-	var is_female: bool = class_id in FEMALE_CLASSES
+	var class_id: String = NpcAssets.CLASSES.get(npc_id, "humar")
+	var is_female: bool = class_id in NpcAssets.FEMALE_CLASSES
 	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if is_female else "res://assets/player/animations/saber_m.glb"
 	if not ResourceLoader.exists(anim_glb):
 		return
@@ -183,7 +161,7 @@ func _load_and_play_animation(anim_field: String) -> void:
 	if not anim_packed:
 		return
 	var anim_scene := anim_packed.instantiate()
-	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+	var source_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if not source_player or not source_player.has_animation(anim_name):
 		push_warning("[FieldNpc] Animation '%s' not found in %s" % [anim_name, anim_glb])
 		anim_scene.queue_free()
@@ -207,13 +185,3 @@ func _load_and_play_animation(anim_field: String) -> void:
 	player.play(anim_name)
 	anim_scene.queue_free()
 	print("[FieldNpc] Playing '%s' on %s" % [anim_name, npc_id])
-
-
-func _find_typed(root: Node, type_name: String) -> Node:
-	if root.get_class() == type_name:
-		return root
-	for child in root.get_children():
-		var found := _find_typed(child, type_name)
-		if found:
-			return found
-	return null

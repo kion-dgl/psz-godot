@@ -4,14 +4,6 @@ extends "res://scripts/3d/city/city_area_base.gd"
 const DEFAULT_SPAWN := Vector3(0.98, 2, 62.79)
 const DEFAULT_ROT := PI
 
-## In-house replacement for the original weapon-shop cart. The market
-## GLB referenced by city_market.tscn has been pre-edited (via the
-## /market-editor download workflow) to remove the old cart geometry,
-## leaving an empty spot for this model. Transform was dialed in inside
-## the same web tool's Place mode and pasted here verbatim.
-const WEAPON_SHOP_CART_SCENE := preload("res://assets/stages/city_e/market/weapon_shop/weapon_shop_cart.glb")
-const ITEM_SHOP_CART_SCENE := preload("res://assets/stages/city_e/market/item_shop/item_cart.glb")
-
 const SPAWN_VARIANTS := {
 	"counter-exit": {
 		"position": Vector3(0.98, 2, 18.84),
@@ -27,11 +19,6 @@ const SPAWN_VARIANTS := {
 func _ready() -> void:
 	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
 	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
-
-	# Drop in the replacement shop carts over the empty spots the no-cart
-	# GLB left behind. Disabled while evaluating dairon2, which may have the
-	# item/weapon stalls baked into the geometry — re-enable if not.
-	#_add_shop_carts()
 
 	# Heal on city entry
 	_heal_character()
@@ -101,28 +88,3 @@ func _ready() -> void:
 
 func _get_area_name() -> String:
 	return "market"
-
-
-## Place the weapon + item shop carts at their fixed transforms.
-func _add_shop_carts() -> void:
-	_add_shop_cart(WEAPON_SHOP_CART_SCENE, Transform3D(
-		Vector3(2.0545, 0.0, -2.0467),
-		Vector3(0.0, 2.9, 0.0),
-		Vector3(2.0467, 0.0, 2.0545),
-		Vector3(-9.0751, 0.0, 20.1794)
-	))
-	_add_shop_cart(ITEM_SHOP_CART_SCENE, Transform3D(
-		Vector3(-0.0798, 0.0, -2.2987),
-		Vector3(0.0, 2.3, 0.0),
-		Vector3(2.2987, 0.0, -0.0798),
-		Vector3(-14.5643, 0.0, 27.5287)
-	))
-
-
-## Instantiate a shop-cart scene at a fixed transform and parent it here.
-## Replaces the per-shop _add_*_shop_cart pair — they differed only in the
-## scene + transform data (#294).
-func _add_shop_cart(scene: PackedScene, xform: Transform3D) -> void:
-	var cart: Node3D = scene.instantiate()
-	cart.transform = xform
-	add_child(cart)

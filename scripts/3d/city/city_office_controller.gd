@@ -375,9 +375,6 @@ func _play_bubble_page() -> void:
 	# Auto-advance duration based on text length
 	_bubble_timer = maxf(3.0, text.length() / 20.0)
 
-	# Log to action log
-	_log_briefing_speech(speaker, text)
-
 
 func _advance_briefing() -> void:
 	if not _briefing_active:
@@ -399,18 +396,7 @@ func _on_briefing_complete() -> void:
 	if not aq.is_empty():
 		aq["briefing_shown"] = true
 
-	# Log "Quest accepted!" to action log
-	var field_hud := _find_field_hud()
-	if field_hud:
-		field_hud.log_entry("Quest accepted!", Color(0.4, 0.8, 1.0))
-
 	player.transition_to(player.PlayerState.IDLE)
-
-
-func _log_briefing_speech(speaker: String, text: String) -> void:
-	var field_hud := _find_field_hud()
-	if field_hud:
-		field_hud.log_speech(speaker, text)
 
 
 func _find_field_hud() -> Node:

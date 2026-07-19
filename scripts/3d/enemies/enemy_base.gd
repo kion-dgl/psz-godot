@@ -53,6 +53,58 @@ var _attack_anim: String = ""
 var _attack_fallback_timer: float = 0.0
 const ATTACK_FALLBACK_DURATION: float = 0.8
 
+## Frame-tied attack model (#509, spec /mechanics/enemy-attacks). The instant
+## hardcoded-10 hit is replaced by: select an attack from data/enemy_attacks.json by
+## range band, lock facing at start, then during the clip's damage window run an arc
+## test and deal attack_base × damage_mult once.
+var _attacks: Array = []                    # resolved attack defs for this enemy (cached)
+var _attack_def: Dictionary = {}            # the attack chosen for the swing in flight
+var _attack_facing: Vector3 = Vector3.FORWARD  # facing locked at attack start
+var _attack_hit_resolved: bool = false      # one resolution (hit or dodge) per attack
+var _attack_clip_len: float = ATTACK_FALLBACK_DURATION  # resolved clip length (or fallback)
+var _attack_pos: float = 0.0                # position within the attack clip (seconds)
+var _rng := RandomNumberGenerator.new()
+
+## Pre-strike telegraph (#491, spec /mechanics/enemy-attacks). ATTACKING opens with a
+## readable attack-ready pose held long enough to react — no "walk up, freeze, cheap
+## hit". Stance risers rise via stt into a wat2 hold; other rigs hold their idle (wat).
+## Damage NEVER lands during telegraph. The hold is TELEGRAPH_HOLD × difficulty reaction
+## (Normal generous, higher tiers shorter). Telegraph is a sub-phase of ATTACKING, so the
+## 6-state FSM (spec /states/enemies) is unchanged and _start_attack stays the strike.
+## ponytail: one hold knob — tune the beat by play-test.
+const TELEGRAPH_HOLD: float = 0.7
+var _telegraphing: bool = false
+var _telegraph_rising: bool = false
+var _telegraph_timer: float = 0.0
+
+## Per-archetype locomotion (#494, spec /states/enemies). `_archetype` selects the chase
+## behavior (quadruped arc-circle, quad_machine/shooter/roller standoff-hold, else the
+## baseline straight chase); `_fsm` carries standoff_range etc. `_arc_side` (±1) is the
+## circling/strafe side, re-picked on `_arc_timer`; `_chase_mode` is the quadruped
+## arc↔dash sub-mode. Movement math is ported in EnemyLocomotionLogic (fsm.ts).
+var _archetype: String = "simple_melee"
+var _fsm: Dictionary = {}
+var _arc_side: float = 1.0
+var _arc_timer: float = 0.0
+var _chase_mode: String = "arc"
+## Player collision radius used by the arc test (the target's radius). Real value isn't
+## exposed cheaply; melee reach dwarfs it, so a constant is fine.
+## ponytail: constant player radius, read the real shape if arc precision ever matters.
+const PLAYER_HIT_RADIUS: float = 0.5
+
+## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
+## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
+## cadence/telegraph. cadence/reaction < 1 = faster attacks / shorter windup.
+## ponytail: starting calibration table — tune the three rows by play-test.
+const AGGRO_SCALING := {
+	"normal":     {"detection": 1.0,  "cadence": 1.0,  "reaction": 1.0},
+	"hard":       {"detection": 1.25, "cadence": 0.80, "reaction": 0.85},
+	"super-hard": {"detection": 1.5,  "cadence": 0.65, "reaction": 0.70},
+}
+var _aggro_cadence: float = 1.0
+var _aggro_reaction: float = 1.0
+var _detection_range: float = 15.0
+
 ## Stuck detection — try perpendicular direction when blocked
 var _stuck_time: float = 0.0
 var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
@@ -147,6 +199,12 @@ func _ready() -> void:
 
 	if enemy_data:
 		_sfx = ENEMY_SFX.get(enemy_data.model_id, {})
+		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
+		_archetype = EnemyAttackRegistry.get_archetype(enemy_data.id)
+		_fsm = EnemyAttackRegistry.get_fsm(enemy_data.id)
+
+	_rng.randomize()
+	_apply_difficulty()
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
@@ -185,7 +243,7 @@ func _setup_model() -> void:
 				MeshUtils.apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
-	animation_player = _find_animation_player(model)
+	animation_player = NodeUtils.first_of_type(model, "AnimationPlayer") as AnimationPlayer
 
 	# If no animations in the model, load from animation_model_id source
 	if animation_player:
@@ -201,15 +259,15 @@ func _setup_model() -> void:
 			var anim_scene: PackedScene = load(anim_glb_path)
 			if anim_scene:
 				var anim_model := anim_scene.instantiate()
-				var source_player := _find_animation_player(anim_model)
+				var source_player := NodeUtils.first_of_type(anim_model, "AnimationPlayer") as AnimationPlayer
 				if source_player:
 					# Find the skeleton parents on both models so we can remap
 					# track paths from source mesh root → destination mesh root.
 					# Guard get_parent() in case the Skeleton3D ends up at the
 					# scene root with no parent (shouldn't happen for these GLBs
 					# but is cheap to handle).
-					var dst_skel := _find_skeleton(model)
-					var src_skel := _find_skeleton(anim_model)
+					var dst_skel := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
+					var src_skel := NodeUtils.first_of_type(anim_model, "Skeleton3D") as Skeleton3D
 					var src_root_name: String = ""
 					var dst_root_name: String = ""
 					if src_skel and src_skel.get_parent():
@@ -258,26 +316,6 @@ func _cache_model_materials() -> void:
 				var mat := mi.get_active_material(i)
 				if mat is StandardMaterial3D:
 					_cached_materials.append(mat)
-
-
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
-		if found:
-			return found
-	return null
-
-
-func _find_skeleton(node: Node) -> Skeleton3D:
-	if node is Skeleton3D:
-		return node
-	for child in node.get_children():
-		var found := _find_skeleton(child)
-		if found:
-			return found
-	return null
 
 
 func _setup_hurtbox() -> void:
@@ -408,7 +446,7 @@ func _process_idle(delta: float) -> void:
 	# Check if target is in detection range - become alert!
 	if target and is_instance_valid(target):
 		var dist := global_position.distance_to(target.global_position)
-		if enemy_data and dist <= enemy_data.detection_range:
+		if enemy_data and dist <= _detection_range:
 			current_state = EnemyState.CHASING
 			is_wandering = false
 			_play_animation("tht", true)  # Threat/war cry when becoming active
@@ -464,61 +502,182 @@ func _process_chasing(_delta: float) -> void:
 
 	var dist := global_position.distance_to(target.global_position)
 
-	# Check if in attack range
 	var attack_range := 2.0
 	if enemy_data:
 		attack_range = enemy_data.attack_range
 
-	if dist <= attack_range and attack_cooldown_timer <= 0 and not _stun_no_attack:
+	# Gate FIRST (every archetype): cooldown ready AND some non-berserk attack band
+	# contains the distance (spec /mechanics/enemy-attacks "Selection"). Keeps kiters
+	# firing from their bands. Falls back to the flat attack_range with no attack table.
+	if attack_cooldown_timer <= 0 and not _stun_no_attack and _has_attack_in_band(dist, attack_range):
 		current_state = EnemyState.ATTACKING
-		_start_attack()
+		_begin_telegraph()
 		return
 
-	# Determine if charging (close to target) or walking (far from target)
-	var charge_range := attack_range * CHARGE_RANGE_MULT
-	var is_charging := dist <= charge_range
+	# Per-archetype locomotion (#494, spec /states/enemies). Distinct ground movers circle
+	# or hold a standoff; every baseline archetype chases straight. Math: EnemyLocomotionLogic.
+	var radial := _radial_to_target()
+	match _archetype:
+		"quadruped":
+			_chase_quadruped(dist, radial, attack_range)
+		"quad_machine", "shooter", "roller":
+			_chase_standoff(_archetype, dist, radial)
+		_:
+			_chase_baseline(dist, attack_range)
 
-	# Use appropriate animation and speed
-	if is_charging:
-		_play_animation("run")
-	else:
-		_play_animation("wlk")
 
-	# Calculate direction to target (horizontal only, properly normalized)
+## Baseline straight-line chase (simple_melee and every non-distinct archetype): walk
+## beyond the charge ring, run inside it, nav-pathing around obstacles.
+func _chase_baseline(dist: float, attack_range: float) -> void:
+	var is_charging := dist <= attack_range * CHARGE_RANGE_MULT
+	_play_animation("run" if is_charging else "wlk")
+
 	var to_target := target.global_position - global_position
 	var horizontal_dir := Vector3(to_target.x, 0, to_target.z)
 	var direction := horizontal_dir.normalized() if horizontal_dir.length() > 0.1 else Vector3.ZERO
 
-	# Try navigation if available (update path every 10th frame to save CPU)
+	# Nav pathing (refresh every 10th frame, staggered per instance)
 	if Engine.get_physics_frames() % 10 == (get_index() % 10):
 		nav_agent.target_position = target.global_position
 	if not nav_agent.is_navigation_finished():
 		var next_pos := nav_agent.get_next_path_position()
-		var nav_dir := (next_pos - global_position)
+		var nav_dir := next_pos - global_position
 		nav_dir.y = 0
-		# Only use nav direction if it's valid (not pointing at ourselves)
 		if nav_dir.length() > 0.5:
 			direction = nav_dir.normalized()
 
-	# Apply movement - walk normally, run when charging
-	var base_speed := 3.0
-	if enemy_data:
-		base_speed = enemy_data.move_speed
-
-	var speed := base_speed * WALK_SPEED_MULT
-	if is_charging:
-		speed = base_speed * CHARGE_SPEED_MULT
-
-	# Apply movement toward target
+	var speed := _base_move_speed() * (CHARGE_SPEED_MULT if is_charging else WALK_SPEED_MULT)
 	if direction.length() > 0.1 and _can_move_to(direction):
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
 		_face_direction(direction)
 
 
+## Quadruped arc-circler (fsm.ts:689-725): circles on an arc (wlk_l/wlk_r by side) and
+## only dashes straight (stt) to close inside the charge ring when armed.
+func _chase_quadruped(dist: float, radial: Vector3, attack_range: float) -> void:
+	var charge_range := attack_range * CHARGE_RANGE_MULT
+	if _chase_mode != "dash" and dist <= charge_range and attack_cooldown_timer <= 0.0:
+		_chase_mode = "dash"
+	if _chase_mode == "dash" and dist > charge_range * 1.5:
+		_chase_mode = "arc"
+	var dashing := _chase_mode == "dash"
+	if not dashing:
+		_tick_arc_side(2.0, 3.0, 0.35)
+	var m := EnemyLocomotionLogic.quadruped_move(radial, _arc_side, dashing)
+	if m["dash"]:
+		_apply_move(m["dir"], _base_move_speed() * CHARGE_SPEED_MULT, m["dir"], "stt")
+	else:
+		_apply_move(m["dir"], _base_move_speed() * WALK_SPEED_MULT, m["dir"],
+			"wlk_l" if m["side_left"] else "wlk_r")
+
+
+## Standoff holder (fsm.ts:736-767/894-915/924-948): quad_machine kites & strafes facing
+## the target, shooter holds radial-only and stops to fire, roller sidles facing its
+## movement. All hold fsm.standoff_range.
+func _chase_standoff(kind: String, dist: float, radial: Vector3) -> void:
+	var standoff := float(_fsm.get("standoff_range", 6.0))
+	var near_mult := 0.85
+	var far_mult := 1.25
+	var strafe := true
+	var faces_target := true
+	if kind == "shooter":
+		near_mult = 0.8
+		far_mult = 1.2
+		strafe = false
+	elif kind == "roller":
+		near_mult = 0.75
+		far_mult = 1.3
+		faces_target = false
+	if strafe:
+		_tick_arc_side(1.5, 2.5, 0.4)
+	var m := EnemyLocomotionLogic.standoff_move(dist, standoff, radial, _arc_side, near_mult, far_mult, strafe)
+	var mode := String(m["mode"])
+	# Retreat is fast (charge mult) for the kiters; the roller walks everywhere.
+	var speed := _base_move_speed() * WALK_SPEED_MULT
+	if mode == "retreat" and kind != "roller":
+		speed = _base_move_speed() * CHARGE_SPEED_MULT
+	var face: Vector3 = radial if faces_target else m["dir"]
+	_apply_move(m["dir"], speed, face, _standoff_clip(kind, mode, bool(m["side_left"])))
+
+
+func _standoff_clip(kind: String, mode: String, side_left: bool) -> String:
+	if kind == "shooter":
+		return "wat" if mode == "hold" else "run"
+	if kind == "roller":
+		return "wlk"
+	# quad_machine: clip matches movement relative to the target-facing body.
+	if mode == "retreat":
+		return "wlk_b"
+	if mode == "close":
+		return "wlk_f"
+	return "wlk_l" if side_left else "wlk_r"
+
+
+## Resolve a movement intent to velocity: move along `dir` at `speed` when the floor
+## ahead holds (else stop), face `face_dir`, play `clip`. Shared by the archetype chases.
+func _apply_move(dir: Vector3, speed: float, face_dir: Vector3, clip: String) -> void:
+	if dir.length() > 0.1 and _can_move_to(dir):
+		velocity.x = dir.x * speed
+		velocity.z = dir.z * speed
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	if face_dir.length() > 0.1:
+		_face_direction(face_dir)
+	if not clip.is_empty():
+		_play_animation(clip)
+
+
+func _radial_to_target() -> Vector3:
+	var to := target.global_position - global_position
+	to.y = 0.0
+	return to.normalized() if to.length() > 0.001 else Vector3.FORWARD
+
+
+func _base_move_speed() -> float:
+	return float(enemy_data.move_speed) if enemy_data else 3.0
+
+
+## Tick the circling/strafe-side timer; re-pick the side after a random interval.
+func _tick_arc_side(base: float, span: float, flip_chance: float) -> void:
+	_arc_timer -= get_physics_process_delta_time()
+	if _arc_timer <= 0.0:
+		_arc_timer = base + _rng.randf() * span
+		if _rng.randf() < flip_chance:
+			_arc_side = -_arc_side
+
+
 func _process_attacking(delta: float) -> void:
 	velocity.x = 0
 	velocity.z = 0
+
+	# Telegraph sub-phase: hold the attack-ready pose (facing the player) before the
+	# strike so the wind-up is readable and dodgeable. No damage here.
+	if _telegraphing:
+		if target and is_instance_valid(target):
+			var d := target.global_position - global_position
+			d.y = 0
+			if d.length() > 0.1:
+				_face_direction(d.normalized())
+		_process_telegraph(delta)
+		return
+
+	# Advance the position within the attack clip. Prefer the real animation
+	# position; fall back to an accumulating timer for no-clip rigs (and tests).
+	if _attack_anim != "" and animation_player and animation_player.current_animation == _attack_anim:
+		_attack_pos = animation_player.current_animation_position
+	else:
+		_attack_pos += delta
+
+	# Frame-tied damage window: [windup_frac, damage_end_frac] of the clip length.
+	# Difficulty shortens the windup (reaction). Damage lands on the first frame the
+	# target passes the arc test; one resolution (hit or dodge) per attack (#509).
+	if is_attacking and not _attack_hit_resolved and not _attack_def.is_empty():
+		var window_start: float = float(_attack_def.get("windup_frac", 0.35)) * _attack_clip_len * _aggro_reaction
+		var window_end: float = float(_attack_def.get("damage_end_frac", 0.6)) * _attack_clip_len
+		if _attack_pos >= window_start and _attack_pos <= window_end:
+			_try_attack_hit()
 
 	# Attack end: the resolved animation finished (signal path or the
 	# watchdog below), or the fallback duration elapsed when no attack
@@ -569,6 +728,9 @@ func _process_loafing(delta: float) -> void:
 
 func _start_loafing() -> void:
 	current_state = EnemyState.LOAFING
+	_telegraphing = false
+	# Stance risers lower back down (wt2w) as they peel off; other rigs just loaf.
+	_play_animation("wt2w", true)
 	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
 
 	# Start moving perpendicular to player (left or right randomly)
@@ -598,34 +760,147 @@ func _process_hurt(delta: float) -> void:
 		current_state = EnemyState.CHASING
 
 
+## Enter the pre-strike telegraph. Stance risers rise (stt) then hold wat2; other rigs
+## hold their idle (wat). The strike (_start_attack) begins only when the hold elapses.
+func _begin_telegraph() -> void:
+	if not target or not is_instance_valid(target):
+		return
+	is_attacking = true
+	_telegraphing = true
+	var rise := _play_animation("stt", true)
+	if not rise.is_empty():
+		_telegraph_rising = true
+		var a := animation_player.get_animation(rise)
+		_telegraph_timer = a.length if a else 0.3
+	else:
+		_telegraph_rising = false
+		_telegraph_timer = TELEGRAPH_HOLD * _aggro_reaction
+		_play_telegraph_hold()
+
+
+func _process_telegraph(delta: float) -> void:
+	_telegraph_timer -= delta
+	if _telegraph_timer > 0.0:
+		return
+	if _telegraph_rising:
+		# Rise finished — hold the raised attack-ready pose for the readable beat.
+		_telegraph_rising = false
+		_telegraph_timer = TELEGRAPH_HOLD * _aggro_reaction
+		_play_telegraph_hold()
+	else:
+		# Hold done — commit to the strike (the player dodges it, not prevents it).
+		_telegraphing = false
+		_start_attack()
+
+
+## Play the held attack-ready pose: the raised stance (wat2) if the rig has one, else
+## its idle (wat). Looped so it holds through the telegraph beat.
+func _play_telegraph_hold() -> void:
+	var held := _play_animation("wat2", true)
+	if held.is_empty():
+		held = _play_animation("wat", true)
+	if not held.is_empty():
+		var a := animation_player.get_animation(held)
+		if a:
+			a.loop_mode = Animation.LOOP_LINEAR
+
+
 func _start_attack() -> void:
 	if not target or not is_instance_valid(target):
 		return
 
 	is_attacking = true
-	_attack_anim = _play_animation("atk", true)  # Force play attack animation
+
+	# Select the attack by range band + weight, then resolve its clip.
+	var dist := global_position.distance_to(target.global_position)
+	_attack_def = _select_attack_for(dist)
+	_attack_hit_resolved = false
+	_attack_pos = 0.0
+
+	_attack_anim = _play_animation(String(_attack_def.get("clip", "atk")), true)
 	if _attack_anim.is_empty():
-		# Rig has no resolvable attack clip — end the attack on a timer.
+		# Rig has no resolvable attack clip — timeline fractions apply to the
+		# fixed fallback duration; end the attack on that same timer.
 		_attack_fallback_timer = ATTACK_FALLBACK_DURATION
+		_attack_clip_len = ATTACK_FALLBACK_DURATION
+	else:
+		var anim := animation_player.get_animation(_attack_anim)
+		_attack_clip_len = anim.length if anim else ATTACK_FALLBACK_DURATION
 	_play_sfx("attack")
 
-	# Face the target
-	var dir_to_target := (target.global_position - global_position).normalized()
+	# Lock facing at attack start — the arc does not track during the swing.
+	var dir_to_target := target.global_position - global_position
 	dir_to_target.y = 0
 	if dir_to_target.length() > 0.1:
-		_face_direction(dir_to_target)
+		_attack_facing = dir_to_target.normalized()
+		_face_direction(_attack_facing)
 
-	# Deal damage to player (fixed 10 damage for now, per user request)
-	var damage := 10
-
-	if target.has_method("take_damage"):
-		target.take_damage(damage)
-
-	# Set cooldown
+	# Set cooldown (difficulty tightens cadence).
 	var cooldown := 1.5
 	if enemy_data:
 		cooldown = enemy_data.attack_cooldown
-	attack_cooldown_timer = cooldown
+	attack_cooldown_timer = cooldown * _aggro_cadence
+
+
+## True when a non-berserk attack's band contains `dist`. Falls back to the flat
+## attack_range when this enemy has no attack table.
+func _has_attack_in_band(dist: float, attack_range: float) -> bool:
+	if _attacks.is_empty():
+		return dist <= attack_range
+	for a in _attacks:
+		if a.get("berserk_only", false):
+			continue
+		if dist >= float(a.get("min_range", 0.0)) and dist <= float(a.get("max_range", 999.0)):
+			return true
+	return false
+
+
+## Pick the attack for this swing (berserk excluded — not implemented in this slice).
+func _select_attack_for(dist: float) -> Dictionary:
+	var pool: Array = []
+	for a in _attacks:
+		if not a.get("berserk_only", false):
+			pool.append(a)
+	var chosen := EnemyAttackLogic.select_attack(pool, dist, _rng)
+	if chosen.is_empty():
+		# No table at all — a basic melee swing (mirrors the registry default).
+		chosen = {"clip": "atk", "windup_frac": 0.35, "damage_end_frac": 0.6,
+			"hit_half_angle_deg": 45.0, "hit_reach": 2.0, "damage_mult": 1.0, "kind": "melee_arc"}
+	return chosen
+
+
+## Run the arc test against the target during the damage window and, on a pass, deal
+## attack_base × damage_mult once. A pass consumes the attack's one resolution even if
+## the player dodges (take_damage no-ops during i-frames — player.gd), matching the spec.
+## ponytail: projectile/lob/charge/leap resolve through this same arc as an interim —
+## their travel mechanics are deferred (#494); no enemy is left on instant damage.
+func _try_attack_hit() -> void:
+	if not target or not is_instance_valid(target):
+		return
+	var reach := float(_attack_def.get("hit_reach", 2.0))
+	var half := float(_attack_def.get("hit_half_angle_deg", 45.0))
+	if not EnemyAttackLogic.arc_hit_test(global_position, _attack_facing,
+			target.global_position, PLAYER_HIT_RADIUS, half, reach):
+		return
+	_attack_hit_resolved = true
+	var base_attack: int = enemy_data.attack_base if enemy_data else 10
+	var dmg := int(round(float(base_attack) * float(_attack_def.get("damage_mult", 1.0))))
+	if target.has_method("take_damage"):
+		target.take_damage(dmg)
+
+
+## Difficulty-scaled aggression + timing (#522). Reads the session difficulty (default
+## "normal" when no session — keeps tests isolated) and sets the aggro/cadence/reaction
+## multipliers + the scaled detection range.
+func _apply_difficulty() -> void:
+	var diff := "normal"
+	if SessionManager and SessionManager.has_method("get_session"):
+		diff = str(SessionManager.get_session().get("difficulty", "normal"))
+	var s: Dictionary = AGGRO_SCALING.get(diff, AGGRO_SCALING["normal"])
+	_aggro_cadence = float(s["cadence"])
+	_aggro_reaction = float(s["reaction"])
+	var base_det: float = enemy_data.detection_range if enemy_data else 15.0
+	_detection_range = base_det * float(s["detection"])
 
 
 func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
@@ -666,6 +941,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
+		_telegraphing = false  # a hit during the wind-up cancels the telegraph too
 		_attack_anim = ""
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION
@@ -886,33 +1162,10 @@ func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
 
 
 func _setup_reticle() -> void:
-	_reticle = Sprite3D.new()
-	_reticle.name = "TargetReticle"
-	_reticle.pixel_size = 0.008
-	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_reticle.no_depth_test = true
-	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
-	_reticle.visible = false
-
-	# Draw a filled downward-pointing triangle
-	var size := 48
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	var half: int = size / 2
-	for y in range(size):
-		# Triangle: top row is full width, narrows to a point at bottom
-		var progress: float = float(y) / float(size - 1)
-		var half_width: int = int(float(half) * (1.0 - progress))
-		for x in range(half - half_width, half + half_width + 1):
-			if x >= 0 and x < size:
-				img.set_pixel(x, y, Color.WHITE)
-	var tex := ImageTexture.create_from_image(img)
-	_reticle.texture = tex
-
 	var height := 1.5
 	if enemy_data:
 		height = enemy_data.collision_height
-	_reticle.position = Vector3(0, height + 0.5, 0)
+	_reticle = TargetReticle.build(height + 0.5)
 	add_child(_reticle)
 
 
@@ -973,11 +1226,6 @@ func _process_status_effects(delta: float) -> void:
 	if _status_effects.is_empty():
 		return
 
-	# TODO(#291 combat window): hp_before is currently unused — remove it (and
-	# this annotation) when the combat pass revisits status-effect damage. Kept
-	# now to avoid churning enemy_base.gd outside the combat-last window.
-	@warning_ignore("unused_variable")
-	var hp_before := current_hp
 	var expired: Array = []
 
 	for fx in _status_effects:

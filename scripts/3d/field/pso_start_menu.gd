@@ -58,7 +58,7 @@ const FONT_SIZE_LG := 17
 const FONT_SIZE_ITEM := 14
 
 # ── State ───────────────────────────────────────────────────────────────────────
-enum Mode { MAIN, ITEMS, ITEMS_MOVE, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
+enum Mode { MAIN, ITEMS, ITEMS_MOVE, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS, DEBUG }
 
 var _mode: Mode = Mode.MAIN
 var _menu_idx: int = 0
@@ -71,6 +71,8 @@ var _pal_slot_idx: int = 0
 var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
+var _debug_idx: int = 0
+var _debug_msg: String = ""  # One-shot result line for a Debug action (e.g. Unlock All), cleared on nav
 var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
 var _move_from_idx: int = -1  # Origin row when in Mode.ITEMS_MOVE (Manual sort)
 var _move_from_id: String = ""  # Origin item id, used to relocate cursor after move
@@ -105,8 +107,8 @@ func _can_use_techs() -> bool:
 	if class_data and class_data.race == "Cast":
 		return false
 	return true
-const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
-const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
+const SYSTEM_LABELS := ["Save", "Return to Title", "Options", "Debug"]
+const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings.", "Debug tools and cheats."]
 ## Equipment slots are built dynamically from the equipped frame instance's slots
 const TYPE_ICONS := {"weapon": "W", "armor": "A", "shield": "S", "unit": "U", "tool": "T", "tech": "M", "material": "R", "mag": "G"}
 const TYPE_COLORS := {
@@ -429,6 +431,8 @@ func open() -> void:
 	_mag_idx = 0
 	_mag_feed_idx = 0
 	_options_idx = 0
+	_debug_idx = 0
+	_debug_msg = ""
 	_action_message = ""
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
@@ -558,6 +562,17 @@ func _get_options_list() -> Array:
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
 		"Camera Y-Axis: %s" % (on if InputConfig.enable_camera_y else off),
 		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
+	]
+
+
+## Debug submenu — developer toggles + cheats, split out of Options (#menu-debug).
+## Row 0 is the one-shot "Unlock All Missions" action; the rest mirror the
+## DebugConfig boolean flags. Kept index-aligned with _toggle_debug().
+func _get_debug_list() -> Array:
+	var on := "ON"
+	var off := "OFF"
+	return [
+		"Unlock All Missions",
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -599,20 +614,31 @@ func _toggle_option(idx: int) -> void:
 			# actually saved. Manual Sort/Move already save_game (above); the
 			# option toggle was the gap.
 			SaveManager.save_game()
-		7: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		8: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		9: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		10: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		11:
+
+
+## Dispatch a Debug-submenu row. Index-aligned with _get_debug_list().
+func _toggle_debug(idx: int) -> void:
+	_debug_msg = ""
+	match idx:
+		0:
+			var n: int = GameState.unlock_all_missions()
+			SaveManager.save_game()
+			SfxManager.play("res://assets/sfx/ui/game_saved.wav")
+			_debug_msg = "Unlocked all missions (%d newly cleared)." % n
+		1: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		2: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		3: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		4: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		5:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		12:
+		6:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
-		13:
+		7:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
-		14:
+		8:
 			DebugConfig.equip_all = not DebugConfig.equip_all
-		15:
+		9:
 			DebugConfig.reveal_map = not DebugConfig.reveal_map
 
 

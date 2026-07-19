@@ -6,8 +6,6 @@ const MATERIALS_PATH = "res://data/materials/"
 
 var _materials: Dictionary = {}
 
-signal materials_loaded()
-
 
 func _ready() -> void:
 	_load_all()
@@ -15,7 +13,6 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_RH.load_dir(MATERIALS_PATH, _materials, "MaterialRegistry", "materials")
-	materials_loaded.emit()
 
 
 func get_material(id: String):

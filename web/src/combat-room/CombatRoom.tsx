@@ -476,7 +476,7 @@ export default function CombatRoom() {
     const limitIdx = Math.min(enteringStep - 2, t.turnLimitDeg.length - 1);
     const limit = deg2rad(t.turnLimitDeg[limitIdx] ?? 90);
     const delta = wrapAngle(sim.desiredYaw - sim.yaw);
-    const clamped = Math.max(-limit, Math.min(limit, delta));
+    const clamped = THREE.MathUtils.clamp(delta, -limit, limit);
     if (Math.abs(delta) > limit + 1e-4) {
       sim.ghostYaw = sim.desiredYaw;
       sim.ghostFade = 0.8;

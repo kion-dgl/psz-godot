@@ -173,9 +173,9 @@ func _equip_selected_item() -> void:
 		if slot_key == "frame":
 			_auto_unequip_excess_units(equipment, 0)
 		if slot_key == "weapon":
-			_notify_player_weapon_changed()
+			_notify_player("refresh_weapon")
 		if slot_key == "mag":
-			_notify_player_mag_changed()
+			_notify_player("refresh_mag")
 		_choosing_item = false
 		if not old_id.is_empty():
 			var info: Dictionary = Inventory._lookup_item(old_id)
@@ -203,9 +203,9 @@ func _equip_selected_item() -> void:
 
 	# Update 3D weapon model if weapon slot changed
 	if slot_key == "weapon":
-		_notify_player_weapon_changed()
+		_notify_player("refresh_weapon")
 	if slot_key == "mag":
-		_notify_player_mag_changed()
+		_notify_player("refresh_mag")
 
 	_choosing_item = false
 	hint_label.text = "Equipped %s!" % item.name
@@ -460,13 +460,7 @@ func _refresh_stats() -> void:
 	stats_panel.add_child(scroll)
 
 
-func _notify_player_weapon_changed() -> void:
+func _notify_player(method: String) -> void:
 	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("refresh_weapon"):
-		player.refresh_weapon()
-
-
-func _notify_player_mag_changed() -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("refresh_mag"):
-		player.refresh_mag()
+	if player and player.has_method(method):
+		player.call(method)

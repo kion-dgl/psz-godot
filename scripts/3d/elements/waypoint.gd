@@ -66,16 +66,3 @@ func _apply_unique_materials(node: Node, offset_x: float) -> void:
 		_apply_unique_materials(child, offset_x)
 
 
-## Mark as new area
-func mark_new() -> void:
-	set_state("new")
-
-
-## Mark as unvisited
-func mark_unvisited() -> void:
-	set_state("unvisited")
-
-
-## Mark as visited
-func mark_visited() -> void:
-	set_state("visited")

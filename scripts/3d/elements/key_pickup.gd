@@ -10,7 +10,6 @@ class_name KeyPickup
 const SPIN_SPEED: float = 2.0
 
 var _prompt_label: Label3D
-var _player_nearby: bool = false
 var _collected: bool = false
 
 
@@ -60,14 +59,12 @@ func _apply_state() -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
-		_player_nearby = true
 		if element_state == "available":
 			_prompt_label.visible = true
 
 
 func _on_body_exited(body: Node3D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
-		_player_nearby = false
 		_prompt_label.visible = false
 
 

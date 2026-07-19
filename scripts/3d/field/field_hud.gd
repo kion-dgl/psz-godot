@@ -1,7 +1,7 @@
 extends CanvasLayer
-## Field HUD — per-scene HUD elements: quest log docked left (toggleable, only
-## when quest active), action palette, quick weapon menu, FPS counter, and it
-## hosts the room minimap (always visible).
+## Field HUD — per-scene HUD elements: action palette, quick weapon menu,
+## target-info plate, FPS counter, and it hosts the room minimap (always
+## visible).
 ##
 ## The HP/PP/Lv stats panel is NOT here: it lives on the persistent HudStats
 ## autoload (#444; spec /states/field-lifecycle) so it survives area
@@ -10,7 +10,6 @@ extends CanvasLayer
 const MARGIN := 12.0
 
 var _target_info: Control
-var _quest_log: Control
 var _action_palette: Control
 var _quick_weapon: Control
 var _debug_info: Control
@@ -21,7 +20,6 @@ var _session_start_msec: int = 0
 var _debug_last_quest: String = ""
 var _debug_last_section: String = ""
 var _debug_last_cell: String = ""
-var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 
 
@@ -64,9 +62,6 @@ func _ready() -> void:
 		add_child(_debug_info)
 		set_process(true)
 		_session_start_msec = Time.get_ticks_msec()
-
-	# Quest log disabled for now
-	_log_visible = false
 
 
 func _connect_player_charge_signals() -> void:
@@ -152,19 +147,6 @@ func _update_target_info_panel() -> void:
 	_target_info.update_info(info)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("quest_log"):
-		_toggle_log()
-		get_viewport().set_input_as_handled()
-
-
-func _toggle_log() -> void:
-	if not _quest_log:
-		return
-	_log_visible = not _log_visible
-	_quest_log.visible = _log_visible
-
-
 func _is_in_city() -> bool:
 	return SessionManager.get_location() == "city"
 
@@ -191,38 +173,10 @@ func restore_after_menu() -> void:
 				child.visible = (child as DialogBox).is_active()
 			else:
 				child.visible = true
-	# Log respects its own toggle state
-	if _quest_log:
-		_quest_log.visible = _log_visible
 	# Grid minimap respects its toggle state (stored as meta by field controller)
 	for child in get_children():
 		if child.has_meta("toggled_off") and child.get_meta("toggled_off"):
 			child.visible = false
-
-
-## Log companion speech to the action log.
-func log_speech(speaker: String, text: String) -> void:
-	if not _quest_log:
-		return
-	_quest_log.add_speech_entry(speaker, text)
-	_auto_show_log()
-
-
-## Log an arbitrary entry to the action log.
-func log_entry(text: String, color: Color = Color(0.85, 0.85, 0.85)) -> void:
-	if not _quest_log:
-		return
-	_quest_log.add_entry(text, color)
-	_auto_show_log()
-
-
-## Auto-show log when a new entry arrives during a quest.
-func _auto_show_log() -> void:
-	if not _quest_log:
-		return
-	if not _log_visible:
-		_log_visible = true
-		_quest_log.visible = true
 
 
 ## Set the debug info text shown at top-center (quest ID, section, cell).
@@ -309,173 +263,6 @@ class _DebugInfoPanel extends Control:
 		if not cell_pos.is_empty():
 			parts.append("Cell %s" % cell_pos)
 		_label.text = " | ".join(parts)
-
-
-# ── Action Log (bottom-left, fixed box with scroll) ─────────────────────────
-
-class _QuestLogPanel extends Control:
-	const PANEL_W := 180.0
-	const PANEL_H := 120.0
-	const PAD := 4.0
-	const FONT_SIZE := 9
-
-	# PSZ palette — semi-transparent for single-screen
-	const BG_COLOR := Color(0.66, 0.80, 0.91, 0.5)   # Pale icy blue, translucent
-	const BORDER_COLOR := Color(0.48, 0.63, 0.75, 0.4)
-	const HEADER_BG := Color(0.16, 0.16, 0.22, 0.7)   # Dark navy header
-	const HEADER_TEXT := Color(1.0, 1.0, 1.0, 0.9)
-	const CONTENT_BG := Color(1.0, 1.0, 1.0, 0.6)     # White content area, translucent
-	const TEXT_COLOR := Color(0.1, 0.1, 0.17)          # Dark text
-	const ITEM_COLOR := Color(0.53, 0.33, 0.13)        # Brown/orange items
-	const MESETA_COLOR := Color(0.53, 0.4, 0.0)        # Dark gold
-	const QUEST_COLOR := Color(0.17, 0.33, 0.6)        # Dark blue
-	const SPEECH_COLOR := Color(0.2, 0.2, 0.3)         # Dark gray
-	const COMPLETE_COLOR := Color(0.13, 0.53, 0.13)    # Dark green
-
-	var _scroll: ScrollContainer
-	var _vbox: VBoxContainer
-	var _prev_meseta: int = 0
-	var _panel_bg: PanelContainer
-
-	func _ready() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-
-		# Bottom-left corner
-		set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-		offset_left = MARGIN
-		offset_bottom = -MARGIN
-		offset_top = -MARGIN - PANEL_H
-		offset_right = MARGIN + PANEL_W
-		size = Vector2(PANEL_W, PANEL_H)
-
-		# Background panel — PSZ blue
-		_panel_bg = PanelContainer.new()
-		_panel_bg.mouse_filter = MOUSE_FILTER_IGNORE
-		_panel_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var style := StyleBoxFlat.new()
-		style.bg_color = BG_COLOR
-		style.border_color = BORDER_COLOR
-		style.set_border_width_all(2)
-		style.set_corner_radius_all(6)
-		style.set_content_margin_all(PAD)
-		_panel_bg.add_theme_stylebox_override("panel", style)
-		add_child(_panel_bg)
-
-		# Outer VBox: header label + scroll content
-		var outer_vbox := VBoxContainer.new()
-		outer_vbox.mouse_filter = MOUSE_FILTER_IGNORE
-		outer_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		outer_vbox.add_theme_constant_override("separation", 2)
-		_panel_bg.add_child(outer_vbox)
-
-		# "Log" header label
-		var header := Label.new()
-		header.text = "Log"
-		header.add_theme_font_size_override("font_size", 10)
-		header.add_theme_color_override("font_color", HEADER_TEXT)
-		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		header.mouse_filter = MOUSE_FILTER_IGNORE
-		var header_panel := PanelContainer.new()
-		header_panel.mouse_filter = MOUSE_FILTER_IGNORE
-		var header_style := StyleBoxFlat.new()
-		header_style.bg_color = HEADER_BG
-		header_style.set_corner_radius_all(4)
-		header_style.content_margin_left = 8.0
-		header_style.content_margin_right = 8.0
-		header_style.content_margin_top = 2.0
-		header_style.content_margin_bottom = 2.0
-		header_panel.add_theme_stylebox_override("panel", header_style)
-		header_panel.add_child(header)
-		outer_vbox.add_child(header_panel)
-
-		# White content area
-		var content_panel := PanelContainer.new()
-		content_panel.mouse_filter = MOUSE_FILTER_IGNORE
-		content_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var content_style := StyleBoxFlat.new()
-		content_style.bg_color = CONTENT_BG
-		content_style.set_corner_radius_all(3)
-		content_style.set_content_margin_all(4.0)
-		content_panel.add_theme_stylebox_override("panel", content_style)
-		outer_vbox.add_child(content_panel)
-
-		# ScrollContainer — auto-scrolls to bottom
-		_scroll = ScrollContainer.new()
-		_scroll.mouse_filter = MOUSE_FILTER_IGNORE
-		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-		_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		content_panel.add_child(_scroll)
-
-		# VBoxContainer holds the label entries
-		_vbox = VBoxContainer.new()
-		_vbox.mouse_filter = MOUSE_FILTER_IGNORE
-		_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_vbox.add_theme_constant_override("separation", 2)
-		_scroll.add_child(_vbox)
-
-		SessionManager.quest_item_collected.connect(_on_item_collected)
-		SessionManager.quest_completed.connect(_on_quest_completed)
-		GameState.meseta_changed.connect(_on_meseta_changed)
-		_prev_meseta = GameState.meseta
-
-		# Restore entries from previous rooms
-		for entry in SessionManager._action_log:
-			_add_label(str(entry.get("text", "")), entry.get("color", TEXT_COLOR))
-		_scroll_to_bottom.call_deferred()
-
-		# Log quest acceptance once per quest (not every room transition)
-		var objectives: Array = SessionManager.get_quest_objectives()
-		if not objectives.is_empty() and not SessionManager._quest_accepted_shown:
-			SessionManager._quest_accepted_shown = true
-			get_tree().create_timer(0.5).timeout.connect(func() -> void:
-				_add_entry("Quest accepted", QUEST_COLOR)
-			)
-
-	func _on_item_collected(item_id: String, new_count: int, target: int) -> void:
-		var label := item_id
-		for obj in SessionManager.get_quest_objectives():
-			if str(obj.get("item_id", "")) == item_id:
-				label = str(obj.get("label", item_id))
-				break
-		_add_entry("Picked up %s (%d/%d)" % [label, mini(new_count, target), target], ITEM_COLOR)
-
-	func _on_quest_completed() -> void:
-		_add_entry("Quest complete!", COMPLETE_COLOR)
-
-	func _on_meseta_changed(new_amount: int) -> void:
-		var diff: int = new_amount - _prev_meseta
-		_prev_meseta = new_amount
-		if diff > 0:
-			_add_entry("Picked up %d meseta" % diff, MESETA_COLOR)
-
-	## Public: log companion speech to the action log.
-	func add_speech_entry(speaker: String, text: String) -> void:
-		_add_entry("%s: %s" % [speaker, text], SPEECH_COLOR)
-
-	## Public: log an arbitrary action.
-	func add_entry(text: String, color: Color = TEXT_COLOR) -> void:
-		_add_entry(text, color)
-
-	func _add_entry(text: String, color: Color) -> void:
-		# Persist to SessionManager so entries survive room transitions
-		SessionManager._action_log.append({"text": text, "color": color})
-		_add_label(text, color)
-		_scroll_to_bottom.call_deferred()
-
-	func _add_label(text: String, color: Color) -> void:
-		var lbl := Label.new()
-		lbl.text = text
-		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl.add_theme_font_size_override("font_size", FONT_SIZE)
-		lbl.add_theme_color_override("font_color", color)
-		lbl.mouse_filter = MOUSE_FILTER_IGNORE
-		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_vbox.add_child(lbl)
-
-	func _scroll_to_bottom() -> void:
-		await get_tree().process_frame
-		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 
 # ── Action Palette (bottom-right) ────────────────────────────────────────────

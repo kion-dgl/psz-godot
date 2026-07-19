@@ -4,14 +4,12 @@ extends Node
 const _RH = preload("res://scripts/utils/registry_helper.gd")
 const ARTS_PATH = "res://data/photon_arts/"
 var _arts: Dictionary = {}
-signal arts_loaded()
 
 func _ready() -> void:
 	_load_all()
 
 func _load_all() -> void:
 	_RH.load_dir(ARTS_PATH, _arts, "PhotonArtRegistry", "photon arts")
-	arts_loaded.emit()
 
 func get_art(id: String):
 	return _arts.get(id, null)

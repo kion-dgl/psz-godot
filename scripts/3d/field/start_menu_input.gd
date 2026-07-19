@@ -129,6 +129,8 @@ func handle_input(event: InputEvent) -> void:
 			handled = _input_system(event)
 		PsoStartMenu.Mode.OPTIONS:
 			handled = _input_options(event)
+		PsoStartMenu.Mode.DEBUG:
+			handled = _input_debug(event)
 
 	if handled:
 		# Skip generic SFX if menu was just closed — close() plays its own sound
@@ -349,6 +351,10 @@ func _input_system(event: InputEvent) -> bool:
 			2:
 				_c._mode = PsoStartMenu.Mode.OPTIONS
 				_c._options_idx = 0
+			3:
+				_c._mode = PsoStartMenu.Mode.DEBUG
+				_c._debug_idx = 0
+				_c._debug_msg = ""
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_c._mode = PsoStartMenu.Mode.MAIN
@@ -385,6 +391,24 @@ func _input_options(event: InputEvent) -> bool:
 	elif event.is_action_pressed("ui_cancel"):
 		_c._mode = PsoStartMenu.Mode.SYSTEM
 		_c._sub_idx = 2
+		return true
+	return false
+
+
+func _input_debug(event: InputEvent) -> bool:
+	var items: Array = _c._get_debug_list()
+	if event.is_action_pressed("ui_up", false) and items.size() > 0:
+		_c._debug_idx = wrapi(_c._debug_idx - 1, 0, items.size())
+		return true
+	elif event.is_action_pressed("ui_down", false) and items.size() > 0:
+		_c._debug_idx = wrapi(_c._debug_idx + 1, 0, items.size())
+		return true
+	elif event.is_action_pressed("ui_accept"):
+		_c._toggle_debug(_c._debug_idx)
+		return true
+	elif event.is_action_pressed("ui_cancel"):
+		_c._mode = PsoStartMenu.Mode.SYSTEM
+		_c._sub_idx = 3
 		return true
 	return false
 
