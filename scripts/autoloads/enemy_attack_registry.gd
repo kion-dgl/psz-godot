@@ -39,15 +39,6 @@ func get_attacks(enemy_id: String, attack_range: float = 2.0) -> Array:
 	return out
 
 
-## Resolved fsm params for an enemy id (its `fsm` merged over defaults.fsm).
-func get_fsm(enemy_id: String) -> Dictionary:
-	var out: Dictionary = _defaults.get("fsm", {}).duplicate(true)
-	var entry: Dictionary = _enemies.get(enemy_id, {})
-	for k in entry.get("fsm", {}):
-		out[k] = entry["fsm"][k]
-	return out
-
-
 func get_enemy_count() -> int:
 	return _enemies.size()
 

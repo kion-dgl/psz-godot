@@ -2441,11 +2441,20 @@ func _run_enemy_freeze_probe(attempt: int = 0) -> void:
 		else:
 			_enemy_freeze_fail("no player in field")
 		return
-	var p: Node3D = players[0]
-	var edata = EnemyRegistry.get_enemy(_enemy_freeze_id)
-	if edata == null:
+	var enemy := _spawn_probe_enemy(players[0], _enemy_freeze_id)
+	if enemy == null:
 		_enemy_freeze_fail("%s missing from EnemyRegistry" % _enemy_freeze_id)
 		return
+	print("[sanity] checkpoint: enemy-freeze probe — %s spawned in contact with player" % _enemy_freeze_id)
+	_enemy_freeze_watch(enemy, {"attacked": false}, 0)
+
+
+## Spawn a probe enemy of `enemy_id` in contact just in front of the player. Returns the
+## enemy, or null if the roster id is missing. Shared by the enemy behavior probes.
+func _spawn_probe_enemy(p: Node3D, enemy_id: String) -> EnemyBase:
+	var edata = EnemyRegistry.get_enemy(enemy_id)
+	if edata == null:
+		return null
 	var enemy := EnemyBase.new()
 	enemy.enemy_data = edata
 	var col_shape := CollisionShape3D.new()
@@ -2459,8 +2468,7 @@ func _run_enemy_freeze_probe(attempt: int = 0) -> void:
 	enemy.collision_mask = 1
 	p.get_parent().add_child(enemy)
 	enemy.global_position = p.global_position + p.global_transform.basis.z * 1.2
-	print("[sanity] checkpoint: enemy-freeze probe — %s spawned in contact with player" % _enemy_freeze_id)
-	_enemy_freeze_watch(enemy, {"attacked": false}, 0)
+	return enemy
 
 
 ## Poll the spawned enemy ~5/s: it must reach ATTACKING, then leave it for
@@ -2510,24 +2518,10 @@ func _run_enemy_attack_probe(attempt: int = 0) -> void:
 		else:
 			_enemy_attack_fail("no player in field")
 		return
-	var p: Node3D = players[0]
-	var edata = EnemyRegistry.get_enemy(_enemy_attack_id)
-	if edata == null:
+	var enemy := _spawn_probe_enemy(players[0], _enemy_attack_id)
+	if enemy == null:
 		_enemy_attack_fail("%s missing from EnemyRegistry" % _enemy_attack_id)
 		return
-	var enemy := EnemyBase.new()
-	enemy.enemy_data = edata
-	var col_shape := CollisionShape3D.new()
-	var capsule := CapsuleShape3D.new()
-	capsule.radius = edata.collision_radius
-	capsule.height = edata.collision_height
-	col_shape.shape = capsule
-	col_shape.position.y = capsule.height / 2
-	enemy.add_child(col_shape)
-	enemy.collision_layer = 8
-	enemy.collision_mask = 1
-	p.get_parent().add_child(enemy)
-	enemy.global_position = p.global_position + p.global_transform.basis.z * 1.2
 	print("[sanity] checkpoint: enemy-attack probe — %s spawned in front of player (hp=%d)" % [_enemy_attack_id, GameState.hp])
 	_enemy_attack_watch(enemy, {"attacked": false, "hp0": GameState.hp}, 0)
 
@@ -2639,43 +2633,41 @@ func _companion_combat_watch(companion: Node3D, enemy: Node3D, tick: int) -> voi
 	_after(0.2, func() -> void: _companion_combat_watch(companion, enemy, tick + 1))
 
 
-func _on_field_cell_loaded(field: Node) -> void:
-	_stop_field_walk()
-	# Defeat probe: in the first field cell, kill the player instead of running
-	# the cell plan. Everything after this is the defeat flow (spec
-	# /states/player-death), driven by _run_defeat_probe.
+## First-cell probes: each fires once in the first field cell, replacing the scripted
+## cell plan (they end the run with DONE ok / FAIL). Returns true if one fired so the
+## caller returns early — keeps _on_field_cell_loaded's plan path readable.
+func _try_run_first_cell_probe() -> bool:
 	if _defeat_probe and not _defeat_triggered:
 		_defeat_triggered = true
 		_run_defeat_probe()
-		return
-	# Commitment probe (#377/#428): in the first field cell, drive a real
-	# swing + dodge press (and the mirror case) instead of the cell plan.
+		return true
 	if _commitment_probe and not _commitment_triggered:
 		_commitment_triggered = true
 		_run_commitment_probe()
-		return
-	# Combo probe (#155): three-tier windows on a real swing chain.
+		return true
 	if _combo_probe and not _combo_triggered:
 		_combo_triggered = true
 		_run_combo_probe()
-		return
-	# Enemy-freeze probe (#477): spawn a big atk1 rig on the player and
-	# require its attack cycle to end without a damage event.
+		return true
 	if _enemy_freeze_probe and not _enemy_freeze_triggered:
 		_enemy_freeze_triggered = true
 		_run_enemy_freeze_probe()
-		return
-	# Enemy-attack probe (#509): spawn an enemy on the player and require it to
-	# deal damage through the frame-tied windup→arc window (not instant).
+		return true
 	if _enemy_attack_probe and not _enemy_attack_triggered:
 		_enemy_attack_triggered = true
 		_run_enemy_attack_probe()
-		return
-	# Companion-combat probe (spec /states/companion-combat): spawn a
-	# companion + an enemy and require the companion to land a hit unaided.
+		return true
 	if _companion_combat_probe and not _companion_combat_triggered:
 		_companion_combat_triggered = true
 		_run_companion_combat_probe()
+		return true
+	return false
+
+
+func _on_field_cell_loaded(field: Node) -> void:
+	_stop_field_walk()
+	# First-cell probes replace the scripted cell plan (each fires once).
+	if _try_run_first_cell_probe():
 		return
 	var key: String = _get_current_cell_key(field)
 	var stage_id: String = ""
