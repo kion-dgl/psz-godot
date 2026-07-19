@@ -314,7 +314,7 @@ jobs:
           mkdir -p build/android
           godot --headless --path . --export-release "Android" build/android/psz-godot.apk
 
-      - name: Upload Android APK (fat: armeabi-v7a + arm64-v8a — installable on 32-bit Android TV)
+      - name: Upload Android APK (fat armeabi-v7a + arm64-v8a, for 32-bit Android TV)
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
