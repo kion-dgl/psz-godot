@@ -64,6 +64,18 @@ var _attack_hit_resolved: bool = false      # one resolution (hit or dodge) per 
 var _attack_clip_len: float = ATTACK_FALLBACK_DURATION  # resolved clip length (or fallback)
 var _attack_pos: float = 0.0                # position within the attack clip (seconds)
 var _rng := RandomNumberGenerator.new()
+
+## Pre-strike telegraph (#491, spec /mechanics/enemy-attacks). ATTACKING opens with a
+## readable attack-ready pose held long enough to react — no "walk up, freeze, cheap
+## hit". Stance risers rise via stt into a wat2 hold; other rigs hold their idle (wat).
+## Damage NEVER lands during telegraph. The hold is TELEGRAPH_HOLD × difficulty reaction
+## (Normal generous, higher tiers shorter). Telegraph is a sub-phase of ATTACKING, so the
+## 6-state FSM (spec /states/enemies) is unchanged and _start_attack stays the strike.
+## ponytail: one hold knob — tune the beat by play-test.
+const TELEGRAPH_HOLD: float = 0.7
+var _telegraphing: bool = false
+var _telegraph_rising: bool = false
+var _telegraph_timer: float = 0.0
 ## Player collision radius used by the arc test (the target's radius). Real value isn't
 ## exposed cheaply; melee reach dwarfs it, so a constant is fine.
 ## ponytail: constant player radius, read the real shape if arc precision ever matters.
@@ -487,7 +499,7 @@ func _process_chasing(_delta: float) -> void:
 	# only when this enemy has no attack table.
 	if attack_cooldown_timer <= 0 and not _stun_no_attack and _has_attack_in_band(dist, attack_range):
 		current_state = EnemyState.ATTACKING
-		_start_attack()
+		_begin_telegraph()
 		return
 
 	# Determine if charging (close to target) or walking (far from target)
@@ -535,6 +547,17 @@ func _process_chasing(_delta: float) -> void:
 func _process_attacking(delta: float) -> void:
 	velocity.x = 0
 	velocity.z = 0
+
+	# Telegraph sub-phase: hold the attack-ready pose (facing the player) before the
+	# strike so the wind-up is readable and dodgeable. No damage here.
+	if _telegraphing:
+		if target and is_instance_valid(target):
+			var d := target.global_position - global_position
+			d.y = 0
+			if d.length() > 0.1:
+				_face_direction(d.normalized())
+		_process_telegraph(delta)
+		return
 
 	# Advance the position within the attack clip. Prefer the real animation
 	# position; fall back to an accumulating timer for no-clip rigs (and tests).
@@ -601,6 +624,9 @@ func _process_loafing(delta: float) -> void:
 
 func _start_loafing() -> void:
 	current_state = EnemyState.LOAFING
+	_telegraphing = false
+	# Stance risers lower back down (wt2w) as they peel off; other rigs just loaf.
+	_play_animation("wt2w", true)
 	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
 
 	# Start moving perpendicular to player (left or right randomly)
@@ -628,6 +654,51 @@ func _process_hurt(delta: float) -> void:
 
 	if hurt_timer <= 0:
 		current_state = EnemyState.CHASING
+
+
+## Enter the pre-strike telegraph. Stance risers rise (stt) then hold wat2; other rigs
+## hold their idle (wat). The strike (_start_attack) begins only when the hold elapses.
+func _begin_telegraph() -> void:
+	if not target or not is_instance_valid(target):
+		return
+	is_attacking = true
+	_telegraphing = true
+	var rise := _play_animation("stt", true)
+	if not rise.is_empty():
+		_telegraph_rising = true
+		var a := animation_player.get_animation(rise)
+		_telegraph_timer = a.length if a else 0.3
+	else:
+		_telegraph_rising = false
+		_telegraph_timer = TELEGRAPH_HOLD * _aggro_reaction
+		_play_telegraph_hold()
+
+
+func _process_telegraph(delta: float) -> void:
+	_telegraph_timer -= delta
+	if _telegraph_timer > 0.0:
+		return
+	if _telegraph_rising:
+		# Rise finished — hold the raised attack-ready pose for the readable beat.
+		_telegraph_rising = false
+		_telegraph_timer = TELEGRAPH_HOLD * _aggro_reaction
+		_play_telegraph_hold()
+	else:
+		# Hold done — commit to the strike (the player dodges it, not prevents it).
+		_telegraphing = false
+		_start_attack()
+
+
+## Play the held attack-ready pose: the raised stance (wat2) if the rig has one, else
+## its idle (wat). Looped so it holds through the telegraph beat.
+func _play_telegraph_hold() -> void:
+	var held := _play_animation("wat2", true)
+	if held.is_empty():
+		held = _play_animation("wat", true)
+	if not held.is_empty():
+		var a := animation_player.get_animation(held)
+		if a:
+			a.loop_mode = Animation.LOOP_LINEAR
 
 
 func _start_attack() -> void:
@@ -766,6 +837,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
+		_telegraphing = false  # a hit during the wind-up cancels the telegraph too
 		_attack_anim = ""
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION

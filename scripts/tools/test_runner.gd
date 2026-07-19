@@ -45,6 +45,7 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_selection()
 	test_enemy_attack_arc()
 	test_enemy_attack_timeline()
+	test_enemy_telegraph()
 	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
@@ -1059,6 +1060,48 @@ func test_enemy_difficulty_scaling() -> void:
 	assert_eq(eh._aggro_cadence, EnemyBase.AGGRO_SCALING["hard"]["cadence"], "hard sets cadence mult")
 	eh.queue_free()
 	SessionManager.enter_field("gurhacia-valley", prev_diff if prev_diff != "" else "normal")
+	print("")
+
+
+func test_enemy_telegraph() -> void:
+	print("── Enemy telegraph / stance wind-up (#491) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)
+
+	# Stance riser: rig has stt (rise) + wat2 (hold) + atk.
+	var e := _make_recovery_enemy(["m_003_stt", "m_003_wat2", "m_003_atk1"], 0.3)
+	e.enemy_data.attack_base = 10
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._begin_telegraph()
+	assert_true(e._telegraphing, "telegraph begins on ATTACKING entry")
+	assert_true(e._telegraph_rising, "stance riser rises (stt) first")
+	assert_eq(e.current_anim, "stt", "plays the rise clip")
+
+	# Drive through rise + hold; damage MUST NOT land during the telegraph.
+	var dt := 1.0 / 60.0
+	var telegraph_dmg := false
+	var ticks := 0
+	while e._telegraphing and ticks < 300:
+		e._process_attacking(dt)
+		if dummy.hits.size() > 0:
+			telegraph_dmg = true
+		ticks += 1
+	assert_true(not telegraph_dmg, "no damage during the telegraph")
+	assert_true(not e._telegraphing, "telegraph ends and commits to the strike")
+	assert_true(e.is_attacking, "strike is in flight after the telegraph")
+	e.queue_free()
+
+	# Generic rig: no stt/wat2 → holds its idle (wat), no rise phase.
+	var g := _make_recovery_enemy(["b_001_wat", "b_001_atk"], 0.3)
+	g.target = dummy
+	g.current_state = EnemyBase.EnemyState.ATTACKING
+	g._begin_telegraph()
+	assert_true(g._telegraphing and not g._telegraph_rising, "generic rig holds without a rise phase")
+	assert_eq(g.current_anim, "wat", "generic telegraph holds idle (wat)")
+	g.queue_free()
+	dummy.queue_free()
 	print("")
 
 
