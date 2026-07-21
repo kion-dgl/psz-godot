@@ -95,6 +95,7 @@ func _run_tests_core() -> void:
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
+	test_scene_manager_transition_settles()
 	test_hud_stats_persistent_panel()
 	test_ranger_playthrough()
 	test_technique_disks()
@@ -3178,6 +3179,25 @@ func test_scene_manager_fade_rect_full_size() -> void:
 	assert_true(fr.size.x > 0.0 and fr.size.y > 0.0, "fade rect has non-zero size (not 0,0)")
 	var vp: Vector2 = SceneManager.get_viewport().get_visible_rect().size
 	assert_true(fr.size.is_equal_approx(vp), "fade rect covers the full viewport (%s == %s)" % [fr.size, vp])
+	print("")
+
+
+# ── Transition settles before fading in (#530) ──
+# change_scene_to_file() is deferred, so the swap + the new scene's _ready run
+# on a later frame. Fading in after a single process_frame revealed the new
+# scene's blank first frame (default environment before its WorldEnvironment +
+# lights settle). The fix holds black for SETTLE_FRAMES rendered frames after
+# the swap applies. Guard the invariant statically — the async timing itself is
+# exercised by the autopilot city→field matrix — so the flash can't silently
+# return and a failed swap can't hang the transition.
+func test_scene_manager_transition_settles() -> void:
+	print("── SceneManager transition settle (#530) ──")
+	var sm: GDScript = load("res://scripts/autoloads/scene_manager.gd")
+	var consts: Dictionary = sm.get_script_constant_map()
+	assert_true(int(consts.get("SETTLE_FRAMES", 0)) >= 1,
+		"transition waits >=1 settled frame before fading in (no blank flash, #530)")
+	assert_true(int(consts.get("MAX_SWAP_WAIT_FRAMES", 0)) > 0,
+		"deferred-swap wait is capped so a failed swap can't hang the transition")
 	print("")
 
 
