@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { FramePreset } from '../ShopScene';
+import type { TalkCam } from '../ShopStage';
 import type { ShopDef } from '../shopData';
 
 export interface VariationCtx {
@@ -12,6 +12,6 @@ export interface Variation {
   id: string;
   label: string;      // short name in the style switcher
   blurb: string;      // one-line description of the treatment
-  preset: FramePreset;
+  talkCam: TalkCam;   // the fixed shop-interaction camera for this style
   Overlay: FC<VariationCtx>;
 }

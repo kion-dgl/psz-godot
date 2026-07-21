@@ -99,6 +99,6 @@ export const Dossier: Variation = {
   id: 'dossier',
   label: 'D · Dossier',
   blurb: 'Wide 3/4 shot with the merchant left; one tall right-hand terminal holds the whole menu.',
-  preset: { azimuthDeg: 24, elevationDeg: 5, distanceMul: 3.1, targetYFrac: 0.52, lateralShift: -0.18, fov: 31 },
+  talkCam: { azimuthDeg: 24, distance: 4.4, height: 2.0, lookHeight: 1.2, lateralShift: -0.18, fov: 44 },
   Overlay,
 };

@@ -22,17 +22,17 @@ function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
 
       {/* Docked lower-third menu bar */}
       <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0, height: '46%',
+        position: 'absolute', left: 0, right: 0, bottom: 0, height: 340,
         background: `linear-gradient(180deg, rgba(10,14,26,0) 0%, rgba(10,14,26,0.55) 22%, rgba(10,14,26,0.78) 100%)`,
         pointerEvents: 'none',
       }} />
       <div style={{
-        position: 'absolute', left: 24, right: 24, bottom: 18, height: '40%',
+        position: 'absolute', left: 24, right: 24, bottom: 16, height: 296,
         display: 'flex', gap: 16, alignItems: 'stretch', pointerEvents: 'auto',
       }}>
         <div style={{ flex: '0 0 46%', display: 'flex', flexDirection: 'column' }}>
           <ItemList shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel}
-            hint={shop.hint} maxListHeight="calc(42vh - 96px)" />
+            hint={shop.hint} maxListHeight={172} />
         </div>
         <div style={{ flex: 1 }}>
           <DetailCard shop={shop} item={item} title="Detail" />
@@ -46,6 +46,6 @@ export const LowerThird: Variation = {
   id: 'lower',
   label: 'B · Lower Third',
   blurb: 'Visual-novel framing: centred merchant, greeting bubble, menu docked into the lower third.',
-  preset: { azimuthDeg: 0, elevationDeg: 3, distanceMul: 2.15, targetYFrac: 0.66, lateralShift: 0, fov: 34 },
+  talkCam: { azimuthDeg: 0, distance: 3.5, height: 1.85, lookHeight: 1.2, lateralShift: 0, fov: 42 },
   Overlay,
 };

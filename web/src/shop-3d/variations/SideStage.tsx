@@ -18,11 +18,11 @@ function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
         display: 'flex', gap: 14, alignItems: 'flex-start', pointerEvents: 'auto',
       }}>
         <ItemList shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel}
-          hint={shop.hint} maxListHeight="calc(100vh - 320px)" width={368} />
+          hint={shop.hint} maxListHeight={430} width={368} />
         <DetailCard shop={shop} item={item} width={300} />
       </div>
 
-      <div style={{ position: 'absolute', top: 40, right: 34, maxWidth: 300, pointerEvents: 'auto' }}>
+      <div style={{ position: 'absolute', top: 34, right: 30, maxWidth: 300, pointerEvents: 'auto' }}>
         <SpeechBubble text={shop.blurb} accent={shop.accent} pointer="none" />
       </div>
     </div>
@@ -33,6 +33,6 @@ export const SideStage: Variation = {
   id: 'side',
   label: 'A · Side Stage',
   blurb: 'Merchant framed right, menu column on the left — the classic JRPG shop shot.',
-  preset: { azimuthDeg: -16, elevationDeg: 6, distanceMul: 3.0, targetYFrac: 0.52, lateralShift: 0.2, fov: 32 },
+  talkCam: { azimuthDeg: -18, distance: 4.2, height: 2.0, lookHeight: 1.25, lateralShift: 0.2, fov: 46 },
   Overlay,
 };

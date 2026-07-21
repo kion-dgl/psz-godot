@@ -59,6 +59,6 @@ export const HoloCounter: Variation = {
   id: 'holo',
   label: 'C · Holo Counter',
   blurb: 'At the counter, looking up at the clerk; the menu floats as glowing holographic panels.',
-  preset: { azimuthDeg: 10, elevationDeg: -3, distanceMul: 2.5, targetYFrac: 0.62, lateralShift: 0.06, counter: true, fov: 38 },
+  talkCam: { azimuthDeg: 14, distance: 3.9, height: 1.7, lookHeight: 1.3, lateralShift: 0.05, fov: 44 },
   Overlay,
 };

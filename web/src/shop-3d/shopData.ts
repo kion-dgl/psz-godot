@@ -9,6 +9,43 @@
 import { assetUrl } from '../utils/assets';
 
 export type Currency = 'meseta' | 'photon' | 'none';
+export type AreaId = 'market' | 'counter' | 'underground';
+
+// The real Godot city stage each shop lives in (identity-transform GLBs, same
+// paths the .tscn scenes instance). NPCs are placed at their in-game world
+// coordinates inside these so the fixed shop camera frames the actual location.
+export interface StageDef {
+  models: string[];   // visual GLB(s), drawn at identity
+  floorY: number;     // ground height in this area (player/NPC feet sit here)
+}
+
+export const STAGES: Record<AreaId, StageDef> = {
+  market: {
+    models: [
+      assetUrl('assets/stages/city_e/market/dairon2.glb'),
+      assetUrl('assets/stages/city_e/market/wall_extension.glb'),
+    ],
+    floorY: 0,
+  },
+  counter: {
+    models: [assetUrl('assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2_m.glb')],
+    floorY: -10.67,
+  },
+  underground: {
+    models: [assetUrl('assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb')],
+    floorY: 0,
+  },
+};
+
+// The player character that walks up to the shop (HUmar, pc_000), plus its idle
+// clip. Stands in front of the NPC during the "talk" shot; can be ghosted or
+// hidden when it obstructs the shopkeeper.
+export const PLAYER = {
+  model: assetUrl('assets/player/pc_000/pc_000_000.glb'),
+  tex: assetUrl('assets/player/pc_000/textures/pc_000_000.png'),
+  animGlb: assetUrl('assets/player/animations/saber_m.glb'),
+  idleClip: 'pmsa_wait',
+};
 
 export interface ShopItem {
   name: string;
@@ -31,7 +68,12 @@ export interface ShopDef {
   label: string;           // nav / picker label
   title: string;           // in-game panel title
   blurb: string;           // one-line greeting shown in some variations
-  npc: { model: string; tex: string; idle?: string };
+  area: AreaId;            // which city stage the shop lives in
+  npc: {
+    model: string; tex: string; idle?: string;
+    pos: [number, number, number];  // in-game world position
+    rot: number;                    // in-game model.rotation.y (radians)
+  };
   accent: number;          // hex tint for the 3D stage + UI accents
   currency: Currency;
   meseta: number;
@@ -40,18 +82,19 @@ export interface ShopDef {
   tabs: ShopTab[];         // single-list shops use one tab with label ''
 }
 
-function npc(id: string, idle?: string) {
+function npc(id: string, idle: string | undefined, pos: [number, number, number], rot: number) {
   const base = `assets/npcs/${id}/${id}`;
-  return { model: assetUrl(`${base}.glb`), tex: assetUrl(`${base}.png`), idle };
+  return { model: assetUrl(`${base}.glb`), tex: assetUrl(`${base}.png`), idle, pos, rot };
 }
 
 export const SHOPS: ShopDef[] = [
   {
     id: 'photon',
+    area: 'underground',
     label: 'Photon Collector',
     title: 'Photon Collector',
     blurb: 'Bring me Photon Drops — I trade them for things meseta can’t buy.',
-    npc: npc('np_018_00_0', 'pso_f_ro_stand'),
+    npc: npc('np_018_00_0', 'pso_f_ro_stand', [-6.32, 0, -5.35], 0),
     accent: 0x9a56d6,
     currency: 'photon',
     meseta: 12450,
@@ -72,10 +115,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'synth',
+    area: 'underground',
     label: 'Synthesis Shop',
     title: 'Synthesis Shop',
     blurb: 'Bring the boards and materials — I’ll forge you a photon weapon.',
-    npc: npc('np_017_00_0', 'pso_ro_stand'),
+    npc: npc('np_017_00_0', 'pso_ro_stand', [8.38, 0, -4.81], 0),
     accent: 0x25b39a,
     currency: 'meseta',
     meseta: 12450,
@@ -102,10 +146,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'grind',
+    area: 'market',
     label: 'Grind Shop',
     title: 'Tekker',
     blurb: 'Hand me a weapon and a grinder — I’ll push its edge a little further.',
-    npc: npc('np_004_00_0'),
+    npc: npc('np_004_00_0', undefined, [6.25, 0, 23.45], -0.7533),
     accent: 0xd08334,
     currency: 'meseta',
     meseta: 12450,
@@ -122,10 +167,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'item',
+    area: 'market',
     label: 'Item Shop',
     title: 'Item Shop',
     blurb: 'Stock up before you head out — mates, fluids, whatever you need.',
-    npc: npc('np_003_00_0', 'pso_f_sh_stand'),
+    npc: npc('np_003_00_0', 'pso_f_sh_stand', [-10.34, 0, 27.67], 1.4207),
     accent: 0x44aa66,
     currency: 'meseta',
     meseta: 12450,
@@ -159,10 +205,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'weapon',
+    area: 'market',
     label: 'Weapon Shop',
     title: 'Weapon Shop',
     blurb: 'Looking to gear up? Best blades and frames in the colony, right here.',
-    npc: npc('np_002_00_0', 'pso_ro_stand'),
+    npc: npc('np_002_00_0', 'pso_ro_stand', [-6.78, 0, 21.81], 0.7835),
     accent: 0xc0504d,
     currency: 'meseta',
     meseta: 12450,
@@ -193,10 +240,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'storage',
+    area: 'counter',
     label: 'Item Counter (Storage)',
     title: 'Storage',
     blurb: 'I’ll keep your gear and meseta safe while you’re out there.',
-    npc: npc('np_000_00_0', 'pso_f_sa_stand'),
+    npc: npc('np_000_00_0', 'pso_f_sa_stand', [-10.53, -10.67, 114.15], 0.94),
     accent: 0x4b8fd6,
     currency: 'meseta',
     meseta: 12450,
@@ -222,10 +270,11 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: 'guild',
+    area: 'counter',
     label: 'Guild Counter',
     title: 'Guild Counter',
     blurb: 'Welcome, hunter. Here are the missions the guild has posted today.',
-    npc: npc('np_001_00_0', 'pso_f_sa_stand'),
+    npc: npc('np_001_00_0', 'pso_f_sa_stand', [-7.86, -10.67, 111.39], 0.64),
     accent: 0xcfa738,
     currency: 'none',
     meseta: 12450,
