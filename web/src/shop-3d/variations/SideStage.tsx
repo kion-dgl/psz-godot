@@ -1,27 +1,16 @@
-// Variation A — "Side Stage": the classic JRPG merchant framing. The camera sits
-// to the shopkeeper's left and pushes them into the right third of frame; all UI
-// lives in a left column (wallet strip, list panel, detail card). Reads as
-// "shop menu on the left, merchant standing to the right."
-import { WalletHeader, ItemList, DetailCard, SpeechBubble, currentItems } from '../parts';
+// Variation A — "Side Stage": camera directly in front of the shopkeeper (who
+// stays put), NPC parked on the right, and the menu on the left as a tall LIST
+// panel (~90% height) with the INFO panel to its right (~40% height). The
+// baseline glass-panel treatment.
+import { ShopColumns, SpeechBubble } from '../parts';
 import type { Variation, VariationCtx } from './types';
 
+export const HEADON: Variation['talkCam'] = { azimuthDeg: 0, distance: 4.3, height: 2.05, lookHeight: 1.3, lateralShift: 0.24, fov: 42 };
+
 function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
-  const item = currentItems(shop, tab)[sel];
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', top: 20, left: 28, pointerEvents: 'auto' }}>
-        <WalletHeader meseta={shop.meseta} photons={shop.currency === 'photon' || shop.id === 'synth' ? shop.photons : undefined} style={{ width: 360 }} />
-      </div>
-
-      <div style={{
-        position: 'absolute', top: 78, left: 28, bottom: 24,
-        display: 'flex', gap: 14, alignItems: 'flex-start', pointerEvents: 'auto',
-      }}>
-        <ItemList shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel}
-          hint={shop.hint} maxListHeight={430} width={368} />
-        <DetailCard shop={shop} item={item} width={300} />
-      </div>
-
+      <ShopColumns shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel} variant="glass" />
       <div style={{ position: 'absolute', top: 34, right: 30, maxWidth: 300, pointerEvents: 'auto' }}>
         <SpeechBubble text={shop.blurb} accent={shop.accent} pointer="none" />
       </div>
@@ -32,7 +21,7 @@ function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
 export const SideStage: Variation = {
   id: 'side',
   label: 'A · Side Stage',
-  blurb: 'Merchant framed right, menu column on the left — the classic JRPG shop shot.',
-  talkCam: { azimuthDeg: -18, distance: 4.2, height: 2.0, lookHeight: 1.25, lateralShift: 0.2, fov: 46 },
+  blurb: 'Head-on shopkeeper on the right; tall list + info panel on the left. Glass panels.',
+  talkCam: HEADON,
   Overlay,
 };

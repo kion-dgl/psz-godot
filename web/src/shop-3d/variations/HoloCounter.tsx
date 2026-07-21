@@ -1,55 +1,15 @@
-// Variation C — "Holo Counter": you're standing at the shop counter. The camera
-// sits low and looks slightly UP at the clerk across a physical counter slab
-// (drawn in the 3D scene), and the menu is projected as free-floating
-// "holographic" panels with an accent glow — as if the counter is emitting them.
-// Diegetic UI: the panels feel like part of the world, not a flat overlay.
-import type { ReactNode } from 'react';
-import { FONT } from '../theme';
-import { WalletHeader, ItemList, DetailCard, SpeechBubble, currentItems } from '../parts';
+// Variation C — "Holo Panels": same head-on / NPC-right / list-left layout, but
+// the panels read as glowing holographic projections (accent-lit borders).
+import { ShopColumns, SpeechBubble } from '../parts';
+import { HEADON } from './SideStage';
 import type { Variation, VariationCtx } from './types';
 
-function Holo({ accent, children, style }: { accent: number; children: ReactNode; style?: React.CSSProperties }) {
-  const hex = `#${accent.toString(16).padStart(6, '0')}`;
-  return (
-    <div style={{
-      borderRadius: 8,
-      boxShadow: `0 0 0 1px ${hex}, 0 0 22px -2px ${hex}, 0 10px 30px rgba(0,0,0,0.5)`,
-      ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
 function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
-  const item = currentItems(shop, tab)[sel];
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', fontFamily: FONT }}>
-      {/* Holo wallet chip, top-left */}
-      <div style={{ position: 'absolute', top: 20, left: 26, pointerEvents: 'auto' }}>
-        <Holo accent={shop.accent}>
-          <WalletHeader meseta={shop.meseta} photons={shop.currency === 'photon' || shop.id === 'synth' ? shop.photons : undefined} style={{ width: 320 }} />
-        </Holo>
-      </div>
-
-      {/* Clerk greeting, upper-centre */}
-      <div style={{ position: 'absolute', top: 26, right: 40, pointerEvents: 'auto' }}>
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <ShopColumns shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel} variant="holo" />
+      <div style={{ position: 'absolute', top: 34, right: 30, maxWidth: 300, pointerEvents: 'auto' }}>
         <SpeechBubble text={shop.blurb} accent={shop.accent} pointer="none" />
-      </div>
-
-      {/* Floating detail panel — left, projected off the counter */}
-      <div style={{ position: 'absolute', left: 40, bottom: 34, width: 292, pointerEvents: 'auto' }}>
-        <Holo accent={shop.accent}>
-          <DetailCard shop={shop} item={item} />
-        </Holo>
-      </div>
-
-      {/* Floating list panel — right of centre */}
-      <div style={{ position: 'absolute', right: 44, bottom: 34, width: 380, pointerEvents: 'auto' }}>
-        <Holo accent={shop.accent}>
-          <ItemList shop={shop} tab={tab} setTab={setTab} sel={sel} setSel={setSel}
-            hint={shop.hint} maxListHeight={280} />
-        </Holo>
       </div>
     </div>
   );
@@ -57,8 +17,8 @@ function Overlay({ shop, tab, setTab, sel, setSel }: VariationCtx) {
 
 export const HoloCounter: Variation = {
   id: 'holo',
-  label: 'C · Holo Counter',
-  blurb: 'At the counter, looking up at the clerk; the menu floats as glowing holographic panels.',
-  talkCam: { azimuthDeg: 14, distance: 3.9, height: 1.7, lookHeight: 1.3, lateralShift: 0.05, fov: 44 },
+  label: 'C · Holo Panels',
+  blurb: 'Same layout with glowing holographic panels projected in front of the player.',
+  talkCam: HEADON,
   Overlay,
 };

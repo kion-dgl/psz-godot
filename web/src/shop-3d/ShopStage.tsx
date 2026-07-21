@@ -42,8 +42,11 @@ export interface ShopStageProps {
 }
 
 const VIEW_W = 1280, VIEW_H = 720;
-const APPROACH = new THREE.Vector3(0, 0, 1);  // player stands on the +Z side of the NPC (matches every area's spawn)
 const STAND_DIST = 2.4;
+// Push the player off the camera↔NPC axis (toward screen-left) so it doesn't
+// cover the head-on shopkeeper; the NPC sits clear on the right, player at
+// lower-left. Can still be ghosted/hidden.
+const PLAYER_SIDE = -1.4;
 const FOLLOW_DIST = 4.5, FOLLOW_HEIGHT = 1.9, FOLLOW_LOOK = 1.0;  // orbit_camera.gd defaults
 
 function skyTexture(accent: number): THREE.Texture {
@@ -132,7 +135,11 @@ export default function ShopStage({ area, npc, accent, talkCam, mode, playerOpac
     const stageDef = STAGES[area];
     const floorY = npc.pos[1];
     const npcPos = new THREE.Vector3(npc.pos[0], npc.pos[1], npc.pos[2]);
-    const playerPos = npcPos.clone().addScaledVector(APPROACH, STAND_DIST);
+    // The direction the NPC faces (model +Z rotated by its authored rotation).
+    // The camera sits on THIS axis in front of the NPC — the NPC never turns.
+    const facing = new THREE.Vector3(Math.sin(npc.rot), 0, Math.cos(npc.rot));
+    const perp = new THREE.Vector3(facing.z, 0, -facing.x);  // NPC's screen-right
+    const playerPos = npcPos.clone().addScaledVector(facing, STAND_DIST).addScaledVector(perp, PLAYER_SIDE);
 
     // ---- stage ----
     const loader = new GLTFLoader();
@@ -145,10 +152,10 @@ export default function ShopStage({ area, npc, accent, talkCam, mode, playerOpac
     let playerMats: THREE.MeshBasicMaterial[] = [];
     let playerGroup: THREE.Object3D | null = null;
 
-    // ---- NPC at its real world pose ----
+    // ---- NPC at its real world pose (unchanged rotation) ----
     loadCharacter(loader, texLoader, npc.model, npc.tex, npc.idle ? NPC_IDLE_GLB : undefined, npc.idle, (group, mixer) => {
       group.position.copy(npcPos);
-      group.rotation.y = npc.rot;  // model.rotation.y from Godot
+      group.rotation.y = npc.rot;  // stays exactly as in-game; the camera moves to face it
       scene.add(group);
       if (mixer) mixers.push(mixer);
     });
@@ -174,14 +181,15 @@ export default function ShopStage({ area, npc, accent, talkCam, mode, playerOpac
     function targetsFor(m: CamMode): { pos: THREE.Vector3; look: THREE.Vector3; shift: number; fov: number } {
       const tc = talkCamRef.current;
       if (m === 'talk') {
+        // Directly in front of the NPC (azimuth 0), optionally swung a little.
         const az = THREE.MathUtils.degToRad(tc.azimuthDeg);
-        const d = APPROACH.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), az);
+        const d = facing.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), az);
         const pos = npcPos.clone().addScaledVector(d, tc.distance).setY(floorY + tc.height);
         const look = new THREE.Vector3(npcPos.x, floorY + tc.lookHeight, npcPos.z);
         return { pos, look, shift: tc.lateralShift, fov: tc.fov ?? 50 };
       }
-      // follow: behind the player (player faces the NPC, so behind = +Z)
-      const pos = playerPos.clone().addScaledVector(APPROACH, FOLLOW_DIST).setY(floorY + FOLLOW_HEIGHT);
+      // follow: behind the player (player faces the NPC, so behind = +facing)
+      const pos = playerPos.clone().addScaledVector(facing, FOLLOW_DIST).setY(floorY + FOLLOW_HEIGHT);
       const look = new THREE.Vector3(playerPos.x, floorY + FOLLOW_LOOK, playerPos.z);
       return { pos, look, shift: 0, fov: 50 };
     }
