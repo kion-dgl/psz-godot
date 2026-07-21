@@ -32,6 +32,7 @@ func _ready() -> void:
 func _run_tests_combat() -> void:
 	test_player_states()
 	test_player_anim_library_cache()
+	test_player_model_y_damping()
 	test_action_commitment()
 	test_combo_three_tier()
 	test_combo_chain_lifecycle()
@@ -705,6 +706,32 @@ func test_player_states() -> void:
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
 	p.free()
+	print("")
+
+
+# ── Player model vertical-follow damping (#538) ──
+# The collision capsule snaps discretely down each stair step; _smooth_model_y
+# damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
+# pops glide, while physics stays exact. Snaps on a real fall so the mesh never
+# floats. Locks the damping contract; the buttery result is verified in-game.
+func test_player_model_y_damping() -> void:
+	print("── Player Model Y Damping ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	# delta<=0 (init / settled frame) snaps exactly to target.
+	assert_eq(PlayerScript._damp_scalar(0.0, 2.0, 0.07, 0.9, 0.0), 2.0, "delta<=0 snaps to target")
+	# A gap beyond snap_dist (a real fall) snaps so the mesh doesn't float.
+	assert_eq(PlayerScript._damp_scalar(0.0, 5.0, 0.07, 0.9, 0.016), 5.0, "gap > snap_dist snaps to target")
+	# A small step (a stair riser) damps only partway in one frame.
+	var one_frame: float = PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.008)
+	assert_true(one_frame > 0.0 and one_frame < 0.3, "small gap damps partway, not instant (%f)" % one_frame)
+	# Frame-rate independent: a larger delta moves further toward target.
+	assert_true(PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.016) > PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.008),
+		"larger delta damps further toward target")
+	# Repeated frames converge on the target (no permanent mesh offset).
+	var y: float = 0.0
+	for _i in range(240):
+		y = PlayerScript._damp_scalar(y, 0.3, 0.07, 0.9, 0.008)
+	assert_true(absf(0.3 - y) < 0.001, "repeated damping converges to target (%f)" % y)
 	print("")
 
 
