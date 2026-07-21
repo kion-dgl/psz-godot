@@ -179,6 +179,7 @@ func _run_tests_systems() -> void:
 	test_minimap_enemy_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
+	test_orbit_camera_follow_y_damping()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -8375,6 +8376,32 @@ func test_autoloads_avoid_packonly_classscope_preloads() -> void:
 		for v in violations:
 			print("  FAIL: %s — resolves only from the .pck, but autoloads boot before bootstrap mounts it" % v)
 		_fail += violations.size()
+
+
+# ── Orbit camera vertical follow damping (#538) ──
+# The camera hard-assigned its Y from the player every frame, so the per-step Y
+# sawtooth from descending stairs shook the view. _damp_follow_y damps only the
+# follow Y (frame-rate independent) and snaps on a large jump so warps don't
+# slide. The visual result is verified in-game; this locks the damping contract.
+func test_orbit_camera_follow_y_damping() -> void:
+	print("── Orbit Camera Y Damping ──")
+	const OrbitCam := preload("res://scripts/3d/camera/orbit_camera.gd")
+	# delta<=0 (init / settled frame) snaps exactly to target.
+	assert_eq(OrbitCam._damp_follow_y(0.0, 2.0, 0.0), 2.0, "delta<=0 snaps to target")
+	# A large gap (warp / respawn) snaps so the camera doesn't slide across it.
+	assert_eq(OrbitCam._damp_follow_y(0.0, 10.0, 0.016), 10.0, "gap > CAM_Y_SNAP_DIST snaps to target")
+	# A small step damps only partway in one frame — that's what absorbs the sawtooth.
+	var one_frame: float = OrbitCam._damp_follow_y(0.0, 1.0, 0.016)
+	assert_true(one_frame > 0.0 and one_frame < 1.0, "small gap damps partway, not instant (%f)" % one_frame)
+	# Frame-rate independent: a larger delta moves further toward the target.
+	assert_true(OrbitCam._damp_follow_y(0.0, 1.0, 0.1) > OrbitCam._damp_follow_y(0.0, 1.0, 0.016),
+		"larger delta damps further toward target")
+	# Repeated frames converge on the target (no permanent offset).
+	var y: float = 0.0
+	for _i in range(180):
+		y = OrbitCam._damp_follow_y(y, 1.0, 0.016)
+	assert_true(absf(1.0 - y) < 0.01, "repeated damping converges to target (%f)" % y)
+	print("")
 
 
 # res:// script paths of the project's autoloads (project.godot [autoload]).
