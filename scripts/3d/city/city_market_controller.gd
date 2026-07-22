@@ -33,22 +33,19 @@ func _ready() -> void:
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
 
 	# NPCs
+	# Low-poly PSZ shopkeeper. Reverted from the VRM-derived item_shop.glb
+	# (#535): the VRM model stuck out as the lone high-poly figure next to the
+	# low-poly cast — better to keep the roster consistent until every NPC can
+	# be upgraded together. The high-poly asset + VRM anims (assets/npcs/
+	# item_shop/, npc_idles_vrm.glb) stay in the repo for that future pass.
+	# pso_f_sh_stand is the original PSZ shopkeeper idle; the VRM-only vrm_idle/
+	# vrm_bow clips don't retarget onto the PSZ skeleton, so they're dropped.
 	_add_npc(
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
-		"res://assets/npcs/item_shop/item_shop.glb",
+		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
 		"Item Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
-		# VRM-targeted retargeted idle. See web/scripts/bake-retarget-vrm.mjs
-		# and assets/player/animations/npc_idles_vrm.glb.
-		# Idle: Blender-authored breathing motion (item_shop_anims.glb).
-		# Geometric, looks natural; doesn't rely on PSO retargeting.
-		"vrm_idle",
-		"",                          # no hat
-		# Interact response: Blender-authored 3s bow (vrm_bow). Was
-		# vrma_greeting before but that's a 7.27s bend+stand+wave —
-		# too long for a quick interaction beat; the player walks into
-		# the shop UI a couple seconds in and never sees the wave.
-		"vrm_bow",
+		"pso_f_sh_stand",
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,

@@ -166,5 +166,9 @@ web/public/assets/player
 # bun deps for the quest solver
 scripts/tools/quest_solver/node_modules/
 
+# Narrated dev play-test captures (record_dev_session.sh): audio, timestamped
+# logs, transcripts. Per-session working artifacts — never committed.
+/dev-sessions/
+
 # macOS
 .DS_Store

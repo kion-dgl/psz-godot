@@ -33,6 +33,16 @@ var _mouse_dragging := false
 # Set false to pause camera rotation (e.g. gate nudge mode)
 var input_enabled := true
 
+# Vertical follow smoothing (#538). The player's Y picks up a per-step sawtooth
+# descending stairs (no step-down snap, so it walks off each edge and re-grounds);
+# hard-assigning the camera Y every frame passed that 1:1 into the view as shake.
+# Damp ONLY the follow Y — horizontal orbit stays instant — and snap on a large
+# jump so the camera doesn't slide across a warp/respawn.
+const CAM_Y_SMOOTH_TAU: float = 0.12   # seconds; larger = smoother but laggier
+const CAM_Y_SNAP_DIST: float = 3.0     # gap beyond which we snap instead of damp
+var _follow_y: float = 0.0
+var _follow_y_valid: bool = false
+
 # Node references
 @onready var camera: Camera3D = $Camera3D
 
@@ -46,10 +56,10 @@ func _ready() -> void:
 	camera.set_as_top_level(true)
 
 	if target:
-		_update_camera_position()
+		_update_camera_position(0.0)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if input_enabled and not PsoStartMenu.is_open():
 		var dir: float = 1.0 if InputConfig.invert_camera_x else -1.0
 		if Input.is_action_pressed("camera_left"):
@@ -68,7 +78,7 @@ func _process(_delta: float) -> void:
 			_center_behind_player()
 
 	if target and camera:
-		_update_camera_position()
+		_update_camera_position(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -86,12 +96,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		camera_rotation += motion.relative.x * mouse_sensitivity
 
 
-func _update_camera_position() -> void:
+func _update_camera_position(delta: float) -> void:
 	if not target:
 		return
 
 	var target_pos := target.global_position
-	var look_at_pos := Vector3(target_pos.x, target_pos.y + 1.0, target_pos.z)
+
+	# Damp only the vertical follow (#538): absorbs the stair-descent Y sawtooth
+	# so it doesn't shake the view, while x/z track the player instantly. First
+	# frame (and large jumps, via the helper) snap so there's no startup slide.
+	if not _follow_y_valid:
+		_follow_y = target_pos.y
+		_follow_y_valid = true
+	else:
+		_follow_y = _damp_follow_y(_follow_y, target_pos.y, delta)
+
+	var look_at_pos := Vector3(target_pos.x, _follow_y + 1.0, target_pos.z)
 
 	# Sphere-orbit: derive a single radius + base pitch from the
 	# exported `distance`/`height` so pitch=0 reproduces the original
@@ -110,12 +130,21 @@ func _update_camera_position() -> void:
 
 	var cam_pos := Vector3(
 		target_pos.x + sin(camera_rotation) * horiz,
-		target_pos.y + vert,
+		_follow_y + vert,
 		target_pos.z + cos(camera_rotation) * horiz,
 	)
 
 	camera.global_position = cam_pos
 	camera.look_at(look_at_pos)
+
+
+## Frame-rate-independent exponential damping of the follow Y toward target_y.
+## Snaps (returns target_y) when delta is non-positive or the gap exceeds
+## CAM_Y_SNAP_DIST, so a warp/respawn doesn't slide and a settled frame is exact.
+static func _damp_follow_y(current: float, target_y: float, delta: float) -> float:
+	if delta <= 0.0 or absf(target_y - current) > CAM_Y_SNAP_DIST:
+		return target_y
+	return lerp(current, target_y, 1.0 - exp(-delta / CAM_Y_SMOOTH_TAU))
 
 
 func _center_behind_player() -> void:

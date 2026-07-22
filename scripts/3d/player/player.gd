@@ -20,6 +20,15 @@ var fall_respawn_y: float = -10.0
 # Spawn tracking
 var spawn_position: Vector3 = Vector3.ZERO
 
+# Visual Y smoothing for the model mesh (#538). The collision capsule snaps
+# discretely down each stair step; damping the *mesh* Y toward the body turns
+# those per-step pops into a smooth glide. Physics/collision is untouched — only
+# the visible model lags. Snaps on a large drop (a real fall) so it never floats.
+const MODEL_Y_SMOOTH_TAU: float = 0.07
+const MODEL_Y_SNAP_DIST: float = 0.9
+var _model_world_y: float = 0.0
+var _model_y_valid: bool = false
+
 # Player state machine
 enum PlayerState {
 	IDLE,
@@ -64,6 +73,14 @@ var _anim_prefix: String = DEFAULT_ANIM_PREFIX_M
 var _walk_anim: String = "pmsa_walk"
 var _run_anim: String = "pmsa_run_pso"
 var _is_female: bool = false
+
+# Cache of built animation libraries, keyed by "<anim_glb>|<skeleton_name>".
+# Building a library duplicates + track-remaps ~26 clips; the result is identical
+# for a given (GLB, skeleton) and is safe to share across player instances
+# (libraries are read-only during playback). This is the dominant per-transition
+# cost when the city rebuilds the player rig on every area load (#531) — build
+# once, reuse thereafter.
+static var _anim_lib_cache: Dictionary = {}
 
 # Default asset paths (fallback when no character data)
 const DEFAULT_TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
@@ -394,17 +411,55 @@ func _load_weapon_animations() -> void:
 		_anim_prefix = DEFAULT_ANIM_PREFIX_M
 		_is_female = false
 
+	# Build the remapped library once per (GLB, skeleton) and reuse it — the
+	# instantiate + per-clip duplicate/remap below is the dominant cost the city
+	# otherwise pays on every area transition (#531). Keyed by skeleton.name
+	# because _remap_animation rewrites every track NodePath to target it.
+	var cache_key := anim_glb + "|" + skeleton.name
+	var lib: AnimationLibrary = _anim_lib_cache.get(cache_key, null)
+	if lib == null:
+		lib = _build_animation_library(anim_glb)
+		if lib == null:
+			return
+		_anim_lib_cache[cache_key] = lib
+		print("[Player] Built animation library: %s (%d clips)" % [anim_glb, lib.get_animation_list().size()])
+	else:
+		print("[Player] Reused cached animation library: %s" % anim_glb)
+
+	# Set gender-aware walk/run animation names
+	if _is_female:
+		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
+		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
+	else:
+		_walk_anim = "pmsa_walk"
+		_run_anim = "pmsa_run_pso"
+	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
+
+	# Replace existing library
+	if animation_player.has_animation_library(""):
+		animation_player.remove_animation_library("")
+	animation_player.add_animation_library("", lib)
+
+	var anim_list := animation_player.get_animation_list()
+	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
+
+
+## Build the remapped AnimationLibrary for an animation GLB. Split out from
+## _load_weapon_animations so the result can be cached (see _anim_lib_cache):
+## the per-clip duplicate + track-path remap is the expensive part, and it's
+## identical for a given (GLB, skeleton). Returns null on failure.
+func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 	var packed: PackedScene = load(anim_glb) as PackedScene
 	if packed == null:
 		push_warning("[Player] Failed to load animation GLB: %s" % anim_glb)
-		return
+		return null
 
 	var anim_scene := packed.instantiate()
 	var source_player: AnimationPlayer = NodeUtils.first_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
 	if not source_player:
 		push_warning("[Player] No AnimationPlayer found in animation GLB: %s" % anim_glb)
 		anim_scene.queue_free()
-		return
+		return null
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
 	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr"]
@@ -444,24 +499,8 @@ func _load_weapon_animations() -> void:
 					new_anim.loop_mode = Animation.LOOP_LINEAR
 					lib.add_animation(anim_name, new_anim)
 
-	# Set gender-aware walk/run animation names
-	if _is_female:
-		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
-		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
-	else:
-		_walk_anim = "pmsa_walk"
-		_run_anim = "pmsa_run_pso"
-	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
-
-	# Replace existing library
-	if animation_player.has_animation_library(""):
-		animation_player.remove_animation_library("")
-	animation_player.add_animation_library("", lib)
-
-	var anim_list := animation_player.get_animation_list()
-	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
-
 	anim_scene.queue_free()
+	return lib
 
 
 ## Call this after equipment changes to update the 3D weapon model.
@@ -858,6 +897,14 @@ func _cache_model_materials() -> void:
 					_cached_materials.append(mat)
 
 
+func _process(delta: float) -> void:
+	# Smooth the model's vertical position at RENDER rate (not the 60 Hz physics
+	# tick) so stair-descent stepping is gone on high-refresh displays too — the
+	# same reason the orbit camera smooths in _process (#538).
+	if model:
+		_smooth_model_y(delta)
+
+
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
 	# Check for fall and respawn
@@ -865,8 +912,17 @@ func _physics_process(delta: float) -> void:
 		_respawn()
 		return
 
-	# Apply gravity
-	if not is_on_floor():
+	# Gravity, and a grounded vertical settle. While on the floor, clear any
+	# residual DOWNWARD velocity: descending stairs the capsule briefly leaves
+	# each step edge, gravity accumulates velocity.y, and (since it was never
+	# reset on re-grounding) that downward speed compounds and fights the floor
+	# snap every step — the character jerks down each riser (#538). Zeroing it
+	# lets floor_snap_length ride the body down each step smoothly. Only downward
+	# motion is cleared, so nothing that launches the player upward is stomped.
+	if is_on_floor():
+		if velocity.y < 0.0:
+			velocity.y = 0.0
+	else:
 		velocity.y -= GRAVITY * delta
 
 	# Handle state-specific logic
@@ -893,7 +949,7 @@ func _physics_process(delta: float) -> void:
 	# place. See the s03a_ib2 plank case in static_in_the_snow.
 	_apply_step_up()
 
-	# Update model rotation
+	# Update model rotation (vertical smoothing runs in _process, at render rate)
 	if model:
 		model.rotation.y = player_rotation
 
@@ -1188,6 +1244,29 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 
 	var result := space_state.intersect_ray(query)
 	return not result.is_empty()
+
+
+# Damp the visible model's Y toward the physics body so the discrete per-step
+# floor snaps descending stairs (#538) glide instead of popping. Only the mesh is
+# offset (model is a child of the body); the collision capsule is unaffected.
+# Snaps on a large gap (a real fall) so the mesh never floats away from the body.
+func _smooth_model_y(delta: float) -> void:
+	var body_y := global_position.y
+	if not _model_y_valid:
+		_model_world_y = body_y
+		_model_y_valid = true
+	else:
+		_model_world_y = _damp_scalar(_model_world_y, body_y, MODEL_Y_SMOOTH_TAU, MODEL_Y_SNAP_DIST, delta)
+	model.position.y = _model_world_y - body_y
+
+
+## Frame-rate-independent exponential damping of a scalar toward target. Snaps
+## (returns target) on non-positive delta or a gap beyond snap_dist, so a real
+## fall / teleport tracks instantly instead of floating. Pure — unit-testable.
+static func _damp_scalar(current: float, target: float, tau: float, snap_dist: float, delta: float) -> float:
+	if delta <= 0.0 or absf(target - current) > snap_dist:
+		return target
+	return lerp(current, target, 1.0 - exp(-delta / tau))
 
 
 # After move_and_slide: if we hit a wall while trying to move horizontally and

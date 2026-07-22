@@ -31,6 +31,8 @@ func _ready() -> void:
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
 	test_player_states()
+	test_player_anim_library_cache()
+	test_player_model_y_damping()
 	test_action_commitment()
 	test_combo_three_tier()
 	test_combo_chain_lifecycle()
@@ -94,6 +96,7 @@ func _run_tests_core() -> void:
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
+	test_scene_manager_transition_settles()
 	test_hud_stats_persistent_panel()
 	test_ranger_playthrough()
 	test_technique_disks()
@@ -178,6 +181,7 @@ func _run_tests_systems() -> void:
 	test_minimap_enemy_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
+	test_orbit_camera_follow_y_damping()
 
 
 func assert_true(condition: bool, label: String) -> void:
@@ -703,6 +707,72 @@ func test_player_states() -> void:
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
 	p.free()
+	print("")
+
+
+# ── Player model vertical-follow damping (#538) ──
+# The collision capsule snaps discretely down each stair step; _smooth_model_y
+# damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
+# pops glide, while physics stays exact. Snaps on a real fall so the mesh never
+# floats. Locks the damping contract; the buttery result is verified in-game.
+func test_player_model_y_damping() -> void:
+	print("── Player Model Y Damping ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	# delta<=0 (init / settled frame) snaps exactly to target.
+	assert_eq(PlayerScript._damp_scalar(0.0, 2.0, 0.07, 0.9, 0.0), 2.0, "delta<=0 snaps to target")
+	# A gap beyond snap_dist (a real fall) snaps so the mesh doesn't float.
+	assert_eq(PlayerScript._damp_scalar(0.0, 5.0, 0.07, 0.9, 0.016), 5.0, "gap > snap_dist snaps to target")
+	# A small step (a stair riser) damps only partway in one frame.
+	var one_frame: float = PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.008)
+	assert_true(one_frame > 0.0 and one_frame < 0.3, "small gap damps partway, not instant (%f)" % one_frame)
+	# Frame-rate independent: a larger delta moves further toward target.
+	assert_true(PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.016) > PlayerScript._damp_scalar(0.0, 0.3, 0.07, 0.9, 0.008),
+		"larger delta damps further toward target")
+	# Repeated frames converge on the target (no permanent mesh offset).
+	var y: float = 0.0
+	for _i in range(240):
+		y = PlayerScript._damp_scalar(y, 0.3, 0.07, 0.9, 0.008)
+	assert_true(absf(0.3 - y) < 0.001, "repeated damping converges to target (%f)" % y)
+	print("")
+
+
+# ── Player animation-library cache (#531) ──
+# The player rig was rebuilt on every city area transition; the expensive part
+# is instantiate + per-clip duplicate/track-remap of ~26 animations. That build
+# is now split into _build_animation_library() and memoized on a static cache
+# keyed by (anim_glb, skeleton.name), so it runs once and the library resource
+# is shared across player instances. (The full build path needs the model GLB —
+# only in the pack — so this locks the cache CONTRACT; the autopilot city→field
+# probe exercises the real build+reuse.)
+func test_player_anim_library_cache() -> void:
+	print("── Player Anim Library Cache ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p1 = PlayerScript.new()
+	var p2 = PlayerScript.new()
+	assert_true(p1.has_method("_build_animation_library"),
+		"library build split into _build_animation_library() so it can be cached")
+
+	# Shared static store: an entry written via one instance is visible to another.
+	# (Synthetic keys — real "<glb>|<skeleton>" keys with res:// paths would trip
+	# check_asset_refs; the dict semantics are what matter here.)
+	p1._anim_lib_cache.clear()
+	var lib := AnimationLibrary.new()
+	var key := "saver_m|GeneralSkeleton"
+	p1._anim_lib_cache[key] = lib
+	assert_true(p2._anim_lib_cache.has(key),
+		"anim library cache is a shared static store across player instances")
+
+	# A hit hands back the identical resource — reused, not rebuilt.
+	assert_true(is_same(p2._anim_lib_cache[key], lib),
+		"a cache hit returns the same AnimationLibrary instance (no rebuild)")
+
+	# Key captures the GLB, so a different animation set is a distinct entry.
+	assert_true(not p1._anim_lib_cache.has("sword_m|GeneralSkeleton"),
+		"a different animation GLB is a different cache key")
+
+	p1._anim_lib_cache.clear()
+	p1.free()
+	p2.free()
 	print("")
 
 
@@ -3138,6 +3208,25 @@ func test_scene_manager_fade_rect_full_size() -> void:
 	assert_true(fr.size.x > 0.0 and fr.size.y > 0.0, "fade rect has non-zero size (not 0,0)")
 	var vp: Vector2 = SceneManager.get_viewport().get_visible_rect().size
 	assert_true(fr.size.is_equal_approx(vp), "fade rect covers the full viewport (%s == %s)" % [fr.size, vp])
+	print("")
+
+
+# ── Transition settles before fading in (#530) ──
+# change_scene_to_file() is deferred, so the swap + the new scene's _ready run
+# on a later frame. Fading in after a single process_frame revealed the new
+# scene's blank first frame (default environment before its WorldEnvironment +
+# lights settle). The fix holds black for SETTLE_FRAMES rendered frames after
+# the swap applies. Guard the invariant statically — the async timing itself is
+# exercised by the autopilot city→field matrix — so the flash can't silently
+# return and a failed swap can't hang the transition.
+func test_scene_manager_transition_settles() -> void:
+	print("── SceneManager transition settle (#530) ──")
+	var sm: GDScript = load("res://scripts/autoloads/scene_manager.gd")
+	var consts: Dictionary = sm.get_script_constant_map()
+	assert_true(int(consts.get("SETTLE_FRAMES", 0)) >= 1,
+		"transition waits >=1 settled frame before fading in (no blank flash, #530)")
+	assert_true(int(consts.get("MAX_SWAP_WAIT_FRAMES", 0)) > 0,
+		"deferred-swap wait is capped so a failed swap can't hang the transition")
 	print("")
 
 
@@ -8352,6 +8441,32 @@ func test_autoloads_avoid_packonly_classscope_preloads() -> void:
 		for v in violations:
 			print("  FAIL: %s — resolves only from the .pck, but autoloads boot before bootstrap mounts it" % v)
 		_fail += violations.size()
+
+
+# ── Orbit camera vertical follow damping (#538) ──
+# The camera hard-assigned its Y from the player every frame, so the per-step Y
+# sawtooth from descending stairs shook the view. _damp_follow_y damps only the
+# follow Y (frame-rate independent) and snaps on a large jump so warps don't
+# slide. The visual result is verified in-game; this locks the damping contract.
+func test_orbit_camera_follow_y_damping() -> void:
+	print("── Orbit Camera Y Damping ──")
+	const OrbitCam := preload("res://scripts/3d/camera/orbit_camera.gd")
+	# delta<=0 (init / settled frame) snaps exactly to target.
+	assert_eq(OrbitCam._damp_follow_y(0.0, 2.0, 0.0), 2.0, "delta<=0 snaps to target")
+	# A large gap (warp / respawn) snaps so the camera doesn't slide across it.
+	assert_eq(OrbitCam._damp_follow_y(0.0, 10.0, 0.016), 10.0, "gap > CAM_Y_SNAP_DIST snaps to target")
+	# A small step damps only partway in one frame — that's what absorbs the sawtooth.
+	var one_frame: float = OrbitCam._damp_follow_y(0.0, 1.0, 0.016)
+	assert_true(one_frame > 0.0 and one_frame < 1.0, "small gap damps partway, not instant (%f)" % one_frame)
+	# Frame-rate independent: a larger delta moves further toward the target.
+	assert_true(OrbitCam._damp_follow_y(0.0, 1.0, 0.1) > OrbitCam._damp_follow_y(0.0, 1.0, 0.016),
+		"larger delta damps further toward target")
+	# Repeated frames converge on the target (no permanent offset).
+	var y: float = 0.0
+	for _i in range(180):
+		y = OrbitCam._damp_follow_y(y, 1.0, 0.016)
+	assert_true(absf(1.0 - y) < 0.01, "repeated damping converges to target (%f)" % y)
+	print("")
 
 
 # res:// script paths of the project's autoloads (project.godot [autoload]).

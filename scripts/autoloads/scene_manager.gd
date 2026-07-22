@@ -4,6 +4,13 @@ extends Node
 
 signal scene_changed(scene_path: String)
 
+## Transition settle timing (#530). change_scene_to_file() is deferred, so the
+## swap + the new scene's _ready run on a later frame; fading in too early
+## revealed the new scene's blank first frame. Wait (up to a cap) for the swap
+## to apply, then a few settled frames, before fading back in.
+const MAX_SWAP_WAIT_FRAMES := 30
+const SETTLE_FRAMES := 3
+
 var _scene_stack: Array[String] = []
 var _transition_data: Dictionary = {}
 var _transitioning: bool = false
@@ -178,12 +185,26 @@ func _fade_to_scene(scene_path: String) -> void:
 	tween.tween_property(_fade_rect, "color:a", 1.0, 0.15)
 	await tween.finished
 
-	# Change scene
+	# Change scene. change_scene_to_file() is DEFERRED: the swap + the new
+	# scene's _ready (player rig, interior lights, material fixes) run on the
+	# next idle frame, and that scene's first rendered frame can briefly show
+	# Godot's default/blank environment before its WorldEnvironment + lights
+	# settle. Fading in after a single frame (as before) revealed that flash (#530).
+	var prev_scene := get_tree().current_scene
 	get_tree().change_scene_to_file(scene_path)
 	scene_changed.emit(scene_path)
 
+	# Hold black until the deferred swap has actually applied (current_scene is
+	# no longer the old one), capped so a failed swap can't hang the transition…
+	var guard := 0
+	while get_tree().current_scene == prev_scene and guard < MAX_SWAP_WAIT_FRAMES:
+		await get_tree().process_frame
+		guard += 1
+	# …then let the new scene render a few settled frames before fading in.
+	for _i in range(SETTLE_FRAMES):
+		await get_tree().process_frame
+
 	# Fade in
-	await get_tree().process_frame
 	var tween2 := create_tween()
 	tween2.tween_property(_fade_rect, "color:a", 0.0, 0.15)
 	await tween2.finished

@@ -305,6 +305,36 @@ never commit a stamp). The publish scripts' pack sidecar `version`
 field reads `VERSION` too — `dev` from a dev box is fine there, the
 sha256 is the integrity anchor.
 
+## "Dev mode with transcription" — what the user means
+
+When the user says **"dev mode with transcription"** (or "start a dev
+session with transcription", "record a narrated play-test"), they mean:
+launch a real play session where they narrate observations out loud, so
+the transcript can be diffed against the game's debug logs. This is the
+project's main way to scale play-testing — see `docs/dev-session-capture.md`.
+
+What to do:
+
+1. Run `scripts/tools/devsession/record_dev_session.sh` **in the
+   background** (`run_in_background: true`). Pass `--note "<focus>"` if the
+   user named one ("dev mode with transcription on the chaos sorcerer" →
+   `--note "chaos sorcerer"`). The script opens the game window on the
+   Mac, records the mic, and stamps Godot stdout to a timestamped log.
+   The user plays and narrates; the dev-mode toggles themselves are theirs
+   to flip in-game (PSO start menu / F-keys) — the wrapper only captures.
+2. **Do not poll.** The background task runs until the user quits the
+   game, then transcribes (whisper) and writes
+   `dev-sessions/<timestamp>/`. You're notified on completion.
+3. On completion, **read `dev-sessions/<latest>/timeline.txt` and report
+   drift automatically** — every place a `>>> SAID:` narration line
+   contradicts the adjacent log lines is a candidate bug or spec/behaviour
+   drift. That analysis is the payoff; produce it without being asked
+   again. `meta.json` has the branch/sha/note for context.
+
+Prereqs (ffmpeg, whisper-cpp, `ggml-small.en` model) are installed on the
+Mac. If the script errors on a missing prereq, see the runbook's
+"Prerequisites" section rather than improvising.
+
 ## "Run autopilot" — what the user means
 
 When the user says **"run autopilot"** (or "run autopilot on
