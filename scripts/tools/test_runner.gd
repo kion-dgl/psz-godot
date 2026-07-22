@@ -142,6 +142,7 @@ func _run_tests_core() -> void:
 func _run_tests_systems() -> void:
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
+	test_bootstrap_registers_pack_uids()
 	test_warp_teleporter_section_label()
 	test_warp_area_unlock()
 	test_mesh_utils_apply_texture()
@@ -6358,6 +6359,43 @@ func test_bootstrap_pack_magic_guard() -> void:
 	gf.close()
 	assert_true(boot._has_pack_magic(good_abs), "Valid GDPC pack accepted")
 	boot._discard_download(good_abs)
+
+	boot.free()
+	print("")
+
+
+func test_bootstrap_registers_pack_uids() -> void:
+	print("── bootstrap — pack uid map re-registration (#539) ──")
+
+	# load_resource_pack() mounts files but not the pack's UID registry, so
+	# uid:// refs baked into packed scenes log "invalid UID — using text path".
+	# bootstrap replays assets/uid_map.json through ResourceUID to fix that.
+	var boot = load("res://scripts/2d/bootstrap.gd").new()
+
+	# Fixture with one id the binary cannot already know (random-ish text id).
+	var map_path: String = "user://test-uid-map.json"
+	var uid_text: String = "uid://bpsz539testuid"
+	var res_path: String = "res://assets/objects/special_c3/s00_1_back03.png"
+	var f := FileAccess.open(map_path, FileAccess.WRITE)
+	assert_true(f != null, "uid map fixture opened for write")
+	f.store_string(JSON.stringify({uid_text: res_path}))
+	f.close()
+
+	var id := ResourceUID.text_to_id(uid_text)
+	assert_true(not ResourceUID.has_id(id), "Fixture id unknown before registration")
+	assert_eq(boot._register_pack_uids(map_path), 1, "One id registered from the map")
+	assert_true(ResourceUID.has_id(id), "Fixture id known after registration")
+	assert_eq(ResourceUID.get_id_path(id), res_path, "Registered id resolves to its res:// path")
+
+	# Re-running must not clobber or double-count — in-tree entries win.
+	assert_eq(boot._register_pack_uids(map_path), 0, "Second pass skips already-known ids")
+
+	ResourceUID.remove_id(id)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(map_path))
+
+	# Missing / malformed maps degrade to the old text-path fallback, not a crash.
+	assert_eq(boot._register_pack_uids("user://test-uid-map-absent.json"), 0,
+		"Missing uid map is a no-op")
 
 	boot.free()
 	print("")
