@@ -21,6 +21,22 @@ var _npcs: Array[CityNPC] = []
 var _warp_pads: Array[WarpPad] = []
 var _pos_overlay: Label  # Toggled by DebugConfig.show_player_position
 
+# Diegetic shop view (spec /states/shops#presentation). While a shop is open the
+# camera holds a fixed pose in front of the shopkeeper and the player is ghosted.
+var _shop_open := false
+var _shop_overlay: Node
+var _shop_prev_fov := 50.0
+# Fixed shop-camera pose relative to the NPC. Tunable — matches the web mock
+# (Style A). Distance/height/look are metres; H_OFFSET shifts the frustum so the
+# NPC sits on the screen-right (negative = subject moves right); FOV narrows the
+# shot vs. the 50° gameplay camera.
+const SHOP_CAM_DIST := 4.3
+const SHOP_CAM_HEIGHT := 2.05
+const SHOP_LOOK_HEIGHT := 1.3
+const SHOP_CAM_FOV := 42.0
+const SHOP_CAM_H_OFFSET := -1.15
+const SHOP_CAM_TWEEN := 0.35
+
 
 func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dictionary) -> CharacterBody3D:
 	player = PLAYER_SCENE.instantiate()
@@ -266,6 +282,92 @@ func _heal_character() -> void:
 func _save_player_state() -> void:
 	if player and is_instance_valid(player):
 		CityState.save_player_state(player.global_position, player.player_rotation, _get_area_name())
+
+
+## Open a shop diegetically: tween the camera to a fixed pose in front of the
+## NPC (framed screen-right), ghost + freeze the player, then push the shop UI as
+## a near-undimmed overlay over the still-rendered 3D city. Called by CityNPC on
+## interaction. Falls back to the plain full-screen push when refs are missing.
+func open_shop_view(npc: Node3D, scene_path: String, data: Dictionary = {}) -> void:
+	if _shop_open:
+		return
+	if not (is_instance_valid(orbit_camera) and is_instance_valid(player) and orbit_camera.has_method("begin_shop_focus")):
+		_save_player_state()
+		SceneManager.push_scene(scene_path, data)
+		return
+	_shop_open = true
+	_save_player_state()
+
+	# Variant locals so the dynamic members (Camera3D handle, PlayerState enum)
+	# resolve at runtime — orbit_camera/player are typed Node3D/CharacterBody3D.
+	var oc: Variant = orbit_camera
+	var pl: Variant = player
+	var cam: Camera3D = oc.camera
+	_shop_prev_fov = cam.fov
+	oc.begin_shop_focus()
+	if pl.has_method("set_ghost"):
+		pl.set_ghost(true)
+	if pl.has_method("transition_to"):
+		pl.transition_to(pl.PlayerState.CUTSCENE)
+
+	var pose := _compute_shop_pose(npc)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(cam, "global_transform", pose, SHOP_CAM_TWEEN)
+	tw.tween_property(cam, "fov", SHOP_CAM_FOV, SHOP_CAM_TWEEN)
+	tw.tween_property(cam, "h_offset", SHOP_CAM_H_OFFSET, SHOP_CAM_TWEEN)
+	await tw.finished
+
+	# Low dim so the live scene stays visible behind the overlay.
+	var overlay: Node = await SceneManager.push_scene(scene_path, data, 0.0)
+	_shop_overlay = overlay
+	if is_instance_valid(overlay):
+		overlay.tree_exited.connect(_close_shop_view)
+	else:
+		_close_shop_view()
+
+
+## Restore gameplay when the shop overlay closes (its cancel path pops the scene,
+## which frees it → tree_exited → here). Tweens the camera back to the follow
+## pose, un-ghosts and unfreezes the player.
+func _close_shop_view() -> void:
+	if not _shop_open:
+		return
+	_shop_open = false
+	_shop_overlay = null
+	if not (is_instance_valid(orbit_camera) and is_instance_valid(player) and orbit_camera.has_method("end_shop_focus")):
+		return
+
+	var oc: Variant = orbit_camera
+	var pl: Variant = player
+	var cam: Camera3D = oc.camera
+	if pl.has_method("set_ghost"):
+		pl.set_ghost(false)
+
+	var back: Transform3D = oc.get_follow_transform()
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(cam, "global_transform", back, 0.3)
+	tw.tween_property(cam, "fov", _shop_prev_fov, 0.3)
+	tw.tween_property(cam, "h_offset", 0.0, 0.3)
+	await tw.finished
+
+	oc.end_shop_focus()
+	if pl.has_method("transition_to"):
+		pl.transition_to(pl.PlayerState.IDLE)
+
+
+## The fixed camera transform for a shop: on the NPC's own facing axis, in front
+## of it, looking at chest height. The NPC does not turn — the camera moves.
+func _compute_shop_pose(npc: Node3D) -> Transform3D:
+	var npc_pos := npc.global_position
+	var rot: float = npc.get("npc_rotation_y") if npc.get("npc_rotation_y") != null else 0.0
+	var facing := Vector3(sin(rot), 0, cos(rot))
+	var floor_y := npc_pos.y
+	var cam_pos := npc_pos + facing * SHOP_CAM_DIST
+	cam_pos.y = floor_y + SHOP_CAM_HEIGHT
+	var look_pos := Vector3(npc_pos.x, floor_y + SHOP_LOOK_HEIGHT, npc_pos.z)
+	return Transform3D(Basis(), cam_pos).looking_at(look_pos, Vector3.UP)
 
 
 func _save_and_transition(target_scene: String, spawn_key: String) -> void:

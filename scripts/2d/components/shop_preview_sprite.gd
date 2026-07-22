@@ -41,7 +41,15 @@ static func detail_reserve_height(texture_path: String) -> float:
 	return maxf(0.0, sz.y - float(BOTTOM_PUSH) + float(DETAIL_GAP) - float(COLUMN_BOTTOM_INSET))
 
 
-static func attach(parent: Control, texture_path: String) -> TextureRect:
+## Disabled: the diegetic shop view renders the real 3D shopkeeper NPC behind the
+## menu overlay, so the 2D preview sprite is redundant and would double-draw over
+## the live scene. Kept as a no-op (rather than editing all seven shop call
+## sites) — restore the body below to bring the 2D portrait back.
+static func attach(_parent: Control, _texture_path: String) -> TextureRect:
+	return null
+
+
+static func _attach_disabled(parent: Control, texture_path: String) -> TextureRect:
 	var tex: Texture2D = load(texture_path)
 	var rect := TextureRect.new()
 	rect.name = "ShopPreview"
