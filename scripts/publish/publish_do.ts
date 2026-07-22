@@ -73,6 +73,8 @@ function formatBytes(n: number): string {
 
 function buildPack(): { hex: string; size: number } {
   mkdirSync(DIST_DIR, { recursive: true });
+  // Must run before the export so assets/uid_map.json lands in the pack (#539).
+  execSync("python3 scripts/tools/gen_uid_map.py", { cwd: REPO_ROOT, stdio: "inherit" });
   const cmd = `godot --headless --path . --export-pack "${PRESET_NAME}" ${PCK_OUT}`;
   console.log(`\n→ Building ${PCK_OUT}`);
   console.log(`  ${cmd}`);
@@ -98,6 +100,7 @@ function writeAssetTree(): void {
     });
     for (const l of raw.split("\n")) if (l.trim()) lines.push(l.trim());
   }
+  lines.push("assets/uid_map.json"); // assets/ root, outside ASSET_DIRS — see publish_assets.ts
   writeFileSync(ASSET_TREE_OUT, lines.join("\n") + "\n");
   console.log(`→ Wrote ${ASSET_TREE_OUT} (${lines.length} files)`);
 }
