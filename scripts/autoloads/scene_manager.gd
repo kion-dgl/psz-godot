@@ -95,10 +95,13 @@ func _reset_modals_for_scene_change() -> void:
 		GameState.push_modal()
 
 
-## Push an overlay scene on top of the current scene (no scene replacement)
-func push_scene(scene_path: String, data: Dictionary = {}) -> void:
+## Push an overlay scene on top of the current scene (no scene replacement).
+## `dim_to` is the backdrop darkness the world behind fades to (0 = none) — the
+## diegetic shop view passes a low value so the live 3D scene stays visible.
+## Returns the instanced overlay node (or null if a transition was in progress).
+func push_scene(scene_path: String, data: Dictionary = {}, dim_to: float = 0.5) -> Node:
 	if _transitioning:
-		return
+		return null
 	_transitioning = true
 	_transition_data = data
 
@@ -130,15 +133,16 @@ func push_scene(scene_path: String, data: Dictionary = {}) -> void:
 	_overlay_stack.append(entry)
 	_scene_stack.append(scene_path)
 
-	# Animate in: dim fades to 0.5, scene fades to 1.0
+	# Animate in: dim fades to dim_to, scene fades to 1.0
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(dim, "color:a", 0.5, 0.15)
+	tween.tween_property(dim, "color:a", dim_to, 0.15)
 	tween.tween_property(scene_instance, "modulate:a", 1.0, 0.15)
 	await tween.finished
 
 	scene_changed.emit(scene_path)
 	_transitioning = false
+	return scene_instance
 
 
 ## Pop the top overlay scene

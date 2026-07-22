@@ -245,14 +245,21 @@ func _on_interact(_player: Node3D) -> void:
 	# returned to idle.
 	if not interact_anim.is_empty():
 		play_oneshot(interact_anim)
-	# Save position so we return to same spot
-	var area_controller := get_parent()
-	if area_controller and area_controller.has_method("_save_player_state"):
-		area_controller._save_player_state()
-	SceneManager.push_scene(target_scene_path, {
+	var data := {
 		"npc_model_path": npc_model_path,
 		"npc_display_name": npc_display_name,
-	})
+	}
+	# Diegetic shop view (spec /states/shops#presentation): the area controller
+	# poses the camera in front of this NPC, ghosts the player, and overlays the
+	# shop on the live 3D city. It saves player state and pushes the scene itself.
+	var area_controller := get_parent()
+	if area_controller and area_controller.has_method("open_shop_view"):
+		area_controller.open_shop_view(self, target_scene_path, data)
+		return
+	# Fallback: plain full-screen shop push.
+	if area_controller and area_controller.has_method("_save_player_state"):
+		area_controller._save_player_state()
+	SceneManager.push_scene(target_scene_path, data)
 
 
 func _apply_npc_texture(node: Node, texture: Texture2D) -> void:

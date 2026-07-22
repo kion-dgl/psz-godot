@@ -149,6 +149,7 @@ func _run_tests_systems() -> void:
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
 	test_setup_shop_portrait()
+	test_shop_camera_pose()
 	test_shop_nav()
 	test_shop_confirm()
 	test_character_appearance()
@@ -6565,9 +6566,13 @@ func test_game_element_override_textured_material() -> void:
 func test_setup_shop_portrait() -> void:
 	print("── PszStyle.setup_shop_portrait — single shared shop layout ──")
 	# THE one layout path every shop uses (composition, NOT a base class — a
-	# ShopBase base class broke the Android export; #274 inc 5 / #368). Left list
-	# 3/5, detail card top-right 2/5 stopping 10px above the portrait. Passing
-	# null detail makes it create a styled card (photon/crafting/tekker path).
+	# ShopBase base class broke the Android export; #274 inc 5 / #368).
+	# Diegetic framing (spec /states/shops#presentation): the outer panel is
+	# transparent and anchored to the left of the frame; the body (list) is a
+	# glass card stretching 3/5, the detail card a shorter top-aligned card 2/5.
+	# No 2D portrait spacer — the real 3D shopkeeper NPC stands behind the
+	# overlay. Passing null detail makes it create a styled card
+	# (photon/crafting/tekker path).
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
 	var content := VBoxContainer.new()
@@ -6579,21 +6584,56 @@ func test_setup_shop_portrait() -> void:
 	assert_eq(panel.get_child_count(), 1, "Panel reduced to a single outer container")
 	var outer := panel.get_child(0)
 	assert_true(outer is HBoxContainer, "Outer container is an HBox (two columns)")
-	assert_eq(outer.get_child_count(), 2, "Outer has [content | right column]")
-	assert_true(outer.get_child(0) == content, "Left column is the original content VBox")
-	assert_eq(content.size_flags_stretch_ratio, 3.0, "Content VBox stretches 3")
+	assert_eq(outer.get_child_count(), 2, "Outer has [body card | right column]")
+	var body_card := outer.get_child(0)
+	assert_true(body_card is PanelContainer, "Left column is the body glass card")
+	assert_true(body_card.get_child(0) == content, "Body card wraps the original content VBox")
+	assert_eq((body_card as Control).size_flags_stretch_ratio, 3.0, "Body card stretches 3")
 	var right := outer.get_child(1)
 	assert_true(right is VBoxContainer, "Right column is a VBox")
 	assert_eq((right as Control).size_flags_stretch_ratio, 2.0, "Right column stretches 2")
-	# Right column = [detail margin (card), portrait spacer] so the card stops
-	# above the portrait instead of running full height.
-	assert_eq(right.get_child_count(), 2, "Right column has [detail | portrait spacer]")
+	# Right column = [detail holder] — the info card, top-aligned at ~40% height,
+	# no portrait spacer (the 3D NPC replaces the 2D preview).
+	assert_eq(right.get_child_count(), 1, "Right column has [detail] (no portrait spacer)")
+	assert_true(right.get_child(0).custom_minimum_size.y > 0.0, "Detail holder reserves ~40% height")
 	assert_true(card is PanelContainer, "Returns the detail card PanelContainer")
 	assert_true(card.has_theme_stylebox_override("panel"), "Detail card styled")
 	assert_true(card.has_node("ScanlineOverlay"), "Detail card has the scanline overlay")
-	assert_true(right.get_child(1).custom_minimum_size.y > 0.0, "Portrait spacer reserves height")
-	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied")
+	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied (transparent)")
 	panel.free()
+	print("")
+
+
+func test_shop_camera_pose() -> void:
+	print("── Diegetic shop camera pose (spec /states/shops#presentation) ──")
+	# The shop camera sits on the NPC's own facing axis, in front of it, and
+	# looks back at it — the NPC never turns (see CityAreaBase._compute_shop_pose).
+	var base: Node = load("res://scripts/3d/city/city_area_base.gd").new()
+	var stub := GDScript.new()
+	stub.source_code = "extends Node3D\nvar npc_rotation_y: float = 0.0\n"
+	stub.reload()
+	var npc: Node3D = stub.new()
+	add_child(npc)
+	npc.global_position = Vector3(5.0, 0.0, 10.0)
+
+	# rot 0 → faces +Z: camera in front is on the +Z side, centred on the NPC's x.
+	npc.npc_rotation_y = 0.0
+	var pose: Transform3D = base._compute_shop_pose(npc)
+	assert_true(pose.origin.z > npc.global_position.z, "Camera sits on the NPC's facing (+Z) side")
+	assert_true(absf(pose.origin.x - npc.global_position.x) < 0.001, "Camera centred on the NPC x at rot 0")
+	assert_true(absf(pose.origin.y - (npc.global_position.y + base.SHOP_CAM_HEIGHT)) < 0.001, "Camera at shop height above the floor")
+	var to_npc: Vector3 = (Vector3(npc.global_position.x, npc.global_position.y + base.SHOP_LOOK_HEIGHT, npc.global_position.z) - pose.origin).normalized()
+	var cam_fwd: Vector3 = -pose.basis.z  # Camera3D looks down local −Z
+	assert_true(cam_fwd.dot(to_npc) > 0.99, "Camera looks straight back at the NPC")
+
+	# rot 90° → faces +X: camera moves to the NPC's +X side instead.
+	npc.npc_rotation_y = PI / 2.0
+	var pose_x: Transform3D = base._compute_shop_pose(npc)
+	assert_true(pose_x.origin.x > npc.global_position.x, "rot 90° puts the camera on the NPC's +X side")
+	assert_true(absf(pose_x.origin.z - npc.global_position.z) < 0.001, "rot 90° keeps the camera on the NPC z")
+
+	npc.queue_free()
+	base.free()
 	print("")
 
 

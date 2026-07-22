@@ -33,6 +33,11 @@ var _mouse_dragging := false
 # Set false to pause camera rotation (e.g. gate nudge mode)
 var input_enabled := true
 
+# While true the orbit does NOT drive the camera — used by the diegetic shop
+# view, which tweens the camera to a fixed pose in front of the shopkeeper and
+# needs the orbit to stop overwriting it. See begin_shop_focus / end_shop_focus.
+var _shop_focus := false
+
 # Vertical follow smoothing (#538). The player's Y picks up a per-step sawtooth
 # descending stairs (no step-down snap, so it walks off each edge and re-grounds);
 # hard-assigning the camera Y every frame passed that 1:1 into the view as shake.
@@ -60,6 +65,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Shop view owns the camera pose while focused; don't fight its tween.
+	if _shop_focus:
+		return
 	if input_enabled and not PsoStartMenu.is_open():
 		var dir: float = 1.0 if InputConfig.invert_camera_x else -1.0
 		if Input.is_action_pressed("camera_left"):
@@ -161,4 +169,39 @@ func _center_behind_player() -> void:
 
 func set_target(new_target: Node3D) -> void:
 	target = new_target
+
+
+## Stop the orbit from driving the camera so the shop view can pose it directly.
+func begin_shop_focus() -> void:
+	_shop_focus = true
+	input_enabled = false
+
+
+## Resume normal follow. Invalidate the follow-Y so it snaps cleanly rather than
+## sliding from the shop pose on the first frame back.
+func end_shop_focus() -> void:
+	_shop_focus = false
+	input_enabled = true
+	_follow_y_valid = false
+
+
+## The camera transform the orbit would use right now — the tween-back target
+## when a shop closes. Mirrors _update_camera_position without the Y damping.
+func get_follow_transform() -> Transform3D:
+	if not target:
+		return camera.global_transform
+	var target_pos := target.global_position
+	var fy: float = _follow_y if _follow_y_valid else target_pos.y
+	var look_at_pos := Vector3(target_pos.x, fy + 1.0, target_pos.z)
+	var radius: float = sqrt(distance * distance + height * height)
+	var base_pitch: float = atan2(height, distance)
+	var pitch: float = base_pitch + camera_pitch
+	var horiz: float = cos(pitch) * radius
+	var vert: float = sin(pitch) * radius
+	var cam_pos := Vector3(
+		target_pos.x + sin(camera_rotation) * horiz,
+		fy + vert,
+		target_pos.z + cos(camera_rotation) * horiz,
+	)
+	return Transform3D(Basis(), cam_pos).looking_at(look_at_pos, Vector3.UP)
 

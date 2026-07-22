@@ -16,6 +16,15 @@ const SEL_BG := Color(0.94, 0.63, 0.13)
 const SEL_BORDER := Color(0.82, 0.5, 0.06)
 const HINT_BG := Color(1.0, 1.0, 1.0, 0.7)
 
+# Diegetic shop overlay geometry (see setup_shop_portrait / spec presentation).
+# The menu occupies the left of the 1280×720 frame; RIGHT_RESERVE keeps the
+# right free for the 3D shopkeeper the camera frames there.
+const LEFT_MARGIN := 24.0
+const TOP_MARGIN := 24.0
+const BOTTOM_MARGIN := 24.0
+const RIGHT_RESERVE := 486.0   # right edge lands at x≈794 of 1280
+const DETAIL_HEIGHT := 288.0   # info card height (~40% of 720)
+
 # ── Text Colors ──
 const TEXT := Color(0.1, 0.1, 0.17)
 const TEXT_WHITE := Color(1.0, 1.0, 1.0)
@@ -443,18 +452,18 @@ static func create_meseta_label(meseta: int) -> Label:
 ##     PanelContainer is the card the shop renders its selection into.
 static func setup_shop_portrait(
 		panel: PanelContainer, detail_ref: PanelContainer,
-		model_path: String) -> PanelContainer:
-	# Make panel fullscreen and opaque
-	panel.offset_left = 0
-	panel.offset_top = 0
-	panel.offset_right = 0
-	panel.offset_bottom = 0
-	var fs := StyleBoxFlat.new()
-	fs.bg_color = BG
-	fs.content_margin_left = 12.0
-	fs.content_margin_top = 8.0
-	fs.content_margin_bottom = 8.0
-	panel.add_theme_stylebox_override("panel", fs)
+		_model_path: String) -> PanelContainer:
+	# Diegetic framing (spec /states/shops#presentation): the shop is an overlay
+	# on the live 3D city, not a full-screen panel. Anchor the menu to the LEFT
+	# ~60% so the 3D shopkeeper NPC — framed by the camera — stays visible on the
+	# right, and keep the outer panel transparent so the body/detail glass cards
+	# read against the scene. Layout: a tall body card (title/tabs/list/hint) on
+	# the left, a shorter detail card (~40% height, top-aligned) beside it.
+	panel.offset_left = LEFT_MARGIN
+	panel.offset_top = TOP_MARGIN
+	panel.offset_right = -RIGHT_RESERVE
+	panel.offset_bottom = -BOTTOM_MARGIN
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 	# Pull VBox out of Panel. When the scene supplies the detail node, lift it
 	# out of its inner HBox; otherwise create a styled card for the right slot.
@@ -468,44 +477,50 @@ static func setup_shop_portrait(
 		detail.name = "DetailPanel"
 	apply_detail_panel_style(detail)
 
-	# Outer HBox: left menu (3/5) + right detail/portrait (2/5)
+	# Outer HBox: left body card (3/5) + right detail column (2/5).
 	var outer := HBoxContainer.new()
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_theme_constant_override("separation", 0)
+	outer.add_theme_constant_override("separation", 12)
 
+	# LEFT: the body (title / tabs / list / hint) in a glass card, full height.
+	var body_card := PanelContainer.new()
+	body_card.name = "ShopBodyCard"
+	body_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_card.size_flags_stretch_ratio = 3.0
+	var glass := StyleBoxFlat.new()
+	glass.bg_color = Color(BG.r, BG.g, BG.b, 0.82)
+	glass.content_margin_left = 10.0
+	glass.content_margin_right = 10.0
+	glass.content_margin_top = 8.0
+	glass.content_margin_bottom = 8.0
+	glass.corner_radius_top_left = 6
+	glass.corner_radius_top_right = 6
+	glass.corner_radius_bottom_left = 6
+	glass.corner_radius_bottom_right = 6
+	glass.border_width_top = 3
+	glass.border_color = TITLE_BG
+	body_card.add_theme_stylebox_override("panel", glass)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_stretch_ratio = 3.0
-	outer.add_child(vbox)
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_card.add_child(vbox)
+	outer.add_child(body_card)
 
+	# RIGHT: the detail card, top-aligned, ~40% of frame height.
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
-
-	var detail_margin := MarginContainer.new()
-	detail_margin.add_theme_constant_override("margin_left", 8)
-	detail_margin.add_theme_constant_override("margin_top", 8)
-	detail_margin.add_theme_constant_override("margin_right", 8)
-	# Bottom inset handled by the spacer below, not here — keep this 0 so the
-	# spacer height alone controls the gap to the portrait.
-	detail_margin.add_theme_constant_override("margin_bottom", 0)
-	detail_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var detail_holder := MarginContainer.new()
+	detail_holder.custom_minimum_size = Vector2(0, DETAIL_HEIGHT)
+	detail_holder.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_margin.add_child(detail)
-	right.add_child(detail_margin)
-
-	# The detail card stops 10px above the portrait rather than running full
-	# height: reserve the portrait's footprint as a fixed bottom spacer so the
-	# EXPAND_FILL card above ends just above the artwork (#368).
-	var portrait_spacer := Control.new()
-	portrait_spacer.custom_minimum_size = Vector2(0, ShopPreviewSprite.detail_reserve_height(model_path))
-	portrait_spacer.size_flags_vertical = Control.SIZE_FILL
-	portrait_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	right.add_child(portrait_spacer)
-
+	detail_holder.add_child(detail)
+	right.add_child(detail_holder)
 	outer.add_child(right)
+
 	panel.add_child(outer)
 	return detail
 

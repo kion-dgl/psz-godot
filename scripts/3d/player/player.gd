@@ -897,6 +897,38 @@ func _cache_model_materials() -> void:
 					_cached_materials.append(mat)
 
 
+## Fade the whole player model to a translucent "ghost" (or back to solid) while
+## a diegetic shop is open, so the camera-in-front shot isn't blocked by the
+## customer. Walks every MeshInstance3D under the model and adjusts (a duplicated,
+## per-instance) StandardMaterial3D's alpha. GHOST_ALPHA matches the web mock.
+const GHOST_ALPHA: float = 0.35
+
+func set_ghost(on: bool) -> void:
+	if model:
+		_set_ghost_recursive(model, on)
+
+func _set_ghost_recursive(node: Node, on: bool) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mi: MeshInstance3D = child as MeshInstance3D
+			for i in range(mi.mesh.get_surface_count() if mi.mesh else 0):
+				var mat := mi.get_active_material(i)
+				if mat is StandardMaterial3D:
+					var sm: StandardMaterial3D = mat as StandardMaterial3D
+					# Only mutate a per-instance override so we never touch a
+					# material shared with another mesh (or the source GLB).
+					if mi.get_surface_override_material(i) != sm:
+						sm = sm.duplicate() as StandardMaterial3D
+						mi.set_surface_override_material(i, sm)
+					if on:
+						sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+						sm.albedo_color.a = GHOST_ALPHA
+					else:
+						sm.albedo_color.a = 1.0
+						sm.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+		_set_ghost_recursive(child, on)
+
+
 func _process(delta: float) -> void:
 	# Smooth the model's vertical position at RENDER rate (not the 60 Hz physics
 	# tick) so stair-descent stepping is gone on high-refresh displays too — the

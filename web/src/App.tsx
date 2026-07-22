@@ -46,6 +46,8 @@ const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
 const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'));
+const ShopIndex = lazy(() => import('./shop-3d/ShopIndex'));
+const ShopMenu3D = lazy(() => import('./shop-3d/ShopMenu3D'));
 
 type NavLink = { to: string; label: string };
 type NavGroup = { label: string; links: NavLink[] };
@@ -85,6 +87,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/menu-design', label: 'Menus' },
       { to: '/settings', label: 'Settings' },
       { to: '/start-menu', label: 'Start Menu' },
+      { to: '/shop-3d', label: '3D Shops' },
       { to: '/title-screen', label: 'Title' },
       { to: '/asset-loader', label: 'Loader' },
       { to: '/controls', label: 'Controls' },
@@ -288,6 +291,8 @@ export default function App() {
             <Route path="/boss-room/:bossId" element={<BossRoom />} />
             <Route path="/texture-anim" element={<TextureAnimEditor />} />
             <Route path="/palette-editor" element={<PaletteEditor />} />
+            <Route path="/shop-3d" element={<ShopIndex />} />
+            <Route path="/shop-3d/:shopId" element={<ShopMenu3D />} />
           </Routes>
         </Suspense>
       </div>
