@@ -22,6 +22,7 @@ extends Control
 const TITLE_SCENE := "res://scenes/2d/title.tscn"
 const MANIFEST_PATH := "res://assets_manifest.json"
 const CACHE_DIR := "user://packs"
+const UID_MAP_PATH := "res://assets/uid_map.json"
 const HASH_CHUNK := 1 << 20  # 1 MiB
 const ONE_MB := 1048576.0
 
@@ -210,10 +211,47 @@ func _run() -> void:
 		_fatal("Failed to mount assets pack.")
 		return
 	print("[bootstrap] mounted %s" % cache_path)
+	_register_pack_uids()
 
 	_set_phase(Phase.DONE)
 	await _yield_frame()
 	_goto_title()
+
+
+## Re-register the pack's resource UIDs with the running binary.
+##
+## load_resource_pack() mounts the pack's *files* but not its UID registry, so
+## every `uid://` reference baked into a packed .scn (glTF scenes that point at
+## their textures as external files) resolves as "invalid UID — using text path
+## instead". Loading still works via the fallback; the cost is log noise on
+## every load (issue #539). assets/uid_map.json is generated at pack-build time
+## by scripts/tools/gen_uid_map.py.
+##
+## Non-fatal by design: a missing or malformed map just leaves us on the
+## text-path fallback, which is exactly the behavior we had before.
+func _register_pack_uids(map_path: String = UID_MAP_PATH) -> int:
+	if not FileAccess.file_exists(map_path):
+		print("[bootstrap] no uid map in pack — uid:// refs use text-path fallback")
+		return 0
+	var raw := FileAccess.get_file_as_string(map_path)
+	var parsed: Variant = JSON.parse_string(raw)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("[bootstrap] uid_map.json is not a JSON object — skipping")
+		return 0
+	var registered := 0
+	for uid_text: String in (parsed as Dictionary):
+		var id := ResourceUID.text_to_id(uid_text)
+		if id == ResourceUID.INVALID_ID:
+			continue
+		var res_path: String = (parsed as Dictionary)[uid_text]
+		# Never clobber an id the binary already knows: in-tree assets win over
+		# the pack, matching the replace_files=false mount above.
+		if ResourceUID.has_id(id):
+			continue
+		ResourceUID.add_id(id, res_path)
+		registered += 1
+	print("[bootstrap] registered %d pack uids" % registered)
+	return registered
 
 
 ## Remove any *.pck under user://packs/ that isn't the one we're about to use.
