@@ -47,6 +47,7 @@ const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'))
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
 const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'));
 const ShopIndex = lazy(() => import('./shop-3d/ShopIndex'));
+const WallDebug = lazy(() => import('./wall-debug/WallDebug'));
 const ShopMenu3D = lazy(() => import('./shop-3d/ShopMenu3D'));
 
 type NavLink = { to: string; label: string };
@@ -121,6 +122,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/enemy-room', label: 'Enemy Rooms' },
       { to: '/boss-room', label: 'Boss Rooms' },
       { to: '/texture-anim', label: 'Texture Anim' },
+      { to: '/wall-debug', label: 'Wall #534' },
     ],
   },
 ];
@@ -293,6 +295,7 @@ export default function App() {
             <Route path="/palette-editor" element={<PaletteEditor />} />
             <Route path="/shop-3d" element={<ShopIndex />} />
             <Route path="/shop-3d/:shopId" element={<ShopMenu3D />} />
+            <Route path="/wall-debug" element={<WallDebug />} />
           </Routes>
         </Suspense>
       </div>
