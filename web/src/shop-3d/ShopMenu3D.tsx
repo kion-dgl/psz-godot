@@ -64,7 +64,7 @@ export default function ShopMenu3D() {
   const [tab, setTab] = useState(0);
   const [sel, setSel] = useState(0);
   const [mode, setMode] = useState<CamMode>('talk');
-  const [opacityKey, setOpacityKey] = useState<(typeof OPACITY_MODES)[number]['key']>('solid');
+  const [opacityKey, setOpacityKey] = useState<(typeof OPACITY_MODES)[number]['key']>('ghost');
 
   useEffect(() => { setTab(0); setSel(0); }, [shop.id]);
 

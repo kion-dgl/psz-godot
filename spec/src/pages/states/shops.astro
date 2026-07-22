@@ -5,9 +5,52 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Shops">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHALL</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as described in RFC 2119 — they define expected behavior, not current implementation status.</p>
 
-  <p>A <strong>shop</strong> is a full-screen 2D menu where the player exchanges one resource for another: meseta for goods, Photon Drops for goods, materials for crafted gear, or items between the inventory and the bank. Every shop screen presents the same skeleton and the same input grammar so a player who has learned one shop has learned them all. The <strong>storage</strong> counter is built from the same skeleton and is treated as a shop for the purposes of this contract, even though it moves items rather than selling them.</p>
+  <p>A <strong>shop</strong> is where the player exchanges one resource for another: meseta for goods, Photon Drops for goods, materials for crafted gear, or items between the inventory and the bank. Every shop presents the same skeleton and the same input grammar so a player who has learned one shop has learned them all. The <strong>storage</strong> counter is built from the same skeleton and is treated as a shop for the purposes of this contract, even though it moves items rather than selling them.</p>
+
+  <p>The shop is presented <strong>diegetically</strong>: rather than cutting to a separate full-screen menu, the game keeps the player in the world. On interaction the camera moves to a fixed angle <em>directly in front of the shopkeeper NPC</em> — who stays exactly where they stand in the city, at their authored position and rotation — the player character is <em>ghosted</em> so it never hides the clerk, and the shop UI is drawn as an <em>overlay on top of the still-rendered 3D scene</em>. Closing the shop returns the camera to following the player and restores the player to solid. The framing contract is in <a href="#presentation">Presentation</a>; the UI skeleton, input grammar, and economy rules below are unchanged by it.</p>
 
   <p>Shops <strong>MUST</strong> share behavior through <em>composition</em> — preloaded static helpers (<code>PszStyle</code>, <code>ShopNav</code>, <code>ShopUI</code>) — and <strong>MUST NOT</strong> share it through a common base class. A cross-script base class fails to resolve in the Android export at runtime (it works in-editor and on every other platform); see <code>docs/shop-dedup.md</code>. Each shop is therefore its own <code>extends Control</code> script that calls into the shared helpers.</p>
+
+  <h2 id="presentation">Presentation — diegetic 3D framing</h2>
+
+  <p>The shop screen is drawn <em>over</em> the live city, not in place of it. When the player accepts an interaction with a shop NPC, the game <strong>MUST</strong>:</p>
+  <ul>
+    <li><strong>Keep the 3D scene rendered.</strong> The city area, the shopkeeper NPC, and the player <strong>MUST NOT</strong> be unloaded; the shop UI is an overlay above them. Cancelling returns to gameplay with no reload.</li>
+    <li><strong>Move the camera directly in front of the NPC.</strong> The camera <strong>MUST</strong> tween from the follow camera to a fixed pose on the NPC's own facing axis, looking head-on at the shopkeeper at roughly chest height. The <strong>NPC MUST NOT</strong> turn — it keeps its authored city position and rotation; the <em>camera</em> moves to face it. The NPC <strong>MUST</strong> be framed on the <strong>right</strong> of the screen so the menu has the left. On close the camera <strong>MUST</strong> tween back to the follow camera.</li>
+    <li><strong>Ghost the player.</strong> While the shop is open the player model <strong>MUST</strong> be rendered semi-transparent (a "ghost") so it never occludes the shopkeeper or the menu, and <strong>MUST</strong> be restored to fully solid on close. (The player stands off to the side and slightly toward the camera; ghosting keeps the clerk and panels readable without hiding the customer entirely.)</li>
+    <li><strong>Lay the UI out left-of-NPC, two panels side by side.</strong> The <strong>list</strong> (the body — tabs + scrolling rows + balance + hint) is a tall panel on the far <strong>left</strong> spanning ~<strong>90%</strong> of frame height. The <strong>info / detail</strong> panel sits <strong>immediately to its right</strong>, top-aligned, ~<strong>40%</strong> of frame height. The confirm/action control <strong>MUST</strong> stay pinned within the info panel (never clipped by its shorter height). Panels use the standard PSZ chrome (Style A: pale-blue glass with the navy title bars).</li>
+    <li>Render at the game's native <strong>1280 × 720 (16:9)</strong>, letterboxed to fit the display.</li>
+  </ul>
+  <p>Everything below — the row grammar, tabs, detail-panel contents, feedback, and economy rules — is <em>unchanged</em> by the framing; it describes the same panels, now composited over the 3D scene rather than a flat background.</p>
+
+  <figure style="margin:1.75rem 0;">
+    <div style="width:1280px;max-width:100%;aspect-ratio:16/9;position:relative;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,#3a2f4a 0%,#141019 60%,#0a0710 100%);border:1px solid #2a2440;color:#e6edf3;font-size:clamp(9px,1.4vw,15px);">
+      <!-- shopkeeper NPC, framed right -->
+      <div style="position:absolute;right:9%;bottom:6%;width:15%;height:66%;background:linear-gradient(180deg,#c98a4a,#6a4a2a);border-radius:40px 40px 8px 8px;box-shadow:0 0 40px -6px #f0a020;"></div>
+      <div style="position:absolute;right:6%;top:8%;background:rgba(20,20,40,0.7);border:1px solid #f0a020;border-radius:8px;padding:4px 8px;">shopkeeper NPC · head-on, right</div>
+      <!-- ghosted player, lower-left toward camera -->
+      <div style="position:absolute;left:33%;bottom:2%;width:11%;height:44%;background:linear-gradient(180deg,rgba(210,90,90,0.28),rgba(210,180,90,0.16));border-radius:30px 30px 6px 6px;border:1px dashed rgba(255,255,255,0.35);"></div>
+      <div style="position:absolute;left:31%;bottom:48%;font-size:0.82em;color:#b7c2d6;">player (ghosted)</div>
+      <!-- list panel: tall, left, ~90% -->
+      <div style="position:absolute;left:2%;top:5%;width:29%;height:90%;background:rgba(168,204,232,0.82);border-top:3px solid #2a3448;border-radius:6px;padding:6px 8px;box-sizing:border-box;color:#1a1a2a;">
+        <div style="background:#2a3448;color:#f8c840;font-weight:700;font-size:0.9em;padding:2px 8px;border-radius:3px;margin:-6px -8px 6px;">SHOP</div>
+        <div style="font-size:0.8em;opacity:0.85;">tab · tab · tab</div>
+        <div style="margin-top:4px;background:linear-gradient(90deg,#f0a020,#f8c840);border-radius:3px;padding:2px 6px;font-weight:700;">selected row ▸</div>
+        <div style="background:#fff;border-radius:3px;padding:2px 6px;margin-top:3px;">row</div>
+        <div style="background:#fff;border-radius:3px;padding:2px 6px;margin-top:3px;">row</div>
+        <div style="position:absolute;left:8px;right:8px;bottom:26px;border-top:1px solid #7aa0c0;padding-top:3px;font-size:0.8em;">Balance</div>
+        <div style="position:absolute;left:8px;right:8px;bottom:4px;text-align:center;font-size:0.75em;opacity:0.8;">hint line</div>
+      </div>
+      <!-- info panel: to the right of the list, ~40% top -->
+      <div style="position:absolute;left:33%;top:5%;width:22%;height:40%;background:rgba(168,204,232,0.82);border-top:3px solid #2a3448;border-radius:6px;padding:6px 8px;box-sizing:border-box;color:#1a1a2a;">
+        <div style="background:#2a3448;color:#f8c840;font-weight:700;font-size:0.9em;padding:2px 8px;border-radius:3px;margin:-6px -8px 6px;">DETAIL</div>
+        <div style="font-size:0.82em;">name · stats · effect</div>
+        <div style="position:absolute;left:8px;right:8px;bottom:6px;background:linear-gradient(90deg,#f0a020,#f8c840);border-radius:3px;text-align:center;font-weight:700;padding:2px;">Confirm</div>
+      </div>
+      <div style="position:absolute;left:2%;top:-0.5%;font-size:0.72em;opacity:0.6;">1280×720</div>
+    </div>
+    <figcaption style="font-size:0.82rem;color:#556;margin-top:10px;max-width:1280px;">The diegetic shop framing (Style A). The shopkeeper is framed head-on on the right; the tall <strong>list</strong> panel (~90% height) and the shorter <strong>info</strong> panel (~40% height) sit side-by-side on the left; the player stands off to the side, ghosted. The camera has tweened from the follow cam to this fixed pose; the city renders behind.</figcaption>
+  </figure>
 
   <h2>The common interface</h2>
 

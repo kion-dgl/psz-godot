@@ -123,37 +123,41 @@ export function DetailCard({ shop, item, width, title = 'Detail', style, glass =
       <div style={{
         background: 'rgba(255,255,255,0.9)', borderRadius: 4,
         padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
-        flex: 1, minHeight: 0, overflowY: 'auto',
+        flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
       }}>
         {!item ? (
           <div style={{ color: C.textLight, fontSize: 13 }}>—</div>
         ) : (
           <>
-            <div style={{ fontSize: 16, fontWeight: 800, color: item.rarity === 'rare' ? C.rare : C.text, marginBottom: 2 }}>
-              {item.name}
+            {/* Scrollable detail; the confirm action stays pinned below it so it
+                never gets clipped by the (short) info panel. */}
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: item.rarity === 'rare' ? C.rare : C.text, marginBottom: 2 }}>
+                {item.name}
+              </div>
+              {item.detail.subtitle && (
+                <div style={{ fontSize: 11, color: C.textLight, marginBottom: 8 }}>{item.detail.subtitle}</div>
+              )}
+              {item.detail.stats && (
+                <>
+                  <Divider />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, margin: '2px 0 8px' }}>
+                    {item.detail.stats.map(([k, v]) => (
+                      <StatRow key={k} k={k} v={v}
+                        accent={/short|None|Cannot|No$|MAX/i.test(v) ? C.rare : undefined} />
+                    ))}
+                  </div>
+                </>
+              )}
+              {item.detail.desc && (
+                <>
+                  <Divider />
+                  <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{item.detail.desc}</div>
+                </>
+              )}
             </div>
-            {item.detail.subtitle && (
-              <div style={{ fontSize: 11, color: C.textLight, marginBottom: 8 }}>{item.detail.subtitle}</div>
-            )}
-            {item.detail.stats && (
-              <>
-                <Divider />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, margin: '2px 0 8px' }}>
-                  {item.detail.stats.map(([k, v]) => (
-                    <StatRow key={k} k={k} v={v}
-                      accent={/short|None|Cannot|No$|MAX/i.test(v) ? C.rare : undefined} />
-                  ))}
-                </div>
-              </>
-            )}
-            {item.detail.desc && (
-              <>
-                <Divider />
-                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{item.detail.desc}</div>
-              </>
-            )}
             {item.detail.action && (
-              <ActionButton label={item.detail.action} style={{ marginTop: 12 }} />
+              <ActionButton label={item.detail.action} style={{ marginTop: 10, flexShrink: 0 }} />
             )}
           </>
         )}
