@@ -138,6 +138,7 @@ func _run_tests_core() -> void:
 	test_field_quest_decouple()
 	test_player_defeat_return()
 	test_companion_anim_from_measured_speed()
+	test_companion_anim_walk_run_hysteresis()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -6277,6 +6278,16 @@ func test_companion_anim_from_measured_speed() -> void:
 	assert_eq(CompanionCombat.locomotion_clip(true, 6.0, "walk"), "run",
 		"intent=true, above RUN_ENTER -> run")
 
+	c.free()
+	print("")
+
+
+# ── #463 hysteresis, split from the selector test above so each stays under the
+# code-health size/cx bound. Pure CompanionCombat.locomotion_clip statics
+# (data-in/data-out) — no companion instance needed.
+func test_companion_anim_walk_run_hysteresis() -> void:
+	print("── Companion walk↔run hysteresis band (#463) ──")
+
 	# ── #463: walk↔run hysteresis band (RUN_EXIT 3.0 .. RUN_ENTER 4.0) ──
 	# The bug: measured planar_speed is a noisy per-frame displacement. With a
 	# single threshold, a speed hovering at ~4 m/s flapped run↔walk every frame;
@@ -6334,7 +6345,6 @@ func test_companion_anim_from_measured_speed() -> void:
 	assert_eq(CompanionCombat.locomotion_clip(true, 0.0, "walk"), "wait",
 		"drop: 0 m/s -> wait")
 
-	c.free()
 	print("")
 
 
