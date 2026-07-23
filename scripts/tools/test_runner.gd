@@ -31,6 +31,7 @@ func _ready() -> void:
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
 	test_player_states()
+	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
 	test_player_model_y_damping()
 	test_action_commitment()
@@ -709,6 +710,45 @@ func test_player_states() -> void:
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
 	p.free()
+	print("")
+
+
+# ── Defeat damage-immunity (#469, spec /states/player-death) ──
+# Between HP hitting 0 and the return-to-city load completing the field player
+# MUST be damage-immune — take_damage() a hard no-op, no HP change, no further
+# `died`. The immunity is HP-DECOUPLED via the _is_defeated flag: the defeat
+# transaction revives to full HP synchronously on "Yes", so an HP-coupled guard
+# alone (current_state==DOWN and hp<=0) stops firing while the field player
+# lives on for the transition frames — the exact bug this pins. Off-tree
+# instance; take_damage's flag return fires before any tree-dependent call.
+func test_player_defeat_invulnerable() -> void:
+	print("── Player defeat — damage immunity across the return-to-city window (#469) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var p = PlayerScript.new()
+
+	# Count `died` emissions so we can assert no re-fire during the immune window.
+	var died_count := [0]
+	p.died.connect(func() -> void: died_count[0] += 1)
+
+	# Defeated: flag latched, HP already at 0 (the state right after death).
+	var full: int = GameState.max_hp
+	p._is_defeated = true
+	GameState.set_hp(0)
+	p.take_damage(25)
+	assert_eq(GameState.hp, 0, "defeated player takes no damage (HP stays 0)")
+	assert_eq(died_count[0], 0, "no further `died` while defeated")
+
+	# THE REGRESSION: the defeat transaction revives to full HP synchronously on
+	# "Yes" (before the scene swaps), so GameState.hp is no longer <= 0. The
+	# HP-coupled guard would now STOP firing — but _is_defeated is still true, so
+	# the still-live field player stays immune through the transition frames.
+	GameState.set_hp(full)
+	p.take_damage(25)
+	assert_eq(GameState.hp, full, "post-revive, still-defeated player is immune (HP unchanged) — the #469 window")
+	assert_eq(died_count[0], 0, "no `died` re-fire after the revive while defeated")
+
+	p.free()
+	GameState.set_hp(full)
 	print("")
 
 

@@ -42,6 +42,29 @@ const chart = `stateDiagram-v2
     animation.</li>
   </ul>
 
+  <h2>Damage immunity during the defeat window</h2>
+  <ul>
+    <li>From the moment the player is defeated — HP reaches <strong>0</strong>
+    and <code>died</code> is emitted — through the return-to-city transition
+    <em>completing</em>, the player <strong>MUST</strong> be
+    <strong>damage-immune</strong>. This covers the entire window: the
+    knockdown, the red overlay and "You were defeated" prompt, the moment
+    <strong>Yes</strong> is pressed, and every frame of the scene transition
+    until the city has loaded a fresh player.</li>
+    <li>While immune, <code>take_damage()</code> <strong>MUST</strong> be a
+    no-op: no HP or PP change <strong>MUST</strong> occur, no hit reaction or
+    knockdown <strong>MUST</strong> play, and <code>died</code>
+    <strong>MUST NOT</strong> be emitted again. The player's hurtbox
+    <strong>MUST NOT</strong> register further hits from any source (enemy
+    melee, projectiles, techniques).</li>
+    <li>Immunity <strong>MUST NOT</strong> be coupled to current HP. The defeat
+    transaction revives the player to full HP <em>synchronously</em> when
+    <strong>Yes</strong> is pressed, before the scene swaps — so an
+    HP-based guard alone would stop firing while the still-live field player
+    remains hittable for the transition frames. Immunity <strong>MUST</strong>
+    persist across that full-HP revive.</li>
+  </ul>
+
   <h2>The defeat screen</h2>
   <ul>
     <li>On defeat a translucent <strong>red</strong> overlay <strong>MUST</strong>
@@ -109,7 +132,10 @@ const chart = `stateDiagram-v2
   <ul>
     <li><code>scripts/3d/player/player.gd</code> (Player) — emits
     <code>died</code> when <code>take_damage()</code> drives HP to 0; the
-    field controller listens for it.</li>
+    field controller listens for it. The <code>_is_defeated</code> flag is
+    latched on that death branch and gates the top of <code>take_damage()</code>
+    to a no-op for the whole defeat window, enforcing the damage-immunity
+    contract above (HP-decoupled, survives the full-HP revive).</li>
     <li><code>scripts/3d/ui/defeat_screen.gd</code> (DefeatScreen) — the red
     overlay + "You were defeated" prompt (Yes/No), mounted below the HUD. On
     <strong>Yes</strong> it runs the defeat transaction and routes to the city
