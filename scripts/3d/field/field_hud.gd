@@ -603,6 +603,13 @@ class _QuickWeaponMenu extends Control:
 			return
 		_is_open = true
 		visible = true
+		# Capture input like the Start Menu (#426): pushing a modal flips
+		# GameState.is_gameplay_blocked(), whose early-return in
+		# Player._unhandled_input suppresses palette/attack actions bound to any
+		# button while the menu is up (#467). Movement is unaffected — it runs
+		# from the ungated _physics_process, so the menu allows move + navigate
+		# together, matching the Start Menu contract (spec /states/start-menu).
+		GameState.push_modal()
 		opened.emit()
 		# Cursor starts at the top of the list (spec /states/quick-weapon-menu,
 		# issue #141) — a fixed, predictable entry point. It deliberately does NOT
@@ -614,8 +621,14 @@ class _QuickWeaponMenu extends Control:
 		queue_redraw()
 
 	func _close() -> void:
+		# Idempotent: only pop the modal we pushed in _open() so the modal_stack
+		# stays balanced even if _close() is reached twice (a stray double-close
+		# would otherwise leak a pop and unblock gameplay under another modal).
+		if not _is_open:
+			return
 		_is_open = false
 		visible = false
+		GameState.pop_modal()
 
 	func _build_weapon_list() -> void:
 		_weapon_list.clear()

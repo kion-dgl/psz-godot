@@ -93,6 +93,7 @@ func _run_tests_core() -> void:
 	test_equip_action_matches_marker()
 	test_field_weapon_swap_gate()
 	test_quick_weapon_menu_unequip_and_order()
+	test_quick_weapon_menu_captures_input()
 	test_start_menu_data()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
@@ -3117,6 +3118,69 @@ func test_quick_weapon_menu_unequip_and_order() -> void:
 
 	menu.free()
 	Inventory.clear_inventory()
+	_restore_character_state(saved)
+	print("")
+
+
+# Quick Weapon Menu input capture (issue #467, spec /states/quick-weapon-menu):
+# an open Quick Menu MUST capture input the same way the Start Menu does (#426) —
+# it pushes a GameState modal so is_gameplay_blocked() suppresses palette/attack
+# actions bound to any button (Player._unhandled_input early-returns on that gate).
+# This is the unit half of the two-layer contract; the autopilot probe is the
+# other half. Movement is orthogonal (ungated _physics_process) and not asserted
+# here. Mirrors the #426 modal-gate assertions in the carried-menu test.
+func test_quick_weapon_menu_captures_input() -> void:
+	print("── Quick Weapon Menu: open captures input / blocks gameplay (#467) ──")
+	const FieldHud := preload("res://scripts/3d/field/field_hud.gd")
+	var saved := _isolate_character_state()
+	# Known baseline so a modal leaked by a prior test can't mask the assertions.
+	GameState.modal_stack = 0
+	CharacterManager.create_character(0, "humar", "QuickMenuCapture")
+	CharacterManager.set_active_slot(0)
+	if not WeaponRegistry.get_weapon("saber"):
+		print("  INFO: saber missing — skipped")
+		GameState.modal_stack = 0; _restore_character_state(saved); print(""); return
+
+	Inventory.clear_inventory()
+	Inventory.add_item("saber", 1)
+
+	var menu = FieldHud._QuickWeaponMenu.new()
+	add_child(menu)
+
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: gameplay unblocked before open")
+
+	# Open → the menu captures input by pushing a modal (the #426 gate).
+	menu._open()
+	assert_true(menu._is_open, "menu opened (list non-empty)")
+	assert_true(GameState.is_gameplay_blocked(),
+		"open Quick Menu blocks gameplay input — palette/attack suppressed (#467)")
+
+	# Close → restores palette firing; modal balanced back to the baseline.
+	menu._close()
+	assert_true(not menu._is_open, "menu closed")
+	assert_true(not GameState.is_gameplay_blocked(),
+		"closing the Quick Menu restores gameplay input (modal popped)")
+
+	# Idempotent close: a stray second _close() MUST NOT pop a modal it never
+	# pushed (would underflow past another modal and wrongly unblock gameplay).
+	GameState.push_modal()  # stand in for some other modal being up
+	menu._close()  # already closed — must be a no-op on the stack
+	assert_true(GameState.is_gameplay_blocked(),
+		"double-close does not leak a pop under an unrelated modal (#467)")
+	GameState.pop_modal()
+
+	# Opening with an EMPTY equippable list must not push a modal (early return).
+	Inventory.clear_inventory()
+	CharacterManager.get_active_character()["equipment"]["weapon"] = ""
+	assert_true(not GameState.is_gameplay_blocked(), "precondition: unblocked before empty-open")
+	menu._open()
+	assert_true(not menu._is_open, "empty list → menu does not open")
+	assert_true(not GameState.is_gameplay_blocked(),
+		"empty-list open pushes no modal — gameplay stays unblocked")
+
+	menu.free()
+	Inventory.clear_inventory()
+	GameState.modal_stack = 0
 	_restore_character_state(saved)
 	print("")
 
