@@ -76,7 +76,8 @@ const ANIM_HOLD_TIME: float = 0.3
 ## Locomotion clip = f(movement INTENT, own measured planar speed). The FSM sets
 ## _move_intent each frame (steering states true, frozen/rooted false); the clip
 ## is resolved centrally in _physics_process (spec /states/companion). Thresholds
-## live on CompanionCombat (IDLE_EPS / RUN_EPS) so there is a single source. The
+## live on CompanionCombat (IDLE_EPS / RUN_ENTER / RUN_EXIT) so there is a single
+## source; the walk↔run split runs a hysteresis band (#463) off the current clip. The
 ## measured-speed veto keeps a stationary companion out of a locomotion clip
 ## (the #420 run-in-place invariant), and the intent layer keeps a moving one
 ## out of "wait" (the combat-transition slide).
@@ -302,8 +303,9 @@ func _play_companion_anim(anim_name: String) -> void:
 		return
 	if not _anim_player.has_animation(anim_name):
 		return
-	# Debounce ONLY the walk<->run borderline, so a companion hovering near
-	# RUN_EPS can't flicker frame to frame. Transitions to/from "wait" (and into
+	# Debounce ONLY the walk<->run borderline, as a backstop to the selector's
+	# hysteresis band (#463), so a companion hovering near the run threshold can't
+	# flicker frame to frame. Transitions to/from "wait" (and into
 	# "atk1") apply immediately, so the clip never lags the body: a moving
 	# companion is never stuck mid-"wait" (the combat-transition slide) and a
 	# stopped one is never stuck mid-"run" (the #420 run-in-place). Previously
@@ -330,8 +332,10 @@ func _select_locomotion_anim(prev_pos: Vector3, curr_pos: Vector3, delta: float)
 	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
 	# Measured-speed selector (intent-to-move assumed here; the intent gate is
 	# applied by the caller). Shares the pure clip mapping + thresholds with the
-	# unit tests via CompanionCombat.
-	return CompanionCombat.locomotion_clip(true, planar_speed)
+	# unit tests via CompanionCombat. _current_anim is threaded in as the current
+	# clip so the walk↔run split applies its hysteresis band (#463) — a near-
+	# threshold measured speed holds the current clip instead of flapping.
+	return CompanionCombat.locomotion_clip(true, planar_speed, _current_anim)
 
 
 ## Autopilot-only regression oracle for #420. Silent in normal play (gated on

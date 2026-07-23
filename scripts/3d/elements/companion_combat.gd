@@ -30,9 +30,14 @@ const COMPANION_WEAPON_TYPES: Dictionary = {
 
 ## Locomotion clip thresholds (m/s of the companion's OWN measured planar
 ## speed). The pure selector below and companion_npc's tripwire share them so
-## there is a single source (spec /states/companion).
-const IDLE_EPS: float = 0.15  # below this the companion plays "wait"
-const RUN_EPS: float = 4.0    # above this the companion plays "run"
+## there is a single source (spec /states/companion). RUN_ENTER/RUN_EXIT form a
+## hysteresis band: measured speed is a noisy per-frame displacement, so a single
+## run/walk threshold flaps the clip when it hovers there (#463). The 1 m/s
+## deadband against the ~6 m/s steady follow speed is the one value worth
+## confirming on-device.
+const IDLE_EPS: float = 0.15   # below this the companion plays "wait"
+const RUN_ENTER: float = 4.0   # walk→run only when measured speed climbs ABOVE this
+const RUN_EXIT: float = 3.0    # run→walk only when measured speed drops BELOW this
 
 
 static func weapon_type_for(companion_id: String) -> int:
@@ -44,12 +49,24 @@ static func weapon_type_for(companion_id: String) -> int:
 ## /states/companion-combat). intent_moving=false always yields "wait"; and even
 ## when the FSM intends to move, a measured planar speed below IDLE_EPS still
 ## yields "wait" — the #420 veto, so a body pinned by geometry or the personal-
-## space cap never plays a locomotion clip while standing still. Above RUN_EPS
-## is "run", between is "walk". Pure so test_runner pins it off-tree.
-static func locomotion_clip(intent_moving: bool, planar_speed: float) -> String:
+## space cap never plays a locomotion clip while standing still.
+##
+## The walk↔run split uses a hysteresis band (#463): measured planar_speed is a
+## noisy per-frame displacement, and a single threshold makes it flap when it
+## hovers there. So the caller threads in current_clip (the clip playing now):
+## enter "run" only ABOVE RUN_ENTER, drop back to "walk" only BELOW RUN_EXIT, and
+## in the RUN_EXIT..RUN_ENTER band HOLD the current clip. Coming out of "wait"
+## (or any non-"run" clip) uses the enter threshold, so a body that is genuinely
+## moving picks walk/run sensibly. Pure so test_runner pins it off-tree.
+static func locomotion_clip(intent_moving: bool, planar_speed: float, current_clip: String) -> String:
 	if not intent_moving or planar_speed < IDLE_EPS:
 		return "wait"
-	return "run" if planar_speed > RUN_EPS else "walk"
+	if current_clip == "run":
+		# Already running: hold "run" through the deadband; only a clear drop
+		# below RUN_EXIT falls back to "walk".
+		return "walk" if planar_speed < RUN_EXIT else "run"
+	# walk / wait / anything else: only a clear climb above RUN_ENTER enters "run".
+	return "run" if planar_speed > RUN_ENTER else "walk"
 
 
 ## True when pos is within LEASH_RADIUS (XZ) of the player.

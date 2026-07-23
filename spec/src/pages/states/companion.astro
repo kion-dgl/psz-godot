@@ -5,11 +5,20 @@ import Mermaid from '../../components/Mermaid.astro';
 const chart = `stateDiagram-v2
   [*] --> wait
 
-  wait --> walk: planar speed >= IDLE_EPS
-  walk --> run: planar speed > RUN_EPS
-  run --> walk: planar speed <= RUN_EPS
+  wait --> walk: planar speed >= IDLE_EPS (below RUN_ENTER)
+  wait --> run: planar speed > RUN_ENTER
+  walk --> run: planar speed > RUN_ENTER
+  run --> walk: planar speed < RUN_EXIT
   walk --> wait: planar speed < IDLE_EPS
   run --> wait: planar speed < IDLE_EPS
+
+  note right of walk
+    walk↔run uses a HYSTERESIS band:
+    enter run above RUN_ENTER (4.0),
+    exit run below RUN_EXIT (3.0), hold
+    the current clip in 3.0..4.0 so a
+    noisy measured speed can't flap it.
+  end note
 
   note right of wait
     The clip is chosen ONLY from the
@@ -41,7 +50,7 @@ const chart = `stateDiagram-v2
 
   <h2>Intent × speed → clip table</h2>
 
-  <p>Let <code>moved</code> be <code>global_position − prev_pos</code> over a frame of length <code>delta</code> (<code>prev_pos</code> captured before the state steers the body), and <code>planar_speed = Vector2(moved.x, moved.z).length() / delta</code> (the vertical component is excluded so gravity and the height-snap to the player's <code>y</code> never read as locomotion). Let <code>intent_moving</code> be the frame's movement intent. The pure selector <code>CompanionCombat.locomotion_clip(intent_moving, planar_speed)</code> <strong>MUST</strong> return:</p>
+  <p>Let <code>moved</code> be <code>global_position − prev_pos</code> over a frame of length <code>delta</code> (<code>prev_pos</code> captured before the state steers the body), and <code>planar_speed = Vector2(moved.x, moved.z).length() / delta</code> (the vertical component is excluded so gravity and the height-snap to the player's <code>y</code> never read as locomotion). Let <code>intent_moving</code> be the frame's movement intent and <code>current_clip</code> the clip currently playing. The pure selector <code>CompanionCombat.locomotion_clip(intent_moving, planar_speed, current_clip)</code> <strong>MUST</strong> return:</p>
 
   <table>
     <thead><tr><th>Condition</th><th>Clip</th></tr></thead>
@@ -49,18 +58,24 @@ const chart = `stateDiagram-v2
       <tr><td><code>intent_moving == false</code> (any speed)</td><td><code>wait</code></td></tr>
       <tr><td><code>delta &le; 0</code></td><td><code>wait</code> (no div-by-zero)</td></tr>
       <tr><td><code>planar_speed &lt; IDLE_EPS</code> (0.15&nbsp;m/s)</td><td><code>wait</code> (the #420 veto)</td></tr>
-      <tr><td><code>IDLE_EPS &le; planar_speed &le; RUN_EPS</code></td><td><code>walk</code></td></tr>
-      <tr><td><code>planar_speed &gt; RUN_EPS</code> (4.0&nbsp;m/s)</td><td><code>run</code></td></tr>
+      <tr><td><code>current_clip == "run"</code> and <code>planar_speed &lt; RUN_EXIT</code> (3.0&nbsp;m/s)</td><td><code>walk</code> (exit run)</td></tr>
+      <tr><td><code>current_clip == "run"</code> and <code>planar_speed &ge; RUN_EXIT</code></td><td><code>run</code> (hold run)</td></tr>
+      <tr><td>otherwise, <code>planar_speed &gt; RUN_ENTER</code> (4.0&nbsp;m/s)</td><td><code>run</code> (enter run)</td></tr>
+      <tr><td>otherwise (<code>IDLE_EPS &le; planar_speed &le; RUN_ENTER</code>)</td><td><code>walk</code></td></tr>
     </tbody>
   </table>
 
-  <p>The clip is resolved once per frame, centrally, from the intent each state set — the companion's equivalent of the player's single per-frame animation update. It is then handed to <code>_play_companion_anim</code>, whose <code>ANIM_HOLD_TIME</code> (0.30&nbsp;s) debounce applies <strong>only to the <code>walk</code>↔<code>run</code> borderline</strong>, so a companion hovering near <code>RUN_EPS</code> cannot flicker frame to frame. Transitions to or from <code>wait</code> (and into the swing clip <code>atk1</code>) <strong>MUST</strong> apply immediately — the debounce <strong>MUST NOT</strong> hold a <code>wait</code>↔locomotion switch, because that lag is exactly what let the clip fall out of sync with the body during fast combat-state transitions (the sliding regression).</p>
+  <h2>Walk↔run hysteresis (#463)</h2>
+
+  <p>The measured <code>planar_speed</code> is a noisy per-frame displacement, so near a single walk/run threshold it flaps the clip run↔walk from frame to frame. The <code>ANIM_HOLD_TIME</code> debounce below only <em>rate-limits</em> that flap (its input still oscillates) — it does not stop it. Therefore the walk↔run selection <strong>MUST</strong> use a <strong>hysteresis band</strong>: the selector switches <code>walk</code>&nbsp;→&nbsp;<code>run</code> only when <code>planar_speed</code> rises <strong>above <code>RUN_ENTER</code></strong> (4.0&nbsp;m/s) and switches <code>run</code>&nbsp;→&nbsp;<code>walk</code> only when it falls <strong>below <code>RUN_EXIT</code></strong> (3.0&nbsp;m/s); for a <code>planar_speed</code> inside the <code>RUN_EXIT</code>&nbsp;…&nbsp;<code>RUN_ENTER</code> band the selector <strong>MUST</strong> return <code>current_clip</code> unchanged (hold). A measured speed hovering at the boundary therefore cannot flap the animation — once the companion has genuinely reached run speed it stays running through the band's dips, and vice-versa. The <code>IDLE_EPS</code> → <code>wait</code> veto is unconditional and takes precedence over the hold. Coming out of <code>wait</code> (or any non-<code>run</code> clip) the enter threshold applies, so a body merely drifting through the band picks <code>walk</code>, never a phantom <code>run</code>. The chosen 1&nbsp;m/s band sits below the ~6&nbsp;m/s steady follow speed; its width is the one tuning value worth confirming on-device.</p>
+
+  <p>The clip is resolved once per frame, centrally, from the intent each state set — the companion's equivalent of the player's single per-frame animation update. It is then handed to <code>_play_companion_anim</code>, whose <code>ANIM_HOLD_TIME</code> (0.30&nbsp;s) debounce applies <strong>only to the <code>walk</code>↔<code>run</code> borderline</strong> as a backstop to the selector's hysteresis band, so a companion hovering near the run threshold cannot flicker frame to frame. Transitions to or from <code>wait</code> (and into the swing clip <code>atk1</code>) <strong>MUST</strong> apply immediately — the debounce <strong>MUST NOT</strong> hold a <code>wait</code>↔locomotion switch, because that lag is exactly what let the clip fall out of sync with the body during fast combat-state transitions (the sliding regression).</p>
 
   <h2>Invariants</h2>
   <ul>
     <li><strong>MUST NOT run while stationary.</strong> A companion whose planar displacement is below <code>IDLE_EPS</code> <strong>MUST</strong> play <code>wait</code>, regardless of intent or the player's state. In particular, a rooted player attack (<code>PlayerState.ATTACKING</code>) — which leaves the companion's follow-position unchanged — <strong>MUST NOT</strong> produce a <code>walk</code>/<code>run</code> clip (the <a href="https://github.com/kion-dgl/psz-godot/issues/420">#420</a> run-in-place regression). The measured-speed veto guarantees this independently of intent.</li>
     <li><strong>MUST NOT slide.</strong> A companion that is actually moving (planar displacement &ge; <code>IDLE_EPS</code>) under its own movement intent <strong>MUST</strong> play the matching <code>walk</code>/<code>run</code> clip that same frame — the debounce <strong>MUST NOT</strong> hold it in <code>wait</code>. A body translating under a <code>wait</code> pose is the sliding defect.</li>
-    <li>The clip selector <code>locomotion_clip(intent_moving, planar_speed)</code> takes <strong>no</strong> <code>PlayerState</code> argument; the movement intent is the companion's own FSM decision. A locomotion clip requires <em>both</em> <code>intent_moving</code> and <code>planar_speed &ge; IDLE_EPS</code>; either alone yields <code>wait</code>.</li>
+    <li>The clip selector <code>locomotion_clip(intent_moving, planar_speed, current_clip)</code> takes <strong>no</strong> <code>PlayerState</code> argument; the movement intent is the companion's own FSM decision. A locomotion clip requires <em>both</em> <code>intent_moving</code> and <code>planar_speed &ge; IDLE_EPS</code>; either alone yields <code>wait</code>. The <code>current_clip</code> argument feeds only the walk↔run hysteresis and never overrides the <code>wait</code> veto.</li>
     <li>Only <code>WALKING</code> / <code>RUNNING</code> delayed samples advance the follow-position (and hence set <code>intent_moving</code> in <code>FOLLOW</code>); every other state freezes the companion.</li>
     <li>Vertical-only motion is never locomotion — the planar projection excludes <code>y</code>.</li>
   </ul>
@@ -73,8 +88,8 @@ const chart = `stateDiagram-v2
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/elements/companion_combat.gd</code> (<code>CompanionCombat</code>) — <code>locomotion_clip(intent_moving, planar_speed)</code>, the pure intent×speed selector, and the <code>IDLE_EPS</code> / <code>RUN_EPS</code> thresholds (single source, shared with the tripwire).</li>
+    <li><code>scripts/3d/elements/companion_combat.gd</code> (<code>CompanionCombat</code>) — <code>locomotion_clip(intent_moving, planar_speed, current_clip)</code>, the pure intent×speed selector with the walk↔run hysteresis band, and the <code>IDLE_EPS</code> / <code>RUN_ENTER</code> / <code>RUN_EXIT</code> thresholds (single source, shared with the tripwire).</li>
     <li><code>scripts/3d/elements/companion_npc.gd</code> (<code>CompanionNpc</code>) — the per-frame <code>prev_pos</code> capture and central <code>_update_locomotion_anim</code> call in <code>_physics_process</code>; each behavior state setting <code>_move_intent</code>; <code>_play_companion_anim</code> (the <code>walk</code>↔<code>run</code>-only debounce); and <code>_autopilot_anim_tripwire</code> (the oracle).</li>
   </ul>
-  <p>Pinned by <code>test_companion_anim_from_measured_speed</code> in <code>scripts/tools/test_runner.gd</code>, which asserts the measured-speed cases (zero displacement, sub-threshold jitter, walk-speed, run-speed, pure-vertical, <code>delta == 0</code>) via <code>_select_locomotion_anim</code>, plus the intent-gate cases (intent-false → <code>wait</code> even at run speed; intent-true sub-<code>IDLE_EPS</code> → <code>wait</code>; walk; run) directly against <code>CompanionCombat.locomotion_clip</code> — no scene or <code>AnimationPlayer</code> needed.</p>
+  <p>Pinned by <code>test_companion_anim_from_measured_speed</code> in <code>scripts/tools/test_runner.gd</code>, which asserts the measured-speed cases (zero displacement, sub-threshold jitter, walk-speed, run-speed, pure-vertical, <code>delta == 0</code>) via <code>_select_locomotion_anim</code>, plus the intent-gate cases (intent-false → <code>wait</code> even at run speed; intent-true sub-<code>IDLE_EPS</code> → <code>wait</code>; walk; run) and the #463 hysteresis cases (enter run only above <code>RUN_ENTER</code>, exit run only below <code>RUN_EXIT</code>, hold in the band, and an oscillating band-straddling sequence that must stop flapping once settled in run) directly against <code>CompanionCombat.locomotion_clip</code> — no scene or <code>AnimationPlayer</code> needed.</p>
 </Concept>
