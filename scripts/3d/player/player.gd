@@ -164,14 +164,13 @@ var current_state: PlayerState = PlayerState.IDLE
 var player_rotation: float = 0.0
 var walk_timer: float = 0.0
 
-# Combo system — three-tier timing (#155, spec /mechanics/combos). Windows
-# are FRACTIONS of the current swing's animation, from per-weapon
-# WeaponComboConfig data. A press in a window QUEUES the next step, which
-# fires when the swing completes (#377: swings always fully execute).
-enum ComboQueue { NONE, NORMAL, JUST }
+# Combo system — two-tier timing (#461, spec /mechanics/combos). `just_start`
+# is a FRACTION of the current swing's animation (per-weapon WeaponComboConfig
+# data): a press before it FUMBLES, a press at/after it QUEUES the next step,
+# which fires when the swing completes (#377: swings always fully execute).
+enum ComboQueue { NONE, NORMAL }
 var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
 var _is_special_attack: bool = false  # True when current attack carries weapon element
-var _is_just_attack: bool = false  # Current swing was chained via the just window
 var _queued_combo: int = ComboQueue.NONE  # Next-step queue (one slot, no re-roll)
 var _queued_combo_special: bool = false  # Queued step is a strong attack
 var _combo_fumbled: bool = false  # Miss-early press locked out this swing's chain
@@ -180,11 +179,6 @@ var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
 var _attack_hit_done: bool = false  # This swing's damaging frame already resolved (spec /mechanics/targeting)
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
-# Bright green — just-attack tier. Deliberately a brighter shade of the normal
-# window's green (0.2, 1.0, 0.4) rather than a third hue: the window is one
-# thing with a hot start, not two mechanics (kion's call on the #471 web tool).
-const JUST_FLASH_COLOR := Color(0.65, 1.0, 0.75)
-
 # Combo timing visual
 var _combo_ring: MeshInstance3D = null
 var _combo_ring_mat: StandardMaterial3D = null
@@ -1441,7 +1435,6 @@ func _start_attack() -> void:
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
 	_is_special_attack = false
-	_is_just_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -1453,11 +1446,12 @@ func _attack_frac() -> float:
 	return clampf(_attack_anim_elapsed / _attack_anim_length, 0.0, 1.0)
 
 
-## Three-tier chain press (#155, spec /mechanics/combos): miss-early FUMBLES
-## the swing (locks out chaining until the next step — a no-op alone let
-## mashing ride the wide accept window; Rozalin's #459 playtest), the just
-## window queues with a damage bonus, the normal window queues standard. The
-## queued step fires at swing end (_attack_step_finished) — never mid-swing
+## Two-tier chain press (#461, spec /mechanics/combos): a press before
+## `just_start` MISS-EARLY fumbles the swing (locks out chaining until the next
+## step — a no-op alone let mashing ride the wide accept window; Rozalin's #459
+## playtest); a press at/after `just_start` queues a normal chain. There is no
+## just-attack tier — crit/damage bonuses come from stats + equipment (#461).
+## The queued step fires at swing end (_attack_step_finished) — never mid-swing
 ## (#377 commitment).
 func _try_queue_combo(special: bool) -> void:
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
@@ -1471,11 +1465,7 @@ func _try_queue_combo(special: bool) -> void:
 	if t.is_empty():
 		return
 	var frac := _attack_frac()
-	if frac >= float(t.just_start) and frac < float(t.just_end):
-		_queued_combo = ComboQueue.JUST
-		_queued_combo_special = special
-		_combo_ring_flash(JUST_FLASH_COLOR)
-	elif frac >= float(t.just_end):
+	if frac >= float(t.just_start):
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
 		_combo_ring_flash(Color(1.0, 0.8, 0.2) if special else Color(0.2, 1.0, 0.4))
@@ -1494,13 +1484,11 @@ func _attack_step_finished() -> void:
 	_deactivate_attack_hitbox()
 	if combo_state == 0:
 		# Technique cast finished (no combo)
-		_is_just_attack = false
 		transition_to(PlayerState.IDLE)
 		return
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if _queued_combo != ComboQueue.NONE and combo_state < max_combo:
 		combo_state += 1
-		_is_just_attack = _queued_combo == ComboQueue.JUST
 		_is_special_attack = _queued_combo_special
 		_queued_combo = ComboQueue.NONE
 		_queued_combo_special = false
@@ -1509,7 +1497,6 @@ func _attack_step_finished() -> void:
 	if combo_state < max_combo:
 		_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Chain broken mid-combo
 	combo_state = 0
-	_is_just_attack = false
 	transition_to(PlayerState.IDLE)
 
 
@@ -1599,7 +1586,6 @@ func _cast_technique(technique_id: String) -> void:
 	combo_state = 0
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
-	_is_just_attack = false
 	play_animation(_anim_prefix + "_tec", false)
 
 	_spawn_technique_effect(technique_id, tech_data)
@@ -2029,7 +2015,6 @@ func _start_strong_attack() -> void:
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
 	_is_special_attack = true
-	_is_just_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -2235,9 +2220,9 @@ func _update_combo_ring(_delta: float) -> void:
 
 	_ensure_combo_ring()
 
-	# Visualize the fraction windows (#155): visible from just_start to the
-	# swing's end, bright green inside the just window, normal green in the
-	# rest, shrinking toward animation end.
+	# Visualize the chain-accept window (#461): visible from just_start to the
+	# swing's end (a press here queues a normal chain; before it fumbles),
+	# green, shrinking toward animation end.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
@@ -2250,9 +2235,9 @@ func _update_combo_ring(_delta: float) -> void:
 		var pct: float = 1.0 - (frac - float(t.just_start)) / maxf(1.0 - float(t.just_start), 0.01)
 		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
 		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
-		var tier_color: Color = JUST_FLASH_COLOR if frac < float(t.just_end) else Color(0.2, 1.0, 0.4)
-		_combo_ring_mat.albedo_color = Color(tier_color.r, tier_color.g, tier_color.b, 0.5 + pct * 0.3)
-		_combo_ring_mat.emission = tier_color
+		var accept_color := Color(0.2, 1.0, 0.4)
+		_combo_ring_mat.albedo_color = Color(accept_color.r, accept_color.g, accept_color.b, 0.5 + pct * 0.3)
+		_combo_ring_mat.emission = accept_color
 	else:
 		if _combo_ring and _combo_ring.visible:
 			_combo_ring.visible = false
@@ -2433,7 +2418,6 @@ func transition_to(new_state: PlayerState) -> void:
 		# never fire its queued follow-up after the DAMAGED/DOWN recovery.
 		_queued_combo = ComboQueue.NONE
 		_queued_combo_special = false
-		_is_just_attack = false
 		_combo_fumbled = false
 
 	match new_state:
@@ -2578,15 +2562,9 @@ func _setup_attack_hitbox() -> void:
 
 
 func _get_attack_damage() -> Dictionary:
-	var atk: Dictionary = CombatManager.calculate_attack_damage(combo_state)
-	# Just-attack bonus (#155, spec /mechanics/combos): a swing chained via
-	# the just window deals just_damage_mult × damage. "just" marks the dict
-	# for hit-feedback consumers.
-	if _is_just_attack:
-		var mult: float = CombatManager.get_combo_just_mult(_get_equipped_weapon_type())
-		atk["damage"] = int(round(int(atk.get("damage", 0)) * mult))
-		atk["just"] = true
-	return atk
+	# Combo timing no longer scales damage (#461): crit and damage bonuses come
+	# from character stats + equipment, not from the chain-accept window.
+	return CombatManager.calculate_attack_damage(combo_state)
 
 
 func _get_equipped_weapon_type() -> int:

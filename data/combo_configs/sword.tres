@@ -5,5 +5,3 @@
 [resource]
 script = ExtResource("1")
 just_start = PackedFloat32Array(0.55, 0.55)
-just_end = PackedFloat32Array(0.7, 0.7)
-just_damage_mult = 1.3

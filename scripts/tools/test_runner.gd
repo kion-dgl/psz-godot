@@ -34,7 +34,7 @@ func _run_tests_combat() -> void:
 	test_player_anim_library_cache()
 	test_player_model_y_damping()
 	test_action_commitment()
-	test_combo_three_tier()
+	test_combo_two_tier()
 	test_combo_chain_lifecycle()
 	test_combo_miss_early_fumble()
 	test_cone_targeting()
@@ -5765,21 +5765,23 @@ func test_mechgun_final_step_no_root() -> void:
 	print("")
 
 
-# ── Three-tier combo timing (#155, spec /mechanics/combos) ──
-# Windows are fractions of the current swing from WeaponComboConfig data
-# (saber = [0.45, 0.60) just / [0.60, 1.0] normal). A press queues; the queue
-# fires at step end; miss-early is unbuffered; just chains carry a damage
-# bonus; the finisher can't chain. Off-tree player, barehanded → type 0
-# (saber config) — the weapon-type fallback combat callers rely on.
-func test_combo_three_tier() -> void:
-	print("── Combo three-tier timing (#155) ──")
+# ── Two-tier combo timing (#461, spec /mechanics/combos) ──
+# `just_start` is the single chain-accept boundary, a fraction of the current
+# swing from WeaponComboConfig data (saber = 0.45). A press before it FUMBLES
+# (miss-early, unbuffered); a press at/after it queues a NORMAL chain that fires
+# at step end. There is no just-attack tier — crit/damage come from
+# stats + equipment, not timing (#461). The finisher can't chain. Off-tree
+# player, barehanded → type 0 (saber config) — the weapon-type fallback combat
+# callers rely on.
+func test_combo_two_tier() -> void:
+	print("── Combo two-tier timing (#461) ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 
 	# Data: saber tuned per #155, untuned types share the default config.
 	# (approx: PackedFloat32Array narrows to float32 — exact == would flake.)
 	var saber_t: Dictionary = CombatManager.get_combo_timing(0, 1)
-	assert_true(is_equal_approx(float(saber_t.just_start), 0.45), "saber just window opens at 0.45 (#155 fast-weapon tuning)")
-	assert_true(is_equal_approx(float(saber_t.just_end), 0.6), "saber just window closes at 0.60")
+	assert_true(is_equal_approx(float(saber_t.just_start), 0.45), "saber chain-accept opens at 0.45 (#155 fast-weapon tuning)")
+	assert_true(not saber_t.has("just_end"), "no just_end tier boundary remains (#461)")
 	var default_t: Dictionary = CombatManager.get_combo_timing(7, 1)  # untuned type → default
 	assert_true(is_equal_approx(float(default_t.just_start), 0.55), "untuned weapon types share the default just_start 0.55")
 	assert_true(CombatManager.get_combo_timing(0, 3).is_empty(), "finisher (step 3) has no accept window")
@@ -5796,45 +5798,38 @@ func test_combo_three_tier() -> void:
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
 		"miss-early press queues nothing (fumble, not buffered)")
-	pl.set("_combo_fumbled", false)  # fresh swing for the tier asserts below
+	pl.set("_combo_fumbled", false)  # fresh swing for the accept asserts below
 
-	# just window: [0.45, 0.60) queues a JUST chain.
+	# chain-accept: at/after just_start queues a NORMAL chain.
 	pl.set("_attack_anim_elapsed", 0.5)
 	pl._try_queue_combo(false)
-	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
-		"press in [just_start, just_end) queues a just chain")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"press at/after just_start queues a normal chain")
 
-	# One queue slot: a later press must not re-roll the tier.
+	# One queue slot: a later press must not re-roll.
 	pl.set("_attack_anim_elapsed", 0.8)
 	pl._try_queue_combo(false)
-	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.JUST),
-		"second press can't re-roll or downgrade the queued tier")
+	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
+		"second press can't re-roll the queued chain")
 
-	# Fire at step end: queued just chain advances and flags the bonus.
+	# Fire at step end: queued chain advances the combo.
 	pl.set("_attack_step_ended", false)
 	pl._attack_step_finished()
 	assert_eq(int(pl.get("combo_state")), 2, "queued chain fires at step end → step 2")
-	assert_true(bool(pl.get("_is_just_attack")), "fired step carries the just flag")
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE), "queue slot cleared on fire")
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING), "chain stays in ATTACKING")
 
-	# Just bonus lands in the damage dict. calculate_attack_damage rolls
-	# variance on the global RNG — seed identically so the just and base
-	# calls see the same roll and the assert isolates the multiplier.
-	seed(0x155)
+	# Combo timing no longer scales damage (#461): the dict carries no "just"
+	# mark and equals the plain step damage.
 	var atk: Dictionary = pl._get_attack_damage()
-	assert_true(bool(atk.get("just", false)), "just swing marks the damage dict")
-	seed(0x155)
-	var base: Dictionary = CombatManager.calculate_attack_damage(2)
-	assert_eq(int(atk.get("damage", -1)), int(round(int(base.get("damage", 0)) * CombatManager.get_combo_just_mult(0))),
-		"just swing damage = base × just_damage_mult (seed-paired rolls)")
+	assert_true(not atk.has("just"), "combo swing carries no just mark (#461)")
 
 	pl.free()
 	print("")
 
 
-# Second half of the #155 contract: the chain lifecycle — normal-window
-# chains, the finisher's structural no-window, the un-queued break to IDLE,
+# Second half of the #461 contract: the chain lifecycle — normal chains,
+# the finisher's structural no-window, the un-queued break to IDLE.
 # Off-tree player parked mid-swing — shared setup for the combo tests.
 func _combo_swing_player(pl_script, step: int, elapsed: float):
 	var pl = pl_script.new()
@@ -5853,20 +5848,18 @@ func _combo_step_end(pl) -> void:
 
 # damage interrupts clearing the queue, and the special-chain flag.
 func test_combo_chain_lifecycle() -> void:
-	print("── Combo chain lifecycle (#155) ──")
+	print("── Combo chain lifecycle (#461) ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 
-	# normal window: [0.60, 1.0] queues a NORMAL chain; firing clears the just flag.
+	# chain-accept: a press at/after just_start queues a NORMAL chain.
 	var pl = _combo_swing_player(PlayerScript, 2, 0.8)
-	pl.set("_is_just_attack", true)  # as if step 2 was a just chain
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
-		"press in [just_end, 1.0] queues a normal chain")
+		"press at/after just_start queues a normal chain")
 	_combo_step_end(pl)
 	assert_eq(int(pl.get("combo_state")), 3, "normal chain fires → step 3 (finisher)")
-	assert_true(not bool(pl.get("_is_just_attack")), "normal chain clears the just flag")
 	var atk3: Dictionary = pl._get_attack_damage()
-	assert_true(not atk3.has("just"), "normal swing carries no just mark")
+	assert_true(not atk3.has("just"), "combo swing carries no just mark (#461)")
 
 	# Finisher: presses during step 3 are no-ops; its end breaks to IDLE.
 	pl.set("_attack_anim_elapsed", 0.7)
@@ -5890,7 +5883,7 @@ func test_combo_chain_lifecycle() -> void:
 	GameState.set_hp(GameState.max_hp)
 	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
 	pl.set("combo_state", 1)
-	pl.set("_queued_combo", PlayerScript.ComboQueue.JUST)
+	pl.set("_queued_combo", PlayerScript.ComboQueue.NORMAL)
 	pl.set("_combo_fumbled", true)
 	pl.take_damage(15)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
