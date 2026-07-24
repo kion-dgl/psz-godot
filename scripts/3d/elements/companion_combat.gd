@@ -69,6 +69,20 @@ static func locomotion_clip(intent_moving: bool, planar_speed: float, current_cl
 	return "run" if planar_speed > RUN_ENTER else "walk"
 
 
+## Commanded FOLLOW speed (spec /states/companion): the companion holds `ring`
+## metres behind the player, and its speed is a CONTINUOUS ramp of how far it sits
+## OUTSIDE that ring — 0 at/inside the ring, climbing linearly over `ramp` metres to
+## `cap`. Continuity is the whole point: fed through locomotion_clip, this eases the
+## gait wait→walk→run and back with no dead zone and no flap (the run/walk swing the
+## old measured-displacement path produced when the companion caught up and stalled).
+## `cap` is set just above player run so the trailing gap holds instead of growing.
+## Pure — test_runner pins the ramp off-tree.
+static func follow_speed(distance: float, ring: float, ramp: float, cap: float) -> float:
+	if ramp <= 0.0:
+		return cap if distance > ring else 0.0
+	return cap * clampf((distance - ring) / ramp, 0.0, 1.0)
+
+
 ## True when pos is within LEASH_RADIUS (XZ) of the player.
 static func within_leash(pos: Vector3, player_pos: Vector3) -> bool:
 	return Vector2(pos.x - player_pos.x, pos.z - player_pos.z).length() <= LEASH_RADIUS

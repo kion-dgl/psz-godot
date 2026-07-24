@@ -139,6 +139,7 @@ func _run_tests_core() -> void:
 	test_player_defeat_return()
 	test_companion_anim_from_measured_speed()
 	test_companion_anim_walk_run_hysteresis()
+	test_companion_follow_speed_ramp()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -6345,6 +6346,38 @@ func test_companion_anim_walk_run_hysteresis() -> void:
 	assert_eq(CompanionCombat.locomotion_clip(true, 0.0, "walk"), "wait",
 		"drop: 0 m/s -> wait")
 
+	print("")
+
+
+# ── #463 arrival gait: the FOLLOW speed ramp that drives the clip. Continuity
+# (monotonic, no dead zone) is what removes the run/walk/wait flap the old
+# measured-displacement path produced when the companion caught up and stalled.
+func test_companion_follow_speed_ramp() -> void:
+	print("── Companion FOLLOW speed ramp (#463 arrival gait) ──")
+	var ring := 2.5   # companion_npc FOLLOW_DISTANCE
+	var ramp := 1.5   # companion_npc FOLLOW_SLOW_RADIUS
+	var cap := 6.5    # companion_npc FOLLOW_MAX_SPEED
+	# At/inside the ring the companion holds station -> 0 (gait settles to wait).
+	assert_eq(CompanionCombat.follow_speed(ring, ring, ramp, cap), 0.0, "at the ring -> 0")
+	assert_eq(CompanionCombat.follow_speed(1.0, ring, ramp, cap), 0.0, "inside the ring -> 0")
+	# Just outside -> moving (a small speed = walk once fed through locomotion_clip).
+	assert_true(CompanionCombat.follow_speed(ring + 0.3, ring, ramp, cap) > 0.0, "just outside -> moving")
+	# Linear across the ramp: half the ramp -> half the cap.
+	assert_eq(CompanionCombat.follow_speed(ring + ramp * 0.5, ring, ramp, cap), cap * 0.5, "half ramp -> half cap")
+	# Full ramp and beyond -> capped (no runaway; keeps a bounded trailing gap).
+	assert_eq(CompanionCombat.follow_speed(ring + ramp, ring, ramp, cap), cap, "full ramp -> cap")
+	assert_eq(CompanionCombat.follow_speed(ring + ramp + 10.0, ring, ramp, cap), cap, "far out -> still cap")
+	# THE anti-flap property: monotonic non-decreasing in distance (no dead zone).
+	var prev := -1.0
+	for d in [0.0, 1.0, 2.5, 2.8, 3.0, 3.25, 4.0, 5.0, 20.0]:
+		var s: float = CompanionCombat.follow_speed(d, ring, ramp, cap)
+		assert_true(s >= prev, "monotonic at d=%.2f (%.3f >= %.3f)" % [d, s, prev])
+		prev = s
+	# Cap above player run (MOVE_SPEED 6.0) so the trailing gap can't grow.
+	assert_true(cap > 6.0, "cap above player run -> keeps pace")
+	# Degenerate ramp (0) can't divide-by-zero — clean step at the ring.
+	assert_eq(CompanionCombat.follow_speed(ring + 0.1, ring, 0.0, cap), cap, "ramp=0 -> cap outside ring")
+	assert_eq(CompanionCombat.follow_speed(ring, ring, 0.0, cap), 0.0, "ramp=0 -> 0 at ring")
 	print("")
 
 
