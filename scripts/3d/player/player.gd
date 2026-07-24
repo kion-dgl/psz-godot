@@ -164,6 +164,16 @@ var current_state: PlayerState = PlayerState.IDLE
 var player_rotation: float = 0.0
 var walk_timer: float = 0.0
 
+# Defeat immunity (#469, spec /states/player-death). Set true the moment the
+# player is defeated (HP 0 / died emitted); makes take_damage() a hard no-op
+# for the whole defeat window — modal up, "Yes" pressed, and the scene
+# transition back to the city. Decoupled from HP on purpose: the defeat
+# transaction revives to full HP synchronously on Yes-press (SessionManager
+# .defeat_return_to_city), so an HP-coupled guard stops firing while the
+# field Player still lives on for the transition frames. Cleared implicitly
+# by the city spawning a fresh Player (this flag defaults false).
+var _is_defeated: bool = false
+
 # Combo system — two-tier timing (#461, spec /mechanics/combos). `just_start`
 # is a FRACTION of the current swing's animation (per-weapon WeaponComboConfig
 # data): a press before it FUMBLES, a press at/after it QUEUES the next step,
@@ -1029,6 +1039,10 @@ func _respawn() -> void:
 	player_rotation = 0.0
 	if model:
 		model.rotation.y = 0.0
+	# Defensive: this fall-out-of-world respawn restores the player to a live
+	# IDLE state in place, so clear the defeat immunity too (#469) — a genuine
+	# revive-in-place path, unlike the defeat exit which swaps to a fresh Player.
+	_is_defeated = false
 	transition_to(PlayerState.IDLE)
 
 
@@ -2492,6 +2506,14 @@ func _on_animation_finished(_anim_name: String) -> void:
 
 # Public API for external systems
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+	# Defeated — hard no-op for the whole defeat window (#469, spec
+	# /states/player-death). Decoupled from HP so it survives the full-HP
+	# revive the defeat transaction applies on "Yes"; the field Player stays
+	# immune through the return-to-city transition. Cleared by the city
+	# spawning a fresh Player.
+	if _is_defeated:
+		return
+
 	# Already dead — ignore further hits
 	if current_state == PlayerState.DOWN and GameState.hp <= 0:
 		return
@@ -2516,8 +2538,10 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 
 	if GameState.hp <= 0:
 		# Death: knockdown into lying-down loop, then raise the defeat screen.
-		# The "already dead" guard at the top of take_damage() makes this fire
-		# exactly once (spec /states/player-death).
+		# Latch the defeat flag so the immune-window guard at the top of
+		# take_damage() makes death fire exactly once AND stays a no-op through
+		# the full-HP revive + return-to-city transition (spec /states/player-death).
+		_is_defeated = true
 		play_animation(_anim_prefix + "_dam_d", false)
 		transition_to(PlayerState.DOWN)
 		died.emit()
