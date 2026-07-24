@@ -138,6 +138,8 @@ func _run_tests_core() -> void:
 	test_field_quest_decouple()
 	test_player_defeat_return()
 	test_companion_anim_from_measured_speed()
+	test_companion_anim_walk_run_hysteresis()
+	test_companion_follow_speed_ramp()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -6245,11 +6247,11 @@ func test_companion_anim_from_measured_speed() -> void:
 	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.002, 0, 0), dt), "wait",
 		"sub-threshold jitter -> wait")
 
-	# 0.02 m/frame = 1.2 m/s — between IDLE_EPS and RUN_EPS -> walk.
+	# 0.02 m/frame = 1.2 m/s — between IDLE_EPS and RUN_ENTER -> walk.
 	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0.02, 0, 0), dt), "walk",
 		"0.02 m/frame (1.2 m/s) -> walk")
 
-	# 0.1 m/frame = 6 m/s — above RUN_EPS (4.0) -> run.
+	# 0.1 m/frame = 6 m/s — above RUN_ENTER (4.0) -> run.
 	assert_eq(c._select_locomotion_anim(Vector3.ZERO, Vector3(0, 0, 0.1), dt), "run",
 		"0.1 m/frame (6 m/s) -> run")
 
@@ -6265,17 +6267,117 @@ func test_companion_anim_from_measured_speed() -> void:
 	# intent selects wait vs locomote, the measured speed selects walk vs run.
 	# intent=false is ALWAYS wait, even at run speed (rooted/frozen states never
 	# slide); intent=true still yields wait below IDLE_EPS (the #420 veto — a
-	# blocked-but-steering companion never plays a locomotion clip in place).
-	assert_eq(CompanionCombat.locomotion_clip(false, 6.0), "wait",
+	# blocked-but-steering companion never plays a locomotion clip in place). The
+	# current clip is threaded in for the walk↔run hysteresis (exercised below);
+	# the wait cases must win regardless of what is playing.
+	assert_eq(CompanionCombat.locomotion_clip(false, 6.0, "run"), "wait",
 		"intent=false -> wait even at run speed (no slide)")
-	assert_eq(CompanionCombat.locomotion_clip(true, 0.05), "wait",
-		"intent=true but sub-IDLE_EPS -> wait (#420 veto)")
-	assert_eq(CompanionCombat.locomotion_clip(true, 1.2), "walk",
+	assert_eq(CompanionCombat.locomotion_clip(true, 0.05, "run"), "wait",
+		"intent=true but sub-IDLE_EPS -> wait (#420 veto, beats run-hold)")
+	assert_eq(CompanionCombat.locomotion_clip(true, 1.2, "walk"), "walk",
 		"intent=true, mid speed -> walk")
-	assert_eq(CompanionCombat.locomotion_clip(true, 6.0), "run",
-		"intent=true, above RUN_EPS -> run")
+	assert_eq(CompanionCombat.locomotion_clip(true, 6.0, "walk"), "run",
+		"intent=true, above RUN_ENTER -> run")
 
 	c.free()
+	print("")
+
+
+# ── #463 hysteresis, split from the selector test above so each stays under the
+# code-health size/cx bound. Pure CompanionCombat.locomotion_clip statics
+# (data-in/data-out) — no companion instance needed.
+func test_companion_anim_walk_run_hysteresis() -> void:
+	print("── Companion walk↔run hysteresis band (#463) ──")
+
+	# ── #463: walk↔run hysteresis band (RUN_EXIT 3.0 .. RUN_ENTER 4.0) ──
+	# The bug: measured planar_speed is a noisy per-frame displacement. With a
+	# single threshold, a speed hovering at ~4 m/s flapped run↔walk every frame;
+	# the 0.3s _play_companion_anim debounce only rate-limited the flap to ~3 Hz
+	# because the SELECTOR's output still oscillated. The fix holds the current
+	# clip inside the band.
+	#
+	# Enter run ONLY above RUN_ENTER; below it (but still in the band) a walker
+	# stays walk.
+	assert_eq(CompanionCombat.locomotion_clip(true, 3.9, "walk"), "walk",
+		"walk + 3.9 m/s (in band, below RUN_ENTER) -> stay walk")
+	assert_eq(CompanionCombat.locomotion_clip(true, 4.1, "walk"), "run",
+		"walk + 4.1 m/s (above RUN_ENTER) -> enter run")
+	# Exit run ONLY below RUN_EXIT; inside the band a runner HOLDS run.
+	assert_eq(CompanionCombat.locomotion_clip(true, 3.9, "run"), "run",
+		"run + 3.9 m/s (in band, above RUN_EXIT) -> hold run")
+	assert_eq(CompanionCombat.locomotion_clip(true, 3.1, "run"), "run",
+		"run + 3.1 m/s (in band, above RUN_EXIT) -> hold run")
+	assert_eq(CompanionCombat.locomotion_clip(true, 2.9, "run"), "walk",
+		"run + 2.9 m/s (below RUN_EXIT) -> exit to walk")
+	# Coming out of wait picks by the enter threshold (no phantom run at band speed).
+	assert_eq(CompanionCombat.locomotion_clip(true, 3.5, "wait"), "walk",
+		"wait + 3.5 m/s (in band) -> walk, not run (enter threshold)")
+
+	# THE anti-regression assertion: an oscillating speed sequence that straddles
+	# the band, threading the returned clip back in as current_clip each step,
+	# must STOP changing the clip once it has settled into run. Under the old
+	# single-threshold selector this list produced run,walk,run,walk,walk,run… —
+	# a per-frame flap. With hysteresis, once 4.1 crosses RUN_ENTER the clip is
+	# "run" and every subsequent band-dip (3.9, 3.5, 3.1) holds it.
+	var flap_speeds: Array = [3.9, 4.1, 3.9, 4.1, 3.5, 4.2, 3.1, 3.8, 3.9]
+	var clip: String = "walk"  # start below the band
+	var run_since := -1
+	var transitions_after_settle := 0
+	for i in range(flap_speeds.size()):
+		var next_clip: String = CompanionCombat.locomotion_clip(true, flap_speeds[i], clip)
+		if run_since >= 0 and next_clip != clip:
+			transitions_after_settle += 1
+		if next_clip == "run" and run_since < 0:
+			run_since = i
+		clip = next_clip
+	assert_true(run_since >= 0, "oscillating sequence entered run once it crossed RUN_ENTER")
+	assert_eq(transitions_after_settle, 0,
+		"#463: no clip flapping once settled in run — band dips (3.0..4.0) hold run")
+	assert_eq(clip, "run", "sequence ends in run (never fell out through the band)")
+
+	# Honest transitions still work: a clear climb 0→5 gives run; a clear drop
+	# 5→0 gives walk then wait (each threaded through the current clip).
+	assert_eq(CompanionCombat.locomotion_clip(true, 0.0, "wait"), "wait",
+		"climb start: 0 m/s -> wait")
+	assert_eq(CompanionCombat.locomotion_clip(true, 5.0, "walk"), "run",
+		"climb: 5 m/s well above RUN_ENTER -> run")
+	assert_eq(CompanionCombat.locomotion_clip(true, 2.0, "run"), "walk",
+		"drop: 2 m/s well below RUN_EXIT -> walk")
+	assert_eq(CompanionCombat.locomotion_clip(true, 0.0, "walk"), "wait",
+		"drop: 0 m/s -> wait")
+
+	print("")
+
+
+# ── #463 arrival gait: the FOLLOW speed ramp that drives the clip. Continuity
+# (monotonic, no dead zone) is what removes the run/walk/wait flap the old
+# measured-displacement path produced when the companion caught up and stalled.
+func test_companion_follow_speed_ramp() -> void:
+	print("── Companion FOLLOW speed ramp (#463 arrival gait) ──")
+	var ring := 2.5   # companion_npc FOLLOW_DISTANCE
+	var ramp := 1.5   # companion_npc FOLLOW_SLOW_RADIUS
+	var cap := 6.5    # companion_npc FOLLOW_MAX_SPEED
+	# At/inside the ring the companion holds station -> 0 (gait settles to wait).
+	assert_eq(CompanionCombat.follow_speed(ring, ring, ramp, cap), 0.0, "at the ring -> 0")
+	assert_eq(CompanionCombat.follow_speed(1.0, ring, ramp, cap), 0.0, "inside the ring -> 0")
+	# Just outside -> moving (a small speed = walk once fed through locomotion_clip).
+	assert_true(CompanionCombat.follow_speed(ring + 0.3, ring, ramp, cap) > 0.0, "just outside -> moving")
+	# Linear across the ramp: half the ramp -> half the cap.
+	assert_eq(CompanionCombat.follow_speed(ring + ramp * 0.5, ring, ramp, cap), cap * 0.5, "half ramp -> half cap")
+	# Full ramp and beyond -> capped (no runaway; keeps a bounded trailing gap).
+	assert_eq(CompanionCombat.follow_speed(ring + ramp, ring, ramp, cap), cap, "full ramp -> cap")
+	assert_eq(CompanionCombat.follow_speed(ring + ramp + 10.0, ring, ramp, cap), cap, "far out -> still cap")
+	# THE anti-flap property: monotonic non-decreasing in distance (no dead zone).
+	var prev := -1.0
+	for d in [0.0, 1.0, 2.5, 2.8, 3.0, 3.25, 4.0, 5.0, 20.0]:
+		var s: float = CompanionCombat.follow_speed(d, ring, ramp, cap)
+		assert_true(s >= prev, "monotonic at d=%.2f (%.3f >= %.3f)" % [d, s, prev])
+		prev = s
+	# Cap above player run (MOVE_SPEED 6.0) so the trailing gap can't grow.
+	assert_true(cap > 6.0, "cap above player run -> keeps pace")
+	# Degenerate ramp (0) can't divide-by-zero — clean step at the ring.
+	assert_eq(CompanionCombat.follow_speed(ring + 0.1, ring, 0.0, cap), cap, "ramp=0 -> cap outside ring")
+	assert_eq(CompanionCombat.follow_speed(ring, ring, 0.0, cap), 0.0, "ramp=0 -> 0 at ring")
 	print("")
 
 

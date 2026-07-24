@@ -12,6 +12,16 @@ const STOP_DISTANCE: float = 1.8
 const START_DISTANCE: float = 3.0  # Must exceed START to begin moving (hysteresis)
 const CATCHUP_DISTANCE: float = 5.0
 const TELEPORT_DISTANCE: float = 20.0
+# Arrival-follow tuning (spec /states/companion). The companion holds ~FOLLOW_DISTANCE
+# behind the player; its speed is a smooth function of how far OUTSIDE that ring it is
+# — zero at the ring, ramping up over FOLLOW_SLOW_RADIUS to FOLLOW_MAX_SPEED (just
+# above player run 6.0, so it keeps pace without the gap growing). Because commanded
+# speed is CONTINUOUS in distance, the gait eases run -> walk -> wait (a real walk) and
+# never flaps. The clip is driven by this commanded speed, not noisy per-frame
+# displacement. All three are feel knobs.
+const FOLLOW_MAX_SPEED: float = 6.5
+const FOLLOW_SLOW_RADIUS: float = 1.5
+const FOLLOW_DISTANCE: float = 2.5
 
 ## Fallback colors for NPCs without GLB models
 const COMPANION_COLORS: Dictionary = {
@@ -76,7 +86,8 @@ const ANIM_HOLD_TIME: float = 0.3
 ## Locomotion clip = f(movement INTENT, own measured planar speed). The FSM sets
 ## _move_intent each frame (steering states true, frozen/rooted false); the clip
 ## is resolved centrally in _physics_process (spec /states/companion). Thresholds
-## live on CompanionCombat (IDLE_EPS / RUN_EPS) so there is a single source. The
+## live on CompanionCombat (IDLE_EPS / RUN_ENTER / RUN_EXIT) so there is a single
+## source; the walk↔run split runs a hysteresis band (#463) off the current clip. The
 ## measured-speed veto keeps a stationary companion out of a locomotion clip
 ## (the #420 run-in-place invariant), and the intent layer keeps a moving one
 ## out of "wait" (the combat-transition slide).
@@ -84,14 +95,12 @@ var _move_intent: bool = false  # Set true by whichever state is steering this f
 
 var _was_moving: bool = false  # Track delayed state transitions
 var _stationary_anim_time: float = 0.0  # autopilot tripwire accumulator (#420)
-var _resume_blend: float = 0.0  # Blend from frozen pos to trail pos on resume
-var _frozen_pos: Vector3 = Vector3.ZERO  # Position when companion froze
-const RESUME_BLEND_SPEED: float = 3.0  # Seconds to fully blend back to trail
+var _follow_cmd_speed: float = -1.0  # FOLLOW's commanded speed this frame; drives the clip (< 0 = not FOLLOW)
 var _dismissed: bool = false  # When true, stop following and idle in place
 
 ## Trail replay — record every physics frame, interpolate on playback
 var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
-const TRAIL_DELAY: float = 0.5  # Seconds behind the player
+const TRAIL_DELAY: float = 0.3  # Seconds behind the player (tighter = less lag)
 const TRAIL_MAX_ENTRIES: int = 150  # ~2.5s at 60fps
 
 ## Combat FSM (spec /states/companion-combat). FOLLOW is the trail-replay
@@ -302,8 +311,9 @@ func _play_companion_anim(anim_name: String) -> void:
 		return
 	if not _anim_player.has_animation(anim_name):
 		return
-	# Debounce ONLY the walk<->run borderline, so a companion hovering near
-	# RUN_EPS can't flicker frame to frame. Transitions to/from "wait" (and into
+	# Debounce ONLY the walk<->run borderline, as a backstop to the selector's
+	# hysteresis band (#463), so a companion hovering near the run threshold can't
+	# flicker frame to frame. Transitions to/from "wait" (and into
 	# "atk1") apply immediately, so the clip never lags the body: a moving
 	# companion is never stuck mid-"wait" (the combat-transition slide) and a
 	# stopped one is never stuck mid-"run" (the #420 run-in-place). Previously
@@ -330,8 +340,10 @@ func _select_locomotion_anim(prev_pos: Vector3, curr_pos: Vector3, delta: float)
 	var planar_speed: float = Vector2(moved.x, moved.z).length() / delta
 	# Measured-speed selector (intent-to-move assumed here; the intent gate is
 	# applied by the caller). Shares the pure clip mapping + thresholds with the
-	# unit tests via CompanionCombat.
-	return CompanionCombat.locomotion_clip(true, planar_speed)
+	# unit tests via CompanionCombat. _current_anim is threaded in as the current
+	# clip so the walk↔run split applies its hysteresis band (#463) — a near-
+	# threshold measured speed holds the current clip instead of flapping.
+	return CompanionCombat.locomotion_clip(true, planar_speed, _current_anim)
 
 
 ## Autopilot-only regression oracle for #420. Silent in normal play (gated on
@@ -471,6 +483,7 @@ func _physics_process(delta: float) -> void:
 	# below — like the player's single per-frame animation update.
 	var prev_pos: Vector3 = global_position
 	_move_intent = false
+	_follow_cmd_speed = -1.0
 	if _combat_state == CombatState.FOLLOW:
 		_process_follow(delta)
 		_tick_combat_scan(delta)
@@ -485,7 +498,16 @@ func _physics_process(delta: float) -> void:
 func _update_locomotion_anim(intent_moving: bool, prev_pos: Vector3, delta: float) -> void:
 	if _swing_elapsed >= 0.0:
 		return
-	var clip: String = _select_locomotion_anim(prev_pos, global_position, delta) if intent_moving else "wait"
+	# FOLLOW drives the clip from its commanded speed (smooth arrival ramp) so the
+	# gait can't flap on noisy per-frame displacement; combat states use measured
+	# displacement. IDLE_EPS still vetoes to "wait" when barely moving.
+	var clip: String
+	if _follow_cmd_speed >= 0.0:
+		clip = CompanionCombat.locomotion_clip(_follow_cmd_speed >= CompanionCombat.IDLE_EPS, _follow_cmd_speed, _current_anim)
+	elif intent_moving:
+		clip = _select_locomotion_anim(prev_pos, global_position, delta)
+	else:
+		clip = "wait"
 	_play_companion_anim(clip)
 	_autopilot_anim_tripwire(prev_pos, global_position, delta)
 
@@ -585,50 +607,31 @@ func _process_follow(_delta: float) -> void:
 
 	var interp_pos: Vector3 = entry_a["pos"].lerp(entry_b["pos"], t)
 	var interp_rot: float = lerp_angle(entry_a["rot"], entry_b["rot"], t)
-	var delayed_state: int = entry_a["state"]
-
-	# Position MAY consult the delayed player state — but ONLY the true
-	# locomotion states (WALKING=1, RUNNING=2) advance the trail. A rooted
-	# player state (ATTACKING=3, DAMAGED, DOWN, …) is >= 1 too, so the old
-	# `delayed_state >= 1` made the companion try to follow a stationary player
-	# and then fall into the `run` branch — running in place (#420). Restrict
-	# the follow-move to actual locomotion.
-	var is_moving: bool = delayed_state == 1 or delayed_state == 2
-
-	if is_moving:
-		# Player was moving — follow the interpolated trail
-		# But cap position so we never get closer than 1.5 units to the player
-		var candidate_pos := Vector3(interp_pos.x, _player_ref.global_position.y, interp_pos.z)
-		var to_player := _player_ref.global_position - candidate_pos
-		to_player.y = 0
-		if to_player.length() < 1.5:
-			var away_dir := -to_player.normalized() if to_player.length() > 0.01 else Vector3(-sin(player_rot), 0, -cos(player_rot))
-			candidate_pos = _player_ref.global_position + away_dir * 1.5
-			candidate_pos.y = _player_ref.global_position.y
-
-		# Smooth blend from frozen position when resuming movement
-		if not _was_moving:
-			_frozen_pos = global_position
-			_resume_blend = 0.0
-		if _resume_blend < 1.0:
-			_resume_blend = minf(_resume_blend + RESUME_BLEND_SPEED * _delta, 1.0)
-			candidate_pos = _frozen_pos.lerp(candidate_pos, _resume_blend)
-
-		global_position = candidate_pos
+	# Head toward the delayed trail point (your route) at a speed set by how far
+	# OUTSIDE the FOLLOW_DISTANCE ring we are — zero at the ring, ramping up over
+	# FOLLOW_SLOW_RADIUS to FOLLOW_MAX_SPEED. `desired` is continuous in distance, so
+	# the gait eases run -> walk -> wait with a real walk and never flaps: no dead
+	# zone, no resume-blend, no hard proximity clamp (those shoved the old measured
+	# speed across the thresholds). The clip is driven by `desired` (set below). A
+	# rooted player (#420) sits at the ring → desired 0 → wait, no run-in-place.
+	var target := Vector3(interp_pos.x, _player_ref.global_position.y, interp_pos.z)
+	var to_target := target - global_position
+	to_target.y = 0.0
+	var gap := to_target.length()
+	var dist_now := global_position.distance_to(_player_ref.global_position)
+	var desired: float = CompanionCombat.follow_speed(dist_now, FOLLOW_DISTANCE, FOLLOW_SLOW_RADIUS, FOLLOW_MAX_SPEED)
+	if desired > 0.001 and gap > 0.001:
+		var step := minf(desired * _delta, gap)
+		global_position += (to_target / gap) * step
 		rotation.y = interp_rot
-		_was_moving = true
 		_move_intent = true
 	else:
-		# Player was idle (or rooted) — freeze in place, face player's direction
-		global_position.y = _player_ref.global_position.y
 		rotation.y = lerp_angle(rotation.y, player_rot, 5.0 * _delta)
-		_was_moving = false
 		_move_intent = false
-	# The locomotion clip is resolved centrally in _physics_process from
-	# _move_intent + this frame's measured displacement (spec /states/companion):
-	# intent gates out the combat-transition slide, the measured-speed veto gates
-	# out the #420 run-in-place, and the resume-from-freeze blend naturally ramps
-	# walk -> run as the measured speed climbs.
+	global_position.y = _player_ref.global_position.y
+	_follow_cmd_speed = maxf(desired, 0.0)
+	# Locomotion clip resolved centrally in _physics_process from _follow_cmd_speed
+	# (spec /states/companion) — the smooth arrival ramp yields run/walk/wait directly.
 
 
 func _teleport_behind_player() -> void:
