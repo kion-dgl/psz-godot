@@ -102,6 +102,10 @@ const AREA_DROP_NAMES := {
 ##   (90 = unbounded, PSO's launchers).
 ##   Tuned in the #/combat-room web tool.
 ## damaging_frac: fraction of each step's swing clip where the hit resolves
+## turn_limit_deg: max |facing change| the inter-swing turn may apply when
+##   entering step 2 and step 3 (spec /mechanics/combos, #560). Heavier and
+##   longer weapons turn less. Tuned in the #/combo-debug web tool; types
+##   with no entry fall back to COMBO_TURN_LIMIT_DEFAULT.
 const WEAPON_TYPE_CONFIGS := {
 	0: {  # SABER — reliable single hits, moderate speed
 		"combo_steps": 3,
@@ -118,6 +122,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
+		"turn_limit_deg": [90.0, 90.0],
 	},
 	1: {  # SWORD — slow heavy hits, big knockback
 		"combo_steps": 3,
@@ -134,6 +139,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 45.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 3,
+		"turn_limit_deg": [60.0, 60.0],
 	},
 	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
 		"combo_steps": 3,
@@ -150,6 +156,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 35.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
+		"turn_limit_deg": [120.0, 120.0],
 	},
 	3: {  # CLAW — very fast, close range
 		"combo_steps": 3,
@@ -166,6 +173,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 35.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
+		"turn_limit_deg": [120.0, 120.0],
 	},
 	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
 		"combo_steps": 3,
@@ -182,6 +190,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 45.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 3,
+		"turn_limit_deg": [180.0, 180.0],
 	},
 	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
 		"combo_steps": 3,
@@ -199,6 +208,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
 		"max_targets_per_step": [1, 1, 3],
+		"turn_limit_deg": [75.0, 75.0],
 	},
 	6: {  # SLICER — thrown blade, narrow long range (pistol-like targeting)
 		"combo_steps": 3,
@@ -215,6 +225,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 30.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 4,
+		"turn_limit_deg": [90.0, 90.0],
 	},
 	9: {  # HANDGUN — single shots
 		"combo_steps": 3,
@@ -231,6 +242,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 15.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
+		"turn_limit_deg": [180.0, 180.0],
 	},
 	10: {  # MECH_GUN — rapid fire spray
 		"combo_steps": 3,
@@ -247,6 +259,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 20.0,
 		"damaging_frac": [0.30, 0.30, 0.35],
 		"max_targets": 3,
+		"turn_limit_deg": [180.0, 180.0],
 	},
 	11: {  # RIFLE — slow precision shots; deliberate 3-shot combo (pmar_atk1..3)
 		"combo_steps": 3,
@@ -263,6 +276,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 10.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
 		"max_targets": 1,
+		"turn_limit_deg": [45.0, 45.0],
 	},
 	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
 		"combo_steps": 2,
@@ -311,6 +325,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
+		"turn_limit_deg": [90.0, 90.0],
 	},
 	15: {  # WAND — melee swing, support amplifier
 		"combo_steps": 3,
@@ -327,6 +342,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
 		"max_targets": 1,
+		"turn_limit_deg": [90.0, 90.0],
 	},
 }
 
@@ -1427,5 +1443,17 @@ func get_combo_timing(weapon_type: int, from_step: int) -> Dictionary:
 	return get_combo_config(weapon_type).timing_for_step(from_step)
 
 
-func get_combo_just_mult(weapon_type: int) -> float:
-	return get_combo_config(weapon_type).just_damage_mult
+## Fallback inter-swing turn limit for weapon types with no tuned entry
+## (the unimplemented GUN_BLADE/SHIELD/BAZOOKA/LASER_CANNON types).
+const COMBO_TURN_LIMIT_DEFAULT := 90.0
+
+
+## Max |facing change|, in degrees, the inter-swing turn may apply when
+## entering `entering_step` (2-based — step 1 starts from IDLE, which aims
+## freely). Spec /mechanics/combos.
+func get_combo_turn_limit(weapon_type: int, entering_step: int) -> float:
+	var limits: Array = get_weapon_type_config(weapon_type).get("turn_limit_deg", [])
+	if limits.is_empty():
+		return COMBO_TURN_LIMIT_DEFAULT
+	var idx: int = clampi(entering_step - 2, 0, limits.size() - 1)
+	return float(limits[idx])

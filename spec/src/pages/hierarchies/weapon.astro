@@ -12,7 +12,7 @@ import Concept from '../../layouts/Concept.astro';
     <tr><th>Layer</th><th>Owns</th><th>Examples</th></tr>
     <tr><td><strong>WeaponData</strong> (resource, per weapon)</td><td>Stats (ATK/ATA/range), grind, element + level, special/PA id (#95 — the PSOBB <code>weapon_special</code> field pattern), model path, rarity, class restrictions</td><td>every saber, every rifle</td></tr>
     <tr><td><strong>Archetype class</strong> (one per type)</td><td>Combo chain (animation triple + per-motion windows from #155), hitbox preset geometry (#157 inc 3), fire mode (single/burst/spread — #57), hold/swap animations</td><td><code>SaberWeapon</code>, <code>MechgunWeapon</code></td></tr>
-    <tr><td><strong>CombatResolver</strong> (shared, #157)</td><td>Damage formula, accuracy rolls (melee + projectile variants), crit/just-attack bonuses</td><td>one module</td></tr>
+    <tr><td><strong>CombatResolver</strong> (shared, #157)</td><td>Damage formula, accuracy rolls (melee + projectile variants), crit bonuses</td><td>one module</td></tr>
   </table>
 
   <h2>Archetype contract</h2>

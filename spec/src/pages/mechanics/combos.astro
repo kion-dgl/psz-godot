@@ -5,54 +5,80 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Combat Combos" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by <strong>three-tier timing windows</strong> (#155) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. A press inside an accept window <strong>queues</strong> the next step, which fires when the current swing completes; this preserves action commitment (#377 — a swing always fully executes, see <a href="/states/player-state">Player State Machine</a>).</p>
+  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by a <strong>two-tier timing window</strong> (#155, respecced by #461) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. A press inside the accept window <strong>queues</strong> the next step, which fires when the current swing completes; this preserves action commitment (#377 — a swing always fully executes, see <a href="/states/player-state">Player State Machine</a>).</p>
 
-  <h2>The three tiers</h2>
+  <h2>The two tiers</h2>
   <pre>
   frame 0                                animation end
-  |----------|---------|----------------|
-   miss-early  JUST      normal            too-late
-              window     window          (swing ended un-queued →
+  |----------|------------------------- |
+   miss-early        accept window         too-late
+                                         (swing ended un-queued →
                                           combo broken, back to IDLE)
   </pre>
   <table>
     <thead><tr><th>Tier</th><th>Window (fraction of swing)</th><th>On attack press (MUST)</th></tr></thead>
     <tbody>
-      <tr><td><strong>miss-early</strong></td><td><code>[0, just_start)</code></td><td><strong>Fumble</strong> — the press is <strong>NOT buffered</strong>, does not advance the combo, and <strong>locks out chaining for the remainder of this swing</strong>: every later press in the same swing <strong>MUST</strong> be ignored, so the swing ends un-queued and the combo breaks. Muted-red flash on the fumbling press.</td></tr>
-      <tr><td><strong>just-attack</strong></td><td><code>[just_start, just_end)</code></td><td>Queue the next step with the <strong>just bonus</strong>: damage × <code>just_damage_mult</code> on the queued swing, distinct bright-green flash.</td></tr>
-      <tr><td><strong>normal</strong></td><td><code>[just_end, 1.0]</code></td><td>Queue the next step (standard damage, green/yellow flash).</td></tr>
+      <tr><td><strong>miss-early</strong></td><td><code>[0, chain_start)</code></td><td><strong>Fumble</strong> — the press is <strong>NOT buffered</strong>, does not advance the combo, and <strong>locks out chaining for the remainder of this swing</strong>: every later press in the same swing <strong>MUST</strong> be ignored, so the swing ends un-queued and the combo breaks. Muted-red flash on the fumbling press.</td></tr>
+      <tr><td><strong>accept</strong></td><td><code>[chain_start, 1.0]</code></td><td>Queue the next step (green flash, yellow for a strong press).</td></tr>
       <tr><td><strong>too-late</strong></td><td>after animation end</td><td>Unreachable as a press — the swing ending un-queued has already broken the combo and returned to IDLE.</td></tr>
     </tbody>
   </table>
   <ul>
-    <li>The window fractions <strong>MUST</strong> come from data (<code>WeaponComboConfig</code> resources, <code>data/combo_configs/</code>), indexed by the step being chained <em>from</em> — per-motion tuning, not code constants. Defaults: just <code>[0.55, 0.70)</code>, normal <code>[0.70, 1.0]</code>; Saber (fast) is tuned to <code>[0.45, 0.60)</code>/<code>[0.60, 1.0]</code> per #155.</li>
-    <li>The just window sits <strong>earlier</strong> than the normal window so precision is rewarded but "waiting = better" can't be farmed.</li>
+    <li>Combo timing decides <strong>whether the chain advances, never how hard it hits</strong>. There <strong>MUST NOT</strong> be a timing-based damage or crit bonus: those come from character stats and equipment. <em>(#461, Rozalin's playtest of PR #459: the #155 three-tier model specced a "just-attack" window carrying <code>just_damage_mult</code>. That tier is not PSZ behaviour — players use the accept window to decide when to advance for repositioning or stagger, so a damage incentive on top of it is both inaccurate and counterintuitive.)</em> Removing the tier <strong>did not</strong> change the accept window's extent, which always ran <code>[just_start, 1.0]</code>; <code>chain_start</code> is the old <code>just_start</code> renamed.</li>
+    <li>The window fraction <strong>MUST</strong> come from data (<code>WeaponComboConfig</code> resources, <code>data/combo_configs/</code>), indexed by the step being chained <em>from</em> — per-motion tuning, not code constants. Default <code>chain_start</code> <code>0.55</code>; Saber (fast) is tuned to <code>0.45</code> per #155.</li>
     <li><em>Why miss-early fumbles instead of being merely ignored:</em> the accept window spans nearly half the swing, so with an ignore-only miss-early, mashing always lands a press inside the window and chains anyway (Rozalin's #459 playtest — "can still be advanced by spamming"). The fumble makes mashing break its own combo. The lockout is <strong>per swing</strong>: the fumble flag <strong>MUST</strong> reset when the next step starts (each step is a clean chain attempt) and on any exit from ATTACKING.</li>
     <li>A queued step <strong>MUST fire at swing end</strong> (via <code>animation_finished</code> or, for looping animations that never emit it, the elapsed-length safety net — the mechgun-root fix generalizes to every step). Exactly one of the two paths fires per step (<code>_attack_step_ended</code> guard).</li>
     <li>The swing ending with nothing queued <strong>MUST</strong> break the combo: reset to step 0, deactivate the hitbox, return to IDLE (red flash when mid-chain). There is no post-animation grace window.</li>
     <li>Only one queue slot: a second press while queued is a no-op — it <strong>MUST NOT</strong> upgrade normal→just or re-roll the tier.</li>
     <li>The final step (finisher) has no accept window — a press during it is a no-op; the finisher ends to IDLE.</li>
     <li>Damage-initiated exits from ATTACKING <strong>MUST</strong> clear the queue (centralized in <code>transition_to</code>, with the #428 hitbox deactivation) — an interrupted swing never fires its queued follow-up.</li>
-    <li>Strong (special) attacks share the same windows: a strong-attack press queues a special step (<code>_queued_combo_special</code>), which keeps its wind-up delay and element on fire.</li>
-    <li>The just bonus <strong>MUST</strong> apply to the queued swing's damage via <code>_get_attack_damage</code> (<code>atk["just"] = true</code> marks it for hit-feedback consumers).</li>
+    <li>Strong (special) attacks share the same window: a strong-attack press queues a special step (<code>_queued_combo_special</code>), which keeps its wind-up delay and element on fire.</li>
   </ul>
 
+  <h2>Inter-swing turn</h2>
+
+  <p>PSO's attack angles were essentially fixed. <strong>PSZ's are not</strong>: holding a direction through a swing re-aims the character as the next step begins. This is the mechanic prototyped and tuned in the <code>#/combo-debug</code> web tool (#560).</p>
+
+  <ul>
+    <li>While a swing is playing, the held direction <strong>MUST NOT</strong> rotate the character — facing is <strong>locked</strong> for the duration of the swing. The input is only <em>recorded</em> as a requested heading (camera-relative, same transform as walking).</li>
+    <li>When a queued step fires, the recorded heading <strong>MUST</strong> be applied <strong>instantaneously</strong>, clamped so the facing change does not exceed the weapon's <code>turn_limit_deg</code> for the step being entered. It is a snap, not an eased rotation.</li>
+    <li>This is <strong>not</strong> a grace window or a pause: the step transition itself is unchanged (see below — no gap between steps). The turn resolves on the transition frame, which is what "the character turns right before the attack" looks like in play.</li>
+    <li>If no direction is held when the step fires, the character <strong>MUST</strong> keep its current facing. Releasing the stick <strong>MUST NOT</strong> snap it anywhere.</li>
+    <li>The clamp <strong>MUST</strong> take the shorter way around: a request across the ±π seam is a small turn, never a near-full spin.</li>
+    <li>Step 1 has no clamp — a combo begun from IDLE aims freely, because IDLE already rotates to the stick via normal movement. Only entering steps 2+ is limited.</li>
+    <li>A swing that ends <strong>un-queued</strong> <strong>MUST NOT</strong> apply a turn on its way to IDLE — the turn belongs to the chained step, not to the combo ending.</li>
+    <li><code>turn_limit_deg</code> <strong>MUST</strong> come from <code>CombatManager.WEAPON_TYPE_CONFIGS</code> (the destination the combo-debug tool's "Copy GDScript" export targets), indexed by the step being entered. Heavier and longer weapons turn less. Untuned types fall back to <code>COMBO_TURN_LIMIT_DEFAULT</code> (90°).</li>
+  </ul>
+
+  <table>
+    <thead><tr><th>Weapon</th><th>±deg</th><th>Weapon</th><th>±deg</th></tr></thead>
+    <tbody>
+      <tr><td>Rifle</td><td>45</td><td>Slicer</td><td>90</td></tr>
+      <tr><td>Sword</td><td>60</td><td>Rod / Wand</td><td>90</td></tr>
+      <tr><td>Spear</td><td>75</td><td>Daggers / Claw</td><td>120</td></tr>
+      <tr><td>Saber</td><td>90</td><td>Double Saber, Handgun, Mechgun</td><td>180</td></tr>
+    </tbody>
+  </table>
+
+  <p>These are the combo-debug tool's tuned proposals and are feel values — expected to move via playtest, per weapon.</p>
+
   <h2>PSO:BB reference frames</h2>
-  <p>Windows are runtime-computed from the animation fraction — PSO:BB's motion files carry no timing events (see <a href="https://github.com/kion-dgl/psobb-re">psobb-re</a>, combo-timing investigation). Motion frame counts from <code>plymotion-profile.tsv</code> inform per-weapon tuning (e.g. Saber A1 = 19 frames → wider windows; finishers A3 = 59–80 frames → no window). The in-repo starting values are feel-tuning defaults, expected to move via playtest.</p>
+  <p>The window is runtime-computed from the animation fraction — PSO:BB's motion files carry no timing events (see <a href="https://github.com/kion-dgl/psobb-re">psobb-re</a>, combo-timing investigation). Motion frame counts from <code>plymotion-profile.tsv</code> inform per-weapon tuning (e.g. Saber A1 = 19 frames → earlier window; finishers A3 = 59–80 frames → no window). The in-repo starting values are feel-tuning defaults, expected to move via playtest. The inter-swing turn is a PSZ addition with no PSO:BB counterpart — PSO's attack angles are fixed.</p>
 
   <h2>Feedback</h2>
-  <p>Queue-time flash by tier (bright green = just, green = normal chain, yellow = special chain, muted red = fumbled press, red = chain broken), drawn by the combo ring and gated on the <strong>Combo Timing</strong> debug toggle exactly as before. The PSO:BB chain sounds (<code>SE_PL_CHAIN1/2/HIT</code>) are <strong>not in the pack yet</strong> — audio cues land as a follow-up with the next pack republish.</p>
+  <p>Queue-time flash (green = chain, yellow = special chain, muted red = fumbled press, red = chain broken), drawn by the combo ring and gated on the <strong>Combo Timing</strong> debug toggle. With the just tier gone the window is one colour — there is no longer a hot start to distinguish. The PSO:BB chain sounds (<code>SE_PL_CHAIN1/2/HIT</code>) are <strong>not in the pack yet</strong> — audio cues land as a follow-up with the next pack republish.</p>
 
   <h2>Combo-timing debug overlay</h2>
-  <p>The <strong>Combo Timing</strong> debug toggle (<code>DebugConfig.show_combo_timing</code>, default <strong>OFF</strong>, toggled from the field start menu) draws the at-feet timing ring, now visualizing the fraction windows: visible from <code>just_start</code> to animation end, bright green inside the just window, normal green in the rest, shrinking toward the swing's end. When the toggle is <strong>OFF</strong> it <strong>MUST</strong> hide <em>every</em> timing ring — both the combo ring (<code>_combo_ring</code>) <em>and</em> the element-tinted heavy/special-attack charge ring (<code>_charge_ring</code>); #415 fixed the charge ring leak. The heavy attack's rising particles and model glow are permanent attack VFX, <strong>not</strong> timing rings, and are unaffected by the toggle.</p>
+  <p>The <strong>Combo Timing</strong> debug toggle (<code>DebugConfig.show_combo_timing</code>, default <strong>OFF</strong>, toggled from the field start menu) draws the at-feet timing ring, visualizing the accept window: visible from <code>chain_start</code> to animation end, shrinking toward the swing's end. When the toggle is <strong>OFF</strong> it <strong>MUST</strong> hide <em>every</em> timing ring — both the combo ring (<code>_combo_ring</code>) <em>and</em> the element-tinted heavy/special-attack charge ring (<code>_charge_ring</code>); #415 fixed the charge ring leak. The heavy attack's rising particles and model glow are permanent attack VFX, <strong>not</strong> timing rings, and are unaffected by the toggle.</p>
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/resources/weapon_combo_config.gd</code> (WeaponComboConfig) — per-step <code>just_start</code>/<code>just_end</code> fractions + <code>just_damage_mult</code>; instances in <code>data/combo_configs/</code>.</li>
-    <li><code>scripts/autoloads/combat_manager.gd</code> — <code>get_combo_timing(weapon_type, from_step)</code> / <code>get_combo_just_mult(weapon_type)</code> resolve the resource (default config for untuned types).</li>
-    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_try_queue_combo</code> (tier check on press), <code>_attack_step_finished</code> (single fire point at swing end), <code>_handle_attack_state</code> (elapsed tracking + safety net), <code>_get_attack_damage</code> (just bonus). <code>_start_attack</code>/<code>_start_strong_attack</code> route ATTACKING-state presses into the queue.</li>
+    <li><code>scripts/resources/weapon_combo_config.gd</code> (WeaponComboConfig) — per-step <code>chain_start</code> fractions; instances in <code>data/combo_configs/</code>.</li>
+    <li><code>scripts/autoloads/combat_manager.gd</code> — <code>get_combo_timing(weapon_type, from_step)</code> resolves the resource (default config for untuned types); <code>get_combo_turn_limit(weapon_type, entering_step)</code> resolves <code>turn_limit_deg</code> from <code>WEAPON_TYPE_CONFIGS</code>.</li>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_try_queue_combo</code> (tier check on press), <code>_attack_step_finished</code> (single fire point at swing end), <code>_handle_attack_state</code> (elapsed tracking, safety net, and recording the held heading into <code>_combo_desired_yaw</code>), <code>_apply_combo_turn</code> (the clamped turn). <code>_start_attack</code>/<code>_start_strong_attack</code> route ATTACKING-state presses into the queue.</li>
+    <li><code>web/src/combo-debug/ComboDebug.tsx</code> — the <code>#/combo-debug</code> tool this was tuned in. Note it still models the removed just tier and parameterizes its window as open-percent + duration in <em>seconds</em>, where the game uses a single fraction; don't copy its numbers across without converting.</li>
   </ul>
-  <p>Status: <strong>implemented (#155)</strong> — <code>test_combo_three_tier</code> pins the tiers, queue semantics, just bonus, and finisher; <code>test_combo_miss_early_fumble</code> pins the fumble lockout; <code>test_mechgun_final_step_no_root</code> pins the safety net; the <code>PSZ_AUTOPILOT_COMBO=1</code> probe drives a live fumble + just-chain end-to-end.</p>
+  <p>Status: <strong>implemented (#155, respecced #461, turn ported #560)</strong> — <code>test_combo_two_tier</code> pins the window, queue semantics, the absence of a damage bonus, and the finisher; <code>test_combo_miss_early_fumble</code> pins the fumble lockout; <code>test_combo_inter_swing_turn</code> pins the clamp, the seam, the no-input case, and that a breaking combo doesn't turn; <code>test_mechgun_final_step_no_root</code> pins the safety net; the <code>PSZ_AUTOPILOT_COMBO=1</code> probe drives a live fumble, chain, and clamped turn end-to-end.</p>
 
   <p>These attacks are the ATTACKING state of the <a href="/states/player-state">Player State Machine</a>.</p>
 

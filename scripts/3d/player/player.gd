@@ -168,10 +168,9 @@ var walk_timer: float = 0.0
 # are FRACTIONS of the current swing's animation, from per-weapon
 # WeaponComboConfig data. A press in a window QUEUES the next step, which
 # fires when the swing completes (#377: swings always fully execute).
-enum ComboQueue { NONE, NORMAL, JUST }
+enum ComboQueue { NONE, NORMAL }
 var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
 var _is_special_attack: bool = false  # True when current attack carries weapon element
-var _is_just_attack: bool = false  # Current swing was chained via the just window
 var _queued_combo: int = ComboQueue.NONE  # Next-step queue (one slot, no re-roll)
 var _queued_combo_special: bool = false  # Queued step is a strong attack
 var _combo_fumbled: bool = false  # Miss-early press locked out this swing's chain
@@ -180,10 +179,10 @@ var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
 var _attack_hit_done: bool = false  # This swing's damaging frame already resolved (spec /mechanics/targeting)
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
-# Bright green — just-attack tier. Deliberately a brighter shade of the normal
-# window's green (0.2, 1.0, 0.4) rather than a third hue: the window is one
-# thing with a hot start, not two mechanics (kion's call on the #471 web tool).
-const JUST_FLASH_COLOR := Color(0.65, 1.0, 0.75)
+# Inter-swing turn (#560, spec /mechanics/combos): the held direction is
+# recorded every frame while ATTACKING but does NOT rotate the character.
+# NAN = nothing held. It is consumed once, when the next combo step starts.
+var _combo_desired_yaw: float = NAN
 
 # Combo timing visual
 var _combo_ring: MeshInstance3D = null
@@ -1140,8 +1139,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				_on_palette_released(slot_idx)
 
 
-func _handle_movement(delta: float) -> void:
-	# Get input direction
+## Raw movement stick/keys as a 2D vector (un-normalized; zero = no input).
+## Shared by _handle_movement and the ATTACKING inter-swing turn (#560), which
+## reads the held direction without moving the character.
+func _read_move_input() -> Vector2:
 	var input_dir := Vector2.ZERO
 	if Input.is_action_pressed("move_forward"):
 		input_dir.y -= 1
@@ -1151,25 +1152,28 @@ func _handle_movement(delta: float) -> void:
 		input_dir.x -= 1
 	if Input.is_action_pressed("move_right"):
 		input_dir.x += 1
+	return input_dir
 
+
+## Camera-relative heading for a movement input, so W always means "into the
+## screen" regardless of camera angle.
+func _heading_from_input(input_dir: Vector2) -> float:
+	input_dir = input_dir.normalized()
+	var cam := get_viewport().get_camera_3d()
+	if cam:
+		var move_3d: Vector3 = cam.get_global_transform().basis * Vector3(input_dir.x, 0, input_dir.y)
+		move_3d.y = 0
+		move_3d = move_3d.normalized()
+		return atan2(move_3d.x, move_3d.z)
+	return atan2(input_dir.x, input_dir.y)
+
+
+func _handle_movement(delta: float) -> void:
+	var input_dir := _read_move_input()
 	var is_moving := input_dir.length_squared() > 0
 
 	if is_moving:
-		# Normalize input
-		input_dir = input_dir.normalized()
-
-		# Camera-relative movement: transform input by camera orientation
-		# so W always moves "into the screen" regardless of camera angle.
-		var target_rotation: float
-		var cam := get_viewport().get_camera_3d()
-		if cam:
-			var cam_basis := cam.get_global_transform().basis
-			var move_3d := cam_basis * Vector3(input_dir.x, 0, input_dir.y)
-			move_3d.y = 0
-			move_3d = move_3d.normalized()
-			target_rotation = atan2(move_3d.x, move_3d.z)
-		else:
-			target_rotation = atan2(input_dir.x, input_dir.y)
+		var target_rotation := _heading_from_input(input_dir)
 
 		# Smoothly rotate toward target
 		var rot_diff := target_rotation - player_rotation
@@ -1441,7 +1445,6 @@ func _start_attack() -> void:
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
 	_is_special_attack = false
-	_is_just_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -1453,12 +1456,13 @@ func _attack_frac() -> float:
 	return clampf(_attack_anim_elapsed / _attack_anim_length, 0.0, 1.0)
 
 
-## Three-tier chain press (#155, spec /mechanics/combos): miss-early FUMBLES
-## the swing (locks out chaining until the next step — a no-op alone let
-## mashing ride the wide accept window; Rozalin's #459 playtest), the just
-## window queues with a damage bonus, the normal window queues standard. The
-## queued step fires at swing end (_attack_step_finished) — never mid-swing
-## (#377 commitment).
+## Two-tier chain press (#155/#461, spec /mechanics/combos): miss-early
+## FUMBLES the swing (locks out chaining until the next step — a no-op alone
+## let mashing ride the wide accept window; Rozalin's #459 playtest), and a
+## press from chain_start on queues the next step. There is no timing-based
+## damage bonus — #461's playtest established PSZ has no just-attack tier;
+## crit and damage come from stats and equipment. The queued step fires at
+## swing end (_attack_step_finished) — never mid-swing (#377 commitment).
 func _try_queue_combo(special: bool) -> void:
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if combo_state <= 0 or combo_state >= max_combo:
@@ -1471,11 +1475,7 @@ func _try_queue_combo(special: bool) -> void:
 	if t.is_empty():
 		return
 	var frac := _attack_frac()
-	if frac >= float(t.just_start) and frac < float(t.just_end):
-		_queued_combo = ComboQueue.JUST
-		_queued_combo_special = special
-		_combo_ring_flash(JUST_FLASH_COLOR)
-	elif frac >= float(t.just_end):
+	if frac >= float(t.chain_start):
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
 		_combo_ring_flash(Color(1.0, 0.8, 0.2) if special else Color(0.2, 1.0, 0.4))
@@ -1494,23 +1494,40 @@ func _attack_step_finished() -> void:
 	_deactivate_attack_hitbox()
 	if combo_state == 0:
 		# Technique cast finished (no combo)
-		_is_just_attack = false
 		transition_to(PlayerState.IDLE)
 		return
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if _queued_combo != ComboQueue.NONE and combo_state < max_combo:
 		combo_state += 1
-		_is_just_attack = _queued_combo == ComboQueue.JUST
 		_is_special_attack = _queued_combo_special
 		_queued_combo = ComboQueue.NONE
 		_queued_combo_special = false
+		_apply_combo_turn(combo_state)
 		_play_attack_animation(combo_state)
 		return
 	if combo_state < max_combo:
 		_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Chain broken mid-combo
 	combo_state = 0
-	_is_just_attack = false
 	transition_to(PlayerState.IDLE)
+
+
+## Inter-swing turn (#560, spec /mechanics/combos): PSZ (unlike PSO, whose
+## attack angles are fixed) lets you hold a direction through a swing and
+## re-aim as the next one starts. Facing is locked *during* a swing; the held
+## heading is only recorded (_combo_desired_yaw, updated in
+## _handle_attack_state). Here — the single point where a chained step begins
+## — that heading is applied, clamped to the weapon's turn_limit_deg for the
+## step being entered, so a sword can't spin like a double saber.
+##
+## Nothing held (NAN) means no turn: releasing the stick keeps the current
+## facing rather than snapping anywhere. Step 1 never comes through here —
+## it starts from IDLE, which already aims freely via _handle_movement.
+func _apply_combo_turn(entering_step: int) -> void:
+	if is_nan(_combo_desired_yaw):
+		return
+	var limit := deg_to_rad(CombatManager.get_combo_turn_limit(_get_equipped_weapon_type(), entering_step))
+	var delta := wrapf(_combo_desired_yaw - player_rotation, -PI, PI)
+	player_rotation = wrapf(player_rotation + clampf(delta, -limit, limit), -PI, PI)
 
 
 func _on_palette_pressed(slot: int) -> void:
@@ -1599,7 +1616,6 @@ func _cast_technique(technique_id: String) -> void:
 	combo_state = 0
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
-	_is_just_attack = false
 	play_animation(_anim_prefix + "_tec", false)
 
 	_spawn_technique_effect(technique_id, tech_data)
@@ -2029,7 +2045,6 @@ func _start_strong_attack() -> void:
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_special = false
 	_is_special_attack = true
-	_is_just_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -2073,6 +2088,12 @@ func _spawn_heal_number(heal_type: String, amount: int) -> void:
 func _handle_attack_state(delta: float) -> void:
 	# Track animation elapsed for the fraction-based combo windows (#155)
 	_attack_anim_elapsed += delta
+
+	# Inter-swing turn (#560): record the held direction. This does NOT rotate
+	# the character — facing is locked during a swing; _apply_combo_turn
+	# consumes this when the next chained step begins.
+	var held := _read_move_input()
+	_combo_desired_yaw = _heading_from_input(held) if held.length_squared() > 0 else NAN
 
 	# Damaging frame (spec /mechanics/targeting): the swing's hits resolve
 	# exactly once, when the animation crosses the step's damaging_frac.
@@ -2235,24 +2256,24 @@ func _update_combo_ring(_delta: float) -> void:
 
 	_ensure_combo_ring()
 
-	# Visualize the fraction windows (#155): visible from just_start to the
-	# swing's end, bright green inside the just window, normal green in the
-	# rest, shrinking toward animation end.
+	# Visualize the accept window (#155/#461): visible from chain_start to the
+	# swing's end, shrinking toward animation end. One window, one colour —
+	# the just tier it used to sub-divide is gone.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
 		t = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
 	var frac := _attack_frac()
-	if not t.is_empty() and frac >= float(t.just_start) and frac < 1.0:
+	if not t.is_empty() and frac >= float(t.chain_start) and frac < 1.0:
 		_combo_ring.visible = true
 		_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
 		# Shrink as the swing runs out
-		var pct: float = 1.0 - (frac - float(t.just_start)) / maxf(1.0 - float(t.just_start), 0.01)
+		var pct: float = 1.0 - (frac - float(t.chain_start)) / maxf(1.0 - float(t.chain_start), 0.01)
 		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
 		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
-		var tier_color: Color = JUST_FLASH_COLOR if frac < float(t.just_end) else Color(0.2, 1.0, 0.4)
-		_combo_ring_mat.albedo_color = Color(tier_color.r, tier_color.g, tier_color.b, 0.5 + pct * 0.3)
-		_combo_ring_mat.emission = tier_color
+		const CHAIN_COLOR := Color(0.2, 1.0, 0.4)
+		_combo_ring_mat.albedo_color = Color(CHAIN_COLOR.r, CHAIN_COLOR.g, CHAIN_COLOR.b, 0.5 + pct * 0.3)
+		_combo_ring_mat.emission = CHAIN_COLOR
 	else:
 		if _combo_ring and _combo_ring.visible:
 			_combo_ring.visible = false
@@ -2433,8 +2454,8 @@ func transition_to(new_state: PlayerState) -> void:
 		# never fire its queued follow-up after the DAMAGED/DOWN recovery.
 		_queued_combo = ComboQueue.NONE
 		_queued_combo_special = false
-		_is_just_attack = false
 		_combo_fumbled = false
+		_combo_desired_yaw = NAN
 
 	match new_state:
 		PlayerState.IDLE:
@@ -2578,15 +2599,10 @@ func _setup_attack_hitbox() -> void:
 
 
 func _get_attack_damage() -> Dictionary:
-	var atk: Dictionary = CombatManager.calculate_attack_damage(combo_state)
-	# Just-attack bonus (#155, spec /mechanics/combos): a swing chained via
-	# the just window deals just_damage_mult × damage. "just" marks the dict
-	# for hit-feedback consumers.
-	if _is_just_attack:
-		var mult: float = CombatManager.get_combo_just_mult(_get_equipped_weapon_type())
-		atk["damage"] = int(round(int(atk.get("damage", 0)) * mult))
-		atk["just"] = true
-	return atk
+	# No timing-based damage bonus (#461): combo timing decides *whether* the
+	# chain advances, never how hard it hits. Crit and damage come from stats
+	# and equipment via calculate_attack_damage.
+	return CombatManager.calculate_attack_damage(combo_state)
 
 
 func _get_equipped_weapon_type() -> int:

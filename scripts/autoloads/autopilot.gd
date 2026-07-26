@@ -381,7 +381,7 @@ func _parse_probe_flags() -> void:
 		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
 	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
 	if _combo_probe:
-		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
+		print("[sanity] autopilot COMBO probe enabled (accept window + inter-swing turn in first field cell)")
 	_enemy_freeze_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
 	if _enemy_freeze_probe:
 		var freeze_val := OS.get_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
@@ -2341,7 +2341,9 @@ func _combo_probe_run(p) -> void:
 		print("[sanity] FAIL: combo probe — no timing config for equipped weapon")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	var just_mid: float = (float(t.just_start) + float(t.just_end)) / 2.0
+	# Midpoint of the accept window [chain_start, 1.0] — comfortably inside it
+	# without racing the swing's end.
+	var chain_mid: float = (float(t.chain_start) + 1.0) / 2.0
 
 	# Case 1: miss-early press FUMBLES the swing — nothing queued, later
 	# presses inside the accept window are locked out, and the swing ending
@@ -2356,7 +2358,7 @@ func _combo_probe_run(p) -> void:
 		return
 	print("[sanity] checkpoint: combo probe — miss-early fumbled the swing")
 	var in_fwindow := await _combo_await(func() -> bool:
-		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= chain_mid)
 	if not in_fwindow or p.get_state() != states["ATTACKING"]:
 		print("[sanity] FAIL: combo probe — fumbled swing ended before the accept window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
@@ -2372,33 +2374,62 @@ func _combo_probe_run(p) -> void:
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	print("[sanity] checkpoint: combo probe — fumbled swing broke to IDLE")
-	_combo_probe_chain_phase(p, states, just_mid)
+	_combo_probe_chain_phase(p, states, chain_mid)
 
 
-## Clean-combo half of the probe: a just-window press queues JUST, fires
-## step 2 with the just flag at swing end, and the un-queued swing 2 breaks
+## Clean-combo half of the probe: an accept-window press queues the chain and
+## fires step 2 at swing end, the inter-swing turn (#560) applies the held
+## direction clamped to the weapon's limit, and the un-queued swing 2 breaks
 ## back to IDLE.
-func _combo_probe_chain_phase(p, states: Dictionary, just_mid: float) -> void:
-	print("[sanity] checkpoint: combo probe — swing 1 (clean), just-window press")
+func _combo_probe_chain_phase(p, states: Dictionary, chain_mid: float) -> void:
+	print("[sanity] checkpoint: combo probe — swing 1 (clean), accept-window press")
 	p._start_attack()
 	var in_window := await _combo_await(func() -> bool:
-		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= chain_mid)
 	if not in_window or p.get_state() != states["ATTACKING"]:
-		print("[sanity] FAIL: combo probe — clean swing ended before the just window was reached")
+		print("[sanity] FAIL: combo probe — clean swing ended before the accept window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	p._start_attack()
-	if p._queued_combo != p.ComboQueue.JUST:
-		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a JUST chain (#155)" % p._attack_frac())
+	if p._queued_combo != p.ComboQueue.NORMAL:
+		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a chain (#155)" % p._attack_frac())
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — just chain queued at frac %.2f" % p._attack_frac())
+	print("[sanity] checkpoint: combo probe — chain queued at frac %.2f" % p._attack_frac())
+
+	# #560 live wiring: hold a direction through the rest of the swing. It must
+	# be RECORDED (not applied — facing is locked mid-swing), then applied
+	# within the weapon's clamp when step 2 starts.
+	var yaw_before: float = p.player_rotation
+	var limit: float = CombatManager.get_combo_turn_limit(p._get_equipped_weapon_type(), 2)
+	Input.action_press("move_backward")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var recorded: bool = not is_nan(p._combo_desired_yaw)
+	var moved_midswing: bool = not is_equal_approx(p.player_rotation, yaw_before)
+	if not recorded:
+		Input.action_release("move_backward")
+		print("[sanity] FAIL: combo probe — held direction was not recorded during the swing (#560)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	if moved_midswing:
+		Input.action_release("move_backward")
+		print("[sanity] FAIL: combo probe — facing changed DURING a swing; it must be locked until the next step (#560)")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+
 	var fired := await _combo_await(func() -> bool: return p.combo_state == 2 or p.get_state() != states["ATTACKING"])
-	if not fired or p.combo_state != 2 or not p._is_just_attack:
-		print("[sanity] FAIL: combo probe — queued just chain did not fire step 2 with the just flag")
+	Input.action_release("move_backward")
+	if not fired or p.combo_state != 2:
+		print("[sanity] FAIL: combo probe — queued chain did not fire step 2")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — step 2 fired with just bonus (#155)")
+	var turned: float = absf(wrapf(p.player_rotation - yaw_before, -PI, PI))
+	if turned > deg_to_rad(limit) + 0.01:
+		print("[sanity] FAIL: combo probe — inter-swing turn %.1f° exceeded the %.0f° limit (#560)" % [rad_to_deg(turned), limit])
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
+		return
+	print("[sanity] checkpoint: combo probe — step 2 fired; inter-swing turn %.1f° within ±%.0f° (#560)" % [rad_to_deg(turned), limit])
 
 	# Case 3: no further press — swing 2 ending un-queued breaks to IDLE.
 	var broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
