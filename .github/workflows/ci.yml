@@ -53,6 +53,12 @@ jobs:
           fi
           exit $rc
 
+      - name: Free-field layout tests
+        # Invariant check for the RE-measured Valley free field + Reyburn data
+        # (issues #562/#563, spec /states/free-field): trees, door/rotation
+        # alignment, key/gate balance, spawn resolution, boss HP.
+        run: godot --headless --path . res://scripts/tools/test_field_layout.tscn
+
   version-check:
     if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-latest

@@ -1,0 +1,10119 @@
+{
+  "source": "build/fs/scene/<NN>/<variant>/<code>.narc -> lndpr (DSIF), via tools/doorways.py",
+  "units": "1.19.12 fixed point divided by 4096; a room cell is 44x44 spanning -22..+22",
+  "format": {
+    "array": "a run of 16-byte records at region-A offset 76",
+    "record": "four i32: x1, z1, x2, z2 - the two ends of the doorway axis",
+    "count": "derived from the relocation table, which holds one pointer per record. No count field was found. The result agrees with the door count implied by the room code's first letter for every room extracted.",
+    "walls": "each segment crosses a boundary, so one end sits at +-22 and the other at +-25. If x is constant the segment crosses the north or south wall and x is the offset along it; if z is constant it is east or west."
+  },
+  "geometry_is_not_shared": {
+    "across_stages_same_variant_and_room": {
+      "identical": 0,
+      "differ": 36
+    },
+    "across_variants_same_stage_and_room": {
+      "identical": 43,
+      "differ": 87
+    },
+    "conclusion": "door positions are specific to the (stage, variant, room) triple. NOT ONE of the 36 variant+room pairs has the same geometry in every stage it appears in, so a port cannot key a door table by room code alone. s01a_ga1's north door is at x=-6, s01b_ga1's at x=+5, s02a_ga1's at x=0 with the wall at z=20 rather than 22. Note that the room NAMES and counts are shared across stages, which is what made one tile set reskinned per area a reasonable earlier reading - the names are shared, the door geometry is not."
+  },
+  "observed_edge_values": [
+    20.0,
+    21.0,
+    21.5,
+    22.0,
+    23.0
+  ],
+  "observed_stub_values": [
+    25.0,
+    25.75,
+    26.0,
+    26.5
+  ],
+  "doors_by_shape_letter": {
+    "i": 2,
+    "l": 2,
+    "t": 3,
+    "x": 4,
+    "n": 1,
+    "s": 1,
+    "g": 1
+  },
+  "rooms": {
+    "s00a_nr1": {
+      "doors": 1,
+      "array_offset": 16,
+      "segments": [
+        [
+          [
+            0.0,
+            21.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s00a_nr3": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s00a_nr4": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s00a_nr5": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            -15.5,
+            22.0
+          ],
+          [
+            -15.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -15.5
+        }
+      ]
+    },
+    "s01a_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            22.0
+          ],
+          [
+            -6.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -6.0
+        }
+      ]
+    },
+    "s01a_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            14.0,
+            22.0
+          ],
+          [
+            14.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "north",
+          "offset": 14.0
+        }
+      ]
+    },
+    "s01a_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            12.0,
+            22.0
+          ],
+          [
+            12.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "north",
+          "offset": 12.0
+        }
+      ]
+    },
+    "s01a_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -13.5,
+            -22.0
+          ],
+          [
+            -13.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            19.0,
+            22.0
+          ],
+          [
+            19.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -13.5
+        },
+        {
+          "wall": "north",
+          "offset": 19.0
+        }
+      ]
+    },
+    "s01a_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -19.0,
+            -22.0
+          ],
+          [
+            -19.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            19.0,
+            22.0
+          ],
+          [
+            19.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -19.0
+        },
+        {
+          "wall": "north",
+          "offset": 19.0
+        }
+      ]
+    },
+    "s01a_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -10.5
+          ],
+          [
+            25.0,
+            -10.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "east",
+          "offset": -10.5
+        }
+      ]
+    },
+    "s01a_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            12.0
+          ],
+          [
+            25.0,
+            12.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "east",
+          "offset": 12.0
+        }
+      ]
+    },
+    "s01a_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -13.5,
+            -22.0
+          ],
+          [
+            -13.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            13.5
+          ],
+          [
+            25.0,
+            13.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -13.5
+        },
+        {
+          "wall": "east",
+          "offset": 13.5
+        }
+      ]
+    },
+    "s01a_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            14.0,
+            -22.0
+          ],
+          [
+            14.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -10.5
+          ],
+          [
+            25.0,
+            -10.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 14.0
+        },
+        {
+          "wall": "east",
+          "offset": -10.5
+        }
+      ]
+    },
+    "s01a_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            19.0,
+            22.0
+          ],
+          [
+            19.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 19.0
+        }
+      ]
+    },
+    "s01a_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s01a_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -14.0,
+            22.0
+          ],
+          [
+            -14.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -14.0
+        }
+      ]
+    },
+    "s01a_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -2.0,
+            22.0
+          ],
+          [
+            -2.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -2.0
+        }
+      ]
+    },
+    "s01a_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            8.5
+          ],
+          [
+            25.0,
+            8.5
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -12.0
+          ],
+          [
+            -25.0,
+            -12.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 8.5
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": -12.0
+        }
+      ]
+    },
+    "s01a_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -17.0
+          ],
+          [
+            25.0,
+            -17.0
+          ]
+        ],
+        [
+          [
+            19.0,
+            22.0
+          ],
+          [
+            19.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            6.0
+          ],
+          [
+            -25.0,
+            6.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -17.0
+        },
+        {
+          "wall": "north",
+          "offset": 19.0
+        },
+        {
+          "wall": "west",
+          "offset": 6.0
+        }
+      ]
+    },
+    "s01a_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            1.0
+          ],
+          [
+            25.0,
+            1.0
+          ]
+        ],
+        [
+          [
+            -14.0,
+            22.0
+          ],
+          [
+            -14.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -16.0
+          ],
+          [
+            -25.0,
+            -16.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 1.0
+        },
+        {
+          "wall": "north",
+          "offset": -14.0
+        },
+        {
+          "wall": "west",
+          "offset": -16.0
+        }
+      ]
+    },
+    "s01a_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            6.5
+          ],
+          [
+            25.0,
+            6.5
+          ]
+        ],
+        [
+          [
+            -14.5,
+            22.0
+          ],
+          [
+            -14.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -0.5
+          ],
+          [
+            -25.0,
+            -0.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 6.5
+        },
+        {
+          "wall": "north",
+          "offset": -14.5
+        },
+        {
+          "wall": "west",
+          "offset": -0.5
+        }
+      ]
+    },
+    "s01a_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -3.0
+          ],
+          [
+            25.0,
+            -3.0
+          ]
+        ],
+        [
+          [
+            12.0,
+            22.0
+          ],
+          [
+            12.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            16.0
+          ],
+          [
+            -25.0,
+            16.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "east",
+          "offset": -3.0
+        },
+        {
+          "wall": "north",
+          "offset": 12.0
+        },
+        {
+          "wall": "west",
+          "offset": 16.0
+        }
+      ]
+    },
+    "s01b_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s01b_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "north",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s01b_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            11.0,
+            -22.0
+          ],
+          [
+            11.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            7.5,
+            22.0
+          ],
+          [
+            7.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 11.0
+        },
+        {
+          "wall": "north",
+          "offset": 7.5
+        }
+      ]
+    },
+    "s01b_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "north",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s01b_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            14.5,
+            -22.0
+          ],
+          [
+            14.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -13.5,
+            22.0
+          ],
+          [
+            -13.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 14.5
+        },
+        {
+          "wall": "north",
+          "offset": -13.5
+        }
+      ]
+    },
+    "s01b_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -17.0
+          ],
+          [
+            25.0,
+            -17.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "east",
+          "offset": -17.0
+        }
+      ]
+    },
+    "s01b_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -17.0
+          ],
+          [
+            25.0,
+            -17.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "east",
+          "offset": -17.0
+        }
+      ]
+    },
+    "s01b_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -17.0,
+            -22.0
+          ],
+          [
+            -17.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            2.5
+          ],
+          [
+            25.0,
+            2.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -17.0
+        },
+        {
+          "wall": "east",
+          "offset": 2.5
+        }
+      ]
+    },
+    "s01b_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            10.0,
+            -22.0
+          ],
+          [
+            10.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            15.5
+          ],
+          [
+            25.0,
+            15.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 10.0
+        },
+        {
+          "wall": "east",
+          "offset": 15.5
+        }
+      ]
+    },
+    "s01b_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s01b_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -11.0,
+            22.0
+          ],
+          [
+            -11.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -11.0
+        }
+      ]
+    },
+    "s01b_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -10.0,
+            22.0
+          ],
+          [
+            -10.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -10.0
+        }
+      ]
+    },
+    "s01b_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s01b_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -14.5
+          ],
+          [
+            25.0,
+            -14.5
+          ]
+        ],
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            17.0
+          ],
+          [
+            -25.0,
+            17.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -14.5
+        },
+        {
+          "wall": "north",
+          "offset": 17.0
+        },
+        {
+          "wall": "west",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s01b_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -11.0
+          ],
+          [
+            25.0,
+            -11.0
+          ]
+        ],
+        [
+          [
+            12.0,
+            22.0
+          ],
+          [
+            12.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            15.5
+          ],
+          [
+            -25.0,
+            15.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -11.0
+        },
+        {
+          "wall": "north",
+          "offset": 12.0
+        },
+        {
+          "wall": "west",
+          "offset": 15.5
+        }
+      ]
+    },
+    "s01b_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -13.0
+          ],
+          [
+            25.0,
+            -13.0
+          ]
+        ],
+        [
+          [
+            11.0,
+            22.0
+          ],
+          [
+            11.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            6.5
+          ],
+          [
+            -25.0,
+            6.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -13.0
+        },
+        {
+          "wall": "north",
+          "offset": 11.0
+        },
+        {
+          "wall": "west",
+          "offset": 6.5
+        }
+      ]
+    },
+    "s01b_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            5.5
+          ],
+          [
+            25.0,
+            5.5
+          ]
+        ],
+        [
+          [
+            -13.5,
+            22.0
+          ],
+          [
+            -13.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -3.0
+          ],
+          [
+            -25.0,
+            -3.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 5.5
+        },
+        {
+          "wall": "north",
+          "offset": -13.5
+        },
+        {
+          "wall": "west",
+          "offset": -3.0
+        }
+      ]
+    },
+    "s01b_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -9.5,
+            -22.0
+          ],
+          [
+            -9.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -14.5
+          ],
+          [
+            25.0,
+            -14.5
+          ]
+        ],
+        [
+          [
+            17.0,
+            22.0
+          ],
+          [
+            17.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            17.0
+          ],
+          [
+            -25.0,
+            17.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -9.5
+        },
+        {
+          "wall": "east",
+          "offset": -14.5
+        },
+        {
+          "wall": "north",
+          "offset": 17.0
+        },
+        {
+          "wall": "west",
+          "offset": 17.0
+        }
+      ]
+    },
+    "s02a_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            20.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s02a_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            4.0,
+            22.0
+          ],
+          [
+            4.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "north",
+          "offset": 4.0
+        }
+      ]
+    },
+    "s02a_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -6.0,
+            22.0
+          ],
+          [
+            -6.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "north",
+          "offset": -6.0
+        }
+      ]
+    },
+    "s02a_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            1.25,
+            -22.0
+          ],
+          [
+            1.25,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -14.0,
+            22.0
+          ],
+          [
+            -14.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 1.25
+        },
+        {
+          "wall": "north",
+          "offset": -14.0
+        }
+      ]
+    },
+    "s02a_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -0.5,
+            -22.0
+          ],
+          [
+            -0.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -13.75,
+            22.0
+          ],
+          [
+            -13.75,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -0.5
+        },
+        {
+          "wall": "north",
+          "offset": -13.75
+        }
+      ]
+    },
+    "s02a_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            6.0
+          ],
+          [
+            25.0,
+            6.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "east",
+          "offset": 6.0
+        }
+      ]
+    },
+    "s02a_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -7.75
+          ],
+          [
+            25.0,
+            -7.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "east",
+          "offset": -7.75
+        }
+      ]
+    },
+    "s02a_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            1.25,
+            -22.0
+          ],
+          [
+            1.25,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            18.5
+          ],
+          [
+            25.0,
+            18.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 1.25
+        },
+        {
+          "wall": "east",
+          "offset": 18.5
+        }
+      ]
+    },
+    "s02a_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s02a_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.0,
+            22.0
+          ],
+          [
+            -7.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -7.0
+        }
+      ]
+    },
+    "s02a_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 6.0
+        }
+      ]
+    },
+    "s02a_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s02a_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            20.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s02a_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            6.0
+          ],
+          [
+            25.0,
+            6.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            7.75
+          ],
+          [
+            -25.0,
+            7.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 6.0
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": 7.75
+        }
+      ]
+    },
+    "s02a_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -0.5
+          ],
+          [
+            25.0,
+            -0.5
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -14.0
+          ],
+          [
+            -25.0,
+            -14.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -0.5
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": -14.0
+        }
+      ]
+    },
+    "s02a_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -8.0
+          ],
+          [
+            25.0,
+            -8.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -6.0
+          ],
+          [
+            -25.0,
+            -6.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -8.0
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": -6.0
+        }
+      ]
+    },
+    "s02a_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -8.0
+          ],
+          [
+            25.0,
+            -8.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -5.0
+          ],
+          [
+            -25.0,
+            -5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -8.0
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": -5.0
+        }
+      ]
+    },
+    "s02a_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.0,
+            -22.0
+          ],
+          [
+            -6.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            7.5
+          ],
+          [
+            25.0,
+            7.5
+          ]
+        ],
+        [
+          [
+            -6.0,
+            22.0
+          ],
+          [
+            -6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -5.0
+          ],
+          [
+            -25.0,
+            -5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.0
+        },
+        {
+          "wall": "east",
+          "offset": 7.5
+        },
+        {
+          "wall": "north",
+          "offset": -6.0
+        },
+        {
+          "wall": "west",
+          "offset": -5.0
+        }
+      ]
+    },
+    "s02b_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -8.0,
+            22.0
+          ],
+          [
+            -8.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -8.0
+        }
+      ]
+    },
+    "s02b_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            10.5,
+            -22.0
+          ],
+          [
+            10.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -11.0,
+            22.0
+          ],
+          [
+            -11.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 10.5
+        },
+        {
+          "wall": "north",
+          "offset": -11.0
+        }
+      ]
+    },
+    "s02b_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            11.75,
+            -22.0
+          ],
+          [
+            11.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -11.0,
+            22.0
+          ],
+          [
+            -11.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 11.75
+        },
+        {
+          "wall": "north",
+          "offset": -11.0
+        }
+      ]
+    },
+    "s02b_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            13.25,
+            -22.0
+          ],
+          [
+            13.25,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -8.75,
+            22.0
+          ],
+          [
+            -8.75,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 13.25
+        },
+        {
+          "wall": "north",
+          "offset": -8.75
+        }
+      ]
+    },
+    "s02b_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -5.75,
+            -22.0
+          ],
+          [
+            -5.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -8.25,
+            22.0
+          ],
+          [
+            -8.25,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.75
+        },
+        {
+          "wall": "north",
+          "offset": -8.25
+        }
+      ]
+    },
+    "s02b_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            11.0,
+            -22.0
+          ],
+          [
+            11.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -3.5
+          ],
+          [
+            25.0,
+            -3.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 11.0
+        },
+        {
+          "wall": "east",
+          "offset": -3.5
+        }
+      ]
+    },
+    "s02b_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            11.25,
+            -22.0
+          ],
+          [
+            11.25,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -7.25
+          ],
+          [
+            25.0,
+            -7.25
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 11.25
+        },
+        {
+          "wall": "east",
+          "offset": -7.25
+        }
+      ]
+    },
+    "s02b_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            19.5,
+            -22.0
+          ],
+          [
+            19.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            13.25
+          ],
+          [
+            25.0,
+            13.25
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 19.5
+        },
+        {
+          "wall": "east",
+          "offset": 13.25
+        }
+      ]
+    },
+    "s02b_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -5.75,
+            -22.0
+          ],
+          [
+            -5.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            5.0
+          ],
+          [
+            25.0,
+            5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.75
+        },
+        {
+          "wall": "east",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s02b_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -8.5,
+            22.0
+          ],
+          [
+            -8.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -8.5
+        }
+      ]
+    },
+    "s02b_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -4.0,
+            22.0
+          ],
+          [
+            -4.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -4.0
+        }
+      ]
+    },
+    "s02b_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            10.0,
+            22.0
+          ],
+          [
+            10.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 10.0
+        }
+      ]
+    },
+    "s02b_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -7.75,
+            22.0
+          ],
+          [
+            -7.75,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -7.75
+        }
+      ]
+    },
+    "s02b_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            7.0
+          ],
+          [
+            25.0,
+            7.0
+          ]
+        ],
+        [
+          [
+            -12.0,
+            22.0
+          ],
+          [
+            -12.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            7.25
+          ],
+          [
+            -25.0,
+            7.25
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 7.0
+        },
+        {
+          "wall": "north",
+          "offset": -12.0
+        },
+        {
+          "wall": "west",
+          "offset": 7.25
+        }
+      ]
+    },
+    "s02b_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            11.0
+          ],
+          [
+            25.0,
+            11.0
+          ]
+        ],
+        [
+          [
+            5.75,
+            22.0
+          ],
+          [
+            5.75,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -6.25
+          ],
+          [
+            -25.0,
+            -6.25
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 11.0
+        },
+        {
+          "wall": "north",
+          "offset": 5.75
+        },
+        {
+          "wall": "west",
+          "offset": -6.25
+        }
+      ]
+    },
+    "s02b_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -5.75
+          ],
+          [
+            25.0,
+            -5.75
+          ]
+        ],
+        [
+          [
+            -5.0,
+            22.0
+          ],
+          [
+            -5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -4.0
+          ],
+          [
+            -25.0,
+            -4.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -5.75
+        },
+        {
+          "wall": "north",
+          "offset": -5.0
+        },
+        {
+          "wall": "west",
+          "offset": -4.0
+        }
+      ]
+    },
+    "s02b_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -5.75
+          ],
+          [
+            25.0,
+            -5.75
+          ]
+        ],
+        [
+          [
+            -5.0,
+            22.0
+          ],
+          [
+            -5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -3.0
+          ],
+          [
+            -25.0,
+            -3.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -5.75
+        },
+        {
+          "wall": "north",
+          "offset": -5.0
+        },
+        {
+          "wall": "west",
+          "offset": -3.0
+        }
+      ]
+    },
+    "s02b_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            11.75,
+            -22.0
+          ],
+          [
+            11.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -10.0
+          ],
+          [
+            25.0,
+            -10.0
+          ]
+        ],
+        [
+          [
+            -12.0,
+            22.0
+          ],
+          [
+            -12.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -9.5
+          ],
+          [
+            -25.0,
+            -9.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 11.75
+        },
+        {
+          "wall": "east",
+          "offset": -10.0
+        },
+        {
+          "wall": "north",
+          "offset": -12.0
+        },
+        {
+          "wall": "west",
+          "offset": -9.5
+        }
+      ]
+    },
+    "s03a_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -0.5,
+            22.0
+          ],
+          [
+            -0.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -0.5
+        }
+      ]
+    },
+    "s03a_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            1.0,
+            -22.0
+          ],
+          [
+            1.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            8.5,
+            22.0
+          ],
+          [
+            8.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 1.0
+        },
+        {
+          "wall": "north",
+          "offset": 8.5
+        }
+      ]
+    },
+    "s03a_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            7.5,
+            -22.0
+          ],
+          [
+            7.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            12.5,
+            22.0
+          ],
+          [
+            12.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 7.5
+        },
+        {
+          "wall": "north",
+          "offset": 12.5
+        }
+      ]
+    },
+    "s03a_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -8.5,
+            -22.0
+          ],
+          [
+            -8.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            12.0,
+            22.0
+          ],
+          [
+            12.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -8.5
+        },
+        {
+          "wall": "north",
+          "offset": 12.0
+        }
+      ]
+    },
+    "s03a_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            4.5,
+            -22.0
+          ],
+          [
+            4.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            2.0,
+            22.0
+          ],
+          [
+            2.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 4.5
+        },
+        {
+          "wall": "north",
+          "offset": 2.0
+        }
+      ]
+    },
+    "s03a_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -6.5,
+            -22.0
+          ],
+          [
+            -6.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -4.5
+          ],
+          [
+            25.0,
+            -4.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -6.5
+        },
+        {
+          "wall": "east",
+          "offset": -4.5
+        }
+      ]
+    },
+    "s03a_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -15.5,
+            -22.0
+          ],
+          [
+            -15.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            8.0
+          ],
+          [
+            25.0,
+            8.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -15.5
+        },
+        {
+          "wall": "east",
+          "offset": 8.0
+        }
+      ]
+    },
+    "s03a_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -4.5,
+            -22.0
+          ],
+          [
+            -4.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -8.5
+          ],
+          [
+            25.0,
+            -8.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -4.5
+        },
+        {
+          "wall": "east",
+          "offset": -8.5
+        }
+      ]
+    },
+    "s03a_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -15.5,
+            -22.0
+          ],
+          [
+            -15.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            15.5
+          ],
+          [
+            25.0,
+            15.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -15.5
+        },
+        {
+          "wall": "east",
+          "offset": 15.5
+        }
+      ]
+    },
+    "s03a_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            2.5,
+            22.0
+          ],
+          [
+            2.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 2.5
+        }
+      ]
+    },
+    "s03a_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            15.5,
+            22.0
+          ],
+          [
+            15.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 15.5
+        }
+      ]
+    },
+    "s03a_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -15.5,
+            22.0
+          ],
+          [
+            -15.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -15.5
+        }
+      ]
+    },
+    "s03a_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s03a_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -12.5
+          ],
+          [
+            25.0,
+            -12.5
+          ]
+        ],
+        [
+          [
+            -6.0,
+            22.0
+          ],
+          [
+            -6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -7.5
+          ],
+          [
+            -25.0,
+            -7.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -12.5
+        },
+        {
+          "wall": "north",
+          "offset": -6.0
+        },
+        {
+          "wall": "west",
+          "offset": -7.5
+        }
+      ]
+    },
+    "s03a_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -15.0
+          ],
+          [
+            25.0,
+            -15.0
+          ]
+        ],
+        [
+          [
+            -4.5,
+            22.0
+          ],
+          [
+            -4.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            12.5
+          ],
+          [
+            -25.0,
+            12.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -15.0
+        },
+        {
+          "wall": "north",
+          "offset": -4.5
+        },
+        {
+          "wall": "west",
+          "offset": 12.5
+        }
+      ]
+    },
+    "s03a_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -10.0
+          ],
+          [
+            25.0,
+            -10.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            3.5
+          ],
+          [
+            -25.0,
+            3.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -10.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 3.5
+        }
+      ]
+    },
+    "s03a_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -7.5
+          ],
+          [
+            25.0,
+            -7.5
+          ]
+        ],
+        [
+          [
+            -4.0,
+            22.0
+          ],
+          [
+            -4.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            3.5
+          ],
+          [
+            -25.0,
+            3.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -7.5
+        },
+        {
+          "wall": "north",
+          "offset": -4.0
+        },
+        {
+          "wall": "west",
+          "offset": 3.5
+        }
+      ]
+    },
+    "s03a_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.0,
+            -22.0
+          ],
+          [
+            -7.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            4.0
+          ],
+          [
+            25.0,
+            4.0
+          ]
+        ],
+        [
+          [
+            -9.5,
+            22.0
+          ],
+          [
+            -9.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            11.5
+          ],
+          [
+            -25.0,
+            11.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.0
+        },
+        {
+          "wall": "east",
+          "offset": 4.0
+        },
+        {
+          "wall": "north",
+          "offset": -9.5
+        },
+        {
+          "wall": "west",
+          "offset": 11.5
+        }
+      ]
+    },
+    "s03b_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -3.0,
+            22.0
+          ],
+          [
+            -3.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -3.0
+        }
+      ]
+    },
+    "s03b_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -4.5,
+            -22.0
+          ],
+          [
+            -4.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            8.0,
+            22.0
+          ],
+          [
+            8.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -4.5
+        },
+        {
+          "wall": "north",
+          "offset": 8.0
+        }
+      ]
+    },
+    "s03b_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -4.5,
+            -22.0
+          ],
+          [
+            -4.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            8.0,
+            22.0
+          ],
+          [
+            8.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -4.5
+        },
+        {
+          "wall": "north",
+          "offset": 8.0
+        }
+      ]
+    },
+    "s03b_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -1.0,
+            -22.0
+          ],
+          [
+            -1.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            16.0,
+            22.0
+          ],
+          [
+            16.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -1.0
+        },
+        {
+          "wall": "north",
+          "offset": 16.0
+        }
+      ]
+    },
+    "s03b_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            2.0,
+            -22.0
+          ],
+          [
+            2.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -13.0,
+            22.0
+          ],
+          [
+            -13.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 2.0
+        },
+        {
+          "wall": "north",
+          "offset": -13.0
+        }
+      ]
+    },
+    "s03b_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -8.0,
+            -22.0
+          ],
+          [
+            -8.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -7.5
+          ],
+          [
+            25.0,
+            -7.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -8.0
+        },
+        {
+          "wall": "east",
+          "offset": -7.5
+        }
+      ]
+    },
+    "s03b_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -4.0,
+            -22.0
+          ],
+          [
+            -4.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -10.5
+          ],
+          [
+            25.0,
+            -10.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -4.0
+        },
+        {
+          "wall": "east",
+          "offset": -10.5
+        }
+      ]
+    },
+    "s03b_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -3.0
+          ],
+          [
+            25.0,
+            -3.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": -3.0
+        }
+      ]
+    },
+    "s03b_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -14.5,
+            -22.0
+          ],
+          [
+            -14.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -13.0
+          ],
+          [
+            25.0,
+            -13.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -14.5
+        },
+        {
+          "wall": "east",
+          "offset": -13.0
+        }
+      ]
+    },
+    "s03b_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -0.5,
+            22.0
+          ],
+          [
+            -0.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -0.5
+        }
+      ]
+    },
+    "s03b_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            13.0,
+            22.0
+          ],
+          [
+            13.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 13.0
+        }
+      ]
+    },
+    "s03b_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            16.0,
+            22.0
+          ],
+          [
+            16.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 16.0
+        }
+      ]
+    },
+    "s03b_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            1.5,
+            22.0
+          ],
+          [
+            1.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 1.5
+        }
+      ]
+    },
+    "s03b_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -4.5
+          ],
+          [
+            25.0,
+            -4.5
+          ]
+        ],
+        [
+          [
+            8.0,
+            22.0
+          ],
+          [
+            8.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -2.0
+          ],
+          [
+            -25.0,
+            -2.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -4.5
+        },
+        {
+          "wall": "north",
+          "offset": 8.0
+        },
+        {
+          "wall": "west",
+          "offset": -2.0
+        }
+      ]
+    },
+    "s03b_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            2.0
+          ],
+          [
+            25.0,
+            2.0
+          ]
+        ],
+        [
+          [
+            11.5,
+            22.0
+          ],
+          [
+            11.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -13.0
+          ],
+          [
+            -25.0,
+            -13.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 2.0
+        },
+        {
+          "wall": "north",
+          "offset": 11.5
+        },
+        {
+          "wall": "west",
+          "offset": -13.0
+        }
+      ]
+    },
+    "s03b_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -4.5
+          ],
+          [
+            25.0,
+            -4.5
+          ]
+        ],
+        [
+          [
+            8.0,
+            22.0
+          ],
+          [
+            8.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -2.0
+          ],
+          [
+            -25.0,
+            -2.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -4.5
+        },
+        {
+          "wall": "north",
+          "offset": 8.0
+        },
+        {
+          "wall": "west",
+          "offset": -2.0
+        }
+      ]
+    },
+    "s03b_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -10.5
+          ],
+          [
+            25.0,
+            -10.5
+          ]
+        ],
+        [
+          [
+            8.0,
+            22.0
+          ],
+          [
+            8.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            4.0
+          ],
+          [
+            -25.0,
+            4.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -10.5
+        },
+        {
+          "wall": "north",
+          "offset": 8.0
+        },
+        {
+          "wall": "west",
+          "offset": 4.0
+        }
+      ]
+    },
+    "s03b_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -11.0,
+            -22.0
+          ],
+          [
+            -11.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -8.0
+          ],
+          [
+            25.0,
+            -8.0
+          ]
+        ],
+        [
+          [
+            14.5,
+            22.0
+          ],
+          [
+            14.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            4.5
+          ],
+          [
+            -25.0,
+            4.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -11.0
+        },
+        {
+          "wall": "east",
+          "offset": -8.0
+        },
+        {
+          "wall": "north",
+          "offset": 14.5
+        },
+        {
+          "wall": "west",
+          "offset": 4.5
+        }
+      ]
+    },
+    "s04a_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04a_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -5.0,
+            -22.0
+          ],
+          [
+            -5.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04a_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -5.0,
+            -22.0
+          ],
+          [
+            -5.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04a_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.75,
+            -22.0
+          ],
+          [
+            -7.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            7.25,
+            22.0
+          ],
+          [
+            7.25,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.75
+        },
+        {
+          "wall": "north",
+          "offset": 7.25
+        }
+      ]
+    },
+    "s04a_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.5,
+            -22.0
+          ],
+          [
+            -7.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            7.5,
+            22.0
+          ],
+          [
+            7.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.5
+        },
+        {
+          "wall": "north",
+          "offset": 7.5
+        }
+      ]
+    },
+    "s04a_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -5.0,
+            -22.0
+          ],
+          [
+            -5.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -5.0
+          ],
+          [
+            25.0,
+            -5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.0
+        },
+        {
+          "wall": "east",
+          "offset": -5.0
+        }
+      ]
+    },
+    "s04a_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -5.0
+          ],
+          [
+            25.0,
+            -5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": -5.0
+        }
+      ]
+    },
+    "s04a_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.5,
+            -22.0
+          ],
+          [
+            -7.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            1.5
+          ],
+          [
+            25.0,
+            1.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.5
+        },
+        {
+          "wall": "east",
+          "offset": 1.5
+        }
+      ]
+    },
+    "s04a_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -7.75,
+            -22.0
+          ],
+          [
+            -7.75,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            1.75
+          ],
+          [
+            25.0,
+            1.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.75
+        },
+        {
+          "wall": "east",
+          "offset": 1.75
+        }
+      ]
+    },
+    "s04a_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s04a_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04a_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -1.5,
+            22.0
+          ],
+          [
+            -1.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -1.5
+        }
+      ]
+    },
+    "s04a_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04a_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            5.0
+          ],
+          [
+            -25.0,
+            5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 5.0
+        },
+        {
+          "wall": "west",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s04a_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            -7.5
+          ],
+          [
+            25.0,
+            -7.5
+          ]
+        ],
+        [
+          [
+            -12.25,
+            22.0
+          ],
+          [
+            -12.25,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            7.5
+          ],
+          [
+            -25.0,
+            7.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -7.5
+        },
+        {
+          "wall": "north",
+          "offset": -12.25
+        },
+        {
+          "wall": "west",
+          "offset": 7.5
+        }
+      ]
+    },
+    "s04a_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            5.0
+          ],
+          [
+            -25.0,
+            5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 5.0
+        },
+        {
+          "wall": "west",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s04a_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            5.0
+          ],
+          [
+            -25.0,
+            5.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 5.0
+        },
+        {
+          "wall": "west",
+          "offset": 5.0
+        }
+      ]
+    },
+    "s04a_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            12.5,
+            -22.0
+          ],
+          [
+            12.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            5.0,
+            22.0
+          ],
+          [
+            5.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            4.75
+          ],
+          [
+            -25.0,
+            4.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 12.5
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 5.0
+        },
+        {
+          "wall": "west",
+          "offset": 4.75
+        }
+      ]
+    },
+    "s04b_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            10.0,
+            -22.0
+          ],
+          [
+            10.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -15.0,
+            22.0
+          ],
+          [
+            -15.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 10.0
+        },
+        {
+          "wall": "north",
+          "offset": -15.0
+        }
+      ]
+    },
+    "s04b_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            -5.0,
+            -22.0
+          ],
+          [
+            -5.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            15.0
+          ],
+          [
+            25.0,
+            15.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -5.0
+        },
+        {
+          "wall": "east",
+          "offset": 15.0
+        }
+      ]
+    },
+    "s04b_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            10.0,
+            -22.0
+          ],
+          [
+            10.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            5.5
+          ],
+          [
+            25.0,
+            5.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 10.0
+        },
+        {
+          "wall": "east",
+          "offset": 5.5
+        }
+      ]
+    },
+    "s04b_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            10.0
+          ],
+          [
+            25.0,
+            10.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -15.0
+          ],
+          [
+            -25.0,
+            -15.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 10.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": -15.0
+        }
+      ]
+    },
+    "s04b_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s04b_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -16.5,
+            -22.0
+          ],
+          [
+            -16.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            9.5,
+            22.0
+          ],
+          [
+            9.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -16.5
+        },
+        {
+          "wall": "north",
+          "offset": 9.5
+        }
+      ]
+    },
+    "s05a_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -20.0,
+            -22.0
+          ],
+          [
+            -20.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            17.5,
+            22.0
+          ],
+          [
+            17.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -20.0
+        },
+        {
+          "wall": "north",
+          "offset": 17.5
+        }
+      ]
+    },
+    "s05a_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -9.5,
+            -22.0
+          ],
+          [
+            -9.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -2.0
+          ],
+          [
+            25.0,
+            -2.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -9.5
+        },
+        {
+          "wall": "east",
+          "offset": -2.0
+        }
+      ]
+    },
+    "s05a_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -2.0,
+            -22.0
+          ],
+          [
+            -2.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            13.0
+          ],
+          [
+            25.0,
+            13.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -2.0
+        },
+        {
+          "wall": "east",
+          "offset": 13.0
+        }
+      ]
+    },
+    "s05a_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            20.0,
+            22.0
+          ],
+          [
+            20.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 20.0
+        }
+      ]
+    },
+    "s05a_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            14.0
+          ],
+          [
+            25.0,
+            14.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 14.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05a_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -2.0
+          ],
+          [
+            25.0,
+            -2.0
+          ]
+        ],
+        [
+          [
+            -15.0,
+            22.0
+          ],
+          [
+            -15.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -13.0
+          ],
+          [
+            -25.0,
+            -13.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -2.0
+        },
+        {
+          "wall": "north",
+          "offset": -15.0
+        },
+        {
+          "wall": "west",
+          "offset": -13.0
+        }
+      ]
+    },
+    "s05a_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -8.5
+          ],
+          [
+            25.0,
+            -8.5
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            9.5
+          ],
+          [
+            -25.0,
+            9.5
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -8.5
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": 9.5
+        }
+      ]
+    },
+    "s05a_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -3.5
+          ],
+          [
+            25.0,
+            -3.5
+          ]
+        ],
+        [
+          [
+            4.5,
+            22.0
+          ],
+          [
+            4.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            12.0
+          ],
+          [
+            -25.0,
+            12.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -3.5
+        },
+        {
+          "wall": "north",
+          "offset": 4.5
+        },
+        {
+          "wall": "west",
+          "offset": 12.0
+        }
+      ]
+    },
+    "s05a_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -12.5,
+            -22.0
+          ],
+          [
+            -12.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            14.0
+          ],
+          [
+            25.0,
+            14.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -12.5
+        },
+        {
+          "wall": "east",
+          "offset": 14.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s05b_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -3.0,
+            22.0
+          ],
+          [
+            -3.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -3.0
+        }
+      ]
+    },
+    "s05b_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            8.0,
+            -22.0
+          ],
+          [
+            8.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -2.5,
+            22.0
+          ],
+          [
+            -2.5,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 8.0
+        },
+        {
+          "wall": "north",
+          "offset": -2.5
+        }
+      ]
+    },
+    "s05b_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            8.0,
+            -22.0
+          ],
+          [
+            8.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            16.0,
+            22.0
+          ],
+          [
+            16.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 8.0
+        },
+        {
+          "wall": "north",
+          "offset": 16.0
+        }
+      ]
+    },
+    "s05b_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            7.5,
+            -22.0
+          ],
+          [
+            7.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            -9.0,
+            22.0
+          ],
+          [
+            -9.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 7.5
+        },
+        {
+          "wall": "north",
+          "offset": -9.0
+        }
+      ]
+    },
+    "s05b_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -11.0,
+            -22.0
+          ],
+          [
+            -11.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            16.0,
+            22.0
+          ],
+          [
+            16.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -11.0
+        },
+        {
+          "wall": "north",
+          "offset": 16.0
+        }
+      ]
+    },
+    "s05b_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -4.0,
+            -22.0
+          ],
+          [
+            -4.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            8.0
+          ],
+          [
+            25.0,
+            8.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -4.0
+        },
+        {
+          "wall": "east",
+          "offset": 8.0
+        }
+      ]
+    },
+    "s05b_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -16.0,
+            -22.0
+          ],
+          [
+            -16.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -6.0
+          ],
+          [
+            25.0,
+            -6.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -16.0
+        },
+        {
+          "wall": "east",
+          "offset": -6.0
+        }
+      ]
+    },
+    "s05b_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -7.5,
+            -22.0
+          ],
+          [
+            -7.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            9.0
+          ],
+          [
+            25.0,
+            9.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -7.5
+        },
+        {
+          "wall": "east",
+          "offset": 9.0
+        }
+      ]
+    },
+    "s05b_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -13.5,
+            -22.0
+          ],
+          [
+            -13.5,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -4.0
+          ],
+          [
+            25.0,
+            -4.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -13.5
+        },
+        {
+          "wall": "east",
+          "offset": -4.0
+        }
+      ]
+    },
+    "s05b_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -8.0,
+            22.0
+          ],
+          [
+            -8.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -8.0
+        }
+      ]
+    },
+    "s05b_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -8.0,
+            22.0
+          ],
+          [
+            -8.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": -8.0
+        }
+      ]
+    },
+    "s05b_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            4.0,
+            22.0
+          ],
+          [
+            4.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 4.0
+        }
+      ]
+    },
+    "s05b_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            1.0,
+            22.0
+          ],
+          [
+            1.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 1.0
+        }
+      ]
+    },
+    "s05b_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            8.0
+          ],
+          [
+            25.0,
+            8.0
+          ]
+        ],
+        [
+          [
+            4.0,
+            22.0
+          ],
+          [
+            4.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -8.0
+          ],
+          [
+            -25.0,
+            -8.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 8.0
+        },
+        {
+          "wall": "north",
+          "offset": 4.0
+        },
+        {
+          "wall": "west",
+          "offset": -8.0
+        }
+      ]
+    },
+    "s05b_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -16.0
+          ],
+          [
+            25.0,
+            -16.0
+          ]
+        ],
+        [
+          [
+            -3.0,
+            22.0
+          ],
+          [
+            -3.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            11.0
+          ],
+          [
+            -25.0,
+            11.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -16.0
+        },
+        {
+          "wall": "north",
+          "offset": -3.0
+        },
+        {
+          "wall": "west",
+          "offset": 11.0
+        }
+      ]
+    },
+    "s05b_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -16.0
+          ],
+          [
+            25.0,
+            -16.0
+          ]
+        ],
+        [
+          [
+            -3.0,
+            22.0
+          ],
+          [
+            -3.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            11.0
+          ],
+          [
+            -25.0,
+            11.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -16.0
+        },
+        {
+          "wall": "north",
+          "offset": -3.0
+        },
+        {
+          "wall": "west",
+          "offset": 11.0
+        }
+      ]
+    },
+    "s05b_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            -16.0
+          ],
+          [
+            25.0,
+            -16.0
+          ]
+        ],
+        [
+          [
+            6.0,
+            22.0
+          ],
+          [
+            6.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            -4.0
+          ],
+          [
+            -25.0,
+            -4.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": -16.0
+        },
+        {
+          "wall": "north",
+          "offset": 6.0
+        },
+        {
+          "wall": "west",
+          "offset": -4.0
+        }
+      ]
+    },
+    "s05b_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            -16.0,
+            -22.0
+          ],
+          [
+            -16.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            -8.5
+          ],
+          [
+            25.0,
+            -8.5
+          ]
+        ],
+        [
+          [
+            -11.5,
+            22.0
+          ],
+          [
+            -11.5,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            11.0
+          ],
+          [
+            -25.0,
+            11.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": -16.0
+        },
+        {
+          "wall": "east",
+          "offset": -8.5
+        },
+        {
+          "wall": "north",
+          "offset": -11.5
+        },
+        {
+          "wall": "west",
+          "offset": 11.0
+        }
+      ]
+    },
+    "s06a_ga1": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_ib1": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_ib2": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_ic1": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_ic3": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_lb1": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_lb3": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_lc1": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_lc2": {
+      "doors": 2,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_na1": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_nb2": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_nc2": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_sa1": {
+      "doors": 1,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_tb3": {
+      "doors": 3,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_tc3": {
+      "doors": 3,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_td1": {
+      "doors": 3,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_td2": {
+      "doors": 3,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06a_xb2": {
+      "doors": 4,
+      "array_offset": 24,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_ib2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_ic1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_ic3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_lb3": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_lc1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_lc2": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_nb2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_nc2": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_tb3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_tc3": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_td1": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_td2": {
+      "doors": 3,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s06b_xb2": {
+      "doors": 4,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07a_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_ga1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_ib1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_ib2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_ic1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_ic3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_lb1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_lb3": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_lc1": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_lc2": {
+      "doors": 2,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_na1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_nb2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_nc2": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_sa1": {
+      "doors": 1,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_tb3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_tc3": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_td1": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_td2": {
+      "doors": 3,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s07b_xb2": {
+      "doors": 4,
+      "array_offset": 76,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            22.0,
+            0.0
+          ],
+          [
+            25.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        [
+          [
+            -22.0,
+            0.0
+          ],
+          [
+            -25.0,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        },
+        {
+          "wall": "west",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s081_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s081_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s081_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s081_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s082_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s082_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s082_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s082_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s083_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s083_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s083_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s083_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s084_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s084_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s084_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s084_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s085_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s085_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s085_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s085_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s086_ga1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s086_ib1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s086_lb1": {
+      "doors": 2,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            -22.0
+          ],
+          [
+            0.0,
+            -25.0
+          ]
+        ],
+        [
+          [
+            23.0,
+            0.0
+          ],
+          [
+            26.5,
+            0.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "south",
+          "offset": 0.0
+        },
+        {
+          "wall": "east",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s086_sa1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            21.5
+          ],
+          [
+            0.0,
+            25.75
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    },
+    "s087_na1": {
+      "doors": 1,
+      "array_offset": 68,
+      "segments": [
+        [
+          [
+            0.0,
+            22.0
+          ],
+          [
+            0.0,
+            26.0
+          ]
+        ]
+      ],
+      "walls": [
+        {
+          "wall": "north",
+          "offset": 0.0
+        }
+      ]
+    }
+  }
+}

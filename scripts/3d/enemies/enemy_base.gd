@@ -352,9 +352,15 @@ func _setup_navigation() -> void:
 
 func _find_target() -> void:
 	# Find the player in the scene
+	target = _find_player()
+
+
+## The player node, or null if none is in the scene. Shared by subclasses that
+## drive their own movement (PoisonLily, ReyburnBoss) and need to re-acquire the
+## target each frame.
+func _find_player() -> Node3D:
 	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target = players[0]
+	return players[0] as Node3D if players.size() > 0 else null
 
 
 func _physics_process(delta: float) -> void:

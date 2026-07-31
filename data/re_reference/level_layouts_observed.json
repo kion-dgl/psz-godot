@@ -1,0 +1,119 @@
+{
+  "source": "psz-re \u2014 four free-field savestates from kion, 2026-07-29",
+  "access": {
+    "chain": "*(*(0x02108C64)) \u2014 a DOUBLE indirection",
+    "correction": "an earlier note used a single deref and read 0x00FF00FF as the count. FUN_0206D60C derefs the pointer once at 0x0206D642 before the call, and FUN_02032C10 derefs it again. Reading the call site in ASM settled it; the decompiler's *DAT_ notation hid the second one.",
+    "count": "base + 0x410",
+    "record": "0x34 = 52 bytes, first 20 bytes are the descriptor"
+  },
+  "layouts": {
+    "valley": {
+      "stage": 1,
+      "count": 9,
+      "rooms": [
+        "s01a_sa1",
+        "s01a_tb3",
+        "s01a_td2",
+        "s01a_lb3",
+        "s01a_lb3",
+        "s01a_lb1",
+        "s01a_nb2",
+        "s01a_ga1",
+        "s01a_nb2"
+      ],
+      "shapes": {
+        "s": 1,
+        "t": 2,
+        "l": 3,
+        "n": 2,
+        "g": 1
+      },
+      "total_doors": 16
+    },
+    "wetlands": {
+      "stage": 2,
+      "count": 8,
+      "rooms": [
+        "s02a_sa1",
+        "s02a_lb1",
+        "s02a_ib1",
+        "s02a_xb2",
+        "s02a_nb2",
+        "s02a_ib2",
+        "s02a_na1",
+        "s02a_ga1"
+      ],
+      "shapes": {
+        "s": 1,
+        "l": 1,
+        "i": 2,
+        "x": 1,
+        "n": 2,
+        "g": 1
+      },
+      "total_doors": 14
+    },
+    "snowfield": {
+      "stage": 3,
+      "count": 9,
+      "rooms": [
+        "s03a_sa1",
+        "s03a_xb2",
+        "s03a_nc2",
+        "s03a_lc2",
+        "s03a_lb3",
+        "s03a_ib1",
+        "s03a_ic1",
+        "s03a_ga1",
+        "s03a_nb2"
+      ],
+      "shapes": {
+        "s": 1,
+        "x": 1,
+        "n": 2,
+        "l": 2,
+        "i": 2,
+        "g": 1
+      },
+      "total_doors": 16
+    },
+    "paru": {
+      "stage": 5,
+      "count": 10,
+      "rooms": [
+        "s05a_sa1",
+        "s05a_lc1",
+        "s05a_td1",
+        "s05a_td2",
+        "s05a_lb1",
+        "s05a_lc2",
+        "s05a_ga1",
+        "s05a_ic1",
+        "s05a_nb2",
+        "s05a_nc2"
+      ],
+      "shapes": {
+        "s": 1,
+        "l": 3,
+        "t": 2,
+        "g": 1,
+        "i": 1,
+        "n": 2
+      },
+      "total_doors": 18
+    }
+  },
+  "observations": [
+    "index 0 is ALWAYS the start room (shape s) in all four layouts",
+    "exactly one goal (shape g) per layout, and it is NOT last \u2014 valley, snowfield and paru all place rooms after it",
+    "room counts are 8, 9, 9 and 10 \u2014 well under the 20 the array can hold",
+    "every generated name exists as a real file in scene/<NN>/a/, so the vocabulary is respected",
+    "all four used variant 'a'; the 'b' art variant did not appear in this sample"
+  ],
+  "stage_to_area": {
+    "s01": "valley",
+    "s02": "wetlands",
+    "s03": "snowfield",
+    "s05": "paru"
+  }
+}

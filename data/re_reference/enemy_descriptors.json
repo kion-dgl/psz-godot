@@ -1,0 +1,4943 @@
+{
+ "source": "enemy_data_*.rel inside every enemy/*.narc",
+ "tool": "tools/enemy_desc.py",
+ "root_layout": "a run of {u32 pointer, u32 count} pairs, POINTER FIRST, with a few lone pointers. Pointer positions come from the DSIF relocation table, so the pair boundaries are stated by the game's toolchain rather than inferred.",
+ "part_table": "the pair whose 8-byte records carry their own index in byte 1. That is the table packet+0x29 indexes when a hit lands on a part.",
+ "descriptors": {
+  "enemy/armadillo.narc": {
+   "root": 1492,
+   "region_a_end": 1568,
+   "pairs": [
+    {
+     "at": 1500,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1508,
+     "ptr": 200,
+     "count": 2
+    },
+    {
+     "at": 1516,
+     "ptr": 256,
+     "count": 2
+    },
+    {
+     "at": 1524,
+     "ptr": 272,
+     "count": 3
+    },
+    {
+     "at": 1532,
+     "ptr": 904,
+     "count": 9
+    },
+    {
+     "at": 1544,
+     "ptr": 1132,
+     "count": 6
+    },
+    {
+     "at": 1552,
+     "ptr": 1372,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1492,
+     "ptr": 28
+    },
+    {
+     "at": 1496,
+     "ptr": 116
+    },
+    {
+     "at": 1540,
+     "ptr": 1048
+    }
+   ],
+   "part_table": {
+    "at": 1516,
+    "ptr": 256,
+    "count": 2
+   },
+   "part_count": 2,
+   "next_pair": {
+    "at": 1524,
+    "ptr": 272,
+    "count": 3
+   },
+   "strides": [
+    28,
+    28,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/armadillo_rare.narc": {
+   "root": 1492,
+   "region_a_end": 1568,
+   "pairs": [
+    {
+     "at": 1500,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1508,
+     "ptr": 200,
+     "count": 2
+    },
+    {
+     "at": 1516,
+     "ptr": 256,
+     "count": 2
+    },
+    {
+     "at": 1524,
+     "ptr": 272,
+     "count": 3
+    },
+    {
+     "at": 1532,
+     "ptr": 904,
+     "count": 9
+    },
+    {
+     "at": 1544,
+     "ptr": 1132,
+     "count": 6
+    },
+    {
+     "at": 1552,
+     "ptr": 1372,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1492,
+     "ptr": 28
+    },
+    {
+     "at": 1496,
+     "ptr": 116
+    },
+    {
+     "at": 1540,
+     "ptr": 1048
+    }
+   ],
+   "part_table": {
+    "at": 1516,
+    "ptr": 256,
+    "count": 2
+   },
+   "part_count": 2,
+   "next_pair": {
+    "at": 1524,
+    "ptr": 272,
+    "count": 3
+   },
+   "strides": [
+    28,
+    28,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/bat.narc": {
+   "root": 964,
+   "region_a_end": 1040,
+   "pairs": [
+    {
+     "at": 972,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 980,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 988,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 996,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 1004,
+     "ptr": 620,
+     "count": 5
+    },
+    {
+     "at": 1016,
+     "ptr": 784,
+     "count": 3
+    },
+    {
+     "at": 1024,
+     "ptr": 904,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 964,
+     "ptr": 28
+    },
+    {
+     "at": 968,
+     "ptr": 104
+    },
+    {
+     "at": 1012,
+     "ptr": 700
+    }
+   ],
+   "part_table": {
+    "at": 980,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 988,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    200,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/bat_blue.narc": {
+   "root": 964,
+   "region_a_end": 1040,
+   "pairs": [
+    {
+     "at": 972,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 980,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 988,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 996,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 1004,
+     "ptr": 620,
+     "count": 5
+    },
+    {
+     "at": 1016,
+     "ptr": 784,
+     "count": 3
+    },
+    {
+     "at": 1024,
+     "ptr": 904,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 964,
+     "ptr": 28
+    },
+    {
+     "at": 968,
+     "ptr": 104
+    },
+    {
+     "at": 1012,
+     "ptr": 700
+    }
+   ],
+   "part_table": {
+    "at": 980,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 988,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    200,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/board.narc": {
+   "root": 1380,
+   "region_a_end": 1456,
+   "pairs": [
+    {
+     "at": 1388,
+     "ptr": 180,
+     "count": 1
+    },
+    {
+     "at": 1396,
+     "ptr": 204,
+     "count": 1
+    },
+    {
+     "at": 1404,
+     "ptr": 236,
+     "count": 2
+    },
+    {
+     "at": 1412,
+     "ptr": 252,
+     "count": 6
+    },
+    {
+     "at": 1420,
+     "ptr": 912,
+     "count": 9
+    },
+    {
+     "at": 1432,
+     "ptr": 1140,
+     "count": 3
+    },
+    {
+     "at": 1440,
+     "ptr": 1260,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1380,
+     "ptr": 28
+    },
+    {
+     "at": 1384,
+     "ptr": 124
+    },
+    {
+     "at": 1428,
+     "ptr": 1056
+    }
+   ],
+   "part_table": {
+    "at": 1396,
+    "ptr": 204,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1404,
+    "ptr": 236,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    110,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/board_blue.narc": {
+   "root": 1380,
+   "region_a_end": 1456,
+   "pairs": [
+    {
+     "at": 1388,
+     "ptr": 180,
+     "count": 1
+    },
+    {
+     "at": 1396,
+     "ptr": 204,
+     "count": 1
+    },
+    {
+     "at": 1404,
+     "ptr": 236,
+     "count": 2
+    },
+    {
+     "at": 1412,
+     "ptr": 252,
+     "count": 6
+    },
+    {
+     "at": 1420,
+     "ptr": 912,
+     "count": 9
+    },
+    {
+     "at": 1432,
+     "ptr": 1140,
+     "count": 3
+    },
+    {
+     "at": 1440,
+     "ptr": 1260,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1380,
+     "ptr": 28
+    },
+    {
+     "at": 1384,
+     "ptr": 124
+    },
+    {
+     "at": 1428,
+     "ptr": 1056
+    }
+   ],
+   "part_table": {
+    "at": 1396,
+    "ptr": 204,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1404,
+    "ptr": 236,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    110,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/board_green.narc": {
+   "root": 1380,
+   "region_a_end": 1456,
+   "pairs": [
+    {
+     "at": 1388,
+     "ptr": 180,
+     "count": 1
+    },
+    {
+     "at": 1396,
+     "ptr": 204,
+     "count": 1
+    },
+    {
+     "at": 1404,
+     "ptr": 236,
+     "count": 2
+    },
+    {
+     "at": 1412,
+     "ptr": 252,
+     "count": 6
+    },
+    {
+     "at": 1420,
+     "ptr": 912,
+     "count": 9
+    },
+    {
+     "at": 1432,
+     "ptr": 1140,
+     "count": 3
+    },
+    {
+     "at": 1440,
+     "ptr": 1260,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1380,
+     "ptr": 28
+    },
+    {
+     "at": 1384,
+     "ptr": 124
+    },
+    {
+     "at": 1428,
+     "ptr": 1056
+    }
+   ],
+   "part_table": {
+    "at": 1396,
+    "ptr": 204,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1404,
+    "ptr": 236,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    110,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/booma.narc": {
+   "root": 1060,
+   "region_a_end": 1136,
+   "pairs": [
+    {
+     "at": 1068,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1076,
+     "ptr": 196,
+     "count": 1
+    },
+    {
+     "at": 1084,
+     "ptr": 224,
+     "count": 1
+    },
+    {
+     "at": 1092,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1100,
+     "ptr": 652,
+     "count": 9
+    },
+    {
+     "at": 1112,
+     "ptr": 880,
+     "count": 3
+    },
+    {
+     "at": 1120,
+     "ptr": 1000,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1060,
+     "ptr": 28
+    },
+    {
+     "at": 1064,
+     "ptr": 116
+    },
+    {
+     "at": 1108,
+     "ptr": 796
+    }
+   ],
+   "part_table": {
+    "at": 1076,
+    "ptr": 196,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1084,
+    "ptr": 224,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    210,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_darkfalz.narc": {
+   "root": 3720,
+   "region_a_end": 3808,
+   "pairs": [
+    {
+     "at": 3728,
+     "ptr": 244,
+     "count": 1
+    },
+    {
+     "at": 3736,
+     "ptr": 292,
+     "count": 7
+    },
+    {
+     "at": 3744,
+     "ptr": 496,
+     "count": 9
+    },
+    {
+     "at": 3752,
+     "ptr": 568,
+     "count": 17
+    },
+    {
+     "at": 3760,
+     "ptr": 2232,
+     "count": 24
+    },
+    {
+     "at": 3772,
+     "ptr": 2700,
+     "count": 12
+    },
+    {
+     "at": 3780,
+     "ptr": 3180,
+     "count": 27
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 3720,
+     "ptr": 36
+    },
+    {
+     "at": 3724,
+     "ptr": 188
+    },
+    {
+     "at": 3768,
+     "ptr": 2616
+    }
+   ],
+   "part_table": {
+    "at": 3744,
+    "ptr": 496,
+    "count": 9
+   },
+   "part_count": 9,
+   "next_pair": {
+    "at": 3752,
+    "ptr": 568,
+    "count": 17
+   },
+   "strides": [
+    48,
+    null,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_dragon.narc": {
+   "root": 5020,
+   "region_a_end": 5088,
+   "pairs": [
+    {
+     "at": 5028,
+     "ptr": 252,
+     "count": 2
+    },
+    {
+     "at": 5036,
+     "ptr": 308,
+     "count": 4
+    },
+    {
+     "at": 5044,
+     "ptr": 476,
+     "count": 16
+    },
+    {
+     "at": 5052,
+     "ptr": 604,
+     "count": 13
+    },
+    {
+     "at": 5060,
+     "ptr": 3232,
+     "count": 24
+    },
+    {
+     "at": 5072,
+     "ptr": 3700,
+     "count": 12
+    },
+    {
+     "at": 5080,
+     "ptr": 4180,
+     "count": 42
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 5020,
+     "ptr": 28
+    },
+    {
+     "at": 5024,
+     "ptr": 196
+    },
+    {
+     "at": 5068,
+     "ptr": 3616
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    28,
+    42,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_mother.narc": {
+   "root": 3556,
+   "region_a_end": 3632,
+   "pairs": [
+    {
+     "at": 3564,
+     "ptr": 248,
+     "count": 4
+    },
+    {
+     "at": 3572,
+     "ptr": 356,
+     "count": 7
+    },
+    {
+     "at": 3580,
+     "ptr": 548,
+     "count": 4
+    },
+    {
+     "at": 3588,
+     "ptr": 580,
+     "count": 7
+    },
+    {
+     "at": 3596,
+     "ptr": 2440,
+     "count": 12
+    },
+    {
+     "at": 3608,
+     "ptr": 2716,
+     "count": 15
+    },
+    {
+     "at": 3616,
+     "ptr": 3316,
+     "count": 12
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 3556,
+     "ptr": 28
+    },
+    {
+     "at": 3560,
+     "ptr": 192
+    },
+    {
+     "at": 3604,
+     "ptr": 2632
+    }
+   ],
+   "part_table": {
+    "at": 3580,
+    "ptr": 548,
+    "count": 4
+   },
+   "part_count": 4,
+   "next_pair": {
+    "at": 3588,
+    "ptr": 580,
+    "count": 7
+   },
+   "strides": [
+    27,
+    null,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_mother_piece.narc": {
+   "root": 2728,
+   "region_a_end": 2816,
+   "pairs": [
+    {
+     "at": 2736,
+     "ptr": 196,
+     "count": 6
+    },
+    {
+     "at": 2744,
+     "ptr": 328,
+     "count": 3
+    },
+    {
+     "at": 2752,
+     "ptr": 504,
+     "count": 10
+    },
+    {
+     "at": 2760,
+     "ptr": 584,
+     "count": 6
+    },
+    {
+     "at": 2768,
+     "ptr": 1508,
+     "count": 11
+    },
+    {
+     "at": 2780,
+     "ptr": 1768,
+     "count": 9
+    },
+    {
+     "at": 2788,
+     "ptr": 2128,
+     "count": 30
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2728,
+     "ptr": 28
+    },
+    {
+     "at": 2732,
+     "ptr": 140
+    },
+    {
+     "at": 2776,
+     "ptr": 1684
+    }
+   ],
+   "part_table": {
+    "at": 2752,
+    "ptr": 504,
+    "count": 10
+   },
+   "part_count": 10,
+   "next_pair": {
+    "at": 2760,
+    "ptr": 584,
+    "count": 6
+   },
+   "strides": [
+    22,
+    null,
+    8,
+    154,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_octopus.narc": {
+   "root": 5420,
+   "region_a_end": 5488,
+   "pairs": [
+    {
+     "at": 5428,
+     "ptr": 388,
+     "count": 7
+    },
+    {
+     "at": 5436,
+     "ptr": 588,
+     "count": 15
+    },
+    {
+     "at": 5444,
+     "ptr": 1040,
+     "count": 15
+    },
+    {
+     "at": 5452,
+     "ptr": 1160,
+     "count": 16
+    },
+    {
+     "at": 5460,
+     "ptr": 2684,
+     "count": 57
+    },
+    {
+     "at": 5472,
+     "ptr": 3680,
+     "count": 21
+    },
+    {
+     "at": 5480,
+     "ptr": 4520,
+     "count": 45
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 5420,
+     "ptr": 36
+    },
+    {
+     "at": 5424,
+     "ptr": 332
+    },
+    {
+     "at": 5468,
+     "ptr": 3596
+    }
+   ],
+   "part_table": {
+    "at": 5444,
+    "ptr": 1040,
+    "count": 15
+   },
+   "part_count": 15,
+   "next_pair": {
+    "at": 5452,
+    "ptr": 1160,
+    "count": 16
+   },
+   "strides": [
+    null,
+    null,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_robot.narc": {
+   "root": 4588,
+   "region_a_end": 4656,
+   "pairs": [
+    {
+     "at": 4596,
+     "ptr": 332,
+     "count": 3
+    },
+    {
+     "at": 4604,
+     "ptr": 440,
+     "count": 12
+    },
+    {
+     "at": 4612,
+     "ptr": 808,
+     "count": 20
+    },
+    {
+     "at": 4620,
+     "ptr": 968,
+     "count": 28
+    },
+    {
+     "at": 4628,
+     "ptr": 2032,
+     "count": 42
+    },
+    {
+     "at": 4640,
+     "ptr": 2788,
+     "count": 15
+    },
+    {
+     "at": 4648,
+     "ptr": 3388,
+     "count": 60
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 4588,
+     "ptr": 36
+    },
+    {
+     "at": 4592,
+     "ptr": 276
+    },
+    {
+     "at": 4636,
+     "ptr": 2704
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    36,
+    null,
+    8,
+    38,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/boss_robot_cmb.narc": {
+   "root": 4588,
+   "region_a_end": 4656,
+   "pairs": [
+    {
+     "at": 4596,
+     "ptr": 332,
+     "count": 3
+    },
+    {
+     "at": 4604,
+     "ptr": 440,
+     "count": 12
+    },
+    {
+     "at": 4612,
+     "ptr": 808,
+     "count": 20
+    },
+    {
+     "at": 4620,
+     "ptr": 968,
+     "count": 28
+    },
+    {
+     "at": 4628,
+     "ptr": 2032,
+     "count": 42
+    },
+    {
+     "at": 4640,
+     "ptr": 2788,
+     "count": 15
+    },
+    {
+     "at": 4648,
+     "ptr": 3388,
+     "count": 60
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 4588,
+     "ptr": 36
+    },
+    {
+     "at": 4592,
+     "ptr": 276
+    },
+    {
+     "at": 4636,
+     "ptr": 2704
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    36,
+    null,
+    8,
+    38,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/circle.narc": {
+   "root": 920,
+   "region_a_end": 1008,
+   "pairs": [
+    {
+     "at": 928,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 936,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 944,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 952,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 960,
+     "ptr": 560,
+     "count": 6
+    },
+    {
+     "at": 972,
+     "ptr": 740,
+     "count": 3
+    },
+    {
+     "at": 980,
+     "ptr": 860,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 920,
+     "ptr": 28
+    },
+    {
+     "at": 924,
+     "ptr": 104
+    },
+    {
+     "at": 968,
+     "ptr": 656
+    }
+   ],
+   "part_table": {
+    "at": 936,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 944,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    340,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/circle_black.narc": {
+   "root": 920,
+   "region_a_end": 1008,
+   "pairs": [
+    {
+     "at": 928,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 936,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 944,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 952,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 960,
+     "ptr": 560,
+     "count": 6
+    },
+    {
+     "at": 972,
+     "ptr": 740,
+     "count": 3
+    },
+    {
+     "at": 980,
+     "ptr": 860,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 920,
+     "ptr": 28
+    },
+    {
+     "at": 924,
+     "ptr": 104
+    },
+    {
+     "at": 968,
+     "ptr": 656
+    }
+   ],
+   "part_table": {
+    "at": 936,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 944,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    340,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/deer.narc": {
+   "root": 1256,
+   "region_a_end": 1344,
+   "pairs": [
+    {
+     "at": 1264,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1272,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1280,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1288,
+     "ptr": 248,
+     "count": 3
+    },
+    {
+     "at": 1296,
+     "ptr": 788,
+     "count": 9
+    },
+    {
+     "at": 1308,
+     "ptr": 1016,
+     "count": 3
+    },
+    {
+     "at": 1316,
+     "ptr": 1136,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1256,
+     "ptr": 36
+    },
+    {
+     "at": 1260,
+     "ptr": 120
+    },
+    {
+     "at": 1304,
+     "ptr": 932
+    }
+   ],
+   "part_table": {
+    "at": 1272,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1280,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    180,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/frog.narc": {
+   "root": 1240,
+   "region_a_end": 1328,
+   "pairs": [
+    {
+     "at": 1248,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1256,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1264,
+     "ptr": 224,
+     "count": 2
+    },
+    {
+     "at": 1272,
+     "ptr": 240,
+     "count": 4
+    },
+    {
+     "at": 1280,
+     "ptr": 788,
+     "count": 8
+    },
+    {
+     "at": 1292,
+     "ptr": 1000,
+     "count": 3
+    },
+    {
+     "at": 1300,
+     "ptr": 1120,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1240,
+     "ptr": 28
+    },
+    {
+     "at": 1244,
+     "ptr": 112
+    },
+    {
+     "at": 1288,
+     "ptr": 916
+    }
+   ],
+   "part_table": {
+    "at": 1256,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1264,
+    "ptr": 224,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    137,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/frog_bomb.narc": {
+   "root": 1312,
+   "region_a_end": 1392,
+   "pairs": [
+    {
+     "at": 1320,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1328,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1336,
+     "ptr": 228,
+     "count": 3
+    },
+    {
+     "at": 1344,
+     "ptr": 252,
+     "count": 4
+    },
+    {
+     "at": 1352,
+     "ptr": 800,
+     "count": 8
+    },
+    {
+     "at": 1364,
+     "ptr": 1012,
+     "count": 3
+    },
+    {
+     "at": 1372,
+     "ptr": 1132,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1312,
+     "ptr": 28
+    },
+    {
+     "at": 1316,
+     "ptr": 112
+    },
+    {
+     "at": 1360,
+     "ptr": 928
+    }
+   ],
+   "part_table": {
+    "at": 1328,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1336,
+    "ptr": 228,
+    "count": 3
+   },
+   "strides": [
+    24,
+    36,
+    8,
+    137,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/frog_rare.narc": {
+   "root": 1212,
+   "region_a_end": 1280,
+   "pairs": [
+    {
+     "at": 1220,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1228,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1236,
+     "ptr": 224,
+     "count": 2
+    },
+    {
+     "at": 1244,
+     "ptr": 240,
+     "count": 4
+    },
+    {
+     "at": 1252,
+     "ptr": 760,
+     "count": 8
+    },
+    {
+     "at": 1264,
+     "ptr": 972,
+     "count": 3
+    },
+    {
+     "at": 1272,
+     "ptr": 1092,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1212,
+     "ptr": 28
+    },
+    {
+     "at": 1216,
+     "ptr": 112
+    },
+    {
+     "at": 1260,
+     "ptr": 888
+    }
+   ],
+   "part_table": {
+    "at": 1228,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1236,
+    "ptr": 224,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    130,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/gorilla.narc": {
+   "root": 1808,
+   "region_a_end": 1888,
+   "pairs": [
+    {
+     "at": 1816,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1824,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1832,
+     "ptr": 240,
+     "count": 4
+    },
+    {
+     "at": 1840,
+     "ptr": 272,
+     "count": 4
+    },
+    {
+     "at": 1848,
+     "ptr": 1220,
+     "count": 9
+    },
+    {
+     "at": 1860,
+     "ptr": 1448,
+     "count": 3
+    },
+    {
+     "at": 1868,
+     "ptr": 1568,
+     "count": 12
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1808,
+     "ptr": 28
+    },
+    {
+     "at": 1812,
+     "ptr": 120
+    },
+    {
+     "at": 1856,
+     "ptr": 1364
+    }
+   ],
+   "part_table": {
+    "at": 1824,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1832,
+    "ptr": 240,
+    "count": 4
+   },
+   "strides": [
+    24,
+    40,
+    8,
+    237,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/gorilla_female.narc": {
+   "root": 1808,
+   "region_a_end": 1888,
+   "pairs": [
+    {
+     "at": 1816,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1824,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1832,
+     "ptr": 240,
+     "count": 4
+    },
+    {
+     "at": 1840,
+     "ptr": 272,
+     "count": 4
+    },
+    {
+     "at": 1848,
+     "ptr": 1220,
+     "count": 9
+    },
+    {
+     "at": 1860,
+     "ptr": 1448,
+     "count": 3
+    },
+    {
+     "at": 1868,
+     "ptr": 1568,
+     "count": 12
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1808,
+     "ptr": 28
+    },
+    {
+     "at": 1812,
+     "ptr": 120
+    },
+    {
+     "at": 1856,
+     "ptr": 1364
+    }
+   ],
+   "part_table": {
+    "at": 1824,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1832,
+    "ptr": 240,
+    "count": 4
+   },
+   "strides": [
+    24,
+    40,
+    8,
+    237,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/gorilla_rare.narc": {
+   "root": 1808,
+   "region_a_end": 1888,
+   "pairs": [
+    {
+     "at": 1816,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1824,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1832,
+     "ptr": 240,
+     "count": 4
+    },
+    {
+     "at": 1840,
+     "ptr": 272,
+     "count": 4
+    },
+    {
+     "at": 1848,
+     "ptr": 1220,
+     "count": 9
+    },
+    {
+     "at": 1860,
+     "ptr": 1448,
+     "count": 3
+    },
+    {
+     "at": 1868,
+     "ptr": 1568,
+     "count": 12
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1808,
+     "ptr": 28
+    },
+    {
+     "at": 1812,
+     "ptr": 120
+    },
+    {
+     "at": 1856,
+     "ptr": 1364
+    }
+   ],
+   "part_table": {
+    "at": 1824,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1832,
+    "ptr": 240,
+    "count": 4
+   },
+   "strides": [
+    24,
+    40,
+    8,
+    237,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/hyena.narc": {
+   "root": 1092,
+   "region_a_end": 1168,
+   "pairs": [
+    {
+     "at": 1100,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1108,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1116,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1124,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1132,
+     "ptr": 700,
+     "count": 8
+    },
+    {
+     "at": 1144,
+     "ptr": 912,
+     "count": 3
+    },
+    {
+     "at": 1152,
+     "ptr": 1032,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1092,
+     "ptr": 28
+    },
+    {
+     "at": 1096,
+     "ptr": 112
+    },
+    {
+     "at": 1140,
+     "ptr": 828
+    }
+   ],
+   "part_table": {
+    "at": 1108,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1116,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    236,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/hyena_rare.narc": {
+   "root": 1092,
+   "region_a_end": 1168,
+   "pairs": [
+    {
+     "at": 1100,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1108,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1116,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1124,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1132,
+     "ptr": 700,
+     "count": 8
+    },
+    {
+     "at": 1144,
+     "ptr": 912,
+     "count": 3
+    },
+    {
+     "at": 1152,
+     "ptr": 1032,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1092,
+     "ptr": 28
+    },
+    {
+     "at": 1096,
+     "ptr": 112
+    },
+    {
+     "at": 1140,
+     "ptr": 828
+    }
+   ],
+   "part_table": {
+    "at": 1108,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1116,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    236,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/jigobooma.narc": {
+   "root": 1060,
+   "region_a_end": 1136,
+   "pairs": [
+    {
+     "at": 1068,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1076,
+     "ptr": 196,
+     "count": 1
+    },
+    {
+     "at": 1084,
+     "ptr": 224,
+     "count": 1
+    },
+    {
+     "at": 1092,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1100,
+     "ptr": 652,
+     "count": 9
+    },
+    {
+     "at": 1112,
+     "ptr": 880,
+     "count": 3
+    },
+    {
+     "at": 1120,
+     "ptr": 1000,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1060,
+     "ptr": 28
+    },
+    {
+     "at": 1064,
+     "ptr": 116
+    },
+    {
+     "at": 1108,
+     "ptr": 796
+    }
+   ],
+   "part_table": {
+    "at": 1076,
+    "ptr": 196,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1084,
+    "ptr": 224,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    210,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/leg.narc": {
+   "root": 1600,
+   "region_a_end": 1680,
+   "pairs": [
+    {
+     "at": 1608,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1616,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1624,
+     "ptr": 240,
+     "count": 2
+    },
+    {
+     "at": 1632,
+     "ptr": 256,
+     "count": 1
+    },
+    {
+     "at": 1640,
+     "ptr": 1148,
+     "count": 8
+    },
+    {
+     "at": 1652,
+     "ptr": 1360,
+     "count": 3
+    },
+    {
+     "at": 1660,
+     "ptr": 1480,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1600,
+     "ptr": 28
+    },
+    {
+     "at": 1604,
+     "ptr": 112
+    },
+    {
+     "at": 1648,
+     "ptr": 1276
+    }
+   ],
+   "part_table": {
+    "at": 1616,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1624,
+    "ptr": 240,
+    "count": 2
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    892,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/leg_black.narc": {
+   "root": 1600,
+   "region_a_end": 1680,
+   "pairs": [
+    {
+     "at": 1608,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1616,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1624,
+     "ptr": 240,
+     "count": 2
+    },
+    {
+     "at": 1632,
+     "ptr": 256,
+     "count": 1
+    },
+    {
+     "at": 1640,
+     "ptr": 1148,
+     "count": 8
+    },
+    {
+     "at": 1652,
+     "ptr": 1360,
+     "count": 3
+    },
+    {
+     "at": 1660,
+     "ptr": 1480,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1600,
+     "ptr": 28
+    },
+    {
+     "at": 1604,
+     "ptr": 112
+    },
+    {
+     "at": 1648,
+     "ptr": 1276
+    }
+   ],
+   "part_table": {
+    "at": 1616,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1624,
+    "ptr": 240,
+    "count": 2
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    892,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/lion.narc": {
+   "root": 2276,
+   "region_a_end": 2352,
+   "pairs": [
+    {
+     "at": 2284,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 2292,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 2300,
+     "ptr": 248,
+     "count": 6
+    },
+    {
+     "at": 2308,
+     "ptr": 296,
+     "count": 3
+    },
+    {
+     "at": 2316,
+     "ptr": 1568,
+     "count": 9
+    },
+    {
+     "at": 2328,
+     "ptr": 1796,
+     "count": 3
+    },
+    {
+     "at": 2336,
+     "ptr": 1916,
+     "count": 18
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2276,
+     "ptr": 36
+    },
+    {
+     "at": 2280,
+     "ptr": 120
+    },
+    {
+     "at": 2324,
+     "ptr": 1712
+    }
+   ],
+   "part_table": {
+    "at": 2292,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2300,
+    "ptr": 248,
+    "count": 6
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    424,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/lion_rare.narc": {
+   "root": 2276,
+   "region_a_end": 2352,
+   "pairs": [
+    {
+     "at": 2284,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 2292,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 2300,
+     "ptr": 248,
+     "count": 6
+    },
+    {
+     "at": 2308,
+     "ptr": 296,
+     "count": 3
+    },
+    {
+     "at": 2316,
+     "ptr": 1568,
+     "count": 9
+    },
+    {
+     "at": 2328,
+     "ptr": 1796,
+     "count": 3
+    },
+    {
+     "at": 2336,
+     "ptr": 1916,
+     "count": 18
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2276,
+     "ptr": 36
+    },
+    {
+     "at": 2280,
+     "ptr": 120
+    },
+    {
+     "at": 2324,
+     "ptr": 1712
+    }
+   ],
+   "part_table": {
+    "at": 2292,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2300,
+    "ptr": 248,
+    "count": 6
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    424,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/lizard.narc": {
+   "root": 1140,
+   "region_a_end": 1216,
+   "pairs": [
+    {
+     "at": 1148,
+     "ptr": 164,
+     "count": 1
+    },
+    {
+     "at": 1156,
+     "ptr": 188,
+     "count": 1
+    },
+    {
+     "at": 1164,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 1172,
+     "ptr": 236,
+     "count": 2
+    },
+    {
+     "at": 1180,
+     "ptr": 688,
+     "count": 8
+    },
+    {
+     "at": 1192,
+     "ptr": 900,
+     "count": 3
+    },
+    {
+     "at": 1200,
+     "ptr": 1020,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1140,
+     "ptr": 28
+    },
+    {
+     "at": 1144,
+     "ptr": 108
+    },
+    {
+     "at": 1188,
+     "ptr": 816
+    }
+   ],
+   "part_table": {
+    "at": 1156,
+    "ptr": 188,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1164,
+    "ptr": 220,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    226,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/lower.narc": {
+   "root": 1600,
+   "region_a_end": 1680,
+   "pairs": [
+    {
+     "at": 1608,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1616,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1624,
+     "ptr": 240,
+     "count": 2
+    },
+    {
+     "at": 1632,
+     "ptr": 256,
+     "count": 1
+    },
+    {
+     "at": 1640,
+     "ptr": 1148,
+     "count": 8
+    },
+    {
+     "at": 1652,
+     "ptr": 1360,
+     "count": 3
+    },
+    {
+     "at": 1660,
+     "ptr": 1480,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1600,
+     "ptr": 28
+    },
+    {
+     "at": 1604,
+     "ptr": 112
+    },
+    {
+     "at": 1648,
+     "ptr": 1276
+    }
+   ],
+   "part_table": {
+    "at": 1616,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1624,
+    "ptr": 240,
+    "count": 2
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    892,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/lower_black.narc": {
+   "root": 1600,
+   "region_a_end": 1680,
+   "pairs": [
+    {
+     "at": 1608,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1616,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1624,
+     "ptr": 240,
+     "count": 2
+    },
+    {
+     "at": 1632,
+     "ptr": 256,
+     "count": 1
+    },
+    {
+     "at": 1640,
+     "ptr": 1148,
+     "count": 8
+    },
+    {
+     "at": 1652,
+     "ptr": 1360,
+     "count": 3
+    },
+    {
+     "at": 1660,
+     "ptr": 1480,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1600,
+     "ptr": 28
+    },
+    {
+     "at": 1604,
+     "ptr": 112
+    },
+    {
+     "at": 1648,
+     "ptr": 1276
+    }
+   ],
+   "part_table": {
+    "at": 1616,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1624,
+    "ptr": 240,
+    "count": 2
+   },
+   "strides": [
+    24,
+    48,
+    8,
+    892,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/mole.narc": {
+   "root": 1528,
+   "region_a_end": 1616,
+   "pairs": [
+    {
+     "at": 1536,
+     "ptr": 180,
+     "count": 1
+    },
+    {
+     "at": 1544,
+     "ptr": 204,
+     "count": 1
+    },
+    {
+     "at": 1552,
+     "ptr": 248,
+     "count": 3
+    },
+    {
+     "at": 1560,
+     "ptr": 272,
+     "count": 3
+    },
+    {
+     "at": 1568,
+     "ptr": 968,
+     "count": 11
+    },
+    {
+     "at": 1580,
+     "ptr": 1228,
+     "count": 3
+    },
+    {
+     "at": 1588,
+     "ptr": 1348,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1528,
+     "ptr": 28
+    },
+    {
+     "at": 1532,
+     "ptr": 124
+    },
+    {
+     "at": 1576,
+     "ptr": 1144
+    }
+   ],
+   "part_table": {
+    "at": 1544,
+    "ptr": 204,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1552,
+    "ptr": 248,
+    "count": 3
+   },
+   "strides": [
+    24,
+    44,
+    8,
+    232,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/mother.narc": {
+   "root": 2180,
+   "region_a_end": 2256,
+   "pairs": [
+    {
+     "at": 2188,
+     "ptr": 208,
+     "count": 1
+    },
+    {
+     "at": 2196,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 2204,
+     "ptr": 300,
+     "count": 9
+    },
+    {
+     "at": 2212,
+     "ptr": 372,
+     "count": 5
+    },
+    {
+     "at": 2220,
+     "ptr": 1256,
+     "count": 15
+    },
+    {
+     "at": 2232,
+     "ptr": 1580,
+     "count": 3
+    },
+    {
+     "at": 2240,
+     "ptr": 1700,
+     "count": 24
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2180,
+     "ptr": 36
+    },
+    {
+     "at": 2184,
+     "ptr": 152
+    },
+    {
+     "at": 2228,
+     "ptr": 1496
+    }
+   ],
+   "part_table": {
+    "at": 2196,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2204,
+    "ptr": 300,
+    "count": 9
+   },
+   "strides": [
+    24,
+    68,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/mother_gun.narc": {
+   "root": 2180,
+   "region_a_end": 2256,
+   "pairs": [
+    {
+     "at": 2188,
+     "ptr": 208,
+     "count": 1
+    },
+    {
+     "at": 2196,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 2204,
+     "ptr": 300,
+     "count": 9
+    },
+    {
+     "at": 2212,
+     "ptr": 372,
+     "count": 5
+    },
+    {
+     "at": 2220,
+     "ptr": 1256,
+     "count": 15
+    },
+    {
+     "at": 2232,
+     "ptr": 1580,
+     "count": 3
+    },
+    {
+     "at": 2240,
+     "ptr": 1700,
+     "count": 24
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2180,
+     "ptr": 36
+    },
+    {
+     "at": 2184,
+     "ptr": 152
+    },
+    {
+     "at": 2228,
+     "ptr": 1496
+    }
+   ],
+   "part_table": {
+    "at": 2196,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2204,
+    "ptr": 300,
+    "count": 9
+   },
+   "strides": [
+    24,
+    68,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/mother_sword.narc": {
+   "root": 2180,
+   "region_a_end": 2256,
+   "pairs": [
+    {
+     "at": 2188,
+     "ptr": 208,
+     "count": 1
+    },
+    {
+     "at": 2196,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 2204,
+     "ptr": 300,
+     "count": 9
+    },
+    {
+     "at": 2212,
+     "ptr": 372,
+     "count": 5
+    },
+    {
+     "at": 2220,
+     "ptr": 1256,
+     "count": 15
+    },
+    {
+     "at": 2232,
+     "ptr": 1580,
+     "count": 3
+    },
+    {
+     "at": 2240,
+     "ptr": 1700,
+     "count": 24
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2180,
+     "ptr": 36
+    },
+    {
+     "at": 2184,
+     "ptr": 152
+    },
+    {
+     "at": 2228,
+     "ptr": 1496
+    }
+   ],
+   "part_table": {
+    "at": 2196,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2204,
+    "ptr": 300,
+    "count": 9
+   },
+   "strides": [
+    24,
+    68,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/mother_tech.narc": {
+   "root": 2180,
+   "region_a_end": 2256,
+   "pairs": [
+    {
+     "at": 2188,
+     "ptr": 208,
+     "count": 1
+    },
+    {
+     "at": 2196,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 2204,
+     "ptr": 300,
+     "count": 9
+    },
+    {
+     "at": 2212,
+     "ptr": 372,
+     "count": 5
+    },
+    {
+     "at": 2220,
+     "ptr": 1256,
+     "count": 15
+    },
+    {
+     "at": 2232,
+     "ptr": 1580,
+     "count": 3
+    },
+    {
+     "at": 2240,
+     "ptr": 1700,
+     "count": 24
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 2180,
+     "ptr": 36
+    },
+    {
+     "at": 2184,
+     "ptr": 152
+    },
+    {
+     "at": 2228,
+     "ptr": 1496
+    }
+   ],
+   "part_table": {
+    "at": 2196,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 2204,
+    "ptr": 300,
+    "count": 9
+   },
+   "strides": [
+    24,
+    68,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/orangutan.narc": {
+   "root": 1784,
+   "region_a_end": 1872,
+   "pairs": [
+    {
+     "at": 1792,
+     "ptr": 188,
+     "count": 2
+    },
+    {
+     "at": 1800,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 1808,
+     "ptr": 268,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 292,
+     "count": 4
+    },
+    {
+     "at": 1824,
+     "ptr": 1224,
+     "count": 11
+    },
+    {
+     "at": 1836,
+     "ptr": 1484,
+     "count": 3
+    },
+    {
+     "at": 1844,
+     "ptr": 1604,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1784,
+     "ptr": 28
+    },
+    {
+     "at": 1788,
+     "ptr": 132
+    },
+    {
+     "at": 1832,
+     "ptr": 1400
+    }
+   ],
+   "part_table": {
+    "at": 1800,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1808,
+    "ptr": 268,
+    "count": 3
+   },
+   "strides": [
+    22,
+    36,
+    8,
+    233,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/orangutan_rare.narc": {
+   "root": 1756,
+   "region_a_end": 1824,
+   "pairs": [
+    {
+     "at": 1764,
+     "ptr": 188,
+     "count": 2
+    },
+    {
+     "at": 1772,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 1780,
+     "ptr": 268,
+     "count": 3
+    },
+    {
+     "at": 1788,
+     "ptr": 292,
+     "count": 4
+    },
+    {
+     "at": 1796,
+     "ptr": 1196,
+     "count": 11
+    },
+    {
+     "at": 1808,
+     "ptr": 1456,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 1576,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1756,
+     "ptr": 28
+    },
+    {
+     "at": 1760,
+     "ptr": 132
+    },
+    {
+     "at": 1804,
+     "ptr": 1372
+    }
+   ],
+   "part_table": {
+    "at": 1772,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1780,
+    "ptr": 268,
+    "count": 3
+   },
+   "strides": [
+    22,
+    36,
+    8,
+    226,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/quad.narc": {
+   "root": 1356,
+   "region_a_end": 1424,
+   "pairs": [
+    {
+     "at": 1364,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1372,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1380,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1388,
+     "ptr": 248,
+     "count": 7
+    },
+    {
+     "at": 1396,
+     "ptr": 872,
+     "count": 10
+    },
+    {
+     "at": 1408,
+     "ptr": 1116,
+     "count": 3
+    },
+    {
+     "at": 1416,
+     "ptr": 1236,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1356,
+     "ptr": 28
+    },
+    {
+     "at": 1360,
+     "ptr": 120
+    },
+    {
+     "at": 1404,
+     "ptr": 1032
+    }
+   ],
+   "part_table": {
+    "at": 1372,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1380,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/quad_rare.narc": {
+   "root": 1356,
+   "region_a_end": 1424,
+   "pairs": [
+    {
+     "at": 1364,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1372,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1380,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1388,
+     "ptr": 248,
+     "count": 7
+    },
+    {
+     "at": 1396,
+     "ptr": 872,
+     "count": 10
+    },
+    {
+     "at": 1408,
+     "ptr": 1116,
+     "count": 3
+    },
+    {
+     "at": 1416,
+     "ptr": 1236,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1356,
+     "ptr": 28
+    },
+    {
+     "at": 1360,
+     "ptr": 120
+    },
+    {
+     "at": 1404,
+     "ptr": 1032
+    }
+   ],
+   "part_table": {
+    "at": 1372,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1380,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/rabbit.narc": {
+   "root": 1064,
+   "region_a_end": 1152,
+   "pairs": [
+    {
+     "at": 1072,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 1080,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 1088,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 1096,
+     "ptr": 220,
+     "count": 3
+    },
+    {
+     "at": 1104,
+     "ptr": 704,
+     "count": 6
+    },
+    {
+     "at": 1116,
+     "ptr": 884,
+     "count": 3
+    },
+    {
+     "at": 1124,
+     "ptr": 1004,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1064,
+     "ptr": 28
+    },
+    {
+     "at": 1068,
+     "ptr": 104
+    },
+    {
+     "at": 1112,
+     "ptr": 800
+    }
+   ],
+   "part_table": {
+    "at": 1080,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1088,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/rabbit_rare.narc": {
+   "root": 1064,
+   "region_a_end": 1152,
+   "pairs": [
+    {
+     "at": 1072,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 1080,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 1088,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 1096,
+     "ptr": 220,
+     "count": 3
+    },
+    {
+     "at": 1104,
+     "ptr": 704,
+     "count": 6
+    },
+    {
+     "at": 1116,
+     "ptr": 884,
+     "count": 3
+    },
+    {
+     "at": 1124,
+     "ptr": 1004,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1064,
+     "ptr": 28
+    },
+    {
+     "at": 1068,
+     "ptr": 104
+    },
+    {
+     "at": 1112,
+     "ptr": 800
+    }
+   ],
+   "part_table": {
+    "at": 1080,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1088,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/rappy.narc": {
+   "root": 1096,
+   "region_a_end": 1184,
+   "pairs": [
+    {
+     "at": 1104,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1112,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1120,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1128,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1136,
+     "ptr": 704,
+     "count": 8
+    },
+    {
+     "at": 1148,
+     "ptr": 916,
+     "count": 3
+    },
+    {
+     "at": 1156,
+     "ptr": 1036,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1096,
+     "ptr": 28
+    },
+    {
+     "at": 1100,
+     "ptr": 112
+    },
+    {
+     "at": 1144,
+     "ptr": 832
+    }
+   ],
+   "part_table": {
+    "at": 1112,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1120,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    238,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/rappy_blue.narc": {
+   "root": 1096,
+   "region_a_end": 1184,
+   "pairs": [
+    {
+     "at": 1104,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1112,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1120,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1128,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1136,
+     "ptr": 704,
+     "count": 8
+    },
+    {
+     "at": 1148,
+     "ptr": 916,
+     "count": 3
+    },
+    {
+     "at": 1156,
+     "ptr": 1036,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1096,
+     "ptr": 28
+    },
+    {
+     "at": 1100,
+     "ptr": 112
+    },
+    {
+     "at": 1144,
+     "ptr": 832
+    }
+   ],
+   "part_table": {
+    "at": 1112,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1120,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    238,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/rappy_red.narc": {
+   "root": 1096,
+   "region_a_end": 1184,
+   "pairs": [
+    {
+     "at": 1104,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1112,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1120,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1128,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1136,
+     "ptr": 704,
+     "count": 8
+    },
+    {
+     "at": 1148,
+     "ptr": 916,
+     "count": 3
+    },
+    {
+     "at": 1156,
+     "ptr": 1036,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1096,
+     "ptr": 28
+    },
+    {
+     "at": 1100,
+     "ptr": 112
+    },
+    {
+     "at": 1144,
+     "ptr": 832
+    }
+   ],
+   "part_table": {
+    "at": 1112,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1120,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    238,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/roc.narc": {
+   "root": 1472,
+   "region_a_end": 1552,
+   "pairs": [
+    {
+     "at": 1480,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1488,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1496,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1504,
+     "ptr": 248,
+     "count": 3
+    },
+    {
+     "at": 1512,
+     "ptr": 1036,
+     "count": 7
+    },
+    {
+     "at": 1524,
+     "ptr": 1232,
+     "count": 3
+    },
+    {
+     "at": 1532,
+     "ptr": 1352,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1472,
+     "ptr": 28
+    },
+    {
+     "at": 1476,
+     "ptr": 112
+    },
+    {
+     "at": 1520,
+     "ptr": 1148
+    }
+   ],
+   "part_table": {
+    "at": 1488,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1496,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    40,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/roc_rare.narc": {
+   "root": 1472,
+   "region_a_end": 1552,
+   "pairs": [
+    {
+     "at": 1480,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1488,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1496,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1504,
+     "ptr": 248,
+     "count": 3
+    },
+    {
+     "at": 1512,
+     "ptr": 1036,
+     "count": 7
+    },
+    {
+     "at": 1524,
+     "ptr": 1232,
+     "count": 3
+    },
+    {
+     "at": 1532,
+     "ptr": 1352,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1472,
+     "ptr": 28
+    },
+    {
+     "at": 1476,
+     "ptr": 112
+    },
+    {
+     "at": 1520,
+     "ptr": 1148
+    }
+   ],
+   "part_table": {
+    "at": 1488,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1496,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    40,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/seal.narc": {
+   "root": 1220,
+   "region_a_end": 1296,
+   "pairs": [
+    {
+     "at": 1228,
+     "ptr": 164,
+     "count": 1
+    },
+    {
+     "at": 1236,
+     "ptr": 188,
+     "count": 1
+    },
+    {
+     "at": 1244,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 1252,
+     "ptr": 236,
+     "count": 3
+    },
+    {
+     "at": 1260,
+     "ptr": 784,
+     "count": 7
+    },
+    {
+     "at": 1272,
+     "ptr": 980,
+     "count": 3
+    },
+    {
+     "at": 1280,
+     "ptr": 1100,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1220,
+     "ptr": 28
+    },
+    {
+     "at": 1224,
+     "ptr": 108
+    },
+    {
+     "at": 1268,
+     "ptr": 896
+    }
+   ],
+   "part_table": {
+    "at": 1236,
+    "ptr": 188,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1244,
+    "ptr": 220,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/seal_rare.narc": {
+   "root": 1220,
+   "region_a_end": 1296,
+   "pairs": [
+    {
+     "at": 1228,
+     "ptr": 164,
+     "count": 1
+    },
+    {
+     "at": 1236,
+     "ptr": 188,
+     "count": 1
+    },
+    {
+     "at": 1244,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 1252,
+     "ptr": 236,
+     "count": 3
+    },
+    {
+     "at": 1260,
+     "ptr": 784,
+     "count": 7
+    },
+    {
+     "at": 1272,
+     "ptr": 980,
+     "count": 3
+    },
+    {
+     "at": 1280,
+     "ptr": 1100,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1220,
+     "ptr": 28
+    },
+    {
+     "at": 1224,
+     "ptr": 108
+    },
+    {
+     "at": 1268,
+     "ptr": 896
+    }
+   ],
+   "part_table": {
+    "at": 1236,
+    "ptr": 188,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1244,
+    "ptr": 220,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/shooter.narc": {
+   "root": 1160,
+   "region_a_end": 1248,
+   "pairs": [
+    {
+     "at": 1168,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1176,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1184,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1192,
+     "ptr": 248,
+     "count": 5
+    },
+    {
+     "at": 1200,
+     "ptr": 708,
+     "count": 8
+    },
+    {
+     "at": 1212,
+     "ptr": 920,
+     "count": 3
+    },
+    {
+     "at": 1220,
+     "ptr": 1040,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1160,
+     "ptr": 36
+    },
+    {
+     "at": 1164,
+     "ptr": 120
+    },
+    {
+     "at": 1208,
+     "ptr": 836
+    }
+   ],
+   "part_table": {
+    "at": 1176,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1184,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    92,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/shooter_leader.narc": {
+   "root": 1160,
+   "region_a_end": 1248,
+   "pairs": [
+    {
+     "at": 1168,
+     "ptr": 176,
+     "count": 1
+    },
+    {
+     "at": 1176,
+     "ptr": 200,
+     "count": 1
+    },
+    {
+     "at": 1184,
+     "ptr": 232,
+     "count": 2
+    },
+    {
+     "at": 1192,
+     "ptr": 248,
+     "count": 5
+    },
+    {
+     "at": 1200,
+     "ptr": 708,
+     "count": 8
+    },
+    {
+     "at": 1212,
+     "ptr": 920,
+     "count": 3
+    },
+    {
+     "at": 1220,
+     "ptr": 1040,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1160,
+     "ptr": 36
+    },
+    {
+     "at": 1164,
+     "ptr": 120
+    },
+    {
+     "at": 1208,
+     "ptr": 836
+    }
+   ],
+   "part_table": {
+    "at": 1176,
+    "ptr": 200,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1184,
+    "ptr": 232,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    92,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/shrimp.narc": {
+   "root": 1300,
+   "region_a_end": 1376,
+   "pairs": [
+    {
+     "at": 1308,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1316,
+     "ptr": 200,
+     "count": 2
+    },
+    {
+     "at": 1324,
+     "ptr": 256,
+     "count": 2
+    },
+    {
+     "at": 1332,
+     "ptr": 272,
+     "count": 1
+    },
+    {
+     "at": 1340,
+     "ptr": 788,
+     "count": 8
+    },
+    {
+     "at": 1352,
+     "ptr": 1000,
+     "count": 6
+    },
+    {
+     "at": 1360,
+     "ptr": 1240,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1300,
+     "ptr": 28
+    },
+    {
+     "at": 1304,
+     "ptr": 116
+    },
+    {
+     "at": 1348,
+     "ptr": 916
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    28,
+    28,
+    8,
+    516,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/shrimp_rare.narc": {
+   "root": 1300,
+   "region_a_end": 1376,
+   "pairs": [
+    {
+     "at": 1308,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1316,
+     "ptr": 200,
+     "count": 2
+    },
+    {
+     "at": 1324,
+     "ptr": 256,
+     "count": 2
+    },
+    {
+     "at": 1332,
+     "ptr": 272,
+     "count": 1
+    },
+    {
+     "at": 1340,
+     "ptr": 788,
+     "count": 8
+    },
+    {
+     "at": 1352,
+     "ptr": 1000,
+     "count": 6
+    },
+    {
+     "at": 1360,
+     "ptr": 1240,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1300,
+     "ptr": 28
+    },
+    {
+     "at": 1304,
+     "ptr": 116
+    },
+    {
+     "at": 1348,
+     "ptr": 916
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    28,
+    28,
+    8,
+    516,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/snake.narc": {
+   "root": 1288,
+   "region_a_end": 1376,
+   "pairs": [
+    {
+     "at": 1296,
+     "ptr": 172,
+     "count": 1
+    },
+    {
+     "at": 1304,
+     "ptr": 196,
+     "count": 1
+    },
+    {
+     "at": 1312,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1320,
+     "ptr": 244,
+     "count": 2
+    },
+    {
+     "at": 1328,
+     "ptr": 804,
+     "count": 10
+    },
+    {
+     "at": 1340,
+     "ptr": 1048,
+     "count": 3
+    },
+    {
+     "at": 1348,
+     "ptr": 1168,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1288,
+     "ptr": 28
+    },
+    {
+     "at": 1292,
+     "ptr": 116
+    },
+    {
+     "at": 1336,
+     "ptr": 964
+    }
+   ],
+   "part_table": {
+    "at": 1304,
+    "ptr": 196,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1312,
+    "ptr": 228,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    280,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/snake_rare.narc": {
+   "root": 1296,
+   "region_a_end": 1376,
+   "pairs": [
+    {
+     "at": 1304,
+     "ptr": 180,
+     "count": 1
+    },
+    {
+     "at": 1312,
+     "ptr": 204,
+     "count": 1
+    },
+    {
+     "at": 1320,
+     "ptr": 236,
+     "count": 2
+    },
+    {
+     "at": 1328,
+     "ptr": 252,
+     "count": 2
+    },
+    {
+     "at": 1336,
+     "ptr": 812,
+     "count": 10
+    },
+    {
+     "at": 1348,
+     "ptr": 1056,
+     "count": 3
+    },
+    {
+     "at": 1356,
+     "ptr": 1176,
+     "count": 6
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1296,
+     "ptr": 36
+    },
+    {
+     "at": 1300,
+     "ptr": 124
+    },
+    {
+     "at": 1344,
+     "ptr": 972
+    }
+   ],
+   "part_table": {
+    "at": 1312,
+    "ptr": 204,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1320,
+    "ptr": 236,
+    "count": 2
+   },
+   "strides": [
+    24,
+    32,
+    8,
+    280,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/swordman.narc": {
+   "root": 1756,
+   "region_a_end": 1824,
+   "pairs": [
+    {
+     "at": 1764,
+     "ptr": 196,
+     "count": 4
+    },
+    {
+     "at": 1772,
+     "ptr": 284,
+     "count": 2
+    },
+    {
+     "at": 1780,
+     "ptr": 356,
+     "count": 4
+    },
+    {
+     "at": 1788,
+     "ptr": 388,
+     "count": 4
+    },
+    {
+     "at": 1796,
+     "ptr": 1180,
+     "count": 12
+    },
+    {
+     "at": 1808,
+     "ptr": 1456,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 1576,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1756,
+     "ptr": 28
+    },
+    {
+     "at": 1760,
+     "ptr": 140
+    },
+    {
+     "at": 1804,
+     "ptr": 1372
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    22,
+    36,
+    8,
+    198,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/swordman_b.narc": {
+   "root": 1756,
+   "region_a_end": 1824,
+   "pairs": [
+    {
+     "at": 1764,
+     "ptr": 196,
+     "count": 4
+    },
+    {
+     "at": 1772,
+     "ptr": 284,
+     "count": 2
+    },
+    {
+     "at": 1780,
+     "ptr": 356,
+     "count": 4
+    },
+    {
+     "at": 1788,
+     "ptr": 388,
+     "count": 4
+    },
+    {
+     "at": 1796,
+     "ptr": 1180,
+     "count": 12
+    },
+    {
+     "at": 1808,
+     "ptr": 1456,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 1576,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1756,
+     "ptr": 28
+    },
+    {
+     "at": 1760,
+     "ptr": 140
+    },
+    {
+     "at": 1804,
+     "ptr": 1372
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    22,
+    36,
+    8,
+    198,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/swordman_rare.narc": {
+   "root": 1756,
+   "region_a_end": 1824,
+   "pairs": [
+    {
+     "at": 1764,
+     "ptr": 196,
+     "count": 4
+    },
+    {
+     "at": 1772,
+     "ptr": 284,
+     "count": 2
+    },
+    {
+     "at": 1780,
+     "ptr": 356,
+     "count": 4
+    },
+    {
+     "at": 1788,
+     "ptr": 388,
+     "count": 4
+    },
+    {
+     "at": 1796,
+     "ptr": 1180,
+     "count": 12
+    },
+    {
+     "at": 1808,
+     "ptr": 1456,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 1576,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1756,
+     "ptr": 28
+    },
+    {
+     "at": 1760,
+     "ptr": 140
+    },
+    {
+     "at": 1804,
+     "ptr": 1372
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    22,
+    36,
+    8,
+    198,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/swordman_rare_b.narc": {
+   "root": 1756,
+   "region_a_end": 1824,
+   "pairs": [
+    {
+     "at": 1764,
+     "ptr": 196,
+     "count": 4
+    },
+    {
+     "at": 1772,
+     "ptr": 284,
+     "count": 2
+    },
+    {
+     "at": 1780,
+     "ptr": 356,
+     "count": 4
+    },
+    {
+     "at": 1788,
+     "ptr": 388,
+     "count": 4
+    },
+    {
+     "at": 1796,
+     "ptr": 1180,
+     "count": 12
+    },
+    {
+     "at": 1808,
+     "ptr": 1456,
+     "count": 3
+    },
+    {
+     "at": 1816,
+     "ptr": 1576,
+     "count": 9
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1756,
+     "ptr": 28
+    },
+    {
+     "at": 1760,
+     "ptr": 140
+    },
+    {
+     "at": 1804,
+     "ptr": 1372
+    }
+   ],
+   "part_table": null,
+   "strides": [
+    22,
+    36,
+    8,
+    198,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/tank.narc": {
+   "root": 1760,
+   "region_a_end": 1840,
+   "pairs": [
+    {
+     "at": 1768,
+     "ptr": 180,
+     "count": 2
+    },
+    {
+     "at": 1776,
+     "ptr": 224,
+     "count": 1
+    },
+    {
+     "at": 1784,
+     "ptr": 268,
+     "count": 5
+    },
+    {
+     "at": 1792,
+     "ptr": 308,
+     "count": 7
+    },
+    {
+     "at": 1800,
+     "ptr": 1096,
+     "count": 10
+    },
+    {
+     "at": 1812,
+     "ptr": 1340,
+     "count": 3
+    },
+    {
+     "at": 1820,
+     "ptr": 1460,
+     "count": 15
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1760,
+     "ptr": 28
+    },
+    {
+     "at": 1764,
+     "ptr": 124
+    },
+    {
+     "at": 1808,
+     "ptr": 1256
+    }
+   ],
+   "part_table": {
+    "at": 1776,
+    "ptr": 224,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1784,
+    "ptr": 268,
+    "count": 5
+   },
+   "strides": [
+    22,
+    44,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/tank_rare.narc": {
+   "root": 1768,
+   "region_a_end": 1856,
+   "pairs": [
+    {
+     "at": 1776,
+     "ptr": 188,
+     "count": 2
+    },
+    {
+     "at": 1784,
+     "ptr": 232,
+     "count": 1
+    },
+    {
+     "at": 1792,
+     "ptr": 276,
+     "count": 5
+    },
+    {
+     "at": 1800,
+     "ptr": 316,
+     "count": 7
+    },
+    {
+     "at": 1808,
+     "ptr": 1104,
+     "count": 10
+    },
+    {
+     "at": 1820,
+     "ptr": 1348,
+     "count": 3
+    },
+    {
+     "at": 1828,
+     "ptr": 1468,
+     "count": 15
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1768,
+     "ptr": 36
+    },
+    {
+     "at": 1772,
+     "ptr": 132
+    },
+    {
+     "at": 1816,
+     "ptr": 1264
+    }
+   ],
+   "part_table": {
+    "at": 1784,
+    "ptr": 232,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1792,
+    "ptr": 276,
+    "count": 5
+   },
+   "strides": [
+    22,
+    44,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/tiger.narc": {
+   "root": 1092,
+   "region_a_end": 1168,
+   "pairs": [
+    {
+     "at": 1100,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1108,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1116,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1124,
+     "ptr": 228,
+     "count": 2
+    },
+    {
+     "at": 1132,
+     "ptr": 700,
+     "count": 8
+    },
+    {
+     "at": 1144,
+     "ptr": 912,
+     "count": 3
+    },
+    {
+     "at": 1152,
+     "ptr": 1032,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1092,
+     "ptr": 28
+    },
+    {
+     "at": 1096,
+     "ptr": 112
+    },
+    {
+     "at": 1140,
+     "ptr": 828
+    }
+   ],
+   "part_table": {
+    "at": 1108,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1116,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    236,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/vulture.narc": {
+   "root": 912,
+   "region_a_end": 992,
+   "pairs": [
+    {
+     "at": 920,
+     "ptr": 160,
+     "count": 1
+    },
+    {
+     "at": 928,
+     "ptr": 184,
+     "count": 1
+    },
+    {
+     "at": 936,
+     "ptr": 212,
+     "count": 1
+    },
+    {
+     "at": 944,
+     "ptr": 220,
+     "count": 2
+    },
+    {
+     "at": 952,
+     "ptr": 568,
+     "count": 5
+    },
+    {
+     "at": 964,
+     "ptr": 732,
+     "count": 3
+    },
+    {
+     "at": 972,
+     "ptr": 852,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 912,
+     "ptr": 28
+    },
+    {
+     "at": 916,
+     "ptr": 104
+    },
+    {
+     "at": 960,
+     "ptr": 648
+    }
+   ],
+   "part_table": {
+    "at": 928,
+    "ptr": 184,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 936,
+    "ptr": 212,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    174,
+    16,
+    40,
+    null
+   ]
+  },
+  "enemy/wolf.narc": {
+   "root": 1144,
+   "region_a_end": 1232,
+   "pairs": [
+    {
+     "at": 1152,
+     "ptr": 168,
+     "count": 1
+    },
+    {
+     "at": 1160,
+     "ptr": 192,
+     "count": 1
+    },
+    {
+     "at": 1168,
+     "ptr": 220,
+     "count": 1
+    },
+    {
+     "at": 1176,
+     "ptr": 228,
+     "count": 3
+    },
+    {
+     "at": 1184,
+     "ptr": 752,
+     "count": 8
+    },
+    {
+     "at": 1196,
+     "ptr": 964,
+     "count": 3
+    },
+    {
+     "at": 1204,
+     "ptr": 1084,
+     "count": 3
+    }
+   ],
+   "lone_pointers": [
+    {
+     "at": 1144,
+     "ptr": 28
+    },
+    {
+     "at": 1148,
+     "ptr": 112
+    },
+    {
+     "at": 1192,
+     "ptr": 880
+    }
+   ],
+   "part_table": {
+    "at": 1160,
+    "ptr": 192,
+    "count": 1
+   },
+   "part_count": 1,
+   "next_pair": {
+    "at": 1168,
+    "ptr": 220,
+    "count": 1
+   },
+   "strides": [
+    24,
+    28,
+    8,
+    null,
+    16,
+    40,
+    null
+   ]
+  }
+ }
+}

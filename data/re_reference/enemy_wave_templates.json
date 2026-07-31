@@ -1,0 +1,12091 @@
+{
+  "d": {
+    "table_at": "A+4808",
+    "templates": 141,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          20,
+          19,
+          19
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla",
+          "gorilla"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 3,
+        "ids": [
+          19,
+          21,
+          19
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female",
+          "gorilla"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 6,
+        "ids": [
+          41,
+          40,
+          40
+        ],
+        "names": [
+          "tank_rare",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          50,
+          48,
+          48
+        ],
+        "names": [
+          "swordman_rare",
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 7,
+        "ids": [
+          51,
+          49,
+          49
+        ],
+        "names": [
+          "swordman_rare_b",
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 140,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      }
+    ]
+  },
+  "f1": {
+    "table_at": "A+5088",
+    "templates": 144,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          19,
+          21,
+          19
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female",
+          "gorilla"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 6,
+        "ids": [
+          40,
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 7,
+        "ids": [
+          48,
+          48,
+          50
+        ],
+        "names": [
+          "swordman",
+          "swordman",
+          "swordman_rare"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          49,
+          49,
+          51
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b",
+          "swordman_rare_b"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      },
+      {
+        "i": 140,
+        "flag": 8,
+        "ids": [
+          58
+        ],
+        "names": [
+          "mother_sword"
+        ]
+      },
+      {
+        "i": 141,
+        "flag": 8,
+        "ids": [
+          59
+        ],
+        "names": [
+          "mother_gun"
+        ]
+      },
+      {
+        "i": 142,
+        "flag": 8,
+        "ids": [
+          60
+        ],
+        "names": [
+          "mother_tech"
+        ]
+      },
+      {
+        "i": 143,
+        "flag": 8,
+        "ids": [
+          57
+        ],
+        "names": [
+          "mother"
+        ]
+      }
+    ]
+  },
+  "f2": {
+    "table_at": "A+4796",
+    "templates": 140,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          19,
+          21,
+          19
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female",
+          "gorilla"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 6,
+        "ids": [
+          41,
+          40,
+          40
+        ],
+        "names": [
+          "tank_rare",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 7,
+        "ids": [
+          50,
+          48,
+          48
+        ],
+        "names": [
+          "swordman_rare",
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          51,
+          49,
+          49
+        ],
+        "names": [
+          "swordman_rare_b",
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      }
+    ]
+  },
+  "f3": {
+    "table_at": "A+4796",
+    "templates": 140,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          19,
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 6,
+        "ids": [
+          41,
+          40,
+          40
+        ],
+        "names": [
+          "tank_rare",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 7,
+        "ids": [
+          48,
+          48,
+          50
+        ],
+        "names": [
+          "swordman",
+          "swordman",
+          "swordman_rare"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          49,
+          49,
+          51
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b",
+          "swordman_rare_b"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      }
+    ]
+  },
+  "f4": {
+    "table_at": "A+4796",
+    "templates": 140,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          19,
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 6,
+        "ids": [
+          41,
+          40,
+          40
+        ],
+        "names": [
+          "tank_rare",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 7,
+        "ids": [
+          48,
+          48,
+          50
+        ],
+        "names": [
+          "swordman",
+          "swordman",
+          "swordman_rare"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          49,
+          49,
+          51
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b",
+          "swordman_rare_b"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      }
+    ]
+  },
+  "s": {
+    "table_at": "A+4788",
+    "templates": 140,
+    "waves": [
+      {
+        "i": 0,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 1,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "vulture",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 2,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 3,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          3,
+          3
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake",
+          "snake"
+        ]
+      },
+      {
+        "i": 4,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          4,
+          4
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 5,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          4,
+          4
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "snake_rare",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 6,
+        "flag": 1,
+        "ids": [
+          1,
+          1,
+          7,
+          7
+        ],
+        "names": [
+          "lizard",
+          "lizard",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 7,
+        "flag": 1,
+        "ids": [
+          2,
+          2,
+          7,
+          7
+        ],
+        "names": [
+          "vulture",
+          "vulture",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 8,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          7
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "hyena"
+        ]
+      },
+      {
+        "i": 9,
+        "flag": 1,
+        "ids": [
+          4,
+          4,
+          7
+        ],
+        "names": [
+          "snake_rare",
+          "snake_rare",
+          "hyena"
+        ]
+      },
+      {
+        "i": 10,
+        "flag": 1,
+        "ids": [
+          3,
+          3,
+          4
+        ],
+        "names": [
+          "snake",
+          "snake",
+          "snake_rare"
+        ]
+      },
+      {
+        "i": 11,
+        "flag": 1,
+        "ids": [
+          7,
+          7,
+          7
+        ],
+        "names": [
+          "hyena",
+          "hyena",
+          "hyena"
+        ]
+      },
+      {
+        "i": 12,
+        "flag": 1,
+        "ids": [
+          8,
+          8,
+          8
+        ],
+        "names": [
+          "hyena_rare",
+          "hyena_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 13,
+        "flag": 1,
+        "ids": [
+          5,
+          1,
+          1
+        ],
+        "names": [
+          "lion",
+          "lizard",
+          "lizard"
+        ]
+      },
+      {
+        "i": 14,
+        "flag": 1,
+        "ids": [
+          5,
+          2,
+          2
+        ],
+        "names": [
+          "lion",
+          "vulture",
+          "vulture"
+        ]
+      },
+      {
+        "i": 15,
+        "flag": 1,
+        "ids": [
+          5,
+          3
+        ],
+        "names": [
+          "lion",
+          "snake"
+        ]
+      },
+      {
+        "i": 16,
+        "flag": 1,
+        "ids": [
+          5
+        ],
+        "names": [
+          "lion"
+        ]
+      },
+      {
+        "i": 17,
+        "flag": 1,
+        "ids": [
+          5,
+          5
+        ],
+        "names": [
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 18,
+        "flag": 1,
+        "ids": [
+          6,
+          8
+        ],
+        "names": [
+          "lion_rare",
+          "hyena_rare"
+        ]
+      },
+      {
+        "i": 19,
+        "flag": 1,
+        "ids": [
+          6,
+          6
+        ],
+        "names": [
+          "lion_rare",
+          "lion_rare"
+        ]
+      },
+      {
+        "i": 20,
+        "flag": 65537,
+        "ids": [
+          61
+        ],
+        "names": [
+          "boss_dragon"
+        ]
+      },
+      {
+        "i": 21,
+        "flag": 1,
+        "ids": [
+          6,
+          5,
+          5
+        ],
+        "names": [
+          "lion_rare",
+          "lion",
+          "lion"
+        ]
+      },
+      {
+        "i": 22,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 23,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          10,
+          10
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 24,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 25,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          11,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 26,
+        "flag": 2,
+        "ids": [
+          9,
+          9,
+          9,
+          11
+        ],
+        "names": [
+          "frog",
+          "frog",
+          "frog",
+          "seal"
+        ]
+      },
+      {
+        "i": 27,
+        "flag": 2,
+        "ids": [
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "names": [
+          "frog_rare",
+          "frog_rare",
+          "frog_rare",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 28,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal"
+        ]
+      },
+      {
+        "i": 29,
+        "flag": 2,
+        "ids": [
+          11,
+          11,
+          11,
+          12
+        ],
+        "names": [
+          "seal",
+          "seal",
+          "seal",
+          "seal_rare"
+        ]
+      },
+      {
+        "i": 30,
+        "flag": 2,
+        "ids": [
+          12,
+          10,
+          10,
+          10
+        ],
+        "names": [
+          "seal_rare",
+          "frog_rare",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 31,
+        "flag": 2,
+        "ids": [
+          13,
+          9,
+          9
+        ],
+        "names": [
+          "roc",
+          "frog",
+          "frog"
+        ]
+      },
+      {
+        "i": 32,
+        "flag": 2,
+        "ids": [
+          13,
+          10,
+          10
+        ],
+        "names": [
+          "roc",
+          "frog_rare",
+          "frog_rare"
+        ]
+      },
+      {
+        "i": 33,
+        "flag": 2,
+        "ids": [
+          13
+        ],
+        "names": [
+          "roc"
+        ]
+      },
+      {
+        "i": 34,
+        "flag": 2,
+        "ids": [
+          13,
+          13
+        ],
+        "names": [
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 35,
+        "flag": 2,
+        "ids": [
+          14,
+          14
+        ],
+        "names": [
+          "roc_rare",
+          "roc_rare"
+        ]
+      },
+      {
+        "i": 36,
+        "flag": 65538,
+        "ids": [
+          62
+        ],
+        "names": [
+          "boss_octopus"
+        ]
+      },
+      {
+        "i": 37,
+        "flag": 2,
+        "ids": [
+          14,
+          13,
+          13
+        ],
+        "names": [
+          "roc_rare",
+          "roc",
+          "roc"
+        ]
+      },
+      {
+        "i": 38,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 39,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 40,
+        "flag": 3,
+        "ids": [
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 41,
+        "flag": 3,
+        "ids": [
+          15,
+          16,
+          15,
+          16,
+          15
+        ],
+        "names": [
+          "rabbit",
+          "rabbit_rare",
+          "rabbit",
+          "rabbit_rare",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 42,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          18,
+          18
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 43,
+        "flag": 3,
+        "ids": [
+          15,
+          15,
+          17,
+          17
+        ],
+        "names": [
+          "rabbit",
+          "rabbit",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 44,
+        "flag": 3,
+        "ids": [
+          18,
+          18,
+          18
+        ],
+        "names": [
+          "wolf",
+          "wolf",
+          "wolf"
+        ]
+      },
+      {
+        "i": 45,
+        "flag": 3,
+        "ids": [
+          17,
+          17,
+          17
+        ],
+        "names": [
+          "deer",
+          "deer",
+          "deer"
+        ]
+      },
+      {
+        "i": 46,
+        "flag": 3,
+        "ids": [
+          19,
+          15,
+          15,
+          15
+        ],
+        "names": [
+          "gorilla",
+          "rabbit",
+          "rabbit",
+          "rabbit"
+        ]
+      },
+      {
+        "i": 47,
+        "flag": 3,
+        "ids": [
+          19,
+          18
+        ],
+        "names": [
+          "gorilla",
+          "wolf"
+        ]
+      },
+      {
+        "i": 48,
+        "flag": 3,
+        "ids": [
+          19,
+          21
+        ],
+        "names": [
+          "gorilla",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 49,
+        "flag": 3,
+        "ids": [
+          20,
+          16,
+          16
+        ],
+        "names": [
+          "gorilla_rare",
+          "rabbit_rare",
+          "rabbit_rare"
+        ]
+      },
+      {
+        "i": 50,
+        "flag": 3,
+        "ids": [
+          20,
+          20
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_rare"
+        ]
+      },
+      {
+        "i": 51,
+        "flag": 3,
+        "ids": [
+          20,
+          21
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla_female"
+        ]
+      },
+      {
+        "i": 52,
+        "flag": 3,
+        "ids": [
+          20,
+          19
+        ],
+        "names": [
+          "gorilla_rare",
+          "gorilla"
+        ]
+      },
+      {
+        "i": 53,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 54,
+        "flag": 4,
+        "ids": [
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "names": [
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 55,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          24,
+          24
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 56,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 57,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          25,
+          25
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 58,
+        "flag": 4,
+        "ids": [
+          23,
+          23,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 59,
+        "flag": 4,
+        "ids": [
+          23,
+          24,
+          22,
+          22
+        ],
+        "names": [
+          "bat",
+          "bat_blue",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 60,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          22
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "mole"
+        ]
+      },
+      {
+        "i": 61,
+        "flag": 4,
+        "ids": [
+          22,
+          22,
+          25
+        ],
+        "names": [
+          "mole",
+          "mole",
+          "tiger"
+        ]
+      },
+      {
+        "i": 62,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          22
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "mole"
+        ]
+      },
+      {
+        "i": 63,
+        "flag": 4,
+        "ids": [
+          25,
+          25,
+          25
+        ],
+        "names": [
+          "tiger",
+          "tiger",
+          "tiger"
+        ]
+      },
+      {
+        "i": 64,
+        "flag": 4,
+        "ids": [
+          26,
+          23,
+          23
+        ],
+        "names": [
+          "armadillo",
+          "bat",
+          "bat"
+        ]
+      },
+      {
+        "i": 65,
+        "flag": 4,
+        "ids": [
+          26,
+          24,
+          24
+        ],
+        "names": [
+          "armadillo",
+          "bat_blue",
+          "bat_blue"
+        ]
+      },
+      {
+        "i": 66,
+        "flag": 4,
+        "ids": [
+          26,
+          22
+        ],
+        "names": [
+          "armadillo",
+          "mole"
+        ]
+      },
+      {
+        "i": 67,
+        "flag": 4,
+        "ids": [
+          26,
+          25
+        ],
+        "names": [
+          "armadillo",
+          "tiger"
+        ]
+      },
+      {
+        "i": 68,
+        "flag": 4,
+        "ids": [
+          26
+        ],
+        "names": [
+          "armadillo"
+        ]
+      },
+      {
+        "i": 69,
+        "flag": 4,
+        "ids": [
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 70,
+        "flag": 4,
+        "ids": [
+          27,
+          27
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo_rare"
+        ]
+      },
+      {
+        "i": 71,
+        "flag": 4,
+        "ids": [
+          27,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo_rare",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 72,
+        "flag": 4,
+        "ids": [
+          26,
+          26,
+          26
+        ],
+        "names": [
+          "armadillo",
+          "armadillo",
+          "armadillo"
+        ]
+      },
+      {
+        "i": 73,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 74,
+        "flag": 5,
+        "ids": [
+          28,
+          30,
+          30,
+          30,
+          30
+        ],
+        "names": [
+          "shrimp",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 75,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          28,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "shrimp",
+          "quad"
+        ]
+      },
+      {
+        "i": 76,
+        "flag": 5,
+        "ids": [
+          28,
+          28,
+          31,
+          31
+        ],
+        "names": [
+          "shrimp",
+          "shrimp",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 77,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          30,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "frog_bomb",
+          "quad"
+        ]
+      },
+      {
+        "i": 78,
+        "flag": 5,
+        "ids": [
+          30,
+          30,
+          31,
+          31
+        ],
+        "names": [
+          "frog_bomb",
+          "frog_bomb",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 79,
+        "flag": 5,
+        "ids": [
+          31,
+          30,
+          30,
+          28,
+          28
+        ],
+        "names": [
+          "quad",
+          "frog_bomb",
+          "frog_bomb",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 80,
+        "flag": 5,
+        "ids": [
+          31,
+          31
+        ],
+        "names": [
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 81,
+        "flag": 5,
+        "ids": [
+          32,
+          29,
+          29
+        ],
+        "names": [
+          "quad_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 82,
+        "flag": 5,
+        "ids": [
+          32,
+          31,
+          31
+        ],
+        "names": [
+          "quad_rare",
+          "quad",
+          "quad"
+        ]
+      },
+      {
+        "i": 83,
+        "flag": 5,
+        "ids": [
+          33
+        ],
+        "names": [
+          "orangutan"
+        ]
+      },
+      {
+        "i": 84,
+        "flag": 5,
+        "ids": [
+          33,
+          33
+        ],
+        "names": [
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 85,
+        "flag": 5,
+        "ids": [
+          33,
+          28,
+          28
+        ],
+        "names": [
+          "orangutan",
+          "shrimp",
+          "shrimp"
+        ]
+      },
+      {
+        "i": 86,
+        "flag": 5,
+        "ids": [
+          33,
+          30,
+          30
+        ],
+        "names": [
+          "orangutan",
+          "frog_bomb",
+          "frog_bomb"
+        ]
+      },
+      {
+        "i": 87,
+        "flag": 5,
+        "ids": [
+          33,
+          31
+        ],
+        "names": [
+          "orangutan",
+          "quad"
+        ]
+      },
+      {
+        "i": 88,
+        "flag": 5,
+        "ids": [
+          34,
+          29,
+          29
+        ],
+        "names": [
+          "orangutan_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 89,
+        "flag": 5,
+        "ids": [
+          34,
+          32
+        ],
+        "names": [
+          "orangutan_rare",
+          "quad_rare"
+        ]
+      },
+      {
+        "i": 90,
+        "flag": 5,
+        "ids": [
+          29,
+          29,
+          29,
+          29
+        ],
+        "names": [
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare",
+          "shrimp_rare"
+        ]
+      },
+      {
+        "i": 91,
+        "flag": 65541,
+        "ids": [
+          63
+        ],
+        "names": [
+          "boss_robot"
+        ]
+      },
+      {
+        "i": 92,
+        "flag": 5,
+        "ids": [
+          34,
+          33,
+          33
+        ],
+        "names": [
+          "orangutan_rare",
+          "orangutan",
+          "orangutan"
+        ]
+      },
+      {
+        "i": 93,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 94,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 95,
+        "flag": 6,
+        "ids": [
+          35,
+          35,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 96,
+        "flag": 6,
+        "ids": [
+          37,
+          35,
+          35
+        ],
+        "names": [
+          "board",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 97,
+        "flag": 6,
+        "ids": [
+          38,
+          35,
+          35
+        ],
+        "names": [
+          "board_green",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 98,
+        "flag": 6,
+        "ids": [
+          39,
+          35,
+          35
+        ],
+        "names": [
+          "board_blue",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 99,
+        "flag": 6,
+        "ids": [
+          37,
+          38,
+          39
+        ],
+        "names": [
+          "board",
+          "board_green",
+          "board_blue"
+        ]
+      },
+      {
+        "i": 100,
+        "flag": 6,
+        "ids": [
+          40
+        ],
+        "names": [
+          "tank"
+        ]
+      },
+      {
+        "i": 101,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter"
+        ]
+      },
+      {
+        "i": 102,
+        "flag": 6,
+        "ids": [
+          40,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 103,
+        "flag": 6,
+        "ids": [
+          40,
+          40
+        ],
+        "names": [
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 104,
+        "flag": 6,
+        "ids": [
+          41,
+          35,
+          35,
+          36
+        ],
+        "names": [
+          "tank_rare",
+          "shooter",
+          "shooter",
+          "shooter_leader"
+        ]
+      },
+      {
+        "i": 105,
+        "flag": 6,
+        "ids": [
+          41,
+          41
+        ],
+        "names": [
+          "tank_rare",
+          "tank_rare"
+        ]
+      },
+      {
+        "i": 106,
+        "flag": 65542,
+        "ids": [
+          65
+        ],
+        "names": [
+          "boss_robot_cmb"
+        ]
+      },
+      {
+        "i": 107,
+        "flag": 6,
+        "ids": [
+          41,
+          40,
+          40
+        ],
+        "names": [
+          "tank_rare",
+          "tank",
+          "tank"
+        ]
+      },
+      {
+        "i": 108,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          42
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 109,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          43
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 110,
+        "flag": 7,
+        "ids": [
+          42,
+          42,
+          42,
+          44
+        ],
+        "names": [
+          "circle",
+          "circle",
+          "circle",
+          "leg"
+        ]
+      },
+      {
+        "i": 111,
+        "flag": 7,
+        "ids": [
+          43,
+          43,
+          43,
+          45
+        ],
+        "names": [
+          "circle_black",
+          "circle_black",
+          "circle_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 112,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          44
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "leg"
+        ]
+      },
+      {
+        "i": 113,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          45
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 114,
+        "flag": 7,
+        "ids": [
+          44,
+          44,
+          42,
+          42
+        ],
+        "names": [
+          "leg",
+          "leg",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 115,
+        "flag": 7,
+        "ids": [
+          45,
+          45,
+          43,
+          43
+        ],
+        "names": [
+          "leg_black",
+          "leg_black",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 116,
+        "flag": 7,
+        "ids": [
+          46,
+          46,
+          46
+        ],
+        "names": [
+          "lower",
+          "lower",
+          "lower"
+        ]
+      },
+      {
+        "i": 117,
+        "flag": 7,
+        "ids": [
+          47,
+          47,
+          47
+        ],
+        "names": [
+          "lower_black",
+          "lower_black",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 118,
+        "flag": 7,
+        "ids": [
+          48
+        ],
+        "names": [
+          "swordman"
+        ]
+      },
+      {
+        "i": 119,
+        "flag": 7,
+        "ids": [
+          49
+        ],
+        "names": [
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 120,
+        "flag": 7,
+        "ids": [
+          48,
+          42,
+          42
+        ],
+        "names": [
+          "swordman",
+          "circle",
+          "circle"
+        ]
+      },
+      {
+        "i": 121,
+        "flag": 7,
+        "ids": [
+          49,
+          43,
+          43
+        ],
+        "names": [
+          "swordman_b",
+          "circle_black",
+          "circle_black"
+        ]
+      },
+      {
+        "i": 122,
+        "flag": 7,
+        "ids": [
+          48,
+          44
+        ],
+        "names": [
+          "swordman",
+          "leg"
+        ]
+      },
+      {
+        "i": 123,
+        "flag": 7,
+        "ids": [
+          49,
+          45
+        ],
+        "names": [
+          "swordman_b",
+          "leg_black"
+        ]
+      },
+      {
+        "i": 124,
+        "flag": 7,
+        "ids": [
+          48,
+          48
+        ],
+        "names": [
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 125,
+        "flag": 7,
+        "ids": [
+          49,
+          49
+        ],
+        "names": [
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 126,
+        "flag": 7,
+        "ids": [
+          50,
+          46
+        ],
+        "names": [
+          "swordman_rare",
+          "lower"
+        ]
+      },
+      {
+        "i": 127,
+        "flag": 7,
+        "ids": [
+          51,
+          47
+        ],
+        "names": [
+          "swordman_rare_b",
+          "lower_black"
+        ]
+      },
+      {
+        "i": 128,
+        "flag": 65543,
+        "ids": [
+          66,
+          67,
+          67,
+          67
+        ],
+        "names": [
+          "boss_mother",
+          "boss_mother_piece",
+          "boss_mother_piece",
+          "boss_mother_piece"
+        ]
+      },
+      {
+        "i": 129,
+        "flag": 131079,
+        "ids": [
+          68
+        ],
+        "names": [
+          "boss_darkfalz"
+        ]
+      },
+      {
+        "i": 130,
+        "flag": 7,
+        "ids": [
+          50,
+          48,
+          48
+        ],
+        "names": [
+          "swordman_rare",
+          "swordman",
+          "swordman"
+        ]
+      },
+      {
+        "i": 131,
+        "flag": 7,
+        "ids": [
+          51,
+          49,
+          49
+        ],
+        "names": [
+          "swordman_rare_b",
+          "swordman_b",
+          "swordman_b"
+        ]
+      },
+      {
+        "i": 132,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 133,
+        "flag": 8,
+        "ids": [
+          53,
+          53,
+          53
+        ],
+        "names": [
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_blue"
+        ]
+      },
+      {
+        "i": 134,
+        "flag": 8,
+        "ids": [
+          54,
+          54,
+          54
+        ],
+        "names": [
+          "rappy_red",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 135,
+        "flag": 8,
+        "ids": [
+          55,
+          55,
+          55
+        ],
+        "names": [
+          "booma",
+          "booma",
+          "booma"
+        ]
+      },
+      {
+        "i": 136,
+        "flag": 8,
+        "ids": [
+          56,
+          56,
+          56
+        ],
+        "names": [
+          "jigobooma",
+          "jigobooma",
+          "jigobooma"
+        ]
+      },
+      {
+        "i": 137,
+        "flag": 8,
+        "ids": [
+          52,
+          53,
+          53,
+          54,
+          54
+        ],
+        "names": [
+          "rappy",
+          "rappy_blue",
+          "rappy_blue",
+          "rappy_red",
+          "rappy_red"
+        ]
+      },
+      {
+        "i": 138,
+        "flag": 8,
+        "ids": [
+          52,
+          52,
+          52,
+          52,
+          52
+        ],
+        "names": [
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy",
+          "rappy"
+        ]
+      },
+      {
+        "i": 139,
+        "flag": 8,
+        "ids": [
+          55,
+          56,
+          55,
+          56,
+          55
+        ],
+        "names": [
+          "booma",
+          "jigobooma",
+          "booma",
+          "jigobooma",
+          "booma"
+        ]
+      }
+    ]
+  },
+  "_meta": {
+    "source": "enemy/group_<set>.rel \u2014 DSIF; the wave table is 12-byte {ptr, count, flag} records, ptr -> count u32 enemy ids",
+    "located_structurally": "the root struct layout DIFFERS per file \u2014 .P.P.... for d, P...P.P. for f1, .P...... for f3 and f4 \u2014 so reading the table pointer from a fixed root word only works for group_d. That is why an earlier pass got 1 template for f1. The table is now found by scanning every relocation target for 12-byte records whose ptr advances by exactly count*4, which needs no assumption about the root at all.",
+    "counts": {
+      "d": 141,
+      "f1": 144,
+      "f2": 140,
+      "f3": 140,
+      "f4": 140,
+      "s": 140
+    },
+    "validated": "all five waves kion observed in valley still match group_d: A2 wave 1 and C1 wave 1 -> template 3, A2 wave 2 -> template 2, C4 wave 2 -> template 0, C3 -> template 10.",
+    "sets_are_nearly_identical": "every set draws from the same enemy pool (63 distinct ids, 67 for f1) with the same maximum id of 68 and almost the same size distribution. So the set does NOT meaningfully change which waves exist \u2014 f1 through f4 are not difficulty tiers in their template lists. Whatever differs per set must be in the per-room-code table that ASSIGNS templates, not in the templates themselves.",
+    "group_2nd": "608 bytes with 19 relocations and no wave table \u2014 a different kind of file, not decoded"
+  }
+}

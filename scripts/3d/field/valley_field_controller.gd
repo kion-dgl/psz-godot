@@ -19,6 +19,9 @@ const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 # Lazily loaded by CellObjectSpawner via the controller back-reference; the
 # assignment lands here so the load happens at most once per controller.
 var PoisonLilyScript: GDScript = null
+# Same lazy-load pattern for the Reyburn boss behaviour (CellObjectSpawner sets
+# it via this back-reference so the load happens at most once per controller).
+var ReyburnBossScript: GDScript = null
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
 # Start menu handled by PsoStartMenu autoload

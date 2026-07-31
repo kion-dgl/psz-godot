@@ -733,61 +733,25 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 	# Look up enemy data from registry
 	var edata = EnemyRegistry.get_enemy(enemy_id)
 
-	# Use specialized scripts for specific enemy types
+	# Poison Lily uses a specialized stationary-plant subclass.
 	if edata and enemy_id == "poison_lily":
 		if not _c.PoisonLilyScript:
 			_c.PoisonLilyScript = load("res://scripts/3d/enemies/poison_lily.gd")
 		if not _c.PoisonLilyScript:
 			push_error("[CellObjects] Failed to load PoisonLily script")
 			return
-		var enemy: EnemyBase = _c.PoisonLilyScript.new()
-		enemy.enemy_data = edata
-		var col_shape := CollisionShape3D.new()
-		var capsule := CapsuleShape3D.new()
-		capsule.radius = edata.collision_radius
-		capsule.height = edata.collision_height
-		col_shape.shape = capsule
-		col_shape.position.y = capsule.height / 2
-		enemy.add_child(col_shape)
-		enemy.collision_layer = 8
-		enemy.collision_mask = 1
-		_c._map_root.add_child(enemy)
-		enemy.position = pos
-		_c._room_enemies.append(enemy)
-		_track_on_minimap(enemy)
-		var spawn_id := enemy_id
-		enemy.died.connect(func(e: EnemyBase) -> void:
-			_spawn_enemy_drops(e.global_position, spawn_id)
-			_c._check_room_clear()
-		)
+		_spawn_scripted_enemy(pos, enemy_id, edata, _c.PoisonLilyScript)
 		print("[CellObjects] PoisonLily at %s" % pos)
 		return
 
+	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
+	if edata and enemy_id == "reyburn":
+		if _spawn_boss(pos, enemy_id, edata):
+			return
+
 	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
 	if edata:
-		var enemy := EnemyBase.new()
-		enemy.enemy_data = edata
-
-		# Collision shape
-		var col_shape := CollisionShape3D.new()
-		var capsule := CapsuleShape3D.new()
-		capsule.radius = edata.collision_radius
-		capsule.height = edata.collision_height
-		col_shape.shape = capsule
-		col_shape.position.y = capsule.height / 2
-		enemy.add_child(col_shape)
-		enemy.collision_layer = 8
-		enemy.collision_mask = 1
-
-		_c._map_root.add_child(enemy)
-		enemy.position = pos
-		_c._room_enemies.append(enemy)
-		_track_on_minimap(enemy)
-		var spawn_id := enemy_id
-		enemy.died.connect(func(e: EnemyBase) -> void:
-			_spawn_enemy_drops(e.global_position, spawn_id)
-			_c._check_room_clear()
-		)
+		_spawn_scripted_enemy(pos, enemy_id, edata, null)
 		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
 	else:
 		# Fallback to static EnemySpawn for unknown enemies
@@ -805,6 +769,47 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 			_c._check_room_clear()
 		)
 		print("[CellObjects] EnemySpawn '%s' at %s (no registry data)" % [enemy_id, pos])
+
+
+## Build an EnemyBase (or a subclass, when `script` is given), add it to the map
+## with a capsule from its data, register it for room-clear/minimap, and wire the
+## death → drops + room-clear signal. Shared by the generic, poison-lily and boss
+## spawn paths.
+func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScript) -> EnemyBase:
+	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
+	enemy.enemy_data = edata
+	var col_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = edata.collision_radius
+	capsule.height = edata.collision_height
+	col_shape.shape = capsule
+	col_shape.position.y = capsule.height / 2
+	enemy.add_child(col_shape)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	_c._map_root.add_child(enemy)
+	enemy.position = pos
+	_c._room_enemies.append(enemy)
+	_track_on_minimap(enemy)
+	var spawn_id := enemy_id
+	enemy.died.connect(func(e: EnemyBase) -> void:
+		_spawn_enemy_drops(e.global_position, spawn_id)
+		_c._check_room_clear())
+	return enemy
+
+
+## Spawn a boss enemy via its behaviour subclass and bind the boss health bar.
+## Returns false if the script failed to load (caller falls back to EnemyBase).
+func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
+	if not _c.ReyburnBossScript:
+		_c.ReyburnBossScript = load("res://scripts/3d/enemies/reyburn_boss.gd")
+	if not _c.ReyburnBossScript:
+		return false
+	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, _c.ReyburnBossScript)
+	if _c._field_hud and _c._field_hud.has_method("show_boss_bar"):
+		_c._field_hud.show_boss_bar(boss)
+	print("[CellObjects] ReyburnBoss at %s" % pos)
+	return true
 
 
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:

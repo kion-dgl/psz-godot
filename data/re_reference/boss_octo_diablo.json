@@ -1,0 +1,943 @@
+{
+  "source": "psz-re \u2014 live extraction from melonDS via the GDB stub",
+  "boss": "Octo Diablo",
+  "vtable": "0x021A1280 (overlay 21)",
+  "hp": {
+    "max": 5220,
+    "field": "entity+0x18",
+    "current": "entity+0x34"
+  },
+  "attack_selection": {
+    "code": "vtable slot 11 (0x021983F4)",
+    "gate": "only runs when entity+0xD8 (state) == 0",
+    "table": "0x0219FFF4 in overlay 21, 3 x u32 per row, row index = entity+0xE4",
+    "rows_are_percentages": "each row sums to 100, and the code walks a running total comparing against a roll",
+    "phases": [
+      {
+        "phase": 0,
+        "weights": [
+          90,
+          0,
+          10
+        ]
+      },
+      {
+        "phase": 1,
+        "weights": [
+          0,
+          90,
+          10
+        ]
+      }
+    ],
+    "reading": "phase 0 uses action 0 nine times in ten; phase 1 uses action 1 nine times in ten; both fall back to action 2 one time in ten",
+    "caveat": "rows 2+ at that address are adjacent unrelated data (sequential small IDs), not further phases"
+  },
+  "state_machine": {
+    "field": "entity+0xD8",
+    "observed": "0 -> 1 -> 2 -> 0 over ~3.2s of live fight",
+    "timings_seconds": {
+      "0_to_1": "immediate",
+      "1_to_2": 0.2,
+      "2_to_0": 3.05
+    },
+    "caveat": "one cycle, sampled at ~5 Hz over the GDB stub. Treat the durations as approximate."
+  },
+  "entity_offsets": {
+    "+0x00": "vtable pointer",
+    "+0x18": "u16 max HP",
+    "+0x34": "u16 current HP",
+    "+0x44": "u16 facing angle, rotates continuously",
+    "+0xD4": "mode flag; selects 8 vs 6 iterations in slot 7 and gates slot 9's transform path",
+    "+0xD8": "state id",
+    "+0xE0": "selected action index",
+    "+0xE4": "phase row into the attack table",
+    "NOT_position": "+0x38/+0x3C/+0x40 was earlier labelled position; it reads 0,0,0 on this boss and slot 9 only writes it when +0xD4 == 1. The body appears to be stationary."
+  },
+  "part_animation": {
+    "region": "0x0237C5A0 .. 0x0237C760, immediately past the entity",
+    "shape": "arrays of int32 triples, all animating smoothly, values roughly +/-20000",
+    "mirror_symmetry": "pairs 0xC0 apart hold mirrored values and mirrored deltas \u2014 e.g. +5775/+652 against -5776/-652, and +4827/+741 against -4828/-741",
+    "reading": "left/right limb chains of a skeleton, which is what the tentacles would look like",
+    "confidence": "LEAD, not confirmed. Nothing yet ties a specific triple to a specific tentacle on screen, and this could equally be a bone matrix palette rather than joint positions.",
+    "write_test": "failed as a method: writes land but are recomputed before they render. Per-frame outputs are not causally testable over a 2 Hz debug link.",
+    "data_type": "3x3 bone ROTATION matrices, 1.19.12 fixed point, 36-byte stride, packed contiguously. Confirmed by orthonormality (unit rows, mutually perpendicular) and independently predicted by z_002_stsweepl.nsbca, whose curves are rotation with constant translation.",
+    "mirroring": "mirrored entries sit 4 matrices (0x90) apart, X negated and Y preserved",
+    "still_open": "which array index corresponds to which named bone; runtime order differs from apicula's joint order"
+  },
+  "assets": {
+    "archive": "enemy/boss_octopus.narc \u2014 ZPR-compressed, 373,394 -> 480,560 bytes, 110 sub-files",
+    "extracted_with": "DashGL/ArchiveUnpacker zpr() + narc() (psz-godot/psz-asset-viewer) \u2014 not re-derived",
+    "data_file": "enemy_data_boss_octopus.rel (6,016 bytes, magic DSIF). NOTE: max HP 5220 does NOT appear in it as a plain u16, so the pool is derived or stored scaled.",
+    "models": {
+      "z_002.nsbmd": {
+        "role": "main body",
+        "objects": [
+          "root_body",
+          "Left_arm",
+          "Left_hand",
+          "Left_mouth",
+          "Left_tent",
+          "Right_arm",
+          "Right_hand",
+          "Right_mouth",
+          "Right_tent",
+          "left_head",
+          "right_head",
+          "root_head",
+          "top_head",
+          "z_body"
+        ]
+      },
+      "z_002_st.nsbmd": {
+        "role": "long tentacle",
+        "objects": [
+          "Point01",
+          "Cylinder01",
+          "Point02",
+          "Point03",
+          "Point04",
+          "Point05",
+          "Point06",
+          "Point07",
+          "Point08",
+          "Point09",
+          "Point10"
+        ]
+      },
+      "z_002_tt.nsbmd": {
+        "role": "short tentacle",
+        "objects": [
+          "Point01",
+          "Cylinder01",
+          "Point02",
+          "Point03",
+          "Point04",
+          "Point05",
+          "Point06",
+          "Point07",
+          "Point08"
+        ]
+      },
+      "note": "object lists read from each model's Nitro dictionary by tools/nsbmd.py, not from apicula output"
+    },
+    "animations": [
+      "z_002_abs2eat",
+      "z_002_abs2vmwt",
+      "z_002_abscnc",
+      "z_002_absorb",
+      "z_002_collisn",
+      "z_002_dmg",
+      "z_002_eat",
+      "z_002_eatcnc",
+      "z_002_float",
+      "z_002_sp2wat",
+      "z_002_spout",
+      "z_002_spwat",
+      "z_002_stapp",
+      "z_002_stcatchl",
+      "z_002_stcatchr",
+      "z_002_stcth2wtl",
+      "z_002_stcth2wtr",
+      "z_002_stcthllp",
+      "z_002_stcthrlp",
+      "z_002_stdmg1",
+      "z_002_stdmg2",
+      "z_002_stdmg3",
+      "z_002_stfreq",
+      "z_002_sthide",
+      "z_002_stscrew",
+      "z_002_stsweepl",
+      "z_002_stsweepr",
+      "z_002_stwat",
+      "z_002_ttpull",
+      "z_002_ttretrn",
+      "z_002_ttrrdl",
+      "z_002_ttrrdr",
+      "z_002_ttsh2sn",
+      "z_002_ttshoot",
+      "z_002_ttshtlp",
+      "z_002_ttshtlp2wt",
+      "z_002_ttsnipe",
+      "z_002_ttstg2hd",
+      "z_002_ttsting",
+      "z_002_ttstp",
+      "z_002_ttstpwt",
+      "z_002_tttear",
+      "z_002_ttwat",
+      "z_002_ttwat2wts",
+      "z_002_ttwt2stp",
+      "z_002_ttwts",
+      "z_002_ttwts2wat",
+      "z_002_ttwtsapp",
+      "z_002_ttwtshide",
+      "z_002_vmply",
+      "z_002_vmwat",
+      "z_002_vomit",
+      "z_002_wat",
+      "z_002_wattir",
+      "z_002_wt2abs",
+      "z_002_wt2spwt",
+      "z_002_wttr2wt"
+    ],
+    "animation_reading": {
+      "stsweepl / stsweepr": "tentacle sweep left / right \u2014 observed on screen after forcing phase 1",
+      "sthide / stapp": "hide / appear \u2014 the dive at half health kion describes",
+      "stcatchl / stcatchr, stcthllp / stcthrlp, stcth2wtl / stcth2wtr": "tentacle catch, its loop, and catch-into-water, all mirrored",
+      "float": "idle",
+      "dmg, stdmg1..3": "damage reactions",
+      "eat, absorb, abscnc, eatcnc": "eat and absorb attacks",
+      "spout, spwat, sp2wat": "water spout",
+      "stscrew": "screw attack",
+      "ttpull, ttretrn": "short-tentacle pull and return"
+    },
+    "skeleton_matches_ram": "the body skeleton is fully left/right paired \u2014 Left_arm/Right_arm, Left_hand/Right_hand, Left_mouth/Right_mouth, Left_tent/Right_tent \u2014 which is exactly the mirrored structure found in the animating triples at 0x0237C5A0..0x0237C760 (mirrored values AND deltas at a 0xC0 stride). Mapping triple to bone is the remaining step and needs no memory writes: match counts and symmetry.",
+    "member_names_are_in_the_archive": "all 110 members are named by the archive's own BTNF section, which zpr.py was not reading. enemy_data_boss_octopus.rel, z_002.nsbmd, z_002_st.nsbmd, z_002_tt.nsbmd and 61 z_002 animations. The dive and reappearance animations this file already called \"sthide / stapp\" are confirmed as z_002_sthide.nsbca and z_002_stapp.nsbca. The long tentacle carries left/right variants - stcatchl/stcatchr, stsweepl/stsweepr, stcthllp/stcthrlp - and the short one carries ttrrdl/ttrrdr, which is a naming handle on the left/right mirror symmetry the bone-matrix note is chasing."
+  },
+  "body_position": {
+    "field": "entity+0x38/+0x3C/+0x40",
+    "value_at_fight_start": "(0,0,0)",
+    "note": "kion confirms the main body sits at the arena origin; it moves during the dive at half health"
+  },
+  "half_hp_transition": {
+    "threshold": "max/2 = 2610 of 5220",
+    "fields_that_flip": {
+      "+0xE4 phase": "0 -> 1, switching the attack table row from [90,0,10] to [0,90,10]",
+      "+0xD4 mode": "0 -> 1, enabling the position-write path in vtable slot 9",
+      "+0x38 position": "(0,0,0) -> (0,0,102400) = 25.0 in 12-bit fixed point along Z"
+    },
+    "animations": "sthide / stapp are the dive and reappearance",
+    "damage_after": "HP keeps falling normally (2403 -> 995 observed), so there is no lasting immunity",
+    "immunity_window": "Hits land and are REFUSED. Damage numbers of 2401/1602/1601 appear while body HP is pinned at exactly 2610, and no ov21-class entity in the heap absorbs them (11 candidates checked across a 7s pair; one changed, by 2). Duration varies \u2014 65.4s and 100.1s measured \u2014 so it ends when the dive-and-reappear sequence completes, not on a timer. Caveat: parts may not use the ov21 layout.",
+    "hp_clamp": "CONFIRMED and conditional. On the first crossing, damage that would take HP below max/2 is clamped to exactly max/2 \u2014 verified from 2830 with a hit that produced exactly a 220-point drop. After the transition (mode 1) there is no clamp: the same setup gave a 1001-point hit straight through. A port must clamp the first crossing or a strong character skips phase 2 entirely.",
+    "clamp_location": "SOLVED \u2014 FUN_ov21__0219A340, the boss hook at (entity+0x10)->vtable slot 4, called from FUN_02036148 right after the HP write. if (mode == 0) HP = max(HP, maxHP/2). For the port that is the whole rule: apply damage normally, then immediately clamp HP up to half while the boss is still in phase 0.",
+    "mechanism": "every hit runs Entity_ApplyHit -> FUN_02036148 and the HP write lands below max/2; HP is then restored to exactly max/2 before the next hit. Seen three times in a row, then released on the fourth (delta -21 from 2610 went through to 2589). For the port: apply the damage, then snap HP back to max/2 while the window is open \u2014 do not refuse the hit, or the damage numbers will not show."
+  },
+  "bone_matrices": {
+    "body_array": {
+      "address": "0x0237C840",
+      "count": 14,
+      "stride": 36,
+      "format": "3x3 row-major, 1.19.12 fixed point",
+      "model": "z_002 (14 objects) \u2014 matched by count"
+    },
+    "tentacle_array": {
+      "address": "0x0237CD50",
+      "count": 9,
+      "stride": 36,
+      "format": "3x3 row-major, 1.19.12 fixed point",
+      "model": "z_002_tt (9 objects) \u2014 matched by count"
+    },
+    "index_to_name": "UNKNOWN. Counts identify the model; the permutation within each array is not established.",
+    "observed": "indices 9 and 10 of the body array are rigidly opposed (7/9 components negated) across frames.",
+    "refuted": "apicula object order \u2014 L/R pairs appeared 4 apart in one frame and in no frame on re-sample.",
+    "INDEX_TO_NAME_RESOLVED": {
+      "rule": "a matrix array is indexed by the model's OBJECT id, so index i is the i-th name in the nsbmd object list",
+      "body_array_0x0237C840": [
+        "root_body",
+        "Left_arm",
+        "Left_hand",
+        "Left_mouth",
+        "Left_tent",
+        "Right_arm",
+        "Right_hand",
+        "Right_mouth",
+        "Right_tent",
+        "left_head",
+        "right_head",
+        "root_head",
+        "top_head",
+        "z_body"
+      ],
+      "tentacle_array_0x0237CD50": [
+        "Point01",
+        "Cylinder01",
+        "Point02",
+        "Point03",
+        "Point04",
+        "Point05",
+        "Point06",
+        "Point07",
+        "Point08"
+      ],
+      "it_predicts_both_live_observations": "the \"mirrored entries sit 4 apart\" claim was RIGHT about the layout and was wrongly retracted. In object order Left_arm/Right_arm, Left_hand/Right_hand, Left_mouth/Right_mouth and Left_tent/Right_tent each sit exactly 4 apart. The re-sample that refuted it was testing whether their VALUES were exact mirrors, which they need not be while an animation plays - a different claim. Separately, indices 9 and 10 were measured rigidly opposed across every frame, and positions 9 and 10 are left_head and right_head.",
+      "the_old_bone_list_was_wrong": "this file listed 16 names for z_002 including `eye` and `head_02`. The model has 14 objects. `eye` comes from a different name run in the nsbmd and `head_02` is not an object name. z_002_st and z_002_tt were recorded as 10 and 8 joints; they have 11 and 9, both carrying a Cylinder01 at index 1. The tentacle array's count of 9 therefore matches z_002_tt exactly rather than approximately.",
+      "source": "tools/nsbmd.py, data/model_objects.json, nodes/sys.model-objects.json"
+    }
+  },
+  "shared_base_methods": {
+    "vtable": "0x021A1280",
+    "arm9_slots": "2,3,4,5,6,12,13,14 \u2014 base class, no boss overrides them",
+    "slot2": {
+      "addr": "0x02035960",
+      "role": "build attack packet",
+      "damage_roll": "min + rand(max-min), then * stat_multiplier >> 12 (1.19.12)",
+      "stat_branch": "descriptor type 0 -> packet[1]=0, reads this+0x1c/+0x1a (physical); else packet[1]=2, reads this+0x22/+0x20 (technique)",
+      "tail_call": "vtable+0x4c (slot 19)"
+    },
+    "slot4": {
+      "addr": "0x02035d10",
+      "role": "apply hit",
+      "flags_at": "packet+8",
+      "flags": {
+        "0x100": "skip the damage path entirely",
+        "0x020": "clamp delta to -(HP-1): leave exactly 1 HP",
+        "0x010": "suppress the death test",
+        "0x001/0x002": "select effect path"
+      },
+      "kill_test": "this[0xd] + delta < 1",
+      "commit": "vtable+0x50 (slot 20)",
+      "report": "FUN_02037610(this, pos, HP, maxHP, ...)",
+      "caveat": "a breakpoint here did not fire in 36s of combat \u2014 not yet shown to be the boss's receive path"
+    }
+  },
+  "hp_write": {
+    "function": "FUN_02036148",
+    "callers": [
+      "0x02035D10 Entity_ApplyHit",
+      "0x02036124"
+    ],
+    "signature": "(entity, packet)",
+    "delta": "signed short at packet+8; <=0 damage, >0 heal",
+    "damage": "hp += delta, then floor at 1 \u2014 never reaches 0, so death is decided elsewhere",
+    "heal": "hp += delta, then clamp to the 16-bit max at entity+0x18",
+    "part_gate": "requires 0 <= packet[0x29] < *(*(entity+0x14)+0x14); body hits carried part=3",
+    "field_widths": "entity+0x34 current HP is 32-bit; entity+0x18 max HP is 16-bit",
+    "confirmed": "live, r0 = 0x0237BE90; deltas -22 then -11 against entry HP 4912 -> 4890 -> final 4879",
+    "note": "the floor at 1 is NOT the half-HP clamp. HP resting on exactly max/2 remains unexplained by this function.",
+    "setup_recipe": "to catch the crossing, interrupt FIRST, then write HP and arm the breakpoint while the core is halted. The fight keeps running during setup \u2014 a state saved 47 points above the threshold lost 70 to drift and the crossing was missed entirely."
+  },
+  "part_table": {
+    "located": "*(entity+0x14) root +0x18 -> 0x022FE96C in this session's heap",
+    "layout": "15 entries x 8 bytes; byte0 = payload flag, byte1 = part index 0..14, +4 = pointer to payload",
+    "index_source": "packet+0x29, bounds-checked against the count 15 at *(entity+0x14)+0x14",
+    "payload": "1.19.12 hitbox dimensions. flag 0 = a single radius; flag 1 = a multi-value form (types 1, 2, 8, 14)",
+    "parts": {
+      "0": {
+        "dims": [
+          1.0
+        ],
+        "pool": "(entity+0x10)+0xA4"
+      },
+      "1": {
+        "dims": [
+          0.0,
+          2.0,
+          10.0
+        ],
+        "pool": "3-hit counter +0xB8/+0xBC"
+      },
+      "2": {
+        "dims": [
+          0.0,
+          2.0,
+          12.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "3": {
+        "dims": [
+          2.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "4": {
+        "dims": [
+          1.5
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "5": {
+        "dims": [
+          1.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "6": {
+        "dims": [
+          1.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "7": {
+        "dims": [
+          0.5
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "8": {
+        "dims": [
+          0.0,
+          10.0,
+          15.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "9": {
+        "dims": [
+          1.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "10": {
+        "dims": [
+          5.0
+        ],
+        "pool": "none \u2014 types 2..10 have no damage pool"
+      },
+      "11": {
+        "dims": [
+          17.0
+        ],
+        "pool": "+0x78"
+      },
+      "12": {
+        "dims": [
+          1.0
+        ],
+        "pool": "+0x134"
+      },
+      "13": {
+        "dims": [
+          0.5
+        ],
+        "pool": "+0x78"
+      },
+      "14": {
+        "dims": [
+          0.0,
+          3.0,
+          18.0,
+          0.0
+        ],
+        "pool": "+0x134"
+      }
+    },
+    "correction": "an earlier note put this table at root +0x10 and could not decide between 15x8 and 5x24. That was the WRONG table. Root +0x10 (0x022FE7A8) spans 452 bytes, which 15 does not divide, and its byte1 runs only 0..3 \u2014 it is keyed by the OTHER index, the 0..3 one at packet+0x20. The part table is root +0x18, spans exactly 120 bytes, and 15 x 8 is exact with byte1 running 0..14.",
+    "reading": "the two damage pools each collect one large part and one small one: +0x78 takes type 11 (radius 17.0) and type 13 (0.5); +0x134 takes type 14 (an 18.0-long form) and type 12 (1.0). Octo Diablo ships two tentacle models \u2014 z_002_st with 10 joints and z_002_tt with 8 \u2014 so one pool per tentacle kind, each with a body and a tip, fits. INFERRED, not measured: both pools read 0 because nothing had been hit.",
+    "STATIC_ROUTE": {
+      "file": "enemy/boss_octopus.narc -> enemy_data_boss_octopus.rel (the archive names it; see data/narc_index.json)",
+      "where": "region-A offset 0x410, 15 records of 8 bytes",
+      "independently_confirmed_by_the_relocation_table": "the DSIF NOF0 section lists 15 relocated pointers running 0x414 to 0x484 in steps of 8 - exactly the +4 pointer field of each of the 15 records. The table's location and stride are therefore stated by the game's own toolchain, not inferred from the byte pattern.",
+      "round_trips_against_the_live_dump": "all 15 hitbox payloads read off disk equal the values dumped from the running fight through the GDB stub. tools/checks.py::octo_part_table_matches_the_live_read re-runs the comparison. The consequence is that every other enemy's part table can now be read WITHOUT an emulator.",
+      "root_descriptor": {
+        "where": "region-A 0x152c, the last structure in region A",
+        "layout": "a run of {u32 pointer, u32 count} pairs, POINTER FIRST, plus three lone pointers (0x24, 0x14c, 0xe0c)",
+        "pairs": {
+          "0x184": 7,
+          "0x24c": 15,
+          "0x410": "15  <- the part table",
+          "0x488": 16,
+          "0xa7c": 57,
+          "0xe60": 21,
+          "0x11a8": 45
+        },
+        "strides": {
+          "0x24c": "24 bytes, confirmed independently by 15 relocations at a 24-byte stride",
+          "0x410": "8",
+          "0x488": "8",
+          "0xa7c": "16, and all 57 records hold a live pointer",
+          "0xe60": "40",
+          "0x11a8": "20"
+        },
+        "WHY_POINTER_FIRST": "the alternative {count, pointer} reading is refuted by arithmetic: it makes the 912-byte array at 0xa7c hold 16 records of 57 bytes and the 84-byte one hold 57 records. Pointer-first gives six exact divisions. Pointer POSITIONS come from the DSIF relocation table, so only the pairing was ever in question.",
+        "consequence_for_the_live_note": "the live code bounds-checks packet+0x29 against *(root+0x14). Under pointer-first, root+0x14 is the count belonging to the array at 0x24c, which is also 15 - so the live read could never have distinguished the two layouts. The part table's own count sits at root+0x1c. Both are 15, so nothing about the part-table decode changes; the root field labels do.",
+        "uniform_across_enemies": "all 67 enemy descriptors share this schema - see nodes/fmt.enemy-descriptor.json"
+      }
+    },
+    "PARALLEL_INDEX_TABLE_AT_0x488": {
+      "shape": "15 records of 8 bytes, one per part index, the count declared at root+0x1c. Byte 0xFF means absent.",
+      "records": {
+        "0": [
+          46,
+          5,
+          44,
+          null,
+          45,
+          null,
+          null,
+          null
+        ],
+        "1": [
+          47,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "2": [
+          18,
+          19,
+          16,
+          null,
+          17,
+          null,
+          null,
+          null
+        ],
+        "3": [
+          35,
+          19,
+          33,
+          null,
+          34,
+          null,
+          null,
+          null
+        ],
+        "4": [
+          28,
+          29,
+          26,
+          null,
+          27,
+          null,
+          null,
+          null
+        ],
+        "5": [
+          32,
+          29,
+          30,
+          null,
+          31,
+          null,
+          null,
+          null
+        ],
+        "6": [
+          1,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "7": [
+          4,
+          5,
+          2,
+          null,
+          3,
+          null,
+          null,
+          null
+        ],
+        "8": [
+          22,
+          null,
+          20,
+          null,
+          21,
+          null,
+          null,
+          null
+        ],
+        "9": [
+          8,
+          null,
+          6,
+          null,
+          7,
+          null,
+          null,
+          null
+        ],
+        "10": [
+          37,
+          9,
+          36,
+          null,
+          null,
+          null,
+          38,
+          null
+        ],
+        "11": [
+          40,
+          9,
+          39,
+          null,
+          null,
+          null,
+          41,
+          null
+        ],
+        "12": [
+          25,
+          19,
+          23,
+          null,
+          24,
+          null,
+          null,
+          null
+        ],
+        "13": [
+          12,
+          null,
+          10,
+          null,
+          11,
+          null,
+          null,
+          null
+        ],
+        "14": [
+          43,
+          null,
+          42,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "what_the_values_are": "small indices in 1..47, every value in that range used. Slots 3, 5 and 7 are 0xFF in every record, so the live slots are 0, 1, 2, 4 and 6.",
+      "the_shape_is_a_consecutive_TRIPLE": "eleven of the fifteen records name three consecutive indices, presented as (n+2, n, n+1) in slots 0, 2 and 4 - part 2 holds 0x12/0x10/0x11, part 3 holds 0x23/0x21/0x22, and so on. Slot 1 is a shared value that recurs across records (0x05, 0x09, 0x13, 0x1d), which is what a parent would look like. Parts 1 and 6 name a single index, part 14 a pair, and parts 10 and 11 use slot 6 as well.",
+      "WHAT_IT_INDEXES_IS_NOT_ESTABLISHED": "the range 1..47 does not fit the 45-entry array at 0x11a8 and does fit the 57 at root+0x2c, but neither is decoded yet, so this is a lead and not the part-to-bone map. Recording it because the SHAPE is the useful part: a part is not one joint, it is a small consecutive group with a shared parent, which is what a hitbox spanning a limb segment would need.",
+      "why_this_matters_for_the_open_question": "item 13 wants part TYPE -> NAMED tentacle. This is the table that has to carry it, and it is now readable statically. The remaining step is identifying the array it indexes.",
+      "RETRACTED_one_record_per_part": "the previous entry called this \"15 records ... one per part\" and \"the table that must carry part -> bone\". Both are withdrawn. The root declares 16 records, not 15, and the array occupies 0x488..0x508 = 128 bytes = 16 x 8 exactly. Across the 58 enemies that have both a part table and a following array, the two counts disagree in 42. So it is not keyed by part index.",
+      "what_it_probably_indexes": "its values run 1..47 and the array at 0xa7c has 57 records, every one with a live pointer, whose 20-byte payloads begin with a small index in 0..0x13. So 0x488 most likely selects groups of entries in that 57-record table. The consecutive-triple shape - eleven of the sixteen records name (n+2, n, n+1) with a shared value in slot 1 - reads more naturally as the phases of one action than as a set of joints. UNPROVEN: nothing has been traced reading either table."
+    },
+    "THE_ARRAY_THE_PART_INDEX_ACTUALLY_SELECTS": {
+      "code": "FUN_02036148 (the HP write) then FUN_0203686c",
+      "sequence": "i = packet[0x29]; if (0 <= i && i < *(root+0x14)) { group = *(u8*)(*(root+0x10) + i*0x18 + 1); rec = *(root+0x34) + (group*3 + <a global byte>) * 0x28; }",
+      "CORRECTION": "this file located the part table at root+0x18 and the notes have called that THE part table ever since. The damage path does not index it. It indexes root+0x10 - region-A 0x24c for this boss - with a 24-byte stride. Both arrays are keyed by the part index and both hold 15 records, which is exactly why one hid the other. The hitbox payloads at root+0x18 are not withdrawn; they are a SECOND per-part array with a different consumer.",
+      "it_also_settles_the_root_layout_from_code": "the bound is read at root+0x14 and the array it bounds at root+0x10, so the pointer sits at the LOWER offset. Yesterday that was an arithmetic argument; it is now the instruction sequence.",
+      "PARTS_ARE_GROUPED": {
+        "rule": "byte 1 of each 24-byte record is a group id, and the root declares the group count at +0x0c",
+        "octo_diablo": "15 parts over 7 groups, sizes [1, 1, 1, 4, 4, 2, 2] for groups 0..6",
+        "why_it_matters": "two groups of FOUR is what an eight-tentacled boss with two tentacle models should look like, and the boss ships exactly two tentacle models. That is suggestive and nothing more - no evidence yet ties group 3 or group 4 to z_002_st or z_002_tt."
+      },
+      "the_group_table": {
+        "where": "root+0x34, region-A 0xe60 for this boss, 40 bytes per record",
+        "shape": "three records per group - 21 = 7 x 3 - indexed by group*3 plus a byte read from a global, almost certainly the difficulty tier",
+        "record": "two 1.19.12 values at +0x00 and +0x04, then bytes, then a per-element byte at +0x14+n and a u32 at +0x18+n*4 where n is packet[0x12] bounds-checked to 1..3 by the caller"
+      }
+    },
+    "PART_TO_NAMED_JOINT_RESOLVED": {
+      "rule": "byte 5 of the 24-byte per-part record at root+0x10 is a joint index into the main model; 0xFF means unattached",
+      "octo_diablo": {
+        "0": "z_body",
+        "1": "z_body",
+        "2": "z_body",
+        "3": "Right_tent",
+        "4": "Right_tent",
+        "5": "Right_tent",
+        "6": "Right_tent",
+        "7..14": "0xFF - not attached to z_002"
+      },
+      "reading": "parts 0-2 are a three-sphere body on z_body with offsets 2.0, -3.0, 2.0 and radii 3.0, 4.0, 3.0. Parts 3-6 attach at Right_tent with byte 4 running 1..4. Parts 7-14 carry no joint at all, which fits the tentacles being separately instanced models with their own bone-matrix arrays rather than joints of z_002.",
+      "corroborated_by_other_bosses": "boss_dragon damages on `atama` and `sippo_02` - head and tail. boss_robot on footL, footR, handL, spine, daggerL, daggerR. Those names are not produceable by fitting, and they come from two different naming schemes.",
+      "see": "data/part_joints.json, nodes/sys.enemy-part-joints.json"
+    },
+    "THE_GROUP_TABLE_FEEDS_THE_HIT_REACTION": {
+      "record": "0x28 bytes, three per part group, indexed group*3 + a difficulty tier",
+      "what_the_code_reads": "FUN_02036148 reads exactly two things out of it, both indexed by packet[0x12] which it bounds-checks to 1..3: a signed byte at rec+0x14+n, passed to the SUB-OBJECT's vtable slot 4, and a u32 at rec+0x18+n*4, passed to FUN_020362ec. The highest byte touched is 0x17 and the highest word ends at 0x28, so both fit the stride exactly - which is itself a check on the stride.",
+      "FUN_020362ec_IS_THE_KNOCKBACK_SETTER": "it takes the hit position, subtracts the entity position at +0x38/+0x3c/+0x40, and turns the result into an ANGLE with FUN_0205cc08, negating it when the first component is negative. That angle goes to entity+0x58 as a short, the u32 from the group record to entity+0x5c, and packet[0x13] to entity+0x60. So a hit becomes a facing plus two reaction parameters.",
+      "gated_on": "FUN_02036148 only calls it when entity+0x90 != 3",
+      "octo_diablo_has_NO_elemental_reaction": "every element byte in all 21 records reads 0xFF and every element word reads 0. So nothing is configured on this path for this boss, which is why nothing visible happens there - an observation, not a puzzle.",
+      "the_leading_field_is_NOT_TRACED": "rec+0x00 is a 1.19.12 value that varies by group and rises with the tier - 1.0/1.0/1.13 on group 0, 0.9/0.9/1.0 on group 1, 0.5/0.5/0.57 on group 2. That is the shape of a per-group damage multiplier and 0.5 against 1.0 is what a tough part versus a normal one looks like. But NOTHING has been traced reading it, so it is recorded as a reading and not asserted."
+    }
+  },
+  "animation_table_DECODED": {
+    "location": "enemy_data_boss_octopus.rel, region-A offset 100, 57 entries x u32 (228 bytes, its own relocation-declared block)",
+    "what_it_is": "an ANIMATION table: each entry is a member index into enemy/boss_octopus.narc",
+    "PROOF_IS_AN_EXACT_CONTENT_MATCH": "the 57 values are injective and span 51..109. There are exactly 57 .nsbca members in that range, and sorted(values) EQUALS that list of 57 exactly. The only two member indices in 51..109 the array omits are 63 and 80 - which are z_002_st.nsbmd and z_002_tt.nsbmd, the only two .nsbmd files in the range. So the array is precisely 'every animation in this block of the archive, and nothing else'. That is not a fit, it is an identity.",
+    "values": [
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      61,
+      62,
+      60,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      75,
+      78,
+      77,
+      79,
+      73,
+      76,
+      74,
+      81,
+      82,
+      85,
+      86,
+      87,
+      89,
+      92,
+      93,
+      94,
+      95,
+      97,
+      88,
+      98,
+      96,
+      99,
+      101,
+      100,
+      91,
+      90,
+      83,
+      84
+    ],
+    "names": [
+      "z_002_abs2eat.nsbca",
+      "z_002_abs2vmwt.nsbca",
+      "z_002_abscnc.nsbca",
+      "z_002_absorb.nsbca",
+      "z_002_collisn.nsbca",
+      "z_002_dmg.nsbca",
+      "z_002_eat.nsbca",
+      "z_002_eatcnc.nsbca",
+      "z_002_float.nsbca",
+      "z_002_spout.nsbca",
+      "z_002_spwat.nsbca",
+      "z_002_sp2wat.nsbca",
+      "z_002_vmply.nsbca",
+      "z_002_vmwat.nsbca",
+      "z_002_vomit.nsbca",
+      "z_002_wat.nsbca",
+      "z_002_wattir.nsbca",
+      "z_002_wt2abs.nsbca",
+      "z_002_wt2spwt.nsbca",
+      "z_002_wttr2wt.nsbca",
+      "z_002_stapp.nsbca",
+      "z_002_stcatchl.nsbca",
+      "z_002_stcatchr.nsbca",
+      "z_002_stcth2wtl.nsbca",
+      "z_002_stcth2wtr.nsbca",
+      "z_002_stcthllp.nsbca",
+      "z_002_stcthrlp.nsbca",
+      "z_002_stdmg1.nsbca",
+      "z_002_stdmg2.nsbca",
+      "z_002_sthide.nsbca",
+      "z_002_stsweepr.nsbca",
+      "z_002_stsweepl.nsbca",
+      "z_002_stwat.nsbca",
+      "z_002_stdmg3.nsbca",
+      "z_002_stscrew.nsbca",
+      "z_002_stfreq.nsbca",
+      "z_002_ttpull.nsbca",
+      "z_002_ttretrn.nsbca",
+      "z_002_ttsh2sn.nsbca",
+      "z_002_ttshoot.nsbca",
+      "z_002_ttshtlp.nsbca",
+      "z_002_ttsnipe.nsbca",
+      "z_002_ttstp.nsbca",
+      "z_002_ttstpwt.nsbca",
+      "z_002_tttear.nsbca",
+      "z_002_ttwat.nsbca",
+      "z_002_ttwt2stp.nsbca",
+      "z_002_ttshtlp2wt.nsbca",
+      "z_002_ttwts.nsbca",
+      "z_002_ttwat2wts.nsbca",
+      "z_002_ttwts2wat.nsbca",
+      "z_002_ttwtshide.nsbca",
+      "z_002_ttwtsapp.nsbca",
+      "z_002_ttsting.nsbca",
+      "z_002_ttstg2hd.nsbca",
+      "z_002_ttrrdl.nsbca",
+      "z_002_ttrrdr.nsbca"
+    ],
+    "why_it_matters": "the boss state machine refers to animations by slot. Those slots can now be resolved to names, which is what the Godot port needs to drive the fight.",
+    "note": "the archive holds 71 .nsbca in total; this table covers only the 57 in members 51..109, so it selects a contiguous archive range rather than every animation."
+  },
+  "part_group_table": {
+    "location": "region-A offset 0x488, immediately after the 15-entry part table at 0x410",
+    "CORRECTION_16_RECORDS_NOT_15": "the block is 128 bytes, which is 16 records of 8, not 15. The earlier note read 15 and reported indices 13, 14 and 15 as unused. The 16th record is 0f ff 0d ff 0e ff ff ff - its members are exactly 13, 14, 15. Reading the count as 15 is what created the gap, and adding the record closes it exactly.",
+    "record_layout": "byte1 is the parent index (0xFF = none); every other non-0xFF byte is a member",
+    "index_space_is_EXACTLY_1_to_47": "43 members and 4 parents, disjoint, together covering 1..47 with nothing missing and index 0 unused. The parents are 5, 9, 19 and 29 - exactly the indices that are never a member. Three separate properties that all had to hold and do.",
+    "shared_parents": {
+      "5": "groups 0 and 7",
+      "9": "groups 10 and 11",
+      "19": "groups 2, 3 and 12",
+      "29": "groups 4 and 5"
+    },
+    "groups": [
+      {
+        "group": 0,
+        "members": [
+          44,
+          45,
+          46
+        ],
+        "parent": 5
+      },
+      {
+        "group": 1,
+        "members": [
+          47
+        ],
+        "parent": null
+      },
+      {
+        "group": 2,
+        "members": [
+          16,
+          17,
+          18
+        ],
+        "parent": 19
+      },
+      {
+        "group": 3,
+        "members": [
+          33,
+          34,
+          35
+        ],
+        "parent": 19
+      },
+      {
+        "group": 4,
+        "members": [
+          26,
+          27,
+          28
+        ],
+        "parent": 29
+      },
+      {
+        "group": 5,
+        "members": [
+          30,
+          31,
+          32
+        ],
+        "parent": 29
+      },
+      {
+        "group": 6,
+        "members": [
+          1
+        ],
+        "parent": null
+      },
+      {
+        "group": 7,
+        "members": [
+          2,
+          3,
+          4
+        ],
+        "parent": 5
+      },
+      {
+        "group": 8,
+        "members": [
+          20,
+          21,
+          22
+        ],
+        "parent": null
+      },
+      {
+        "group": 9,
+        "members": [
+          6,
+          7,
+          8
+        ],
+        "parent": null
+      },
+      {
+        "group": 10,
+        "members": [
+          36,
+          37,
+          38
+        ],
+        "parent": 9
+      },
+      {
+        "group": 11,
+        "members": [
+          39,
+          40,
+          41
+        ],
+        "parent": 9
+      },
+      {
+        "group": 12,
+        "members": [
+          23,
+          24,
+          25
+        ],
+        "parent": 19
+      },
+      {
+        "group": 13,
+        "members": [
+          10,
+          11,
+          12
+        ],
+        "parent": null
+      },
+      {
+        "group": 14,
+        "members": [
+          42,
+          43
+        ],
+        "parent": null
+      },
+      {
+        "group": 15,
+        "members": [
+          13,
+          14,
+          15
+        ],
+        "parent": null
+      }
+    ]
+  },
+  "part_to_bone_STILL_UNFOUND_BOTH_CANDIDATES_ELIMINATED": {
+    "the_hypothesis": "that the 1..47 indices index the 57-entry array, which would have given part -> bone. It was the surviving candidate because 47 does not fit the 45-entry array at 0x11a8 and does fit 57.",
+    "the_45_entry_array_is_excluded_definitively": "the index space reaches 47, and a 45-entry array bounds at 44",
+    "REFUTED_on_content": "the 57-entry array is now decoded and it yields ANIMATIONS, not bones. Indexing it with a part's joint indices returns .nsbca filenames.",
+    "REFUTED_on_semantics_too": "the groups are three CONSECUTIVE indices under a shared parent, which is exactly what a limb segment looks like in a skeleton. Mapped through the animation table those become three ALPHABETICALLY adjacent animations under a 'parent animation' - group 7's 2,3,4 becomes abscnc, absorb, collisn. Alphabetical adjacency in an archive carries no structure, so the grouping would be meaningless under that reading. The consecutive-triple structure is evidence that these are bone indices in some OTHER array.",
+    "what_that_array_cannot_be": "not the models as extracted either: z_002 has 14 objects, z_002_st 11 and z_002_tt 9, so even all three together give 34, well short of 48. Either the runtime builds a combined skeleton with multiple tentacle instances, or the array lives outside this file.",
+    "next": "find the reader. The part table's count is bounds-checked at *(entity+0x14)+0x14, so the code that walks the group table is reachable from the same object - decompiling it gives the array's base directly, instead of guessing at candidates by length."
+  },
+  "TWO_DIFFERENT_57_ENTRY_ARRAYS_DO_NOT_CONFLATE_THEM": {
+    "why_this_note_exists": "two arrays in this file have 57 entries, and a concurrent commit (b002ee9) proposes one of them as the part->bone candidate while the entry above eliminates the OTHER. Both are right; conflating them would look like a contradiction and would either resurrect a dead candidate or kill a live one.",
+    "ELIMINATED  A+100, 57 x u32, 228 bytes": "the animation table. Proven by identity with the 57 .nsbca members of enemy/boss_octopus.narc in the range 51..109, the only two omissions being the only two .nsbmd in that range. Indexing it with part joint indices returns filenames, so it cannot be the bone map. This is the array the entry above refutes.",
+    "STILL_LIVE  0xa7c, 57 x 16, 912 bytes": "a different array entirely, declared by the root's pointer-first {pointer, count} pairs and carrying a live pointer in all 57 records. b002ee9 proposes it because the 1..47 index space fits it and its 20-byte payloads open with a small 0..0x13 index. Nothing here touches that candidate - it was never tested against the .nsbca identity and remains open.",
+    "the_two_are_not_the_same_block": "A+100 is 228 bytes of bare u32 with no relocations into it; 0xa7c is 912 bytes of 16-byte records every one of which holds a relocated pointer. Same count, unrelated structures.",
+    "what_the_count_coincidence_probably_means": "57 animations and 57 records-with-pointers is more likely one per animation than a coincidence, which would make 0xa7c per-ANIMATION rather than per-bone - a testable prediction against b002ee9's reading, and one that would close the part->bone question negatively for this file too. Not asserted; the reader still has to be found."
+  }
+}

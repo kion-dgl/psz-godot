@@ -1,0 +1,194 @@
+{
+  "valley": {
+    "rooms": 9,
+    "edges_outward": [
+      {
+        "from": 0,
+        "to": 1,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "attr": 4
+      },
+      {
+        "from": 1,
+        "to": 3,
+        "attr": 4
+      },
+      {
+        "from": 2,
+        "to": 4,
+        "attr": 4
+      },
+      {
+        "from": 2,
+        "to": 5,
+        "attr": 4
+      },
+      {
+        "from": 3,
+        "to": 6,
+        "attr": 0
+      },
+      {
+        "from": 4,
+        "to": 8,
+        "attr": 2
+      },
+      {
+        "from": 5,
+        "to": 7,
+        "attr": 4
+      }
+    ]
+  },
+  "wetlands": {
+    "rooms": 8,
+    "edges_outward": [
+      {
+        "from": 0,
+        "to": 1,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "attr": 4
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "attr": 2
+      },
+      {
+        "from": 3,
+        "to": 5,
+        "attr": 4
+      },
+      {
+        "from": 3,
+        "to": 6,
+        "attr": 4
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "attr": 4
+      },
+      {
+        "from": 5,
+        "to": 7,
+        "attr": 4
+      }
+    ]
+  },
+  "snowfield": {
+    "rooms": 9,
+    "edges_outward": [
+      {
+        "from": 0,
+        "to": 1,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 3,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 4,
+        "attr": 0
+      },
+      {
+        "from": 3,
+        "to": 8,
+        "attr": 1
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "attr": 4
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "attr": 4
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "attr": 4
+      }
+    ]
+  },
+  "paru": {
+    "rooms": 10,
+    "edges_outward": [
+      {
+        "from": 0,
+        "to": 1,
+        "attr": 0
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "attr": 0
+      },
+      {
+        "from": 2,
+        "to": 4,
+        "attr": 4
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "attr": 4
+      },
+      {
+        "from": 3,
+        "to": 5,
+        "attr": 4
+      },
+      {
+        "from": 3,
+        "to": 6,
+        "attr": 2
+      },
+      {
+        "from": 4,
+        "to": 7,
+        "attr": 4
+      },
+      {
+        "from": 5,
+        "to": 8,
+        "attr": 4
+      },
+      {
+        "from": 7,
+        "to": 9,
+        "attr": 1
+      }
+    ]
+  },
+  "_decoded": {
+    "door_slots": "adjacency byte k: 0 = north, 1 = east, 2 = south, 3 = west",
+    "grid_placement": "walking the adjacency from room 0 with that mapping places every room on a 2D grid with ZERO collisions and zero contradictions in all four fields \u2014 36 rooms. Valley lands 3x4, wetlands 4x4, snowfield 3x5, paru 5x3.",
+    "ground_truth": "kion loaded the valley savestate in game. Character in B3, first cell B4 holding the to/from-city warp with no gate north. The reconstruction puts room 0 (the start, shape s) at B4 and room 1 (shape t) at B3 \u2014 an exact match, including B3 being a T-junction.",
+    "gate_values": {
+      "0": "NO GATE \u2014 confirmed: B4's north exit and B3's south exit both read 0 and kion reports no gate on either",
+      "4": "ENEMY-DEFEAT GATE \u2014 confirmed: B3's north and east edges both read 4 and kion reports both locked with enemy-defeat gates",
+      "1": "unmapped \u2014 only 2 edges across all four fields",
+      "2": "unmapped \u2014 only 3 edges across all four fields"
+    },
+    "map_ui": "the in-game map draws a larger fixed grid (kion reports 30 cells, columns A.. and rows 1..5); the generated layout occupies part of it"
+  }
+}

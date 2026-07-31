@@ -1,0 +1,130 @@
+{
+  "valley": {
+    "start": "B4",
+    "goal": "A1",
+    "unknown_gates": [
+      {
+        "from": "B1",
+        "dir": "east",
+        "to": "C1",
+        "value": 2
+      }
+    ],
+    "cells": {
+      "B4": "s",
+      "B3": "t",
+      "B2": "t",
+      "C3": "l",
+      "B1": "l",
+      "A2": "l",
+      "C4": "n",
+      "A1": "g",
+      "C1": "n"
+    }
+  },
+  "wetlands": {
+    "start": "D4",
+    "goal": "B1",
+    "unknown_gates": [
+      {
+        "from": "C3",
+        "dir": "west",
+        "to": "B3",
+        "value": 2
+      }
+    ],
+    "cells": {
+      "D4": "s",
+      "D3": "l",
+      "C3": "i",
+      "B3": "x",
+      "A3": "n",
+      "B2": "i",
+      "B4": "n",
+      "B1": "g"
+    }
+  },
+  "snowfield": {
+    "start": "B5",
+    "goal": "A1",
+    "unknown_gates": [
+      {
+        "from": "C4",
+        "dir": "south",
+        "to": "C5",
+        "value": 1
+      }
+    ],
+    "cells": {
+      "B5": "s",
+      "B4": "x",
+      "B3": "n",
+      "C4": "l",
+      "A4": "l",
+      "A3": "i",
+      "A2": "i",
+      "A1": "g",
+      "C5": "n"
+    }
+  },
+  "paru": {
+    "start": "B3",
+    "goal": "D3",
+    "unknown_gates": [
+      {
+        "from": "D2",
+        "dir": "south",
+        "to": "D3",
+        "value": 2
+      },
+      {
+        "from": "B1",
+        "dir": "west",
+        "to": "A1",
+        "value": 1
+      }
+    ],
+    "cells": {
+      "B3": "s",
+      "B2": "l",
+      "C2": "t",
+      "D2": "t",
+      "C1": "l",
+      "E2": "l",
+      "D3": "g",
+      "B1": "i",
+      "E3": "n",
+      "A1": "n"
+    }
+  },
+  "valley_E_transition": {
+    "savestate": "20260729-174925.ml1",
+    "count": 1,
+    "room": "s01e_ia1 at D3",
+    "reading": "the transition area is a single-room table. kion confirms Valley E is one room between area A and area B and that the same pattern applies to every stage \u2014 consistent with s01e having only 2 room codes in the assignment table."
+  },
+  "valley_B": {
+    "savestate": "20260729-174940.ml2",
+    "rooms": 8,
+    "start": "B4",
+    "goal": "D2",
+    "grid": [
+      "..  7n  ..  ..",
+      "..  2i  ..  6g",
+      "3n  1x  4i  5l",
+      "..  0s  ..  .."
+    ],
+    "keys": {
+      "A3": 1
+    },
+    "gates": {
+      "B2 north->B1": "enemy-defeat",
+      "C3 east->D3": "1 key",
+      "D3 north->D2": "enemy-defeat"
+    },
+    "invariants_all_hold": "8 rooms and 7 edges so it is a tree; door count matches the shape letter in every room; adjacency is symmetric; the stored +0x2e/+0x2f coordinates agree with walking the adjacency; +0x28 is the way-back slot in every room; room 0 is the start; exactly one goal; exactly two dead ends; and the single key at A3 balances the single 1-key gate at C3 east.",
+    "first_verifiable_1key": "this is the first layout where a value-1 gate appears alongside an inspectable key placement \u2014 A3 holds 1 key and C3's east gate requires 1. Value 1 = one key is now confirmed by balance, not just by analogy with value 2.",
+    "confirmed_in_game": "the in-game map screen shows the player marker on B4 and the corner readout says 'B - 4', matching the reconstruction from the room table exactly. The map UI draws columns A..G and rows 1..5 regardless of how much of it the layout occupies."
+  },
+  "area_name": "Gurhacia Valley \u2014 the in-game map names stage 01 'Gurhacia Valley', and area B's first room 'Ancient clearing'"
+}
