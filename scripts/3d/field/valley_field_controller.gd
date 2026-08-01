@@ -10,6 +10,7 @@ const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.g
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
+const BossWarpScript := preload("res://scripts/3d/elements/boss_warp.gd")
 const GateScript := preload("res://scripts/3d/elements/gate.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
@@ -1192,7 +1193,8 @@ func _spawn_field_elements() -> void:
 			pad_pos = _portal_data["default"].get("spawn_pos", pad_pos)
 		var pad_cb := _make_section_warp_callback(false, section_idx_for_warp + 1,
 			str(next_sec.get("start_pos", "")), str(next_sec.get("entry_direction", "")), "goal_pad")
-		_spawn_goal_pad_warp(pad_pos, pad_cb, room_has_enemies)
+		var to_boss: bool = str(next_sec.get("type", "")) == "boss"
+		_spawn_goal_pad_warp(pad_pos, pad_cb, room_has_enemies, to_boss)
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	_fdbg("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
@@ -1359,16 +1361,17 @@ func _make_section_warp_callback(is_final: bool, t_section: int, t_cell: String,
 
 
 ## Place a section-exit warp inside the goal room (a warp pad) rather than on a
-## wall portal — for free-roam goal rooms that have no free door. Mirrors the
-## AreaWarp element + trigger + waypoint the wall path builds.
-func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool) -> void:
+## wall portal — for free-roam goal rooms that have no free door. Uses the large
+## BossWarp model when the next section is the boss arena (so entering the boss
+## reads as a boss warp, not a plain area gate), else the medium AreaWarp.
+func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool, to_boss: bool = false) -> void:
 	var is_open: bool = not room_has_enemies
-	var area_warp := AreaWarpScript.new()
-	area_warp.auto_collect = false
-	area_warp.name = "AreaWarp_goal_pad"
-	area_warp.element_state = "open" if is_open else "locked"
-	add_child(area_warp)
-	area_warp.global_position = pad_pos
+	var warp: AreaWarp = BossWarpScript.new() if to_boss else AreaWarpScript.new()
+	warp.auto_collect = false
+	warp.name = "AreaWarp_goal_pad"  # kept stable for the autopilot's find_child
+	warp.element_state = "open" if is_open else "locked"
+	add_child(warp)
+	warp.global_position = pad_pos
 	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", pad_pos, callback, false, not is_open)
 	var waypoint := WaypointScript.new()
 	add_child(waypoint)

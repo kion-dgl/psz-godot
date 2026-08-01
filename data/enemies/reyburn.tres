@@ -24,5 +24,5 @@ meseta_min = 100
 meseta_max = 300
 behavior = 5
 attack_cooldown = 2.5
-collision_radius = 1.5
-collision_height = 3.0
+collision_radius = 3.0
+collision_height = 6.0

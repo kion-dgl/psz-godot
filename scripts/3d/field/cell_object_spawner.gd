@@ -704,7 +704,7 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	box.drop_type = drop_type if not drop_type.is_empty() else "meseta"
 	box.drop_value = drop_value if not drop_value.is_empty() else (str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200)))
 	_c._map_root.add_child(box)
-	box.position = _snap_to_floor(pos)
+	box.position = _place_on_floor(pos)
 	_c._fixup_element_materials(box)
 	_c._room_boxes.append(box)
 	# Track drops spawned from this box
@@ -718,35 +718,48 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	print("[CellObjects] Box at %s (rare=%s, snapped from y=%.1f)" % [box.position, is_rare, pos.y])
 
 
-## Drop a static object's Y onto the floor beneath it. Authored/RE-derived
-## positions carry a ground-plane (x, z) but a Y of 0, which floats or sinks
-## wherever the room floor isn't at Y=0 (measured free-field spawns especially).
-## Enemies settle via gravity; static boxes need this explicit snap. No-op if no
-## floor is found below (leaves the authored Y).
-func _snap_to_floor(pos: Vector3) -> Vector3:
+## Floor-validated LOCAL position. Our ring placement is blind, so a spot can
+## land over a wall/gap/void — a box floats there and an enemy (with gravity)
+## falls out of bounds. Try the authored (x,z); if there's no floor under it,
+## step toward the room centre until solid floor is found, then sit on it. This
+## keeps objects on walkable ground until the measured object table (psz-re
+## set/<code>_s.rel) lands and we can drop in the exact authored positions.
+func _place_on_floor(pos: Vector3) -> Vector3:
 	var map_root: Node3D = _c._map_root
 	if not map_root:
 		return pos
-	var floor_y: Variant = _floor_y_at(map_root, pos.x, pos.z)
-	if floor_y != null:
-		return Vector3(pos.x, floor_y, pos.z)
-	# The ring position landed off the floor mesh (a doorway gap / room edge).
-	# Fall back to the room centre's floor height so the box rests at a sane Y
-	# instead of floating at y=0 — better a slightly-misplaced box than one in
-	# mid-air.
-	var centre_y: Variant = _floor_y_at(map_root, 0.0, 0.0)
-	if centre_y != null:
-		print("[sanity] box-snap fallback at local (%.1f,%.1f) → room-centre floor y=%.2f" % [pos.x, pos.z, centre_y])
-		return Vector3(pos.x, centre_y, pos.z)
-	print("[sanity] box-snap MISS at local (%.1f,%.1f) — no floor under it or centre, left at y=%.2f" % [pos.x, pos.z, pos.y])
+	# 1) authored spot
+	var fy: Variant = _floor_y_at(map_root, pos.x, pos.z)
+	if fy != null:
+		return Vector3(pos.x, fy, pos.z)
+	# 2) the room's walkable floor isn't always centred on the local origin (area
+	# B rooms in particular are offset), so scan a grid across the cell and drop
+	# the object on the nearest actual floor point rather than blindly pulling to
+	# (0,0). One-time at spawn; cheap relative to a stuck enemy.
+	var best: Variant = null
+	var best_d := INF
+	for gx in range(-18, 19, 3):
+		for gz in range(-18, 19, 3):
+			var gy: Variant = _floor_y_at(map_root, float(gx), float(gz))
+			if gy == null:
+				continue
+			var d := Vector2(float(gx) - pos.x, float(gz) - pos.z).length()
+			if d < best_d:
+				best_d = d
+				best = Vector3(float(gx), gy, float(gz))
+	if best != null:
+		print("[sanity] floor-relocate local (%.1f,%.1f)→(%.1f,%.1f) (authored spot off-floor)" % [pos.x, pos.z, best.x, best.z])
+		return best
+	print("[sanity] floor MISS at local (%.1f,%.1f) — no floor anywhere in cell, left at y=%.2f" % [pos.x, pos.z, pos.y])
 	return pos
 
 
-## Local floor Y under (x, z), or null if the downward ray hits no floor.
+## Local floor Y under (x, z), or null. Wide vertical range so unusually high/low
+## room floors (area B) are still found.
 func _floor_y_at(map_root: Node3D, x: float, z: float) -> Variant:
 	var space: PhysicsDirectSpaceState3D = map_root.get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(
-		map_root.to_global(Vector3(x, 8.0, z)), map_root.to_global(Vector3(x, -20.0, z)))
+		map_root.to_global(Vector3(x, 60.0, z)), map_root.to_global(Vector3(x, -60.0, z)))
 	q.collision_mask = 1  # floor / environment
 	var hit: Dictionary = space.intersect_ray(q)
 	if hit.is_empty():
@@ -794,7 +807,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		var enemy := EnemySpawnScript.new()
 		enemy.enemy_id = enemy_id
 		_c._map_root.add_child(enemy)
-		enemy.position = pos
+		enemy.position = _place_on_floor(pos)
 		_c._room_enemies.append(enemy)
 		_track_on_minimap(enemy)
 		var enemy_ref := enemy
@@ -824,7 +837,7 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 	enemy.collision_layer = 8
 	enemy.collision_mask = 1
 	_c._map_root.add_child(enemy)
-	enemy.position = pos
+	enemy.position = _place_on_floor(pos)
 	_c._room_enemies.append(enemy)
 	_track_on_minimap(enemy)
 	var spawn_id := enemy_id
