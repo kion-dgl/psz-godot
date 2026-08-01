@@ -1,1 +1,16 @@
-{ "version": "local", "godot_version": "4.5", "pack": { "sha256": "0d448dc036b2c5d7754bb850af1518e77772879c36499805a4d9c7bf7cdec596", "size": 333651672, "urls": ["file:///home/kion/projects/psz-godot/psz-godot-wt-562/dist/assets.pck"] } }
+{
+  "version": "dev",
+  "godot_version": "4.5",
+  "pack": {
+    "sha256": "0d448dc036b2c5d7754bb850af1518e77772879c36499805a4d9c7bf7cdec596",
+    "size": 333651672,
+    "urls": [
+      "https://pck.psz.onl/0d448dc036b2c5d7754bb850af1518e77772879c36499805a4d9c7bf7cdec596.pck"
+    ]
+  },
+  "sidecar": {
+    "urls": [
+      "https://pck.psz.onl/0d448dc036b2c5d7754bb850af1518e77772879c36499805a4d9c7bf7cdec596.sidecar.json"
+    ]
+  }
+}

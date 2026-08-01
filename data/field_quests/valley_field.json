@@ -664,7 +664,35 @@
           "required_keys": 0,
           "warp_edge": "north",
           "path_order": 0,
-          "objects": []
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                5.0,
+                0,
+                0.0
+              ],
+              "enemy_id": "helion"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.5,
+                0,
+                4.33
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.5,
+                0,
+                -4.33
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         }
       ]
     },

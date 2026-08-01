@@ -227,6 +227,12 @@ def build_grid_section(spec, area_letter):
 
 def build_transition():
     baked = cfg_doors("s01e_ia1")
+    # The transition room is NOT empty in the original: s01e_ia1 carries an enemy
+    # assignment (psz-re enemy_room_assignment) — a small fight before the area-B
+    # warp. Draw its wave the same way grid rooms do.
+    ids = wave_enemies("s01e_ia1", "E0")
+    objects = [{"type": "enemy", "position": p, "enemy_id": eid}
+               for eid, p in zip(ids, ring_positions(len(ids)))]
     return {
         "type": "transition", "area": "e", "start_pos": "0,0", "end_pos": "0,0",
         "entry_direction": "south", "exit_direction": "north",
@@ -235,7 +241,7 @@ def build_transition():
             "portals": baked, "is_start": True, "is_end": True, "is_branch": False,
             "has_key": False, "key_count": 0, "key_for_cell": "", "is_key_gate": False,
             "key_gate_direction": "", "key_drop": "", "required_keys": 0,
-            "warp_edge": "north", "path_order": 0, "objects": [],
+            "warp_edge": "north", "path_order": 0, "objects": objects,
         }],
     }
 
