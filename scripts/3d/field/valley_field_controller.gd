@@ -1366,7 +1366,7 @@ func _make_section_warp_callback(is_final: bool, t_section: int, t_cell: String,
 ## reads as a boss warp, not a plain area gate), else the medium AreaWarp.
 func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool, to_boss: bool = false) -> void:
 	var is_open: bool = not room_has_enemies
-	var warp: AreaWarp = BossWarpScript.new() if to_boss else AreaWarpScript.new()
+	var warp: WarpBase = BossWarpScript.new() if to_boss else AreaWarpScript.new()
 	warp.auto_collect = false
 	warp.name = "AreaWarp_goal_pad"  # kept stable for the autopilot's find_child
 	warp.element_state = "open" if is_open else "locked"
