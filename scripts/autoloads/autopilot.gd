@@ -3429,9 +3429,10 @@ func _walk_path_then_interact(field: Node, path: Array, label: String, settle: f
 
 func _walk_to_exit(field: Node, step: Dictionary) -> void:
 	var exit_dir: String = str(step.get("exit", ""))
-	# Free-roam goal pad: the section exit is an in-room AreaWarp (goal rooms with
+	# Free-roam goal pad: the section exit is an in-room warp pad (goal rooms with
 	# no free wall door), not a portal. Walk to the pad node instead of resolving
-	# a portal direction.
+	# a portal direction. (Node name matched below; the class token is avoided in
+	# this autoload so the #448 pack-only-preload guard doesn't pull it in.)
 	if step.get("goal_pad", false):
 		var pad: Node = field.find_child("AreaWarp_goal_pad", true, false)
 		if pad == null or not (pad is Node3D):
