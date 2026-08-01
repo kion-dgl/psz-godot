@@ -204,10 +204,21 @@ def build_grid_section(spec, area_letter):
     for kc in [c for c in out_cells if c["has_key"]]:
         if gate_cells: kc["key_for_cell"] = gate_cells[0]["pos"]
     # entry_direction: the door the player materialises at when this section is
-    # entered from the previous one — the start room's (single) connection, so
-    # they spawn facing into the field rather than via a blind fallback.
-    start_conns = list(out_cells[spec["start"]]["connections"].keys())
-    entry_dir = start_conns[0] if start_conns else "north"
+    # entered from the previous one. Prefer a FREE door (a config portal not used
+    # by a connection) so the player spawns at an unused opening and walks toward
+    # the room's connection — matching how the game enters an area's start room.
+    # Spawning on the connection door itself (the old behaviour) left the player
+    # jammed on the exit gate facing inward. Fall back to a connection, then N.
+    start_cell = out_cells[spec["start"]]
+    start_conns = set(start_cell["connections"].keys())
+    start_doors = [d for d in start_cell["portals"].keys() if d != "default"]
+    free_doors = [d for d in start_doors if d not in start_conns]
+    if free_doors:
+        entry_dir = free_doors[0]
+    elif start_conns:
+        entry_dir = next(iter(start_conns))
+    else:
+        entry_dir = "north"
     return {
         "type": "grid", "area": area_letter,
         "start_pos": pos_key(cells[spec["start"]]), "end_pos": pos_key(cells[spec["goal"]]),

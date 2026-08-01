@@ -466,6 +466,12 @@ func _ready() -> void:
 
 	_spawn_field_elements()
 	_spawn_companion()
+	# Wait one PHYSICS frame so the floor collision built above is live in the
+	# physics space before boxes raycast down to ground-snap. process_frame
+	# (render) alone doesn't guarantee a physics tick has run — headless (180
+	# ticks/s) got away with it, but on-device (60fps) the ray missed and boxes
+	# floated at y=0. This makes the snap deterministic on hardware.
+	await get_tree().physics_frame
 	_cell_spawner._spawn_cell_objects()
 	_setup_debug_panel()
 

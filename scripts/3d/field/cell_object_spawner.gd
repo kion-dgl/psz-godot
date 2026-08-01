@@ -715,7 +715,7 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 			if child is DropBase and not _c._room_drops.has(child):
 				_c._room_drops.append(child)
 	)
-	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
+	print("[CellObjects] Box at %s (rare=%s, snapped from y=%.1f)" % [box.position, is_rare, pos.y])
 
 
 ## Drop a static object's Y onto the floor beneath it. Authored/RE-derived
@@ -734,6 +734,7 @@ func _snap_to_floor(pos: Vector3) -> Vector3:
 	q.collision_mask = 1  # floor / environment
 	var hit: Dictionary = space.intersect_ray(q)
 	if hit.is_empty():
+		print("[sanity] box-snap MISS at local (%.1f,%.1f) — no floor hit, left at y=%.2f" % [pos.x, pos.z, pos.y])
 		return pos
 	return Vector3(pos.x, map_root.to_local(hit.position).y, pos.z)
 
