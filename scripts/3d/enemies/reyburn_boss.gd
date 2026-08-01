@@ -64,6 +64,57 @@ func _ready() -> void:
 	_play("tht")                    # war-cry opener
 
 
+# Faithful multi-part hitbox rig (psz-re Q5 / sys.enemy-part-joints + the shape
+# table): Reyburn has FOUR damage parts, not one capsule — a body sphere in
+# entity space plus spheres riding the head bone (atama, joint 12, ×2) and the
+# tail (sippo_02, joint 18). Each is a measured sphere and, when bone-attached,
+# moves with the animation, so the player hits the dragon where it's seen. A hit
+# on any part routes through Hurtbox → _on_hit_received (one HP pool at +0x34).
+const _HIT_PARTS := [
+	{"r": 3.5, "bone": "", "off": Vector3.ZERO},              # part 0: body (joint 0xFF)
+	{"r": 4.0, "bone": "atama", "off": Vector3(0, -0.5, 0)},  # part 1: head
+	{"r": 0.75, "bone": "atama", "off": Vector3(0, -0.5, 0)}, # part 2: head
+	{"r": 1.0, "bone": "sippo_02", "off": Vector3.ZERO},      # part 3: tail
+]
+
+
+func _setup_hurtbox() -> void:
+	var skel: Skeleton3D = null
+	if model:
+		skel = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
+	if skel:
+		var names: Array = []
+		for b in skel.get_bone_count():
+			names.append(skel.get_bone_name(b))
+		print("[ReyburnBoss] skeleton %d bones: %s" % [skel.get_bone_count(), ", ".join(names)])
+	else:
+		print("[ReyburnBoss] no skeleton on model — hit parts placed entity-local")
+	for i in _HIT_PARTS.size():
+		var p: Dictionary = _HIT_PARTS[i]
+		var hb := Hurtbox.new()
+		hb.name = "Hurtbox_part%d" % i
+		hb.owner_node = self
+		var cs := CollisionShape3D.new()
+		var sph := SphereShape3D.new()
+		sph.radius = float(p["r"])
+		cs.shape = sph
+		cs.position = p["off"]
+		hb.add_child(cs)
+		var parent: Node = self
+		var bone: String = str(p["bone"])
+		if not bone.is_empty() and skel and skel.find_bone(bone) != -1:
+			var att := BoneAttachment3D.new()
+			att.name = "Attach_%s_%d" % [bone, i]
+			skel.add_child(att)
+			att.bone_name = bone
+			parent = att
+		elif not bone.is_empty():
+			print("[ReyburnBoss] bone '%s' not in skeleton — part %d entity-local" % [bone, i])
+		parent.add_child(hb)
+		if i == 0:
+			hurtbox = hb  # base/projectile code reads a single .hurtbox
+
+
 func _load_kit() -> void:
 	if not ResourceLoader.exists(KIT_PATH) and not FileAccess.file_exists(KIT_PATH):
 		return
