@@ -61,7 +61,6 @@ var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
-var _is_free_roam: bool = false  # free-roam rotates the mesh; quests keep label-only
 var _visited_cells: Dictionary = {}  # cell_pos → true
 var _key_hud_label: Label
 var _gate_nudge_mode: bool = false
@@ -227,19 +226,10 @@ func _ready() -> void:
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
 
+	# Stage geometry is NOT rotated. Rotation only affects direction label mapping
+	# (grid direction ↔ config direction) and minimap display. The 3D corridors
+	# stay at their original GLB positions; triggers are placed at config positions.
 	_rotation_deg = int(_current_cell.get("rotation", 0))
-	# FREE-ROAM: actually rotate the room mesh so decorative geometry (stairs,
-	# ramps, props) aligns with the layout, matching the original game — not just
-	# a door-label remap (issue #218). Positions are stage-local and go through
-	# _map_root.to_global (see below), and enemies/boxes/collision are children of
-	# _map_root, so a single node rotation carries everything. Guild quests keep
-	# the old label-only behaviour (mesh stays at identity) so their hand-authored
-	# baked portals are untouched.
-	# NOTE: sign (-deg) matches StageRotation's CW rotate_dir convention on paper;
-	# confirm/flip on device — headless can't load the stage GLBs.
-	_is_free_roam = SessionManager.get_session().get("type", "") != "quest"
-	if _is_free_roam and _rotation_deg != 0:
-		_map_root.rotation.y = deg_to_rad(-_rotation_deg)
 
 	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
@@ -332,21 +322,6 @@ func _ready() -> void:
 		if not _portal_data.has(game_dir):
 			_portal_data[game_dir] = _gate_mgr._compute_portal_from_config(cp, game_dir)
 			_fdbg("[ValleyField]   Synthesized missing portal: '%s' (config dir='%s')" % [game_dir, base_dir])
-
-	# FREE-ROAM: portal positions are stage-local; downstream places gates/warps
-	# and the player at these as global coords (fine while _map_root is identity,
-	# as it is for quests). Since free-roam now rotates _map_root, push every
-	# position through to_global so gates/spawns track the rotated openings, and
-	# fold the mesh yaw into gate_rot so the gate models face their new walls.
-	if _is_free_roam and _rotation_deg != 0:
-		var yaw := deg_to_rad(-_rotation_deg)
-		for pdir in _portal_data:
-			var pd: Dictionary = _portal_data[pdir]
-			for key in ["gate_pos", "spawn_pos", "trigger_pos"]:
-				if pd.has(key):
-					pd[key] = _map_root.to_global(pd[key])
-			if pd.has("gate_rot"):
-				pd["gate_rot"] = Vector3(pd["gate_rot"].x, pd["gate_rot"].y + yaw, pd["gate_rot"].z)
 
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
