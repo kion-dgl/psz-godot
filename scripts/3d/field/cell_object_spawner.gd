@@ -727,16 +727,31 @@ func _snap_to_floor(pos: Vector3) -> Vector3:
 	var map_root: Node3D = _c._map_root
 	if not map_root:
 		return pos
+	var floor_y: Variant = _floor_y_at(map_root, pos.x, pos.z)
+	if floor_y != null:
+		return Vector3(pos.x, floor_y, pos.z)
+	# The ring position landed off the floor mesh (a doorway gap / room edge).
+	# Fall back to the room centre's floor height so the box rests at a sane Y
+	# instead of floating at y=0 — better a slightly-misplaced box than one in
+	# mid-air.
+	var centre_y: Variant = _floor_y_at(map_root, 0.0, 0.0)
+	if centre_y != null:
+		print("[sanity] box-snap fallback at local (%.1f,%.1f) → room-centre floor y=%.2f" % [pos.x, pos.z, centre_y])
+		return Vector3(pos.x, centre_y, pos.z)
+	print("[sanity] box-snap MISS at local (%.1f,%.1f) — no floor under it or centre, left at y=%.2f" % [pos.x, pos.z, pos.y])
+	return pos
+
+
+## Local floor Y under (x, z), or null if the downward ray hits no floor.
+func _floor_y_at(map_root: Node3D, x: float, z: float) -> Variant:
 	var space: PhysicsDirectSpaceState3D = map_root.get_world_3d().direct_space_state
-	var from: Vector3 = map_root.to_global(Vector3(pos.x, pos.y + 8.0, pos.z))
-	var to: Vector3 = map_root.to_global(Vector3(pos.x, pos.y - 20.0, pos.z))
-	var q := PhysicsRayQueryParameters3D.create(from, to)
+	var q := PhysicsRayQueryParameters3D.create(
+		map_root.to_global(Vector3(x, 8.0, z)), map_root.to_global(Vector3(x, -20.0, z)))
 	q.collision_mask = 1  # floor / environment
 	var hit: Dictionary = space.intersect_ray(q)
 	if hit.is_empty():
-		print("[sanity] box-snap MISS at local (%.1f,%.1f) — no floor hit, left at y=%.2f" % [pos.x, pos.z, pos.y])
-		return pos
-	return Vector3(pos.x, map_root.to_local(hit.position).y, pos.z)
+		return null
+	return map_root.to_local(hit.position).y
 
 
 ## Minimap enemy dot (#422). Cell-entry spawns run before the minimap is

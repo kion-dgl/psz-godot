@@ -259,6 +259,12 @@ var _menu_during_pickup := false
 # the shop/storage screens instead of accepting a quest. Gated so the
 # regression-matrix quest flow is completely untouched. See issue #9.
 var _shops_phase := false
+# PSZ_AUTOPILOT_FIELD=<area_id>: after the office intro, enter that area's FREE
+# field (not a quest) and walk it, so free-roam-only behaviour (goal pads,
+# entry spawns, box ground-snap) gets headless coverage the quest matrix can't
+# reach. Gated so the quest flow is untouched.
+var _field_phase := false
+var _field_area := ""
 
 # Defeat probe (spec /states/player-death): when PSZ_AUTOPILOT_DEFEAT=1, the
 # autopilot drives normally into the first field cell, then kills the player
@@ -373,6 +379,10 @@ func _parse_probe_flags() -> void:
 	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
 	if _shops_phase:
 		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
+	_field_area = OS.get_environment("PSZ_AUTOPILOT_FIELD")
+	_field_phase = not _field_area.is_empty()
+	if _field_phase:
+		print("[sanity] autopilot FREE-ROAM smoke enabled (area=%s: enter free field, walk it)" % _field_area)
 	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
 	if _defeat_probe:
 		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
@@ -1040,6 +1050,9 @@ func _drive_office_intro() -> void:
 	elif _shops_phase:
 		print("[sanity] office intro complete → shop/storage smoke (PSZ_AUTOPILOT_SHOPS)")
 		_after(STEP_DELAY, _drive_shop_smoke)
+	elif _field_phase:
+		print("[sanity] office intro complete → free-roam field smoke (PSZ_AUTOPILOT_FIELD=%s)" % _field_area)
+		_after(STEP_DELAY, _drive_field_smoke)
 	else:
 		print("[sanity] office intro complete → exit to counter")
 		_menu_carry_open_before_exit()
@@ -1077,6 +1090,110 @@ func _drive_office_briefing() -> void:
 	else:
 		print("[sanity] WARN: briefing advance limit; forcing exit")
 		_teleport_player(OFFICE_EXIT_POS)
+
+
+# ── Free-roam field smoke (PSZ_AUTOPILOT_FIELD) ────────────────
+# Enter an area's FREE field (not a quest) and walk it with a generic plan:
+# each cell → kill_all (if it holds enemies) then walk to the exit toward the
+# goal; the goal cell warps to the next section. Verifies free-roam-only paths
+# (entry spawns, box ground-snap, section warps) the quest matrix can't reach.
+# Stops with a clear [sanity] line where a room isn't yet traversable (a key
+# gate needing a detour, or a goal-pad exit — known follow-ups).
+func _drive_field_smoke() -> void:
+	SessionManager.return_to_city()
+	SessionManager.enter_field(_field_area, "normal")
+	var quest: Dictionary = QuestLoader.pick_field_quest(_field_area)
+	if quest.is_empty() or not quest.has("sections"):
+		print("[sanity] FAIL: no free-roam field authored for area %s" % _field_area)
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	var sections: Array = quest["sections"]
+	SessionManager.set_field_sections(sections)
+	_quest_id = "free_roam_%s" % _field_area
+	_quest_steps = _build_field_steps(sections)
+	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
+	_dump_plan(_quest_steps, _steps_by_cell)
+	SessionManager.set_current_section(0)
+	print("[sanity] checkpoint: free-roam field entered (%d sections, %d steps)" % [sections.size(), _quest_steps.size()])
+	SceneManager.goto_scene(VALLEY_FIELD, {
+		"current_cell_pos": str(sections[0]["start_pos"]),
+		"spawn_edge": "",
+		"keys_collected": {},
+	})
+
+
+## Generic per-cell plan: BFS the tree start→goal in each section; each path
+## cell exits toward the next, the goal cell exits via warp_edge to the next
+## section, the final (boss) cell ends the run. kill_all where a cell has enemies.
+func _build_field_steps(sections: Array) -> Array:
+	var steps: Array = []
+	var idx := 0
+	for si in sections.size():
+		var sec: Dictionary = sections[si]
+		var cells: Array = sec.get("cells", [])
+		var by_pos := {}
+		for c in cells:
+			by_pos[str(c.get("pos", ""))] = c
+		var start_pos := str(sec.get("start_pos", ""))
+		var goal_pos := ""
+		for c in cells:
+			if c.get("is_end", false):
+				goal_pos = str(c.get("pos", "")); break
+		if goal_pos == "":
+			goal_pos = str(sec.get("end_pos", start_pos))
+		# BFS start→goal over connections
+		var prev := {start_pos: ""}
+		var frontier := [start_pos]
+		while not frontier.is_empty():
+			var cur: String = frontier.pop_front()
+			if cur == goal_pos:
+				break
+			for dir in by_pos.get(cur, {}).get("connections", {}):
+				var nxt := str(by_pos[cur]["connections"][dir])
+				if not prev.has(nxt):
+					prev[nxt] = cur
+					frontier.append(nxt)
+		# reconstruct path
+		var path: Array = []
+		var walk := goal_pos
+		while prev.has(walk):
+			path.push_front(walk)
+			if walk == start_pos:
+				break
+			walk = str(prev[walk])
+		for pi in path.size():
+			var pos: String = str(path[pi])
+			var cell: Dictionary = by_pos.get(pos, {})
+			var do_list: Array = []
+			if _cell_has_enemy(cell):
+				do_list.append("kill_all")
+			var exit_dir := ""
+			var target := ""
+			if pos == goal_pos:
+				exit_dir = str(cell.get("warp_edge", ""))
+				if exit_dir == "" and si + 1 >= sections.size():
+					do_list.append("field_done")
+			elif pi + 1 < path.size():
+				var nextpos: String = str(path[pi + 1])
+				for dir in cell.get("connections", {}):
+					if str(cell["connections"][dir]) == nextpos:
+						exit_dir = dir
+						target = nextpos
+						break
+			steps.append({
+				"label": "%s %s%s" % [str(sec.get("area", "?")), pos, (" GOAL" if pos == goal_pos else "")],
+				"do": do_list, "exit": exit_dir, "target": target,
+				"_section_idx": si, "_pos": pos, "_step_idx": idx,
+			})
+			idx += 1
+	return steps
+
+
+func _cell_has_enemy(cell: Dictionary) -> bool:
+	for o in cell.get("objects", []):
+		if str(o.get("type", "")) == "enemy":
+			return true
+	return false
 
 
 # ── Shop / storage smoke (PSZ_AUTOPILOT_SHOPS) ─────────────────
@@ -2811,6 +2928,10 @@ func _run_next_action(field: Node) -> void:
 			_do_open_gate(field, open_gate_dir)
 		"wait_quest_complete":
 			_do_wait_quest_complete(field)
+		"field_done":
+			print("[sanity] free-roam field cleared to the boss room")
+			print("[sanity] DONE ok")
+			_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
 		_:
 			print("[sanity] WARN: unknown action '%s'" % action)
 			_run_next_action(field)
