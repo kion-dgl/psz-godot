@@ -12,6 +12,7 @@
       "area": "a",
       "start_pos": "3,1",
       "end_pos": "0,0",
+      "entry_direction": "north",
       "exit_direction": "north",
       "cells": [
         {
@@ -672,6 +673,7 @@
       "area": "b",
       "start_pos": "3,1",
       "end_pos": "1,3",
+      "entry_direction": "north",
       "exit_direction": "north",
       "cells": [
         {

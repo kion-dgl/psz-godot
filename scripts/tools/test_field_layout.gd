@@ -33,9 +33,13 @@ func _ready() -> void:
 	_check("section order grid/transition/grid/boss",
 		types == ["grid", "transition", "grid", "boss"])
 
-	for sec in sections:
+	for i in sections.size():
+		var sec: Dictionary = sections[i]
 		if sec.get("type") == "grid":
 			_check_grid_section(sec, cfg)
+			_check_section_exit(sec, i, sections)
+		elif sec.get("type") == "transition":
+			_check_section_exit(sec, i, sections)
 		elif sec.get("type") == "boss":
 			_check_boss_section(sec)
 
@@ -103,6 +107,22 @@ func _check_grid_section(sec: Dictionary, cfg: Dictionary) -> void:
 					enemy_ok = false
 					print("    unresolved enemy_id: %s" % o.get("enemy_id"))
 	_check("area %s all enemies resolve in registry" % area, enemy_ok)
+
+
+# A non-final section must be able to warp onward: its end cell needs a
+# warp_edge, and a following section must exist to receive it. The exit itself
+# is created either on a free wall portal or, when the goal room has no free door
+# (a faithful 1-door goal), by the in-room goal-pad warp — so we don't require a
+# matching portal here, only that the chain is wired. Catches the regression
+# where valley area B dead-ended at the transition.
+func _check_section_exit(sec: Dictionary, idx: int, sections: Array) -> void:
+	var area: String = str(sec.get("area"))
+	var ends: Array = sec.get("cells", []).filter(func(c): return c.get("is_end", false))
+	_check("section %s has exactly one exit cell" % area, ends.size() == 1)
+	if ends.is_empty():
+		return
+	_check("section %s exit has a warp_edge" % area, not str(ends[0].get("warp_edge", "")).is_empty())
+	_check("section %s has a following section to warp into" % area, idx + 1 < sections.size())
 
 
 func _check_boss_section(sec: Dictionary) -> void:

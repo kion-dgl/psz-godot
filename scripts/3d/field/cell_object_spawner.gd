@@ -704,7 +704,7 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	box.drop_type = drop_type if not drop_type.is_empty() else "meseta"
 	box.drop_value = drop_value if not drop_value.is_empty() else (str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200)))
 	_c._map_root.add_child(box)
-	box.position = pos
+	box.position = _snap_to_floor(pos)
 	_c._fixup_element_materials(box)
 	_c._room_boxes.append(box)
 	# Track drops spawned from this box
@@ -716,6 +716,26 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 				_c._room_drops.append(child)
 	)
 	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
+
+
+## Drop a static object's Y onto the floor beneath it. Authored/RE-derived
+## positions carry a ground-plane (x, z) but a Y of 0, which floats or sinks
+## wherever the room floor isn't at Y=0 (measured free-field spawns especially).
+## Enemies settle via gravity; static boxes need this explicit snap. No-op if no
+## floor is found below (leaves the authored Y).
+func _snap_to_floor(pos: Vector3) -> Vector3:
+	var map_root: Node3D = _c._map_root
+	if not map_root:
+		return pos
+	var space: PhysicsDirectSpaceState3D = map_root.get_world_3d().direct_space_state
+	var from: Vector3 = map_root.to_global(Vector3(pos.x, pos.y + 8.0, pos.z))
+	var to: Vector3 = map_root.to_global(Vector3(pos.x, pos.y - 20.0, pos.z))
+	var q := PhysicsRayQueryParameters3D.create(from, to)
+	q.collision_mask = 1  # floor / environment
+	var hit: Dictionary = space.intersect_ray(q)
+	if hit.is_empty():
+		return pos
+	return Vector3(pos.x, map_root.to_local(hit.position).y, pos.z)
 
 
 ## Minimap enemy dot (#422). Cell-entry spawns run before the minimap is

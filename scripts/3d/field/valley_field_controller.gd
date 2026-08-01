@@ -1115,39 +1115,7 @@ func _spawn_field_elements() -> void:
 			var target_sec: Dictionary = sections_for_warp[t_section]
 			aw_entry_edge = str(target_sec.get("exit_direction", ""))
 
-		var is_final := is_final_exit
-		var aw_callback := func(_body: Node3D) -> void:
-			if _body.is_in_group("player"):
-				if is_final:
-					_fdbg("[ValleyField] AreaWarp %s → final exit, leaving field" % portal_dir)
-					# #384: a quest's final exit marks complete + suspends (resumable
-					# until report/cancel). A free field flushes its run-state into the
-					# per-area Free-Roam store so re-entering shows it cleared (spec
-					# /states/quest-vs-field) — save the end cell first, like the
-					# StartWarp/telepipe paths do.
-					if SessionManager.get_session().get("type") == "quest":
-						SessionManager.mark_quest_complete()
-						SessionManager.suspend_session()
-					else:
-						_cell_spawner._save_cell_state()
-						SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
-						SessionManager.flush_free_roam_field()
-					SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
-				else:
-					_fdbg("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
-					_cell_spawner._save_cell_state()
-					SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
-					var target_state: Dictionary = SessionManager.get_section_state(t_section)
-					SessionManager.set_current_section(t_section)
-					SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-						"current_cell_pos": t_cell,
-						"spawn_edge": aw_entry_edge,
-						"keys_collected": target_state.get("keys_collected", {}),
-						"gates_opened": target_state.get("gates_opened", {}),
-						"visited_cells": target_state.get("visited_cells", {}),
-						"cell_states": target_state.get("cell_states", {}),
-						"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-					})
+		var aw_callback := _make_section_warp_callback(is_final_exit, t_section, t_cell, aw_entry_edge, portal_dir)
 		_gate_mgr._create_fallback_trigger("GateTrigger_%s" % portal_dir, aw_trigger_pos, aw_callback, is_delayed, not is_open)
 
 		# Waypoint — same as regular gates
@@ -1201,6 +1169,24 @@ func _spawn_field_elements() -> void:
 				break
 		if not has_telepipe_source:
 			_needs_telepipe = true
+
+	# Free-roam goal room = a WARP PAD, not a wall door. In a faithful measured
+	# tree the goal is a 1-door leaf whose only door is its entry connection, so
+	# warp_edge has no free wall and no portal-based exit warp was created above.
+	# Place the section exit in the room instead (like the original's goal pad).
+	# Guild quests always author warp_edge on a real baked portal, so gate this
+	# to free-roam to leave them untouched.
+	if _current_cell.get("is_end", false) and not warp_edge.is_empty() \
+			and not _portal_data.has(warp_edge) \
+			and SessionManager.get_session().get("type", "") != "quest" \
+			and section_idx_for_warp + 1 < sections_for_warp.size():
+		var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
+		var pad_pos: Vector3 = _map_root.to_global(Vector3.ZERO)
+		if _portal_data.has("default"):
+			pad_pos = _portal_data["default"].get("spawn_pos", pad_pos)
+		var pad_cb := _make_section_warp_callback(false, section_idx_for_warp + 1,
+			str(next_sec.get("start_pos", "")), str(next_sec.get("entry_direction", "")), "goal_pad")
+		_spawn_goal_pad_warp(pad_pos, pad_cb, room_has_enemies)
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	_fdbg("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
@@ -1329,6 +1315,63 @@ func _spawn_field_elements() -> void:
 
 ## Spawn a telepipe (cyan cylinder placeholder). Player steps into it to complete the section / quest.
 ## If pos is zero, falls back to room center / default spawn.
+## The player-entered callback for a section-transition warp: save this section's
+## state and either leave the field (final exit) or advance to the target
+## section/cell. Shared by wall-portal AreaWarps and the free-roam goal pad.
+func _make_section_warp_callback(is_final: bool, t_section: int, t_cell: String, aw_entry_edge: String, label: String) -> Callable:
+	return func(_body: Node3D) -> void:
+		if not _body.is_in_group("player"):
+			return
+		if is_final:
+			_fdbg("[ValleyField] AreaWarp %s → final exit, leaving field" % label)
+			# #384: a quest's final exit marks complete + suspends; a free field
+			# flushes run-state into the per-area Free-Roam store (spec
+			# /states/quest-vs-field) — save the end cell first.
+			if SessionManager.get_session().get("type") == "quest":
+				SessionManager.mark_quest_complete()
+				SessionManager.suspend_session()
+			else:
+				_cell_spawner._save_cell_state()
+				SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+				SessionManager.flush_free_roam_field()
+			SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
+		else:
+			_fdbg("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [label, t_section, t_cell, aw_entry_edge])
+			_cell_spawner._save_cell_state()
+			SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+			var target_state: Dictionary = SessionManager.get_section_state(t_section)
+			SessionManager.set_current_section(t_section)
+			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+				"current_cell_pos": t_cell,
+				"spawn_edge": aw_entry_edge,
+				"keys_collected": target_state.get("keys_collected", {}),
+				"gates_opened": target_state.get("gates_opened", {}),
+				"visited_cells": target_state.get("visited_cells", {}),
+				"cell_states": target_state.get("cell_states", {}),
+				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+			})
+
+
+## Place a section-exit warp inside the goal room (a warp pad) rather than on a
+## wall portal — for free-roam goal rooms that have no free door. Mirrors the
+## AreaWarp element + trigger + waypoint the wall path builds.
+func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool) -> void:
+	var is_open: bool = not room_has_enemies
+	var area_warp := AreaWarpScript.new()
+	area_warp.auto_collect = false
+	area_warp.name = "AreaWarp_goal_pad"
+	area_warp.element_state = "open" if is_open else "locked"
+	add_child(area_warp)
+	area_warp.global_position = pad_pos
+	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", pad_pos, callback, false, not is_open)
+	var waypoint := WaypointScript.new()
+	add_child(waypoint)
+	waypoint.global_position = Vector3(pad_pos.x, 1.5, pad_pos.z)
+	waypoint._base_y = waypoint.position.y
+	waypoint.set_state("new")
+	_add_debug_sphere(pad_pos, Color(0, 0.6, 1), "GoalPadMark")
+
+
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	_fdbg("[FieldElements] Spawning telepipe at %s" % pos)
 	# Per spec: when a quest-completion telepipe spawns, any player-dropped

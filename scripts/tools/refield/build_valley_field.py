@@ -203,10 +203,15 @@ def build_grid_section(spec, area_letter):
     gate_cells = [c for c in out_cells if c["required_keys"] > 0]
     for kc in [c for c in out_cells if c["has_key"]]:
         if gate_cells: kc["key_for_cell"] = gate_cells[0]["pos"]
+    # entry_direction: the door the player materialises at when this section is
+    # entered from the previous one — the start room's (single) connection, so
+    # they spawn facing into the field rather than via a blind fallback.
+    start_conns = list(out_cells[spec["start"]]["connections"].keys())
+    entry_dir = start_conns[0] if start_conns else "north"
     return {
         "type": "grid", "area": area_letter,
         "start_pos": pos_key(cells[spec["start"]]), "end_pos": pos_key(cells[spec["goal"]]),
-        "exit_direction": exit_dir, "cells": out_cells,
+        "entry_direction": entry_dir, "exit_direction": exit_dir, "cells": out_cells,
     }
 
 def build_transition():
