@@ -279,7 +279,7 @@ var _defeat_meseta_before := 0
 var _commitment_probe := false      # #377/#428 action-commitment probe
 var _commitment_triggered := false  # ran the probe already (fires once)
 
-var _combo_probe := false           # #155 three-tier combo-timing probe
+var _combo_probe := false           # #461 two-tier combo-timing probe
 var _combo_triggered := false       # ran the probe already (fires once)
 
 var _enemy_freeze_probe := false    # #477 big-rig attack-wedge probe
@@ -391,7 +391,7 @@ func _parse_probe_flags() -> void:
 		print("[sanity] autopilot COMMITMENT probe enabled (attack/dodge must not cancel each other in first field cell)")
 	_combo_probe = OS.has_environment("PSZ_AUTOPILOT_COMBO")
 	if _combo_probe:
-		print("[sanity] autopilot COMBO probe enabled (three-tier timing windows in first field cell)")
+		print("[sanity] autopilot COMBO probe enabled (two-tier timing windows in first field cell)")
 	_enemy_freeze_probe = OS.has_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
 	if _enemy_freeze_probe:
 		var freeze_val := OS.get_environment("PSZ_AUTOPILOT_ENEMY_FREEZE")
@@ -2505,13 +2505,14 @@ func _commitment_attack_held(p, states: Dictionary) -> void:
 		_commitment_dodge_phase(p, states))
 
 
-# ── Combo three-tier probe (#155, spec /mechanics/combos) ──────────────────
-## PSZ_AUTOPILOT_COMBO=1: in the first field cell, drive a real swing and
-## press attack inside each tier — miss-early must queue nothing, the just
-## window must chain step 2 with the just flag, and the un-queued swing end
-## must break to IDLE. Frame-polled so the presses land inside the windows
-## regardless of box load / time_scale. Runs instead of the cell plan and
-## ends the run with DONE ok / FAIL.
+# ── Combo two-tier probe (#461, spec /mechanics/combos) ────────────────────
+## PSZ_AUTOPILOT_COMBO=1: in the first field cell, drive a real swing and press
+## attack in each tier — a miss-early press must FUMBLE (queue nothing, lock out
+## later presses, break to IDLE), and a press in the chain-accept window
+## [just_start, 1.0) must queue a NORMAL chain that fires step 2, with the
+## un-queued swing end breaking to IDLE. Frame-polled so the presses land inside
+## the windows regardless of box load / time_scale. Runs instead of the cell
+## plan and ends the run with DONE ok / FAIL.
 
 ## Await cond (polled per frame) with a frame budget; false = timed out.
 func _combo_await(cond: Callable, frames: int = 1800) -> bool:
@@ -2543,7 +2544,9 @@ func _combo_probe_run(p) -> void:
 		print("[sanity] FAIL: combo probe — no timing config for equipped weapon")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	var just_mid: float = (float(t.just_start) + float(t.just_end)) / 2.0
+	# Midpoint of the chain-accept window [just_start, 1.0) — a press here
+	# queues a normal chain (#461, two-tier: fumble before just_start, accept at/after).
+	var accept_mid: float = (float(t.just_start) + 1.0) / 2.0
 
 	# Case 1: miss-early press FUMBLES the swing — nothing queued, later
 	# presses inside the accept window are locked out, and the swing ending
@@ -2558,7 +2561,7 @@ func _combo_probe_run(p) -> void:
 		return
 	print("[sanity] checkpoint: combo probe — miss-early fumbled the swing")
 	var in_fwindow := await _combo_await(func() -> bool:
-		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= accept_mid)
 	if not in_fwindow or p.get_state() != states["ATTACKING"]:
 		print("[sanity] FAIL: combo probe — fumbled swing ended before the accept window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
@@ -2574,33 +2577,33 @@ func _combo_probe_run(p) -> void:
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	print("[sanity] checkpoint: combo probe — fumbled swing broke to IDLE")
-	_combo_probe_chain_phase(p, states, just_mid)
+	_combo_probe_chain_phase(p, states, accept_mid)
 
 
-## Clean-combo half of the probe: a just-window press queues JUST, fires
-## step 2 with the just flag at swing end, and the un-queued swing 2 breaks
-## back to IDLE.
-func _combo_probe_chain_phase(p, states: Dictionary, just_mid: float) -> void:
-	print("[sanity] checkpoint: combo probe — swing 1 (clean), just-window press")
+## Clean-combo half of the probe: a press in the accept window queues a NORMAL
+## chain, fires step 2 at swing end, and the un-queued swing 2 breaks back to
+## IDLE (#461, two-tier — no just-attack tier).
+func _combo_probe_chain_phase(p, states: Dictionary, accept_mid: float) -> void:
+	print("[sanity] checkpoint: combo probe — swing 1 (clean), chain-accept press")
 	p._start_attack()
 	var in_window := await _combo_await(func() -> bool:
-		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= just_mid)
+		return p.get_state() != states["ATTACKING"] or p._attack_frac() >= accept_mid)
 	if not in_window or p.get_state() != states["ATTACKING"]:
-		print("[sanity] FAIL: combo probe — clean swing ended before the just window was reached")
+		print("[sanity] FAIL: combo probe — clean swing ended before the accept window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
 	p._start_attack()
-	if p._queued_combo != p.ComboQueue.JUST:
-		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a JUST chain (#155)" % p._attack_frac())
+	if p._queued_combo != p.ComboQueue.NORMAL:
+		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a NORMAL chain (#461)" % p._attack_frac())
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — just chain queued at frac %.2f" % p._attack_frac())
+	print("[sanity] checkpoint: combo probe — normal chain queued at frac %.2f" % p._attack_frac())
 	var fired := await _combo_await(func() -> bool: return p.combo_state == 2 or p.get_state() != states["ATTACKING"])
-	if not fired or p.combo_state != 2 or not p._is_just_attack:
-		print("[sanity] FAIL: combo probe — queued just chain did not fire step 2 with the just flag")
+	if not fired or p.combo_state != 2:
+		print("[sanity] FAIL: combo probe — queued chain did not fire step 2")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — step 2 fired with just bonus (#155)")
+	print("[sanity] checkpoint: combo probe — step 2 fired (#461)")
 
 	# Case 3: no further press — swing 2 ending un-queued breaks to IDLE.
 	var broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])
