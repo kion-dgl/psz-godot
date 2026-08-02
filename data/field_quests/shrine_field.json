@@ -88,6 +88,30 @@
                 -8
               ],
               "enemy_id": "eulidveil"
+            },
+            {
+              "type": "box",
+              "position": [
+                12.3965,
+                0.0,
+                -0.0442
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.0466,
+                0.0,
+                5.9915
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.0527,
+                0.0,
+                6.0364
+              ]
             }
           ]
         },
@@ -112,7 +136,36 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.5374,
+                0.0,
+                -12.0547
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -0.167,
+                0.0,
+                -5.1345
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -0.2146,
+                0.0,
+                6.1802
+              ]
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -139,7 +192,32 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 3,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                12.3965,
+                0.0,
+                -0.0442
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.0466,
+                0.0,
+                5.9915
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.0527,
+                0.0,
+                6.0364
+              ]
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -162,7 +240,16 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 4,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0073,
+                0.0,
+                12.2749
+              ]
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -189,7 +276,32 @@
           "required_keys": 1,
           "warp_edge": "",
           "path_order": 5,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                12.3965,
+                0.0,
+                -0.0442
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.0466,
+                0.0,
+                5.9915
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.0527,
+                0.0,
+                6.0364
+              ]
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -212,7 +324,36 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 6,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.5374,
+                0.0,
+                -12.0547
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -0.167,
+                0.0,
+                -5.1345
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -0.2146,
+                0.0,
+                6.1802
+              ]
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -264,6 +405,32 @@
                 -4
               ],
               "enemy_id": "eulada"
+            },
+            {
+              "type": "box",
+              "position": [
+                8.762,
+                0.0,
+                -2.9758
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                3.3293,
+                0.0,
+                -8.3591
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                2.1421,
+                0.0,
+                -2.5098
+              ]
             }
           ]
         },
@@ -290,7 +457,34 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 8,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                13.1404,
+                0.0,
+                -0.0095
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -0.1951,
+                0.0,
+                3.7886
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -13.2034,
+                0.0,
+                -0.0095
+              ]
+            }
+          ]
         },
         {
           "pos": "1,3",
@@ -315,7 +509,44 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 9,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                8.9641,
+                0.0,
+                -0.1245
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -9.0317,
+                0.0,
+                -0.1245
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0957,
+                0.0,
+                8.9597
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0693,
+                0.0,
+                -8.9338
+              ]
+            }
+          ]
         },
         {
           "pos": "0,3",
@@ -340,7 +571,34 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 10,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                3.4373,
+                0.0,
+                8.5405
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -9.6501,
+                0.0,
+                9.2976
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                11.7075,
+                0.0,
+                -0.2283
+              ]
+            }
+          ]
         },
         {
           "pos": "0,4",
@@ -365,7 +623,34 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 11,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                13.3635,
+                0.0,
+                0.1455
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.0149,
+                0.0,
+                0.0413
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                4.3572,
+                0.0,
+                4.3047
+              ]
+            }
+          ]
         },
         {
           "pos": "1,4",
@@ -408,6 +693,42 @@
                 -2
               ],
               "enemy_id": "eulidveil"
+            },
+            {
+              "type": "box",
+              "position": [
+                8.9641,
+                0.0,
+                -0.1245
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -9.0317,
+                0.0,
+                -0.1245
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0957,
+                0.0,
+                8.9597
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0693,
+                0.0,
+                -8.9338
+              ]
             }
           ]
         },
@@ -434,7 +755,64 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 13,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                0.2925,
+                0.0,
+                -5.5491
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.2925,
+                0.0,
+                6.2615
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -2.6948,
+                0.0,
+                0.877
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                3.6304,
+                0.0,
+                0.877
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.2075,
+                0.0,
+                -9.3083
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.2075,
+                0.0,
+                8.5635
+              ]
+            }
+          ]
         },
         {
           "pos": "3,4",
@@ -523,30 +901,6 @@
               "enemy_id": "eulid"
             },
             {
-              "type": "box",
-              "position": [
-                12.8,
-                0,
-                -7.4
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                14,
-                0,
-                -6
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                14.5,
-                0,
-                -7.4
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 -4,
@@ -558,17 +912,27 @@
             {
               "type": "box",
               "position": [
-                8,
-                0,
-                -12
+                8.762,
+                0.0,
+                -2.9758
               ]
             },
             {
-              "type": "rare_box",
+              "type": "box",
               "position": [
-                10,
-                0,
-                -12.5
+                3.3293,
+                0.0,
+                -8.3591
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                2.1421,
+                0.0,
+                -2.5098
               ]
             }
           ]
@@ -596,7 +960,34 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 16,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.2124,
+                0.0,
+                -6.5786
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.2124,
+                0.0,
+                9.4302
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -0.4343,
+                0.0,
+                -0.4734
+              ]
+            }
+          ]
         },
         {
           "pos": "4,2",
@@ -647,6 +1038,32 @@
                 8
               ],
               "enemy_id": "eulid"
+            },
+            {
+              "type": "box",
+              "position": [
+                13.3635,
+                0.0,
+                0.1455
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.0149,
+                0.0,
+                0.0413
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                4.3572,
+                0.0,
+                4.3047
+              ]
             }
           ]
         }
@@ -712,9 +1129,9 @@
             {
               "type": "box",
               "position": [
-                8,
-                0,
-                -15
+                5.5449,
+                0.0,
+                -4.5813
               ]
             }
           ]
@@ -801,6 +1218,42 @@
                 8
               ],
               "enemy_id": "eulidveil"
+            },
+            {
+              "type": "box",
+              "position": [
+                10.019,
+                0.0,
+                0.0303
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.8965,
+                0.0,
+                0.0303
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -3.928,
+                0.0,
+                0.1401
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.3269,
+                0.0,
+                0.1011
+              ]
             }
           ]
         },
@@ -829,7 +1282,26 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0422,
+                0.0,
+                9.823
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                0.0391,
+                0.0,
+                11.9424
+              ]
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -852,7 +1324,16 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 3,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                0.0164,
+                0.0,
+                -11.9912
+              ]
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -879,7 +1360,26 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 4,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0422,
+                0.0,
+                9.823
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                0.0391,
+                0.0,
+                11.9424
+              ]
+            }
+          ]
         },
         {
           "pos": "1,3",
@@ -927,7 +1427,44 @@
           "required_keys": 1,
           "warp_edge": "",
           "path_order": 6,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -12.0935,
+                0.0,
+                0.0366
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.1758,
+                0.0,
+                -12.054
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -6.2805,
+                0.0,
+                -5.877
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -5.9993,
+                0.0,
+                -6.0552
+              ]
+            }
+          ]
         },
         {
           "pos": "3,4",
@@ -979,6 +1516,62 @@
                 0
               ],
               "enemy_id": "eulada"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                -4.7012
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                4.5508
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                8.75,
+                0.0,
+                0.0029
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -8.7446,
+                0.0,
+                0.0007
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0452,
+                0.0,
+                8.886
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0205,
+                0.0,
+                -8.9207
+              ]
             }
           ]
         },
@@ -1005,7 +1598,44 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 8,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -12.0935,
+                0.0,
+                0.0366
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.1758,
+                0.0,
+                -12.054
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -6.2805,
+                0.0,
+                -5.877
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -5.9993,
+                0.0,
+                -6.0552
+              ]
+            }
+          ]
         },
         {
           "pos": "4,3",
@@ -1032,7 +1662,26 @@
           "required_keys": 1,
           "warp_edge": "",
           "path_order": 9,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0422,
+                0.0,
+                9.823
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                0.0391,
+                0.0,
+                11.9424
+              ]
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -1055,7 +1704,46 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 10,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.1204,
+                0.0,
+                -12.469
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0359,
+                0.0,
+                7.6411
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                2.7498,
+                0.0,
+                4.48
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -2.4507,
+                0.0,
+                4.5278
+              ]
+            }
+          ]
         },
         {
           "pos": "4,2",
@@ -1080,7 +1768,60 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 11,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -11.5522,
+                0.0,
+                0.8003
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                3.8562,
+                0.0,
+                8.5513
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -7.3672,
+                0.0,
+                -3.407
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -2.3818,
+                0.0,
+                -9.2017
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -9.1333,
+                0.0,
+                6.4592
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.4639,
+                0.0,
+                9.0232
+              ]
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -1105,7 +1846,44 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 12,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -12.0935,
+                0.0,
+                0.0366
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.1758,
+                0.0,
+                -12.054
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -6.2805,
+                0.0,
+                -5.877
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -5.9993,
+                0.0,
+                -6.0552
+              ]
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -1130,7 +1908,60 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 13,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -11.5522,
+                0.0,
+                0.8003
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                3.8562,
+                0.0,
+                8.5513
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -7.3672,
+                0.0,
+                -3.407
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                -2.3818,
+                0.0,
+                -9.2017
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -9.1333,
+                0.0,
+                6.4592
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.4639,
+                0.0,
+                9.0232
+              ]
+            }
+          ]
         },
         {
           "pos": "4,1",
@@ -1155,7 +1986,24 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 14,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -8.5439,
+                0.0,
+                -3.1174
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.1951,
+                0.0,
+                6.5776
+              ]
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -1202,17 +2050,17 @@
             {
               "type": "box",
               "position": [
-                12.8,
-                0,
-                6.7
+                -8.5439,
+                0.0,
+                -3.1174
               ]
             },
             {
               "type": "box",
               "position": [
-                15,
-                0,
-                6.9
+                1.1951,
+                0.0,
+                6.5776
               ]
             }
           ]
@@ -1281,6 +2129,62 @@
                 -4
               ],
               "enemy_id": "eulada"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                -4.7012
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                4.5508
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                8.75,
+                0.0,
+                0.0029
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -8.7446,
+                0.0,
+                0.0007
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0452,
+                0.0,
+                8.886
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0205,
+                0.0,
+                -8.9207
+              ]
             }
           ]
         },
@@ -1307,7 +2211,64 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 17,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                -4.7012
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0139,
+                0.0,
+                4.5508
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                8.75,
+                0.0,
+                0.0029
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -8.7446,
+                0.0,
+                0.0007
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0452,
+                0.0,
+                8.886
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0205,
+                0.0,
+                -8.9207
+              ]
+            }
+          ]
         },
         {
           "pos": "1,0",
@@ -1334,7 +2295,26 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 18,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0422,
+                0.0,
+                9.823
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "burn",
+              "damage": 50,
+              "position": [
+                0.0391,
+                0.0,
+                11.9424
+              ]
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -1357,7 +2337,16 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 19,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                0.0164,
+                0.0,
+                -11.9912
+              ]
+            }
+          ]
         },
         {
           "pos": "0,0",
@@ -1408,6 +2397,42 @@
                 -8
               ],
               "enemy_id": "eulid"
+            },
+            {
+              "type": "box",
+              "position": [
+                10.019,
+                0.0,
+                0.0303
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.8965,
+                0.0,
+                0.0303
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -3.928,
+                0.0,
+                0.1401
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.3269,
+                0.0,
+                0.1011
+              ]
             }
           ]
         }

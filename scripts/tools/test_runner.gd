@@ -133,6 +133,7 @@ func _run_tests_core() -> void:
 	test_shop_armor_purchase_records_slots()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
+	test_freeroam_authored_objects()
 	test_free_roam_per_area_state()
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
@@ -5637,6 +5638,68 @@ func test_field_quest_decouple() -> void:
 	SessionManager.return_to_city()
 	SessionManager._suspended_session.clear()
 	SessionManager._completed_quest.clear()
+	print("")
+
+
+# ── Free-roam objects are placed at the AUTHORED positions (psz-re Q6) ──
+# Guards the pipeline room_objects.json -> apply_authored_objects.py -> field JSON,
+# plus the parameterised needle_trap the four contact traps share.
+func test_freeroam_authored_objects() -> void:
+	print("── Free-roam authored boxes/traps (psz-re Q6 set table) ──")
+
+	# room_objects.json is the measured source of truth.
+	var ro_f := FileAccess.open("res://data/re_reference/room_objects.json", FileAccess.READ)
+	assert_true(ro_f != null, "room_objects.json present")
+	var rooms: Dictionary = (JSON.parse_string(ro_f.get_as_text()) as Dictionary).get("rooms", {})
+	assert_true(rooms.size() > 0, "room_objects has rooms")
+
+	var vf := FileAccess.open("res://data/field_quests/valley_field.json", FileAccess.READ)
+	assert_true(vf != null, "valley_field.json present")
+	var field: Dictionary = JSON.parse_string(vf.get_as_text())
+
+	# Contract: every authored box (groups 0-4) for a cell's stage MUST be in the
+	# cell's baked objects — i.e. the field is in sync with the measured table.
+	var checked_cells := 0
+	var total_boxes := 0
+	var trap_with_dmg := 0
+	for sec in field.get("sections", []):
+		for cell in sec.get("cells", []):
+			var sid: String = str(cell.get("stage_id", ""))
+			var objs: Array = cell.get("objects", [])
+			var baked_box_xz := {}
+			for o in objs:
+				var t := str(o.get("type", ""))
+				if t == "box":
+					total_boxes += 1
+					var p: Array = o.get("position", [0, 0, 0])
+					baked_box_xz["%.1f,%.1f" % [float(p[0]), float(p[2])]] = true
+				elif t == "needle_trap":
+					if int(o.get("damage", 0)) > 0 and not str(o.get("trap_kind", "")).is_empty():
+						trap_with_dmg += 1
+			if not rooms.has(sid):
+				continue
+			checked_cells += 1
+			for ao in rooms[sid].get("objects", []):
+				if str(ao.get("name", "")) != "treasure_box":
+					continue
+				var g = ao.get("group")
+				if g != null and int(g) == 5:  # skip only the randomised group-5 pool
+					continue
+				var key := "%.1f,%.1f" % [float(ao.get("x", 0)), float(ao.get("z", 0))]
+				assert_true(baked_box_xz.has(key),
+					"%s authored box at %s is baked into the field" % [sid, key])
+
+	assert_gt(checked_cells, 0, "valley cells were cross-checked against room_objects")
+	assert_gt(total_boxes, 0, "valley has authored boxes (not blind ring placement)")
+	assert_gt(trap_with_dmg, 0, "valley traps carry a psz-re damage value + kind")
+
+	# The shared contact-trap actor honours its per-instance damage.
+	var trap: Object = load("res://scripts/3d/elements/needle_trap.gd").new()
+	trap.set("damage_amount", 50)
+	trap.set("trap_kind", "burn")
+	assert_eq(trap.get("damage_amount"), 50, "needle_trap damage is parameterised")
+	assert_eq(trap.get("trap_kind"), "burn", "needle_trap carries its psz-re kind")
+	trap.free()
 	print("")
 
 

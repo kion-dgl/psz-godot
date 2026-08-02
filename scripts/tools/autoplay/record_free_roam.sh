@@ -43,7 +43,12 @@ mkdir -p "$USERDIR"
 rm -f "$USERDIR/input_config.json" "$USERDIR/save_data.json"
 
 echo "[record-freeroam] driving free-roam field area=$AREA → $SANITY"
-env PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_FIELD="$AREA" LIBGL_ALWAYS_SOFTWARE=1 \
+# NO_BOXES: authored boxes (psz-re Q6) sit at real positions, some on the walk
+# backbone. Boxes are solid, breakable content — a human clears them, but the
+# autopilot is a navigation harness and can't attack an obstacle, so it skips
+# them (same as the quest matrix). Traps are Area3D-only and spawn disarmed, so
+# they don't need skipping. Box placement is covered by test_freeroam_authored_objects.
+env PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_FIELD="$AREA" PSZ_AUTOPILOT_NO_BOXES=1 LIBGL_ALWAYS_SOFTWARE=1 \
 	timeout "$TIMEOUT" xvfb-run -a -s "-screen 0 640x360x24" \
 	"$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO" >"$SANITY" 2>&1

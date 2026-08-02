@@ -112,6 +112,34 @@ const tree = `flowchart TD
     hyena→<code>grimble</code>, lizard→<code>ghowl</code>, rappy→<code>rappy</code>.
   </p>
 
+  <h2>Objects: boxes and traps</h2>
+  <p>
+    Boxes, traps, keys and containers are <strong>authored per room</strong>, not
+    scattered at runtime. The original keeps a per-room object table keyed exactly
+    like the enemy deploy record — <code>set/&lt;NN&gt;/&lt;v&gt;/&lt;room&gt;/…_s.rel</code>
+    — of 24-byte records carrying a room-local <code>(x, y, z)</code> in the same
+    frame as <code>room_doorways.json</code> (psz-re Q6). The builder MUST place
+    boxes and traps at these measured positions; the floor mesh is never rotated,
+    so authored room-local positions map straight to world space.
+  </p>
+  <p>
+    A grouped set file rolls only its <strong>group 5</strong> pool at runtime; every
+    other group — and every record of an ungrouped file — is loaded verbatim. The
+    builder therefore takes groups 0–4 (and all ungrouped records) as authored and
+    leaves group 5 to the runtime.
+  </p>
+  <p>
+    Trap types (psz-re Q6) map to this engine's actors:
+    <code>0x1415</code> needler, <code>0x2414</code> burn, <code>0x2C10</code> gun and
+    <code>0x1C13</code> elemental (subtype by record <code>+0x12</code>) are contact
+    floor traps sharing the <code>needle_trap</code> actor, parameterised by the
+    measured per-type damage (needler 25, burn 50); <code>0x1427</code> capture is the
+    <code>bear_trap</code>. Under autopilot traps spawn <strong>disarmed</strong> so
+    the regression matrix isn't wedged by damage or capture. Extraction is
+    <code>data/re_reference/room_objects.json</code>; baking is
+    <code>scripts/tools/refield/apply_authored_objects.py</code>.
+  </p>
+
   <h2>The boss room</h2>
   <p>
     The <code>z</code> section is a single arena. Valley's is <code>s01z_na1</code>, and
@@ -126,5 +154,6 @@ const tree = `flowchart TD
     <li><strong>The generator algorithm itself</strong> is located in the decomp (psz-re <code>FUN_02082a98</code>; room count = <code>min + rand(max−min)</code>) but not yet ported. Current fields are <strong>static fixtures</strong> transcribed from observed layouts — parity of output, not of the RNG. (issue #562 Phase 3.)</li>
     <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre.</li>
     <li><strong>Which allowed wave</strong> a room rolls is our own weighted pick (see above).</li>
+    <li><strong>Group-5 objects</strong> are the game's runtime-randomised pool; the builder currently skips them rather than reproducing the roll. Burn/gun/elemental traps reuse the needle-trap model until dedicated assets exist.</li>
   </ul>
 </Concept>

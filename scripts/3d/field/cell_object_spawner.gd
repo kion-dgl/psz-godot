@@ -201,7 +201,7 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				else:
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
-				_spawn_needle_trap(pos)
+				_spawn_needle_trap(pos, int(obj.get("damage", 8)), str(obj.get("trap_kind", "needler")), str(obj.get("element", "")))
 			"bear_trap":
 				_spawn_bear_trap(pos)
 			"wall":
@@ -344,7 +344,7 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					else:
 						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
-				_spawn_needle_trap(pos)
+				_spawn_needle_trap(pos, int(obj.get("damage", 8)), str(obj.get("trap_kind", "needler")), str(obj.get("element", "")))
 			"bear_trap":
 				_spawn_bear_trap(pos)
 			"wall":
@@ -442,7 +442,10 @@ func _save_cell_state() -> void:
 			var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 			var found := false
 			for intact_pos in intact_box_positions:
-				if intact_pos.distance_to(pos) < 0.1:
+				# Match on x/z only: _spawn_box floor-snaps y, so the authored
+				# y (0) won't equal the spawned box's y. Comparing the full
+				# vector here mis-recorded on-floor boxes as destroyed.
+				if Vector2(intact_pos.x, intact_pos.z).distance_to(Vector2(pos.x, pos.z)) < 0.5:
 					found = true
 					break
 			if not found:
@@ -1023,20 +1026,27 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
-func _spawn_needle_trap(pos: Vector3) -> void:
+# Traps are authored (psz-re Q6 set table). Contact traps (needler/burn/gun/
+# elemental) share the needle actor, parameterised by damage; capture is the bear
+# trap. Under autopilot we spawn them disarmed ("off") so the regression matrix
+# isn't wedged by damage/capture, while still exercising the spawn path.
+func _spawn_needle_trap(pos: Vector3, damage: int = 8, kind: String = "needler", element: String = "") -> void:
 	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
+	trap.set("damage_amount", damage)
+	trap.set("trap_kind", kind)
+	trap.set("element", element)
 	_c._map_root.add_child(trap)
-	trap.position = pos
-	trap.call("set_state", "on")
-	print("[CellObjects] NeedleTrap at %s" % pos)
+	trap.position = _place_on_floor(pos)
+	trap.call("set_state", "off" if OS.has_environment("PSZ_AUTOPILOT") else "on")
+	print("[CellObjects] Trap '%s' dmg=%d at %s" % [kind, damage, trap.position])
 
 
 func _spawn_bear_trap(pos: Vector3) -> void:
 	var trap: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
 	_c._map_root.add_child(trap)
-	trap.position = pos
-	trap.call("set_state", "on")
-	print("[CellObjects] BearTrap at %s" % pos)
+	trap.position = _place_on_floor(pos)
+	trap.call("set_state", "off" if OS.has_environment("PSZ_AUTOPILOT") else "on")
+	print("[CellObjects] BearTrap at %s" % trap.position)
 
 
 func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true) -> void:

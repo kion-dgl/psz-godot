@@ -86,6 +86,58 @@
                 -8
               ],
               "enemy_id": "bullbatt"
+            },
+            {
+              "type": "box",
+              "position": [
+                -8.7937,
+                0.0,
+                -11.3616
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                6.5979,
+                0.0,
+                11.6936
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -10.0623,
+                0.0,
+                9.209
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                12.9141,
+                0.0,
+                4.2056
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -12.4604,
+                0.0,
+                -13.1624
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -2.0337,
+                0.0,
+                -13.2373
+              ]
             }
           ]
         },
@@ -114,7 +166,64 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                1.6699,
+                0.0,
+                3.6958
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                1.8352,
+                0.0,
+                7.0166
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.4619,
+                0.0,
+                2.8057
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -2.2581,
+                0.0,
+                2.6741
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.4614,
+                0.0,
+                4.7041
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.1597,
+                0.0,
+                11.2295
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.606,
+                0.0,
+                5.4768
+              ]
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -184,6 +293,70 @@
                 -2
               ],
               "enemy_id": "bullbatt"
+            },
+            {
+              "type": "box",
+              "position": [
+                1.0491,
+                0.0,
+                10.769
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.6951,
+                0.0,
+                -3.0554
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.814,
+                0.0,
+                -0.4978
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                11.7217,
+                0.0,
+                -12.1511
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -0.8242,
+                0.0,
+                12.3501
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -3.8362,
+                0.0,
+                9.322
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.1746,
+                0.0,
+                -3.4587
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.7998,
+                0.0,
+                -3.4587
+              ]
             }
           ]
         },
@@ -208,7 +381,132 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 4,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                11.2493,
+                0.0,
+                -3.2522
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                14.4536,
+                0.0,
+                4.803
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                9.3953,
+                0.0,
+                1.8052
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                4.4023,
+                0.0,
+                3.3662
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -12.7847,
+                0.0,
+                12.2856
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -3.7749,
+                0.0,
+                -6.0715
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                1.3198,
+                0.0,
+                -0.9797
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                7.4829,
+                0.0,
+                5.0271
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -5.8298,
+                0.0,
+                13.2563
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -6.2471,
+                0.0,
+                11.8081
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -6.8633,
+                0.0,
+                10.8142
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -5.1069,
+                0.0,
+                11.1497
+              ]
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -251,6 +549,58 @@
                 0
               ],
               "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                1.6755,
+                0.0,
+                2.4897
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -6.4402,
+                0.0,
+                2.4397
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -4.2493,
+                0.0,
+                -4.5168
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -0.2202,
+                0.0,
+                7.2827
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -6.3586,
+                0.0,
+                2.6672
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.6501,
+                0.0,
+                2.6672
+              ]
             }
           ]
         },
@@ -277,7 +627,94 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 6,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                7.4778,
+                0.0,
+                -9.2153
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                9.9314,
+                0.0,
+                -12.6382
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -7.3479,
+                0.0,
+                7.8174
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -2.5237,
+                0.0,
+                9.2241
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -8.8672,
+                0.0,
+                2.8047
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                7.4778,
+                0.0,
+                -9.2153
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -8.0637,
+                0.0,
+                7.9204
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -7.9473,
+                0.0,
+                12.0032
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -12.0757,
+                0.0,
+                7.4297
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.7019,
+                0.0,
+                -12.3291
+              ]
+            }
+          ]
         },
         {
           "pos": "0,0",
@@ -302,7 +739,56 @@
           "required_keys": 1,
           "warp_edge": "",
           "path_order": 7,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                13.7761,
+                0.0,
+                -13.6501
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.1055,
+                0.0,
+                -15.3076
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                12.447,
+                0.0,
+                -15.8811
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.9287,
+                0.0,
+                -12.6919
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.9287,
+                0.0,
+                5.6118
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                16.1846,
+                0.0,
+                -12.5884
+              ]
+            }
+          ]
         },
         {
           "pos": "1,0",
@@ -345,30 +831,6 @@
                 -5
               ],
               "enemy_id": "batt"
-            },
-            {
-              "type": "box",
-              "position": [
-                12,
-                0,
-                -8
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                14,
-                0,
-                -6
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                13,
-                0,
-                -10
-              ]
             }
           ]
         },
@@ -422,7 +884,64 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 10,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                1.6699,
+                0.0,
+                3.6958
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                1.8352,
+                0.0,
+                7.0166
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.4619,
+                0.0,
+                2.8057
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -2.2581,
+                0.0,
+                2.6741
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.4614,
+                0.0,
+                4.7041
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.1597,
+                0.0,
+                11.2295
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.606,
+                0.0,
+                5.4768
+              ]
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -445,7 +964,64 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 11,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.1011,
+                0.0,
+                -1.8145
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -5.9336,
+                0.0,
+                6.2668
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                3.7913,
+                0.0,
+                6.2668
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.5476,
+                0.0,
+                -5.2546
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -9.2463,
+                0.0,
+                3.2229
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                8.8899,
+                0.0,
+                3.2229
+              ]
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -506,17 +1082,65 @@
             {
               "type": "box",
               "position": [
-                10.5,
-                0,
-                -12
+                1.0491,
+                0.0,
+                10.769
               ]
             },
             {
-              "type": "rare_box",
+              "type": "box",
               "position": [
-                10.5,
-                0,
-                -14
+                1.6951,
+                0.0,
+                -3.0554
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.814,
+                0.0,
+                -0.4978
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                11.7217,
+                0.0,
+                -12.1511
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -0.8242,
+                0.0,
+                12.3501
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -3.8362,
+                0.0,
+                9.322
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.1746,
+                0.0,
+                -3.4587
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.7998,
+                0.0,
+                -3.4587
               ]
             }
           ]
@@ -570,6 +1194,38 @@
                 8
               ],
               "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                7.7932,
+                0.0,
+                -8.6929
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                2.052,
+                0.0,
+                1.7036
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                5.8513,
+                0.0,
+                -7.3181
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.7383,
+                0.0,
+                0.561
+              ]
             }
           ]
         }
@@ -635,9 +1291,9 @@
             {
               "type": "box",
               "position": [
-                8,
-                0,
-                -15
+                0.2197,
+                0.0,
+                -6.9656
               ]
             }
           ]
@@ -724,6 +1380,38 @@
                 8
               ],
               "enemy_id": "bullbatt"
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.0232,
+                0.0,
+                14.9919
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4.9885,
+                0.0,
+                15.0068
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1824,
+                0.0,
+                15.0178
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                5.02,
+                0.0,
+                15.0178
+              ]
             }
           ]
         },
@@ -750,7 +1438,76 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                7.3079,
+                0.0,
+                0.0684
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.3484,
+                0.0,
+                0.0684
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -18.3127,
+                0.0,
+                8.1021
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -18.3777,
+                0.0,
+                13.4775
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -0.0959,
+                0.0,
+                -9.2542
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                0.0139,
+                0.0,
+                9.3928
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1836,
+                0.0,
+                3.2605
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1836,
+                0.0,
+                -3.1685
+              ]
+            }
+          ]
         },
         {
           "pos": "1,0",
@@ -802,6 +1559,86 @@
                 0
               ],
               "enemy_id": "rumole"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0278,
+                0.0,
+                9.9275
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0278,
+                0.0,
+                0.0435
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.4409,
+                0.0,
+                8.9856
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.5107,
+                0.0,
+                8.7842
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.4353,
+                0.0,
+                9.071
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.416,
+                0.0,
+                9.1648
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                7.6248,
+                0.0,
+                -7.4121
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.5247,
+                0.0,
+                -1.666
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.0303,
+                0.0,
+                -7.5227
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                7.2214,
+                0.0,
+                -0.2988
+              ]
             }
           ]
         },
@@ -828,7 +1665,40 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 4,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -2.1934,
+                0.0,
+                10.0598
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.2039,
+                0.0,
+                10.0598
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -2.2856,
+                0.0,
+                10.0015
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.2126,
+                0.0,
+                10.0015
+              ]
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -853,7 +1723,48 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 5,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                10.8396,
+                0.0,
+                10.3872
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.8809,
+                0.0,
+                -10.876
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                11.2117,
+                0.0,
+                0.1592
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.8228,
+                0.0,
+                -12.4949
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.8982,
+                0.0,
+                12.53
+              ]
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -880,7 +1791,70 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 6,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                0.0703,
+                0.0,
+                3.5283
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -10.8579,
+                0.0,
+                10.7937
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.094,
+                0.0,
+                -0.082
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.0576,
+                0.0,
+                -0.9104
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.031,
+                0.0,
+                6.864
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                5.3811,
+                0.0,
+                -1.8918
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -5.2524,
+                0.0,
+                -1.8445
+              ]
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -929,17 +1903,63 @@
             {
               "type": "box",
               "position": [
-                17.5,
-                0,
-                7.8
+                0.0703,
+                0.0,
+                3.5283
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -10.8579,
+                0.0,
+                10.7937
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.094,
+                0.0,
+                -0.082
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.0576,
+                0.0,
+                -0.9104
               ]
             },
             {
               "type": "box",
               "position": [
-                17.5,
-                0,
-                7.8
+                0.031,
+                0.0,
+                6.864
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                5.3811,
+                0.0,
+                -1.8918
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -5.2524,
+                0.0,
+                -1.8445
               ]
             }
           ]
@@ -988,7 +2008,42 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 9,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -20.6145,
+                0.0,
+                -4.1858
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "needler",
+              "damage": 25,
+              "position": [
+                -0.104,
+                0.0,
+                -4.4624
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.0115,
+                0.0,
+                -3.6802
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                6.1572,
+                0.0,
+                -10.1013
+              ]
+            }
+          ]
         },
         {
           "pos": "4,2",
@@ -1033,6 +2088,68 @@
                 -4
               ],
               "enemy_id": "rumole"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0703,
+                0.0,
+                3.5283
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -10.8579,
+                0.0,
+                10.7937
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.094,
+                0.0,
+                -0.082
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.0576,
+                0.0,
+                -0.9104
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.031,
+                0.0,
+                6.864
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                5.3811,
+                0.0,
+                -1.8918
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -5.2524,
+                0.0,
+                -1.8445
+              ]
             }
           ]
         },
@@ -1057,7 +2174,80 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 11,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -12.3347,
+                0.0,
+                -10.2839
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.5818,
+                0.0,
+                -10.8169
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.5818,
+                0.0,
+                -7.426
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -11.2761,
+                0.0,
+                0.0967
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                11.3125,
+                0.0,
+                0.0967
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0029,
+                0.0,
+                -9.8479
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -10.7471,
+                0.0,
+                7.4272
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                10.8042,
+                0.0,
+                7.2554
+              ]
+            }
+          ]
         },
         {
           "pos": "4,1",
@@ -1082,7 +2272,92 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 12,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0569,
+                0.0,
+                -10.0728
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.0569,
+                0.0,
+                9.5796
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                19.8557,
+                0.0,
+                -5.7356
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.0256,
+                0.0,
+                0.0364
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                0.0332,
+                0.0,
+                14.8748
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "gun",
+              "damage": 40,
+              "position": [
+                -17.2925,
+                0.0,
+                -5.7388
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1355,
+                0.0,
+                -10.0906
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1355,
+                0.0,
+                12.1182
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                10.3992,
+                0.0,
+                -5.501
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -10.426,
+                0.0,
+                -5.6069
+              ]
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -1107,7 +2382,40 @@
           "required_keys": 1,
           "warp_edge": "",
           "path_order": 13,
-          "objects": []
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -0.0232,
+                0.0,
+                14.9919
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4.9885,
+                0.0,
+                15.0068
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.1824,
+                0.0,
+                15.0178
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                5.02,
+                0.0,
+                15.0178
+              ]
+            }
+          ]
         },
         {
           "pos": "3,0",
@@ -1158,6 +2466,86 @@
                 -8
               ],
               "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0278,
+                0.0,
+                9.9275
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.0278,
+                0.0,
+                0.0435
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.4409,
+                0.0,
+                8.9856
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.5107,
+                0.0,
+                8.7842
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                5.4353,
+                0.0,
+                9.071
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -5.416,
+                0.0,
+                9.1648
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                7.6248,
+                0.0,
+                -7.4121
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.5247,
+                0.0,
+                -1.666
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                0.0303,
+                0.0,
+                -7.5227
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                7.2214,
+                0.0,
+                -0.2988
+              ]
             }
           ]
         }
@@ -1215,6 +2603,14 @@
                 8
               ],
               "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                -0.0977,
+                0.0,
+                16.8723
+              ]
             }
           ]
         }

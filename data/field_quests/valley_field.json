@@ -106,33 +106,17 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
+                0.1387,
                 0.0,
-                0,
-                8.0
+                -1.8887
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -0.0,
-                0,
-                -8.0
+                5.394,
+                0.0,
+                -2.6638
               ]
             }
           ]
@@ -208,6 +192,14 @@
                 -4.76
               ],
               "enemy_id": "vulkure"
+            },
+            {
+              "type": "box",
+              "position": [
+                -3.387,
+                0.0,
+                1.6289
+              ]
             }
           ]
         },
@@ -271,6 +263,38 @@
                 -5.0
               ],
               "enemy_id": "garapython"
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.6521,
+                0.0,
+                -0.5491
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -2.698,
+                0.0,
+                -7.2571
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.0613,
+                0.0,
+                2.7888
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4.2947,
+                0.0,
+                9.729
+              ]
             }
           ]
         },
@@ -338,17 +362,33 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                -1.6521,
+                0.0,
+                -0.5491
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                -2.698,
+                0.0,
+                -7.2571
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.0613,
+                0.0,
+                2.7888
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4.2947,
+                0.0,
+                9.729
               ]
             }
           ]
@@ -417,25 +457,33 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                -12.7253,
+                0.0,
+                -6.8298
               ]
             },
             {
               "type": "box",
               "position": [
-                -4.0,
-                0,
-                6.93
+                8.2361,
+                0.0,
+                4.0264
               ]
             },
             {
               "type": "box",
               "position": [
-                -4.0,
-                0,
-                -6.93
+                -4.9939,
+                0.0,
+                7.8237
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                5.1812,
+                0.0,
+                -2.8301
               ]
             }
           ]
@@ -493,33 +541,9 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
+                16.4158,
                 0.0,
-                0,
-                8.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -0.0,
-                0,
-                -8.0
+                6.167
               ]
             }
           ]
@@ -602,33 +626,9 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
+                16.4158,
                 0.0,
-                0,
-                8.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -8.0,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -0.0,
-                0,
-                -8.0
+                6.167
               ]
             }
           ]
@@ -691,6 +691,14 @@
                 -4.33
               ],
               "enemy_id": "ghowl"
+            },
+            {
+              "type": "box",
+              "position": [
+                2.7566,
+                0.0,
+                -11.5342
+              ]
             }
           ]
         }
@@ -797,17 +805,50 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                3.3723,
+                0.0,
+                5.7622
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                12.5469,
+                0.0,
+                -7.0273
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -7.9033,
+                0.0,
+                11.1858
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                11.5996,
+                0.0,
+                1.4604
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                7.1111,
+                0.0,
+                3.4614
               ]
             }
           ]
@@ -876,17 +917,66 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                -3.9619,
+                0.0,
+                2.2771
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                1.1072,
+                0.0,
+                6.9341
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -0.7104,
+                0.0,
+                -8.1763
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -0.7104,
+                0.0,
+                13.5254
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -3.9778,
+                0.0,
+                2.2771
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                1.0762,
+                0.0,
+                6.9207
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                14.6792,
+                0.0,
+                -14.7466
               ]
             }
           ]
@@ -944,17 +1034,83 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                17.9851,
+                0.0,
+                7.0195
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                10.4016,
+                0.0,
+                -16.0039
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                7.7119,
+                0.0,
+                11.0461
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                17.9851,
+                0.0,
+                7.0195
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                19.0737,
+                0.0,
+                4.4995
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                0.3323,
+                0.0,
+                12.3994
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                13.9036,
+                0.0,
+                -14.377
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                17.3655,
+                0.0,
+                -1.7092
               ]
             }
           ]
@@ -1023,17 +1179,66 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                7.0022,
+                0.0,
+                -13.3315
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                15.1453,
+                0.0,
+                -7.4285
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -12.262,
+                0.0,
+                -10.8467
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -11.1519,
+                0.0,
+                17.5271
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -17.0369,
+                0.0,
+                5.4116
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                7.0022,
+                0.0,
+                -13.3315
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                15.1453,
+                0.0,
+                -7.4285
               ]
             }
           ]
@@ -1102,17 +1307,66 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                -4.5942,
+                0.0,
+                2.0869
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                -1.0171,
+                0.0,
+                10.1519
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                10.2822,
+                0.0,
+                -8.0669
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -11.064,
+                0.0,
+                11.6484
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -0.2056,
+                0.0,
+                1.5117
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -4.5913,
+                0.0,
+                2.0869
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.0125,
+                0.0,
+                10.1167
               ]
             }
           ]
@@ -1203,17 +1457,50 @@
             {
               "type": "box",
               "position": [
-                8.0,
-                0,
-                0.0
+                -7.1523,
+                0.0,
+                -0.4619
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                3.5657,
+                0.0,
+                -4.1836
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -8.4717,
+                0.0,
+                1.4802
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "trap_kind": "elemental",
+              "damage": 30,
+              "element": "heat",
+              "position": [
+                -15.7446,
+                0.0,
+                10.1118
               ]
             },
             {
               "type": "box",
               "position": [
-                -8.0,
-                0,
-                0.0
+                -7.1523,
+                0.0,
+                -0.4619
               ]
             }
           ]
@@ -1255,6 +1542,14 @@
                 0
               ],
               "enemy_id": "reyburn"
+            },
+            {
+              "type": "box",
+              "position": [
+                0.5513,
+                0.0,
+                -7.4958
+              ]
             }
           ]
         }

@@ -5,8 +5,17 @@ class_name NeedleTrap
 ## Light damage with invulnerability window so player can recover and leave.
 
 const SPIKE_TEX_NAME := "o0c_1_needle2"
-const DAMAGE_AMOUNT := 8
 const INVULN_TIME := 2.0
+
+## Contact damage. The authored set table (psz-re Q6) gives the real per-type
+## amounts — needler 25, burn 50, gun ~40, elemental ~30 — so the spawner sets
+## this from the object data. Defaults to the original light value.
+@export var damage_amount: int = 8
+## Which psz-re trap this instance represents (needler/burn/gun/elemental).
+## The four contact traps share this actor until dedicated models exist.
+@export var trap_kind: String = "needler"
+## Elemental subtype (heal/heat/light/ice) for trap_kind == "elemental".
+@export var element: String = ""
 
 var _spike_material: StandardMaterial3D = null
 var _base_material: StandardMaterial3D = null
@@ -61,7 +70,7 @@ func _on_damage_body_entered(body: Node3D) -> void:
 		return
 	_hit_bodies[body_id] = INVULN_TIME
 	if body.has_method("take_damage"):
-		body.take_damage(DAMAGE_AMOUNT)
+		body.take_damage(damage_amount)
 
 
 func _update_animation(delta: float) -> void:
