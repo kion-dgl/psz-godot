@@ -1,0 +1,146 @@
+{
+  "source": "psz-re \u2014 ROM filesystem, ZPR+NARC via psz-godot/psz-asset-viewer/ArchiveUnpacker",
+  "extracted_to": "build/enemy_extract/ (not committed \u2014 regenerate with the bun script in docs)",
+  "roster": {
+    "boss_darkfalz": {
+      "models": [
+        "z_005"
+      ],
+      "nsbca": 34,
+      "nsbmd": 18,
+      "dsif": "enemy_data_boss_darkfalz.rel (4304B)",
+      "series": "z_005",
+      "identity": "Dark Falz"
+    },
+    "boss_dragon": {
+      "models": [
+        "ff_e_m_fire",
+        "o0b_dradmg",
+        "z_001",
+        "z_001_horn"
+      ],
+      "nsbca": 38,
+      "nsbmd": 15,
+      "dsif": "enemy_data_boss_dragon.rel (5728B)",
+      "series": "z_001",
+      "identity": "Reyburn"
+    },
+    "boss_mother": {
+      "models": [
+        "s07z_obj",
+        "z_004",
+        "z_004_kao_a",
+        "z_004_kao_b"
+      ],
+      "nsbca": 28,
+      "nsbmd": 11,
+      "dsif": "enemy_data_boss_mother.rel (4080B)",
+      "series": "z_004",
+      "identity": "Mother \u2014 z_004_kao_a/b faces"
+    },
+    "boss_mother_piece": {
+      "models": [
+        "z_004_koma_a",
+        "z_004_koma_aa",
+        "z_004_koma_b",
+        "z_004_koma_bb",
+        "z_004_koma_c",
+        "z_004_koma_cc"
+      ],
+      "nsbca": 15,
+      "nsbmd": 12,
+      "dsif": "enemy_data_boss_mother_piece.rel (3168B)",
+      "series": "z_004_koma_*",
+      "identity": "Mother's detachable pieces"
+    },
+    "boss_octopus": {
+      "models": [
+        "ff_e_w_sumi",
+        "o0b_kaeru",
+        "z_002",
+        "z_002_st",
+        "z_002_tt"
+      ],
+      "nsbca": 71,
+      "nsbmd": 19,
+      "dsif": "enemy_data_boss_octopus.rel (6016B)",
+      "series": "z_002",
+      "identity": "Octo Diablo"
+    },
+    "boss_robot": {
+      "models": [
+        "o0c_bsef01",
+        "z_003",
+        "z_003n",
+        "z_003u"
+      ],
+      "nsbca": 18,
+      "nsbmd": 14,
+      "dsif": "enemy_data_boss_robot.rel (5072B)",
+      "series": "z_003",
+      "identity": "robot boss \u2014 arena A"
+    },
+    "boss_robot_cmb": {
+      "models": [
+        "floor_blue",
+        "floor_lazer",
+        "floor_orange",
+        "floor_red",
+        "floor_yellow",
+        "z_003",
+        "z_003n",
+        "z_103u"
+      ],
+      "nsbca": 53,
+      "nsbmd": 26,
+      "dsif": "enemy_data_boss_robot_cmb.rel (5072B)",
+      "series": "z_003/z_103u",
+      "identity": "robot boss \u2014 arena B, ships floor_* arena pieces"
+    }
+  },
+  "humanoid_b_series": {
+    "mother": {
+      "models": [
+        "b_072"
+      ],
+      "nsbca": 18,
+      "nsbmd": 6,
+      "dsif": "enemy_data_mother.rel (2592B)"
+    },
+    "mother_gun": {
+      "models": [
+        "b_272"
+      ],
+      "nsbca": 18,
+      "nsbmd": 6,
+      "dsif": "enemy_data_mother_gun.rel (2592B)"
+    },
+    "mother_sword": {
+      "models": [
+        "b_172"
+      ],
+      "nsbca": 18,
+      "nsbmd": 6,
+      "dsif": "enemy_data_mother_sword.rel (2592B)"
+    },
+    "mother_tech": {
+      "models": [
+        "b_372"
+      ],
+      "nsbca": 18,
+      "nsbmd": 6,
+      "dsif": "enemy_data_mother_tech.rel (2592B)"
+    }
+  },
+  "boss_rooms": {
+    "stages": "scene/01..07 each have a/b/e/z subfolders; z is the boss room. s07 has two (na1, na2).",
+    "count": "8 boss arenas against 5 boss models \u2014 at least three rooms must reuse a model or use ordinary enemies.",
+    "deploy_files": "enemy/deploy/*/s0Xz_na1.rel, ZPR-compressed, all exactly 224 bytes decompressed. The first 0x30 bytes are IDENTICAL across all eight; everything from 0x30 on is a list of 12-byte XYZ triples (32-bit, negatives as 0xFFFFxxxx). So these are spawn POSITIONS and do not name the enemy \u2014 the type must come from quest or scene data."
+  },
+  "corrections": {
+    "dsif_directory": "the 'four count/offset pairs' reading in data/format_dsif.json does not hold. Parsing octopus that way yields 3680@0x15 and 4520@0x2d, and 3680 is really 0xE60 \u2014 an OFFSET that the old note already listed as one. The eight words at the directory are not four uniform (count, offset) pairs. Needs re-deriving now that all seven files are extracted rather than just their headers.",
+    "animation_count": "tested and REFUTED: the 16-byte record count is not one per animation. octopus has 57 such records but 71 .nsbca files; dragon 24 against 38; robot 42 against 18."
+  },
+  "roster_reading": "the boss model series is z_001..z_005 with NO GAP. Five distinct boss models across seven archives: robot and mother each ship a second archive (a different arena, and the detachable pieces).",
+  "humanoid_reading": "mother / mother_sword / mother_gun / mother_tech are b_072 / b_172 / b_272 / b_372 \u2014 four variants of one humanoid in the b_ (player-like) series, not the z_ (boss) series. At 237-241 KB they are boss-sized: every other regular enemy tops out around 140 KB (gorilla)."
+}

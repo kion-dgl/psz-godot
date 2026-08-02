@@ -286,7 +286,7 @@ JSON
   # --- Resume guards ---
   # Execution order of the phases. `reached <stage>` returns 0 (run it) when
   # no --from was given, or when <stage> is at-or-after FROM in this order.
-  PHASE_ORDER=(boot sr pp ppdlg ppmenu as doe fo static it heretic csy tbs dc shops)
+  PHASE_ORDER=(boot freeroam sr pp ppdlg ppmenu as doe fo static it heretic csy tbs dc shops)
   phase_index() {
     local name=$1 i=0
     for p in "${PHASE_ORDER[@]}"; do
@@ -360,6 +360,20 @@ JSON
   if reached boot; then
     echo ""; echo "=== Phase 1: Boot ==="
     bash "$REPO/scripts/tools/autoplay/record_boot.sh"
+  fi
+
+  # === Phase 1b: Valley free-roam (free-field end-to-end) ===
+  # Free-roam A→E→B→boss with the key detour + goal pad — the free-roam-only
+  # paths the quest matrix never exercises. Self-contained (boots fresh), so it
+  # doesn't depend on the quest chain. FAIL flips MATRIX_FAIL (#562/#563).
+  if reached freeroam; then
+    echo ""; echo "=== Phase 1b: Valley free-roam (A→E→B→Reyburn) ==="
+    if bash "$REPO/scripts/tools/autoplay/record_free_roam.sh"; then
+      echo "[regression] freeroam PASS"
+    else
+      echo "[regression] ::error:: free-roam Valley did not reach DONE ok (#562/#563)"
+      MATRIX_FAIL=1
+    fi
   fi
 
   # === Phase 2: SR ===

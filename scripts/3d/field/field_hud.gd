@@ -14,6 +14,7 @@ var _action_palette: Control
 var _quick_weapon: Control
 var _debug_info: Control
 var _fps_label: Label
+var _boss_bar: Control
 # Cached state for the autopilot debug overlay so _process can re-render the
 # wall-clock without re-querying the field controller every frame.
 var _session_start_msec: int = 0
@@ -187,6 +188,27 @@ func set_debug_info(quest_id: String, section_text: String, cell_pos: String) ->
 	_debug_last_cell = cell_pos
 	if _debug_info:
 		_render_debug_info()
+
+
+## Show the top-center boss health bar and bind it to a boss enemy. Created
+## lazily so normal field rooms carry no boss UI. The bar tracks the boss's
+## current_hp via its `damaged` signal and hides itself when the boss dies
+## (issue #62 — bosses get a dedicated bar, separate from the target plate).
+func show_boss_bar(boss: EnemyBase) -> void:
+	if not is_instance_valid(boss):
+		return
+	if not _boss_bar:
+		_boss_bar = _BossHealthBar.new()
+		add_child(_boss_bar)
+	var max_hp: int = boss.enemy_data.hp_base if boss.enemy_data else boss.current_hp
+	var boss_name: String = boss.enemy_data.name if boss.enemy_data else "Boss"
+	(_boss_bar as _BossHealthBar).bind(boss_name, max_hp, boss.current_hp)
+	boss.damaged.connect(func(e: EnemyBase, _amt: int) -> void:
+		if _boss_bar and is_instance_valid(e):
+			(_boss_bar as _BossHealthBar).set_hp(e.current_hp))
+	boss.died.connect(func(_e: EnemyBase) -> void:
+		if _boss_bar:
+			(_boss_bar as _BossHealthBar).hide_bar())
 
 
 func _render_debug_info() -> void:
@@ -737,3 +759,59 @@ class _QuickWeaponMenu extends Control:
 		if end_idx < _weapon_list.size():
 			draw_string(font, Vector2(MENU_W - 16, MENU_H - 4), "\u25bc",
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, TEXT_DIM)
+
+
+class _BossHealthBar extends Control:
+	## Top-center boss health bar (issue #62). A wide plate with the boss name
+	## and a single HP bar that drains as the boss takes damage. Hidden on death.
+
+	const BAR_W := 420.0
+	const BAR_H := 18.0
+	const NAME_H := 18.0
+	const HP_COLOR := Color(0.85, 0.22, 0.22)
+	const HP_LOW := Color(0.95, 0.55, 0.15)
+	const HP_TRACK := Color(0.12, 0.05, 0.06)
+	const BORDER := Color(0.85, 0.8, 0.7, 0.9)
+
+	var _name: String = "Boss"
+	var _max_hp: int = 1
+	var _hp: int = 1
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+		anchor_left = 0.5
+		anchor_right = 0.5
+		anchor_top = 0.0
+		anchor_bottom = 0.0
+		offset_left = -BAR_W / 2.0
+		offset_right = BAR_W / 2.0
+		offset_top = 40.0
+		offset_bottom = 40.0 + NAME_H + BAR_H + 6.0
+		size = Vector2(BAR_W, NAME_H + BAR_H + 6.0)
+
+	func bind(boss_name: String, max_hp: int, hp: int) -> void:
+		_name = boss_name
+		_max_hp = maxi(1, max_hp)
+		_hp = clampi(hp, 0, _max_hp)
+		visible = true
+		queue_redraw()
+
+	func set_hp(hp: int) -> void:
+		_hp = clampi(hp, 0, _max_hp)
+		queue_redraw()
+
+	func hide_bar() -> void:
+		visible = false
+
+	func _draw() -> void:
+		var font := ThemeDB.fallback_font
+		# name
+		draw_string(font, Vector2(0, NAME_H - 4), _name,
+			HORIZONTAL_ALIGNMENT_CENTER, BAR_W, 15, Color(0.95, 0.92, 0.85))
+		# bar track + border
+		var bar_rect := Rect2(0, NAME_H + 4, BAR_W, BAR_H)
+		draw_rect(bar_rect, HP_TRACK, true)
+		var frac := float(_hp) / float(_max_hp)
+		var fill := Rect2(bar_rect.position, Vector2(BAR_W * frac, BAR_H))
+		draw_rect(fill, HP_LOW if frac < 0.35 else HP_COLOR, true)
+		draw_rect(bar_rect, BORDER, false, 1.5)

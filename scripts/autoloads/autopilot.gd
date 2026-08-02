@@ -259,6 +259,12 @@ var _menu_during_pickup := false
 # the shop/storage screens instead of accepting a quest. Gated so the
 # regression-matrix quest flow is completely untouched. See issue #9.
 var _shops_phase := false
+# PSZ_AUTOPILOT_FIELD=<area_id>: after the office intro, enter that area's FREE
+# field (not a quest) and walk it, so free-roam-only behaviour (goal pads,
+# entry spawns, box ground-snap) gets headless coverage the quest matrix can't
+# reach. Gated so the quest flow is untouched.
+var _field_phase := false
+var _field_area := ""
 
 # Defeat probe (spec /states/player-death): when PSZ_AUTOPILOT_DEFEAT=1, the
 # autopilot drives normally into the first field cell, then kills the player
@@ -373,6 +379,10 @@ func _parse_probe_flags() -> void:
 	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
 	if _shops_phase:
 		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
+	_field_area = OS.get_environment("PSZ_AUTOPILOT_FIELD")
+	_field_phase = not _field_area.is_empty()
+	if _field_phase:
+		print("[sanity] autopilot FREE-ROAM smoke enabled (area=%s: enter free field, walk it)" % _field_area)
 	_defeat_probe = OS.has_environment("PSZ_AUTOPILOT_DEFEAT")
 	if _defeat_probe:
 		print("[sanity] autopilot DEFEAT probe enabled (kill player in first field cell → return to city)")
@@ -1040,6 +1050,9 @@ func _drive_office_intro() -> void:
 	elif _shops_phase:
 		print("[sanity] office intro complete → shop/storage smoke (PSZ_AUTOPILOT_SHOPS)")
 		_after(STEP_DELAY, _drive_shop_smoke)
+	elif _field_phase:
+		print("[sanity] office intro complete → free-roam field smoke (PSZ_AUTOPILOT_FIELD=%s)" % _field_area)
+		_after(STEP_DELAY, _drive_field_smoke)
 	else:
 		print("[sanity] office intro complete → exit to counter")
 		_menu_carry_open_before_exit()
@@ -1077,6 +1090,195 @@ func _drive_office_briefing() -> void:
 	else:
 		print("[sanity] WARN: briefing advance limit; forcing exit")
 		_teleport_player(OFFICE_EXIT_POS)
+
+
+# ── Free-roam field smoke (PSZ_AUTOPILOT_FIELD) ────────────────
+# Enter an area's FREE field (not a quest) and walk it with a generic plan:
+# each cell → kill_all (if it holds enemies) then walk to the exit toward the
+# goal; the goal cell warps to the next section. Verifies free-roam-only paths
+# (entry spawns, box ground-snap, section warps) the quest matrix can't reach.
+# Stops with a clear [sanity] line where a room isn't yet traversable (a key
+# gate needing a detour, or a goal-pad exit — known follow-ups).
+func _drive_field_smoke() -> void:
+	SessionManager.return_to_city()
+	SessionManager.enter_field(_field_area, "normal")
+	var quest: Dictionary = QuestLoader.pick_field_quest(_field_area)
+	if quest.is_empty() or not quest.has("sections"):
+		print("[sanity] FAIL: no free-roam field authored for area %s" % _field_area)
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	var sections: Array = quest["sections"]
+	SessionManager.set_field_sections(sections)
+	_quest_id = "free_roam_%s" % _field_area
+	_quest_steps = _build_field_steps(sections)
+	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
+	_dump_plan(_quest_steps, _steps_by_cell)
+	SessionManager.set_current_section(0)
+	print("[sanity] checkpoint: free-roam field entered (%d sections, %d steps)" % [sections.size(), _quest_steps.size()])
+	SceneManager.goto_scene(VALLEY_FIELD, {
+		"current_cell_pos": str(sections[0]["start_pos"]),
+		"spawn_edge": "",
+		"keys_collected": {},
+	})
+
+
+## Generic per-cell plan WITH key detours. For each section: BFS the tree
+## start→goal, then build a visit walk that detours to each key cell (pickup)
+## and back before the path crosses its gate. Each visit exits toward the next;
+## a key-gate crossing adds open_gate; the goal cell warps to the next section
+## (wall portal or in-room goal pad); the final boss cell ends the run.
+func _build_field_steps(sections: Array) -> Array:
+	var steps: Array = []
+	var idx := 0
+	for si in sections.size():
+		var sec: Dictionary = sections[si]
+		var by_pos := {}
+		for c in sec.get("cells", []):
+			by_pos[str(c.get("pos", ""))] = c
+		var start_pos := str(sec.get("start_pos", ""))
+		var goal_pos := _section_goal(sec, start_pos)
+		var main: Array = _bfs_path(by_pos, start_pos, goal_pos)
+		var detours: Dictionary = _plan_key_detours(by_pos, main, start_pos)
+		var collect_keys := {}
+		for j in detours:
+			for kp in detours[j]:
+				collect_keys[str(kp)] = true
+		var walk: Array = _visit_walk(by_pos, main, detours)
+		var seen := {}
+		for wi in walk.size():
+			steps.append(_emit_visit_step(walk, wi, by_pos, sec, si, sections.size(), collect_keys, seen, idx))
+			idx += 1
+	return steps
+
+
+func _section_goal(sec: Dictionary, start_pos: String) -> String:
+	for c in sec.get("cells", []):
+		if c.get("is_end", false):
+			return str(c.get("pos", ""))
+	return str(sec.get("end_pos", start_pos))
+
+
+## Where to detour for keys: for each key cell, the junction is the last main-
+## path cell on start→key; detour there only if an on-path key gate comes at/
+## after that junction. Keys for off-path (dead-end) gates are skipped.
+func _plan_key_detours(by_pos: Dictionary, main: Array, start_pos: String) -> Dictionary:
+	var main_set := {}
+	var main_idx := {}
+	for i in main.size():
+		main_set[str(main[i])] = true
+		main_idx[str(main[i])] = i
+	var last_gate_idx := -1
+	for i in range(main.size() - 1):
+		var gc: Dictionary = by_pos.get(str(main[i]), {})
+		if gc.get("is_key_gate", false) and str(gc.get("key_gate_direction", "")) == _dir_to(gc, str(main[i + 1])):
+			last_gate_idx = i
+	var detours := {}
+	for p in by_pos:
+		if int(by_pos[p].get("key_count", 0)) <= 0:
+			continue
+		var j := start_pos
+		for pp in _bfs_path(by_pos, start_pos, str(p)):
+			if main_set.has(pp):
+				j = pp
+		if int(main_idx.get(j, 0)) <= last_gate_idx:
+			if not detours.has(j):
+				detours[j] = []
+			detours[j].append(str(p))
+	return detours
+
+
+## The ordered visit walk start→goal, inserting a round-trip to each key cell at
+## its junction (so the key is collected before the path crosses its gate).
+func _visit_walk(by_pos: Dictionary, main: Array, detours: Dictionary) -> Array:
+	if main.is_empty():
+		return []
+	var walk: Array = [str(main[0])]
+	for mi in range(1, main.size()):
+		var junction: String = str(main[mi - 1])
+		for kp in detours.get(junction, []):
+			var dp: Array = _bfs_path(by_pos, junction, str(kp))
+			for i in range(1, dp.size()):
+				walk.append(dp[i])
+			for i in range(dp.size() - 2, -1, -1):
+				walk.append(dp[i])
+		walk.append(str(main[mi]))
+	return walk
+
+
+## One step for the visit at walk[wi]: kill_all/pickup_key on first visit, exit
+## toward the next visit (open_gate on a key-gate crossing), goal-pad/field_done
+## on the section's last visit. `seen` is mutated to track first visits.
+func _emit_visit_step(walk: Array, wi: int, by_pos: Dictionary, sec: Dictionary, si: int, n_sections: int, collect_keys: Dictionary, seen: Dictionary, idx: int) -> Dictionary:
+	var pos: String = str(walk[wi])
+	var cell: Dictionary = by_pos.get(pos, {})
+	var first: bool = not seen.has(pos)
+	seen[pos] = true
+	var do_list: Array = []
+	if first and _cell_has_enemy(cell):
+		do_list.append("kill_all")
+	if first and collect_keys.has(pos):
+		do_list.append("pickup_key")
+	var exit_dir := ""
+	var target := ""
+	var goal_pad := false
+	if wi + 1 < walk.size():
+		var nextpos: String = str(walk[wi + 1])
+		exit_dir = _dir_to(cell, nextpos)
+		target = nextpos
+		if cell.get("is_key_gate", false) and str(cell.get("key_gate_direction", "")) == exit_dir:
+			do_list.append("open_gate:%s" % exit_dir)
+	else:
+		exit_dir = str(cell.get("warp_edge", ""))
+		if not (cell.get("portals", {}) as Dictionary).has(exit_dir):
+			goal_pad = true  # in-room warp pad, not a wall portal
+		if exit_dir == "" and si + 1 >= n_sections:
+			do_list.append("field_done")
+	var step := {
+		"label": "%s %s" % [str(sec.get("area", "?")), pos],
+		"do": do_list, "exit": exit_dir, "target": target,
+		"_section_idx": si, "_pos": pos, "_step_idx": idx,
+	}
+	if goal_pad:
+		step["goal_pad"] = true
+	return step
+
+
+## BFS shortest path (list of pos strings, inclusive) over cell connections.
+func _bfs_path(by_pos: Dictionary, from_pos: String, to_pos: String) -> Array:
+	var prev := {from_pos: ""}
+	var frontier := [from_pos]
+	while not frontier.is_empty():
+		var cur: String = frontier.pop_front()
+		if cur == to_pos:
+			break
+		for dir in by_pos.get(cur, {}).get("connections", {}):
+			var nxt := str(by_pos[cur]["connections"][dir])
+			if not prev.has(nxt):
+				prev[nxt] = cur
+				frontier.append(nxt)
+	var path: Array = []
+	var walk := to_pos
+	while prev.has(walk):
+		path.push_front(walk)
+		if walk == from_pos:
+			break
+		walk = str(prev[walk])
+	return path
+
+
+## The connection direction from `cell` to the neighbour at `nextpos`, or "".
+func _dir_to(cell: Dictionary, nextpos: String) -> String:
+	for dir in cell.get("connections", {}):
+		if str(cell["connections"][dir]) == nextpos:
+			return str(dir)
+	return ""
+
+
+func _cell_has_enemy(cell: Dictionary) -> bool:
+	for o in cell.get("objects", []):
+		if str(o.get("type", "")) == "enemy":
+			return true
+	return false
 
 
 # ── Shop / storage smoke (PSZ_AUTOPILOT_SHOPS) ─────────────────
@@ -2814,6 +3016,10 @@ func _run_next_action(field: Node) -> void:
 			_do_open_gate(field, open_gate_dir)
 		"wait_quest_complete":
 			_do_wait_quest_complete(field)
+		"field_done":
+			print("[sanity] free-roam field cleared to the boss room")
+			print("[sanity] DONE ok")
+			_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
 		_:
 			print("[sanity] WARN: unknown action '%s'" % action)
 			_run_next_action(field)
@@ -3226,6 +3432,20 @@ func _walk_path_then_interact(field: Node, path: Array, label: String, settle: f
 
 func _walk_to_exit(field: Node, step: Dictionary) -> void:
 	var exit_dir: String = str(step.get("exit", ""))
+	# Free-roam goal pad: the section exit is an in-room warp pad (goal rooms with
+	# no free wall door), not a portal. Walk to the pad node instead of resolving
+	# a portal direction. (Node name matched below; the class token is avoided in
+	# this autoload so the #448 pack-only-preload guard doesn't pull it in.)
+	if step.get("goal_pad", false):
+		var pad: Node = field.find_child("AreaWarp_goal_pad", true, false)
+		if pad == null or not (pad is Node3D):
+			_fail_with_reason("goal_pad exit but no AreaWarp_goal_pad node in %s" % str(step.get("label", "?")))
+			return
+		var pad_pos: Vector3 = (pad as Node3D).global_position
+		print("[sanity] walk to goal pad at (%.1f, %.1f, %.1f)" % [pad_pos.x, pad_pos.y, pad_pos.z])
+		var pad_path: Array = _find_walk_path(field, field.get("_portal_data"), pad_pos)
+		_walk_path(field, pad_path, "goal_pad", 0)
+		return
 	if exit_dir == "":
 		# No exit (final cell). wait_quest_complete should have handled it.
 		return

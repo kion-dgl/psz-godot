@@ -1,0 +1,130 @@
+---
+// Free-Field Generation (RE-measured) — the normative contract for how a PSZ
+// free field is laid out, gated, and populated, reproduced from the original
+// game rather than invented. Ground truth is the psz-re project's savestate
+// observations (data/re_reference/*.json in this repo); the Valley field
+// (data/field_quests/valley_field.json) is the first field built to it.
+//
+// Implemented by:
+//   scripts/tools/refield/build_valley_field.py  — builds the field JSON from RE data
+//   scripts/tools/refield/derive_layout.py       — derives a layout from observations
+//   data/field_quests/valley_field.json          — the built Valley field
+//   scripts/3d/field/valley_field_controller.gd  — consumes the field sections
+//   scripts/tools/test_field_layout.gd           — the invariant tests
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const tree = `flowchart TD
+  S["0 · sa1 (start) · B4"] -->|open| T1["1 · tb3 · B3"]
+  T1 -->|enemy-defeat| T2["2 · td2 · B2 · holds 2 keys"]
+  T1 -->|enemy-defeat| L3["3 · lb3 · C3"]
+  T2 -->|enemy-defeat| L4["4 · lb3 · B1"]
+  T2 -->|enemy-defeat| L5["5 · lb1 · A2"]
+  L3 -->|open| N6["6 · nb2 · C4 (dead end)"]
+  L4 -->|2-key gate| N8["8 · nb2 · C1 (dead end)"]
+  L5 -->|enemy-defeat| G7["7 · ga1 (goal) · A1"]
+  classDef goal fill:#0d1117,stroke:#3fb950,color:#e6edf3,stroke-width:2px
+  classDef gate fill:#1a0d0d,stroke:#f0883e,color:#e6edf3,stroke-width:2px
+  class G7 goal
+  class N8 gate
+`;
+---
+
+<Concept title="Free-Field Generation (RE-measured)" section="States">
+  <p>
+    A PSZ free field is <strong>not</strong> a hand-drawn dungeon and it is not the
+    invented 5×5 sketch the old generator produced. It is a small, gated tree of
+    reused room tiles whose shape, gates, keys, and enemy tables were
+    <strong>measured out of the original ROM</strong> by the
+    <a href="http://100.108.200.100:3000/kion/psz-re">psz-re</a> project. This page is
+    the normative contract for reproducing one to parity. The reference
+    observations live in <code>data/re_reference/</code>; the Valley field
+    (<code>data/field_quests/valley_field.json</code>) is the first built to it.
+  </p>
+
+  <h2>The room vocabulary</h2>
+  <p>
+    Every stage ships the same room codes; the first letter of the code encodes
+    the room's <strong>door count and shape</strong> — this is confirmed by the
+    game's own name-format table (psz-re <code>FUN_0206D2E4</code>):
+  </p>
+  <ul>
+    <li><code>s</code> start · <code>g</code> goal · <code>n</code> dead end — 1 door each</li>
+    <li><code>i</code> straight (2 doors, opposite walls) · <code>l</code> L-corner (2 doors, adjacent walls)</li>
+    <li><code>t</code> T-junction (3 doors) · <code>x</code> cross (4 doors)</li>
+  </ul>
+  <p>
+    A field's variant letter is its <strong>area role</strong>: <code>a</code>/<code>b</code>
+    are the two explorable areas, <code>e</code> the single-room transition between
+    them, <code>z</code> the boss arena. So a full field is four sections —
+    <code>grid a → transition e → grid b → boss z</code>.
+  </p>
+
+  <h2>The layout is always a tree</h2>
+  <div class="diagram"><Mermaid chart={tree} /></div>
+  <p>The generator MUST satisfy these invariants (measured across four fields, 36 rooms; tested in <code>test_field_layout.gd</code>):</p>
+  <ul>
+    <li><strong>Room 0 is always the start</strong> (shape <code>s</code>); there is <strong>exactly one goal</strong> (shape <code>g</code>), and it is not necessarily last.</li>
+    <li>The layout is a <strong>tree</strong>: edges = rooms − 1, no cycles, adjacency symmetric.</li>
+    <li>The number of doors on a room <strong>equals the door count its shape letter implies</strong>.</li>
+    <li>Each room stores an absolute <strong>grid cell</strong> (column A.., row 1..5); the in-game map draws a fixed grid the layout occupies part of.</li>
+  </ul>
+
+  <h2>Rotation is derived, not stored</h2>
+  <p>
+    The game does not store a room's rotation. A port MUST derive it: rotate the
+    room's door set until it <strong>covers the directions the layout needs at that
+    cell</strong> — there is exactly one 90° multiple that fits (psz-re
+    <em>"Rooms are rotated, and the rotation is derived"</em>). In this engine the
+    room's authored <strong>config portal directions</strong> are the door set, and
+    <code>StageRotation.rotate_dir</code> is a <em>logical</em> label remap (never a
+    mesh rotation — see <a href="/states/field-lifecycle">Field Stage Lifecycle</a> and issue #218).
+  </p>
+
+  <h2>Gates and keys</h2>
+  <p>Each outward edge (away from the start) carries a gate value; the way-back edge is always open:</p>
+  <ul>
+    <li><code>0</code> — <strong>open</strong>, walk through.</li>
+    <li><code>4</code> — <strong>enemy-defeat gate</strong>: locked while the room holds live enemies, opens on clear. The common case.</li>
+    <li><code>1</code> / <code>2</code> — <strong>key gate</strong>: needs that many keys.</li>
+  </ul>
+  <p>
+    A field places <strong>exactly as many keys as its gates require</strong>, on cells
+    reachable before the gate — so a layout is always solvable without backtracking
+    to an unreachable room. Valley: a 2-key gate <code>B1 → C1</code>, with both keys
+    on <code>B2</code>. This balance is a tested invariant.
+  </p>
+
+  <h2>Enemy population</h2>
+  <p>
+    Spawns are drawn from the measured wave tables, not authored by hand. Each room
+    code has an <strong>allowed list of wave templates with selection weights</strong>
+    (psz-re <code>enemy_room_assignment</code>); each template is a fixed set of enemy
+    ids (<code>enemy_wave_templates</code>). The <strong>start and goal rooms carry no
+    wave</strong> and spawn nothing. The exact per-instance roll (which allowed
+    template a room draws) is not yet decoded, so the builder rolls one
+    deterministically against the measured weights — preserving the "mostly ordinary
+    fights, occasional rare" texture rather than making every instance identical.
+  </p>
+  <p>
+    psz-re internal enemy names map to this engine's ids: snake→<code>garapython</code>,
+    vulture→<code>vulkure</code>, lion→<code>helion</code>, lion_rare→<code>blaze_helion</code>,
+    hyena→<code>grimble</code>, lizard→<code>ghowl</code>, rappy→<code>rappy</code>.
+  </p>
+
+  <h2>The boss room</h2>
+  <p>
+    The <code>z</code> section is a single arena. Valley's is <code>s01z_na1</code>, and
+    the assignment table's sole <code>s01z</code> entry is <code>boss_dragon</code> — so
+    Valley's boss is <strong>Reyburn</strong>. See
+    <a href="/states/bosses">Boss Behavior</a>. Clearing the boss spawns the
+    return-to-city warp (the existing <code>type: "boss"</code> section handling).
+  </p>
+
+  <h2>What is deliberately approximated</h2>
+  <ul>
+    <li><strong>The generator algorithm itself</strong> is located in the decomp (psz-re <code>FUN_02082a98</code>; room count = <code>min + rand(max−min)</code>) but not yet ported. Current fields are <strong>static fixtures</strong> transcribed from observed layouts — parity of output, not of the RNG. (issue #562 Phase 3.)</li>
+    <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre.</li>
+    <li><strong>Which allowed wave</strong> a room rolls is our own weighted pick (see above).</li>
+  </ul>
+</Concept>

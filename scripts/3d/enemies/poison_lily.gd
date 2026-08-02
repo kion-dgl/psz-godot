@@ -244,13 +244,6 @@ func _face_target() -> void:
 			model.rotation.y = 0
 
 
-func _find_player() -> Node3D:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		return players[0] as Node3D
-	return null
-
-
 func _die() -> void:
 	_lily_state = LilyState.DYING
 	_play_lily_anim("die")

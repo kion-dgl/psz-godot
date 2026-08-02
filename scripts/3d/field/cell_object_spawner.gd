@@ -704,7 +704,7 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	box.drop_type = drop_type if not drop_type.is_empty() else "meseta"
 	box.drop_value = drop_value if not drop_value.is_empty() else (str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200)))
 	_c._map_root.add_child(box)
-	box.position = pos
+	box.position = _place_on_floor(pos)
 	_c._fixup_element_materials(box)
 	_c._room_boxes.append(box)
 	# Track drops spawned from this box
@@ -715,7 +715,56 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 			if child is DropBase and not _c._room_drops.has(child):
 				_c._room_drops.append(child)
 	)
-	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
+	print("[CellObjects] Box at %s (rare=%s, snapped from y=%.1f)" % [box.position, is_rare, pos.y])
+
+
+## Floor-validated LOCAL position. Our ring placement is blind, so a spot can
+## land over a wall/gap/void — a box floats there and an enemy (with gravity)
+## falls out of bounds. Try the authored (x,z); if there's no floor under it,
+## step toward the room centre until solid floor is found, then sit on it. This
+## keeps objects on walkable ground until the measured object table (psz-re
+## set/<code>_s.rel) lands and we can drop in the exact authored positions.
+func _place_on_floor(pos: Vector3) -> Vector3:
+	var map_root: Node3D = _c._map_root
+	if not map_root:
+		return pos
+	# 1) authored spot
+	var fy: Variant = _floor_y_at(map_root, pos.x, pos.z)
+	if fy != null:
+		return Vector3(pos.x, fy, pos.z)
+	# 2) the room's walkable floor isn't always centred on the local origin (area
+	# B rooms in particular are offset), so scan a grid across the cell and drop
+	# the object on the nearest actual floor point rather than blindly pulling to
+	# (0,0). One-time at spawn; cheap relative to a stuck enemy.
+	var best: Variant = null
+	var best_d := INF
+	for gx in range(-18, 19, 3):
+		for gz in range(-18, 19, 3):
+			var gy: Variant = _floor_y_at(map_root, float(gx), float(gz))
+			if gy == null:
+				continue
+			var d := Vector2(float(gx) - pos.x, float(gz) - pos.z).length()
+			if d < best_d:
+				best_d = d
+				best = Vector3(float(gx), gy, float(gz))
+	if best != null:
+		print("[sanity] floor-relocate local (%.1f,%.1f)→(%.1f,%.1f) (authored spot off-floor)" % [pos.x, pos.z, best.x, best.z])
+		return best
+	print("[sanity] floor MISS at local (%.1f,%.1f) — no floor anywhere in cell, left at y=%.2f" % [pos.x, pos.z, pos.y])
+	return pos
+
+
+## Local floor Y under (x, z), or null. Wide vertical range so unusually high/low
+## room floors (area B) are still found.
+func _floor_y_at(map_root: Node3D, x: float, z: float) -> Variant:
+	var space: PhysicsDirectSpaceState3D = map_root.get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(
+		map_root.to_global(Vector3(x, 60.0, z)), map_root.to_global(Vector3(x, -60.0, z)))
+	q.collision_mask = 1  # floor / environment
+	var hit: Dictionary = space.intersect_ray(q)
+	if hit.is_empty():
+		return null
+	return map_root.to_local(hit.position).y
 
 
 ## Minimap enemy dot (#422). Cell-entry spawns run before the minimap is
@@ -733,68 +782,32 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 	# Look up enemy data from registry
 	var edata = EnemyRegistry.get_enemy(enemy_id)
 
-	# Use specialized scripts for specific enemy types
+	# Poison Lily uses a specialized stationary-plant subclass.
 	if edata and enemy_id == "poison_lily":
 		if not _c.PoisonLilyScript:
 			_c.PoisonLilyScript = load("res://scripts/3d/enemies/poison_lily.gd")
 		if not _c.PoisonLilyScript:
 			push_error("[CellObjects] Failed to load PoisonLily script")
 			return
-		var enemy: EnemyBase = _c.PoisonLilyScript.new()
-		enemy.enemy_data = edata
-		var col_shape := CollisionShape3D.new()
-		var capsule := CapsuleShape3D.new()
-		capsule.radius = edata.collision_radius
-		capsule.height = edata.collision_height
-		col_shape.shape = capsule
-		col_shape.position.y = capsule.height / 2
-		enemy.add_child(col_shape)
-		enemy.collision_layer = 8
-		enemy.collision_mask = 1
-		_c._map_root.add_child(enemy)
-		enemy.position = pos
-		_c._room_enemies.append(enemy)
-		_track_on_minimap(enemy)
-		var spawn_id := enemy_id
-		enemy.died.connect(func(e: EnemyBase) -> void:
-			_spawn_enemy_drops(e.global_position, spawn_id)
-			_c._check_room_clear()
-		)
+		_spawn_scripted_enemy(pos, enemy_id, edata, _c.PoisonLilyScript)
 		print("[CellObjects] PoisonLily at %s" % pos)
 		return
 
+	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
+	if edata and enemy_id == "reyburn":
+		if _spawn_boss(pos, enemy_id, edata):
+			return
+
 	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
 	if edata:
-		var enemy := EnemyBase.new()
-		enemy.enemy_data = edata
-
-		# Collision shape
-		var col_shape := CollisionShape3D.new()
-		var capsule := CapsuleShape3D.new()
-		capsule.radius = edata.collision_radius
-		capsule.height = edata.collision_height
-		col_shape.shape = capsule
-		col_shape.position.y = capsule.height / 2
-		enemy.add_child(col_shape)
-		enemy.collision_layer = 8
-		enemy.collision_mask = 1
-
-		_c._map_root.add_child(enemy)
-		enemy.position = pos
-		_c._room_enemies.append(enemy)
-		_track_on_minimap(enemy)
-		var spawn_id := enemy_id
-		enemy.died.connect(func(e: EnemyBase) -> void:
-			_spawn_enemy_drops(e.global_position, spawn_id)
-			_c._check_room_clear()
-		)
+		_spawn_scripted_enemy(pos, enemy_id, edata, null)
 		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
 	else:
 		# Fallback to static EnemySpawn for unknown enemies
 		var enemy := EnemySpawnScript.new()
 		enemy.enemy_id = enemy_id
 		_c._map_root.add_child(enemy)
-		enemy.position = pos
+		enemy.position = _place_on_floor(pos)
 		_c._room_enemies.append(enemy)
 		_track_on_minimap(enemy)
 		var enemy_ref := enemy
@@ -805,6 +818,47 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 			_c._check_room_clear()
 		)
 		print("[CellObjects] EnemySpawn '%s' at %s (no registry data)" % [enemy_id, pos])
+
+
+## Build an EnemyBase (or a subclass, when `script` is given), add it to the map
+## with a capsule from its data, register it for room-clear/minimap, and wire the
+## death → drops + room-clear signal. Shared by the generic, poison-lily and boss
+## spawn paths.
+func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScript) -> EnemyBase:
+	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
+	enemy.enemy_data = edata
+	var col_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = edata.collision_radius
+	capsule.height = edata.collision_height
+	col_shape.shape = capsule
+	col_shape.position.y = capsule.height / 2
+	enemy.add_child(col_shape)
+	enemy.collision_layer = 8
+	enemy.collision_mask = 1
+	_c._map_root.add_child(enemy)
+	enemy.position = _place_on_floor(pos)
+	_c._room_enemies.append(enemy)
+	_track_on_minimap(enemy)
+	var spawn_id := enemy_id
+	enemy.died.connect(func(e: EnemyBase) -> void:
+		_spawn_enemy_drops(e.global_position, spawn_id)
+		_c._check_room_clear())
+	return enemy
+
+
+## Spawn a boss enemy via its behaviour subclass and bind the boss health bar.
+## Returns false if the script failed to load (caller falls back to EnemyBase).
+func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
+	if not _c.ReyburnBossScript:
+		_c.ReyburnBossScript = load("res://scripts/3d/enemies/reyburn_boss.gd")
+	if not _c.ReyburnBossScript:
+		return false
+	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, _c.ReyburnBossScript)
+	if _c._field_hud and _c._field_hud.has_method("show_boss_bar"):
+		_c._field_hud.show_boss_bar(boss)
+	print("[CellObjects] ReyburnBoss at %s" % pos)
+	return true
 
 
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:

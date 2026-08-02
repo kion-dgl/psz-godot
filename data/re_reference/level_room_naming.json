@@ -1,0 +1,102 @@
+{
+ "source": "psz-re \u2014 decompiled from arm9, tables read out of the ROM",
+ "room_name_builder": {
+  "function": "FUN_0206D2E4 (0x0206D2E4, 132 bytes, 6 callers)",
+  "format": "s%02d%c_%c%c%1d at 0x020F9770, e.g. s01a_ga1",
+  "buffer": "9 bytes \u2014 8 characters plus NUL",
+  "descriptor": "param_1 is a 5-word struct: [0] stage number, [1] variant id, [2] shape id, [3] class id, [4] digit",
+  "boss_variant": "a second format, s%02dz_xxx at 0x020F9780, is built by FUN_0206D60C (982 bytes, called from 0x02050F8C)"
+ },
+ "tables": {
+  "variant": {
+   "addr": "0x020F24B4",
+   "count": 12,
+   "chars": [
+    "a",
+    "e",
+    "b",
+    "z",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ],
+   "reading": "0=a 1=e 2=b 3=z are the four per-stage variants; 4..11 map to '0'..'7', which is how the final area's s080..s087 sub-stages are addressed",
+   "roles_confirmed_empirically": {
+    "method": "all 30 readable savestates on disk decoded statically with tools/mlstate.py (data/savestate_index.json) and grouped by the variant letter of their room codes",
+    "a": "area A - room graphs of 8, 9 and 10 rooms",
+    "b": "area B - room graphs of 8 rooms",
+    "e": "single-room transition between areas; the one 'e' state is s01e_ia1, shape 'i' (2-door straight), matching kion's description of Valley E as a one-room link",
+    "z": "boss arena - all 20 'z' states hold exactly ONE room and exactly one entity. s01z reads HP 1576/1650 with vtable 0x0219F8D4, which is Reyburn's HP and vtable as recorded from live GDB in an earlier iteration; s05z reads 5400/5400 with vtable 0x021A1604, the paru boss. That 'z' means boss was already inferred from the separate s%02dz format string in FUN_0206D60C; what is new is the empirical confirmation and the a/b/e roles.",
+    "caveat": "no savestate exists for variants 0..7, so the s080..s087 reading is still untested"
+   }
+  },
+  "shape": {
+   "addr": "0x020F24AD",
+   "count": 7,
+   "chars": [
+    "i",
+    "l",
+    "t",
+    "x",
+    "n",
+    "s",
+    "g"
+   ],
+   "reading": "CONFIRMS the topology reading derived independently from NOF0 relocation counts. The table is ordered by connectivity: 0=i straight and 1=l corner are the 2-door shapes, 2=t is 3-door, 3=x is 4-door, then 4=n dead end, 5=s start and 6=g goal are the 1-door terminals."
+  },
+  "class": {
+   "addr": "0x020F24A8",
+   "count": 5,
+   "chars": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "r"
+   ],
+   "reading": "the second letter. Does not affect door count \u2014 ib1 and ic1 are both 2-door straights. Still unidentified; size or footprint class.",
+   "CORRECTION": "the count of 4 is WRONG. The table at 0x020f24a8 reads 'abcdr' - FIVE entries - and class index 4 = 'r' is what forms the rare-room codes nr1..nr6. The byte at 0x020f24ac, previously unexplained between the class and shape tables, is that fifth letter."
+  }
+ },
+ "validation": "each mapper range-checks its id (0..11, 0..6, 0..3) and returns 0 on failure, so an out-of-range descriptor produces no name rather than a bad one",
+ "not_yet_known": "what FILLS the descriptor. FUN_0206D2E4 only formats one that already exists. Its six callers are 0x0204005C, 0x020402A4, 0x020416DC and 0x02041918 among others; the selection logic and the seed are upstream of those and have not been traced.",
+ "loader": {
+  "entry": "FUN_02050F8C (112 bytes) -> FUN_0206D60C (982 bytes)",
+  "working_set": "FUN_02050F8C zeroes three buffers before the loop: 0xA0 bytes of header, 0x1800 bytes and 0x1000 bytes, and passes 0x200 as the capacity for each of the latter two. 0x1800/512 = 12 bytes per entry and 0x1000/512 = 8 bytes per entry, so the layout is capped at 512 rooms.",
+  "loop": "FUN_0206D60C walks i from 0 to a count in its arg block. For each i it calls FUN_02032C10(descriptor, singleton, i) to FETCH a descriptor, FUN_0206D2E4 to format the name, and FUN_020401C8 to load it. It separately formats the boss room for the same stage with the s%02dz_xxx string. So this is the consumer: it reads a list that already exists.",
+  "descriptor_source": "FUN_02032C10, an accessor on the object at *0x0206D924"
+ },
+ "refuted": {
+  "room_list_global": "0x02108C64, the value at DAT_0206D924, is NOT a room-list global. It is referenced from about 170 literal pools across arm9 and overlays 4, 12 and 17 \u2014 a general system singleton that many subsystems reach through. FUN_02032C10 is an accessor that indexes a member of it, so tracing writers to the global cannot isolate the generator. Recorded so the next attempt does not repeat it."
+ },
+ "room_table": {
+  "accessor_chain": "FUN_02032C10 -> FUN_02082EFC -> FUN_02041A08",
+  "gate": "FUN_02032C10 and its neighbours guard on a global at 0x0211A3C4, requiring *(that)+8 >= 0",
+  "base": "*(*(0x02108C64)) \u2014 a DOUBLE indirection, resolved to 0x02243ED0 in all four field savestates",
+  "record_size": "0x34 = 52 bytes, indexed as base + i*0x34",
+  "count": "a 32-bit count at base + 0x410, bounds-checked as 0 <= i < count",
+  "descriptor": "FUN_02041A08 copies exactly 5 words, so the record's first 20 bytes ARE the {stage, variantId, shapeId, classId, digit} descriptor; the remaining 32 bytes are other per-room data and are not yet identified",
+  "capacity_inferred": "0x410/0x34 = 20 exactly. Observed layouts run 8 to 10 rooms, so 20 as a ceiling is consistent but still not directly demonstrated.",
+  "not_the_512": "the 0x200 capacities in FUN_02050F8C are for two OTHER per-room arrays of 12 and 8 bytes, not for this table. Room count and those buffers are separate things.",
+  "capacity_confirmed": "20, no longer an inference. FUN_020828D0 initialises the array with a loop that walks r4 from the base to base+0x410 in steps of 0x34, calling FUN_0208286C on each \u2014 exactly 20 iterations. Called from 0x020324C8."
+ },
+ "verified": "see data/level_layouts_observed.json \u2014 four real layouts read out of free-field savestates",
+ "writers": {
+  "search": "0x410 is too large for a THUMB immediate offset, so every access must materialise it as mov rX,#0x41 ; lsl rX,#4. Scanning arm9 and all 32 overlays for that pair finds exactly 5 sites.",
+  "sites": {
+   "0x02032BEC": "read \u2014 FUN_02032BD4 returns the count",
+   "0x02032E60": "read \u2014 FUN_02032E5C, a bounds-checked record accessor returning base + i*0x34",
+   "0x020828D6": "loop bound \u2014 FUN_020828D0's 20-record initialiser",
+   "0x02082C6A": "the ONLY store \u2014 inside FUN_02082BE4",
+   "0x02082F02": "read \u2014 FUN_02082EFC, the indexer"
+  },
+  "the_only_store": "FUN_02082BE4(dest, src, kind) copies five words into dest[0..4], optionally a second descriptor at dest+0x34 when kind == 5, and writes param_1[0x104] \u2014 which is +0x410 \u2014 as 1 or 2. So it builds a one-or-two room list, NOT a generated field. Its callers are 0x02082B30, 0x02082BBC and 0x020831A0, and FUN_02082B30 does contain an RNG roll (FUN_020780F4 then FUN_0207816C) against a 5-entry threshold table, so this path is probabilistic \u2014 just not the field generator."
+ },
+ "open_question": "free fields hold 8 to 10 rooms, but the only +0x410 store in the binary writes 1 or 2. So the field count is written by something the offset search cannot see \u2014 a bulk copy of a prepared table, or a base pointer offset differently. NEXT: breakpoint FUN_020828D0, which runs when the table is constructed, and watch what fills it immediately afterwards. That sidesteps the static search entirely.",
+ "refuted_lead": "the literal 0x00000410 appears once outside arm9, in ov16 at 0x02122620. It is DATA, not a code constant \u2014 the surrounding words are 0x320, 0x460, then negatives stepping by 352, a coordinate-shaped table. Not the generator."
+}
