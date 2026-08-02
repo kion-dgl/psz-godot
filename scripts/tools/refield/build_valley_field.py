@@ -260,7 +260,7 @@ def build_boss():
 
 def main():
     field = {
-        "version": 2,
+        "version": 1,
         "last_updated": "2026-07-31",
         "id": "valley_field",
         "name": "Gurhacia Valley",
