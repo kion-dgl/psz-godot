@@ -463,7 +463,10 @@ func _ready() -> void:
 	if _current_cell.get("has_key", false):
 		var key_for: String = str(_current_cell.get("key_for_cell", ""))
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
-			_gate_mgr._create_key_pickup(key_for)
+			# key_count is how many copies this cell holds; the gate it feeds
+			# consumes required_keys of them (key_gate.gd). Defaults to 1 for
+			# cells authored before multi-key gates existed.
+			_gate_mgr._create_key_pickup(key_for, int(_current_cell.get("key_count", 1)))
 
 	_spawn_field_elements()
 	_spawn_companion()
