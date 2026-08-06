@@ -136,10 +136,28 @@ def build_grid(rooms, keys_by_cell, start_idx, goal_idx, prefix, area_letter,
     exit_dir = next((d for d in free if d not in used),
                     bvf.OPP[next(iter(used))] if used else "north")
     goal["warp_edge"] = exit_dir
-    for kc in [c for c in out if c["has_key"]]:
-        g = next((c for c in out if c["required_keys"] > 0), None)
-        if g:
+    # Route key cells to gates. Assigning every key to the FIRST gate leaves
+    # any second gate with no key at all — unopenable, since key_gate.gd only
+    # counts keys whose id names that gate (paru shipped an orphaned A 0,1
+    # this way). Walk gates in path order and consume key cells until each
+    # gate's required_keys is covered.
+    gates = sorted([c for c in out if c["required_keys"] > 0],
+                   key=lambda c: c["path_order"])
+    key_cells = sorted([c for c in out if c["has_key"]],
+                       key=lambda c: c["path_order"])
+    ki = 0
+    for g in gates:
+        need = g["required_keys"]
+        while need > 0 and ki < len(key_cells):
+            kc = key_cells[ki]
             kc["key_for_cell"] = g["pos"]
+            need -= max(1, kc["key_count"])
+            ki += 1
+    # Any leftover key cells (more keys than gates require) feed the last gate
+    # so they still resolve to something real rather than dangling.
+    for kc in key_cells[ki:]:
+        if gates:
+            kc["key_for_cell"] = gates[-1]["pos"]
     start_conns = set(out[[c["is_start"] for c in out].index(True)]["connections"].keys())
     start_doors = [d for d in out[[c["is_start"] for c in out].index(True)]["portals"] if d != "default"]
     free_doors = [d for d in start_doors if d not in start_conns]

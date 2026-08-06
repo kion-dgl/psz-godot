@@ -105,6 +105,42 @@ def validate_quest(filepath: str) -> list[str]:
                 if target_pos not in cell_positions:
                     errors.append(f'{cell_label}: connection "{dir_key}" -> "{target_pos}" not in section cells')
 
+    # Key-gate routing: every gate needs enough keys pointed AT IT.
+    #
+    # key_gate.gd opens a gate when the player holds `required_keys` copies of
+    # a single key id. Two authoring shapes feed a gate, and a gate is only
+    # satisfiable when they supply at least required_keys between them:
+    #   * field quests place a pickup cell — `key_for_cell` names the gate and
+    #     `key_count` is how many copies that cell holds;
+    #   * guild quests drop keys on clear — `key_drop` names the gate, one key
+    #     per dropping cell (a gate may also self-drop, e.g. finding_ogi B 3,2).
+    #
+    # An aggregate keys-vs-gates count is not enough: it balances even when
+    # every key is routed to one gate and another gate gets none, which ships a
+    # field that cannot be completed (wetlands 2,2 and paru 0,1 both did).
+    for si, section in enumerate(quest.get('sections', [])):
+        cells = section.get('cells', [])
+        supply: dict[str, int] = {}
+        for cell in cells:
+            target = str(cell.get('key_for_cell', '') or '')
+            if target:
+                supply[target] = supply.get(target, 0) + max(1, int(cell.get('key_count', 1) or 1))
+            drop = str(cell.get('key_drop', '') or '')
+            if drop:
+                supply[drop] = supply.get(drop, 0) + 1
+        for cell in cells:
+            if not cell.get('is_key_gate'):
+                continue
+            pos = str(cell.get('pos', ''))
+            need = int(cell.get('required_keys', 0) or 0)
+            have = supply.get(pos, 0)
+            if have < need:
+                errors.append(
+                    f'{fname} section[{si}] cell {pos}: key gate needs {need} key(s) '
+                    f'but only {have} routed to it (no cell has key_for_cell="{pos}" '
+                    f'with enough key_count) — gate would be unopenable'
+                )
+
     # Validate entry/exit directions for multi-section quests
     sections = quest.get('sections', [])
     if len(sections) > 1:

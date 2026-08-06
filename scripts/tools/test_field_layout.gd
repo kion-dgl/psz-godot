@@ -98,6 +98,28 @@ func _check_grid_section(sec: Dictionary, cfg: Dictionary) -> void:
 			req += int(c.get("required_keys", 0))
 	_check("area %s keys balance gates (keys=%d req=%d)" % [area, keys, req], keys == req)
 
+	# ...and each gate individually has enough keys ROUTED to it. The aggregate
+	# above balances even when every key points at one gate and another gets
+	# none, which leaves that gate unopenable (paru A 0,1 shipped this way).
+	# key_gate.gd consumes required_keys copies of a single key id, so the cells
+	# feeding a gate must supply at least that many between them.
+	var supply := {}
+	for c in cells:
+		var target: String = str(c.get("key_for_cell", ""))
+		if not target.is_empty():
+			supply[target] = int(supply.get(target, 0)) + maxi(1, int(c.get("key_count", 1)))
+	var routing_ok := true
+	for c in cells:
+		if not c.get("is_key_gate"):
+			continue
+		var pos: String = str(c.get("pos", ""))
+		var have: int = int(supply.get(pos, 0))
+		var need: int = int(c.get("required_keys", 0))
+		if have < need:
+			routing_ok = false
+			print("    gate %s needs %d key(s), only %d routed to it" % [pos, need, have])
+	_check("area %s every gate has its keys routed" % area, routing_ok)
+
 	# every enemy resolves
 	var enemy_ok := true
 	for c in cells:
