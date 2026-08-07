@@ -89,6 +89,37 @@ export interface CatalogEntry {
   /** Per-texture wrap/repeat exceptions to the mirrored-repeat default. */
   textures?: TextureOverrides;
   states?: CatalogState[];
+  /**
+   * Per-state texture overrides, layered on top of `textures`. Used where a
+   * state is expressed by shifting the sheet rather than by geometry — the
+   * heal pad's used/unused frames are the same mesh at ±0.5 offsetX.
+   */
+  stateTextures?: Record<string, TextureOverrides>;
+  /**
+   * Texture filenames whose material is hidden in the named state. Mirrors what
+   * the hand-written NeedleTrap does for `o0c_1_needle2`: the trap's second
+   * sheet is the "armed" overlay and is simply not drawn when off.
+   */
+  stateHiddenTextures?: Record<string, string[]>;
+  /**
+   * Child-mesh indices drawn in the named state, for models that ship variants
+   * as sibling primitives rather than separate files. The treasure box is two
+   * 100-vertex primitives sharing one material — lid-on and lid-off — and
+   * renders both at once unless a state picks one.
+   */
+  stateMeshes?: Record<string, number[]>;
+  /**
+   * Per-state skin-joint rotation in DEGREES, keyed by bone name. Some objects
+   * express their state through the rig rather than through geometry or UVs —
+   * the treasure box lid is the `huta` joint, and the GLB ships no animation
+   * clip, so the open angle lives here.
+   */
+  stateBones?: Record<string, Record<string, [number, number, number]>>;
+  /**
+   * Milliseconds to ease texture offsets when the state changes, instead of
+   * snapping. The heal pad reads as a pad draining rather than a hard cut.
+   */
+  stateTransitionMs?: number;
 }
 
 const DESTRUCTIBLE: CatalogState[] = [
@@ -183,12 +214,19 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     id: 'treasure-box',
     title: 'Treasure Box',
     description:
-      'Field-independent treasure chest. Unlike the per-field box this is one shared model in every set that has it.',
+      'Field-independent treasure chest. Unlike the per-field box this is one shared model in every set that has it. The lid is a SKIN JOINT named `huta` (Japanese for lid), not separate geometry — the two primitives are the same 100-vertex shell. Opening the chest means rotating that bone; there is no animation clip in the GLB, so the angle is set here.',
     category: 'Containers',
     glb: '/assets/objects/valley/o0c_trebox.glb',
     model: 'o0c_trebox',
     sourceSet: '01_o01a',
-    states: DESTRUCTIBLE,
+    states: [
+      { name: 'closed', label: 'Closed', description: 'Lid down' },
+      { name: 'open', label: 'Open', description: 'Lid hinged back' },
+    ],
+    stateBones: {
+      closed: { huta: [0, 0, 0] },
+      open: { huta: [-100, 0, 0] },
+    },
   },
 
   // --- Traps and hazards -------------------------------------------------
@@ -234,11 +272,23 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
   {
     id: 'poison-trap',
     title: 'Poison Trap',
-    description: 'Floor gas trap. Two-texture model (o0c_1_poisonm / poisonm2) like the needle trap.',
+    description:
+      'Floor gas trap. Two-primitive model like the needle trap: o0c_1_poisonm is the always-visible base and o0c_1_poisonm2 is the armed gas overlay, drawn only when on.',
     category: 'Traps',
     glb: '/assets/objects/valley/o0c_poisonm.glb',
     model: 'o0c_poisonm',
     sourceSet: '01_o01a',
+    states: [
+      { name: 'off', label: 'Off', description: 'Gas retracted' },
+      { name: 'on', label: 'On', description: 'Gas venting, deals damage' },
+    ],
+    stateHiddenTextures: { off: ['o0c_1_poisonm2.png'] },
+    // Same UV setup as the needle trap: base flat at 1x, armed overlay offset
+    // slightly and tiled 2x across the strip.
+    textures: {
+      'o0c_1_poisonm.png': { offsetX: 0, offsetY: 0, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0c_1_poisonm2.png': { offsetX: -0.17, offsetY: -0.18, repeatX: 2, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'clay-trap',
@@ -250,6 +300,7 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     model: 'o0c_clay1',
     sourceSet: '01_o01a',
     scale: 0.12,
+    repeat: [2, 1],
     states: DESTRUCTIBLE,
   },
 
@@ -274,18 +325,26 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_n/o0s_warps.glb',
     model: 'o0s_warps',
     sourceSet: 'special_n',
-    scroll: { 'o0s_1_swarp2.png': { y: -1.35 } },
+    scroll: { 'o0s_1_swarp2.png': { y: 0.6 } },
+    textures: {
+      'o0s_1_swarp2.png': { offsetX: 0, offsetY: -4.84, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0s_0_swarp1.png': { offsetX: 0, offsetY: 0, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'area-warp-n',
     title: 'Area Warp (Variant N)',
     description:
-      'special_n area warp. Its o0s_1_fwarp2.png is a different image from the identically-named texture in every other special set — the reason these live in their own asset directory.',
+      'special_n area warp. Not a duplicate of the standard warps despite looking similar: the mesh differs and its o0s_1_fwarp2.png is a different image from the identically-named texture in every other special set — the reason these live in their own asset directory.',
     category: 'Warps',
     glb: '/assets/objects/special_n/o0s_warpm.glb',
     model: 'o0s_warpm',
     sourceSet: 'special_n',
-    scroll: { 'o0s_1_fwarp2.png': { y: -1.35 } },
+    scroll: { 'o0s_1_fwarp2.png': { x: -0.5 } },
+    textures: {
+      'o0s_1_fwarp2.png': { offsetX: -3.08, offsetY: 0 },
+      'o0s_0_fwarp1.png': { offsetX: 0, offsetY: 0, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'boss-warp-n',
@@ -309,9 +368,10 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
   },
   {
     id: 'return-warp',
-    title: 'Return Warp',
-    description: 'Exit pad that sends the player back to the City. Appears in special_e, special_sg and special_z.',
-    category: 'Warps',
+    title: 'Return Waypoint',
+    description:
+      'Waypoint marker carrying a home icon — the exit pad that sends the player back to the City. Grouped with the other indicators rather than the warps because it reads as a marker, not a transition. Appears in special_e, special_sg and special_z.',
+    category: 'Indicators',
     glb: '/assets/objects/special_z/o0c_return.glb',
     model: 'o0c_return',
     sourceSet: 'special_e',
@@ -324,7 +384,11 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_c3/o0s_warpcn.glb',
     model: 'o0s_warpcn',
     sourceSet: 'special_c3',
-    scroll: { 'o0s_1_cwarp1a2.png': { y: -0.8 } },
+    scroll: { 'o0s_1_cwarp2a.png': { x: -0.5 } },
+    textures: {
+      'o0s_1_cwarp2a.png': { offsetX: -2.68, offsetY: 5.31, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0s_1_cwarp1a2.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'city-warp-b',
@@ -334,7 +398,11 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_c3/o0s_warpch.glb',
     model: 'o0s_warpch',
     sourceSet: 'special_c3',
-    scroll: { 'o0s_1_cwarp1b2.png': { y: -0.8 } },
+    scroll: { 'o0s_1_cwarp2b.png': { x: -0.5 } },
+    textures: {
+      'o0s_1_cwarp2b.png': { offsetX: -2.68, offsetY: 5.31, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0s_1_cwarp1b2.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'city-warp-c',
@@ -344,7 +412,11 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_c3/o0s_warpcv.glb',
     model: 'o0s_warpcv',
     sourceSet: 'special_c3',
-    scroll: { 'o0s_1_cwarp1c2.png': { y: -0.8 } },
+    scroll: { 'o0s_1_cwarp2c.png': { x: -0.5 } },
+    textures: {
+      'o0s_1_cwarp2c.png': { offsetX: -2.68, offsetY: 5.31, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0s_1_cwarp1c2.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'city-warp-absorb',
@@ -355,7 +427,11 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_c3/o0s_warpcb.glb',
     model: 'o0s_warpcb',
     sourceSet: 'special_c3',
-    scroll: { 'o0c_1_wabs1.png': { y: -0.8 } },
+    scroll: { 'o0c_1_wabs2.png': { y: 0.4 } },
+    textures: {
+      'o0c_1_wabs2.png': { offsetX: 0, offsetY: 2.48, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0c_1_wabs1.png': { offsetX: 0, offsetY: 0, repeatX: 2, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
 
   // --- City props --------------------------------------------------------
@@ -368,6 +444,10 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_c3/o00_compass.glb',
     model: 'o00_compass',
     sourceSet: 'special_c3',
+    textures: {
+      's00_1_back03.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+      's00_1_back02.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
     scale: 0.12,
   },
   {
@@ -389,6 +469,9 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     glb: '/assets/objects/special_z/o0c_ruller01.glb',
     model: 'o0c_ruller01',
     sourceSet: 'special_c1',
+    textures: {
+      's00_1_ring1.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
 
   // --- Ambient life ------------------------------------------------------
@@ -426,11 +509,21 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
   {
     id: 'heal-pad',
     title: 'Heal Pad',
-    description: 'Healing floor pad. Present in nine of the fourteen special sets.',
+    description:
+      'Healing floor pad. Present in nine of the fourteen special sets. Used and unused are the same mesh — the sheet holds both frames side by side and the state shifts offsetX by half.',
     category: 'Pickups',
     glb: '/assets/objects/special_z/o0c_healhp.glb',
     model: 'o0c_healhp',
     sourceSet: 'special_02z',
+    states: [
+      { name: 'unused', label: 'Unused', description: 'Pad is charged and can still heal' },
+      { name: 'used', label: 'Used', description: 'Pad has been spent' },
+    ],
+    stateTextures: {
+      unused: { 'o0c_0_healhp.png': { offsetX: 0.5 } },
+      used: { 'o0c_0_healhp.png': { offsetX: -0.5 } },
+    },
+    stateTransitionMs: 450,
   },
   {
     id: 'z-sky-wetlands',

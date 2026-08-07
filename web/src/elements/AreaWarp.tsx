@@ -13,8 +13,8 @@ interface AreaWarpProps extends ElementProps {
 
 // Story metadata for the storybook
 export const areaWarpMeta: StoryMeta = {
-  title: 'Area Warp',
-  description: 'Warp gate to the next area. Players pass through this to advance to the next section.',
+  title: 'Area Gate',
+  description: 'Gate showing the transition to the next area. Players pass through it to advance to the next section.',
   states: [
     { name: 'active', label: 'Active', description: 'Warp gate is active and usable' },
     { name: 'inactive', label: 'Inactive', description: 'Warp gate is inactive' },
