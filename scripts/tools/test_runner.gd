@@ -107,6 +107,7 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_teleporter_dressing()
+	test_teleporter_dressing_texture_overrides()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -470,8 +471,20 @@ func test_teleporter_dressing() -> void:
 	assert_eq(smat_default.get_shader_parameter("wrap_u"), 0, "default wrap is mirror (source sampler mode)")
 	assert_eq(smat_default.get_shader_parameter("scroll_speed"), Vector2.ZERO, "default has no scroll")
 
-	# Per-texture overrides: two surfaces on one piece disagreeing is the whole
-	# reason `textures` exists (o0s_warpcn's glow scrolls over a static plate).
+	pivot.free()
+	el.free()
+	print("")
+
+
+## ── Teleporter dressing: per-texture overrides ───────
+## Split out of test_teleporter_dressing to stay under the complexity bound.
+## Covers only the `textures` merge — two surfaces on one piece disagreeing is
+## the whole reason it exists (o0s_warpcn's glow scrolls over a static plate).
+func test_teleporter_dressing_texture_overrides() -> void:
+	print("── TeleporterDressing (per-texture uv/scroll overrides) ──")
+	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
+	var el = DressScript.new()
+
 	var piece_cfg := {
 		"uv": {"wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0},
 		"textures": {
@@ -503,7 +516,6 @@ func test_teleporter_dressing() -> void:
 	assert_eq(merged.get("uv", {}).get("repeat", []), [3, 3], "scroll-only override inherits piece uv")
 	assert_eq(merged.get("scroll", {}).get("u", 0.0), 1.0, "scroll-only override applies its scroll")
 
-	pivot.free()
 	el.free()
 	print("")
 
