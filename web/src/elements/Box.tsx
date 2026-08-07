@@ -12,8 +12,9 @@ interface BoxProps extends ElementProps {
 
 // Story metadata for the storybook
 export const boxMeta: StoryMeta = {
-  title: 'Box',
-  description: 'Destructible container. Model varies by field. (Valley variant)',
+  title: 'Box (Gurhacia Valley)',
+  description:
+    'Destructible container, Valley variant (o01_cont). Every field re-skins this object — the other seven live alongside it under Containers.',
   states: [
     { name: 'intact', label: 'Intact', description: 'Box can be destroyed' },
     { name: 'destroyed', label: 'Destroyed', description: 'Box has been destroyed' },

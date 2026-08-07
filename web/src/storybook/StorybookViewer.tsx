@@ -31,6 +31,8 @@ import {
   BearTrap, bearTrapMeta,
   type StoryMeta,
 } from '../elements';
+import { OBJECT_CATALOG, CATALOG_CATEGORY_ORDER } from '../elements/objectCatalog';
+import { catalogComponent, catalogMeta } from '../elements/CatalogObject';
 
 // Registry of all elements with their components and metadata
 interface ElementEntry {
@@ -44,7 +46,10 @@ interface CategoryEntry {
   elements: ElementEntry[];
 }
 
-const CATEGORIES: CategoryEntry[] = [
+// Hand-written elements — the ones with real gameplay state (open/closed,
+// raised/lowered, animated pickups). Everything else in the object archive is
+// data-driven from OBJECT_CATALOG and merged in below.
+const HAND_WRITTEN: CategoryEntry[] = [
   {
     name: 'Gates',
     elements: [
@@ -131,6 +136,35 @@ const CATEGORIES: CategoryEntry[] = [
     ],
   },
 ];
+
+// Catalog entries grouped by their declared category.
+const CATALOG_BY_CATEGORY = OBJECT_CATALOG.reduce<Record<string, ElementEntry[]>>((acc, entry) => {
+  (acc[entry.category] ||= []).push({
+    id: entry.id,
+    Component: catalogComponent(entry),
+    meta: catalogMeta(entry),
+  });
+  return acc;
+}, {});
+
+/**
+ * Merge the catalog into the hand-written categories: an entry whose category
+ * already exists is appended to it, and any remaining category is added in
+ * CATALOG_CATEGORY_ORDER. That keeps e.g. every warp under one "Warps" heading
+ * instead of splitting hand-written and catalog objects into parallel lists.
+ */
+const CATEGORIES: CategoryEntry[] = (() => {
+  const remaining = new Set(Object.keys(CATALOG_BY_CATEGORY));
+  const merged = HAND_WRITTEN.map((cat) => {
+    remaining.delete(cat.name);
+    return { ...cat, elements: [...cat.elements, ...(CATALOG_BY_CATEGORY[cat.name] ?? [])] };
+  });
+
+  const extras = [...remaining].sort(
+    (a, b) => CATALOG_CATEGORY_ORDER.indexOf(a) - CATALOG_CATEGORY_ORDER.indexOf(b),
+  );
+  return [...merged, ...extras.map((name) => ({ name, elements: CATALOG_BY_CATEGORY[name] }))];
+})();
 
 // Flatten for lookup
 const ALL_ELEMENTS = CATEGORIES.flatMap((cat) => cat.elements);
@@ -315,6 +349,23 @@ const WRAP_MODES: { value: WrapMode; label: string }[] = [
 
 export default function StorybookViewer() {
   const [selectedId, setSelectedId] = useState<string>(ALL_ELEMENTS[0].id);
+  // The catalog port took the sidebar from ~25 to ~70 entries, past what fits
+  // on screen, so the list is filterable by title.
+  const [filter, setFilter] = useState('');
+
+  const visibleCategories = useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) return CATEGORIES;
+    return CATEGORIES.map((cat) => ({
+      ...cat,
+      elements: cat.elements.filter(
+        (el) =>
+          el.meta.title.toLowerCase().includes(needle) ||
+          el.id.includes(needle) ||
+          cat.name.toLowerCase().includes(needle),
+      ),
+    })).filter((cat) => cat.elements.length > 0);
+  }, [filter]);
   const [states, setStates] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     ALL_ELEMENTS.forEach((el) => {
@@ -512,7 +563,28 @@ export default function StorybookViewer() {
         padding: '1rem',
         background: '#151525',
       }}>
-        {CATEGORIES.map((category) => (
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={`Filter ${ALL_ELEMENTS.length} objects…`}
+          style={{
+            width: '100%',
+            marginBottom: '1rem',
+            padding: '8px 10px',
+            background: '#0f0f1e',
+            border: '1px solid #333',
+            borderRadius: '6px',
+            color: 'white',
+            fontSize: '12px',
+          }}
+        />
+
+        {visibleCategories.length === 0 && (
+          <div style={{ color: '#666', fontSize: '12px' }}>No objects match “{filter}”.</div>
+        )}
+
+        {visibleCategories.map((category) => (
           <div key={category.name} style={{ marginBottom: '1.5rem' }}>
             <div style={{
               fontSize: '11px',
