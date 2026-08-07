@@ -179,6 +179,7 @@ func _run_tests_systems() -> void:
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
 	test_box_state_survives_warp_flush()
+	test_box_state_survives_floor_placement()
 	test_drop_state_survives_warp_flush()
 	test_message_wall_questitem_persist()
 	test_keys_gates_survive_section_roundtrip()
@@ -4861,6 +4862,49 @@ func test_keys_gates_survive_section_roundtrip() -> void:
 # ── Full persistence contract holds across repeated city trips (#423) ────────
 # The reliability/stress case: one cell mixing every persisted category, bounced
 # to the city 3× in a row. Every category MUST hold each trip — nothing respawns.
+func test_box_state_survives_floor_placement() -> void:
+	print("── Box-state — floor-snapped/relocated boxes aren't recorded destroyed ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "6,6",
+		"objects": [
+			{"type": "box", "position": [1.0, 0.0, 1.0]},   # A — floor snapped y
+			{"type": "box", "position": [4.0, 0.0, 4.0]},   # B — floor relocated x/z
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # C — genuinely destroyed
+		],
+	}
+	# _spawn_box positions boxes at _place_on_floor(pos): A's floor sits below
+	# the authored y, and B's authored spot had no floor at all so the grid scan
+	# moved it several metres. Both are still standing; only C is gone.
+	var snapped_box := Box.new()
+	snapped_box.element_state = "intact"
+	snapped_box.position = Vector3(1.0, 0.35, 1.0)
+	snapped_box.set_meta("authored_pos", Vector3(1.0, 0.0, 1.0))
+	var relocated := Box.new()
+	relocated.element_state = "intact"
+	relocated.position = Vector3(7.0, 0.2, 7.0)
+	relocated.set_meta("authored_pos", Vector3(4.0, 0.0, 4.0))
+	stub._room_boxes = [snapped_box, relocated]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	# Only C may be recorded destroyed. A phantom "destroyed" for a box that is
+	# still standing is the bug: the saved cell state then disagrees with the
+	# room it describes.
+	var destroyed_x: Array = []
+	for o in stub._cell_states.get("6,6", {}).get("objects", []):
+		if str(o.get("type", "")) == "box" and str(o.get("state", "")) == "destroyed":
+			destroyed_x.append(snappedf(float(o.get("px", 0)), 0.01))
+	assert_true(not destroyed_x.has(1.0), "Floor-snapped box not recorded destroyed")
+	assert_true(not destroyed_x.has(4.0), "Relocated box not recorded destroyed")
+	assert_true(destroyed_x.has(9.0), "Genuinely broken box still recorded destroyed")
+	assert_eq(destroyed_x.size(), 1, "Exactly one destroyed record (no phantoms)")
+
+
 func test_field_state_full_contract_roundtrip() -> void:
 	print("── Full persistence contract holds across 3 consecutive city trips (#423) ──")
 	SessionManager.clear_section_states()
