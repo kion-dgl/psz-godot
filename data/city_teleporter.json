@@ -1,5 +1,6 @@
 {
-  "_comment": "City warp-pad dressing layout (special_c3 set). Authored in the web mock at #/teleporter-mock and consumed by scripts/3d/elements/teleporter_dressing.gd. Positions are offsets from `anchor` (world frame, matches the s00e_sa2 stage GLB); each piece is re-pivoted to its bbox bottom-center before the offset applies. `scroll` = UV offset speed in units/sec; `uv.wrap` per axis is mirror|repeat|clamp; `uv.rot` is radians. `visible: false` keeps a piece's authored transform on record without spawning it in-game (the warp-ring variants are parked until wanted).",
+  "_comment": "City warp-pad dressing layout (special_c3 set). Authored in the web mock at #/teleporter-mock and consumed by scripts/3d/elements/teleporter_dressing.gd. Positions are offsets from `anchor` (world frame, matches the s00e_sa2 stage GLB); each piece is re-pivoted to its bbox bottom-center before the offset applies. `scroll` = UV offset speed in units/sec; `uv.wrap` per axis is mirror|repeat|clamp; `uv.rot` is radians. A piece MAY carry `textures`, keyed by texture filename, whose `uv`/`scroll` override the piece-level ones for that surface only — needed wherever two surfaces on one model disagree. `visible: false` keeps a piece's authored transform and measured config on record without spawning it in-game.",
+  "_uv_source": "uv/scroll values measured in the storybook texture inspector (#/storybook, Warps + City Props) and transcribed here. three.js texture.offset/repeat map 1:1 onto the shader's uv_offset/uv_scale, and the panel's scrollX/scrollY are the same units/sec as `scroll.u`/`scroll.v`.",
   "set": "special_c3",
   "anchor": [0.03, -7.08, 60.83],
   "pieces": {
@@ -7,24 +8,74 @@
       "pos": [0, 0, 0],
       "ry": 0,
       "s": 1,
-      "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 }
+      "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0 }
     },
     "o00_compass2": {
       "pos": [0, 0.5, 0],
       "ry": 0,
       "s": 1,
+      "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 },
       "scroll": { "u": 0, "v": -0.15 }
+    },
+    "o0s_warpcn": {
+      "pos": [0, 0, 0],
+      "ry": 0,
+      "s": 1,
+      "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 },
+      "textures": {
+        "o0s_1_cwarp1a2.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0 }
+        },
+        "o0s_1_cwarp2a.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [-2.68, 5.31], "rot": 0 },
+          "scroll": { "u": -0.5, "v": 0 }
+        }
+      }
+    },
+    "o0s_warpch": {
+      "visible": false,
+      "pos": [0, 0, 0],
+      "ry": 0,
+      "s": 1,
+      "textures": {
+        "o0s_1_cwarp1b2.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0 }
+        },
+        "o0s_1_cwarp2b.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [-2.68, 5.31], "rot": 0 },
+          "scroll": { "u": -0.5, "v": 0 }
+        }
+      }
+    },
+    "o0s_warpcv": {
+      "visible": false,
+      "pos": [0, 0, 0],
+      "ry": 0,
+      "s": 1,
+      "textures": {
+        "o0s_1_cwarp1c2.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0 }
+        },
+        "o0s_1_cwarp2c.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [-2.68, 5.31], "rot": 0 },
+          "scroll": { "u": -0.5, "v": 0 }
+        }
+      }
     },
     "o0s_warpcb": {
       "visible": false,
       "pos": [0, 1, 0],
       "ry": 0,
       "s": 1,
-      "scroll": { "u": 0, "v": 0.15 },
-      "uv": { "wrap": ["repeat", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 }
-    },
-    "o0s_warpch": { "visible": false, "pos": [0, 0, 0], "ry": 0, "s": 1 },
-    "o0s_warpcn": { "visible": false, "pos": [0, 0, 0], "ry": 0, "s": 1 },
-    "o0s_warpcv": { "visible": false, "pos": [0, 0, 0], "ry": 0, "s": 1 }
+      "textures": {
+        "o0c_1_wabs1.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 1], "offset": [0, 0], "rot": 0 }
+        },
+        "o0c_1_wabs2.png": {
+          "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 2.48], "rot": 0 },
+          "scroll": { "u": 0, "v": 0.4 }
+        }
+      }
+    }
   }
 }

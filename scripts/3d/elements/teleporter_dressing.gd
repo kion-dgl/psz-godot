@@ -97,7 +97,7 @@ func _combined_aabb(root: Node3D) -> AABB:
 
 ## Swap every textured surface to uv_dressing.gdshader, carrying over the
 ## imported material's texture/color/scissor and applying the piece's uv +
-## scroll config. The whole piece shares one config — same as the web mock.
+## scroll config.
 func _apply_dress_materials(model: Node3D, cfg: Dictionary) -> void:
 	_dress_recursive(model, cfg)
 
@@ -113,10 +113,44 @@ func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 		_dress_recursive(child, cfg)
 
 
+## Resolve the uv/scroll config for one texture.
+##
+## A piece may carry a `textures` map keyed by texture filename whose entries
+## override the piece-level `uv` / `scroll`. That indirection exists because
+## the pieces genuinely need it: o0s_warpcn draws its glow sheet at offset
+## (-2.68, 5.31) repeat 1x1 with a -0.5 u scroll over a base plate at offset
+## (0, 1) repeat 2x2 and no scroll. A single per-piece config cannot express
+## two surfaces that disagree, which is what the storybook's texture inspector
+## measured them doing.
+##
+## Merge is per-key, not whole-dict: a texture entry that sets only `scroll`
+## still inherits the piece's `uv`, so shared placement stays written once.
+func _texture_cfg(cfg: Dictionary, texture_name: String) -> Dictionary:
+	var overrides: Dictionary = cfg.get("textures", {})
+	if texture_name.is_empty() or not overrides.has(texture_name):
+		return cfg
+	var per_tex: Dictionary = overrides[texture_name]
+	var merged := cfg.duplicate()
+	for key in ["uv", "scroll"]:
+		if per_tex.has(key):
+			merged[key] = per_tex[key]
+	return merged
+
+
+## Filename (no directory, no import suffix) of a material's albedo texture,
+## for matching against a piece's `textures` map. Empty when the texture has
+## no resource path — synthetic textures in tests, for instance.
+func _albedo_name(src: StandardMaterial3D) -> String:
+	if not src.albedo_texture:
+		return ""
+	return String(src.albedo_texture.resource_path).get_file()
+
+
 ## Build the ShaderMaterial for one surface from the imported material + the
 ## piece's layout config. Pure (no tree access) so the test_runner can cover
 ## the cfg → uniform mapping directly.
-func _make_dress_material(src: StandardMaterial3D, cfg: Dictionary) -> ShaderMaterial:
+func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary) -> ShaderMaterial:
+	var cfg := _texture_cfg(piece_cfg, _albedo_name(src))
 	var smat := ShaderMaterial.new()
 	smat.shader = UV_SHADER
 	smat.set_shader_parameter("albedo_tex", src.albedo_texture)
