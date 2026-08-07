@@ -75,24 +75,9 @@ func _build_piece(piece_name: String, model: Node3D, cfg: Dictionary) -> Node3D:
 
 
 ## Merged AABB of every MeshInstance3D under root, in root's parent space
-## (i.e. including root's own transform), computed without entering the tree.
+## (i.e. including root's own transform) — the space the pivot offset applies in.
 func _combined_aabb(root: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	var stack: Array = [[root as Node, Transform3D.IDENTITY]]
-	while not stack.is_empty():
-		var entry: Array = stack.pop_back()
-		var node: Node = entry[0]
-		var xform: Transform3D = entry[1]
-		if node is Node3D:
-			xform = xform * (node as Node3D).transform
-		if node is MeshInstance3D and (node as MeshInstance3D).mesh:
-			var ab: AABB = xform * (node as MeshInstance3D).mesh.get_aabb()
-			result = ab if first else result.merge(ab)
-			first = false
-		for child in node.get_children():
-			stack.push_back([child, xform])
-	return result
+	return MeshBounds.combined(root, true)
 
 
 ## Swap every textured surface to uv_dressing.gdshader, carrying over the

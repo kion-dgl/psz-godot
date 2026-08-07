@@ -78,25 +78,8 @@ static func current_model_path(suffix: String) -> String:
 	return model_path(SessionManager.get_current_area_id(), suffix)
 
 
-## Merged AABB of every MeshInstance3D under `root`, in root's local space.
-## Used to size a per-field element's collision from the model it actually
-## loaded — the containers are not all 1x1x1 (Paru's is 1 x 1.588 x 1), so a
-## fixed box leaves part of the mesh without collision.
-## Returns a zero-size AABB when there is no mesh to measure.
+## Local-space extents of a loaded model, for sizing a collider to the mesh the
+## area actually gave us. Thin alias over MeshBounds so callers do not need to
+## know about the include-root-transform distinction.
 static func model_extents(root: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	var stack: Array = [[root as Node, Transform3D.IDENTITY]]
-	while not stack.is_empty():
-		var entry: Array = stack.pop_back()
-		var node: Node = entry[0]
-		var xform: Transform3D = entry[1]
-		if node is Node3D and node != root:
-			xform = xform * (node as Node3D).transform
-		if node is MeshInstance3D and (node as MeshInstance3D).mesh:
-			var ab: AABB = xform * (node as MeshInstance3D).mesh.get_aabb()
-			result = ab if first else result.merge(ab)
-			first = false
-		for child in node.get_children():
-			stack.push_back([child, xform])
-	return result
+	return MeshBounds.combined(root)
