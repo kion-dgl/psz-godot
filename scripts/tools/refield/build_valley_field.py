@@ -95,6 +95,32 @@ def ring_positions(n, r=5.0):
     return [[round(r*math.cos(2*math.pi*i/n), 2), 0, round(r*math.sin(2*math.pi*i/n), 2)]
             for i in range(n)]
 
+# Floor traps. psz-re has no observed object table (only layouts + enemies), so
+# unlike box counts these are NOT transcribed measurements — they are a seeded
+# roll, deterministic per room instance so a rebuild is a no-op.
+#
+# Deliberately additive-only: needle and bear traps damage/immobilise but never
+# block, so a bad roll can't wall off an exit the way a fence or gate could.
+# Combat rooms only, and never the start or goal room, so nobody walks in or
+# out onto one. Their ring sits between the enemy ring (r=5) and the box ring
+# (r=8) rather than on top of either.
+TRAP_TYPES = ["needle_trap", "bear_trap"]
+TRAP_RING_RADIUS = 6.5
+MAX_TRAPS_PER_CELL = 2
+
+
+def cell_traps(room_code, cell, is_combat):
+    """Seeded 0..MAX_TRAPS_PER_CELL floor traps for one cell, as object dicts."""
+    if not is_combat:
+        return []
+    h = _seed("trap", room_code, cell)
+    count = h % (MAX_TRAPS_PER_CELL + 1)
+    out = []
+    for i, p in enumerate(ring_positions(count, r=TRAP_RING_RADIUS)):
+        kind = TRAP_TYPES[_seed("trapkind", room_code, cell, i) % len(TRAP_TYPES)]
+        out.append({"type": kind, "position": p})
+    return out
+
 # ---- measured layouts -------------------------------------------------------
 # Each room: (index, room_code_suffix, cell, shape). Doors are derived from the
 # edge list. gate attr is set on the OUTWARD edge; the way-back edge is 0.
@@ -176,6 +202,7 @@ def build_grid_section(spec, area_letter):
             0 if i in (spec["start"], spec["goal"]) else 2)
         for p in ring_positions(nbox, r=8.0):
             objects.append({"type": "box", "position": p})
+        objects.extend(cell_traps(code, cell, i not in (spec["start"], spec["goal"])))
         # keys held in this room
         has_key = i in spec["keys"]
         key_count = spec["keys"].get(i, 0)

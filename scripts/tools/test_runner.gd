@@ -107,6 +107,8 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_teleporter_dressing()
+	test_area_objects()
+	test_free_field_traps()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -398,6 +400,142 @@ func test_element_collision_setup() -> void:
 # and the layout's uv/scroll config maps onto uv_dressing.gdshader uniforms.
 # Pack-free: synthetic BoxMesh + ImageTexture, no GLB loads (assets aren't in
 # git on CI).
+## ── Per-field object resolution (AreaObjects) ───────
+## box.gd and wall.gd used to hardcode valley/o01_cont.glb and valley/o01_wall.glb,
+## so every non-Valley field rendered Valley crates and Valley walls. Pins the
+## area → folder/scene-number mapping for all eight areas and the Valley
+## fallback. Pack-free: candidate_path/fallback_path are pure string mapping,
+## and the extents helper runs on a synthetic BoxMesh (assets aren't in git).
+func test_area_objects() -> void:
+	print("── AreaObjects (per-field model resolution) ──")
+
+	# One row per area: the folder and scene number its models live under. These
+	# are the directories the storybook port created (PR #571).
+	var expected := {
+		"gurhacia": ["valley", "01"],
+		"ozette": ["wetlands", "02"],
+		"rioh": ["snowfield", "03"],
+		"makara": ["makara", "04"],
+		"paru": ["paru", "05"],
+		"arca": ["arca", "06"],
+		"dark": ["shrine", "07"],
+		"tower": ["tower", "08"],
+	}
+	for area_id in expected:
+		var want: Array = expected[area_id]
+		assert_eq(AreaObjects.folder(area_id), want[0], "%s folder is %s" % [area_id, want[0]])
+		assert_eq(AreaObjects.scene_num(area_id), want[1], "%s scene number is %s" % [area_id, want[1]])
+		assert_eq(
+			AreaObjects.candidate_path(area_id, "cont"),
+			"%s/o%s_cont.glb" % [want[0], want[1]],
+			"%s container path" % area_id
+		)
+
+	# Every area covered by the grid generator must resolve — a new area added
+	# to AREA_CONFIG without object art would otherwise silently show Valley.
+	# (GridGenerator has no class_name, so it is preloaded like every other
+	# consumer does.)
+	const GridGeneratorScript := preload("res://scripts/3d/field/grid_generator.gd")
+	for area_id in GridGeneratorScript.AREA_CONFIG:
+		assert_true(expected.has(area_id), "AREA_CONFIG area '%s' has a pinned object folder" % area_id)
+
+	# The Valley row is the fallback, so its candidate and fallback agree —
+	# which is what stops model_path warning about the area it falls back to.
+	assert_eq(
+		AreaObjects.candidate_path("gurhacia", "wall"),
+		AreaObjects.fallback_path("wall"),
+		"Valley is its own fallback"
+	)
+	assert_eq(AreaObjects.fallback_path("wall"), "valley/o01_wall.glb", "fallback wall is the Valley wall")
+	# An area that isn't in the table at all still resolves rather than
+	# producing a path like "/o__cont.glb".
+	assert_eq(AreaObjects.candidate_path("nonexistent", "cont"), "valley/o01_cont.glb", "unknown area falls back")
+
+	# Extents drive box collision. A mesh offset from its root must measure by
+	# its geometry, not its origin — Paru's container is 1 x 1.588 x 1 where
+	# every other field's is 1x1x1, and the fixed 1x1x1 box left the top third
+	# of it without collision or hurtbox.
+	var root := Node3D.new()
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(1.588, 1.2, 1.588)
+	mi.mesh = bm
+	mi.position = Vector3(4, 0, -3)
+	root.add_child(mi)
+	var extents: AABB = AreaObjects.model_extents(root)
+	assert_true(extents.size.is_equal_approx(Vector3(1.588, 1.2, 1.588)), "extents measure the mesh, not the offset")
+	# No mesh -> zero size, which is the signal box.gd uses to keep its default.
+	var empty := Node3D.new()
+	assert_eq(AreaObjects.model_extents(empty).size, Vector3.ZERO, "meshless model measures zero")
+	root.free()
+	empty.free()
+	print("")
+
+
+## ── Free-field floor traps ───────
+## The generator scatters seeded needle/bear traps into free-field combat rooms
+## (scripts/tools/refield/build_valley_field.py cell_traps). Pins the placement
+## invariants that keep a bad roll from being a soft-lock or an ambush: traps
+## are additive-only, never in the start or goal room, and never stacked on a
+## another object's exact spot. Pack-free — reads the committed quest JSON.
+func test_free_field_traps() -> void:
+	print("── Free-field floor traps (generator placement) ──")
+	const TRAP_TYPES := ["needle_trap", "bear_trap"]
+	var fields := ["valley_field", "wetlands_field", "snowfield_field", "paru_field"]
+	var total_traps := 0
+
+	for field_id in fields:
+		var path := "res://data/field_quests/%s.json" % field_id
+		var fa := FileAccess.open(path, FileAccess.READ)
+		assert_true(fa != null, "%s loads" % field_id)
+		if not fa:
+			continue
+		var json := JSON.new()
+		assert_true(json.parse(fa.get_as_text()) == OK, "%s parses" % field_id)
+		var data: Dictionary = json.data if json.data is Dictionary else {}
+
+		var field_traps := 0
+		for section in data.get("sections", []):
+			for cell in section.get("cells", []):
+				var objects: Array = cell.get("objects", [])
+				var traps: Array = []
+				var occupied: Array = []
+				for obj in objects:
+					var t: String = str(obj.get("type", ""))
+					if t in TRAP_TYPES:
+						traps.append(obj)
+					else:
+						occupied.append(obj.get("position", []))
+				field_traps += traps.size()
+				if traps.is_empty():
+					continue
+				# Start and goal rooms stay clear so nobody spawns onto a trap
+				# or walks out of the section onto one.
+				assert_true(
+					not bool(cell.get("is_start", false)),
+					"%s %s: no traps in the start room" % [field_id, cell.get("pos", "?")]
+				)
+				assert_true(
+					not bool(cell.get("is_end", false)),
+					"%s %s: no traps in the goal room" % [field_id, cell.get("pos", "?")]
+				)
+				assert_true(
+					traps.size() <= 2,
+					"%s %s: at most 2 traps" % [field_id, cell.get("pos", "?")]
+				)
+				for trap in traps:
+					assert_true(
+						not occupied.has(trap.get("position", [])),
+						"%s %s: trap does not share a spot with another object"
+							% [field_id, cell.get("pos", "?")]
+					)
+		assert_true(field_traps > 0, "%s has traps" % field_id)
+		total_traps += field_traps
+
+	print("  INFO: %d floor traps across %d free fields" % [total_traps, fields.size()])
+	print("")
+
+
 func test_teleporter_dressing() -> void:
 	print("── TeleporterDressing (special_c3 layout + pivot + materials) ──")
 	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")

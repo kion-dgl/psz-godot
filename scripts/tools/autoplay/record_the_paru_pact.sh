@@ -68,6 +68,7 @@ PSZ_AUTOPILOT=1 \
 	PSZ_AUTOPILOT_QUEST=the_paru_pact \
 	PSZ_AUTOPILOT_NO_OBSTACLES=1 \
 	PSZ_AUTOPILOT_NO_BOXES=1 \
+	PSZ_AUTOPILOT_NO_TRAPS=1 \
 	LIBGL_ALWAYS_SOFTWARE=1 \
 	xvfb-run -a -s "-screen 0 ${RES}x24" \
 	timeout "$TIMEOUT" "$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \

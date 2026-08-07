@@ -40,6 +40,7 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A breakable container placed at spawn from the stage config. The `rare_box` variant uses the same model but carries a rarer drop table.',
     state: 'Persisted state is `intact` → `broken`. Once broken it MUST NOT reappear on cell re-entry, and it MUST NOT re-roll or re-drop its loot.',
     interactions: 'The player attacks the box to break it. Breaking spawns the configured drop (meseta / item / material) as a ground pickup; the pickup itself is then a normal drop tracked in the cell snapshot.',
+    notes: 'The plain container is re-skinned per field: it MUST load `oNN_cont` for the active area (`o02_cont` in Ozette Wetlands, `o05_cont` in Paru, and so on) rather than a fixed Valley model. `AreaObjects.model_path` resolves it from the area\'s object folder and falls back to the Valley model only when the area ships no variant. Collision MUST be sized from the model that actually loaded — the containers are not all 1×1×1 (Paru\'s is 1 × 1.588 × 1, half again as tall), so a fixed box leaves part of the mesh uncollidable. The `rare_box` model `o0c_recont` is a shared object, byte-identical in every field, and stays on one path.',
   },
   {
     slug: 'wall',
@@ -54,6 +55,7 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A static blocker placed from the stage config. Forms part of the cell collision so the player and pathing MUST route around it.',
     state: 'Persisted state is `intact` → `destroyed`. A destroyed destructible wall MUST stay destroyed on re-entry.',
     interactions: 'A non-`destructible` wall is a permanent blocker. A `destructible` wall can be attacked until destroyed, opening the path it blocked.',
+    notes: 'Re-skinned per field like the box: it MUST load `oNN_wall` for the active area. The Eternal Tower ships no wall model (its rooms are sealed rather than walled off), so the resolver falls back to the Valley wall there. Collision stays at the authored 6 × 1.85 × 0.52 rather than being measured from the mesh — walls are blockers and pathing is tuned against that box.',
   },
   {
     slug: 'fence',
@@ -110,6 +112,7 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A floor trap placed from the stage config.',
     state: 'Armed / sprung. Whether a sprung trap re-arms on re-entry follows the cell snapshot.',
     interactions: 'Stepping onto the trap deals damage to the player on contact.',
+    notes: 'Free-roam fields scatter these procedurally: psz-re has no observed object table (only layouts and enemies), so unlike box counts the placement is a seeded roll, deterministic per room instance. Placement MUST stay additive — traps damage or immobilise but never block, so a bad roll cannot wall off an exit. Traps MUST NOT be placed in a section\'s start or goal room, and there MUST be at most two per cell. Authored quest traps are unaffected. Setting `PSZ_AUTOPILOT_NO_TRAPS=1` suppresses trap spawning, the same escape hatch `PSZ_AUTOPILOT_NO_BOXES` gives boxes, so a regression run measures pathing rather than attrition.',
   },
   {
     slug: 'bear-trap',
@@ -122,6 +125,7 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A floor trap placed from the stage config.',
     state: 'Armed / sprung, tracked with the cell snapshot.',
     interactions: 'Stepping onto the trap immobilizes the player on contact (rather than dealing damage outright).',
+    notes: 'Free-roam fields scatter these procedurally: psz-re has no observed object table (only layouts and enemies), so unlike box counts the placement is a seeded roll, deterministic per room instance. Placement MUST stay additive — traps damage or immobilise but never block, so a bad roll cannot wall off an exit. Traps MUST NOT be placed in a section\'s start or goal room, and there MUST be at most two per cell. Authored quest traps are unaffected. Setting `PSZ_AUTOPILOT_NO_TRAPS=1` suppresses trap spawning, the same escape hatch `PSZ_AUTOPILOT_NO_BOXES` gives boxes, so a regression run measures pathing rather than attrition.',
   },
   {
     slug: 'gate',

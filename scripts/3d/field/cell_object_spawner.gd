@@ -1034,20 +1034,37 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
+## PSZ_AUTOPILOT_NO_TRAPS=1 skips floor traps, the same escape hatch
+## PSZ_AUTOPILOT_NO_BOXES gives boxes. The free fields now scatter traps into
+## every combat room, and the autopilot walks the room ring on its way through
+## — over a seven-quest matrix run that is a slow bleed with no way to heal,
+## which would turn a pathing regression suite into an HP test.
+func _traps_suppressed() -> bool:
+	return OS.has_environment("PSZ_AUTOPILOT_NO_TRAPS")
+
+
 func _spawn_needle_trap(pos: Vector3) -> void:
+	if _traps_suppressed():
+		return
 	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
 	_c._map_root.add_child(trap)
-	trap.position = pos
+	# Floor-snap like boxes. The free-field generator places traps on a blind
+	# ring, so an authored spot can land over a gap; and these are floor traps,
+	# so sitting on the floor is right even for hand-authored quest positions
+	# (where the snap is a no-op — they are already on it).
+	trap.position = _place_on_floor(pos)
 	trap.call("set_state", "on")
-	print("[CellObjects] NeedleTrap at %s" % pos)
+	print("[CellObjects] NeedleTrap at %s" % trap.position)
 
 
 func _spawn_bear_trap(pos: Vector3) -> void:
+	if _traps_suppressed():
+		return
 	var trap: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
 	_c._map_root.add_child(trap)
-	trap.position = pos
+	trap.position = _place_on_floor(pos)
 	trap.call("set_state", "on")
-	print("[CellObjects] BearTrap at %s" % pos)
+	print("[CellObjects] BearTrap at %s" % trap.position)
 
 
 func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true) -> void:

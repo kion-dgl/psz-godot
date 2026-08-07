@@ -5,7 +5,8 @@ class_name Box
 
 signal destroyed_box
 
-## Whether this box is a rare variant (uses o0c_recont instead of o01_cont)
+## Whether this box is a rare variant (uses the shared o0c_recont instead of
+## the active area's oNN_cont)
 @export var is_rare: bool = false
 
 ## Drop type when destroyed (meseta, weapon, armor, item, none)
@@ -35,15 +36,35 @@ func _ready() -> void:
 	add_to_group("enemies")
 
 	if is_rare:
+		# o0c_recont is a shared object — byte-identical in every field, so it
+		# keeps one path. Only the plain container is re-skinned per area.
 		model_path = "valley/o0c_recont.glb"
 	else:
-		model_path = "valley/o01_cont.glb"
+		model_path = AreaObjects.current_model_path("cont")
 
 	super._ready()
+	_fit_collision_to_model()
 	collision_body = _build_static_collision("BoxCollision")
 	_setup_hurtbox()
 	_setup_mirror_textures(Vector2(0, 1) if is_rare else Vector2.ZERO)
 	_setup_reticle()
+
+
+## Size the collision box from the container the area actually loaded.
+##
+## The per-field containers are not all the same size — most are 1x1x1 but
+## Paru's o05_cont is 1 x 1.588 x 1, half again as tall — so the fixed 1x1x1
+## box left the top third of that container without collision or hurtbox.
+## Every container's mesh sits on y=0, so the shape's half-height offset still
+## lands correctly. Falls back to the default when the model is missing or has
+## no mesh to measure.
+func _fit_collision_to_model() -> void:
+	if not model:
+		return
+	var extents := AreaObjects.model_extents(model)
+	if extents.size.x <= 0.0 or extents.size.y <= 0.0 or extents.size.z <= 0.0:
+		return
+	collision_size = extents.size
 
 
 func _setup_hurtbox() -> void:

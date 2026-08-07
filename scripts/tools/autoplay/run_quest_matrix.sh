@@ -59,6 +59,7 @@ run_godot() {
     PSZ_AUTOPILOT_PHASE=first-mission \
     PSZ_AUTOPILOT_NO_OBSTACLES=1 \
     PSZ_AUTOPILOT_NO_BOXES=1 \
+    PSZ_AUTOPILOT_NO_TRAPS=1 \
     PSZ_AUTOPILOT_QUEST="$quest" \
     XDG_DATA_HOME="$userdir" \
     LIBGL_ALWAYS_SOFTWARE=1 \

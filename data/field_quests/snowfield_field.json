@@ -120,6 +120,22 @@
                 0,
                 0.0
               ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.5,
+                0,
+                0.0
+              ]
             }
           ]
         },
@@ -276,6 +292,22 @@
                 0,
                 0.0
               ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.5,
+                0,
+                0.0
+              ]
             }
           ]
         },
@@ -355,6 +387,14 @@
                 0,
                 0.0
               ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
             }
           ]
         },
@@ -431,6 +471,22 @@
               "type": "box",
               "position": [
                 -8.0,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.5,
                 0,
                 0.0
               ]
@@ -612,6 +668,22 @@
               "type": "box",
               "position": [
                 -8.0,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                -6.5,
                 0,
                 0.0
               ]
@@ -977,6 +1049,14 @@
                 0,
                 0.0
               ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
             }
           ]
         },
@@ -1056,6 +1136,14 @@
                 0,
                 0.0
               ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
             }
           ]
         },
@@ -1132,6 +1220,22 @@
               "type": "box",
               "position": [
                 -8.0,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.5,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                -6.5,
                 0,
                 0.0
               ]

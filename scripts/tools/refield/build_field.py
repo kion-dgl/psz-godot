@@ -122,6 +122,9 @@ def build_grid(rooms, keys_by_cell, start_idx, goal_idx, prefix, area_letter,
                 objects.append({"type": "enemy", "position": p, "enemy_id": eid})
             for p in bvf.ring_positions(boxes_default, r=8.0):
                 objects.append({"type": "box", "position": p})
+            # Seeded floor traps — see build_valley_field.cell_traps. Shared so
+            # every free field scatters them the same way.
+            objects.extend(bvf.cell_traps(code, cell, True))
         kc = keys_by_cell.get(cell, 0)
         out.append(_cell(code, cell, rotation, connections, baked, objects,
                          is_start, is_end, kg_dir, req, kc, path_order=r["index"]))
