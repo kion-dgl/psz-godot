@@ -434,7 +434,13 @@ func _save_cell_state() -> void:
 	var intact_box_positions: Array = []
 	for box in _c._room_boxes:
 		if is_instance_valid(box):
-			intact_box_positions.append(box.position)
+			# Compare AUTHORED positions, not spawned ones. _spawn_box places the
+			# box at _place_on_floor(pos), which snaps y to the floor and can
+			# shift x/z entirely when the authored spot has no floor under it, so
+			# box.position never equals the authored position it came from.
+			# Matching on the spawned position recorded still-intact boxes as
+			# destroyed, and they never respawned on re-entry.
+			intact_box_positions.append(box.get_meta("authored_pos", box.position))
 	for obj in objects:
 		var obj_type: String = str(obj.get("type", ""))
 		if obj_type in ["box", "rare_box"]:
@@ -705,6 +711,11 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 	box.drop_value = drop_value if not drop_value.is_empty() else (str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200)))
 	_c._map_root.add_child(box)
 	box.position = _place_on_floor(pos)
+	# Remember where this box was AUTHORED. _save_cell_state matches surviving
+	# boxes against the cell's object list to work out which ones were
+	# destroyed, and _place_on_floor above may have moved the box off that
+	# spot entirely.
+	box.set_meta("authored_pos", pos)
 	_c._fixup_element_materials(box)
 	_c._room_boxes.append(box)
 	# Track drops spawned from this box
