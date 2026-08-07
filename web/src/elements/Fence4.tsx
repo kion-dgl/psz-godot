@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { ElementProps, StoryMeta } from './types';
 import { assetUrl } from '../utils/assets';
+import { applyFenceTextureConfig, type FenceTextureSetup } from './Fence';
 
 export type Fence4State = 'active' | 'disabled';
 
@@ -24,7 +25,31 @@ export const fence4Meta: StoryMeta = {
 
 // The laser texture - meshes with this texture are hidden when disabled
 const LASER_TEXTURE_NAME = 'o0c_1_fence2';
-const LASER_SCROLL_SPEED = 0.70;
+const LASER_SCROLL_SPEED = 0.25;
+
+/**
+ * Same texture pair as the straight fence, different UV placement: the laser
+ * sits at offsetX +2.57 here rather than -4.09. repeatY 2 is what splits the
+ * single laser quad into the two beams the original draws.
+ */
+const FENCE4_TEXTURE_CONFIG: Record<string, FenceTextureSetup> = {
+  'o0c_1_fence2': {
+    offsetX: 2.57,
+    offsetY: 1.11,
+    repeatX: 1.0,
+    repeatY: 2.0,
+    wrapS: THREE.RepeatWrapping,
+    wrapT: THREE.MirroredRepeatWrapping,
+  },
+  'o0c_0_fence1': {
+    offsetX: 0.5,
+    offsetY: 0.0,
+    repeatX: 1.0,
+    repeatY: 1.0,
+    wrapS: THREE.RepeatWrapping,
+    wrapT: THREE.RepeatWrapping,
+  },
+};
 
 export default function Fence4({
   position = [0, 0, 0],
@@ -38,6 +63,7 @@ export default function Fence4({
 
   // Hide laser mesh when disabled, keep poles visible, collect laser textures
   useEffect(() => {
+    applyFenceTextureConfig(clonedScene, FENCE4_TEXTURE_CONFIG);
     const laserTextures: THREE.Texture[] = [];
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
@@ -70,7 +96,8 @@ export default function Fence4({
   // Animate laser texture scroll on offset.x
   useFrame((_, delta) => {
     laserTexturesRef.current.forEach((tex) => {
-      tex.offset.x -= LASER_SCROLL_SPEED * delta;
+      tex.offset.x += LASER_SCROLL_SPEED * delta;
+      if (tex.offset.x > 10) tex.offset.x -= 10;
       if (tex.offset.x < -10) tex.offset.x += 10;
     });
   });

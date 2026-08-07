@@ -18,9 +18,13 @@ export const needleTrapMeta: StoryMeta = {
   defaultState: 'off',
 };
 
-const TEXTURE_CONFIG: Record<string, { offsetX: number; offsetY: number; wrapS: THREE.Wrapping; wrapT: THREE.Wrapping }> = {
-  'o0c_1_needle': { offsetX: 0.00, offsetY: 0.00, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
-  'o0c_1_needle2': { offsetX: -0.17, offsetY: -0.18, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
+const TEXTURE_CONFIG: Record<
+  string,
+  { offsetX: number; offsetY: number; repeatX: number; repeatY: number; wrapS: THREE.Wrapping; wrapT: THREE.Wrapping }
+> = {
+  'o0c_1_needle': { offsetX: 0.00, offsetY: 0.00, repeatX: 1.0, repeatY: 1.0, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
+  // repeatX 2 tiles the spike strip across the base; at 1x it stretches.
+  'o0c_1_needle2': { offsetX: -0.17, offsetY: -0.18, repeatX: 2.0, repeatY: 1.0, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
 };
 
 function getTexId(mat: THREE.Material): string | null {
@@ -51,6 +55,7 @@ export default function NeedleTrap({
         const cfg = TEXTURE_CONFIG[texId];
         if (cfg && mat.map) {
           mat.map.offset.set(cfg.offsetX, cfg.offsetY);
+          mat.map.repeat.set(cfg.repeatX, cfg.repeatY);
           mat.map.wrapS = cfg.wrapS;
           mat.map.wrapT = cfg.wrapT;
           mat.map.needsUpdate = true;

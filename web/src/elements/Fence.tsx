@@ -25,7 +25,68 @@ export const fenceMeta: StoryMeta = {
 
 // The laser texture - meshes with this texture are hidden when disabled
 const LASER_TEXTURE_NAME = 'o0c_1_fence2';
-const LASER_SCROLL_SPEED = 0.70;
+// Scrolls along +X. The fence is a single laser quad; repeatY 2 is what splits
+// it into the two beams the original draws, and wrapT stays mirrored so the
+// two halves meet instead of showing a seam.
+const LASER_SCROLL_SPEED = 0.25;
+
+export interface FenceTextureSetup {
+  offsetX: number;
+  offsetY: number;
+  repeatX: number;
+  repeatY: number;
+  wrapS: THREE.Wrapping;
+  wrapT: THREE.Wrapping;
+}
+
+/**
+ * Measured per-texture setup, one table per fence model.
+ *
+ * The two share a texture pair but NOT their UV placement: the laser sits at
+ * offsetX -4.09 on the straight fence and +2.57 on the 4-sided one, so the
+ * tables stay separate rather than one being derived from the other.
+ */
+const FENCE_TEXTURE_CONFIG: Record<string, FenceTextureSetup> = {
+  'o0c_1_fence2': {
+    offsetX: -4.09,
+    offsetY: 1.11,
+    repeatX: 1.0,
+    repeatY: 2.0,
+    wrapS: THREE.RepeatWrapping,
+    wrapT: THREE.MirroredRepeatWrapping,
+  },
+  'o0c_0_fence1': {
+    offsetX: 0.5,
+    offsetY: 0.0,
+    repeatX: 1.0,
+    repeatY: 1.0,
+    wrapS: THREE.RepeatWrapping,
+    wrapT: THREE.RepeatWrapping,
+  },
+};
+
+/** Apply a measured per-texture setup to every mapped material in a model. */
+export function applyFenceTextureConfig(
+  root: THREE.Object3D,
+  config: Record<string, FenceTextureSetup>,
+): void {
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.forEach((mat) => {
+      const map = (mat as THREE.MeshStandardMaterial).map;
+      if (!map) return;
+      const key = Object.keys(config).find((k) => map.name?.includes(k));
+      if (!key) return;
+      const cfg = config[key];
+      map.offset.set(cfg.offsetX, cfg.offsetY);
+      map.repeat.set(cfg.repeatX, cfg.repeatY);
+      map.wrapS = cfg.wrapS;
+      map.wrapT = cfg.wrapT;
+      map.needsUpdate = true;
+    });
+  });
+}
 
 const FENCE_MODELS: Record<string, string> = {
   default: assetUrl('/assets/objects/valley/o0c_fence.glb'),
@@ -47,6 +108,7 @@ export default function Fence({
 
   // Hide laser mesh when disabled, keep poles visible, collect laser textures
   useEffect(() => {
+    applyFenceTextureConfig(clonedScene, FENCE_TEXTURE_CONFIG);
     const laserTextures: THREE.Texture[] = [];
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
@@ -79,7 +141,8 @@ export default function Fence({
   // Animate laser texture scroll on offset.x
   useFrame((_, delta) => {
     laserTexturesRef.current.forEach((tex) => {
-      tex.offset.x -= LASER_SCROLL_SPEED * delta;
+      tex.offset.x += LASER_SCROLL_SPEED * delta;
+      if (tex.offset.x > 10) tex.offset.x -= 10;
       if (tex.offset.x < -10) tex.offset.x += 10;
     });
   });

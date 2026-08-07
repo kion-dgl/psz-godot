@@ -12,8 +12,9 @@ interface WallProps extends ElementProps {
 
 // Story metadata for the storybook
 export const wallMeta: StoryMeta = {
-  title: 'Wall',
-  description: 'Destructible wall obstacle. Model varies by field. (Valley variant)',
+  title: 'Wall (Gurhacia Valley)',
+  description:
+    'Destructible wall obstacle, Valley variant (o01_wall). Six more field variants and their debris models sit alongside it under Walls.',
   states: [
     { name: 'intact', label: 'Intact', description: 'Wall blocks passage' },
     { name: 'destroyed', label: 'Destroyed', description: 'Wall has been destroyed' },
