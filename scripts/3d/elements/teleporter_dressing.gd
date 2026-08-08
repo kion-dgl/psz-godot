@@ -95,14 +95,39 @@ func _combined_aabb(root: Node3D) -> AABB:
 	return result
 
 
+## Dress a model that is NOT spawned by this node, using one piece's config
+## from data/city_teleporter.json.
+##
+## The city Warp Teleporter renders o0s_warpcn itself (WarpPad), so it never
+## passes through build() — but it still needs the measured uv/scroll the
+## storybook read off that model, or the glow sheet draws unscrolled at the
+## wrong offset. Sharing this keeps one copy of the numbers.
+static func dress_model_from_layout(model: Node3D, piece_name: String) -> bool:
+	var f := FileAccess.open(LAYOUT_PATH, FileAccess.READ)
+	if not f:
+		push_warning("TeleporterDressing: missing " + LAYOUT_PATH)
+		return false
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("TeleporterDressing: bad JSON in " + LAYOUT_PATH)
+		return false
+	var pieces: Dictionary = (parsed as Dictionary).get("pieces", {})
+	if not pieces.has(piece_name):
+		push_warning("TeleporterDressing: no piece '%s' in layout" % piece_name)
+		return false
+	_apply_dress_materials(model, pieces[piece_name])
+	return true
+
+
 ## Swap every textured surface to uv_dressing.gdshader, carrying over the
 ## imported material's texture/color/scissor and applying the piece's uv +
 ## scroll config.
-func _apply_dress_materials(model: Node3D, cfg: Dictionary) -> void:
+static func _apply_dress_materials(model: Node3D, cfg: Dictionary) -> void:
 	_dress_recursive(model, cfg)
 
 
-func _dress_recursive(node: Node, cfg: Dictionary) -> void:
+static func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		for i in range(mesh_inst.get_surface_override_material_count()):
@@ -125,7 +150,7 @@ func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 ##
 ## Merge is per-key, not whole-dict: a texture entry that sets only `scroll`
 ## still inherits the piece's `uv`, so shared placement stays written once.
-func _texture_cfg(cfg: Dictionary, texture_name: String) -> Dictionary:
+static func _texture_cfg(cfg: Dictionary, texture_name: String) -> Dictionary:
 	var overrides: Dictionary = cfg.get("textures", {})
 	if texture_name.is_empty() or not overrides.has(texture_name):
 		return cfg
@@ -140,7 +165,7 @@ func _texture_cfg(cfg: Dictionary, texture_name: String) -> Dictionary:
 ## Filename (no directory, no import suffix) of a material's albedo texture,
 ## for matching against a piece's `textures` map. Empty when the texture has
 ## no resource path — synthetic textures in tests, for instance.
-func _albedo_name(src: StandardMaterial3D) -> String:
+static func _albedo_name(src: StandardMaterial3D) -> String:
 	if not src.albedo_texture:
 		return ""
 	return String(src.albedo_texture.resource_path).get_file()
@@ -149,7 +174,7 @@ func _albedo_name(src: StandardMaterial3D) -> String:
 ## Build the ShaderMaterial for one surface from the imported material + the
 ## piece's layout config. Pure (no tree access) so the test_runner can cover
 ## the cfg → uniform mapping directly.
-func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary) -> ShaderMaterial:
+static func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary) -> ShaderMaterial:
 	var cfg := _texture_cfg(piece_cfg, _albedo_name(src))
 	var smat := ShaderMaterial.new()
 	smat.shader = UV_SHADER
@@ -157,6 +182,10 @@ func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary) -> Sha
 	smat.set_shader_parameter("albedo_color", src.albedo_color)
 	if src.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR:
 		smat.set_shader_parameter("alpha_scissor", src.alpha_scissor_threshold)
+	# Carry the source's sidedness. These meshes mix the two on one model, and
+	# the shader is compile-time double-sided, so a CULL_BACK surface has to
+	# discard its back faces or it draws through the piece.
+	smat.set_shader_parameter("cull_back", src.cull_mode == BaseMaterial3D.CULL_BACK)
 	var uv: Dictionary = cfg.get("uv", {})
 	var wrap_modes: Array = uv.get("wrap", ["mirror", "mirror"])
 	smat.set_shader_parameter("wrap_u", WRAP.get(wrap_modes[0], 0))

@@ -21,6 +21,12 @@ uniform float uv_rot = 0.0; // radians around the texture center
 uniform vec2 scroll_speed = vec2(0.0, 0.0); // UV units/sec
 uniform float alpha_scissor = 0.0; // >0 = discard below threshold (glTF MASK)
 uniform vec4 albedo_color : source_color = vec4(1.0);
+// Per-surface back-face cull. render_mode is compile-time, but these sets mix
+// single- and double-sided materials on one mesh: o0s_warpcn's glow sheet is
+// authored CULL_DISABLED while its base plate is CULL_BACK. Forcing everything
+// double-sided draws the plate's underside through the pad as an offset,
+// discoloured copy of itself. Discarding back faces here keeps one shader.
+uniform bool cull_back = false;
 
 float wrap_coord(float c, int mode, float half_texel) {
 	if (mode == 1) {
@@ -38,6 +44,9 @@ float wrap_coord(float c, int mode, float half_texel) {
 }
 
 void fragment() {
+	if (cull_back && !FRONT_FACING) {
+		discard;
+	}
 	vec2 uv = UV;
 	if (uv_rot != 0.0) {
 		float cs = cos(uv_rot);

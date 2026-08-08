@@ -2,16 +2,16 @@
   "_comment": "City warp-pad dressing layout (special_c3 set). Authored in the web mock at #/teleporter-mock and consumed by scripts/3d/elements/teleporter_dressing.gd. Positions are offsets from `anchor` (world frame, matches the s00e_sa2 stage GLB); each piece is re-pivoted to its bbox bottom-center before the offset applies. `scroll` = UV offset speed in units/sec; `uv.wrap` per axis is mirror|repeat|clamp; `uv.rot` is radians. A piece MAY carry `textures`, keyed by texture filename, whose `uv`/`scroll` override the piece-level ones for that surface only — needed wherever two surfaces on one model disagree. `visible: false` keeps a piece's authored transform and measured config on record without spawning it in-game.",
   "_uv_source": "uv/scroll values measured in the storybook texture inspector (#/storybook, Warps + City Props) and transcribed here. three.js texture.offset/repeat map 1:1 onto the shader's uv_offset/uv_scale, and the panel's scrollX/scrollY are the same units/sec as `scroll.u`/`scroll.v`.",
   "set": "special_c3",
-  "anchor": [0.03, -7.08, 60.83],
+  "anchor": [0.03, -5.33, 60.83],
   "pieces": {
     "o00_compass": {
-      "pos": [0, 0, 0],
+      "pos": [0, -1.45, 0],
       "ry": 0,
       "s": 1,
       "uv": { "wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0 }
     },
     "o00_compass2": {
-      "pos": [0, 0.5, 0],
+      "pos": [0, -0.15, 0],
       "ry": 0,
       "s": 1,
       "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 },
@@ -21,6 +21,7 @@
       "pos": [0, 0, 0],
       "ry": 0,
       "s": 1,
+      "visible": false,
       "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 },
       "textures": {
         "o0s_1_cwarp1a2.png": {

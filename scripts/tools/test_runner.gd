@@ -429,10 +429,13 @@ func test_teleporter_dressing() -> void:
 		if pieces[n].get("visible", true):
 			visible_names.append(n)
 	visible_names.sort()
+	# City Warp A is NOT dressing any more: WarpPad renders o0s_warpcn as the
+	# teleporter itself, so spawning it here too would double the mesh. Its
+	# authored transform and measured config stay on record via visible:false.
 	assert_eq(
 		visible_names,
-		["o00_compass", "o00_compass2", "o0s_warpcn"],
-		"compass plates + City Warp A spawn"
+		["o00_compass", "o00_compass2"],
+		"compass plates spawn; the warp is the pad, not dressing"
 	)
 
 	# Pivot math: a mesh authored away from its scene root gets re-pivoted to
@@ -515,6 +518,23 @@ func test_teleporter_dressing_texture_overrides() -> void:
 	var merged: Dictionary = el._texture_cfg(scroll_only, "glow.png")
 	assert_eq(merged.get("uv", {}).get("repeat", []), [3, 3], "scroll-only override inherits piece uv")
 	assert_eq(merged.get("scroll", {}).get("u", 0.0), 1.0, "scroll-only override applies its scroll")
+
+	# Sidedness carries from the source material. o0s_warpcn mixes the two on
+	# one mesh — glow CULL_DISABLED over a CULL_BACK plate — and the shader is
+	# compile-time double-sided, so a back-culled surface must be told to
+	# discard its back faces or it draws through the piece as an offset,
+	# discoloured copy (what the city pad showed).
+	var back_src := StandardMaterial3D.new()
+	back_src.albedo_texture = ImageTexture.new()
+	back_src.cull_mode = BaseMaterial3D.CULL_BACK
+	var back_mat: ShaderMaterial = el._make_dress_material(back_src, piece_cfg)
+	assert_true(back_mat.get_shader_parameter("cull_back"), "CULL_BACK surface discards back faces")
+
+	var both_src := StandardMaterial3D.new()
+	both_src.albedo_texture = ImageTexture.new()
+	both_src.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var both_mat: ShaderMaterial = el._make_dress_material(both_src, piece_cfg)
+	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
 
 	el.free()
 	print("")
