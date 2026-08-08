@@ -13,6 +13,10 @@ const TeleporterDressingScript := preload("res://scripts/3d/elements/teleporter_
 ## than restating the numbers here.
 const DRESSING_PIECE := "o0s_warpcn"
 
+## o0s_warpcn's base slab is authored off-centre by this much on X and Z; the
+## glow cylinder above it is centred at the origin. Measured from the mesh.
+const PLATE_OFFSET := 0.063
+
 @export var area_id: String = ""
 @export var display_name: String = ""
 
@@ -33,6 +37,10 @@ func _ready() -> void:
 	super._ready()
 	if model:
 		TeleporterDressingScript.dress_model_from_layout(model, DRESSING_PIECE)
+		# The base slab is authored off-centre — its rings sit at (+0.063,
+		# +0.063) while the glow cylinder is dead-on (0, 0). Shift the model so
+		# the two are concentric; measured off the mesh, not eyeballed.
+		model.position -= Vector3(PLATE_OFFSET, 0.0, PLATE_OFFSET)
 	_setup_prompt()
 	_update_dim_state()
 

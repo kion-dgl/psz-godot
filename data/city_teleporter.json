@@ -22,6 +22,7 @@
       "ry": 0,
       "s": 1,
       "visible": false,
+      "min_y": -0.375,
       "uv": { "wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0 },
       "textures": {
         "o0s_1_cwarp1a2.png": {

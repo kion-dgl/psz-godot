@@ -127,13 +127,35 @@ static func _apply_dress_materials(model: Node3D, cfg: Dictionary) -> void:
 	_dress_recursive(model, cfg)
 
 
+## Debug palette, indexed by surface. Only used when PSZ_DRESSING_DEBUG_TINT=1.
+const DEBUG_TINTS: Array[Color] = [
+	Color(1.0, 0.3, 0.3),  # surface 0 — red
+	Color(0.3, 1.0, 0.3),  # surface 1 — green
+	Color(0.4, 0.6, 1.0),  # surface 2 — blue
+	Color(1.0, 1.0, 0.3),  # surface 3 — yellow
+]
+
+
 static func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
+		var debug_mode := OS.get_environment("PSZ_DRESSING_DEBUG_TINT")
+		var debug_tint := debug_mode != ""
+		var debug_y := debug_mode == "y"
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture:
-				mesh_inst.set_surface_override_material(i, _make_dress_material(mat as StandardMaterial3D, cfg))
+				var dressed := _make_dress_material(mat as StandardMaterial3D, cfg)
+				if debug_y:
+					dressed.set_shader_parameter("debug_y_tint", true)
+					print("[dressing-debug] %s surface %d: Y-banded (yellow<-0.375, cyan<0.15, magenta>=0.15) tex=%s" % [
+						mesh_inst.name, i, _albedo_name(mat as StandardMaterial3D)])
+				elif debug_tint:
+					dressed.set_shader_parameter("debug_tint", DEBUG_TINTS[i % DEBUG_TINTS.size()])
+					print("[dressing-debug] %s surface %d tinted %s (tex=%s)" % [
+						mesh_inst.name, i, DEBUG_TINTS[i % DEBUG_TINTS.size()],
+						_albedo_name(mat as StandardMaterial3D)])
+				mesh_inst.set_surface_override_material(i, dressed)
 	for child in node.get_children():
 		_dress_recursive(child, cfg)
 
@@ -186,6 +208,9 @@ static func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary)
 	# the shader is compile-time double-sided, so a CULL_BACK surface has to
 	# discard its back faces or it draws through the piece.
 	smat.set_shader_parameter("cull_back", src.cull_mode == BaseMaterial3D.CULL_BACK)
+	# Optional floor for the piece's geometry — see min_y in the shader.
+	if cfg.has("min_y"):
+		smat.set_shader_parameter("min_y", float(cfg["min_y"]))
 	var uv: Dictionary = cfg.get("uv", {})
 	var wrap_modes: Array = uv.get("wrap", ["mirror", "mirror"])
 	smat.set_shader_parameter("wrap_u", WRAP.get(wrap_modes[0], 0))

@@ -27,6 +27,28 @@ uniform vec4 albedo_color : source_color = vec4(1.0);
 // double-sided draws the plate's underside through the pad as an offset,
 // discoloured copy of itself. Discarding back faces here keeps one shader.
 uniform bool cull_back = false;
+// Debug only (PSZ_DRESSING_DEBUG_TINT=1): flat per-surface colour so a stray
+// draw can be traced to the surface that produced it. Anything ghosting in an
+// UNTINTED colour is not coming through this shader at all.
+uniform vec4 debug_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+// Debug only (PSZ_DRESSING_DEBUG_TINT=y): colour by the vertex's model-space Y
+// instead of by surface, so stacked rings on ONE surface can be told apart.
+// o0s_warpcn's plate is two 14-vertex rings at y=-0.55 and y=-0.20; per-surface
+// tinting paints both the same colour and cannot distinguish them.
+uniform bool debug_y_tint = false;
+// Discard geometry below this model-space Y. These pieces are solid slabs, not
+// flat plates: o0s_warpcn's base is 0.35 thick, and its top face is alpha-
+// scissored, so the ring cut-outs let you see the underside 0.35 below —
+// which reads as an offset, discoloured copy of the plate. The pad sits on the
+// floor and nothing under it is ever meaningfully visible, so the bottom face
+// is dropped. Left at -INF (draw everything) unless a piece asks for it.
+uniform float min_y = -1e9;
+
+varying float v_local_y;
+
+void vertex() {
+	v_local_y = VERTEX.y;
+}
 
 float wrap_coord(float c, int mode, float half_texel) {
 	if (mode == 1) {
@@ -47,6 +69,9 @@ void fragment() {
 	if (cull_back && !FRONT_FACING) {
 		discard;
 	}
+	if (v_local_y < min_y) {
+		discard;
+	}
 	vec2 uv = UV;
 	if (uv_rot != 0.0) {
 		float cs = cos(uv_rot);
@@ -56,7 +81,18 @@ void fragment() {
 	uv = uv * uv_scale + uv_offset + scroll_speed * TIME;
 	vec2 half_texel = 0.5 / vec2(textureSize(albedo_tex, 0));
 	uv = vec2(wrap_coord(uv.x, wrap_u, half_texel.x), wrap_coord(uv.y, wrap_v, half_texel.y));
-	vec4 col = texture(albedo_tex, uv) * COLOR * albedo_color;
+	vec4 col = texture(albedo_tex, uv) * COLOR * albedo_color * debug_tint;
+	if (debug_y_tint) {
+		// Bands split at the midpoints between o0s_warpcn's known ring heights
+		// (-0.55, -0.20, +0.50): yellow / cyan / magenta, low to high.
+		vec3 band = vec3(1.0, 1.0, 0.2);
+		if (v_local_y >= -0.375 && v_local_y < 0.15) {
+			band = vec3(0.2, 1.0, 1.0);
+		} else if (v_local_y >= 0.15) {
+			band = vec3(1.0, 0.2, 1.0);
+		}
+		col.rgb = band;
+	}
 	if (alpha_scissor > 0.0 && col.a < alpha_scissor) {
 		discard;
 	}
