@@ -4,6 +4,10 @@ extends RefCounted
 ## Area-agnostic: reads portal directions from *_config.json when available,
 ## falls back to hardcoded GATES for valley (s01).
 
+## One RNG per generator instance so a field's layout and its fights come from
+## the same stream — seed it to reproduce a whole field, not just its rooms.
+var _rng := RandomNumberGenerator.new()
+
 const DIRECTIONS := ["north", "east", "south", "west"]
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIR_OFFSET := {
@@ -267,6 +271,7 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	var e_stage := "%se_ia1" % prefix
 	var e_cell := _make_output_cell(Vector2i(0, 0), e_stage, 0, true, true, false, 0)
 	e_cell["warp_edge"] = "south"
+	e_cell["objects"] = FieldPopulation.objects_for_single_room(e_stage, _rng)
 	sections.append({
 		"type": "transition", "area": "e", "cells": [e_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
@@ -286,6 +291,9 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 		z_stage = "%sa_na1" % prefix
 	var z_cell := _make_output_cell(Vector2i(0, 0), z_stage, 0, true, true, false, 0)
 	z_cell["warp_edge"] = "south"
+	# The boss is read from the assignment table, not picked: s01z_na1 names
+	# boss_dragon, s02z_na1 boss_octopus, s05z_na1 boss_robot, and so on.
+	z_cell["objects"] = FieldPopulation.objects_for_single_room(z_stage, _rng)
 	sections.append({
 		"type": "boss", "area": "z", "cells": [z_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
@@ -955,6 +963,12 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 			"key_gate_direction": str(cell.get("key_gate_direction", "")),
 			"warp_edge": warp_edge,
 			"path_order": int(cell.get("path_order", -1)),
+			"objects": FieldPopulation.objects_for_cell(
+				str(cell["stage_id"]),
+				cell.get("is_start", false),
+				cell.get("is_end", false),
+				_rng,
+			),
 		})
 
 	return {
@@ -1015,6 +1029,10 @@ func _make_output_cell(pos: Vector2i, stage_id: String, rotation: int,
 		"key_gate_direction": "",
 		"warp_edge": "",
 		"path_order": path_order,
+		# Transition / boss / tower rooms: the caller fills these where the RE
+		# assignment has a row for them; a bare cell carries an empty list so
+		# the spawner never sees a missing key.
+		"objects": [],
 	}
 
 

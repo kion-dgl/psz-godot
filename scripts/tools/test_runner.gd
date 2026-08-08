@@ -108,7 +108,6 @@ func _run_tests_core() -> void:
 	test_element_collision_setup()
 	test_teleporter_dressing()
 	test_area_objects()
-	test_free_field_traps()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -469,70 +468,6 @@ func test_area_objects() -> void:
 	assert_eq(AreaObjects.model_extents(empty).size, Vector3.ZERO, "meshless model measures zero")
 	root.free()
 	empty.free()
-	print("")
-
-
-## ── Free-field floor traps ───────
-## The generator scatters seeded needle/bear traps into free-field combat rooms
-## (scripts/tools/refield/build_valley_field.py cell_traps). Pins the placement
-## invariants that keep a bad roll from being a soft-lock or an ambush: traps
-## are additive-only, never in the start or goal room, and never stacked on a
-## another object's exact spot. Pack-free — reads the committed quest JSON.
-func test_free_field_traps() -> void:
-	print("── Free-field floor traps (generator placement) ──")
-	const TRAP_TYPES := ["needle_trap", "bear_trap"]
-	var fields := ["valley_field", "wetlands_field", "snowfield_field", "paru_field"]
-	var total_traps := 0
-
-	for field_id in fields:
-		var path := "res://data/field_quests/%s.json" % field_id
-		var fa := FileAccess.open(path, FileAccess.READ)
-		assert_true(fa != null, "%s loads" % field_id)
-		if not fa:
-			continue
-		var json := JSON.new()
-		assert_true(json.parse(fa.get_as_text()) == OK, "%s parses" % field_id)
-		var data: Dictionary = json.data if json.data is Dictionary else {}
-
-		var field_traps := 0
-		for section in data.get("sections", []):
-			for cell in section.get("cells", []):
-				var objects: Array = cell.get("objects", [])
-				var traps: Array = []
-				var occupied: Array = []
-				for obj in objects:
-					var t: String = str(obj.get("type", ""))
-					if t in TRAP_TYPES:
-						traps.append(obj)
-					else:
-						occupied.append(obj.get("position", []))
-				field_traps += traps.size()
-				if traps.is_empty():
-					continue
-				# Start and goal rooms stay clear so nobody spawns onto a trap
-				# or walks out of the section onto one.
-				assert_true(
-					not bool(cell.get("is_start", false)),
-					"%s %s: no traps in the start room" % [field_id, cell.get("pos", "?")]
-				)
-				assert_true(
-					not bool(cell.get("is_end", false)),
-					"%s %s: no traps in the goal room" % [field_id, cell.get("pos", "?")]
-				)
-				assert_true(
-					traps.size() <= 2,
-					"%s %s: at most 2 traps" % [field_id, cell.get("pos", "?")]
-				)
-				for trap in traps:
-					assert_true(
-						not occupied.has(trap.get("position", [])),
-						"%s %s: trap does not share a spot with another object"
-							% [field_id, cell.get("pos", "?")]
-					)
-		assert_true(field_traps > 0, "%s has traps" % field_id)
-		total_traps += field_traps
-
-	print("  INFO: %d floor traps across %d free fields" % [total_traps, fields.size()])
 	print("")
 
 

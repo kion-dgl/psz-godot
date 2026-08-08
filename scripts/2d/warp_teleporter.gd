@@ -173,6 +173,11 @@ static func derive_section_label(area_name: String, first_stage_id: String,
 
 
 func _is_area_unlocked(area_id: String) -> bool:
+	# Testing toggle (start menu -> Debug). Deliberately separate from "Unlock
+	# All Missions": that marks every quest complete, which is a save-state
+	# change you then have to undo. This only affects what the warp lists.
+	if DebugConfig.unlock_all_areas:
+		return true
 	if area_id == "gurhacia":
 		return true
 	# An area unlocks when a completed quest cleared it (quest.area_id == area_id).
@@ -258,6 +263,14 @@ func _resume_free_roam_field(area_id: String, section_idx: int) -> void:
 
 
 ## Start a fresh expedition into a free field (hand-authored quest or generated).
+##
+## NOT yet switched to always-generate. GridGenerator cannot currently build
+## these areas: it never rotates a room while laying the main path, only accepts
+## rooms with exactly two doors in their authored orientation, and _validate_gates
+## then rejects any room with a door facing an empty grid cell. All 200 attempts
+## fail for every area and section, and the fallback is a fixed 5-room line with
+## no objects — so generating here today would be strictly worse than replaying
+## the static field. See the PR for the diagnosis.
 func _enter_fresh_field(area_id: String) -> void:
 	SessionManager.enter_field(area_id, "normal")
 	var quest := QuestLoader.pick_field_quest(area_id)

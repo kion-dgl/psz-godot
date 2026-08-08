@@ -219,7 +219,6 @@ JSON
         PSZ_AUTOPILOT_PHASE=first-mission \
         PSZ_AUTOPILOT_NO_OBSTACLES=1 \
         PSZ_AUTOPILOT_NO_BOXES=1 \
-        PSZ_AUTOPILOT_NO_TRAPS=1 \
         PSZ_AUTOPILOT_QUEST="$quest" \
         $SPEED_ENV \
         $PROBE_EXTRA_ENV \

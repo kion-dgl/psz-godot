@@ -112,7 +112,6 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A floor trap placed from the stage config.',
     state: 'Armed / sprung. Whether a sprung trap re-arms on re-entry follows the cell snapshot.',
     interactions: 'Stepping onto the trap deals damage to the player on contact.',
-    notes: 'Free-roam fields scatter these procedurally: psz-re has no observed object table (only layouts and enemies), so unlike box counts the placement is a seeded roll, deterministic per room instance. Placement MUST stay additive — traps damage or immobilise but never block, so a bad roll cannot wall off an exit. Traps MUST NOT be placed in a section\'s start or goal room, and there MUST be at most two per cell. Authored quest traps are unaffected. Setting `PSZ_AUTOPILOT_NO_TRAPS=1` suppresses trap spawning, the same escape hatch `PSZ_AUTOPILOT_NO_BOXES` gives boxes, so a regression run measures pathing rather than attrition.',
   },
   {
     slug: 'bear-trap',
@@ -125,7 +124,6 @@ export const cellObjects: CellObjectSpec[] = [
     spawns: 'A floor trap placed from the stage config.',
     state: 'Armed / sprung, tracked with the cell snapshot.',
     interactions: 'Stepping onto the trap immobilizes the player on contact (rather than dealing damage outright).',
-    notes: 'Free-roam fields scatter these procedurally: psz-re has no observed object table (only layouts and enemies), so unlike box counts the placement is a seeded roll, deterministic per room instance. Placement MUST stay additive — traps damage or immobilise but never block, so a bad roll cannot wall off an exit. Traps MUST NOT be placed in a section\'s start or goal room, and there MUST be at most two per cell. Authored quest traps are unaffected. Setting `PSZ_AUTOPILOT_NO_TRAPS=1` suppresses trap spawning, the same escape hatch `PSZ_AUTOPILOT_NO_BOXES` gives boxes, so a regression run measures pathing rather than attrition.',
   },
   {
     slug: 'gate',
