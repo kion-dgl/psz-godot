@@ -16,6 +16,71 @@ const DIR_OFFSET := {
 }
 
 
+## {game_direction: portal_id} for a placed cell — the same shape the static
+## field files carry. The field controller can fall back to the stage config
+## without this, but the autopilot reads cell["portals"] directly to choose an
+## exit, so a generated cell that omits them cannot be driven.
+func _baked_portals(stage_id: String, rotation_deg: int) -> Dictionary:
+	_ensure_unified_config()
+	var cfg: Dictionary = _unified_config.get(stage_id, {})
+	var out: Dictionary = {}
+	for portal in cfg.get("portals", []):
+		var base_dir: String = str(portal.get("direction", ""))
+		if base_dir.is_empty():
+			continue
+		out[StageRotation.rotate_dir(base_dir, rotation_deg)] = str(portal.get("id", ""))
+	if not cfg.get("defaultSpawn", {}).is_empty():
+		out["default"] = "default"
+	return out
+
+
+## Gate directions a stage presents at each rotation, as {rotation: [dirs]}.
+##
+## Room models have a FIXED door set; the layout picks a rotation whose doors
+## cover the connections the cell needs. The static builder in
+## scripts/tools/refield does exactly this ("rotate config doors until they
+## cover the needed slots"), but the runtime generator never rotated while
+## laying the main path — it only accepted rooms whose authored orientation
+## already matched, which is why every attempt failed for every area.
+func _gates_at_rotation(stage_id: String, steps: int) -> Array[String]:
+	var out: Array[String] = []
+	for g in _get_gates(stage_id):
+		out.append(StageRotation.rotate_dir(g, steps * 90))
+	return out
+
+
+## Rotations (0..3) at which `stage_id` has a door on `entry_dir` and exactly one
+## usable exit, plus that exit direction. `exit_outside` picks whether the exit
+## must leave the grid (end cell) or land on an empty in-grid cell (middle).
+##
+## Extra doors beyond entry+exit are ALLOWED: the runtime only builds a gate
+## trigger for a direction that appears in the cell's `connections`, so a door
+## with nothing behind it is inert geometry — which is already true of the
+## static fields.
+func _fitting_rotations(stage_id: String, entry_dir: String, row: int, col: int,
+		grid: Dictionary, exit_outside: bool) -> Array[Dictionary]:
+	var fits: Array[Dictionary] = []
+	for steps in range(4):
+		var gates: Array[String] = _gates_at_rotation(stage_id, steps)
+		if entry_dir not in gates:
+			continue
+		for g in gates:
+			if g == entry_dir:
+				continue
+			var off: Vector2i = DIR_OFFSET[g]
+			var er: int = row + off.x
+			var ec: int = col + off.y
+			var inside: bool = _is_valid_pos(er, ec)
+			if exit_outside:
+				if inside:
+					continue
+			else:
+				if not inside or grid.has(_pos_key(Vector2i(er, ec))):
+					continue
+			fits.append({"stage": stage_id, "rotation": steps, "exit_dir": g})
+	return fits
+
+
 ## Get gate directions in grid-space for a cell, applying its rotation.
 func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 	var stage_id: String = str(cell.get("stage_id", ""))
@@ -287,7 +352,8 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	# Section 4: Area Z boss arena (single room)
 	# Prefer {prefix}z_na1 (wetlands has s02z_na1), fall back to {prefix}a_na1 (valley lacks s01z_na1)
 	var z_stage := "%sz_na1" % prefix
-	if not _active_gates.has(z_stage):
+	_ensure_unified_config()
+	if not _unified_config.has(z_stage):
 		z_stage = "%sa_na1" % prefix
 	var z_cell := _make_output_cell(Vector2i(0, 0), z_stage, 0, true, true, false, 0)
 	z_cell["warp_edge"] = "south"
@@ -483,40 +549,10 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 		# Find valid stages for this position
 		var candidates: Array[Dictionary] = []
 		for stage_id in all_stages:
-			var gates: Array[String] = _get_gates(stage_id)
-			if entry_dir not in gates:
-				continue
-			var other_gates: Array[String] = []
-			for g in gates:
-				if g != entry_dir:
-					other_gates.append(g)
-
-			if is_last_cell:
-				# End cell: exactly 1 other gate pointing outside grid
-				if other_gates.size() != 1:
-					continue
-				var eo: Vector2i = DIR_OFFSET[other_gates[0]]
-				if _is_valid_pos(next_row + eo.x, next_col + eo.y):
-					continue
-				candidates.append({
-					"stage": stage_id, "rotation": 0,
-					"exit_dir": other_gates[0],
-				})
-			else:
-				# Middle cell: exactly 1 other gate → empty cell inside grid
-				if other_gates.size() != 1:
-					continue
-				var eo: Vector2i = DIR_OFFSET[other_gates[0]]
-				var er: int = next_row + eo.x
-				var ec: int = next_col + eo.y
-				if not _is_valid_pos(er, ec):
-					continue
-				if grid.has(_pos_key(Vector2i(er, ec))):
-					continue
-				candidates.append({
-					"stage": stage_id, "rotation": 0,
-					"exit_dir": other_gates[0],
-				})
+			# End cell exits the grid (that edge becomes the section warp);
+			# a middle cell exits onto the next empty cell.
+			candidates.append_array(_fitting_rotations(
+				stage_id, entry_dir, next_row, next_col, grid, is_last_cell))
 
 		if candidates.is_empty():
 			# Try to end early if we have enough cells
@@ -525,11 +561,11 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 					break
 			break
 
-		var chosen: Dictionary = candidates[randi() % candidates.size()]
+		var chosen: Dictionary = candidates[_rng.randi_range(0, candidates.size() - 1)]
 
 		grid[next_key] = {
 			"stage_id": str(chosen["stage"]),
-			"rotation": 0,
+			"rotation": int(chosen["rotation"]) * 90,
 			"entry_direction": entry_dir,
 			"is_start": false,
 			"is_end": is_last_cell,
@@ -587,24 +623,17 @@ func _try_place_end_cell(grid: Dictionary, path: Array[Vector2i],
 		all_stages: Array[String], row: int, col: int, entry_dir: String) -> bool:
 	var key := _pos_key(Vector2i(row, col))
 	for stage_id in all_stages:
-		var gates: Array[String] = _get_gates(stage_id)
-		if entry_dir not in gates:
+		var fits: Array[Dictionary] = _fitting_rotations(
+			stage_id, entry_dir, row, col, grid, true)
+		if fits.is_empty():
 			continue
-		var other: Array[String] = []
-		for g in gates:
-			if g != entry_dir:
-				other.append(g)
-		if other.size() != 1:
-			continue
-		var eo: Vector2i = DIR_OFFSET[other[0]]
-		if _is_valid_pos(row + eo.x, col + eo.y):
-			continue
+		var fit: Dictionary = fits[_rng.randi_range(0, fits.size() - 1)]
 		grid[key] = {
-			"stage_id": stage_id, "rotation": 0,
+			"stage_id": stage_id, "rotation": int(fit["rotation"]) * 90,
 			"entry_direction": entry_dir, "is_start": false,
 			"is_end": true, "is_branch": false,
 			"has_key": false, "key_for_cell": "",
-			"is_key_gate": false, "key_gate_direction": other[0],
+			"is_key_gate": false, "key_gate_direction": str(fit["exit_dir"]),
 			"path_order": path.size(),
 		}
 		path.append(Vector2i(row, col))
@@ -620,32 +649,32 @@ func _fix_end_cell(grid: Dictionary, end_cell: Dictionary, end_pos: Vector2i,
 		return false
 
 	for stage_id in all_stages:
-		var gates: Array[String] = _get_gates(stage_id)
-		if entry_dir not in gates:
-			continue
-		var warp_dir := ""
-		var has_orphan := false
-		for gate in gates:
-			if gate == entry_dir:
+		for steps in range(4):
+			var gates: Array[String] = _gates_at_rotation(stage_id, steps)
+			if entry_dir not in gates:
 				continue
-			var offset: Vector2i = DIR_OFFSET[gate]
-			var nr: int = end_pos.x + offset.x
-			var nc: int = end_pos.y + offset.y
-			if not _is_valid_pos(nr, nc):
-				warp_dir = gate
-			elif grid.has(_pos_key(Vector2i(nr, nc))):
-				var neighbor: Dictionary = grid[_pos_key(Vector2i(nr, nc))]
-				var n_gates: Array[String] = _get_gates(str(neighbor["stage_id"]))
-				if OPPOSITE[gate] not in n_gates:
-					has_orphan = true
-					break
-		if has_orphan or warp_dir.is_empty():
-			continue
-		end_cell["stage_id"] = stage_id
-		end_cell["rotation"] = 0
-		end_cell["is_end"] = true
-		end_cell["key_gate_direction"] = warp_dir
-		return true
+			var warp_dir := ""
+			var has_orphan := false
+			for gate in gates:
+				if gate == entry_dir:
+					continue
+				var offset: Vector2i = DIR_OFFSET[gate]
+				var nr: int = end_pos.x + offset.x
+				var nc: int = end_pos.y + offset.y
+				if not _is_valid_pos(nr, nc):
+					warp_dir = gate
+				elif grid.has(_pos_key(Vector2i(nr, nc))):
+					var neighbor: Dictionary = grid[_pos_key(Vector2i(nr, nc))]
+					if OPPOSITE[gate] not in _get_rotated_gates(neighbor):
+						has_orphan = true
+						break
+			if has_orphan or warp_dir.is_empty():
+				continue
+			end_cell["stage_id"] = stage_id
+			end_cell["rotation"] = steps * 90
+			end_cell["is_end"] = true
+			end_cell["key_gate_direction"] = warp_dir
+			return true
 	return false
 
 
@@ -870,7 +899,10 @@ func _validate_gates(grid: Dictionary) -> bool:
 				continue
 			var nkey := _pos_key(Vector2i(nr, nc))
 			if not grid.has(nkey):
-				return false
+				# Nothing placed there — the door leads nowhere and the runtime
+				# builds no trigger for it (gate triggers come from `connections`
+				# only). Inert, not a failure.
+				continue
 			var neighbor: Dictionary = grid[nkey]
 			var n_gates: Array[String] = _get_rotated_gates(neighbor)
 			if OPPOSITE[dir] not in n_gates:
@@ -963,6 +995,7 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 			"key_gate_direction": str(cell.get("key_gate_direction", "")),
 			"warp_edge": warp_edge,
 			"path_order": int(cell.get("path_order", -1)),
+			"portals": _baked_portals(str(cell["stage_id"]), int(cell.get("rotation", 0))),
 			"objects": FieldPopulation.objects_for_cell(
 				str(cell["stage_id"]),
 				cell.get("is_start", false),
@@ -1029,6 +1062,7 @@ func _make_output_cell(pos: Vector2i, stage_id: String, rotation: int,
 		"key_gate_direction": "",
 		"warp_edge": "",
 		"path_order": path_order,
+		"portals": _baked_portals(stage_id, rotation),
 		# Transition / boss / tower rooms: the caller fills these where the RE
 		# assignment has a row for them; a bare cell carries an empty list so
 		# the spawner never sees a missing key.
