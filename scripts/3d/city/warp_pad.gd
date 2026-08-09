@@ -4,6 +4,18 @@ class_name WarpPad
 ## When area_id is empty, acts as a central pad that opens the teleporter menu.
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
+const TeleporterDressingScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
+
+## Layout piece whose measured uv/scroll config this pad's model wants. The
+## storybook measured o0s_warpcn's two surfaces disagreeing — the glow sheet
+## at offset (-2.68, 5.31) with a -0.5 u scroll over a plate at (0, 1) 2x2 —
+## and that lives in data/city_teleporter.json, so read it from there rather
+## than restating the numbers here.
+const DRESSING_PIECE := "o0s_warpcn"
+
+## o0s_warpcn's base slab is authored off-centre by this much on X and Z; the
+## glow cylinder above it is centred at the origin. Measured from the mesh.
+const PLATE_OFFSET := 0.063
 
 @export var area_id: String = ""
 @export var display_name: String = ""
@@ -16,12 +28,19 @@ var _is_dimmed: bool = false
 func _init() -> void:
 	interactable = true
 	collision_size = Vector3(2, 2, 2)
-	# Use the small warp model
-	model_path = "special/o0s_warps.glb"
+	# City Warp A — the measured special_c3 pad, replacing the small
+	# start-warp model this used to borrow.
+	model_path = "special_c3/o0s_warpcn.glb"
 
 
 func _ready() -> void:
 	super._ready()
+	if model:
+		TeleporterDressingScript.dress_model_from_layout(model, DRESSING_PIECE)
+		# The base slab is authored off-centre — its rings sit at (+0.063,
+		# +0.063) while the glow cylinder is dead-on (0, 0). Shift the model so
+		# the two are concentric; measured off the mesh, not eyeballed.
+		model.position -= Vector3(PLATE_OFFSET, 0.0, PLATE_OFFSET)
 	_setup_prompt()
 	_update_dim_state()
 

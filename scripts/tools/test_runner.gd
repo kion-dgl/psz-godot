@@ -107,6 +107,7 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_teleporter_dressing()
+	test_teleporter_dressing_texture_overrides()
 	test_area_objects()
 	test_generated_field_doors()
 	test_equipment_slot_names()
@@ -594,16 +595,31 @@ func test_teleporter_dressing() -> void:
 	assert_eq(pieces.size(), 6, "layout has 6 pieces")
 	var anchor: Array = layout.get("anchor", [])
 	assert_true(anchor.size() == 3 and is_equal_approx(float(anchor[2]), 60.83), "anchor sits at the warp pad")
+	# The parked Absorb ring keeps its measured config on record: its glow sheet
+	# scrolls while its base plate does not, which is why it needs `textures`.
 	var warpcb: Dictionary = pieces.get("o0s_warpcb", {})
-	assert_eq(warpcb.get("scroll", {}).get("v", 0.0), 0.15, "warp ring scrolls v=0.15")
-	# Only the two compass plates are live in-game; the warp-ring variants are
-	# parked (visible:false keeps their authored transforms without spawning).
+	var wabs2: Dictionary = warpcb.get("textures", {}).get("o0c_1_wabs2.png", {})
+	assert_eq(wabs2.get("scroll", {}).get("v", 0.0), 0.4, "absorb ring glow scrolls v=0.4")
+	assert_true(
+		not warpcb.get("textures", {}).get("o0c_1_wabs1.png", {}).has("scroll"),
+		"absorb ring base plate does not scroll"
+	)
+	# The two compass plates and City Warp A are live in-game; the other three
+	# warp variants are parked (visible:false keeps their authored transforms
+	# and measured configs without spawning them).
 	var visible_names := []
 	for n in pieces:
 		if pieces[n].get("visible", true):
 			visible_names.append(n)
 	visible_names.sort()
-	assert_eq(visible_names, ["o00_compass", "o00_compass2"], "only the compass plates spawn")
+	# City Warp A is NOT dressing any more: WarpPad renders o0s_warpcn as the
+	# teleporter itself, so spawning it here too would double the mesh. Its
+	# authored transform and measured config stay on record via visible:false.
+	assert_eq(
+		visible_names,
+		["o00_compass", "o00_compass2"],
+		"compass plates spawn; the warp is the pad, not dressing"
+	)
 
 	# Pivot math: a mesh authored away from its scene root gets re-pivoted to
 	# bbox bottom-center before the cfg offset applies.
@@ -642,6 +658,67 @@ func test_teleporter_dressing() -> void:
 	assert_eq(smat_default.get_shader_parameter("scroll_speed"), Vector2.ZERO, "default has no scroll")
 
 	pivot.free()
+	el.free()
+	print("")
+
+
+## ── Teleporter dressing: per-texture overrides ───────
+## Split out of test_teleporter_dressing to stay under the complexity bound.
+## Covers only the `textures` merge — two surfaces on one piece disagreeing is
+## the whole reason it exists (o0s_warpcn's glow scrolls over a static plate).
+func test_teleporter_dressing_texture_overrides() -> void:
+	print("── TeleporterDressing (per-texture uv/scroll overrides) ──")
+	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
+	var el = DressScript.new()
+
+	var piece_cfg := {
+		"uv": {"wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0},
+		"textures": {
+			"glow.png": {
+				"uv": {"wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [-2.68, 5.31], "rot": 0},
+				"scroll": {"u": -0.5, "v": 0},
+			},
+			"plate.png": {
+				"uv": {"wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0},
+			},
+		},
+	}
+	var glow_cfg: Dictionary = el._texture_cfg(piece_cfg, "glow.png")
+	assert_eq(glow_cfg.get("uv", {}).get("offset", []), [-2.68, 5.31], "glow takes its own offset")
+	assert_eq(glow_cfg.get("scroll", {}).get("u", 0.0), -0.5, "glow takes its own scroll")
+	var plate_cfg: Dictionary = el._texture_cfg(piece_cfg, "plate.png")
+	assert_eq(plate_cfg.get("uv", {}).get("repeat", []), [2, 2], "plate takes its own repeat")
+	assert_true(not plate_cfg.has("scroll"), "plate inherits no scroll (piece sets none)")
+	# An unlisted texture — and a texture with no resource path at all, which is
+	# what a synthetic ImageTexture gives — fall back to the piece config.
+	assert_eq(el._texture_cfg(piece_cfg, "other.png"), piece_cfg, "unlisted texture uses piece cfg")
+	assert_eq(el._texture_cfg(piece_cfg, ""), piece_cfg, "unnamed texture uses piece cfg")
+	# Per-key merge: a texture entry that sets only scroll keeps the piece uv.
+	var scroll_only := {
+		"uv": {"wrap": ["clamp", "clamp"], "repeat": [3, 3], "offset": [0, 0], "rot": 0},
+		"textures": {"glow.png": {"scroll": {"u": 1, "v": 0}}},
+	}
+	var merged: Dictionary = el._texture_cfg(scroll_only, "glow.png")
+	assert_eq(merged.get("uv", {}).get("repeat", []), [3, 3], "scroll-only override inherits piece uv")
+	assert_eq(merged.get("scroll", {}).get("u", 0.0), 1.0, "scroll-only override applies its scroll")
+
+	# Sidedness carries from the source material. o0s_warpcn mixes the two on
+	# one mesh — glow CULL_DISABLED over a CULL_BACK plate — and the shader is
+	# compile-time double-sided, so a back-culled surface must be told to
+	# discard its back faces or it draws through the piece as an offset,
+	# discoloured copy (what the city pad showed).
+	var back_src := StandardMaterial3D.new()
+	back_src.albedo_texture = ImageTexture.new()
+	back_src.cull_mode = BaseMaterial3D.CULL_BACK
+	var back_mat: ShaderMaterial = el._make_dress_material(back_src, piece_cfg)
+	assert_true(back_mat.get_shader_parameter("cull_back"), "CULL_BACK surface discards back faces")
+
+	var both_src := StandardMaterial3D.new()
+	both_src.albedo_texture = ImageTexture.new()
+	both_src.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var both_mat: ShaderMaterial = el._make_dress_material(both_src, piece_cfg)
+	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
+
 	el.free()
 	print("")
 
