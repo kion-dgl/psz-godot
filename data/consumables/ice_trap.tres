@@ -9,5 +9,6 @@ name = "Ice Trap"
 japanese_name = "アイストラップ"
 details = "Inflicts Freeze Status effect on enemies."
 rarity = 1
-max_stack = 10
+max_stack = 5
 pso_world_id = 312
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")

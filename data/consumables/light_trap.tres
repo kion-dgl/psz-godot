@@ -9,5 +9,6 @@ name = "Light Trap"
 japanese_name = "ライトトラップ"
 details = "Inflicts Confusion status effect on enemies."
 rarity = 1
-max_stack = 10
+max_stack = 5
 pso_world_id = 313
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")

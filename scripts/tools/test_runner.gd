@@ -106,6 +106,7 @@ func _run_tests_core() -> void:
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
+	test_player_traps()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_area_objects()
@@ -581,6 +582,68 @@ func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
 				seen[nxt] = true
 				queue.append(nxt)
 	return false
+
+
+## ── Player-placed traps (#575) ───────
+## Four consumables that only a CAST can carry and drop. Pins the four things
+## that make them work as items rather than just models: the shop sells them,
+## the palette can hold them, they cap at 5, and a non-CAST cannot use them.
+## Pack-free — data resources and constants only.
+func test_player_traps() -> void:
+	print("── Player-placed traps (shop / palette / cap / CAST-only) ──")
+	const TrapScript := preload("res://scripts/3d/elements/trap_ball.gd")
+	var trap_ids := ["heat_trap", "ice_trap", "light_trap", "heal_trap"]
+
+	# Every trap item has a ball and an effect, and nothing else sneaks in.
+	assert_eq(TrapScript.TRAP_MODELS.size(), 4, "four trap balls")
+	assert_eq(TrapScript.TRAP_EFFECTS.size(), 4, "four trap effects")
+	var models := {}
+	for id in trap_ids:
+		assert_true(TrapScript.TRAP_MODELS.has(id), "%s has a ball model" % id)
+		assert_true(TrapScript.TRAP_EFFECTS.has(id), "%s has an effect" % id)
+		models[str(TrapScript.TRAP_MODELS[id])] = true
+	assert_eq(models.size(), 4, "each trap maps to a DIFFERENT ball (the mapping is 1:1)")
+
+	# Effects resolve against the real status table, or the trap does nothing.
+	for id in trap_ids:
+		var effect: Dictionary = TrapScript.TRAP_EFFECTS[id]
+		var status: String = str(effect.get("status", ""))
+		if not status.is_empty():
+			assert_true(CombatManager.STATUS_EFFECTS.has(status),
+				"%s inflicts a status that exists (%s)" % [id, status])
+		else:
+			assert_true(float(effect.get("heal_percent", 0.0)) > 0.0,
+				"%s does something — a status or a heal" % id)
+
+	# Carry up to 5 each, and CAST-only through the shop's capability hook.
+	for id in trap_ids:
+		var consumable = ConsumableRegistry.get_consumable(id)
+		assert_true(consumable != null, "%s is a registered consumable" % id)
+		if consumable == null:
+			continue
+		assert_eq(consumable.max_stack, 5, "%s stacks to 5" % id)
+		assert_true(consumable.can_be_used_by("Hunter Cast"), "%s usable by HUcast" % id)
+		assert_true(consumable.can_be_used_by("Ranger Cast"), "%s usable by RAcast" % id)
+		assert_true(not consumable.can_be_used_by("Hunter Human"), "%s NOT usable by HUmar" % id)
+		assert_true(not consumable.can_be_used_by("Force Newman"), "%s NOT usable by FOnewm" % id)
+
+	# Buyable at the item shop, under their own category.
+	var shop = ShopRegistry.get_shop("item_shop")
+	assert_true(shop != null, "item shop loads")
+	if shop != null:
+		var sold := {}
+		for entry in shop.items:
+			sold[str(entry.get("item", "")).to_lower().replace(" ", "_")] = str(entry.get("category", ""))
+		for id in trap_ids:
+			assert_true(sold.has(id), "item shop sells %s" % id)
+			assert_eq(str(sold.get(id, "")), "Traps", "%s is in the Traps category" % id)
+
+	# Equippable to the action palette, and treated as a consumable there.
+	for id in trap_ids:
+		assert_true(not ActionPalette.get_action_data(id).is_empty(),
+			"%s is a palette action" % id)
+		assert_true(ActionPalette.is_consumable(id), "%s counts as a consumable slot" % id)
+	print("")
 
 
 func test_teleporter_dressing() -> void:
