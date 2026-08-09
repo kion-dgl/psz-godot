@@ -43,7 +43,10 @@ func build(layout: Dictionary) -> void:
 		if not packed:
 			push_warning("TeleporterDressing: missing model %s/%s.glb" % [set_id, piece_name])
 			continue
-		add_child(_build_piece(piece_name, packed.instantiate() as Node3D, pieces[piece_name]))
+		add_child(_build_piece(
+			piece_name, packed.instantiate() as Node3D, pieces[piece_name],
+			OBJECTS_DIR + set_id + "/" + piece_name + ".glb",
+		))
 
 
 func _load_layout() -> Dictionary:
@@ -60,7 +63,7 @@ func _load_layout() -> Dictionary:
 
 ## Wrap a model in a pivot at the model's bbox bottom-center and apply the
 ## piece config (pos/ry/s offsets from the anchor, uv + scroll on materials).
-func _build_piece(piece_name: String, model: Node3D, cfg: Dictionary) -> Node3D:
+func _build_piece(piece_name: String, model: Node3D, cfg: Dictionary, glb_path := "") -> Node3D:
 	var pivot := Node3D.new()
 	pivot.name = piece_name
 	var aabb := _combined_aabb(model)
@@ -70,7 +73,7 @@ func _build_piece(piece_name: String, model: Node3D, cfg: Dictionary) -> Node3D:
 	pivot.position = Vector3(pos[0], pos[1], pos[2])
 	pivot.rotation.y = float(cfg.get("ry", 0.0))
 	pivot.scale = Vector3.ONE * float(cfg.get("s", 1.0))
-	_apply_dress_materials(model, cfg)
+	_apply_dress_materials(model, cfg, glb_path)
 	return pivot
 
 
@@ -116,15 +119,17 @@ static func dress_model_from_layout(model: Node3D, piece_name: String) -> bool:
 	if not pieces.has(piece_name):
 		push_warning("TeleporterDressing: no piece '%s' in layout" % piece_name)
 		return false
-	_apply_dress_materials(model, pieces[piece_name])
+	var set_id: String = str((parsed as Dictionary).get("set", ""))
+	var glb_path := OBJECTS_DIR + set_id + "/" + piece_name + ".glb"
+	_apply_dress_materials(model, pieces[piece_name], glb_path)
 	return true
 
 
 ## Swap every textured surface to uv_dressing.gdshader, carrying over the
 ## imported material's texture/color/scissor and applying the piece's uv +
 ## scroll config.
-static func _apply_dress_materials(model: Node3D, cfg: Dictionary) -> void:
-	_dress_recursive(model, cfg)
+static func _apply_dress_materials(model: Node3D, cfg: Dictionary, glb_path := "") -> void:
+	_dress_recursive(model, cfg, glb_path)
 
 
 ## Debug palette, indexed by surface. Only used when PSZ_DRESSING_DEBUG_TINT=1.
@@ -136,7 +141,7 @@ const DEBUG_TINTS: Array[Color] = [
 ]
 
 
-static func _dress_recursive(node: Node, cfg: Dictionary) -> void:
+static func _dress_recursive(node: Node, cfg: Dictionary, glb_path := "") -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		var debug_mode := OS.get_environment("PSZ_DRESSING_DEBUG_TINT")
@@ -145,7 +150,7 @@ static func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture:
-				var dressed := _make_dress_material(mat as StandardMaterial3D, cfg)
+				var dressed := _make_dress_material(mat as StandardMaterial3D, cfg, glb_path)
 				if debug_y:
 					dressed.set_shader_parameter("debug_y_tint", true)
 					print("[dressing-debug] %s surface %d: Y-banded (yellow<-0.375, cyan<0.15, magenta>=0.15) tex=%s" % [
@@ -157,7 +162,7 @@ static func _dress_recursive(node: Node, cfg: Dictionary) -> void:
 						_albedo_name(mat as StandardMaterial3D)])
 				mesh_inst.set_surface_override_material(i, dressed)
 	for child in node.get_children():
-		_dress_recursive(child, cfg)
+		_dress_recursive(child, cfg, glb_path)
 
 
 ## Resolve the uv/scroll config for one texture.
@@ -196,8 +201,9 @@ static func _albedo_name(src: StandardMaterial3D) -> String:
 ## Build the ShaderMaterial for one surface from the imported material + the
 ## piece's layout config. Pure (no tree access) so the test_runner can cover
 ## the cfg → uniform mapping directly.
-static func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary) -> ShaderMaterial:
-	var cfg := _texture_cfg(piece_cfg, _albedo_name(src))
+static func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary, glb_path := "") -> ShaderMaterial:
+	var tex_name := _albedo_name(src)
+	var cfg := _texture_cfg(piece_cfg, tex_name)
 	var smat := ShaderMaterial.new()
 	smat.shader = UV_SHADER
 	smat.set_shader_parameter("albedo_tex", src.albedo_texture)
@@ -212,7 +218,13 @@ static func _make_dress_material(src: StandardMaterial3D, piece_cfg: Dictionary)
 	if cfg.has("min_y"):
 		smat.set_shader_parameter("min_y", float(cfg["min_y"]))
 	var uv: Dictionary = cfg.get("uv", {})
-	var wrap_modes: Array = uv.get("wrap", ["mirror", "mirror"])
+	# Default the wrap to what the model itself declares (#576) instead of a
+	# blanket "mirror". o00_compass2 and o0s_warpcn's cwarp2a are repeat/repeat
+	# in the source but were being mirrored. An explicit `wrap` in the layout
+	# still wins — that is the point of the override.
+	var source: Dictionary = SourceWrap.for_texture(glb_path, tex_name) if not glb_path.is_empty() else {}
+	var default_wrap: Array = [str(source.get("s", "mirror")), str(source.get("t", "mirror"))]
+	var wrap_modes: Array = uv.get("wrap", default_wrap)
 	smat.set_shader_parameter("wrap_u", WRAP.get(wrap_modes[0], 0))
 	smat.set_shader_parameter("wrap_v", WRAP.get(wrap_modes[1], 0))
 	var repeat: Array = uv.get("repeat", [1.0, 1.0])
