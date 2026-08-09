@@ -61,7 +61,7 @@ func _init() -> void:
 	collision_size = Vector3(1.5, 2.0, 1.5)
 
 
-var _reticle: Sprite3D
+var _reticle: Node3D
 var is_alive: bool = true
 
 

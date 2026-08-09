@@ -25,9 +25,23 @@ func _init() -> void:
 	collision_size = Vector3(2.0, 2.0, 2.0)
 
 
+var _quest_marker: QuestMarker
+
+
+func _ready() -> void:
+	super._ready()
+	# Point-of-interest star over the objective (#577). Before this the pickup
+	# was an unmarked spinning gold star with nothing to say the quest wants it.
+	_quest_marker = QuestMarker.build()
+	if _quest_marker:
+		add_child(_quest_marker)
+
+
 func _apply_state() -> void:
 	match element_state:
 		"collected":
+			if _quest_marker:
+				_quest_marker.visible = false
 			visible = false
 			set_process(false)
 			interactable = false

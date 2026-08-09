@@ -21,7 +21,7 @@ var collision_body: StaticBody3D
 var hurtbox: Hurtbox
 
 
-var _reticle: Sprite3D
+var _reticle: Node3D
 var is_alive: bool = true
 
 
