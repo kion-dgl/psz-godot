@@ -173,6 +173,11 @@ static func derive_section_label(area_name: String, first_stage_id: String,
 
 
 func _is_area_unlocked(area_id: String) -> bool:
+	# Testing toggle (start menu -> Debug). Deliberately separate from "Unlock
+	# All Missions": that marks every quest complete, which is a save-state
+	# change you then have to undo. This only affects what the warp lists.
+	if DebugConfig.unlock_all_areas:
+		return true
 	if area_id == "gurhacia":
 		return true
 	# An area unlocks when a completed quest cleared it (quest.area_id == area_id).
@@ -257,15 +262,23 @@ func _resume_free_roam_field(area_id: String, section_idx: int) -> void:
 	_goto_field(section, SessionManager.get_section_state(section_idx))
 
 
-## Start a fresh expedition into a free field (hand-authored quest or generated).
+## Start a fresh expedition into a free field — always GENERATED.
+##
+## This used to prefer a hand-authored data/field_quests/*.json and only fall
+## back to the generator, and pick_field_quest always returns the first match,
+## so every free field was the same rooms in the same order with the same fights
+## on every entry. PSZ rolls a new field per run.
+##
+## The generator could not actually build these areas until now: it never
+## rotated a room while laying the main path, so nothing fit and all 200
+## attempts fell through to a fixed 5-room line. Rooms are picked by rotation
+## now, and the cells they emit carry portals and objects, so there is nothing
+## left for the static file to supply.
+##
+## Story quests are unaffected — they load their authored quest, not this path.
 func _enter_fresh_field(area_id: String) -> void:
 	SessionManager.enter_field(area_id, "normal")
-	var quest := QuestLoader.pick_field_quest(area_id)
-	var sections: Array
-	if not quest.is_empty() and quest.has("sections"):
-		sections = quest["sections"]
-	else:
-		sections = GridGenerator.new().generate_field("normal", area_id)["sections"]
+	var sections: Array = GridGenerator.new().generate_field("normal", area_id)["sections"]
 	SessionManager.set_field_sections(sections)
 	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 		"current_cell_pos": str(sections[0]["start_pos"]),

@@ -582,6 +582,7 @@ func _get_debug_list() -> Array:
 		"Show Player Position: %s" % (on if DebugConfig.show_player_position else off),
 		"Equip All (debug): %s" % (on if DebugConfig.equip_all else off),
 		"Reveal Map (debug): %s" % (on if DebugConfig.reveal_map else off),
+		"Unlock All Areas (warp): %s" % (on if DebugConfig.unlock_all_areas else off),
 	]
 
 
@@ -640,6 +641,13 @@ func _toggle_debug(idx: int) -> void:
 			DebugConfig.equip_all = not DebugConfig.equip_all
 		9:
 			DebugConfig.reveal_map = not DebugConfig.reveal_map
+		10:
+			DebugConfig.unlock_all_areas = not DebugConfig.unlock_all_areas
+			_debug_msg = (
+				"Every field listed in the city warp."
+				if DebugConfig.unlock_all_areas
+				else "Warp back to quest-unlocked fields only."
+			)
 
 
 func _enter_sub(idx: int) -> void:

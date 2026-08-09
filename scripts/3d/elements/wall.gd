@@ -14,11 +14,13 @@ var collision_body: StaticBody3D
 
 func _init() -> void:
 	element_state = "intact"
-	model_path = "valley/o01_wall.glb"
 	collision_size = Vector3(6, 1.85, 0.52)
 
 
 func _ready() -> void:
+	# Per-area wall art. The Eternal Tower ships no oNN_wall, so AreaObjects
+	# falls back to the Valley model there rather than loading nothing.
+	model_path = AreaObjects.current_model_path("wall")
 	super._ready()
 	collision_body = _build_static_collision("WallCollision")
 	_setup_mirror_textures()
