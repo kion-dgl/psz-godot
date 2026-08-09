@@ -137,6 +137,7 @@ func _run_tests_core() -> void:
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_free_roam_per_area_state()
+	test_free_roam_field_lifecycle()
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
 	test_player_defeat_return()
@@ -5989,6 +5990,65 @@ func _reset_session_state() -> void:
 	SessionManager._completed_quest.clear()
 	SessionManager.clear_free_roam_state()
 	TelepipeManager.cancel("test_setup")
+
+
+## ── Free-Roam field lifecycle: generate → persist → regenerate ───────
+## Spec /states/quest-vs-field. test_free_roam_per_area_state covers the STORE
+## (what is retained and when it is cleared); this covers the FIELD ITSELF —
+## that a first visit rolls a random layout, that the SAME layout comes back
+## until a quest is taken, and that a new one is rolled afterwards.
+##
+## This is what the static data/field_quests/*.json used to prevent: the store
+## cleared correctly, but the next entry replayed the identical hand-authored
+## layout, so "a new field is created" was never true.
+func test_free_roam_field_lifecycle() -> void:
+	print("── Free-Roam field lifecycle (generate → persist → regenerate) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	_reset_session_state()
+
+	# First visit: the warp's fresh-entry path generates rather than loading a file.
+	SessionManager.enter_field("gurhacia", "normal")
+	var first: Array = GridGen.new().generate_field("normal", "gurhacia")["sections"]
+	SessionManager.set_field_sections(first)
+	var first_sig := JSON.stringify(first)
+	SessionManager.flush_free_roam_field()
+
+	# Re-entry inside Free Roam restores the SAME field — not a fresh roll.
+	assert_true(SessionManager.enter_free_roam_field("gurhacia"), "re-enter Valley from the store")
+	assert_eq(JSON.stringify(SessionManager.get_field_sections()), first_sig,
+		"the generated field persists byte-for-byte across a city return")
+	SessionManager.flush_free_roam_field()
+
+	# A second area generates its own field and neither disturbs the other.
+	SessionManager.enter_field("ozette", "normal")
+	SessionManager.set_field_sections(GridGen.new().generate_field("normal", "ozette")["sections"])
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.enter_free_roam_field("gurhacia"), "Valley still retained after a Wetlands trip")
+	assert_eq(JSON.stringify(SessionManager.get_field_sections()), first_sig,
+		"Valley's field is unchanged by visiting another free field")
+	SessionManager.flush_free_roam_field()
+
+	# Accepting a quest drops every retained field.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	assert_true(SessionManager.get_free_roam_area_ids().is_empty(),
+		"accepting a quest clears the retained fields")
+	assert_true(not SessionManager.has_free_roam_field("gurhacia"),
+		"Valley has no retained field, so the next visit takes the fresh-generation path")
+	SessionManager.start_accepted_quest()
+	SessionManager.complete_quest()
+	SessionManager.report_quest()
+
+	# After the quest, a visit rolls a NEW field. Generation is random, so rather
+	# than asserting one roll differs (which a coincidence could fail), assert the
+	# generator produces more than one distinct layout — a fixed file cannot.
+	var layouts := {}
+	for i in range(6):
+		layouts[JSON.stringify(GridGen.new().generate_field("normal", "gurhacia")["sections"])] = true
+	assert_true(layouts.size() > 1,
+		"post-quest visits roll a new field (%d distinct layouts in 6 rolls)" % layouts.size())
+
+	_reset_session_state()
+	print("")
 
 
 func test_free_roam_per_area_state() -> void:
