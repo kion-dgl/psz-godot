@@ -48,6 +48,7 @@ const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEdi
 const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'));
 const ShopIndex = lazy(() => import('./shop-3d/ShopIndex'));
 const WallDebug = lazy(() => import('./wall-debug/WallDebug'));
+const FieldGenerator = lazy(() => import('./field-generator/FieldGenerator'));
 const ShopMenu3D = lazy(() => import('./shop-3d/ShopMenu3D'));
 
 type NavLink = { to: string; label: string };
@@ -296,6 +297,7 @@ export default function App() {
             <Route path="/shop-3d" element={<ShopIndex />} />
             <Route path="/shop-3d/:shopId" element={<ShopMenu3D />} />
             <Route path="/wall-debug" element={<WallDebug />} />
+            <Route path="/field-generator" element={<FieldGenerator />} />
           </Routes>
         </Suspense>
       </div>

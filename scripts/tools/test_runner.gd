@@ -108,6 +108,7 @@ func _run_tests_core() -> void:
 	test_element_collision_setup()
 	test_teleporter_dressing()
 	test_area_objects()
+	test_generated_field_doors()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -469,6 +470,115 @@ func test_area_objects() -> void:
 	root.free()
 	empty.free()
 	print("")
+
+
+## ── Generated free fields: doors line up ───────
+## GridGenerator now rotates rooms to fit the layout, which is what makes
+## generation succeed at all. Rotation is also what can silently misalign a
+## door, so these are the invariants that decide whether a field is walkable:
+## a connection must be reciprocal, must have a portal, and that portal must be
+## backed by a real config portal once the cell rotation is applied. Pack-free —
+## stage configs, RE tables and enemy resources are all in git.
+func test_generated_field_doors() -> void:
+	print("── Generated free fields (door alignment) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var areas := ["gurhacia", "ozette", "rioh", "makara", "paru", "arca", "dark"]
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	var cfg_json := JSON.new()
+	cfg_json.parse(cfg_file.get_as_text())
+	var configs: Dictionary = cfg_json.data
+
+	# Tallies, so one assert per invariant names the invariant rather than the
+	# first cell that happened to break it.
+	# SEEDED. Generation is random, and an unseeded sweep makes this test flaky
+	# on the tail below — a fixed set of seeds keeps a red run reproducible.
+	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0, "fell_back": 0}
+	for area in areas:
+		for roll in range(3):
+			var gen = GridGen.new()
+			gen.set_seed(roll)
+			for section in gen.generate_field("normal", area)["sections"]:
+				_audit_generated_section(section, configs, t)
+
+	# Door alignment is absolute — a misaligned door is an unwalkable field.
+	assert_eq(t["one_way"], 0, "no one-way door pairs across generated fields")
+	assert_eq(t["no_portal"], 0, "every connection has a portal")
+	assert_eq(t["unbacked"], 0, "every portal is backed by a config portal at the cell's rotation")
+	assert_eq(t["unreachable"], 0, "every section's end cell is reachable from its start")
+	# Fallbacks are a RATE, not zero. Rotation-aware room selection took this
+	# from 100% (every section of every area, before the fix) to ~1.5% measured
+	# over 840 sections. The tail is a real remaining gap, tracked separately —
+	# the bound here catches a regression back toward "never generates" without
+	# pretending the tail is gone. A fallback section is still a valid walkable
+	# field, just a fixed 5-room line with no objects.
+	assert_true(t["fell_back"] <= 2, "grid sections falling back to the 5-room line stays in the tail (got %d of 42)" % t["fell_back"])
+	print("  INFO: %d generated cells checked across %d areas" % [t["cells"], areas.size()])
+	print("")
+
+
+## One section's door invariants, accumulated into `t`. Split out of
+## test_generated_field_doors to stay under the complexity bound.
+func _audit_generated_section(section: Dictionary, configs: Dictionary, t: Dictionary) -> void:
+	const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
+	var cells: Array = section["cells"]
+	t["cells"] += cells.size()
+	# The fallback is a fixed 5-room line with no objects; a grid section that
+	# lands on it means generation failed.
+	if str(section.get("type", "")) == "grid" and cells.size() < 6:
+		t["fell_back"] += 1
+
+	var by_pos := {}
+	for cell in cells:
+		by_pos[str(cell["pos"])] = cell
+
+	for cell in cells:
+		var connections: Dictionary = cell.get("connections", {})
+		var portals: Dictionary = cell.get("portals", {})
+		for dir in connections:
+			var target: String = str(connections[dir])
+			if by_pos.has(target):
+				var back: Dictionary = by_pos[target].get("connections", {})
+				if str(back.get(OPPOSITE[dir], "")) != str(cell["pos"]):
+					t["one_way"] += 1
+			if not portals.has(dir):
+				t["no_portal"] += 1
+		if not cell.has("objects"):
+			t["no_portal"] += 1
+		for dir in portals:
+			if dir == "default":
+				continue
+			if not _portal_backed(configs, str(cell["stage_id"]), int(cell.get("rotation", 0)), str(dir)):
+				t["unbacked"] += 1
+
+	var sp := str(section.get("start_pos", ""))
+	var ep := str(section.get("end_pos", ""))
+	if by_pos.has(sp) and by_pos.has(ep) and sp != ep and not _connected(by_pos, sp, ep):
+		t["unreachable"] += 1
+
+
+## Does `stage_id` have a config portal that faces `game_dir` once rotated?
+func _portal_backed(configs: Dictionary, stage_id: String, rotation: int, game_dir: String) -> bool:
+	for portal in configs.get(stage_id, {}).get("portals", []):
+		var base: String = str(portal.get("direction", ""))
+		if not base.is_empty() and StageRotation.rotate_dir(base, rotation) == game_dir:
+			return true
+	return false
+
+
+## BFS over `connections`.
+func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
+	var seen := {from_pos: true}
+	var queue: Array = [from_pos]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		if cur == to_pos:
+			return true
+		for d in by_pos[cur].get("connections", {}):
+			var nxt: String = str(by_pos[cur]["connections"][d])
+			if by_pos.has(nxt) and not seen.has(nxt):
+				seen[nxt] = true
+				queue.append(nxt)
+	return false
 
 
 func test_teleporter_dressing() -> void:

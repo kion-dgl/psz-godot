@@ -5,8 +5,27 @@ extends RefCounted
 ## falls back to hardcoded GATES for valley (s01).
 
 ## One RNG per generator instance so a field's layout and its fights come from
-## the same stream — seed it to reproduce a whole field, not just its rooms.
+## the same stream. EVERY random choice in this file must go through it —
+## Array.shuffle(), randi() and randf() read Godot's global RNG, which cannot be
+## seeded per generator, and a single one of them left in makes the whole field
+## irreproducible. That matters because reproducing a field from a seed is how
+## we compare our output against the game's own generation.
 var _rng := RandomNumberGenerator.new()
+
+
+## Reproduce a specific field. Same seed + same area + same params = same field,
+## rooms, rotations, gates, keys and enemy waves included.
+func set_seed(value: int) -> void:
+	_rng.seed = value
+
+
+## Fisher-Yates through _rng — Array.shuffle() would use the global RNG.
+func _shuffle(arr: Array) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j: int = _rng.randi_range(0, i)
+		var tmp = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
 
 const DIRECTIONS := ["north", "east", "south", "west"]
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
@@ -722,7 +741,7 @@ func _add_branches(grid: Dictionary, path: Array[Vector2i],
 				_find_branch_replacement(candidates, grid, path_pos, all_stages,
 					entry_dir, exit_dir, dir, Vector2i(br, bc))
 
-	candidates.shuffle()
+	_shuffle(candidates)
 	var placed := 0
 
 	for c in candidates:
@@ -782,7 +801,7 @@ func _find_branch_replacement(candidates: Array[Dictionary], grid: Dictionary,
 func _place_dead_end(grid: Dictionary, pos_key: String, entry_dir: String,
 		all_stages: Array[String]) -> bool:
 	var shuffled: Array[String] = all_stages.duplicate()
-	shuffled.shuffle()
+	_shuffle(shuffled)
 	for stage_id in shuffled:
 		var gates: Array[String] = _get_gates(stage_id)
 		if gates.size() != 1:
@@ -823,7 +842,7 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 		var cell: Dictionary = grid[_pos_key(path[i])]
 		if not cell.get("is_end", false):
 			gate_candidates.append(path[i])
-	gate_candidates.shuffle()
+	_shuffle(gate_candidates)
 
 	var placed := 0
 	for gate_pos in gate_candidates:
@@ -854,7 +873,7 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 
 		# Prefer branch cells (80% chance if available)
 		var key_candidates: Array[Vector2i]
-		if not branch_candidates.is_empty() and randf() < 0.8:
+		if not branch_candidates.is_empty() and _rng.randf() < 0.8:
 			key_candidates = branch_candidates
 		elif not main_candidates.is_empty():
 			key_candidates = main_candidates
@@ -863,7 +882,7 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 		else:
 			continue
 
-		var key_pos: Vector2i = key_candidates[randi() % key_candidates.size()]
+		var key_pos: Vector2i = key_candidates[_rng.randi_range(0, key_candidates.size() - 1)]
 
 		# Find which gate direction to lock
 		var gates: Array[String] = _get_gates(str(gate_cell["stage_id"]))
@@ -874,7 +893,7 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 		if exit_gates.is_empty():
 			continue
 
-		var locked_dir: String = exit_gates[randi() % exit_gates.size()]
+		var locked_dir: String = exit_gates[_rng.randi_range(0, exit_gates.size() - 1)]
 		gate_cell["is_key_gate"] = true
 		gate_cell["key_gate_direction"] = locked_dir
 
