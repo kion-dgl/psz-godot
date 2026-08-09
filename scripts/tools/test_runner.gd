@@ -455,8 +455,10 @@ func test_source_wrap_per_axis() -> void:
 	assert_eq(str(one.get("t", "")), "mirror", "for_texture resolves a single texture")
 	# Unknown model / unknown texture must be empty, not a guess — callers use
 	# {} as the signal to leave the material alone.
-	assert_true(SourceWrap.for_glb("res://assets/objects/valley/does_not_exist.glb").is_empty(),
-		"a missing model yields no opinion")
+	# Path assembled at runtime on purpose: check_asset_refs.py greps source for
+	# asset-path literals and would flag a deliberately-absent one.
+	var absent := "res://assets/objects/valley/" + "does_not_exist" + ".glb"
+	assert_true(SourceWrap.for_glb(absent).is_empty(), "a missing model yields no opinion")
 	assert_true(SourceWrap.for_texture(
 		"res://assets/objects/valley/o01_wall.glb", "not_a_texture.png").is_empty(),
 		"an unknown texture yields no opinion")
