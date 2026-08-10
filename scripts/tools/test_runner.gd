@@ -172,6 +172,7 @@ func _run_tests_systems() -> void:
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
+	test_quest_item_burst_is_static()
 	test_dialog_box_not_restored_after_close()
 	test_quest_rewards()
 	test_quest_reward_data()
@@ -722,6 +723,45 @@ func test_teleporter_dressing_texture_overrides() -> void:
 	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
 
 	el.free()
+	print("")
+
+
+# ── Quest pickup is one still burst, not a star plus a badge ──
+# The gold star was a stand-in for ef_com_quest, so once the real texture
+# landed the pickup carried both — the imitation spinning on the floor and the
+# original hovering above it. The burst is now the model itself, and nothing
+# animates it. Pack-free: falls back to the star when assets/effects is absent,
+# which is exactly the case this also has to keep working.
+func test_quest_item_burst_is_static() -> void:
+	print("── QuestItemPickup shows one still burst (no star, no spin) ──")
+	var qitem := QuestItemPickup.new()
+	qitem._load_model()
+
+	# Never invisible: an objective the player cannot see is an unclearable quest.
+	assert_true(qitem.model != null, "pickup always builds a visible model")
+	assert_eq(qitem.get_child_count(), 1, "one visual, not a model plus a marker")
+
+	# DropBase spins `model` every frame. This one must not.
+	var before: Vector3 = qitem.model.rotation
+	qitem._update_animation(1.0)
+	assert_eq(qitem.model.rotation, before, "burst does not spin")
+
+	# And it does not bob: the height is a constant, not a starting point.
+	assert_eq(QuestMarker.DEFAULT_HEIGHT, 0.7, "burst centre sits at a fixed 0.7")
+
+	# The burst path itself only exists with the pack mounted; the CI runner has
+	# no assets/effects on disk, so assert it only where it can be built.
+	if ResourceLoader.exists("res://assets/effects/ef_com_quest/ef_com_quest.glb"):
+		assert_true(qitem.model is QuestMarker, "pack present → the burst IS the model")
+		var marker := QuestMarker.build()
+		assert_true(marker != null, "marker builds from the pack")
+		if marker:
+			assert_eq(marker.position.y, QuestMarker.DEFAULT_HEIGHT, "marker sits at its height")
+			marker.free()
+	else:
+		print("  (no pack — burst not built; fallback star path exercised instead)")
+
+	qitem.free()
 	print("")
 
 
