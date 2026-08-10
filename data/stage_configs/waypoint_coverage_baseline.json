@@ -21,15 +21,7 @@
     "s02b_td2",
     "s02b_xb2",
     "s02e_ia1",
-    "s02z_na1",
-    "s07a_ic1",
-    "s07a_td1",
-    "s07a_xb2",
-    "s07b_ic1",
-    "s07b_td1",
-    "s07b_xb2",
-    "s07z_na1",
-    "s07z_na2"
+    "s02z_na1"
   ],
   "invalid": [
     "s02a_tc3"
