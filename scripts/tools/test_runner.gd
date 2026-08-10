@@ -765,7 +765,10 @@ func test_city_scroll_fixes() -> void:
 	wall.mesh = QuadMesh.new()
 	var wall_mat := StandardMaterial3D.new()
 	var wall_tex := ImageTexture.new()
-	wall_tex.resource_path = "res://assets/stages/city_e/market/s00_0_back00.png"
+	# s00e_sa2's copy, not the market's: market/s00_* is excluded from the
+	# export, and check-asset-refs rejects a res:// path that isn't in the pack.
+	# The lookup keys on the basename, so the shipped path is the right one.
+	wall_tex.resource_path = "res://assets/stages/city_e/s00e_sa2/lndmd/s00_0_back00.png"
 	wall_mat.albedo_texture = wall_tex
 	wall.set_surface_override_material(0, wall_mat)
 	area.add_child(wall)
