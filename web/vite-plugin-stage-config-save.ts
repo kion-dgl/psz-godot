@@ -19,6 +19,10 @@ import type { Plugin } from 'vite';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
+// Same validator the `npm run wp:check` CLI and the CI coverage test use, so
+// a waypoint graph is judged by one definition wherever it's checked.
+// @ts-expect-error — plain .mjs module, no type declarations.
+import { validateGraph } from '../scripts/tools/waypoints/validate_graph.mjs';
 
 const CONFIG_REL = 'data/stage_configs/unified-stage-configs.json';
 
@@ -27,7 +31,11 @@ interface SaveBody {
   config: Record<string, unknown>;
 }
 
-function saveStage(repoRoot: string, body: SaveBody): { ok: true; path: string } | { ok: false; error: string } {
+type SaveResult =
+  | { ok: true; path: string; waypoints: { errors: string[]; warnings: string[] } | null }
+  | { ok: false; error: string };
+
+function saveStage(repoRoot: string, body: SaveBody): SaveResult {
   const full = path.join(repoRoot, CONFIG_REL);
   if (!existsSync(full)) return { ok: false, error: `${CONFIG_REL} not found` };
   if (!body.stageId || typeof body.stageId !== 'string') {
@@ -44,7 +52,17 @@ function saveStage(repoRoot: string, body: SaveBody): { ok: true; path: string }
   }
   parsed[body.stageId] = body.config;
   writeFileSync(full, JSON.stringify(parsed, null, 2) + '\n');
-  return { ok: true, path: full };
+
+  // Report on the nav graph rather than refusing the write — a half-authored
+  // room is a legitimate thing to save. The autopilot is what enforces this
+  // for real; surfacing it here just means the author hears about a stranded
+  // spawn now instead of after a 25-minute matrix run.
+  const cfg = body.config as { waypoints?: unknown[] };
+  const waypoints = (cfg.waypoints?.length ?? 0) > 0
+    ? (({ errors, warnings }) => ({ errors, warnings }))(validateGraph(body.stageId, body.config))
+    : null;
+
+  return { ok: true, path: full, waypoints };
 }
 
 async function readJsonBody<T>(req: { [Symbol.asyncIterator](): AsyncIterator<Buffer | string> }): Promise<T> {

@@ -1,0 +1,5 @@
+{
+  "comment": "Waypoint-coverage debt. `missing` = field stages with no authored nav graph; `invalid` = graphs that exist but violate the authoring contract. Both shrink as rooms are authored (docs/waypoint-authoring.md). web/src/__tests__/waypoint-coverage.test.ts fails if either grows — re-run `npm run wp:baseline` to record progress.",
+  "missing": [],
+  "invalid": []
+}
