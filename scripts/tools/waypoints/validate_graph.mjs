@@ -83,8 +83,19 @@ export function validateGraph(stageId, cfg) {
   }
 
   const nodesOfKind = (kind) => waypoints.filter((w) => w.kind === kind && byId.has(w.id));
+  // Nodes belonging to gates the stage declares deliberately unreachable.
+  const excusedNodes = new Set();
 
   if (portals.length > 0) {
+    // Some gates are deliberately unreachable — s02b_lb3's south gate sits
+    // across a broken bridge the player can see over but not cross. Those
+    // are declared per stage so an intentional gap reads as intent rather
+    // than as debt, and so an accidental one still fails:
+    //   "waypointExceptions": { "unreachable": ["south"], "reason": "..." }
+    // The pair must still exist at the contract offsets and be joined to
+    // each other; it's only excused from the all-gates-reachable rule.
+    const excused = new Set(cfg.waypointExceptions?.unreachable ?? []);
+
     // Each portal needs its spawn/exit pair, and they must be joined.
     for (const portal of portals) {
       const o = OUTWARD[portal.direction];
@@ -108,6 +119,15 @@ export function validateGraph(stageId, cfg) {
       if (spawn && exit && !adj.get(spawn.id).has(exit.id)) {
         errors.push(`${label}: spawn and exit nodes are not connected by an edge`);
       }
+      if (excused.has(portal.direction)) {
+        if (spawn) excusedNodes.add(spawn.id);
+        if (exit) excusedNodes.add(exit.id);
+      }
+    }
+    for (const dir of excused) {
+      if (!portals.some((p) => p.direction === dir)) {
+        errors.push(`waypointExceptions.unreachable names '${dir}', which is not a portal on this stage`);
+      }
     }
   } else {
     // Portal-less arena (boss room): needs a spawn on the default spawn
@@ -124,8 +144,10 @@ export function validateGraph(stageId, cfg) {
     }
   }
 
-  // Everything the autopilot navigates between must be mutually reachable.
-  const anchors = waypoints.filter((w) => (w.kind === "spawn" || w.kind === "exit") && byId.has(w.id));
+  // Everything the autopilot navigates between must be mutually reachable —
+  // minus any gate the stage declares deliberately unreachable.
+  const anchors = waypoints.filter((w) =>
+    (w.kind === "spawn" || w.kind === "exit") && byId.has(w.id) && !excusedNodes.has(w.id));
   if (anchors.length > 0) {
     const start = anchors[0].id;
     const seen = new Set([start]);

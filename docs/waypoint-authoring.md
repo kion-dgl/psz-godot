@@ -72,6 +72,25 @@ npm run wp:apply -- ~/Downloads/s02b_ib1-config.json
 Unlike Save to Disk, these *refuse* to write a graph that fails validation
 (`--force` overrides), and print the next room's URL when they're done.
 
+### Gates that are meant to be unreachable
+
+`s02b_lb3`'s south gate sits across a broken bridge — visible from the room,
+deliberately not crossable. Its spawn/exit pair exists so the gate reads
+correctly, but nothing routes to it, which the all-gates-reachable rule would
+otherwise call a bug. Declare it on the stage:
+
+```json
+"waypointExceptions": {
+  "unreachable": ["south"],
+  "reason": "Broken bridge — visible across the gap but intentionally not traversable."
+}
+```
+
+The excused gate still has to carry a spawn and exit at the contract offsets,
+joined to each other; it is only exempt from being reachable from the other
+gates. Naming a direction the stage has no portal for is an error, so a typo
+can't quietly excuse a real gap.
+
 ### Room shapes don't transplant between areas
 
 Tempting shortcut, doesn't work. `s02b_xb2` and `s04a_xb2` share a room *type*
@@ -100,13 +119,17 @@ satisfies:
 
 - each portal has its `spawn` (3m out) and `exit` (7m out) node, joined by an edge
 - no isolated nodes; no edges referencing nodes that don't exist
-- every spawn and exit is reachable from every other one
+- every spawn and exit is reachable from every other one, except gates the
+  stage declares unreachable on purpose (see above)
 - portal-less arenas carry a spawn on `defaultSpawn`
 
-One already-committed graph fails today: **`s02a_tc3`** strands its east
-spawn/exit pair in its own component, so the autopilot can enter that room
-from the east and never leave. It is recorded under `invalid` in the baseline
-and is worth fixing while you're in Ozette.
+One thing it cannot catch: a portal whose `direction` is wrong is
+*self-consistently* wrong, because the expected spawn/exit offsets are derived
+from that same direction. `s02b_lb3` shipped with its east gate labelled
+`west`, which put both nodes inside the room, and every graph check passed.
+Only the floor geometry gives it away — probe outward from the gate and a
+correct direction stays on floor at +3m and +7m then leaves it, while a
+reversed one re-enters the room body further out.
 
 `data/stage_configs/waypoint_coverage_baseline.json` records the outstanding
 debt — rooms not yet authored, plus graphs that exist but violate the
