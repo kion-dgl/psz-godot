@@ -218,13 +218,21 @@ function cmdCheck(args) {
   const configs = loadConfigs();
   const only = argValue(args, "--stage");
   const strict = args.includes("--strict");
-  const ids = Object.keys(configs).filter((id) => isFieldStage(id)).sort();
+  // Filter up front so the summary counts the same set it inspected — with
+  // --stage it must not report on all 294.
+  const ids = Object.keys(configs)
+    .filter((id) => isFieldStage(id))
+    .filter((id) => !only || id === only)
+    .sort();
+  if (only && ids.length === 0) {
+    console.error(`no such field stage: ${only}`);
+    process.exit(1);
+  }
 
   let missing = 0;
   let bad = 0;
   let warned = 0;
   for (const id of ids) {
-    if (only && id !== only) continue;
     const cfg = configs[id];
     if ((cfg.waypoints ?? []).length === 0) {
       missing++;
