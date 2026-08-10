@@ -108,6 +108,7 @@ func _run_tests_core() -> void:
 	test_element_collision_setup()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
+	test_city_scroll_fixes()
 	test_area_objects()
 	test_generated_field_doors()
 	test_equipment_slot_names()
@@ -721,6 +722,65 @@ func test_teleporter_dressing_texture_overrides() -> void:
 	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
 
 	el.free()
+	print("")
+
+
+# ── City scroll-only texture pass (Dairon market waves) ──────
+# _apply_scroll_fixes() exists so an area with baked textures can animate its
+# water without opting into the whole _fix_city_materials() rewrite. Two things
+# are worth pinning: that it converts a scrolling material, and that it leaves
+# a non-scrolling one alone — the second is the entire point of the narrow pass.
+func test_city_scroll_fixes() -> void:
+	print("── city _apply_scroll_fixes (scroll-only material pass) ──")
+	var area := CityAreaBase.new()
+	CityAreaBase._load_global_texture_fixes()
+
+	# The data half. scrollY must be present and 0: _fix_materials_recursive
+	# defaults a missing scrollY to -0.35, so an entry that only says scrollX
+	# would inherit a vertical crawl nobody asked for.
+	var fixes_file := FileAccess.open("res://data/stage_configs/global-texture-fixes.json", FileAccess.READ)
+	assert_true(fixes_file != null, "global-texture-fixes.json is readable")
+	var fixes: Dictionary = JSON.parse_string(fixes_file.get_as_text())
+	fixes_file.close()
+	for key in ["dairon2_s00_2_wave01.png#1", "dairon2_s00_2_wave02.png#1"]:
+		assert_true(fixes.has(key), "%s has a fix entry" % key)
+		var entry: Dictionary = fixes.get(key, {})
+		assert_eq(entry.get("scrollX", 0.0), -0.2, "%s scrolls -0.2 in u" % key)
+		assert_true(entry.has("scrollY"), "%s pins scrollY (else it defaults to -0.35)" % key)
+		assert_eq(entry.get("scrollY", -0.35), 0.0, "%s does not scroll in v" % key)
+
+	# The behavioural half. A material whose texture carries a scroll entry
+	# becomes a waterfall ShaderMaterial carrying that scroll.
+	var wave := MeshInstance3D.new()
+	wave.mesh = QuadMesh.new()
+	var wave_mat := StandardMaterial3D.new()
+	var wave_tex := ImageTexture.new()
+	wave_tex.resource_path = "res://assets/stages/city_e/market/dairon2_s00_2_wave01.png"
+	wave_mat.albedo_texture = wave_tex
+	wave.set_surface_override_material(0, wave_mat)
+	area.add_child(wave)
+
+	# ...and one whose texture has a fix with NO scroll stays exactly as authored.
+	var wall := MeshInstance3D.new()
+	wall.mesh = QuadMesh.new()
+	var wall_mat := StandardMaterial3D.new()
+	var wall_tex := ImageTexture.new()
+	wall_tex.resource_path = "res://assets/stages/city_e/market/s00_0_back00.png"
+	wall_mat.albedo_texture = wall_tex
+	wall.set_surface_override_material(0, wall_mat)
+	area.add_child(wall)
+
+	area._apply_scroll_fixes_recursive(area)
+
+	var wave_out := wave.get_surface_override_material(0)
+	assert_true(wave_out is ShaderMaterial, "scrolling texture becomes a ShaderMaterial")
+	if wave_out is ShaderMaterial:
+		var sm := wave_out as ShaderMaterial
+		assert_eq(sm.get_shader_parameter("uv_scroll"), Vector2(-0.2, 0.0), "wave scrolls -0.2 in u only")
+	assert_true(wall.get_surface_override_material(0) == wall_mat,
+		"non-scrolling material is left untouched by the narrow pass")
+
+	area.free()
 	print("")
 
 

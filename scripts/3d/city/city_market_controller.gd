@@ -17,7 +17,12 @@ const SPAWN_VARIANTS := {
 
 
 func _ready() -> void:
-	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
+	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes
+	# needed, so this area deliberately skips _fix_city_materials(). The two
+	# wave surfaces are the exception: they are meant to be moving water, and
+	# a still texture reads as a painted-on puddle. _apply_scroll_fixes() is
+	# the narrow pass that animates those and touches nothing else.
+	_apply_scroll_fixes()
 	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
 	# Heal on city entry

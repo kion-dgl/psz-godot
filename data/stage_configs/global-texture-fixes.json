@@ -1,4 +1,24 @@
 {
+  "dairon2_s00_2_wave01.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": -0.2,
+    "scrollY": 0,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
+  "dairon2_s00_2_wave02.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": -0.2,
+    "scrollY": 0,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
   "s00_0_back00.png#1": {
     "offsetX": 0,
     "offsetY": 0,
