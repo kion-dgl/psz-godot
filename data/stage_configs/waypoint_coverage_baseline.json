@@ -1,26 +1,8 @@
 {
   "comment": "Waypoint-coverage debt. `missing` = field stages with no authored nav graph; `invalid` = graphs that exist but violate the authoring contract. Both shrink as rooms are authored (docs/waypoint-authoring.md). web/src/__tests__/waypoint-coverage.test.ts fails if either grows — re-run `npm run wp:baseline` to record progress.",
   "missing": [
-    "s02a_xb2",
-    "s02b_ga1",
-    "s02b_ib1",
-    "s02b_ib2",
-    "s02b_ic1",
-    "s02b_ic3",
-    "s02b_lb1",
     "s02b_lb3",
-    "s02b_lc1",
-    "s02b_lc2",
-    "s02b_na1",
-    "s02b_nb2",
-    "s02b_nc2",
-    "s02b_sa1",
-    "s02b_tb3",
-    "s02b_tc3",
-    "s02b_td1",
-    "s02b_td2",
     "s02b_xb2",
-    "s02e_ia1",
     "s02z_na1"
   ],
   "invalid": [
