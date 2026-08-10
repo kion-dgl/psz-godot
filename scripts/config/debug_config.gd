@@ -8,6 +8,11 @@ static var show_hitboxes := false
 static var show_combo_timing := false  # Show rhythm combo window indicator
 static var profile_frames := false  # Log slow frame breakdowns to console
 static var show_player_position := false
+# Testers: list every field in the city warp regardless of quest progress, so a
+# freshly generated area can be walked without first clearing its unlock quest.
+# Deliberately NOT "Unlock All Missions" — that rewrites completed_missions and
+# has to be undone; this only changes what the warp offers.
+static var unlock_all_areas := false
 # Testers: reveal the full area map (fog of war off) so a grid's layout is
 # visible without exploring — spec /states/area-map.
 static var reveal_map := false  # Top-of-screen overlay with player.global_position

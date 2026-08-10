@@ -124,7 +124,7 @@ func _add_interactables() -> void:
 		"res://scenes/3d/city/city_office.tscn", "counter-office"
 	)
 	# Warp teleporter — empty area_id = central pad that opens the teleporter menu.
-	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.33, 60.96), "", "Warp Teleporter")
+	_add_warp_pad("WarpTeleporter", Vector3(0.05, -5.08, 60.96), "", "Warp Teleporter")
 	# Decorative special_c3 dressing around the pad — positions itself from
 	# data/city_teleporter.json (authored in the web #/teleporter-mock).
 	add_child(TeleporterDressingScript.new())

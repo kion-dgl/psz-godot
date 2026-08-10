@@ -107,6 +107,9 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_teleporter_dressing()
+	test_teleporter_dressing_texture_overrides()
+	test_area_objects()
+	test_generated_field_doors()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -134,6 +137,7 @@ func _run_tests_core() -> void:
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_free_roam_per_area_state()
+	test_free_roam_field_lifecycle()
 	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
 	test_player_defeat_return()
@@ -179,6 +183,7 @@ func _run_tests_systems() -> void:
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
 	test_box_state_survives_warp_flush()
+	test_box_state_survives_floor_placement()
 	test_drop_state_survives_warp_flush()
 	test_message_wall_questitem_persist()
 	test_keys_gates_survive_section_roundtrip()
@@ -397,6 +402,187 @@ func test_element_collision_setup() -> void:
 # and the layout's uv/scroll config maps onto uv_dressing.gdshader uniforms.
 # Pack-free: synthetic BoxMesh + ImageTexture, no GLB loads (assets aren't in
 # git on CI).
+## ── Per-field object resolution (AreaObjects) ───────
+## box.gd and wall.gd used to hardcode valley/o01_cont.glb and valley/o01_wall.glb,
+## so every non-Valley field rendered Valley crates and Valley walls. Pins the
+## area → folder/scene-number mapping for all eight areas and the Valley
+## fallback. Pack-free: candidate_path/fallback_path are pure string mapping,
+## and the extents helper runs on a synthetic BoxMesh (assets aren't in git).
+func test_area_objects() -> void:
+	print("── AreaObjects (per-field model resolution) ──")
+
+	# One row per area: the folder and scene number its models live under. These
+	# are the directories the storybook port created (PR #571).
+	var expected := {
+		"gurhacia": ["valley", "01"],
+		"ozette": ["wetlands", "02"],
+		"rioh": ["snowfield", "03"],
+		"makara": ["makara", "04"],
+		"paru": ["paru", "05"],
+		"arca": ["arca", "06"],
+		"dark": ["shrine", "07"],
+		"tower": ["tower", "08"],
+	}
+	for area_id in expected:
+		var want: Array = expected[area_id]
+		assert_eq(AreaObjects.folder(area_id), want[0], "%s folder is %s" % [area_id, want[0]])
+		assert_eq(AreaObjects.scene_num(area_id), want[1], "%s scene number is %s" % [area_id, want[1]])
+		assert_eq(
+			AreaObjects.candidate_path(area_id, "cont"),
+			"%s/o%s_cont.glb" % [want[0], want[1]],
+			"%s container path" % area_id
+		)
+
+	# Every area covered by the grid generator must resolve — a new area added
+	# to AREA_CONFIG without object art would otherwise silently show Valley.
+	# (GridGenerator has no class_name, so it is preloaded like every other
+	# consumer does.)
+	const GridGeneratorScript := preload("res://scripts/3d/field/grid_generator.gd")
+	for area_id in GridGeneratorScript.AREA_CONFIG:
+		assert_true(expected.has(area_id), "AREA_CONFIG area '%s' has a pinned object folder" % area_id)
+
+	# The Valley row is the fallback, so its candidate and fallback agree —
+	# which is what stops model_path warning about the area it falls back to.
+	assert_eq(
+		AreaObjects.candidate_path("gurhacia", "wall"),
+		AreaObjects.fallback_path("wall"),
+		"Valley is its own fallback"
+	)
+	assert_eq(AreaObjects.fallback_path("wall"), "valley/o01_wall.glb", "fallback wall is the Valley wall")
+	# An area that isn't in the table at all still resolves rather than
+	# producing a path like "/o__cont.glb".
+	assert_eq(AreaObjects.candidate_path("nonexistent", "cont"), "valley/o01_cont.glb", "unknown area falls back")
+
+	# Extents drive box collision. A mesh offset from its root must measure by
+	# its geometry, not its origin — Paru's container is 1 x 1.588 x 1 where
+	# every other field's is 1x1x1, and the fixed 1x1x1 box left the top third
+	# of it without collision or hurtbox.
+	var root := Node3D.new()
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(1.588, 1.2, 1.588)
+	mi.mesh = bm
+	mi.position = Vector3(4, 0, -3)
+	root.add_child(mi)
+	var extents: AABB = AreaObjects.model_extents(root)
+	assert_true(extents.size.is_equal_approx(Vector3(1.588, 1.2, 1.588)), "extents measure the mesh, not the offset")
+	# No mesh -> zero size, which is the signal box.gd uses to keep its default.
+	var empty := Node3D.new()
+	assert_eq(AreaObjects.model_extents(empty).size, Vector3.ZERO, "meshless model measures zero")
+	root.free()
+	empty.free()
+	print("")
+
+
+## ── Generated free fields: doors line up ───────
+## GridGenerator now rotates rooms to fit the layout, which is what makes
+## generation succeed at all. Rotation is also what can silently misalign a
+## door, so these are the invariants that decide whether a field is walkable:
+## a connection must be reciprocal, must have a portal, and that portal must be
+## backed by a real config portal once the cell rotation is applied. Pack-free —
+## stage configs, RE tables and enemy resources are all in git.
+func test_generated_field_doors() -> void:
+	print("── Generated free fields (door alignment) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var areas := ["gurhacia", "ozette", "rioh", "makara", "paru", "arca", "dark"]
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	var cfg_json := JSON.new()
+	cfg_json.parse(cfg_file.get_as_text())
+	var configs: Dictionary = cfg_json.data
+
+	# Tallies, so one assert per invariant names the invariant rather than the
+	# first cell that happened to break it.
+	# SEEDED. Generation is random, and an unseeded sweep makes this test flaky
+	# on the tail below — a fixed set of seeds keeps a red run reproducible.
+	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0, "fell_back": 0}
+	for area in areas:
+		for roll in range(3):
+			var gen = GridGen.new()
+			gen.set_seed(roll)
+			for section in gen.generate_field("normal", area)["sections"]:
+				_audit_generated_section(section, configs, t)
+
+	# Door alignment is absolute — a misaligned door is an unwalkable field.
+	assert_eq(t["one_way"], 0, "no one-way door pairs across generated fields")
+	assert_eq(t["no_portal"], 0, "every connection has a portal")
+	assert_eq(t["unbacked"], 0, "every portal is backed by a config portal at the cell's rotation")
+	assert_eq(t["unreachable"], 0, "every section's end cell is reachable from its start")
+	# Fallbacks are a RATE, not zero. Rotation-aware room selection took this
+	# from 100% (every section of every area, before the fix) to ~1.5% measured
+	# over 840 sections. The tail is a real remaining gap, tracked separately —
+	# the bound here catches a regression back toward "never generates" without
+	# pretending the tail is gone. A fallback section is still a valid walkable
+	# field, just a fixed 5-room line with no objects.
+	assert_true(t["fell_back"] <= 2, "grid sections falling back to the 5-room line stays in the tail (got %d of 42)" % t["fell_back"])
+	print("  INFO: %d generated cells checked across %d areas" % [t["cells"], areas.size()])
+	print("")
+
+
+## One section's door invariants, accumulated into `t`. Split out of
+## test_generated_field_doors to stay under the complexity bound.
+func _audit_generated_section(section: Dictionary, configs: Dictionary, t: Dictionary) -> void:
+	const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
+	var cells: Array = section["cells"]
+	t["cells"] += cells.size()
+	# The fallback is a fixed 5-room line with no objects; a grid section that
+	# lands on it means generation failed.
+	if str(section.get("type", "")) == "grid" and cells.size() < 6:
+		t["fell_back"] += 1
+
+	var by_pos := {}
+	for cell in cells:
+		by_pos[str(cell["pos"])] = cell
+
+	for cell in cells:
+		var connections: Dictionary = cell.get("connections", {})
+		var portals: Dictionary = cell.get("portals", {})
+		for dir in connections:
+			var target: String = str(connections[dir])
+			if by_pos.has(target):
+				var back: Dictionary = by_pos[target].get("connections", {})
+				if str(back.get(OPPOSITE[dir], "")) != str(cell["pos"]):
+					t["one_way"] += 1
+			if not portals.has(dir):
+				t["no_portal"] += 1
+		if not cell.has("objects"):
+			t["no_portal"] += 1
+		for dir in portals:
+			if dir == "default":
+				continue
+			if not _portal_backed(configs, str(cell["stage_id"]), int(cell.get("rotation", 0)), str(dir)):
+				t["unbacked"] += 1
+
+	var sp := str(section.get("start_pos", ""))
+	var ep := str(section.get("end_pos", ""))
+	if by_pos.has(sp) and by_pos.has(ep) and sp != ep and not _connected(by_pos, sp, ep):
+		t["unreachable"] += 1
+
+
+## Does `stage_id` have a config portal that faces `game_dir` once rotated?
+func _portal_backed(configs: Dictionary, stage_id: String, rotation: int, game_dir: String) -> bool:
+	for portal in configs.get(stage_id, {}).get("portals", []):
+		var base: String = str(portal.get("direction", ""))
+		if not base.is_empty() and StageRotation.rotate_dir(base, rotation) == game_dir:
+			return true
+	return false
+
+
+## BFS over `connections`.
+func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
+	var seen := {from_pos: true}
+	var queue: Array = [from_pos]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		if cur == to_pos:
+			return true
+		for d in by_pos[cur].get("connections", {}):
+			var nxt: String = str(by_pos[cur]["connections"][d])
+			if by_pos.has(nxt) and not seen.has(nxt):
+				seen[nxt] = true
+				queue.append(nxt)
+	return false
+
+
 func test_teleporter_dressing() -> void:
 	print("── TeleporterDressing (special_c3 layout + pivot + materials) ──")
 	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
@@ -410,16 +596,31 @@ func test_teleporter_dressing() -> void:
 	assert_eq(pieces.size(), 6, "layout has 6 pieces")
 	var anchor: Array = layout.get("anchor", [])
 	assert_true(anchor.size() == 3 and is_equal_approx(float(anchor[2]), 60.83), "anchor sits at the warp pad")
+	# The parked Absorb ring keeps its measured config on record: its glow sheet
+	# scrolls while its base plate does not, which is why it needs `textures`.
 	var warpcb: Dictionary = pieces.get("o0s_warpcb", {})
-	assert_eq(warpcb.get("scroll", {}).get("v", 0.0), 0.15, "warp ring scrolls v=0.15")
-	# Only the two compass plates are live in-game; the warp-ring variants are
-	# parked (visible:false keeps their authored transforms without spawning).
+	var wabs2: Dictionary = warpcb.get("textures", {}).get("o0c_1_wabs2.png", {})
+	assert_eq(wabs2.get("scroll", {}).get("v", 0.0), 0.4, "absorb ring glow scrolls v=0.4")
+	assert_true(
+		not warpcb.get("textures", {}).get("o0c_1_wabs1.png", {}).has("scroll"),
+		"absorb ring base plate does not scroll"
+	)
+	# The two compass plates and City Warp A are live in-game; the other three
+	# warp variants are parked (visible:false keeps their authored transforms
+	# and measured configs without spawning them).
 	var visible_names := []
 	for n in pieces:
 		if pieces[n].get("visible", true):
 			visible_names.append(n)
 	visible_names.sort()
-	assert_eq(visible_names, ["o00_compass", "o00_compass2"], "only the compass plates spawn")
+	# City Warp A is NOT dressing any more: WarpPad renders o0s_warpcn as the
+	# teleporter itself, so spawning it here too would double the mesh. Its
+	# authored transform and measured config stay on record via visible:false.
+	assert_eq(
+		visible_names,
+		["o00_compass", "o00_compass2"],
+		"compass plates spawn; the warp is the pad, not dressing"
+	)
 
 	# Pivot math: a mesh authored away from its scene root gets re-pivoted to
 	# bbox bottom-center before the cfg offset applies.
@@ -458,6 +659,67 @@ func test_teleporter_dressing() -> void:
 	assert_eq(smat_default.get_shader_parameter("scroll_speed"), Vector2.ZERO, "default has no scroll")
 
 	pivot.free()
+	el.free()
+	print("")
+
+
+## ── Teleporter dressing: per-texture overrides ───────
+## Split out of test_teleporter_dressing to stay under the complexity bound.
+## Covers only the `textures` merge — two surfaces on one piece disagreeing is
+## the whole reason it exists (o0s_warpcn's glow scrolls over a static plate).
+func test_teleporter_dressing_texture_overrides() -> void:
+	print("── TeleporterDressing (per-texture uv/scroll overrides) ──")
+	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
+	var el = DressScript.new()
+
+	var piece_cfg := {
+		"uv": {"wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [0, 0], "rot": 0},
+		"textures": {
+			"glow.png": {
+				"uv": {"wrap": ["mirror", "mirror"], "repeat": [1, 1], "offset": [-2.68, 5.31], "rot": 0},
+				"scroll": {"u": -0.5, "v": 0},
+			},
+			"plate.png": {
+				"uv": {"wrap": ["mirror", "mirror"], "repeat": [2, 2], "offset": [0, 1], "rot": 0},
+			},
+		},
+	}
+	var glow_cfg: Dictionary = el._texture_cfg(piece_cfg, "glow.png")
+	assert_eq(glow_cfg.get("uv", {}).get("offset", []), [-2.68, 5.31], "glow takes its own offset")
+	assert_eq(glow_cfg.get("scroll", {}).get("u", 0.0), -0.5, "glow takes its own scroll")
+	var plate_cfg: Dictionary = el._texture_cfg(piece_cfg, "plate.png")
+	assert_eq(plate_cfg.get("uv", {}).get("repeat", []), [2, 2], "plate takes its own repeat")
+	assert_true(not plate_cfg.has("scroll"), "plate inherits no scroll (piece sets none)")
+	# An unlisted texture — and a texture with no resource path at all, which is
+	# what a synthetic ImageTexture gives — fall back to the piece config.
+	assert_eq(el._texture_cfg(piece_cfg, "other.png"), piece_cfg, "unlisted texture uses piece cfg")
+	assert_eq(el._texture_cfg(piece_cfg, ""), piece_cfg, "unnamed texture uses piece cfg")
+	# Per-key merge: a texture entry that sets only scroll keeps the piece uv.
+	var scroll_only := {
+		"uv": {"wrap": ["clamp", "clamp"], "repeat": [3, 3], "offset": [0, 0], "rot": 0},
+		"textures": {"glow.png": {"scroll": {"u": 1, "v": 0}}},
+	}
+	var merged: Dictionary = el._texture_cfg(scroll_only, "glow.png")
+	assert_eq(merged.get("uv", {}).get("repeat", []), [3, 3], "scroll-only override inherits piece uv")
+	assert_eq(merged.get("scroll", {}).get("u", 0.0), 1.0, "scroll-only override applies its scroll")
+
+	# Sidedness carries from the source material. o0s_warpcn mixes the two on
+	# one mesh — glow CULL_DISABLED over a CULL_BACK plate — and the shader is
+	# compile-time double-sided, so a back-culled surface must be told to
+	# discard its back faces or it draws through the piece as an offset,
+	# discoloured copy (what the city pad showed).
+	var back_src := StandardMaterial3D.new()
+	back_src.albedo_texture = ImageTexture.new()
+	back_src.cull_mode = BaseMaterial3D.CULL_BACK
+	var back_mat: ShaderMaterial = el._make_dress_material(back_src, piece_cfg)
+	assert_true(back_mat.get_shader_parameter("cull_back"), "CULL_BACK surface discards back faces")
+
+	var both_src := StandardMaterial3D.new()
+	both_src.albedo_texture = ImageTexture.new()
+	both_src.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var both_mat: ShaderMaterial = el._make_dress_material(both_src, piece_cfg)
+	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
+
 	el.free()
 	print("")
 
@@ -4861,6 +5123,49 @@ func test_keys_gates_survive_section_roundtrip() -> void:
 # ── Full persistence contract holds across repeated city trips (#423) ────────
 # The reliability/stress case: one cell mixing every persisted category, bounced
 # to the city 3× in a row. Every category MUST hold each trip — nothing respawns.
+func test_box_state_survives_floor_placement() -> void:
+	print("── Box-state — floor-snapped/relocated boxes aren't recorded destroyed ──")
+	SessionManager.clear_section_states()
+	SessionManager._suspended_session.clear()
+
+	var stub := _KillStateStubController.new()
+	stub._current_cell = {
+		"pos": "6,6",
+		"objects": [
+			{"type": "box", "position": [1.0, 0.0, 1.0]},   # A — floor snapped y
+			{"type": "box", "position": [4.0, 0.0, 4.0]},   # B — floor relocated x/z
+			{"type": "box", "position": [9.0, 0.0, 9.0]},   # C — genuinely destroyed
+		],
+	}
+	# _spawn_box positions boxes at _place_on_floor(pos): A's floor sits below
+	# the authored y, and B's authored spot had no floor at all so the grid scan
+	# moved it several metres. Both are still standing; only C is gone.
+	var snapped_box := Box.new()
+	snapped_box.element_state = "intact"
+	snapped_box.position = Vector3(1.0, 0.35, 1.0)
+	snapped_box.set_meta("authored_pos", Vector3(1.0, 0.0, 1.0))
+	var relocated := Box.new()
+	relocated.element_state = "intact"
+	relocated.position = Vector3(7.0, 0.2, 7.0)
+	relocated.set_meta("authored_pos", Vector3(4.0, 0.0, 4.0))
+	stub._room_boxes = [snapped_box, relocated]
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._save_cell_state()
+
+	# Only C may be recorded destroyed. A phantom "destroyed" for a box that is
+	# still standing is the bug: the saved cell state then disagrees with the
+	# room it describes.
+	var destroyed_x: Array = []
+	for o in stub._cell_states.get("6,6", {}).get("objects", []):
+		if str(o.get("type", "")) == "box" and str(o.get("state", "")) == "destroyed":
+			destroyed_x.append(snappedf(float(o.get("px", 0)), 0.01))
+	assert_true(not destroyed_x.has(1.0), "Floor-snapped box not recorded destroyed")
+	assert_true(not destroyed_x.has(4.0), "Relocated box not recorded destroyed")
+	assert_true(destroyed_x.has(9.0), "Genuinely broken box still recorded destroyed")
+	assert_eq(destroyed_x.size(), 1, "Exactly one destroyed record (no phantoms)")
+
+
 func test_field_state_full_contract_roundtrip() -> void:
 	print("── Full persistence contract holds across 3 consecutive city trips (#423) ──")
 	SessionManager.clear_section_states()
@@ -5685,6 +5990,65 @@ func _reset_session_state() -> void:
 	SessionManager._completed_quest.clear()
 	SessionManager.clear_free_roam_state()
 	TelepipeManager.cancel("test_setup")
+
+
+## ── Free-Roam field lifecycle: generate → persist → regenerate ───────
+## Spec /states/quest-vs-field. test_free_roam_per_area_state covers the STORE
+## (what is retained and when it is cleared); this covers the FIELD ITSELF —
+## that a first visit rolls a random layout, that the SAME layout comes back
+## until a quest is taken, and that a new one is rolled afterwards.
+##
+## This is what the static data/field_quests/*.json used to prevent: the store
+## cleared correctly, but the next entry replayed the identical hand-authored
+## layout, so "a new field is created" was never true.
+func test_free_roam_field_lifecycle() -> void:
+	print("── Free-Roam field lifecycle (generate → persist → regenerate) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	_reset_session_state()
+
+	# First visit: the warp's fresh-entry path generates rather than loading a file.
+	SessionManager.enter_field("gurhacia", "normal")
+	var first: Array = GridGen.new().generate_field("normal", "gurhacia")["sections"]
+	SessionManager.set_field_sections(first)
+	var first_sig := JSON.stringify(first)
+	SessionManager.flush_free_roam_field()
+
+	# Re-entry inside Free Roam restores the SAME field — not a fresh roll.
+	assert_true(SessionManager.enter_free_roam_field("gurhacia"), "re-enter Valley from the store")
+	assert_eq(JSON.stringify(SessionManager.get_field_sections()), first_sig,
+		"the generated field persists byte-for-byte across a city return")
+	SessionManager.flush_free_roam_field()
+
+	# A second area generates its own field and neither disturbs the other.
+	SessionManager.enter_field("ozette", "normal")
+	SessionManager.set_field_sections(GridGen.new().generate_field("normal", "ozette")["sections"])
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.enter_free_roam_field("gurhacia"), "Valley still retained after a Wetlands trip")
+	assert_eq(JSON.stringify(SessionManager.get_field_sections()), first_sig,
+		"Valley's field is unchanged by visiting another free field")
+	SessionManager.flush_free_roam_field()
+
+	# Accepting a quest drops every retained field.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	assert_true(SessionManager.get_free_roam_area_ids().is_empty(),
+		"accepting a quest clears the retained fields")
+	assert_true(not SessionManager.has_free_roam_field("gurhacia"),
+		"Valley has no retained field, so the next visit takes the fresh-generation path")
+	SessionManager.start_accepted_quest()
+	SessionManager.complete_quest()
+	SessionManager.report_quest()
+
+	# After the quest, a visit rolls a NEW field. Generation is random, so rather
+	# than asserting one roll differs (which a coincidence could fail), assert the
+	# generator produces more than one distinct layout — a fixed file cannot.
+	var layouts := {}
+	for i in range(6):
+		layouts[JSON.stringify(GridGen.new().generate_field("normal", "gurhacia")["sections"])] = true
+	assert_true(layouts.size() > 1,
+		"post-quest visits roll a new field (%d distinct layouts in 6 rolls)" % layouts.size())
+
+	_reset_session_state()
+	print("")
 
 
 func test_free_roam_per_area_state() -> void:

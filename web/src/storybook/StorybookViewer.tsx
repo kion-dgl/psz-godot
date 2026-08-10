@@ -31,12 +31,17 @@ import {
   BearTrap, bearTrapMeta,
   type StoryMeta,
 } from '../elements';
+import { OBJECT_CATALOG, CATALOG_CATEGORY_ORDER, type CatalogEntry } from '../elements/objectCatalog';
+import { catalogComponent, catalogMeta, CatalogObject } from '../elements/CatalogObject';
 
 // Registry of all elements with their components and metadata
 interface ElementEntry {
   id: string;
   Component: React.ComponentType<{ state?: string }>;
   meta: StoryMeta;
+  // Present for data-driven catalog objects. The viewer renders these directly
+  // so it can disable their built-in scroll and own texture.offset itself.
+  catalogEntry?: CatalogEntry;
 }
 
 interface CategoryEntry {
@@ -44,12 +49,16 @@ interface CategoryEntry {
   elements: ElementEntry[];
 }
 
-const CATEGORIES: CategoryEntry[] = [
+// Hand-written elements — the ones with real gameplay state (open/closed,
+// raised/lowered, animated pickups). Everything else in the object archive is
+// data-driven from OBJECT_CATALOG and merged in below.
+const HAND_WRITTEN: CategoryEntry[] = [
   {
     name: 'Gates',
     elements: [
       { id: 'gate', Component: Gate as React.ComponentType<{ state?: string }>, meta: gateMeta },
       { id: 'key-gate', Component: KeyGate as React.ComponentType<{ state?: string }>, meta: keyGateMeta },
+      { id: 'area-warp', Component: AreaWarp as React.ComponentType<{ state?: string }>, meta: areaWarpMeta },
     ],
   },
   {
@@ -114,7 +123,6 @@ const CATEGORIES: CategoryEntry[] = [
     name: 'Warps',
     elements: [
       { id: 'start-warp', Component: StartWarp as React.ComponentType<{ state?: string }>, meta: startWarpMeta },
-      { id: 'area-warp', Component: AreaWarp as React.ComponentType<{ state?: string }>, meta: areaWarpMeta },
     ],
   },
   {
@@ -131,6 +139,36 @@ const CATEGORIES: CategoryEntry[] = [
     ],
   },
 ];
+
+// Catalog entries grouped by their declared category.
+const CATALOG_BY_CATEGORY = OBJECT_CATALOG.reduce<Record<string, ElementEntry[]>>((acc, entry) => {
+  (acc[entry.category] ||= []).push({
+    id: entry.id,
+    Component: catalogComponent(entry),
+    meta: catalogMeta(entry),
+    catalogEntry: entry,
+  });
+  return acc;
+}, {});
+
+/**
+ * Merge the catalog into the hand-written categories: an entry whose category
+ * already exists is appended to it, and any remaining category is added in
+ * CATALOG_CATEGORY_ORDER. That keeps e.g. every warp under one "Warps" heading
+ * instead of splitting hand-written and catalog objects into parallel lists.
+ */
+const CATEGORIES: CategoryEntry[] = (() => {
+  const remaining = new Set(Object.keys(CATALOG_BY_CATEGORY));
+  const merged = HAND_WRITTEN.map((cat) => {
+    remaining.delete(cat.name);
+    return { ...cat, elements: [...cat.elements, ...(CATALOG_BY_CATEGORY[cat.name] ?? [])] };
+  });
+
+  const extras = [...remaining].sort(
+    (a, b) => CATALOG_CATEGORY_ORDER.indexOf(a) - CATALOG_CATEGORY_ORDER.indexOf(b),
+  );
+  return [...merged, ...extras.map((name) => ({ name, elements: CATALOG_BY_CATEGORY[name] }))];
+})();
 
 // Flatten for lookup
 const ALL_ELEMENTS = CATEGORIES.flatMap((cat) => cat.elements);
@@ -181,6 +219,11 @@ function getThreeWrapMode(mode: WrapMode): THREE.Wrapping {
 
 // --- Canvas-internal components ---
 
+/** How often the texture scanner re-checks the scene while waiting for a model. */
+const SCAN_INTERVAL_FRAMES = 5;
+/** Give up after ~10s at 60fps; a lazily-fetched GLB has long since arrived. */
+const SCAN_BUDGET_FRAMES = 600;
+
 /** Scans a group for textures and reports them to the parent */
 function TextureScanner({
   groupRef,
@@ -194,47 +237,76 @@ function TextureScanner({
   onTexturesFound: (textures: TextureInfo[]) => void;
 }) {
   const scanCount = useRef(0);
+  const settled = useRef(false);
 
   useFrame(() => {
-    // Scan on first few frames after element/state change to catch async GLB loads
-    if (scanCount.current < 10) {
-      scanCount.current++;
-      if (scanCount.current === 5 && groupRef.current) {
-        const instanceCounts: Record<string, number> = {};
-        const textureList: TextureInfo[] = [];
+    // Poll until the model is actually in the scene, rather than scanning one
+    // fixed frame. Hand-written elements preload their GLB at module scope so
+    // they are mounted almost immediately, but catalog objects are Suspense-
+    // loaded on select (deliberately not preloaded — 45 models would be several
+    // MB on open). Their mesh often isn't in the tree for many frames after the
+    // selection changes, so a single early scan reported "No textures found"
+    // for every catalog object and left the texture controls unusable.
+    if (settled.current) return;
+    scanCount.current++;
+    if (scanCount.current % SCAN_INTERVAL_FRAMES !== 0) return;
+    if (!groupRef.current) return;
 
-        groupRef.current.traverse((object) => {
-          if (!(object as THREE.Mesh).isMesh) return;
-          const mesh = object as THREE.Mesh;
-          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    // Only look inside the subtree tagged with the current selection. A model
+    // left over from the previous element is still mounted for a few frames
+    // under its own tag, and scanning it is what made the inspector lag a
+    // selection behind.
+    let scope: THREE.Object3D | null = null;
+    groupRef.current.traverse((object) => {
+      if (!scope && object.userData?.elementId === elementId) scope = object;
+    });
+    if (!scope) return;
 
-          materials.forEach((mat) => {
-            const m = mat as any;
-            if (m.map && m.map instanceof THREE.Texture) {
-              const filename = getTextureFilename(m.map);
-              instanceCounts[filename] = (instanceCounts[filename] || 0) + 1;
-              const num = instanceCounts[filename];
-              const key = `${filename}#${num}`;
+    const instanceCounts: Record<string, number> = {};
+    const textureList: TextureInfo[] = [];
 
-              textureList.push({
-                name: `${filename} #${num}`,
-                key,
-                filename,
-                texture: m.map,
-                meshName: mesh.name,
-              });
-            }
+    (scope as THREE.Object3D).traverse((object) => {
+      if (!(object as THREE.Mesh).isMesh) return;
+      const mesh = object as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+      materials.forEach((mat) => {
+        const m = mat as any;
+        if (m.map && m.map instanceof THREE.Texture) {
+          const filename = getTextureFilename(m.map);
+          instanceCounts[filename] = (instanceCounts[filename] || 0) + 1;
+          const num = instanceCounts[filename];
+          const key = `${filename}#${num}`;
+
+          textureList.push({
+            name: `${filename} #${num}`,
+            key,
+            filename,
+            texture: m.map,
+            meshName: mesh.name,
           });
-        });
+        }
+      });
+    });
 
-        onTexturesFound(textureList);
-      }
+    // Found the new model — report and stop polling.
+    if (textureList.length > 0) {
+      settled.current = true;
+      onTexturesFound(textureList);
+      return;
+    }
+    // Nothing after the budget: report empty so the panel says so honestly
+    // rather than polling forever on a genuinely texture-less element.
+    if (scanCount.current >= SCAN_BUDGET_FRAMES) {
+      settled.current = true;
+      onTexturesFound([]);
     }
   });
 
-  // Reset scan counter when element or state changes
+  // Restart the scan when element or state changes.
   useEffect(() => {
     scanCount.current = 0;
+    settled.current = false;
   }, [elementId, state]);
 
   return null;
@@ -295,12 +367,25 @@ function ModelSpinner({
 }
 
 function ElementPreview({ element, state }: { element: ElementEntry; state: string }) {
-  const { Component } = element;
+  const { Component, catalogEntry } = element;
 
+  // Tag the subtree with the element it belongs to. Suspense keeps the previous
+  // model mounted while the next GLB loads, so the scanner needs a way to tell
+  // whose meshes it is looking at — without this it reports the outgoing
+  // object and the inspector runs one selection behind.
   return (
+    <group userData={{ elementId: element.id }}>
     <Suspense fallback={null}>
-      <Component key={element.id} state={state} />
+      {catalogEntry ? (
+        // animate={false}: the panel's TextureAnimator owns texture.offset here,
+        // so the scroll controls actually take effect instead of being fought
+        // frame-for-frame by the entry's authored scroll.
+        <CatalogObject key={element.id} entry={catalogEntry} state={state} animate={false} />
+      ) : (
+        <Component key={element.id} state={state} />
+      )}
     </Suspense>
+    </group>
   );
 }
 
@@ -315,6 +400,23 @@ const WRAP_MODES: { value: WrapMode; label: string }[] = [
 
 export default function StorybookViewer() {
   const [selectedId, setSelectedId] = useState<string>(ALL_ELEMENTS[0].id);
+  // The catalog port took the sidebar from ~25 to ~70 entries, past what fits
+  // on screen, so the list is filterable by title.
+  const [filter, setFilter] = useState('');
+
+  const visibleCategories = useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) return CATEGORIES;
+    return CATEGORIES.map((cat) => ({
+      ...cat,
+      elements: cat.elements.filter(
+        (el) =>
+          el.meta.title.toLowerCase().includes(needle) ||
+          el.id.includes(needle) ||
+          cat.name.toLowerCase().includes(needle),
+      ),
+    })).filter((cat) => cat.elements.length > 0);
+  }, [filter]);
   const [states, setStates] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     ALL_ELEMENTS.forEach((el) => {
@@ -375,8 +477,13 @@ export default function StorybookViewer() {
     setOffsetY(tex.offset.y);
     setWrapS(getWrapModeName(tex.wrapS));
     setWrapT(getWrapModeName(tex.wrapT));
-    setScrollX(0);
-    setScrollY(0);
+    // Seed the scroll controls from the catalog's authored value for this
+    // texture, so the panel opens showing what the object actually does and a
+    // wrong direction can be corrected by flipping the sign in place. Falls
+    // back to 0 for hand-written elements and unscrolled textures.
+    const authoredScroll = selectedElement.catalogEntry?.scroll?.[selectedTexture.filename];
+    setScrollX(authoredScroll?.x ?? 0);
+    setScrollY(authoredScroll?.y ?? 0);
 
     // Generate preview
     const image = tex.image as CanvasImageSource | null;
@@ -396,7 +503,7 @@ export default function StorybookViewer() {
     } else {
       setPreviewUrl(null);
     }
-  }, [selectedTexture]);
+  }, [selectedTexture, selectedElement]);
 
   // Apply changes to texture in real-time
   useEffect(() => {
@@ -512,7 +619,28 @@ export default function StorybookViewer() {
         padding: '1rem',
         background: '#151525',
       }}>
-        {CATEGORIES.map((category) => (
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={`Filter ${ALL_ELEMENTS.length} objects…`}
+          style={{
+            width: '100%',
+            marginBottom: '1rem',
+            padding: '8px 10px',
+            background: '#0f0f1e',
+            border: '1px solid #333',
+            borderRadius: '6px',
+            color: 'white',
+            fontSize: '12px',
+          }}
+        />
+
+        {visibleCategories.length === 0 && (
+          <div style={{ color: '#666', fontSize: '12px' }}>No objects match “{filter}”.</div>
+        )}
+
+        {visibleCategories.map((category) => (
           <div key={category.name} style={{ marginBottom: '1.5rem' }}>
             <div style={{
               fontSize: '11px',

@@ -3102,7 +3102,31 @@ func _do_pickup_key(field: Node) -> void:
 		print("[sanity] WARN: pickup_key — no KeyPickup in cell")
 		_run_next_action(field)
 		return
-	_walk_then_interact(field, key.global_position, "key", POST_INTERACT_SETTLE)
+	_pickup_key_chain(field, key, 1)
+
+
+## Collect EVERY KeyPickup in the cell, not just the first.
+##
+## A cell with key_count > 1 spawns N pickups sharing one key_id because the
+## gate it feeds consumes N copies (key_gate.gd counts them via
+## Inventory.get_key_count). Stopping after the first leaves the gate locked,
+## and the subsequent walk to the exit wedges against the closed gate's
+## collider — surfacing as a stuck-walk a few metres short of the portal
+## rather than as the missing key it actually is.
+func _pickup_key_chain(field: Node, key: Node, index: int) -> void:
+	_walk_then_interact(field, key.global_position, "key %d" % index, POST_INTERACT_SETTLE, false,
+		func() -> void:
+			print("[sanity] interact key %d" % index)
+			_press_action("interact")
+			_after(POST_INTERACT_SETTLE, func() -> void:
+				if not is_instance_valid(field) or field != get_tree().current_scene:
+					return
+				var next_key := _find_key_pickup(field)
+				if next_key != null:
+					print("[sanity] cell holds another key — collecting #%d" % (index + 1))
+					_pickup_key_chain(field, next_key, index + 1)
+				else:
+					_run_next_action(field)))
 
 
 func _do_pickup_quest_item(field: Node) -> void:
@@ -3611,7 +3635,10 @@ func _ray_floor_hit(check_pos: Vector3, base_y: float, ray_length: float) -> boo
 # ── Scene-tree finders for interactables ───────────────────────
 
 func _find_key_pickup(root: Node) -> Node:
-	if root is KeyPickup:
+	# Skip pickups already taken: KeyPickup.queue_free()s itself on collection,
+	# and the node lingers for the rest of the frame. Without this guard the
+	# multi-key chain re-targets the key it just collected and stalls.
+	if root is KeyPickup and not root.is_queued_for_deletion():
 		return root
 	for c in root.get_children():
 		var found := _find_key_pickup(c)

@@ -362,18 +362,30 @@ JSON
     bash "$REPO/scripts/tools/autoplay/record_boot.sh"
   fi
 
-  # === Phase 1b: Valley free-roam (free-field end-to-end) ===
+  # === Phase 1b: Free-roam fields (free-field end-to-end, every area) ===
   # Free-roam A→E→B→boss with the key detour + goal pad — the free-roam-only
   # paths the quest matrix never exercises. Self-contained (boots fresh), so it
-  # doesn't depend on the quest chain. FAIL flips MATRIX_FAIL (#562/#563).
+  # doesn't depend on the quest chain. Any area failing flips MATRIX_FAIL
+  # (#562/#563). gurhacia is RE-faithful; ozette/rioh/paru use observed layouts +
+  # area rosters.
   if reached freeroam; then
-    echo ""; echo "=== Phase 1b: Valley free-roam (A→E→B→Reyburn) ==="
-    if bash "$REPO/scripts/tools/autoplay/record_free_roam.sh"; then
-      echo "[regression] freeroam PASS"
-    else
-      echo "[regression] ::error:: free-roam Valley did not reach DONE ok (#562/#563)"
-      MATRIX_FAIL=1
-    fi
+    echo ""; echo "=== Phase 1b: Free-roam fields (A→E→B→boss) ==="
+    # Hard-gated areas fully clear the autopilot today (RE-faithful Valley +
+    # snowfield). ozette/paru are built + validate but the autopilot snags on
+    # specific-room door geometry (the reflection-vs-rotation door mapping —
+    # psz-re Q1); they're human-playable, so report them without failing the
+    # gate until their door alignment / waypoints are settled.
+    FREEROAM_GATED="gurhacia rioh"
+    for area in gurhacia rioh ozette paru; do
+      if FIELD_AREA="$area" bash "$REPO/scripts/tools/autoplay/record_free_roam.sh"; then
+        echo "[regression] freeroam $area PASS"
+      elif [[ " $FREEROAM_GATED " == *" $area "* ]]; then
+        echo "[regression] ::error:: free-roam $area did not reach DONE ok (#562)"
+        MATRIX_FAIL=1
+      else
+        echo "[regression] ::warning:: free-roam $area autopilot snag (human-playable; door-geometry follow-up) — not gating"
+      fi
+    done
   fi
 
   # === Phase 2: SR ===

@@ -1263,7 +1263,21 @@ export default function UnifiedStageEditor() {
                 });
                 const text = await res.text();
                 if (res.ok) {
-                  alert(`Saved to disk:\n${selectedMapId}\n${text}`);
+                  // The server re-validates the nav graph against the autopilot's
+                  // authoring contract (scripts/tools/waypoints/wp_tool.mjs) and
+                  // reports back — the save always lands, but a stranded spawn
+                  // should be heard about now, not during an autopilot run.
+                  let report = '';
+                  try {
+                    const wp = (JSON.parse(text) as { waypoints?: { errors: string[]; warnings: string[] } }).waypoints;
+                    if (wp) {
+                      const lines = [...wp.errors.map((e) => `✗ ${e}`), ...wp.warnings.map((w) => `⚠ ${w}`)];
+                      report = lines.length > 0
+                        ? `\n\nWaypoint graph:\n${lines.join('\n')}`
+                        : '\n\nWaypoint graph: OK';
+                    }
+                  } catch { /* fall back to the bare confirmation */ }
+                  alert(`Saved to disk: ${selectedMapId}${report}`);
                 } else {
                   alert(`Save failed (${res.status}): ${text}`);
                 }

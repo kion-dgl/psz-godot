@@ -9,6 +9,14 @@ extends RefCounted
 
 const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
 
+## Ring radius used to spread a multi-key cell's pickups apart (metres).
+## Keys share a collision_size of 2.5, so anything under ~1.5 lets two pickups
+## sit inside one interaction volume.
+const KEY_SPREAD_RADIUS := 2.0
+
+## Height a key floats above the floor, matching the single-key fallback spot.
+const KEY_HOVER_HEIGHT := 0.5
+
 ## Direction base rotations for portal position math (matches quest-io.ts DIRECTION_ROTATIONS).
 ## north=0, south=PI, east=-PI/2, west=PI/2.
 const DIRECTION_ROTATIONS := {
@@ -291,12 +299,17 @@ func _add_gate_label(direction: String, pos: Vector3, target_cell: String, porta
 		_c._add_debug_sphere(pd["trigger_pos"], Color(1, 0, 0), "TriggerMark_%s" % direction)
 
 
-func _create_key_pickup(key_for_cell: String) -> void:
-	# Use proper KeyPickup element with o0c_key.glb model
+## Spawn the key pickup(s) this cell holds for `key_for_cell`'s gate.
+##
+## `count` is the cell's authored `key_count`. A gate with required_keys=N
+## consumes N copies of the SAME key id (key_gate.gd counts them via
+## Inventory.get_key_count), so a multi-key cell must spawn N pickups sharing
+## one key_id — spawning a single pickup leaves the gate permanently
+## unopenable. Extra keys are ringed around the base position so they don't
+## overlap into one un-clickable pile.
+func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 	var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
-	var key := KeyPickupScript.new()
-	key.key_id = key_item_id
-	key.name = "KeyPickup_%s" % key_for_cell
+	var total: int = maxi(1, count)
 
 	# Place key at authored position from quest editor, or fall back to heuristic
 	var key_pos := Vector3.ZERO
@@ -321,16 +334,47 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_pos.y = 0.5
 		print("[ValleyField] Key using fallback midpoint: %s" % key_pos)
 
-	_c._map_root.add_child(key)
-	key.position = key_pos
+	# Remaining-count guard: the cell is only marked collected once EVERY key
+	# in it is taken. Marking on the first pickup would suppress the respawn of
+	# the others on re-entry (_keys_collected is the respawn guard), stranding
+	# the player below the gate's requirement with no way to top up.
+	var remaining := [total]
 
-	# Track collection for grid state and update HUD
-	key.interacted.connect(func(_player: Node3D) -> void:
-		_c._keys_collected[key_for_cell] = true
-		_c._update_key_hud()
-	)
-	print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s)" % [
-		key_for_cell, key_pos, key_item_id])
+	for i in total:
+		var key := KeyPickupScript.new()
+		key.key_id = key_item_id
+		key.name = ("KeyPickup_%s_%d" % [key_for_cell, i]) if total > 1 else ("KeyPickup_%s" % key_for_cell)
+
+		var pos := key_pos
+		if total > 1:
+			# Ring the copies so each is separately walkable/interactable, then
+			# floor-validate: a blind offset pushes keys past the floor edge in
+			# narrow rooms (s02b_lb1), leaving one unreachable and the gate
+			# unopenable — the very failure this multi-key path exists to fix.
+			# _place_on_floor snaps to the floor, or relocates to the nearest
+			# floor point when the ringed spot has none.
+			var angle := TAU * float(i) / float(total)
+			var ringed := key_pos + Vector3(cos(angle), 0.0, sin(angle)) * KEY_SPREAD_RADIUS
+			if _c._cell_spawner:
+				# Hover above whatever floor it actually landed on — a relocated
+				# spot can sit at a different height than the base key's.
+				pos = _c._cell_spawner._place_on_floor(ringed)
+				pos.y += KEY_HOVER_HEIGHT
+			else:
+				pos = ringed
+
+		_c._map_root.add_child(key)
+		key.position = pos
+
+		# Track collection for grid state and update HUD
+		key.interacted.connect(func(_player: Node3D) -> void:
+			remaining[0] -= 1
+			if remaining[0] <= 0:
+				_c._keys_collected[key_for_cell] = true
+			_c._update_key_hud()
+		)
+		print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s, %d/%d)" % [
+			key_for_cell, pos, key_item_id, i + 1, total])
 
 
 func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
