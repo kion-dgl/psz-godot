@@ -17,6 +17,7 @@ func _ready() -> void:
 	# Core first: it creates the active character the combat group's
 	# simulation/damage tests need (they SKIP without one).
 	_run_tests_core()
+	_run_tests_telepipe_and_roam()
 	_run_tests_combat()
 	_run_tests_systems()
 
@@ -123,6 +124,12 @@ func _run_tests_core() -> void:
 	test_tekker_grinding()
 	test_tekker_identification()
 	test_additional_drops()
+
+
+# Telepipe + section state, free-roam lifecycle, and companion movement.
+# Split out of _run_tests_core when that list crossed the code-health size
+# bound; the grouping is topical, the call order is unchanged.
+func _run_tests_telepipe_and_roam() -> void:
 	test_telepipe_suspend()
 	test_telepipe_manager_unit()
 	test_telepipe_round_trip()
