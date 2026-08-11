@@ -1,7 +1,7 @@
 extends DropBase
 class_name QuestItemPickup
 ## Quest item pickup — collectible quest objective item.
-## Walk over to auto-collect. Appears as a spinning gold star.
+## Walk over to auto-collect. Appears as the ef_com_quest star burst.
 ## States: available, collected (inherited from DropBase)
 
 @export var quest_item_id: String = ""
@@ -42,7 +42,31 @@ func _apply_state() -> void:
 			super._apply_state()
 
 
+## DropBase spins `model` on the spot. The burst is a still quad, and
+## BILLBOARD_ENABLED replaces the node basis anyway, so a Y spin would be
+## invisible on the real model and would only ever show on the fallback.
+func _update_animation(_delta: float) -> void:
+	pass
+
+
 func _load_model() -> void:
+	# The burst IS the pickup. The gold star this used to build was only ever a
+	# stand-in for ef_com_quest — once the real texture landed, the two showed at
+	# once: the imitation spinning on the floor, the original hanging above it.
+	model = QuestMarker.build()
+	if model:
+		add_child(model)
+		return
+	# assets/effects ships in the pack, and a scene run straight from the editor
+	# has none mounted. An objective the player cannot see is an unclearable
+	# quest, so the star stays as the pack-free fallback — the same reasoning
+	# that keeps TargetReticle's procedural triangle.
+	model = _fallback_star()
+	add_child(model)
+
+
+## The pre-#577 procedural gold star, kept only for the no-pack case.
+func _fallback_star() -> Node3D:
 	# Build a flat 6-pointed star (two overlapping triangles) — gold material
 	var mesh_instance := MeshInstance3D.new()
 	var arr_mesh := ArrayMesh.new()
@@ -110,9 +134,9 @@ func _load_model() -> void:
 
 	mesh_instance.mesh = arr_mesh
 	mesh_instance.position.y = 0.3
-	model = Node3D.new()
-	model.add_child(mesh_instance)
-	add_child(model)
+	var root := Node3D.new()
+	root.add_child(mesh_instance)
+	return root
 
 
 func _give_reward() -> bool:

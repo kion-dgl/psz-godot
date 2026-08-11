@@ -4,6 +4,11 @@
   "description": "Repo-level dev/test entry points for PSZ Godot.",
   "scripts": {
     "sanity-check": "bash scripts/tools/autoplay/sanity_check.sh",
-    "shop-smoke": "bash scripts/tools/autoplay/shop_smoke.sh"
+    "shop-smoke": "bash scripts/tools/autoplay/shop_smoke.sh",
+    "wp:todo": "node scripts/tools/waypoints/wp_tool.mjs todo",
+    "wp:paste": "node scripts/tools/waypoints/wp_tool.mjs paste",
+    "wp:apply": "node scripts/tools/waypoints/wp_tool.mjs apply",
+    "wp:check": "node scripts/tools/waypoints/wp_tool.mjs check",
+    "wp:baseline": "node scripts/tools/waypoints/wp_tool.mjs baseline"
   }
 }

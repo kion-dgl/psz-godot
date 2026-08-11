@@ -110,6 +110,7 @@ func _run_tests_core() -> void:
 	test_palette_picker_grid()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
+	test_city_scroll_fixes()
 	test_area_objects()
 	test_generated_field_doors()
 	test_equipment_slot_names()
@@ -173,6 +174,7 @@ func _run_tests_systems() -> void:
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
+	test_quest_item_burst_is_static()
 	test_dialog_box_not_restored_after_close()
 	test_quest_rewards()
 	test_quest_reward_data()
@@ -856,6 +858,113 @@ func test_teleporter_dressing_texture_overrides() -> void:
 	assert_true(not both_mat.get_shader_parameter("cull_back"), "CULL_DISABLED surface stays double-sided")
 
 	el.free()
+	print("")
+
+
+# ── Quest pickup is one still burst, not a star plus a badge ──
+# The gold star was a stand-in for ef_com_quest, so once the real texture
+# landed the pickup carried both — the imitation spinning on the floor and the
+# original hovering above it. The burst is now the model itself, and nothing
+# animates it. Pack-free: falls back to the star when assets/effects is absent,
+# which is exactly the case this also has to keep working.
+func test_quest_item_burst_is_static() -> void:
+	print("── QuestItemPickup shows one still burst (no star, no spin) ──")
+	var qitem := QuestItemPickup.new()
+	qitem._load_model()
+
+	# Never invisible: an objective the player cannot see is an unclearable quest.
+	assert_true(qitem.model != null, "pickup always builds a visible model")
+	assert_eq(qitem.get_child_count(), 1, "one visual, not a model plus a marker")
+
+	# DropBase spins `model` every frame. This one must not.
+	var before: Vector3 = qitem.model.rotation
+	qitem._update_animation(1.0)
+	assert_eq(qitem.model.rotation, before, "burst does not spin")
+
+	# And it does not bob: the height is a constant, not a starting point.
+	assert_eq(QuestMarker.DEFAULT_HEIGHT, 0.7, "burst centre sits at a fixed 0.7")
+
+	# The burst path itself only exists with the pack mounted; the CI runner has
+	# no assets/effects on disk, so assert it only where it can be built.
+	if ResourceLoader.exists("res://assets/effects/ef_com_quest/ef_com_quest.glb"):
+		assert_true(qitem.model is QuestMarker, "pack present → the burst IS the model")
+		var marker := QuestMarker.build()
+		assert_true(marker != null, "marker builds from the pack")
+		if marker:
+			# is_equal_approx, not assert_eq: position.y is a float32 Vector3
+			# component, so DEFAULT_HEIGHT (0.7, a double) reads back as
+			# 0.699999988… and an exact compare can never pass. The guard above
+			# means CI never ran this — it only fires on a box that has
+			# assets/effects on disk.
+			assert_true(is_equal_approx(marker.position.y, QuestMarker.DEFAULT_HEIGHT),
+				"marker sits at its height (%f)" % marker.position.y)
+			marker.free()
+	else:
+		print("  (no pack — burst not built; fallback star path exercised instead)")
+
+	qitem.free()
+	print("")
+
+
+# ── City scroll-only texture pass (Dairon market waves) ──────
+# _apply_scroll_fixes() exists so an area with baked textures can animate its
+# water without opting into the whole _fix_city_materials() rewrite. Two things
+# are worth pinning: that it converts a scrolling material, and that it leaves
+# a non-scrolling one alone — the second is the entire point of the narrow pass.
+func test_city_scroll_fixes() -> void:
+	print("── city _apply_scroll_fixes (scroll-only material pass) ──")
+	var area := CityAreaBase.new()
+	CityAreaBase._load_global_texture_fixes()
+
+	# The data half. scrollY must be present and 0: _fix_materials_recursive
+	# defaults a missing scrollY to -0.35, so an entry that only says scrollX
+	# would inherit a vertical crawl nobody asked for.
+	var fixes_file := FileAccess.open("res://data/stage_configs/global-texture-fixes.json", FileAccess.READ)
+	assert_true(fixes_file != null, "global-texture-fixes.json is readable")
+	var fixes: Dictionary = JSON.parse_string(fixes_file.get_as_text())
+	fixes_file.close()
+	for key in ["dairon2_s00_2_wave01.png#1", "dairon2_s00_2_wave02.png#1"]:
+		assert_true(fixes.has(key), "%s has a fix entry" % key)
+		var entry: Dictionary = fixes.get(key, {})
+		assert_eq(entry.get("scrollX", 0.0), -0.2, "%s scrolls -0.2 in u" % key)
+		assert_true(entry.has("scrollY"), "%s pins scrollY (else it defaults to -0.35)" % key)
+		assert_eq(entry.get("scrollY", -0.35), 0.0, "%s does not scroll in v" % key)
+
+	# The behavioural half. A material whose texture carries a scroll entry
+	# becomes a waterfall ShaderMaterial carrying that scroll.
+	var wave := MeshInstance3D.new()
+	wave.mesh = QuadMesh.new()
+	var wave_mat := StandardMaterial3D.new()
+	var wave_tex := ImageTexture.new()
+	wave_tex.resource_path = "res://assets/stages/city_e/market/dairon2_s00_2_wave01.png"
+	wave_mat.albedo_texture = wave_tex
+	wave.set_surface_override_material(0, wave_mat)
+	area.add_child(wave)
+
+	# ...and one whose texture has a fix with NO scroll stays exactly as authored.
+	var wall := MeshInstance3D.new()
+	wall.mesh = QuadMesh.new()
+	var wall_mat := StandardMaterial3D.new()
+	var wall_tex := ImageTexture.new()
+	# s00e_sa2's copy, not the market's: market/s00_* is excluded from the
+	# export, and check-asset-refs rejects a res:// path that isn't in the pack.
+	# The lookup keys on the basename, so the shipped path is the right one.
+	wall_tex.resource_path = "res://assets/stages/city_e/s00e_sa2/lndmd/s00_0_back00.png"
+	wall_mat.albedo_texture = wall_tex
+	wall.set_surface_override_material(0, wall_mat)
+	area.add_child(wall)
+
+	area._apply_scroll_fixes_recursive(area)
+
+	var wave_out := wave.get_surface_override_material(0)
+	assert_true(wave_out is ShaderMaterial, "scrolling texture becomes a ShaderMaterial")
+	if wave_out is ShaderMaterial:
+		var sm := wave_out as ShaderMaterial
+		assert_eq(sm.get_shader_parameter("uv_scroll"), Vector2(-0.2, 0.0), "wave scrolls -0.2 in u only")
+	assert_true(wall.get_surface_override_material(0) == wall_mat,
+		"non-scrolling material is left untouched by the narrow pass")
+
+	area.free()
 	print("")
 
 

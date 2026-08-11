@@ -400,6 +400,64 @@ func _fix_city_materials() -> void:
 	_fix_materials_recursive(self)
 
 
+## Apply ONLY the scroll half of global-texture-fixes.json — the animated
+## surfaces (water, waves) — and leave every other material exactly as the GLB
+## authored it.
+##
+## For an area whose textures are already baked (the Market), the full
+## _fix_city_materials() pass is too big a hammer: it rewrites shading mode,
+## alpha scissor, depth draw and shadow-surface hiding on every surface in the
+## scene, which is precisely what those areas opted out of. Scrolling one
+## material should not re-light the whole market.
+##
+## An entry qualifies by carrying scrollX or scrollY. Note the asymmetry with
+## _fix_materials_recursive: this pass does NOT infer scroll from a `_fall`
+## texture name. A waterfall that wants to move says so in the data.
+func _apply_scroll_fixes() -> void:
+	_load_global_texture_fixes()
+	var applied := _apply_scroll_fixes_recursive(self)
+	# Worth printing: the lookup keys on the extracted texture filename, which
+	# Godot derives from the GLB name (dairon2.glb + image `s00_2_wave01` =>
+	# dairon2_s00_2_wave01.png). A re-export under a different name silently
+	# stops matching, and a still surface is easy to miss. 0 here says so.
+	print("[CityArea] scroll fixes applied to %d surface(s)" % applied)
+
+
+func _apply_scroll_fixes_recursive(node: Node) -> int:
+	var applied := 0
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if not (mat is StandardMaterial3D):
+				continue
+			var std_mat := mat as StandardMaterial3D
+			var fix := _find_global_fix_for_material(std_mat)
+			if not (fix.has("scrollX") or fix.has("scrollY")):
+				continue
+			var shader_mat := ShaderMaterial.new()
+			shader_mat.shader = WATERFALL_SHADER
+			if std_mat.albedo_texture:
+				shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+			shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+			shader_mat.set_shader_parameter("uv_scale",
+				Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+			shader_mat.set_shader_parameter("uv_offset",
+				Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+			# Both default to 0 here, unlike the waterfall branch in
+			# _fix_materials_recursive where a missing scrollY means -0.35. An
+			# entry that asks for horizontal scroll must not inherit a vertical
+			# crawl it never asked for.
+			shader_mat.set_shader_parameter("uv_scroll",
+				Vector2(fix.get("scrollX", 0.0), fix.get("scrollY", 0.0)))
+			shader_mat.render_priority = 1
+			mesh_inst.set_surface_override_material(i, shader_mat)
+			applied += 1
+	for child in node.get_children():
+		applied += _apply_scroll_fixes_recursive(child)
+	return applied
+
+
 func _override_vertex_colors(enabled: bool) -> void:
 	## Override vertex_color_use_as_albedo on all StandardMaterial3D in the scene.
 	_set_vertex_colors_recursive(self, enabled)
