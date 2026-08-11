@@ -129,7 +129,7 @@ const STATUS_COLORS := {
 }
 
 ## Target reticle (shown when player is targeting this enemy)
-var _reticle: Sprite3D
+var _reticle: Node3D
 var _cached_materials: Array = []  # Cached StandardMaterial3D refs for tint updates
 
 ## Walk variant cycling — for enemies with wlk_l/wlk_r instead of plain wlk.

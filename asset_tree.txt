@@ -1,3 +1,7 @@
+assets/effects/ef_com_quest/ef_com_quest.glb
+assets/effects/ef_com_quest/ff_com_quest.png
+assets/effects/ef_com_rockon/ef_com_rockon.glb
+assets/effects/ef_com_rockon_s/ef_com_rockon_s.glb
 assets/enemies/armadillo/armadillo.glb
 assets/enemies/armadillo/b_035.png
 assets/enemies/armadillo_rare/armadillo_rare.glb
