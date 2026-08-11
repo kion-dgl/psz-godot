@@ -247,12 +247,13 @@ func _input_palette(event: InputEvent) -> bool:
 	elif event.is_action_pressed("ui_accept"):
 		_c._mode = PsoStartMenu.Mode.PALETTE_PICK
 		_c._sub_idx = 0
+		# Seed the cursor on the slot's current action. Search the PICKER GRID,
+		# not ALL_ACTIONS — _sub_idx is a grid cell index everywhere else.
 		var current_id: String = str(ActionPalette.pages[_c._pal_page_idx][_c._pal_slot_idx])
-		var actions: Array = _c._get_palette_actions()
-		for i in range(actions.size()):
-			if str(actions[i].get("id", "")) == current_id:
-				_c._sub_idx = i
-				break
+		var grid_ids: Array = PsoStartMenu.palette_grid_ids()
+		var found: int = grid_ids.find(current_id)
+		if found >= 0:
+			_c._sub_idx = found
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_c._mode = PsoStartMenu.Mode.MAIN
@@ -280,7 +281,7 @@ func _pal_row_col_to_flat(row: int, col: int) -> int:
 
 
 func _input_palette_pick(event: InputEvent) -> bool:
-	var actions: Array = _c._get_palette_actions()
+	var grid_ids: Array = PsoStartMenu.palette_grid_ids()
 	var rc := _pal_flat_to_row_col(_c._sub_idx)
 	var in_left: bool = rc.x < PsoStartMenu._PAL_LEFT_COL_SIZE
 	var col_start: int = 0 if in_left else PsoStartMenu._PAL_LEFT_COL_SIZE
@@ -318,9 +319,11 @@ func _input_palette_pick(event: InputEvent) -> bool:
 			_c._sub_idx = _pal_row_col_to_flat(target_row, target_ids.size() - 1)
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		if _c._sub_idx < actions.size():
-			var action: Dictionary = actions[_c._sub_idx]
-			var action_id: String = str(action.get("id", ""))
+		# Assign the id the SELECTED CELL actually draws. Previously this read
+		# ALL_ACTIONS[_sub_idx], which only matched while the two lists happened
+		# to share an order.
+		if _c._sub_idx < grid_ids.size():
+			var action_id: String = str(grid_ids[_c._sub_idx])
 			if _c._is_palette_action_available(action_id):
 				ActionPalette.set_action(_c._pal_page_idx, _c._pal_slot_idx, action_id)
 				_c._mode = PsoStartMenu.Mode.PALETTE

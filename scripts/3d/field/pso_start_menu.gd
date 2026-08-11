@@ -514,21 +514,49 @@ func _do_equip() -> void:
 	_sub_idx = _equip_slot_idx
 
 
+## The palette picker grid — the SINGLE source of truth for what the picker
+## shows, in what order, and what selecting a cell assigns. Rows 0.._PAL_LEFT_COL_SIZE-1
+## draw in the left column, the rest in the right.
+##
+## This used to be duplicated in start_menu_renderer.gd (as two per-column
+## consts) and coupled BY POSITION to ActionPalette.ALL_ACTIONS — the picker
+## navigated this grid but assigned ALL_ACTIONS[flat_index]. Inserting an entry
+## anywhere in ALL_ACTIONS silently shifted every later cell onto the wrong
+## action (#575 added four traps and made "Foie" assign "Ice Trap"). Selection
+## now resolves through the id in this table, so the two lists no longer have to
+## agree on order — but an action missing from here is unreachable, which
+## test_runner's palette-grid test pins.
 const _PAL_PICKER_ROWS: Array = [
 	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
 	{"ids": ["monofluid", "difluid", "trifluid"]},
 	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
 	{"ids": ["telepipe", "kill_all"]},
+	# Traps sit opposite Technique on purpose: they are the CAST counterpart to
+	# techniques (a CAST can't cast, and only a CAST places traps).
+	{"label": "Traps", "ids": ["heat_trap", "ice_trap", "light_trap", "heal_trap"]},
 	{"label": "Technique", "ids": ["foie", "barta", "zonde"]},
 	{"ids": ["grants", "megid"]},
-	{"ids": ["resta", "anti"]},
+	# reverser rides along with the other two support techs. It has been in
+	# ALL_ACTIONS but absent from this grid — i.e. unassignable — since the grid
+	# was introduced; the row had a free third cell all along.
+	{"ids": ["resta", "anti", "reverser"]},
 	{"ids": ["shifta", "deband"]},
 	{"ids": ["jellen", "zalure"]},
 ]
 
 const _PAL_LEFT_COL_SIZE: int = 5   # rows 0-4: combat + recovery
-const _PAL_RIGHT_COL_SIZE: int = 5  # rows 5-9: techniques
+const _PAL_RIGHT_COL_SIZE: int = 6  # rows 5-10: traps + techniques
+
+
+## Flat list of every id in the picker grid, in navigation order. Cell N of the
+## picker assigns palette_grid_ids()[N].
+static func palette_grid_ids() -> Array:
+	var ids: Array = []
+	for row in _PAL_PICKER_ROWS:
+		for id in row.ids:
+			ids.append(str(id))
+	return ids
 
 
 func _adjust_sfx_volume(delta: float) -> void:
@@ -1067,14 +1095,6 @@ func _get_feed_items() -> Array:
 			var info: Dictionary = Inventory._lookup_item(item_id)
 			var effects: Dictionary = MagManager.FEED_EFFECTS.get(item_id, {})
 			result.append({"id": item_id, "name": str(info.get("name", item_id)), "quantity": qty, "effects": effects, "type": "tool"})
-	return result
-
-
-func _get_palette_actions() -> Array:
-	## Returns all assignable actions from ActionPalette.ALL_ACTIONS
-	var result: Array = []
-	for action in ActionPalette.ALL_ACTIONS:
-		result.append(action)
 	return result
 
 

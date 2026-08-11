@@ -50,7 +50,20 @@ const ARM_DELAY := 1.0
 const LIFETIME := 60.0
 const BOB_AMPLITUDE := 0.06
 const BOB_SPEED := 3.0
-const REST_HEIGHT := 0.4
+
+## How high the ball floats above the trap's origin (the player's feet).
+##
+## Set to the top of the player's head, so it reads as suspended on a string
+## rather than dropped. Measured from the visual mesh, NOT the collision capsule:
+## assets/player/pc_000/pc_000_000.glb spans y=0.003..1.840, so the crown is
+## y≈1.84. (The capsule in player.tscn is only 1.4 tall — shorter than the model
+## — which is why sizing against it put the ball at chest height.) The ball mesh
+## is centred on its own origin and 0.51 across, so it straddles the crown.
+##
+## The trigger volume is centred on the ball, so raising this lifts it too. That
+## is deliberate and harmless: at TRIGGER_RADIUS 4.0 the sphere still reaches
+## 3.55 units horizontally at ground level, where the enemies are.
+const REST_HEIGHT := 1.85
 
 signal triggered(trap_id: String)
 
@@ -81,6 +94,24 @@ func _ready() -> void:
 	_build_area()
 
 
+## Mirrored-repeat UV wrapping, which StandardMaterial3D cannot express.
+##
+## The burst GLBs declare wrapS = wrapT = MIRRORED_REPEAT (glTF 33648) and run
+## TEXCOORD_0 V from -0.5 to +0.5, i.e. half of every quad samples outside 0..1
+## and is meant to mirror back. Godot's glTF importer has no mirrored mode — the
+## material only carries a `texture_repeat` bool — and it imports these as
+## texture_repeat = false (CLAMP). Clamping smears the texture's edge row across
+## the entire outside-0..1 half, which is the "grey angular mass with a coloured
+## streak" these models render as. Plain repeat is not right either: it wraps
+## instead of mirroring and seams down the middle of each quad.
+##
+## This is the same fix the stage/gate geometry already needed — see the shared
+## fold in mirror_repeat.gdshaderinc. The long-term fix is at the asset level
+## (bake the mirror into the texture and author UVs in 0..1), which would let
+## every mirror_repeat* shader retire.
+const MIRROR_SHADER := preload("res://scripts/3d/shaders/mirror_repeat_effect.gdshader")
+
+
 func _load_ball() -> void:
 	var model_id: String = str(TRAP_MODELS.get(trap_id, ""))
 	var path := "res://assets/effects/%s/%s.glb" % [model_id, model_id]
@@ -91,6 +122,29 @@ func _load_ball() -> void:
 	_model = packed.instantiate() as Node3D
 	_model.position.y = REST_HEIGHT
 	add_child(_model)
+	_apply_mirror_wrap(_model)
+
+
+## Swap each surface's imported StandardMaterial3D for the mirrored-wrap shader,
+## carrying over its albedo texture. Walks the whole subtree because the burst
+## meshes sit under a Skeleton3D.
+func _apply_mirror_wrap(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh: Mesh = (node as MeshInstance3D).mesh
+		if mesh:
+			for i in mesh.get_surface_count():
+				var src := mesh.surface_get_material(i) as StandardMaterial3D
+				if src == null or src.albedo_texture == null:
+					continue
+				var mat := ShaderMaterial.new()
+				mat.shader = MIRROR_SHADER
+				mat.set_shader_parameter("albedo_texture", src.albedo_texture)
+				mat.set_shader_parameter("mirror_x", true)
+				mat.set_shader_parameter("mirror_y", true)
+				mat.set_shader_parameter("alpha_scissor", src.alpha_scissor_threshold)
+				(node as MeshInstance3D).set_surface_override_material(i, mat)
+	for child in node.get_children():
+		_apply_mirror_wrap(child)
 
 
 func _build_area() -> void:

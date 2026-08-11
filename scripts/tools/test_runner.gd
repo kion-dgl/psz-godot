@@ -107,6 +107,7 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_player_traps()
+	test_palette_picker_grid()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_area_objects()
@@ -589,6 +590,77 @@ func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
 ## that make them work as items rather than just models: the shop sells them,
 ## the palette can hold them, they cap at 5, and a non-CAST cannot use them.
 ## Pack-free — data resources and constants only.
+## ── Palette picker grid ───────
+## The picker draws PsoStartMenu._PAL_PICKER_ROWS and assigns by the id in that
+## table. Two things must hold and neither did when #575 landed: every palette
+## action must be reachable from some cell, and the cell must assign what it
+## draws. Before the fix the picker indexed ALL_ACTIONS by grid position, so
+## inserting the four traps mid-list made 12 of 25 cells assign the wrong
+## action — "Foie" assigned "Ice Trap" — while the traps themselves were
+## unreachable. Pack-free: constants only.
+func test_palette_picker_grid() -> void:
+	print("── Palette picker grid (reachability / cell identity) ──")
+	const PsoMenu := preload("res://scripts/3d/field/pso_start_menu.gd")
+
+	var grid_ids: Array = PsoMenu.palette_grid_ids()
+	assert_true(grid_ids.size() > 0, "picker grid is non-empty")
+
+	# The two column sizes must account for every row, or the tail of the grid
+	# is undrawable and the up/down wrap lands out of range.
+	var rows: Array = PsoMenu._PAL_PICKER_ROWS
+	assert_eq(PsoMenu._PAL_LEFT_COL_SIZE + PsoMenu._PAL_RIGHT_COL_SIZE, rows.size(),
+		"left + right column sizes cover every grid row")
+
+	# Every cell names a real action.
+	for id in grid_ids:
+		assert_true(not ActionPalette.get_action_data(str(id)).is_empty(),
+			"grid cell '%s' is a real ActionPalette action" % id)
+
+	# No id appears twice — a duplicate makes one of the two cells unselectable
+	# (the seed-cursor search stops at the first match).
+	var seen := {}
+	var dupes: Array = []
+	for id in grid_ids:
+		if seen.has(id):
+			dupes.append(id)
+		seen[str(id)] = true
+	assert_true(dupes.is_empty(), "no id appears in two cells (dupes: %s)" % str(dupes))
+
+	# Every assignable action is reachable. This is the check that would have
+	# caught #575's traps being absent from the grid entirely.
+	var missing: Array = []
+	for action in ActionPalette.ALL_ACTIONS:
+		var aid: String = str(action.get("id", ""))
+		if not seen.has(aid):
+			missing.append(aid)
+	assert_true(missing.is_empty(),
+		"every ALL_ACTIONS entry is reachable in the picker (unreachable: %s)" % str(missing))
+
+	# The four traps specifically, since that is what #575 added.
+	for id in ["heat_trap", "ice_trap", "light_trap", "heal_trap"]:
+		assert_true(seen.has(id), "%s is reachable in the picker grid" % id)
+
+	# Every grid cell must be DISPATCHABLE, not just drawable. player.gd's
+	# _execute_palette_action routes on ActionPalette.is_consumable() /
+	# TechniqueManager.TECHNIQUES / a few literals; an action in the grid that
+	# matches none of those is a slot that silently does nothing when pressed —
+	# which is exactly how #575's traps shipped.
+	const DISPATCH_LITERALS := ["attack", "strong_attack", "dodge", "kill_all"]
+	var undispatchable: Array = []
+	for id in grid_ids:
+		var aid: String = str(id)
+		if aid in DISPATCH_LITERALS:
+			continue
+		if ActionPalette.is_consumable(aid):
+			continue
+		if TechniqueManager.TECHNIQUES.has(aid):
+			continue
+		undispatchable.append(aid)
+	assert_true(undispatchable.is_empty(),
+		"every palette action is dispatchable in player.gd (dead: %s)" % str(undispatchable))
+	print("")
+
+
 func test_player_traps() -> void:
 	print("── Player-placed traps (shop / palette / cap / CAST-only) ──")
 	const TrapScript := preload("res://scripts/3d/elements/trap_ball.gd")
