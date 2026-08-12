@@ -8,6 +8,16 @@ const SPIKE_TEX_NAME := "o0c_1_needle2"
 const DAMAGE_AMOUNT := 8
 const INVULN_TIME := 2.0
 
+## Damage this instance deals. Defaults to the script's own DAMAGE_AMOUNT so
+## every existing caller is unchanged; the authored field traps override it with
+## psz-re's measured per-type constants (Needler 25, Burn 50).
+@export var damage: int = DAMAGE_AMOUNT
+
+## Which of the contact traps this instance is. Cosmetic today — the four share
+## one model until dedicated meshes land — but it keeps the log honest and gives
+## a hook for per-kind art without a leaf class per trap.
+@export var trap_kind: String = "needle_trap"
+
 var _spike_material: StandardMaterial3D = null
 var _base_material: StandardMaterial3D = null
 var _damage_area: Area3D
@@ -61,7 +71,7 @@ func _on_damage_body_entered(body: Node3D) -> void:
 		return
 	_hit_bodies[body_id] = INVULN_TIME
 	if body.has_method("take_damage"):
-		body.take_damage(DAMAGE_AMOUNT)
+		body.take_damage(damage)
 
 
 func _update_animation(delta: float) -> void:

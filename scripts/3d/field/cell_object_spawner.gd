@@ -200,10 +200,12 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 					})
 				else:
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
-			"needle_trap":
-				_spawn_needle_trap(pos)
-			"bear_trap":
+			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
+				_spawn_contact_trap(pos, obj_type)
+			"bear_trap", "capture_trap":
 				_spawn_bear_trap(pos)
+			"heal_trap", "heat_trap", "light_trap", "ice_trap":
+				_spawn_elemental_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -343,10 +345,12 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 							})
 					else:
 						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
-			"needle_trap":
-				_spawn_needle_trap(pos)
-			"bear_trap":
+			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
+				_spawn_contact_trap(pos, obj_type)
+			"bear_trap", "capture_trap":
 				_spawn_bear_trap(pos)
+			"heal_trap", "heat_trap", "light_trap", "ice_trap":
+				_spawn_elemental_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -1034,12 +1038,56 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
-func _spawn_needle_trap(pos: Vector3) -> void:
+## Damage per contact-trap kind.
+##
+## The Needler's 25 and the Burn's 50 are MEASURED — psz-re read them as the one
+## constant each type's parameter block carries across the whole corpus (248 and
+## 458 records). The Gun trap genuinely varies per instance and psz-re does not
+## publish the field, so it takes the needle trap's own default. `needle_trap`
+## is the legacy id the static quests author.
+const CONTACT_TRAP_DAMAGE := {
+	"needler_trap": 25,
+	"burn_trap": 50,
+}
+
+## The four contact traps share one script and differ by data — the repo's
+## hierarchy rule. Only the elemental family needs its own behaviour, because
+## only it is invisible and fused.
+func _spawn_contact_trap(pos: Vector3, kind: String) -> void:
 	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
+	if CONTACT_TRAP_DAMAGE.has(kind):
+		trap.set("damage", int(CONTACT_TRAP_DAMAGE[kind]))
+	trap.set("trap_kind", kind)
 	_c._map_root.add_child(trap)
 	trap.position = pos
 	trap.call("set_state", "on")
-	print("[CellObjects] NeedleTrap at %s" % pos)
+	print("[CellObjects] %s at %s" % [kind, pos])
+
+
+## The authored elemental trap: invisible until it arms, then it rises and
+## blows. Same class as the player's own trap item — see trap_ball.gd.
+func _spawn_elemental_trap(pos: Vector3, kind: String) -> void:
+	var trap := TrapBall.build_field(kind, _difficulty_index())
+	if trap == null:
+		return
+	# The nav backbone walks straight over authored trap positions, so a blast
+	# mid-route is noise rather than a finding. Spawn them inert under autopilot.
+	trap.disarmed = OS.get_environment("PSZ_AUTOPILOT") == "1"
+	_c._map_root.add_child(trap)
+	trap.position = pos
+	print("[CellObjects] %s at %s%s" % [kind, pos, " (disarmed)" if trap.disarmed else ""])
+
+
+## The session difficulty as the index the fuse table is keyed on.
+func _difficulty_index() -> int:
+	var name: String = str(SessionManager.get_session().get("difficulty", "normal"))
+	match name:
+		"hard":
+			return 1
+		"v_hard", "very_hard", "super_hard":
+			return 2
+		_:
+			return 0
 
 
 func _spawn_bear_trap(pos: Vector3) -> void:
