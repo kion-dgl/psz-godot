@@ -9,5 +9,6 @@ name = "Heat Trap"
 japanese_name = "ヒートトラップ"
 details = "Inflicts Burn Status effect on enemies."
 rarity = 1
-max_stack = 10
+max_stack = 5
 pso_world_id = 311
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")

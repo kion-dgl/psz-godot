@@ -17,6 +17,7 @@ func _ready() -> void:
 	# Core first: it creates the active character the combat group's
 	# simulation/damage tests need (they SKIP without one).
 	_run_tests_core()
+	_run_tests_telepipe_and_roam()
 	_run_tests_combat()
 	_run_tests_systems()
 
@@ -106,6 +107,8 @@ func _run_tests_core() -> void:
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
+	test_player_traps()
+	test_palette_picker_grid()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_city_scroll_fixes()
@@ -121,6 +124,12 @@ func _run_tests_core() -> void:
 	test_tekker_grinding()
 	test_tekker_identification()
 	test_additional_drops()
+
+
+# Telepipe + section state, free-roam lifecycle, and companion movement.
+# Split out of _run_tests_core when that list crossed the code-health size
+# bound; the grouping is topical, the call order is unchanged.
+func _run_tests_telepipe_and_roam() -> void:
 	test_telepipe_suspend()
 	test_telepipe_manager_unit()
 	test_telepipe_round_trip()
@@ -585,6 +594,139 @@ func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
 	return false
 
 
+## ── Player-placed traps (#575) ───────
+## Four consumables that only a CAST can carry and drop. Pins the four things
+## that make them work as items rather than just models: the shop sells them,
+## the palette can hold them, they cap at 5, and a non-CAST cannot use them.
+## Pack-free — data resources and constants only.
+## ── Palette picker grid ───────
+## The picker draws PsoStartMenu._PAL_PICKER_ROWS and assigns by the id in that
+## table. Two things must hold and neither did when #575 landed: every palette
+## action must be reachable from some cell, and the cell must assign what it
+## draws. Before the fix the picker indexed ALL_ACTIONS by grid position, so
+## inserting the four traps mid-list made 12 of 25 cells assign the wrong
+## action — "Foie" assigned "Ice Trap" — while the traps themselves were
+## unreachable. Pack-free: constants only.
+func test_palette_picker_grid() -> void:
+	print("── Palette picker grid (reachability / cell identity) ──")
+	const PsoMenu := preload("res://scripts/3d/field/pso_start_menu.gd")
+
+	var grid_ids: Array = PsoMenu.palette_grid_ids()
+	assert_true(grid_ids.size() > 0, "picker grid is non-empty")
+
+	# The two column sizes must account for every row, or the tail of the grid
+	# is undrawable and the up/down wrap lands out of range.
+	var rows: Array = PsoMenu._PAL_PICKER_ROWS
+	assert_eq(PsoMenu._PAL_LEFT_COL_SIZE + PsoMenu._PAL_RIGHT_COL_SIZE, rows.size(),
+		"left + right column sizes cover every grid row")
+
+	# Every cell names a real action.
+	for id in grid_ids:
+		assert_true(not ActionPalette.get_action_data(str(id)).is_empty(),
+			"grid cell '%s' is a real ActionPalette action" % id)
+
+	# No id appears twice — a duplicate makes one of the two cells unselectable
+	# (the seed-cursor search stops at the first match).
+	var seen := {}
+	var dupes: Array = []
+	for id in grid_ids:
+		if seen.has(id):
+			dupes.append(id)
+		seen[str(id)] = true
+	assert_true(dupes.is_empty(), "no id appears in two cells (dupes: %s)" % str(dupes))
+
+	# Every assignable action is reachable. This is the check that would have
+	# caught #575's traps being absent from the grid entirely.
+	var missing: Array = []
+	for action in ActionPalette.ALL_ACTIONS:
+		var aid: String = str(action.get("id", ""))
+		if not seen.has(aid):
+			missing.append(aid)
+	assert_true(missing.is_empty(),
+		"every ALL_ACTIONS entry is reachable in the picker (unreachable: %s)" % str(missing))
+
+	# The four traps specifically, since that is what #575 added.
+	for id in ["heat_trap", "ice_trap", "light_trap", "heal_trap"]:
+		assert_true(seen.has(id), "%s is reachable in the picker grid" % id)
+
+	# Every grid cell must be DISPATCHABLE, not just drawable. player.gd's
+	# _execute_palette_action routes on ActionPalette.is_consumable() /
+	# TechniqueManager.TECHNIQUES / a few literals; an action in the grid that
+	# matches none of those is a slot that silently does nothing when pressed —
+	# which is exactly how #575's traps shipped.
+	const DISPATCH_LITERALS := ["attack", "strong_attack", "dodge", "kill_all"]
+	var undispatchable: Array = []
+	for id in grid_ids:
+		var aid: String = str(id)
+		if aid in DISPATCH_LITERALS:
+			continue
+		if ActionPalette.is_consumable(aid):
+			continue
+		if TechniqueManager.TECHNIQUES.has(aid):
+			continue
+		undispatchable.append(aid)
+	assert_true(undispatchable.is_empty(),
+		"every palette action is dispatchable in player.gd (dead: %s)" % str(undispatchable))
+	print("")
+
+
+func test_player_traps() -> void:
+	print("── Player-placed traps (shop / palette / cap / CAST-only) ──")
+	const TrapScript := preload("res://scripts/3d/elements/trap_ball.gd")
+	var trap_ids := ["heat_trap", "ice_trap", "light_trap", "heal_trap"]
+
+	# Every trap item has a ball and an effect, and nothing else sneaks in.
+	assert_eq(TrapScript.TRAP_MODELS.size(), 4, "four trap balls")
+	assert_eq(TrapScript.TRAP_EFFECTS.size(), 4, "four trap effects")
+	var models := {}
+	for id in trap_ids:
+		assert_true(TrapScript.TRAP_MODELS.has(id), "%s has a ball model" % id)
+		assert_true(TrapScript.TRAP_EFFECTS.has(id), "%s has an effect" % id)
+		models[str(TrapScript.TRAP_MODELS[id])] = true
+	assert_eq(models.size(), 4, "each trap maps to a DIFFERENT ball (the mapping is 1:1)")
+
+	# Effects resolve against the real status table, or the trap does nothing.
+	for id in trap_ids:
+		var effect: Dictionary = TrapScript.TRAP_EFFECTS[id]
+		var status: String = str(effect.get("status", ""))
+		if not status.is_empty():
+			assert_true(CombatManager.STATUS_EFFECTS.has(status),
+				"%s inflicts a status that exists (%s)" % [id, status])
+		else:
+			assert_true(float(effect.get("heal_percent", 0.0)) > 0.0,
+				"%s does something — a status or a heal" % id)
+
+	# Carry up to 5 each, and CAST-only through the shop's capability hook.
+	for id in trap_ids:
+		var consumable = ConsumableRegistry.get_consumable(id)
+		assert_true(consumable != null, "%s is a registered consumable" % id)
+		if consumable == null:
+			continue
+		assert_eq(consumable.max_stack, 5, "%s stacks to 5" % id)
+		assert_true(consumable.can_be_used_by("Hunter Cast"), "%s usable by HUcast" % id)
+		assert_true(consumable.can_be_used_by("Ranger Cast"), "%s usable by RAcast" % id)
+		assert_true(not consumable.can_be_used_by("Hunter Human"), "%s NOT usable by HUmar" % id)
+		assert_true(not consumable.can_be_used_by("Force Newman"), "%s NOT usable by FOnewm" % id)
+
+	# Buyable at the item shop, under their own category.
+	var shop = ShopRegistry.get_shop("item_shop")
+	assert_true(shop != null, "item shop loads")
+	if shop != null:
+		var sold := {}
+		for entry in shop.items:
+			sold[str(entry.get("item", "")).to_lower().replace(" ", "_")] = str(entry.get("category", ""))
+		for id in trap_ids:
+			assert_true(sold.has(id), "item shop sells %s" % id)
+			assert_eq(str(sold.get(id, "")), "Traps", "%s is in the Traps category" % id)
+
+	# Equippable to the action palette, and treated as a consumable there.
+	for id in trap_ids:
+		assert_true(not ActionPalette.get_action_data(id).is_empty(),
+			"%s is a palette action" % id)
+		assert_true(ActionPalette.is_consumable(id), "%s counts as a consumable slot" % id)
+	print("")
+
+
 func test_teleporter_dressing() -> void:
 	print("── TeleporterDressing (special_c3 layout + pivot + materials) ──")
 	const DressScript := preload("res://scripts/3d/elements/teleporter_dressing.gd")
@@ -756,7 +898,13 @@ func test_quest_item_burst_is_static() -> void:
 		var marker := QuestMarker.build()
 		assert_true(marker != null, "marker builds from the pack")
 		if marker:
-			assert_eq(marker.position.y, QuestMarker.DEFAULT_HEIGHT, "marker sits at its height")
+			# is_equal_approx, not assert_eq: position.y is a float32 Vector3
+			# component, so DEFAULT_HEIGHT (0.7, a double) reads back as
+			# 0.699999988… and an exact compare can never pass. The guard above
+			# means CI never ran this — it only fires on a box that has
+			# assets/effects on disk.
+			assert_true(is_equal_approx(marker.position.y, QuestMarker.DEFAULT_HEIGHT),
+				"marker sits at its height (%f)" % marker.position.y)
 			marker.free()
 	else:
 		print("  (no pack — burst not built; fallback star path exercised instead)")

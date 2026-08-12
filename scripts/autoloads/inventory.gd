@@ -400,6 +400,11 @@ func use_item(item_id: String) -> bool:
 	if item_id == "telepipe":
 		return _use_telepipe()
 
+	# Player-placed traps (#575) — dropped at the player's feet, field-only,
+	# CAST-only. Same shape as the telepipe: a placeable, not a stat change.
+	if TrapBall.TRAP_MODELS.has(item_id):
+		return _use_trap(item_id)
+
 	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
 	if effect.is_empty():
 		# Not a known consumable — try legacy path for other usable items
@@ -469,6 +474,54 @@ func _use_telepipe() -> bool:
 	_last_use_amount = 1
 	print("[Inventory] Used telepipe at %s" % player.global_position)
 	return true
+
+
+## Drop a trap at the player's feet.
+##
+## Refuses (without consuming the item) outside a field, with no player in the
+## scene, or when the character is not a CAST. The CAST restriction is the
+## mirror of the technique gate — CASTs cannot cast, and only CASTs carry traps.
+## It is enforced here as well as in the shop and palette because this is the
+## only chokepoint every use path goes through.
+func _use_trap(item_id: String) -> bool:
+	if SessionManager.get_location() != "field":
+		_last_use_type = "trap_fail"
+		_last_use_amount = 0
+		print("[Inventory] Trap rejected: not in a field (location=%s)"
+			% SessionManager.get_location())
+		return false
+	if not can_use_traps():
+		_last_use_type = "trap_fail"
+		_last_use_amount = 0
+		print("[Inventory] Trap rejected: only CASTs can place traps")
+		return false
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		_last_use_type = "trap_fail"
+		_last_use_amount = 0
+		print("[Inventory] Trap rejected: no player in scene")
+		return false
+	var trap := TrapBall.build(item_id)
+	if trap == null:
+		_last_use_type = "trap_fail"
+		_last_use_amount = 0
+		return false
+	player.get_parent().add_child(trap)
+	trap.global_position = player.global_position
+	remove_item(item_id, 1)
+	_last_use_type = "trap"
+	_last_use_amount = 1
+	print("[Inventory] Placed %s at %s" % [item_id, player.global_position])
+	return true
+
+
+## True when the active character is a CAST. Traps are the CAST counterpart to
+## techniques: pso_start_menu._can_use_techs() returns false for Cast, and this
+## returns true only for Cast.
+func can_use_traps() -> bool:
+	var character: Dictionary = CharacterManager.get_active_character()
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	return class_data != null and class_data.race == "Cast"
 
 
 ## Use a technique disk to learn or upgrade a tech.

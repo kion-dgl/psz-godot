@@ -57,6 +57,30 @@ items = [
     "currency": "Meseta"
   },
   {
+    "item": "Heat Trap",
+    "category": "Traps",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Ice Trap",
+    "category": "Traps",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Light Trap",
+    "category": "Traps",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Heal Trap",
+    "category": "Traps",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
     "item": "Trap Vision",
     "category": "Utility",
     "cost": 50,

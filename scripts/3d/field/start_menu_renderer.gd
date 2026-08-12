@@ -638,27 +638,15 @@ func _draw_palette(c: Control, font: Font) -> void:
 	_draw_palette_grid_split(c, font, mx, base_y, mw, rx, base_y, rw, panel_h, current_id, sel_flat)
 
 
-const _PAL_COMBAT_RECOVERY_ROWS: Array = [
-	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
-	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
-	{"ids": ["monofluid", "difluid", "trifluid"]},
-	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
-	{"ids": ["telepipe", "kill_all"]},
-]
-
-const _PAL_TECHNIQUE_ROWS: Array = [
-	{"label": "Technique", "ids": ["foie", "barta", "zonde"]},
-	{"ids": ["grants", "megid"]},
-	{"ids": ["resta", "anti"]},
-	{"ids": ["shifta", "deband"]},
-	{"ids": ["jellen", "zalure"]},
-]
-
-
+## Both columns come from PsoStartMenu._PAL_PICKER_ROWS — the same table the
+## input layer navigates. They used to be separate consts here, so the drawn
+## grid and the navigable grid could drift apart without anything noticing.
 func _draw_palette_grid_split(c: Control, font: Font, mx: float, my: float, mw: float, rx: float, ry: float, rw: float, ph: float, current_id: String, selected_flat: int) -> void:
+	var rows: Array = PsoStartMenu._PAL_PICKER_ROWS
+	var split: int = PsoStartMenu._PAL_LEFT_COL_SIZE
 	var flat_idx: int = 0
-	flat_idx = _draw_palette_column(c, font, mx, my, mw, ph, _PAL_COMBAT_RECOVERY_ROWS, current_id, selected_flat, flat_idx)
-	_draw_palette_column(c, font, rx, ry, rw, ph, _PAL_TECHNIQUE_ROWS, current_id, selected_flat, flat_idx)
+	flat_idx = _draw_palette_column(c, font, mx, my, mw, ph, rows.slice(0, split), current_id, selected_flat, flat_idx)
+	_draw_palette_column(c, font, rx, ry, rw, ph, rows.slice(split), current_id, selected_flat, flat_idx)
 
 
 func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, rows: Array, _current_id: String, selected_flat: int, start_flat: int) -> int:
@@ -674,11 +662,19 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			draw_y += 26
 
 		var row_ids: Array = row_def.ids
-		var cell_w: float = (pw - 12.0) / 3.0
+		# Three cells is the normal width; a longer row (Traps has four) packs
+		# tighter rather than overflowing the panel. At four across there is no
+		# room for an icon box AND readable text, so those cells drop the icon
+		# and use the action's `short` name across the full cell.
+		var per_row: int = maxi(3, row_ids.size())
+		var cell_w: float = (pw - 12.0) / float(per_row)
+		var tight: bool = row_ids.size() > 3
 		for ci in range(row_ids.size()):
 			var action_id: String = row_ids[ci]
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
-			var label: String = str(data.get("label", action_id))
+			var label: String = str(data.get("short", "") if tight else data.get("label", action_id))
+			if label.is_empty():
+				label = str(data.get("label", action_id))
 			var is_sel: bool = flat_idx == selected_flat
 			var available: bool = _c._is_palette_action_available(action_id)
 
@@ -687,12 +683,15 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			if is_sel:
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), PsoStartMenu.C_SELECT)
 
-			var icon_y: float = draw_y + (cell_h - icon_sz) * 0.5
-			c.draw_rect(Rect2(cx + 3, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
-			var icon: Texture2D = _c._get_action_icon(action_id)
-			if icon:
-				var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
-				c.draw_texture_rect(icon, Rect2(cx + 3, icon_y, icon_sz, icon_sz), false, icon_mod)
+			var text_x: float = cx + 3
+			if not tight:
+				var icon_y: float = draw_y + (cell_h - icon_sz) * 0.5
+				c.draw_rect(Rect2(cx + 3, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
+				var icon: Texture2D = _c._get_action_icon(action_id)
+				if icon:
+					var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
+					c.draw_texture_rect(icon, Rect2(cx + 3, icon_y, icon_sz, icon_sz), false, icon_mod)
+				text_x = cx + icon_sz + 8
 
 			var col: Color
 			if is_sel:
@@ -701,8 +700,8 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 				col = Color(0.5, 0.5, 0.5)
 			else:
 				col = PsoStartMenu.C_TEXT
-			c.draw_string(font, Vector2(cx + icon_sz + 8, draw_y + 23), label,
-				HORIZONTAL_ALIGNMENT_LEFT, cell_w - icon_sz - 12, PsoStartMenu.FONT_SIZE, col)
+			c.draw_string(font, Vector2(text_x, draw_y + 23), label,
+				HORIZONTAL_ALIGNMENT_LEFT, cx + cell_w - 6 - text_x, PsoStartMenu.FONT_SIZE, col)
 
 			flat_idx += 1
 

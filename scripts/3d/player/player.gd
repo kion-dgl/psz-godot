@@ -1564,13 +1564,17 @@ func _execute_palette_action(slot: int) -> void:
 			_start_strong_attack()
 		"dodge":
 			_start_dodge()
-		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid", \
-		"sol_atomizer", "star_atomizer", "moon_atomizer", "telepipe":
-			_use_consumable(action_id)
 		"kill_all":
 			_debug_kill_all()
 		_:
-			if TechniqueManager.TECHNIQUES.has(action_id):
+			# Consumables come from ActionPalette.CONSUMABLE_IDS, the same list
+			# the HUD uses to decide which slots draw a stock count. This used to
+			# be a literal id list here, so a consumable added to CONSUMABLE_IDS
+			# but not to that list showed its count and then did nothing at all
+			# when pressed (#575's traps).
+			if ActionPalette.is_consumable(action_id):
+				_use_consumable(action_id)
+			elif TechniqueManager.TECHNIQUES.has(action_id):
 				_cast_technique(action_id)
 
 
@@ -2040,7 +2044,11 @@ func _use_consumable(item_id: String) -> void:
 		var info: Dictionary = Inventory.get_last_use_info()
 		var use_type: String = str(info.get("type", ""))
 		var amount: int = int(info.get("amount", 0))
-		_spawn_heal_number(use_type, amount)
+		# Only restoratives float a number. Placeables (telepipe, traps) restore
+		# nothing, and _spawn_heal_number treats anything that isn't "hp" as PP —
+		# so without this a placed trap read "+1 PP" and a telepipe "+0 PP".
+		if use_type == "hp" or use_type == "pp":
+			_spawn_heal_number(use_type, amount)
 	else:
 		print("[Player] Cannot use %s" % item_id)
 

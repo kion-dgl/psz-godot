@@ -9,5 +9,6 @@ name = "Heal Trap"
 japanese_name = "ヒールトラップ"
 details = "Revives incapacitated teammates and restores 50% of HP."
 rarity = 1
-max_stack = 10
+max_stack = 5
 pso_world_id = 314
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")

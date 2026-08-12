@@ -2,6 +2,14 @@ assets/effects/ef_com_quest/ef_com_quest.glb
 assets/effects/ef_com_quest/ff_com_quest.png
 assets/effects/ef_com_rockon/ef_com_rockon.glb
 assets/effects/ef_com_rockon_s/ef_com_rockon_s.glb
+assets/effects/o0c_burst01/o0c_burst01.glb
+assets/effects/o0c_burst01/o0s_1_trapb01.png
+assets/effects/o0c_burst02/o0c_burst02.glb
+assets/effects/o0c_burst02/o0s_1_trapb02.png
+assets/effects/o0c_burst03/o0c_burst03.glb
+assets/effects/o0c_burst03/o0s_1_trapb03.png
+assets/effects/o0c_burst04/o0c_burst04.glb
+assets/effects/o0c_burst04/o0s_1_trapb04.png
 assets/enemies/armadillo/armadillo.glb
 assets/enemies/armadillo/b_035.png
 assets/enemies/armadillo_rare/armadillo_rare.glb
