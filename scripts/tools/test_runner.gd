@@ -777,7 +777,7 @@ func test_authored_field_objects() -> void:
 
 
 func test_authored_walls_clear_doorways() -> void:
-	print("── No authored object stands in a doorway (#593's soft-lock question) ──")
+	print("── No BLOCKING authored object stands in a doorway (#593's soft-lock question) ──")
 	var rooms: Dictionary = QuestLoader._load_json(
 		"res://data/re_reference/room_objects.json").get("rooms", {})
 	var doorways: Dictionary = QuestLoader._load_json(
@@ -789,10 +789,24 @@ func test_authored_walls_clear_doorways() -> void:
 	# cells of clearance over all 964 records, against a control that finds the
 	# room warp at 0.01. This re-derives it from OUR copy rather than trusting
 	# the number, because the import is ours to get wrong.
+	#
+	# SCOPED TO THE KINDS THAT BLOCK, and it has to be. The claim "no authored
+	# object of ANY kind stands in a doorway" is FALSE in the corpus — the same
+	# psz-re ruler puts o0c_fence at 1.31 and the room warp at 0.01, and both
+	# belong there: a fence across a doorway is a barrier, which is the entire
+	# point of a fence, and a warp IS the doorway. Asserting it over every kind
+	# would pass today only because the importer's allowlist (CONTAINER_KINDS)
+	# has not reached those kinds yet, and would fail the moment #594 widens it
+	# — reading as "#594 broke the invariant" when the invariant was overstated
+	# here. What matters for a soft-lock is an object the player can neither
+	# walk through nor get rid of.
+	const BLOCKING_KINDS := ["box", "rare_box", "wall"]
 	const MIN_CLEARANCE := 3.0
 	var worst_wall: float = 1e9
-	var worst_any: float = 1e9
+	var worst_blocking: float = 1e9
 	var worst_desc: String = ""
+	var worst_any: float = 1e9
+	var worst_any_desc: String = ""
 	var measured: int = 0
 
 	for key in rooms.keys():
@@ -802,21 +816,30 @@ func test_authored_walls_clear_doorways() -> void:
 		if segments.is_empty():
 			continue
 		for obj in rooms[key].get("objects", []):
+			var kind: String = str(obj.get("k", ""))
 			var d: float = _distance_to_doorways(
 				float(obj.get("x", 0.0)), float(obj.get("z", 0.0)), segments)
 			measured += 1
 			if d < worst_any:
 				worst_any = d
-				worst_desc = "%s %s" % [key, str(obj.get("k", ""))]
-			if str(obj.get("k", "")) == "wall" and d < worst_wall:
+				worst_any_desc = "%s %s" % [key, kind]
+			if kind not in BLOCKING_KINDS:
+				continue
+			if d < worst_blocking:
+				worst_blocking = d
+				worst_desc = "%s %s" % [key, kind]
+			if kind == "wall" and d < worst_wall:
 				worst_wall = d
 
 	assert_true(measured > 1000, "measured a real corpus (%d objects)" % measured)
 	assert_true(worst_wall >= MIN_CLEARANCE,
 		"the closest authored WALL clears every doorway by %.2f units" % worst_wall)
-	assert_true(worst_any >= MIN_CLEARANCE,
-		"no authored object of any kind stands in a doorway (closest %.2f, %s)"
-			% [worst_any, worst_desc])
+	assert_true(worst_blocking >= MIN_CLEARANCE,
+		"no BLOCKING authored object stands in a doorway (closest %.2f, %s)"
+			% [worst_blocking, worst_desc])
+	# Reported, never asserted — see the note above. When #594 lands the fences
+	# this number is expected to drop to roughly 1.3, and that is not a failure.
+	print("    closest of any kind (informational): %.2f — %s" % [worst_any, worst_any_desc])
 	print("")
 
 

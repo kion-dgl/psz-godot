@@ -367,6 +367,20 @@ static func _to_object(rec: Dictionary) -> Dictionary:
 		snappedf(float(rec.get("z", 0.0)), 0.01),
 	]
 	var obj: Dictionary = {"type": kind, "position": pos, "authored": true}
+	if kind == "wall":
+		# OURS, and stated rather than inherited from the spawner's default.
+		# psz-re's wall_placement_per_room.json is explicit that "no wall
+		# BEHAVIOUR is decoded -- hit points, whether it breaks at all", so
+		# there is no measured answer to port. Breakable is the failure-safe
+		# reading: no authored wall blocks a connection today (5.14 cells of
+		# clearance across the corpus), but if one ever did, a player can clear
+		# a breakable wall and cannot clear a solid one.
+		#
+		# The thread to pull if this is ever settled: the container constructor
+		# special-cases record byte +0x12 == 1 -- it additionally enables the
+		# collider and stores 2 rather than 3 -- which is the likeliest
+		# solid/breakable discriminator. This importer does not carry +0x12.
+		obj["destructible"] = true
 	# The spawner's `rotation` is degrees everywhere (it calls deg_to_rad), so
 	# convert here rather than leaving a second unit in the object schema.
 	var facing_deg: float = float(int(rec.get("a", 0))) / FACING_PER_TURN * 360.0
