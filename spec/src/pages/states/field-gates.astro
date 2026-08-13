@@ -85,6 +85,25 @@ const economy = `flowchart LR
     makes a field feel linear is that the graph is a <strong>tree</strong>.
   </p>
 
+  <h2>Relationship to /states/free-field</h2>
+  <p>
+    <a href="/states/free-field">/states/free-field</a> already carries a "Gates and
+    keys" table listing these same four attribute values, and the working agreement
+    requires a new definition to be reconciled with an existing one rather than left to
+    drift. The split is: <strong>this page is normative for the RULE</strong> — how a
+    generator decides which doors get gated and where keys go — and free-field's table
+    is the <strong>captured Valley layout</strong>, a transcribed instance of that rule
+    for one field.
+  </p>
+  <p>
+    One framing there needs reading in that light. Free-field calls attribute 4 "locked
+    while the room holds live enemies, opens on clear — the common case", which
+    describes what a player experiences in the room once it is gated. It is not a rule
+    for <em>which</em> rooms get gated: that is the per-room roll below, and a room can
+    pass the roll independently of what it happens to hold. The two are consistent, and
+    an implementation <strong>MUST</strong> take the roll from this page.
+  </p>
+
   <h2>The four door kinds</h2>
   <p>
     The door attribute lives at cell <code>+0x14+dir</code> and is copied to the room
