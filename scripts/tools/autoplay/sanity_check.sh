@@ -20,7 +20,18 @@ set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 GODOT="${GODOT:-$(command -v godot || echo /home/kion/.local/bin/godot)}"
-USERDIR="$HOME/.local/share/godot/app_userdata/PSZ Godot"
+
+# Godot's user:// root is per-platform, and this used to be the Linux path
+# unconditionally. On a Mac that made the reset below a silent no-op: the run
+# then booted an already-configured, already-created character, so the four
+# first-run checkpoints (input_select, character_create) could not fire and the
+# check reported four failures that had nothing to do with the diff under test.
+# SANITY_USERDIR overrides both.
+case "$(uname -s)" in
+	Darwin) DEFAULT_USERDIR="$HOME/Library/Application Support/Godot/app_userdata/PSZ Godot" ;;
+	*)      DEFAULT_USERDIR="${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/PSZ Godot" ;;
+esac
+USERDIR="${SANITY_USERDIR:-$DEFAULT_USERDIR}"
 MANIFEST="$REPO/assets_manifest.json"
 PACK="$REPO/dist/assets.pck"
 TIMEOUT="${SANITY_TIMEOUT:-600}"
@@ -38,11 +49,33 @@ if [ ! -f "$PACK" ]; then
 	exit 1
 fi
 
+# coreutils `timeout` is not on macOS. Prefer it, then gtimeout (brew
+# coreutils), then a fork/kill equivalent — same contract, 124 on expiry.
+run_with_timeout() {
+	local secs="$1"; shift
+	if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@"; return $?; fi
+	if command -v gtimeout >/dev/null 2>&1; then gtimeout "$secs" "$@"; return $?; fi
+	"$@" &
+	local child=$!
+	( sleep "$secs"; kill -TERM "$child" 2>/dev/null ) &
+	local watcher=$!
+	wait "$child"; local rc=$?
+	kill "$watcher" 2>/dev/null; wait "$watcher" 2>/dev/null
+	[ "$rc" -ge 128 ] && rc=124
+	return "$rc"
+}
+
 # 1) Fresh player state. Keep packs/ so the local pack stays cached between runs
 #    (first run copies it from dist — the "download" — later runs cache-hit).
+#
+#    Moved aside rather than deleted. This is a disposable-dev-box script by
+#    design, but it also runs on kion's Mac, where user:// is a real save — so
+#    the reset keeps one generation back instead of being unrecoverable.
 echo "[sanity-check] resetting player state (input_config.json, save_data.json)…"
-mkdir -p "$USERDIR"
-rm -f "$USERDIR/input_config.json" "$USERDIR/save_data.json"
+mkdir -p "$USERDIR/_sanity_backup"
+for f in input_config.json save_data.json; do
+	[ -f "$USERDIR/$f" ] && mv -f "$USERDIR/$f" "$USERDIR/_sanity_backup/$f"
+done
 
 # 2) Repoint the manifest at the local pack so bootstrap copies from disk, not
 #    Arweave. sha256/size are read from the actual file so it always verifies.
@@ -67,8 +100,9 @@ JSON
 # transition, interact at the guild NPC must be consumed by the menu).
 MENU_CARRY="${SANITY_MENU_CARRY:-0}"
 echo "[sanity-check] launching game under autopilot (timeout ${TIMEOUT}s, menu-carry=${MENU_CARRY})…"
-PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_MENU_CARRY="$MENU_CARRY" \
-	timeout "$TIMEOUT" "$GODOT" --headless --path "$REPO" >"$LOG" 2>&1
+run_with_timeout "$TIMEOUT" \
+	env PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_MENU_CARRY="$MENU_CARRY" \
+	"$GODOT" --headless --path "$REPO" >"$LOG" 2>&1
 RC=$?
 
 echo "── game log (bootstrap / sanity) ──"
