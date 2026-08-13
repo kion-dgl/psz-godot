@@ -20,21 +20,27 @@ class_name FieldPopulation
 ##            table entries resolve, the rest being the `sample` slot, the
 ##            documented empty slot at 64, and two boss sub-parts.
 ##
-##   boxes    NOT decoded. level_generation_algorithm.json records that a
-##            previous "boxes = 2 x byte at +0x31" reading was REFUTED (it was
-##            a table index) and that the real placement weights are still
-##            "unidentified". The per-cell counts in build_valley_field.py are
-##            transcribed observations of one Valley area-A layout, which do
-##            not transfer to a randomly generated layout. So a generated cell
-##            gets BOXES_PER_ROOM, and that number is a placeholder, not a
-##            measurement.
+##   boxes    DECODED, and this replaces the ring. The earlier note here said
+##            "the real placement weights are still unidentified" and put boxes
+##            on a ring, because at the time the only reading of box COUNT
+##            (2 x the byte at +0x31) had been refuted. That refutation stands
+##            and it was the wrong question: there is no count formula because
+##            there is no placement pass. Positions are AUTHORED per room in
+##            set/<NN>/<v>/<room>/*.rel, and the byte at +0x31 is a layout
+##            index that picks which of the file's six groups get built. The
+##            table is data/re_reference/room_objects.json (290 rooms, every
+##            cell of every field quest covered) and the selection rule is
+##            `authored_objects()` below.
 ##
-##   walls    No data at all, and no field places one today. Omitted rather
-##            than invented — a wall blocks, so a wrong guess is a soft-lock
-##            rather than a cosmetic complaint.
+##   traps    DECODED, same table, same rule — and the traps are mostly in
+##            GROUP 5, which is the one group the game rolls rather than
+##            builds whole. A port that built groups 0..4 and stopped would
+##            place almost no traps at all.
 ##
-## Positions are ours either way: the game's placement formula is not decoded,
-## so objects go on a ring and the spawner floor-snaps them.
+##   walls    Authored too, and deliberately NOT placed — see PLACE_WALLS.
+##
+## Enemy positions are still ours: the game's enemy deploy table is a separate
+## file that has not been decoded to positions, so enemies stay on a ring.
 
 const RE_DIR := "res://data/re_reference/"
 ## Deploy set to roll from. The RE notes record that d/f1..f4/s draw from the
@@ -43,17 +49,40 @@ const RE_DIR := "res://data/re_reference/"
 ## kion's observed Valley waves.
 const DEPLOY_SET := "d"
 
-## Placeholder box count per combat room — see the note above. Matches what the
-## static builder used for every area outside Valley area A.
+## Box count for a room the authored table does not cover. Nothing in a shipped
+## field hits this today — every cell of every field quest resolves — so it is
+## the fallback for a room code invented later, not a placement policy.
 const BOXES_PER_ROOM := 2
 
 const ENEMY_RING_RADIUS := 5.0
 const BOX_RING_RADIUS := 8.0
 
+## Authored walls are in the table and are NOT placed.
+##
+## They are as measured as the boxes, so this is a gameplay call rather than a
+## data one: a wall blocks, the free-roam autopilot's walk backbone cannot
+## attack one, and a room whose authored wall sits across the line between two
+## doorways is a soft-lock rather than a cosmetic complaint. Turning this on
+## needs the nav harness to route around blockers first.
+const PLACE_WALLS := false
+
+## The game's facing is 16 bits per turn, 0 = +Z increasing toward +X, which is
+## exactly Godot's `rotation.y` about a +Z forward. So the conversion is a
+## scale and nothing else (psz-re nodes/sys.facing-convention.json).
+const FACING_PER_TURN := 65536.0
+
 static var _assignment: Dictionary = {}
 static var _waves: Array = []
 static var _model_to_enemy: Dictionary = {}
 static var _loaded := false
+
+## data/re_reference/room_objects.json, split out at load.
+static var _rooms: Dictionary = {}
+static var _layout_masks: Array = []
+static var _layout_weights: Dictionary = {}
+static var _group5_weights: Array = []
+static var _cap_per_group: int = 20
+static var _cap_per_room: int = 20
 
 
 static func _load() -> void:
@@ -66,6 +95,15 @@ static func _load() -> void:
 	var deploy: Dictionary = wave_doc.get(DEPLOY_SET, {})
 	_waves = deploy.get("waves", [])
 	_build_model_map()
+
+	var obj_doc: Dictionary = _read_json(RE_DIR + "room_objects.json")
+	_rooms = obj_doc.get("rooms", {})
+	_layout_masks = obj_doc.get("layout_masks", [])
+	_layout_weights = obj_doc.get("layout_weights_by_depth", {})
+	_group5_weights = obj_doc.get("group5_weights", [])
+	var caps: Dictionary = obj_doc.get("caps", {})
+	_cap_per_group = int(caps.get("per_group", 20))
+	_cap_per_room = int(caps.get("per_room", 20))
 
 
 static func _read_json(path: String) -> Dictionary:
@@ -167,6 +205,155 @@ static func _resolve(re_name: String) -> Array:
 	return [enemy_id]
 
 
+## The authored objects one room instance gets, as psz-godot object dicts.
+##
+## THE RULE, transcribed from psz-re (docs/godot-field-parity.md §7 and §8.1 —
+## the constants travel with the data in room_objects.json rather than being
+## repeated here as free numbers):
+##
+##   1. A set file is SIX groups. One of five layout masks picks which of
+##      groups 0..4 are built, and group 5's bit is forced into every mask.
+##   2. The layout index is a rand(100) draw against a weight row chosen by the
+##      room's depth in the tree. A mask is only eligible if every group it
+##      names is non-empty; when the drawn index is not eligible the highest
+##      eligible index at or below 3 wins, and failing that, 0.
+##   3. Groups 0..4 are then built VERBATIM. Nothing is sampled from them.
+##   4. Group 5 — the trap group — is ROLLED: rand(100) against [40,20,20,20]
+##      gives a count of 0..3, the group is shuffled, and that many are taken.
+##      So 40% of rooms roll no group-5 object at all.
+##   5. A group is truncated at 20 records and a room stops at 20 objects.
+##
+## `depth` is the room's distance along the generated path; -1 means unknown
+## and takes the middle weight row. Every draw goes through `rng`, so a seeded
+## generator reproduces a field exactly.
+static func authored_objects(room_code: String, depth: int, rng: RandomNumberGenerator) -> Array:
+	_load()
+	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
+	var records: Array = entry.get("objects", [])
+	if records.is_empty():
+		return []
+
+	var groups = entry.get("groups", null)
+	var picked: Array = []
+	if groups == null:
+		# No recoverable group table: psz-re records that the loader falls back
+		# and builds the file flat. Do the same rather than dropping the room.
+		picked = _cap(records, _cap_per_group)
+	else:
+		var layout: int = _pick_layout(groups, depth, rng)
+		var mask: int = int(_layout_masks[layout]) if layout < _layout_masks.size() else 0
+		for g in range(5):
+			if (mask >> g) & 1:
+				picked.append_array(_cap(_in_group(records, g), _cap_per_group))
+		picked.append_array(_roll_group_five(_in_group(records, 5), rng))
+
+	var out: Array = []
+	for rec in _cap(picked, _cap_per_room):
+		var obj := _to_object(rec)
+		if not obj.is_empty():
+			out.append(obj)
+	return out
+
+
+## Which of the five layout masks this room instance uses.
+static func _pick_layout(groups: Array, depth: int, rng: RandomNumberGenerator) -> int:
+	var occupied: int = 0
+	for g in range(min(groups.size(), 6)):
+		if int(groups[g]) > 0:
+			occupied |= 1 << g
+	# Group 5's bit is forced in: the mask names it whether or not the file has
+	# one, because the roll may legitimately take nothing.
+	occupied |= 0x20
+
+	var eligible: Array[int] = []
+	for i in range(_layout_masks.size()):
+		var m: int = int(_layout_masks[i])
+		if m == (m & occupied):
+			eligible.append(i)
+	if eligible.is_empty():
+		return 0
+
+	var drawn: int = _weighted_index(_layout_weights.get(_depth_band(depth), []), rng)
+	if drawn in eligible:
+		return drawn
+	# Not eligible: the highest eligible index at or below 3, else 0.
+	var best: int = -1
+	for i in eligible:
+		if i <= 3 and i > best:
+			best = i
+	return best if best >= 0 else 0
+
+
+## The weight row keys room_objects.json publishes, by tree depth.
+static func _depth_band(depth: int) -> String:
+	if depth < 0:
+		return "4_6"
+	if depth < 4:
+		return "lt4"
+	return "4_6" if depth <= 6 else "ge7"
+
+
+## rand(100) walked against a weight row, as the game walks it.
+static func _weighted_index(weights: Array, rng: RandomNumberGenerator) -> int:
+	if weights.is_empty():
+		return 0
+	var roll: int = rng.randi_range(0, 99)
+	for i in range(weights.size()):
+		roll -= int(weights[i])
+		if roll < 0:
+			return i
+	return weights.size() - 1
+
+
+## Group 5: a rolled count of 0..3, then a shuffle, then take that many.
+static func _roll_group_five(records: Array, rng: RandomNumberGenerator) -> Array:
+	if records.is_empty():
+		return []
+	var count: int = _weighted_index(_group5_weights, rng)
+	if count <= 0:
+		return []
+	# Fisher-Yates over a copy, so the source order is never mutated.
+	var pool: Array = records.duplicate()
+	for i in range(pool.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var tmp = pool[i]
+		pool[i] = pool[j]
+		pool[j] = tmp
+	return pool.slice(0, min(count, pool.size()))
+
+
+static func _in_group(records: Array, group: int) -> Array:
+	var out: Array = []
+	for rec in records:
+		if rec.get("g", null) != null and int(rec["g"]) == group:
+			out.append(rec)
+	return out
+
+
+static func _cap(records: Array, limit: int) -> Array:
+	return records if records.size() <= limit else records.slice(0, limit)
+
+
+## One authored record -> the object dict the spawner understands, or {} for a
+## kind this build does not place.
+static func _to_object(rec: Dictionary) -> Dictionary:
+	var kind: String = str(rec.get("k", ""))
+	if kind == "wall" and not PLACE_WALLS:
+		return {}
+	var pos: Array = [
+		snappedf(float(rec.get("x", 0.0)), 0.01),
+		snappedf(float(rec.get("y", 0.0)), 0.01),
+		snappedf(float(rec.get("z", 0.0)), 0.01),
+	]
+	var obj: Dictionary = {"type": kind, "position": pos, "authored": true}
+	# The spawner's `rotation` is degrees everywhere (it calls deg_to_rad), so
+	# convert here rather than leaving a second unit in the object schema.
+	var facing_deg: float = float(int(rec.get("a", 0))) / FACING_PER_TURN * 360.0
+	if not is_zero_approx(facing_deg):
+		obj["rotation"] = snappedf(facing_deg, 0.01)
+	return obj
+
+
 ## Evenly spaced positions on a ring around the room centre (rooms are 44x44).
 static func ring_positions(count: int, radius: float) -> Array:
 	var out: Array = []
@@ -196,8 +383,12 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 
 ## Objects for one generated cell. Start and goal rooms stay empty so nobody
 ## spawns into a fight or onto loot they did not walk to.
+##
+## `depth` is the cell's path_order — how far along the generated route it sits
+## — which is what the layout draw is banded on. Callers that do not track it
+## may leave it at -1.
 static func objects_for_cell(room_code: String, is_start: bool, is_end: bool,
-		rng: RandomNumberGenerator) -> Array:
+		rng: RandomNumberGenerator, depth: int = -1) -> Array:
 	if is_start or is_end:
 		return []
 	var objects: Array = []
@@ -207,6 +398,13 @@ static func objects_for_cell(room_code: String, is_start: bool, is_end: bool,
 		objects.append({
 			"type": "enemy", "position": enemy_spots[i], "enemy_id": wave[i],
 		})
-	for spot in ring_positions(BOXES_PER_ROOM, BOX_RING_RADIUS):
-		objects.append({"type": "box", "position": spot})
+
+	var authored: Array = authored_objects(room_code, depth, rng)
+	if authored.is_empty():
+		# No authored table for this room code. Fall back to the ring rather
+		# than leaving the room bare — see BOXES_PER_ROOM.
+		for spot in ring_positions(BOXES_PER_ROOM, BOX_RING_RADIUS):
+			objects.append({"type": "box", "position": spot})
+	else:
+		objects.append_array(authored)
 	return objects

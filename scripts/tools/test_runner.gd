@@ -108,6 +108,10 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_player_traps()
+	test_authored_field_objects()
+	test_group_five_trap_roll()
+	test_field_trap_behaviour()
+	test_trap_vision_reveal()
 	test_palette_picker_grid()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
@@ -725,6 +729,192 @@ func test_player_traps() -> void:
 			"%s is a palette action" % id)
 		assert_true(ActionPalette.is_consumable(id), "%s counts as a consumable slot" % id)
 	print("")
+
+
+func test_authored_field_objects() -> void:
+	print("── Authored field objects (the set table + the layout / group-5 roll) ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+
+	# 1. The table covers every cell of every shipped field quest. If a room
+	#    code ever falls out of it the field silently drops back to the ring,
+	#    which is exactly the regression this replaces.
+	var missing: Array = []
+	var checked: int = 0
+	for path in ["valley", "wetlands", "snowfield", "paru", "shrine", "ruins", "arca"]:
+		var doc = QuestLoader._load_json("res://data/field_quests/%s_field.json" % path)
+		if doc.is_empty():
+			continue
+		for section in doc.get("sections", []):
+			for cell in section.get("cells", []):
+				checked += 1
+				var stage_id: String = str(cell.get("stage_id", ""))
+				if not _room_is_authored(stage_id):
+					missing.append(stage_id)
+	assert_true(checked > 0, "field quests loaded (%d cells)" % checked)
+	assert_eq(missing.size(), 0, "every field-quest cell has an authored table")
+
+	# 2. Same seed, same field. Every draw goes through the generator's RNG.
+	var a: Array = Pop.authored_objects("s01a_tb3", 3, _seeded_rng(1234))
+	var b: Array = Pop.authored_objects("s01a_tb3", 3, _seeded_rng(1234))
+	assert_eq(JSON.stringify(a), JSON.stringify(b), "the roll is seed-deterministic")
+
+	# 3. The caps hold and no wall escapes while PLACE_WALLS is off.
+	var walls: int = 0
+	var over_cap: int = 0
+	for seed_i in range(120):
+		var objs: Array = Pop.authored_objects("s01a_tb3", seed_i % 9, _seeded_rng(seed_i))
+		if objs.size() > 20:
+			over_cap += 1
+		for o in objs:
+			if str(o.get("type", "")) == "wall":
+				walls += 1
+	assert_eq(over_cap, 0, "a room never exceeds the 20-object cap")
+	if not Pop.PLACE_WALLS:
+		assert_eq(walls, 0, "no authored wall is placed while PLACE_WALLS is false")
+	print("")
+
+
+func test_group_five_trap_roll() -> void:
+	print("── Group 5 is the trap group, and it is ROLLED 0..3 at 40/20/20/20 ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+
+	# s01a_tb3 authors ten group-5 Heat traps and nothing else in group 5, so
+	# the trap count in a roll IS the rolled count — 0 through 3, never more.
+	var counts := {0: 0, 1: 0, 2: 0, 3: 0}
+	var trials := 400
+	for seed_i in range(trials):
+		var objs: Array = Pop.authored_objects("s01a_tb3", 5, _seeded_rng(seed_i))
+		var traps: int = 0
+		for o in objs:
+			if str(o.get("type", "")).ends_with("_trap"):
+				traps += 1
+		counts[traps] = int(counts.get(traps, 0)) + 1
+	# Asserted once over the whole sample rather than per trial — 400 identical
+	# PASS lines bury the two assertions that actually say something.
+	var over: int = 0
+	for n in counts.keys():
+		if int(n) > 3:
+			over += int(counts[n])
+	assert_eq(over, 0, "a room never rolls more than 3 group-5 objects (%d trials)" % trials)
+
+	# 40% of rooms roll nothing. Bounded loosely — this is a seeded sample, not
+	# a proof — but tight enough that a broken weight walk fails it.
+	var zero_share: float = float(counts[0]) / float(trials)
+	assert_true(zero_share > 0.28 and zero_share < 0.52,
+		"about 40%% of rooms roll no trap (got %.0f%%)" % (zero_share * 100.0))
+	assert_true(counts[1] > 0 and counts[2] > 0 and counts[3] > 0,
+		"counts 1, 2 and 3 all occur")
+
+	# Every authored trap id the table can emit is one the spawner handles.
+	const Known := ["heal_trap", "heat_trap", "light_trap", "ice_trap",
+		"gun_trap", "burn_trap", "needler_trap", "capture_trap"]
+	var seen := {}
+	for code in ["s01a_tb3", "s03a_xb2", "s05a_lc1", "s07b_td1", "s04a_ib1"]:
+		for seed_i in range(60):
+			for o in Pop.authored_objects(code, 4, _seeded_rng(seed_i)):
+				var t: String = str(o.get("type", ""))
+				if t.ends_with("_trap"):
+					seen[t] = true
+	for t in seen.keys():
+		assert_true(t in Known, "authored trap '%s' is a kind the spawner knows" % t)
+	assert_true(seen.size() >= 3, "the sample reaches several trap types (%d)" % seen.size())
+	print("")
+
+
+func test_field_trap_behaviour() -> void:
+	print("── The elemental trap: one class, two families, measured fuses ──")
+	const TrapScript := preload("res://scripts/3d/elements/trap_ball.gd")
+
+	# The fuse table, straight off psz-re. Element 0 (Heal) is singled out on
+	# the player side; the field side gets FASTER as difficulty rises.
+	var player_heal := TrapScript.build("heal_trap")
+	var player_heat := TrapScript.build("heat_trap")
+	assert_true(player_heal != null and player_heat != null, "both trap balls build")
+	if player_heal != null and player_heat != null:
+		assert_true(is_equal_approx(player_heal.fuse_seconds(), 150.0 / 60.0),
+			"a player's Heal trap fuses over 150 frames")
+		assert_true(is_equal_approx(player_heat.fuse_seconds(), 75.0 / 60.0),
+			"every other player trap fuses over 75 frames")
+		assert_true(not player_heal.field_placed, "a built trap is the player's by default")
+		player_heal.free()
+		player_heat.free()
+
+	var expect := [45.0, 30.0, 15.0]
+	for d in range(3):
+		var field_trap := TrapScript.build_field("ice_trap", d)
+		assert_true(field_trap != null, "the field form builds at difficulty %d" % d)
+		if field_trap == null:
+			continue
+		assert_true(field_trap.field_placed, "build_field sets the parameter-block byte")
+		assert_true(is_equal_approx(field_trap.fuse_seconds(), expect[d] / 60.0),
+			"difficulty %d fuses over %d frames" % [d, int(expect[d])])
+		field_trap.free()
+
+	# The difficulty index is clamped rather than trusted — a session with an
+	# unknown difficulty string must not index off the end of the table.
+	var clamped := TrapScript.build_field("ice_trap", 9)
+	assert_true(clamped != null, "an out-of-range difficulty still builds")
+	if clamped != null:
+		assert_true(is_equal_approx(clamped.fuse_seconds(), 15.0 / 60.0),
+			"an out-of-range difficulty clamps to the fastest fuse")
+		clamped.free()
+
+	# Heal is measured at half of max HP, in both of the game's handlers.
+	assert_true(is_equal_approx(float(TrapScript.TRAP_EFFECTS["heal_trap"]["heal_percent"]), 0.5),
+		"the Heal element restores 50% of max HP")
+	print("")
+
+
+func test_trap_vision_reveal() -> void:
+	print("── A dormant trap is seen by a CAST, or under Trap Vision ──")
+	const TrapScript := preload("res://scripts/3d/elements/trap_ball.gd")
+
+	TrapScript.vision_until_msec = 0
+	assert_true(not TrapScript.vision_active(), "Trap Vision starts inactive")
+
+	# Using one turns it on for everybody, CAST or not.
+	TrapScript.grant_vision(5.0)
+	assert_true(TrapScript.vision_active(), "using a Trap Vision turns it on")
+	assert_true(TrapScript.traps_are_visible(), "traps are visible while it runs")
+
+	# A second one EXTENDS rather than stacks: the later expiry wins and an
+	# earlier, shorter one cannot cut the running effect short.
+	var long_until: int = TrapScript.vision_until_msec
+	TrapScript.grant_vision(60.0)
+	assert_true(TrapScript.vision_until_msec > long_until, "a longer one extends it")
+	var extended: int = TrapScript.vision_until_msec
+	TrapScript.grant_vision(1.0)
+	assert_eq(TrapScript.vision_until_msec, extended,
+		"a shorter one does NOT cut the running effect short")
+
+	# With vision off, the rule falls through to the race check — the same hook
+	# that gates whether the character can carry traps at all.
+	TrapScript.vision_until_msec = 0
+	assert_eq(TrapScript.traps_are_visible(), Inventory.can_use_traps(),
+		"with no Trap Vision, seeing traps is exactly the CAST check")
+
+	# The consumable is wired: using one is what grants the effect.
+	var consumable = ConsumableRegistry.get_consumable("trap_vision")
+	assert_true(consumable != null, "trap_vision is a registered consumable")
+	print("")
+
+
+func _seeded_rng(seed_value: int) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	return rng
+
+
+## True when the authored table carries this room code. A room with a table but
+## no records is fine — a room with NO table falls back to the ring, which is
+## the regression the authored placement replaces.
+var _authored_rooms_cache: Dictionary = {}
+
+func _room_is_authored(stage_id: String) -> bool:
+	if _authored_rooms_cache.is_empty():
+		var doc := QuestLoader._load_json("res://data/re_reference/room_objects.json")
+		_authored_rooms_cache = doc.get("rooms", {})
+	return _authored_rooms_cache.has("%s_d" % stage_id)
 
 
 func test_teleporter_dressing() -> void:

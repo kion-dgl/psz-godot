@@ -1020,6 +1020,7 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 				cell.get("is_start", false),
 				cell.get("is_end", false),
 				_rng,
+				int(cell.get("path_order", -1)),
 			),
 		})
 

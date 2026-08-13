@@ -112,6 +112,108 @@ const tree = `flowchart TD
     hyena→<code>grimble</code>, lizard→<code>ghowl</code>, rappy→<code>rappy</code>.
   </p>
 
+  <h2>Objects and traps are AUTHORED, not generated</h2>
+  <p>
+    Boxes, walls and traps are <strong>not</strong> scattered by a placement pass.
+    Every one is authored per room in the original's
+    <code>set/&lt;NN&gt;/&lt;v&gt;/&lt;room&gt;/*.rel</code>, with a room-local
+    <code>(x, y, z)</code> in the same frame as <code>room_doorways.json</code> and a
+    16-bit facing. The table is <code>data/re_reference/room_objects.json</code>
+    (290 rooms — every cell of every field quest resolves), imported by
+    <code>scripts/tools/refield/import_re_objects.py</code>. A port MUST place them
+    as authored; it MUST NOT ring-scatter or raycast-and-snap.
+  </p>
+  <p>
+    A set file is <strong>six groups</strong>, and which of them a room instance builds
+    is the one part that <em>is</em> rolled:
+  </p>
+  <ul>
+    <li>One of five <strong>layout masks</strong> picks which of groups 0–4 are built.
+      The index is a <code>rand(100)</code> draw against a weight row banded by the
+      room's depth in the tree. A mask is eligible only if every group it names is
+      non-empty; when the drawn index is not eligible, the highest eligible index at
+      or below 3 wins, else 0.</li>
+    <li>Groups 0–4 are then built <strong>verbatim</strong>. Nothing is sampled.</li>
+    <li><strong>Group 5 is the trap group</strong> — 99.5% of the original's trap pool
+      sits in it — and it is <strong>rolled</strong>: <code>rand(100)</code> against
+      <code>[40, 20, 20, 20]</code> gives a count of 0–3, the group is shuffled, and
+      that many are taken. So <strong>40% of rooms roll no group-5 object at all</strong>.
+      An implementation that built 0–4 and stopped would place almost no traps.</li>
+    <li>A group is truncated at 20 records and a room stops at 20 objects.</li>
+  </ul>
+  <p>
+    Every draw goes through the generator's seeded RNG, so a seed reproduces a field
+    exactly. Authored <strong>walls</strong> are in the table and are deliberately
+    <em>not</em> placed — see the approximation list below.
+  </p>
+
+  <h2>Traps</h2>
+  <p>
+    The original has five field trap types. Four are contact traps that share one
+    behaviour and differ only in damage; the fifth — the <strong>elemental</strong>
+    family — is its own thing and is the interesting one.
+  </p>
+  <table>
+    <thead><tr><th>Family</th><th>Ids</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Contact</td>
+        <td><code>needler_trap</code> (25 dmg), <code>burn_trap</code> (50),
+            <code>gun_trap</code>, <code>capture_trap</code></td>
+        <td>Visible floor furniture. Damage on contact; capture holds the player.
+            The 25 and 50 are measured constants from the original's parameter blocks.</td>
+      </tr>
+      <tr>
+        <td>Elemental</td>
+        <td><code>heal_trap</code>, <code>heat_trap</code>, <code>light_trap</code>,
+            <code>ice_trap</code></td>
+        <td>Invisible, proximity-armed, fused — see below.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>The elemental field trap and the player's trap item are the same object.</strong>
+    psz-re decoded the original's class: factory index 19 / type <code>0x1C13</code>,
+    and the only thing separating the two families is one byte in the object's
+    parameter block. This engine models that with <code>TrapBall.field_placed</code>
+    rather than a second script.
+  </p>
+  <p>An authored elemental trap MUST:</p>
+  <ul>
+    <li>be <strong>invisible while dormant</strong> — the original's factory table gives
+      it no model at all;</li>
+    <li><strong>arm when a player comes within 4.0 units</strong>, then rise 2.5 units out
+      of the ground and become visible;</li>
+    <li>run a <strong>fuse</strong> of 45 / 30 / 15 frames on normal / hard / v_hard —
+      the original gets <em>faster</em>, not stronger, with difficulty — and detonate on
+      whoever is still inside;</li>
+    <li>apply its element: heat → burn, ice → freeze, light → confusion (stunned stands
+      in), <strong>heal → restore 50% of max HP</strong>. About 10% of the original's
+      authored elemental traps are heal traps, so not every field trap is hostile.</li>
+  </ul>
+  <p>
+    A <strong>player-placed</strong> trap of the same element is always visible to its
+    owner, arms on a timer, waits for a valid target, and then runs its own measured
+    fuse — 150 frames for heal, 75 for the rest.
+  </p>
+
+  <h3>Seeing a dormant trap</h3>
+  <p>
+    A dormant elemental trap MUST be drawn when either holds:
+  </p>
+  <ul>
+    <li>the active character is a <strong>CAST</strong> — traps are the CAST counterpart
+      to techniques, and a CAST sees them natively; or</li>
+    <li><strong>Trap Vision</strong> is active. The item's own text is the contract:
+      <em>"Temporarily allows any non-Cast race to see traps."</em> Using one as a CAST
+      is allowed but redundant, and a second one extends rather than stacks.</li>
+  </ul>
+  <p>
+    Trap Vision's duration is <strong>not measured</strong> — psz-re found no such timer
+    anywhere in the trap class, which also means the reveal is a renderer-side concern
+    in the original and carries no gameplay coupling.
+  </p>
+
   <h2>The boss room</h2>
   <p>
     The <code>z</code> section is a single arena. Valley's is <code>s01z_na1</code>, and
@@ -124,7 +226,12 @@ const tree = `flowchart TD
   <h2>What is deliberately approximated</h2>
   <ul>
     <li><strong>The generator algorithm itself</strong> is located in the decomp (psz-re <code>FUN_02082a98</code>; room count = <code>min + rand(max−min)</code>) but not yet ported. Current fields are <strong>static fixtures</strong> transcribed from observed layouts — parity of output, not of the RNG. (issue #562 Phase 3.)</li>
-    <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre.</li>
+    <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre. Object and trap positions are no longer approximated — see above.</li>
     <li><strong>Which allowed wave</strong> a room rolls is our own weighted pick (see above).</li>
+    <li><strong>Authored walls are not placed.</strong> Their positions are as measured as the boxes; the reason is gameplay, not data. A wall blocks, the free-roam autopilot's walk backbone cannot attack one, and a wall across the line between two doorways is a soft-lock rather than a cosmetic complaint. Gated behind <code>FieldPopulation.PLACE_WALLS</code> until the nav harness routes around blockers.</li>
+    <li><strong>What arms a field trap is not decoded.</strong> psz-re reads the state machine but not the transition out of dormant, so "a player walks close" is the obvious reading of a thing that rises out of the ground on a fuse — it is not measured, and neither is its radius. The 4.0 units above is the one radius the original publishes (the heal element's player scan), reused.</li>
+    <li><strong>A field trap's damage is ours.</strong> The original's elemental trap carries no per-instance parameters at all, so there is no number to port.</li>
+    <li><strong>Gun-trap damage varies per instance</strong> in the original and the field is not published, so it takes the contact trap's default.</li>
+    <li><strong>The four contact traps share one model</strong> until dedicated meshes land.</li>
   </ul>
 </Concept>

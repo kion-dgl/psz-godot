@@ -405,6 +405,17 @@ func use_item(item_id: String) -> bool:
 	if TrapBall.TRAP_MODELS.has(item_id):
 		return _use_trap(item_id)
 
+	# Trap Vision — "Temporarily allows any non-Cast race to see traps." A CAST
+	# already sees them, so using one is allowed but wasteful, and the item says
+	# nothing about stacking, so a second one extends rather than adds.
+	if item_id == "trap_vision":
+		TrapBall.grant_vision()
+		remove_item(item_id, 1)
+		_last_use_type = "trap_vision"
+		_last_use_amount = int(TrapBall.TRAP_VISION_SECONDS)
+		print("[Inventory] Trap Vision active for %ds" % _last_use_amount)
+		return true
+
 	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
 	if effect.is_empty():
 		# Not a known consumable — try legacy path for other usable items
