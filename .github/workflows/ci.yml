@@ -138,6 +138,20 @@ jobs:
       - name: Orphan-file ratchet
         run: python3 scripts/tools/orphan_files.py --check
 
+      # The generator's own output, not the unit tests' view of it: the seeded
+      # tests call FieldPopulation.authored_objects directly, so they cannot
+      # catch the generator forgetting to call it. This reads the committed
+      # dump and asserts every authored object landed inside its room (#591).
+      - name: Generated fields carry their authored objects
+        run: python3 scripts/tools/check_generated_objects.py
+
+      # Drift guard for data/re_reference/room_objects.json against psz-re.
+      # Self-skips (exit 0) when psz-re is not checked out, which is the CI
+      # case — it earns its keep on a dev box with $PSZ_RE set, and costs a
+      # second here so nobody has to remember to run it (#591).
+      - name: Authored-object table has not drifted from psz-re
+        run: python3 scripts/tools/refield/import_re_objects.py --check
+
       # Beta working agreement: accepting debt (growing any baseline) must be
       # loud and deliberate — requires a `Debt-Accepted: <reason>` trailer in
       # a PR commit. Decreases pass silently. spec /engineering.
