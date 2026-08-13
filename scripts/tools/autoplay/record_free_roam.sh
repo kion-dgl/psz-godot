@@ -9,7 +9,9 @@
 # only paths the quest matrix can't reach (entry spawns, goal pads, section
 # warps, key detours). Exits non-zero unless the run prints `[sanity] DONE ok`.
 #
-# Env: FIELD_AREA (default gurhacia).
+# Env: FIELD_AREA (default gurhacia). NO_WALLS=1 skips the authored walls --
+# leave it UNSET to prove the walls do not wedge the walk backbone, which is
+# the evidence #593 asks for; set it when iterating on waypoints.
 # Output: $OUTDIR/freeroam_<area>_<ts>.mp4 + .sanity.log
 set -uo pipefail
 
@@ -44,6 +46,7 @@ rm -f "$USERDIR/input_config.json" "$USERDIR/save_data.json"
 
 echo "[record-freeroam] driving free-roam field area=$AREA → $SANITY"
 env PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_FIELD="$AREA" LIBGL_ALWAYS_SOFTWARE=1 \
+	${NO_WALLS:+PSZ_AUTOPILOT_NO_WALLS=1} \
 	timeout "$TIMEOUT" xvfb-run -a -s "-screen 0 640x360x24" \
 	"$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO" >"$SANITY" 2>&1

@@ -69,6 +69,19 @@ CAPS = {"per_group": 20, "per_room": 20}
 
 DEFAULT_SETS = ("d",)
 
+## The object kinds this importer takes, and it is an ALLOWLIST on purpose.
+##
+## psz-re's object dump is being extended to emit every classified kind on the
+## same schema (keys, fences, switches, mspack, NPCs, warps -- psz-godot #594).
+## Taking a kind the spawner does not handle would be worse than not taking it:
+## the record still counts against the 20-object room cap, so an unhandled key
+## would silently displace a box or a trap. And an allowlist means this file
+## does not churn every time the upstream dump grows.
+##
+## Widening this is #594's job, together with the spawner cases. Anything not
+## listed is counted and reported, never dropped silently.
+CONTAINER_KINDS = ("box", "rare_box", "wall")
+
 
 def psz_re_root(explicit: str | None) -> pathlib.Path | None:
     for candidate in (explicit, os.environ.get("PSZ_RE"),
@@ -94,6 +107,7 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
 
     rooms: dict[str, dict] = {}
     unknown_traps: set[str] = set()
+    deferred: dict[str, int] = {}
 
     def room_entry(key: str, rec: dict) -> dict:
         entry = rooms.get(key)
@@ -109,9 +123,13 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
             continue
         entry = room_entry(key, rec)
         for box in rec.get("boxes", []):
+            kind = str(box.get("kind", "box"))
+            if kind not in CONTAINER_KINDS:
+                deferred[kind] = deferred.get(kind, 0) + 1
+                continue
             entry["objects"].append({
                 "g": box.get("group"),
-                "k": str(box.get("kind", "box")),
+                "k": kind,
                 "x": _round(box.get("x", 0.0)),
                 "y": _round(box.get("y", 0.0)),
                 "z": _round(box.get("z", 0.0)),
@@ -167,12 +185,28 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
             "group 5 is ROLLED: rand(100) against [40,20,20,20] for a count of 0..3, "
             "Fisher-Yates shuffle, take that many",
             "a group is truncated to 20 records and a room stops at 20 objects",
+            "THERE ARE FIVE MASKS AND ONLY FOUR ARE REACHABLE, BY DESIGN. The layout "
+            "index comes from FUN_02082814, which psz-re reads as a weighted draw "
+            "returning a category 0..3 against the table at 0x020f2e70 -- twelve ints "
+            "as three rows of four, every row summing to 100 -- and validates on all 44 "
+            "values across five captured fields being in 0..3. So mask 4 (0x30), the "
+            "only one naming group 4, is never selected by the depth-banded draw and "
+            "group 4's objects never spawn in a free field. That is faithful, not a "
+            "bug: psz-re's NOT_ESTABLISHED records a mission-guarded path that forces "
+            "layout 4, which it has not modelled and which free-roam generation "
+            "correctly never takes. Do not 'fix' the mask table or widen the draw.",
         ],
         "layout_masks": LAYOUT_MASKS,
         "layout_weights_by_depth": LAYOUT_WEIGHTS_BY_DEPTH,
         "group5_weights": GROUP5_WEIGHTS,
         "caps": CAPS,
         "census": dict(sorted(census.items(), key=lambda kv: -kv[1])),
+        "not_imported_yet": {
+            "_": ("Kinds psz-re emits that this importer deliberately does not take "
+                  "yet -- psz-godot #594 widens CONTAINER_KINDS and adds the spawner "
+                  "cases together. Listed so the gap is visible rather than silent."),
+            "counts": dict(sorted(deferred.items(), key=lambda kv: -kv[1])),
+        },
         "rooms": dict(sorted(rooms.items())),
     }
 
@@ -210,6 +244,11 @@ def main() -> int:
           % (OUT, len(doc["rooms"]), sum(doc["census"].values()), len(text) / 1024))
     for kind, n in doc["census"].items():
         print("  %-16s %d" % (kind, n))
+    skipped = doc["not_imported_yet"]["counts"]
+    if skipped:
+        print("  deferred to #594: %d records over %d kinds (%s)"
+              % (sum(skipped.values()), len(skipped),
+                 ", ".join(list(skipped)[:6])))
     return 0
 
 

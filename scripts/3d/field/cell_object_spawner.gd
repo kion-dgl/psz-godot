@@ -1098,7 +1098,21 @@ func _spawn_bear_trap(pos: Vector3) -> void:
 	print("[CellObjects] BearTrap at %s" % pos)
 
 
+## Authored walls, skipped at SPAWN time under PSZ_AUTOPILOT_NO_WALLS.
+##
+## Deliberately its own variable rather than folded into NO_OBSTACLES: that one
+## strips a stage's baked obstacle collision, which is a property of the room
+## mesh, while this drops a placed object. A run that wants to prove walls do
+## not wedge the backbone needs to turn exactly one of them off.
+##
+## The skip is here and not in FieldPopulation because the gate must not change
+## the field DATA: a cell first entered under autopilot would otherwise save
+## without its walls and restore that way forever, and the committed
+## generated-fields dump would describe a world no player sees. Same reason and
+## same shape as PSZ_AUTOPILOT_NO_BOXES above.
 func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true) -> void:
+	if OS.has_environment("PSZ_AUTOPILOT_NO_WALLS"):
+		return
 	var wall := WallScript.new()
 	wall.is_destructible = is_destructible
 	_c._map_root.add_child(wall)

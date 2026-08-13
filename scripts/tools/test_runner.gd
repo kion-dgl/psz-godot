@@ -109,6 +109,7 @@ func _run_tests_core() -> void:
 	test_element_collision_setup()
 	test_player_traps()
 	test_authored_field_objects()
+	test_authored_walls_clear_doorways()
 	test_group_five_trap_roll()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
@@ -758,20 +759,87 @@ func test_authored_field_objects() -> void:
 	var b: Array = Pop.authored_objects("s01a_tb3", 3, _seeded_rng(1234))
 	assert_eq(JSON.stringify(a), JSON.stringify(b), "the roll is seed-deterministic")
 
-	# 3. The caps hold and no wall escapes while PLACE_WALLS is off.
-	var walls: int = 0
+	# 3. The caps hold, and walls are in the DATA — the autopilot skip moved to
+	#    spawn time (#593), so a generated cell must carry its walls whether or
+	#    not this run intends to build them.
 	var over_cap: int = 0
+	var saw_wall := false
 	for seed_i in range(120):
-		var objs: Array = Pop.authored_objects("s01a_tb3", seed_i % 9, _seeded_rng(seed_i))
+		var objs: Array = Pop.authored_objects("s05b_lb3", seed_i % 9, _seeded_rng(seed_i))
 		if objs.size() > 20:
 			over_cap += 1
 		for o in objs:
 			if str(o.get("type", "")) == "wall":
-				walls += 1
+				saw_wall = true
 	assert_eq(over_cap, 0, "a room never exceeds the 20-object cap")
-	if not Pop.PLACE_WALLS:
-		assert_eq(walls, 0, "no authored wall is placed while PLACE_WALLS is false")
+	assert_true(saw_wall, "authored walls reach the object list (the gate is at spawn time)")
 	print("")
+
+
+func test_authored_walls_clear_doorways() -> void:
+	print("── No authored object stands in a doorway (#593's soft-lock question) ──")
+	var rooms: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_objects.json").get("rooms", {})
+	var doorways: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_doorways.json").get("rooms", {})
+	assert_true(not rooms.is_empty() and not doorways.is_empty(), "both reference tables load")
+
+	# The reason walls were gated off was that one across the line between two
+	# doorways is a soft-lock. psz-re measured that it never happens — 5.14
+	# cells of clearance over all 964 records, against a control that finds the
+	# room warp at 0.01. This re-derives it from OUR copy rather than trusting
+	# the number, because the import is ours to get wrong.
+	const MIN_CLEARANCE := 3.0
+	var worst_wall: float = 1e9
+	var worst_any: float = 1e9
+	var worst_desc: String = ""
+	var measured: int = 0
+
+	for key in rooms.keys():
+		var room_code: String = str(key).substr(0, str(key).rfind("_"))
+		var door: Dictionary = doorways.get(room_code, {})
+		var segments: Array = door.get("segments", [])
+		if segments.is_empty():
+			continue
+		for obj in rooms[key].get("objects", []):
+			var d: float = _distance_to_doorways(
+				float(obj.get("x", 0.0)), float(obj.get("z", 0.0)), segments)
+			measured += 1
+			if d < worst_any:
+				worst_any = d
+				worst_desc = "%s %s" % [key, str(obj.get("k", ""))]
+			if str(obj.get("k", "")) == "wall" and d < worst_wall:
+				worst_wall = d
+
+	assert_true(measured > 1000, "measured a real corpus (%d objects)" % measured)
+	assert_true(worst_wall >= MIN_CLEARANCE,
+		"the closest authored WALL clears every doorway by %.2f units" % worst_wall)
+	assert_true(worst_any >= MIN_CLEARANCE,
+		"no authored object of any kind stands in a doorway (closest %.2f, %s)"
+			% [worst_any, worst_desc])
+	print("")
+
+
+## Shortest distance from a point to any of a room's doorway openings.
+##
+## Sampled along each opening rather than measured to its endpoints: a wall
+## beside the middle of a wide doorway is in the way just as much as one at the
+## corner, and endpoint-only distance would miss it.
+func _distance_to_doorways(x: float, z: float, segments: Array) -> float:
+	var best: float = 1e9
+	for seg in segments:
+		if seg.size() < 2:
+			continue
+		var ax: float = float(seg[0][0])
+		var az: float = float(seg[0][1])
+		var bx: float = float(seg[1][0])
+		var bz: float = float(seg[1][1])
+		for step in range(9):
+			var t: float = float(step) / 8.0
+			var px: float = ax + (bx - ax) * t
+			var pz: float = az + (bz - az) * t
+			best = minf(best, Vector2(x - px, z - pz).length())
+	return best
 
 
 func test_group_five_trap_roll() -> void:

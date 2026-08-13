@@ -77,6 +77,26 @@
                     {
                       "authored": true,
                       "position": [
+                        -4.34,
+                        0.0,
+                        -1.49
+                      ],
+                      "rotation": 167.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        1.59,
+                        0.0,
+                        -1.38
+                      ],
+                      "rotation": 193.48,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         1.93,
                         0.0,
                         13.58
@@ -1789,6 +1809,26 @@
                     {
                       "authored": true,
                       "position": [
+                        -4.34,
+                        0.0,
+                        -1.49
+                      ],
+                      "rotation": 167.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        1.59,
+                        0.0,
+                        -1.38
+                      ],
+                      "rotation": 193.48,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         1.93,
                         0.0,
                         13.58
@@ -1978,6 +2018,16 @@
                         0.0
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        2.19,
+                        0.0,
+                        13.63
+                      ],
+                      "rotation": 181.43,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -2770,20 +2820,14 @@
                       "type": "enemy"
                     },
                     {
+                      "authored": true,
                       "position": [
-                        8.0,
+                        2.19,
                         0.0,
-                        0.0
+                        13.63
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "rotation": 181.43,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -3629,6 +3673,35 @@
                     {
                       "authored": true,
                       "position": [
+                        -15.83,
+                        0.0,
+                        12.35
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -15.59,
+                        0.0,
+                        8.39
+                      ],
+                      "rotation": 12.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -12.64,
+                        0.0,
+                        9.31
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -12.51,
                         0.0,
                         17.39
@@ -3669,6 +3742,35 @@
                     {
                       "authored": true,
                       "position": [
+                        -9.83,
+                        0.0,
+                        12.35
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -9.63,
+                        0.0,
+                        6.36
+                      ],
+                      "rotation": 179.05,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -9.54,
+                        0.0,
+                        7.04
+                      ],
+                      "rotation": 12.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -9.19,
                         0.0,
                         12.64
@@ -3699,6 +3801,25 @@
                     {
                       "authored": true,
                       "position": [
+                        -2.28,
+                        0.0,
+                        -11.56
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -0.51,
+                        0.0,
+                        13.87
+                      ],
+                      "rotation": 100.53,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         5.87,
                         0.0,
                         -13.28
@@ -3725,6 +3846,26 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        10.76,
+                        0.0,
+                        -10.21
+                      ],
+                      "rotation": 17.05,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        16.62,
+                        0.0,
+                        -11.39
+                      ],
+                      "rotation": 5.56,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -5678,12 +5819,50 @@
                     {
                       "authored": true,
                       "position": [
+                        -11.32,
+                        0.0,
+                        -10.03
+                      ],
+                      "rotation": 95.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -11.32,
+                        0.0,
+                        -10.03
+                      ],
+                      "rotation": 95.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         9.88,
                         0.0,
                         -9.66
                       ],
                       "rotation": 268.62,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        10.67,
+                        0.0,
+                        -8.2
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        10.67,
+                        0.0,
+                        -8.2
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -9162,6 +9341,16 @@
                         -11.16
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -1.47,
+                        0.0,
+                        13.67
+                      ],
+                      "rotation": 90.12,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -17918,6 +18107,42 @@
                     {
                       "authored": true,
                       "position": [
+                        -4.08,
+                        0.0,
+                        4.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -1.35,
+                        0.0,
+                        -12.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -1.23,
+                        0.0,
+                        -12.75
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        1.04,
+                        0.0,
+                        -7.01
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         3.59,
                         0.0,
                         3.49
@@ -17948,6 +18173,35 @@
                     {
                       "authored": true,
                       "position": [
+                        16.78,
+                        0.0,
+                        1.5
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        16.85,
+                        0.0,
+                        1.4
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        17.31,
+                        0.0,
+                        -6.37
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         18.88,
                         0.0,
                         0.26
@@ -17963,6 +18217,15 @@
                         0.08
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        19.53,
+                        0.0,
+                        -1.68
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -18588,6 +18851,16 @@
                     {
                       "authored": true,
                       "position": [
+                        -9.72,
+                        0.0,
+                        -2.6
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -7.61,
                         0.0,
                         -3.33
@@ -18608,12 +18881,61 @@
                     {
                       "authored": true,
                       "position": [
+                        -6.11,
+                        0.0,
+                        0.14
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -4.81,
                         0.0,
                         -3.39
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -2.49,
+                        0.0,
+                        -2.64
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        4.3,
+                        0.0,
+                        -17.62
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        4.93,
+                        0.0,
+                        0.72
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        5.26,
+                        0.0,
+                        3.45
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -18634,6 +18956,15 @@
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        8.42,
+                        0.0,
+                        3.48
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -18664,6 +18995,55 @@
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        11.9,
+                        0.0,
+                        0.67
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        12.3,
+                        0.0,
+                        -17.61
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        15.45,
+                        0.0,
+                        3.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        18.94,
+                        0.0,
+                        0.77
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        18.97,
+                        0.0,
+                        3.4
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -19869,6 +20249,33 @@
                     {
                       "authored": true,
                       "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -4.11
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -18.63,
                         0.0,
                         -12.01
@@ -19919,6 +20326,15 @@
                     {
                       "authored": true,
                       "position": [
+                        -15.51,
+                        0.0,
+                        -4.13
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -14.94,
                         0.0,
                         -12.17
@@ -19949,6 +20365,52 @@
                     {
                       "authored": true,
                       "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -9.54,
+                        0.0,
+                        -4.15
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -8.68,
+                        0.0,
+                        -7.2
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -6.07,
+                        0.0,
+                        -4.34
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -3.56,
                         0.0,
                         -10.83
@@ -19965,6 +20427,15 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -2.76,
+                        0.0,
+                        -4.6
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -20699,6 +21170,16 @@
                     {
                       "authored": true,
                       "position": [
+                        -12.79,
+                        0.0,
+                        -15.36
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -2.05,
                         0.0,
                         -16.14
@@ -20729,6 +21210,15 @@
                     {
                       "authored": true,
                       "position": [
+                        11.3,
+                        0.0,
+                        -9.14
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         16.06,
                         0.0,
                         -14.83
@@ -20755,6 +21245,15 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        17.18,
+                        0.0,
+                        -9.14
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -22204,6 +22703,15 @@
                     {
                       "authored": true,
                       "position": [
+                        -17.44,
+                        0.0,
+                        -5.07
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -16.42,
                         0.0,
                         -7.01
@@ -23186,6 +23694,15 @@
                         -4.76
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -17.44,
+                        0.0,
+                        -5.07
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -25220,6 +25737,16 @@
                     {
                       "authored": true,
                       "position": [
+                        -3.09,
+                        0.0,
+                        0.08
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -0.86,
                         0.0,
                         0.62
@@ -25240,12 +25767,40 @@
                     {
                       "authored": true,
                       "position": [
+                        0.02,
+                        0.0,
+                        -2.95
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        0.02,
+                        0.0,
+                        3.12
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         0.75,
                         0.0,
                         0.58
                       ],
                       "rotation": 89.7,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        3.14,
+                        0.0,
+                        0.08
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -25294,6 +25849,16 @@
                     {
                       "authored": true,
                       "position": [
+                        -3.09,
+                        0.0,
+                        0.08
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -0.86,
                         0.0,
                         0.62
@@ -25314,12 +25879,40 @@
                     {
                       "authored": true,
                       "position": [
+                        0.02,
+                        0.0,
+                        -2.95
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        0.02,
+                        0.0,
+                        3.12
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         0.75,
                         0.0,
                         0.58
                       ],
                       "rotation": 89.7,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        3.14,
+                        0.0,
+                        0.08
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -26289,6 +26882,16 @@
                     {
                       "authored": true,
                       "position": [
+                        -0.02,
+                        0.0,
+                        2.7
+                      ],
+                      "rotation": 180.01,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         13.24,
                         0.0,
                         -5.29
@@ -26522,11 +27125,29 @@
                     {
                       "authored": true,
                       "position": [
+                        -8.27,
+                        0.0,
+                        -5.41
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -3.92,
                         0.0,
                         -7.22
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -2.74,
+                        0.0,
+                        -5.41
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -26545,6 +27166,15 @@
                         -7.22
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        2.88,
+                        0.0,
+                        -5.41
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -26761,6 +27391,15 @@
                       ],
                       "rotation": 90.06,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -0.01,
+                        0.0,
+                        7.67
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": -1,
@@ -26965,6 +27604,46 @@
                       ],
                       "rotation": 359.68,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -27275,12 +27954,50 @@
                     {
                       "authored": true,
                       "position": [
+                        -8.36,
+                        0.0,
+                        -2.53
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -8.36,
+                        0.0,
+                        3.21
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
                         -6.66,
                         0.0,
                         -10.67
                       ],
                       "rotation": 42.25,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -5.27,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        0.49,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -27381,6 +28098,16 @@
                       ],
                       "rotation": 134.99,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "position": [
+                        -1.61,
+                        0.0,
+                        -9.8
+                      ],
+                      "rotation": 44.99,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -27753,20 +28480,14 @@
                       "type": "enemy"
                     },
                     {
+                      "authored": true,
                       "position": [
-                        8.0,
+                        -5.42,
                         0.0,
-                        0.0
+                        3.02
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,

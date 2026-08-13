@@ -9,7 +9,8 @@
   "the layout index is a rand(100) draw against a depth-banded weight row",
   "a mask is eligible only if every group it names is non-empty; group 5 is forced in",
   "group 5 is ROLLED: rand(100) against [40,20,20,20] for a count of 0..3, Fisher-Yates shuffle, take that many",
-  "a group is truncated to 20 records and a room stops at 20 objects"
+  "a group is truncated to 20 records and a room stops at 20 objects",
+  "THERE ARE FIVE MASKS AND ONLY FOUR ARE REACHABLE, BY DESIGN. The layout index comes from FUN_02082814, which psz-re reads as a weighted draw returning a category 0..3 against the table at 0x020f2e70 -- twelve ints as three rows of four, every row summing to 100 -- and validates on all 44 values across five captured fields being in 0..3. So mask 4 (0x30), the only one naming group 4, is never selected by the depth-banded draw and group 4's objects never spawn in a free field. That is faithful, not a bug: psz-re's NOT_ESTABLISHED records a mission-guarded path that forces layout 4, which it has not modelled and which free-roam generation correctly never takes. Do not 'fix' the mask table or widen the draw."
  ],
  "layout_masks": [
   33,
@@ -60,6 +61,35 @@
   "capture_trap": 66,
   "burn_trap": 43,
   "needler_trap": 16
+ },
+ "not_imported_yet": {
+  "_": "Kinds psz-re emits that this importer deliberately does not take yet -- psz-godot #594 widens CONTAINER_KINDS and adds the spawner cases together. Listed so the gap is visible rather than silent.",
+  "counts": {
+   "o0c_key": 836,
+   "o0c_trebox": 653,
+   "o0c_switchf": 107,
+   "o0c_mspack": 102,
+   "o0c_fence": 98,
+   "o0c_shfence": 41,
+   "o0c_needle": 41,
+   "o0c_remswitch": 26,
+   "o0c_dgfance": 26,
+   "o0c_switchs": 24,
+   "o0s_warpm": 21,
+   "o0c_fence4": 18,
+   "o0c_butterfly": 16,
+   "o0s_warps": 15,
+   "o0c_return": 15,
+   "o0c_healhp": 14,
+   "o0s_warpb": 14,
+   "o0c_warparena1": 14,
+   "o0c_dragonfly": 8,
+   "o0c_poisonm": 7,
+   "np_011_00_0": 5,
+   "np_014_00_0": 5,
+   "np_019_00_0": 5,
+   "o0c_bird": 1
+  }
  },
  "rooms": {
   "s00a_nr1_d": {
