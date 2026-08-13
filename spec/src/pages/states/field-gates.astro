@@ -1,0 +1,252 @@
+---
+// Field Gate Economy — the normative contract for how a generated free field
+// locks itself and hands the player the keys to unlock it.
+//
+// Ground truth is psz-re, and this page is written against work that is
+// `confidence: confirmed` there rather than against leads:
+//   nodes/sys.field-doorways.json      62 captures / 592 rooms / 1,058 connections
+//   data/level_topology_builder.json   the economy, with parameter values
+//   data/level_generation_topology.json  the runtime parameter block
+//
+// NOTHING HERE IS IMPLEMENTED YET. This is step 1 of the working agreement —
+// the definition lands first, the generator and runtime are the next PRs, and
+// the tests are pinned against this page rather than against the code.
+//
+// Will be implemented by:
+//   scripts/3d/field/grid_generator.gd       assign door attributes during layout
+//   scripts/3d/field/portal_gate_manager.gd  read generated attributes
+//   scripts/3d/field/valley_field_controller.gd  enemy-defeat locking
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const economy = `flowchart LR
+  A["room count"] --> B["key-gate budget<br/>(rooms - 2) * 35 / 100"]
+  B --> C{"per candidate room<br/>eligible?"}
+  C -->|"no: already gated,<br/>neighbour gated,<br/>or balance off"| C
+  C -->|yes| D{"rand(100) < 30 (0x20 room)<br/>else < 10"}
+  D -->|under| E["attr 2 - two-key gate"]
+  D -->|over| F["attr 1 - one-key gate"]
+  E --> G["scatter keys:<br/>BFS depth &lt; 2, skip start/goal,<br/>max 2 per room"]
+  F --> G
+  G --> H{"solvability:<br/>walk way-back chain,<br/>required == available?"}
+  H -->|no| I["reject this gate"]
+  H -->|yes| J["commit, spend budget"]
+  classDef bad fill:#1a0d0d,stroke:#f0883e,color:#e6edf3
+  class I bad
+`;
+---
+
+<Concept title="Field Gate Economy" section="States">
+  <p>
+    A generated free field is a <strong>tree of rooms that locks itself</strong>. This
+    page is the normative contract for how those locks are chosen and how the field
+    stays completable. The key words <strong>MUST</strong>, <strong>MUST NOT</strong>,
+    <strong>SHOULD</strong> and <strong>MAY</strong> are RFC-2119.
+  </p>
+  <p>
+    Everything below is <strong>measured</strong>, not designed: psz-re's
+    <code>sys.field-doorways</code> is <code>confidence: confirmed</code> over
+    <strong>62 field captures, 592 rooms and 1,058 connections</strong>, and
+    <code>level_topology_builder.json</code> carries the parameter values. Where a
+    number is <em>not</em> measured this page says so.
+  </p>
+  <p>
+    <strong>Status: contract only.</strong> None of this is implemented — see
+    "Where we are today" at the end for what the engine does instead right now.
+  </p>
+
+  <h2>Correction: there is no such thing as a spare door</h2>
+  <p>
+    <code>grid_generator.gd</code> currently carries the comment "Extra doors beyond
+    entry+exit are ALLOWED… a door with nothing behind it is inert geometry".
+    <strong>That is wrong and MUST be corrected.</strong> psz-re's node exists
+    specifically to answer it:
+  </p>
+  <ul>
+    <li>Room <strong>shape comes from the cell's degree and nothing else</strong> —
+      degree 4 → <code>x</code>, 3 → <code>t</code>, 2 → <code>l</code> or
+      <code>i</code>, 1 → <code>s</code>/<code>g</code>/<code>n</code>.</li>
+    <li>The degree counter is incremented in <em>the same function that links two
+      neighbours</em>, bumping parent and child together, so
+      <strong>doors == connections by construction</strong>. The scene geometry agrees
+      independently: <code>room_doorways.json</code> reads i 2, l 2, t 3, x 4, and
+      1 each for n/s/g.</li>
+  </ul>
+  <p>
+    So a generator <strong>MUST NOT</strong> place a room whose door set exceeds its
+    connections, and <strong>MUST NOT</strong> implement any sealing pass. What the
+    game closes is a <strong>gate</strong>, and a gate is <strong>always on a live
+    connection</strong> — all 417 gated doorways in the capture set still hold their
+    neighbour index.
+  </p>
+  <p>
+    This also retires an older psz-re line that called
+    <code>params[8]</code> a pass that "seals spare exits". Nothing is sealed. What
+    makes a field feel linear is that the graph is a <strong>tree</strong>.
+  </p>
+
+  <h2>The four door kinds</h2>
+  <p>
+    The door attribute lives at cell <code>+0x14+dir</code> and is copied to the room
+    record at <code>+0x1c..+0x1f</code> — one byte per direction:
+  </p>
+  <table>
+    <thead><tr><th>Attr</th><th>Kind</th><th>Opens when</th></tr></thead>
+    <tbody>
+      <tr><td><code>0</code></td><td>open</td><td>always — walk through</td></tr>
+      <tr><td><code>1</code></td><td>one-key gate</td><td>the player spends 1 key</td></tr>
+      <tr><td><code>2</code></td><td><strong>two-key gate</strong></td><td>the player spends 2 keys</td></tr>
+      <tr><td><code>4</code></td><td>enemy-defeat gate</td><td>the room holds no live enemies</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>The way-back door is never gated</strong> — 0 of 592 rooms — so a player
+    can always retreat toward the start. An implementation <strong>MUST</strong>
+    preserve that: it is what makes a key detour possible at all.
+  </p>
+
+  <h2>The economy</h2>
+  <div class="diagram"><Mermaid chart={economy} /></div>
+
+  <h3>Key-gate budget</h3>
+  <p>
+    <code>budget = (roomCount - 2) * params[5] / 100</code>, with
+    <strong><code>params[5] = 35</code></strong> and start and goal excluded from the
+    count. Integer division, and it is a <strong>hard cap</strong>: the pass
+    <strong>MUST</strong> stop as soon as spend reaches budget.
+  </p>
+
+  <h3>Eligibility — gates are never adjacent</h3>
+  <p>A candidate room <strong>MUST</strong> be rejected when any of these holds:</p>
+  <ul>
+    <li>the room already carries more than one gate;</li>
+    <li><strong>any neighbour carries a gate</strong> — gated rooms are never
+      adjacent, which is what stops the field turning into a corridor of locks;</li>
+    <li>the room's gate/key balance fails the solvability invariant below.</li>
+  </ul>
+  <p>
+    An eligible room with flag <code>0x20</code> accepts at
+    <code>rand(100) &lt; params[4]</code> (<strong>50</strong>). Other rooms accept
+    with a probability that <strong>scales with remaining budget</strong>, so gates
+    thin out toward the end of the pass rather than stopping at a cliff. An
+    implementation <strong>SHOULD</strong> reproduce that taper; a flat probability
+    that simply stops at the budget will cluster gates near the start.
+  </p>
+
+  <h3>One key or two</h3>
+  <p>
+    Roll <code>rand(100)</code> against <strong><code>params[6] = 30</code></strong>
+    when the room's flag byte carries <code>0x20</code>, else against
+    <strong><code>params[7] = 10</code></strong>. Under → attribute <code>2</code>;
+    over → attribute <code>1</code>. A two-key gate additionally requires the
+    caller's count to be ≥ 2, so a two-key gate <strong>MUST NOT</strong> be created
+    when only one key can be placed for it.
+  </p>
+
+  <h3>Enemy-defeat gates are per ROOM, not per door</h3>
+  <p>
+    <strong>One roll per room.</strong> If it passes, <em>every</em> direction that
+    has a neighbour, is not already attributed, and is not the way-back direction
+    gets attribute <code>4</code>. A room's forward exits are therefore
+    <strong>all gated or none</strong> — the capture set has
+    <strong>268 rooms gating every eligible exit, 106 gating none, and 0 mixed</strong>.
+    An implementation that rolls per door <strong>MUST</strong> be treated as wrong
+    even though it would look similar in play.
+  </p>
+  <p>
+    <strong>The chance is 75, not 10.</strong> <code>level_topology_builder.json</code>
+    lists <code>default_params_8: 10</code>, but
+    <code>level_generation_topology.json</code> records the <strong>runtime</strong>
+    value as <strong>75</strong>, and the 268/106 split is ≈72% — which is 75 with
+    sampling noise, and nothing like 10. <strong>Use 75.</strong> The 10 is the
+    table's default, not the value the game runs with.
+  </p>
+
+  <h3>Key placement</h3>
+  <p>
+    Keys scatter in <strong>the gated room's own neighbourhood</strong>: BFS from the
+    gated room to <strong>depth &lt; 2</strong>, skipping the start and goal rooms. A
+    room is dropped from the pool once it holds <strong>2</strong> keys, which is why
+    no room in the capture set ever holds more than two. The key economy closes —
+    gates demanding exactly the keys the rooms hold — in <strong>62 of 62</strong>
+    captures.
+  </p>
+  <p>
+    Keys stay <strong>section-scoped and fungible</strong>, as
+    <a href="/states/field-lifecycle">Field Stage Lifecycle</a> already defines them:
+    any key opens any key gate in the same section. That reconciles with the measured
+    rule rather than contradicting it — the original's invariant is over
+    <em>counts</em> (required vs available), not identities. The original does store
+    per-room key ids, and what those ids are for is <strong>not established</strong>;
+    an implementation <strong>MUST NOT</strong> pair keys to gates on the strength of
+    them.
+  </p>
+
+  <h3>The solvability invariant — the part that MUST NOT be skipped</h3>
+  <p>
+    Walk up the way-back chain from the candidate room to the start, accumulating the
+    gate requirement at <code>+0x06</code> and the keys available at
+    <code>+0x07</code>. A gate is only eligible when the two are
+    <strong>equal</strong>.
+  </p>
+  <p>
+    This is what guarantees a field is completable, and it is simultaneously the part
+    most likely to be dropped as an optimisation and the most expensive to add back
+    later. A generator <strong>MUST</strong> evaluate it before committing a gate, and
+    the seeded test sweep <strong>MUST</strong> include "no field is ever unsolvable"
+    as its headline assertion.
+  </p>
+
+  <h2>Where we are today</h2>
+  <p>None of the above is implemented. What the engine currently does:</p>
+  <ul>
+    <li><code>valley_field_controller._lock_gates_for_enemies()</code> locks every
+      non-entry, non-visited exit whenever a room holds enemies — <em>always on</em>
+      and keyed to enemy presence, rather than a 75% per-room roll. It is the closest
+      existing analogue to attribute <code>4</code>.</li>
+    <li><code>portal_gate_manager._get_locked_gates()</code> reads
+      <code>key_gate_directions</code> / <code>key_gate_direction</code> off the cell —
+      <strong>hand-authored by the editor</strong>, not generated.</li>
+    <li>There are <strong>no two-key gates, no budget, no key placement and no
+      solvability check</strong>.</li>
+  </ul>
+
+  <h2>Order of work</h2>
+  <ol>
+    <li>This page. <em>(done — it is the contract the rest is tested against.)</em></li>
+    <li><strong>Generator</strong>: assign door attributes during layout, honouring the
+      budget, the adjacency rejection and the invariant. Seeded, so a seed reproduces
+      a field's gates exactly.</li>
+    <li><strong>Runtime</strong>: <code>portal_gate_manager</code> reads generated
+      attributes instead of only authored ones; two-key gates need their own HUD and
+      minimap states.</li>
+    <li><strong>Keys</strong>: placement per the BFS rule, and the pickup/consume path
+      against a gate. Keys <strong>MAY</strong> be generator-placed, which is what the
+      original does, rather than waiting on the authored key object in #594.</li>
+  </ol>
+
+  <h2>Verification the implementation owes</h2>
+  <ul>
+    <li>Seeded unit tests for: the budget formula; gated rooms never adjacent; the
+      way-back door never gated; enemy-defeat all-or-nothing per room; and
+      <strong>no field unsolvable over a large seed sweep</strong> — that last one is
+      the test that matters.</li>
+    <li>Autopilot: the nav backbone has to learn "clear the room to open the exit" and
+      "fetch two keys". Expect harness work, and expect the matrix to be the long
+      pole.</li>
+  </ul>
+
+  <h2>What is NOT claimed</h2>
+  <ul>
+    <li><strong>What the per-room key ids are for.</strong> The original stores them
+      and the invariant that closes the economy is count-based, so nothing here pairs
+      a key to a gate.</li>
+    <li><strong>The exact taper</strong> on the non-<code>0x20</code> acceptance
+      probability. psz-re records that it scales with remaining budget; the precise
+      curve is not transcribed here, and an implementation should read
+      <code>level_topology_builder.json</code> rather than invent one.</li>
+    <li><strong>What flag <code>0x20</code> means.</strong> It selects the higher
+      accept chance and the higher two-key chance, and it is the same flag the room
+      builder uses for paired cells — but it is used here as an input, not explained.</li>
+  </ul>
+</Concept>

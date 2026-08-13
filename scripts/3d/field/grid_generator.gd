@@ -72,10 +72,25 @@ func _gates_at_rotation(stage_id: String, steps: int) -> Array[String]:
 ## usable exit, plus that exit direction. `exit_outside` picks whether the exit
 ## must leave the grid (end cell) or land on an empty in-grid cell (middle).
 ##
-## Extra doors beyond entry+exit are ALLOWED: the runtime only builds a gate
-## trigger for a direction that appears in the cell's `connections`, so a door
-## with nothing behind it is inert geometry — which is already true of the
-## static fields.
+## Extra doors beyond entry+exit are ALLOWED **here**, and that is a property of
+## THIS generator rather than of the game — corrected per #595.
+##
+## The old comment said a spare door is "inert geometry, which is already true
+## of the static fields". The first half still holds for us: the runtime only
+## builds a gate trigger for a direction in the cell's `connections`, so a door
+## with nothing behind it does nothing. What is wrong is the implication that
+## the original works this way.
+##
+## psz-re's sys.field-doorways.json exists to answer exactly this (it cites our
+## #581) and the answer is that **there is never a spare door**. Room shape comes
+## from the cell's DEGREE and nothing else — 4 -> x, 3 -> t, 2 -> l or i, 1 ->
+## s/g/n — and the degree counter is incremented in the same function that links
+## two neighbours, bumping parent and child together, so doors == connections by
+## construction. Nothing is ever sealed; what the game closes is a GATE, always
+## on a live connection (417 of 417 gated doorways still hold their neighbour).
+##
+## So this function tolerating a spare door is a divergence we are choosing, not
+## parity. Closing it belongs with the gate work — see /states/field-gates.
 func _fitting_rotations(stage_id: String, entry_dir: String, row: int, col: int,
 		grid: Dictionary, exit_outside: bool) -> Array[Dictionary]:
 	var fits: Array[Dictionary] = []
