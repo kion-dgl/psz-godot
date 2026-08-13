@@ -217,6 +217,24 @@ func _rest_height() -> float:
 	return FIELD_REST_HEIGHT if field_placed else REST_HEIGHT
 
 
+## Mirrored-repeat UV wrapping, which StandardMaterial3D cannot express.
+##
+## The burst GLBs declare wrapS = wrapT = MIRRORED_REPEAT (glTF 33648) and run
+## TEXCOORD_0 V from -0.5 to +0.5, i.e. half of every quad samples outside 0..1
+## and is meant to mirror back. Godot's glTF importer has no mirrored mode — the
+## material only carries a `texture_repeat` bool — and it imports these as
+## texture_repeat = false (CLAMP). Clamping smears the texture's edge row across
+## the entire outside-0..1 half, which is the "grey angular mass with a coloured
+## streak" these models render as. Plain repeat is not right either: it wraps
+## instead of mirroring and seams down the middle of each quad.
+##
+## This is the same fix the stage/gate geometry already needed — see the shared
+## fold in mirror_repeat.gdshaderinc. The long-term fix is at the asset level
+## (bake the mirror into the texture and author UVs in 0..1), which would let
+## every mirror_repeat* shader retire.
+const MIRROR_SHADER := preload("res://scripts/3d/shaders/mirror_repeat_effect.gdshader")
+
+
 func _load_ball() -> void:
 	var model_id: String = str(TRAP_MODELS.get(trap_id, ""))
 	var path := "res://assets/effects/%s/%s.glb" % [model_id, model_id]
@@ -227,6 +245,32 @@ func _load_ball() -> void:
 	_model = packed.instantiate() as Node3D
 	_model.position.y = _rest_height()
 	add_child(_model)
+	_apply_mirror_wrap(_model)
+
+
+## Swap each surface's imported StandardMaterial3D for the mirrored-wrap shader,
+## carrying over its albedo texture. Walks the whole subtree because the burst
+## meshes sit under a Skeleton3D.
+##
+## A field-placed trap gets this too: it spends most of its life invisible, but
+## the moment it arms it rises into view, and it is the same mesh either way.
+func _apply_mirror_wrap(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh: Mesh = (node as MeshInstance3D).mesh
+		if mesh:
+			for i in mesh.get_surface_count():
+				var src := mesh.surface_get_material(i) as StandardMaterial3D
+				if src == null or src.albedo_texture == null:
+					continue
+				var mat := ShaderMaterial.new()
+				mat.shader = MIRROR_SHADER
+				mat.set_shader_parameter("albedo_texture", src.albedo_texture)
+				mat.set_shader_parameter("mirror_x", true)
+				mat.set_shader_parameter("mirror_y", true)
+				mat.set_shader_parameter("alpha_scissor", src.alpha_scissor_threshold)
+				(node as MeshInstance3D).set_surface_override_material(i, mat)
+	for child in node.get_children():
+		_apply_mirror_wrap(child)
 
 
 func _build_area() -> void:
