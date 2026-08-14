@@ -78,16 +78,26 @@ func _gates_at_rotation(stage_id: String, steps: int) -> Array[String]:
 ## usable exit, plus that exit direction. `exit_outside` picks whether the exit
 ## must leave the grid (end cell) or land on an empty in-grid cell (middle).
 ##
-## Extra doors beyond entry+exit are allowed HERE, and then removed: this runs
+## Extra doors beyond entry+exit are allowed HERE, and then removed. This runs
 ## while the path is still being laid, when a cell's final degree is not yet
-## known (branches attach later), so it accepts any rotation that COVERS what
+## known — branches attach later — so it accepts any rotation that COVERS what
 ## the cell needs. `_retile_no_spare_doors` runs once the topology is final and
 ## swaps each tile for one whose doors are exactly its connections.
 ##
-## The old note here said a door with nothing behind it was "inert geometry".
-## It is not inert to a player: no gate, no loading trigger, nothing behind it,
-## and no way to tell it apart from a real exit until you walk into it. It was
-## in 182 door-slots across the 392-cell dump before the retile pass.
+## The old comment said a spare door is "inert geometry, which is already true
+## of the static fields", and that it was a divergence we were choosing. Both
+## halves are retired. It is not inert to a player: no gate, no loading trigger,
+## nothing behind it, and no way to tell it apart from a real exit until you
+## walk into it — 182 door-slots across the 392-cell dump carried one.
+##
+## psz-re's sys.field-doorways.json exists to answer exactly this (it cites our
+## #581): there is never a spare door. Room shape comes from the cell's DEGREE
+## and nothing else — 4 -> x, 3 -> t, 2 -> l or i, 1 -> s/g/n — and the degree
+## counter is incremented in the same function that links two neighbours,
+## bumping parent and child together, so doors == connections by construction.
+## Nothing is ever sealed; what the game closes is a GATE, always on a live
+## connection (417 of 417 gated doorways still hold their neighbour).
+## See /states/field-gates.
 func _fitting_rotations(stage_id: String, entry_dir: String, row: int, col: int,
 		grid: Dictionary, exit_outside: bool) -> Array[Dictionary]:
 	var fits: Array[Dictionary] = []
