@@ -12,6 +12,12 @@ extends RefCounted
 ## we compare our output against the game's own generation.
 var _rng := RandomNumberGenerator.new()
 
+## Cells the retile pass could not make exact, from the last generate() call.
+## Non-zero means a door somewhere still leads nowhere — see
+## `_retile_no_spare_doors`, which explains the one case that is expected
+## (the `b`-area start tile) and why it is counted rather than hidden.
+var _spare_door_cells: int = 0
+
 
 ## Reproduce a specific field. Same seed + same area + same params = same field,
 ## rooms, rotations, gates, keys and enemy waves included.
@@ -72,10 +78,16 @@ func _gates_at_rotation(stage_id: String, steps: int) -> Array[String]:
 ## usable exit, plus that exit direction. `exit_outside` picks whether the exit
 ## must leave the grid (end cell) or land on an empty in-grid cell (middle).
 ##
-## Extra doors beyond entry+exit are ALLOWED: the runtime only builds a gate
-## trigger for a direction that appears in the cell's `connections`, so a door
-## with nothing behind it is inert geometry — which is already true of the
-## static fields.
+## Extra doors beyond entry+exit are allowed HERE, and then removed: this runs
+## while the path is still being laid, when a cell's final degree is not yet
+## known (branches attach later), so it accepts any rotation that COVERS what
+## the cell needs. `_retile_no_spare_doors` runs once the topology is final and
+## swaps each tile for one whose doors are exactly its connections.
+##
+## The old note here said a door with nothing behind it was "inert geometry".
+## It is not inert to a player: no gate, no loading trigger, nothing behind it,
+## and no way to tell it apart from a real exit until you walk into it. It was
+## in 182 door-slots across the 392-cell dump before the retile pass.
 func _fitting_rotations(stage_id: String, entry_dir: String, row: int, col: int,
 		grid: Dictionary, exit_outside: bool) -> Array[Dictionary]:
 	var fits: Array[Dictionary] = []
@@ -625,6 +637,14 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 	if key_gates_count > 0:
 		_add_key_gates(grid, path, branch_cells, key_gates_count)
 
+	# No spare doors: retile so every door leads somewhere. Runs after the
+	# topology is final (path, end cell, branches, key gates) because it needs
+	# each cell's finished connection set, and before validation because it
+	# changes which tile a cell shows.
+	var unfixed: int = _retile_no_spare_doors(grid, all_stages)
+	if unfixed > 0:
+		_spare_door_cells = unfixed
+
 	# Validate: all gates match neighbors (no orphans)
 	if not _validate_gates(grid):
 		return {}
@@ -902,6 +922,131 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 		key_cell["key_for_cell"] = _pos_key(gate_pos)
 
 		placed += 1
+
+
+## Retile every cell so its doors are EXACTLY its connections. Returns how many
+## cells could not be fixed (0 = no spare doors anywhere).
+##
+## A spare door is a door with nothing behind it: no gate, no loading trigger,
+## no neighbouring room. `_validate_gates` called that "inert, not a failure",
+## and `_fitting_rotations` accepted any rotation that COVERED the directions a
+## cell needed. Measured over the committed dump of this generator, that left a
+## door leading nowhere in 234 of 392 cells — 60% — and in play it reads as a
+## broken exit, because the player cannot tell it apart from a real one.
+##
+## The original has no such thing. psz-re's sys.field-doorways: room shape comes
+## from the cell's DEGREE and nothing else, and the degree counter is bumped in
+## the same function that links two neighbours, so doors == connections BY
+## CONSTRUCTION. Nothing is ever sealed either — what the game closes is a gate,
+## always on a live connection. See /states/field-gates.
+##
+## THIS PASS PRESERVES THE GRAPH EXACTLY. `needed` is the cell's existing
+## connections — the doors it already has that lead to a placed cell — never raw
+## adjacency, so a door is only ever DROPPED, never added. Two cells that sit
+## side by side without a door between them keep their wall. That matters:
+## adding doors on adjacency would create edges, and an edge that closes a loop
+## breaks the "layout is a tree" invariant every field is validated against.
+##
+## The goal keeps its warp exit, which is a door with no cell behind it on
+## purpose — it leaves the field rather than leading nowhere.
+##
+## START CELLS ARE RETILED TOO, with one exception that is about spawning rather
+## than doors: a stage carrying a `defaultSpawn` is where the player materialises
+## when they warp into the section from outside, and no other tile has one, so
+## swapping it would leave them with nowhere to stand. Only `sNNa_sa1` and
+## `sNNz_na1` carry one, and `sNNa_sa1` has a single south door, so it is already
+## exact and never needs retiling. `sNNb_sa1` carries north+south and sits on row
+## 0, which used to leave its north door hanging off-grid in every `b` section —
+## it has no default spawn (a `b` section is entered by warp from the transition
+## room), so it retiles like anything else.
+func _retile_no_spare_doors(grid: Dictionary, all_stages: Array[String]) -> int:
+	var unfixed: int = 0
+
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		if _carries_default_spawn(str(cell.get("stage_id", ""))):
+			if not _spare_dirs(grid, key, cell).is_empty():
+				unfixed += 1
+			continue
+
+		var needed: Array[String] = []
+		for dir in _get_rotated_gates(cell):
+			if _leads_somewhere(grid, key, cell, dir):
+				needed.append(dir)
+		if _spare_dirs(grid, key, cell).is_empty():
+			continue
+
+		var pick: Dictionary = _tile_with_exact_doors(
+			all_stages, needed, str(cell.get("stage_id", "")))
+		if pick.is_empty():
+			unfixed += 1
+			continue
+		cell["stage_id"] = str(pick["stage"])
+		# DEGREES, not steps. `_tile_with_exact_doors` works in quarter turns
+		# because `_gates_at_rotation` does, but every consumer of a cell's
+		# `rotation` treats it as degrees — `StageRotation.rotate_dir` divides by
+		# 90, the field controller reads it into `_rotation_deg`, and the static
+		# field JSONs built from RE data carry 0/90/180/270. Storing steps here
+		# silently placed the tile unrotated.
+		cell["rotation"] = int(pick["rotation"]) * 90
+	return unfixed
+
+
+## Is this stage the one the player warps INTO for its section? Those keep their
+## tile no matter what their doors look like — see `_retile_no_spare_doors`.
+func _carries_default_spawn(stage_id: String) -> bool:
+	if stage_id.is_empty():
+		return false
+	_ensure_unified_config()
+	var cfg: Dictionary = _unified_config.get(stage_id, {})
+	return not cfg.get("defaultSpawn", {}).is_empty()
+
+
+## Doors on this cell that lead nowhere — the ones this pass exists to remove.
+func _spare_dirs(grid: Dictionary, key: String, cell: Dictionary) -> Array[String]:
+	var spare: Array[String] = []
+	for dir in _get_rotated_gates(cell):
+		if not _leads_somewhere(grid, key, cell, dir):
+			spare.append(dir)
+	return spare
+
+
+## True when a door opens onto a placed cell, or is the goal's warp out.
+func _leads_somewhere(grid: Dictionary, key: String, cell: Dictionary, dir: String) -> bool:
+	if cell.get("is_end", false) and dir == str(cell.get("key_gate_direction", "")):
+		return true
+	var pos: Vector2i = _parse_pos(key)
+	var off: Vector2i = DIR_OFFSET[dir]
+	return grid.has(_pos_key(Vector2i(pos.x + off.x, pos.y + off.y)))
+
+
+## A stage + rotation whose doors are exactly `needed`, or {} if none exists.
+## The cell's current stage is tried first so a room keeps its look when only
+## the rotation was wrong; otherwise the pool is shuffled, so which tile stands
+## in is part of the seeded roll rather than dictated by dictionary order.
+func _tile_with_exact_doors(all_stages: Array[String], needed: Array[String],
+		prefer_stage: String) -> Dictionary:
+	var want: Array[String] = needed.duplicate()
+	want.sort()
+
+	var pool: Array[String] = []
+	if not prefer_stage.is_empty():
+		pool.append(prefer_stage)
+	var rest: Array = all_stages.duplicate()
+	_shuffle(rest)
+	for s in rest:
+		if str(s) != prefer_stage:
+			pool.append(str(s))
+
+	for stage_id in pool:
+		for steps in range(4):
+			var doors: Array[String] = _gates_at_rotation(stage_id, steps)
+			if doors.size() != want.size():
+				continue
+			doors.sort()
+			if doors == want:
+				return {"stage": stage_id, "rotation": steps}
+	return {}
 
 
 ## Validate all gates have matching neighbors (no orphans).

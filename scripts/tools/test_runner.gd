@@ -509,7 +509,8 @@ func test_generated_field_doors() -> void:
 	# first cell that happened to break it.
 	# SEEDED. Generation is random, and an unseeded sweep makes this test flaky
 	# on the tail below — a fixed set of seeds keeps a red run reproducible.
-	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0, "fell_back": 0}
+	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0,
+		"fell_back": 0, "spare": 0, "spare_start": 0}
 	for area in areas:
 		for roll in range(3):
 			var gen = GridGen.new()
@@ -529,6 +530,12 @@ func test_generated_field_doors() -> void:
 	# pretending the tail is gone. A fallback section is still a valid walkable
 	# field, just a fixed 5-room line with no objects.
 	assert_true(t["fell_back"] <= 2, "grid sections falling back to the 5-room line stays in the tail (got %d of 42)" % t["fell_back"])
+	# A spare door — one with no room behind it, no gate and no loading trigger
+	# — is indistinguishable from a real exit until the player walks into it.
+	# psz-re: the original has none, because room shape comes from the cell's
+	# degree, so doors == connections by construction (/states/field-gates).
+	assert_eq(t["spare"], 0, "no generated room has a door with nothing behind it")
+	assert_eq(t["spare_start"], 0, "start rooms have no spare door either")
 	print("  INFO: %d generated cells checked across %d areas" % [t["cells"], areas.size()])
 	print("")
 
@@ -566,11 +573,32 @@ func _audit_generated_section(section: Dictionary, configs: Dictionary, t: Dicti
 				continue
 			if not _portal_backed(configs, str(cell["stage_id"]), int(cell.get("rotation", 0)), str(dir)):
 				t["unbacked"] += 1
+			_tally_spare_door(cell, section, str(dir), connections, t)
 
 	var sp := str(section.get("start_pos", ""))
 	var ep := str(section.get("end_pos", ""))
 	if by_pos.has(sp) and by_pos.has(ep) and sp != ep and not _connected(by_pos, sp, ep):
 		t["unreachable"] += 1
+
+
+## Count one portal direction as a spare door, or exempt it and say why.
+##
+## Exempt: the field's own warp out (a door that leaves the field rather than
+## leading nowhere) and every door of a transition room, which is entered and
+## left by warp and so has no grid connections at all. Start cells are NOT
+## exempt — they are tallied separately only so a regression there names itself.
+func _tally_spare_door(cell: Dictionary, section: Dictionary, dir: String,
+		connections: Dictionary, t: Dictionary) -> void:
+	if connections.has(dir):
+		return
+	if dir == str(cell.get("warp_edge", "")):
+		return
+	if str(section.get("type", "")) == "transition":
+		return
+	if bool(cell.get("is_start", false)):
+		t["spare_start"] += 1
+		return
+	t["spare"] += 1
 
 
 ## Does `stage_id` have a config portal that faces `game_dir` once rotated?
@@ -8264,7 +8292,17 @@ func test_wetlands_field() -> void:
 		if cell.get("is_start", false):
 			b_start = cell
 			break
-	assert_eq(str(b_start.get("stage_id", "")), "s02b_sa1", "Ozette B start uses s02b_sa1")
+	# NOT pinned to s02b_sa1 any more. That tile carries north+south and the `b`
+	# start sits on row 0, so its north door hung off-grid in every b section —
+	# a door with no room, no gate and no trigger behind it. The retile pass
+	# swaps it for a tile whose doors are exactly its connections, which is what
+	# the original does (room shape comes from the cell's degree, so a start room
+	# has one door). The `a` start keeps sa1 above because that stage carries the
+	# section's defaultSpawn; b sections are entered by warp instead.
+	assert_true(not str(b_start.get("stage_id", "")).is_empty(), "Ozette B section has a start cell")
+	assert_true(str(b_start.get("stage_id", "")).begins_with("s02b_"), "Ozette B start is an s02b stage")
+	assert_eq(b_start.get("connections", {}).size(), b_start.get("portals", {}).size(),
+		"Ozette B start has no door without a room behind it")
 
 	# Per-file GLB existence is verified server-side against R2 — not here.
 
