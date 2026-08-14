@@ -82,6 +82,46 @@ DEFAULT_SETS = ("d",)
 ## listed is counted and reported, never dropped silently.
 CONTAINER_KINDS = ("box", "rare_box", "wall")
 
+# psz-re model name -> the object `type` the spawner already understands.
+#
+# These are AUTHORED the same way boxes and traps are; the only reason they
+# waited is that psz-re's dump emitted three kinds out of thirty until aef6d1b.
+# The spawner has carried `fence` and `step_switch` cases for the static quests
+# all along, so this is a mapping job rather than new gameplay code.
+#
+# o0c_poisonm is a PLACEHOLDER: it is a real authored trap in the corpus (78
+# records) with no behaviour of its own here yet, so it rides the shared
+# needle_trap script through `trap_kind` like the other contact traps. That
+# keeps the object in the world -- which is the point -- without inventing a
+# poison mechanic nobody has measured.
+MODEL_TO_TYPE = {
+    "o0c_fence": "fence",
+    "o0c_shfence": "fence",
+    "o0c_dgfance": "fence",
+    "o0c_fence4": "fence",
+    "o0c_remswitch": "step_switch",
+    "o0c_switchf": "step_switch",
+    "o0c_switchs": "step_switch",
+    "o0c_poisonm": "poison_trap",
+}
+
+# A fence is opened by a switch, and the pairing is NOT in psz-re's dump -- the
+# record carries group/kind/model/x/y/z/angle/slot/factory_index/variant and no
+# link or event flag, because the linkage lives in the parameter block that the
+# per-room dump does not publish.
+#
+# psz-re also measures o0c_fence sitting 1.31 cells from a doorway, against a
+# 5.14 floor for walls: fences STAND IN DOORWAYS on purpose, because a fence is
+# a barrier you open rather than scenery you walk past. So an unlinked fence is
+# not cosmetic, it is a sealed room.
+#
+# Until the flag is published, fences are imported ONLY into rooms that also
+# carry a switch, and every fence in such a room is linked to every switch in
+# it. In set d that covers 43 rooms; 33 rooms hold fences with no switch at all
+# and are skipped and counted rather than barricaded. Replacing this with the
+# real pairing changes this function and nothing else.
+FENCE_LINK_ID = "authored"
+
 
 def psz_re_root(explicit: str | None) -> pathlib.Path | None:
     for candidate in (explicit, os.environ.get("PSZ_RE"),
@@ -108,6 +148,7 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
     rooms: dict[str, dict] = {}
     unknown_traps: set[str] = set()
     deferred: dict[str, int] = {}
+    unlinked_fences: dict[str, int] = {}
 
     def room_entry(key: str, rec: dict) -> dict:
         entry = rooms.get(key)
@@ -122,19 +163,38 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
         if str(rec.get("set", "")) not in sets:
             continue
         entry = room_entry(key, rec)
+        # A fence needs a switch in the same room to be openable -- see
+        # FENCE_LINK_ID. Decided per room, before anything is emitted.
+        room_kinds = [str(b.get("kind", "")) for b in rec.get("boxes", [])]
+        room_has_switch = any(MODEL_TO_TYPE.get(k) == "step_switch" for k in room_kinds)
         for box in rec.get("boxes", []):
             kind = str(box.get("kind", "box"))
-            if kind not in CONTAINER_KINDS:
+            mapped = MODEL_TO_TYPE.get(kind)
+            if mapped is None and kind not in CONTAINER_KINDS:
                 deferred[kind] = deferred.get(kind, 0) + 1
                 continue
-            entry["objects"].append({
+            if mapped == "fence" and not room_has_switch:
+                unlinked_fences[key] = unlinked_fences.get(key, 0) + 1
+                continue
+            obj = {
                 "g": box.get("group"),
-                "k": kind,
+                "k": mapped or kind,
                 "x": _round(box.get("x", 0.0)),
                 "y": _round(box.get("y", 0.0)),
                 "z": _round(box.get("z", 0.0)),
                 "a": int(box.get("angle", 0)),
-            })
+            }
+            if mapped in ("fence", "step_switch"):
+                # One link id per room: every switch in a room opens every fence
+                # in it. `_fence_links` is per-cell at runtime, so a constant is
+                # unambiguous inside a room.
+                obj["link"] = FENCE_LINK_ID
+            if mapped is not None:
+                # Keep the source model: four fence models and three switch
+                # models share two spawner cases today, and the art can diverge
+                # later without another import.
+                obj["m"] = kind
+            entry["objects"].append(obj)
 
     for key, rec in traps_doc.get("per_room", {}).items():
         if str(rec.get("set", "")) not in sets:
@@ -201,6 +261,16 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
         "group5_weights": GROUP5_WEIGHTS,
         "caps": CAPS,
         "census": dict(sorted(census.items(), key=lambda kv: -kv[1])),
+        "fences_skipped_no_switch": {
+            "_": ("Rooms holding a fence with no switch to open it. psz-re does "
+                  "not publish the fence/switch pairing (it lives in the object "
+                  "parameter block), and a fence stands IN a doorway -- 1.31 "
+                  "cells from one, against 5.14 for walls -- so importing one "
+                  "with nothing to open it seals the room. Skipped and counted "
+                  "until the flag is published."),
+            "rooms": len(unlinked_fences),
+            "records": sum(unlinked_fences.values()),
+        },
         "not_imported_yet": {
             "_": ("Kinds psz-re emits that this importer deliberately does not take "
                   "yet -- psz-godot #594 widens CONTAINER_KINDS and adds the spawner "

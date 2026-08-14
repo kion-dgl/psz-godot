@@ -112,6 +112,7 @@ func _run_tests_core() -> void:
 	test_gate_economy_solvability()
 	test_authored_field_objects()
 	test_authored_walls_clear_doorways()
+	test_authored_fences_are_openable()
 	test_group_five_trap_roll()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
@@ -1021,6 +1022,39 @@ func test_authored_field_objects() -> void:
 				saw_wall = true
 	assert_eq(over_cap, 0, "a room never exceeds the 20-object cap")
 	assert_true(saw_wall, "authored walls reach the object list (the gate is at spawn time)")
+	print("")
+
+
+## A fence is a barrier you open, not scenery — psz-re measures o0c_fence at
+## 1.31 cells from a doorway against 5.14 for walls, so fences stand IN
+## doorways on purpose. One with no switch in the room is a sealed room, and
+## the layout mask can build the fence's group while skipping the switch's, so
+## the guard has to hold on the objects a room actually builds.
+func test_authored_fences_are_openable() -> void:
+	print("── Every authored fence has a switch in its room ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+	var rooms: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_objects.json").get("rooms", {})
+	var sealed: int = 0
+	var with_fence: int = 0
+	var switches: int = 0
+	for key in rooms.keys():
+		var room_code: String = str(key).substr(0, str(key).rfind("_"))
+		for seed_i in range(6):
+			var objs: Array = Pop.authored_objects(room_code, seed_i % 9, _seeded_rng(seed_i))
+			var kinds: Array[String] = []
+			for o in objs:
+				kinds.append(str(o.get("type", "")))
+			if "step_switch" in kinds:
+				switches += 1
+			if "fence" not in kinds:
+				continue
+			with_fence += 1
+			if "step_switch" not in kinds:
+				sealed += 1
+	assert_true(with_fence > 0, "the corpus places fences at all (%d room rolls)" % with_fence)
+	assert_true(switches > 0, "the corpus places switches at all (%d room rolls)" % switches)
+	assert_eq(sealed, 0, "no room roll leaves a fence with no switch to open it")
 	print("")
 
 
