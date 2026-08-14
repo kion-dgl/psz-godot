@@ -594,6 +594,11 @@ func _tally_spare_door(cell: Dictionary, section: Dictionary, dir: String,
 		return
 	if dir == str(cell.get("warp_edge", "")):
 		return
+	# The start room's way back to where the player warped in from — a `b`
+	# section must show you where you came from, so this door is required
+	# rather than tolerated.
+	if dir == str(cell.get("entry_warp_edge", "")):
+		return
 	if str(section.get("type", "")) == "transition":
 		return
 	if bool(cell.get("is_start", false)):
@@ -8392,8 +8397,15 @@ func test_wetlands_field() -> void:
 	# section's defaultSpawn; b sections are entered by warp instead.
 	assert_true(not str(b_start.get("stage_id", "")).is_empty(), "Ozette B section has a start cell")
 	assert_true(str(b_start.get("stage_id", "")).begins_with("s02b_"), "Ozette B start is an s02b stage")
-	assert_eq(b_start.get("connections", {}).size(), b_start.get("portals", {}).size(),
-		"Ozette B start has no door without a room behind it")
+	# A `b` section is entered by warp from the transition room, and the room you
+	# land in has to show you where you came from — so it carries exactly one
+	# door more than it has connections, and that door is the way back.
+	var b_entry: String = str(b_start.get("entry_warp_edge", ""))
+	assert_true(not b_entry.is_empty(), "Ozette B start has a way back to the transition room")
+	assert_true(not b_start.get("connections", {}).has(b_entry),
+		"the way back is a warp, not a connection to another room")
+	assert_eq(b_start.get("portals", {}).size(), b_start.get("connections", {}).size() + 1,
+		"Ozette B start carries its connections plus the way back, and nothing else")
 
 	# Per-file GLB existence is verified server-side against R2 — not here.
 

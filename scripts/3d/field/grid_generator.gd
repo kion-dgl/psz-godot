@@ -376,7 +376,15 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	# Section 2: Area E transition (single room)
 	var e_stage := "%se_ia1" % prefix
 	var e_cell := _make_output_cell(Vector2i(0, 0), e_stage, 0, true, true, false, 0)
-	e_cell["warp_edge"] = "south"
+	# ENTER FROM THE SOUTH, LEAVE TO THE NORTH. The transition room is a
+	# straight corridor between area A and area B, and it always runs the same
+	# way round: you arrive at its south door and walk out its north one.
+	#
+	# `warp_edge` is the EXIT, and the spawn resolver puts the player at the
+	# OPPOSITE portal (valley_field_controller: "opposite of warp_edge"). So
+	# "south" here meant arriving at the north door and walking back out south,
+	# i.e. through the corridor backwards — which is what kion hit in play.
+	e_cell["warp_edge"] = "north"
 	e_cell["objects"] = FieldPopulation.objects_for_single_room(e_stage, _rng)
 	sections.append({
 		"type": "transition", "area": "e", "cells": [e_cell],
@@ -1021,13 +1029,40 @@ func _spare_dirs(grid: Dictionary, key: String, cell: Dictionary) -> Array[Strin
 	return spare
 
 
-## True when a door opens onto a placed cell, or is the goal's warp out.
+## True when a door opens onto a placed cell, or is one of the section's two
+## warps — the goal's way out, or the start's way back.
 func _leads_somewhere(grid: Dictionary, key: String, cell: Dictionary, dir: String) -> bool:
 	if cell.get("is_end", false) and dir == str(cell.get("key_gate_direction", "")):
+		return true
+	if dir == _entry_warp_dir(grid, key, cell):
 		return true
 	var pos: Vector2i = _parse_pos(key)
 	var off: Vector2i = DIR_OFFSET[dir]
 	return grid.has(_pos_key(Vector2i(pos.x + off.x, pos.y + off.y)))
+
+
+## The start room's way BACK, or "" when the section has none.
+##
+## A `b` section is entered by warp from the transition room, and the room you
+## land in has to show you where you came from — kion's rule from play: "the B
+## section should ALWAYS start with a room with a door that implies leading back
+## to valley E". That door has no cell behind it, but it is not a dead door: it
+## is the arrival warp, the mirror of the goal's exit warp, and the spawn
+## resolver already puts the player at it (valley_field_controller's "fallback
+## north portal, facing gate"). Treating it as a spare and retiling it away is
+## what dropped players into a dead end.
+##
+## An `a` section has none — it is entered from the city through `sa1`'s
+## defaultSpawn, and that tile carries a single south door.
+func _entry_warp_dir(grid: Dictionary, key: String, cell: Dictionary) -> String:
+	if not cell.get("is_start", false):
+		return ""
+	var pos: Vector2i = _parse_pos(key)
+	for dir in _get_rotated_gates(cell):
+		var off: Vector2i = DIR_OFFSET[dir]
+		if not grid.has(_pos_key(Vector2i(pos.x + off.x, pos.y + off.y))):
+			return dir
+	return ""
 
 
 ## A stage + rotation whose doors are exactly `needed`, or {} if none exists.
@@ -1168,6 +1203,9 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 			"is_key_gate": cell.get("is_key_gate", false),
 			"key_gate_direction": str(cell.get("key_gate_direction", "")),
 			"warp_edge": warp_edge,
+			# The start room's way back to wherever the player warped in from.
+			# "" for an `a` section, which is entered through a defaultSpawn.
+			"entry_warp_edge": _entry_warp_dir(grid, key, cell),
 			"path_order": int(cell.get("path_order", -1)),
 			"portals": _baked_portals(str(cell["stage_id"]), int(cell.get("rotation", 0))),
 			"objects": FieldPopulation.objects_for_cell(
