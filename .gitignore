@@ -148,6 +148,9 @@ web/public/assets/npcs
 web/public/assets/objects
 web/public/assets/stages
 web/public/assets/player
+web/public/assets/enemies
+web/public/assets/images
+web/public/assets/weapons
 .claude/*
 # Track the project hook config so the merge gate travels with the repo.
 !.claude/settings.json
