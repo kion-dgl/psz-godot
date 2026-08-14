@@ -58,6 +58,28 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -4.34,
+                        0.0,
+                        -1.49
+                      ],
+                      "rotation": 167.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        1.59,
+                        0.0,
+                        -1.38
+                      ],
+                      "rotation": 193.48,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         1.93,
                         0.0,
@@ -1247,6 +1269,17 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.81,
+                        0.0,
+                        -4.24
+                      ],
+                      "rotation": 181.2,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         10.09,
                         0.0,
@@ -1264,6 +1297,17 @@
                       ],
                       "rotation": 89.35,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        11.82,
+                        0.0,
+                        -0.09
+                      ],
+                      "rotation": 181.82,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -1347,20 +1391,15 @@
                       "type": "enemy"
                     },
                     {
+                      "authored": true,
+                      "destructible": true,
                       "position": [
-                        8.0,
+                        2.19,
                         0.0,
-                        0.0
+                        13.63
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "rotation": 181.43,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -2106,6 +2145,17 @@
                         0.0
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        2.19,
+                        0.0,
+                        13.63
+                      ],
+                      "rotation": 181.43,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -3334,6 +3384,28 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -4.34,
+                        0.0,
+                        -1.49
+                      ],
+                      "rotation": 167.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        1.59,
+                        0.0,
+                        -1.38
+                      ],
+                      "rotation": 193.48,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         1.93,
                         0.0,
@@ -4251,6 +4323,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -16.14,
+                        0.0,
+                        -1.94
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -13.6,
                         0.0,
@@ -4308,6 +4390,126 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -10.18,
+                        0.0,
+                        3.99
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.95,
+                        0.0,
+                        -10.88
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.95,
+                        0.0,
+                        -10.88
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.05,
+                        0.0,
+                        -16.37
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.02,
+                        0.0,
+                        -16.4
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.89,
+                        0.0,
+                        8.31
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.36,
+                        0.0,
+                        -5.51
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.74,
+                        0.0,
+                        1.39
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.75,
+                        0.0,
+                        7.37
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.9,
+                        0.0,
+                        7.37
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.9,
+                        0.0,
+                        1.39
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -5277,6 +5479,38 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -9.19,
+                        0.0,
+                        -16.9
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -9.19,
+                        0.0,
+                        -10.91
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        4.84,
+                        0.0,
+                        -10.82
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         6.71,
                         0.0,
@@ -5284,6 +5518,17 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        7.6,
+                        0.0,
+                        -0.72
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -5307,6 +5552,26 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.61,
+                        0.0,
+                        -3.72
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.84,
+                        0.0,
+                        -10.82
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         10.85,
                         0.0,
@@ -5317,6 +5582,26 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.88,
+                        0.0,
+                        -4.26
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.88,
+                        0.0,
+                        -10.93
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         12.16,
                         0.0,
@@ -5354,6 +5639,26 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.59,
+                        0.0,
+                        -3.71
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.85,
+                        0.0,
+                        -10.82
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -5998,6 +6303,28 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.32,
+                        0.0,
+                        -10.03
+                      ],
+                      "rotation": 95.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.32,
+                        0.0,
+                        -10.03
+                      ],
+                      "rotation": 95.75,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         9.88,
                         0.0,
@@ -6005,6 +6332,26 @@
                       ],
                       "rotation": 268.62,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.67,
+                        0.0,
+                        -8.2
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.67,
+                        0.0,
+                        -8.2
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -7831,6 +8178,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -16.14,
+                        0.0,
+                        -1.94
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -13.6,
                         0.0,
@@ -7888,6 +8245,126 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -10.18,
+                        0.0,
+                        3.99
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.95,
+                        0.0,
+                        -10.88
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.95,
+                        0.0,
+                        -10.88
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.05,
+                        0.0,
+                        -16.37
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.02,
+                        0.0,
+                        -16.4
+                      ],
+                      "rotation": 77.88,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.89,
+                        0.0,
+                        8.31
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.36,
+                        0.0,
+                        -5.51
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.74,
+                        0.0,
+                        1.39
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.75,
+                        0.0,
+                        7.37
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.9,
+                        0.0,
+                        7.37
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        9.9,
+                        0.0,
+                        1.39
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -10461,6 +10938,17 @@
                         -11.16
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.47,
+                        0.0,
+                        13.67
+                      ],
+                      "rotation": 90.12,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -16719,6 +17207,36 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -4.11
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -18.63,
                         0.0,
@@ -16769,6 +17287,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -15.51,
+                        0.0,
+                        -4.13
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -14.94,
                         0.0,
@@ -16799,6 +17327,57 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -9.54,
+                        0.0,
+                        -4.15
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.68,
+                        0.0,
+                        -7.2
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.07,
+                        0.0,
+                        -4.34
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -3.56,
                         0.0,
@@ -16816,6 +17395,16 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -2.76,
+                        0.0,
+                        -4.6
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -17375,6 +17964,46 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -4.08,
+                        0.0,
+                        4.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.35,
+                        0.0,
+                        -12.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.23,
+                        0.0,
+                        -12.75
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        1.04,
+                        0.0,
+                        -7.01
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         3.59,
                         0.0,
@@ -17405,6 +18034,38 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.78,
+                        0.0,
+                        1.5
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.85,
+                        0.0,
+                        1.4
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        17.31,
+                        0.0,
+                        -6.37
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         18.88,
                         0.0,
@@ -17421,6 +18082,16 @@
                         0.08
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        19.53,
+                        0.0,
+                        -1.68
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -18253,6 +18924,36 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -21.49,
+                        0.0,
+                        -4.11
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -18.63,
                         0.0,
@@ -18303,6 +19004,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -15.51,
+                        0.0,
+                        -4.13
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -14.94,
                         0.0,
@@ -18333,6 +19044,57 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.22,
+                        0.0,
+                        -8.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -9.54,
+                        0.0,
+                        -4.15
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.68,
+                        0.0,
+                        -7.2
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.07,
+                        0.0,
+                        -4.34
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -3.56,
                         0.0,
@@ -18350,6 +19112,16 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -2.76,
+                        0.0,
+                        -4.6
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -19022,6 +19794,28 @@
                       ],
                       "rotation": 270.0,
                       "type": "burn_trap"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        10.68,
+                        0.0,
+                        -15.16
+                      ],
+                      "rotation": 349.37,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.49,
+                        0.0,
+                        -14.11
+                      ],
+                      "rotation": 349.37,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -19616,6 +20410,17 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -9.72,
+                        0.0,
+                        -2.6
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -7.61,
                         0.0,
@@ -19636,6 +20441,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.11,
+                        0.0,
+                        0.14
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -4.81,
                         0.0,
@@ -19643,6 +20458,50 @@
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -2.49,
+                        0.0,
+                        -2.64
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        4.3,
+                        0.0,
+                        -17.62
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        4.93,
+                        0.0,
+                        0.72
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.26,
+                        0.0,
+                        3.45
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -19663,6 +20522,16 @@
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        8.42,
+                        0.0,
+                        3.48
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -19693,6 +20562,60 @@
                       ],
                       "rotation": 270.01,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        11.9,
+                        0.0,
+                        0.67
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        12.3,
+                        0.0,
+                        -17.61
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        15.45,
+                        0.0,
+                        3.48
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        18.94,
+                        0.0,
+                        0.77
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        18.97,
+                        0.0,
+                        3.4
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -20262,6 +21185,46 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -4.08,
+                        0.0,
+                        4.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.35,
+                        0.0,
+                        -12.79
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.23,
+                        0.0,
+                        -12.75
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        1.04,
+                        0.0,
+                        -7.01
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         3.59,
                         0.0,
@@ -20292,6 +21255,38 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.78,
+                        0.0,
+                        1.5
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.85,
+                        0.0,
+                        1.4
+                      ],
+                      "rotation": 89.99,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        17.31,
+                        0.0,
+                        -6.37
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         18.88,
                         0.0,
@@ -20308,6 +21303,16 @@
                         0.08
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        19.53,
+                        0.0,
+                        -1.68
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -20441,6 +21446,38 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.1,
+                        0.0,
+                        -8.32
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.1,
+                        0.0,
+                        -2.42
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.19,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         11.05,
                         0.0,
@@ -20448,6 +21485,16 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        11.06,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -20468,6 +21515,26 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        14.94,
+                        0.0,
+                        0.37
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.98,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -21561,6 +22628,17 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -12.79,
+                        0.0,
+                        -15.36
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -2.05,
                         0.0,
@@ -21591,6 +22669,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        11.3,
+                        0.0,
+                        -9.14
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         16.06,
                         0.0,
@@ -21618,6 +22706,16 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        17.18,
+                        0.0,
+                        -9.14
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -21741,6 +22839,38 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.1,
+                        0.0,
+                        -8.32
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.1,
+                        0.0,
+                        -2.42
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.19,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         11.05,
                         0.0,
@@ -21748,6 +22878,16 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        11.06,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -21768,6 +22908,26 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        14.94,
+                        0.0,
+                        0.37
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        16.98,
+                        0.0,
+                        4.7
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -25189,6 +26349,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -17.44,
+                        0.0,
+                        -5.07
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -16.42,
                         0.0,
@@ -26012,6 +27182,28 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.36,
+                        0.0,
+                        -2.53
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.36,
+                        0.0,
+                        3.21
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -6.66,
                         0.0,
@@ -26019,6 +27211,26 @@
                       ],
                       "rotation": 42.25,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -5.27,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        0.49,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -26313,6 +27525,50 @@
                       ],
                       "rotation": 359.68,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 1,
@@ -26535,6 +27791,17 @@
                       ],
                       "rotation": 179.79,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.02,
+                        0.0,
+                        2.7
+                      ],
+                      "rotation": 180.01,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -27641,6 +28908,17 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -7.13,
+                        0.0,
+                        -0.01
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.89,
                         0.0,
@@ -27651,6 +28929,16 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.01,
+                        0.0,
+                        7.14
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         0.58,
                         0.0,
@@ -27658,6 +28946,17 @@
                       ],
                       "rotation": 270.22,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        6.97,
+                        0.0,
+                        -0.01
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 3,
@@ -27753,6 +29052,16 @@
                       ],
                       "rotation": 90.06,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.01,
+                        0.0,
+                        7.67
+                      ],
+                      "type": "wall"
                     }
                   ],
                   "path_order": -1,
@@ -28183,6 +29492,17 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.1,
+                        0.0,
+                        8.13
+                      ],
+                      "rotation": 180.01,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         5.69,
                         0.0,
@@ -28365,6 +29685,28 @@
                     },
                     {
                       "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.36,
+                        0.0,
+                        -2.53
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -8.36,
+                        0.0,
+                        3.21
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -6.66,
                         0.0,
@@ -28372,6 +29714,26 @@
                       ],
                       "rotation": 42.25,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -5.27,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        0.49,
+                        0.0,
+                        6.3
+                      ],
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -28463,6 +29825,17 @@
                       ],
                       "rotation": 134.99,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -1.61,
+                        0.0,
+                        -9.8
+                      ],
+                      "rotation": 44.99,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -28914,6 +30287,50 @@
                       ],
                       "rotation": 359.68,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -11.73,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        -2.23
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        5.65,
+                        0.0,
+                        3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "wall"
                     }
                   ],
                   "path_order": 2,
@@ -28995,6 +30412,17 @@
                       ],
                       "rotation": 89.7,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -6.75,
+                        0.0,
+                        -5.29
+                      ],
+                      "rotation": 315.01,
+                      "type": "wall"
                     },
                     {
                       "authored": true,
@@ -29105,6 +30533,17 @@
                       ],
                       "rotation": 179.79,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "destructible": true,
+                      "position": [
+                        -0.02,
+                        0.0,
+                        2.7
+                      ],
+                      "rotation": 180.01,
+                      "type": "wall"
                     },
                     {
                       "authored": true,

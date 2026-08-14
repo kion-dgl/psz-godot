@@ -98,9 +98,11 @@ def main() -> int:
     if out_of_cell:
         failures.append("%d authored objects outside the room + its door stubs: %s"
                         % (len(out_of_cell), out_of_cell[:5]))
-    if walls:
-        failures.append("%d walls placed while FieldPopulation.PLACE_WALLS is false: %s"
-                        % (len(walls), walls[:5]))
+    # #593 moved the wall gate to spawn time, so the generated DATA must carry
+    # them now — their absence is the regression, not their presence.
+    if not walls:
+        failures.append("no authored walls in any generated field — the gate has "
+                        "drifted back into generation time")
 
     if failures:
         print("FAIL:")
@@ -110,8 +112,8 @@ def main() -> int:
 
     print("ok: %d cells over %d areas, %d with objects"
           % (cells, len(doc.get("areas", [])), cells_with_objects))
-    print("    containers %d, traps %d over %d families (%s)"
-          % (containers, traps, len(families), ", ".join(families)))
+    print("    containers %d, traps %d over %d families (%s), walls %d"
+          % (containers, traps, len(families), ", ".join(families), len(walls)))
     print("    every authored position is inside its room (44x44 + 3-unit door stubs)")
     return 0
 
