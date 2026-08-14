@@ -20,6 +20,7 @@ class_name ReyburnBoss extends EnemyBase
 
 const KIT_PATH := "res://data/boss_arenas.json"
 const ENRAGE_FRAC := 0.35
+const FLIGHT_HP_FRAC := 0.5  # Reyburn only takes to the air below half HP (psz-re B2: grounded at high HP)
 
 enum S { INTRO, GROUND, TELEGRAPH, ATTACK, LOAF, FLIGHT_OUT, FLIGHT_HOVER, FLIGHT_SLAM, DEAD }
 
@@ -183,7 +184,13 @@ func _tick_intro(delta: float) -> void:
 func _tick_ground(delta: float, dist: float) -> void:
 	_face(target.global_position, delta)
 	_apply_gravity(delta)
-	if _flight_attacks.size() > 0 and _flight_clock >= _flight_interval and _cooldown <= 0.0:
+	# Flight is a LOW-HEALTH behaviour, not a from-full timer. psz-re (Q5/B2)
+	# measured Reyburn grounded from 100% down to 86% with no takeoff observed,
+	# and the exact threshold is unconfirmed — so a dragon flying off every 22s
+	# from full HP was invented jank. Gate it below half health until the real
+	# trigger is traced; keep the timer so it still paces within that phase.
+	if _flight_attacks.size() > 0 and current_hp < _max_hp * FLIGHT_HP_FRAC \
+			and _flight_clock >= _flight_interval and _cooldown <= 0.0:
 		_begin_flight()
 	elif _cooldown <= 0.0 and _pick_ground_attack(dist):
 		pass                                       # _pick_ground_attack sets _s = TELEGRAPH
