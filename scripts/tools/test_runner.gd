@@ -109,6 +109,7 @@ func _run_tests_core() -> void:
 	test_element_collision_setup()
 	test_player_traps()
 	test_authored_field_objects()
+	test_authored_walls_clear_doorways()
 	test_group_five_trap_roll()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
@@ -509,7 +510,8 @@ func test_generated_field_doors() -> void:
 	# first cell that happened to break it.
 	# SEEDED. Generation is random, and an unseeded sweep makes this test flaky
 	# on the tail below — a fixed set of seeds keeps a red run reproducible.
-	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0, "fell_back": 0}
+	var t := {"cells": 0, "one_way": 0, "no_portal": 0, "unbacked": 0, "unreachable": 0,
+		"fell_back": 0, "spare": 0, "spare_start": 0}
 	for area in areas:
 		for roll in range(3):
 			var gen = GridGen.new()
@@ -529,6 +531,12 @@ func test_generated_field_doors() -> void:
 	# pretending the tail is gone. A fallback section is still a valid walkable
 	# field, just a fixed 5-room line with no objects.
 	assert_true(t["fell_back"] <= 2, "grid sections falling back to the 5-room line stays in the tail (got %d of 42)" % t["fell_back"])
+	# A spare door — one with no room behind it, no gate and no loading trigger
+	# — is indistinguishable from a real exit until the player walks into it.
+	# psz-re: the original has none, because room shape comes from the cell's
+	# degree, so doors == connections by construction (/states/field-gates).
+	assert_eq(t["spare"], 0, "no generated room has a door with nothing behind it")
+	assert_eq(t["spare_start"], 0, "start rooms have no spare door either")
 	print("  INFO: %d generated cells checked across %d areas" % [t["cells"], areas.size()])
 	print("")
 
@@ -566,11 +574,37 @@ func _audit_generated_section(section: Dictionary, configs: Dictionary, t: Dicti
 				continue
 			if not _portal_backed(configs, str(cell["stage_id"]), int(cell.get("rotation", 0)), str(dir)):
 				t["unbacked"] += 1
+			_tally_spare_door(cell, section, str(dir), connections, t)
 
 	var sp := str(section.get("start_pos", ""))
 	var ep := str(section.get("end_pos", ""))
 	if by_pos.has(sp) and by_pos.has(ep) and sp != ep and not _connected(by_pos, sp, ep):
 		t["unreachable"] += 1
+
+
+## Count one portal direction as a spare door, or exempt it and say why.
+##
+## Exempt: the field's own warp out (a door that leaves the field rather than
+## leading nowhere) and every door of a transition room, which is entered and
+## left by warp and so has no grid connections at all. Start cells are NOT
+## exempt — they are tallied separately only so a regression there names itself.
+func _tally_spare_door(cell: Dictionary, section: Dictionary, dir: String,
+		connections: Dictionary, t: Dictionary) -> void:
+	if connections.has(dir):
+		return
+	if dir == str(cell.get("warp_edge", "")):
+		return
+	# The start room's way back to where the player warped in from — a `b`
+	# section must show you where you came from, so this door is required
+	# rather than tolerated.
+	if dir == str(cell.get("entry_warp_edge", "")):
+		return
+	if str(section.get("type", "")) == "transition":
+		return
+	if bool(cell.get("is_start", false)):
+		t["spare_start"] += 1
+		return
+	t["spare"] += 1
 
 
 ## Does `stage_id` have a config portal that faces `game_dir` once rotated?
@@ -758,20 +792,110 @@ func test_authored_field_objects() -> void:
 	var b: Array = Pop.authored_objects("s01a_tb3", 3, _seeded_rng(1234))
 	assert_eq(JSON.stringify(a), JSON.stringify(b), "the roll is seed-deterministic")
 
-	# 3. The caps hold and no wall escapes while PLACE_WALLS is off.
-	var walls: int = 0
+	# 3. The caps hold, and walls are in the DATA — the autopilot skip moved to
+	#    spawn time (#593), so a generated cell must carry its walls whether or
+	#    not this run intends to build them.
 	var over_cap: int = 0
+	var saw_wall := false
 	for seed_i in range(120):
-		var objs: Array = Pop.authored_objects("s01a_tb3", seed_i % 9, _seeded_rng(seed_i))
+		var objs: Array = Pop.authored_objects("s05b_lb3", seed_i % 9, _seeded_rng(seed_i))
 		if objs.size() > 20:
 			over_cap += 1
 		for o in objs:
 			if str(o.get("type", "")) == "wall":
-				walls += 1
+				saw_wall = true
 	assert_eq(over_cap, 0, "a room never exceeds the 20-object cap")
-	if not Pop.PLACE_WALLS:
-		assert_eq(walls, 0, "no authored wall is placed while PLACE_WALLS is false")
+	assert_true(saw_wall, "authored walls reach the object list (the gate is at spawn time)")
 	print("")
+
+
+func test_authored_walls_clear_doorways() -> void:
+	print("── No BLOCKING authored object stands in a doorway (#593's soft-lock question) ──")
+	var rooms: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_objects.json").get("rooms", {})
+	var doorways: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_doorways.json").get("rooms", {})
+	assert_true(not rooms.is_empty() and not doorways.is_empty(), "both reference tables load")
+
+	# The reason walls were gated off was that one across the line between two
+	# doorways is a soft-lock. psz-re measured that it never happens — 5.14
+	# cells of clearance over all 964 records, against a control that finds the
+	# room warp at 0.01. This re-derives it from OUR copy rather than trusting
+	# the number, because the import is ours to get wrong.
+	#
+	# SCOPED TO THE KINDS THAT BLOCK, and it has to be. The claim "no authored
+	# object of ANY kind stands in a doorway" is FALSE in the corpus — the same
+	# psz-re ruler puts o0c_fence at 1.31 and the room warp at 0.01, and both
+	# belong there: a fence across a doorway is a barrier, which is the entire
+	# point of a fence, and a warp IS the doorway. Asserting it over every kind
+	# would pass today only because the importer's allowlist (CONTAINER_KINDS)
+	# has not reached those kinds yet, and would fail the moment #594 widens it
+	# — reading as "#594 broke the invariant" when the invariant was overstated
+	# here. What matters for a soft-lock is an object the player can neither
+	# walk through nor get rid of.
+	const BLOCKING_KINDS := ["box", "rare_box", "wall"]
+	const MIN_CLEARANCE := 3.0
+	var worst_wall: float = 1e9
+	var worst_blocking: float = 1e9
+	var worst_desc: String = ""
+	var worst_any: float = 1e9
+	var worst_any_desc: String = ""
+	var measured: int = 0
+
+	for key in rooms.keys():
+		var room_code: String = str(key).substr(0, str(key).rfind("_"))
+		var door: Dictionary = doorways.get(room_code, {})
+		var segments: Array = door.get("segments", [])
+		if segments.is_empty():
+			continue
+		for obj in rooms[key].get("objects", []):
+			var kind: String = str(obj.get("k", ""))
+			var d: float = _distance_to_doorways(
+				float(obj.get("x", 0.0)), float(obj.get("z", 0.0)), segments)
+			measured += 1
+			if d < worst_any:
+				worst_any = d
+				worst_any_desc = "%s %s" % [key, kind]
+			if kind not in BLOCKING_KINDS:
+				continue
+			if d < worst_blocking:
+				worst_blocking = d
+				worst_desc = "%s %s" % [key, kind]
+			if kind == "wall" and d < worst_wall:
+				worst_wall = d
+
+	assert_true(measured > 1000, "measured a real corpus (%d objects)" % measured)
+	assert_true(worst_wall >= MIN_CLEARANCE,
+		"the closest authored WALL clears every doorway by %.2f units" % worst_wall)
+	assert_true(worst_blocking >= MIN_CLEARANCE,
+		"no BLOCKING authored object stands in a doorway (closest %.2f, %s)"
+			% [worst_blocking, worst_desc])
+	# Reported, never asserted — see the note above. When #594 lands the fences
+	# this number is expected to drop to roughly 1.3, and that is not a failure.
+	print("    closest of any kind (informational): %.2f — %s" % [worst_any, worst_any_desc])
+	print("")
+
+
+## Shortest distance from a point to any of a room's doorway openings.
+##
+## Sampled along each opening rather than measured to its endpoints: a wall
+## beside the middle of a wide doorway is in the way just as much as one at the
+## corner, and endpoint-only distance would miss it.
+func _distance_to_doorways(x: float, z: float, segments: Array) -> float:
+	var best: float = 1e9
+	for seg in segments:
+		if seg.size() < 2:
+			continue
+		var ax: float = float(seg[0][0])
+		var az: float = float(seg[0][1])
+		var bx: float = float(seg[1][0])
+		var bz: float = float(seg[1][1])
+		for step in range(9):
+			var t: float = float(step) / 8.0
+			var px: float = ax + (bx - ax) * t
+			var pz: float = az + (bz - az) * t
+			best = minf(best, Vector2(x - px, z - pz).length())
+	return best
 
 
 func test_group_five_trap_roll() -> void:
@@ -8264,7 +8388,24 @@ func test_wetlands_field() -> void:
 		if cell.get("is_start", false):
 			b_start = cell
 			break
-	assert_eq(str(b_start.get("stage_id", "")), "s02b_sa1", "Ozette B start uses s02b_sa1")
+	# NOT pinned to s02b_sa1 any more. That tile carries north+south and the `b`
+	# start sits on row 0, so its north door hung off-grid in every b section —
+	# a door with no room, no gate and no trigger behind it. The retile pass
+	# swaps it for a tile whose doors are exactly its connections, which is what
+	# the original does (room shape comes from the cell's degree, so a start room
+	# has one door). The `a` start keeps sa1 above because that stage carries the
+	# section's defaultSpawn; b sections are entered by warp instead.
+	assert_true(not str(b_start.get("stage_id", "")).is_empty(), "Ozette B section has a start cell")
+	assert_true(str(b_start.get("stage_id", "")).begins_with("s02b_"), "Ozette B start is an s02b stage")
+	# A `b` section is entered by warp from the transition room, and the room you
+	# land in has to show you where you came from — so it carries exactly one
+	# door more than it has connections, and that door is the way back.
+	var b_entry: String = str(b_start.get("entry_warp_edge", ""))
+	assert_true(not b_entry.is_empty(), "Ozette B start has a way back to the transition room")
+	assert_true(not b_start.get("connections", {}).has(b_entry),
+		"the way back is a warp, not a connection to another room")
+	assert_eq(b_start.get("portals", {}).size(), b_start.get("connections", {}).size() + 1,
+		"Ozette B start carries its connections plus the way back, and nothing else")
 
 	# Per-file GLB existence is verified server-side against R2 — not here.
 

@@ -37,7 +37,9 @@ class_name FieldPopulation
 ##            builds whole. A port that built groups 0..4 and stopped would
 ##            place almost no traps at all.
 ##
-##   walls    Authored too, and deliberately NOT placed — see PLACE_WALLS.
+##   walls    DECODED and PLACED (#593). The autopilot skips them at spawn
+##            time, not generation time, so the field data is the same
+##            either way.
 ##
 ## Enemy positions are still ours: the game's enemy deploy table is a separate
 ## file that has not been decoded to positions, so enemies stay on a ring.
@@ -57,14 +59,22 @@ const BOXES_PER_ROOM := 2
 const ENEMY_RING_RADIUS := 5.0
 const BOX_RING_RADIUS := 8.0
 
-## Authored walls are in the table and are NOT placed.
+## Authored walls ARE placed (#593), and the soft-lock fear that used to gate
+## them here is measured away.
 ##
-## They are as measured as the boxes, so this is a gameplay call rather than a
-## data one: a wall blocks, the free-roam autopilot's walk backbone cannot
-## attack one, and a room whose authored wall sits across the line between two
-## doorways is a soft-lock rather than a cosmetic complaint. Turning this on
-## needs the nav harness to route around blockers first.
-const PLACE_WALLS := false
+## The old gate lived in `_to_object()` — generation time — which was the wrong
+## place twice over: the generated field DATA differed between an autopilot run
+## and a player run, and a cell first entered under autopilot saved without its
+## walls and restored that way forever. The skip now lives at spawn time in
+## CellObjectSpawner, next to the one boxes already use.
+##
+## And the reason for the gate does not survive contact with psz-re's own
+## measurement. Over all 964 authored wall records the smallest distance from a
+## wall to any doorway mouth of its own room is 5.14 cells — with a control that
+## the same ruler finds the room warp at 0.01 and `o0c_fence` at 1.31, so it
+## does detect things that stand in a doorway. An authored wall never blocks a
+## connection. `test_authored_walls_clear_doorways` re-derives that from our own
+## copy of the data rather than trusting the number.
 
 ## The game's facing is 16 bits per turn, 0 = +Z increasing toward +X, which is
 ## exactly Godot's `rotation.y` about a +Z forward. So the conversion is a
@@ -223,6 +233,19 @@ static func _resolve(re_name: String) -> Array:
 ##      So 40% of rooms roll no group-5 object at all.
 ##   5. A group is truncated at 20 records and a room stops at 20 objects.
 ##
+## THERE ARE FIVE MASKS AND ONLY FOUR ARE REACHABLE, BY DESIGN — do not "fix"
+## this. The layout index comes from the original's FUN_02082814, which psz-re
+## reads as a weighted draw returning a category 0..3 against the table at
+## 0x020f2e70 (twelve ints as three rows of four, every row summing to 100),
+## validated on all 44 values across five captured fields being in 0..3. So
+## mask 4 = 0x30 — the only one naming group 4 — is never selected here, and
+## group 4's objects never spawn in a free field. 146 of set d's records sit
+## there, and `s07a_ga1_d` is entirely group 4, which is why that room falls
+## through to the ring. psz-re's own NOT_ESTABLISHED records a mission-guarded
+## path that forces layout 4; it has not modelled it, and free-roam generation
+## correctly never takes it. Widening the draw would spawn objects the original
+## does not spawn.
+##
 ## `depth` is the room's distance along the generated path; -1 means unknown
 ## and takes the middle weight row. Every draw goes through `rng`, so a seeded
 ## generator reproduces a field exactly.
@@ -338,14 +361,26 @@ static func _cap(records: Array, limit: int) -> Array:
 ## kind this build does not place.
 static func _to_object(rec: Dictionary) -> Dictionary:
 	var kind: String = str(rec.get("k", ""))
-	if kind == "wall" and not PLACE_WALLS:
-		return {}
 	var pos: Array = [
 		snappedf(float(rec.get("x", 0.0)), 0.01),
 		snappedf(float(rec.get("y", 0.0)), 0.01),
 		snappedf(float(rec.get("z", 0.0)), 0.01),
 	]
 	var obj: Dictionary = {"type": kind, "position": pos, "authored": true}
+	if kind == "wall":
+		# OURS, and stated rather than inherited from the spawner's default.
+		# psz-re's wall_placement_per_room.json is explicit that "no wall
+		# BEHAVIOUR is decoded -- hit points, whether it breaks at all", so
+		# there is no measured answer to port. Breakable is the failure-safe
+		# reading: no authored wall blocks a connection today (5.14 cells of
+		# clearance across the corpus), but if one ever did, a player can clear
+		# a breakable wall and cannot clear a solid one.
+		#
+		# The thread to pull if this is ever settled: the container constructor
+		# special-cases record byte +0x12 == 1 -- it additionally enables the
+		# collider and stores 2 rather than 3 -- which is the likeliest
+		# solid/breakable discriminator. This importer does not carry +0x12.
+		obj["destructible"] = true
 	# The spawner's `rotation` is degrees everywhere (it calls deg_to_rad), so
 	# convert here rather than leaving a second unit in the object schema.
 	var facing_deg: float = float(int(rec.get("a", 0))) / FACING_PER_TURN * 360.0
