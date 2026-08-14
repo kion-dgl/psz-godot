@@ -530,7 +530,7 @@ func generate(area: String, params: Dictionary, area_prefix: String = "s01") -> 
 
 
 ## Single attempt at generating a valid grid.
-func _try_generate(area: String, path_length: int, key_gates_count: int,
+func _try_generate(area: String, path_length: int, _key_gates_count: int,
 		branches_count: int, area_prefix: String = "s01") -> Dictionary:
 	var grid: Dictionary = {}  # "row,col" → cell dict
 	var path: Array[Vector2i] = []
@@ -651,17 +651,25 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 	if branches_count > 0:
 		branch_cells = _add_branches(grid, path, all_stages, branches_count)
 
-	# Add key-gates
-	if key_gates_count > 0:
-		_add_key_gates(grid, path, branch_cells, key_gates_count)
-
 	# No spare doors: retile so every door leads somewhere. Runs after the
-	# topology is final (path, end cell, branches, key gates) because it needs
-	# each cell's finished connection set, and before validation because it
-	# changes which tile a cell shows.
+	# topology is final (path, end cell, branches) because it needs each cell's
+	# finished connection set, and before validation because it changes which
+	# tile a cell shows.
 	var unfixed: int = _retile_no_spare_doors(grid, all_stages)
 	if unfixed > 0:
 		_spare_door_cells = unfixed
+
+	# The gate economy (#595). AFTER the retile, because a gate is always on a
+	# live connection and the retile is what settles which doors those are.
+	#
+	# `key_gates_count` from the difficulty config is NO LONGER READ. The budget
+	# is (rooms - 2) * 35 / 100 off the section's own room count, which is the
+	# measured rule, and it supersedes a hand-set count that had normal
+	# difficulty at zero key gates in both sections — the original has them at
+	# every difficulty. The config key is left in place because the field
+	# editor and the static builders still carry it.
+	if not _assign_door_attributes(grid, _pos_key(path[0])):
+		return {}
 
 	# Validate: all gates match neighbors (no orphans)
 	if not _validate_gates(grid):
@@ -859,87 +867,324 @@ func _place_dead_end(grid: Dictionary, pos_key: String, entry_dir: String,
 	return false
 
 
-## Add key-gates and place keys with reachability constraints.
-func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
-		branch_cells: Array[Vector2i], target_count: int) -> void:
-	# Map branch cells to the path order of their connected main-path cell
-	var branch_to_path_order: Dictionary = {}
-	for bp in branch_cells:
-		var bcell: Dictionary = grid[_pos_key(bp)]
-		var entry_dir: String = str(bcell.get("entry_direction", ""))
-		if entry_dir.is_empty():
+# ── The gate economy (#595) ────────────────────────────────────────────────
+# Implements /states/field-gates. The contract page is normative; this is the
+# code that has to match it, and the seeded tests are pinned against the page
+# rather than against this function.
+
+## Door attributes, one per direction. The values are the original's, at cell
+## +0x14+dir — kept as its numbers rather than an enum of our own so a capture
+## and a generated field can be compared without a translation table.
+const ATTR_OPEN := 0
+const ATTR_ONE_KEY := 1
+const ATTR_TWO_KEY := 2
+const ATTR_ENEMY_DEFEAT := 4
+
+## params[5]: budget = (rooms - 2) * 35 / 100, integer division, a HARD cap.
+const KEY_GATE_BUDGET_PCT := 35
+
+## params[7]: chance a key gate is a TWO-key gate.
+##
+## The original rolls params[6] = 30 instead for a room carrying flag 0x20, and
+## we have no equivalent of that flag: psz-re's topology reads 0x20 as marking a
+## cell created as one of a PAIR during the frontier walk, and this generator
+## does not build pairs. Rather than invent a mapping, every room takes the
+## non-0x20 arm. Recorded as a divergence in /states/field-gates, not hidden —
+## the visible effect is that two-key gates are rarer here than in the original.
+const TWO_KEY_CHANCE := 10
+
+## params[8], the RUNTIME value.
+##
+## NOT the 10 that level_topology_builder.json lists as the table default. The
+## runtime block reads 75, and the capture split — 268 rooms gating every
+## eligible exit, 106 gating none, 0 mixed — is 72%, which is 75 with sampling
+## noise and nothing like 10.
+const ENEMY_DEFEAT_CHANCE := 75
+
+## Keys scatter within BFS depth < 2 of the gated room, and a room drops out of
+## the pool once it holds 2 — which is why no captured room ever holds more.
+const KEY_SCATTER_DEPTH := 2
+const KEYS_PER_ROOM := 2
+
+
+## Assign a door attribute to every doorway in the section.
+##
+## Runs AFTER the retile, because it needs each cell's final connection set: a
+## gate is always on a live connection, and before the retile a cell can still
+## be showing a door that leads nowhere.
+##
+## Returns false when the result is not solvable, so `_try_generate` can discard
+## the attempt and roll again rather than shipping a field that cannot be
+## finished. That is the backstop; the placement below is meant to keep it
+## solvable by construction, and the seeded sweep is what proves it does.
+func _assign_door_attributes(grid: Dictionary, start_key: String,
+		allow_key_gates: bool = true) -> bool:
+	for key in grid:
+		grid[key]["door_attributes"] = {}
+		grid[key]["key_count"] = 0
+
+	if allow_key_gates:
+		_place_key_gates(grid)
+	_place_enemy_defeat_gates(grid)
+	_sync_legacy_gate_fields(grid)
+	return _field_is_solvable(grid, start_key)
+
+
+## The connections a cell actually has, as {dir: neighbour_key}.
+func _cell_connections(grid: Dictionary, key: String) -> Dictionary:
+	var cell: Dictionary = grid[key]
+	var pos: Vector2i = _parse_pos(key)
+	var out: Dictionary = {}
+	for dir in _get_rotated_gates(cell):
+		var off: Vector2i = DIR_OFFSET[dir]
+		var nkey := _pos_key(Vector2i(pos.x + off.x, pos.y + off.y))
+		if grid.has(nkey):
+			out[dir] = nkey
+	return out
+
+
+## The direction that leads back toward the start, or "" for the start itself.
+##
+## The original never gates this door — 0 of 592 rooms — and an implementation
+## has to preserve that, because it is what makes a key detour possible: you
+## must always be able to walk back out of a room to fetch what it wants.
+func _way_back_dir(grid: Dictionary, key: String) -> String:
+	return str(grid[key].get("entry_direction", ""))
+
+
+## Every room whose route from the start passes through `key`'s door `dir`.
+## In a tree that is exactly the neighbour's subtree, and it is what a key must
+## NOT be placed in: a key behind its own gate cannot be fetched.
+func _behind_door(grid: Dictionary, key: String, dir: String) -> Dictionary:
+	var conns: Dictionary = _cell_connections(grid, key)
+	if not conns.has(dir):
+		return {}
+	var out: Dictionary = {}
+	var queue: Array[String] = [str(conns[dir])]
+	out[str(conns[dir])] = true
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		for ndir in _cell_connections(grid, cur):
+			var nkey: String = str(_cell_connections(grid, cur)[ndir])
+			if nkey == key or out.has(nkey):
+				continue
+			out[nkey] = true
+			queue.append(nkey)
+	return out
+
+
+## Rooms within BFS depth < 2 of the gated room, skipping start and goal, and
+## skipping anything behind the gate being placed.
+func _key_scatter_pool(grid: Dictionary, gate_key: String, locked_dir: String) -> Array[String]:
+	var blocked: Dictionary = _behind_door(grid, gate_key, locked_dir)
+	var pool: Array[String] = []
+	var seen: Dictionary = {gate_key: 0}
+	var queue: Array[String] = [gate_key]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		var depth: int = int(seen[cur])
+		var cell: Dictionary = grid[cur]
+		var skip: bool = blocked.has(cur) \
+			or cell.get("is_start", false) or cell.get("is_end", false)
+		if not skip and int(cell.get("key_count", 0)) < KEYS_PER_ROOM:
+			pool.append(cur)
+		if depth + 1 >= KEY_SCATTER_DEPTH:
 			continue
-		var offset: Vector2i = DIR_OFFSET[entry_dir]
-		var pkey := _pos_key(Vector2i(bp.x + offset.x, bp.y + offset.y))
-		if grid.has(pkey):
-			branch_to_path_order[_pos_key(bp)] = int(grid[pkey].get("path_order", -1))
+		for ndir in _cell_connections(grid, cur):
+			var nkey: String = str(_cell_connections(grid, cur)[ndir])
+			if seen.has(nkey) or blocked.has(nkey):
+				continue
+			seen[nkey] = depth + 1
+			queue.append(nkey)
+	return pool
 
-	# Key-gate candidates: path cells after index 2, not end cell
-	var gate_candidates: Array[Vector2i] = []
-	for i in range(3, path.size()):
-		var cell: Dictionary = grid[_pos_key(path[i])]
-		if not cell.get("is_end", false):
-			gate_candidates.append(path[i])
-	_shuffle(gate_candidates)
 
-	var placed := 0
-	for gate_pos in gate_candidates:
-		if placed >= target_count:
+## The key-gate pass: budget, eligibility, the one-vs-two roll, then scatter.
+func _place_key_gates(grid: Dictionary) -> void:
+	var budget: int = int((grid.size() - 2) * KEY_GATE_BUDGET_PCT / 100.0)
+	if budget <= 0:
+		return
+
+	var candidates: Array[String] = []
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		if cell.get("is_start", false) or cell.get("is_end", false):
+			continue
+		candidates.append(key)
+	_shuffle(candidates)
+
+	var spent: int = 0
+	for key in candidates:
+		if spent >= budget:
+			break
+		if not _gate_is_eligible(grid, key):
+			continue
+
+		# Only a FORWARD door can be gated — never the way back.
+		var forward: Array[String] = []
+		var way_back: String = _way_back_dir(grid, key)
+		for dir in _cell_connections(grid, key):
+			if dir != way_back:
+				forward.append(dir)
+		if forward.is_empty():
+			continue
+		var locked_dir: String = forward[_rng.randi_range(0, forward.size() - 1)]
+
+		# One key or two. A two-key gate additionally requires that two keys can
+		# actually be placed for it, so the roll can be overruled by the pool.
+		var want: int = ATTR_TWO_KEY if _rng.randi_range(0, 99) < TWO_KEY_CHANCE else ATTR_ONE_KEY
+		var pool: Array[String] = _key_scatter_pool(grid, key, locked_dir)
+		if pool.is_empty():
+			continue
+		var capacity: int = 0
+		for pkey in pool:
+			capacity += KEYS_PER_ROOM - int(grid[pkey].get("key_count", 0))
+		if want > capacity:
+			want = ATTR_ONE_KEY
+		if want > capacity:
+			continue
+
+		# Commit: the door, then exactly as many keys as it demands.
+		grid[key]["door_attributes"][locked_dir] = want
+		_scatter_keys(grid, pool, want, key)
+		spent += 1
+
+
+## A room may carry at most one gate, and NEVER next to another gated room —
+## which is what stops a field turning into a corridor of locks.
+func _gate_is_eligible(grid: Dictionary, key: String) -> bool:
+	if not _gates_on(grid, key).is_empty():
+		return false
+	for dir in _cell_connections(grid, key):
+		var nkey: String = str(_cell_connections(grid, key)[dir])
+		if not _gates_on(grid, nkey).is_empty():
+			return false
+	return true
+
+
+## Directions of this room that carry a KEY gate (enemy-defeat does not count
+## toward the never-adjacent rule — it is a different pass with no budget).
+func _gates_on(grid: Dictionary, key: String) -> Array[String]:
+	var out: Array[String] = []
+	var attrs: Dictionary = grid[key].get("door_attributes", {})
+	for dir in attrs:
+		var a: int = int(attrs[dir])
+		if a == ATTR_ONE_KEY or a == ATTR_TWO_KEY:
+			out.append(str(dir))
+	return out
+
+
+## Place `count` keys across the pool, at most KEYS_PER_ROOM in any one room.
+func _scatter_keys(grid: Dictionary, pool: Array[String], count: int, gate_key: String) -> void:
+	var shuffled: Array[String] = pool.duplicate()
+	_shuffle(shuffled)
+	var placed: int = 0
+	while placed < count:
+		var progressed := false
+		for key in shuffled:
+			if placed >= count:
+				break
+			if int(grid[key].get("key_count", 0)) >= KEYS_PER_ROOM:
+				continue
+			grid[key]["key_count"] = int(grid[key].get("key_count", 0)) + 1
+			grid[key]["has_key"] = true
+			# Kept for the runtime, which is still key-gate-per-cell. Step 3 of
+			# /states/field-gates replaces this with the attribute table.
+			if str(grid[key].get("key_for_cell", "")).is_empty():
+				grid[key]["key_for_cell"] = gate_key
+			placed += 1
+			progressed = true
+		if not progressed:
 			break
 
-		var gate_cell: Dictionary = grid[_pos_key(gate_pos)]
-		var gate_order: int = int(gate_cell.get("path_order", -1))
 
-		# Key candidates: earlier main-path cells (not start, not already used)
-		var main_candidates: Array[Vector2i] = []
-		for p in path:
-			var c: Dictionary = grid[_pos_key(p)]
-			var order: int = int(c.get("path_order", -1))
-			if order > 0 and order < gate_order and not c.get("has_key", false) \
-					and not c.get("is_key_gate", false):
-				main_candidates.append(p)
-
-		# Branch cells reachable before the gate
-		var branch_candidates: Array[Vector2i] = []
-		for bp in branch_cells:
-			var c: Dictionary = grid[_pos_key(bp)]
-			if c.get("has_key", false):
+## The enemy-defeat pass. ONE roll per ROOM, not per door.
+##
+## If it passes, every direction that has a neighbour, is not the way back, and
+## is not already attributed gets attribute 4. So a room's forward exits are all
+## gated or none are — 268 / 106 / 0 mixed in the capture set. A per-door roll
+## would look similar in play and be wrong.
+func _place_enemy_defeat_gates(grid: Dictionary) -> void:
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		if cell.get("is_start", false) or cell.get("is_end", false):
+			continue
+		if _rng.randi_range(0, 99) >= ENEMY_DEFEAT_CHANCE:
+			continue
+		var way_back: String = _way_back_dir(grid, key)
+		var attrs: Dictionary = cell["door_attributes"]
+		for dir in _cell_connections(grid, key):
+			if dir == way_back or attrs.has(dir):
 				continue
-			var connected_order: int = branch_to_path_order.get(_pos_key(bp), -1)
-			if connected_order >= 0 and connected_order < gate_order:
-				branch_candidates.append(bp)
+			attrs[dir] = ATTR_ENEMY_DEFEAT
 
-		# Prefer branch cells (80% chance if available)
-		var key_candidates: Array[Vector2i]
-		if not branch_candidates.is_empty() and _rng.randf() < 0.8:
-			key_candidates = branch_candidates
-		elif not main_candidates.is_empty():
-			key_candidates = main_candidates
-		elif not branch_candidates.is_empty():
-			key_candidates = branch_candidates
-		else:
-			continue
 
-		var key_pos: Vector2i = key_candidates[_rng.randi_range(0, key_candidates.size() - 1)]
+## Keep the pre-#595 per-cell fields in step with the attribute table.
+##
+## The runtime still reads `is_key_gate` / `key_gate_direction` / `has_key`, and
+## replacing that is step 3 of /states/field-gates rather than this PR. Deriving
+## them here means the generator has ONE source of truth and the old consumers
+## keep working unchanged.
+func _sync_legacy_gate_fields(grid: Dictionary) -> void:
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		var key_gates: Array[String] = _gates_on(grid, key)
+		cell["is_key_gate"] = not key_gates.is_empty()
+		cell["required_keys"] = int(cell["door_attributes"][key_gates[0]]) \
+			if not key_gates.is_empty() else 0
+		# The end cell's `key_gate_direction` is its warp edge and is load-bearing
+		# elsewhere; never overwrite it.
+		if not cell.get("is_end", false):
+			cell["key_gate_direction"] = key_gates[0] if not key_gates.is_empty() else ""
+		cell["has_key"] = int(cell.get("key_count", 0)) > 0
 
-		# Find which gate direction to lock
-		var gates: Array[String] = _get_gates(str(gate_cell["stage_id"]))
-		var exit_gates: Array[String] = []
-		for g in gates:
-			if g != str(gate_cell.get("entry_direction", "")):
-				exit_gates.append(g)
-		if exit_gates.is_empty():
-			continue
 
-		var locked_dir: String = exit_gates[_rng.randi_range(0, exit_gates.size() - 1)]
-		gate_cell["is_key_gate"] = true
-		gate_cell["key_gate_direction"] = locked_dir
+## Can the field actually be finished? A real traversal, not an accounting rule.
+##
+## Walks from the start with a key purse, opening what it can afford and
+## re-walking whenever a key is picked up, until nothing new opens. The field is
+## solvable when the goal is reachable. This is the headline assertion
+## /states/field-gates asks for, and it is deliberately a SIMULATION rather than
+## the original's chain-balance check: the chain rule is what the game uses to
+## keep itself honest while placing, and this is the independent question of
+## whether the result can be played.
+func _field_is_solvable(grid: Dictionary, start_key: String) -> bool:
+	if not grid.has(start_key):
+		return false
+	var goal_key: String = ""
+	for key in grid:
+		if grid[key].get("is_end", false):
+			goal_key = key
+			break
+	if goal_key.is_empty():
+		return true
 
-		var key_cell: Dictionary = grid[_pos_key(key_pos)]
-		key_cell["has_key"] = true
-		key_cell["key_for_cell"] = _pos_key(gate_pos)
-
-		placed += 1
+	var reached: Dictionary = {start_key: true}
+	var keys_held: int = 0
+	var changed := true
+	while changed:
+		changed = false
+		keys_held = 0
+		for key in reached:
+			keys_held += int(grid[key].get("key_count", 0))
+		var spent: int = 0
+		for key in reached.keys():
+			var attrs: Dictionary = grid[key].get("door_attributes", {})
+			for dir in _cell_connections(grid, key):
+				var nkey: String = str(_cell_connections(grid, key)[dir])
+				if reached.has(nkey):
+					continue
+				var attr: int = int(attrs.get(dir, ATTR_OPEN))
+				# An enemy-defeat gate always opens: clearing the room is
+				# something the player can always do, so it never blocks
+				# solvability. Only key gates can.
+				var cost: int = attr if attr == ATTR_ONE_KEY or attr == ATTR_TWO_KEY else 0
+				if cost > keys_held - spent:
+					continue
+				spent += cost
+				reached[nkey] = true
+				changed = true
+	return reached.has(goal_key)
 
 
 ## Retile every cell so its doors are EXACTLY its connections. Returns how many
@@ -1202,6 +1447,19 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 			"key_for_cell": str(cell.get("key_for_cell", "")),
 			"is_key_gate": cell.get("is_key_gate", false),
 			"key_gate_direction": str(cell.get("key_gate_direction", "")),
+			# The gate economy's own output: {direction: attribute}, using the
+			# original's values (0 open, 1 one-key, 2 two-key, 4 enemy-defeat).
+			# The three legacy fields above are DERIVED from this — see
+			# _sync_legacy_gate_fields — and step 3 of /states/field-gates
+			# retires them once portal_gate_manager reads the table directly.
+			"door_attributes": cell.get("door_attributes", {}).duplicate(),
+			"key_count": int(cell.get("key_count", 0)),
+			# How many keys this cell's gate demands. The runtime already honours
+			# it — valley_field_controller reads it into KeyGate.required_keys and
+			# portal_gate_manager spawns that many pickups sharing one key id — so
+			# a TWO-key gate is a real two-key gate today rather than waiting for
+			# step 3 of /states/field-gates.
+			"required_keys": int(cell.get("required_keys", 0)),
 			"warp_edge": warp_edge,
 			# The start room's way back to wherever the player warped in from.
 			# "" for an `a` section, which is entered through a defaultSpawn.

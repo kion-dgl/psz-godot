@@ -108,6 +108,8 @@ func _run_tests_core() -> void:
 	test_autoload_api_surface()
 	test_element_collision_setup()
 	test_player_traps()
+	test_gate_economy_invariants()
+	test_gate_economy_solvability()
 	test_authored_field_objects()
 	test_authored_walls_clear_doorways()
 	test_group_five_trap_roll()
@@ -764,6 +766,218 @@ func test_player_traps() -> void:
 			"%s is a palette action" % id)
 		assert_true(ActionPalette.is_consumable(id), "%s counts as a consumable slot" % id)
 	print("")
+
+
+func test_gate_economy_invariants() -> void:
+	print("── Gate economy: the rules /states/field-gates makes normative ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	# One tally across the whole sweep; the per-section work is in the helper so
+	# neither function crosses the complexity bound.
+	var t: Dictionary = {
+		"sections": 0, "off_connection": 0, "way_back": 0, "adjacent": 0,
+		"mixed": 0, "all_gated": 0, "none_gated": 0, "over_budget": 0,
+	}
+	for seed_value in range(60):
+		var gen = GridGen.new()
+		gen.set_seed(seed_value)
+		for section in gen.generate_field("normal", "gurhacia")["sections"]:
+			_tally_gate_violations(_cells_by_pos(section),
+				str(section.get("start_pos", "")), t)
+
+	assert_true(int(t["sections"]) > 100, "swept a real sample (%d sections)" % t["sections"])
+	assert_eq(int(t["off_connection"]), 0, "no door attribute sits on a non-connection")
+	assert_eq(int(t["way_back"]), 0, "the way-back door is NEVER gated")
+	assert_eq(int(t["adjacent"]), 0, "two gated rooms are never adjacent")
+	assert_eq(int(t["mixed"]), 0, "enemy-defeat is all-or-nothing per ROOM, never per door")
+	assert_eq(int(t["over_budget"]), 0, "no section exceeds its key-gate budget")
+	var rate: float = float(t["all_gated"]) / float(maxi(1, int(t["all_gated"]) + int(t["none_gated"])))
+	assert_true(rate > 0.62 and rate < 0.87,
+		"the enemy-defeat roll lands near 75%% (got %.0f%%)" % (rate * 100.0))
+	print("")
+
+
+## Fold one generated section's gate violations into the running tally.
+func _tally_gate_violations(cells: Dictionary, start_pos: String, t: Dictionary) -> void:
+	if cells.is_empty():
+		return
+	t["sections"] = int(t["sections"]) + 1
+	var parents: Dictionary = _way_back_dirs(cells, start_pos)
+	var key_gates := 0
+	for pos in cells:
+		var cell: Dictionary = cells[pos]
+		var attrs: Dictionary = cell.get("door_attributes", {})
+		var conns: Dictionary = cell.get("connections", {})
+		for dir in attrs:
+			if not conns.has(dir):
+				t["off_connection"] = int(t["off_connection"]) + 1
+		var wb: String = str(parents.get(pos, ""))
+		if not wb.is_empty() and int(attrs.get(wb, 0)) != 0:
+			t["way_back"] = int(t["way_back"]) + 1
+		if _has_key_gate(attrs):
+			key_gates += 1
+			for dir in conns:
+				if _has_key_gate(cells.get(str(conns[dir]), {}).get("door_attributes", {})):
+					t["adjacent"] = int(t["adjacent"]) + 1
+		_tally_enemy_defeat(cell, conns, attrs, wb, t)
+	# budget = (rooms - 2) * 35 / 100, a hard cap
+	if key_gates > int(float(cells.size() - 2) * 35.0 / 100.0):
+		t["over_budget"] = int(t["over_budget"]) + 1
+
+
+## Enemy-defeat must be all-or-nothing over the FORWARD doors a key gate has not
+## already taken.
+func _tally_enemy_defeat(cell: Dictionary, conns: Dictionary, attrs: Dictionary,
+		wb: String, t: Dictionary) -> void:
+	if cell.get("is_start", false) or cell.get("is_end", false):
+		return
+	var defeat := 0
+	var open_doors := 0
+	for dir in conns:
+		if dir == wb:
+			continue
+		var a: int = int(attrs.get(dir, 0))
+		if a == 1 or a == 2:
+			return  # the key gate consumed this room's forward door
+		elif a == 4:
+			defeat += 1
+		else:
+			open_doors += 1
+	if defeat == 0 and open_doors == 0:
+		return
+	if defeat > 0 and open_doors > 0:
+		t["mixed"] = int(t["mixed"]) + 1
+	elif defeat > 0:
+		t["all_gated"] = int(t["all_gated"]) + 1
+	else:
+		t["none_gated"] = int(t["none_gated"]) + 1
+
+
+func test_gate_economy_solvability() -> void:
+	print("── Gate economy: no generated field is ever unsolvable ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var checked := 0
+	var unsolvable: Array[String] = []
+	var unbalanced := 0
+	var two_key := 0
+	var one_key := 0
+
+	for area in ["gurhacia", "ozette", "rioh", "paru"]:
+		for seed_value in range(30):
+			var gen = GridGen.new()
+			gen.set_seed(seed_value)
+			for section in gen.generate_field("normal", area)["sections"]:
+				var cells: Dictionary = _cells_by_pos(section)
+				if cells.is_empty():
+					continue
+				checked += 1
+				# Requirement and supply must balance exactly — a spare key is
+				# as much a bug as a missing one, because it means a gate was
+				# placed and then dropped.
+				var required := 0
+				var keys := 0
+				for pos in cells:
+					keys += int(cells[pos].get("key_count", 0))
+					for dir in cells[pos].get("door_attributes", {}):
+						var a: int = int(cells[pos]["door_attributes"][dir])
+						if a == 1:
+							required += 1
+							one_key += 1
+						elif a == 2:
+							required += 2
+							two_key += 1
+				if required != keys:
+					unbalanced += 1
+				if not _section_is_solvable(cells, str(section.get("start_pos", ""))):
+					unsolvable.append("%s/%s" % [area, section.get("start_pos", "")])
+
+	assert_true(checked > 300, "swept a real sample (%d sections)" % checked)
+	assert_eq(unsolvable.size(), 0,
+		"every generated section is completable (%d checked)" % checked)
+	assert_eq(unbalanced, 0, "keys placed exactly match keys demanded")
+	assert_true(one_key + two_key > 0, "the sweep actually produced key gates")
+	print("  (%d one-key, %d two-key gates over %d sections)" % [one_key, two_key, checked])
+	print("")
+
+
+## {pos: cell} for one generated section.
+func _cells_by_pos(section: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for cell in section.get("cells", []):
+		out[str(cell.get("pos", ""))] = cell
+	return out
+
+
+## {pos: direction back toward the start}, by BFS.
+##
+## Derived rather than read off `path_order`: branch cells carry -1 there, so a
+## path_order rule silently treats a branch's way-back as a forward door — which
+## is exactly the mistake that made an earlier read of this data report a 53%
+## enemy-defeat rate instead of 75%.
+func _way_back_dirs(cells: Dictionary, start_pos: String) -> Dictionary:
+	var out: Dictionary = {}
+	if not cells.has(start_pos):
+		return out
+	out[start_pos] = ""
+	var queue: Array[String] = [start_pos]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		for dir in cells[cur].get("connections", {}):
+			var nkey: String = str(cells[cur]["connections"][dir])
+			if out.has(nkey) or not cells.has(nkey):
+				continue
+			out[nkey] = ""
+			for back in cells[nkey].get("connections", {}):
+				if str(cells[nkey]["connections"][back]) == cur:
+					out[nkey] = back
+					break
+			queue.append(nkey)
+	return out
+
+
+func _has_key_gate(attrs: Dictionary) -> bool:
+	for dir in attrs:
+		var a: int = int(attrs[dir])
+		if a == 1 or a == 2:
+			return true
+	return false
+
+
+## Walk the section with a key purse, opening what it can afford, until nothing
+## new opens. Solvable when the goal is reached.
+func _section_is_solvable(cells: Dictionary, start_pos: String) -> bool:
+	if not cells.has(start_pos):
+		return false
+	var goal: String = ""
+	for pos in cells:
+		if cells[pos].get("is_end", false):
+			goal = pos
+			break
+	if goal.is_empty():
+		return true
+	var reached: Dictionary = {start_pos: true}
+	var changed := true
+	while changed:
+		changed = false
+		var held := 0
+		for pos in reached:
+			held += int(cells[pos].get("key_count", 0))
+		var spent := 0
+		for pos in reached.keys():
+			var attrs: Dictionary = cells[pos].get("door_attributes", {})
+			for dir in cells[pos].get("connections", {}):
+				var nkey: String = str(cells[pos]["connections"][dir])
+				if reached.has(nkey) or not cells.has(nkey):
+					continue
+				var a: int = int(attrs.get(dir, 0))
+				# An enemy-defeat gate always opens: clearing a room is
+				# something the player can always do. Only keys can strand you.
+				var cost: int = a if a == 1 or a == 2 else 0
+				if cost > held - spent:
+					continue
+				spent += cost
+				reached[nkey] = true
+				changed = true
+	return reached.has(goal)
 
 
 func test_authored_field_objects() -> void:
