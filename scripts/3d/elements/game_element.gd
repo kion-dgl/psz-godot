@@ -240,22 +240,32 @@ func _build_warp_cylinder(tint: Color, mesh_name: String) -> MeshInstance3D:
 
 
 ## Replace every albedo-textured StandardMaterial3D on the model with the
-## mirror-repeat shader (2x2 UV, mirrored both axes). `uv_offset` shifts the
-## palette row — Box passes (0, 1) for rare variants. Shared by the
-## destructible elements — wall, box (#294).
+## mirror-repeat shader at 2x2 UV. `uv_offset` shifts the palette row — Box
+## passes (0, 1) for rare variants. Shared by the destructible elements —
+## wall, box (#294).
+##
+## Mirroring is now read PER AXIS from the model's own .glb rather than forced
+## on both (#576). The old assumption happened to be right for the box —
+## o01_cont really is mirror/mirror — and wrong for every wall, which is
+## repeat/repeat, so walls were being mirrored against the source data.
 func _setup_mirror_textures(uv_offset := Vector2.ZERO) -> void:
 	if not model:
 		return
+	var wraps: Dictionary = SourceWrap.for_glb("res://assets/objects/" + model_path)
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
 			if std_mat.albedo_texture:
+				var tex_name := String(std_mat.albedo_texture.resource_path).get_file()
+				# No entry means the .glb could not be read; keep the historical
+				# mirror-both rather than silently changing how a model looks.
+				var tex_wrap: Dictionary = wraps.get(tex_name, {"s": "mirror", "t": "mirror"})
 				var smat := ShaderMaterial.new()
 				smat.shader = MIRROR_SHADER
 				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 				smat.set_shader_parameter("uv_scale", Vector2(2, 2))
-				smat.set_shader_parameter("mirror_x", true)
-				smat.set_shader_parameter("mirror_y", true)
+				smat.set_shader_parameter("mirror_x", str(tex_wrap.get("s", "mirror")) == "mirror")
+				smat.set_shader_parameter("mirror_y", str(tex_wrap.get("t", "mirror")) == "mirror")
 				if uv_offset != Vector2.ZERO:
 					smat.set_shader_parameter("uv_offset", uv_offset)
 				mesh.set_surface_override_material(surface, smat)

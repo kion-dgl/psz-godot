@@ -114,6 +114,7 @@ func _run_tests_core() -> void:
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
+	test_source_wrap_per_axis()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_city_scroll_fixes()
@@ -1039,6 +1040,71 @@ func _room_is_authored(stage_id: String) -> bool:
 		var doc := QuestLoader._load_json("res://data/re_reference/room_objects.json")
 		_authored_rooms_cache = doc.get("rooms", {})
 	return _authored_rooms_cache.has("%s_d" % stage_id)
+
+
+## ── Per-axis texture wrap read back from the source .glb ───────
+## #576: the DS sets wrap per axis and mirrors heavily — 283 of the exported
+## samplers mirror EXACTLY ONE axis. Godot's importer collapses all of it into
+## a single texture_repeat bool, so the only way to honour it is to read the
+## .glb. Needs the asset pack, so it self-skips on CI where /assets/ is absent.
+func test_source_wrap_per_axis() -> void:
+	print("── SourceWrap (per-axis wrap from the source .glb) ──")
+	const PROBE := "res://assets/objects/valley/o0c_needle.glb"
+	if not FileAccess.file_exists(PROBE):
+		print("  SKIP: no local /assets/ tree (pack-free CI)")
+		print("")
+		return
+	SourceWrap.clear_cache()
+
+	# One model per wrap combination the survey found, so a regression in the
+	# parse cannot hide behind a uniform case.
+	var cases := {
+		# mirror/repeat AND repeat/mirror on the same model — the case that
+		# proves per-axis is real rather than a converter default.
+		"res://assets/objects/valley/o0c_needle.glb": {
+			"o0c_1_needle.png": ["mirror", "repeat"],
+			"o0c_1_needle2.png": ["repeat", "mirror"],
+		},
+		# mirror/mirror — the box, which is why forcing mirror looked right.
+		"res://assets/objects/valley/o01_cont.glb": {
+			"o02_0_cont.png": ["mirror", "mirror"],
+		},
+		# repeat/repeat — every wall. These were being mirrored against the
+		# source before #576.
+		"res://assets/objects/valley/o01_wall.glb": {
+			"o01_1_wall1.png": ["repeat", "repeat"],
+		},
+		# Two textures disagreeing within one model.
+		"res://assets/objects/special_c3/o0s_warpcn.glb": {
+			"o0s_1_cwarp1a2.png": ["mirror", "mirror"],
+			"o0s_1_cwarp2a.png": ["repeat", "repeat"],
+		},
+	}
+	for glb_path in cases:
+		var wraps: Dictionary = SourceWrap.for_glb(glb_path)
+		var model_name: String = glb_path.get_file()
+		for tex_name in cases[glb_path]:
+			var want: Array = cases[glb_path][tex_name]
+			var got: Dictionary = wraps.get(tex_name, {})
+			assert_eq(str(got.get("s", "")), str(want[0]),
+				"%s %s wrapS is %s" % [model_name, tex_name, want[0]])
+			assert_eq(str(got.get("t", "")), str(want[1]),
+				"%s %s wrapT is %s" % [model_name, tex_name, want[1]])
+
+	# for_texture is the per-surface accessor the elements use.
+	var one: Dictionary = SourceWrap.for_texture(
+		"res://assets/objects/valley/o0c_needle.glb", "o0c_1_needle2.png")
+	assert_eq(str(one.get("t", "")), "mirror", "for_texture resolves a single texture")
+	# Unknown model / unknown texture must be empty, not a guess — callers use
+	# {} as the signal to leave the material alone.
+	# Path assembled at runtime on purpose: check_asset_refs.py greps source for
+	# asset-path literals and would flag a deliberately-absent one.
+	var absent := "res://assets/objects/valley/" + "does_not_exist" + ".glb"
+	assert_true(SourceWrap.for_glb(absent).is_empty(), "a missing model yields no opinion")
+	assert_true(SourceWrap.for_texture(
+		"res://assets/objects/valley/o01_wall.glb", "not_a_texture.png").is_empty(),
+		"an unknown texture yields no opinion")
+	print("")
 
 
 func test_teleporter_dressing() -> void:
