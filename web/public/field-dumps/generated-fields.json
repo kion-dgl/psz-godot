@@ -4481,6 +4481,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        0.01,
+                        0.0,
+                        -13.37
+                      ],
+                      "rotation": 256.12,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         1.13,
                         0.0,
@@ -4498,6 +4510,18 @@
                       ],
                       "rotation": 56.55,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        4.51,
+                        0.0,
+                        -8.81
+                      ],
+                      "rotation": 223.45,
+                      "type": "fence"
                     },
                     {
                       "authored": true,
@@ -4930,6 +4954,39 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.24
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.02
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.02
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -1.89,
                         0.0,
@@ -4940,6 +4997,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -1.21,
+                        0.0,
+                        7.6
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.85,
                         0.0,
@@ -4947,6 +5016,30 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -0.54,
+                        0.0,
+                        7.76
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -0.54,
+                        0.0,
+                        7.76
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -4980,6 +5073,42 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.5,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.55,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.63,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         0.78,
                         0.0,
@@ -4990,33 +5119,27 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
                       "position": [
-                        17.84,
+                        7.09,
                         0.0,
-                        -12.3
+                        -7.71
                       ],
-                      "rotation": 89.99,
-                      "type": "box"
+                      "rotation": 336.79,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
                       "position": [
-                        18.83,
+                        7.36,
                         0.0,
-                        -13.37
+                        -7.25
                       ],
-                      "rotation": 89.99,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        18.83,
-                        0.0,
-                        -11.23
-                      ],
-                      "rotation": 89.99,
-                      "type": "box"
+                      "rotation": 6.78,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": 2,
@@ -6066,6 +6189,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        0.01,
+                        0.0,
+                        -13.37
+                      ],
+                      "rotation": 256.12,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         1.13,
                         0.0,
@@ -6083,6 +6218,18 @@
                       ],
                       "rotation": 56.55,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        4.51,
+                        0.0,
+                        -8.81
+                      ],
+                      "rotation": 223.45,
+                      "type": "fence"
                     },
                     {
                       "authored": true,
@@ -6366,6 +6513,66 @@
                       ],
                       "rotation": 95.75,
                       "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        2.21,
+                        0.0,
+                        1.24
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        5.0,
+                        0.0,
+                        -3.44
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        6.15,
+                        0.0,
+                        3.4
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        6.41,
+                        0.0,
+                        -0.05
+                      ],
+                      "rotation": 57.65,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        8.88,
+                        0.0,
+                        -1.4
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -7537,6 +7744,39 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.24
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.02
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -7.61,
+                        0.0,
+                        -12.02
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -1.89,
                         0.0,
@@ -7547,6 +7787,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -1.21,
+                        0.0,
+                        7.6
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.85,
                         0.0,
@@ -7554,6 +7806,30 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -0.54,
+                        0.0,
+                        7.76
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -0.54,
+                        0.0,
+                        7.76
+                      ],
+                      "rotation": 301.73,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -7587,6 +7863,42 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.5,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.55,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        0.63,
+                        0.0,
+                        11.66
+                      ],
+                      "rotation": 270.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         0.78,
                         0.0,
@@ -7597,33 +7909,27 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
                       "position": [
-                        17.84,
+                        7.09,
                         0.0,
-                        -12.3
+                        -7.71
                       ],
-                      "rotation": 89.99,
-                      "type": "box"
+                      "rotation": 336.79,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
                       "position": [
-                        18.83,
+                        7.36,
                         0.0,
-                        -13.37
+                        -7.25
                       ],
-                      "rotation": 89.99,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        18.83,
-                        0.0,
-                        -11.23
-                      ],
-                      "rotation": 89.99,
-                      "type": "box"
+                      "rotation": 6.78,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": 2,
@@ -7717,6 +8023,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -15.1,
+                        0.0,
+                        -2.54
+                      ],
+                      "rotation": 301.71,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -14.12,
                         0.0,
@@ -7737,6 +8055,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -11.67,
+                        0.0,
+                        0.53
+                      ],
+                      "rotation": 180.42,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.57,
                         0.0,
@@ -7754,6 +8084,96 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        3.83,
+                        0.0,
+                        11.2
+                      ],
+                      "rotation": 93.71,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        6.58,
+                        0.0,
+                        7.52
+                      ],
+                      "rotation": 301.71,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        15.26,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        15.26,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        15.26,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        21.24,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        21.24,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        21.24,
+                        0.0,
+                        -2.22
+                      ],
+                      "type": "fence"
                     }
                   ],
                   "path_order": 3,
@@ -13720,6 +14140,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -7.18,
+                        0.0,
+                        -7.33
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -7.15,
                         0.0,
@@ -13739,6 +14170,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        7.34,
+                        0.0,
+                        3.61
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         11.01,
                         0.0,
@@ -13746,6 +14188,17 @@
                       ],
                       "rotation": 89.99,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -3.61,
+                        0.0,
+                        7.21
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -13838,6 +14291,17 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -8.89,
+                        0.0,
+                        10.88
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -14720,6 +15184,17 @@
                       ],
                       "rotation": 89.99,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        3.8,
+                        0.0,
+                        10.71
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -15620,6 +16095,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -8.89,
+                        0.0,
+                        10.88
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         10.83,
                         0.0,
@@ -15685,6 +16171,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -7.18,
+                        0.0,
+                        -7.33
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -7.15,
                         0.0,
@@ -15701,6 +16198,17 @@
                       ],
                       "rotation": 89.99,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        7.34,
+                        0.0,
+                        3.61
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -15824,6 +16332,17 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        7.44,
+                        0.0,
+                        6.93
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -16658,6 +17177,17 @@
                         -5.47
                       ],
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        12.64,
+                        0.0,
+                        9.0
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -17526,6 +18056,54 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -2.42,
+                        0.0,
+                        19.98
+                      ],
+                      "rotation": 89.99,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -2.42,
+                        0.0,
+                        19.98
+                      ],
+                      "rotation": 89.99,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -2.4,
+                        0.0,
+                        19.99
+                      ],
+                      "rotation": 90.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        4.97,
+                        0.0,
+                        -15.0
+                      ],
+                      "rotation": 90.0,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         6.32,
                         0.0,
@@ -17533,6 +18111,17 @@
                       ],
                       "rotation": 43.64,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        9.84,
+                        0.0,
+                        20.17
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -17586,6 +18175,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        14.82,
+                        0.0,
+                        -5.01
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         14.84,
                         0.0,
@@ -17606,43 +18206,14 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
                       "position": [
-                        17.59,
+                        15.4,
                         0.0,
-                        -7.7
+                        -4.06
                       ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        17.61,
-                        0.0,
-                        -0.76
-                      ],
-                      "rotation": 270.0,
-                      "type": "burn_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        19.04,
-                        0.0,
-                        -7.78
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        24.11,
-                        0.0,
-                        -10.91
-                      ],
-                      "rotation": 317.02,
-                      "type": "gun_trap"
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": -1,
@@ -18760,6 +19331,39 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -9.99,
+                        0.0,
+                        -10.18
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -9.45,
+                        0.0,
+                        -3.68
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_dgfance",
+                      "position": [
+                        -8.64,
+                        0.0,
+                        -21.79
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         8.51,
                         0.0,
@@ -19184,6 +19788,28 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence4",
+                      "position": [
+                        -8.37,
+                        0.0,
+                        3.87
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence4",
+                      "position": [
+                        -8.14,
+                        0.0,
+                        11.02
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -4.87,
                         0.0,
@@ -19231,6 +19857,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_dgfance",
+                      "position": [
+                        2.24,
+                        0.0,
+                        1.43
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         2.63,
                         0.0,
@@ -19269,32 +19906,38 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
                       "position": [
-                        8.95,
+                        5.26,
                         0.0,
-                        1.88
+                        4.4
                       ],
                       "rotation": 270.0,
-                      "type": "box"
+                      "type": "fence"
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
                       "position": [
-                        10.13,
+                        7.86,
                         0.0,
-                        1.89
+                        13.9
                       ],
-                      "type": "rare_box"
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
                       "position": [
-                        10.13,
+                        8.14,
                         0.0,
-                        3.07
+                        -1.66
                       ],
-                      "rotation": 270.0,
-                      "type": "box"
+                      "rotation": 286.07,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": -1,
@@ -19497,12 +20140,108 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -6.11,
+                        0.0,
+                        1.69
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -6.09,
                         0.0,
                         1.67
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -1.7,
+                        0.0,
+                        1.24
+                      ],
+                      "rotation": 273.31,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.29,
+                        0.0,
+                        -1.05
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.46,
+                        0.0,
+                        0.94
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.65,
+                        0.0,
+                        2.97
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.66,
+                        0.0,
+                        -1.05
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.8,
+                        0.0,
+                        0.94
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        3.0,
+                        0.0,
+                        2.97
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -19559,66 +20298,6 @@
                       ],
                       "rotation": 276.37,
                       "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        -0.63
-                      ],
-                      "rotation": 285.06,
-                      "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        2.31
-                      ],
-                      "rotation": 275.97,
-                      "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        14.76,
-                        0.0,
-                        8.14
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        17.01,
-                        0.0,
-                        8.14
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        20.63,
-                        0.0,
-                        6.56
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        21.76,
-                        0.0,
-                        5.42
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
                     }
                   ],
                   "path_order": 1,
@@ -19684,12 +20363,84 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -17.05,
+                        0.0,
+                        5.95
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_remswitch",
+                      "position": [
+                        -15.77,
+                        0.0,
+                        -8.03
+                      ],
+                      "rotation": 270.0,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -13.5,
+                        0.0,
+                        5.06
+                      ],
+                      "rotation": 231.11,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -13.18,
+                        0.0,
+                        5.45
+                      ],
+                      "rotation": 50.06,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -8.08,
+                        0.0,
+                        9.4
+                      ],
+                      "rotation": 230.31,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -7.02,
                         0.0,
                         -10.42
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        -4.68,
+                        0.0,
+                        7.66
+                      ],
+                      "rotation": 39.22,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -21088,6 +21839,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -0.99,
+                        0.0,
+                        10.46
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.72,
                         0.0,
@@ -21127,6 +21889,28 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        2.91,
+                        0.0,
+                        -3.03
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        2.91,
+                        0.0,
+                        2.93
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         3.05,
                         0.0,
@@ -21134,6 +21918,17 @@
                       ],
                       "rotation": 180.01,
                       "type": "needler_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_dgfance",
+                      "position": [
+                        3.13,
+                        0.0,
+                        -0.38
+                      ],
+                      "type": "fence"
                     },
                     {
                       "authored": true,
@@ -21154,6 +21949,17 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        6.88,
+                        0.0,
+                        10.46
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -21194,16 +22000,6 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        -9.63
-                      ],
-                      "rotation": 207.7,
-                      "type": "needler_trap"
                     }
                   ],
                   "path_order": -1,
@@ -22081,6 +22877,30 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -3.24,
+                        0.0,
+                        -2.0
+                      ],
+                      "rotation": 89.99,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -3.24,
+                        0.0,
+                        -2.0
+                      ],
+                      "rotation": 89.99,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -2.04,
                         0.0,
@@ -22117,6 +22937,29 @@
                       ],
                       "rotation": 270.0,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        6.17,
+                        0.0,
+                        -2.03
+                      ],
+                      "rotation": 89.99,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        10.52,
+                        0.0,
+                        -2.03
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -22454,6 +23297,17 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -0.99,
+                        0.0,
+                        10.46
+                      ],
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -0.72,
                         0.0,
@@ -22493,6 +23347,28 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        2.91,
+                        0.0,
+                        -3.03
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        2.91,
+                        0.0,
+                        2.93
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         3.05,
                         0.0,
@@ -22500,6 +23376,17 @@
                       ],
                       "rotation": 180.01,
                       "type": "needler_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_dgfance",
+                      "position": [
+                        3.13,
+                        0.0,
+                        -0.38
+                      ],
+                      "type": "fence"
                     },
                     {
                       "authored": true,
@@ -22520,6 +23407,17 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        6.88,
+                        0.0,
+                        10.46
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -22560,16 +23458,6 @@
                       ],
                       "rotation": 270.0,
                       "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        -9.63
-                      ],
-                      "rotation": 207.7,
-                      "type": "needler_trap"
                     }
                   ],
                   "path_order": -1,
@@ -22976,12 +23864,108 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        -6.11,
+                        0.0,
+                        1.69
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -6.09,
                         0.0,
                         1.67
                       ],
                       "type": "ice_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_fence",
+                      "position": [
+                        -1.7,
+                        0.0,
+                        1.24
+                      ],
+                      "rotation": 273.31,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.29,
+                        0.0,
+                        -1.05
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.46,
+                        0.0,
+                        0.94
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.65,
+                        0.0,
+                        2.97
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.66,
+                        0.0,
+                        -1.05
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        2.8,
+                        0.0,
+                        0.94
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        3.0,
+                        0.0,
+                        2.97
+                      ],
+                      "rotation": 5.77,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -23038,66 +24022,6 @@
                       ],
                       "rotation": 276.37,
                       "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        -0.63
-                      ],
-                      "rotation": 285.06,
-                      "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        9.25,
-                        0.0,
-                        2.31
-                      ],
-                      "rotation": 275.97,
-                      "type": "gun_trap"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        14.76,
-                        0.0,
-                        8.14
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        17.01,
-                        0.0,
-                        8.14
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        20.63,
-                        0.0,
-                        6.56
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
-                    },
-                    {
-                      "authored": true,
-                      "position": [
-                        21.76,
-                        0.0,
-                        5.42
-                      ],
-                      "rotation": 270.0,
-                      "type": "box"
                     }
                   ],
                   "path_order": 2,
@@ -23403,6 +24327,17 @@
                       ],
                       "rotation": 166.42,
                       "type": "gun_trap"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchf",
+                      "position": [
+                        11.05,
+                        0.0,
+                        -11.19
+                      ],
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,
@@ -27936,6 +28871,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        -7.43,
+                        0.0,
+                        -12.19
+                      ],
+                      "rotation": 44.74,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -5.76,
                         0.0,
@@ -27953,6 +28900,18 @@
                       ],
                       "rotation": 224.84,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        2.95,
+                        0.0,
+                        -2.26
+                      ],
+                      "rotation": 134.99,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": 2,
@@ -28252,6 +29211,17 @@
                     },
                     {
                       "authored": true,
+                      "model": "o0c_poisonm",
+                      "position": [
+                        -6.08,
+                        0.0,
+                        -5.9
+                      ],
+                      "rotation": 314.98,
+                      "type": "poison_trap"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -6.57,
                         0.0,
@@ -28533,6 +29503,28 @@
                         -13.81
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_poisonm",
+                      "position": [
+                        -6.09,
+                        0.0,
+                        -5.96
+                      ],
+                      "rotation": 315.01,
+                      "type": "poison_trap"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_poisonm",
+                      "position": [
+                        6.02,
+                        0.0,
+                        -6.08
+                      ],
+                      "rotation": 44.99,
+                      "type": "poison_trap"
                     },
                     {
                       "authored": true,
@@ -28883,6 +29875,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        -18.36,
+                        0.0,
+                        0.04
+                      ],
+                      "rotation": 89.99,
+                      "type": "step_switch"
+                    },
+                    {
+                      "authored": true,
                       "destructible": true,
                       "position": [
                         -6.75,
@@ -28891,6 +29895,29 @@
                       ],
                       "rotation": 315.01,
                       "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        3.44,
+                        0.0,
+                        -11.88
+                      ],
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        12.19,
+                        0.0,
+                        -3.48
+                      ],
+                      "rotation": 90.0,
+                      "type": "fence"
                     },
                     {
                       "authored": true,
@@ -29121,6 +30148,17 @@
                     },
                     {
                       "authored": true,
+                      "model": "o0c_poisonm",
+                      "position": [
+                        -6.08,
+                        0.0,
+                        -5.9
+                      ],
+                      "rotation": 314.98,
+                      "type": "poison_trap"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -2.93,
                         0.0,
@@ -29251,6 +30289,17 @@
                       ],
                       "rotation": 270.22,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_poisonm",
+                      "position": [
+                        -0.08,
+                        0.0,
+                        -13.26
+                      ],
+                      "rotation": 180.26,
+                      "type": "poison_trap"
                     },
                     {
                       "authored": true,
@@ -29587,6 +30636,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        -7.43,
+                        0.0,
+                        -12.19
+                      ],
+                      "rotation": 44.74,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "position": [
                         -5.76,
                         0.0,
@@ -29604,6 +30665,18 @@
                       ],
                       "rotation": 224.84,
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        2.95,
+                        0.0,
+                        -2.26
+                      ],
+                      "rotation": 134.99,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": 2,
@@ -30627,6 +31700,18 @@
                     },
                     {
                       "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        -12.33,
+                        0.0,
+                        -13.47
+                      ],
+                      "rotation": 269.91,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
                       "destructible": true,
                       "position": [
                         -11.73,
@@ -30668,6 +31753,18 @@
                       ],
                       "rotation": 90.0,
                       "type": "wall"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        10.16,
+                        0.0,
+                        -8.41
+                      ],
+                      "rotation": 179.99,
+                      "type": "step_switch"
                     }
                   ],
                   "path_order": 2,
@@ -30721,6 +31818,30 @@
                         -4.33
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_shfence",
+                      "position": [
+                        -3.69,
+                        0.0,
+                        8.31
+                      ],
+                      "rotation": 315.74,
+                      "type": "fence"
+                    },
+                    {
+                      "authored": true,
+                      "link_id": "authored",
+                      "model": "o0c_switchs",
+                      "position": [
+                        -2.08,
+                        0.0,
+                        -3.2
+                      ],
+                      "rotation": 225.01,
+                      "type": "step_switch"
                     },
                     {
                       "authored": true,

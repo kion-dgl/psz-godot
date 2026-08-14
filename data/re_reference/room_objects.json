@@ -55,28 +55,29 @@
   "gun_trap": 243,
   "wall": 196,
   "heat_trap": 190,
+  "step_switch": 157,
   "rare_box": 139,
   "light_trap": 139,
   "heal_trap": 123,
+  "fence": 115,
   "capture_trap": 66,
   "burn_trap": 43,
-  "needler_trap": 16
+  "needler_trap": 16,
+  "poison_trap": 7
+ },
+ "fences_skipped_no_switch": {
+  "_": "Rooms holding a fence with no switch to open it. psz-re does not publish the fence/switch pairing (it lives in the object parameter block), and a fence stands IN a doorway -- 1.31 cells from one, against 5.14 for walls -- so importing one with nothing to open it seals the room. Skipped and counted until the flag is published.",
+  "rooms": 44,
+  "records": 68
  },
  "not_imported_yet": {
   "_": "Kinds psz-re emits that this importer deliberately does not take yet -- psz-godot #594 widens CONTAINER_KINDS and adds the spawner cases together. Listed so the gap is visible rather than silent.",
   "counts": {
    "o0c_key": 836,
    "o0c_trebox": 653,
-   "o0c_switchf": 107,
    "o0c_mspack": 102,
-   "o0c_fence": 98,
-   "o0c_shfence": 41,
    "o0c_needle": 41,
-   "o0c_remswitch": 26,
-   "o0c_dgfance": 26,
-   "o0c_switchs": 24,
    "o0s_warpm": 21,
-   "o0c_fence4": 18,
    "o0c_butterfly": 16,
    "o0s_warps": 15,
    "o0c_return": 15,
@@ -84,7 +85,6 @@
    "o0s_warpb": 14,
    "o0c_warparena1": 14,
    "o0c_dragonfly": 8,
-   "o0c_poisonm": 7,
    "np_011_00_0": 5,
    "np_014_00_0": 5,
    "np_019_00_0": 5,
@@ -1149,6 +1149,36 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -23.311,
+     "y": 0.0,
+     "z": 11.239,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -19.889,
+     "y": 0.0,
+     "z": -11.178,
+     "a": 11333,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -17.636,
+     "y": 0.0,
+     "z": -2.62,
+     "a": 62098,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
      "k": "gun_trap",
      "x": -14.984,
      "y": 0.0,
@@ -1189,11 +1219,41 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": 10.579,
+     "y": 0.0,
+     "z": -3.974,
+     "a": 54709,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "gun_trap",
      "x": 13.59,
      "y": 0.0,
      "z": 17.225,
      "a": 32769
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 13.796,
+     "y": 0.0,
+     "z": 3.316,
+     "a": 100,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 22.446,
+     "y": 0.0,
+     "z": 12.824,
+     "a": 40961,
+     "link": "authored",
+     "m": "o0c_switchs"
     }
    ]
   },
@@ -1305,6 +1365,16 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -12.973,
+     "y": 0.0,
+     "z": -3.762,
+     "a": 64727,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -11.2,
      "y": 0.0,
@@ -1337,6 +1407,16 @@
     },
     {
      "g": 4,
+     "k": "fence",
+     "x": -9.393,
+     "y": 0.0,
+     "z": -9.555,
+     "a": 60956,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -8.737,
      "y": 0.0,
@@ -1358,6 +1438,16 @@
      "y": 0.0,
      "z": -10.146,
      "a": 11933
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -6.982,
+     "y": 0.0,
+     "z": -16.322,
+     "a": 64727,
+     "link": "authored",
+     "m": "o0c_switchf"
     }
    ]
   },
@@ -1442,6 +1532,36 @@
      "y": 0.0,
      "z": 4.626,
      "a": 16383
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -7.192,
+     "y": 0.0,
+     "z": 15.209,
+     "a": 10044,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -2.576,
+     "y": 0.0,
+     "z": 13.04,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 2.904,
+     "y": 0.0,
+     "z": 16.688,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -1622,6 +1742,36 @@
      "y": 0.0,
      "z": 5.596,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -6.293,
+     "y": 0.0,
+     "z": 13.845,
+     "a": 54709,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -6.083,
+     "y": 0.0,
+     "z": 7.798,
+     "a": 11333,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 0.588,
+     "y": 0.0,
+     "z": 11.827,
+     "a": 47328,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": 4,
@@ -2654,6 +2804,26 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": 5.296,
+     "y": 0.0,
+     "z": 8.076,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 10.951,
+     "y": 0.0,
+     "z": -1.987,
+     "a": 1751,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
      "k": "rare_box",
      "x": 11.931,
      "y": 0.0,
@@ -2675,6 +2845,16 @@
      "y": 0.0,
      "z": 11.443,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 17.201,
+     "y": 0.0,
+     "z": -5.123,
+     "a": 63669,
+     "link": "authored",
+     "m": "o0c_switchf"
     }
    ]
   },
@@ -3330,6 +3510,16 @@
     },
     {
      "g": 4,
+     "k": "fence",
+     "x": -19.534,
+     "y": 0.0,
+     "z": 6.982,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -18.25,
      "y": 0.0,
@@ -3359,6 +3549,36 @@
      "y": 0.0,
      "z": -0.938,
      "a": 32632
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -12.488,
+     "y": 0.0,
+     "z": -10.626,
+     "a": 70,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -2.42,
+     "y": 0.0,
+     "z": -12.855,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -2.361,
+     "y": 0.0,
+     "z": -12.882,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchs"
     }
    ]
   },
@@ -3470,6 +3690,16 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -13.642,
+     "y": 0.0,
+     "z": -6.69,
+     "a": 63653,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -12.246,
      "y": 0.0,
@@ -3491,6 +3721,56 @@
      "y": 0.0,
      "z": -9.162,
      "a": 32769
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -6.319,
+     "y": 0.0,
+     "z": -13.688,
+     "a": 52793,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -4.363,
+     "y": 0.0,
+     "z": -8.334,
+     "a": 52793,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 6.251,
+     "y": 0.0,
+     "z": 9.584,
+     "a": 51883,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 7.71,
+     "y": 0.0,
+     "z": 15.041,
+     "a": 51883,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 9.32,
+     "y": 0.0,
+     "z": 7.624,
+     "a": 2730,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 4,
@@ -3562,6 +3842,16 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -2.56,
+     "y": 0.0,
+     "z": 12.62,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 14.77,
      "y": 0.0,
@@ -3599,6 +3889,16 @@
      "y": 0.0,
      "z": 10.92,
      "a": 30332
+    },
+    {
+     "g": 2,
+     "k": "fence",
+     "x": 5.68,
+     "y": 0.0,
+     "z": 9.522,
+     "a": 65502,
+     "link": "authored",
+     "m": "o0c_shfence"
     },
     {
      "g": 2,
@@ -3642,6 +3942,26 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -5.109,
+     "y": 0.0,
+     "z": 17.915,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -5.095,
+     "y": 0.0,
+     "z": 5.847,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -3.914,
      "y": 0.0,
@@ -3655,6 +3975,16 @@
      "y": 0.0,
      "z": -14.919,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -2.55,
+     "y": 0.0,
+     "z": 12.531,
+     "a": 49153,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": 4,
@@ -3711,6 +4041,16 @@
      "y": 0.0,
      "z": 0.531,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 15.601,
+     "y": 0.0,
+     "z": -9.265,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_shfence"
     }
    ]
   },
@@ -4496,6 +4836,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -4.875,
+     "y": 0.0,
+     "z": -5.783,
+     "a": 58137,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -1.535,
      "y": 0.0,
@@ -4512,11 +4862,31 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -0.95,
+     "y": 0.0,
+     "z": -7.267,
+     "a": 3859,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -0.26,
      "y": 0.0,
      "z": -7.529,
      "a": 4114
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 3.001,
+     "y": 0.0,
+     "z": -8.73,
+     "a": 4058,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": null,
@@ -5346,6 +5716,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": 0.007,
+     "y": 0.0,
+     "z": -13.37,
+     "a": 46625,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 1.125,
      "y": 0.0,
@@ -5359,6 +5739,16 @@
      "y": 0.0,
      "z": -7.227,
      "a": 10294
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 4.508,
+     "y": 0.0,
+     "z": -8.806,
+     "a": 40677,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": null,
@@ -5454,6 +5844,26 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": 0.526,
+     "y": 0.0,
+     "z": 8.023,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 3.214,
+     "y": 0.0,
+     "z": 8.172,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 5.128,
      "y": 0.0,
@@ -5478,6 +5888,26 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 6.204,
+     "y": 0.0,
+     "z": 11.167,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 6.22,
+     "y": 0.0,
+     "z": 5.153,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 7.195,
      "y": 0.0,
@@ -5494,11 +5924,31 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 9.239,
+     "y": 0.0,
+     "z": 8.172,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 10.345,
      "y": 0.0,
      "z": -2.711,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 11.67,
+     "y": 0.0,
+     "z": 8.214,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": null,
@@ -6133,6 +6583,36 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -7.608,
+     "y": 0.0,
+     "z": -12.244,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -7.608,
+     "y": 0.0,
+     "z": -12.024,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -7.608,
+     "y": 0.0,
+     "z": -12.024,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -1.891,
      "y": 0.0,
@@ -6141,11 +6621,41 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -1.207,
+     "y": 0.0,
+     "z": 7.596,
+     "a": 54928,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -0.85,
      "y": 0.0,
      "z": -3.971,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -0.543,
+     "y": 0.0,
+     "z": 7.759,
+     "a": 54928,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -0.543,
+     "y": 0.0,
+     "z": 7.759,
+     "a": 54928,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": null,
@@ -6173,11 +6683,101 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 0.501,
+     "y": 0.0,
+     "z": 11.657,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 0.546,
+     "y": 0.0,
+     "z": 11.657,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 0.626,
+     "y": 0.0,
+     "z": 11.657,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 0.778,
      "y": 0.0,
      "z": 2.85,
      "a": 16383
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 7.085,
+     "y": 0.0,
+     "z": -7.707,
+     "a": 61311,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 7.359,
+     "y": 0.0,
+     "z": -7.247,
+     "a": 1235,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 7.73,
+     "y": 0.0,
+     "z": -6.941,
+     "a": 1235,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 10.692,
+     "y": 0.0,
+     "z": -3.935,
+     "a": 936,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 10.71,
+     "y": 0.0,
+     "z": -3.992,
+     "a": 910,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 10.741,
+     "y": 0.0,
+     "z": -3.966,
+     "a": 936,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": null,
@@ -6215,6 +6815,46 @@
      "y": 0.0,
      "z": -3.268,
      "a": 14261
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -2.119,
+     "y": 0.0,
+     "z": 1.913,
+     "a": 45037,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -2.119,
+     "y": 0.0,
+     "z": 1.913,
+     "a": 45037,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -2.015,
+     "y": 0.0,
+     "z": -1.183,
+     "a": 51016,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -1.512,
+     "y": 0.0,
+     "z": -0.437,
+     "a": 51016,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": null,
@@ -6266,6 +6906,16 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 12.859,
+     "y": 0.0,
+     "z": -2.464,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 13.002,
      "y": 0.0,
@@ -6279,6 +6929,16 @@
      "y": 0.0,
      "z": -14.805,
      "a": 0
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 15.585,
+     "y": 0.0,
+     "z": 4.151,
+     "a": 48954,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": null,
@@ -6465,6 +7125,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -15.098,
+     "y": 0.0,
+     "z": -2.536,
+     "a": 54924,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -14.12,
      "y": 0.0,
@@ -6481,6 +7151,16 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -11.667,
+     "y": 0.0,
+     "z": 0.531,
+     "a": 32844,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -0.568,
      "y": 0.0,
@@ -6494,6 +7174,86 @@
      "y": 0.0,
      "z": 1.659,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 3.826,
+     "y": 0.0,
+     "z": 11.202,
+     "a": 17060,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 6.583,
+     "y": 0.0,
+     "z": 7.518,
+     "a": 54924,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 15.258,
+     "y": 0.0,
+     "z": -2.22,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 15.258,
+     "y": 0.0,
+     "z": -2.22,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 15.258,
+     "y": 0.0,
+     "z": -2.22,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 21.244,
+     "y": 0.0,
+     "z": -2.224,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 21.244,
+     "y": 0.0,
+     "z": -2.224,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 21.244,
+     "y": 0.0,
+     "z": -2.224,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
     }
    ]
   },
@@ -7216,6 +7976,56 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": 2.215,
+     "y": 0.0,
+     "z": 1.236,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 4.997,
+     "y": 0.0,
+     "z": -3.441,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 6.154,
+     "y": 0.0,
+     "z": 3.401,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 6.408,
+     "y": 0.0,
+     "z": -0.054,
+     "a": 10495,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 8.881,
+     "y": 0.0,
+     "z": -1.399,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 9.877,
      "y": 0.0,
@@ -7625,11 +8435,51 @@
     },
     {
      "g": 3,
+     "k": "fence",
+     "x": 14.95,
+     "y": 0.0,
+     "z": 0.113,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 15.655,
      "y": 0.0,
      "z": -10.62,
      "a": 65381
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -6.629,
+     "y": 0.0,
+     "z": 0.372,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 9.253,
+     "y": 0.0,
+     "z": 10.974,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 14.95,
+     "y": 0.0,
+     "z": 0.113,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": 4,
@@ -8006,6 +8856,36 @@
      "y": 0.0,
      "z": 17.027,
      "a": 49152
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -15.873,
+     "y": 0.0,
+     "z": 11.108,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -11.36,
+     "y": 0.0,
+     "z": 20.957,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 0.083,
+     "y": 0.0,
+     "z": 14.975,
+     "a": 49118,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": 4,
@@ -9576,6 +10456,36 @@
      "y": 0.0,
      "z": 12.195,
      "a": 16412
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -13.206,
+     "y": 0.0,
+     "z": -9.384,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -5.494,
+     "y": 0.0,
+     "z": -2.927,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 5.509,
+     "y": 0.0,
+     "z": -3.846,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 5,
@@ -11528,6 +12438,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": 3.124,
+     "y": 0.0,
+     "z": 16.634,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 4.845,
      "y": 0.0,
@@ -11633,6 +12553,16 @@
      "y": 0.0,
      "z": 9.008,
      "a": 8191
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -10.784,
+     "y": 0.0,
+     "z": 10.772,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 3,
@@ -11840,11 +12770,41 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": 2.983,
+     "y": 0.0,
+     "z": -5.738,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "capture_trap",
      "x": 14.475,
      "y": 0.0,
      "z": -0.728,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 15.207,
+     "y": 0.0,
+     "z": -0.844,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 16.365,
+     "y": 0.0,
+     "z": 5.51,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -12036,6 +12996,16 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -12.8,
+     "y": 0.0,
+     "z": 2.284,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -12.742,
      "y": 0.0,
@@ -12049,6 +13019,26 @@
      "y": 0.0,
      "z": 8.432,
      "a": 16383
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -11.567,
+     "y": 0.0,
+     "z": 3.559,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -11.555,
+     "y": 0.0,
+     "z": 9.645,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence4"
     },
     {
      "g": 4,
@@ -12081,6 +13071,16 @@
      "y": 0.0,
      "z": 8.45,
      "a": 16383
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -10.244,
+     "y": 0.0,
+     "z": 4.985,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -12403,6 +13403,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": 1.188,
+     "y": 0.0,
+     "z": -3.344,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 13.171,
      "y": 0.0,
@@ -12679,6 +13689,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": 0.85,
+     "y": 0.0,
+     "z": -14.518,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 8.113,
      "y": 0.0,
@@ -12731,6 +13751,16 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -10.991,
+     "y": 0.0,
+     "z": -9.763,
+     "a": 8191,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 1,
      "k": "gun_trap",
      "x": -10.928,
      "y": 0.0,
@@ -12770,6 +13800,16 @@
      "a": 53704
     },
     {
+     "g": 2,
+     "k": "fence",
+     "x": 16.259,
+     "y": 0.0,
+     "z": -5.881,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
      "g": 3,
      "k": "gun_trap",
      "x": -3.561,
@@ -12800,6 +13840,16 @@
      "y": 0.0,
      "z": -0.447,
      "a": 49152
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 1.595,
+     "y": 0.0,
+     "z": 1.657,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -12858,6 +13908,16 @@
     },
     {
      "g": 1,
+     "k": "step_switch",
+     "x": 10.96,
+     "y": 0.0,
+     "z": 0.054,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 12.06,
      "y": 0.0,
@@ -12871,6 +13931,16 @@
      "y": 0.0,
      "z": -3.519,
      "a": 49152
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -10.799,
+     "y": 0.0,
+     "z": -0.032,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -12911,6 +13981,36 @@
      "y": 0.0,
      "z": -7.575,
      "a": 0
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -3.581,
+     "y": 0.0,
+     "z": -10.757,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -0.013,
+     "y": 0.0,
+     "z": -0.001,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 3.817,
+     "y": 0.0,
+     "z": 10.869,
+     "a": 65523,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -12958,6 +14058,16 @@
     },
     {
      "g": 1,
+     "k": "step_switch",
+     "x": -8.887,
+     "y": 0.0,
+     "z": 10.878,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 1,
      "k": "gun_trap",
      "x": 10.834,
      "y": 0.0,
@@ -12979,6 +14089,16 @@
      "y": 0.0,
      "z": -8.979,
      "a": 49152
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -7.26,
+     "y": 0.0,
+     "z": -10.777,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -13014,6 +14134,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": -8.921,
+     "y": 0.0,
+     "z": 7.355,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": -8.109,
      "y": 0.0,
@@ -13027,6 +14157,26 @@
      "y": 0.0,
      "z": -11.586,
      "a": 49152
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -3.616,
+     "y": 0.0,
+     "z": -10.843,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 0.028,
+     "y": 0.0,
+     "z": 16.289,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -13146,6 +14296,56 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -3.257,
+     "y": 0.0,
+     "z": 12.04,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -0.071,
+     "y": 0.0,
+     "z": -6.82,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -0.002,
+     "y": 0.0,
+     "z": 8.722,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 0.013,
+     "y": 0.0,
+     "z": 1.958,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 3.187,
+     "y": 0.0,
+     "z": -10.056,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "gun_trap",
      "x": 3.353,
      "y": 0.0,
@@ -13246,6 +14446,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": 9.983,
+     "y": 0.0,
+     "z": 15.319,
+     "a": 32769,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 9.984,
      "y": 0.0,
@@ -13342,6 +14552,16 @@
     },
     {
      "g": 1,
+     "k": "step_switch",
+     "x": -7.28,
+     "y": 0.0,
+     "z": -0.052,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": -7.232,
      "y": 0.0,
@@ -13371,6 +14591,16 @@
      "y": 0.0,
      "z": -5.468,
      "a": 0
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": 12.643,
+     "y": 0.0,
+     "z": 9.003,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -13406,11 +14636,41 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": -10.783,
+     "y": 0.0,
+     "z": 3.714,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 3.66,
+     "y": 0.0,
+     "z": -14.502,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
      "k": "gun_trap",
      "x": 10.864,
      "y": 0.0,
      "z": -0.146,
      "a": 0
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 10.903,
+     "y": 0.0,
+     "z": 14.262,
+     "a": 32767,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -13522,6 +14782,26 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -8.203,
+     "y": 0.0,
+     "z": -10.068,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -1.433,
+     "y": 0.0,
+     "z": -10.068,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "gun_trap",
      "x": -1.349,
      "y": 0.0,
@@ -13530,11 +14810,41 @@
     },
     {
      "g": 4,
+     "k": "fence",
+     "x": 0.533,
+     "y": 0.0,
+     "z": 2.486,
+     "a": 53,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 1.859,
+     "y": 0.0,
+     "z": 15.055,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "gun_trap",
      "x": 2.062,
      "y": 0.0,
      "z": -2.878,
      "a": 365
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 5.113,
+     "y": 0.0,
+     "z": 11.737,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -13698,6 +15008,16 @@
     },
     {
      "g": 0,
+     "k": "step_switch",
+     "x": 7.441,
+     "y": 0.0,
+     "z": 6.927,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 0,
      "k": "gun_trap",
      "x": 12.556,
      "y": 0.0,
@@ -13721,12 +15041,32 @@
      "a": 49152
     },
     {
+     "g": 1,
+     "k": "step_switch",
+     "x": -7.248,
+     "y": 0.0,
+     "z": -0.599,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
      "g": 2,
      "k": "box",
      "x": -7.231,
      "y": 0.0,
      "z": -4.461,
      "a": 49152
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -0.117,
+     "y": 0.0,
+     "z": 14.546,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -13778,6 +15118,16 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": -3.645,
+     "y": 0.0,
+     "z": -0.755,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -3.107,
      "y": 0.0,
@@ -13815,6 +15165,16 @@
      "y": 0.0,
      "z": -7.921,
      "a": 33
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 3.627,
+     "y": 0.0,
+     "z": -0.755,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -13878,6 +15238,16 @@
     },
     {
      "g": 1,
+     "k": "step_switch",
+     "x": -10.863,
+     "y": 0.0,
+     "z": 0.149,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 1,
      "k": "gun_trap",
      "x": -10.848,
      "y": 0.0,
@@ -13917,6 +15287,36 @@
      "a": 0
     },
     {
+     "g": 2,
+     "k": "step_switch",
+     "x": 11.023,
+     "y": 0.0,
+     "z": 0.141,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -17.048,
+     "y": 0.0,
+     "z": -10.984,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -11.267,
+     "y": 0.0,
+     "z": -2.57,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
      "g": 4,
      "k": "box",
      "x": -10.961,
@@ -13939,6 +15339,16 @@
      "y": 0.0,
      "z": 10.747,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -10.729,
+     "y": 0.0,
+     "z": 10.753,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -13974,11 +15384,31 @@
     },
     {
      "g": 4,
+     "k": "step_switch",
+     "x": 10.928,
+     "y": 0.0,
+     "z": 10.695,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": 10.943,
      "y": 0.0,
      "z": -10.908,
      "a": 49152
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": 11.266,
+     "y": 0.0,
+     "z": -2.559,
+     "a": 53,
+     "link": "authored",
+     "m": "o0c_fence"
     }
    ]
   },
@@ -14039,6 +15469,16 @@
      "y": 0.0,
      "z": 11.993,
      "a": 0
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -23.755,
+     "y": 0.0,
+     "z": -6.143,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 3,
@@ -14357,6 +15797,16 @@
     },
     {
      "g": 0,
+     "k": "step_switch",
+     "x": 3.804,
+     "y": 0.0,
+     "z": 10.71,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 0,
      "k": "box",
      "x": 10.906,
      "y": 0.0,
@@ -14386,6 +15836,16 @@
      "y": 0.0,
      "z": 11.155,
      "a": 16383
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -14.377,
+     "y": 0.0,
+     "z": 7.25,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -14445,6 +15905,16 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": -7.182,
+     "y": 0.0,
+     "z": -7.192,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
      "k": "capture_trap",
      "x": -3.606,
      "y": 0.0,
@@ -14453,11 +15923,31 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": -3.536,
+     "y": 0.0,
+     "z": 3.547,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
      "k": "box",
      "x": 10.906,
      "y": 0.0,
      "z": 10.702,
      "a": 16383
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 14.556,
+     "y": 0.0,
+     "z": -0.052,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     }
    ]
   },
@@ -14489,6 +15979,16 @@
     },
     {
      "g": 0,
+     "k": "step_switch",
+     "x": -7.177,
+     "y": 0.0,
+     "z": -7.327,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 0,
      "k": "gun_trap",
      "x": -7.155,
      "y": 0.0,
@@ -14502,6 +16002,16 @@
      "y": 0.0,
      "z": -10.932,
      "a": 16383
+    },
+    {
+     "g": 0,
+     "k": "step_switch",
+     "x": 7.339,
+     "y": 0.0,
+     "z": 3.61,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 0,
@@ -14537,6 +16047,16 @@
     },
     {
      "g": 2,
+     "k": "step_switch",
+     "x": -3.612,
+     "y": 0.0,
+     "z": 7.209,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 2,
      "k": "box",
      "x": -3.612,
      "y": 0.0,
@@ -14558,6 +16078,16 @@
      "y": 0.0,
      "z": -1.872,
      "a": 0
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -10.752,
+     "y": 0.0,
+     "z": 10.799,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -14585,11 +16115,31 @@
     },
     {
      "g": 3,
+     "k": "step_switch",
+     "x": -3.59,
+     "y": 0.0,
+     "z": -10.928,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
      "k": "capture_trap",
      "x": 0.066,
      "y": 0.0,
      "z": -0.072,
      "a": 0
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": 3.656,
+     "y": 0.0,
+     "z": 3.495,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -15095,6 +16645,36 @@
    "objects": [
     {
      "g": 1,
+     "k": "fence",
+     "x": -9.986,
+     "y": 0.0,
+     "z": -10.183,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": -9.451,
+     "y": 0.0,
+     "z": -3.68,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": -8.642,
+     "y": 0.0,
+     "z": -21.786,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_dgfance"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 8.508,
      "y": 0.0,
@@ -15119,11 +16699,41 @@
     },
     {
      "g": 2,
+     "k": "step_switch",
+     "x": -12.302,
+     "y": 0.0,
+     "z": -2.151,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 2,
      "k": "light_trap",
      "x": -12.293,
      "y": 0.0,
      "z": -2.144,
      "a": 0
+    },
+    {
+     "g": 2,
+     "k": "fence",
+     "x": -9.979,
+     "y": 0.0,
+     "z": -10.067,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -7.96,
+     "y": 0.0,
+     "z": -2.084,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 2,
@@ -15148,6 +16758,36 @@
      "y": 0.0,
      "z": -10.982,
      "a": 49153
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -12.333,
+     "y": 0.0,
+     "z": -3.737,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 3,
+     "k": "fence",
+     "x": -10.019,
+     "y": 0.0,
+     "z": -10.056,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 3,
+     "k": "step_switch",
+     "x": -8.033,
+     "y": 0.0,
+     "z": -3.665,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 3,
@@ -15180,6 +16820,36 @@
      "y": 0.0,
      "z": -13.375,
      "a": 49153
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -10.929,
+     "y": 0.0,
+     "z": -3.715,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -9.995,
+     "y": 0.0,
+     "z": -10.079,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 6.577,
+     "y": 0.0,
+     "z": 3.653,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -15513,6 +17183,26 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -21.52,
+     "y": 0.0,
+     "z": 8.454,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -21.113,
+     "y": 0.0,
+     "z": 11.128,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -18.942,
      "y": 0.0,
@@ -15529,6 +17219,46 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -18.545,
+     "y": 0.0,
+     "z": 2.788,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -18.306,
+     "y": 0.0,
+     "z": 4.476,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_dgfance"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -18.269,
+     "y": 0.0,
+     "z": 11.128,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -18.227,
+     "y": 0.0,
+     "z": -4.22,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_dgfance"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -17.668,
      "y": 0.0,
@@ -15542,6 +17272,36 @@
      "y": 0.0,
      "z": -13.422,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -15.449,
+     "y": 0.0,
+     "z": 11.128,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.513,
+     "y": 0.0,
+     "z": 5.592,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.496,
+     "y": 0.0,
+     "z": -0.048,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": null,
@@ -15609,11 +17369,41 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 8.727,
+     "y": 0.0,
+     "z": 5.542,
+     "a": 9830,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": 9.486,
      "y": 0.0,
      "z": -2.809,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 13.479,
+     "y": 0.0,
+     "z": 3.154,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 18.237,
+     "y": 0.0,
+     "z": 5.59,
+     "a": 55706,
+     "link": "authored",
+     "m": "o0c_fence"
     }
    ]
   },
@@ -15662,6 +17452,26 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -8.373,
+     "y": 0.0,
+     "z": 3.873,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -8.138,
+     "y": 0.0,
+     "z": 11.018,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": null,
      "k": "heat_trap",
      "x": -4.871,
      "y": 0.0,
@@ -15702,6 +17512,16 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 2.244,
+     "y": 0.0,
+     "z": 1.43,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_dgfance"
+    },
+    {
+     "g": null,
      "k": "heat_trap",
      "x": 2.625,
      "y": 0.0,
@@ -15731,6 +17551,56 @@
      "y": 0.0,
      "z": 5.953,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 5.262,
+     "y": 0.0,
+     "z": 4.397,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 7.864,
+     "y": 0.0,
+     "z": 13.904,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 8.144,
+     "y": 0.0,
+     "z": -1.664,
+     "a": 52078,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 8.249,
+     "y": 0.0,
+     "z": 7.389,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 8.842,
+     "y": 0.0,
+     "z": 3.471,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -15795,6 +17665,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -0.99,
+     "y": 0.0,
+     "z": 10.462,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "rare_box",
      "x": -0.724,
      "y": 0.0,
@@ -15827,11 +17707,41 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": 2.912,
+     "y": 0.0,
+     "z": -3.035,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 2.912,
+     "y": 0.0,
+     "z": 2.928,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "needler_trap",
      "x": 3.052,
      "y": 0.0,
      "z": -5.692,
      "a": 32769
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 3.13,
+     "y": 0.0,
+     "z": -0.381,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_dgfance"
     },
     {
      "g": null,
@@ -15848,6 +17758,16 @@
      "y": 0.0,
      "z": -9.283,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 6.88,
+     "y": 0.0,
+     "z": 10.462,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -15936,11 +17856,61 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -2.42,
+     "y": 0.0,
+     "z": 19.981,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -2.42,
+     "y": 0.0,
+     "z": 19.981,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -2.402,
+     "y": 0.0,
+     "z": 19.991,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": 4.967,
+     "y": 0.0,
+     "z": -14.996,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "gun_trap",
      "x": 6.319,
      "y": 0.0,
      "z": -10.282,
      "a": 7944
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 9.843,
+     "y": 0.0,
+     "z": 20.168,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -15984,6 +17954,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": 14.818,
+     "y": 0.0,
+     "z": -5.006,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "burn_trap",
      "x": 14.839,
      "y": 0.0,
@@ -15997,6 +17977,16 @@
      "y": 0.0,
      "z": -0.743,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 15.404,
+     "y": 0.0,
+     "z": -4.064,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -16179,6 +18169,26 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -3.241,
+     "y": 0.0,
+     "z": -1.998,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -3.241,
+     "y": 0.0,
+     "z": -1.998,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "gun_trap",
      "x": -2.045,
      "y": 0.0,
@@ -16208,6 +18218,26 @@
      "y": 0.0,
      "z": 1.75,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 6.173,
+     "y": 0.0,
+     "z": -2.03,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 10.524,
+     "y": 0.0,
+     "z": -2.031,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -16877,6 +18907,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -7.256,
+     "y": 0.0,
+     "z": 0.456,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -6.864,
      "y": 0.0,
@@ -16906,6 +18946,66 @@
      "y": 0.0,
      "z": 11.337,
      "a": 0
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.858,
+     "y": 0.0,
+     "z": 6.899,
+     "a": 3519,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.858,
+     "y": 0.0,
+     "z": 6.899,
+     "a": 3519,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 3.584,
+     "y": 0.0,
+     "z": 8.82,
+     "a": 3519,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 3.584,
+     "y": 0.0,
+     "z": 8.82,
+     "a": 3519,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 4.187,
+     "y": 0.0,
+     "z": 10.687,
+     "a": 3410,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 4.187,
+     "y": 0.0,
+     "z": 10.687,
+     "a": 3410,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -16946,11 +19046,71 @@
    "objects": [
     {
      "g": null,
+     "k": "step_switch",
+     "x": -17.054,
+     "y": 0.0,
+     "z": 5.947,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -15.766,
+     "y": 0.0,
+     "z": -8.033,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -13.499,
+     "y": 0.0,
+     "z": 5.058,
+     "a": 42073,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -13.183,
+     "y": 0.0,
+     "z": 5.448,
+     "a": 9114,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -8.08,
+     "y": 0.0,
+     "z": 9.405,
+     "a": 41927,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -7.019,
      "y": 0.0,
      "z": -10.418,
      "a": 0
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -4.676,
+     "y": 0.0,
+     "z": 7.664,
+     "a": 7140,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": null,
@@ -17265,6 +19425,106 @@
     },
     {
      "g": null,
+     "k": "fence",
+     "x": -17.053,
+     "y": 0.0,
+     "z": 19.853,
+     "a": 32769,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -17.053,
+     "y": 0.0,
+     "z": 19.853,
+     "a": 32769,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -17.04,
+     "y": 0.0,
+     "z": 15.017,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -17.04,
+     "y": 0.0,
+     "z": 15.017,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -16.834,
+     "y": 0.0,
+     "z": 17.518,
+     "a": 60043,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -16.834,
+     "y": 0.0,
+     "z": 17.518,
+     "a": 60043,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.406,
+     "y": 0.0,
+     "z": 13.396,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.406,
+     "y": 0.0,
+     "z": 13.396,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.406,
+     "y": 0.0,
+     "z": 21.642,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -14.406,
+     "y": 0.0,
+     "z": 21.642,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
      "k": "burn_trap",
      "x": -14.385,
      "y": 0.0,
@@ -17382,6 +19642,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -14.417,
+     "y": 0.0,
+     "z": -12.78,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "box",
      "x": -13.477,
      "y": 0.0,
@@ -17435,6 +19705,16 @@
      "y": 0.0,
      "z": -4.693,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": -3.491,
+     "y": 0.0,
+     "z": -7.694,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -17749,6 +20029,16 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": 11.049,
+     "y": 0.0,
+     "z": -11.193,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "gun_trap",
      "x": 16.882,
      "y": 0.0,
@@ -17952,11 +20242,91 @@
     },
     {
      "g": null,
+     "k": "step_switch",
+     "x": -6.114,
+     "y": 0.0,
+     "z": 1.69,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
      "k": "ice_trap",
      "x": -6.087,
      "y": 0.0,
      "z": 1.672,
      "a": 0
+    },
+    {
+     "g": null,
+     "k": "fence",
+     "x": -1.698,
+     "y": 0.0,
+     "z": 1.239,
+     "a": 49754,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.287,
+     "y": 0.0,
+     "z": -1.054,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.455,
+     "y": 0.0,
+     "z": 0.941,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.649,
+     "y": 0.0,
+     "z": 2.969,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.656,
+     "y": 0.0,
+     "z": -1.054,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.801,
+     "y": 0.0,
+     "z": 0.941,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 2.995,
+     "y": 0.0,
+     "z": 2.969,
+     "a": 1051,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": null,
@@ -18053,6 +20423,16 @@
      "y": 0.0,
      "z": 5.417,
      "a": 49152
+    },
+    {
+     "g": null,
+     "k": "step_switch",
+     "x": 22.387,
+     "y": 0.0,
+     "z": 1.598,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_switchs"
     }
    ]
   },
@@ -19945,6 +22325,16 @@
     },
     {
      "g": 4,
+     "k": "fence",
+     "x": -4.346,
+     "y": 0.0,
+     "z": -20.294,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": -4.313,
      "y": 0.0,
@@ -19958,6 +22348,26 @@
      "y": 0.0,
      "z": -18.367,
      "a": 0
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 0.694,
+     "y": 0.0,
+     "z": -10.415,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_remswitch"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 5.229,
+     "y": 0.0,
+     "z": -5.612,
+     "a": 35499,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": 5,
@@ -21430,6 +23840,36 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -13.941,
+     "y": 0.0,
+     "z": 14.082,
+     "a": 57356,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": -7.146,
+     "y": 0.0,
+     "z": -7.079,
+     "a": 8191,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": 14.133,
+     "y": 0.0,
+     "z": -13.884,
+     "a": 57356,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 17.321,
      "y": 0.0,
@@ -21462,11 +23902,41 @@
     },
     {
      "g": 2,
+     "k": "fence",
+     "x": -13.941,
+     "y": 0.0,
+     "z": 14.082,
+     "a": 57356,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 2,
+     "k": "step_switch",
+     "x": -7.146,
+     "y": 0.0,
+     "z": -7.079,
+     "a": 8191,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 2,
      "k": "capture_trap",
      "x": -5.706,
      "y": 0.0,
      "z": -5.726,
      "a": 8191
+    },
+    {
+     "g": 2,
+     "k": "fence",
+     "x": 14.133,
+     "y": 0.0,
+     "z": -13.884,
+     "a": 57356,
+     "link": "authored",
+     "m": "o0c_fence"
     },
     {
      "g": 2,
@@ -22155,6 +24625,15 @@
      "a": 8203
     },
     {
+     "g": 1,
+     "k": "poison_trap",
+     "x": -6.081,
+     "y": 0.0,
+     "z": -5.905,
+     "a": 57340,
+     "m": "o0c_poisonm"
+    },
+    {
      "g": 5,
      "k": "heal_trap",
      "x": -6.566,
@@ -22431,6 +24910,24 @@
      "a": 0
     },
     {
+     "g": 1,
+     "k": "poison_trap",
+     "x": -6.091,
+     "y": 0.0,
+     "z": -5.958,
+     "a": 57345,
+     "m": "o0c_poisonm"
+    },
+    {
+     "g": 1,
+     "k": "poison_trap",
+     "x": 6.022,
+     "y": 0.0,
+     "z": -6.078,
+     "a": 8191,
+     "m": "o0c_poisonm"
+    },
+    {
      "g": 5,
      "k": "heal_trap",
      "x": -6.727,
@@ -22697,6 +25194,24 @@
    ],
    "objects": [
     {
+     "g": 1,
+     "k": "poison_trap",
+     "x": -5.987,
+     "y": 0.0,
+     "z": 6.004,
+     "a": 8191,
+     "m": "o0c_poisonm"
+    },
+    {
+     "g": 1,
+     "k": "poison_trap",
+     "x": 5.715,
+     "y": 0.0,
+     "z": 6.196,
+     "a": 57340,
+     "m": "o0c_poisonm"
+    },
+    {
      "g": 5,
      "k": "heal_trap",
      "x": -7.267,
@@ -22898,6 +25413,15 @@
     },
     {
      "g": 1,
+     "k": "poison_trap",
+     "x": 13.447,
+     "y": 0.0,
+     "z": -11.197,
+     "a": 49147,
+     "m": "o0c_poisonm"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 13.453,
      "y": 0.0,
@@ -23003,6 +25527,15 @@
      "y": 0.0,
      "z": -16.546,
      "a": 49192
+    },
+    {
+     "g": 1,
+     "k": "poison_trap",
+     "x": -0.08,
+     "y": 0.0,
+     "z": -13.259,
+     "a": 32815,
+     "m": "o0c_poisonm"
     },
     {
      "g": 1,
@@ -23285,6 +25818,16 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -13.528,
+     "y": 0.0,
+     "z": -2.089,
+     "a": 24701,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
      "k": "gun_trap",
      "x": -11.567,
      "y": 0.0,
@@ -23293,11 +25836,41 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -0.081,
+     "y": 0.0,
+     "z": 0.019,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 1,
      "k": "gun_trap",
      "x": 11.453,
      "y": 0.0,
      "z": 0.004,
      "a": 16240
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": 13.415,
+     "y": 0.0,
+     "z": 2.104,
+     "a": 57478,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -16.951,
+     "y": 0.0,
+     "z": -0.039,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": 4,
@@ -23317,6 +25890,16 @@
     },
     {
      "g": 4,
+     "k": "fence",
+     "x": -0.081,
+     "y": 0.0,
+     "z": 0.019,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_fence4"
+    },
+    {
+     "g": 4,
      "k": "box",
      "x": 0.78,
      "y": 0.0,
@@ -23330,6 +25913,16 @@
      "y": 0.0,
      "z": -1.984,
      "a": 16330
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 16.551,
+     "y": 0.0,
+     "z": -0.002,
+     "a": 32769,
+     "link": "authored",
+     "m": "o0c_remswitch"
     },
     {
      "g": 5,
@@ -23501,6 +26094,16 @@
    "objects": [
     {
      "g": 1,
+     "k": "fence",
+     "x": -2.691,
+     "y": 0.0,
+     "z": -3.14,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": 12.689,
      "y": 0.0,
@@ -23514,6 +26117,16 @@
      "y": 0.0,
      "z": -7.335,
      "a": 65478
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": 13.81,
+     "y": 0.0,
+     "z": -3.946,
+     "a": 49152,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 5,
@@ -23661,11 +26274,41 @@
     },
     {
      "g": 1,
+     "k": "step_switch",
+     "x": -18.363,
+     "y": 0.0,
+     "z": 0.036,
+     "a": 16383,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 1,
      "k": "wall",
      "x": -6.747,
      "y": 0.0,
      "z": -5.287,
      "a": 57345
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": 3.443,
+     "y": 0.0,
+     "z": -11.879,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": 12.194,
+     "y": 0.0,
+     "z": -3.479,
+     "a": 16384,
+     "link": "authored",
+     "m": "o0c_shfence"
     },
     {
      "g": 5,
@@ -23819,6 +26462,26 @@
     8
    ],
    "objects": [
+    {
+     "g": 1,
+     "k": "fence",
+     "x": -3.686,
+     "y": 0.0,
+     "z": 8.31,
+     "a": 57478,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": -2.08,
+     "y": 0.0,
+     "z": -3.205,
+     "a": 40961,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
     {
      "g": 5,
      "k": "heal_trap",
@@ -23997,6 +26660,16 @@
     },
     {
      "g": 0,
+     "k": "step_switch",
+     "x": 0.067,
+     "y": 0.0,
+     "z": -18.519,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchs"
+    },
+    {
+     "g": 0,
      "k": "box",
      "x": 3.609,
      "y": 0.0,
@@ -24010,6 +26683,46 @@
      "y": 0.0,
      "z": -15.565,
      "a": 8140
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": -15.501,
+     "y": 0.0,
+     "z": 0.05,
+     "a": 32799,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
+     "k": "fence",
+     "x": 15.399,
+     "y": 0.0,
+     "z": 0.036,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 2,
+     "k": "fence",
+     "x": -15.501,
+     "y": 0.0,
+     "z": 0.05,
+     "a": 32799,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 2,
+     "k": "fence",
+     "x": 15.399,
+     "y": 0.0,
+     "z": 0.036,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_shfence"
     },
     {
      "g": 5,
@@ -24142,6 +26855,36 @@
      "y": 0.0,
      "z": -5.217,
      "a": 49228
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": -10.13,
+     "y": 0.0,
+     "z": 6.157,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
+    },
+    {
+     "g": 4,
+     "k": "fence",
+     "x": -0.023,
+     "y": 0.0,
+     "z": 2.87,
+     "a": 65524,
+     "link": "authored",
+     "m": "o0c_fence"
+    },
+    {
+     "g": 4,
+     "k": "step_switch",
+     "x": 9.405,
+     "y": 0.0,
+     "z": 5.848,
+     "a": 0,
+     "link": "authored",
+     "m": "o0c_switchf"
     },
     {
      "g": 4,
@@ -24319,6 +27062,16 @@
    "objects": [
     {
      "g": 1,
+     "k": "fence",
+     "x": -7.43,
+     "y": 0.0,
+     "z": -12.19,
+     "a": 8145,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
      "k": "box",
      "x": -5.758,
      "y": 0.0,
@@ -24332,6 +27085,16 @@
      "y": 0.0,
      "z": 2.088,
      "a": 40930
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": 2.948,
+     "y": 0.0,
+     "z": -2.264,
+     "a": 24575,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 5,
@@ -24395,6 +27158,16 @@
     },
     {
      "g": 1,
+     "k": "fence",
+     "x": -12.332,
+     "y": 0.0,
+     "z": -13.475,
+     "a": 49135,
+     "link": "authored",
+     "m": "o0c_shfence"
+    },
+    {
+     "g": 1,
      "k": "wall",
      "x": -11.734,
      "y": 0.0,
@@ -24424,6 +27197,16 @@
      "y": 0.0,
      "z": 3.475,
      "a": 16384
+    },
+    {
+     "g": 1,
+     "k": "step_switch",
+     "x": 10.162,
+     "y": 0.0,
+     "z": -8.413,
+     "a": 32767,
+     "link": "authored",
+     "m": "o0c_switchs"
     },
     {
      "g": 5,

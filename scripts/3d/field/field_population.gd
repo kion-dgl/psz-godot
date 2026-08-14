@@ -275,7 +275,37 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 		var obj := _to_object(rec)
 		if not obj.is_empty():
 			out.append(obj)
-	return out
+	return _drop_unopenable_fences(out)
+
+
+## A fence with no switch in the room is a sealed room, so drop it.
+##
+## The importer already refuses to emit a fence into a room whose TABLE has no
+## switch, but that is not enough: groups 0..4 are selected by the layout mask,
+## so a room can build the group holding its fence and skip the group holding
+## its switch. Measured over the generated dump, that happened in 1 cell of the
+## 21 that carry a fence — rare, and a hard stop for the player when it does.
+##
+## The check has to run here, on the objects a room actually builds, which is
+## the only place both facts are known. When psz-re publishes the fence/switch
+## pairing (it lives in the object parameter block, not in the per-room dump)
+## this becomes "drop a fence whose switch was not built" instead.
+static func _drop_unopenable_fences(objects: Array) -> Array:
+	var has_switch := false
+	var has_fence := false
+	for o in objects:
+		var t: String = str(o.get("type", ""))
+		if t == "step_switch":
+			has_switch = true
+		elif t == "fence":
+			has_fence = true
+	if has_switch or not has_fence:
+		return objects
+	var kept: Array = []
+	for o in objects:
+		if str(o.get("type", "")) != "fence":
+			kept.append(o)
+	return kept
 
 
 ## Which of the five layout masks this room instance uses.
@@ -367,6 +397,16 @@ static func _to_object(rec: Dictionary) -> Dictionary:
 		snappedf(float(rec.get("z", 0.0)), 0.01),
 	]
 	var obj: Dictionary = {"type": kind, "position": pos, "authored": true}
+	# A fence is opened by a switch, and the import links every fence in a room
+	# to every switch in it (see import_re_objects.FENCE_LINK_ID — psz-re does
+	# not publish the real pairing). The spawner already keys `_fence_links` on
+	# this id for the static quests.
+	if rec.has("link"):
+		obj["link_id"] = str(rec["link"])
+	# The source model, kept so four fence models and three switch models can
+	# diverge in art later without a re-import.
+	if rec.has("m"):
+		obj["model"] = str(rec["m"])
 	if kind == "wall":
 		# OURS, and stated rather than inherited from the spawner's default.
 		# psz-re's wall_placement_per_room.json is explicit that "no wall
