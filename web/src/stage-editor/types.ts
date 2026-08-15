@@ -5,7 +5,7 @@ import * as THREE from 'three';
 export type GateDirection = 'north' | 'south' | 'east' | 'west';
 export type PreviewModel = 'Gate' | 'AreaWarp';
 export type ObstacleType = 'box' | 'cylinder';
-export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'waypoints' | 'svg' | 'export';
+export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'waypoints' | 'svg' | 'authored' | 'export';
 
 // =============== Floor Collision ===============
 

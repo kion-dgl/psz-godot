@@ -10,6 +10,8 @@ import StageCanvas from './StageCanvas';
 import FloorOverlay from './FloorOverlay';
 import PortalOverlay from './PortalOverlay';
 import MeasuredDoorwayOverlay from './MeasuredDoorwayOverlay';
+import AuthoredObjectOverlay from './AuthoredObjectOverlay';
+import AuthoredTab from './tabs/AuthoredTab';
 import ObstacleOverlay from './ObstacleOverlay';
 import TextureAnimator from './TextureAnimator';
 import FloorCollisionTab from './tabs/FloorCollisionTab';
@@ -170,6 +172,7 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: 'scene', label: 'Scene' },
   { id: 'waypoints', label: 'Waypoints' },
   { id: 'svg', label: 'SVG' },
+  { id: 'authored', label: 'Authored' },
   { id: 'export', label: 'Export' },
 ];
 
@@ -216,6 +219,8 @@ export default function UnifiedStageEditor() {
   const [portalPlacementRotationOffset, setPortalPlacementRotationOffset] = useState(0);
   const [portalPreviewModel, setPortalPreviewModel] = useState<PreviewModel>('Gate');
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
+  // null = show every authored kind; a list filters the overlay.
+  const [authoredKinds, setAuthoredKinds] = useState<string[] | null>(null);
 
   // Default spawn placement state
   const [spawnPlacementMode, setSpawnPlacementMode] = useState(false);
@@ -795,6 +800,14 @@ export default function UnifiedStageEditor() {
     if (!config) return null;
 
     switch (activeTab) {
+      case 'authored':
+        return (
+          <AuthoredTab
+            stageId={selectedMapId}
+            visibleKinds={authoredKinds}
+            setVisibleKinds={setAuthoredKinds}
+          />
+        );
       case 'floor':
         return (
           <FloorCollisionTab
@@ -997,6 +1010,18 @@ export default function UnifiedStageEditor() {
             onTriangleClick={handleTriangleClick}
             interactive
           />
+        );
+      case 'authored':
+        return (
+          <>
+            {/* The doorways too, because "is this box inside the room" is
+                exactly the question this tab exists to answer. */}
+            <MeasuredDoorwayOverlay stageId={selectedMapId} />
+            <AuthoredObjectOverlay
+              stageId={selectedMapId}
+              kinds={authoredKinds ?? undefined}
+            />
+          </>
         );
       case 'portals':
         return (
