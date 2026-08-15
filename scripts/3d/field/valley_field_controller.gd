@@ -457,6 +457,8 @@ func _ready() -> void:
 		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has("%s:%s" % [str(_current_cell.get("pos", "")), dir])
 		_gate_mgr._create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
+	_log_room_summary(connections)
+
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
 
 	# Place key pickup if this cell has one
@@ -1592,6 +1594,46 @@ func _wire_fence_links() -> void:
 		if fences.size() > 0 and switches.size() > 0:
 			_fdbg("[CellObjects] Wired link '%s': %d switches → %d fences" % [
 				link_id, switches.size(), fences.size()])
+
+
+## One line per room, so a play-test can tell "rolled open" apart from "broken".
+##
+## Every door with what the generator decided for it, everything authored into
+## the room, and the wave state. Without this, a room that simply rolled no
+## enemy-defeat gate is indistinguishable from a gate that failed to lock, and
+## the interesting objects are rare enough (fences are in 20 of 392 cells) that
+## a short run misses them and reads as absence.
+func _log_room_summary(connections: Dictionary) -> void:
+	const ATTR_NAMES := {0: "open", 1: "one-key", 2: "two-key", 4: "enemy-defeat"}
+	var attrs: Dictionary = _current_cell.get("door_attributes", {})
+	var doors: Array[String] = []
+	for dir in connections:
+		var a: int = int(attrs.get(dir, 0))
+		doors.append("%s=%s" % [dir, ATTR_NAMES.get(a, str(a))])
+	if doors.is_empty():
+		doors.append("(none)")
+
+	var counts: Dictionary = {}
+	var enemies: int = 0
+	for obj in _current_cell.get("objects", []):
+		var t: String = str(obj.get("type", ""))
+		if t == "enemy":
+			enemies += 1
+			continue
+		counts[t] = int(counts.get(t, 0)) + 1
+	var parts: Array[String] = []
+	for t in counts:
+		parts.append("%sx%d" % [t, int(counts[t])])
+	parts.sort()
+
+	print("[room] %s @%s | doors: %s | enemies: %d (wave %d/%d) | keys: %d | %s" % [
+		str(_current_cell.get("stage_id", "?")),
+		str(_current_cell.get("pos", "?")),
+		", ".join(doors),
+		enemies, _current_wave, _max_wave,
+		int(_current_cell.get("key_count", 1 if _current_cell.get("has_key", false) else 0)),
+		", ".join(parts) if not parts.is_empty() else "no objects",
+	])
 
 
 ## Lock the room's ENEMY-DEFEAT gates while it holds enemies.
