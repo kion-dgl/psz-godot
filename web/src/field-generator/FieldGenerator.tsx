@@ -259,6 +259,17 @@ function CellBox({
         {cell.is_key_gate && '🔒'}
         {cell.warp_edge && '➜'}
       </div>
+      {/* Which gate this room's key opens, and what this room's gate costs.
+          The scatter rule is BFS depth < 2 from the gated room, never behind
+          its own gate — so "→2,1" should always be a room or two away, and a
+          key must never sit behind the door it opens. Showing the pairing is
+          what makes that checkable by eye. */}
+      <div style={{ color: '#8a90b8', fontSize: 9 }}>
+        {cell.has_key && cell.key_for_cell && <span>→{cell.key_for_cell} </span>}
+        {cell.is_key_gate && (cell.required_keys ?? 0) > 0 && (
+          <span>needs {cell.required_keys}</span>
+        )}
+      </div>
     </div>
   );
 }

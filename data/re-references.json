@@ -1,0 +1,85 @@
+{
+  "_": "psz-re findings vendored for the field preview. Regenerate with scripts/tools/refield/sync_re_references.py — do not hand-edit, the point is that these are psz-re's words and not ours.",
+  "references": [
+    {
+      "id": "sys.field-doorways",
+      "title": "A generated field room's doors are exactly its connections — nothing is ever sealed, and every gate sits on a live one",
+      "blurb": "doors == connections; there is never a spare door",
+      "confidence": "confirmed",
+      "summary": "psz-godot #581 asks whether PSZ picks rooms whose doors exactly match the connections a cell needs or also allows extra doors, and if extra doors are allowed whether the game seals them. The premise does not hold: there is never a spare door. FUN_020826ec picks the room SHAPE from the cell's DEGREE at cell+0x02 and from nothing else — degree 4 gives shape 3 (x, 4 doors) with a rand(4) rotation, degree 3 gives shape 2 (t) rotated to face its one unlinked side, degree 2 gives shape 1 (l) when exactly one of north/south is linked and shape 0 (i) otherwise, degree 1 gives shape 5 (s) on a START cell, 6 (g) on a GOAL cell and 4 (n) otherwise. cell+0x02 is incremented in exactly one place, FUN_0208209c, which is also the only caller of the neighbour setter FUN_020832f8 and bumps parent and child together as it links them, so doors == connections by construction. The scene geometry agrees independently: doors_by_shape_letter in room_doorways.json reads i 2, l 2, t 3, x 4, n 1, s 1, g 1. WHAT THE GAME DOES CLOSE IS A GATE, AND ALWAYS ON A DOORWAY THAT LEADS SOMEWHERE. The door attribute at cell+0x14+dir, copied to room record +0x1c..+0x1f by FUN_02082364, is the gate kind level_topology_bu",
+      "source": "nodes/sys.field-doorways.json",
+      "open_questions": [
+        "Where the gate's own geometry comes from. Factory indices 0 (o0c_gatet) and 43 (o0c_gate) have live constructors in the table at 0x020EC1B4 and ZERO records in all 1,491 set files, so the mesh a gate renders is built by code rather than authored — and the code that builds it is not located. Nothing here says what a closed gate looks like, only which doorway carries one.",
+        "What FUN_02083068's caller does with the position it returns. The chain FUN_02031014 -> FUN_02032c80 -> FUN_02083068 walks the model's doorways in rotation order and returns the first whose record byte has NO gate attribute, as a position and a facing; the object it hands that to (the room-setup field at +0x28) is not identified. It is the only reader of +0x1c..+0x1f found in arm9 -- the room-table module 0x02082000..0x02083700 was decompiled in full and all 29 arm9 functions that reference the room-table root at 0x02108C64 were swept for a byte read at +0x1c..+0x1f, with zero further hits. The overlays were NOT swept, so 'only reader' is bounded to arm9. It selects rather than closes either way.",
+        "Attribute values 1 and 2 are read as one-key and two-key gates on the strength of the key economy closing and of level_topology_builder.json's decode of FUN_020b27ec. What is NOT established is that the value is a count rather than two flags — FUN_020b27ec writes the 1-or-2 room count of the branch, and the two readings are indistinguishable in the observed data because no doorway ever carries both bits."
+      ]
+    },
+    {
+      "id": "fmt.room-object-set",
+      "title": "Room object set — the authored per-room object table behind boxes, gates and traps",
+      "blurb": "the authored per-room object table behind boxes, gates and traps",
+      "confidence": "confirmed",
+      "summary": "set/<NN>/<v>/<room>/<stage><v>_<room>_<set>.rel is the per-room OBJECT table, keyed exactly like enemy/deploy: same stage, variant and room, and the same six set letters (d, f1..f4, s), so the deploy-set selector at byte +0x0C of the session record chooses this file too. 1495 files parse into 23552 records. Same container as the deploy record and enemy_data_*.rel -- ZPR over DSIF with an NDR payload and a NOF0 relocation table. EVERY OFFSET IS RELATIVE TO THE NDR CHUNK, not to the payload 0x14 bytes into it, so a record begins exactly ON a declared relocation: its first word is a pointer to its own parameter block. A record is 24 bytes: +0x00 that parameter pointer, +0x04/+0x08/+0x0C a ROOM-LOCAL (x, y, z) in 1.19.12 in the same frame as room_doorways.json, +0x10 a u16 facing angle, +0x12 a flag, +0x13 the class byte, +0x14 the FACTORY INDEX, +0x15 the type high byte and +0x16 the record's own SLOT. A FILE IS SIX GROUPS, not one flat array: a six-entry {count, pointer} table sits after the records and the loader walks it, building all of them whole except group 5, which it rolls. THE COUNT IS NOT STORED -- it comes from the group table, confirmed by requiring every group's whole re",
+      "source": "nodes/fmt.room-object-set.json",
+      "open_questions": [
+        "setobj.payload STILL READS THE NOF0 OFFSETS AT nof+12. The corrected window is nof+16 and both the corpus and RAM say so, but the old list feeds the group table, the frame test, the parameter blocks and the condition extraction -- about fifteen checks -- so it is left alone here and the group table is shown to be identical under both readings in 1495 of 1495 files. Correcting it is a pass of its own, with a re-measurement of everything downstream.",
+        "WHAT LOADS THE SPECIAL ARCHIVE. object/special/special_<tag>_prm.rel is a 53rd registry and it is where the warp models, the heal pad, the NPCs and the return warp live, but which of the fourteen tags a room loads is not traced. The name is built from `special/special_%s` at 0x020F93B0, whose one reference is the literal at 0x020507D8 inside a function Ghidra never made, and the tag index looks like FUN_020507F4's 0..12 return. Not followed this pass.",
+        "WHETHER TYPE 0x1C13 IS THE TREASURE BOX. The case has TWO legs, not three: it is 92% of the rolled group, and it belongs to the eight-type family whose objects are the largest (0x144..0x1A8 against 0xC0 or less for everything else). The third leg -- 'and that family is the damageable one' -- is RETRACTED: those slot numbers are the node subobject's, not the object's. Nothing maps 0x1C13 onto o0c_trebox, and the static family's model-index route is dead too, since nothing reads that index. AND A SECOND INDEPENDENT BLOW: the damage entry FUN_020437D8 only accepts a target handle in 0..515, while the set objects' band is 516..643 -- so no room object can be its target at all. Whatever breaks a container, it is not the enemy damage path."
+      ]
+    },
+    {
+      "id": "gate economy/key_gate_budget",
+      "title": "key gate budget",
+      "blurb": "gate economy",
+      "confidence": "documented",
+      "summary": "{\"formula\": \"(roomCount - 2) * params[5] / 100, via the unsigned divide at FUN_0200a5ac\", \"default_params_5\": 35, \"minus_two\": \"the start and goal rooms are excluded, matching the observed invariant that index 0 is always the start and there is exactly one goal\", \"enforcement\": \"FUN_020b2740 returns 0 as soon as spent (object[3]) reaches budget (object[2]), so the budget is a hard cap on the number of gated doors\"}",
+      "source": "data/level_topology_builder.json#key_gate_budget",
+      "open_questions": []
+    },
+    {
+      "id": "gate economy/one_key_versus_two",
+      "title": "one key versus two",
+      "blurb": "gate economy",
+      "confidence": "documented",
+      "summary": "{\"function\": \"FUN_020b27ec\", \"rule\": \"pick params[6] if the room's flag byte has 0x20 set, otherwise params[7]. Roll rand(100). If the roll is below that percentage the door gets attribute 2 (two keys), otherwise attribute 1 (one key). A two-key gate additionally requires the caller's count to be >= 2.\", \"defaults\": {\"params_6\": 30, \"params_7\": 10}, \"side_effects\": \"increments the room's own gate counter at internal +0x04 and the global spent counter\"}",
+      "source": "data/level_topology_builder.json#one_key_versus_two",
+      "open_questions": []
+    },
+    {
+      "id": "gate economy/enemy_defeat_gates",
+      "title": "enemy defeat gates",
+      "blurb": "gate economy",
+      "confidence": "documented",
+      "summary": "{\"function\": \"FUN_020b2bf4\", \"rule\": \"params[8] is a PERCENT CHANCE PER ROOM, clamped to [0,100]. For each room whose flags have neither 0x04 nor 0x08 set, roll rand(100) once; if it passes, set attribute 4 on EVERY direction that has a neighbour, is not already attributed 7, and is not the way-back direction stored at internal +0x08.\", \"default_params_8\": 10, \"key_consequence\": \"the roll is per ROOM, not per door, so a room that passes gets ALL of its forward exits gated at once. kion observed exactly this: B3 in valley area A had BOTH its north and east exits as enemy-defeat gates.\", \"entrance_never_gated\": \"the way-back direction is excluded, matching the observation that the room entered from is always open\"}",
+      "source": "data/level_topology_builder.json#enemy_defeat_gates",
+      "open_questions": []
+    },
+    {
+      "id": "gate economy/door_attributes",
+      "title": "door attributes",
+      "blurb": "gate economy",
+      "confidence": "documented",
+      "summary": "{\"setter\": \"FUN_020b2854(room, dir, attr) does room[0x14+dir] |= attr\", \"values\": {\"0\": \"open\", \"1\": \"one key\", \"2\": \"two keys\", \"4\": \"enemy-defeat\"}, \"note\": \"matches the GATE map already in tools/pszd.py, derived independently from live reads\"}",
+      "source": "data/level_topology_builder.json#door_attributes",
+      "open_questions": []
+    },
+    {
+      "id": "gate economy/gate_and_key_placement",
+      "title": "gate and key placement",
+      "blurb": "gate economy",
+      "confidence": "documented",
+      "summary": "{\"source\": \"psz-re - FUN_020b2978/2868/2920/2a14/2444 decompiled, 2026-07-29; item 31's leftover\", \"eligibility_test\": {\"function\": \"FUN_020b2978\", \"rejections\": [\"the candidate room already carries more than one gate (internal +0x04)\", \"any neighbour already carries gates - so gated rooms are never adjacent\", \"internal +0x06 != internal +0x07, the gate/key balance described below\"], \"acceptance\": {\"rooms with flag 0x20\": \"rand(100) < params[4]. That IDENTIFIES params[4] = 50, which item 33 had left as 'not seen being read anywhere'\", \"other rooms\": \"requires the 0x58 object's +0x54 to be positive, then accepts with a probability that scales with the REMAINING budget - the draw is compared against (budget - spent), so gates get rarer as the budget is consumed rather than simply stopping at a cliff\"}}, \"neighbourhood_collection\": {\"function\": \"FUN_020b2868\", \"what\": \"a breadth-first walk out from the room that just received a gate, limited to depth < 2, pushing rooms into a collection. FUN_020b2444 files each one by depth into a bucket at collection + depth*0x20, so there are three buckets of 32 bytes.\", \"skips\": \"rooms whose flag byte has 0x04 or 0x08 - the start and the goal, the ",
+      "source": "data/level_topology_builder.json#gate_and_key_placement",
+      "open_questions": []
+    },
+    {
+      "id": "layout selection/field_0x31_identified",
+      "title": "field 0x31 identified",
+      "blurb": "layout selection",
+      "confidence": "documented",
+      "summary": "{\"function\": \"FUN_02082814 (0x02082814, 82 bytes), called by the transcriber with the room's tree depth\", \"what_it_is\": \"a weighted random draw returning a category 0..3, with the weight row selected by depth band\", \"bands\": {\"depth < 4\": [50, 20, 20, 10], \"depth 4..6\": [40, 20, 20, 20], \"depth >= 7\": [25, 25, 25, 25]}, \"table\": \"0x020f2e70, twelve ints as three rows of four; every row sums to exactly 100, which is a good sign the reading is right\", \"reading\": \"a richness or difficulty curve. Shallow rooms are category 0 half the time and take the top category only 10% of the time, while rooms at depth 7 or more are uniform across all four.\", \"why_two_hypotheses_failed_on_this_field\": \"'boxes = 2 x byte at +0x31' was shipped then refuted, and item 34 could only call it 'a lookup'. It is a RANDOM DRAW, so it is not a function of anything in the record - two rooms at the same depth routinely differ. No formula over the record could ever have fitted it.\", \"validation\": \"all 44 values across five fields are in 0..3. Band 0, with 30 rooms, observes 14/7/7/2 against the 15/6/6/3 the weights predict. Band 1 has only 14 rooms and observes 2/2/4/6 against 5.6/2.8/2.8/2.8, skewed toward the ",
+      "source": "data/level_generation_algorithm.json#field_0x31_identified",
+      "open_questions": []
+    }
+  ]
+}

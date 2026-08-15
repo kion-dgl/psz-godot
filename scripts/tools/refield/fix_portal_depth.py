@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 """Snap each stage portal to the DEPTH the game's own doorway sits at.
 
-!!! NOT APPLIED YET — RUNNING THIS BREAKS THE AUTOPILOT. !!!
+WHAT THIS WRITES, AND WHY IT IS NOT `position`.
 
-It was applied once and reverted, because the geometry does not allow it. The
-engine derives the load trigger from the gate at +7 outward, and the trigger is
-a 6-deep box, so its NEAR FACE sits at gate+4. A doorway stub only runs from the
-room wall (|22|) out to |25|. Putting the gate on the wall therefore puts the
-trigger's near face at |26| — past the end of the stub, where there is no floor.
+An earlier version moved `position` itself and broke the autopilot. That field
+is load-bearing for two things besides the gate: the engine derives the player
+spawn from it at +3 and the load trigger at +7, and a trigger is a 6-deep box,
+so its near face sits at gate+4. A doorway stub runs from the room wall (|22|)
+out to |25|, so putting the gate on the wall puts the trigger's near face at
+|26| -- past the end of the stub, over nothing. Measured on s01b_tb3's south
+door: gate 13.12 -> 22.00 moved the trigger's near face 17.1 -> 26.0 and
+sanity-check failed with the player stuck at 25.5, unable to enter a trigger it
+could never reach.
 
-Measured on s01b_tb3's south door: gate 13.12 -> 22.00 moved the trigger's near
-face from 17.1 to 26.0, and sanity-check failed with
+So the two concerns are separated. This writes `gatePosition` -- where the gate
+MESH belongs, measured -- and leaves `position` alone, so spawn and trigger keep
+deriving from the number that already works. The runtime prefers `gatePosition`
+for the gate and ignores it for everything else.
 
-    [sanity] FAIL: walk stuck at dist=3.50 from (17.1, 0.2, 25.5) in cell 1,2
-             (stage s01b_tb3) — author waypoints for this stage
-
-i.e. the player walked to the end of the stub and could not reach the trigger.
-
-So the hand-placed depths are partly COMPENSATING for the +7 offset, and fixing
-gate positions properly means deciding what the trigger offset should be first
-(psz-godot#608). The measurement and the direction-convention finding below are
-the useful part of this file until then.
+That fixes what kion actually sees (a gate standing a couple of units inside its
+doorway) without moving the navigation that was tuned around the old number.
+Aligning `position` itself is still open, and still needs the trigger offset
+decided first -- psz-godot#608.
 
 ---
 
@@ -189,15 +190,14 @@ def main() -> int:
                 continue
             moved.append((stage_id, direction, round(current, 2), round(wanted, 2)))
             if not args.check:
-                delta = round(wanted, 4) - pos[axis]
-                pos[axis] = round(wanted, 4)
-                waypoints_shifted += shift_portal_waypoints(stage, portal, axis, delta)
+                gate = list(pos)
+                gate[axis] = round(wanted, 4)
+                portal["gatePosition"] = gate
 
     deltas = [abs(w - c) for _, _, c, w in moved]
     print("stages with measured doorways: %d (no data for %d)"
           % (len(configs) - no_data, no_data))
-    print("portals moved: %d (waypoint nodes carried along: %d)"
-          % (len(moved), waypoints_shifted))
+    print("portals given a measured gatePosition: %d" % len(moved))
     if deltas:
         deltas.sort()
         print("  depth shift: median %.2f  p90 %.2f  max %.2f"
