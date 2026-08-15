@@ -307,8 +307,13 @@ function ConnectionStubs({ cell }: { cell: Cell }) {
                 position: 'absolute',
                 background: ATTR_INFO[attr].color,
                 borderRadius: 1,
-                width: horizontal ? 3 : 22,
-                height: horizontal ? 22 : 3,
+                width: horizontal ? 4 : 24,
+                height: horizontal ? 24 : 4,
+                // ABOVE the cell. ConnectionStubs renders before CellBox and
+                // CellBox has an opaque background, so a bar inside the cell
+                // footprint is painted over by it — which is why every gate
+                // bar vanished while the links out in the gap survived.
+                zIndex: 2,
               };
         if (gate) {
           if (d === 'north') Object.assign(gate, { left: mid - 11, top: 1 });
