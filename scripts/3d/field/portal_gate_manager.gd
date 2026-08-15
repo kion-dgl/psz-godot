@@ -134,7 +134,30 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 ## Only the compass label uses the game direction (rotated label).
 func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictionary:
 	var pos_arr: Array = portal.get("position", [0, 0, 0])
-	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+	# THE GATE MESH GOES WHERE THE GAME'S DOORWAY IS; everything else keeps
+	# deriving from the authored `position`.
+	#
+	# `gatePosition` is written by scripts/tools/refield/fix_portal_depth.py from
+	# psz-re's measured doorway segments. The hand-placed portals were already
+	# right ALONG the wall (median 0.11 units) and wrong in DEPTH — a gate sat a
+	# median 1.88 units inside the room, tail reaching 20 — which is what kion
+	# saw as gates being off.
+	#
+	# It is a SEPARATE field on purpose. `position` also drives the player spawn
+	# (+3) and the load trigger (+7), and a trigger is 6 deep, so its near face
+	# is gate+4. A doorway stub only runs from the wall (|22|) to |25|, so moving
+	# `position` itself put the trigger's near face at |26| — past the stub, over
+	# nothing — and the autopilot walked to the edge and stopped (measured on
+	# s01b_tb3). Splitting them moves what the player SEES without disturbing the
+	# navigation that was tuned around the old number.
+	#
+	# 50 portals have no measured doorway — city stages, and doors we authored
+	# that the original's room does not have — and keep their authored position.
+	var gate_arr: Array = portal.get("gatePosition", pos_arr)
+	if gate_arr.size() != 3:
+		gate_arr = pos_arr
+	var gate_pos := Vector3(float(gate_arr[0]), float(gate_arr[1]), float(gate_arr[2]))
 
 	# Use the config direction for gate rotation and outward vector. Add the
 	# authored rotationOffset (in degrees) so angled gates like the s07e_ia1
@@ -146,8 +169,11 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 	var gate_rot := Vector3(0.0, rotation, 0.0)
 	var outward := Vector2(-sin(rotation), -cos(rotation))
 
-	var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
-	var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
+	# Derived from the AUTHORED position, never from the moved gate — that is the
+	# whole point of the split above.
+	var nav := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+	var spawn_pos := Vector3(nav.x + outward.x * 3.0, 1.0, nav.z + outward.y * 3.0)
+	var trigger_pos := Vector3(nav.x + outward.x * 7.0, 0.0, nav.z + outward.y * 7.0)
 
 	return {
 		"gate_pos": gate_pos,

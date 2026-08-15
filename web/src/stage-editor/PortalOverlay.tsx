@@ -573,7 +573,11 @@ export default function PortalOverlay({
         return (
           <PortalModel
             key={portal.id}
-            position={portal.position}
+            // The GATE goes at the measured doorway when we have one — the same
+            // split the runtime makes (portal_gate_manager._compute_portal_from_config).
+            // `position` still drives spawn and trigger, so the markers inside
+            // PortalModel stay where navigation expects them.
+            position={(portal as { gatePosition?: [number, number, number] }).gatePosition ?? portal.position}
             rotation={getPortalRotation(portal)}
             modelType={previewModel}
             opacity={1}
