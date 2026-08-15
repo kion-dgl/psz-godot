@@ -89,6 +89,7 @@ TelepipeManager="*res://scripts/autoloads/telepipe_manager.gd"
 BuildInfo="*res://scripts/autoloads/build_info.gd"
 Autopilot="*res://scripts/autoloads/autopilot.gd"
 JourneyLog="*res://scripts/autoloads/journey_log.gd"
+CrtFilter="*res://scripts/autoloads/crt_filter.gd"
 
 [editor]
 
