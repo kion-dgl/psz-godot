@@ -1615,6 +1615,12 @@ func _cast_technique(technique_id: String) -> void:
 	_queued_combo_special = false
 	play_animation(_anim_prefix + "_tec", false)
 
+	# A cast enters ATTACKING without going through _play_attack_animation, so
+	# it has to arm the step-end machinery itself. play_animation falls back to
+	# a fuzzy suffix match, so measure the clip that actually started rather
+	# than the name we asked for.
+	_arm_attack_step(animation_player.current_animation if animation_player else "")
+
 	_spawn_technique_effect(technique_id, tech_data)
 
 
@@ -2203,15 +2209,24 @@ const WEAPON_SFX := {
 ## callers depend on its 0 fallback (player.gd ~1247/1770/2215/2297/2450).
 const BAREHANDED_SFX := "res://assets/sfx/weapons/unarmed_swing_1.wav"  # common46 — pending pack republish
 
-func _play_and_track_attack(anim_name: String) -> void:
-	play_animation(anim_name, false)
-	_attack_anim_elapsed = 0.0
+## Arm the step-end machinery for a clip that just started. EVERY entry into
+## ATTACKING must call this. Both exits out of the state are gated on
+## _attack_step_ended — the animation_finished double-fire guard and the
+## elapsed-length safety net — so a value left true by the previous step roots
+## the player in ATTACKING until something unrelated knocks them out of it.
+## _attack_anim_length doubles as the rhythm-window denominator (_attack_frac).
+func _arm_attack_step(anim_name: String) -> void:
 	_attack_step_ended = false
-	# Get animation length for rhythm window timing
-	if animation_player and animation_player.has_animation(anim_name):
+	_attack_anim_elapsed = 0.0
+	if anim_name != "" and animation_player and animation_player.has_animation(anim_name):
 		_attack_anim_length = animation_player.get_animation(anim_name).length
 	else:
 		_attack_anim_length = 0.5  # Fallback
+
+
+func _play_and_track_attack(anim_name: String) -> void:
+	play_animation(anim_name, false)
+	_arm_attack_step(anim_name)
 	# Hits resolve at the step's damaging frame (_handle_attack_state), not
 	# at swing start — spec /mechanics/targeting.
 	_attack_hit_done = false

@@ -59,6 +59,7 @@ func _run_tests_combat() -> void:
 	test_damage_formulas()
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
+	test_technique_cast_recovers()
 	test_weapon_attack_sfx_mapping()
 	test_weapon_anim_data_new_animation_sets()
 	test_companion_combat_decisions()
@@ -6798,6 +6799,77 @@ func test_mechgun_final_step_no_root() -> void:
 	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
 		"queued chain keeps ATTACKING — next step fires at the safety net")
 	assert_eq(int(pl.get("combo_state")), 2, "queued step advanced the combo at anim length")
+
+	pl.free()
+	print("")
+
+
+# ── Technique cast recovers to IDLE (every cast, not just the first) ──
+# A cast enters ATTACKING via _cast_technique, which does NOT go through
+# _play_attack_animation — so the step-end tracking that path resets was left
+# holding the previous attack step's values. _attack_step_ended stayed true,
+# and BOTH exits out of ATTACKING are gated on it: the animation_finished
+# double-fire guard and the elapsed-length safety net. Net effect was that the
+# first cast after a spawn worked and every cast after it stranded the player
+# in ATTACKING until an unrelated event (usually taking a hit) knocked them out.
+# Same root as the mechgun case above: an entry point into ATTACKING that
+# forgets to arm the step-end machinery.
+func test_technique_cast_recovers() -> void:
+	print("── Technique cast returns to IDLE ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+
+	# A cast-shaped step: combo_state 0 (techniques never combo), tracking armed
+	# the way _cast_technique now arms it. The safety net must land it in IDLE
+	# even though no animation_finished ever arrives.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 0)
+	pl.set("_attack_step_ended", false)
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.0)
+	for _i in range(10):
+		pl._handle_attack_state(0.1)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"a cast returns to IDLE at animation length with no animation_finished")
+
+	# Why it has to be armed: a stale _attack_step_ended disables BOTH exits, so
+	# the player never leaves ATTACKING no matter how long the clip runs.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 0)
+	pl.set("_attack_step_ended", true)  # stale, as _cast_technique used to leave it
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.0)
+	for _i in range(10):
+		pl._handle_attack_state(0.1)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
+		"stale _attack_step_ended roots the player — why every ATTACKING entry must arm")
+
+	# The regression pin: _arm_attack_step is the shared arming both the attack
+	# path and the cast path go through, and it must clear a stale flag. Drop
+	# the call from _cast_technique and casts root again — this is the assert
+	# that makes that failure loud.
+	pl.set("_attack_step_ended", true)
+	pl.set("_attack_anim_elapsed", 99.0)
+	pl._arm_attack_step("")
+	assert_true(not bool(pl.get("_attack_step_ended")),
+		"_arm_attack_step clears a stale step-end flag")
+	assert_eq(float(pl.get("_attack_anim_elapsed")), 0.0,
+		"_arm_attack_step restarts the elapsed clock")
+	assert_eq(float(pl.get("_attack_anim_length")), 0.5,
+		"_arm_attack_step falls back to 0.5s so the safety net stays armed")
+
+	# The call site itself. Everything above proves _arm_attack_step works;
+	# none of it proves _cast_technique still calls it, and that call is the
+	# whole fix. It can't be driven from an off-tree player — _cast_technique
+	# reaches _spawn_technique_effect, which needs get_tree() — so pin the
+	# source instead.
+	var src: String = _read_text_file("res://scripts/3d/player/player.gd")
+	var cast_start: int = src.find("func _cast_technique(")
+	assert_true(cast_start >= 0, "_cast_technique still exists in player.gd")
+	var next_func: int = src.find("\nfunc ", cast_start + 1)
+	var cast_body: String = src.substr(cast_start, next_func - cast_start) if next_func > 0 else src.substr(cast_start)
+	assert_true(cast_body.contains("_arm_attack_step("),
+		"_cast_technique arms the step-end machinery (drop this and every cast roots the player)")
 
 	pl.free()
 	print("")
