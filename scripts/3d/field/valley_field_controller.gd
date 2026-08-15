@@ -1270,9 +1270,27 @@ func _spawn_field_elements() -> void:
 			)
 			_fdbg("[FieldElements] ── KEY GATE DONE ──")
 		else:
-			# Regular gate — open if entry, visited, or room has no enemies
+			# Regular gate — open if entry, visited, the room has no enemies, or
+			# THIS DOOR IS NOT AN ENEMY-DEFEAT DOOR.
+			#
+			# That last clause is the one that was missing. A gate is built on
+			# every connection and used to start closed whenever the room held
+			# enemies, whatever the generator had decided for that doorway — so
+			# an `open` door and a `one-key` door both appeared as a shut laser
+			# the moment a room had a fight in it, and kion's play-through of
+			# three stages found nothing but enemy-defeat gates even though the
+			# data underneath had 25% one-key and a quarter of doors open.
+			#
+			# Fixing `_lock_gates_for_enemies` was not enough: that stops a door
+			# being LOCKED, this is what decides whether it is built shut.
+			#
+			# A cell with no `door_attributes` — every static field_quest, every
+			# older save — keeps the previous behaviour untouched.
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
-			var gate_is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
+			var cell_attrs: Dictionary = _current_cell.get("door_attributes", {})
+			var is_enemy_door: bool = int(cell_attrs.get(dir, 0)) == 4
+			var gate_is_open: bool = (dir == _spawn_edge) or target_visited \
+				or not room_has_enemies or (not cell_attrs.is_empty() and not is_enemy_door)
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
