@@ -262,34 +262,67 @@ function CellBox({
   );
 }
 
-/** A connection drawn as a stub from the cell edge, so a one-way pair shows as
- *  a stub with nothing meeting it. Coloured by DOOR ATTRIBUTE — green walk
- *  straight through, yellow one-key, orange two-key, red enemy-defeat — which
- *  is what makes gate variety readable at a glance instead of one room at a
- *  time in Godot. A thicker stub means a gate stands there. */
+/** Connections and their gates.
+ *
+ * TWO marks, deliberately separate, because the earlier version conflated them
+ * and read as a contradiction: a connection was drawn as a coloured stub from
+ * each side, so a door that is enemy-defeat one way and the way back the other
+ * produced a red stub meeting a green one across the gap, as though the game
+ * could not make its mind up.
+ *
+ * Now the gap between cells carries only a neutral CONNECTION line — present or
+ * absent, which is what makes a one-way pair visible — and the gate is a bar
+ * drawn INSIDE the cell's own edge, in its attribute colour, because a gate
+ * belongs to the room that owns that doorway. Same idea as the quest editor's
+ * layout grid, where a gate is a mark on the cell rather than on the link.
+ */
 function ConnectionStubs({ cell }: { cell: Cell }) {
+  const edge = CELL_PX - 10;
+  const mid = edge / 2;
   return (
     <>
       {Object.keys(cell.connections).map((dir) => {
         const d = dir as Dir;
         const horizontal = d === 'east' || d === 'west';
         const len = 12;
-        const attr = attrOf(cell, d);
-        const gated = attr !== ATTR_OPEN;
-        const thickness = gated ? 6 : 3;
-        const style: React.CSSProperties = {
+
+        // The link itself: neutral, so it says "connected" and nothing more.
+        const link: React.CSSProperties = {
           position: 'absolute',
-          background: ATTR_INFO[attr]?.color ?? '#6b74b8',
-          width: horizontal ? len : thickness,
-          height: horizontal ? thickness : len,
-          borderRadius: 1,
+          background: '#4a5080',
+          width: horizontal ? len : 2,
+          height: horizontal ? 2 : len,
         };
-        const mid = (CELL_PX - 10) / 2;
-        if (d === 'north') Object.assign(style, { left: mid, top: -len });
-        if (d === 'south') Object.assign(style, { left: mid, top: CELL_PX - 10 });
-        if (d === 'west') Object.assign(style, { left: -len, top: mid });
-        if (d === 'east') Object.assign(style, { left: CELL_PX - 10, top: mid });
-        return <div key={dir} style={style} />;
+        if (d === 'north') Object.assign(link, { left: mid, top: -len });
+        if (d === 'south') Object.assign(link, { left: mid, top: edge });
+        if (d === 'west') Object.assign(link, { left: -len, top: mid });
+        if (d === 'east') Object.assign(link, { left: edge, top: mid });
+
+        // The gate: on this cell's edge, in this cell's colour for this door.
+        const attr = attrOf(cell, d);
+        const gate: React.CSSProperties | null =
+          attr === ATTR_OPEN
+            ? null
+            : {
+                position: 'absolute',
+                background: ATTR_INFO[attr].color,
+                borderRadius: 1,
+                width: horizontal ? 3 : 22,
+                height: horizontal ? 22 : 3,
+              };
+        if (gate) {
+          if (d === 'north') Object.assign(gate, { left: mid - 11, top: 1 });
+          if (d === 'south') Object.assign(gate, { left: mid - 11, top: edge - 4 });
+          if (d === 'west') Object.assign(gate, { left: 1, top: mid - 11 });
+          if (d === 'east') Object.assign(gate, { left: edge - 4, top: mid - 11 });
+        }
+
+        return (
+          <div key={dir}>
+            <div style={link} />
+            {gate && <div style={gate} />}
+          </div>
+        );
       })}
     </>
   );
@@ -393,7 +426,13 @@ export default function FieldGenerator() {
       style={{
         padding: 20,
         background: '#0f0f1e',
-        minHeight: '100%',
+        // App.tsx wraps every route in `overflow: hidden`, so a page taller than
+        // the viewport is clipped rather than scrolled — sections b and z were
+        // unreachable. Pages own their own scrolling here (the quest editor's
+        // LayoutTab does the same), so this is the scroll container.
+        height: '100%',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
         color: '#e8e8f0',
         fontFamily: 'system-ui, sans-serif',
       }}
@@ -469,7 +508,8 @@ export default function FieldGenerator() {
           has a gate standing in it. */}
       <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
         <span>doors:</span>
-        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>— open (no gate)</span>
+        <span style={{ color: '#4a5080' }}>— connection</span>
+        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>(no bar) open</span>
         <span style={{ color: ATTR_INFO[ATTR_ONE_KEY].color }}>▬ one-key</span>
         <span style={{ color: ATTR_INFO[ATTR_TWO_KEY].color }}>▬ two-key</span>
         <span style={{ color: ATTR_INFO[ATTR_ENEMY_DEFEAT].color }}>▬ enemy-defeat</span>
