@@ -299,33 +299,34 @@ function ConnectionStubs({ cell }: { cell: Cell }) {
         if (d === 'east') Object.assign(link, { left: edge, top: mid });
 
         // The gate: on this cell's edge, in this cell's colour for this door.
+        //
+        // ALWAYS drawn, including green for an ungated door. Both ends of every
+        // connection carry a mark, so the two sides can be read independently —
+        // a door that is enemy-defeat going forward and open on the way back
+        // shows red at one end and green at the other, which is the truth about
+        // that doorway rather than a contradiction. It also makes a MISSING bar
+        // meaningful: if one end of a line has no mark, something failed to
+        // emit an attribute, and that is a bug rather than an open door.
         const attr = attrOf(cell, d);
-        const gate: React.CSSProperties | null =
-          attr === ATTR_OPEN
-            ? null
-            : {
-                position: 'absolute',
-                background: ATTR_INFO[attr].color,
-                borderRadius: 1,
-                width: horizontal ? 4 : 24,
-                height: horizontal ? 24 : 4,
-                // ABOVE the cell. ConnectionStubs renders before CellBox and
-                // CellBox has an opaque background, so a bar inside the cell
-                // footprint is painted over by it — which is why every gate
-                // bar vanished while the links out in the gap survived.
-                zIndex: 2,
-              };
-        if (gate) {
-          if (d === 'north') Object.assign(gate, { left: mid - 11, top: 1 });
-          if (d === 'south') Object.assign(gate, { left: mid - 11, top: edge - 4 });
-          if (d === 'west') Object.assign(gate, { left: 1, top: mid - 11 });
-          if (d === 'east') Object.assign(gate, { left: edge - 4, top: mid - 11 });
-        }
+        const gate: React.CSSProperties = {
+          position: 'absolute',
+          background: ATTR_INFO[attr].color,
+          borderRadius: 1,
+          width: horizontal ? 4 : 24,
+          height: horizontal ? 24 : 4,
+          // Above the cell: ConnectionStubs renders before CellBox, whose
+          // opaque background would otherwise paint over the bar.
+          zIndex: 2,
+        };
+        if (d === 'north') Object.assign(gate, { left: mid - 12, top: 1 });
+        if (d === 'south') Object.assign(gate, { left: mid - 12, top: edge - 5 });
+        if (d === 'west') Object.assign(gate, { left: 1, top: mid - 12 });
+        if (d === 'east') Object.assign(gate, { left: edge - 5, top: mid - 12 });
 
         return (
           <div key={dir}>
             <div style={link} />
-            {gate && <div style={gate} />}
+            <div style={gate} />
           </div>
         );
       })}
@@ -335,6 +336,21 @@ function ConnectionStubs({ cell }: { cell: Cell }) {
 
 function SectionGrid({ section }: { section: Section }) {
   const problems = useMemo(() => auditSection(section), [section]);
+
+  // Keys are per SECTION, not per area: each section's gates are opened by keys
+  // scattered inside that same section. An area can total three across a and b
+  // while no single section ever shows more than two, which is exactly the
+  // "I only see two keys but need three" confusion this makes visible.
+  const keysDemanded = section.cells.reduce(
+    (n, c) =>
+      n +
+      Object.values(c.door_attributes ?? {}).reduce(
+        (m, a) => m + (a === ATTR_ONE_KEY || a === ATTR_TWO_KEY ? a : 0),
+        0,
+      ),
+    0,
+  );
+  const keysHeld = section.cells.reduce((n, c) => n + (c.key_count ?? 0), 0);
   const problemCount = Object.values(problems).reduce((n, list) => n + list.length, 0);
 
   // The generator emits sparse coordinates on a gridSize x gridSize board but a
@@ -353,6 +369,11 @@ function SectionGrid({ section }: { section: Section }) {
       <div style={{ fontSize: 12, color: '#aab', marginBottom: 6 }}>
         section <strong style={{ color: '#fff' }}>{section.area}</strong> ({section.type}) —{' '}
         {section.cells.length} cells, start {section.start_pos} → end {section.end_pos}
+        {keysDemanded > 0 && (
+          <span style={{ color: keysHeld === keysDemanded ? '#8a90b8' : '#ff6b6b' }}>
+            {' '}· keys {keysHeld}/{keysDemanded}
+          </span>
+        )}
         {problemCount > 0 && (
           <span style={{ color: '#ff6b6b' }}> · {problemCount} door problem(s)</span>
         )}
@@ -500,7 +521,6 @@ export default function FieldGenerator() {
 
       <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
         <span>🔑 holds key</span>
-        <span>🔒 key gate</span>
         <span>➜ section exit</span>
         <span style={{ color: '#6ec98a' }}>■ start</span>
         <span style={{ color: '#c9a06e' }}>■ end</span>
@@ -514,7 +534,7 @@ export default function FieldGenerator() {
       <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
         <span>doors:</span>
         <span style={{ color: '#4a5080' }}>— connection</span>
-        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>(no bar) open</span>
+        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>▬ open (no gate)</span>
         <span style={{ color: ATTR_INFO[ATTR_ONE_KEY].color }}>▬ one-key</span>
         <span style={{ color: ATTR_INFO[ATTR_TWO_KEY].color }}>▬ two-key</span>
         <span style={{ color: ATTR_INFO[ATTR_ENEMY_DEFEAT].color }}>▬ enemy-defeat</span>
