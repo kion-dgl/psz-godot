@@ -47,6 +47,7 @@ rm -f "$USERDIR/input_config.json" "$USERDIR/save_data.json"
 echo "[record-freeroam] driving free-roam field area=$AREA → $SANITY"
 env PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_FIELD="$AREA" LIBGL_ALWAYS_SOFTWARE=1 \
 	${NO_WALLS:+PSZ_AUTOPILOT_NO_WALLS=1} \
+	${NO_FENCES:+PSZ_AUTOPILOT_NO_FENCES=1} \
 	timeout "$TIMEOUT" xvfb-run -a -s "-screen 0 640x360x24" \
 	"$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO" >"$SANITY" 2>&1

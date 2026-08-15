@@ -457,6 +457,8 @@ func _ready() -> void:
 		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has("%s:%s" % [str(_current_cell.get("pos", "")), dir])
 		_gate_mgr._create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
+	_log_room_summary(connections)
+
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
 
 	# Place key pickup if this cell has one
@@ -1104,8 +1106,24 @@ func _spawn_field_elements() -> void:
 		var is_open: bool = is_player_entry or not room_has_enemies
 		var is_delayed: bool = is_player_entry  # Delay trigger on entry edge
 
-		# Gate model — AreaWarp instead of Gate
-		var area_warp := AreaWarpScript.new()
+		# Gate model — AreaWarp instead of Gate, or a BOSS WARP when the section
+		# this door leads to is the boss arena.
+		#
+		# BossWarp used to be reachable only from the goal-pad block below, which
+		# is guarded by `not _portal_data.has(warp_edge)` — a leaf room whose exit
+		# has no wall door. A generated field's b-section end cell always HAS one
+		# (grid_generator sets warp_edge from key_gate_direction, chosen from the
+		# tile's real gates, and the no-spare-doors retile deliberately exempts
+		# it), so the pad never fired and every boss entrance was a plain area
+		# gate. kion: "the transition to the boss should always be a boss warp".
+		var aw_to_boss: bool = not is_final_exit and target_section >= 0 \
+			and target_section < sections_for_warp.size() \
+			and str(sections_for_warp[target_section].get("type", "")) == "boss"
+		# BossWarp and AreaWarp are SIBLINGS under WarpBase, not parent/child, so
+		# the `is AreaWarp` tests in the enemy lock/unlock passes are widened to
+		# WarpBase — otherwise swapping the model here would silently stop the
+		# boss door being locked behind an uncleared room.
+		var area_warp: WarpBase = BossWarpScript.new() if aw_to_boss else AreaWarpScript.new()
 		area_warp.auto_collect = false
 		area_warp.name = "AreaWarp_%s" % portal_dir
 		area_warp.element_state = "open" if is_open else "locked"
@@ -1212,8 +1230,32 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
+		# NO GATE MESH where the door carries no gate. Two cases, per kion's
+		# spec of the four-door room:
+		#
+		#   the way back   "there should be no gate mesh behind me, only a
+		#                  loading trigger to go back to the previous room"
+		#   attribute 0    "there is no gate. which means that there is no gate
+		#                  model, and the player can freely pass through"
+		#
+		# Building one and opening it is NOT the same thing: an open gate still
+		# puts a frame in the doorway, and a player reads that as a gate that
+		# happens to be open rather than a door that was never gated. The load
+		# trigger is created separately (_create_gate_trigger) and is unaffected,
+		# so the door still works — it just has nothing standing in it.
+		#
+		# A cell with no `door_attributes` keeps every gate it used to build.
+		var attrs_for_gate: Dictionary = _current_cell.get("door_attributes", {})
+		var attr_here: int = int(attrs_for_gate.get(dir, 0))
+		var gate_kind: int = gate_kind_for_door(
+			attrs_for_gate, dir, _spawn_edge, is_key_gate, key_gate_dirs)
+		var build_gate: bool = gate_kind != GATE_NONE
+		if not build_gate:
+			_fdbg("[FieldElements]   no gate for %s (attr=%d, entry=%s)"
+				% [dir, attr_here, dir == _spawn_edge])
+
 		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
-		if is_key_gate and dir in key_gate_dirs:
+		if gate_kind == GATE_KEY:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
@@ -1244,6 +1286,7 @@ func _spawn_field_elements() -> void:
 			kg._setup_laser_material()
 			kg._apply_state()
 			_gate_mgr._fix_gate_depth(kg)
+			_spawn_second_key_gate_mesh(kg, dir, gate_pos, gate_rot)
 			# Only auto-open if THIS direction was previously opened by the player.
 			# The compound (cell:dir) key is what bug fix per-direction tracking needs —
 			# previously the per-cell flag opened all locked doors on a multi-gate hub
@@ -1267,10 +1310,28 @@ func _spawn_field_elements() -> void:
 						_area_map_panel.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
 			_fdbg("[FieldElements] ── KEY GATE DONE ──")
-		else:
-			# Regular gate — open if entry, visited, or room has no enemies
+		elif gate_kind == GATE_ENEMY_DEFEAT:
+			# Regular gate — open if entry, visited, the room has no enemies, or
+			# THIS DOOR IS NOT AN ENEMY-DEFEAT DOOR.
+			#
+			# That last clause is the one that was missing. A gate is built on
+			# every connection and used to start closed whenever the room held
+			# enemies, whatever the generator had decided for that doorway — so
+			# an `open` door and a `one-key` door both appeared as a shut laser
+			# the moment a room had a fight in it, and kion's play-through of
+			# three stages found nothing but enemy-defeat gates even though the
+			# data underneath had 25% one-key and a quarter of doors open.
+			#
+			# Fixing `_lock_gates_for_enemies` was not enough: that stops a door
+			# being LOCKED, this is what decides whether it is built shut.
+			#
+			# A cell with no `door_attributes` — every static field_quest, every
+			# older save — keeps the previous behaviour untouched.
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
-			var gate_is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
+			var cell_attrs: Dictionary = _current_cell.get("door_attributes", {})
+			var is_enemy_door: bool = int(cell_attrs.get(dir, 0)) == 4
+			var gate_is_open: bool = (dir == _spawn_edge) or target_visited \
+				or not room_has_enemies or (not cell_attrs.is_empty() and not is_enemy_door)
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
@@ -1594,14 +1655,150 @@ func _wire_fence_links() -> void:
 				link_id, switches.size(), fences.size()])
 
 
-## Lock non-entry/non-visited gates when room has enemies.
+## What a doorway gets: nothing, a key gate, or an enemy-defeat gate.
+##
+## Pulled out of _spawn_field_elements so it can be tested without a scene. The
+## bug it exists to prevent was invisible to both test layers: the generator
+## tests assert the attributes are ASSIGNED correctly, and the sanity autopilot
+## drives a static quest that has no attributes at all — so a runtime that
+## ignored them passed everything while kion saw nothing but enemy-defeat gates
+## across three stages.
+##
+## `attrs` empty means a field with no door attributes — every static
+## field_quest, and any save written before they existed. Those keep exactly the
+## behaviour they had: a gate on every connection, key gates where the legacy
+## `is_key_gate` / `key_gate_direction` fields say so.
+enum { GATE_NONE, GATE_KEY, GATE_ENEMY_DEFEAT }
+
+static func gate_kind_for_door(attrs: Dictionary, dir: String, spawn_edge: String,
+		legacy_is_key_gate: bool, legacy_key_dirs: Array) -> int:
+	if attrs.is_empty():
+		# Legacy field: gate everything, key-gate what the old fields name.
+		return GATE_KEY if (legacy_is_key_gate and dir in legacy_key_dirs) else GATE_ENEMY_DEFEAT
+	# The way back is never gated — 0 of 592 rooms in psz-re's capture set — and
+	# an open door has no mesh at all rather than a gate that starts open.
+	if dir == spawn_edge:
+		return GATE_NONE
+	match int(attrs.get(dir, 0)):
+		1, 2:
+			return GATE_KEY
+		4:
+			return GATE_ENEMY_DEFEAT
+		_:
+			return GATE_NONE
+
+
+## One line per room, so a play-test can tell "rolled open" apart from "broken".
+##
+## Every door with what the generator decided for it, everything authored into
+## the room, and the wave state. Without this, a room that simply rolled no
+## enemy-defeat gate is indistinguishable from a gate that failed to lock, and
+## the interesting objects are rare enough (fences are in 20 of 392 cells) that
+## a short run misses them and reads as absence.
+func _log_room_summary(connections: Dictionary) -> void:
+	const ATTR_NAMES := {0: "open", 1: "one-key", 2: "two-key", 4: "enemy-defeat"}
+	var attrs: Dictionary = _current_cell.get("door_attributes", {})
+	var doors: Array[String] = []
+	for dir in connections:
+		var a: int = int(attrs.get(dir, 0))
+		doors.append("%s=%s" % [dir, ATTR_NAMES.get(a, str(a))])
+	if doors.is_empty():
+		doors.append("(none)")
+
+	var counts: Dictionary = {}
+	var enemies: int = 0
+	for obj in _current_cell.get("objects", []):
+		var t: String = str(obj.get("type", ""))
+		if t == "enemy":
+			enemies += 1
+			continue
+		counts[t] = int(counts.get(t, 0)) + 1
+	var parts: Array[String] = []
+	for t in counts:
+		parts.append("%sx%d" % [t, int(counts[t])])
+	parts.sort()
+
+	print("[room] %s @%s | doors: %s | enemies: %d (wave %d/%d) | keys: %d | %s" % [
+		str(_current_cell.get("stage_id", "?")),
+		str(_current_cell.get("pos", "?")),
+		", ".join(doors),
+		enemies, _current_wave, _max_wave,
+		int(_current_cell.get("key_count", 1 if _current_cell.get("has_key", false) else 0)),
+		", ".join(parts) if not parts.is_empty() else "no objects",
+	])
+
+
+## A two-key gate is TWO gates, one behind the other.
+##
+## kion's spec from play: "the double key gate should be two key gates placed
+## directly next to each other. one key gate should be in the exact position
+## where the gate normally is, and then following behind it should be another
+## gate." One mesh that happens to want two keys reads exactly like a one-key
+## gate until you try it; two in a row tells the player the price before they
+## walk up to it.
+##
+## The SECOND mesh is decoration driven by the first: `kg` keeps all of the
+## unlocking logic and the collision body, and this one mirrors its state. Two
+## independent KeyGates on one doorway would need the per-direction
+## `_gates_opened` bookkeeping to become per-gate, for no gain — the requirement
+## is already "this door costs 2".
+##
+## Placed one unit further along the doorway's outward direction, which is the
+## same axis the spawn point (+3) and load trigger (+7) already use, so it sits
+## just beyond the first rather than beside it.
+func _spawn_second_key_gate_mesh(kg: Node3D, dir: String, gate_pos: Vector3,
+		gate_rot: Vector3) -> void:
+	if int(_current_cell.get("required_keys", 1)) < 2:
+		return
+	var pd: Dictionary = _portal_data.get(dir, {})
+	var spawn_pos: Vector3 = pd.get("spawn_pos", gate_pos)
+	var outward: Vector3 = spawn_pos - gate_pos
+	outward.y = 0.0
+	if outward.length() < 0.01:
+		return
+	var second := KeyGateScript.new()
+	second.name = "KeyGate_%s_second" % dir
+	second.required_key_id = kg.required_key_id
+	second.required_keys = kg.required_keys
+	add_child(second)
+	second.global_position = gate_pos + outward.normalized() * 1.0
+	second.rotation = gate_rot
+	_gate_mgr._fixup_gate_materials(second)
+	second._setup_laser_material()
+	second._apply_state()
+	_gate_mgr._fix_gate_depth(second)
+	# Mirror the real gate: it opens when the player pays, this follows.
+	kg.state_changed.connect(func(_old: String, new_state: String) -> void:
+		if new_state == "open" and is_instance_valid(second):
+			second.open()
+	)
+
+
+## Lock the room's ENEMY-DEFEAT gates while it holds enemies.
+##
+## This used to lock every non-entry, non-visited exit of any room with enemies
+## in it, which made every gate in the game an enemy-defeat gate — kion's report
+## from playing Valley: "all of the gates were enemy defeat gates". The
+## generator now assigns a door attribute per doorway (spec /states/field-gates:
+## 0 open, 1 one-key, 2 two-key, 4 enemy-defeat) with the enemy-defeat roll
+## happening ONCE PER ROOM at 75%, so a quarter of rooms are meant to let you
+## walk straight out and the rest gate every forward exit at once.
+##
+## Honouring that here is what makes the roll visible in play rather than only
+## in the data. A cell with no `door_attributes` — the static field_quests, and
+## any save written before this — keeps the old behaviour, so nothing regresses
+## for fields that were never given attributes.
 func _lock_gates_for_enemies() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
+	var attrs: Dictionary = _current_cell.get("door_attributes", {})
+	const ATTR_ENEMY_DEFEAT := 4
 	for dir in connections:
 		if dir == _spawn_edge:
 			continue  # Don't lock entry gate
 		if _visited_cells.has(str(connections[dir])):
 			continue  # Don't lock gates to visited cells
+		if not attrs.is_empty() and int(attrs.get(dir, 0)) != ATTR_ENEMY_DEFEAT:
+			continue  # Not an enemy-defeat door — open, or a key gate
 		# Find the gate element for this direction
 		for child in get_children():
 			if child is Gate and child.global_position.distance_to(
@@ -1619,7 +1816,7 @@ func _lock_gates_for_enemies() -> void:
 
 	# Lock area warps (like gates) until room clear — skip entry direction
 	for child in get_children():
-		if child is AreaWarp and child.name.begins_with("AreaWarp_"):
+		if child is WarpBase and child.name.begins_with("AreaWarp_"):
 			var aw_dir: String = child.name.trim_prefix("AreaWarp_")
 			if aw_dir == _spawn_edge:
 				continue  # Don't lock entry area warp
@@ -1676,7 +1873,7 @@ func _unlock_room_gates() -> void:
 func _unlock_area_warps() -> void:
 	for node in _warp_edge_locked:
 		if is_instance_valid(node):
-			if node is AreaWarp:
+			if node is WarpBase:
 				node.element_state = "open"
 				node._apply_state()
 				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""

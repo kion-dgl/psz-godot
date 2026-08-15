@@ -206,6 +206,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				_spawn_bear_trap(pos)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
+			"poison_trap":
+				_spawn_contact_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -351,6 +353,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_bear_trap(pos)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
+			"poison_trap":
+				_spawn_contact_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -876,7 +880,15 @@ func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
 	return true
 
 
+## Authored fences are skipped at SPAWN time under PSZ_AUTOPILOT_NO_FENCES,
+## for the same reason walls are: a fence stands IN a doorway on purpose (psz-re
+## measures o0c_fence at 1.31 cells from one, against 5.14 for walls), it opens
+## only when a switch is hit, and the nav backbone cannot hit a switch. Its own
+## variable rather than folded into NO_WALLS so a run can prove one without the
+## other.
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:
+	if OS.has_environment("PSZ_AUTOPILOT_NO_FENCES"):
+		return
 	var fence := FenceScript.new()
 	_c._map_root.add_child(fence)
 	fence.position = pos

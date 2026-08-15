@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
+import { PROVENANCE, CONFIDENCE_STYLE, type Confidence } from './provenance';
 
 /**
  * Grid viewer for GENERATED free fields.
@@ -15,13 +16,23 @@ import { assetUrl } from '../utils/assets';
  * against the real game's output once psz-re can dump a field for a known seed.
  */
 
+interface FieldObject {
+  type: string;
+  enemy_id?: string;
+  /** Room-local (x, y, z). Authored props carry one; ring-placed enemies do too. */
+  position?: [number, number, number];
+  rotation?: number;
+  authored?: boolean;
+  destructible?: boolean;
+}
+
 interface Cell {
   pos: string;
   stage_id: string;
   rotation: number;
   connections: Record<string, string>;
   portals?: Record<string, string>;
-  objects?: { type: string; enemy_id?: string }[];
+  objects?: FieldObject[];
   is_start: boolean;
   is_end: boolean;
   is_branch: boolean;
@@ -31,6 +42,54 @@ interface Cell {
   key_gate_direction: string;
   warp_edge: string;
   path_order: number;
+  /**
+   * Door attribute per direction, using the original game's own numbers
+   * (see GridGenerator.ATTR_*): 1 one-key, 2 two-key, 4 enemy-defeat.
+   *
+   * AN OPEN DOOR IS OMITTED, not written as 0 — so "absent" means "walk
+   * straight through", which is exactly the case that is easy to misread.
+   *
+   * Optional because transition and boss sections are single hand-built cells
+   * that carry 15 keys rather than the 19 a grid cell has.
+   */
+  door_attributes?: Record<string, number>;
+  /** The start room's way back to wherever the player warped in from. */
+  entry_warp_edge?: string;
+  /** Keys this room holds (cap 2), and how many its own gate demands. */
+  key_count?: number;
+  required_keys?: number;
+}
+
+/** Door attribute → label + colour. `undefined`/0 is an ungated doorway. */
+const ATTR_OPEN = 0;
+const ATTR_ONE_KEY = 1;
+const ATTR_TWO_KEY = 2;
+const ATTR_ENEMY_DEFEAT = 4;
+
+const ATTR_INFO: Record<number, { label: string; color: string }> = {
+  [ATTR_OPEN]: { label: 'open', color: '#6ec98a' },
+  [ATTR_ONE_KEY]: { label: 'one-key', color: '#e0c97a' },
+  [ATTR_TWO_KEY]: { label: 'two-key', color: '#e08a3c' },
+  [ATTR_ENEMY_DEFEAT]: { label: 'enemy-defeat', color: '#ff6b6b' },
+};
+
+function attrOf(cell: Cell, dir: string): number {
+  return cell.door_attributes?.[dir] ?? ATTR_OPEN;
+}
+
+/** Object-type counts for a cell, collapsed into the groups worth eyeballing. */
+function contentCounts(cell: Cell) {
+  const objects = cell.objects ?? [];
+  const n = (...types: string[]) =>
+    objects.filter((o) => types.includes(o.type)).length;
+  return {
+    enemies: n('enemy'),
+    boxes: n('box', 'rare_box'),
+    walls: n('wall'),
+    fences: n('fence'),
+    switches: n('step_switch'),
+    traps: objects.filter((o) => o.type.endsWith('_trap')).length,
+  };
 }
 
 interface Section {
@@ -139,9 +198,11 @@ function CellBox({
   cell: Cell;
   problems: string[];
 }) {
-  const enemies = (cell.objects ?? []).filter((o) => o.type === 'enemy').length;
-  const boxes = (cell.objects ?? []).filter((o) => o.type === 'box').length;
+  const c = contentCounts(cell);
   const bad = problems.length > 0;
+  const doors = Object.keys(cell.connections)
+    .map((d) => `${d}=${ATTR_INFO[attrOf(cell, d)]?.label ?? '?'}`)
+    .join(', ');
 
   let bg = '#242438';
   if (cell.is_start) bg = '#1d4d3a';
@@ -154,8 +215,13 @@ function CellBox({
       title={
         `${cell.stage_id}  rot=${cell.rotation}°\n` +
         `connections: ${Object.entries(cell.connections).map(([d, t]) => `${d}→${t}`).join(', ') || 'none'}\n` +
+        `doors: ${doors || 'none'}\n` +
         `portals: ${Object.keys(cell.portals ?? {}).join(', ') || 'none'}\n` +
-        `${enemies} enemies, ${boxes} boxes` +
+        `${c.enemies} enemies, ${c.boxes} boxes, ${c.walls} walls, ` +
+        `${c.traps} traps, ${c.fences} fences, ${c.switches} switches\n` +
+        `keys held: ${cell.key_count ?? (cell.has_key ? 1 : 0)}` +
+        (cell.required_keys ? `, gate demands ${cell.required_keys}` : '') +
+        (cell.entry_warp_edge ? `\nway back: ${cell.entry_warp_edge}` : '') +
         (problems.length ? `\n\nPROBLEMS:\n- ${problems.join('\n- ')}` : '')
       }
       style={{
@@ -179,11 +245,17 @@ function CellBox({
       </div>
       <div style={{ color: '#8a90b8' }}>{cell.rotation}°</div>
       <div style={{ color: '#9aa' }}>
-        {enemies > 0 && <span>{enemies}e </span>}
-        {boxes > 0 && <span>{boxes}b</span>}
+        {c.enemies > 0 && <span>{c.enemies}e </span>}
+        {c.boxes > 0 && <span>{c.boxes}b </span>}
+        {c.traps > 0 && <span style={{ color: '#e08a3c' }}>{c.traps}t </span>}
+        {c.walls > 0 && <span>{c.walls}w</span>}
+      </div>
+      <div style={{ color: '#9aa' }}>
+        {c.fences > 0 && <span style={{ color: '#88aaff' }}>{c.fences}f </span>}
+        {c.switches > 0 && <span style={{ color: '#88aaff' }}>{c.switches}s</span>}
       </div>
       <div style={{ color: '#e0c97a' }}>
-        {cell.has_key && '🔑'}
+        {(cell.key_count ?? 0) > 1 ? `🔑×${cell.key_count}` : cell.has_key && '🔑'}
         {cell.is_key_gate && '🔒'}
         {cell.warp_edge && '➜'}
       </div>
@@ -191,27 +263,73 @@ function CellBox({
   );
 }
 
-/** A connection drawn as a stub from the cell edge, so a one-way pair shows as
- *  a stub with nothing meeting it. */
+/** Connections and their gates.
+ *
+ * TWO marks, deliberately separate, because the earlier version conflated them
+ * and read as a contradiction: a connection was drawn as a coloured stub from
+ * each side, so a door that is enemy-defeat one way and the way back the other
+ * produced a red stub meeting a green one across the gap, as though the game
+ * could not make its mind up.
+ *
+ * Now the gap between cells carries only a neutral CONNECTION line — present or
+ * absent, which is what makes a one-way pair visible — and the gate is a bar
+ * drawn INSIDE the cell's own edge, in its attribute colour, because a gate
+ * belongs to the room that owns that doorway. Same idea as the quest editor's
+ * layout grid, where a gate is a mark on the cell rather than on the link.
+ */
 function ConnectionStubs({ cell }: { cell: Cell }) {
+  const edge = CELL_PX - 10;
+  const mid = edge / 2;
   return (
     <>
       {Object.keys(cell.connections).map((dir) => {
         const d = dir as Dir;
         const horizontal = d === 'east' || d === 'west';
         const len = 12;
-        const style: React.CSSProperties = {
+
+        // The link itself: neutral, so it says "connected" and nothing more.
+        const link: React.CSSProperties = {
           position: 'absolute',
-          background: '#6b74b8',
-          width: horizontal ? len : 3,
-          height: horizontal ? 3 : len,
+          background: '#4a5080',
+          width: horizontal ? len : 2,
+          height: horizontal ? 2 : len,
         };
-        const mid = (CELL_PX - 10) / 2;
-        if (d === 'north') Object.assign(style, { left: mid, top: -len });
-        if (d === 'south') Object.assign(style, { left: mid, top: CELL_PX - 10 });
-        if (d === 'west') Object.assign(style, { left: -len, top: mid });
-        if (d === 'east') Object.assign(style, { left: CELL_PX - 10, top: mid });
-        return <div key={dir} style={style} />;
+        if (d === 'north') Object.assign(link, { left: mid, top: -len });
+        if (d === 'south') Object.assign(link, { left: mid, top: edge });
+        if (d === 'west') Object.assign(link, { left: -len, top: mid });
+        if (d === 'east') Object.assign(link, { left: edge, top: mid });
+
+        // The gate: on this cell's edge, in this cell's colour for this door.
+        //
+        // ALWAYS drawn, including green for an ungated door. Both ends of every
+        // connection carry a mark, so the two sides can be read independently —
+        // a door that is enemy-defeat going forward and open on the way back
+        // shows red at one end and green at the other, which is the truth about
+        // that doorway rather than a contradiction. It also makes a MISSING bar
+        // meaningful: if one end of a line has no mark, something failed to
+        // emit an attribute, and that is a bug rather than an open door.
+        const attr = attrOf(cell, d);
+        const gate: React.CSSProperties = {
+          position: 'absolute',
+          background: ATTR_INFO[attr].color,
+          borderRadius: 1,
+          width: horizontal ? 4 : 24,
+          height: horizontal ? 24 : 4,
+          // Above the cell: ConnectionStubs renders before CellBox, whose
+          // opaque background would otherwise paint over the bar.
+          zIndex: 2,
+        };
+        if (d === 'north') Object.assign(gate, { left: mid - 12, top: 1 });
+        if (d === 'south') Object.assign(gate, { left: mid - 12, top: edge - 5 });
+        if (d === 'west') Object.assign(gate, { left: 1, top: mid - 12 });
+        if (d === 'east') Object.assign(gate, { left: edge - 5, top: mid - 12 });
+
+        return (
+          <div key={dir}>
+            <div style={link} />
+            <div style={gate} />
+          </div>
+        );
       })}
     </>
   );
@@ -219,6 +337,21 @@ function ConnectionStubs({ cell }: { cell: Cell }) {
 
 function SectionGrid({ section }: { section: Section }) {
   const problems = useMemo(() => auditSection(section), [section]);
+
+  // Keys are per SECTION, not per area: each section's gates are opened by keys
+  // scattered inside that same section. An area can total three across a and b
+  // while no single section ever shows more than two, which is exactly the
+  // "I only see two keys but need three" confusion this makes visible.
+  const keysDemanded = section.cells.reduce(
+    (n, c) =>
+      n +
+      Object.values(c.door_attributes ?? {}).reduce(
+        (m, a) => m + (a === ATTR_ONE_KEY || a === ATTR_TWO_KEY ? a : 0),
+        0,
+      ),
+    0,
+  );
+  const keysHeld = section.cells.reduce((n, c) => n + (c.key_count ?? 0), 0);
   const problemCount = Object.values(problems).reduce((n, list) => n + list.length, 0);
 
   // The generator emits sparse coordinates on a gridSize x gridSize board but a
@@ -237,6 +370,11 @@ function SectionGrid({ section }: { section: Section }) {
       <div style={{ fontSize: 12, color: '#aab', marginBottom: 6 }}>
         section <strong style={{ color: '#fff' }}>{section.area}</strong> ({section.type}) —{' '}
         {section.cells.length} cells, start {section.start_pos} → end {section.end_pos}
+        {keysDemanded > 0 && (
+          <span style={{ color: keysHeld === keysDemanded ? '#8a90b8' : '#ff6b6b' }}>
+            {' '}· keys {keysHeld}/{keysDemanded}
+          </span>
+        )}
         {problemCount > 0 && (
           <span style={{ color: '#ff6b6b' }}> · {problemCount} door problem(s)</span>
         )}
@@ -270,6 +408,122 @@ function SectionGrid({ section }: { section: Section }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** What is measured, what is inferred, and what we made up.
+ *
+ * Collapsed by default: it is reference material, not something to read every
+ * visit. But it lives on the page rather than in a doc, because the moment it
+ * is somewhere else it stops being consulted and an invented number starts
+ * getting defended as a fact.
+ */
+interface ReReference {
+  id: string;
+  title: string;
+  blurb: string;
+  confidence: string;
+  summary: string;
+  source: string;
+  open_questions?: string[];
+}
+
+function ProvenancePanel() {
+  const [open, setOpen] = useState(false);
+  // psz-re's own words, vendored by scripts/tools/refield/sync_re_references.py.
+  // Optional on purpose: a fresh clone that has never run the sync still gets a
+  // working page, just without the citations.
+  const [refs, setRefs] = useState<ReReference[]>([]);
+  useEffect(() => {
+    fetch(assetUrl('/data/re-references.json'))
+      .then((r) => (r.ok ? r.json() : { references: [] }))
+      .then((d) => setRefs(d.references ?? []))
+      .catch(() => setRefs([]));
+  }, []);
+  const counts = PROVENANCE.reduce(
+    (acc, p) => ({ ...acc, [p.level]: (acc[p.level] ?? 0) + 1 }),
+    {} as Record<Confidence, number>,
+  );
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: '#12122a',
+          color: '#e8e8f0',
+          border: '1px solid #2a2a4a',
+          borderRadius: 6,
+          padding: '6px 10px',
+          fontSize: 12,
+          cursor: 'pointer',
+        }}
+      >
+        {open ? '▾' : '▸'} what do we actually know?{' '}
+        {(['measured', 'inferred', 'ours'] as Confidence[]).map((lvl) => (
+          <span key={lvl} style={{ color: CONFIDENCE_STYLE[lvl].color, marginLeft: 8 }}>
+            {CONFIDENCE_STYLE[lvl].mark} {counts[lvl] ?? 0}
+          </span>
+        ))}
+      </button>
+      {open && (
+        <div
+          style={{
+            marginTop: 8,
+            border: '1px solid #2a2a4a',
+            borderRadius: 6,
+            background: '#12122a',
+            padding: 12,
+            fontSize: 12,
+            lineHeight: 1.5,
+            maxWidth: 900,
+          }}
+        >
+          {refs.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ color: '#e8e8f0', marginBottom: 6 }}>
+                psz-re, in its own words
+              </div>
+              {refs.map((r) => (
+                <details key={r.id} style={{ marginBottom: 6 }}>
+                  <summary style={{ cursor: 'pointer', color: '#88aaff', fontSize: 11 }}>
+                    {r.title}{' '}
+                    <span
+                      style={{ color: r.confidence === 'confirmed' ? '#6ec98a' : '#8a90b8' }}
+                    >
+                      [{r.confidence}]
+                    </span>
+                  </summary>
+                  <div style={{ color: '#9aa', fontSize: 11, padding: '4px 0 0 12px' }}>
+                    {r.summary}
+                    <div style={{ color: '#6b74b8', marginTop: 4 }}>{r.source}</div>
+                    {(r.open_questions ?? []).length > 0 && (
+                      <div style={{ color: '#e0c97a', marginTop: 4 }}>
+                        open: {(r.open_questions ?? []).join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          )}
+
+          {PROVENANCE.map((p) => {
+            const c = CONFIDENCE_STYLE[p.level];
+            return (
+              <div key={p.label} style={{ marginBottom: 10 }}>
+                <span style={{ color: c.color }} title={c.title}>
+                  {c.mark}
+                </span>{' '}
+                <strong style={{ color: '#e8e8f0' }}>{p.label}</strong>{' '}
+                <span style={{ color: c.color, fontSize: 11 }}>{p.level}</span>
+                <div style={{ color: '#8a90b8', fontSize: 11 }}>{p.source}</div>
+                {p.note && <div style={{ color: '#9aa', fontSize: 11 }}>{p.note}</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -315,7 +569,13 @@ export default function FieldGenerator() {
       style={{
         padding: 20,
         background: '#0f0f1e',
-        minHeight: '100%',
+        // App.tsx wraps every route in `overflow: hidden`, so a page taller than
+        // the viewport is clipped rather than scrolled — sections b and z were
+        // unreachable. Pages own their own scrolling here (the quest editor's
+        // LayoutTab does the same), so this is the scroll container.
+        height: '100%',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
         color: '#e8e8f0',
         fontFamily: 'system-ui, sans-serif',
       }}
@@ -378,13 +638,27 @@ export default function FieldGenerator() {
 
       <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
         <span>🔑 holds key</span>
-        <span>🔒 key gate</span>
         <span>➜ section exit</span>
         <span style={{ color: '#6ec98a' }}>■ start</span>
         <span style={{ color: '#c9a06e' }}>■ end</span>
         <span style={{ color: '#a08ac9' }}>■ branch</span>
         <span style={{ color: '#ff6b6b' }}>■ problem (hover for detail)</span>
       </div>
+
+      {/* Door attributes, the thing this view exists to make readable. A thin
+          stub is an ungated doorway you can walk straight through; a thick one
+          has a gate standing in it. */}
+      <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
+        <span>doors:</span>
+        <span style={{ color: '#4a5080' }}>— connection</span>
+        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>▬ open (no gate)</span>
+        <span style={{ color: ATTR_INFO[ATTR_ONE_KEY].color }}>▬ one-key</span>
+        <span style={{ color: ATTR_INFO[ATTR_TWO_KEY].color }}>▬ two-key</span>
+        <span style={{ color: ATTR_INFO[ATTR_ENEMY_DEFEAT].color }}>▬ enemy-defeat</span>
+        <span>· counts: e enemies, b boxes, t traps, w walls, f fences, s switches</span>
+      </div>
+
+      <ProvenancePanel />
 
       {roll.sections.map((section) => (
         <SectionGrid key={section.area} section={section} />

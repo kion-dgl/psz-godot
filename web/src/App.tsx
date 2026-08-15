@@ -124,6 +124,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/boss-room', label: 'Boss Rooms' },
       { to: '/texture-anim', label: 'Texture Anim' },
       { to: '/wall-debug', label: 'Wall #534' },
+      { to: '/field-generator', label: 'Field Preview' },
     ],
   },
 ];
