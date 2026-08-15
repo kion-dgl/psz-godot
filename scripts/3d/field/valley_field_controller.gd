@@ -1594,14 +1594,31 @@ func _wire_fence_links() -> void:
 				link_id, switches.size(), fences.size()])
 
 
-## Lock non-entry/non-visited gates when room has enemies.
+## Lock the room's ENEMY-DEFEAT gates while it holds enemies.
+##
+## This used to lock every non-entry, non-visited exit of any room with enemies
+## in it, which made every gate in the game an enemy-defeat gate — kion's report
+## from playing Valley: "all of the gates were enemy defeat gates". The
+## generator now assigns a door attribute per doorway (spec /states/field-gates:
+## 0 open, 1 one-key, 2 two-key, 4 enemy-defeat) with the enemy-defeat roll
+## happening ONCE PER ROOM at 75%, so a quarter of rooms are meant to let you
+## walk straight out and the rest gate every forward exit at once.
+##
+## Honouring that here is what makes the roll visible in play rather than only
+## in the data. A cell with no `door_attributes` — the static field_quests, and
+## any save written before this — keeps the old behaviour, so nothing regresses
+## for fields that were never given attributes.
 func _lock_gates_for_enemies() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
+	var attrs: Dictionary = _current_cell.get("door_attributes", {})
+	const ATTR_ENEMY_DEFEAT := 4
 	for dir in connections:
 		if dir == _spawn_edge:
 			continue  # Don't lock entry gate
 		if _visited_cells.has(str(connections[dir])):
 			continue  # Don't lock gates to visited cells
+		if not attrs.is_empty() and int(attrs.get(dir, 0)) != ATTR_ENEMY_DEFEAT:
+			continue  # Not an enemy-defeat door — open, or a key gate
 		# Find the gate element for this direction
 		for child in get_children():
 			if child is Gate and child.global_position.distance_to(
