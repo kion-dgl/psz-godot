@@ -1,6 +1,29 @@
 #!/usr/bin/env python3
 """Snap each stage portal to the DEPTH the game's own doorway sits at.
 
+!!! NOT APPLIED YET — RUNNING THIS BREAKS THE AUTOPILOT. !!!
+
+It was applied once and reverted, because the geometry does not allow it. The
+engine derives the load trigger from the gate at +7 outward, and the trigger is
+a 6-deep box, so its NEAR FACE sits at gate+4. A doorway stub only runs from the
+room wall (|22|) out to |25|. Putting the gate on the wall therefore puts the
+trigger's near face at |26| — past the end of the stub, where there is no floor.
+
+Measured on s01b_tb3's south door: gate 13.12 -> 22.00 moved the trigger's near
+face from 17.1 to 26.0, and sanity-check failed with
+
+    [sanity] FAIL: walk stuck at dist=3.50 from (17.1, 0.2, 25.5) in cell 1,2
+             (stage s01b_tb3) — author waypoints for this stage
+
+i.e. the player walked to the end of the stub and could not reach the trigger.
+
+So the hand-placed depths are partly COMPENSATING for the +7 offset, and fixing
+gate positions properly means deciding what the trigger offset should be first
+(psz-godot#608). The measurement and the direction-convention finding below are
+the useful part of this file until then.
+
+---
+
 kion, from play: "we have the original gate positions from the game, can we make
 sure those are actually being used? a lot of the gate positions are slightly off
 from me trying to hand place them."
