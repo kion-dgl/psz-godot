@@ -86,6 +86,10 @@ func _ready() -> void:
 		return
 
 	_set_mode_no_save(_load_mode())
+	# Sibling autoloads (HudStats, PsoStartMenu) announce themselves. Without a
+	# line here there is no way to tell a filter that is Off from one that
+	# failed to load — the first question anyone asks when it "doesn't work".
+	print("[CrtFilter] Ready — layer %d, mode %s" % [layer, get_mode_label()])
 
 
 ## Current filter as a Mode enum value.
