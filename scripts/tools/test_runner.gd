@@ -59,6 +59,7 @@ func _run_tests_combat() -> void:
 	test_damage_formulas()
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
+	test_technique_cast_recovers()
 	test_weapon_attack_sfx_mapping()
 	test_weapon_anim_data_new_animation_sets()
 	test_companion_combat_decisions()
@@ -200,6 +201,7 @@ func _run_tests_systems() -> void:
 	test_difficulty_unlock_persistence()
 	test_debug_unlock_all_missions()
 	test_input_config()
+	test_crt_filter()
 	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
@@ -7085,6 +7087,77 @@ func test_mechgun_final_step_no_root() -> void:
 	print("")
 
 
+# ── Technique cast recovers to IDLE (every cast, not just the first) ──
+# A cast enters ATTACKING via _cast_technique, which does NOT go through
+# _play_attack_animation — so the step-end tracking that path resets was left
+# holding the previous attack step's values. _attack_step_ended stayed true,
+# and BOTH exits out of ATTACKING are gated on it: the animation_finished
+# double-fire guard and the elapsed-length safety net. Net effect was that the
+# first cast after a spawn worked and every cast after it stranded the player
+# in ATTACKING until an unrelated event (usually taking a hit) knocked them out.
+# Same root as the mechgun case above: an entry point into ATTACKING that
+# forgets to arm the step-end machinery.
+func test_technique_cast_recovers() -> void:
+	print("── Technique cast returns to IDLE ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+
+	# A cast-shaped step: combo_state 0 (techniques never combo), tracking armed
+	# the way _cast_technique now arms it. The safety net must land it in IDLE
+	# even though no animation_finished ever arrives.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 0)
+	pl.set("_attack_step_ended", false)
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.0)
+	for _i in range(10):
+		pl._handle_attack_state(0.1)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"a cast returns to IDLE at animation length with no animation_finished")
+
+	# Why it has to be armed: a stale _attack_step_ended disables BOTH exits, so
+	# the player never leaves ATTACKING no matter how long the clip runs.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 0)
+	pl.set("_attack_step_ended", true)  # stale, as _cast_technique used to leave it
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.0)
+	for _i in range(10):
+		pl._handle_attack_state(0.1)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
+		"stale _attack_step_ended roots the player — why every ATTACKING entry must arm")
+
+	# The regression pin: _arm_attack_step is the shared arming both the attack
+	# path and the cast path go through, and it must clear a stale flag. Drop
+	# the call from _cast_technique and casts root again — this is the assert
+	# that makes that failure loud.
+	pl.set("_attack_step_ended", true)
+	pl.set("_attack_anim_elapsed", 99.0)
+	pl._arm_attack_step("")
+	assert_true(not bool(pl.get("_attack_step_ended")),
+		"_arm_attack_step clears a stale step-end flag")
+	assert_eq(float(pl.get("_attack_anim_elapsed")), 0.0,
+		"_arm_attack_step restarts the elapsed clock")
+	assert_eq(float(pl.get("_attack_anim_length")), 0.5,
+		"_arm_attack_step falls back to 0.5s so the safety net stays armed")
+
+	# The call site itself. Everything above proves _arm_attack_step works;
+	# none of it proves _cast_technique still calls it, and that call is the
+	# whole fix. It can't be driven from an off-tree player — _cast_technique
+	# reaches _spawn_technique_effect, which needs get_tree() — so pin the
+	# source instead.
+	var src: String = _read_text_file("res://scripts/3d/player/player.gd")
+	var cast_start: int = src.find("func _cast_technique(")
+	assert_true(cast_start >= 0, "_cast_technique still exists in player.gd")
+	var next_func: int = src.find("\nfunc ", cast_start + 1)
+	var cast_body: String = src.substr(cast_start, next_func - cast_start) if next_func > 0 else src.substr(cast_start)
+	assert_true(cast_body.contains("_arm_attack_step("),
+		"_cast_technique arms the step-end machinery (drop this and every cast roots the player)")
+
+	pl.free()
+	print("")
+
+
 # ── Two-tier combo timing (#461, spec /mechanics/combos) ──
 # `just_start` is the single chain-accept boundary, a fraction of the current
 # swing from WeaponComboConfig data (saber = 0.45). A press before it FUMBLES
@@ -9592,6 +9665,89 @@ func test_input_config() -> void:
 
 	# Restore original for any tests that run after.
 	InputConfig._apply_scheme_no_save(original_scheme)
+
+
+# ── CRT filter (spec /states/crt-filter) ─────────────────────
+# Two things can silently break this feature and neither shows up as a crash:
+# a preset key that doesn't match a real shader uniform (the look just never
+# applies), and the Options list drifting out of index-alignment with
+# _toggle_option (the row would toggle someone else's setting). Both are
+# pinned here.
+func test_crt_filter() -> void:
+	print("── CRT filter ──")
+	var original_mode: int = CrtFilter.get_mode()
+
+	# Mode table integrity — ids/labels are index-aligned with the enum, and
+	# every non-Off mode has a preset.
+	assert_eq(CrtFilter.MODE_IDS.size(), CrtFilter.Mode.size(), "MODE_IDS covers every Mode")
+	assert_eq(CrtFilter.MODE_LABELS.size(), CrtFilter.Mode.size(), "MODE_LABELS covers every Mode")
+	for m in range(CrtFilter.Mode.size()):
+		if m == CrtFilter.Mode.OFF:
+			assert_true(not CrtFilter.PRESETS.has(m), "Off has no preset (rect is hidden instead)")
+		else:
+			assert_true(CrtFilter.PRESETS.has(m), "%s has a preset" % CrtFilter.MODE_LABELS[m])
+
+	# Every preset key must be a real uniform on the shader. A typo here is
+	# invisible at runtime: set_shader_parameter on an unknown name is a no-op,
+	# so the mode would just look like Off.
+	var shader := load(CrtFilter.SHADER_PATH) as Shader
+	assert_true(shader != null, "crt.gdshader loads")
+	var uniforms: Array = []
+	if shader != null:
+		for u in shader.get_shader_uniform_list():
+			uniforms.append(String(u.get("name", "")))
+	for m in CrtFilter.PRESETS:
+		for key in CrtFilter.PRESETS[m]:
+			assert_true(key in uniforms, "%s preset key '%s' is a shader uniform" % [CrtFilter.MODE_LABELS[m], key])
+
+	# cycle() wraps in both directions; set_mode() clamps out-of-range input.
+	CrtFilter._set_mode_no_save(CrtFilter.Mode.OFF)
+	assert_eq(CrtFilter.get_mode_label(), "Off", "Off label")
+	CrtFilter.cycle(1)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.SCANLINES, "cycle(+1) Off → Scanlines")
+	CrtFilter.cycle(1)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.FULL, "cycle(+1) Scanlines → Full")
+	CrtFilter.cycle(1)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.OFF, "cycle(+1) wraps Full → Off")
+	CrtFilter.cycle(-1)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.FULL, "cycle(-1) wraps Off → Full")
+	CrtFilter.set_mode(99)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.FULL, "set_mode clamps above range")
+	CrtFilter.set_mode(-5)
+	assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.OFF, "set_mode clamps below range")
+
+	# Persistence round-trip: the id written to video_settings.cfg is what
+	# _load_mode reads back. (cycle() above already wrote the file — this run
+	# owns it, and the original mode is restored at the end.)
+	CrtFilter.set_mode(CrtFilter.Mode.SCANLINES)
+	assert_eq(CrtFilter._load_mode(), CrtFilter.Mode.SCANLINES, "mode round-trips through video_settings.cfg")
+
+	# An unknown id on disk (hand-edited, or written by an older build with a
+	# different mode set) MUST fall back to Off rather than index-crash.
+	var cfg := ConfigFile.new()
+	cfg.load(CrtFilter.SETTINGS_PATH)
+	cfg.set_value("video", "crt_mode", "tube_of_the_future")
+	cfg.save(CrtFilter.SETTINGS_PATH)
+	assert_eq(CrtFilter._load_mode(), CrtFilter.Mode.OFF, "unknown crt_mode id falls back to Off")
+
+	# Options row alignment — the CRT row must sit at the index _toggle_option
+	# dispatches CrtFilter.cycle from, and Left/Right in start_menu_input keys
+	# off the same literal.
+	var opts: Array = PsoStartMenu._get_options_list()
+	var crt_idx: int = -1
+	for i in range(opts.size()):
+		if String(opts[i]).begins_with("CRT Filter:"):
+			crt_idx = i
+			break
+	assert_eq(crt_idx, 7, "CRT Filter is Options row 7 (matches _toggle_option + start_menu_input)")
+	CrtFilter._set_mode_no_save(CrtFilter.Mode.OFF)
+	if crt_idx >= 0:
+		PsoStartMenu._toggle_option(crt_idx)
+		assert_eq(CrtFilter.get_mode(), CrtFilter.Mode.SCANLINES, "Options row 7 Accept advances the filter")
+		assert_eq(String(PsoStartMenu._get_options_list()[crt_idx]), "CRT Filter: Scanlines", "row label reflects the new mode")
+
+	CrtFilter.set_mode(original_mode)
+	print("")
 
 
 func _get_joypad_button(action: String) -> int:

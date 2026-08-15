@@ -590,6 +590,7 @@ func _get_options_list() -> Array:
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
 		"Camera Y-Axis: %s" % (on if InputConfig.enable_camera_y else off),
 		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
+		"CRT Filter: %s" % CrtFilter.get_mode_label(),
 	]
 
 
@@ -643,6 +644,11 @@ func _toggle_option(idx: int) -> void:
 			# actually saved. Manual Sort/Move already save_game (above); the
 			# option toggle was the gap.
 			SaveManager.save_game()
+		7:
+			# CrtFilter persists itself to user://video_settings.cfg — a video
+			# setting belongs to the machine, not to the character, so it
+			# deliberately does NOT ride along with SaveManager.save_game().
+			CrtFilter.cycle(1)
 
 
 ## Dispatch a Debug-submenu row. Index-aligned with _get_debug_list().
