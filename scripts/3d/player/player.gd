@@ -213,6 +213,15 @@ signal tech_charge_started(slot: int)
 signal tech_charge_ready(slot: int)
 signal tech_charge_released(slot: int)
 
+# Zonde / Gizonde / Razonde bolt visual. The quad is drawn additively and
+# Y-billboards in the shader, so ZONDE_BOLT_WIDTH is how wide the bolt may
+# wander, not how thick it looks.
+const LIGHTNING_SHADER := preload("res://scripts/3d/shaders/lightning_bolt.gdshader")
+const ZONDE_BOLT_HEIGHT: float = 10.0
+const ZONDE_BOLT_WIDTH: float = 2.0
+const ZONDE_BOLT_HOLD: float = 0.10
+const ZONDE_BOLT_FADE: float = 0.30
+
 # Footstep SFX
 var _footstep_timer: float = 0.0
 const FOOTSTEP_WALK_INTERVAL := 0.55
@@ -1882,25 +1891,27 @@ func _spawn_zonde(damage: int, kb: float) -> void:
 	_spawn_zonde_visual(target_enemy.global_position)
 
 
+## One bolt of the Zonde family, struck downward onto target_pos. The quad
+## Y-billboards in the shader, so it never needs to be aimed at the camera.
 func _spawn_zonde_visual(target_pos: Vector3) -> void:
 	var bolt := MeshInstance3D.new()
-	var cylinder := CylinderMesh.new()
-	cylinder.top_radius = 0.08
-	cylinder.bottom_radius = 0.08
-	cylinder.height = 10.0
-	bolt.mesh = cylinder
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 1.0, 0.3)
-	mat.emission_enabled = true
-	mat.emission = Color(0.8, 0.8, 1.0)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var quad := QuadMesh.new()
+	quad.size = Vector2(ZONDE_BOLT_WIDTH, ZONDE_BOLT_HEIGHT)
+	bolt.mesh = quad
+	bolt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mat := ShaderMaterial.new()
+	mat.shader = LIGHTNING_SHADER
+	mat.set_shader_parameter("Main_Color", Color(1.0, 1.0, 0.85))
+	mat.set_shader_parameter("Effect_Color", Color(0.55, 0.7, 1.0))
+	# Without a per-bolt seed every strike in a Gizonde chain animates in
+	# lockstep, which reads as one wide bolt rather than several.
+	mat.set_shader_parameter("Seed", randf() * 100.0)
 	bolt.material_override = mat
 	get_tree().current_scene.add_child(bolt)
-	bolt.global_position = target_pos + Vector3(0, 5.0, 0)
+	bolt.global_position = target_pos + Vector3(0, ZONDE_BOLT_HEIGHT * 0.5, 0)
 	var tween := bolt.create_tween()
-	tween.tween_property(mat, "albedo_color:a", 0.0, 0.4)
-	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
+	tween.tween_interval(ZONDE_BOLT_HOLD)
+	tween.tween_property(mat, "shader_parameter/Fade", 0.0, ZONDE_BOLT_FADE)
 	tween.tween_callback(bolt.queue_free)
 
 
