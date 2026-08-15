@@ -1214,8 +1214,31 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
+		# NO GATE MESH where the door carries no gate. Two cases, per kion's
+		# spec of the four-door room:
+		#
+		#   the way back   "there should be no gate mesh behind me, only a
+		#                  loading trigger to go back to the previous room"
+		#   attribute 0    "there is no gate. which means that there is no gate
+		#                  model, and the player can freely pass through"
+		#
+		# Building one and opening it is NOT the same thing: an open gate still
+		# puts a frame in the doorway, and a player reads that as a gate that
+		# happens to be open rather than a door that was never gated. The load
+		# trigger is created separately (_create_gate_trigger) and is unaffected,
+		# so the door still works — it just has nothing standing in it.
+		#
+		# A cell with no `door_attributes` keeps every gate it used to build.
+		var attrs_for_gate: Dictionary = _current_cell.get("door_attributes", {})
+		var attr_here: int = int(attrs_for_gate.get(dir, 0))
+		var build_gate: bool = attrs_for_gate.is_empty() \
+			or (attr_here != 0 and dir != _spawn_edge)
+		if not build_gate:
+			_fdbg("[FieldElements]   no gate for %s (attr=%d, entry=%s)"
+				% [dir, attr_here, dir == _spawn_edge])
+
 		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
-		if is_key_gate and dir in key_gate_dirs:
+		if build_gate and is_key_gate and dir in key_gate_dirs:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
@@ -1246,6 +1269,7 @@ func _spawn_field_elements() -> void:
 			kg._setup_laser_material()
 			kg._apply_state()
 			_gate_mgr._fix_gate_depth(kg)
+			_spawn_second_key_gate_mesh(kg, dir, gate_pos, gate_rot)
 			# Only auto-open if THIS direction was previously opened by the player.
 			# The compound (cell:dir) key is what bug fix per-direction tracking needs —
 			# previously the per-cell flag opened all locked doors on a multi-gate hub
@@ -1269,7 +1293,7 @@ func _spawn_field_elements() -> void:
 						_area_map_panel.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
 			_fdbg("[FieldElements] ── KEY GATE DONE ──")
-		else:
+		elif build_gate:
 			# Regular gate — open if entry, visited, the room has no enemies, or
 			# THIS DOOR IS NOT AN ENEMY-DEFEAT DOOR.
 			#
@@ -1652,6 +1676,52 @@ func _log_room_summary(connections: Dictionary) -> void:
 		int(_current_cell.get("key_count", 1 if _current_cell.get("has_key", false) else 0)),
 		", ".join(parts) if not parts.is_empty() else "no objects",
 	])
+
+
+## A two-key gate is TWO gates, one behind the other.
+##
+## kion's spec from play: "the double key gate should be two key gates placed
+## directly next to each other. one key gate should be in the exact position
+## where the gate normally is, and then following behind it should be another
+## gate." One mesh that happens to want two keys reads exactly like a one-key
+## gate until you try it; two in a row tells the player the price before they
+## walk up to it.
+##
+## The SECOND mesh is decoration driven by the first: `kg` keeps all of the
+## unlocking logic and the collision body, and this one mirrors its state. Two
+## independent KeyGates on one doorway would need the per-direction
+## `_gates_opened` bookkeeping to become per-gate, for no gain — the requirement
+## is already "this door costs 2".
+##
+## Placed one unit further along the doorway's outward direction, which is the
+## same axis the spawn point (+3) and load trigger (+7) already use, so it sits
+## just beyond the first rather than beside it.
+func _spawn_second_key_gate_mesh(kg: Node3D, dir: String, gate_pos: Vector3,
+		gate_rot: Vector3) -> void:
+	if int(_current_cell.get("required_keys", 1)) < 2:
+		return
+	var pd: Dictionary = _portal_data.get(dir, {})
+	var spawn_pos: Vector3 = pd.get("spawn_pos", gate_pos)
+	var outward: Vector3 = spawn_pos - gate_pos
+	outward.y = 0.0
+	if outward.length() < 0.01:
+		return
+	var second := KeyGateScript.new()
+	second.name = "KeyGate_%s_second" % dir
+	second.required_key_id = kg.required_key_id
+	second.required_keys = kg.required_keys
+	add_child(second)
+	second.global_position = gate_pos + outward.normalized() * 1.0
+	second.rotation = gate_rot
+	_gate_mgr._fixup_gate_materials(second)
+	second._setup_laser_material()
+	second._apply_state()
+	_gate_mgr._fix_gate_depth(second)
+	# Mirror the real gate: it opens when the player pays, this follows.
+	kg.state_changed.connect(func(_old: String, new_state: String) -> void:
+		if new_state == "open" and is_instance_valid(second):
+			second.open()
+	)
 
 
 ## Lock the room's ENEMY-DEFEAT gates while it holds enemies.
