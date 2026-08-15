@@ -9,6 +9,7 @@ import StageSelector from './StageSelector';
 import StageCanvas from './StageCanvas';
 import FloorOverlay from './FloorOverlay';
 import PortalOverlay from './PortalOverlay';
+import MeasuredDoorwayOverlay from './MeasuredDoorwayOverlay';
 import ObstacleOverlay from './ObstacleOverlay';
 import TextureAnimator from './TextureAnimator';
 import FloorCollisionTab from './tabs/FloorCollisionTab';
@@ -999,6 +1000,10 @@ export default function UnifiedStageEditor() {
         );
       case 'portals':
         return (
+          <>
+          {/* psz-re's measured doorway, so a hand-placed portal can be checked
+              against the real opening rather than against an aggregate. */}
+          <MeasuredDoorwayOverlay stageId={selectedMapId} />
           <PortalOverlay
             portals={config.portals}
             selectedPortalId={selectedPortalId}
@@ -1014,6 +1019,7 @@ export default function UnifiedStageEditor() {
             spawnPlacementMode={spawnPlacementMode}
             onPlaceDefaultSpawn={handlePlaceDefaultSpawn}
           />
+          </>
         );
       case 'obstacles':
         return (
