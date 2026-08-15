@@ -1,0 +1,73 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> Off: no video_settings.cfg
+  Off --> Scanlines: Accept / Right
+  Scanlines --> Full: Accept / Right
+  Full --> Off: Accept / Right
+  Off --> Full: Left
+  Full --> Scanlines: Left
+  Scanlines --> Off: Left
+
+  Off: Off — overlay hidden, zero cost
+  Scanlines: Scanlines — flat, touch-safe
+  Full: Full — curved tube
+`;
+---
+
+<Concept title="CRT Filter">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in RFC 2119.</p>
+
+  <p>An optional full-screen post-process that makes the game look like it is being played on a CRT. It is purely cosmetic: it <strong>MUST NOT</strong> change gameplay, timing, input, or any value the game reads back — it only changes what reaches the glass.</p>
+
+  <h2>Modes</h2>
+
+  <p>The setting is a three-state cycle, not a boolean. <strong>Off</strong> is the default.</p>
+
+  <ul>
+    <li><strong>Off</strong> — no filter. The overlay <strong>MUST</strong> be hidden (not merely transparent), because a transparent canvas item still forces the per-frame back-buffer copy the shader needs. Off <strong>MUST</strong> cost nothing.</li>
+    <li><strong>Scanlines</strong> — horizontal scanlines and a light vignette, with brightness raised to pay back the energy the scanlines remove. No geometric warp. This is the conservative preset and the one to pick on a phone: because it does not move any pixel, on-screen control buttons stay exactly where a tap registers.</li>
+    <li><strong>Full</strong> — Scanlines plus an aperture-grille mask, barrel curvature, chromatic aberration, halation, and a stronger vignette.</li>
+  </ul>
+
+  <h2>Scope — what goes through the tube</h2>
+
+  <p>The filter treats the <em>composited frame</em>. The 3D world, every HUD canvas, the start menu, and the <code>SceneManager</code> fade <strong>MUST</strong> all pass through it — a UI layer floating crisp and unwarped above a curved image gives the illusion away. Concretely, the overlay <strong>MUST</strong> sit above every other <code>CanvasLayer</code> in the project (today: layer 260, above the fade at 250).</p>
+
+  <h2>Curvature MUST NOT crop</h2>
+
+  <p>Barrel distortion pushes the corners of the image outside the sampled area. Rather than let that clip content, the warp <strong>MUST</strong> be rescaled by exactly its own corner factor, so the corners land back on the frame edge. No pixel that the game drew is lost — which matters because the HP/PP panel, the minimap and the action palette all live in corners.</p>
+
+  <p>The cost of that guarantee is a thin black band at the middles of the edges, which reads as the tube's bezel. <strong>Full</strong> therefore keeps its curvature small; a larger value would trade a wider bezel for a bulge nobody asked for.</p>
+
+  <h2>Resolution independence</h2>
+
+  <p>Scanlines are counted against a fixed virtual line count (240), not against physical pixels, so the look is identical at 720p and at 4K instead of the lines dissolving into the pixel grid on a large display. The aperture grille is the opposite: it is measured in <em>physical</em> pixels (3px RGB triads), because a grille is meant to be a fine texture, not a visible stripe pattern that scales up with the window.</p>
+
+  <h2>Persistence</h2>
+
+  <p>The mode persists to <code>user://video_settings.cfg</code> under <code>[video] crt_mode</code>, as one of the string ids <code>off</code> / <code>scanlines</code> / <code>full</code>. It is stored as a string rather than an enum ordinal so that reordering the modes can never silently reinterpret a saved config as a different filter.</p>
+
+  <p>This is a <strong>video</strong> setting, so it belongs to the machine, not to the character: it <strong>MUST NOT</strong> ride along with <code>SaveManager.save_game()</code> and <strong>MUST</strong> survive deleting or switching characters. An unrecognised <code>crt_mode</code> id (hand-edited, or written by a build with a different mode set) <strong>MUST</strong> fall back to <strong>Off</strong>.</p>
+
+  <h2>Where it is suppressed</h2>
+
+  <ul>
+    <li><strong>Autopilot</strong> (<code>PSZ_AUTOPILOT</code>) — the filter <strong>MUST</strong> stay Off. The matrix greps its own rendered frames, and the back-buffer copy perturbs the frame timings it measures.</li>
+    <li><strong>Headless</strong> — nothing to filter.</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+
+  <ul>
+    <li><code>scripts/autoloads/crt_filter.gd</code> — the <code>CrtFilter</code> autoload: mode enum, the preset table, persistence, and the overlay <code>CanvasLayer</code>.</li>
+    <li><code>scripts/shaders/crt.gdshader</code> — the single canvas-item shader. Every mode is a set of uniform values in <code>CrtFilter.PRESETS</code>; a new look is a preset entry, <strong>not</strong> a second shader.</li>
+    <li><code>scripts/3d/field/pso_start_menu.gd</code> / <code>start_menu_input.gd</code> — the <em>CRT Filter</em> row in <a href="/states/start-menu">Options</a>.</li>
+  </ul>
+
+  <p>The shader file <strong>MUST</strong> stay under <code>res://scripts/</code>. It is reachable from an autoload, and autoloads must compile before the asset pack mounts — see the compile contract in <a href="/states/field-lifecycle">Field Stage Lifecycle</a>.</p>
+</Concept>
