@@ -213,6 +213,15 @@ signal tech_charge_started(slot: int)
 signal tech_charge_ready(slot: int)
 signal tech_charge_released(slot: int)
 
+# Zonde / Gizonde / Razonde bolt visual. The quad is drawn additively and
+# Y-billboards in the shader, so ZONDE_BOLT_WIDTH is how wide the bolt may
+# wander, not how thick it looks.
+const LIGHTNING_SHADER := preload("res://scripts/3d/shaders/lightning_bolt.gdshader")
+const ZONDE_BOLT_HEIGHT: float = 10.0
+const ZONDE_BOLT_WIDTH: float = 2.0
+const ZONDE_BOLT_HOLD: float = 0.10
+const ZONDE_BOLT_FADE: float = 0.30
+
 # Footstep SFX
 var _footstep_timer: float = 0.0
 const FOOTSTEP_WALK_INTERVAL := 0.55
@@ -1606,6 +1615,12 @@ func _cast_technique(technique_id: String) -> void:
 	_queued_combo_special = false
 	play_animation(_anim_prefix + "_tec", false)
 
+	# A cast enters ATTACKING without going through _play_attack_animation, so
+	# it has to arm the step-end machinery itself. play_animation falls back to
+	# a fuzzy suffix match, so measure the clip that actually started rather
+	# than the name we asked for.
+	_arm_attack_step(animation_player.current_animation if animation_player else "")
+
 	_spawn_technique_effect(technique_id, tech_data)
 
 
@@ -1882,25 +1897,33 @@ func _spawn_zonde(damage: int, kb: float) -> void:
 	_spawn_zonde_visual(target_enemy.global_position)
 
 
+## One bolt of the Zonde family, struck downward onto target_pos. The quad
+## Y-billboards in the shader, so it never needs to be aimed at the camera.
 func _spawn_zonde_visual(target_pos: Vector3) -> void:
 	var bolt := MeshInstance3D.new()
-	var cylinder := CylinderMesh.new()
-	cylinder.top_radius = 0.08
-	cylinder.bottom_radius = 0.08
-	cylinder.height = 10.0
-	bolt.mesh = cylinder
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 1.0, 0.3)
-	mat.emission_enabled = true
-	mat.emission = Color(0.8, 0.8, 1.0)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var quad := QuadMesh.new()
+	quad.size = Vector2(ZONDE_BOLT_WIDTH, ZONDE_BOLT_HEIGHT)
+	bolt.mesh = quad
+	bolt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mat := ShaderMaterial.new()
+	mat.shader = LIGHTNING_SHADER
+	mat.set_shader_parameter("Main_Color", Color(1.0, 1.0, 0.85))
+	mat.set_shader_parameter("Effect_Color", Color(0.55, 0.7, 1.0))
+	# Without a per-bolt seed every strike in a Gizonde chain animates in
+	# lockstep, which reads as one wide bolt rather than several.
+	mat.set_shader_parameter("Seed", randf() * 100.0)
+	# Fade looks redundant — the shader already defaults it to 1.0 — but it is
+	# load-bearing. ShaderMaterial.get("shader_parameter/x") returns null for a
+	# parameter that was never assigned, and Tween rejects a null property with
+	# "does not exist", so the fade-out below silently never runs. Deleting this
+	# line leaves a bolt that pops out after ZONDE_BOLT_HOLD with no fade.
+	mat.set_shader_parameter("Fade", 1.0)
 	bolt.material_override = mat
 	get_tree().current_scene.add_child(bolt)
-	bolt.global_position = target_pos + Vector3(0, 5.0, 0)
+	bolt.global_position = target_pos + Vector3(0, ZONDE_BOLT_HEIGHT * 0.5, 0)
 	var tween := bolt.create_tween()
-	tween.tween_property(mat, "albedo_color:a", 0.0, 0.4)
-	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
+	tween.tween_interval(ZONDE_BOLT_HOLD)
+	tween.tween_property(mat, "shader_parameter/Fade", 0.0, ZONDE_BOLT_FADE)
 	tween.tween_callback(bolt.queue_free)
 
 
@@ -2186,15 +2209,24 @@ const WEAPON_SFX := {
 ## callers depend on its 0 fallback (player.gd ~1247/1770/2215/2297/2450).
 const BAREHANDED_SFX := "res://assets/sfx/weapons/unarmed_swing_1.wav"  # common46 — pending pack republish
 
-func _play_and_track_attack(anim_name: String) -> void:
-	play_animation(anim_name, false)
-	_attack_anim_elapsed = 0.0
+## Arm the step-end machinery for a clip that just started. EVERY entry into
+## ATTACKING must call this. Both exits out of the state are gated on
+## _attack_step_ended — the animation_finished double-fire guard and the
+## elapsed-length safety net — so a value left true by the previous step roots
+## the player in ATTACKING until something unrelated knocks them out of it.
+## _attack_anim_length doubles as the rhythm-window denominator (_attack_frac).
+func _arm_attack_step(anim_name: String) -> void:
 	_attack_step_ended = false
-	# Get animation length for rhythm window timing
-	if animation_player and animation_player.has_animation(anim_name):
+	_attack_anim_elapsed = 0.0
+	if anim_name != "" and animation_player and animation_player.has_animation(anim_name):
 		_attack_anim_length = animation_player.get_animation(anim_name).length
 	else:
 		_attack_anim_length = 0.5  # Fallback
+
+
+func _play_and_track_attack(anim_name: String) -> void:
+	play_animation(anim_name, false)
+	_arm_attack_step(anim_name)
 	# Hits resolve at the step's damaging frame (_handle_attack_state), not
 	# at swing start — spec /mechanics/targeting.
 	_attack_hit_done = false
