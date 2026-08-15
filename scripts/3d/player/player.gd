@@ -1906,6 +1906,12 @@ func _spawn_zonde_visual(target_pos: Vector3) -> void:
 	# Without a per-bolt seed every strike in a Gizonde chain animates in
 	# lockstep, which reads as one wide bolt rather than several.
 	mat.set_shader_parameter("Seed", randf() * 100.0)
+	# Fade looks redundant — the shader already defaults it to 1.0 — but it is
+	# load-bearing. ShaderMaterial.get("shader_parameter/x") returns null for a
+	# parameter that was never assigned, and Tween rejects a null property with
+	# "does not exist", so the fade-out below silently never runs. Deleting this
+	# line leaves a bolt that pops out after ZONDE_BOLT_HOLD with no fade.
+	mat.set_shader_parameter("Fade", 1.0)
 	bolt.material_override = mat
 	get_tree().current_scene.add_child(bolt)
 	bolt.global_position = target_pos + Vector3(0, ZONDE_BOLT_HEIGHT * 0.5, 0)
