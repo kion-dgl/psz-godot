@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
+import { PROVENANCE, CONFIDENCE_STYLE, type Confidence } from './provenance';
 
 /**
  * Grid viewer for GENERATED free fields.
@@ -411,6 +412,122 @@ function SectionGrid({ section }: { section: Section }) {
   );
 }
 
+/** What is measured, what is inferred, and what we made up.
+ *
+ * Collapsed by default: it is reference material, not something to read every
+ * visit. But it lives on the page rather than in a doc, because the moment it
+ * is somewhere else it stops being consulted and an invented number starts
+ * getting defended as a fact.
+ */
+interface ReReference {
+  id: string;
+  title: string;
+  blurb: string;
+  confidence: string;
+  summary: string;
+  source: string;
+  open_questions?: string[];
+}
+
+function ProvenancePanel() {
+  const [open, setOpen] = useState(false);
+  // psz-re's own words, vendored by scripts/tools/refield/sync_re_references.py.
+  // Optional on purpose: a fresh clone that has never run the sync still gets a
+  // working page, just without the citations.
+  const [refs, setRefs] = useState<ReReference[]>([]);
+  useEffect(() => {
+    fetch(assetUrl('/data/re-references.json'))
+      .then((r) => (r.ok ? r.json() : { references: [] }))
+      .then((d) => setRefs(d.references ?? []))
+      .catch(() => setRefs([]));
+  }, []);
+  const counts = PROVENANCE.reduce(
+    (acc, p) => ({ ...acc, [p.level]: (acc[p.level] ?? 0) + 1 }),
+    {} as Record<Confidence, number>,
+  );
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: '#12122a',
+          color: '#e8e8f0',
+          border: '1px solid #2a2a4a',
+          borderRadius: 6,
+          padding: '6px 10px',
+          fontSize: 12,
+          cursor: 'pointer',
+        }}
+      >
+        {open ? '▾' : '▸'} what do we actually know?{' '}
+        {(['measured', 'inferred', 'ours'] as Confidence[]).map((lvl) => (
+          <span key={lvl} style={{ color: CONFIDENCE_STYLE[lvl].color, marginLeft: 8 }}>
+            {CONFIDENCE_STYLE[lvl].mark} {counts[lvl] ?? 0}
+          </span>
+        ))}
+      </button>
+      {open && (
+        <div
+          style={{
+            marginTop: 8,
+            border: '1px solid #2a2a4a',
+            borderRadius: 6,
+            background: '#12122a',
+            padding: 12,
+            fontSize: 12,
+            lineHeight: 1.5,
+            maxWidth: 900,
+          }}
+        >
+          {refs.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ color: '#e8e8f0', marginBottom: 6 }}>
+                psz-re, in its own words
+              </div>
+              {refs.map((r) => (
+                <details key={r.id} style={{ marginBottom: 6 }}>
+                  <summary style={{ cursor: 'pointer', color: '#88aaff', fontSize: 11 }}>
+                    {r.title}{' '}
+                    <span
+                      style={{ color: r.confidence === 'confirmed' ? '#6ec98a' : '#8a90b8' }}
+                    >
+                      [{r.confidence}]
+                    </span>
+                  </summary>
+                  <div style={{ color: '#9aa', fontSize: 11, padding: '4px 0 0 12px' }}>
+                    {r.summary}
+                    <div style={{ color: '#6b74b8', marginTop: 4 }}>{r.source}</div>
+                    {(r.open_questions ?? []).length > 0 && (
+                      <div style={{ color: '#e0c97a', marginTop: 4 }}>
+                        open: {(r.open_questions ?? []).join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          )}
+
+          {PROVENANCE.map((p) => {
+            const c = CONFIDENCE_STYLE[p.level];
+            return (
+              <div key={p.label} style={{ marginBottom: 10 }}>
+                <span style={{ color: c.color }} title={c.title}>
+                  {c.mark}
+                </span>{' '}
+                <strong style={{ color: '#e8e8f0' }}>{p.label}</strong>{' '}
+                <span style={{ color: c.color, fontSize: 11 }}>{p.level}</span>
+                <div style={{ color: '#8a90b8', fontSize: 11 }}>{p.source}</div>
+                {p.note && <div style={{ color: '#9aa', fontSize: 11 }}>{p.note}</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FieldGenerator() {
   const [dump, setDump] = useState<Dump | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -540,6 +657,8 @@ export default function FieldGenerator() {
         <span style={{ color: ATTR_INFO[ATTR_ENEMY_DEFEAT].color }}>▬ enemy-defeat</span>
         <span>· counts: e enemies, b boxes, t traps, w walls, f fences, s switches</span>
       </div>
+
+      <ProvenancePanel />
 
       {roll.sections.map((section) => (
         <SectionGrid key={section.area} section={section} />
