@@ -58,14 +58,28 @@ const KIND_COLOR: Record<string, string> = {
 
 const FALLBACK = '#e0e0e0';
 
+interface ReferenceRoom {
+  objects?: { k: string; m?: string; x: number; y: number; z: number }[];
+  enemies?: { x: number; y: number; z: number }[];
+  blocks?: number;
+  flags?: number[];
+}
+
 export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds }: Props) {
   const [rooms, setRooms] = useState<Record<string, { objects: AuthoredObject[] }> | null>(null);
+  // The REFERENCE layer: what the original has here that we do not place.
+  // Separate file, separate risk — nothing in it reaches the game.
+  const [reference, setReference] = useState<Record<string, ReferenceRoom> | null>(null);
 
   useEffect(() => {
     fetch(assetUrl('/data/re_reference/room_objects.json'))
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setRooms(d?.rooms ?? null))
       .catch(() => setRooms(null));
+    fetch(assetUrl('/data/re_reference/room_reference.json'))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setReference(d?.rooms ?? null))
+      .catch(() => setReference(null));
   }, []);
 
   const objects = useMemo(() => {
@@ -74,10 +88,45 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds }: Pro
     return kinds ? entry.objects.filter((o) => kinds.includes(o.k)) : entry.objects;
   }, [rooms, stageId, set, kinds]);
 
-  if (objects.length === 0) return null;
+  const ref = reference?.[`${stageId}_${set}`];
+  const refObjects = (ref?.objects ?? []).filter(
+    (o) => !kinds || kinds.includes(o.k),
+  );
+  const spawns = !kinds || kinds.includes('enemy spawn') ? ref?.enemies ?? [] : [];
+
+  if (objects.length === 0 && refObjects.length === 0 && spawns.length === 0) return null;
 
   return (
     <group>
+      {/* WHAT THE ORIGINAL HAS AND WE DO NOT PLACE. Drawn as open wireframe so
+          it never reads as something the game builds: authored keys (the
+          original places them per room; we scatter by rule), enemy spawn slots
+          (we still use a blind 5-unit ring), and kinds nobody has identified. */}
+      {refObjects.map((o, i) => (
+        <group key={`ref${i}`} position={[o.x, o.y, o.z]}>
+          <mesh position={[0, 0.9, 0]}>
+            <boxGeometry args={[1.2, 1.8, 1.2]} />
+            <meshBasicMaterial
+              color={o.k === 'key' ? '#ffd166' : '#7a7f9a'}
+              wireframe
+            />
+          </mesh>
+        </group>
+      ))}
+      {spawns.map((e, i) => (
+        <group key={`spawn${i}`} position={[e.x, e.y, e.z]}>
+          {/* Elevation matters here — a slot sitting above the floor is the
+              "enemies standing on rocks" case, so the post shows the drop. */}
+          <mesh position={[0, 0.9, 0]}>
+            <cylinderGeometry args={[0.55, 0.55, 1.8, 10]} />
+            <meshBasicMaterial color="#f87171" wireframe />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
+            <ringGeometry args={[0.5, 0.75, 14]} />
+            <meshBasicMaterial color="#f87171" />
+          </mesh>
+        </group>
+      ))}
       {objects.map((o, i) => {
         const color = KIND_COLOR[o.k] ?? FALLBACK;
         // Facing is 16 bits per turn, 0 = +Z toward +X — the same convention

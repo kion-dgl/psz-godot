@@ -24,12 +24,22 @@ interface RoomEntry {
 
 export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: Props) {
   const [rooms, setRooms] = useState<Record<string, RoomEntry> | null>(null);
+  const [reference, setReference] = useState<Record<string, {
+    objects?: { k: string }[];
+    enemies?: unknown[];
+    blocks?: number;
+    flags?: number[];
+  }> | null>(null);
 
   useEffect(() => {
     fetch(assetUrl('/data/re_reference/room_objects.json'))
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setRooms(d?.rooms ?? null))
       .catch(() => setRooms(null));
+    fetch(assetUrl('/data/re_reference/room_reference.json'))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setReference(d?.rooms ?? null))
+      .catch(() => setReference(null));
   }, []);
 
   const entry = rooms?.[`${stageId}_d`];
@@ -49,6 +59,14 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
   }, [entry]);
 
   const kinds = Object.keys(byKind).sort();
+
+  // The reference layer: what the original has here that we do not place.
+  const ref = reference?.[`${stageId}_d`];
+  const refByKind: Record<string, number> = {};
+  for (const o of ref?.objects ?? []) refByKind[o.k] = (refByKind[o.k] ?? 0) + 1;
+  const spawnCount = ref?.enemies?.length ?? 0;
+  if (spawnCount) refByKind['enemy spawn'] = spawnCount;
+  const refKinds = Object.keys(refByKind).sort();
 
   return (
     <div style={{ padding: 16, color: '#e8e8f0', fontSize: 13, lineHeight: 1.5 }}>
@@ -140,6 +158,54 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
             })}
           </div>
         </>
+      )}
+
+      {refKinds.length > 0 && (
+        <div style={{ marginTop: 18, borderTop: '1px solid #2a2a4a', paddingTop: 12 }}>
+          <strong style={{ color: '#f87171' }}>What we do NOT place</strong>
+          <div style={{ color: '#8a90b8', fontSize: 11, margin: '4px 0 8px' }}>
+            Drawn as open wireframe so it never reads as something the game
+            builds. Keys are authored per room in the original — psz-godot
+            scatters them by rule instead — and enemy spawn slots are measured
+            while we still ring enemies at radius 5.0 (psz-godot#604).
+            {ref?.blocks !== undefined && (
+              <div style={{ marginTop: 4 }}>
+                deploy blocks: {ref.blocks} · flags [{(ref.flags ?? []).join(', ')}]
+                {' '}— 254 of 257 rooms have one block, so a block is not a wave;
+                the flag is only ever 0 or 1 and nobody knows what it means yet.
+              </div>
+            )}
+          </div>
+          {refKinds.map((k) => {
+            const on = visibleKinds === null || visibleKinds.includes(k);
+            return (
+              <button
+                key={k}
+                onClick={() =>
+                  setVisibleKinds(
+                    visibleKinds === null
+                      ? [...kinds, ...refKinds].filter((x) => x !== k)
+                      : on
+                        ? visibleKinds.filter((x) => x !== k)
+                        : [...visibleKinds, k],
+                  )
+                }
+                style={{
+                  background: on ? '#1a1a2e' : '#0f0f1e',
+                  color: on ? (k === 'key' ? '#ffd166' : k === 'enemy spawn' ? '#f87171' : '#9aa') : '#555',
+                  border: '1px dashed #3a3a5a',
+                  borderRadius: 4,
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  margin: '0 6px 6px 0',
+                }}
+              >
+                {k} {refByKind[k]}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
