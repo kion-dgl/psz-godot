@@ -1106,8 +1106,24 @@ func _spawn_field_elements() -> void:
 		var is_open: bool = is_player_entry or not room_has_enemies
 		var is_delayed: bool = is_player_entry  # Delay trigger on entry edge
 
-		# Gate model — AreaWarp instead of Gate
-		var area_warp := AreaWarpScript.new()
+		# Gate model — AreaWarp instead of Gate, or a BOSS WARP when the section
+		# this door leads to is the boss arena.
+		#
+		# BossWarp used to be reachable only from the goal-pad block below, which
+		# is guarded by `not _portal_data.has(warp_edge)` — a leaf room whose exit
+		# has no wall door. A generated field's b-section end cell always HAS one
+		# (grid_generator sets warp_edge from key_gate_direction, chosen from the
+		# tile's real gates, and the no-spare-doors retile deliberately exempts
+		# it), so the pad never fired and every boss entrance was a plain area
+		# gate. kion: "the transition to the boss should always be a boss warp".
+		var aw_to_boss: bool = not is_final_exit and target_section >= 0 \
+			and target_section < sections_for_warp.size() \
+			and str(sections_for_warp[target_section].get("type", "")) == "boss"
+		# BossWarp and AreaWarp are SIBLINGS under WarpBase, not parent/child, so
+		# the `is AreaWarp` tests in the enemy lock/unlock passes are widened to
+		# WarpBase — otherwise swapping the model here would silently stop the
+		# boss door being locked behind an uncleared room.
+		var area_warp: WarpBase = BossWarpScript.new() if aw_to_boss else AreaWarpScript.new()
 		area_warp.auto_collect = false
 		area_warp.name = "AreaWarp_%s" % portal_dir
 		area_warp.element_state = "open" if is_open else "locked"
@@ -1231,14 +1247,15 @@ func _spawn_field_elements() -> void:
 		# A cell with no `door_attributes` keeps every gate it used to build.
 		var attrs_for_gate: Dictionary = _current_cell.get("door_attributes", {})
 		var attr_here: int = int(attrs_for_gate.get(dir, 0))
-		var build_gate: bool = attrs_for_gate.is_empty() \
-			or (attr_here != 0 and dir != _spawn_edge)
+		var gate_kind: int = gate_kind_for_door(
+			attrs_for_gate, dir, _spawn_edge, is_key_gate, key_gate_dirs)
+		var build_gate: bool = gate_kind != GATE_NONE
 		if not build_gate:
 			_fdbg("[FieldElements]   no gate for %s (attr=%d, entry=%s)"
 				% [dir, attr_here, dir == _spawn_edge])
 
 		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
-		if build_gate and is_key_gate and dir in key_gate_dirs:
+		if gate_kind == GATE_KEY:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
@@ -1293,7 +1310,7 @@ func _spawn_field_elements() -> void:
 						_area_map_panel.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
 			_fdbg("[FieldElements] ── KEY GATE DONE ──")
-		elif build_gate:
+		elif gate_kind == GATE_ENEMY_DEFEAT:
 			# Regular gate — open if entry, visited, the room has no enemies, or
 			# THIS DOOR IS NOT AN ENEMY-DEFEAT DOOR.
 			#
@@ -1638,6 +1655,39 @@ func _wire_fence_links() -> void:
 				link_id, switches.size(), fences.size()])
 
 
+## What a doorway gets: nothing, a key gate, or an enemy-defeat gate.
+##
+## Pulled out of _spawn_field_elements so it can be tested without a scene. The
+## bug it exists to prevent was invisible to both test layers: the generator
+## tests assert the attributes are ASSIGNED correctly, and the sanity autopilot
+## drives a static quest that has no attributes at all — so a runtime that
+## ignored them passed everything while kion saw nothing but enemy-defeat gates
+## across three stages.
+##
+## `attrs` empty means a field with no door attributes — every static
+## field_quest, and any save written before they existed. Those keep exactly the
+## behaviour they had: a gate on every connection, key gates where the legacy
+## `is_key_gate` / `key_gate_direction` fields say so.
+enum { GATE_NONE, GATE_KEY, GATE_ENEMY_DEFEAT }
+
+static func gate_kind_for_door(attrs: Dictionary, dir: String, spawn_edge: String,
+		legacy_is_key_gate: bool, legacy_key_dirs: Array) -> int:
+	if attrs.is_empty():
+		# Legacy field: gate everything, key-gate what the old fields name.
+		return GATE_KEY if (legacy_is_key_gate and dir in legacy_key_dirs) else GATE_ENEMY_DEFEAT
+	# The way back is never gated — 0 of 592 rooms in psz-re's capture set — and
+	# an open door has no mesh at all rather than a gate that starts open.
+	if dir == spawn_edge:
+		return GATE_NONE
+	match int(attrs.get(dir, 0)):
+		1, 2:
+			return GATE_KEY
+		4:
+			return GATE_ENEMY_DEFEAT
+		_:
+			return GATE_NONE
+
+
 ## One line per room, so a play-test can tell "rolled open" apart from "broken".
 ##
 ## Every door with what the generator decided for it, everything authored into
@@ -1766,7 +1816,7 @@ func _lock_gates_for_enemies() -> void:
 
 	# Lock area warps (like gates) until room clear — skip entry direction
 	for child in get_children():
-		if child is AreaWarp and child.name.begins_with("AreaWarp_"):
+		if child is WarpBase and child.name.begins_with("AreaWarp_"):
 			var aw_dir: String = child.name.trim_prefix("AreaWarp_")
 			if aw_dir == _spawn_edge:
 				continue  # Don't lock entry area warp
@@ -1823,7 +1873,7 @@ func _unlock_room_gates() -> void:
 func _unlock_area_warps() -> void:
 	for node in _warp_edge_locked:
 		if is_instance_valid(node):
-			if node is AreaWarp:
+			if node is WarpBase:
 				node.element_state = "open"
 				node._apply_state()
 				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""

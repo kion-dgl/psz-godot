@@ -15,13 +15,23 @@ import { assetUrl } from '../utils/assets';
  * against the real game's output once psz-re can dump a field for a known seed.
  */
 
+interface FieldObject {
+  type: string;
+  enemy_id?: string;
+  /** Room-local (x, y, z). Authored props carry one; ring-placed enemies do too. */
+  position?: [number, number, number];
+  rotation?: number;
+  authored?: boolean;
+  destructible?: boolean;
+}
+
 interface Cell {
   pos: string;
   stage_id: string;
   rotation: number;
   connections: Record<string, string>;
   portals?: Record<string, string>;
-  objects?: { type: string; enemy_id?: string }[];
+  objects?: FieldObject[];
   is_start: boolean;
   is_end: boolean;
   is_branch: boolean;
@@ -31,6 +41,54 @@ interface Cell {
   key_gate_direction: string;
   warp_edge: string;
   path_order: number;
+  /**
+   * Door attribute per direction, using the original game's own numbers
+   * (see GridGenerator.ATTR_*): 1 one-key, 2 two-key, 4 enemy-defeat.
+   *
+   * AN OPEN DOOR IS OMITTED, not written as 0 — so "absent" means "walk
+   * straight through", which is exactly the case that is easy to misread.
+   *
+   * Optional because transition and boss sections are single hand-built cells
+   * that carry 15 keys rather than the 19 a grid cell has.
+   */
+  door_attributes?: Record<string, number>;
+  /** The start room's way back to wherever the player warped in from. */
+  entry_warp_edge?: string;
+  /** Keys this room holds (cap 2), and how many its own gate demands. */
+  key_count?: number;
+  required_keys?: number;
+}
+
+/** Door attribute → label + colour. `undefined`/0 is an ungated doorway. */
+const ATTR_OPEN = 0;
+const ATTR_ONE_KEY = 1;
+const ATTR_TWO_KEY = 2;
+const ATTR_ENEMY_DEFEAT = 4;
+
+const ATTR_INFO: Record<number, { label: string; color: string }> = {
+  [ATTR_OPEN]: { label: 'open', color: '#6ec98a' },
+  [ATTR_ONE_KEY]: { label: 'one-key', color: '#e0c97a' },
+  [ATTR_TWO_KEY]: { label: 'two-key', color: '#e08a3c' },
+  [ATTR_ENEMY_DEFEAT]: { label: 'enemy-defeat', color: '#ff6b6b' },
+};
+
+function attrOf(cell: Cell, dir: string): number {
+  return cell.door_attributes?.[dir] ?? ATTR_OPEN;
+}
+
+/** Object-type counts for a cell, collapsed into the groups worth eyeballing. */
+function contentCounts(cell: Cell) {
+  const objects = cell.objects ?? [];
+  const n = (...types: string[]) =>
+    objects.filter((o) => types.includes(o.type)).length;
+  return {
+    enemies: n('enemy'),
+    boxes: n('box', 'rare_box'),
+    walls: n('wall'),
+    fences: n('fence'),
+    switches: n('step_switch'),
+    traps: objects.filter((o) => o.type.endsWith('_trap')).length,
+  };
 }
 
 interface Section {
@@ -139,9 +197,11 @@ function CellBox({
   cell: Cell;
   problems: string[];
 }) {
-  const enemies = (cell.objects ?? []).filter((o) => o.type === 'enemy').length;
-  const boxes = (cell.objects ?? []).filter((o) => o.type === 'box').length;
+  const c = contentCounts(cell);
   const bad = problems.length > 0;
+  const doors = Object.keys(cell.connections)
+    .map((d) => `${d}=${ATTR_INFO[attrOf(cell, d)]?.label ?? '?'}`)
+    .join(', ');
 
   let bg = '#242438';
   if (cell.is_start) bg = '#1d4d3a';
@@ -154,8 +214,13 @@ function CellBox({
       title={
         `${cell.stage_id}  rot=${cell.rotation}°\n` +
         `connections: ${Object.entries(cell.connections).map(([d, t]) => `${d}→${t}`).join(', ') || 'none'}\n` +
+        `doors: ${doors || 'none'}\n` +
         `portals: ${Object.keys(cell.portals ?? {}).join(', ') || 'none'}\n` +
-        `${enemies} enemies, ${boxes} boxes` +
+        `${c.enemies} enemies, ${c.boxes} boxes, ${c.walls} walls, ` +
+        `${c.traps} traps, ${c.fences} fences, ${c.switches} switches\n` +
+        `keys held: ${cell.key_count ?? (cell.has_key ? 1 : 0)}` +
+        (cell.required_keys ? `, gate demands ${cell.required_keys}` : '') +
+        (cell.entry_warp_edge ? `\nway back: ${cell.entry_warp_edge}` : '') +
         (problems.length ? `\n\nPROBLEMS:\n- ${problems.join('\n- ')}` : '')
       }
       style={{
@@ -179,11 +244,17 @@ function CellBox({
       </div>
       <div style={{ color: '#8a90b8' }}>{cell.rotation}°</div>
       <div style={{ color: '#9aa' }}>
-        {enemies > 0 && <span>{enemies}e </span>}
-        {boxes > 0 && <span>{boxes}b</span>}
+        {c.enemies > 0 && <span>{c.enemies}e </span>}
+        {c.boxes > 0 && <span>{c.boxes}b </span>}
+        {c.traps > 0 && <span style={{ color: '#e08a3c' }}>{c.traps}t </span>}
+        {c.walls > 0 && <span>{c.walls}w</span>}
+      </div>
+      <div style={{ color: '#9aa' }}>
+        {c.fences > 0 && <span style={{ color: '#88aaff' }}>{c.fences}f </span>}
+        {c.switches > 0 && <span style={{ color: '#88aaff' }}>{c.switches}s</span>}
       </div>
       <div style={{ color: '#e0c97a' }}>
-        {cell.has_key && '🔑'}
+        {(cell.key_count ?? 0) > 1 ? `🔑×${cell.key_count}` : cell.has_key && '🔑'}
         {cell.is_key_gate && '🔒'}
         {cell.warp_edge && '➜'}
       </div>
@@ -192,7 +263,10 @@ function CellBox({
 }
 
 /** A connection drawn as a stub from the cell edge, so a one-way pair shows as
- *  a stub with nothing meeting it. */
+ *  a stub with nothing meeting it. Coloured by DOOR ATTRIBUTE — green walk
+ *  straight through, yellow one-key, orange two-key, red enemy-defeat — which
+ *  is what makes gate variety readable at a glance instead of one room at a
+ *  time in Godot. A thicker stub means a gate stands there. */
 function ConnectionStubs({ cell }: { cell: Cell }) {
   return (
     <>
@@ -200,11 +274,15 @@ function ConnectionStubs({ cell }: { cell: Cell }) {
         const d = dir as Dir;
         const horizontal = d === 'east' || d === 'west';
         const len = 12;
+        const attr = attrOf(cell, d);
+        const gated = attr !== ATTR_OPEN;
+        const thickness = gated ? 6 : 3;
         const style: React.CSSProperties = {
           position: 'absolute',
-          background: '#6b74b8',
-          width: horizontal ? len : 3,
-          height: horizontal ? 3 : len,
+          background: ATTR_INFO[attr]?.color ?? '#6b74b8',
+          width: horizontal ? len : thickness,
+          height: horizontal ? thickness : len,
+          borderRadius: 1,
         };
         const mid = (CELL_PX - 10) / 2;
         if (d === 'north') Object.assign(style, { left: mid, top: -len });
@@ -384,6 +462,18 @@ export default function FieldGenerator() {
         <span style={{ color: '#c9a06e' }}>■ end</span>
         <span style={{ color: '#a08ac9' }}>■ branch</span>
         <span style={{ color: '#ff6b6b' }}>■ problem (hover for detail)</span>
+      </div>
+
+      {/* Door attributes, the thing this view exists to make readable. A thin
+          stub is an ungated doorway you can walk straight through; a thick one
+          has a gate standing in it. */}
+      <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8a90b8', marginBottom: 14, flexWrap: 'wrap' }}>
+        <span>doors:</span>
+        <span style={{ color: ATTR_INFO[ATTR_OPEN].color }}>— open (no gate)</span>
+        <span style={{ color: ATTR_INFO[ATTR_ONE_KEY].color }}>▬ one-key</span>
+        <span style={{ color: ATTR_INFO[ATTR_TWO_KEY].color }}>▬ two-key</span>
+        <span style={{ color: ATTR_INFO[ATTR_ENEMY_DEFEAT].color }}>▬ enemy-defeat</span>
+        <span>· counts: e enemies, b boxes, t traps, w walls, f fences, s switches</span>
       </div>
 
       {roll.sections.map((section) => (

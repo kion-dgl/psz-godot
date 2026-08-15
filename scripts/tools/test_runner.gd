@@ -113,6 +113,7 @@ func _run_tests_core() -> void:
 	test_authored_field_objects()
 	test_authored_walls_clear_doorways()
 	test_authored_fences_are_openable()
+	test_gate_kind_per_door()
 	test_group_five_trap_roll()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
@@ -1030,6 +1031,40 @@ func test_authored_field_objects() -> void:
 ## doorways on purpose. One with no switch in the room is a sealed room, and
 ## the layout mask can build the fence's group while skipping the switch's, so
 ## the guard has to hold on the objects a room actually builds.
+## Which gate a doorway gets, per kion\'s four-door room: enter from the south,
+## two-key west, enemy-defeat north, nothing east.
+##
+## This is the layer that was missing when the runtime ignored door attributes
+## entirely. The generator tests assert the attributes are ASSIGNED; the sanity
+## autopilot drives a static quest that has none. Between them a runtime that
+## built a gate on every door passed everything, while three stages of play
+## showed nothing but enemy-defeat gates.
+func test_gate_kind_per_door() -> void:
+	print("── Which gate a doorway gets (spec /states/field-gates) ──")
+	const VF := preload("res://scripts/3d/field/valley_field_controller.gd")
+	# north enemy-defeat, west two-key, east open (absent = open), entered south.
+	var attrs := {"north": 4, "west": 2}
+	assert_eq(VF.gate_kind_for_door(attrs, "south", "south", false, []),
+		VF.GATE_NONE, "the way back gets no gate")
+	assert_eq(VF.gate_kind_for_door(attrs, "east", "south", false, []),
+		VF.GATE_NONE, "an open door gets no gate at all, not an opened one")
+	assert_eq(VF.gate_kind_for_door(attrs, "north", "south", false, []),
+		VF.GATE_ENEMY_DEFEAT, "an enemy-defeat door gets a gate")
+	assert_eq(VF.gate_kind_for_door(attrs, "west", "south", false, []),
+		VF.GATE_KEY, "a two-key door gets a key gate")
+	assert_eq(VF.gate_kind_for_door({"west": 1}, "west", "south", false, []),
+		VF.GATE_KEY, "a one-key door gets a key gate")
+
+	# A field with no attributes — every static field_quest — is untouched.
+	assert_eq(VF.gate_kind_for_door({}, "east", "south", false, []),
+		VF.GATE_ENEMY_DEFEAT, "legacy field still gates every connection")
+	assert_eq(VF.gate_kind_for_door({}, "west", "south", true, ["west"]),
+		VF.GATE_KEY, "legacy field still key-gates what its old fields name")
+	assert_eq(VF.gate_kind_for_door({}, "south", "south", false, []),
+		VF.GATE_ENEMY_DEFEAT, "legacy field gates the entry edge as it always did")
+	print("")
+
+
 func test_authored_fences_are_openable() -> void:
 	print("── Every authored fence has a switch in its room ──")
 	const Pop := preload("res://scripts/3d/field/field_population.gd")
