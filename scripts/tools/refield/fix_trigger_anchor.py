@@ -40,12 +40,19 @@ CONFIGS = pathlib.Path(__file__).resolve().parents[3] / "data/stage_configs/unif
 OUTWARD = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
 AXIS = {"north": 2, "south": 2, "east": 0, "west": 0}
 
-# The measured medians above. Distances outward from the gate, along the door
-# axis. Spawn first, then trigger, so a player leaving a room crosses the spawn
-# and then fires the trigger, and a player arriving lands short of the trigger
-# rather than inside it (which is what stranded the_paru_pact).
-SPAWN_FROM_GATE = 1.1
-TRIGGER_FROM_GATE = 5.1
+# NOT a fixed distance from the gate. Forcing every portal onto the median
+# moved ones that were already fine: s02a_tb3's south gate moved 1.66, but its
+# authored gate->spawn was 4.66, so snapping to the median dragged the spawn
+# 3.56 units inward. That changed where the player enters and leaves, shed an
+# item drop, and the autopilot then spent its telepipe interacts picking the
+# drop up instead -- apothecary_supply failed on the LAST interact of the run.
+#
+# The line was RIGHT before #612. The gate moved by some delta; move the spawn
+# and the trigger by the SAME delta and every authored relationship is
+# preserved exactly, while the line is repaired. Nothing is normalised, so a
+# portal whose gate did not move does not move at all.
+SPAWN_OUTSET_AUTHORED = 3.0
+TRIGGER_OUTSET_AUTHORED = 7.0
 
 # Engine offsets the nodes were authored at, used only to FIND the existing
 # waypoint so a hand-nudged one is moved rather than duplicated.
@@ -84,17 +91,18 @@ def main() -> int:
             gate_v = float(gate[axis])
             sign = 1.0 if gate_v >= 0 else -1.0
 
-            # ONE LINE. Lateral coordinates come from the GATE, not from the old
-            # position, so all three points sit on the doorway's own axis rather
-            # than being merely parallel to it.
-            def point_at(dist):
+            # RIGID TRANSLATION by however far the gate moved. Lateral comes
+            # from the gate so all three sit on the doorway's own axis.
+            delta = gate_v - float(pos[axis])
+
+            def point_at(outset):
                 p = list(gate)
-                p[axis] = round(gate_v + sign * dist, 4)
+                p[axis] = round(float(pos[axis]) + sign * outset + delta, 4)
                 p[1] = 0.0
                 return p
 
-            spawn_pt = point_at(SPAWN_FROM_GATE)
-            trigger = point_at(TRIGGER_FROM_GATE)
+            spawn_pt = point_at(SPAWN_OUTSET_AUTHORED)
+            trigger = point_at(TRIGGER_OUTSET_AUTHORED)
 
             # `out` is (x, z); the door axis is 0 or 2 in a 3-vector, so map it.
             oi = 0 if axis == 0 else 1

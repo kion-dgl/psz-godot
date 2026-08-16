@@ -6,10 +6,12 @@
  * and #612 broke it by moving the gate onto psz-re's measured doorway while
  * leaving the other two on the old `position`.
  *
- * The spacing is measured, not invented. Across 552 portals the existing
- * gate→spawn distance had a median of 1.12 with an interquartile spread of
- * ~1.4, and gate→trigger a median of 5.12. The outliers, as far as −17.8, are
- * the ones the gate move stranded.
+ * The spacing is the AUTHORED +3 / +7, preserved by moving the spawn and
+ * trigger by exactly the delta the gate moved. Normalising to a median instead
+ * was tried and refuted: s02a_tb3's gate moved 1.66 but its authored gate→spawn
+ * was 4.66, so snapping to the median dragged the spawn 3.56 units, shed an
+ * item drop, and the autopilot burned its telepipe interacts picking the drop
+ * up — apothecary_supply failed on the last interact of the run.
  *
  * Why this replaced a "does the trigger reach the doorway stub" check: the stub
  * cannot tell a good portal from a bad one. s05b_nc2 worked for years with its
@@ -24,8 +26,10 @@ import path from 'path';
 const CONFIGS = path.resolve(
   __dirname, '../../../data/stage_configs/unified-stage-configs.json');
 
-const SPAWN_FROM_GATE = 1.1;
-const TRIGGER_FROM_GATE = 5.1;
+// The authored offsets. They are preserved by rigid translation, not
+// normalised: the gate moved, so the spawn and trigger moved with it.
+const SPAWN_FROM_GATE = 3.0;
+const TRIGGER_FROM_GATE = 7.0;
 const TOL = 0.01;
 const AXIS: Record<string, number> = { north: 2, south: 2, east: 0, west: 0 };
 const LATERAL: Record<string, number> = { north: 0, south: 0, east: 2, west: 2 };
@@ -54,7 +58,7 @@ describe('portal gate | spawn | trigger line', () => {
     expect(bad).toEqual([]);
   });
 
-  it('holds the fixed spacing outward from the gate', () => {
+  it('holds the authored spacing outward from the gate', () => {
     const bad: string[] = [];
     for (const [stageId, p] of portals()) {
       if (!p.spawnPosition || !p.triggerPosition) continue;
