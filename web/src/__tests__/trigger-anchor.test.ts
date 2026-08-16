@@ -62,6 +62,34 @@ describe('load trigger anchoring', () => {
     expect(bad).toEqual([]);
   });
 
+  it('a re-anchored trigger never reaches back inside the room', () => {
+    // The regression that broke the_paru_pact. Centring the trigger in the
+    // 3-deep stub put 1.5 units of the 6-deep box back inside the room, so the
+    // autopilot crossed it while still looting: the cell loaded early, drops
+    // were abandoned, objectives went unmet and the goal cell never spawned its
+    // Telepipe. Same 23-cell route, 216s pass became 3x1100s timeout.
+    //
+    // Only re-anchored portals are held to this. 86 others have a near face
+    // slightly inside the room, which is pre-existing and demonstrably passing;
+    // asserting it here would fail on behaviour this change never touched.
+    const bad: string[] = [];
+    for (const [stageId, cfg] of Object.entries<any>(cfgs)) {
+      if (!cfg || typeof cfg !== 'object') continue;
+      for (const p of cfg.portals ?? []) {
+        if (!p.triggerPosition) continue;
+        const axis = AXIS[p.direction];
+        if (axis === undefined) continue;
+        const gate = Math.abs(p.gatePosition[axis]);
+        const near = Math.abs(p.triggerPosition[axis]) - TRIGGER_HALF;
+        if (near < gate - 0.01) {
+          bad.push(`${stageId} ${p.direction}: trigger near face ${near.toFixed(2)} ` +
+                   `is ${(gate - near).toFixed(2)} inside the room wall at ${gate.toFixed(1)}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
   it('a re-anchored portal keeps its exit waypoint on the trigger', () => {
     // Moving the trigger without its exit node leaves the autopilot walking to
     // where the trigger used to be. validate_graph.mjs cannot catch that on its

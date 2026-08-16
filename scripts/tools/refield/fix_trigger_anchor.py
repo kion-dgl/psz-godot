@@ -90,14 +90,28 @@ def main() -> int:
             centre_d = (abs(float(existing[axis])) if existing
                         else abs(float(pos[axis])) + EXIT_OUTSET)
 
+            # Detection is deliberately UNCHANGED: only a trigger that misses
+            # its stub entirely is re-anchored. 86 further portals have a near
+            # face slightly inside the room, but that is pre-existing and the
+            # control run passes with it -- widening the blast radius to "fix"
+            # them would be changing behaviour nobody has evidence is broken.
             if overlaps_stub(centre_d, gate_d):
                 already_ok += 1
                 continue
 
-            # Centre the trigger in the stub: the box then spans the wall face
-            # to 1.5 beyond the stub, so it is entered walking either way
-            # through the door and never fires in open floor.
-            new_d = gate_d + STUB_DEPTH / 2.0
+            # Centre the trigger a FULL HALF-BOX outward, so its near face
+            # lands exactly on the wall plane and no part of it reaches back
+            # inside the room.
+            #
+            # Centring it in the stub (gate + 1.5) is the obvious choice and is
+            # WRONG: the box is 6 deep against a 3-deep stub, so 1.5 units of it
+            # protrude into the room. The autopilot then crossed the trigger
+            # while still looting, the cell loaded early, drops were abandoned,
+            # objectives went unmet and the goal cell never spawned its
+            # Telepipe -- the_paru_pact cleared but could not warp out and timed
+            # out. Measured: pp_canon passes in 216s at the parent commit and
+            # failed 3x1100s with this, on an IDENTICAL 23-cell route.
+            new_d = gate_d + TRIGGER_HALF
             trigger = list(pos)
             trigger[axis] = round(sign * new_d, 4)
             trigger[1] = 0.0
