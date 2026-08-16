@@ -25,6 +25,7 @@ const CONFIGS = path.resolve(
 const TRIGGER_HALF = 3;
 const STUB_DEPTH = 3;
 const EXIT_OUTSET = 7;
+const SPAWN_OUTSET = 3;
 const AXIS: Record<string, number> = { north: 2, south: 2, east: 0, west: 0 };
 
 describe('load trigger anchoring', () => {
@@ -33,45 +34,33 @@ describe('load trigger anchoring', () => {
   it('every portal with a measured doorway has a trigger that reaches it', () => {
     const bad: string[] = [];
     let checked = 0;
-
     for (const [stageId, cfg] of Object.entries<any>(cfgs)) {
       if (!cfg || typeof cfg !== 'object') continue;
       for (const p of cfg.portals ?? []) {
         const axis = AXIS[p.direction];
         if (axis === undefined || !p.position || !p.gatePosition) continue;
         checked++;
-
         const gate = Math.abs(p.gatePosition[axis]);
-        // position + 7 unless the portal was re-anchored, in which case the
-        // trigger position is data — read it the way the engine does.
         const centre = p.triggerPosition
           ? Math.abs(p.triggerPosition[axis])
           : Math.abs(p.position[axis]) + EXIT_OUTSET;
-
-        const near = centre - TRIGGER_HALF;
-        const far = centre + TRIGGER_HALF;
-        if (near > gate + STUB_DEPTH || far < gate) {
-          bad.push(
-            `${stageId} ${p.direction}: trigger ${near.toFixed(1)}..${far.toFixed(1)} ` +
-            `misses doorway ${gate.toFixed(1)}..${(gate + STUB_DEPTH).toFixed(1)}`);
+        if (centre - TRIGGER_HALF > gate + STUB_DEPTH || centre + TRIGGER_HALF < gate) {
+          bad.push(`${stageId} ${p.direction}: trigger misses doorway ${gate.toFixed(1)}`);
         }
       }
     }
-
     expect(checked).toBeGreaterThan(500);
     expect(bad).toEqual([]);
   });
 
-  it('a re-anchored trigger never reaches back inside the room', () => {
-    // The regression that broke the_paru_pact. Centring the trigger in the
-    // 3-deep stub put 1.5 units of the 6-deep box back inside the room, so the
-    // autopilot crossed it while still looting: the cell loaded early, drops
-    // were abandoned, objectives went unmet and the goal cell never spawned its
-    // Telepipe. Same 23-cell route, 216s pass became 3x1100s timeout.
-    //
-    // Only re-anchored portals are held to this. 86 others have a near face
-    // slightly inside the room, which is pre-existing and demonstrably passing;
-    // asserting it here would fail on behaviour this change never touched.
+  it('keeps gate | spawn | trigger in order, with the spawn outside the box', () => {
+    // THE INVARIANT THE AUTHORING ALWAYS HAD and two PRs quietly broke: #612
+    // moved the gate, #617 moved the trigger, and nobody moved the spawn, so
+    // the spawn ended up INSIDE the trigger box. The player then spawned
+    // already in it, re-fired a transition on arrival and bypassed the room --
+    // objectives unmet, quest force-completed, the goal cell's deferred
+    // Telepipe never fired, 14 minutes of timeout. s05b_nc2 alone did it:
+    // gate 22.0, spawn 24.06, trigger box 22.0..28.0.
     const bad: string[] = [];
     for (const [stageId, cfg] of Object.entries<any>(cfgs)) {
       if (!cfg || typeof cfg !== 'object') continue;
@@ -80,10 +69,13 @@ describe('load trigger anchoring', () => {
         const axis = AXIS[p.direction];
         if (axis === undefined) continue;
         const gate = Math.abs(p.gatePosition[axis]);
+        const spawn = p.spawnPosition
+          ? Math.abs(p.spawnPosition[axis])
+          : Math.abs(p.position[axis]) + SPAWN_OUTSET;
         const near = Math.abs(p.triggerPosition[axis]) - TRIGGER_HALF;
-        if (near < gate - 0.01) {
-          bad.push(`${stageId} ${p.direction}: trigger near face ${near.toFixed(2)} ` +
-                   `is ${(gate - near).toFixed(2)} inside the room wall at ${gate.toFixed(1)}`);
+        if (!(gate < spawn && spawn < near)) {
+          bad.push(`${stageId} ${p.direction}: gate ${gate.toFixed(2)} | ` +
+                   `spawn ${spawn.toFixed(2)} | trigger near ${near.toFixed(2)} out of order`);
         }
       }
     }

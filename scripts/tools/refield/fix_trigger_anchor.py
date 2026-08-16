@@ -46,6 +46,14 @@ EXIT_OUTSET = 7.0
 SPAWN_OUTSET = 3.0
 OFFSET_TOL = 1.5
 
+# GATE | SPAWN | TRIGGER, in that order going outward -- the ordering kion
+# authored by hand and the one #612 and #617 broke by moving the gate and then
+# the trigger while leaving the spawn on `position`. Both are measured from the
+# gate now, so the order holds by construction instead of by luck, and both fit
+# inside the 3-deep doorway stub.
+SPAWN_FROM_GATE = 1.0
+TRIGGER_NEAR_FROM_GATE = 2.5
+
 
 def overlaps_stub(centre_d: float, gate_d: float) -> bool:
     """Does the trigger box reach the doorway stub at all?
@@ -64,6 +72,7 @@ def main() -> int:
 
     cfgs = json.loads(CONFIGS.read_text())
     fixed, moved_wp, skipped_no_gate, already_ok = [], 0, 0, 0
+    unfixable = []
 
     for stage_id, st in cfgs.items():
         if not isinstance(st, dict):
@@ -99,9 +108,16 @@ def main() -> int:
                 already_ok += 1
                 continue
 
-            # Centre the trigger a FULL HALF-BOX outward, so its near face
-            # lands exactly on the wall plane and no part of it reaches back
-            # inside the room.
+            # MOVE THE SPAWN WITH THE TRIGGER, or the order breaks.
+            #
+            # A player entering a cell appears at the spawn. Leave the spawn on
+            # `position` while the trigger moves to the doorway and the spawn
+            # ends up INSIDE the trigger box: the player spawns already in it,
+            # re-fires a transition on arrival, and the room is BYPASSED --
+            # "objectives unmet from bypassed cells", the quest force-completes,
+            # the goal cell's deferred Telepipe never fires and the run times
+            # out with no warp. s05b_nc2 did exactly that: spawn 24.06 against a
+            # trigger box of 22.0..28.0, and it alone reproduced the failure.
             #
             # Centring it in the stub (gate + 1.5) is the obvious choice and is
             # WRONG: the box is 6 deep against a 3-deep stub, so 1.5 units of it
@@ -111,36 +127,52 @@ def main() -> int:
             # Telepipe -- the_paru_pact cleared but could not warp out and timed
             # out. Measured: pp_canon passes in 216s at the parent commit and
             # failed 3x1100s with this, on an IDENTICAL 23-cell route.
-            new_d = gate_d + TRIGGER_HALF
+            new_spawn_d = gate_d + SPAWN_FROM_GATE
+            new_d = gate_d + TRIGGER_NEAR_FROM_GATE + TRIGGER_HALF
             trigger = list(pos)
             trigger[axis] = round(sign * new_d, 4)
             trigger[1] = 0.0
 
+            spawn_pt = list(pos)
+            spawn_pt[axis] = round(sign * new_spawn_d, 4)
+            spawn_pt[1] = 0.0
+
             if not args.check:
                 portal["triggerPosition"] = trigger
+                portal["spawnPosition"] = spawn_pt
 
             # The exit waypoint has to follow. It is matched the way
             # validate_graph.mjs matches it -- nearest 'exit' node within
             # OFFSET_TOL of the OLD contract position -- so a hand-nudged node
             # is still found rather than duplicated.
-            old = [float(pos[0]) + out[0] * EXIT_OUTSET, 0.0,
-                   float(pos[2]) + out[1] * EXIT_OUTSET]
-            best, best_d = None, OFFSET_TOL
-            for w in st.get("waypoints", []):
-                if w.get("kind") != "exit":
-                    continue
-                wp = w.get("position", [0, 0, 0])
-                d = ((wp[0] - old[0]) ** 2 + (wp[2] - old[2]) ** 2) ** 0.5
-                if d <= best_d:
-                    best, best_d = w, d
-            if best is not None:
-                if not args.check:
-                    best["position"] = [trigger[0], best["position"][1], trigger[2]]
+            def move_node(kind, outset, dest):
+                old = [float(pos[0]) + out[0] * outset, 0.0,
+                       float(pos[2]) + out[1] * outset]
+                best, best_d = None, OFFSET_TOL
+                for w in st.get("waypoints", []):
+                    if w.get("kind") != kind:
+                        continue
+                    wp = w.get("position", [0, 0, 0])
+                    d = ((wp[0] - old[0]) ** 2 + (wp[2] - old[2]) ** 2) ** 0.5
+                    if d <= best_d:
+                        best, best_d = w, d
+                if best is not None and not args.check:
+                    best["position"] = [dest[0], best["position"][1], dest[2]]
+                return best is not None
+
+            got_exit = move_node("exit", EXIT_OUTSET, trigger)
+            move_node("spawn", SPAWN_OUTSET, spawn_pt)
+            if got_exit:
                 moved_wp += 1
+            best = got_exit
 
             fixed.append((stage_id, direction, round(centre_d, 2), round(new_d, 2),
                           best is not None))
 
+    if unfixable:
+        print("portals NOT re-anchored (clearing the spawn would pass the stub): %d" % len(unfixable))
+        for st, d, n, hi in unfixable[:6]:
+            print("     %-12s %-6s needs near>=%.2f but stub ends %.2f" % (st, d, n, hi))
     print("portals already reaching their stub: %d" % already_ok)
     print("portals with no measured doorway (left alone): %d" % skipped_no_gate)
     print("portals re-anchored: %d  (exit waypoint moved for %d)" % (len(fixed), moved_wp))

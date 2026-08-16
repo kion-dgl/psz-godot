@@ -109,6 +109,11 @@ export function validateGraph(stageId, cfg) {
       const exitAt = portal.triggerPosition
         ? [portal.triggerPosition[0], 0, portal.triggerPosition[2]]
         : at(EXIT_OUTSET);
+      // The spawn moves with the trigger so gate | spawn | trigger stays in
+      // order; when it has, its node is at the data, not at position + 3.
+      const spawnAt = portal.spawnPosition
+        ? [portal.spawnPosition[0], 0, portal.spawnPosition[2]]
+        : at(SPAWN_OUTSET);
       const nearest = (kind, target) => {
         let best = null;
         for (const w of nodesOfKind(kind)) {
@@ -117,7 +122,7 @@ export function validateGraph(stageId, cfg) {
         }
         return best?.w ?? null;
       };
-      const spawn = nearest("spawn", at(SPAWN_OUTSET));
+      const spawn = nearest("spawn", spawnAt);
       const exit = nearest("exit", exitAt);
       const label = `portal ${portal.direction}`;
       if (!spawn) errors.push(`${label}: no 'spawn' node ${SPAWN_OUTSET}m outward from the gate — use "Seed from gates + spawn"`);
