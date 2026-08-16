@@ -73,11 +73,13 @@ GODOT_DEFAULT_USERDIR="$HOME/.local/share/godot/app_userdata/PSZ Godot"
 # turned each fix-and-retry cycle into a coffee break and was the single
 # biggest drag on diagnosing #617.
 #
-# 420s is ~1.6x the slowest observed pass: enough headroom for a loaded box or
-# a slower quest, short enough that a failure is reported while it is still
-# interesting. Raise it if a legitimately longer quest lands, but raise it with
-# a measurement rather than out of caution.
-QUEST_TIMEOUT=${QUEST_TIMEOUT:-420}
+# 600s is ~2.2x the slowest observed pass. It started at 420 and was raised on
+# a measurement, not a hunch: the plan generator sends the autopilot back
+# through cleared rooms to collect quest items it walked past the first time --
+# valley B does 2,1 -> 1,1 -> 2,1 for one pickup -- so a legitimate run can be
+# noticeably longer than the fastest ones. Fixing that routing is worth ~30s a
+# quest and would let this come back down.
+QUEST_TIMEOUT=${QUEST_TIMEOUT:-600}
 
 mkdir -p "$SCRATCH"
 

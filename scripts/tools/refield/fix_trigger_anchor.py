@@ -74,9 +74,7 @@ GEOMETRY_SUSPECT = 8.0
 # new floor; it is realigned now. Entries are added only when a matrix run
 # names the stage in a stuck-walk, never from the heuristic above -- guessing
 # put 24 portals on this list that do not belong on it.
-AWAITING_FLOOR = {
-    ("s01b_ic1", "north"),   # DOE: player stops at 24.78, trigger at 29.00
-}
+AWAITING_FLOOR = set()  # empty: s02a_sa1, s01b_ic1 and s01b_tc3 all have floors now
 
 
 def main() -> int:
