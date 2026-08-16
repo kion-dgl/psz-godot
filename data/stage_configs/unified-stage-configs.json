@@ -6462,16 +6462,6 @@
           -17,
           0,
           -22.0
-        ],
-        "spawnPosition": [
-          -17,
-          0.0,
-          -25.0
-        ],
-        "triggerPosition": [
-          -17,
-          0.0,
-          -29.0
         ]
       },
       {
@@ -6508,7 +6498,7 @@
         "position": [
           -17,
           0,
-          -25.0
+          -14.88
         ],
         "kind": "spawn",
         "label": "spawn north"
@@ -6518,7 +6508,7 @@
         "position": [
           -17,
           0,
-          -29.0
+          -18.880000000000003
         ],
         "kind": "exit",
         "label": "load north"

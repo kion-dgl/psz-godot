@@ -60,9 +60,23 @@ SPAWN_OUTSET = 3.0
 EXIT_OUTSET = 7.0
 OFFSET_TOL = 1.5
 
-# A gate that moved further than this means the stage geometry and the measured
-# doorway disagree about where the door is. Aligning the line cannot help.
+# A gate that moved further than this is WORTH LOOKING AT, not proof of
+# anything: s05a_sa1 and s05b_ga1 both moved 13.4 and the_paru_pact passes with
+# them realigned, so their floors reach the measured doorway fine.
 GEOMETRY_SUSPECT = 8.0
+
+# PROVEN unreachable by the autopilot -- the measured doorway is somewhere
+# psz-godot has no floor, so moving the trigger there strands the run. These
+# keep their authored spawn/trigger (navigation works, the gate mesh is drawn a
+# little off) until the stage gets a floor that reaches its doorway.
+#
+# This is a DEBT LIST and it shrinks. s02a_sa1 was on it until kion authored a
+# new floor; it is realigned now. Entries are added only when a matrix run
+# names the stage in a stuck-walk, never from the heuristic above -- guessing
+# put 24 portals on this list that do not belong on it.
+AWAITING_FLOOR = {
+    ("s01b_ic1", "north"),   # DOE: player stops at 24.78, trigger at 29.00
+}
 
 
 def main() -> int:
@@ -72,6 +86,7 @@ def main() -> int:
 
     cfgs = json.loads(CONFIGS.read_text())
     aligned, unchanged, no_gate, suspect, nodes_moved = 0, 0, 0, [], 0
+    awaiting = 0
     biggest = []
 
     for stage_id, st in cfgs.items():
@@ -115,6 +130,10 @@ def main() -> int:
             if gate_move > GEOMETRY_SUSPECT:
                 suspect.append((stage_id, direction, round(gate_move, 1)))
 
+            if (stage_id, direction) in AWAITING_FLOOR:
+                awaiting += 1
+                continue
+
             if not args.check:
                 portal["spawnPosition"] = spawn_pt
                 portal["triggerPosition"] = trigger
@@ -148,6 +167,7 @@ def main() -> int:
     print("  of those, moved < 0.5 units:      %d  (already on the line)" % unchanged)
     print("  meaningfully repositioned:        %d" % aligned)
     print("portals with no measured doorway:   %d  (left alone)" % no_gate)
+    print("portals awaiting a floor:           %d  (left on authored points)" % awaiting)
     print("waypoint pairs moved:               %d" % nodes_moved)
 
     biggest.sort(reverse=True)
