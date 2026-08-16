@@ -116,6 +116,7 @@ func _run_tests_core() -> void:
 	test_authored_fences_are_openable()
 	test_gate_kind_per_door()
 	test_group_five_trap_roll()
+	test_enemies_stand_on_authored_slots()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
@@ -1182,6 +1183,46 @@ func _distance_to_doorways(x: float, z: float, segments: Array) -> float:
 			var pz: float = az + (bz - az) * t
 			best = minf(best, Vector2(x - px, z - pz).length())
 	return best
+
+
+func test_enemies_stand_on_authored_slots() -> void:
+	print("── Enemies stand on the room's AUTHORED SLOTS, not on a ring ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+
+	# The ring is radius 5.0 about the origin, so "every enemy is 5.0 from the
+	# centre" is exactly the symptom being removed (#604). Authored slots are
+	# scattered by the room's real geometry and are not equidistant.
+	var slots: Array = Pop.enemy_slot_positions("s03a_ib1", 4, _seeded_rng(1))
+	assert_true(slots.size() == 4, "four enemies get four positions")
+
+	var on_ring := 0
+	for p in slots:
+		var d: float = sqrt(float(p[0]) * float(p[0]) + float(p[2]) * float(p[2]))
+		if abs(d - 5.0) < 0.02:
+			on_ring += 1
+	assert_true(on_ring < 4, "not every enemy sits on the 5.0 ring")
+
+	# Every position MUST be one the room actually authors -- placement picks
+	# from the slot list, it does not interpolate or jitter.
+	var authored := {}
+	for e in Pop.authored_enemy_slots("s03a_ib1"):
+		authored["%.2f,%.2f" % [float(e.get("x", 0.0)), float(e.get("z", 0.0))]] = true
+	for p in slots:
+		assert_true(authored.has("%.2f,%.2f" % [float(p[0]), float(p[2])]),
+			"position %s is an authored slot" % [p])
+
+	# Seeded: the same field populates the same way every time it is entered.
+	var again: Array = Pop.enemy_slot_positions("s03a_ib1", 4, _seeded_rng(1))
+	assert_true(str(again) == str(slots), "same seed gives the same placement")
+
+	# A wave larger than the slot count REUSES slots rather than losing enemies
+	# -- the original reuses them too (8 slots, 11 enemies over three waves).
+	var big: Array = Pop.enemy_slot_positions("s03a_ib1", 12, _seeded_rng(2))
+	assert_true(big.size() == 12, "a 12-enemy wave gets 12 positions, none dropped")
+
+	# An unknown room code falls back to the ring rather than spawning nothing.
+	var none: Array = Pop.enemy_slot_positions("s99z_zz9", 3, _seeded_rng(3))
+	assert_true(none.is_empty(), "unknown room code yields no slots, so the caller rings")
 
 
 func test_group_five_trap_roll() -> void:
