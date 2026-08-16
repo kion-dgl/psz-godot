@@ -3576,8 +3576,17 @@ func _fail_walk_stuck(pos: Vector3, dist: float) -> void:
 	var label := "?"
 	if _quest_step_idx > 0 and _quest_step_idx <= _quest_steps.size():
 		label = str(_quest_steps[_quest_step_idx - 1].get("label", "?"))
-	_fail_with_reason("walk stuck at dist=%.2f from (%.1f, %.1f, %.1f) in cell %s (stage %s, %s) — author waypoints for this stage" % [
-		dist, pos.x, pos.y, pos.z, cell_pos, stage_id, label])
+	# THE ADVICE HAS TO MATCH THE EVIDENCE. "author waypoints" is right when the
+	# player is boxed in by geometry, and wrong when the floor simply stops --
+	# no waypoint can route across a hole, and the fix is the stage's floor.
+	# The probes taken a moment ago already know which it is.
+	var advice := "author waypoints for this stage"
+	if _last_floor_hits == 0:
+		advice = "NO FLOOR ahead (0/3 probes hit) — the stage geometry stops here, so this is a FLOOR to extend, not a waypoint to author"
+	elif _last_floor_hits > 0 and _last_floor_hits < 3:
+		advice = "partial floor ahead (%d/3 probes hit) — the walk line clips a hole or an edge; a waypoint routing around it should fix it" % _last_floor_hits
+	_fail_with_reason("walk stuck at dist=%.2f from (%.1f, %.1f, %.1f) in cell %s (stage %s, %s) — %s" % [
+		dist, pos.x, pos.y, pos.z, cell_pos, stage_id, label, advice])
 
 
 func _fail_with_reason(reason: String) -> void:
@@ -3594,6 +3603,10 @@ func _fail_with_reason(reason: String) -> void:
 ## left, right at FLOOR_CHECK_DISTANCE ahead of the player) and log which
 ## ones hit floor. Mirrors player.gd:1081 so the result tells the stage
 ## author exactly which sample point is dropping into a hole.
+## Floor probes from the most recent _log_floor_samples, -1 when none taken.
+static var _last_floor_hits := -1
+
+
 func _log_floor_samples(pos: Vector3, dir: Vector3) -> void:
 	# Match player.gd constants exactly — if those change, update here too.
 	const FLOOR_CHECK_DISTANCE := 1.0
@@ -3609,6 +3622,11 @@ func _log_floor_samples(pos: Vector3, dir: Vector3) -> void:
 	var hit_l := _ray_floor_hit(left, pos.y, FLOOR_RAY_LENGTH)
 	var hit_r := _ray_floor_hit(right, pos.y, FLOOR_RAY_LENGTH)
 	var hits: int = (1 if hit_c else 0) + (1 if hit_l else 0) + (1 if hit_r else 0)
+	# Remembered so the FAIL line can say WHICH failure this is. Without it the
+	# message always reads "author waypoints", which is wrong half the time and
+	# sent #617 chasing waypoints twice when the answer -- floor=false on all
+	# three probes -- was already printed directly above it.
+	_last_floor_hits = hits
 	print("[sanity] floor samples ahead of player (FLOOR_CHECK_DISTANCE=%.1f, FLOOR_CHECK_SIDE=%.1f):" % [FLOOR_CHECK_DISTANCE, FLOOR_CHECK_SIDE])
 	print("[sanity]   center=(%.3f, %.3f) floor=%s" % [center.x, center.z, hit_c])
 	print("[sanity]   left  =(%.3f, %.3f) floor=%s" % [left.x, left.z, hit_l])
