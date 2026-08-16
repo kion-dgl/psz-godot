@@ -56,6 +56,14 @@ const DEPLOY_SET := "d"
 ## the fallback for a room code invented later, not a placement policy.
 const BOXES_PER_ROOM := 2
 
+## The ring is now a FALLBACK, not the placement. Every room model the original
+## ships carries 8 or 9 authored spawn slots, and standing enemies on those is
+## the whole difference between a wave that fits its room and one that does not
+## (#604 -- enemies on rocks, waves straddling a void). A ring is a shape; it
+## knows nothing about the geometry it is drawn inside.
+##
+## Kept for room codes that have no authored slots, same as BOXES_PER_ROOM is
+## kept for room codes with no authored object table. See /mechanics/enemy-placement.
 const ENEMY_RING_RADIUS := 5.0
 const BOX_RING_RADIUS := 8.0
 
@@ -88,6 +96,13 @@ static var _loaded := false
 
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
+
+## Authored enemy spawn slots, room code -> Array of {x, y, z}. From
+## room_reference.json, which is otherwise reference-only -- see the note there:
+## its OBJECTS stay out of the game because an unhandled kind would eat a slot
+## against the 20-object room cap, but spawn slots are positions, not objects,
+## and cost nothing against that cap.
+static var _enemy_slots: Dictionary = {}
 static var _layout_masks: Array = []
 static var _layout_weights: Dictionary = {}
 static var _group5_weights: Array = []
@@ -111,6 +126,12 @@ static func _load() -> void:
 	_layout_masks = obj_doc.get("layout_masks", [])
 	_layout_weights = obj_doc.get("layout_weights_by_depth", {})
 	_group5_weights = obj_doc.get("group5_weights", [])
+	var ref_doc: Dictionary = _read_json(RE_DIR + "room_reference.json")
+	for code in ref_doc.get("rooms", {}):
+		var slots: Array = ref_doc["rooms"][code].get("enemies", [])
+		if not slots.is_empty():
+			_enemy_slots[code] = slots
+
 	var caps: Dictionary = obj_doc.get("caps", {})
 	_cap_per_group = int(caps.get("per_group", 20))
 	_cap_per_room = int(caps.get("per_room", 20))
@@ -430,6 +451,55 @@ static func _to_object(rec: Dictionary) -> Dictionary:
 
 
 ## Evenly spaced positions on a ring around the room centre (rooms are 44x44).
+## Where a wave's enemies stand: the room's own authored slots.
+##
+## `count` may exceed the slot count -- slots are REUSED rather than the wave
+## truncated, because the original reuses them too (a room with 8 slots was
+## observed producing 11 enemies across three waves). It may also be smaller,
+## in which case a seeded subset is taken so a given field always populates the
+## same way rather than shuffling on every revisit.
+##
+## Returns [] when the room code has no authored slots, so the caller falls
+## back to the ring.
+## The room's authored slots as the data holds them. Exposed so a test can
+## assert placement picks FROM this list rather than near it.
+static func authored_enemy_slots(room_code: String) -> Array:
+	_load()
+	return _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+
+
+static func enemy_slot_positions(room_code: String, count: int,
+		rng: RandomNumberGenerator) -> Array:
+	_load()
+	# Same keying as authored_objects: the data is per deploy set.
+	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	if slots.is_empty() or count <= 0:
+		return []
+
+	# Which slots go unused is OUR choice, not a measurement: the original
+	# derives it from a per-room seed whose placement weights are still
+	# undecoded (psz-re default_parameters bytes 4..8). The POSITIONS are
+	# authored and exact; the selection among them is not claimed to match.
+	var order: Array = []
+	for i in range(slots.size()):
+		order.append(i)
+	for i in range(order.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var t = order[i]
+		order[i] = order[j]
+		order[j] = t
+
+	var out: Array = []
+	for i in range(count):
+		var slot: Dictionary = slots[order[i % order.size()]]
+		out.append([
+			snappedf(float(slot.get("x", 0.0)), 0.01),
+			snappedf(float(slot.get("y", 0.0)), 0.01),
+			snappedf(float(slot.get("z", 0.0)), 0.01),
+		])
+	return out
+
+
 static func ring_positions(count: int, radius: float) -> Array:
 	var out: Array = []
 	for i in range(count):
@@ -447,7 +517,9 @@ static func ring_positions(count: int, radius: float) -> Array:
 ## No boxes: these rooms are a fight and a warp, not a loot round.
 static func objects_for_single_room(room_code: String, rng: RandomNumberGenerator) -> Array:
 	var wave: Array = roll_wave(room_code, rng)
-	var spots: Array = ring_positions(wave.size(), ENEMY_RING_RADIUS)
+	var spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
+	if spots.is_empty():
+		spots = ring_positions(wave.size(), ENEMY_RING_RADIUS)
 	var objects: Array = []
 	for i in range(wave.size()):
 		objects.append({
@@ -468,7 +540,9 @@ static func objects_for_cell(room_code: String, is_start: bool, is_end: bool,
 		return []
 	var objects: Array = []
 	var wave: Array = roll_wave(room_code, rng)
-	var enemy_spots: Array = ring_positions(wave.size(), ENEMY_RING_RADIUS)
+	var enemy_spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
+	if enemy_spots.is_empty():
+		enemy_spots = ring_positions(wave.size(), ENEMY_RING_RADIUS)
 	for i in range(wave.size()):
 		objects.append({
 			"type": "enemy", "position": enemy_spots[i], "enemy_id": wave[i],

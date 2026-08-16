@@ -1,0 +1,37 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Enemy Placement" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This page governs <em>where</em> a wave's enemies stand. It does not govern <em>which</em> enemies a wave contains — that is the wave template roll, unchanged by this page.</p>
+
+  <h2>The rule</h2>
+
+  <p>Every room model in the original has <strong>authored spawn slots</strong>: 8 or 9 fixed positions per room, 2177 across 257 rooms, decoded by psz-re from <code>enemy_deploy_positions.json</code>. A wave's enemies <strong>MUST</strong> be placed on those slots.</p>
+
+  <p>psz-godot previously ringed enemies at a fixed radius of 5.0 around the cell centre. That is <strong>refuted</strong>: it ignores the room's geometry entirely, which is why enemies stand on rocks and why a wave can straddle a void (<a href="https://github.com/kion-dgl/psz-godot/issues/604">#604</a>). A ring is a shape, not a placement.</p>
+
+  <table>
+    <thead><tr><th>Case</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Room code has authored slots</td><td>Enemies <strong>MUST</strong> be placed on slots, chosen as below.</td></tr>
+      <tr><td>Wave is smaller than the slot count</td><td>A <strong>subset MUST</strong> be chosen, seeded from the run's RNG so a given field always populates identically.</td></tr>
+      <tr><td>Wave is larger than the slot count</td><td>Slots <strong>MUST</strong> be reused rather than the wave truncated. Slots are known to be reused across waves in the original: a room with 8 slots produced 11 enemies over 3 waves.</td></tr>
+      <tr><td>Room code has no authored slots</td><td>Fall back to the ring. This is a fallback for a room code invented later, <strong>not</strong> a placement policy.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Slots are positions, not a wave count</h2>
+
+  <p>A room's slot count <strong>MUST NOT</strong> be read as the number of enemies in a wave, nor as a per-room total. Measured against the original: a room with 8 slots produced three waves of 4, 3 and 4 enemies — 11 in total. Slots are the positions available to <em>each</em> wave, and the same slot may be used by a later wave.</p>
+
+  <h2>Coordinates</h2>
+
+  <p>Slots are room-local, in the same units and orientation as authored objects, with <code>y</code> the floor height at that point. psz-re's source orders each record <code>(x, z, elevation)</code> rather than <code>(x, y, z)</code>; the importer converts on read, so consumers see <code>&#123;x, y, z&#125;</code> and <strong>MUST NOT</strong> re-order.</p>
+
+  <h2>What this page does not settle</h2>
+
+  <p>Which subset of slots the original picks for a given wave is <strong>not known</strong>. The original derives room contents from a per-room RNG seed (record <code>+0x14</code>, confirmed by psz-re as a full-range RNG draw), and the weights that drive placement are still unidentified — psz-re's own note names <code>default_parameters.bytes_4_to_8</code> as the best candidate. Until those are decoded, the subset here is our own seeded choice and is <strong>not</strong> claimed to match the original's. The <em>positions</em> are authored data and are exact; the <em>selection among them</em> is ours.</p>
+</Concept>
