@@ -102,8 +102,14 @@ export function validateGraph(stageId, cfg) {
       if (!o) { errors.push(`portal ${portal.id ?? portal.direction}: unknown direction`); continue; }
       const [gx, , gz] = portal.position;
       const at = (m) => [gx + o[0] * m, 0, gz + o[1] * m];
-      const nearest = (kind, m) => {
-        const target = at(m);
+      // A re-anchored trigger moves its exit node with it (#617). The expected
+      // place is then the DATA, not `position + EXIT_OUTSET` -- portals whose
+      // trigger did not overlap its own doorway were given an explicit
+      // `triggerPosition` by fix_trigger_anchor.py, and the node follows it.
+      const exitAt = portal.triggerPosition
+        ? [portal.triggerPosition[0], 0, portal.triggerPosition[2]]
+        : at(EXIT_OUTSET);
+      const nearest = (kind, target) => {
         let best = null;
         for (const w of nodesOfKind(kind)) {
           const d = dist2d(target, w.position);
@@ -111,11 +117,11 @@ export function validateGraph(stageId, cfg) {
         }
         return best?.w ?? null;
       };
-      const spawn = nearest("spawn", SPAWN_OUTSET);
-      const exit = nearest("exit", EXIT_OUTSET);
+      const spawn = nearest("spawn", at(SPAWN_OUTSET));
+      const exit = nearest("exit", exitAt);
       const label = `portal ${portal.direction}`;
       if (!spawn) errors.push(`${label}: no 'spawn' node ${SPAWN_OUTSET}m outward from the gate — use "Seed from gates + spawn"`);
-      if (!exit) errors.push(`${label}: no 'exit' node ${EXIT_OUTSET}m outward from the gate — use "Seed from gates + spawn"`);
+      if (!exit) errors.push(`${label}: no 'exit' node at the trigger${portal.triggerPosition ? " (re-anchored, see #617)" : ` (${EXIT_OUTSET}m outward from the gate)`} — use "Seed from gates + spawn"`);
       if (spawn && exit && !adj.get(spawn.id).has(exit.id)) {
         errors.push(`${label}: spawn and exit nodes are not connected by an edge`);
       }
