@@ -10,9 +10,13 @@ original puts in a room and what we build is visible instead of theoretical.
     python3 scripts/tools/refield/import_re_reference.py           # write
     python3 scripts/tools/refield/import_re_reference.py --check   # drift guard
 
-NOTHING HERE REACHES THE GAME. It is deliberately a separate file from
+THE OBJECTS HERE DO NOT REACH THE GAME. It is deliberately a separate file from
 room_objects.json so that adding a kind to this list can never accidentally
 start spawning it — the two have different consumers and different risks.
+
+The ENEMY SLOTS are the exception and ARE consumed: FieldPopulation stands each
+wave on them instead of a ring (spec /mechanics/enemy-placement). They are
+positions rather than objects, so they cost nothing against the room cap.
 
 What it carries, per room:
 
@@ -25,9 +29,9 @@ What it carries, per room:
               how we find out.
 
   enemies     Spawn slots from enemy_deploy_positions.json: 257 rooms in set d,
-              8 or 9 slots each. psz-godot still rings enemies at radius 5.0
-              (psz-godot#604), which is why they stand on rocks and why a wave
-              straddles a void.
+              8 or 9 slots each. CONSUMED by FieldPopulation since #616 — before
+              that psz-godot ringed enemies at radius 5.0 (#604), which is why
+              they stood on rocks and why a wave straddled a void.
 
               SLOT ORDER IS (x, z, elevation), NOT (x, y, z) — psz-re's
               THE_COLUMNS_ARE_X_THEN_Z: col0/col1 are the ground plane and col2
@@ -40,9 +44,11 @@ What it carries, per room:
               splits 159/95. With ~8.4 slots per block against 4-enemy wave
               templates, a room's slots plausibly cover more than one wave.
 
-  other       Kinds the original authors that we neither place nor understand:
-              o0c_trebox (653 records over 251 rooms — psz-re's largest single
-              unknown), warps, healing pads, meseta packs.
+  other       Kinds the original authors that psz-godot does not place:
+              o0c_trebox, the TREASURE BOX that appears once a room is cleared
+              (653 records over 251 rooms — long carried as psz-re's largest
+              unknown until it was identified in play, #613); o0c_mspack, the
+              MESSAGE PACK that spawns beside it; warps and healing pads.
 """
 from __future__ import annotations
 
@@ -69,8 +75,21 @@ PLACED_KINDS = {
 # name, which is the honest default for a thing nobody has identified.
 REFERENCE_LABELS = {
     "o0c_key": "key",
-    "o0c_trebox": "trebox (unidentified)",
-    "o0c_mspack": "meseta",
+    # IDENTIFIED IN PLAY, not guessed. Both were wrong in ways that cost time:
+    # "trebox (unidentified)" read as an open question and was re-investigated
+    # every session, and "meseta" was simply the wrong object.
+    #
+    # o0c_trebox is the TREASURE BOX -- it spawns in a room after every enemy in
+    # that room is defeated, and it is the treasure box model in the storybook.
+    # Confirmed across four rooms of a Rioh run, counts matching the reference
+    # each time (kion-dgl/psz-godot#613).
+    #
+    # o0c_mspack is the MESSAGE PACK, which psz-godot already models --
+    # web/src/elements/MessagePack.tsx and scripts/3d/elements/message_pack.gd,
+    # the latter reading its own o0c_1_mspack scroll texture. It spawns
+    # post-clear alongside the treasure box. Nothing about it is meseta.
+    "o0c_trebox": "treasure box",
+    "o0c_mspack": "message pack",
     "o0c_healhp": "heal pad",
     "o0s_warpm": "warp",
     "o0s_warps": "warp",
