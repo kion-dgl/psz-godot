@@ -35,6 +35,17 @@ OUTWARD = {"north": -1, "south": 1, "east": 1, "west": -1}
 # what has to be reachable.
 TRIGGER_HALF = 3.0
 
+# THE POINT BEING ON FLOOR IS NOT ENOUGH. player.gd refuses to move unless it
+# finds floor FLOOR_CHECK_DISTANCE ahead of itself and FLOOR_CHECK_SIDE either
+# side of that -- the same three probes a stuck-walk logs. So reaching a point
+# needs floor about a metre BEYOND it, laterally too.
+#
+# s01b_tb3 is what taught this: floor to z=26.5, trigger face at 26.0, so a
+# plain point test passed it -- and search_and_rescue stalled at 25.5 with 0/3
+# probes, because standing at 26.0 wants floor at 27.0.
+FLOOR_CHECK_DISTANCE = 1.0
+FLOOR_CHECK_SIDE = 0.5
+
 
 def floor_triangles(glb: pathlib.Path):
     """XZ triangles of the collision floor, or None if the file has no mesh."""
@@ -141,7 +152,16 @@ def main() -> int:
                         z -= out * TRIGGER_HALF
                     else:
                         x -= out * TRIGGER_HALF
-                if not inside(tris, x, z):
+                # Probe as the player would: ahead along the approach, plus
+                # both shoulders. All three must land, matching can_move_to.
+                ax_is_z = (ax == 2)
+                fx = out * FLOOR_CHECK_DISTANCE if not ax_is_z else 0.0
+                fz = out * FLOOR_CHECK_DISTANCE if ax_is_z else 0.0
+                sx, sz = (FLOOR_CHECK_SIDE, 0.0) if ax_is_z else (0.0, FLOOR_CHECK_SIDE)
+                probes = [(x + fx, z + fz),
+                          (x + fx + sx, z + fz + sz),
+                          (x + fx - sx, z + fz - sz)]
+                if not inside(tris, x, z) or not all(inside(tris, px, pz) for px, pz in probes):
                     coord = z if ax == 2 else x
                     bad.append((stage_id, p["direction"],
                                 "spawn" if kind == "spawnPosition" else "trigger face",
