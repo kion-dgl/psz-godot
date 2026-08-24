@@ -135,6 +135,10 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/3d/elements/destructible_element.gd:_apply_state#0||scripts/3d/elements/enemy_spawn.gd:_apply_state#0",
+      "jaccard": 0.96
+    },
+    {
       "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/key_gate.gd:_on_body_exited#0",
       "jaccard": 1.0
     },

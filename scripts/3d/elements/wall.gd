@@ -1,7 +1,8 @@
-extends GameElement
+extends DestructibleElement
 class_name Wall
 ## Destructible wall that can be attacked to destroy.
 ## States: intact, destroyed
+## Hurtbox + intact/destroyed state live in DestructibleElement.
 
 signal destroyed_wall
 
@@ -11,13 +12,6 @@ signal destroyed_wall
 ## Hits required to break the wall. The original's breakable walls take a few
 ## strikes rather than shattering on the first touch.
 const HITS_TO_DESTROY := 3
-
-## Collision body for physical presence
-var collision_body: StaticBody3D
-
-## Hurtbox for receiving hits from the player's attack hitbox. Without it an
-## attack never registers on the wall and the wall can never be broken.
-var hurtbox: Hurtbox
 
 var _hits_taken: int = 0
 
@@ -33,39 +27,8 @@ func _ready() -> void:
 	model_path = AreaObjects.current_model_path("wall")
 	super._ready()
 	collision_body = _build_static_collision("WallCollision")
-	_setup_hurtbox()
+	_setup_hurtbox("WallHurtbox")
 	_setup_mirror_textures()
-
-
-func _setup_hurtbox() -> void:
-	hurtbox = Hurtbox.new()
-	hurtbox.name = "WallHurtbox"
-	hurtbox.owner_node = self
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	# Match the wall's footprint, with enough height for ranged shots to land.
-	var hb_size := Vector3(collision_size.x, maxf(collision_size.y, 2.0), collision_size.z)
-	box.size = hb_size
-	shape.shape = box
-	shape.position.y = hb_size.y / 2
-	hurtbox.add_child(shape)
-	add_child(hurtbox)
-
-
-func _apply_state() -> void:
-	match element_state:
-		"intact":
-			set_element_visible(true)
-			if collision_body:
-				collision_body.collision_layer = 1
-			if hurtbox:
-				hurtbox.monitorable = true
-		"destroyed":
-			set_element_visible(false)
-			if collision_body:
-				collision_body.collision_layer = 0
-			if hurtbox:
-				hurtbox.set_deferred("monitorable", false)
 
 
 ## Called when the wall takes damage (from player attacks via the Hurtbox).
