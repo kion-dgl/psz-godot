@@ -124,13 +124,17 @@ const economy = `flowchart LR
     preserve that: it is what makes a key detour possible at all.
   </p>
   <p>
-    <strong>An open gate renders no mesh.</strong> A doorway that is passable the
-    moment the player reaches it — an <code>open</code> door (attr 0), the way-back,
-    or an enemy-defeat gate whose room holds no live enemies — <strong>MUST NOT</strong>
-    leave a gate frame standing in it; only the load trigger remains. When an
-    enemy-defeat gate opens on clear it <strong>MUST</strong> remove its frame too,
-    not merely drop the laser. A frame in a walk-through doorway reads as "gated but
-    open", which the original never shows: a barrier that is not in force is not drawn.
+    <strong>A generated gate persists; a door that was never a barrier has no mesh.</strong>
+    An enemy-defeat gate whose room <em>has a fight</em> (the room's generated content
+    includes enemies) is a real gate: it <strong>MUST</strong> be built on every visit,
+    shown closed while enemies are alive and <strong>open</strong> — frame still
+    standing, laser and collision off — once the room is cleared. It <strong>MUST NOT</strong>
+    disappear on re-entry; a gate you opened is still there when you come back. Whether
+    a room "has a fight" is read from its generated objects, <strong>not</strong> the live
+    enemy count, which goes false the instant the room is cleared. By contrast, a doorway
+    that was never a barrier — an <code>open</code> door (attr 0), the way-back, or an
+    enemy-defeat door on a room that never had enemies — <strong>MUST</strong> render no
+    gate mesh at all; only its load trigger remains.
   </p>
 
   <h2>The economy</h2>

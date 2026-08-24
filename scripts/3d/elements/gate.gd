@@ -71,12 +71,6 @@ func _apply_state() -> void:
 			"open":
 				collision_body.collision_layer = 0
 
-	# The frame vanishes when open. The original leaves nothing standing in a
-	# doorway you can walk through; an open frame reads as "gated but open", which
-	# is not what a cleared (or never-gated) enemy-defeat door should look like.
-	if model:
-		model.visible = element_state != "open"
-
 
 ## Open the gate
 func open() -> void:

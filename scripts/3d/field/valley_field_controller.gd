@@ -1332,18 +1332,29 @@ func _spawn_field_elements() -> void:
 			var is_enemy_door: bool = int(cell_attrs.get(dir, 0)) == 4
 			var gate_is_open: bool = (dir == _spawn_edge) or target_visited \
 				or not room_has_enemies or (not cell_attrs.is_empty() and not is_enemy_door)
-			# A gate that would start OPEN gets no mesh at all — only the load
-			# trigger (created below). A frame standing in a passable doorway reads
-			# as "gated but open"; the original leaves nothing where a barrier was
-			# never in force. A gate that starts CLOSED is built and opens on clear
-			# via the enemy-defeat locking, and gate.open() then hides its frame too.
-			if not gate_is_open:
+			# A GENERATED enemy-defeat gate persists: it is built on every visit,
+			# shown closed while the room holds live enemies and OPEN (frame still
+			# standing, laser + collision off) once cleared — so a gate you opened
+			# is still there when you come back. "Ever had a fight" is read from the
+			# cell's raw generated objects, NOT the live enemy count, which goes
+			# false the moment the room is cleared and used to make the gate vanish.
+			#
+			# A door whose room NEVER had a fight was never a barrier ("already
+			# open"): it gets no mesh, only the load trigger created below.
+			var room_ever_had_enemies := false
+			for _o in _current_cell.get("objects", []):
+				if str(_o.get("type", "")) == "enemy":
+					room_ever_had_enemies = true
+					break
+			if room_ever_had_enemies:
 				var gate := GateScript.new()
 				add_child(gate)
 				gate.global_position = gate_pos
 				gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 				_gate_mgr._fixup_gate_materials(gate)
 				gate._setup_laser_material()
+				if gate_is_open:
+					gate.open()
 				_gate_mgr._fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
