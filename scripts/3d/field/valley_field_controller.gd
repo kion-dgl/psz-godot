@@ -1332,15 +1332,19 @@ func _spawn_field_elements() -> void:
 			var is_enemy_door: bool = int(cell_attrs.get(dir, 0)) == 4
 			var gate_is_open: bool = (dir == _spawn_edge) or target_visited \
 				or not room_has_enemies or (not cell_attrs.is_empty() and not is_enemy_door)
-			var gate := GateScript.new()
-			add_child(gate)
-			gate.global_position = gate_pos
-			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
-			_gate_mgr._fixup_gate_materials(gate)
-			gate._setup_laser_material()
-			if gate_is_open:
-				gate.open()
-			_gate_mgr._fix_gate_depth(gate)
+			# A gate that would start OPEN gets no mesh at all — only the load
+			# trigger (created below). A frame standing in a passable doorway reads
+			# as "gated but open"; the original leaves nothing where a barrier was
+			# never in force. A gate that starts CLOSED is built and opens on clear
+			# via the enemy-defeat locking, and gate.open() then hides its frame too.
+			if not gate_is_open:
+				var gate := GateScript.new()
+				add_child(gate)
+				gate.global_position = gate_pos
+				gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
+				_gate_mgr._fixup_gate_materials(gate)
+				gate._setup_laser_material()
+				_gate_mgr._fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
 		var gate_wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)

@@ -123,6 +123,15 @@ const economy = `flowchart LR
     can always retreat toward the start. An implementation <strong>MUST</strong>
     preserve that: it is what makes a key detour possible at all.
   </p>
+  <p>
+    <strong>An open gate renders no mesh.</strong> A doorway that is passable the
+    moment the player reaches it — an <code>open</code> door (attr 0), the way-back,
+    or an enemy-defeat gate whose room holds no live enemies — <strong>MUST NOT</strong>
+    leave a gate frame standing in it; only the load trigger remains. When an
+    enemy-defeat gate opens on clear it <strong>MUST</strong> remove its frame too,
+    not merely drop the laser. A frame in a walk-through doorway reads as "gated but
+    open", which the original never shows: a barrier that is not in force is not drawn.
+  </p>
 
   <h2>The economy</h2>
   <div class="diagram"><Mermaid chart={economy} /></div>

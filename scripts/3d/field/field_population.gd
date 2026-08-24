@@ -534,9 +534,14 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 ## `depth` is the cell's path_order — how far along the generated route it sits
 ## — which is what the layout draw is banded on. Callers that do not track it
 ## may leave it at -1.
-static func objects_for_cell(room_code: String, is_start: bool, is_end: bool,
+static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 		rng: RandomNumberGenerator, depth: int = -1) -> Array:
-	if is_start or is_end:
+	# Only the START room is unconditionally empty. is_end is NOT: the goal is
+	# "not necessarily last" (free-field spec), so the last cell of a path is
+	# often an ordinary combat room, and suppressing its wave left whole rooms
+	# with no enemies. The actual goal room carries no assignment, so roll_wave
+	# returns [] for it on its own — no need to special-case is_end here.
+	if is_start:
 		return []
 	var objects: Array = []
 	var wave: Array = roll_wave(room_code, rng)
