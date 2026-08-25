@@ -98,12 +98,10 @@ static var _loaded := false
 ## enemy_room_assignment record; see the Enemy Waves spec.
 static var _wave_counts: Dictionary = {}
 
-## PROVISIONAL wave-count range, used for any room whose w3/w4 is not yet in
-## enemy_room_assignment.json. psz-re carries the real per-room pair (e.g.
-## s01a_ib1 = [2, 3]) but this repo's copy still ships only {template, weight};
-## until the w3/w4 import lands, a room runs 1-3 waves so the mechanic is live
-## and testable. Replace by importing the real counts, not by tuning this.
-const DEFAULT_WAVE_RANGE := [1, 3]
+## Wave count for a room the table does not cover. Every room in the imported
+## table carries a pair, so this is only reachable for a code the original never
+## shipped — a single wave, matching how a fightless room reads in play.
+const DEFAULT_WAVE_COUNT := 1
 
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
@@ -548,9 +546,9 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 ## may leave it at -1.
 ##
 ## How many waves a room runs — a count in [w3, w4] rolled per instance (Enemy
-## Waves spec). Uses the room's imported w3/w4 pair when present, with the same
-## area-A fallback roll_wave uses; otherwise DEFAULT_WAVE_RANGE (provisional,
-## until the w3/w4 import lands).
+## Waves spec). Every imported room carries its measured w3/w4 pair; the area-A
+## fallback covers a b-section code with no pair of its own, and a code the
+## table never carried runs DEFAULT_WAVE_COUNT.
 static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 	_load()
 	var pair: Array = _wave_counts.get(room_code, [])
@@ -559,7 +557,7 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 		if parts.size() == 2 and parts[0].length() >= 4:
 			pair = _wave_counts.get("%sa_%s" % [parts[0].substr(0, 3), parts[1]], [])
 	if pair.is_empty():
-		pair = DEFAULT_WAVE_RANGE
+		return DEFAULT_WAVE_COUNT
 	var lo: int = int(pair[0])
 	var hi: int = int(pair[1]) if pair.size() > 1 else lo
 	if hi < lo:
