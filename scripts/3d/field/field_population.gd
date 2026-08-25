@@ -94,6 +94,17 @@ static var _waves: Array = []
 static var _model_to_enemy: Dictionary = {}
 static var _loaded := false
 
+## Per-room wave-count range, room code -> [w3, w4] (min, max). From psz-re's
+## enemy_room_assignment record; see the Enemy Waves spec.
+static var _wave_counts: Dictionary = {}
+
+## PROVISIONAL wave-count range, used for any room whose w3/w4 is not yet in
+## enemy_room_assignment.json. psz-re carries the real per-room pair (e.g.
+## s01a_ib1 = [2, 3]) but this repo's copy still ships only {template, weight};
+## until the w3/w4 import lands, a room runs 1-3 waves so the mechanic is live
+## and testable. Replace by importing the real counts, not by tuning this.
+const DEFAULT_WAVE_RANGE := [1, 3]
+
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
 
@@ -116,6 +127,7 @@ static func _load() -> void:
 	_loaded = true
 	var assign_doc: Dictionary = _read_json(RE_DIR + "enemy_room_assignment.json")
 	_assignment = assign_doc.get("assignment", {})
+	_wave_counts = assign_doc.get("wave_counts", {})
 	var wave_doc: Dictionary = _read_json(RE_DIR + "enemy_wave_templates.json")
 	var deploy: Dictionary = wave_doc.get(DEPLOY_SET, {})
 	_waves = deploy.get("waves", [])
@@ -534,19 +546,54 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 ## `depth` is the cell's path_order — how far along the generated route it sits
 ## — which is what the layout draw is banded on. Callers that do not track it
 ## may leave it at -1.
-static func objects_for_cell(room_code: String, is_start: bool, is_end: bool,
+##
+## How many waves a room runs — a count in [w3, w4] rolled per instance (Enemy
+## Waves spec). Uses the room's imported w3/w4 pair when present, with the same
+## area-A fallback roll_wave uses; otherwise DEFAULT_WAVE_RANGE (provisional,
+## until the w3/w4 import lands).
+static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
+	_load()
+	var pair: Array = _wave_counts.get(room_code, [])
+	if pair.is_empty():
+		var parts := room_code.split("_", true, 1)
+		if parts.size() == 2 and parts[0].length() >= 4:
+			pair = _wave_counts.get("%sa_%s" % [parts[0].substr(0, 3), parts[1]], [])
+	if pair.is_empty():
+		pair = DEFAULT_WAVE_RANGE
+	var lo: int = int(pair[0])
+	var hi: int = int(pair[1]) if pair.size() > 1 else lo
+	if hi < lo:
+		hi = lo
+	return rng.randi_range(lo, hi)
+
+
+static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 		rng: RandomNumberGenerator, depth: int = -1) -> Array:
-	if is_start or is_end:
+	# Only the START room is unconditionally empty. is_end is NOT: the goal is
+	# "not necessarily last" (free-field spec), so the last cell of a path is
+	# often an ordinary combat room, and suppressing its wave left whole rooms
+	# with no enemies. The actual goal room carries no assignment, so roll_wave
+	# returns [] for it on its own — no need to special-case is_end here.
+	if is_start:
 		return []
 	var objects: Array = []
-	var wave: Array = roll_wave(room_code, rng)
-	var enemy_spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
-	if enemy_spots.is_empty():
-		enemy_spots = ring_positions(wave.size(), ENEMY_RING_RADIUS)
-	for i in range(wave.size()):
-		objects.append({
-			"type": "enemy", "position": enemy_spots[i], "enemy_id": wave[i],
-		})
+	# A room runs a COUNT of waves (Enemy Waves spec), each an independent draw
+	# from the room's pool. Each enemy is tagged with its wave number; the
+	# spawner holds back wave > 1 until the prior wave is cleared. Slots are
+	# reused across waves, so each wave re-picks positions.
+	var wave_count: int = _wave_count(room_code, rng)
+	for w in range(1, wave_count + 1):
+		var wave: Array = roll_wave(room_code, rng)
+		if wave.is_empty():
+			continue  # room fights nobody (start/goal / no assignment)
+		var enemy_spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
+		if enemy_spots.is_empty():
+			enemy_spots = ring_positions(wave.size(), ENEMY_RING_RADIUS)
+		for i in range(wave.size()):
+			objects.append({
+				"type": "enemy", "position": enemy_spots[i], "enemy_id": wave[i],
+				"wave": w,
+			})
 
 	var authored: Array = authored_objects(room_code, depth, rng)
 	if authored.is_empty():

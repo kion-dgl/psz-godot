@@ -3,14 +3,6 @@
   "jaccard_min": 0.85,
   "accepted_pairs": [
     {
-      "sig": "scripts/2d/character_select.gd:_find_animation_player#0||scripts/3d/enemies/enemy_base.gd:_find_animation_player#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/2d/character_select.gd:_find_skeleton#0||scripts/3d/enemies/enemy_base.gd:_find_skeleton#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/2d/guild_counter.gd:_process#0||scripts/2d/shops/crafting_shop.gd:_process#0",
       "jaccard": 1.0
     },
@@ -87,6 +79,10 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/2d/shops/item_shop.gd:_unhandled_input#0||scripts/2d/shops/weapon_shop.gd:_unhandled_input#0",
+      "jaccard": 1.0
+    },
+    {
       "sig": "scripts/2d/shops/photon_shop.gd:_process#0||scripts/2d/shops/weapon_shop.gd:_process#0",
       "jaccard": 1.0
     },
@@ -103,47 +99,7 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/city/city_npc.gd:_find_typed#0||scripts/3d/elements/companion_npc.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/city/city_npc.gd:_find_typed#0||scripts/3d/elements/enemy_spawn.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/city/city_npc.gd:_find_typed#0||scripts/3d/elements/field_npc.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/city/city_npc.gd:_find_typed#0||scripts/3d/test/weapon_test.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/box.gd:_setup_reticle#0||scripts/3d/elements/enemy_spawn.gd:_setup_reticle#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/companion_npc.gd:_find_typed#0||scripts/3d/elements/enemy_spawn.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/companion_npc.gd:_find_typed#0||scripts/3d/elements/field_npc.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/companion_npc.gd:_find_typed#0||scripts/3d/test/weapon_test.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/key_gate.gd:_on_body_exited#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/key_pickup.gd:_on_body_exited#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/message_pack.gd:_on_body_exited#0",
       "jaccard": 1.0
     },
     {
@@ -155,31 +111,11 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_typed#0||scripts/3d/elements/field_npc.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_typed#0||scripts/3d/test/weapon_test.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/3d/elements/enemy_spawn.gd:_spawn_damage_number#0||scripts/3d/enemies/enemy_base.gd:_spawn_damage_number#0",
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/elements/field_npc.gd:_find_typed#0||scripts/3d/test/weapon_test.gd:_find_typed#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/key_gate.gd:_on_body_exited#0||scripts/3d/elements/key_pickup.gd:_on_body_exited#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/3d/elements/key_gate.gd:_on_body_exited#0||scripts/3d/elements/message_pack.gd:_on_body_exited#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/3d/elements/key_pickup.gd:_on_body_exited#0||scripts/3d/elements/message_pack.gd:_on_body_exited#0",
       "jaccard": 1.0
     },
     {
@@ -211,7 +147,7 @@
       "jaccard": 0.967
     },
     {
-      "sig": "scripts/3d/elements/box.gd:_apply_state#0||scripts/3d/elements/enemy_spawn.gd:_apply_state#0",
+      "sig": "scripts/3d/elements/destructible_element.gd:_apply_state#0||scripts/3d/elements/enemy_spawn.gd:_apply_state#0",
       "jaccard": 0.96
     },
     {
@@ -231,6 +167,22 @@
       "jaccard": 0.955
     },
     {
+      "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/key_gate.gd:_on_body_exited#0",
+      "jaccard": 0.952
+    },
+    {
+      "sig": "scripts/3d/elements/drop_base.gd:_on_body_exited#0||scripts/3d/elements/message_pack.gd:_on_body_exited#0",
+      "jaccard": 0.952
+    },
+    {
+      "sig": "scripts/3d/elements/key_gate.gd:_on_body_exited#0||scripts/3d/elements/key_pickup.gd:_on_body_exited#0",
+      "jaccard": 0.952
+    },
+    {
+      "sig": "scripts/3d/elements/key_pickup.gd:_on_body_exited#0||scripts/3d/elements/message_pack.gd:_on_body_exited#0",
+      "jaccard": 0.952
+    },
+    {
       "sig": "scripts/3d/elements/key_pickup.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
       "jaccard": 0.952
     },
@@ -239,28 +191,8 @@
       "jaccard": 0.949
     },
     {
-      "sig": "scripts/2d/shops/crafting_shop.gd:_update_selection#0||scripts/2d/shops/weapon_shop.gd:_update_selection#0",
-      "jaccard": 0.935
-    },
-    {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
       "jaccard": 0.932
-    },
-    {
-      "sig": "scripts/2d/action_palette_screen.gd:_is_action_available#0||scripts/3d/field/pso_start_menu.gd:_is_palette_action_available#0",
-      "jaccard": 0.931
-    },
-    {
-      "sig": "scripts/3d/elements/box.gd:_setup_reticle#0||scripts/3d/enemies/enemy_base.gd:_setup_reticle#0",
-      "jaccard": 0.928
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_setup_reticle#0||scripts/3d/enemies/enemy_base.gd:_setup_reticle#0",
-      "jaccard": 0.928
-    },
-    {
-      "sig": "scripts/3d/field/cell_object_spawner.gd:_spawn_bear_trap#0||scripts/3d/field/cell_object_spawner.gd:_spawn_needle_trap#0",
-      "jaccard": 0.926
     },
     {
       "sig": "scripts/tools/test_runner.gd:assert_eq#0||scripts/tools/test_runner.gd:assert_gt#0",
@@ -279,44 +211,8 @@
       "jaccard": 0.92
     },
     {
-      "sig": "scripts/3d/city/city_npc.gd:_find_typed#0||scripts/3d/player/player.gd:_find_node_of_type#0",
-      "jaccard": 0.92
-    },
-    {
-      "sig": "scripts/3d/elements/companion_npc.gd:_find_typed#0||scripts/3d/player/player.gd:_find_node_of_type#0",
-      "jaccard": 0.92
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_typed#0||scripts/3d/player/player.gd:_find_node_of_type#0",
-      "jaccard": 0.92
-    },
-    {
-      "sig": "scripts/3d/elements/field_npc.gd:_find_typed#0||scripts/3d/player/player.gd:_find_node_of_type#0",
-      "jaccard": 0.92
-    },
-    {
       "sig": "scripts/3d/field/valley_field_controller.gd:_find_child_by_name#0||scripts/tools/test_runner.gd:_find_child_recursive#0",
       "jaccard": 0.92
-    },
-    {
-      "sig": "scripts/3d/player/player.gd:_find_node_of_type#0||scripts/3d/test/weapon_test.gd:_find_typed#0",
-      "jaccard": 0.92
-    },
-    {
-      "sig": "scripts/3d/elements/key_pickup.gd:_on_body_entered#0||scripts/3d/elements/message_pack.gd:_on_body_entered#0",
-      "jaccard": 0.917
-    },
-    {
-      "sig": "scripts/2d/character_select.gd:_find_animation_player#0||scripts/3d/elements/enemy_spawn.gd:_find_anim_player#0",
-      "jaccard": 0.913
-    },
-    {
-      "sig": "scripts/2d/character_select.gd:_find_animation_player#0||scripts/tools/test_enemy_anims.gd:_find_ap#0",
-      "jaccard": 0.913
-    },
-    {
-      "sig": "scripts/2d/equipment_screen.gd:_ready#0||scripts/2d/status.gd:_ready#0",
-      "jaccard": 0.913
     },
     {
       "sig": "scripts/3d/elements/bear_trap.gd:_init#0||scripts/3d/elements/message_pack.gd:_init#0",
@@ -324,14 +220,6 @@
     },
     {
       "sig": "scripts/3d/elements/bear_trap.gd:_init#0||scripts/3d/elements/needle_trap.gd:_init#0",
-      "jaccard": 0.913
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_anim_player#0||scripts/3d/enemies/enemy_base.gd:_find_animation_player#0",
-      "jaccard": 0.913
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_anim_player#0||scripts/tools/test_enemy_anims.gd:_find_ap#0",
       "jaccard": 0.913
     },
     {
@@ -344,10 +232,6 @@
     },
     {
       "sig": "scripts/3d/elements/message_pack.gd:_init#0||scripts/3d/elements/warp_point.gd:_init#0",
-      "jaccard": 0.913
-    },
-    {
-      "sig": "scripts/3d/enemies/enemy_base.gd:_find_animation_player#0||scripts/tools/test_enemy_anims.gd:_find_ap#0",
       "jaccard": 0.913
     },
     {
@@ -400,22 +284,14 @@
     },
     {
       "sig": "scripts/2d/shops/item_shop.gd:_generate_sell_list#0||scripts/2d/shops/weapon_shop.gd:_generate_sell_list#0",
-      "jaccard": 0.884
-    },
-    {
-      "sig": "scripts/2d/shops/item_shop.gd:_unhandled_input#0||scripts/2d/shops/weapon_shop.gd:_unhandled_input#0",
-      "jaccard": 0.882
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
-      "jaccard": 0.88
+      "jaccard": 0.878
     },
     {
       "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
       "jaccard": 0.875
     },
     {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_apply_state#0||scripts/3d/elements/wall.gd:_apply_state#0",
+      "sig": "scripts/3d/elements/key_pickup.gd:_on_body_entered#0||scripts/3d/elements/message_pack.gd:_on_body_entered#0",
       "jaccard": 0.875
     },
     {
@@ -459,12 +335,8 @@
       "jaccard": 0.864
     },
     {
-      "sig": "scripts/2d/mag_feeder.gd:_unhandled_input#0||scripts/2d/mag_list.gd:_unhandled_input#0",
-      "jaccard": 0.857
-    },
-    {
-      "sig": "scripts/3d/field/pso_start_menu.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
-      "jaccard": 0.857
+      "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
+      "jaccard": 0.863
     },
     {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
@@ -473,10 +345,6 @@
     {
       "sig": "scripts/ui/choice_dialog.gd:_make_button#0||scripts/ui/confirm_dialog.gd:_make_button#0",
       "jaccard": 0.853
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_on_body_entered#0||scripts/3d/elements/message_pack.gd:_on_body_entered#0",
-      "jaccard": 0.852
     },
     {
       "sig": "scripts/3d/field/map_collision_builder.gd:collect_mesh_instances#0||scripts/3d/ui/title_backdrop.gd:_walk_recursive#0",
