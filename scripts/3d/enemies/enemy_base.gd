@@ -16,6 +16,17 @@ var current_evasion: int = 30
 ## Is enemy alive?
 var is_alive: bool = true
 
+## Dormant spawn (free-field parity): in the original, a room's enemies
+## materialise when the player walks in — they are not standing there waiting.
+## A dormant enemy is hidden, runs no AI, and cannot be hit; `reveal()` brings
+## it in with a spawn effect and start animation. Set BEFORE the node enters
+## the tree (the spawner does), so _ready() can hide it during setup.
+var dormant := false
+
+## Seconds after reveal the enemy holds still while the start animation plays.
+var _spawn_lock := 0.0
+const SPAWN_LOCK_SEC := 0.8
+
 ## Target to chase (usually the player)
 var target: Node3D
 
@@ -210,6 +221,11 @@ func _ready() -> void:
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
 	_setup_reticle()
 
+	if dormant:
+		visible = false
+		if hurtbox:
+			hurtbox.set_deferred("monitorable", false)
+
 
 func _setup_from_data() -> void:
 	if enemy_data:
@@ -365,6 +381,23 @@ func _find_player() -> Node3D:
 
 func _physics_process(delta: float) -> void:
 	if not is_alive:
+		return
+
+	# Dormant: waiting for the player to walk into the room. No AI, no
+	# gravity — the spawner already placed the body on the floor.
+	if dormant:
+		velocity = Vector3.ZERO
+		return
+
+	# Fresh reveal: hold position (gravity still settles) while the start
+	# animation plays, so the spawn reads as an entrance and not a pop-in.
+	if _spawn_lock > 0.0:
+		_spawn_lock -= delta
+		velocity.x = 0
+		velocity.z = 0
+		if not is_on_floor():
+			velocity.y -= GRAVITY * delta
+		move_and_slide()
 		return
 
 	# Kill enemy if it falls off the stage
@@ -1058,6 +1091,7 @@ const ANIM_ALIASES := {
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
 	"dmg": ["dam"],       # five rigs name the damage clip dam (booma/swordman/tank/orangutan/shrimp)
+	"spawn": ["app", "appearance", "stt"],  # spawn-in → appearance clip; stt is a stand-from-wait that reads as one
 }
 
 func _find_animation(short_name: String) -> String:
@@ -1143,6 +1177,82 @@ func _play_sfx(key: String) -> void:
 	var path: String = _sfx.get(key, "")
 	if not path.is_empty():
 		SfxManager.play_at(path, global_position)
+
+
+## Bring a dormant enemy in: show it, play the spawn effect and a start
+## animation, and hold it still for SPAWN_LOCK_SEC so the entrance reads.
+## `delay` staggers multi-enemy reveals so a wave arrives as a ripple rather
+## than one simultaneous pop.
+func reveal(delay: float = 0.0) -> void:
+	if not dormant:
+		return
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+		if not dormant or not is_inside_tree():
+			return
+	dormant = false
+	visible = true
+	if hurtbox:
+		hurtbox.set_deferred("monitorable", true)
+	_spawn_lock = SPAWN_LOCK_SEC
+	_play_spawn_effect()
+	# Start animation if the rig has one, else settle into idle. Short names
+	# the rigs use for it: "app"/"appearance"/"spawn"; none is guaranteed.
+	if _play_animation("spawn", true).is_empty():
+		_play_animation("wat", true)
+
+
+## The spawn-in burst: a one-shot puff of additive glow dots, in the shape the
+## weather controller uses for its particles. Self-frees when finished.
+func _play_spawn_effect() -> void:
+	var burst := GPUParticles3D.new()
+	burst.one_shot = true
+	burst.explosiveness = 1.0
+	burst.lifetime = 0.6
+	burst.amount = 24
+	burst.local_coords = false
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3.UP
+	mat.spread = 35.0
+	mat.initial_velocity_min = 2.0
+	mat.initial_velocity_max = 4.0
+	mat.gravity = Vector3(0, -6, 0)
+	mat.scale_min = 0.35
+	mat.scale_max = 0.9
+	burst.process_material = mat
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.35, 0.35)
+	var qm := StandardMaterial3D.new()
+	qm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	qm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	qm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	qm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	qm.albedo_texture = _glow_dot()
+	qm.albedo_color = Color(0.55, 0.8, 1.0)
+	quad.material = qm
+	burst.draw_pass_1 = quad
+	add_child(burst)
+	burst.position = Vector3(0, 0.8, 0)
+	burst.finished.connect(burst.queue_free)
+
+
+## Shared radial-gradient dot texture for the spawn burst (same construction as
+## WeatherController's, kept local so the enemy has no dependency on the field).
+static var _dot_tex: ImageTexture = null
+
+static func _glow_dot() -> ImageTexture:
+	if _dot_tex:
+		return _dot_tex
+	var size := 32
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2(size / 2.0, size / 2.0)
+	for y in range(size):
+		for x in range(size):
+			var d: float = Vector2(x + 0.5, y + 0.5).distance_to(center) / (size / 2.0)
+			img.set_pixel(x, y, Color(1, 1, 1, clampf(1.0 - d, 0.0, 1.0)))
+	_dot_tex = ImageTexture.create_from_image(img)
+	return _dot_tex
 
 
 func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:

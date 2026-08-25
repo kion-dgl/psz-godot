@@ -75,6 +75,13 @@ func _spawn_cell_objects() -> void:
 		_restore_cell_objects(saved)
 	else:
 		_spawn_fresh_cell_objects(objects)
+		# Fresh room with enemies: they hold dormant until the player walks
+		# in — the controller's _process watches the distance from this entry
+		# point and reveals the wave (free-field parity: enemies appear on
+		# entry, not standing in advance).
+		if not _c._room_enemies.is_empty() and _c.player and _c._map_root:
+			_c._enemies_pending_reveal = true
+			_c._reveal_origin_local = _c._map_root.to_local(_c.player.global_position)
 
 	# Wire fence↔switch links
 	_c._wire_fence_links()
@@ -104,6 +111,7 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 	_c._wave_enemy_data.clear()
 	_c._current_wave = 1
 	_c._max_wave = 1
+	_c._wave_break_pending = false
 
 	for obj in objects:
 		var obj_type: String = str(obj.get("type", ""))
@@ -122,7 +130,9 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 					_c._max_wave = wave
 				if wave == 1:
 					var enemy_id: String = str(obj.get("enemy_id", "lizard"))
-					_spawn_enemy(pos, enemy_id)
+					# Dormant: the room's first wave waits for the player to
+					# walk in (see ValleyFieldController._process — reveal).
+					_spawn_enemy(pos, enemy_id, "alive", true)
 				else:
 					if not _c._wave_enemy_data.has(wave):
 						_c._wave_enemy_data[wave] = []
@@ -794,7 +804,8 @@ func _track_on_minimap(enemy: Node3D) -> void:
 		_c._room_minimap.track_enemy(enemy)
 
 
-func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> void:
+func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
+		dormant: bool = false) -> void:
 	if state == "dead":
 		return  # Don't spawn dead enemies
 
@@ -819,8 +830,8 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 
 	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
 	if edata:
-		_spawn_scripted_enemy(pos, enemy_id, edata, null)
-		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
+		_spawn_scripted_enemy(pos, enemy_id, edata, null, dormant)
+		print("[CellObjects] EnemyBase '%s' at %s%s" % [enemy_id, pos, " (dormant)" if dormant else ""])
 	else:
 		# Fallback to static EnemySpawn for unknown enemies
 		var enemy := EnemySpawnScript.new()
@@ -843,9 +854,12 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 ## with a capsule from its data, register it for room-clear/minimap, and wire the
 ## death → drops + room-clear signal. Shared by the generic, poison-lily and boss
 ## spawn paths.
-func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScript) -> EnemyBase:
+func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScript,
+		dormant: bool = false) -> EnemyBase:
 	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
 	enemy.enemy_data = edata
+	# Before add_child, so _ready() hides the body during setup (see EnemyBase).
+	enemy.dormant = dormant
 	var col_shape := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = edata.collision_radius

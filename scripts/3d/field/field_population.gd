@@ -510,6 +510,49 @@ static func enemy_slot_positions(room_code: String, count: int,
 	return out
 
 
+## Slot positions for a LATER wave: same authored pool as
+## enemy_slot_positions, but the pick prefers slots far from `away_from`
+## (room-local, XZ distance). A wave that appears across the room reads as a
+## new arrival; one that pops up beside the player reads as the same fight
+## continuing. Which slots the original picks per wave is undecoded (same note
+## as above) — the positions are exact, the selection is ours.
+static func enemy_slot_positions_away(room_code: String, count: int,
+		rng: RandomNumberGenerator, away_from: Vector3) -> Array:
+	_load()
+	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	if slots.is_empty() or count <= 0:
+		return []
+
+	var order: Array = []
+	for i in range(slots.size()):
+		order.append(i)
+	# Shuffle first so the far-sort keeps some variety among near-equal
+	# distances rather than always the same corner.
+	for i in range(order.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var t = order[i]
+		order[i] = order[j]
+		order[j] = t
+	var ax := away_from.x
+	var az := away_from.z
+	order.sort_custom(func(a: int, b: int) -> bool:
+		var sa: Dictionary = slots[a]
+		var sb: Dictionary = slots[b]
+		var da := Vector2(float(sa.get("x", 0.0)) - ax, float(sa.get("z", 0.0)) - az).length_squared()
+		var db := Vector2(float(sb.get("x", 0.0)) - ax, float(sb.get("z", 0.0)) - az).length_squared()
+		return da > db)
+
+	var out: Array = []
+	for i in range(count):
+		var slot: Dictionary = slots[order[i % order.size()]]
+		out.append([
+			snappedf(float(slot.get("x", 0.0)), 0.01),
+			snappedf(float(slot.get("y", 0.0)), 0.01),
+			snappedf(float(slot.get("z", 0.0)), 0.01),
+		])
+	return out
+
+
 static func ring_positions(count: int, radius: float) -> Array:
 	var out: Array = []
 	for i in range(count):
