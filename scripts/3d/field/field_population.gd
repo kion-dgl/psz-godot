@@ -98,12 +98,10 @@ static var _loaded := false
 ## enemy_room_assignment record; see the Enemy Waves spec.
 static var _wave_counts: Dictionary = {}
 
-## PROVISIONAL wave-count range, used for any room whose w3/w4 is not yet in
-## enemy_room_assignment.json. psz-re carries the real per-room pair (e.g.
-## s01a_ib1 = [2, 3]) but this repo's copy still ships only {template, weight};
-## until the w3/w4 import lands, a room runs 1-3 waves so the mechanic is live
-## and testable. Replace by importing the real counts, not by tuning this.
-const DEFAULT_WAVE_RANGE := [1, 3]
+## Wave count for a room the table does not cover. Every room in the imported
+## table carries a pair, so this is only reachable for a code the original never
+## shipped — a single wave, matching how a fightless room reads in play.
+const DEFAULT_WAVE_COUNT := 1
 
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
@@ -512,6 +510,49 @@ static func enemy_slot_positions(room_code: String, count: int,
 	return out
 
 
+## Slot positions for a LATER wave: same authored pool as
+## enemy_slot_positions, but the pick prefers slots far from `away_from`
+## (room-local, XZ distance). A wave that appears across the room reads as a
+## new arrival; one that pops up beside the player reads as the same fight
+## continuing. Which slots the original picks per wave is undecoded (same note
+## as above) — the positions are exact, the selection is ours.
+static func enemy_slot_positions_away(room_code: String, count: int,
+		rng: RandomNumberGenerator, away_from: Vector3) -> Array:
+	_load()
+	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	if slots.is_empty() or count <= 0:
+		return []
+
+	var order: Array = []
+	for i in range(slots.size()):
+		order.append(i)
+	# Shuffle first so the far-sort keeps some variety among near-equal
+	# distances rather than always the same corner.
+	for i in range(order.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var t = order[i]
+		order[i] = order[j]
+		order[j] = t
+	var ax := away_from.x
+	var az := away_from.z
+	order.sort_custom(func(a: int, b: int) -> bool:
+		var sa: Dictionary = slots[a]
+		var sb: Dictionary = slots[b]
+		var da := Vector2(float(sa.get("x", 0.0)) - ax, float(sa.get("z", 0.0)) - az).length_squared()
+		var db := Vector2(float(sb.get("x", 0.0)) - ax, float(sb.get("z", 0.0)) - az).length_squared()
+		return da > db)
+
+	var out: Array = []
+	for i in range(count):
+		var slot: Dictionary = slots[order[i % order.size()]]
+		out.append([
+			snappedf(float(slot.get("x", 0.0)), 0.01),
+			snappedf(float(slot.get("y", 0.0)), 0.01),
+			snappedf(float(slot.get("z", 0.0)), 0.01),
+		])
+	return out
+
+
 static func ring_positions(count: int, radius: float) -> Array:
 	var out: Array = []
 	for i in range(count):
@@ -548,9 +589,9 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 ## may leave it at -1.
 ##
 ## How many waves a room runs — a count in [w3, w4] rolled per instance (Enemy
-## Waves spec). Uses the room's imported w3/w4 pair when present, with the same
-## area-A fallback roll_wave uses; otherwise DEFAULT_WAVE_RANGE (provisional,
-## until the w3/w4 import lands).
+## Waves spec). Every imported room carries its measured w3/w4 pair; the area-A
+## fallback covers a b-section code with no pair of its own, and a code the
+## table never carried runs DEFAULT_WAVE_COUNT.
 static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 	_load()
 	var pair: Array = _wave_counts.get(room_code, [])
@@ -559,7 +600,7 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 		if parts.size() == 2 and parts[0].length() >= 4:
 			pair = _wave_counts.get("%sa_%s" % [parts[0].substr(0, 3), parts[1]], [])
 	if pair.is_empty():
-		pair = DEFAULT_WAVE_RANGE
+		return DEFAULT_WAVE_COUNT
 	var lo: int = int(pair[0])
 	var hi: int = int(pair[1]) if pair.size() > 1 else lo
 	if hi < lo:
