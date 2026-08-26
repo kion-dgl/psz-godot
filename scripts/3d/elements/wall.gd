@@ -44,6 +44,10 @@ func _ready() -> void:
 	collision_body = _build_static_collision("WallCollision")
 	_setup_hurtbox("WallHurtbox")
 	_setup_mirror_textures()
+	# Centre of the wall's face, not above it — a wall is targeted like an
+	# enemy standing in the doorway, not like loot on the ground.
+	if is_destructible:
+		_setup_reticle(collision_size.y * 0.5)
 
 
 ## Called when the wall takes damage (from player attacks via the Hurtbox).
@@ -66,6 +70,7 @@ func destroy() -> void:
 
 	is_alive = false
 	remove_from_group("enemies")
+	hide_reticle()
 	set_state("destroyed")
 	destroyed_wall.emit()
 	print("[Wall] Destroyed")

@@ -17,7 +17,6 @@ signal destroyed_box
 @export var drop_value: String = ""
 
 
-var _reticle: Node3D
 var is_alive: bool = true
 
 
@@ -42,7 +41,7 @@ func _ready() -> void:
 	collision_body = _build_static_collision("BoxCollision")
 	_setup_hurtbox("BoxHurtbox")
 	_setup_mirror_textures(Vector2(0, 1) if is_rare else Vector2.ZERO)
-	_setup_reticle()
+	_setup_reticle(collision_size.y + 0.5)
 
 
 ## Size the collision box from the container the area actually loaded.
@@ -86,21 +85,6 @@ func destroy() -> void:
 		_spawn_drop()
 
 	print("[Box] Destroyed")
-
-
-func _setup_reticle() -> void:
-	_reticle = TargetReticle.build(collision_size.y + 0.5)
-	add_child(_reticle)
-
-
-func show_reticle() -> void:
-	if _reticle:
-		_reticle.visible = true
-
-
-func hide_reticle() -> void:
-	if _reticle:
-		_reticle.visible = false
 
 
 func _spawn_drop() -> void:
