@@ -1,85 +1,88 @@
 extends RefCounted
 class_name TargetReticle
-## Shared builder for the lock-on reticle shown above a target. The Sprite3D +
-## triangle texture were duplicated verbatim in enemy_base / enemy_spawn / box
-## (#517); only the vertical offset differed, so callers pass that in.
+## Shared builder for the lock-on reticle. The Sprite3D + single triangle
+## texture were duplicated verbatim in enemy_base / enemy_spawn / box (#517);
+## only the vertical offset differed, so callers pass that in.
 ##
-## The triangle used to be drawn procedurally into an ImageTexture. It is now
-## the game's own model (#577): `ef_com_rockon` plus `ef_com_rockon_s`.
-##
-## Those two are an OUTLINE PAIR, not variants — the geometry says so rather
-## than the naming. `_s` is smaller (x +/-0.073 against +/-0.104), concentric
-## with the larger one, and sits IN FRONT of it (z 0.024 against 0.008). The
-## larger model carries all-black vertex colours; the smaller carries no
-## COLOR_0 at all and so renders white. Black border behind, white fill in
-## front — which is also why loading either one alone looks wrong.
+## The reticle is THREE TRIANGLES AROUND A CENTER POINT — the original's
+## lock-on shape, read off the real game in play: three small triangles spaced
+## 120° apart, each pointing inward at the target's centre. #577 briefly used
+## the pack's ef_com_rockon outline/fill pair, but that pair is a SINGLE
+## triangle and the models are absent from the asset manifests anyway, so the
+## shape is drawn procedurally here. When the effect models land in the pack,
+## compare against ef_com_rockon before replacing this.
 
-const OUTLINE_MODEL := "ef_com_rockon"
-const FILL_MODEL := "ef_com_rockon_s"
+## Texture pixel size for the fallback sprite.
+const FALLBACK_PX := 96
 
-## Fallback triangle size, used only when the models cannot be loaded.
-const FALLBACK_PX := 48
+## Distance from texture centre to a triangle's apex (pointing inward) and to
+## its base, in fractions of the half-size.
+const APEX_RADIUS := 0.16
+const BASE_RADIUS := 0.42
+## Half-width of each triangle's base, as a fraction of the half-size.
+const BASE_HALF_WIDTH := 0.14
 
 
 ## Build the reticle. `y_offset` is the local height above the target's origin
-## (typically collision height + 0.5). Caller add_child()s the result and drives
-## `visible`. Returns a Node3D — it used to be a Sprite3D, and callers that
-## still type it that way will not compile.
+## where the reticle centre sits — over the body centre for a wall, above the
+## head for an enemy. Caller add_child()s the result and drives `visible`.
+## Returns a Node3D — it used to be a Sprite3D, and callers that still type it
+## that way will not compile.
 static func build(y_offset: float) -> Node3D:
 	var root := Node3D.new()
 	root.name = "TargetReticle"
 	root.visible = false
 	root.position = Vector3(0, y_offset, 0)
 
-	# ORIENTATION IS UNRESOLVED. The models are authored pointing UP, while the
-	# sprite they replace pointed DOWN at the target it hangs above.
-	#
-	# Both ways of flipping it fail: BILLBOARD_ENABLED replaces the node basis
-	# with the camera's, so rotating the node moves the offset without turning
-	# the quad, and a negative Y scale reverses the winding so the quad vanishes.
-	# Flipping it properly means flipping the geometry or hand-billboarding.
-	#
-	# Left as authored rather than guessed at — it may well be that the original
-	# pins this BELOW the target, in which case pointing up is already right and
-	# only the attach point is wrong. Worth one look at the real game.
-	# Draw order matters: both quads disable depth testing so they read through
-	# the target, which means the painter's order is all that separates them.
-	var outline := EffectBillboard.load_model(OUTLINE_MODEL, 0)
-	var fill := EffectBillboard.load_model(FILL_MODEL, 1)
-	if outline and fill:
-		root.add_child(outline)
-		root.add_child(fill)
-		return root
-
-	# The models live in the asset pack; if it is missing we still want a
-	# visible reticle rather than an invisible node the player cannot aim with.
-	if outline:
-		outline.queue_free()
-	if fill:
-		fill.queue_free()
-	root.add_child(_fallback_sprite())
-	return root
-
-
-## The pre-#577 procedural triangle, kept as a pack-free fallback.
-static func _fallback_sprite() -> Sprite3D:
 	var reticle := Sprite3D.new()
-	reticle.name = "FallbackTriangle"
+	reticle.name = "ThreeTriangleReticle"
 	reticle.pixel_size = 0.008
 	reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	reticle.no_depth_test = true
 	reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
+	reticle.texture = _three_triangle_texture()
+	root.add_child(reticle)
+	return root
 
-	# Filled downward-pointing triangle: top row full width, narrowing to a point.
+
+## Three inward-pointing triangles, 120° apart, around a transparent centre.
+static func _three_triangle_texture() -> ImageTexture:
 	var size := FALLBACK_PX
+	var half := size / 2.0
+	var center := Vector2(half, half)
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	var half: int = size / 2
-	for y in range(size):
-		var progress: float = float(y) / float(size - 1)
-		var half_width: int = int(float(half) * (1.0 - progress))
-		for x in range(half - half_width, half + half_width + 1):
-			if x >= 0 and x < size:
+
+	for k in range(3):
+		var angle := TAU * float(k) / 3.0 - PI / 2.0
+		var dir := Vector2(cos(angle), sin(angle))
+		var perp := Vector2(-dir.y, dir.x)
+		# Apex points at the centre; the base sits further out.
+		var apex := center + dir * (half * APEX_RADIUS)
+		var b1 := center + dir * (half * BASE_RADIUS) + perp * (half * BASE_HALF_WIDTH)
+		var b2 := center + dir * (half * BASE_RADIUS) - perp * (half * BASE_HALF_WIDTH)
+		_fill_triangle(img, apex, b1, b2)
+
+	return ImageTexture.create_from_image(img)
+
+
+## Rasterize one white triangle (the Sprite3D's modulate carries the colour).
+static func _fill_triangle(img: Image, a: Vector2, b: Vector2, c: Vector2) -> void:
+	var min_x := int(floor(minf(a.x, minf(b.x, c.x))))
+	var max_x := int(ceil(maxf(a.x, maxf(b.x, c.x))))
+	var min_y := int(floor(minf(a.y, minf(b.y, c.y))))
+	var max_y := int(ceil(maxf(a.y, maxf(b.y, c.y))))
+	var area := _edge(a, b, c)
+	if absf(area) < 0.0001:
+		return
+	for y in range(maxi(min_y, 0), mini(max_y, img.get_height() - 1) + 1):
+		for x in range(maxi(min_x, 0), mini(max_x, img.get_width() - 1) + 1):
+			var p := Vector2(x + 0.5, y + 0.5)
+			# Same-side test against all three edges, robust to winding.
+			if _edge(a, b, p) * area >= 0.0 and _edge(b, c, p) * area >= 0.0 \
+					and _edge(c, a, p) * area >= 0.0:
 				img.set_pixel(x, y, Color.WHITE)
-	reticle.texture = ImageTexture.create_from_image(img)
-	return reticle
+
+
+static func _edge(a: Vector2, b: Vector2, p: Vector2) -> float:
+	return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x)

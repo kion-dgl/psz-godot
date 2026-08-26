@@ -16,6 +16,27 @@ var collision_body: StaticBody3D
 ## attack never registers and the element can never be destroyed.
 var hurtbox: Hurtbox
 
+## Lock-on reticle (three triangles around a centre point — see
+## TargetReticle). The player's targeting drives visibility via
+## show/hide_reticle; only the attach height differs per leaf, so the plumbing
+## lives here.
+var _reticle: Node3D
+
+
+func _setup_reticle(y_offset: float) -> void:
+	_reticle = TargetReticle.build(y_offset)
+	add_child(_reticle)
+
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = true
+
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.visible = false
+
 
 func _setup_hurtbox(hurtbox_name: String) -> void:
 	hurtbox = Hurtbox.new()

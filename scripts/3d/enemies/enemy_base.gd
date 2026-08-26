@@ -1288,10 +1288,13 @@ func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
 
 
 func _setup_reticle() -> void:
+	# Centre of the body, not above the head — the three triangles mark the
+	# thing they lock, and with a crowd the above-head reticles smear into a
+	# band instead of reading one-per-enemy.
 	var height := 1.5
 	if enemy_data:
 		height = enemy_data.collision_height
-	_reticle = TargetReticle.build(height + 0.5)
+	_reticle = TargetReticle.build(height * 0.5)
 	add_child(_reticle)
 
 
