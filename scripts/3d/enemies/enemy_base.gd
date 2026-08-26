@@ -379,15 +379,18 @@ func _find_player() -> Node3D:
 	return players[0] as Node3D if players.size() > 0 else null
 
 
-func _physics_process(delta: float) -> void:
+## The pre-AI gate: dead, dormant (waiting for the room-entry reveal), or
+## fresh off a reveal (hold still while the start animation plays). Each case
+## handles its own velocity/motion and the caller returns when one fires.
+func _early_process_returns(delta: float) -> bool:
 	if not is_alive:
-		return
+		return true
 
 	# Dormant: waiting for the player to walk into the room. No AI, no
 	# gravity — the spawner already placed the body on the floor.
 	if dormant:
 		velocity = Vector3.ZERO
-		return
+		return true
 
 	# Fresh reveal: hold position (gravity still settles) while the start
 	# animation plays, so the spawn reads as an entrance and not a pop-in.
@@ -398,11 +401,18 @@ func _physics_process(delta: float) -> void:
 		if not is_on_floor():
 			velocity.y -= GRAVITY * delta
 		move_and_slide()
-		return
+		return true
 
 	# Kill enemy if it falls off the stage
 	if global_position.y < -10.0:
 		_die()
+		return true
+
+	return false
+
+
+func _physics_process(delta: float) -> void:
+	if _early_process_returns(delta):
 		return
 
 	# Process status effects
