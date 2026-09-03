@@ -322,7 +322,8 @@ func _find_animation(short_name: String) -> String:
 
 
 func _setup_reticle() -> void:
-	_reticle = TargetReticle.build(collision_size.y + 0.5)
+	# Body centre, matching EnemyBase — see the note there.
+	_reticle = TargetReticle.build(collision_size.y * 0.5)
 	add_child(_reticle)
 
 

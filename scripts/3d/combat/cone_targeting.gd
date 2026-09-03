@@ -40,6 +40,12 @@ static func scan_enemies(enemies: Array, origin: Vector3, yaw: float, config: Di
 		if ed != null:
 			radius = float(ed.collision_radius)
 			height = float(ed.collision_height)
+		# Per-node override for destructibles riding the group without
+		# enemy_data: a wall is far wider than the 0.5 default, and testing
+		# its centre point alone would leave most of its face outside any
+		# weapon's cone.
+		radius = maxf(radius, float(enemy.get("target_radius") or 0.0))
+		height = maxf(height, float(enemy.get("target_height") or 0.0))
 		var center: Vector3 = enemy.global_position + Vector3(0, height * 0.5, 0)
 		var d := distance_in_cone(
 			origin, yaw,

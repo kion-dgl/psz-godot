@@ -1,7 +1,8 @@
-extends GameElement
+extends DestructibleElement
 class_name Box
 ## Destructible container that can drop items when destroyed.
 ## States: intact, destroyed
+## Hurtbox + intact/destroyed state live in DestructibleElement.
 
 signal destroyed_box
 
@@ -15,14 +16,7 @@ signal destroyed_box
 ## Drop amount for meseta or item ID for items
 @export var drop_value: String = ""
 
-## Collision body for physical presence
-var collision_body: StaticBody3D
 
-## Hurtbox for receiving hits from player attack hitbox
-var hurtbox: Hurtbox
-
-
-var _reticle: Node3D
 var is_alive: bool = true
 
 
@@ -45,9 +39,9 @@ func _ready() -> void:
 	super._ready()
 	_fit_collision_to_model()
 	collision_body = _build_static_collision("BoxCollision")
-	_setup_hurtbox()
+	_setup_hurtbox("BoxHurtbox")
 	_setup_mirror_textures(Vector2(0, 1) if is_rare else Vector2.ZERO)
-	_setup_reticle()
+	_setup_reticle(collision_size.y + 0.5)
 
 
 ## Size the collision box from the container the area actually loaded.
@@ -65,37 +59,6 @@ func _fit_collision_to_model() -> void:
 	if extents.size.x <= 0.0 or extents.size.y <= 0.0 or extents.size.z <= 0.0:
 		return
 	collision_size = extents.size
-
-
-func _setup_hurtbox() -> void:
-	hurtbox = Hurtbox.new()
-	hurtbox.name = "BoxHurtbox"
-	hurtbox.owner_node = self
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	# Extend hurtbox height so ranged projectiles can hit the box
-	var hurtbox_size := Vector3(collision_size.x, maxf(collision_size.y, 2.0), collision_size.z)
-	box.size = hurtbox_size
-	shape.shape = box
-	shape.position.y = hurtbox_size.y / 2
-	hurtbox.add_child(shape)
-	add_child(hurtbox)
-
-
-func _apply_state() -> void:
-	match element_state:
-		"intact":
-			set_element_visible(true)
-			if collision_body:
-				collision_body.collision_layer = 1
-			if hurtbox:
-				hurtbox.monitorable = true
-		"destroyed":
-			set_element_visible(false)
-			if collision_body:
-				collision_body.collision_layer = 0
-			if hurtbox:
-				hurtbox.set_deferred("monitorable", false)
 
 
 ## Called when the box takes damage (from player attacks via Hurtbox)
@@ -122,21 +85,6 @@ func destroy() -> void:
 		_spawn_drop()
 
 	print("[Box] Destroyed")
-
-
-func _setup_reticle() -> void:
-	_reticle = TargetReticle.build(collision_size.y + 0.5)
-	add_child(_reticle)
-
-
-func show_reticle() -> void:
-	if _reticle:
-		_reticle.visible = true
-
-
-func hide_reticle() -> void:
-	if _reticle:
-		_reticle.visible = false
 
 
 func _spawn_drop() -> void:

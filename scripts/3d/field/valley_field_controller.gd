@@ -96,6 +96,20 @@ var _current_wave: int = 1
 var _max_wave: int = 1
 var _wave_enemy_data: Dictionary = {}  # wave_num → [obj data]
 
+# Room-entry reveal (free-field parity): a fresh room's wave 1 spawns dormant
+# and reveals once the player walks this far in from their entry point — the
+# original triggers a room's enemies on entry, it does not pre-populate it.
+var _enemies_pending_reveal := false
+var _reveal_origin_local := Vector3.ZERO
+const ENEMY_REVEAL_DIST := 4.5
+
+# Wave break: the pause between waves, so the next wave reads as a new arrival
+# (spawn effect + start animation away from the player) and not one continuous
+# stream of enemies.
+const WAVE_BREAK_SEC := 1.5
+var _wave_break_pending := false
+var _wave_break_cell := ""
+
 # Debug toggle state
 var _show_triggers := false
 var _show_gate_markers := false
@@ -614,6 +628,20 @@ func _process(_delta: float) -> void:
 			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
+	# Dormant wave 1 reveals when the player walks into the room — distance
+	# from the entry point, or proximity to any one dormant enemy as a safety
+	# net for entry placements that already sit deep in the room.
+	if _enemies_pending_reveal and player and _map_root:
+		var lp := _map_root.to_local(player.global_position)
+		var walked_in := lp.distance_to(_reveal_origin_local) >= ENEMY_REVEAL_DIST
+		if not walked_in:
+			for e in _room_enemies:
+				if is_instance_valid(e) and e.get("dormant") \
+						and lp.distance_to((e as Node3D).position) < 2.5:
+					walked_in = true
+					break
+		if walked_in:
+			_reveal_dormant_enemies()
 	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
@@ -1332,15 +1360,30 @@ func _spawn_field_elements() -> void:
 			var is_enemy_door: bool = int(cell_attrs.get(dir, 0)) == 4
 			var gate_is_open: bool = (dir == _spawn_edge) or target_visited \
 				or not room_has_enemies or (not cell_attrs.is_empty() and not is_enemy_door)
-			var gate := GateScript.new()
-			add_child(gate)
-			gate.global_position = gate_pos
-			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
-			_gate_mgr._fixup_gate_materials(gate)
-			gate._setup_laser_material()
-			if gate_is_open:
-				gate.open()
-			_gate_mgr._fix_gate_depth(gate)
+			# A GENERATED enemy-defeat gate persists: it is built on every visit,
+			# shown closed while the room holds live enemies and OPEN (frame still
+			# standing, laser + collision off) once cleared — so a gate you opened
+			# is still there when you come back. "Ever had a fight" is read from the
+			# cell's raw generated objects, NOT the live enemy count, which goes
+			# false the moment the room is cleared and used to make the gate vanish.
+			#
+			# A door whose room NEVER had a fight was never a barrier ("already
+			# open"): it gets no mesh, only the load trigger created below.
+			var room_ever_had_enemies := false
+			for _o in _current_cell.get("objects", []):
+				if str(_o.get("type", "")) == "enemy":
+					room_ever_had_enemies = true
+					break
+			if room_ever_had_enemies:
+				var gate := GateScript.new()
+				add_child(gate)
+				gate.global_position = gate_pos
+				gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
+				_gate_mgr._fixup_gate_materials(gate)
+				gate._setup_laser_material()
+				if gate_is_open:
+					gate.open()
+				_gate_mgr._fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
 		var gate_wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
@@ -1891,6 +1934,10 @@ func _unlock_area_warps() -> void:
 
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
+	# A wave break is already counting down — the room is empty by definition
+	# and re-entering here would re-schedule the same next wave.
+	if _wave_break_pending:
+		return
 	var alive_count: int = 0
 	var total_count: int = _room_enemies.size()
 	for enemy in _room_enemies:
@@ -1907,11 +1954,14 @@ func _check_room_clear() -> void:
 	if alive_count > 0:
 		return
 
-	# Check for next wave
+	# Check for next wave — after a break, so the player gets a beat between
+	# waves and the next one arrives with its own spawn effect.
 	if _current_wave < _max_wave:
-		_current_wave += 1
-		_fdbg("[CellObjects] Wave %d cleared! Spawning wave %d" % [_current_wave - 1, _current_wave])
-		_spawn_wave(_current_wave)
+		_wave_break_pending = true
+		_wave_break_cell = str(_current_cell.get("pos", ""))
+		_fdbg("[CellObjects] Wave %d cleared! Wave %d in %.1fs" % [
+			_current_wave, _current_wave + 1, WAVE_BREAK_SEC])
+		get_tree().create_timer(WAVE_BREAK_SEC).timeout.connect(_on_wave_break)
 		return
 
 	_fdbg("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
@@ -1979,15 +2029,62 @@ func _check_room_clear() -> void:
 			_spawn_telepipe(warp_pos)
 
 
+## The wave-break timer fired. Drop the break if the player left the cell (or
+## the tree) meanwhile — the new cell runs its own spawn path.
+func _on_wave_break() -> void:
+	if not _wave_break_pending or not is_inside_tree():
+		return
+	if str(_current_cell.get("pos", "")) != _wave_break_cell:
+		_wave_break_pending = false
+		return
+	_wave_break_pending = false
+	_current_wave += 1
+	_fdbg("[CellObjects] Wave break over — spawning wave %d" % _current_wave)
+	_spawn_wave(_current_wave)
+
+
+## Reveal every dormant enemy in the room, staggered so a wave arrives as a
+## ripple. Also used right after a wave spawns (there the break was the wait).
+func _reveal_dormant_enemies() -> void:
+	_enemies_pending_reveal = false
+	var i := 0
+	for e in _room_enemies:
+		if is_instance_valid(e) and e.get("dormant"):
+			e.call("reveal", 0.08 * i)
+			i += 1
+	if i > 0:
+		_fdbg("[CellObjects] Revealed %d enemies" % i)
+
+
 ## Spawn enemies for a specific wave number.
 func _spawn_wave(wave_num: int) -> void:
 	_room_enemies.clear()
 	var wave_objs: Array = _wave_enemy_data.get(wave_num, [])
-	for obj in wave_objs:
-		var pos_arr: Array = obj.get("position", [0, 0, 0])
-		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+	# Re-pick the wave's slots AWAY from the player, so the next wave reads as
+	# a new arrival across the room rather than enemies popping up beside the
+	# player. Same authored slot pool the wave was drawn from (spec
+	# /mechanics/enemy-placement); only the selection among slots differs.
+	var positions: Array = []
+	if not wave_objs.is_empty() and player and _map_root:
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		positions = FieldPopulation.enemy_slot_positions_away(
+			str(_current_cell.get("stage_id", "")), wave_objs.size(), rng,
+			_map_root.to_local(player.global_position))
+	for i in wave_objs.size():
+		var obj: Dictionary = wave_objs[i]
+		var pos: Vector3
+		if i < positions.size():
+			var pa: Array = positions[i]
+			pos = Vector3(float(pa[0]), float(pa[1]), float(pa[2]))
+		else:
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			pos = Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 		var enemy_id: String = str(obj.get("enemy_id", "lizard"))
-		_cell_spawner._spawn_enemy(pos, enemy_id)
+		# Dormant then immediately revealed: the break was the wait, and this
+		# way the wave still gets its spawn effect and start animation.
+		_cell_spawner._spawn_enemy(pos, enemy_id, "alive", true)
+	_reveal_dormant_enemies()
 	_fdbg("[CellObjects] Wave %d: spawned %d enemies" % [wave_num, wave_objs.size()])
 	# Empty-wave guard: if this wave spawned zero enemies, no `died` signal
 	# will ever fire and the wave system would silently stall here — locked

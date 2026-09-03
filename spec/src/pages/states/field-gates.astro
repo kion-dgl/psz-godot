@@ -123,6 +123,19 @@ const economy = `flowchart LR
     can always retreat toward the start. An implementation <strong>MUST</strong>
     preserve that: it is what makes a key detour possible at all.
   </p>
+  <p>
+    <strong>A generated gate persists; a door that was never a barrier has no mesh.</strong>
+    An enemy-defeat gate whose room <em>has a fight</em> (the room's generated content
+    includes enemies) is a real gate: it <strong>MUST</strong> be built on every visit,
+    shown closed while enemies are alive and <strong>open</strong> — frame still
+    standing, laser and collision off — once the room is cleared. It <strong>MUST NOT</strong>
+    disappear on re-entry; a gate you opened is still there when you come back. Whether
+    a room "has a fight" is read from its generated objects, <strong>not</strong> the live
+    enemy count, which goes false the instant the room is cleared. By contrast, a doorway
+    that was never a barrier — an <code>open</code> door (attr 0), the way-back, or an
+    enemy-defeat door on a room that never had enemies — <strong>MUST</strong> render no
+    gate mesh at all; only its load trigger remains.
+  </p>
 
   <h2>The economy</h2>
   <div class="diagram"><Mermaid chart={economy} /></div>
