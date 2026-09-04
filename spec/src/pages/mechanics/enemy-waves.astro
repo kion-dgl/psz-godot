@@ -1,0 +1,49 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Enemy Waves" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This page governs <em>how many</em> waves a room runs and <em>when</em> each arrives. It does not govern <em>which</em> enemies a wave contains (the wave-template roll — see <a href="/psz-godot/states/free-field">Free Field</a>) nor <em>where</em> they stand (the slot placement — see <a href="/psz-godot/mechanics/enemy-placement">Enemy Placement</a>). Those three are independent: a room picks a count of waves here, draws a template for each on the Free Field page, and places each template's enemies on the Enemy Placement page.</p>
+
+  <h2>A room runs several waves, not one</h2>
+
+  <p>A room in the original clears in <strong>1–3 waves</strong>, run in sequence. This is measured: a room with 8 slots was observed producing three waves of 4, 3 and 4 enemies — 11 in total (see Enemy Placement, slot reuse). A port that spawns a single wave per room is <strong>refuted</strong>: it fights one of the room's several fights and calls the room clear.</p>
+
+  <h2>The wave count is a per-room min/max, rolled per instance</h2>
+
+  <p>Each room's deploy record carries a wave-count pair. psz-re decoded the per-room table as 20-byte records <code>&#123;roomCodePtr, listPtr, count, w3, w4&#125;</code>: <code>w3</code> is the <strong>minimum</strong> wave count and <code>w4</code> the <strong>maximum</strong>. For a given field instance, a room <strong>MUST</strong> run a number of waves in the inclusive range <code>[w3, w4]</code>. The count is a draw from the room's own per-room RNG seed (record <code>+0x14</code>, confirmed by psz-re as a full-range RNG draw — the same seed that drives slot selection), so it <strong>MUST</strong> be deterministic for a given field and <strong>MUST NOT</strong> be re-rolled on re-entry.</p>
+
+  <p>Example (psz-re <code>enemy_room_assignment</code>, set <code>d</code>): <code>s01a_ib1</code> carries <code>w3 = 2, w4 = 3</code> — two or three waves. The pair varies by room type, which is why a field shows anywhere from one to three waves per room.</p>
+
+  <p>The exact distribution within <code>[w3, w4]</code> is the seeded draw and is <strong>not</strong> claimed to match the original's bit-for-bit until the draw is decoded; only the bound <code>[w3, w4]</code> is normative.</p>
+
+  <h2>Each wave is its own draw</h2>
+
+  <p>A room's <em>N</em> waves are <strong>not</strong> one template repeated. Each wave <strong>MUST</strong> independently draw a template from the room's weighted pool (the roll defined on the Free Field page), so a three-wave room makes three draws and may see three different templates. The pool is the same for every wave of a room; only the draw is per-wave.</p>
+
+  <h2>Later waves wait for the player</h2>
+
+  <p>A room's waves <strong>MUST NOT</strong> all spawn at once. The first wave spawns on room entry; each subsequent wave is <strong>gated</strong> and arrives only after the previous wave is cleared. psz-re's note that "a room runs several waves and some of them WAIT FOR YOU" identifies the deploy record's optional ninth slot as a <strong>trigger volume</strong> — the region whose entry releases the next wave. Where a room carries that trigger, the next wave <strong>SHOULD</strong> release on the trigger rather than on clear; where the exact trigger is not decoded, releasing on clear is the accepted approximation.</p>
+
+  <h2>Rooms with no waves</h2>
+
+  <p>The <strong>start and goal rooms carry no waves</strong> (their assignment is empty; equivalently <code>w4 = 0</code>) and <strong>MUST</strong> spawn nothing — consistent with <a href="/psz-godot/states/free-field">Free Field</a>. A room whose assignment is empty is not a bug to fill in; it is authored to be quiet.</p>
+
+  <h2>What the port owes</h2>
+
+  <p>Two gaps, both concrete:</p>
+  <ul>
+    <li><strong>Data.</strong> <code>data/re_reference/enemy_room_assignment.json</code> currently keeps only <code>&#123;template, weight&#125;</code> per room; it <strong>MUST</strong> carry the per-room <code>w3</code>/<code>w4</code> pair (and the per-entry <code>field3</code>) re-imported from psz-re, or there is no wave-count data to roll against.</li>
+    <li><strong>Runtime.</strong> <code>FieldPopulation.roll_wave</code> is singular — one draw per room. It <strong>MUST</strong> become a count-driven loop: roll a count in <code>[w3, w4]</code> from the room seed, then draw and deploy that many waves, gating the later ones per the trigger rule above.</li>
+  </ul>
+
+  <h2>Tests</h2>
+
+  <p>Per the two-layer rule, this behavior is verified at both layers:</p>
+  <ul>
+    <li>A seeded <code>test_runner</code> unit test: a room's wave count lands in <code>[w3, w4]</code>; the count is stable for a fixed field seed; each wave is an independent draw from the pool; start/goal rooms produce zero waves.</li>
+    <li>An autopilot probe: a field run actually fights more than one wave in a multi-wave room (a single-wave clear is the regression this guards).</li>
+  </ul>
+</Concept>

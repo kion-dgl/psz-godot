@@ -110,9 +110,12 @@ const tree = `flowchart TD
     (psz-re <code>enemy_room_assignment</code>); each template is a fixed set of enemy
     ids (<code>enemy_wave_templates</code>). The <strong>start and goal rooms carry no
     wave</strong> and spawn nothing. The exact per-instance roll (which allowed
-    template a room draws) is not yet decoded, so the builder rolls one
+    template a room draws) is not yet decoded, so the builder draws
     deterministically against the measured weights — preserving the "mostly ordinary
     fights, occasional rare" texture rather than making every instance identical.
+    A room runs <strong>1–3 waves</strong>, each an independent draw from this pool;
+    the wave count and its trigger timing are governed by
+    <a href="/psz-godot/mechanics/enemy-waves">Enemy Waves</a>.
   </p>
   <p>
     psz-re internal enemy names map to this engine's ids: snake→<code>garapython</code>,

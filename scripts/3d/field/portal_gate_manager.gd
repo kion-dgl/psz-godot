@@ -175,6 +175,35 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 	var spawn_pos := Vector3(nav.x + outward.x * 3.0, 1.0, nav.z + outward.y * 3.0)
 	var trigger_pos := Vector3(nav.x + outward.x * 7.0, 0.0, nav.z + outward.y * 7.0)
 
+	# THE TRIGGER MAY BE RE-ANCHORED, and when it is the position is DATA rather
+	# than a second copy of the geometry (#617).
+	#
+	# `position + 7` leaves the trigger free to sit anywhere relative to the door
+	# it belongs to, and measured over 552 portals it often did not: 109 sat past
+	# the end of the doorway stub where nothing can reach them — the s01b_tb3
+	# failure — and 14 sat entirely inside the room, firing a cell load in open
+	# floor (s01b_xb2's spanned 5.2..11.2 against a doorway at 22.0).
+	#
+	# scripts/tools/refield/fix_trigger_anchor.py writes `triggerPosition` for
+	# those and only those; the 428 already reaching their stub keep the offset
+	# their navigation was tuned around. It is a field and not a rule here on
+	# purpose: the +3/+7 contract already existed in GDScript, validate_graph.mjs
+	# and fix_portal_depth.py, and a fourth restatement is how they drift.
+	# GATE | SPAWN | TRIGGER, outward, in that order. Moving the gate (#612)
+	# and then the trigger (#617) while leaving the spawn on `position` broke
+	# the order: the spawn landed INSIDE the trigger box, so the player spawned
+	# already in it, re-fired a transition on arrival and bypassed the room.
+	# One portal doing that (s05b_nc2) was enough to strand the_paru_pact with
+	# its objectives unmet and its Telepipe never deferred.
+	#
+	# So a re-anchored portal carries both, and both are read here.
+	var trig_arr: Array = portal.get("triggerPosition", [])
+	if trig_arr.size() == 3:
+		trigger_pos = Vector3(float(trig_arr[0]), 0.0, float(trig_arr[2]))
+	var spawn_arr: Array = portal.get("spawnPosition", [])
+	if spawn_arr.size() == 3:
+		spawn_pos = Vector3(float(spawn_arr[0]), 1.0, float(spawn_arr[2]))
+
 	return {
 		"gate_pos": gate_pos,
 		"spawn_pos": spawn_pos,
