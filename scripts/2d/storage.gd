@@ -17,7 +17,12 @@ const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 enum Tab { DEPOSIT_ITEMS, WITHDRAW_ITEMS, DEPOSIT_MESETA, WITHDRAW_MESETA }
 
-const TAB_NAMES := ["Deposit Items", "Withdraw Items", "Deposit Meseta", "Withdraw Meseta"]
+const TAB_NAMES := ["Deposit", "Withdraw", "Deposit M", "Withdraw M"]
+# ^ Kept short to fit the pinned shop card (#626): the full "Deposit Items /
+# Withdraw Items / Deposit Meseta / Withdraw Meseta" set measures ~513 px of
+# pills against a 418 px content width, and the centered mode bar spilled past
+# the card's left edge. "M" is the meseta shorthand the UI already uses for
+# prices ("100 M"). Spec: /shop/storage + /states/shops tab table.
 
 var _tab: int = Tab.DEPOSIT_ITEMS
 var _selected_index: int = 0

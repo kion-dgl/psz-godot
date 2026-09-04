@@ -179,6 +179,7 @@ func _run_tests_systems() -> void:
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
 	test_setup_shop_portrait()
+	test_storage_tabs_fit_pinned_card()
 	test_shop_camera_pose()
 	test_shop_nav()
 	test_shop_confirm()
@@ -8191,7 +8192,65 @@ func test_setup_shop_portrait() -> void:
 	assert_true(card.has_theme_stylebox_override("panel"), "Detail card styled")
 	assert_true(card.has_node("ScanlineOverlay"), "Detail card has the scanline overlay")
 	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied (transparent)")
+
+	# ── Pinned column widths (#626): the split never depends on text length ──
+	assert_eq((body_card as Control).custom_minimum_size.x, PszStyle.SHOP_BODY_W,
+		"Body card width is pinned")
+	var holder: Control = right.get_child(0)
+	assert_eq(holder.custom_minimum_size, Vector2(PszStyle.SHOP_DETAIL_W, PszStyle.DETAIL_HEIGHT),
+		"Detail holder width is pinned to the fixture's 320")
+	var panel_w: float = 1280.0 - PszStyle.LEFT_MARGIN - PszStyle.RIGHT_RESERVE
+	assert_eq(PszStyle.SHOP_BODY_W + outer.get_theme_constant("separation") + PszStyle.SHOP_DETAIL_W, panel_w,
+		"body + gap + detail consume the fixed panel width exactly (no text-driven surplus)")
+
+	# A long detail line wraps inside the fixed card instead of widening it —
+	# unwrapped, this sentence's width becomes the card's minimum width and the
+	# list/info split shifts per shop/tab/selection (the #626 report).
+	var long_line := "Vivid Agito with a Monomate Grinder Frame, Antlia Parasol and Flowen's Sword"
+	var lbl := PszStyle.detail_label(long_line)
+	card.add_child(lbl)
+	assert_eq(lbl.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "detail_label wraps within the card")
+	assert_true(holder.get_minimum_size().x <= PszStyle.SHOP_DETAIL_W + 1.0,
+		"a long detail line wraps instead of widening the detail card")
+
+	# Row names trim with an ellipsis rather than drawing past the pill edge
+	# (the list scroll disables horizontal scrolling, so the row width is capped).
+	var row := PszStyle.shop_row(long_line, "100 M", {})
+	assert_eq(_shop_row_label(row).text_overrun_behavior, TextServer.OVERRUN_TRIM_ELLIPSIS,
+		"row name label trims with ellipsis")
+
+	# The hint sentence is the widest single-line text in the body card
+	# ("Left/Right: Category …" ≈ 504 px > the 438 pin) — it must wrap, or it
+	# floors the card above the pinned split and the menu rides into the NPC
+	# reserve (playtest on #630: "the window on the left is cut off").
+	var hint := Label.new()
+	hint.text = long_line
+	var menu_title := Label.new()
+	PszStyle.style_menu(menu_title, hint)
+	content.add_child(hint)
+	assert_eq(hint.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "style_menu wraps the hint label")
+	assert_true(hint.get_minimum_size().x < PszStyle.SHOP_BODY_W,
+		"a long hint wraps instead of flooring the body card above its pin")
+	menu_title.free()
+
 	panel.free()
+	print("")
+
+
+## Storage's tab bar is the one shop chrome that measured wider than the pinned
+## card (#630 playtest: the centered mode bar spilled past the card's left edge
+## at ~513 px of pills). Pin the contract: whatever TAB_NAMES storage carries,
+## the bar must fit the body card's content width (pin minus glass margins).
+func test_storage_tabs_fit_pinned_card() -> void:
+	print("── Storage tab bar fits the pinned shop card (#626) ──")
+	var names: Array = load("res://scripts/2d/storage.gd").TAB_NAMES
+	var bar := PszStyle.create_tab_bar(names, 0)
+	add_child(bar)
+	var content_w: float = PszStyle.SHOP_BODY_W - 20.0  # glass margins 10+10
+	assert_true(bar.get_minimum_size().x <= content_w,
+		"storage tab bar (%.0f px) fits the %.0f px card content width — shorten TAB_NAMES otherwise" % [
+			bar.get_minimum_size().x, content_w])
+	bar.free()
 	print("")
 
 
