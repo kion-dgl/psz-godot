@@ -179,6 +179,7 @@ func _run_tests_systems() -> void:
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
 	test_setup_shop_portrait()
+	test_storage_tabs_fit_pinned_card()
 	test_shop_camera_pose()
 	test_shop_nav()
 	test_shop_confirm()
@@ -8233,6 +8234,23 @@ func test_setup_shop_portrait() -> void:
 	menu_title.free()
 
 	panel.free()
+	print("")
+
+
+## Storage's tab bar is the one shop chrome that measured wider than the pinned
+## card (#630 playtest: the centered mode bar spilled past the card's left edge
+## at ~513 px of pills). Pin the contract: whatever TAB_NAMES storage carries,
+## the bar must fit the body card's content width (pin minus glass margins).
+func test_storage_tabs_fit_pinned_card() -> void:
+	print("── Storage tab bar fits the pinned shop card (#626) ──")
+	var names: Array = load("res://scripts/2d/storage.gd").TAB_NAMES
+	var bar := PszStyle.create_tab_bar(names, 0)
+	add_child(bar)
+	var content_w: float = PszStyle.SHOP_BODY_W - 20.0  # glass margins 10+10
+	assert_true(bar.get_minimum_size().x <= content_w,
+		"storage tab bar (%.0f px) fits the %.0f px card content width — shorten TAB_NAMES otherwise" % [
+			bar.get_minimum_size().x, content_w])
+	bar.free()
 	print("")
 
 
