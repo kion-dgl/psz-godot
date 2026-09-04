@@ -558,6 +558,10 @@ static func style_menu(p_title: Label, p_hint: Label, panels: Array = []) -> voi
 	p_hint.add_theme_stylebox_override("normal", hint_style())
 	p_hint.add_theme_color_override("font_color", TEXT)
 	p_hint.add_theme_font_size_override("font_size", FONT_HINT)
+	# Wrap within the fixed-width menu (#626): the hint sentence is the widest
+	# single-line text in the body card ("Left/Right: Category …" ≈ 504 px) and
+	# otherwise floors the card's minimum width above the pinned 438 split.
+	p_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	for panel in panels:
 		if panel is PanelContainer:
 			panel.add_theme_stylebox_override("panel", inner_panel_style())

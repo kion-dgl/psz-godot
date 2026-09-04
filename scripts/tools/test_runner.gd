@@ -8218,6 +8218,20 @@ func test_setup_shop_portrait() -> void:
 	assert_eq(_shop_row_label(row).text_overrun_behavior, TextServer.OVERRUN_TRIM_ELLIPSIS,
 		"row name label trims with ellipsis")
 
+	# The hint sentence is the widest single-line text in the body card
+	# ("Left/Right: Category …" ≈ 504 px > the 438 pin) — it must wrap, or it
+	# floors the card above the pinned split and the menu rides into the NPC
+	# reserve (playtest on #630: "the window on the left is cut off").
+	var hint := Label.new()
+	hint.text = long_line
+	var menu_title := Label.new()
+	PszStyle.style_menu(menu_title, hint)
+	content.add_child(hint)
+	assert_eq(hint.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "style_menu wraps the hint label")
+	assert_true(hint.get_minimum_size().x < PszStyle.SHOP_BODY_W,
+		"a long hint wraps instead of flooring the body card above its pin")
+	menu_title.free()
+
 	panel.free()
 	print("")
 
