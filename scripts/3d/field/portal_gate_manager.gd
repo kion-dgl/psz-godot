@@ -359,22 +359,78 @@ func _add_gate_label(direction: String, pos: Vector3, target_cell: String, porta
 ## `count` is the cell's authored `key_count`. A gate with required_keys=N
 ## consumes N copies of the SAME key id (key_gate.gd counts them via
 ## Inventory.get_key_count), so a multi-key cell must spawn N pickups sharing
-## one key_id — spawning a single pickup leaves the gate permanently
-## unopenable. Extra keys are ringed around the base position so they don't
-## overlap into one un-clickable pile.
+## one key id — spawning a single pickup leaves the gate permanently
+## unopenable. WHERE they stand is _resolve_key_positions' tier list below.
 func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 	var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 	var total: int = maxi(1, count)
+	var positions: Array[Vector3] = _resolve_key_positions(total)
 
-	# Place key at authored position from quest editor, or fall back to heuristic
+	# Remaining-count guard: the cell is only marked collected once EVERY key
+	# in it is taken. Marking on the first pickup would suppress the respawn of
+	# the others on re-entry (_keys_collected is the respawn guard), stranding
+	# the player below the gate's requirement with no way to top up.
+	var remaining := [total]
+
+	for i in total:
+		var key := KeyPickupScript.new()
+		key.key_id = key_item_id
+		key.name = ("KeyPickup_%s_%d" % [key_for_cell, i]) if total > 1 else ("KeyPickup_%s" % key_for_cell)
+
+		_c._map_root.add_child(key)
+		key.position = positions[i]
+
+		# Track collection for grid state and update HUD
+		key.interacted.connect(func(_player: Node3D) -> void:
+			remaining[0] -= 1
+			if remaining[0] <= 0:
+				_c._keys_collected[key_for_cell] = true
+			_c._update_key_hud()
+		)
+		print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s, %d/%d)" % [
+			key_for_cell, positions[i], key_item_id, i + 1, total])
+
+
+## One spawn position per key, in tier order (#627, spec /mechanics/key-placement):
+##   1. the quest editor's authored `key_position`;
+##   2. the room's authored key slots, mask-filtered at generation and carried
+##      on the cell as `key_slots` — generated fields always have these;
+##   3. the portal-spawn centroid with ringed extras — a room code the
+##      reference never covered, or a cell saved before #627.
+func _resolve_key_positions(total: int) -> Array[Vector3]:
+	var out: Array[Vector3] = []
 	var key_pos := Vector3.ZERO
 	var authored_pos: Array = _c._current_cell.get("key_position", [])
+	var slots: Array = _c._current_cell.get("key_slots", [])
 	if authored_pos.size() == 3:
-		# Use authored position from quest editor (stage-local coordinates)
+		# Tier 1: authored position from quest editor (stage-local coordinates)
 		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
 		print("[ValleyField] Key using authored position: %s (rotation handled by _map_root)" % key_pos)
+	elif not slots.is_empty():
+		print("[ValleyField] Key using authored reference slots: %d slot(s) for %d key(s)" % [
+			slots.size(), total])
+		for i in total:
+			# Every record carries y=0.0 — the original authors no height — so
+			# floor-snap at the slot's (x,z) and hover, the same contract boxes
+			# follow. A key under a raised floor is an unopenable gate, i.e. a
+			# soft lock, not a cosmetic bug.
+			var sa: Array = slots[i % slots.size()]
+			var spot := Vector3(float(sa[0]), float(sa[1]), float(sa[2]))
+			if i >= slots.size():
+				# More keys than the room authors distinct slots: wrap, and ring
+				# the copy so two pickups don't sit inside one interaction
+				# volume (collision_size 2.5 — see KEY_SPREAD_RADIUS).
+				var angle := TAU * float(i) / float(total)
+				spot += Vector3(cos(angle), 0.0, sin(angle)) * KEY_SPREAD_RADIUS
+			if _c._cell_spawner:
+				var floored: Vector3 = _c._cell_spawner._place_on_floor(spot)
+				floored.y += KEY_HOVER_HEIGHT
+				out.append(floored)
+			else:
+				out.append(spot + Vector3(0.0, KEY_HOVER_HEIGHT, 0.0))
+		return out
 	else:
-		# Fallback: midpoint between portal spawns
+		# Tier 3 fallback: midpoint between portal spawns
 		var portal_positions: Array[Vector3] = []
 		for dir in _c._portal_data:
 			if dir != "default":
@@ -389,25 +445,16 @@ func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 		key_pos.y = 0.5
 		print("[ValleyField] Key using fallback midpoint: %s" % key_pos)
 
-	# Remaining-count guard: the cell is only marked collected once EVERY key
-	# in it is taken. Marking on the first pickup would suppress the respawn of
-	# the others on re-entry (_keys_collected is the respawn guard), stranding
-	# the player below the gate's requirement with no way to top up.
-	var remaining := [total]
-
+	# Tiers 1 and 3 share a base position: single-key cells sit on it verbatim,
+	# multi-key cells ring their copies so each is separately walkable and
+	# interactable, then floor-validate — a blind offset pushes keys past the
+	# floor edge in narrow rooms (s02b_lb1), leaving one unreachable and the
+	# gate unopenable, the very failure the ring exists to avoid.
+	# _place_on_floor snaps to the floor, or relocates to the nearest floor
+	# point when a ringed spot has none.
 	for i in total:
-		var key := KeyPickupScript.new()
-		key.key_id = key_item_id
-		key.name = ("KeyPickup_%s_%d" % [key_for_cell, i]) if total > 1 else ("KeyPickup_%s" % key_for_cell)
-
 		var pos := key_pos
 		if total > 1:
-			# Ring the copies so each is separately walkable/interactable, then
-			# floor-validate: a blind offset pushes keys past the floor edge in
-			# narrow rooms (s02b_lb1), leaving one unreachable and the gate
-			# unopenable — the very failure this multi-key path exists to fix.
-			# _place_on_floor snaps to the floor, or relocates to the nearest
-			# floor point when the ringed spot has none.
 			var angle := TAU * float(i) / float(total)
 			var ringed := key_pos + Vector3(cos(angle), 0.0, sin(angle)) * KEY_SPREAD_RADIUS
 			if _c._cell_spawner:
@@ -417,19 +464,8 @@ func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 				pos.y += KEY_HOVER_HEIGHT
 			else:
 				pos = ringed
-
-		_c._map_root.add_child(key)
-		key.position = pos
-
-		# Track collection for grid state and update HUD
-		key.interacted.connect(func(_player: Node3D) -> void:
-			remaining[0] -= 1
-			if remaining[0] <= 0:
-				_c._keys_collected[key_for_cell] = true
-			_c._update_key_hud()
-		)
-		print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s, %d/%d)" % [
-			key_for_cell, pos, key_item_id, i + 1, total])
+		out.append(pos)
+	return out
 
 
 func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:

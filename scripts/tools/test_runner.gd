@@ -117,6 +117,7 @@ func _run_tests_core() -> void:
 	test_gate_kind_per_door()
 	test_group_five_trap_roll()
 	test_enemies_stand_on_authored_slots()
+	test_keys_stand_on_authored_slots()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
@@ -1224,6 +1225,122 @@ func test_enemies_stand_on_authored_slots() -> void:
 	# An unknown room code falls back to the ring rather than spawning nothing.
 	var none: Array = Pop.enemy_slot_positions("s99z_zz9", 3, _seeded_rng(3))
 	assert_true(none.is_empty(), "unknown room code yields no slots, so the caller rings")
+
+
+func test_keys_stand_on_authored_slots() -> void:
+	print("── Keys stand on the room's AUTHORED KEY SLOTS, not the portal centroid ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+
+	# Every position MUST be one the room actually authors — placement picks
+	# from the slot list, it does not interpolate or jitter. s01a_ib2 splits
+	# its four slots by group (two in group 0, two in group 3, disjoint), so
+	# the same fixture exercises the mask filter below. Keys are compared in
+	# key_slot_positions' own snappedf form: GDScript's %.2f and snappedf
+	# disagree on half-boundary values (-0.405 → -0.41 vs -0.4), so mixing the
+	# two roundings fails a slot that IS authored.
+	var authored := {}
+	for s in Pop.authored_key_slots("s01a_ib2"):
+		authored[_key_slot_key(s)] = true
+	assert_eq(authored.size(), 4, "s01a_ib2 authors 4 distinct key positions")
+
+	var picks: Array = Pop.key_slot_positions("s01a_ib2", 2, _seeded_rng(1), 33)
+	assert_eq(picks.size(), 2, "two keys get two positions")
+	for p in picks:
+		assert_true(authored.has("%.2f,%.2f" % [float(p[0]), float(p[2])]),
+			"position %s is an authored key slot" % [p])
+
+	# THE MASK FILTER — the same draw that builds the room's objects decides
+	# which slots exist. Mask 33 builds group 0 (+5); mask 40 builds group 3.
+	# count=2 empties each pool, so each pick set IS its mask's slot set.
+	var set33 := {}
+	for p in Pop.key_slot_positions("s01a_ib2", 2, _seeded_rng(2), 33):
+		set33["%.2f,%.2f" % [float(p[0]), float(p[2])]] = true
+	var set40 := {}
+	for p in Pop.key_slot_positions("s01a_ib2", 2, _seeded_rng(3), 40):
+		set40["%.2f,%.2f" % [float(p[0]), float(p[2])]] = true
+	for s in Pop.authored_key_slots("s01a_ib2"):
+		var slot_key := _key_slot_key(s)
+		assert_eq(set33.has(slot_key), s.get("g", []).has(0),
+			"mask 33 admits exactly the group-0 slot %s" % slot_key)
+		assert_eq(set40.has(slot_key), s.get("g", []).has(3),
+			"mask 40 admits exactly the group-3 slot %s" % slot_key)
+
+	# A mask that leaves the room NO slot must not unplace the key: s03a_ib1's
+	# slots are all group 0, which mask 40 does not build, so the mask is set
+	# aside and the authored slots are used anyway (spec /mechanics/key-placement
+	# — which rooms hold keys is the gate economy's committed decision).
+	var mask_empty: Array = Pop.key_slot_positions("s03a_ib1", 2, _seeded_rng(4), 40)
+	assert_eq(mask_empty.size(), 2, "the key exists regardless of the mask — no slot dropped")
+
+	# Flat-build rooms (no recoverable group table, all of s02/s05): records
+	# carry no group, so every slot is eligible whatever the mask.
+	var flat_a: Array = Pop.key_slot_positions("s02a_ib1", 2, _seeded_rng(5), 33)
+	var flat_b: Array = Pop.key_slot_positions("s02a_ib1", 2, _seeded_rng(5), 40)
+	assert_eq(flat_a.size(), 2, "a flat room still yields its authored slots")
+	assert_true(str(flat_a) == str(flat_b), "the mask does not filter an ungrouped slot")
+
+	# Seeded: the same field populates the same way on every revisit.
+	var again: Array = Pop.key_slot_positions("s01a_ib2", 2, _seeded_rng(1), 33)
+	assert_true(str(again) == str(picks), "same seed gives the same placement")
+
+	# More keys than distinct slots WRAP — the gate demands them, none dropped.
+	var big: Array = Pop.key_slot_positions("s01a_ib2", 12, _seeded_rng(6), 33)
+	assert_eq(big.size(), 12, "a 12-key cell gets 12 positions, none dropped")
+
+	# Authored records carry no height (y=0.0 corpus-wide) — the pickup
+	# floor-snaps and hovers at spawn instead of trusting y.
+	assert_true(is_zero_approx(float(picks[0][1])),
+		"slot y is authored 0.0; the spawn floor-snaps rather than trusting it")
+
+	# An unknown room code yields no slots, so the caller keeps the centroid.
+	assert_true(Pop.key_slot_positions("s99z_zz9", 3, _seeded_rng(7), 33).is_empty(),
+		"unknown room code yields no slots")
+
+	# END TO END: generated fields stand every key on its room's authored
+	# slots, wrapped to the cell's key_count, under a mask the room drew. The
+	# sweep lives in its own helper so neither function crosses the
+	# code-health size bound.
+	var checked: int = _sweep_generated_key_slots()
+	assert_true(checked > 50, "the sweep exercised real key placements (%d)" % checked)
+
+
+## How many key slots the generator sweep checked; asserts each one against
+## its room's authored list (see test_keys_stand_on_authored_slots).
+func _sweep_generated_key_slots() -> int:
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var checked := 0
+	for seed_value in range(30):
+		var gen = GridGen.new()
+		gen.set_seed(seed_value)
+		for section in gen.generate_field("normal", "gurhacia")["sections"]:
+			for cell in section.get("cells", []):
+				if not cell.get("has_key", false):
+					continue
+				var stage_id: String = str(cell.get("stage_id", ""))
+				var room_authors: Array = Pop.authored_key_slots(stage_id)
+				if room_authors.is_empty():
+					continue  # reference never covered this room — centroid path
+				var slots: Array = cell.get("key_slots", [])
+				var want: int = maxi(1, int(cell.get("key_count", 1)))
+				assert_eq(slots.size(), want,
+					"cell %s holds one slot per key (%d wanted)" % [str(cell.get("pos", "")), want])
+				var by_xy := {}
+				for s in room_authors:
+					by_xy[_key_slot_key(s)] = true
+				for sa in slots:
+					checked += 1
+					assert_true(by_xy.has("%.2f,%.2f" % [float(sa[0]), float(sa[2])]),
+						"generated slot %s is authored for %s" % [str(sa), stage_id])
+	return checked
+
+
+## Comparison key for an authored key-slot record, in key_slot_positions' own
+## snappedf form — see the note in test_keys_stand_on_authored_slots.
+func _key_slot_key(s: Dictionary) -> String:
+	return "%.2f,%.2f" % [
+		snappedf(float(s.get("x", 0.0)), 0.01),
+		snappedf(float(s.get("z", 0.0)), 0.01)]
 
 
 func test_group_five_trap_roll() -> void:

@@ -41,8 +41,11 @@ class_name FieldPopulation
 ##            time, not generation time, so the field data is the same
 ##            either way.
 ##
-## Enemy positions are still ours: the game's enemy deploy table is a separate
-## file that has not been decoded to positions, so enemies stay on a ring.
+## Enemy and key POSITIONS are authored and consumed (#604, #627): waves stand
+## on the room's enemy slots, a cell's keys on its authored key slots. Which
+## subset of either a given room instance uses is OUR seeded choice, not a
+## measurement — the original's per-room placement weights are still undecoded
+## (psz-re default_parameters bytes 4..8).
 
 const RE_DIR := "res://data/re_reference/"
 ## Deploy set to roll from. The RE notes record that d/f1..f4/s draw from the
@@ -112,6 +115,14 @@ static var _rooms: Dictionary = {}
 ## against the 20-object room cap, but spawn slots are positions, not objects,
 ## and cost nothing against that cap.
 static var _enemy_slots: Dictionary = {}
+
+## Authored key slots, room code -> Array of {x, y, z, g: [groups]}. Same file,
+## same argument (spec /mechanics/key-placement): the POSITIONS are consumed,
+## the key object still never spawns through the room-object table -- which
+## rooms hold keys and how many is the gate economy's own rule. The file
+## repeats a position under each group that builds it, so slots are stored
+## DISTINCT, each carrying every group it appears in for the mask filter.
+static var _key_slots: Dictionary = {}
 static var _layout_masks: Array = []
 static var _layout_weights: Dictionary = {}
 static var _group5_weights: Array = []
@@ -141,6 +152,9 @@ static func _load() -> void:
 		var slots: Array = ref_doc["rooms"][code].get("enemies", [])
 		if not slots.is_empty():
 			_enemy_slots[code] = slots
+		var keys: Array = _distinct_key_slots(ref_doc["rooms"][code].get("objects", []))
+		if not keys.is_empty():
+			_key_slots[code] = keys
 
 	var caps: Dictionary = obj_doc.get("caps", {})
 	_cap_per_group = int(caps.get("per_group", 20))
@@ -280,7 +294,13 @@ static func _resolve(re_name: String) -> Array:
 ## `depth` is the room's distance along the generated path; -1 means unknown
 ## and takes the middle weight row. Every draw goes through `rng`, so a seeded
 ## generator reproduces a field exactly.
-static func authored_objects(room_code: String, depth: int, rng: RandomNumberGenerator) -> Array:
+##
+## `layout_mask` shares ONE draw with the caller: pass `drawn_mask()`'s result
+## and this uses it instead of drawing again, so a room's objects and its key
+## slots are selected under the same mask. -1 (the default) draws here, as
+## before -- the key-slot consumer must never let the room draw twice.
+static func authored_objects(room_code: String, depth: int, rng: RandomNumberGenerator,
+		layout_mask: int = -1) -> Array:
 	_load()
 	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
 	var records: Array = entry.get("objects", [])
@@ -294,8 +314,10 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 		# and builds the file flat. Do the same rather than dropping the room.
 		picked = _cap(records, _cap_per_group)
 	else:
-		var layout: int = _pick_layout(groups, depth, rng)
-		var mask: int = int(_layout_masks[layout]) if layout < _layout_masks.size() else 0
+		var mask := layout_mask
+		if mask < 0:
+			var layout: int = _pick_layout(groups, depth, rng)
+			mask = int(_layout_masks[layout]) if layout < _layout_masks.size() else 0
 		for g in range(5):
 			if (mask >> g) & 1:
 				picked.append_array(_cap(_in_group(records, g), _cap_per_group))
@@ -553,6 +575,118 @@ static func enemy_slot_positions_away(room_code: String, count: int,
 	return out
 
 
+## The room's authored key positions as the data holds them: DISTINCT slots
+## (the file repeats a position under each group that builds it), each
+## carrying the groups it appears in. Mask-agnostic -- key_slot_positions
+## applies the filter. Exposed so a test can assert placement picks FROM this
+## list rather than near it.
+static func authored_key_slots(room_code: String) -> Array:
+	_load()
+	return _key_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+
+
+## The reference table's key records collapsed to distinct positions.
+static func _distinct_key_slots(objects: Array) -> Array:
+	var out: Array = []
+	var by_pos := {}
+	for rec in objects:
+		if str(rec.get("k", "")) != "key":
+			continue
+		# The importer rounds to 3 decimals, so a %.3f key is exact identity.
+		var pos_key := "%.3f,%.3f,%.3f" % [
+			float(rec.get("x", 0.0)), float(rec.get("y", 0.0)), float(rec.get("z", 0.0))]
+		var slot: Dictionary = by_pos.get(pos_key, {})
+		if slot.is_empty():
+			slot = {
+				"x": float(rec.get("x", 0.0)),
+				"y": float(rec.get("y", 0.0)),
+				"z": float(rec.get("z", 0.0)),
+				"g": [],
+			}
+			by_pos[pos_key] = slot
+			out.append(slot)
+		var g = rec.get("g", null)
+		if g != null and not slot["g"].has(int(g)):
+			slot["g"].append(int(g))
+	return out
+
+
+## The layout mask this room instance draws: the ONE draw shared by the room's
+## objects and its key slots, so a key only stands in a group the room built
+## (spec /mechanics/key-placement). Draw this FIRST, pass it to
+## authored_objects/objects_for_cell, and hand it to key_slot_positions.
+## -1 when the room builds flat (no recoverable group table) or has no object
+## row -- every key slot is then eligible, exactly as the flat object build
+## takes those rooms' records regardless of mask.
+static func drawn_mask(room_code: String, depth: int, rng: RandomNumberGenerator) -> int:
+	_load()
+	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
+	var groups = entry.get("groups", null)
+	if groups == null:
+		return -1
+	var layout: int = _pick_layout(groups, depth, rng)
+	return int(_layout_masks[layout]) if layout < _layout_masks.size() else -1
+
+
+## Seeded slot picks for one cell's `count` keys (#627, spec
+## /mechanics/key-placement). Filters the room's authored key slots by the
+## drawn layout mask, shuffles, and takes `count` with modulo wrap -- a slot
+## may be reused, never a key dropped, because the gate demands exactly
+## `count`. Returns [] when the room authors no key slot at all, so the caller
+## keeps its centroid fallback.
+static func key_slot_positions(room_code: String, count: int,
+		rng: RandomNumberGenerator, mask: int) -> Array:
+	_load()
+	var slots: Array = _key_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	var pool: Array = []
+	for slot in slots:
+		if _slot_in_mask(slot.get("g", []), mask):
+			pool.append(slot)
+	if pool.is_empty() and not slots.is_empty() and mask >= 0:
+		# The drawn mask leaves this room no slot -- under it the original
+		# would place no key here at all. But WHICH rooms hold keys is the gate
+		# economy's committed decision, not the reference table's, so the key
+		# exists regardless: stand it on the room's authored spots from its
+		# other layouts rather than on a doorway centroid over a void. (88 of
+		# the 224 key rooms are group-0-only; layout 3 does not build group 0.)
+		pool = slots
+	if pool.is_empty() or count <= 0:
+		return []
+
+	# Same seeded-subset contract as enemy_slot_positions: the POSITIONS are
+	# authored and exact, the selection among them is ours.
+	var order: Array = []
+	for i in range(pool.size()):
+		order.append(i)
+	for i in range(order.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var t = order[i]
+		order[i] = order[j]
+		order[j] = t
+
+	var out: Array = []
+	for i in range(count):
+		var slot: Dictionary = pool[order[i % order.size()]]
+		out.append([
+			snappedf(float(slot.get("x", 0.0)), 0.01),
+			snappedf(float(slot.get("y", 0.0)), 0.01),
+			snappedf(float(slot.get("z", 0.0)), 0.01),
+		])
+	return out
+
+
+## A slot stands in one of the mask's groups. An ungrouped slot -- the
+## flat-build rooms, whose group table did not survive -- is always eligible,
+## exactly as the flat object build takes those rooms' records.
+static func _slot_in_mask(groups: Array, mask: int) -> bool:
+	if groups.is_empty() or mask < 0:
+		return true
+	for g in groups:
+		if (mask >> int(g)) & 1:
+			return true
+	return false
+
+
 static func ring_positions(count: int, radius: float) -> Array:
 	var out: Array = []
 	for i in range(count):
@@ -608,8 +742,11 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 	return rng.randi_range(lo, hi)
 
 
+## `layout_mask` is drawn_mask()'s result for this same room instance, so the
+## objects and the caller's key slots share ONE draw; -1 (the default) draws
+## here as before.
 static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
-		rng: RandomNumberGenerator, depth: int = -1) -> Array:
+		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1) -> Array:
 	# Only the START room is unconditionally empty. is_end is NOT: the goal is
 	# "not necessarily last" (free-field spec), so the last cell of a path is
 	# often an ordinary combat room, and suppressing its wave left whole rooms
@@ -636,7 +773,7 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 				"wave": w,
 			})
 
-	var authored: Array = authored_objects(room_code, depth, rng)
+	var authored: Array = authored_objects(room_code, depth, rng, layout_mask)
 	if authored.is_empty():
 		# No authored table for this room code. Fall back to the ring rather
 		# than leaving the room bare — see BOXES_PER_ROOM.

@@ -1,5 +1,5 @@
 {
- "_": "What the ORIGINAL has in a room. OBJECTS are reference only and never reach the game — an unhandled kind would still eat a slot against the 20-object room cap, so the gameplay table stays room_objects.json. ENEMIES are DIFFERENT and ARE consumed: FieldPopulation stands each wave on these authored slots instead of a ring, because they are positions rather than objects and cost nothing against that cap (spec /mechanics/enemy-placement). Regenerate with scripts/tools/refield/import_re_reference.py.",
+ "_": "What the ORIGINAL has in a room. OBJECTS are reference only and never reach the game — an unhandled kind would still eat a slot against the 20-object room cap, so the gameplay table stays room_objects.json. ENEMIES and KEY POSITIONS are DIFFERENT and ARE consumed: FieldPopulation stands each wave on these authored slots instead of a ring, and stands each cell's keys on these authored key slots instead of the portal centroid, because both are positions rather than objects and cost nothing against that cap (specs /mechanics/enemy-placement, /mechanics/key-placement). Regenerate with scripts/tools/refield/import_re_reference.py.",
  "source": "psz-re data/object_placement_per_room.json + enemy_deploy_positions.json",
  "sets": [
   "d"
