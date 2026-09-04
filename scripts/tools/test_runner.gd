@@ -8191,6 +8191,33 @@ func test_setup_shop_portrait() -> void:
 	assert_true(card.has_theme_stylebox_override("panel"), "Detail card styled")
 	assert_true(card.has_node("ScanlineOverlay"), "Detail card has the scanline overlay")
 	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied (transparent)")
+
+	# ── Pinned column widths (#626): the split never depends on text length ──
+	assert_eq((body_card as Control).custom_minimum_size.x, PszStyle.SHOP_BODY_W,
+		"Body card width is pinned")
+	var holder: Control = right.get_child(0)
+	assert_eq(holder.custom_minimum_size, Vector2(PszStyle.SHOP_DETAIL_W, PszStyle.DETAIL_HEIGHT),
+		"Detail holder width is pinned to the fixture's 320")
+	var panel_w: float = 1280.0 - PszStyle.LEFT_MARGIN - PszStyle.RIGHT_RESERVE
+	assert_eq(PszStyle.SHOP_BODY_W + outer.get_theme_constant("separation") + PszStyle.SHOP_DETAIL_W, panel_w,
+		"body + gap + detail consume the fixed panel width exactly (no text-driven surplus)")
+
+	# A long detail line wraps inside the fixed card instead of widening it —
+	# unwrapped, this sentence's width becomes the card's minimum width and the
+	# list/info split shifts per shop/tab/selection (the #626 report).
+	var long_line := "Vivid Agito with a Monomate Grinder Frame, Antlia Parasol and Flowen's Sword"
+	var lbl := PszStyle.detail_label(long_line)
+	card.add_child(lbl)
+	assert_eq(lbl.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "detail_label wraps within the card")
+	assert_true(holder.get_minimum_size().x <= PszStyle.SHOP_DETAIL_W + 1.0,
+		"a long detail line wraps instead of widening the detail card")
+
+	# Row names trim with an ellipsis rather than drawing past the pill edge
+	# (the list scroll disables horizontal scrolling, so the row width is capped).
+	var row := PszStyle.shop_row(long_line, "100 M", {})
+	assert_eq(_shop_row_label(row).text_overrun_behavior, TextServer.OVERRUN_TRIM_ELLIPSIS,
+		"row name label trims with ellipsis")
+
 	panel.free()
 	print("")
 

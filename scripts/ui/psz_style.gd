@@ -25,6 +25,14 @@ const BOTTOM_MARGIN := 24.0
 const RIGHT_RESERVE := 486.0   # right edge lands at x≈794 of 1280
 const DETAIL_HEIGHT := 288.0   # info card height (~40% of 720)
 
+# Pinned column widths (#626): body + 12px separation + detail = 770 = the fixed
+# panel width, so the split is constant across every shop/tab/selection. Text must
+# wrap/truncate inside these (see detail_label / the row label) — an unwrapped
+# Label's width becomes its card's minimum width and the split drifts again.
+# Detail matches the web fixture's 320 (web/src/shop-3d/parts.tsx ShopColumns).
+const SHOP_BODY_W := 438.0
+const SHOP_DETAIL_W := 320.0
+
 # ── Text Colors ──
 const TEXT := Color(0.1, 0.1, 0.17)
 const TEXT_WHITE := Color(1.0, 1.0, 1.0)
@@ -213,6 +221,10 @@ static func create_pill_with_icons(icons: Array, left_text: String, selected: bo
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_font_size_override("font_size", FONT_ITEM)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Long names trim with an ellipsis instead of painting past the pill edge —
+	# the list scroll disables horizontal scrolling, so the row width is capped
+	# and overflow otherwise draws outside the card (#626).
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	hbox.add_child(label)
 	if not right_text.is_empty():
 		var right := Label.new()
@@ -486,6 +498,7 @@ static func setup_shop_portrait(
 	# LEFT: the body (title / tabs / list / hint) in a glass card, full height.
 	var body_card := PanelContainer.new()
 	body_card.name = "ShopBodyCard"
+	body_card.custom_minimum_size = Vector2(SHOP_BODY_W, 0.0)
 	body_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_card.size_flags_stretch_ratio = 3.0
@@ -514,7 +527,7 @@ static func setup_shop_portrait(
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
 	var detail_holder := MarginContainer.new()
-	detail_holder.custom_minimum_size = Vector2(0, DETAIL_HEIGHT)
+	detail_holder.custom_minimum_size = Vector2(SHOP_DETAIL_W, DETAIL_HEIGHT)
 	detail_holder.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_holder.add_child(detail)
@@ -530,6 +543,10 @@ static func detail_label(text: String, color := TEXT) -> Label:
 	label.text = text
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_font_size_override("font_size", FONT_DETAIL)
+	# Wrap inside the fixed-width detail card (#626): an unwrapped Label's width
+	# becomes the card's minimum width, so the longest item name would resize the
+	# whole list/info split. The web fixture wraps the same way (CSS default).
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
 
