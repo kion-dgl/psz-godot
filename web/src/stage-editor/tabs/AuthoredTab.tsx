@@ -125,11 +125,12 @@ export default function AuthoredTab({
   }, [layoutMask, entry, masks, eligible, weightsByDepth, setLayoutMask]);
 
   // The reference layer: what the original has here that we do not place.
+  // Spawn slots are NOT part of it — they belong to the room's wave, not the
+  // object table, and render above the layouts as layout-independent.
   const ref = reference?.[`${stageId}_d`];
   const refByKind: Record<string, number> = {};
   for (const o of ref?.objects ?? []) refByKind[o.k] = (refByKind[o.k] ?? 0) + 1;
   const spawnCount = ref?.enemies?.length ?? 0;
-  if (spawnCount) refByKind['enemy spawn'] = spawnCount;
   const refKinds = Object.keys(refByKind).sort();
 
   return (
@@ -151,6 +152,39 @@ export default function AuthoredTab({
 
       {entry && (
         <>
+          {spawnCount > 0 && (
+            <>
+              <div
+                style={sectionLabel}
+                title="Enemy slots belong to the room's wave, not the object table — every layout fights from the same slots, so they render regardless of which layout is selected. Posts floor-snap to the stage mesh exactly as the spawner places them."
+              >
+                Spawns · all layouts
+              </div>
+              <div style={{ marginBottom: 4 }}>
+                <button
+                  onClick={() =>
+                    setVisibleKinds(
+                      visibleKinds === null
+                        ? [...kinds, ...refKinds, 'enemy spawn']
+                        : visibleKinds.includes('enemy spawn')
+                          ? visibleKinds.filter((x) => x !== 'enemy spawn')
+                          : [...visibleKinds, 'enemy spawn'],
+                    )
+                  }
+                  style={{
+                    ...chipStyle(visibleKinds === null || visibleKinds.includes('enemy spawn')),
+                    background: visibleKinds === null || visibleKinds.includes('enemy spawn') ? '#1a1a2e' : '#0f0f1e',
+                    color: visibleKinds === null || visibleKinds.includes('enemy spawn') ? '#f87171' : '#555',
+                    border: '1px dashed #3a3a5a',
+                  }}
+                  title="Toggle the wave's spawn slots in the viewport."
+                >
+                  enemy spawn {spawnCount}
+                </button>
+              </div>
+            </>
+          )}
+
           {entry.groups == null ? (
             <div style={{ fontSize: 11, color: '#8a90b8' }}>
               No recoverable group table — the original builds this file flat,
@@ -297,9 +331,9 @@ export default function AuthoredTab({
             <div style={{ marginTop: 14, borderTop: '1px solid #2a2a4a', paddingTop: 10 }}>
               <div
                 style={{ ...sectionLabel, margin: 0 }}
-                title="Drawn as open wireframe so it never reads as something the game builds. Keys are authored per room in the original (psz-godot scatters them by rule instead) and follow the selected layout's groups; enemy spawn slots belong to the room's wave and show in every layout; deploy blocks/flags are measured but unexplained."
+                title="Drawn as open wireframe so it never reads as something the game builds. These are group-tagged like the placed objects and follow the selected layout's groups: keys are authored per room in the original (psz-godot scatters them by rule instead); treasure boxes and unidentified kinds are measured but not placed. Deploy blocks/flags are measured but unexplained."
               >
-                Not placed (reference)
+                Not placed · follows layout
               </div>
               <div style={{ marginTop: 6 }}>
                 {refKinds.map((k) => {
