@@ -11,7 +11,9 @@ import { DIRECTION_ROTATIONS, getPortalRotation } from './types';
 
 // Model paths — Godot asset layout
 const GATE_MODEL_PATH = assetUrl('assets/objects/valley/o0c_gate.glb');
-const WARP_MODEL_PATH = assetUrl('assets/objects/valley/o0s_warpm.glb');
+// The o0s_* warps live under special/, not valley/ — the old valley/ path 404s
+// on every editor load via the module-scope preload.
+const WARP_MODEL_PATH = assetUrl('assets/objects/special/o0s_warpm.glb');
 
 interface PortalModelProps {
   position: [number, number, number];
