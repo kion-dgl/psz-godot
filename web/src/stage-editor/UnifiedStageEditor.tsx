@@ -190,8 +190,17 @@ export default function UnifiedStageEditor() {
   // posts on the floor. Useful for "go look at where the autopilot got
   // stuck" links. Multiple markers semicolon-separated.
   const urlMarker = searchParams.get('marker') ?? undefined;
+  // `?tab=authored` restores the active tab across reloads — HMR included,
+  // which otherwise dumps the user back on Floor mid-inspection.
+  const urlTab = searchParams.get('tab') ?? undefined;
 
-  const [activeTab, setActiveTab] = useState<EditorTab>(urlQuest ? 'waypoints' : 'floor');
+  const [activeTab, setActiveTab] = useState<EditorTab>(
+    urlQuest
+      ? 'waypoints'
+      : TABS.some((t) => t.id === urlTab)
+        ? (urlTab as EditorTab)
+        : 'floor',
+  );
   const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
   const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
   const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
@@ -208,8 +217,9 @@ export default function UnifiedStageEditor() {
     if (selectedQuest) next.set('quest', selectedQuest);
     if (highlightCell) next.set('cell', highlightCell);
     if (urlMarker) next.set('marker', urlMarker);
+    if (activeTab !== 'floor') next.set('tab', activeTab);
     setSearchParams(next, { replace: true });
-  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker]);
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker, activeTab]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -221,6 +231,18 @@ export default function UnifiedStageEditor() {
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   // null = show every authored kind; a list filters the overlay.
   const [authoredKinds, setAuthoredKinds] = useState<string[] | null>(null);
+  // Layout-mask preview for the Authored tab. The tab auto-picks the room's
+  // most-taken layout (null only briefly, before the room data loads).
+  const [authoredMask, setAuthoredMask] = useState<number | null>(null);
+  const [authoredGroup5, setAuthoredGroup5] = useState(0);
+
+  // Eligibility comes from the room's own group table, so a preview never
+  // carries across a stage switch — the next room re-opens on its own
+  // most-taken layout.
+  useEffect(() => {
+    setAuthoredMask(null);
+    setAuthoredGroup5(0);
+  }, [selectedMapId]);
 
   // Default spawn placement state
   const [spawnPlacementMode, setSpawnPlacementMode] = useState(false);
@@ -806,6 +828,10 @@ export default function UnifiedStageEditor() {
             stageId={selectedMapId}
             visibleKinds={authoredKinds}
             setVisibleKinds={setAuthoredKinds}
+            layoutMask={authoredMask}
+            setLayoutMask={setAuthoredMask}
+            group5Count={authoredGroup5}
+            setGroup5Count={setAuthoredGroup5}
           />
         );
       case 'floor':
@@ -1020,6 +1046,9 @@ export default function UnifiedStageEditor() {
             <AuthoredObjectOverlay
               stageId={selectedMapId}
               kinds={authoredKinds ?? undefined}
+              layoutMask={authoredMask}
+              group5Count={authoredGroup5}
+              stageScene={stageScene}
             />
           </>
         );
