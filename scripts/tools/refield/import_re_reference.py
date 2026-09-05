@@ -14,19 +14,25 @@ THE OBJECTS HERE DO NOT REACH THE GAME. It is deliberately a separate file from
 room_objects.json so that adding a kind to this list can never accidentally
 start spawning it — the two have different consumers and different risks.
 
-The ENEMY SLOTS are the exception and ARE consumed: FieldPopulation stands each
-wave on them instead of a ring (spec /mechanics/enemy-placement). They are
-positions rather than objects, so they cost nothing against the room cap.
+The ENEMY SLOTS and the KEY POSITIONS are the exceptions and ARE consumed:
+FieldPopulation stands each wave on the enemy slots instead of a ring (spec
+/mechanics/enemy-placement), and stands a generated cell's keys on the authored
+key slots instead of the portal centroid (spec /mechanics/key-placement). Both
+are positions rather than objects, so they cost nothing against the room cap.
+The key OBJECT still does not spawn from here — which rooms hold keys and how
+many stays the gate economy's own rule (spec /states/field-gates) — only the
+positions are read.
 
 What it carries, per room:
 
-  keys        o0c_key, 836 records over 224 rooms in set d. The original
-              AUTHORS where a key sits. psz-godot instead scatters keys by the
-              measured rule (BFS depth < 2 from the gated room, max 2 per room),
-              because which ROOMS hold keys is a per-field decision. Both can be
-              true — the room table saying where a key may sit, the generator
-              choosing which rooms use it — and seeing the authored positions is
-              how we find out.
+  keys        o0c_key, 836 records over 224 rooms in set d, 2-6 distinct
+              positions each. The original AUTHORS where a key sits, and the
+              records are group-tagged like every other object: a key exists
+              only in the layout masks that build its group, so the consumer
+              filters by the room's drawn mask. psz-godot still decides which
+              rooms hold keys and how many (the gate economy's BFS scatter);
+              since #627 the keys a generated cell does hold STAND on these
+              positions rather than on the portal centroid.
 
   enemies     Spawn slots from enemy_deploy_positions.json: 257 rooms in set d,
               8 or 9 slots each. CONSUMED by FieldPopulation since #616 — before
@@ -161,10 +167,12 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
         "_": ("What the ORIGINAL has in a room. OBJECTS are reference only and "
               "never reach the game — an unhandled kind would still eat a slot "
               "against the 20-object room cap, so the gameplay table stays "
-              "room_objects.json. ENEMIES are DIFFERENT and ARE consumed: "
-              "FieldPopulation stands each wave on these authored slots instead "
-              "of a ring, because they are positions rather than objects and "
-              "cost nothing against that cap (spec /mechanics/enemy-placement). "
+              "room_objects.json. ENEMIES and KEY POSITIONS are DIFFERENT and "
+              "ARE consumed: FieldPopulation stands each wave on these authored "
+              "slots instead of a ring, and stands each cell's keys on these "
+              "authored key slots instead of the portal centroid, because both "
+              "are positions rather than objects and cost nothing against that "
+              "cap (specs /mechanics/enemy-placement, /mechanics/key-placement). "
               "Regenerate with scripts/tools/refield/import_re_reference.py."),
         "source": "psz-re data/object_placement_per_room.json + enemy_deploy_positions.json",
         "sets": list(sets),

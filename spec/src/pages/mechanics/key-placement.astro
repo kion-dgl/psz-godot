@@ -1,0 +1,63 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Key Placement" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This page governs <em>where in its room a key pickup stands</em>. It does not govern <em>which rooms hold keys or how many</em> — that is the gate economy's scatter rule (<a href="/states/field-gates">Field Gate Economy</a>): BFS depth &lt; 2 from the gated room, at most 2 per room. The two compose: the economy picks the room and the count, this page picks the spot.</p>
+
+  <h2>The rule</h2>
+
+  <p>The original <strong>authors</strong> where a key sits: 836 <code>o0c_key</code> records over 224 of the 295 reference rooms, 2–6 distinct positions each, decoded by psz-re from <code>object_placement_per_room.json</code> and carried in <code>room_reference.json</code>. A generated field's keys <strong>MUST</strong> stand on those slots.</p>
+
+  <p>psz-godot previously placed the fallback key at the centroid of the cell's portal spawn points and ringed extra copies around it. That is <strong>refuted</strong>: the centroid has no relationship to where the room's floor is wide enough, which is why keys hover over voids (<a href="https://github.com/kion-dgl/psz-godot/issues/627">#627</a>). A centroid is an average of doorways, not a placement.</p>
+
+  <h2>Resolution order</h2>
+
+  <table>
+    <thead><tr><th>Case</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Cell carries an authored <code>key_position</code></td><td>That position wins — the quest editor spoke, and generated cells never carry the field.</td></tr>
+      <tr><td>Generated cell with authored key slots</td><td>Keys <strong>MUST</strong> stand on the room's mask-filtered key slots, chosen as below.</td></tr>
+      <tr><td>Cell holds more keys than the room has distinct slots</td><td>Slots <strong>MUST</strong> be reused (modulo wrap) rather than keys dropped — the gate demands them — and each reused copy <strong>MUST</strong> be ringed apart so pickups stay separately clickable.</td></tr>
+      <tr><td>Room code has no authored slots</td><td>Fall back to the portal centroid. This is a fallback for a room code the reference never covered, <strong>not</strong> a placement policy.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The mask filter</h2>
+
+  <p>Authored key records are group-tagged like every other room object: a key exists only in the layout masks that build its group. Faithful placement <strong>MUST</strong> filter slots by the layout mask the room instance actually drew — the same draw that selected the room's objects (<code>_pick_layout</code>) — so a key never stands in a group the room did not build. One draw per room instance, shared by objects and keys; the selection <strong>MUST NOT</strong> draw twice.</p>
+
+  <p>Two consequences fall out of the data and are behaviour, not accidents:</p>
+
+  <ul>
+    <li>Rooms with no recoverable group table (all of s02 and s05) build flat; their key records carry no group and every slot is always eligible.</li>
+    <li>Layout mask 4 (the only one naming group 4) is never drawn in a free field — see <code>authored_objects</code> — so a slot whose only group is 4 is <strong>never</strong> eligible. Group-4 keys stay unplaced, exactly as the original's group-4 objects stay unbuilt.</li>
+  </ul>
+
+  <h3>When the mask leaves nothing</h3>
+
+  <p>88 of the 224 key rooms carry slots in group 0 only, and mask 40 — layout 3 — does not build group 0. Under that draw the original would place <em>no key in that room at all</em>. But which rooms hold keys is not the reference table's decision: it is the gate economy's, already committed before placement runs. So when the drawn mask leaves a room no eligible slot, the mask <strong>MUST</strong> be set aside and all of the room's authored slots used — the key exists regardless, and an authored spot from another layout of the same room beats a doorway centroid over a void. The filter narrows <em>where</em>; it must not unplace <em>whether</em>.</p>
+
+  <h2>Positions, not objects</h2>
+
+  <p><code>room_reference.json</code> says its objects never reach the game, because an unhandled kind would still eat a slot against the 20-object room cap. Keys are the second exception after enemy slots, and the argument is the same with one honest addition: a key is not a passive spawn point — it occupies interactivity, a thing the player picks up. So the split is stated rather than blurred:</p>
+
+  <ul>
+    <li>The <strong>positions</strong> are consumed (mask-filtered, seeded selection), and cost nothing against the room cap.</li>
+    <li>The key <strong>object</strong> still does not spawn through the room-object table — <code>o0c_key</code> stays under <code>not_imported_yet</code>. Which rooms hold keys, and how many, remains the gate economy's own rule (<a href="/states/field-gates">Field Gate Economy</a>), not the reference table's.</li>
+  </ul>
+
+  <h2>Coordinates and height</h2>
+
+  <p>Slots are room-local, same units and orientation as authored objects. Every authored key record carries <code>y = 0</code>, so the pickup <strong>MUST NOT</strong> trust the authored height: it floor-snaps at the slot's <code>(x, z)</code> and hovers a fixed amount above whatever floor it finds — the same contract boxes already follow. A key buried under a raised floor is an unopenable gate, which is a soft lock, not a cosmetic bug.</p>
+
+  <h2>Seeding</h2>
+
+  <p>Which subset of a room's eligible slots a cell uses is a seeded choice made at field generation, so a given field populates identically on every revisit rather than reshuffling under an uncollected key.</p>
+
+  <h2>What this page does not settle</h2>
+
+  <p>Which slot the original picks for a given room instance is <strong>not known</strong> — the same undecoded per-room seed and placement weights as <a href="/mechanics/enemy-placement">Enemy Placement</a>'s subset note. The <em>positions</em> are authored data and are exact; the <em>selection among them</em> is ours. Which rooms hold keys is likewise ours-by-measurement (the economy's scatter rule), not the reference table's.</p>
+</Concept>

@@ -475,15 +475,6 @@ func _ready() -> void:
 
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
 
-	# Place key pickup if this cell has one
-	if _current_cell.get("has_key", false):
-		var key_for: String = str(_current_cell.get("key_for_cell", ""))
-		if not key_for.is_empty() and not _keys_collected.has(key_for):
-			# key_count is how many copies this cell holds; the gate it feeds
-			# consumes required_keys of them (key_gate.gd). Defaults to 1 for
-			# cells authored before multi-key gates existed.
-			_gate_mgr._create_key_pickup(key_for, int(_current_cell.get("key_count", 1)))
-
 	_spawn_field_elements()
 	_spawn_companion()
 	# Wait one PHYSICS frame so the floor collision built above is live in the
@@ -493,6 +484,19 @@ func _ready() -> void:
 	# floated at y=0. This makes the snap deterministic on hardware.
 	await get_tree().physics_frame
 	_cell_spawner._spawn_cell_objects()
+
+	# Place key pickup if this cell has one — AFTER the physics frame, because
+	# authored key slots (#627) floor-snap exactly like boxes and the ray needs
+	# that tick to see the floor. Earlier, a slot over raised floor snapped to
+	# nothing and buried the key: an unopenable gate, a soft lock.
+	if _current_cell.get("has_key", false):
+		var key_for: String = str(_current_cell.get("key_for_cell", ""))
+		if not key_for.is_empty() and not _keys_collected.has(key_for):
+			# key_count is how many copies this cell holds; the gate it feeds
+			# consumes required_keys of them (key_gate.gd). Defaults to 1 for
+			# cells authored before multi-key gates existed.
+			_gate_mgr._create_key_pickup(key_for, int(_current_cell.get("key_count", 1)))
+
 	_setup_debug_panel()
 
 	# Re-spawn the player-dropped telepipe if one is active in this exact

@@ -1435,6 +1435,8 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 		if cell.get("is_end", false):
 			warp_edge = str(cell.get("key_gate_direction", ""))
 
+		var populated: Dictionary = _populate_cell(cell)
+
 		cells.append({
 			"pos": key,
 			"stage_id": str(cell["stage_id"]),
@@ -1460,25 +1462,58 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 			# a TWO-key gate is a real two-key gate today rather than waiting for
 			# step 3 of /states/field-gates.
 			"required_keys": int(cell.get("required_keys", 0)),
+			# Where this cell's keys STAND: the room's authored key slots,
+			# mask-filtered by the same draw that built `objects` and wrapped to
+			# key_count (#627). Consumed by _create_key_pickup between the
+			# editor-authored key_position and the centroid fallback.
+			"key_slots": populated["key_slots"],
 			"warp_edge": warp_edge,
 			# The start room's way back to wherever the player warped in from.
 			# "" for an `a` section, which is entered through a defaultSpawn.
 			"entry_warp_edge": _entry_warp_dir(grid, key, cell),
 			"path_order": int(cell.get("path_order", -1)),
 			"portals": _baked_portals(str(cell["stage_id"]), int(cell.get("rotation", 0))),
-			"objects": FieldPopulation.objects_for_cell(
-				str(cell["stage_id"]),
-				cell.get("is_start", false),
-				cell.get("is_end", false),
-				_rng,
-				int(cell.get("path_order", -1)),
-			),
+			"objects": populated["objects"],
 		})
 
 	return {
 		"cells": cells,
 		"start_pos": _pos_key(start_pos),
 		"end_pos": _pos_key(end_pos),
+	}
+
+
+## A cell's generated contents: its objects and, for a key cell, the slots its
+## keys stand on.
+##
+## ONE layout draw per room instance, shared by the objects and the key slots,
+## so a key never stands in a group the room did not build (spec
+## /mechanics/key-placement); the mask comes back as -1 for a flat build or a
+## room with no object row, which leaves every key slot eligible. Start rooms
+## stay undrawn — objects_for_cell empties them before any draw, and they never
+## hold a key anyway. Key slots are selected HERE, at generation, so a field
+## populates identically on every revisit; [] leaves _create_key_pickup on its
+## centroid fallback (a room code the reference never covered).
+func _populate_cell(cell: Dictionary) -> Dictionary:
+	var stage_id := str(cell["stage_id"])
+	var depth := int(cell.get("path_order", -1))
+	var layout_mask: int = -1
+	if not cell.get("is_start", false):
+		layout_mask = FieldPopulation.drawn_mask(stage_id, depth, _rng)
+	var key_slots: Array = []
+	if cell.get("has_key", false):
+		key_slots = FieldPopulation.key_slot_positions(
+			stage_id, maxi(1, int(cell.get("key_count", 1))), _rng, layout_mask)
+	return {
+		"objects": FieldPopulation.objects_for_cell(
+			stage_id,
+			cell.get("is_start", false),
+			cell.get("is_end", false),
+			_rng,
+			depth,
+			layout_mask,
+		),
+		"key_slots": key_slots,
 	}
 
 
