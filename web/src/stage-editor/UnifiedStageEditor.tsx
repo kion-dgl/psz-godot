@@ -237,11 +237,8 @@ export default function UnifiedStageEditor() {
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   // null = show every authored kind; a list filters the overlay.
   const [authoredKinds, setAuthoredKinds] = useState<string[] | null>(null);
-  // Layout-mask preview for the Authored tab. The tab opens on 'layout' — a
-  // real arrangement (the room's most-taken layout, auto-picked by the tab)
-  // — because the point is the variations; 'table' is the explicit
-  // everything-at-once scatter view.
-  const [authoredView, setAuthoredView] = useState<'layout' | 'table'>('layout');
+  // Layout-mask preview for the Authored tab. The tab auto-picks the room's
+  // most-taken layout (null only briefly, before the room data loads).
   const [authoredMask, setAuthoredMask] = useState<number | null>(null);
   const [authoredGroup5, setAuthoredGroup5] = useState(0);
 
@@ -249,7 +246,6 @@ export default function UnifiedStageEditor() {
   // carries across a stage switch — the next room re-opens on its own
   // most-taken layout.
   useEffect(() => {
-    setAuthoredView('layout');
     setAuthoredMask(null);
     setAuthoredGroup5(0);
   }, [selectedMapId]);
@@ -838,8 +834,6 @@ export default function UnifiedStageEditor() {
             stageId={selectedMapId}
             visibleKinds={authoredKinds}
             setVisibleKinds={setAuthoredKinds}
-            view={authoredView}
-            setView={setAuthoredView}
             layoutMask={authoredMask}
             setLayoutMask={setAuthoredMask}
             group5Count={authoredGroup5}
@@ -1060,7 +1054,7 @@ export default function UnifiedStageEditor() {
             <AuthoredObjectOverlay
               stageId={selectedMapId}
               kinds={authoredKinds ?? undefined}
-              layoutMask={authoredView === 'layout' ? authoredMask : null}
+              layoutMask={authoredMask}
               group5Count={authoredGroup5}
               realModels={authoredRealModels}
             />
