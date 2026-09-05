@@ -26,6 +26,7 @@ const WARP_TO_AREA := {
 
 ## Stage prefix → area_id (reverse of GridGenerator.AREA_CONFIG prefix)
 const STAGE_PREFIX_TO_AREA := {
+	"s00": "city",
 	"s01": "gurhacia",
 	"s02": "ozette",
 	"s03": "rioh",

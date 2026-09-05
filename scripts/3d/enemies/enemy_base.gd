@@ -103,6 +103,54 @@ var _chase_mode: String = "arc"
 ## ponytail: constant player radius, read the real shape if arc precision ever matters.
 const PLAYER_HIT_RADIUS: float = 0.5
 
+## Delivery kinds + authored telegraphs (#629, spec /mechanics/enemy-attacks "kind" /
+## "windup_clips"). Port of fsm.ts startAttack/processAttackCharge: projectile/lob are
+## released once at window open and resolve at impact/landing; charge runs its own
+## st → lp → ed segment machine (the segments ARE the timeline); leap travels the enemy
+## itself to the target's window-open position and lands for area damage at window
+## close. windup_clips play sequentially as pure telegraph before the attack clip, with
+## the timeline fractions offset past them. Until now every kind collapsed to the
+## instant melee arc (#494 interim) — these are the travel mechanics proper.
+const CHARGE_SEGMENT_FALLBACK: float = 0.4  # fsm.ts stDur/edDur fallback; windup clip fallback
+const CHARGE_MAX_LP_TIME: float = 8.0       # fsm.ts charge loop watchdog
+var _attack_kind := "melee_arc"
+var _window_opened := false                 # damaging window opened (ranged release point)
+var _window_closed := false                 # damaging window closed (leap landing point)
+var _windup_clips: Array = []               # [{token, end}] sequential telegraph preludes
+var _windup_total := 0.0                    # their resolved total duration
+var _windup_elapsed := 0.0
+var _windup_idx := -1                       # prelude clip currently playing
+var _windup_done := true                    # false only while the prelude plays
+var _leap_from := Vector3.ZERO              # kind leap: enemy travels during the window
+var _leap_to := Vector3.ZERO
+var _charge: Dictionary = {}                # kind charge: phase machine (see _start_charge)
+var _vulnerable_mult := 1.0                 # recovery punish window (recovery_vulnerable_mult)
+
+## Berserk kamikaze (spec /states/enemies §shooter): `apply_berserk()` (leader loss —
+## wired in _die) plays the atk_an confusion display once, then CHASING loops the
+## berserk_only attack's clip straight at the player and self-destructs on contact.
+var _berserk := false
+var _kamikaze_def: Dictionary = {}
+
+## Aggro display hold (fsm.ts threatTimer): bigrig chest-beat / flyer takeoff / roller
+## activate / ape-gunner stand — each its rig's stt, held for the clip before pursuit.
+const THREAT_DISPLAY_ARCHETYPES := ["bigrig_combo", "flyer_combo", "roller", "ape_gunner"]
+var _threat_timer := 0.0
+var _threat_total := 0.0
+
+## Box mimic (spec /states/enemies §box-mimic): dormant disguise ignoring
+## detection_range entirely; only fsm.reveal_range breaks it. Holds stt's first frame,
+## occasionally sways (wlk2 tell); reveal-cancel retreats into the box (tk2).
+var _dormant_timer := 0.0
+var _dormant_swaying := false
+var _disguise_held := false
+
+## Flyer combo (spec /states/enemies §flyer): shoulder-height hover is the anti-melee
+## design — MUST NOT ground while engaged. `_flying` gates the altitude hold; the
+## takeoff rises through the aggro display.
+var _flying := false
+var _ground_y := 0.0
+
 ## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
 ## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
 ## cadence/telegraph. cadence/reaction < 1 = faster attacks / shorter windup.
@@ -213,9 +261,14 @@ func _ready() -> void:
 		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
 		_archetype = EnemyAttackRegistry.get_archetype(enemy_data.id)
 		_fsm = EnemyAttackRegistry.get_fsm(enemy_data.id)
+		for a in _attacks:
+			if a.get("berserk_only", false):
+				_kamikaze_def = a
+				break
 
 	_rng.randomize()
 	_apply_difficulty()
+	_ground_y = global_position.y
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
@@ -260,6 +313,14 @@ func _setup_model() -> void:
 
 	# Find AnimationPlayer in the model hierarchy
 	animation_player = NodeUtils.first_of_type(model, "AnimationPlayer") as AnimationPlayer
+
+	# Entry-level render scale for oversized source GLBs (spec /mechanics/
+	# enemy-attacks: model_scale — poison_lily is 0.09; the runtime applies the
+	# same factor the web tool renders with).
+	if enemy_data:
+		var ms := EnemyAttackRegistry.get_model_scale(enemy_data.id)
+		if not is_equal_approx(ms, 1.0):
+			model.scale = Vector3.ONE * ms
 
 	# If no animations in the model, load from animation_model_id source
 	if animation_player:
@@ -429,8 +490,14 @@ func _physics_process(delta: float) -> void:
 			if current_anim == "wlk":
 				current_anim = ""
 
-	# Apply gravity
-	if not is_on_floor():
+	# Flyers hold their hover altitude while engaged (spec /states/enemies §flyer —
+	# the anti-melee design; they MUST NOT ground mid-combat): gravity is bypassed
+	# and y lerps to the hover plane. Everything else falls normally.
+	if _archetype == "flyer_combo" and _flying and is_alive:
+		velocity.y = 0.0
+		global_position.y = lerpf(global_position.y,
+			_ground_y + float(_fsm.get("hover_height", 1.3)), 2.0 * delta)
+	elif not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
 	# Immobilized by status effect — skip AI
@@ -492,13 +559,46 @@ func _process_idle(delta: float) -> void:
 	if not target or not is_instance_valid(target):
 		_find_target()
 
-	# Check if target is in detection range - become alert!
 	if target and is_instance_valid(target):
 		var dist := global_position.distance_to(target.global_position)
+
+		# Box mimic (spec /states/enemies §box-mimic): the dormant disguise overrides
+		# normal detection entirely — stationary, holding stt's boxed-up first frame,
+		# aggroing ONLY inside fsm.reveal_range. Occasional wlk2 sway = the live tell.
+		if _archetype == "box_mimic":
+			velocity.x = 0
+			velocity.z = 0
+			if dist <= _fsm.get("reveal_range", 3.5):
+				current_state = EnemyState.CHASING
+				is_wandering = false
+				_disguise_held = false
+				_dormant_swaying = false
+				_begin_threat_display("stt")  # pokes its head out of the box
+				return
+			_process_disguise(delta)
+			return
+
+		# Rooted enemies (fsm.stationary): no wander out of combat either — stand at
+		# the authored idle clip and let detection promote to CHASING.
+		if _fsm.get("stationary", false):
+			velocity.x = 0
+			velocity.z = 0
+			_play_animation(String(_fsm.get("idle_clip", "wat")))
+			if enemy_data and dist <= _detection_range:
+				current_state = EnemyState.CHASING
+				is_wandering = false
+			return
+
+		# Check if target is in detection range - become alert!
 		if enemy_data and dist <= _detection_range:
 			current_state = EnemyState.CHASING
 			is_wandering = false
-			_play_animation("tht", true)  # Threat/war cry when becoming active
+			if _archetype in THREAT_DISPLAY_ARCHETYPES:
+				# Per-archetype aggro display, held for its clip before pursuit:
+				# gorilla chest-beat / roc takeoff / roller activation / ape stands.
+				_begin_threat_display("stt")
+			else:
+				_play_animation("tht", true)  # Threat/war cry when becoming active
 			return
 
 	# Wandering behavior
@@ -527,7 +627,50 @@ func _process_idle(delta: float) -> void:
 		# Standing idle
 		velocity.x = 0
 		velocity.z = 0
-		_play_animation("wat")
+		# Roller rigs idle on wat1/wat2 (no plain wat — the wat→stt alias would
+		# mis-read as "become active").
+		if _archetype == "roller":
+			_play_animation("wat1")
+		else:
+			_play_animation("wat")
+
+
+## The dormant disguise hold: frozen on stt's first frame (the boxed-up pose), with a
+## rare one-shot wlk2 sway (fsm.ts box-mimic idle). Port of fsm.ts box_mimic idle branch.
+func _process_disguise(delta: float) -> void:
+	_dormant_timer -= delta
+	if _dormant_swaying:
+		# Playing out a one-shot (the sway tell, or a tk2 reveal-cancel retreat) —
+		# let it finish, then re-hold the disguise.
+		_disguise_held = false
+		if _dormant_timer <= 0:
+			_dormant_swaying = false
+		return
+	if not _disguise_held:
+		var full := _play_animation("stt", true)
+		if not full.is_empty() and animation_player:
+			animation_player.seek(0.05)
+			animation_player.pause()
+			_disguise_held = true
+	if _dormant_timer <= 0:
+		_dormant_timer = 3.0 + _rng.randf() * 4.0
+		if _rng.randf() < 0.35:
+			_dormant_swaying = true
+			_dormant_timer = _clip_duration("wlk2")
+			if _dormant_timer < 0.0:
+				_dormant_timer = 1.0
+			_play_animation("wlk2", true)
+
+
+## Hold an aggro/reveal display clip for its duration before pursuit (fsm.ts
+## threatTimer). Flyers start flying (the takeoff rise runs through the hold).
+func _begin_threat_display(token: String) -> void:
+	var dur := _clip_duration(token)
+	_threat_timer = dur if dur > 0.0 else 1.0
+	_threat_total = _threat_timer
+	_play_animation(token, true)
+	if _archetype == "flyer_combo":
+		_flying = true
 
 
 func _pick_new_wander_behavior() -> void:
@@ -544,12 +687,48 @@ func _pick_new_wander_behavior() -> void:
 		wander_direction = Vector3(sin(angle), 0, cos(angle))
 
 
-func _process_chasing(_delta: float) -> void:
+func _process_chasing(delta: float) -> void:
 	if not target or not is_instance_valid(target):
 		current_state = EnemyState.IDLE
 		return
 
 	var dist := global_position.distance_to(target.global_position)
+
+	# Aggro display hold (fsm.ts threatTimer): stand and display (chest-beat /
+	# takeoff / pop-out) before pursuit. The flyer rises during the hold.
+	if _threat_timer > 0.0:
+		_threat_timer -= delta
+		velocity.x = 0
+		velocity.z = 0
+		var d := target.global_position - global_position
+		d.y = 0
+		if d.length() > 0.1:
+			_face_direction(d.normalized())
+		# Reveal-cancel (spec §box-mimic): the target backed off mid-reveal —
+		# tk2 retreats into the box and the disguise resumes.
+		if _archetype == "box_mimic" and dist > float(_fsm.get("reveal_range", 3.5)) * 1.5:
+			_threat_timer = 0.0
+			current_state = EnemyState.IDLE
+			_dormant_swaying = true
+			_dormant_timer = _clip_duration("tk2")
+			if _dormant_timer < 0.0:
+				_dormant_timer = 1.0
+			_play_animation("tk2", true)
+		return
+
+	# Berserk kamikaze (spec §shooter): loop the berserk_only clip straight at the
+	# player and self-destruct on contact — regardless of i-frames (the blast
+	# happens; i-frames dodge the damage, not the explosion).
+	if _berserk and not _kamikaze_def.is_empty():
+		var radial_k := _radial_to_target()
+		var speed_k := _base_move_speed() * float(_fsm.get("charge_speed_mult", CHARGE_SPEED_MULT)) * 1.2
+		velocity.x = radial_k.x * speed_k
+		velocity.z = radial_k.z * speed_k
+		_face_direction(radial_k)
+		_play_animation(String(_kamikaze_def.get("clip", "atk_ji")))
+		if dist <= float(_kamikaze_def.get("hit_reach", 1.5)) + PLAYER_HIT_RADIUS:
+			_explode_kamikaze()
+		return
 
 	var attack_range := 2.0
 	if enemy_data:
@@ -563,6 +742,18 @@ func _process_chasing(_delta: float) -> void:
 		_begin_telegraph()
 		return
 
+	# Rooted enemies (poison lily): never move — face the target and let the band
+	# gate above fire the attacks (fsm.ts stationary chasing).
+	if _fsm.get("stationary", false):
+		velocity.x = 0
+		velocity.z = 0
+		var df := target.global_position - global_position
+		df.y = 0
+		if df.length() > 0.1:
+			_face_direction(df.normalized())
+		_play_animation(String(_fsm.get("idle_clip", "wat")))
+		return
+
 	# Per-archetype locomotion (#494, spec /states/enemies). Distinct ground movers circle
 	# or hold a standoff; every baseline archetype chases straight. Math: EnemyLocomotionLogic.
 	var radial := _radial_to_target()
@@ -571,15 +762,36 @@ func _process_chasing(_delta: float) -> void:
 			_chase_quadruped(dist, radial, attack_range)
 		"quad_machine", "shooter", "roller":
 			_chase_standoff(_archetype, dist, radial)
+		"flyer_combo":
+			_chase_flyer(dist, radial)
 		_:
 			_chase_baseline(dist, attack_range)
 
 
+## Flyer combo chase (spec /states/enemies §flyer, fsm.ts processChasingFlyer):
+## airborne at fsm.hover_height (never grounds while engaged); `fly` to close
+## distance, `tk` to hover-orbit at fsm.standoff_range, watching the target.
+func _chase_flyer(dist: float, radial: Vector3) -> void:
+	_flying = true
+	var m := EnemyLocomotionLogic.flyer_move(dist, float(_fsm.get("standoff_range", 6.0)), radial, _arc_side)
+	if m["mode"] == "approach":
+		_tick_arc_side(1.5, 2.5, 0.4)
+		_apply_move(m["dir"], _base_move_speed() * float(_fsm.get("charge_speed_mult", CHARGE_SPEED_MULT)),
+			radial, "fly")
+	else:
+		_apply_move(m["dir"], _base_move_speed() * float(_fsm.get("walk_speed_mult", WALK_SPEED_MULT)),
+			radial, "tk")
+
+
 ## Baseline straight-line chase (simple_melee and every non-distinct archetype): walk
-## beyond the charge ring, run inside it, nav-pathing around obstacles.
+## beyond the charge ring, run inside it, nav-pathing around obstacles. The revealed
+## box mimic shares this but walks wlk1 (its rig has no plain wlk/run).
 func _chase_baseline(dist: float, attack_range: float) -> void:
 	var is_charging := dist <= attack_range * CHARGE_RANGE_MULT
-	_play_animation("run" if is_charging else "wlk")
+	var clip := "run" if is_charging else "wlk"
+	if _archetype == "box_mimic":
+		clip = "wlk1"
+	_play_animation(clip)
 
 	var to_target := target.global_position - global_position
 	var horizontal_dir := Vector3(to_target.x, 0, to_target.z)
@@ -698,18 +910,35 @@ func _tick_arc_side(base: float, span: float, flip_chance: float) -> void:
 
 
 func _process_attacking(delta: float) -> void:
-	velocity.x = 0
-	velocity.z = 0
-
 	# Telegraph sub-phase: hold the attack-ready pose (facing the player) before the
 	# strike so the wind-up is readable and dodgeable. No damage here.
 	if _telegraphing:
+		velocity.x = 0
+		velocity.z = 0
 		if target and is_instance_valid(target):
 			var d := target.global_position - global_position
 			d.y = 0
 			if d.length() > 0.1:
 				_face_direction(d.normalized())
 		_process_telegraph(delta)
+		return
+
+	# Segmented charge (kind charge): its own phase machine — the st/lp/ed segments
+	# ARE the timeline (spec §big-rig). It moves during lp, so it owns its velocity.
+	if not _charge.is_empty():
+		_process_charge(delta)
+		if not is_attacking:
+			_start_loafing()
+		return
+
+	velocity.x = 0
+	velocity.z = 0
+
+	# windup_clips prelude (fsm.ts windup): sequential pure-telegraph clips before
+	# the attack clip; the swing's window cannot start until the prelude finishes.
+	# No damage during it.
+	if not _windup_done:
+		_process_windup(delta)
 		return
 
 	# Advance the position within the attack clip. Prefer the real animation
@@ -719,14 +948,48 @@ func _process_attacking(delta: float) -> void:
 	else:
 		_attack_pos += delta
 
-	# Frame-tied damage window: [windup_frac, damage_end_frac] of the clip length.
-	# Difficulty shortens the windup (reaction). Damage lands on the first frame the
-	# target passes the arc test; one resolution (hit or dodge) per attack (#509).
-	if is_attacking and not _attack_hit_resolved and not _attack_def.is_empty():
+	if is_attacking and not _attack_def.is_empty():
+		# The fractions apply to the attack clip's own timeline (`_attack_pos`, reset
+		# when the clip starts); the windup_clips prelude delays the whole window via
+		# the _windup_done gate above — no extra offset, or it would count twice.
 		var window_start: float = float(_attack_def.get("windup_frac", 0.35)) * _attack_clip_len * _aggro_reaction
 		var window_end: float = float(_attack_def.get("damage_end_frac", 0.6)) * _attack_clip_len
-		if _attack_pos >= window_start and _attack_pos <= window_end:
+
+		# Ranged kinds release exactly once, at window open (spec: kind) — resolution
+		# then happens at impact/landing, not via the arc test. The leap captures its
+		# flight endpoints at the same instant.
+		if not _window_opened and _attack_pos >= window_start:
+			_window_opened = true
+			if _attack_kind == "projectile":
+				_attack_hit_resolved = true
+				_fire_projectile()
+			elif _attack_kind == "lob":
+				_attack_hit_resolved = true
+				_fire_lob()
+			elif _attack_kind == "leap":
+				_leap_from = global_position
+				var tp := target.global_position if target and is_instance_valid(target) else global_position
+				_leap_to = Vector3(tp.x, global_position.y, tp.z)
+
+		# Leap flight: the enemy itself travels from → target during the window.
+		if _attack_kind == "leap" and _window_opened and not _window_closed and window_end > window_start:
+			var f := clampf((_attack_pos - window_start) / (window_end - window_start), 0.0, 1.0)
+			global_position.x = lerpf(_leap_from.x, _leap_to.x, f)
+			global_position.z = lerpf(_leap_from.z, _leap_to.z, f)
+
+		# Frame-tied damage window, melee only: the arc test runs each frame; the
+		# first frame the target passes resolves the hit. One resolution (hit or
+		# dodge) per attack (#509). Ranged/leap kinds resolve at impact/landing.
+		if _attack_kind == "melee_arc" and not _attack_hit_resolved \
+				and _attack_pos >= window_start and _attack_pos <= window_end:
 			_try_attack_hit()
+
+		# Window close = the leap's landing: snap to the landing point, AoE with
+		# hit_reach as the radius, i-frames tested at landing (spec §big-rig).
+		if not _window_closed and _attack_pos > window_end:
+			_window_closed = true
+			if _attack_kind == "leap" and not _attack_hit_resolved:
+				_leap_land()
 
 	# Attack end: the resolved animation finished (signal path or the
 	# watchdog below), or the fallback duration elapsed when no attack
@@ -744,12 +1007,95 @@ func _process_attacking(delta: float) -> void:
 		_start_loafing()
 
 
+## windup_clips prelude ticker (fsm.ts windup): advance through the telegraph clips
+## on their resolved cumulative end-times, then hand off to the attack clip.
+func _process_windup(delta: float) -> void:
+	_windup_elapsed += delta
+	if _windup_elapsed < _windup_total:
+		for i in _windup_clips.size():
+			if _windup_elapsed < float(_windup_clips[i]["end"]):
+				if i != _windup_idx:
+					_windup_idx = i
+					_play_animation(String(_windup_clips[i]["token"]), true)
+				break
+		return
+	_windup_done = true
+	_begin_main_clip()
+
+
+## Segmented charge phases (fsm.ts processAttackCharge): st stationary windup →
+## lp charging forward along the locked facing, hitting on first contact (a dodge
+## lets it pass and keep going), capped at the travel target → ed recovery, whose
+## duration is the recovery_vulnerable_mult punish window (spec §roller).
+func _process_charge(delta: float) -> void:
+	var c: Dictionary = _charge
+	c["phase_t"] = float(c["phase_t"]) + delta
+	var tokens: Dictionary = c["tokens"]
+	match String(c["phase"]):
+		"st":
+			velocity.x = 0
+			velocity.z = 0
+			if float(c["phase_t"]) >= float(c["st_dur"]):
+				c["phase"] = "lp"
+				c["phase_t"] = 0.0
+				_play_charge_segment(tokens, "lp")
+		"lp":
+			var speed := _base_move_speed() * float(_fsm.get("charge_speed_mult", CHARGE_SPEED_MULT))
+			velocity.x = _attack_facing.x * speed
+			velocity.z = _attack_facing.z * speed
+			c["traveled"] = float(c["traveled"]) + speed * delta
+			# Engine-rolled loop clips (the roller's curled wat3) carry no motion of
+			# their own — the model must rotate while it travels (spec §roller).
+			if c.get("rotate_model", false) and model:
+				model.rotate_x(-deg_to_rad(720.0) * delta)
+			var end_charge := false
+			if not _attack_hit_resolved and target and is_instance_valid(target):
+				var reach := float(_attack_def.get("hit_reach", 2.0))
+				var half := float(_attack_def.get("hit_half_angle_deg", 45.0))
+				if EnemyAttackLogic.arc_hit_test(global_position, _attack_facing,
+						target.global_position, PLAYER_HIT_RADIUS, half, reach):
+					_attack_hit_resolved = true
+					var dodged: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
+					if not dodged:
+						_deal_damage_for(_attack_def)
+						# stop_on_hit: false (roller) bowls the player over and keeps
+						# rolling — same animation whether it hits player or wall.
+						if _attack_def.get("stop_on_hit", true) != false:
+							end_charge = true
+			if float(c["traveled"]) >= float(c["travel_target"]) or float(c["phase_t"]) > CHARGE_MAX_LP_TIME:
+				end_charge = true
+			if end_charge:
+				c["phase"] = "ed"
+				c["phase_t"] = 0.0
+				velocity.x = 0
+				velocity.z = 0
+				_play_charge_segment(tokens, "ed")
+				# The fall-over punish window (spec §roller): recovery takes mult damage.
+				var vm = _attack_def.get("recovery_vulnerable_mult", null)
+				if vm != null:
+					_vulnerable_mult = float(vm)
+		"ed":
+			velocity.x = 0
+			velocity.z = 0
+			if float(c["phase_t"]) >= float(c["ed_dur"]):
+				is_attacking = false
+				_charge = {}
+				_vulnerable_mult = 1.0
+
+
 func _process_loafing(delta: float) -> void:
 	loaf_timer -= delta
 
 	# When loaf time is up, go back to chasing
 	if loaf_timer <= 0:
 		current_state = EnemyState.CHASING
+		return
+
+	# Rooted enemies never move — stand at the idle clip through the loaf.
+	if _fsm.get("stationary", false):
+		velocity.x = 0
+		velocity.z = 0
+		_play_animation(String(_fsm.get("idle_clip", "wat")))
 		return
 
 	# Curve the direction over time (creates semi-circle path)
@@ -766,7 +1112,7 @@ func _process_loafing(delta: float) -> void:
 		velocity.x = loaf_direction.x * speed
 		velocity.z = loaf_direction.z * speed
 		_face_direction(loaf_direction)  # Face movement direction (away from player)
-		_play_animation("wlk")
+		_play_animation("wlk1" if _archetype == "box_mimic" else "wlk")
 	else:
 		# Can't move that way, try reversing curve direction
 		loaf_curve_rate = -loaf_curve_rate
@@ -778,6 +1124,7 @@ func _process_loafing(delta: float) -> void:
 func _start_loafing() -> void:
 	current_state = EnemyState.LOAFING
 	_telegraphing = false
+	_vulnerable_mult = 1.0  # the recovery (and its punish window) is over
 	# Stance risers lower back down (wt2w) as they peel off; other rigs just loaf.
 	_play_animation("wt2w", true)
 	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
@@ -811,10 +1158,21 @@ func _process_hurt(delta: float) -> void:
 
 ## Enter the pre-strike telegraph. Stance risers rise (stt) then hold wat2; other rigs
 ## hold their idle (wat). The strike (_start_attack) begins only when the hold elapses.
+## Attacks carrying their OWN authored telegraph — windup_clips preludes, charge st
+## segments — skip the generic hold: their clips are the readable beat (spec
+## /mechanics/enemy-attacks "windup_clips" / "kind").
 func _begin_telegraph() -> void:
 	if not target or not is_instance_valid(target):
 		return
 	is_attacking = true
+	var dist := global_position.distance_to(target.global_position)
+	_attack_def = _select_attack_for(dist)
+	_attack_kind = String(_attack_def.get("kind", "melee_arc"))
+	var windup: Array = _attack_def.get("windup_clips", [])
+	if _attack_kind == "charge" or not windup.is_empty():
+		_telegraphing = false
+		_start_attack()
+		return
 	_telegraphing = true
 	var rise := _play_animation("stt", true)
 	if not rise.is_empty():
@@ -860,21 +1218,32 @@ func _start_attack() -> void:
 
 	is_attacking = true
 
-	# Select the attack by range band + weight, then resolve its clip.
+	# Select the attack by range band + weight. Already selected at telegraph start
+	# for authored-telegraph kinds; keep the fallback for direct entries (tests,
+	# PoisonLily's delegated swings).
 	var dist := global_position.distance_to(target.global_position)
-	_attack_def = _select_attack_for(dist)
+	if _attack_def.is_empty():
+		_attack_def = _select_attack_for(dist)
+	_attack_kind = String(_attack_def.get("kind", "melee_arc"))
 	_attack_hit_resolved = false
-	_attack_pos = 0.0
+	_window_opened = false
+	_window_closed = false
+	_windup_done = true
+	_windup_total = 0.0
+	_windup_elapsed = 0.0
+	_windup_idx = -1
+	_charge = {}
+	_vulnerable_mult = 1.0
 
-	_attack_anim = _play_animation(String(_attack_def.get("clip", "atk")), true)
-	if _attack_anim.is_empty():
-		# Rig has no resolvable attack clip — timeline fractions apply to the
-		# fixed fallback duration; end the attack on that same timer.
-		_attack_fallback_timer = ATTACK_FALLBACK_DURATION
-		_attack_clip_len = ATTACK_FALLBACK_DURATION
+	# Per-kind machinery: the charge's segments ARE its timeline; windup_clips play
+	# before the attack clip and gate its window; everything else resolves the main clip.
+	var windup: Array = _attack_def.get("windup_clips", [])
+	if _attack_kind == "charge":
+		_start_charge(dist)
+	elif windup.size() > 0:
+		_setup_windup()
 	else:
-		var anim := animation_player.get_animation(_attack_anim)
-		_attack_clip_len = anim.length if anim else ATTACK_FALLBACK_DURATION
+		_begin_main_clip()
 	_play_sfx("attack")
 
 	# Lock facing at attack start — the arc does not track during the swing.
@@ -889,6 +1258,97 @@ func _start_attack() -> void:
 	if enemy_data:
 		cooldown = enemy_data.attack_cooldown
 	attack_cooldown_timer = cooldown * _aggro_cadence
+
+
+## Resolve + play the attack clip proper and arm its timeline/fallback end.
+func _begin_main_clip() -> void:
+	_attack_anim = _play_animation(String(_attack_def.get("clip", "atk")), true)
+	if _attack_anim.is_empty():
+		# Rig has no resolvable attack clip — timeline fractions apply to the
+		# fixed fallback duration; end the attack on that same timer.
+		_attack_fallback_timer = ATTACK_FALLBACK_DURATION
+		_attack_clip_len = ATTACK_FALLBACK_DURATION
+	else:
+		var anim := animation_player.get_animation(_attack_anim)
+		_attack_clip_len = anim.length if anim else ATTACK_FALLBACK_DURATION
+	_attack_pos = 0.0
+
+
+## Build the windup_clips prelude (fsm.ts startAttack windup): resolved clip lengths
+## (fallback CHARGE_SEGMENT_FALLBACK per missing clip), cumulative end-times, then
+## play the first prelude clip. The main clip starts when the prelude elapses.
+func _setup_windup() -> void:
+	_windup_clips = []
+	var acc := 0.0
+	for token in _attack_def.get("windup_clips", []):
+		var dur := _clip_duration(str(token))
+		if dur < 0.0:
+			dur = CHARGE_SEGMENT_FALLBACK
+		acc += dur
+		_windup_clips.append({"token": token, "end": acc})
+	_windup_total = acc
+	_windup_elapsed = 0.0
+	_windup_idx = -1
+	_windup_done = _windup_clips.is_empty()
+	_attack_anim = ""
+	_attack_clip_len = ATTACK_FALLBACK_DURATION
+	if not _windup_done:
+		_windup_idx = 0
+		_play_animation(String(_windup_clips[0]["token"]), true)
+
+
+## Arm the segmented charge (fsm.ts startAttack charge branch). Tokens come from
+## charge_segments (the roller's trf1/wat3/trf2) or the clip's _st/_lp/_ed suffixes.
+## The travel target rolls overshoot meters PAST where the target stood at start
+## (spec §roller), capped by max_range.
+func _start_charge(dist: float) -> void:
+	var clip := String(_attack_def.get("clip", "atk"))
+	var tokens: Dictionary = _attack_def.get("charge_segments", {})
+	if tokens.is_empty():
+		tokens = {"st": clip + "_st", "lp": clip + "_lp", "ed": clip + "_ed"}
+	var st_dur := _clip_duration(str(tokens["st"]))
+	var ed_dur := _clip_duration(str(tokens["ed"]))
+	var max_range := maxf(float(_attack_def.get("max_range", 1.0)), 1.0)
+	var overshoot = _attack_def.get("overshoot", null)
+	var travel_target := max_range
+	if overshoot != null:
+		travel_target = clampf(dist + float(overshoot), 0.0, max_range)
+	_charge = {
+		"phase": "st",
+		"phase_t": 0.0,
+		"st_dur": st_dur if st_dur > 0.0 else CHARGE_SEGMENT_FALLBACK,
+		"ed_dur": ed_dur if ed_dur > 0.0 else CHARGE_SEGMENT_FALLBACK,
+		"tokens": tokens,
+		"traveled": 0.0,
+		"travel_target": travel_target,
+		# Explicit segments (roller) mean transform clips — the loop piece is a
+		# motionless ball the engine must roll.
+		"rotate_model": not (_attack_def.get("charge_segments", {}) as Dictionary).is_empty(),
+	}
+	_attack_anim = ""          # the phase machine ends the attack, never the clip
+	_attack_fallback_timer = 1.0e9
+	_play_animation(str(tokens["st"]), true)
+
+
+func _play_charge_segment(tokens: Dictionary, key: String) -> void:
+	var full := _play_animation(str(tokens[key]), true)
+	# The lp loop may repeat (travel outlasts one loop) — loop it; st/ed are timed
+	# by their durations anyway.
+	if key == "lp" and not full.is_empty() and animation_player:
+		var a := animation_player.get_animation(full)
+		if a:
+			a.loop_mode = Animation.LOOP_LINEAR
+
+
+## A clip token's resolved duration on this rig, or -1 when it doesn't resolve.
+func _clip_duration(token: String) -> float:
+	if not animation_player:
+		return -1.0
+	var full := _find_animation(token)
+	if full.is_empty():
+		return -1.0
+	var a := animation_player.get_animation(full)
+	return a.length if a else -1.0
 
 
 ## True when a non-berserk attack's band contains `dist`. Falls back to the flat
@@ -921,8 +1381,6 @@ func _select_attack_for(dist: float) -> Dictionary:
 ## Run the arc test against the target during the damage window and, on a pass, deal
 ## attack_base × damage_mult once. A pass consumes the attack's one resolution even if
 ## the player dodges (take_damage no-ops during i-frames — player.gd), matching the spec.
-## ponytail: projectile/lob/charge/leap resolve through this same arc as an interim —
-## their travel mechanics are deferred (#494); no enemy is left on instant damage.
 func _try_attack_hit() -> void:
 	if not target or not is_instance_valid(target):
 		return
@@ -932,10 +1390,158 @@ func _try_attack_hit() -> void:
 			target.global_position, PLAYER_HIT_RADIUS, half, reach):
 		return
 	_attack_hit_resolved = true
-	var base_attack: int = enemy_data.attack_base if enemy_data else 10
-	var dmg := int(round(float(base_attack) * float(_attack_def.get("damage_mult", 1.0))))
+	_deal_damage_for(_attack_def)
+
+
+## Damage the target per an attack def: attack_base × damage_mult, plus the def's
+## knockdown flag (the player maps it to its knock-down reaction — spec
+## /mechanics/enemy-attacks "knockdown").
+func _deal_damage_for(def: Dictionary) -> void:
+	if not target or not is_instance_valid(target):
+		return
 	if target.has_method("take_damage"):
-		target.take_damage(dmg)
+		target.take_damage(_attack_damage(def), Vector3.ZERO, bool(def.get("knockdown", false)))
+
+
+func _attack_damage(def: Dictionary) -> int:
+	var base_attack: int = enemy_data.attack_base if enemy_data else 10
+	return int(round(float(base_attack) * float(def.get("damage_mult", 1.0))))
+
+
+## Release a straight projectile (kind projectile) at window open — Godot port of the
+## fsm.ts delivery. Travel is along the facing locked at attack start; hit_reach is the
+## flight range. Tech casts fire recolored for now; routing through the real technique
+## system (element, status procs, tech visuals) stays owed to the `tech` contract.
+func _fire_projectile() -> void:
+	if not is_inside_tree():
+		return
+	var p := EnemyProjectile.new()
+	p.dir = _attack_facing
+	p.speed = EnemyProjectile.PROJECTILE_SPEED
+	p.max_range = maxf(float(_attack_def.get("hit_reach", 2.0)), 1.0)
+	p.damage = _attack_damage(_attack_def)
+	p.knockdown = bool(_attack_def.get("knockdown", false))
+	p.target = target
+	p.on_hit = _projectile_on_hit()
+	if str(_attack_def.get("tech", "")) != "":
+		p.color = Color(0.5, 0.8, 1.0)
+	get_parent().add_child(p)
+	p.global_position = global_position + _attack_facing * 0.8 + Vector3(0, 1.2, 0)
+
+
+## Subclass hook: an extra on-hit effect for projectiles (the lily's poison DoT).
+func _projectile_on_hit() -> Callable:
+	return Callable()
+
+
+## Release a grenade (kind lob) at window open, toward the target's position at
+## release. Lands after LOB_FLIGHT_TIME for area damage (hit_reach = blast radius).
+func _fire_lob() -> void:
+	if not is_inside_tree():
+		return
+	var l := EnemyLob.new()
+	l.from = global_position + Vector3(0, 1.2, 0)
+	var tp := target.global_position if target and is_instance_valid(target) else global_position
+	l.to = tp
+	l.blast_radius = float(_attack_def.get("hit_reach", 1.6))
+	l.damage = _attack_damage(_attack_def)
+	l.knockdown = bool(_attack_def.get("knockdown", false))
+	l.target = target
+	get_parent().add_child(l)
+	l.global_position = l.from
+
+
+## Leap landing (kind leap): snap to the landing point and resolve the area hit —
+## hit_reach is the radius, i-frames are tested here, one resolution regardless.
+func _leap_land() -> void:
+	_attack_hit_resolved = true
+	global_position.x = _leap_to.x
+	global_position.z = _leap_to.z
+	var radius := float(_attack_def.get("hit_reach", 2.0))
+	_spawn_blast_ring(radius)
+	if target and is_instance_valid(target):
+		var to := target.global_position - _leap_to
+		to.y = 0.0
+		if to.length() <= radius + PLAYER_HIT_RADIUS:
+			_deal_damage_for(_attack_def)
+
+
+## Expanding ground ring marking an AoE (leap landing, kamikaze blast).
+func _spawn_blast_ring(radius: float) -> void:
+	var parent := get_parent()
+	if not parent:
+		return
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = radius * 0.6
+	tm.outer_radius = radius * 0.7
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.6, 0.2, 0.7)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.5, 0.1)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	tm.material = mat
+	ring.mesh = tm
+	parent.add_child(ring)
+	ring.global_position = Vector3(global_position.x, global_position.y + 0.2, global_position.z)
+	var tw := ring.create_tween()
+	tw.parallel().tween_property(ring, "scale", Vector3.ONE * 1.4, 0.4)
+	tw.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.4)
+	tw.tween_callback(ring.queue_free)
+
+
+## Leader-loss berserk (spec /states/enemies §shooter): the atk_an confusion display
+## plays once as a threat hold, then CHASING's kamikaze branch dives at the player.
+## No-op unless the table carries a berserk_only attack.
+func apply_berserk() -> void:
+	if _berserk or not is_alive or _kamikaze_def.is_empty():
+		return
+	_berserk = true
+	is_attacking = false
+	_telegraphing = false
+	_attack_anim = ""
+	_charge = {}
+	_vulnerable_mult = 1.0
+	current_state = EnemyState.CHASING
+	var dur := _clip_duration("atk_an")
+	_threat_timer = dur if dur > 0.0 else 1.0
+	_threat_total = _threat_timer
+	_play_animation("atk_an", true)
+
+
+## Contact self-destruct: one AoE hit at the kamikaze def's hit_reach, then die.
+## The explosion triggers regardless of i-frames — i-frames dodge the damage, not
+## the blast (fsm.ts exploded branch).
+func _explode_kamikaze() -> void:
+	if not is_alive:
+		return
+	var radius := float(_kamikaze_def.get("hit_reach", 1.5))
+	_spawn_blast_ring(radius)
+	if target and is_instance_valid(target):
+		var to := target.global_position - global_position
+		to.y = 0.0
+		if to.length() <= radius + PLAYER_HIT_RADIUS:
+			_deal_damage_for(_kamikaze_def)
+	_die()
+
+
+## Shooter leader-loss wiring (spec §shooter): when a *_leader model dies (Akorse is
+## the Canane analog), its pack — same model minus the suffix (Korse) — goes berserk.
+## Full pack wiring is #495; this radius trigger is the runtime half (#629).
+func _notify_leader_loss() -> void:
+	if not enemy_data or not str(enemy_data.model_id).ends_with("_leader"):
+		return
+	var follower_model := str(enemy_data.model_id).trim_suffix("_leader")
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var eb := n as EnemyBase
+		if eb == null or eb == self or not eb.is_alive:
+			continue
+		if not eb.enemy_data or str(eb.enemy_data.model_id) != follower_model:
+			continue
+		if eb._kamikaze_def.is_empty():
+			continue
+		if eb.global_position.distance_to(global_position) <= 30.0:
+			eb.apply_berserk()
 
 
 ## Difficulty-scaled aggression + timing (#522). Reads the session difficulty (default
@@ -971,7 +1577,9 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
 		return
 
-	var final_damage: int = int(int(result.get("damage", raw_damage)) * damage_mult)
+	# Apply damage multiplier from freeze, then the recovery punish window if the
+	# hit lands inside one (recovery_vulnerable_mult — spec §roller).
+	var final_damage: int = int(int(result.get("damage", raw_damage)) * damage_mult * _vulnerable_mult)
 	var is_crit: bool = result.get("is_critical", false)
 	current_hp -= final_damage
 	damaged.emit(self, final_damage)
@@ -992,6 +1600,8 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		is_attacking = false  # Cancel any attack
 		_telegraphing = false  # a hit during the wind-up cancels the telegraph too
 		_attack_anim = ""
+		_charge = {}            # a stagger interrupts a charge mid-phase
+		_vulnerable_mult = 1.0  # ...and closes any punish window
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION
 		velocity = Vector3.ZERO  # Stop movement during stagger
@@ -1003,8 +1613,10 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 func _die() -> void:
 	is_alive = false
 	is_attacking = false
+	_vulnerable_mult = 1.0
 	current_state = EnemyState.DEAD
 	died.emit(self)
+	_notify_leader_loss()
 
 	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " died!")
 

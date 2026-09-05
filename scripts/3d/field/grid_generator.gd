@@ -135,7 +135,10 @@ func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 	return rotated
 
 ## Area configuration: maps area_id → prefix, folder, display name.
+## "city" (s00) exists only for quest-authored stages — the coliseum debug arena
+## (s00a_nr2) among them; the city itself is walked via scenes, not free-field.
 const AREA_CONFIG := {
+	"city":    {"prefix": "s00", "folder": "city", "name": "City"},
 	"gurhacia": {"prefix": "s01", "folder": "valley", "name": "Valley"},
 	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Wetlands"},
 	"rioh":     {"prefix": "s03", "folder": "snowfield", "name": "Snowfield"},

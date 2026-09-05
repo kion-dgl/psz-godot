@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "last_updated": "2026-09-05",
+  "id": "debug_coliseum",
+  "name": "DEBUG: Coliseum Enemy Lab",
+  "description": "Debug warp: the city coliseum (s00a_nr2) stocked with one of every combat archetype \u2014 the 1:1 Godot counterpart of the #/enemy-room web tool. Always unlocked; no rewards.",
+  "area_id": "city",
+  "rewards": {},
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "Debug warp: the coliseum combat lab. Every archetype in one arena."
+    }
+  ],
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "area_id": "city",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s00a_nr2",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "hildegigas",
+              "position": [
+                0.0,
+                0,
+                7.0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "rohjade",
+              "position": [
+                2.7,
+                0,
+                6.5
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "pelcatraz",
+              "position": [
+                4.9,
+                0,
+                4.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "bolix",
+              "position": [
+                6.5,
+                0,
+                2.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "goldix",
+              "position": [
+                7.0,
+                0,
+                0.0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "akorse",
+              "position": [
+                6.5,
+                0,
+                -2.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "korse",
+              "position": [
+                4.9,
+                0,
+                -4.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "korse",
+              "position": [
+                2.7,
+                0,
+                -6.5
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "izhirak_s6",
+              "position": [
+                0.0,
+                0,
+                -7.0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "froutang",
+              "position": [
+                -2.7,
+                0,
+                -6.5
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "hypao",
+              "position": [
+                -4.9,
+                0,
+                -4.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "poison_lily",
+              "position": [
+                -6.5,
+                0,
+                -2.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "porel",
+              "position": [
+                -7.0,
+                0,
+                -0.0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "reyhound",
+              "position": [
+                -6.5,
+                0,
+                2.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "garapython",
+              "position": [
+                -4.9,
+                0,
+                4.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "rappy",
+              "position": [
+                -2.7,
+                0,
+                6.5
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -64048,5 +64048,18 @@
         "wp_1786327323511_5m1fd3"
       ]
     ]
+  },
+  "s00a_nr2": {
+    "floorCollision": {
+      "excludedMeshPatterns": [],
+      "triangles": {},
+      "yTolerance": 0.25
+    },
+    "lastModified": "2026-09-05T00:00:00.000Z",
+    "mapId": "s00a_nr2",
+    "obstacles": [],
+    "portals": [],
+    "textureFixes": [],
+    "version": 1
   }
 }

@@ -1,17 +1,17 @@
 class_name PoisonLily extends EnemyBase
-## Poison Lily — stationary plant enemy that wakes when player approaches.
-## Melee attacks at close range, fires poison projectiles at distance.
+## Poison Lily — stationary plant enemy that wakes when the player approaches.
+## The sleep/wake cycle (spec /states/enemies §poison-lily) stays bespoke in this
+## script; the ATTACKS themselves now run through the base frame-tied machinery and
+## the authored table in data/enemy_attacks.json (#629) — `bite` (melee_arc, band
+## 0-3) and `poison_spit` (projectile, band 3-12) select by range band like every
+## other enemy, instead of this script's old hardcoded midpoint/MELEE_RANGE split.
+## The spit's on-hit poison DoT (3 dmg/s for 5s) rides the _projectile_on_hit hook.
 
-const PSO_SCALE := Vector3(0.09, 0.09, 0.09)
-const MELEE_RANGE := 3.0
-const PROJECTILE_SPEED := 5.0
 const POISON_DURATION := 5.0
 const POISON_TICK_DAMAGE := 3
 
-enum LilyState { SLEEPING, WAKING, IDLE_AWAKE, ATTACKING, HURT, DYING }
+enum LilyState { SLEEPING, WAKING, IDLE_AWAKE, HURT, DYING }
 var _lily_state: LilyState = LilyState.SLEEPING
-var _attack_timer: float = 0.0
-var _attack_fired: bool = false
 
 const ANIM := {
 	"sleep": "waitc_re2_b_root",
@@ -26,7 +26,6 @@ const ANIM := {
 func _ready() -> void:
 	super._ready()
 	if model:
-		model.scale = PSO_SCALE
 		print("[PoisonLily] Model loaded and scaled at %s" % global_position)
 	else:
 		print("[PoisonLily] WARNING: No model loaded at %s (model_id=%s)" % [global_position, enemy_data.model_id if enemy_data else "?"])
@@ -47,9 +46,7 @@ func _physics_process(delta: float) -> void:
 	if not is_alive or current_state == EnemyState.DEAD:
 		return
 
-	_attack_timer -= delta
-
-	# Override EnemyBase movement — Poison Lily never moves
+	# Override EnemyBase locomotion — Poison Lily never moves.
 	velocity = Vector3.ZERO
 
 	if not target or not is_instance_valid(target):
@@ -57,17 +54,25 @@ func _physics_process(delta: float) -> void:
 		if not target:
 			return
 
+	# Attacks delegate to the base frame-tied machinery (selection by band, window
+	# timeline, projectile release at window open, arc test for the bite).
+	if current_state == EnemyState.ATTACKING:
+		_process_attacking(delta)
+		if current_state == EnemyState.LOAFING:
+			# The lily doesn't loaf — straight back to awake idle (override below).
+			current_state = EnemyState.IDLE
+			_lily_state = LilyState.IDLE_AWAKE
+			_play_lily_anim("idle", true)
+		return
+
 	var dist: float = global_position.distance_to(target.global_position)
 	var det_range: float = enemy_data.detection_range if enemy_data else 12.0
 
 	match _lily_state:
 		LilyState.SLEEPING:
+			_play_lily_anim("sleep", true)
 			if dist <= det_range:
-				_lily_state = LilyState.WAKING
-				_play_lily_anim("wake")
-				_face_target()
-				if animation_player and not animation_player.animation_finished.is_connected(_on_wake_finished):
-					animation_player.animation_finished.connect(_on_wake_finished, CONNECT_ONE_SHOT)
+				_wake()
 
 		LilyState.WAKING:
 			_face_target()
@@ -77,14 +82,25 @@ func _physics_process(delta: float) -> void:
 			if dist > det_range:
 				_lily_state = LilyState.SLEEPING
 				_play_lily_anim("sleep", true)
-			elif _attack_timer <= 0:
-				_start_lily_attack(dist)
-
-		LilyState.ATTACKING:
-			pass
+			elif attack_cooldown_timer <= 0 and _has_attack_in_band(dist, enemy_data.attack_range):
+				# Commit to a swing from the authored table: bite up close, spit at
+				# range. Waking was the telegraph — no generic hold.
+				_lily_state = LilyState.IDLE_AWAKE  # stays; base states drive the swing
+				current_state = EnemyState.ATTACKING
+				is_attacking = true
+				_attack_def = _select_attack_for(dist)
+				_start_attack()
 
 		LilyState.HURT:
 			pass
+
+
+func _wake() -> void:
+	_lily_state = LilyState.WAKING
+	_play_lily_anim("wake")
+	_face_target()
+	if animation_player and not animation_player.animation_finished.is_connected(_on_wake_finished):
+		animation_player.animation_finished.connect(_on_wake_finished, CONNECT_ONE_SHOT)
 
 
 func _on_wake_finished(_anim_name: String) -> void:
@@ -93,115 +109,16 @@ func _on_wake_finished(_anim_name: String) -> void:
 		_play_lily_anim("idle", true)
 
 
-func _start_lily_attack(dist: float) -> void:
-	_lily_state = LilyState.ATTACKING
-	_attack_fired = false
-	_play_lily_anim("attack")
-	var cooldown: float = enemy_data.attack_cooldown if enemy_data else 3.0
-	_attack_timer = cooldown
-
-	# Fire damage/projectile at mid-animation via timer
-	var attack_delay: float = 0.4
-	if animation_player and animation_player.has_animation(ANIM["attack"]):
-		attack_delay = animation_player.get_animation(ANIM["attack"]).length * 0.5
-
-	var is_melee: bool = dist <= MELEE_RANGE
-	get_tree().create_timer(attack_delay).timeout.connect(func() -> void:
-		if not is_alive or _lily_state != LilyState.ATTACKING:
-			return
-		_attack_fired = true
-		if is_melee:
-			_do_melee_attack()
-		else:
-			_fire_projectile()
-	)
-
-	if animation_player:
-		animation_player.animation_finished.connect(_on_attack_finished, CONNECT_ONE_SHOT)
+## Rooted: the base loaf would walk a semicircle — stand at the awake idle instead.
+func _start_loafing() -> void:
+	current_state = EnemyState.LOAFING  # caller (this script) immediately re-routes to idle
+	_telegraphing = false
+	_vulnerable_mult = 1.0
 
 
-func _on_attack_finished(_anim_name: String) -> void:
-	if _lily_state == LilyState.ATTACKING:
-		_lily_state = LilyState.IDLE_AWAKE
-		_play_lily_anim("idle", true)
-
-
-func _do_melee_attack() -> void:
-	if not target or not is_instance_valid(target):
-		return
-	var dist: float = global_position.distance_to(target.global_position)
-	if dist <= MELEE_RANGE + 1.0 and target.has_method("take_damage"):
-		var dmg: int = enemy_data.attack_base if enemy_data else 15
-		target.take_damage(dmg)
-
-
-func _fire_projectile() -> void:
-	if not target or not is_instance_valid(target):
-		return
-	var proj := _create_poison_projectile()
-	get_parent().add_child(proj)
-	var spawn_pos := global_position + Vector3(0, 1.0, 0)
-	proj.global_position = spawn_pos
-
-	# Calculate travel using a tween so projectile is self-sufficient after lily dies
-	var direction: Vector3 = Vector3.ZERO
-	if target and is_instance_valid(target):
-		direction = (target.global_position + Vector3(0, 1, 0) - spawn_pos).normalized()
-	var max_dist: float = enemy_data.detection_range * 1.5 if enemy_data else 18.0
-	var travel_time: float = max_dist / PROJECTILE_SPEED
-	var end_pos := spawn_pos + direction * max_dist
-
-	var tw := proj.create_tween()
-	tw.tween_property(proj, "global_position", end_pos, travel_time)
-	tw.tween_callback(proj.queue_free)
-
-	print("[PoisonLily] Fired projectile toward %s" % target.name)
-
-
-func _create_poison_projectile() -> Node3D:
-	var proj := Area3D.new()
-	proj.name = "PoisonProjectile"
-	proj.collision_layer = 0
-	proj.collision_mask = 2  # Player layer
-	proj.monitoring = true
-	proj.monitorable = false
-
-	# Collision shape
-	var col := CollisionShape3D.new()
-	var sphere := SphereShape3D.new()
-	sphere.radius = 0.3
-	col.shape = sphere
-	proj.add_child(col)
-
-	# Visual — green glowing sphere
-	var mesh := MeshInstance3D.new()
-	var sphere_mesh := SphereMesh.new()
-	sphere_mesh.radius = 0.15
-	sphere_mesh.height = 0.3
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.3, 0.8, 0.2)
-	mat.emission_enabled = true
-	mat.emission = Color(0.2, 0.9, 0.1)
-	mat.emission_energy_multiplier = 2.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	sphere_mesh.material = mat
-	mesh.mesh = sphere_mesh
-	proj.add_child(mesh)
-
-	var dmg: int = enemy_data.attack_base if enemy_data else 15
-	proj.set_meta("hit", false)
-
-	proj.body_entered.connect(func(body: Node3D) -> void:
-		if proj.get_meta("hit"):
-			return
-		if body.is_in_group("player") and body.has_method("take_damage"):
-			proj.set_meta("hit", true)
-			body.take_damage(dmg)
-			_apply_poison_to(body)
-			proj.queue_free()
-	)
-
-	return proj
+## The spit's extra effect: poison DoT on the player (3 dmg/s for 5s).
+func _projectile_on_hit() -> Callable:
+	return func(body: Node3D) -> void: _apply_poison_to(body)
 
 
 func _apply_poison_to(body: Node3D) -> void:
@@ -223,14 +140,11 @@ func _apply_poison_to(body: Node3D) -> void:
 		ticks_remaining -= 1
 		if target_body.has_method("take_damage"):
 			target_body.take_damage(tick_dmg)
-			print("[PoisonLily] Poison tick: %d damage (%d ticks left)" % [tick_dmg, ticks_remaining])
 		if ticks_remaining > 0:
 			get_tree().create_timer(1.0).timeout.connect(tick_fn)
 
 	get_tree().create_timer(1.0).timeout.connect(tick_fn)
 	print("[PoisonLily] Applied poison to %s for %ds" % [body.name, ticks_remaining])
-
-
 
 
 func _face_target() -> void:
@@ -251,13 +165,11 @@ func _die() -> void:
 
 
 func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
+	# Being hit wakes a sleeping lily (spec §poison-lily).
 	if _lily_state == LilyState.SLEEPING:
-		_lily_state = LilyState.WAKING
-		_play_lily_anim("wake")
-		if animation_player:
-			animation_player.animation_finished.connect(_on_wake_finished, CONNECT_ONE_SHOT)
+		_wake()
 
-	# Play damage animation briefly but don't override death
+	# Play the damage animation briefly but don't override death
 	if _lily_state != LilyState.DYING:
 		_lily_state = LilyState.HURT
 		_play_lily_anim("damage")
@@ -265,6 +177,10 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, 
 			animation_player.animation_finished.connect(func(_n: String) -> void:
 				if _lily_state == LilyState.HURT:
 					_lily_state = LilyState.IDLE_AWAKE
+					# super set the BASE state to HURT and this script never runs the
+					# base hurt handler — clear it or the ATTACKING branch below would
+					# never fire again.
+					current_state = EnemyState.IDLE
 					_play_lily_anim("idle", true)
 			, CONNECT_ONE_SHOT)
 

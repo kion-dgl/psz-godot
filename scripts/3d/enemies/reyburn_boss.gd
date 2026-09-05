@@ -48,7 +48,6 @@ var _ground_attacks: Array = []
 var _flight_attacks: Array = []
 var _cur: Dictionary = {}           # attack currently telegraphing/executing
 var _attack_done := false           # damage already applied this swing
-var _ground_y: float = 0.0
 var _fly_target: Vector3 = Vector3.ZERO
 var _glow: OmniLight3D = null
 

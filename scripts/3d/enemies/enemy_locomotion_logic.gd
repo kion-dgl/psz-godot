@@ -36,3 +36,13 @@ static func quadruped_move(radial: Vector3, arc_side: float, dash: bool) -> Dict
 	var dir := (tangent + radial * 0.45).normalized()
 	var left_dot := radial.x * dir.z + radial.z * (-dir.x)
 	return {"dir": dir, "dash": false, "side_left": left_dot > 0.0}
+
+
+## Flyer approach/orbit decision (fsm.ts:861-886, spec /states/enemies §flyer): beyond
+## 1.4x the orbit radius flap straight in (fly); inside it, hover-orbit on the tangent
+## (tk) while watching the target. Returns {mode, dir} with dir a unit XZ vector.
+static func flyer_move(dist: float, orbit: float, radial: Vector3, arc_side: float) -> Dictionary:
+	if dist > orbit * 1.4:
+		return {"mode": "approach", "dir": radial}
+	var tangent := Vector3(-radial.z * arc_side, 0.0, radial.x * arc_side)
+	return {"mode": "orbit", "dir": tangent}
