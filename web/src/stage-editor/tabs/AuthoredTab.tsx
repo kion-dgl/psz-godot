@@ -308,6 +308,26 @@ export default function AuthoredTab({
                 Traps
               </div>
               <div style={{ marginBottom: 8 }}>
+                {group5Total > 0 && (
+                  <div style={{ marginBottom: 6 }}>
+                    <span
+                      style={{ fontSize: 11, color: '#8a90b8', marginRight: 4 }}
+                      title="Group 5 is rolled per visit: rand(100) against 40/20/20/20 gives a count of 0–3, the group is shuffled, that many are taken. Which N varies per visit — the preview takes the first N in table order."
+                    >
+                      roll:
+                    </span>
+                    {Array.from({ length: Math.min(3, group5Total) + 1 }, (_, n) => (
+                      <button
+                        key={n}
+                        onClick={() => setGroup5Count(n)}
+                        style={chipStyle(group5Count === n)}
+                        title={`rolled count ${n}${group5Weights[n] !== undefined ? ` — ${group5Weights[n]}% of visits` : ''}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {trapKinds.map((k) => {
                   const on = visibleKinds === null || visibleKinds.includes(k);
                   return (
@@ -332,26 +352,6 @@ export default function AuthoredTab({
                     </button>
                   );
                 })}
-                {group5Total > 0 && (
-                  <span>
-                    <span
-                      style={{ fontSize: 11, color: '#8a90b8', margin: '0 4px' }}
-                      title="Group 5 is rolled per visit: rand(100) against 40/20/20/20 gives a count of 0–3, the group is shuffled, that many are taken. Which N varies per visit — the preview takes the first N in table order."
-                    >
-                      roll:
-                    </span>
-                    {Array.from({ length: Math.min(3, group5Total) + 1 }, (_, n) => (
-                      <button
-                        key={n}
-                        onClick={() => setGroup5Count(n)}
-                        style={chipStyle(group5Count === n)}
-                        title={`rolled count ${n}${group5Weights[n] !== undefined ? ` — ${group5Weights[n]}% of visits` : ''}`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </span>
-                )}
               </div>
             </>
           )}
