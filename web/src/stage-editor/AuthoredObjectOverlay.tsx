@@ -1,13 +1,10 @@
-import { Component, Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
 import { filterByLayout } from './layoutMasks';
 import { authoredModelFor } from './authoredModelMap';
 import { getAreaFromMapId } from './constants';
+import AuthoredObjectModel from './AuthoredObjectModel';
 import type { AuthoredModel } from './authoredModelMap';
-
-// The storybook models, loaded only when real-model mode is first switched on
-// so marker mode never fetches a GLB.
-const AuthoredObjectModel = lazy(() => import('./AuthoredObjectModel'));
 
 /**
  * The objects the ORIGINAL authors into this room, drawn where it puts them.
@@ -75,6 +72,9 @@ const KIND_COLOR: Record<string, string> = {
 };
 
 const FALLBACK = '#e0e0e0';
+/** A model that failed to load renders its marker in this, so a dead fetch
+ * never reads as "still loading" or as a kind colour. */
+const ERROR_COLOR = '#ff2d55';
 
 /** The coloured placeholder for one record — a box-ish body for containers
  * and walls, a flat disc for traps (traps sit ON the floor; a tall box would
@@ -96,8 +96,9 @@ function Marker({ k, color }: { k: string; color: string }) {
   );
 }
 
-/** Keeps a failed model fetch (CDN hiccup, missing GLB) from taking the whole
- * canvas down — the marker is the answer, not a crash. */
+/** Keeps a failed model render (CDN hiccup, missing GLB, bad mesh) from
+ * taking the whole canvas down. The fallback marker renders in signal red so
+ * a failure is visible in the viewport rather than silently back to normal. */
 class ModelBoundary extends Component<
   { fallback: React.ReactNode; children: React.ReactNode },
   { failed: boolean }
@@ -105,6 +106,9 @@ class ModelBoundary extends Component<
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error('[authored models] falling back to marker:', error);
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;
@@ -195,7 +199,7 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
                 it streams in, when it fails, and for kinds with no identified
                 model (the elemental trap families). */}
             {model ? (
-              <ModelBoundary fallback={<Marker k={o.k} color={color} />}>
+              <ModelBoundary fallback={<Marker k={o.k} color={ERROR_COLOR} />}>
                 <Suspense fallback={<Marker k={o.k} color={color} />}>
                   <AuthoredObjectModel model={model} />
                 </Suspense>

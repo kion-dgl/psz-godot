@@ -161,10 +161,11 @@ export default function AuthoredTab({
             })}
             {realModels && (
               <div style={{ fontSize: 11, color: '#8a90b8', marginTop: 4 }}>
-                Models load on first use and fall back to markers if one fails.
-                Boxes and walls use this field's own art. burn / capture / heal
-                / heat / light / ice traps have no identified model yet and stay
-                as discs.
+                Models stream from the asset CDN — markers show while one loads,
+                and a model that fails renders its marker in red. Boxes and
+                walls use this field's own art. burn / capture / heal / heat /
+                light / ice traps have no identified model yet and stay as
+                discs.
               </div>
             )}
           </div>

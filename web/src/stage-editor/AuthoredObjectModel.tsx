@@ -9,10 +9,13 @@ import type { AuthoredModel } from './authoredModelMap';
 
 /**
  * Renders one authored record as the storybook model for its kind, at the
- * record's position and facing, true scale. Lazy-loaded by the Authored
- * overlay so marker mode never fetches a GLB; the mapping itself lives in
- * authoredModelMap.ts (pure data) so the overlay knows which records have a
- * model without importing this module.
+ * record's position and facing, true scale. Statically imported by the
+ * Authored overlay — React.lazy() never resolves inside the R3F canvas
+ * reconciler, so the dynamic-import version left every model stuck on its
+ * marker fallback; each GLB still suspends per-object behind a Suspense
+ * boundary in the overlay. The mapping itself lives in authoredModelMap.ts
+ * (pure data) so the overlay knows which records have a model without any
+ * of the rendering concerns.
  *
  * The catalog entries resolve through assetUrl(), which points at the R2 CDN
  * in dev — the same dependency the stage GLBs already carry.
