@@ -221,6 +221,18 @@ export default function UnifiedStageEditor() {
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   // null = show every authored kind; a list filters the overlay.
   const [authoredKinds, setAuthoredKinds] = useState<string[] | null>(null);
+  // Layout-mask preview for the Authored tab: null = the whole table; a mask
+  // value renders that layout's outcome (groups 0–4 by bit + a rolled
+  // group-5 count).
+  const [authoredMask, setAuthoredMask] = useState<number | null>(null);
+  const [authoredGroup5, setAuthoredGroup5] = useState(0);
+
+  // Eligibility comes from the room's own group table, so a preview never
+  // carries across a stage switch.
+  useEffect(() => {
+    setAuthoredMask(null);
+    setAuthoredGroup5(0);
+  }, [selectedMapId]);
 
   // Default spawn placement state
   const [spawnPlacementMode, setSpawnPlacementMode] = useState(false);
@@ -806,6 +818,10 @@ export default function UnifiedStageEditor() {
             stageId={selectedMapId}
             visibleKinds={authoredKinds}
             setVisibleKinds={setAuthoredKinds}
+            layoutMask={authoredMask}
+            setLayoutMask={setAuthoredMask}
+            group5Count={authoredGroup5}
+            setGroup5Count={setAuthoredGroup5}
           />
         );
       case 'floor':
@@ -1020,6 +1036,8 @@ export default function UnifiedStageEditor() {
             <AuthoredObjectOverlay
               stageId={selectedMapId}
               kinds={authoredKinds ?? undefined}
+              layoutMask={authoredMask}
+              group5Count={authoredGroup5}
             />
           </>
         );

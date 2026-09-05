@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
+import { filterByLayout } from './layoutMasks';
 
 /**
  * The objects the ORIGINAL authors into this room, drawn where it puts them.
@@ -11,11 +12,13 @@ import { assetUrl } from '../utils/assets';
  * lined up with anything, and why this can be checked against the geometry at
  * all.
  *
- * WHAT YOU ARE LOOKING AT IS THE TABLE, NOT ONE INSTANCE. A room does not build
- * everything here: a file is six groups, one of five layout masks picks which of
- * groups 0..4 get built, and group 5 is rolled 0..3 at 40/20/20/20. So a real
+ * WHAT YOU ARE LOOKING AT IS THE TABLE, NOT ONE INSTANCE. A room does not
+ * build everything here: a file is six groups, one of five layout masks picks
+ * which of groups 0..4 get built, and group 5 is rolled 0..3 at 40/20/20/20. So a real
  * visit shows a subset. Group is on the label so the subsets are legible —
- * everything in the same group arrives together.
+ * everything in the same group arrives together. The Authored tab can also
+ * filter this overlay to ONE layout's outcome (`layoutMask` + `group5Count`);
+ * without it, every record renders regardless of group.
  */
 
 interface AuthoredObject {
@@ -36,6 +39,11 @@ interface Props {
   set?: string;
   /** Only draw these kinds; undefined draws all. */
   kinds?: string[];
+  /** A layout-mask value renders only that layout's outcome; null/undefined
+   * renders the whole table. */
+  layoutMask?: number | null;
+  /** Group 5's rolled count (0–3) when previewing a layout. */
+  group5Count?: number;
 }
 
 /** Colour per family, so a room reads at a glance rather than by hovering. */
@@ -65,7 +73,7 @@ interface ReferenceRoom {
   flags?: number[];
 }
 
-export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds }: Props) {
+export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count }: Props) {
   const [rooms, setRooms] = useState<Record<string, { objects: AuthoredObject[] }> | null>(null);
   // The REFERENCE layer: what the original has here that we do not place.
   // Separate file, separate risk — nothing in it reaches the game.
@@ -85,8 +93,9 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds }: Pro
   const objects = useMemo(() => {
     const entry = rooms?.[`${stageId}_${set}`];
     if (!entry) return [];
-    return kinds ? entry.objects.filter((o) => kinds.includes(o.k)) : entry.objects;
-  }, [rooms, stageId, set, kinds]);
+    const list = kinds ? entry.objects.filter((o) => kinds.includes(o.k)) : entry.objects;
+    return layoutMask == null ? list : filterByLayout(list, layoutMask, group5Count ?? 0);
+  }, [rooms, stageId, set, kinds, layoutMask, group5Count]);
 
   const ref = reference?.[`${stageId}_${set}`];
   const refObjects = (ref?.objects ?? []).filter(

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../../utils/assets';
 import { KIND_COLOR, type AuthoredObject } from '../AuthoredObjectOverlay';
+import { layoutEligibility, layoutShares, maskGroups } from '../layoutMasks';
 
 /**
  * What the ORIGINAL authors into this room — the measured side of the field
@@ -15,6 +16,12 @@ interface Props {
   stageId: string;
   visibleKinds: string[] | null;
   setVisibleKinds: (kinds: string[] | null) => void;
+  /** null = the whole table; a mask value previews that layout's outcome. */
+  layoutMask: number | null;
+  setLayoutMask: (mask: number | null) => void;
+  /** Group 5's rolled count (0–3) while a layout is selected. */
+  group5Count: number;
+  setGroup5Count: (n: number) => void;
 }
 
 interface RoomEntry {
@@ -22,8 +29,23 @@ interface RoomEntry {
   objects: AuthoredObject[];
 }
 
-export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: Props) {
+/** The weight rows room_objects.json publishes, in display order. */
+const DEPTH_BANDS = ['lt4', '4_6', 'ge7'] as const;
+
+export default function AuthoredTab({
+  stageId,
+  visibleKinds,
+  setVisibleKinds,
+  layoutMask,
+  setLayoutMask,
+  group5Count,
+  setGroup5Count,
+}: Props) {
   const [rooms, setRooms] = useState<Record<string, RoomEntry> | null>(null);
+  // The mask/weight constants travel with the data (same file as rooms).
+  const [masks, setMasks] = useState<number[]>([]);
+  const [weightsByDepth, setWeightsByDepth] = useState<Record<string, number[]>>({});
+  const [group5Weights, setGroup5Weights] = useState<number[]>([]);
   const [reference, setReference] = useState<Record<string, {
     objects?: { k: string }[];
     enemies?: unknown[];
@@ -34,7 +56,12 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
   useEffect(() => {
     fetch(assetUrl('/data/re_reference/room_objects.json'))
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setRooms(d?.rooms ?? null))
+      .then((d) => {
+        setRooms(d?.rooms ?? null);
+        setMasks(d?.layout_masks ?? []);
+        setWeightsByDepth(d?.layout_weights_by_depth ?? {});
+        setGroup5Weights(d?.group5_weights ?? []);
+      })
       .catch(() => setRooms(null));
     fetch(assetUrl('/data/re_reference/room_reference.json'))
       .then((r) => (r.ok ? r.json() : null))
@@ -59,6 +86,18 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
   }, [entry]);
 
   const kinds = Object.keys(byKind).sort();
+
+  // The room's real variations: eligibility comes from the measured group
+  // table (which can name groups the importer did not emit), and each band's
+  // row gives the share of visits per layout after _pick_layout's fallback.
+  const eligible =
+    entry?.groups != null && masks.length > 0 ? layoutEligibility(entry.groups, masks) : [];
+  const sharesByBand = DEPTH_BANDS.map((b) => layoutShares(masks, eligible, weightsByDepth[b] ?? []));
+  // A layout is previewable if the room can draw it — or, when no mask is
+  // eligible at all, if it is layout 0, the draw's terminal fallback.
+  const previewable = (i: number) =>
+    eligible[i] || sharesByBand.some((shares) => (shares[i] ?? 0) > 0);
+  const group5Total = (entry?.objects ?? []).filter((o) => o.g === 5).length;
 
   // The reference layer: what the original has here that we do not place.
   const ref = reference?.[`${stageId}_d`];
@@ -90,7 +129,10 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
           <div style={{ marginBottom: 12 }}>
             <strong>{entry.objects.length}</strong> objects
             {entry.groups && (
-              <span style={{ color: '#8a90b8' }}>
+              <span
+                style={{ color: '#8a90b8' }}
+                title="The original's group-size table; the imported objects below can be a subset of it (unhandled kinds are not emitted)."
+              >
                 {' '}· group sizes [{entry.groups.join(', ')}]
               </span>
             )}
@@ -105,11 +147,114 @@ export default function AuthoredTab({ stageId, visibleKinds, setVisibleKinds }: 
               .map(([g, n]) => `${g}:${n}`)
               .join('  ')}
             <div style={{ marginTop: 4 }}>
-              One of five layout masks picks which of groups 0–4 are built; group
-              5 is rolled 0–3 at 40/20/20/20, so 40% of visits take nothing from
-              it. What you see here is the table, not a single visit.
+              A visit builds a subset of the table — pick a layout below to
+              render one real arrangement instead of every record at once.
             </div>
           </div>
+
+          {entry.groups == null ? (
+            <div style={{ marginBottom: 12, fontSize: 11, color: '#8a90b8' }}>
+              No recoverable group table for this room — the original builds
+              the file flat, so it has no variations to preview.
+            </div>
+          ) : (
+            masks.length > 0 && (
+              <>
+                <div style={{ marginBottom: 4, fontSize: 11, color: '#8a90b8' }}>
+                  layout preview — draw % by tree depth &lt;4 · 4–6 · ≥7,
+                  eligibility fallback included:
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <button
+                    onClick={() => setLayoutMask(null)}
+                    style={{
+                      background: layoutMask === null ? '#2a2a4a' : '#12122a',
+                      color: '#e8e8f0',
+                      border: `1px solid ${layoutMask === null ? '#4a9eff' : '#2a2a4a'}`,
+                      borderRadius: 4,
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      margin: '0 6px 6px 0',
+                    }}
+                    title="Every record in the file, no mask applied — the table, not a single visit."
+                  >
+                    table
+                  </button>
+                  {masks.map((m, i) => {
+                    const selected = layoutMask === m;
+                    const on = previewable(i);
+                    const built = maskGroups(m);
+                    const bandShares = sharesByBand.map((s) => s[i] ?? 0);
+                    const never = i === 4;
+                    const face =
+                      bandShares.some((s) => s > 0)
+                        ? `L${i} g${built.join('+')} · ${bandShares.join('·')}`
+                        : never
+                          ? `L${i} g${built.join('+')} · never drawn`
+                          : `L${i} g${built.join('+')} · —`;
+                    const title = !on
+                      ? `mask ${m} names an empty group for this room — never drawn`
+                      : never
+                        ? `mask ${m} → groups ${built.join(', ')} + the group-5 roll. Never drawn: the original's layout draw returns 0..3 by design — group 4's objects never spawn in a free field.`
+                        : `mask ${m} → groups ${built.join(', ')} + the group-5 roll. Draw % for depth <4 / 4–6 / ≥7: ${bandShares.join(' / ')}`;
+                    return (
+                      <button
+                        key={m}
+                        disabled={!on}
+                        onClick={() => setLayoutMask(m)}
+                        style={{
+                          background: selected ? '#2a2a4a' : '#12122a',
+                          color: on ? '#e8e8f0' : '#555',
+                          border: `1px solid ${selected ? '#4a9eff' : '#2a2a4a'}`,
+                          borderRadius: 4,
+                          padding: '3px 8px',
+                          fontSize: 11,
+                          cursor: on ? 'pointer' : 'not-allowed',
+                          margin: '0 6px 6px 0',
+                        }}
+                        title={title}
+                      >
+                        {face}
+                      </button>
+                    );
+                  })}
+                </div>
+                {layoutMask != null && group5Total > 0 && (
+                  <div style={{ marginBottom: 12, fontSize: 11, color: '#8a90b8' }}>
+                    group-5 roll ({(group5Weights.length ? group5Weights : [40, 20, 20, 20]).join('/')} → count 0–
+                    {Math.min(3, group5Total)}):{' '}
+                    {Array.from({ length: Math.min(3, group5Total) + 1 }, (_, n) => (
+                      <button
+                        key={n}
+                        onClick={() => setGroup5Count(n)}
+                        style={{
+                          background: group5Count === n ? '#2a2a4a' : '#12122a',
+                          color: '#e8e8f0',
+                          border: `1px solid ${group5Count === n ? '#4a9eff' : '#2a2a4a'}`,
+                          borderRadius: 4,
+                          padding: '3px 8px',
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          margin: '0 6px 6px 0',
+                        }}
+                        title={`rolled count ${n}${
+                          group5Weights[n] !== undefined ? ` — ${group5Weights[n]}% of visits` : ''
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                    <div style={{ marginTop: 4 }}>
+                      {group5Count === 0
+                        ? `Nothing from group 5 — ${group5Weights[0] ?? 40}% of visits roll this.`
+                        : `Shown take is the first ${group5Count} in table order — the game shuffles the group, so WHICH ${group5Count} varies per visit.`}
+                    </div>
+                  </div>
+                )}
+              </>
+            )
+          )}
 
           <div style={{ marginBottom: 8 }}>
             <button
