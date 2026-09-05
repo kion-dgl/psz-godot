@@ -226,6 +226,8 @@ export default function UnifiedStageEditor() {
   // group-5 count).
   const [authoredMask, setAuthoredMask] = useState<number | null>(null);
   const [authoredGroup5, setAuthoredGroup5] = useState(0);
+  // Storybook models instead of coloured markers for kinds that have one.
+  const [authoredRealModels, setAuthoredRealModels] = useState(false);
 
   // Eligibility comes from the room's own group table, so a preview never
   // carries across a stage switch.
@@ -822,6 +824,8 @@ export default function UnifiedStageEditor() {
             setLayoutMask={setAuthoredMask}
             group5Count={authoredGroup5}
             setGroup5Count={setAuthoredGroup5}
+            realModels={authoredRealModels}
+            setRealModels={setAuthoredRealModels}
           />
         );
       case 'floor':
@@ -1038,6 +1042,7 @@ export default function UnifiedStageEditor() {
               kinds={authoredKinds ?? undefined}
               layoutMask={authoredMask}
               group5Count={authoredGroup5}
+              realModels={authoredRealModels}
             />
           </>
         );

@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Component, Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
 import { filterByLayout } from './layoutMasks';
+import { authoredModelFor } from './authoredModelMap';
+import { getAreaFromMapId } from './constants';
+import type { AuthoredModel } from './authoredModelMap';
+
+// The storybook models, loaded only when real-model mode is first switched on
+// so marker mode never fetches a GLB.
+const AuthoredObjectModel = lazy(() => import('./AuthoredObjectModel'));
 
 /**
  * The objects the ORIGINAL authors into this room, drawn where it puts them.
@@ -17,8 +24,8 @@ import { filterByLayout } from './layoutMasks';
  * which of groups 0..4 get built, and group 5 is rolled 0..3 at 40/20/20/20. So a real
  * visit shows a subset. Group is on the label so the subsets are legible —
  * everything in the same group arrives together. The Authored tab can also
- * filter this overlay to ONE layout's outcome (`layoutMask` + `group5Count`);
- * without it, every record renders regardless of group.
+ * filter this overlay to ONE layout's outcome (`layoutMask` + `group5Count`)
+ * and swap the coloured markers for the storybook models (`realModels`).
  */
 
 interface AuthoredObject {
@@ -44,6 +51,9 @@ interface Props {
   layoutMask?: number | null;
   /** Group 5's rolled count (0–3) when previewing a layout. */
   group5Count?: number;
+  /** Render the storybook model for kinds that have one, instead of the
+   * coloured marker. Kinds without an identified model stay as markers. */
+  realModels?: boolean;
 }
 
 /** Colour per family, so a room reads at a glance rather than by hovering. */
@@ -66,6 +76,41 @@ const KIND_COLOR: Record<string, string> = {
 
 const FALLBACK = '#e0e0e0';
 
+/** The coloured placeholder for one record — a box-ish body for containers
+ * and walls, a flat disc for traps (traps sit ON the floor; a tall box would
+ * hide the geometry under them, which is the thing being checked). Doubles as
+ * the fallback while a model streams in and when its GLB fails to load. */
+function Marker({ k, color }: { k: string; color: string }) {
+  const isWall = k === 'wall';
+  const isTrap = k.endsWith('_trap');
+  return isTrap ? (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+      <circleGeometry args={[1.1, 20]} />
+      <meshBasicMaterial color={color} transparent opacity={0.75} />
+    </mesh>
+  ) : (
+    <mesh position={[0, isWall ? 1.4 : 0.7, 0]}>
+      <boxGeometry args={isWall ? [4.0, 2.8, 0.5] : [1.6, 1.4, 1.6]} />
+      <meshBasicMaterial color={color} transparent opacity={0.65} />
+    </mesh>
+  );
+}
+
+/** Keeps a failed model fetch (CDN hiccup, missing GLB) from taking the whole
+ * canvas down — the marker is the answer, not a crash. */
+class ModelBoundary extends Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 interface ReferenceRoom {
   objects?: { k: string; m?: string; x: number; y: number; z: number }[];
   enemies?: { x: number; y: number; z: number }[];
@@ -73,7 +118,9 @@ interface ReferenceRoom {
   flags?: number[];
 }
 
-export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count }: Props) {
+export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count, realModels }: Props) {
+  // The area picks per-field box/wall art from the catalog.
+  const area = useMemo(() => getAreaFromMapId(stageId) ?? undefined, [stageId]);
   const [rooms, setRooms] = useState<Record<string, { objects: AuthoredObject[] }> | null>(null);
   // The REFERENCE layer: what the original has here that we do not place.
   // Separate file, separate risk — nothing in it reaches the game.
@@ -141,25 +188,23 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
         // Facing is 16 bits per turn, 0 = +Z toward +X — the same convention
         // Godot's rotation.y uses, so this is a scale and nothing else.
         const yaw = ((o.a ?? 0) / 65536) * Math.PI * 2;
-        const isWall = o.k === 'wall';
-        const isTrap = o.k.endsWith('_trap');
+        const model = realModels ? authoredModelFor(o.k, o.m, area) : null;
         return (
           <group key={i} position={[o.x, o.y, o.z]} rotation={[0, yaw, 0]}>
-            {/* A box-ish body for containers and walls, a flat disc for traps —
-                traps sit ON the floor and a tall box would hide the geometry
-                under them, which is the thing being checked. */}
-            {isTrap ? (
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-                <circleGeometry args={[1.1, 20]} />
-                <meshBasicMaterial color={color} transparent opacity={0.75} />
-              </mesh>
+            {/* The storybook model when the kind has one — the marker while
+                it streams in, when it fails, and for kinds with no identified
+                model (the elemental trap families). */}
+            {model ? (
+              <ModelBoundary fallback={<Marker k={o.k} color={color} />}>
+                <Suspense fallback={<Marker k={o.k} color={color} />}>
+                  <AuthoredObjectModel model={model} />
+                </Suspense>
+              </ModelBoundary>
             ) : (
-              <mesh position={[0, isWall ? 1.4 : 0.7, 0]}>
-                <boxGeometry args={isWall ? [4.0, 2.8, 0.5] : [1.6, 1.4, 1.6]} />
-                <meshBasicMaterial color={color} transparent opacity={0.65} />
-              </mesh>
+              <Marker k={o.k} color={color} />
             )}
-            {/* Ground ring, so an object hovering over a hole is obvious. */}
+            {/* Ground ring, so an object hovering over a hole is obvious —
+                kept in model mode too, as the position anchor. */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
               <ringGeometry args={[0.75, 1.0, 16]} />
               <meshBasicMaterial color={color} />

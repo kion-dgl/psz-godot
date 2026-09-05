@@ -22,6 +22,9 @@ interface Props {
   /** Group 5's rolled count (0–3) while a layout is selected. */
   group5Count: number;
   setGroup5Count: (n: number) => void;
+  /** Draw the storybook model for kinds that have one, instead of markers. */
+  realModels: boolean;
+  setRealModels: (on: boolean) => void;
 }
 
 interface RoomEntry {
@@ -40,6 +43,8 @@ export default function AuthoredTab({
   setLayoutMask,
   group5Count,
   setGroup5Count,
+  realModels,
+  setRealModels,
 }: Props) {
   const [rooms, setRooms] = useState<Record<string, RoomEntry> | null>(null);
   // The mask/weight constants travel with the data (same file as rooms).
@@ -126,6 +131,44 @@ export default function AuthoredTab({
 
       {entry && (
         <>
+          {/* Marker vs storybook-model rendering for the viewport. */}
+          <div style={{ marginBottom: 12 }}>
+            {(['markers', 'models'] as const).map((mode) => {
+              const on = mode === 'models' ? realModels : !realModels;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setRealModels(mode === 'models')}
+                  style={{
+                    background: on ? '#2a2a4a' : '#12122a',
+                    color: '#e8e8f0',
+                    border: `1px solid ${on ? '#4a9eff' : '#2a2a4a'}`,
+                    borderRadius: 4,
+                    padding: '3px 8px',
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    margin: '0 6px 6px 0',
+                  }}
+                  title={
+                    mode === 'models'
+                      ? 'Draw the storybook model for kinds that have one — containers, walls, fences, switches, needler/gun/poison traps, at true scale. The other trap families have no identified model and stay as discs.'
+                      : 'Coloured primitives — the lightweight default.'
+                  }
+                >
+                  {mode}
+                </button>
+              );
+            })}
+            {realModels && (
+              <div style={{ fontSize: 11, color: '#8a90b8', marginTop: 4 }}>
+                Models load on first use and fall back to markers if one fails.
+                Boxes and walls use this field's own art. burn / capture / heal
+                / heat / light / ice traps have no identified model yet and stay
+                as discs.
+              </div>
+            )}
+          </div>
+
           <div style={{ marginBottom: 12 }}>
             <strong>{entry.objects.length}</strong> objects
             {entry.groups && (
