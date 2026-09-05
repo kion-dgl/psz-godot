@@ -101,6 +101,8 @@ export default function AuthoredTab({
     return out;
   }, [entry]);
   const kinds = Object.keys(byKind).sort();
+  const trapKinds = kinds.filter((k) => k.endsWith('_trap'));
+  const objectKinds = kinds.filter((k) => !k.endsWith('_trap'));
 
   // Eligibility comes from the measured group table (which can name groups
   // the importer did not emit); each band's row gives the share of visits per
@@ -258,40 +260,20 @@ export default function AuthoredTab({
                   );
                 })}
               </div>
-              {group5Total > 0 && (
-                <div style={{ marginBottom: 6 }}>
-                  <span
-                    style={{ fontSize: 11, color: '#8a90b8', marginRight: 4 }}
-                    title="Group 5 is rolled per visit: rand(100) against 40/20/20/20 gives a count of 0–3, the group is shuffled, that many are taken. Which N varies per visit — the preview takes the first N in table order."
-                  >
-                    trap roll:
-                  </span>
-                  {Array.from({ length: Math.min(3, group5Total) + 1 }, (_, n) => (
-                    <button
-                      key={n}
-                      onClick={() => setGroup5Count(n)}
-                      style={chipStyle(group5Count === n)}
-                      title={`rolled count ${n}${group5Weights[n] !== undefined ? ` — ${group5Weights[n]}% of visits` : ''}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              )}
             </>
           )}
 
           <div
             style={sectionLabel}
-            title="Toggle kinds in the viewport. Kinds with an identified model render as that model (streamed from the asset CDN; a failed load renders its marker in red) — boxes and walls in this field's own art; kinds with no identified model (the elemental trap families) draw as discs, in the colour of their button."
+            title="Toggle kinds in the viewport. Kinds with an identified model render as that model (streamed from the asset CDN; a failed load renders its marker in red) — boxes and walls in this field's own art; kinds with no identified model draw as discs, in the colour of their button."
           >
-            Kinds
+            Objects
           </div>
           <div style={{ marginBottom: 8 }}>
             <button onClick={() => setVisibleKinds(null)} style={chipStyle(visibleKinds === null)}>
               show all
             </button>
-            {kinds.map((k) => {
+            {objectKinds.map((k) => {
               const on = visibleKinds === null || visibleKinds.includes(k);
               return (
                 <button
@@ -316,6 +298,63 @@ export default function AuthoredTab({
               );
             })}
           </div>
+
+          {trapKinds.length > 0 && (
+            <>
+              <div
+                style={sectionLabel}
+                title="The trap families are authored like everything else but live mostly in group 5 — the one group the game ROLLS rather than builds whole: rand(100) against 40/20/20/20 gives a count of 0–3, the group is shuffled, that many are taken. The roll below previews that count against the selected layout."
+              >
+                Traps
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                {trapKinds.map((k) => {
+                  const on = visibleKinds === null || visibleKinds.includes(k);
+                  return (
+                    <button
+                      key={k}
+                      onClick={() =>
+                        setVisibleKinds(
+                          visibleKinds === null
+                            ? kinds.filter((x) => x !== k)
+                            : on
+                              ? visibleKinds.filter((x) => x !== k)
+                              : [...visibleKinds, k],
+                        )
+                      }
+                      style={{
+                        ...chipStyle(on, KIND_COLOR[k]),
+                        color: on ? KIND_COLOR[k] ?? '#e8e8f0' : '#555',
+                        borderColor: on ? KIND_COLOR[k] ?? '#2a2a4a' : '#2a2a4a',
+                      }}
+                    >
+                      {k} {byKind[k]}
+                    </button>
+                  );
+                })}
+                {group5Total > 0 && (
+                  <span>
+                    <span
+                      style={{ fontSize: 11, color: '#8a90b8', margin: '0 4px' }}
+                      title="Group 5 is rolled per visit: rand(100) against 40/20/20/20 gives a count of 0–3, the group is shuffled, that many are taken. Which N varies per visit — the preview takes the first N in table order."
+                    >
+                      roll:
+                    </span>
+                    {Array.from({ length: Math.min(3, group5Total) + 1 }, (_, n) => (
+                      <button
+                        key={n}
+                        onClick={() => setGroup5Count(n)}
+                        style={chipStyle(group5Count === n)}
+                        title={`rolled count ${n}${group5Weights[n] !== undefined ? ` — ${group5Weights[n]}% of visits` : ''}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
 
         </>
       )}
