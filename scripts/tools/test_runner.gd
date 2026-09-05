@@ -51,11 +51,17 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
 	test_enemy_locomotion()
-	test_enemy_delivery_kinds()
+	test_enemy_ranged_delivery()
+	test_enemy_leap_delivery()
+	test_enemy_charge_stop_on_hit()
+	test_enemy_charge_roll_through()
+	test_enemy_windup_prelude()
+	test_box_mimic_disguise()
 	test_enemy_archetype_modules()
 	test_enemy_berserk_kamikaze()
 	test_coliseum_debug_quest()
-	test_enemy_authored_table_cycle()
+	test_enemy_authored_table_charge_cycle()
+	test_enemy_authored_table_ranged_cycles()
 	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
@@ -2639,14 +2645,14 @@ func _find_delivery(cls: Script) -> Node:
 	return null
 
 
-func test_enemy_delivery_kinds() -> void:
-	print("── Enemy attack delivery kinds (#629) ──")
+func test_enemy_ranged_delivery() -> void:
+	print("── Enemy ranged deliveries: projectile + lob (#629) ──")
 	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
 
 	# ── projectile: released once at window open, straight along the locked facing,
 	#    contact-tested by the delivery itself.
-	var dummy := _DamageCapture.new()
-	add_child(dummy)
 	dummy.global_position = Vector3(0, 0, 6.0)
 	var p := _make_rig_enemy({"atk": 1.0})
 	p.enemy_data.attack_base = 10
@@ -2708,6 +2714,13 @@ func test_enemy_delivery_kinds() -> void:
 		assert_eq(dummy.hits[0], 15, "lob damage = attack_base x 1.5")
 	l.queue_free()
 
+
+func test_enemy_leap_delivery() -> void:
+	print("── Enemy leap delivery (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
 	# ── leap: the enemy itself travels to the target's window-open position during
 	#    the window, landing at its close for area damage.
 	dummy.hits.clear()
@@ -2729,18 +2742,36 @@ func test_enemy_delivery_kinds() -> void:
 		"the enemy lands on the captured target position")
 	le.queue_free()
 
+
+	dummy.queue_free()
+	print("")
+
+
+## Shared charge-test setup: rig + injected charge def + committed attack.
+func _make_charge_enemy(rig: Dictionary, def_extras: Dictionary, dummy: Node3D) -> EnemyBase:
+	var e := _make_rig_enemy(rig)
+	e.enemy_data.attack_base = 10
+	e.enemy_data.move_speed = 4.0
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._attack_def = _delivery_def("charge", def_extras)
+	e._start_attack()
+	return e
+
+
+func test_enemy_charge_stop_on_hit() -> void:
+	print("── Enemy charge: gorilla slam (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
 	# ── charge (gorilla slam): st → lp travel along the locked facing → contact hit
 	#    ends it (stop_on_hit default) → ed recovery.
 	dummy.hits.clear()
 	dummy.knockdowns.clear()
 	dummy.global_position = Vector3(0, 0, 3.0)
-	var c := _make_rig_enemy({"r_atk2_st": 0.3, "r_atk2_lp": 0.3, "r_atk2_ed": 0.3})
-	c.enemy_data.attack_base = 10
-	c.enemy_data.move_speed = 4.0
-	c.target = dummy
-	c.current_state = EnemyBase.EnemyState.ATTACKING
-	c._attack_def = _delivery_def("charge", {"clip": "atk2", "hit_reach": 1.4, "max_range": 9.0, "damage_mult": 1.4})
-	c._start_attack()
+	var c := _make_charge_enemy({"r_atk2_st": 0.3, "r_atk2_lp": 0.3, "r_atk2_ed": 0.3},
+		{"clip": "atk2", "hit_reach": 1.4, "max_range": 9.0, "damage_mult": 1.4}, dummy)
 	assert_eq(String(c._charge["tokens"]["st"]), "atk2_st", "suffix tokens derived from the clip")
 	# st: stationary windup segment, no damage, no movement.
 	for _i in range(20):
@@ -2767,22 +2798,24 @@ func test_enemy_delivery_kinds() -> void:
 	assert_eq(c.current_state, EnemyBase.EnemyState.LOAFING, "charge recovers to LOAFING after ed")
 	c.queue_free()
 
+
+
+func test_enemy_charge_roll_through() -> void:
+	print("── Enemy charge: roller roll-through + punish window (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
 	# ── charge (roller roll): explicit segments, overshoot, rolls THROUGH the target
 	#    (stop_on_hit false), knockdown flag passes through, ed opens the punish window.
 	dummy.hits.clear()
 	dummy.knockdowns.clear()
 	dummy.global_position = Vector3(0, 0, 3.0)
-	var r := _make_rig_enemy({"trf1": 0.3, "wat3": 0.3, "trf2": 0.3})
-	r.enemy_data.attack_base = 10
-	r.enemy_data.move_speed = 4.0
-	r.target = dummy
-	r.current_state = EnemyBase.EnemyState.ATTACKING
-	r._attack_def = _delivery_def("charge", {
+	var r := _make_charge_enemy({"trf1": 0.3, "wat3": 0.3, "trf2": 0.3}, {
 		"clip": "wat3", "hit_reach": 1.3, "max_range": 12.0, "damage_mult": 1.5,
 		"charge_segments": {"st": "trf1", "lp": "wat3", "ed": "trf2"},
 		"stop_on_hit": false, "overshoot": 3.0, "knockdown": true,
-		"recovery_vulnerable_mult": 2.0})
-	r._start_attack()
+		"recovery_vulnerable_mult": 2.0}, dummy)
 	assert_true(r._charge["rotate_model"], "explicit segments mean an engine-rolled loop clip")
 	assert_eq(float(r._charge["travel_target"]), 6.0, "overshoot: travel = start dist 3 + 3, capped by max_range")
 	for _i in range(20):
@@ -2804,6 +2837,14 @@ func test_enemy_delivery_kinds() -> void:
 	assert_eq(r._vulnerable_mult, 1.0, "punish window closes with the recovery")
 	assert_eq(r.current_state, EnemyBase.EnemyState.LOAFING, "roll recovers to LOAFING")
 	r.queue_free()
+
+	dummy.queue_free()
+	print("")
+func test_enemy_windup_prelude() -> void:
+	print("── Enemy windup_clips prelude (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
 
 	# ── windup_clips: sequential prelude, no damage before it, window offset past it.
 	dummy.hits.clear()
@@ -2842,11 +2883,11 @@ func test_enemy_delivery_kinds() -> void:
 ## Box-mimic disguise/reveal, flyer hover-orbit chase, stationary rooting, and the
 ## aggro threat display — seeded ports of the fsm.ts archetype branches.
 
-func test_enemy_archetype_modules() -> void:
-	print("── Enemy archetype modules (#629) ──")
+
+func test_box_mimic_disguise() -> void:
+	print("── Box-mimic disguise / reveal (#629) ──")
 	var dummy := _DamageCapture.new()
 	add_child(dummy)
-	dummy.global_position = Vector3(0, 0, 1.0)
 
 	# Box mimic: the disguise overrides detection_range entirely — only reveal_range
 	# breaks it. detection 15 would aggro at 10 m; the mimic must stay dormant.
@@ -2874,6 +2915,14 @@ func test_enemy_archetype_modules() -> void:
 	assert_eq(m.current_anim, "tk2", "reveal-cancel plays the retreat clip")
 	m.queue_free()
 
+
+
+func test_enemy_archetype_modules() -> void:
+	print("── Enemy archetype modules (#629) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)
+
 	# Flyer: approach beyond 1.4x orbit, hover-orbit inside it (math pinned on the
 	# static like the other locomotion decisions; the node path pins anims/airborne).
 	var fm := EnemyLocomotionLogic.flyer_move(8.0, 2.5, Vector3(0, 0, 1), 1.0)
@@ -2898,7 +2947,8 @@ func test_enemy_archetype_modules() -> void:
 
 	# Stationary: rooted in CHASING — faces the target, never moves (fsm.stationary).
 	var s := _make_rig_enemy({"waito": 0.5, "atk": 0.5})
-	s._fsm = {"stationary": true, "idle_clip": "waito"}
+	s._fsm = {"stationary": true}
+	s._idle_clip = "waito"  # entry-level key — cached from the registry at _ready
 	s.enemy_data.move_speed = 4.0
 	s.target = dummy
 	dummy.global_position = Vector3(0, 0, 2.0)
@@ -2932,7 +2982,6 @@ func test_enemy_archetype_modules() -> void:
 
 
 # ── Berserk kamikaze + leader loss (#629, spec /states/enemies §shooter) ─────
-
 func test_enemy_berserk_kamikaze() -> void:
 	print("── Enemy berserk kamikaze (#629) ──")
 	var dummy := _DamageCapture.new()
@@ -3025,8 +3074,8 @@ func test_coliseum_debug_quest() -> void:
 ## charged punch. Distances sit inside exactly one attack's band, so selection is
 ## deterministic without seeding. Pins the registry merge against the kinds.
 
-func test_enemy_authored_table_cycle() -> void:
-	print("── Authored attack-table cycles (#629) ──")
+func test_enemy_authored_table_charge_cycle() -> void:
+	print("── Authored table: hildegigas slam cycle (#629) ──")
 	var dt := 1.0 / 60.0
 
 	# hildegigas at 8.5m: only the shoulder_slam band [3,9] contains it (the flop
@@ -3051,6 +3100,14 @@ func test_enemy_authored_table_cycle() -> void:
 	assert_eq(hg.current_state, EnemyBase.EnemyState.LOAFING, "slam cycle completes")
 	assert_eq(dummy.hits.size(), 1, "slam lands exactly one hit from the authored def")
 	hg.queue_free()
+
+
+
+func test_enemy_authored_table_ranged_cycles() -> void:
+	print("── Authored table: lob + windup cycles (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
 
 	# azherowa_b2 at 11m: only the grenade band [4,12] contains it — the lob kind.
 	dummy.hits.clear()
@@ -3108,8 +3165,6 @@ func test_enemy_authored_table_cycle() -> void:
 
 	dummy.queue_free()
 	print("")
-
-
 func test_enemy_attack_recovery() -> void:
 	print("── Enemy attack recovery (#477) ──")
 	var dummy := Node3D.new()

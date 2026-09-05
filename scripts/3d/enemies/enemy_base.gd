@@ -151,6 +151,14 @@ var _disguise_held := false
 var _flying := false
 var _ground_y := 0.0
 
+## Entry-level engaged-idle clip for rooted enemies (idle_clip — the lily's waito).
+## Entry-level, NOT inside fsm, so it comes through its own registry getter.
+var _idle_clip := ""
+
+
+func _rooted_idle_clip() -> String:
+	return _idle_clip if not _idle_clip.is_empty() else "wat"
+
 ## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
 ## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
 ## cadence/telegraph. cadence/reaction < 1 = faster attacks / shorter windup.
@@ -261,6 +269,7 @@ func _ready() -> void:
 		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
 		_archetype = EnemyAttackRegistry.get_archetype(enemy_data.id)
 		_fsm = EnemyAttackRegistry.get_fsm(enemy_data.id)
+		_idle_clip = EnemyAttackRegistry.get_idle_clip(enemy_data.id)
 		for a in _attacks:
 			if a.get("berserk_only", false):
 				_kamikaze_def = a
@@ -531,21 +540,7 @@ func _physics_process(delta: float) -> void:
 
 	# Stuck detection: if we tried to move but barely displaced, try going around
 	if current_state == EnemyState.CHASING:
-		var attempted_speed := Vector2(velocity.x, velocity.z).length()
-		var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
-		if attempted_speed > 0.5 and actual_disp < delta * 0.5:
-			_stuck_time += delta
-			if _stuck_time > STUCK_THRESHOLD and target and is_instance_valid(target):
-				var to_target := (target.global_position - global_position)
-				var dir := Vector3(to_target.x, 0, to_target.z).normalized()
-				var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
-				velocity.x = perp.x * attempted_speed * 0.7
-				velocity.z = perp.z * attempted_speed * 0.7
-				if _stuck_time > STUCK_THRESHOLD * 3:
-					_stuck_side *= -1.0
-					_stuck_time = STUCK_THRESHOLD
-		else:
-			_stuck_time = 0.0
+		_detect_stuck_movement(pos_before, delta)
 
 	# Safety: if enemy ends up over empty space, stop horizontal movement
 	if (velocity.x * velocity.x + velocity.z * velocity.z) > 0.001:
@@ -566,27 +561,13 @@ func _process_idle(delta: float) -> void:
 		# normal detection entirely — stationary, holding stt's boxed-up first frame,
 		# aggroing ONLY inside fsm.reveal_range. Occasional wlk2 sway = the live tell.
 		if _archetype == "box_mimic":
-			velocity.x = 0
-			velocity.z = 0
-			if dist <= _fsm.get("reveal_range", 3.5):
-				current_state = EnemyState.CHASING
-				is_wandering = false
-				_disguise_held = false
-				_dormant_swaying = false
-				_begin_threat_display("stt")  # pokes its head out of the box
-				return
-			_process_disguise(delta)
+			_idle_mimic(dist, delta)
 			return
 
 		# Rooted enemies (fsm.stationary): no wander out of combat either — stand at
 		# the authored idle clip and let detection promote to CHASING.
 		if _fsm.get("stationary", false):
-			velocity.x = 0
-			velocity.z = 0
-			_play_animation(String(_fsm.get("idle_clip", "wat")))
-			if enemy_data and dist <= _detection_range:
-				current_state = EnemyState.CHASING
-				is_wandering = false
+			_idle_stationary(dist)
 			return
 
 		# Check if target is in detection range - become alert!
@@ -633,6 +614,33 @@ func _process_idle(delta: float) -> void:
 			_play_animation("wat1")
 		else:
 			_play_animation("wat")
+
+
+## The dormant disguise hold: frozen on stt's first frame (the boxed-up pose), with a
+## rare one-shot wlk2 sway (fsm.ts box-mimic idle). Port of fsm.ts box_mimic idle branch.
+## `_idle_mimic` is the IDLE-state branch: hold the disguise, or pop out on reveal.
+func _idle_mimic(dist: float, delta: float) -> void:
+	velocity.x = 0
+	velocity.z = 0
+	if dist <= _fsm.get("reveal_range", 3.5):
+		current_state = EnemyState.CHASING
+		is_wandering = false
+		_disguise_held = false
+		_dormant_swaying = false
+		_begin_threat_display("stt")  # pokes its head out of the box
+		return
+	_process_disguise(delta)
+
+
+## Rooted IDLE branch (fsm.stationary): stand at the authored idle clip; detection
+## still promotes to CHASING (rooted enemies fight — they never wander).
+func _idle_stationary(dist: float) -> void:
+	velocity.x = 0
+	velocity.z = 0
+	_play_animation(_rooted_idle_clip())
+	if enemy_data and dist <= _detection_range:
+		current_state = EnemyState.CHASING
+		is_wandering = false
 
 
 ## The dormant disguise hold: frozen on stt's first frame (the boxed-up pose), with a
@@ -751,7 +759,7 @@ func _process_chasing(delta: float) -> void:
 		df.y = 0
 		if df.length() > 0.1:
 			_face_direction(df.normalized())
-		_play_animation(String(_fsm.get("idle_clip", "wat")))
+		_play_animation(_rooted_idle_clip())
 		return
 
 	# Per-archetype locomotion (#494, spec /states/enemies). Distinct ground movers circle
@@ -949,47 +957,7 @@ func _process_attacking(delta: float) -> void:
 		_attack_pos += delta
 
 	if is_attacking and not _attack_def.is_empty():
-		# The fractions apply to the attack clip's own timeline (`_attack_pos`, reset
-		# when the clip starts); the windup_clips prelude delays the whole window via
-		# the _windup_done gate above — no extra offset, or it would count twice.
-		var window_start: float = float(_attack_def.get("windup_frac", 0.35)) * _attack_clip_len * _aggro_reaction
-		var window_end: float = float(_attack_def.get("damage_end_frac", 0.6)) * _attack_clip_len
-
-		# Ranged kinds release exactly once, at window open (spec: kind) — resolution
-		# then happens at impact/landing, not via the arc test. The leap captures its
-		# flight endpoints at the same instant.
-		if not _window_opened and _attack_pos >= window_start:
-			_window_opened = true
-			if _attack_kind == "projectile":
-				_attack_hit_resolved = true
-				_fire_projectile()
-			elif _attack_kind == "lob":
-				_attack_hit_resolved = true
-				_fire_lob()
-			elif _attack_kind == "leap":
-				_leap_from = global_position
-				var tp := target.global_position if target and is_instance_valid(target) else global_position
-				_leap_to = Vector3(tp.x, global_position.y, tp.z)
-
-		# Leap flight: the enemy itself travels from → target during the window.
-		if _attack_kind == "leap" and _window_opened and not _window_closed and window_end > window_start:
-			var f := clampf((_attack_pos - window_start) / (window_end - window_start), 0.0, 1.0)
-			global_position.x = lerpf(_leap_from.x, _leap_to.x, f)
-			global_position.z = lerpf(_leap_from.z, _leap_to.z, f)
-
-		# Frame-tied damage window, melee only: the arc test runs each frame; the
-		# first frame the target passes resolves the hit. One resolution (hit or
-		# dodge) per attack (#509). Ranged/leap kinds resolve at impact/landing.
-		if _attack_kind == "melee_arc" and not _attack_hit_resolved \
-				and _attack_pos >= window_start and _attack_pos <= window_end:
-			_try_attack_hit()
-
-		# Window close = the leap's landing: snap to the landing point, AoE with
-		# hit_reach as the radius, i-frames tested at landing (spec §big-rig).
-		if not _window_closed and _attack_pos > window_end:
-			_window_closed = true
-			if _attack_kind == "leap" and not _attack_hit_resolved:
-				_leap_land()
+		_process_attack_window()
 
 	# Attack end: the resolved animation finished (signal path or the
 	# watchdog below), or the fallback duration elapsed when no attack
@@ -1005,6 +973,53 @@ func _process_attacking(delta: float) -> void:
 
 	if not is_attacking:
 		_start_loafing()
+
+
+## The damaging-window step, post-prelude: window open releases the ranged kinds /
+## captures the leap, the leap travels the window, melee runs the per-frame arc
+## test, and window close is the leap's landing. One resolution per attack.
+func _process_attack_window() -> void:
+	# The fractions apply to the attack clip's own timeline (`_attack_pos`, reset
+	# when the clip starts); the windup_clips prelude delays the whole window via
+	# the _windup_done gate above — no extra offset, or it would count twice.
+	var window_start: float = float(_attack_def.get("windup_frac", 0.35)) * _attack_clip_len * _aggro_reaction
+	var window_end: float = float(_attack_def.get("damage_end_frac", 0.6)) * _attack_clip_len
+
+	# Ranged kinds release exactly once, at window open (spec: kind) — resolution
+	# then happens at impact/landing, not via the arc test. The leap captures its
+	# flight endpoints at the same instant.
+	if not _window_opened and _attack_pos >= window_start:
+		_window_opened = true
+		if _attack_kind == "projectile":
+			_attack_hit_resolved = true
+			_fire_projectile()
+		elif _attack_kind == "lob":
+			_attack_hit_resolved = true
+			_fire_lob()
+		elif _attack_kind == "leap":
+			_leap_from = global_position
+			var tp := target.global_position if target and is_instance_valid(target) else global_position
+			_leap_to = Vector3(tp.x, global_position.y, tp.z)
+
+	# Leap flight: the enemy itself travels from → target during the window.
+	if _attack_kind == "leap" and _window_opened and not _window_closed and window_end > window_start:
+		var f := clampf((_attack_pos - window_start) / (window_end - window_start), 0.0, 1.0)
+		global_position.x = lerpf(_leap_from.x, _leap_to.x, f)
+		global_position.z = lerpf(_leap_from.z, _leap_to.z, f)
+
+	# Frame-tied damage window, melee only: the arc test runs each frame; the
+	# first frame the target passes resolves the hit. One resolution (hit or
+	# dodge) per attack (#509). Ranged/leap kinds resolve at impact/landing.
+	if _attack_kind == "melee_arc" and not _attack_hit_resolved \
+			and _attack_pos >= window_start and _attack_pos <= window_end:
+		_try_attack_hit()
+
+	# Window close = the leap's landing: snap to the landing point, AoE with
+	# hit_reach as the radius, i-frames tested at landing (spec §big-rig).
+	if not _window_closed and _attack_pos > window_end:
+		_window_closed = true
+		if _attack_kind == "leap" and not _attack_hit_resolved:
+			_leap_land()
 
 
 ## windup_clips prelude ticker (fsm.ts windup): advance through the telegraph clips
@@ -1095,7 +1110,7 @@ func _process_loafing(delta: float) -> void:
 	if _fsm.get("stationary", false):
 		velocity.x = 0
 		velocity.z = 0
-		_play_animation(String(_fsm.get("idle_clip", "wat")))
+		_play_animation(_rooted_idle_clip())
 		return
 
 	# Curve the direction over time (creates semi-circle path)
@@ -1458,36 +1473,12 @@ func _leap_land() -> void:
 	global_position.x = _leap_to.x
 	global_position.z = _leap_to.z
 	var radius := float(_attack_def.get("hit_reach", 2.0))
-	_spawn_blast_ring(radius)
+	EnemyLob.spawn_ring(get_parent(), global_position, radius)
 	if target and is_instance_valid(target):
 		var to := target.global_position - _leap_to
 		to.y = 0.0
 		if to.length() <= radius + PLAYER_HIT_RADIUS:
 			_deal_damage_for(_attack_def)
-
-
-## Expanding ground ring marking an AoE (leap landing, kamikaze blast).
-func _spawn_blast_ring(radius: float) -> void:
-	var parent := get_parent()
-	if not parent:
-		return
-	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = radius * 0.6
-	tm.outer_radius = radius * 0.7
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.6, 0.2, 0.7)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.5, 0.1)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	tm.material = mat
-	ring.mesh = tm
-	parent.add_child(ring)
-	ring.global_position = Vector3(global_position.x, global_position.y + 0.2, global_position.z)
-	var tw := ring.create_tween()
-	tw.parallel().tween_property(ring, "scale", Vector3.ONE * 1.4, 0.4)
-	tw.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.4)
-	tw.tween_callback(ring.queue_free)
 
 
 ## Leader-loss berserk (spec /states/enemies §shooter): the atk_an confusion display
@@ -1516,7 +1507,7 @@ func _explode_kamikaze() -> void:
 	if not is_alive:
 		return
 	var radius := float(_kamikaze_def.get("hit_reach", 1.5))
-	_spawn_blast_ring(radius)
+	EnemyLob.spawn_ring(get_parent(), global_position, radius)
 	if target and is_instance_valid(target):
 		var to := target.global_position - global_position
 		to.y = 0.0
@@ -1918,6 +1909,27 @@ func show_reticle() -> void:
 func hide_reticle() -> void:
 	if _reticle:
 		_reticle.visible = false
+
+
+## Stuck-avoidance (CHASING only, after move_and_slide): displacement stalling below
+## the attempted speed steers perpendicular around the obstacle, flipping the side if
+## still stuck after three thresholds.
+func _detect_stuck_movement(pos_before: Vector3, delta: float) -> void:
+	var attempted_speed := Vector2(velocity.x, velocity.z).length()
+	var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
+	if attempted_speed <= 0.5 or actual_disp >= delta * 0.5:
+		_stuck_time = 0.0
+		return
+	_stuck_time += delta
+	if _stuck_time > STUCK_THRESHOLD and target and is_instance_valid(target):
+		var to_target := (target.global_position - global_position)
+		var dir := Vector3(to_target.x, 0, to_target.z).normalized()
+		var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
+		velocity.x = perp.x * attempted_speed * 0.7
+		velocity.z = perp.z * attempted_speed * 0.7
+		if _stuck_time > STUCK_THRESHOLD * 3:
+			_stuck_side *= -1.0
+			_stuck_time = STUCK_THRESHOLD
 
 
 # ── Status Effects ──────────────────────────────────────────────────────────
