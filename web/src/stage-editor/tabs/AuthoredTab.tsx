@@ -124,13 +124,17 @@ export default function AuthoredTab({
     setLayoutMask(masks[pick]);
   }, [layoutMask, entry, masks, eligible, weightsByDepth, setLayoutMask]);
 
-  // The reference layer: what the original has here that we do not place.
-  // Spawn slots are NOT part of it — they belong to the room's wave, not the
-  // object table, and render above the layouts as layout-independent.
+  // The reference layer: keys, treasure boxes, unidentified kinds, and the
+  // wave's spawn slots. All of it is INDEPENDENT of the room's layout — keys
+  // exist regardless of the drawn mask (field_population.key_slot_positions
+  // prefers in-mask slots and falls back to all; which rooms hold keys is the
+  // gate economy's decision), spawns belong to the wave — so it renders above
+  // the layouts, unfiltered by the selected mask.
   const ref = reference?.[`${stageId}_d`];
   const refByKind: Record<string, number> = {};
   for (const o of ref?.objects ?? []) refByKind[o.k] = (refByKind[o.k] ?? 0) + 1;
   const spawnCount = ref?.enemies?.length ?? 0;
+  if (spawnCount) refByKind['enemy spawn'] = spawnCount;
   const refKinds = Object.keys(refByKind).sort();
 
   return (
@@ -152,35 +156,49 @@ export default function AuthoredTab({
 
       {entry && (
         <>
-          {spawnCount > 0 && (
+          {refKinds.length > 0 && (
             <>
               <div
                 style={sectionLabel}
-                title="Enemy slots belong to the room's wave, not the object table — every layout fights from the same slots, so they render regardless of which layout is selected. Posts floor-snap to the stage mesh exactly as the spawner places them."
+                title="Independent of the room's layout: which rooms hold keys is the gate economy's decision — the game prefers slots in the drawn layout and falls back to all of them (field_population.key_slot_positions); enemy slots belong to the room's wave; treasure boxes and unidentified kinds are measured but not placed. Drawn as open wireframe, floor-snapped to the stage mesh as the spawner places things."
               >
-                Spawns · all layouts
+                All layouts
               </div>
               <div style={{ marginBottom: 4 }}>
-                <button
-                  onClick={() =>
-                    setVisibleKinds(
-                      visibleKinds === null
-                        ? [...kinds, ...refKinds, 'enemy spawn']
-                        : visibleKinds.includes('enemy spawn')
-                          ? visibleKinds.filter((x) => x !== 'enemy spawn')
-                          : [...visibleKinds, 'enemy spawn'],
-                    )
-                  }
-                  style={{
-                    ...chipStyle(visibleKinds === null || visibleKinds.includes('enemy spawn')),
-                    background: visibleKinds === null || visibleKinds.includes('enemy spawn') ? '#1a1a2e' : '#0f0f1e',
-                    color: visibleKinds === null || visibleKinds.includes('enemy spawn') ? '#f87171' : '#555',
-                    border: '1px dashed #3a3a5a',
-                  }}
-                  title="Toggle the wave's spawn slots in the viewport."
-                >
-                  enemy spawn {spawnCount}
-                </button>
+                {refKinds.map((k) => {
+                  const on = visibleKinds === null || visibleKinds.includes(k);
+                  const color =
+                    k === 'key' ? '#ffd166' : k === 'enemy spawn' ? '#f87171' : '#9aa';
+                  return (
+                    <button
+                      key={k}
+                      onClick={() =>
+                        setVisibleKinds(
+                          visibleKinds === null
+                            ? [...kinds, ...refKinds].filter((x) => x !== k)
+                            : on
+                              ? visibleKinds.filter((x) => x !== k)
+                              : [...visibleKinds, k],
+                        )
+                      }
+                      style={{
+                        ...chipStyle(on),
+                        background: on ? '#1a1a2e' : '#0f0f1e',
+                        color: on ? color : '#555',
+                        border: '1px dashed #3a3a5a',
+                      }}
+                      title={
+                        k === 'enemy spawn'
+                          ? "The wave's spawn slots — every layout fights from the same slots."
+                          : k === 'key'
+                            ? 'Authored key slots — keys exist in every layout (psz-godot scatters/places them by rule, not from this table).'
+                            : 'Measured in the original but not placed by psz-godot.'
+                      }
+                    >
+                      {k} {refByKind[k]}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
@@ -327,48 +345,6 @@ export default function AuthoredTab({
             )}
           </div>
 
-          {refKinds.length > 0 && (
-            <div style={{ marginTop: 14, borderTop: '1px solid #2a2a4a', paddingTop: 10 }}>
-              <div
-                style={{ ...sectionLabel, margin: 0 }}
-                title="Drawn as open wireframe so it never reads as something the game builds. These are group-tagged like the placed objects and follow the selected layout's groups: keys are authored per room in the original (psz-godot scatters them by rule instead); treasure boxes and unidentified kinds are measured but not placed. Deploy blocks/flags are measured but unexplained."
-              >
-                Not placed · follows layout
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {refKinds.map((k) => {
-                  const on = visibleKinds === null || visibleKinds.includes(k);
-                  return (
-                    <button
-                      key={k}
-                      onClick={() =>
-                        setVisibleKinds(
-                          visibleKinds === null
-                            ? [...kinds, ...refKinds].filter((x) => x !== k)
-                            : on
-                              ? visibleKinds.filter((x) => x !== k)
-                              : [...visibleKinds, k],
-                        )
-                      }
-                      style={{
-                        ...chipStyle(on),
-                        background: on ? '#1a1a2e' : '#0f0f1e',
-                        color: on ? (k === 'key' ? '#ffd166' : k === 'enemy spawn' ? '#f87171' : '#9aa') : '#555',
-                        border: '1px dashed #3a3a5a',
-                      }}
-                      title={
-                        ref?.blocks !== undefined
-                          ? `deploy blocks: ${ref.blocks} · flags [${(ref.flags ?? []).join(', ')}] — 254 of 257 rooms have one block, so a block is not a wave; the flag is only ever 0 or 1 and nobody knows what it means yet.`
-                          : undefined
-                      }
-                    >
-                      {k} {refByKind[k]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

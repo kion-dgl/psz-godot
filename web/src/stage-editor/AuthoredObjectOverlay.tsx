@@ -1,7 +1,7 @@
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { assetUrl } from '../utils/assets';
-import { filterByLayout, filterReferenceByLayout } from './layoutMasks';
+import { filterByLayout } from './layoutMasks';
 import { authoredModelFor } from './authoredModelMap';
 import { getAreaFromMapId } from './constants';
 import AuthoredObjectModel from './AuthoredObjectModel';
@@ -153,35 +153,47 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
   }, [rooms, stageId, set, kinds, layoutMask, group5Count]);
 
   const ref = reference?.[`${stageId}_${set}`];
-  // The reference layer is group-tagged too (a key repeats under each group
-  // that builds it), so a layout preview shows exactly that visit's keys.
-  // Spawn slots are NOT filtered: they belong to the room's wave, not to the
-  // layout — every arrangement fights from the same slots.
-  const refObjects = useMemo(() => {
-    const list = (ref?.objects ?? []).filter((o) => !kinds || kinds.includes(o.k));
-    return layoutMask == null ? list : filterReferenceByLayout(list, layoutMask, group5Count ?? 0);
-  }, [ref, kinds, layoutMask, group5Count]);
+  // The reference layer renders in EVERY layout: keys exist regardless of the
+  // drawn mask (field_population.key_slot_positions prefers in-mask slots and
+  // falls back to all — which rooms hold keys is the gate economy's
+  // decision), enemy slots belong to the room's wave, and treasure boxes /
+  // unidentified kinds are measured but not placed. The group tag on a record
+  // says which arrangement its position belongs to, not whether it appears.
+  const refObjects = useMemo(
+    () => (ref?.objects ?? []).filter((o) => !kinds || kinds.includes(o.k)),
+    [ref, kinds],
+  );
   const spawns = !kinds || kinds.includes('enemy spawn') ? ref?.enemies ?? [] : [];
 
-  // Spawn slots floor-snap before display: the game stands every enemy on
-  // the first surface below the slot (cell_object_spawner._place_on_floor →
-  // _floor_y_at rays y 60→−60 against floor/environment), so the authored y
-  // never reaches the world and the marker must not draw it either. This
-  // mirrors that ray against the stage mesh — a slot whose surface turns out
-  // to be a rock top is visible as such; a slot with NO surface under it
-  // (the ray misses) stays at its authored height and is a real finding,
-  // since the game would relocate it toward the room centre.
-  const snappedSpawns = useMemo(() => {
-    if (!stageScene) return spawns.map((e) => ({ ...e, floorY: null as number | null }));
+  // Everything drawn from the measured tables floor-snaps before display,
+  // because that is what the game does: cell_object_spawner._place_on_floor
+  // rays y 60→−60 against floor/environment for enemies (#604) and key
+  // pickups (#627), so the authored y never reaches the world. This mirrors
+  // that ray against the stage mesh — a slot whose surface turns out to be a
+  // rock top is visible as such; a slot with NO surface under it stays at
+  // its authored height and is a real finding (the game would relocate it
+  // toward the room centre).
+  const snapY = useMemo(() => {
+    if (!stageScene) return null;
     stageScene.updateMatrixWorld(true);
     const ray = new THREE.Raycaster();
     ray.ray.direction.set(0, -1, 0);
-    return spawns.map((e) => {
-      ray.ray.origin.set(e.x, 60, e.z);
+    return (x: number, z: number): number | null => {
+      ray.ray.origin.set(x, 60, z);
       const hit = ray.intersectObject(stageScene, true)[0];
-      return { ...e, floorY: hit ? hit.point.y : null };
-    });
-  }, [spawns, stageScene]);
+      return hit ? hit.point.y : null;
+    };
+  }, [stageScene]);
+
+  const snappedSpawns = useMemo(
+    () => spawns.map((e) => ({ ...e, floorY: snapY?.(e.x, e.z) ?? null })),
+    [spawns, snapY],
+  );
+
+  const snappedRefs = useMemo(
+    () => refObjects.map((o) => ({ ...o, floorY: snapY?.(o.x, o.z) ?? null })),
+    [refObjects, snapY],
+  );
 
   if (objects.length === 0 && refObjects.length === 0 && spawns.length === 0) return null;
 
@@ -191,8 +203,18 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
           it never reads as something the game builds: authored keys (the
           original places them per room; we scatter by rule), enemy spawn slots
           (we still use a blind 5-unit ring), and kinds nobody has identified. */}
-      {refObjects.map((o, i) => (
-        <group key={`ref${i}`} position={[o.x, o.y, o.z]}>
+      {snappedRefs.map((o, i) => (
+        <group key={`ref${i}`} position={[o.x, o.floorY ?? o.y, o.z]}>
+          {o.floorY == null && o.y > 0.01 && (
+            <mesh position={[0, -o.y / 2, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, o.y, 6]} />
+              <meshBasicMaterial
+                color={o.k === 'key' ? '#ffd166' : '#7a7f9a'}
+                transparent
+                opacity={0.6}
+              />
+            </mesh>
+          )}
           <mesh position={[0, 0.9, 0]}>
             <boxGeometry args={[1.2, 1.8, 1.2]} />
             <meshBasicMaterial

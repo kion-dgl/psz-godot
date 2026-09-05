@@ -7,7 +7,6 @@ import {
   layoutShares,
   maskGroups,
   filterByLayout,
-  filterReferenceByLayout,
   pickDefaultLayout,
 } from '../stage-editor/layoutMasks';
 
@@ -197,36 +196,6 @@ describe('room_objects.json through the preview logic', () => {
     // All imported objects are group 4, so the layout the room actually takes
     // builds none of them — the documented fall-through-to-the-ring case.
     expect(filterByLayout(entry.objects, 33, 3)).toEqual([]);
-  });
-});
-
-describe('filterReferenceByLayout', () => {
-  const refs = [
-    { k: 'key', g: 0, x: 1, y: 0, z: 2 },
-    { k: 'key', g: 1, x: 1, y: 0, z: 2 },   // same slot, second group
-    { k: 'key', g: 3, x: 5, y: 0, z: -1 },
-    { k: 'treasure box', g: 4, x: -2, y: 0, z: 3 },
-    { k: 'mystery', g: 5, x: 0, y: 0, z: 0 },
-  ];
-
-  it('shows a key in every layout whose group it repeats under, deduped', () => {
-    // mask 33 = groups 0,5: the g0 and g1 copies collapse to one.
-    const out = filterReferenceByLayout(refs, 33, 0);
-    expect(out).toEqual([{ k: 'key', g: 0, x: 1, y: 0, z: 2 }]);
-  });
-
-  it('mask 35 (groups 0,1) still dedupes to one copy of the shared slot', () => {
-    expect(filterReferenceByLayout(refs, 35, 0)).toHaveLength(1);
-  });
-
-  it('group-5 reference objects need a non-empty roll', () => {
-    expect(filterReferenceByLayout(refs, 48, 0).map((r) => r.k)).toEqual(['treasure box']);
-    expect(filterReferenceByLayout(refs, 48, 2).map((r) => r.k)).toEqual(['treasure box', 'mystery']);
-  });
-
-  it('records with no group stay in every layout', () => {
-    const ungrouped = [{ k: 'unknown', x: 0, y: 0, z: 0 }];
-    expect(filterReferenceByLayout(ungrouped, 33, 0)).toEqual(ungrouped);
   });
 });
 
