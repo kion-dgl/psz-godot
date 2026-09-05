@@ -1,4 +1,5 @@
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
+import * as THREE from 'three';
 import { assetUrl } from '../utils/assets';
 import { filterByLayout, filterReferenceByLayout } from './layoutMasks';
 import { authoredModelFor } from './authoredModelMap';
@@ -51,6 +52,9 @@ interface Props {
   /** Render the storybook model for kinds that have one, instead of the
    * coloured marker. Kinds without an identified model stay as markers. */
   realModels?: boolean;
+  /** The loaded stage mesh — spawn slots floor-snap against it, mirroring
+   * cell_object_spawner._floor_y_at. Null while the stage streams in. */
+  stageScene?: THREE.Group | null;
 }
 
 /** Colour per family, so a room reads at a glance rather than by hovering. */
@@ -122,7 +126,7 @@ interface ReferenceRoom {
   flags?: number[];
 }
 
-export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count, realModels }: Props) {
+export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count, realModels, stageScene }: Props) {
   // The area picks per-field box/wall art from the catalog.
   const area = useMemo(() => getAreaFromMapId(stageId) ?? undefined, [stageId]);
   const [rooms, setRooms] = useState<Record<string, { objects: AuthoredObject[] }> | null>(null);
@@ -159,6 +163,26 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
   }, [ref, kinds, layoutMask, group5Count]);
   const spawns = !kinds || kinds.includes('enemy spawn') ? ref?.enemies ?? [] : [];
 
+  // Spawn slots floor-snap before display: the game stands every enemy on
+  // the first surface below the slot (cell_object_spawner._place_on_floor →
+  // _floor_y_at rays y 60→−60 against floor/environment), so the authored y
+  // never reaches the world and the marker must not draw it either. This
+  // mirrors that ray against the stage mesh — a slot whose surface turns out
+  // to be a rock top is visible as such; a slot with NO surface under it
+  // (the ray misses) stays at its authored height and is a real finding,
+  // since the game would relocate it toward the room centre.
+  const snappedSpawns = useMemo(() => {
+    if (!stageScene) return spawns.map((e) => ({ ...e, floorY: null as number | null }));
+    stageScene.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster();
+    ray.ray.direction.set(0, -1, 0);
+    return spawns.map((e) => {
+      ray.ray.origin.set(e.x, 60, e.z);
+      const hit = ray.intersectObject(stageScene, true)[0];
+      return { ...e, floorY: hit ? hit.point.y : null };
+    });
+  }, [spawns, stageScene]);
+
   if (objects.length === 0 && refObjects.length === 0 && spawns.length === 0) return null;
 
   return (
@@ -178,14 +202,12 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
           </mesh>
         </group>
       ))}
-      {spawns.map((e, i) => (
-        <group key={`spawn${i}`} position={[e.x, e.y, e.z]}>
-          {/* Elevation is AUTHORED, not a bug — the original stands enemies
-              on rocks and platforms (#604), and psz-godot consumes y
-              verbatim. The thin drop line makes the height legible: a slot
-              should visibly land on raised geometry, and one hanging over a
-              void is a real finding. */}
-          {e.y > 0.01 && (
+      {snappedSpawns.map((e, i) => (
+        <group key={`spawn${i}`} position={[e.x, e.floorY ?? e.y, e.z]}>
+          {/* No surface under the slot (the ray missed): keep the authored
+              height and drop a line to the floor so the gap is what you see
+              — in-game _place_on_floor would relocate this slot. */}
+          {e.floorY == null && e.y > 0.01 && (
             <mesh position={[0, -e.y / 2, 0]}>
               <cylinderGeometry args={[0.05, 0.05, e.y, 6]} />
               <meshBasicMaterial color="#f87171" transparent opacity={0.6} />

@@ -1057,6 +1057,7 @@ export default function UnifiedStageEditor() {
               layoutMask={authoredMask}
               group5Count={authoredGroup5}
               realModels={authoredRealModels}
+              stageScene={stageScene}
             />
           </>
         );
