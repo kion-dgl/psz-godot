@@ -1,6 +1,6 @@
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import { assetUrl } from '../utils/assets';
-import { filterByLayout } from './layoutMasks';
+import { filterByLayout, filterReferenceByLayout } from './layoutMasks';
 import { authoredModelFor } from './authoredModelMap';
 import { getAreaFromMapId } from './constants';
 import AuthoredObjectModel from './AuthoredObjectModel';
@@ -116,7 +116,7 @@ class ModelBoundary extends Component<
 }
 
 interface ReferenceRoom {
-  objects?: { k: string; m?: string; x: number; y: number; z: number }[];
+  objects?: { k: string; m?: string; g?: number | null; x: number; y: number; z: number }[];
   enemies?: { x: number; y: number; z: number }[];
   blocks?: number;
   flags?: number[];
@@ -149,9 +149,14 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
   }, [rooms, stageId, set, kinds, layoutMask, group5Count]);
 
   const ref = reference?.[`${stageId}_${set}`];
-  const refObjects = (ref?.objects ?? []).filter(
-    (o) => !kinds || kinds.includes(o.k),
-  );
+  // The reference layer is group-tagged too (a key repeats under each group
+  // that builds it), so a layout preview shows exactly that visit's keys.
+  // Spawn slots are NOT filtered: they belong to the room's wave, not to the
+  // layout — every arrangement fights from the same slots.
+  const refObjects = useMemo(() => {
+    const list = (ref?.objects ?? []).filter((o) => !kinds || kinds.includes(o.k));
+    return layoutMask == null ? list : filterReferenceByLayout(list, layoutMask, group5Count ?? 0);
+  }, [ref, kinds, layoutMask, group5Count]);
   const spawns = !kinds || kinds.includes('enemy spawn') ? ref?.enemies ?? [] : [];
 
   if (objects.length === 0 && refObjects.length === 0 && spawns.length === 0) return null;

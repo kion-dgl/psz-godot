@@ -90,3 +90,46 @@ export function filterByLayout<T extends { g?: number | null }>(
     return o.g === 5 && taken5++ < group5Count;
   });
 }
+
+/**
+ * The same mask applied to the REFERENCE layer (room_reference.json: authored
+ * keys, treasure boxes). Those records carry a scalar g, and a position the
+ * file repeats under each group that builds it — so this filters groups 0–4
+ * by bit and group 5 by a non-empty roll, then dedupes by position. Records
+ * with no group stay: nothing says which layout builds them.
+ *
+ * Enemy spawn slots are NOT passed through this — they belong to the room's
+ * wave, not to the object table, and every layout fights from the same slots.
+ */
+export function filterReferenceByLayout<T extends { g?: number | null; k: string; x: number; y: number; z: number }>(
+  records: T[],
+  mask: number,
+  group5Count: number,
+): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const r of records) {
+    if (r.g != null) {
+      if (r.g <= 4 ? ((mask >> r.g) & 1) !== 1 : r.g === 5 && group5Count <= 0) continue;
+      const key = `${r.k}|${r.x.toFixed(2)}|${r.y.toFixed(2)}|${r.z.toFixed(2)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+    out.push(r);
+  }
+  return out;
+}
+
+/**
+ * The layout this room most often takes — the tab's default view, so it opens
+ * on a real arrangement (intent) rather than the flattened table (scatter).
+ * Falls back to layout 0, which is also _pick_layout's terminal fallback.
+ */
+export function pickDefaultLayout(masks: number[], eligible: boolean[], weights: number[]): number {
+  const shares = layoutShares(masks, eligible, weights);
+  let best = 0;
+  shares.forEach((s, i) => {
+    if (s > shares[best]) best = i;
+  });
+  return best;
+}

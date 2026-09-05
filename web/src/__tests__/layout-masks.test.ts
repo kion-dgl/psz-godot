@@ -7,6 +7,8 @@ import {
   layoutShares,
   maskGroups,
   filterByLayout,
+  filterReferenceByLayout,
+  pickDefaultLayout,
 } from '../stage-editor/layoutMasks';
 
 // The constants as room_objects.json publishes them — the tests mirror
@@ -195,5 +197,52 @@ describe('room_objects.json through the preview logic', () => {
     // All imported objects are group 4, so the layout the room actually takes
     // builds none of them — the documented fall-through-to-the-ring case.
     expect(filterByLayout(entry.objects, 33, 3)).toEqual([]);
+  });
+});
+
+describe('filterReferenceByLayout', () => {
+  const refs = [
+    { k: 'key', g: 0, x: 1, y: 0, z: 2 },
+    { k: 'key', g: 1, x: 1, y: 0, z: 2 },   // same slot, second group
+    { k: 'key', g: 3, x: 5, y: 0, z: -1 },
+    { k: 'treasure box', g: 4, x: -2, y: 0, z: 3 },
+    { k: 'mystery', g: 5, x: 0, y: 0, z: 0 },
+  ];
+
+  it('shows a key in every layout whose group it repeats under, deduped', () => {
+    // mask 33 = groups 0,5: the g0 and g1 copies collapse to one.
+    const out = filterReferenceByLayout(refs, 33, 0);
+    expect(out).toEqual([{ k: 'key', g: 0, x: 1, y: 0, z: 2 }]);
+  });
+
+  it('mask 35 (groups 0,1) still dedupes to one copy of the shared slot', () => {
+    expect(filterReferenceByLayout(refs, 35, 0)).toHaveLength(1);
+  });
+
+  it('group-5 reference objects need a non-empty roll', () => {
+    expect(filterReferenceByLayout(refs, 48, 0).map((r) => r.k)).toEqual(['treasure box']);
+    expect(filterReferenceByLayout(refs, 48, 2).map((r) => r.k)).toEqual(['treasure box', 'mystery']);
+  });
+
+  it('records with no group stay in every layout', () => {
+    const ungrouped = [{ k: 'unknown', x: 0, y: 0, z: 0 }];
+    expect(filterReferenceByLayout(ungrouped, 33, 0)).toEqual(ungrouped);
+  });
+});
+
+describe('pickDefaultLayout', () => {
+  it('picks the most-taken reachable layout', () => {
+    const all = [true, true, true, true, true];
+    expect(pickDefaultLayout(MASKS, all, [50, 20, 20, 10])).toBe(0);
+    expect(pickDefaultLayout(MASKS, all, [10, 60, 20, 10])).toBe(1);
+  });
+
+  it('cascades to the eligible layout when the drawn one is not', () => {
+    // only L2 eligible: everything falls to L2, so it is the most-taken.
+    expect(pickDefaultLayout(MASKS, [false, false, true, false, false], [25, 25, 25, 25])).toBe(2);
+  });
+
+  it('falls back to layout 0 when nothing is eligible', () => {
+    expect(pickDefaultLayout(MASKS, [false, false, false, false, false], [25, 25, 25, 25])).toBe(0);
   });
 });

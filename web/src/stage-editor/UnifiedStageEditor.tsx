@@ -237,15 +237,19 @@ export default function UnifiedStageEditor() {
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   // null = show every authored kind; a list filters the overlay.
   const [authoredKinds, setAuthoredKinds] = useState<string[] | null>(null);
-  // Layout-mask preview for the Authored tab: null = the whole table; a mask
-  // value renders that layout's outcome (groups 0–4 by bit + a rolled
-  // group-5 count).
+  // Layout-mask preview for the Authored tab. The tab opens on 'layout' — a
+  // real arrangement (the room's most-taken layout, auto-picked by the tab)
+  // — because the point is the variations; 'table' is the explicit
+  // everything-at-once scatter view.
+  const [authoredView, setAuthoredView] = useState<'layout' | 'table'>('layout');
   const [authoredMask, setAuthoredMask] = useState<number | null>(null);
   const [authoredGroup5, setAuthoredGroup5] = useState(0);
 
   // Eligibility comes from the room's own group table, so a preview never
-  // carries across a stage switch.
+  // carries across a stage switch — the next room re-opens on its own
+  // most-taken layout.
   useEffect(() => {
+    setAuthoredView('layout');
     setAuthoredMask(null);
     setAuthoredGroup5(0);
   }, [selectedMapId]);
@@ -834,6 +838,8 @@ export default function UnifiedStageEditor() {
             stageId={selectedMapId}
             visibleKinds={authoredKinds}
             setVisibleKinds={setAuthoredKinds}
+            view={authoredView}
+            setView={setAuthoredView}
             layoutMask={authoredMask}
             setLayoutMask={setAuthoredMask}
             group5Count={authoredGroup5}
@@ -1054,7 +1060,7 @@ export default function UnifiedStageEditor() {
             <AuthoredObjectOverlay
               stageId={selectedMapId}
               kinds={authoredKinds ?? undefined}
-              layoutMask={authoredMask}
+              layoutMask={authoredView === 'layout' ? authoredMask : null}
               group5Count={authoredGroup5}
               realModels={authoredRealModels}
             />
