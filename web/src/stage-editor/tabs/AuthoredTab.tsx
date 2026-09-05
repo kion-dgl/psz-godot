@@ -157,21 +157,6 @@ export default function AuthoredTab({
 
       {entry && (
         <>
-          <div style={{ fontSize: 11, color: '#8a90b8', marginBottom: 8 }}>
-            <strong>{entry.objects.length}</strong> objects ·{' '}
-            {view === 'table' ? 'every record at once' : 'one layout\u2019s outcome'}
-            <span
-              style={{ marginLeft: 6, borderBottom: '1px dotted #8a90b8', cursor: 'help' }}
-              title={
-                entry.groups
-                  ? `Group sizes (the original's table; the imported objects can be a subset): [${entry.groups.join(', ')}]`
-                  : undefined
-              }
-            >
-              {entry.groups ? '6 groups' : 'flat'}
-            </span>
-          </div>
-
           {entry.groups == null ? (
             <div style={{ fontSize: 11, color: '#8a90b8' }}>
               No recoverable group table — the original builds this file flat,
@@ -181,45 +166,82 @@ export default function AuthoredTab({
             <>
               <div
                 style={sectionLabel}
-                title="A room never builds every record at once. One of five layout masks picks which of groups 0–4 are built verbatim (drawn against a weight row by the room's tree depth); group 5 — traps — rolls a separate 0–3 count at 40/20/20/20. A mask is only eligible if every group it names is non-empty. Button faces quote the 4–6 depth band; ineligible layouts are dimmed; layout 4 is never drawn by design (the original's draw returns 0..3)."
+                title="A room never builds every record at once. One of five layout masks picks which of groups 0–4 are built verbatim (drawn against a weight row by the room's tree depth); group 5 — traps — rolls a separate 0–3 count at 40/20/20/20. A mask is only eligible if every group it names is non-empty. The share quoted per row is the 4–6 depth band; layout 4 is never drawn by design (the original's draw returns 0..3)."
               >
                 Layouts
               </div>
-              <div style={{ marginBottom: 4 }}>
-                <button
-                  onClick={() => setView('table')}
-                  style={chipStyle(view === 'table')}
-                  title="The scatter: every record in the file at once, no mask applied — useful for checking the table itself."
-                >
-                  table
-                </button>
+              <div style={{ marginBottom: 6 }}>
                 {masks.map((m, i) => {
                   const on = eligible[i] || sharesByBand.some((s) => (s[i] ?? 0) > 0);
                   const selected = view === 'layout' && layoutMask === m;
                   const built = maskGroups(m);
                   const shares = sharesByBand.map((s) => s[i] ?? 0);
                   const never = i === 4;
-                  const face = never ? 'L4 ✕' : `L${i} ${faceShares[i]}%`;
                   const title = !on
                     ? `mask ${m} names an empty group for this room — never drawn`
                     : never
                       ? `mask ${m} → groups ${built.join(', ')} + the trap roll. Never drawn: the original's layout draw returns 0..3 by design — group 4's objects never spawn in a free field.`
                       : `mask ${m} → groups ${built.join(', ')} + the trap roll · draw % by depth <4 / 4–6 / ≥7: ${shares.join(' / ')}`;
                   return (
-                    <button
+                    <label
                       key={m}
-                      disabled={!on}
-                      onClick={() => {
-                        setView('layout');
-                        setLayoutMask(m);
-                      }}
-                      style={{ ...chipStyle(selected), ...(on ? {} : { color: '#555', cursor: 'not-allowed' }) }}
                       title={title}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '6px 8px',
+                        borderRadius: 6,
+                        marginBottom: 2,
+                        background: selected ? '#2a2a4a' : 'transparent',
+                        opacity: on ? 1 : 0.45,
+                        cursor: on ? 'pointer' : 'not-allowed',
+                      }}
                     >
-                      {face}
-                    </button>
+                      <input
+                        type="radio"
+                        name="authored-layout"
+                        checked={selected}
+                        disabled={!on}
+                        onChange={() => {
+                          setView('layout');
+                          setLayoutMask(m);
+                        }}
+                        style={{ accentColor: '#4a9eff', margin: 0 }}
+                      />
+                      <span>L{i}</span>
+                      <span style={{ color: '#8a90b8' }}>
+                        groups {built.join(', ')} + traps{never ? ' · never drawn' : ''}
+                      </span>
+                      <span style={{ marginLeft: 'auto', color: on && !never ? '#8a90b8' : '#555' }}>
+                        {on && !never ? `${faceShares[i]}%` : '—'}
+                      </span>
+                    </label>
                   );
                 })}
+                <label
+                  title="The scatter: every record in the file at once, no mask applied — useful for checking the table itself."
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 8px',
+                    borderRadius: 6,
+                    background: view === 'table' ? '#2a2a4a' : 'transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="authored-layout"
+                    checked={view === 'table'}
+                    onChange={() => setView('table')}
+                    style={{ accentColor: '#4a9eff', margin: 0 }}
+                  />
+                  <span>table</span>
+                  <span style={{ color: '#8a90b8' }}>every record at once</span>
+                  <span style={{ marginLeft: 'auto', color: '#8a90b8' }}>{entry.objects.length} objects</span>
+                </label>
               </div>
               {view === 'layout' && group5Total > 0 && (
                 <div style={{ marginBottom: 6 }}>
