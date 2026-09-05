@@ -190,11 +190,25 @@ export default function UnifiedStageEditor() {
   // posts on the floor. Useful for "go look at where the autopilot got
   // stuck" links. Multiple markers semicolon-separated.
   const urlMarker = searchParams.get('marker') ?? undefined;
+  // `?tab=authored&models=1` restore the active tab and the Authored tab's
+  // model mode across reloads — HMR included, which otherwise dumps the user
+  // back on Floor in marker mode mid-inspection.
+  const urlTab = searchParams.get('tab') ?? undefined;
+  const urlModels = searchParams.get('models') === '1';
 
-  const [activeTab, setActiveTab] = useState<EditorTab>(urlQuest ? 'waypoints' : 'floor');
+  const [activeTab, setActiveTab] = useState<EditorTab>(
+    urlQuest
+      ? 'waypoints'
+      : TABS.some((t) => t.id === urlTab)
+        ? (urlTab as EditorTab)
+        : 'floor',
+  );
   const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
   const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
   const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
+  // Declared up here because the URL-sync effect below writes it back out.
+  // Storybook models instead of coloured markers for kinds that have one.
+  const [authoredRealModels, setAuthoredRealModels] = useState(urlModels);
   const questObjects = useQuestObjects(selectedQuest, selectedMapId);
   const questCells = useQuestCells(selectedQuest, selectedMapId);
 
@@ -208,8 +222,10 @@ export default function UnifiedStageEditor() {
     if (selectedQuest) next.set('quest', selectedQuest);
     if (highlightCell) next.set('cell', highlightCell);
     if (urlMarker) next.set('marker', urlMarker);
+    if (activeTab !== 'floor') next.set('tab', activeTab);
+    if (authoredRealModels) next.set('models', '1');
     setSearchParams(next, { replace: true });
-  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker]);
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker, activeTab, authoredRealModels]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -226,8 +242,6 @@ export default function UnifiedStageEditor() {
   // group-5 count).
   const [authoredMask, setAuthoredMask] = useState<number | null>(null);
   const [authoredGroup5, setAuthoredGroup5] = useState(0);
-  // Storybook models instead of coloured markers for kinds that have one.
-  const [authoredRealModels, setAuthoredRealModels] = useState(false);
 
   // Eligibility comes from the room's own group table, so a preview never
   // carries across a stage switch.
