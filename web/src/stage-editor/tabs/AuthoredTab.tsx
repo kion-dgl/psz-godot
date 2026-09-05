@@ -24,9 +24,6 @@ interface Props {
   /** Group 5's rolled count (0–3) while a layout is selected. */
   group5Count: number;
   setGroup5Count: (n: number) => void;
-  /** Draw the storybook model for kinds that have one, instead of markers. */
-  realModels: boolean;
-  setRealModels: (on: boolean) => void;
 }
 
 interface RoomEntry {
@@ -68,8 +65,6 @@ export default function AuthoredTab({
   setLayoutMask,
   group5Count,
   setGroup5Count,
-  realModels,
-  setRealModels,
 }: Props) {
   const [rooms, setRooms] = useState<Record<string, RoomEntry> | null>(null);
   // The mask/weight constants travel with the data (same file as rooms).
@@ -288,7 +283,7 @@ export default function AuthoredTab({
 
           <div
             style={sectionLabel}
-            title="Toggle kinds in the viewport; the colour is the same one the viewport draws. Counts are over the whole table, not the selected layout."
+            title="Toggle kinds in the viewport. Kinds with an identified model render as that model (streamed from the asset CDN; a failed load renders its marker in red) — boxes and walls in this field's own art; kinds with no identified model (the elemental trap families) draw as discs, in the colour of their button."
           >
             Kinds
           </div>
@@ -320,29 +315,6 @@ export default function AuthoredTab({
                 </button>
               );
             })}
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
-            {(['markers', 'models'] as const).map((mode) => {
-              const on = mode === 'models' ? realModels : !realModels;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => setRealModels(mode === 'models')}
-                  style={chipStyle(on)}
-                  title={
-                    mode === 'models'
-                      ? 'Draw the storybook model for kinds that have one — containers, walls, fences, switches, needler/gun/poison traps, true scale. Models stream from the asset CDN (markers while loading, red if a fetch fails); boxes and walls use this field\u2019s own art; the other trap families have no identified model and stay as discs.'
-                      : 'Coloured primitives — lightweight, and the colour doubles as the kind legend.'
-                  }
-                >
-                  {mode}
-                </button>
-              );
-            })}
-            {realModels && (
-              <span style={{ fontSize: 11, color: '#8a90b8' }}>red = failed load</span>
-            )}
           </div>
 
         </>

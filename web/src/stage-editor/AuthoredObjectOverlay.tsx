@@ -21,9 +21,9 @@ import type { AuthoredModel } from './authoredModelMap';
  * build everything here: a file is six groups, one of five layout masks picks
  * which of groups 0..4 get built, and group 5 is rolled 0..3 at 40/20/20/20. So a real
  * visit shows a subset. Group is on the label so the subsets are legible —
- * everything in the same group arrives together. The Authored tab can also
- * filter this overlay to ONE layout's outcome (`layoutMask` + `group5Count`)
- * and swap the coloured markers for the storybook models (`realModels`).
+ * everything in the same group arrives together. The Authored tab filters
+ * this overlay to ONE layout's outcome (`layoutMask` + `group5Count`); kinds
+ * with an identified model render as that model, the rest as markers.
  */
 
 interface AuthoredObject {
@@ -49,9 +49,6 @@ interface Props {
   layoutMask?: number | null;
   /** Group 5's rolled count (0–3) when previewing a layout. */
   group5Count?: number;
-  /** Render the storybook model for kinds that have one, instead of the
-   * coloured marker. Kinds without an identified model stay as markers. */
-  realModels?: boolean;
   /** The loaded stage mesh — spawn slots floor-snap against it, mirroring
    * cell_object_spawner._floor_y_at. Null while the stage streams in. */
   stageScene?: THREE.Group | null;
@@ -126,7 +123,7 @@ interface ReferenceRoom {
   flags?: number[];
 }
 
-export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count, realModels, stageScene }: Props) {
+export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layoutMask, group5Count, stageScene }: Props) {
   // The area picks per-field box/wall art from the catalog.
   const area = useMemo(() => getAreaFromMapId(stageId) ?? undefined, [stageId]);
   const [rooms, setRooms] = useState<Record<string, { objects: AuthoredObject[] }> | null>(null);
@@ -250,12 +247,12 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
         // Facing is 16 bits per turn, 0 = +Z toward +X — the same convention
         // Godot's rotation.y uses, so this is a scale and nothing else.
         const yaw = ((o.a ?? 0) / 65536) * Math.PI * 2;
-        const model = realModels ? authoredModelFor(o.k, o.m, area) : null;
+        const model = authoredModelFor(o.k, o.m, area);
         return (
           <group key={i} position={[o.x, o.y, o.z]} rotation={[0, yaw, 0]}>
             {/* The storybook model when the kind has one — the marker while
-                it streams in, when it fails, and for kinds with no identified
-                model (the elemental trap families). */}
+                it streams in, when it fails (in red), and for kinds with no
+                identified model (the elemental trap families). */}
             {model ? (
               <ModelBoundary fallback={<Marker k={o.k} color={ERROR_COLOR} />}>
                 <Suspense fallback={<Marker k={o.k} color={color} />}>

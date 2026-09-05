@@ -190,11 +190,9 @@ export default function UnifiedStageEditor() {
   // posts on the floor. Useful for "go look at where the autopilot got
   // stuck" links. Multiple markers semicolon-separated.
   const urlMarker = searchParams.get('marker') ?? undefined;
-  // `?tab=authored&models=1` restore the active tab and the Authored tab's
-  // model mode across reloads — HMR included, which otherwise dumps the user
-  // back on Floor in marker mode mid-inspection.
+  // `?tab=authored` restores the active tab across reloads — HMR included,
+  // which otherwise dumps the user back on Floor mid-inspection.
   const urlTab = searchParams.get('tab') ?? undefined;
-  const urlModels = searchParams.get('models') === '1';
 
   const [activeTab, setActiveTab] = useState<EditorTab>(
     urlQuest
@@ -206,9 +204,6 @@ export default function UnifiedStageEditor() {
   const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
   const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
   const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
-  // Declared up here because the URL-sync effect below writes it back out.
-  // Storybook models instead of coloured markers for kinds that have one.
-  const [authoredRealModels, setAuthoredRealModels] = useState(urlModels);
   const questObjects = useQuestObjects(selectedQuest, selectedMapId);
   const questCells = useQuestCells(selectedQuest, selectedMapId);
 
@@ -223,9 +218,8 @@ export default function UnifiedStageEditor() {
     if (highlightCell) next.set('cell', highlightCell);
     if (urlMarker) next.set('marker', urlMarker);
     if (activeTab !== 'floor') next.set('tab', activeTab);
-    if (authoredRealModels) next.set('models', '1');
     setSearchParams(next, { replace: true });
-  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker, activeTab, authoredRealModels]);
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker, activeTab]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -838,8 +832,6 @@ export default function UnifiedStageEditor() {
             setLayoutMask={setAuthoredMask}
             group5Count={authoredGroup5}
             setGroup5Count={setAuthoredGroup5}
-            realModels={authoredRealModels}
-            setRealModels={setAuthoredRealModels}
           />
         );
       case 'floor':
@@ -1056,7 +1048,6 @@ export default function UnifiedStageEditor() {
               kinds={authoredKinds ?? undefined}
               layoutMask={authoredMask}
               group5Count={authoredGroup5}
-              realModels={authoredRealModels}
               stageScene={stageScene}
             />
           </>
