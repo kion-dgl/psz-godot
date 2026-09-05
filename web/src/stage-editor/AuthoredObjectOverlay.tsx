@@ -180,8 +180,17 @@ export default function AuthoredObjectOverlay({ stageId, set = 'd', kinds, layou
       ))}
       {spawns.map((e, i) => (
         <group key={`spawn${i}`} position={[e.x, e.y, e.z]}>
-          {/* Elevation matters here — a slot sitting above the floor is the
-              "enemies standing on rocks" case, so the post shows the drop. */}
+          {/* Elevation is AUTHORED, not a bug — the original stands enemies
+              on rocks and platforms (#604), and psz-godot consumes y
+              verbatim. The thin drop line makes the height legible: a slot
+              should visibly land on raised geometry, and one hanging over a
+              void is a real finding. */}
+          {e.y > 0.01 && (
+            <mesh position={[0, -e.y / 2, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, e.y, 6]} />
+              <meshBasicMaterial color="#f87171" transparent opacity={0.6} />
+            </mesh>
+          )}
           <mesh position={[0, 0.9, 0]}>
             <cylinderGeometry args={[0.55, 0.55, 1.8, 10]} />
             <meshBasicMaterial color="#f87171" wireframe />
