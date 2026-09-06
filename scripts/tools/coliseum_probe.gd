@@ -61,28 +61,8 @@ class Watch extends Node:
 		if hp0 < 0:
 			hp0 = GameState.hp
 			print("[coliseum] field up: player in place (hp=%d)" % hp0)
-		# The return warp belongs beside the warp-in spawn (0, 15), not the
-		# stage's default portal (kion playtest). It spawns a frame or two after
-		# the player — allow a grace window before failing.
-		if not warp_checked and elapsed > 2.0:
-			var warp := _find_script_node_under(get_tree().current_scene, "start_warp.gd")
-			if warp == null:
-				_fail("no start warp on the arena cell")
-				return
-			if absf(warp.global_position.x) > 0.75 or absf(warp.global_position.z - 15.0) > 0.75:
-				_fail("start warp at %s — expected beside the spawn (0, 15)" % str(warp.global_position))
-				return
-			warp_checked = true
-			print("[coliseum] start warp beside the spawn at (%.1f, %.1f)" % [warp.global_position.x, warp.global_position.z])
-		if warp_checked and not facing_checked:
-			# player_rotation drives the model + movement facing (the body node
-			# itself never rotates) — assert against that.
-			var yaw := wrapf(float((player as Object).get("player_rotation")), -PI, PI)
-			if absf(absf(yaw)) < 0.1:
-				_fail("player faces the wall (yaw 0) — spawn_rotation not applied")
-				return
-			facing_checked = true
-			print("[coliseum] player faces the arena (yaw %.2f)" % yaw)
+		if not _check_arrival(player):
+			return  # an arrival checkpoint failed or is still pending
 
 		if not damaged:
 			if enemy == null:
@@ -119,6 +99,32 @@ class Watch extends Node:
 			print("[coliseum] room-clear telepipe spawned after the kill")
 			print("[coliseum] DONE ok")
 			get_tree().quit(0)
+
+	## Arrival checkpoints, in order: the return warp lands beside the spawn
+	## (0, 15) — it spawns a frame or two after the player, so allow a grace
+	## window — then the player faces the arena, not the wall (kion playtests).
+	## Returns false once a checkpoint has failed (the caller stops).
+	func _check_arrival(player: Node3D) -> bool:
+		if not warp_checked and elapsed > 2.0:
+			var warp := _find_script_node_under(get_tree().current_scene, "start_warp.gd")
+			if warp == null:
+				_fail("no start warp on the arena cell")
+				return false
+			if absf(warp.global_position.x) > 0.75 or absf(warp.global_position.z - 15.0) > 0.75:
+				_fail("start warp at %s — expected beside the spawn (0, 15)" % str(warp.global_position))
+				return false
+			warp_checked = true
+			print("[coliseum] start warp beside the spawn at (%.1f, %.1f)" % [warp.global_position.x, warp.global_position.z])
+		if warp_checked and not facing_checked:
+			# player_rotation drives the model + movement facing (the body node
+			# itself never rotates) — assert against that.
+			var yaw := wrapf(float((player as Object).get("player_rotation")), -PI, PI)
+			if absf(absf(yaw)) < 0.1:
+				_fail("player faces the wall (yaw 0) — spawn_rotation not applied")
+				return false
+			facing_checked = true
+			print("[coliseum] player faces the arena (yaw %.2f)" % yaw)
+		return true
 
 	func _fail(msg: String) -> void:
 		print("[coliseum] FAIL: %s" % msg)
