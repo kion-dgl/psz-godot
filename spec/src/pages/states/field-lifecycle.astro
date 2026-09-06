@@ -200,6 +200,26 @@ const lifecycle = `flowchart TD
   <p>Gate <em>direction</em> is resolved through <code>StageRotation</code> so a
   rotated cell still opens the correct physical exit.</p>
 
+  <h3>Area gates are two-way</h3>
+  <p>Every section that is entered by warp — the transition room between the two
+  grids, and the second grid itself — <strong>MUST</strong> carry section-level
+  <code>entry_direction</code> / <code>exit_direction</code> metadata:
+  <code>entry_direction</code> names the portal on the section's start cell that
+  the player arrived at (the way back to the previous section), and
+  <code>exit_direction</code> names the end cell's forward warp edge. The runtime
+  <strong>MUST</strong> build an area gate and trigger for both, so walking back
+  through the arrival door returns the player to the previous section's end cell,
+  and a forward warp <strong>MUST</strong> land the player on the target
+  section's <code>entry_direction</code> portal. The first section (entered from
+  the city, not by warp) and the boss arena (left by its final exit or the
+  boss-clear telepipe) carry neither. Generated fields <strong>MUST</strong> emit
+  this metadata exactly as static field files do — a generated section without it
+  draws its way back as inert geometry: a door with no warp and no trigger
+  behind it. <code>entry_direction</code> classifies a portal as a backward warp
+  only on the section's <strong>start cell</strong>; elsewhere the same compass
+  value can collide with a <code>warp_edge</code> and mis-classify the
+  door.</p>
+
   <h2>Fences &amp; switches</h2>
   <p>Fences are distinct from gates. A fence is toggled by its own dedicated
   <strong>step-switch</strong>: stepping on the switch (<code>flip_switch</code>)
