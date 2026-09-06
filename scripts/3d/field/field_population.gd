@@ -782,3 +782,43 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 	else:
 		objects.append_array(authored)
 	return objects
+
+
+## One enemy object for a room that MUST fight: a key cell whose every wave
+## rolled empty (#639 — the key drops on room clear, so an enemy-less key cell
+## strands its gate unless the runtime's on-entry fallback catches it). Fully
+## data-driven: an enemy the room's own assignment names, else the first name
+## any wave template resolves to; an authored enemy slot, else the ring.
+static func guaranteed_enemy(room_code: String, rng: RandomNumberGenerator) -> Dictionary:
+	_load()
+	var enemy_id := _first_resolvable_enemy(room_code)
+	var spots: Array = enemy_slot_positions(room_code, 1, rng)
+	var pos: Array = spots[0] if not spots.is_empty() \
+		else ring_positions(1, ENEMY_RING_RADIUS)[0]
+	return {"type": "enemy", "position": pos, "enemy_id": enemy_id, "wave": 1}
+
+
+## The enemy id guaranteed_enemy stands up: the room's own assignment first,
+## then any template in the table. Never empty while any template resolves —
+## which every area's table does, or objects_for_single_room would already be
+## spawning empty boss rooms.
+static func _first_resolvable_enemy(room_code: String) -> String:
+	for entry in _assignment.get(room_code, []):
+		var id := _first_resolvable_in_template(int(entry.get("template", -1)))
+		if not id.is_empty():
+			return id
+	for t in range(_waves.size()):
+		var id := _first_resolvable_in_template(t)
+		if not id.is_empty():
+			return id
+	return ""
+
+
+static func _first_resolvable_in_template(template_idx: int) -> String:
+	if template_idx < 0 or template_idx >= _waves.size():
+		return ""
+	for n in _waves[template_idx].get("names", []):
+		var resolved: Array = _resolve(str(n))
+		if not resolved.is_empty():
+			return str(resolved[0])
+	return ""

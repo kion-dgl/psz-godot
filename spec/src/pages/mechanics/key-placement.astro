@@ -5,13 +5,28 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Key Placement" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>This page governs <em>where in its room a key pickup stands</em>. It does not govern <em>which rooms hold keys or how many</em> — that is the gate economy's scatter rule (<a href="/states/field-gates">Field Gate Economy</a>): BFS depth &lt; 2 from the gated room, at most 2 per room. The two compose: the economy picks the room and the count, this page picks the spot.</p>
+  <p>This page governs <em>where in its room a key pickup stands</em> and <em>when it appears</em>. It does not govern <em>which rooms hold keys or how many</em> — that is the gate economy's scatter rule (<a href="/states/field-gates">Field Gate Economy</a>): BFS depth &lt; 2 from the gated room, at most 2 per room, dead ends first. The three compose: the economy picks the room and the count, this page picks the spot and the moment.</p>
 
   <h2>The rule</h2>
 
   <p>The original <strong>authors</strong> where a key sits: 836 <code>o0c_key</code> records over 224 of the 295 reference rooms, 2–6 distinct positions each, decoded by psz-re from <code>object_placement_per_room.json</code> and carried in <code>room_reference.json</code>. A generated field's keys <strong>MUST</strong> stand on those slots.</p>
 
   <p>psz-godot previously placed the fallback key at the centroid of the cell's portal spawn points and ringed extra copies around it. That is <strong>refuted</strong>: the centroid has no relationship to where the room's floor is wide enough, which is why keys hover over voids (<a href="https://github.com/kion-dgl/psz-godot/issues/627">#627</a>). A centroid is an average of doorways, not a placement.</p>
+
+  <h2>When the key appears</h2>
+
+  <p>The original puts keys <strong>on the ground when the room loads</strong>. psz-godot diverges deliberately (#639): a key <strong>MUST</strong> materialise when its room is <strong>cleared</strong> — the last enemy defeated — standing on the spot this page's resolution order picks. The authored slots decide <em>where</em>; the fight decides <em>when</em>.</p>
+
+  <p>The rationale is the same playtest line that removed the per-room treasure boxes: a key standing on the floor at entry is a rote pickup — walk over, collect, continue — and in a dead end it means walking back out with nothing gained. Dropping the key from the fight deletes the rote interaction and lets combat deliver the reward: dead end visible, fight, key drops, the gate ahead opens. That is an exploration reward structure, not a participation trophy. It is an intentional divergence from the RE-measured original, recorded here rather than taken silently.</p>
+
+  <p>Because a gate's solvability hangs on the key existing, the timing carries hard rules:</p>
+
+  <ul>
+    <li>A key room that <strong>holds a fight this visit</strong> (live enemies, or a wave still queued) <strong>MUST</strong> hold its key for the room-clear event, and <strong>MUST NOT</strong> also stand it at entry — the drop is the reward, a pre-standing copy voids it.</li>
+    <li>A key room that <strong>never fights</strong> — an authored cell with no enemies (several in the shipped field quests), or a room whose waves all rolled empty — <strong>MUST</strong> spawn its key on entry as before. A key that never drops is an unopenable gate: a soft lock, not a design choice. The generator <strong>MUST</strong> hold up its end by never emitting a key cell without an enemy to fight.</li>
+    <li>Re-entering a <strong>cleared</strong> key room whose keys went uncollected <strong>MUST</strong> re-drop them — the same respawn contract the collected-keys guard already gives an entry-spawned key.</li>
+    <li>The drop fires when the <em>final</em> wave dies — once per clear, not once per wave.</li>
+  </ul>
 
   <h2>Resolution order</h2>
 

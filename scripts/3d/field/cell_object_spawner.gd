@@ -67,6 +67,15 @@ func _spawn_cell_objects() -> void:
 	_c._deferred_telepipe = {}
 	_c._deferred_quest_complete_telepipe = {}
 	_c._deferred_room_clear_items.clear()
+	_c._deferred_key_pickup = {}
+	# Wave state is per-cell: reset it HERE, not only in the fresh/restore
+	# branches, so a cell with no objects at all cannot inherit the previous
+	# cell's queued waves — #639's key deferral would read that as a pending
+	# fight and hold a key for a clear that never comes.
+	_c._wave_enemy_data.clear()
+	_c._current_wave = 1
+	_c._max_wave = 1
+	_c._wave_break_pending = false
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -87,18 +96,17 @@ func _spawn_cell_objects() -> void:
 	_c._wire_fence_links()
 
 	# Count living enemies for gate locking
-	var alive_enemies: int = 0
-	for e in _c._room_enemies:
-		if not is_instance_valid(e):
-			continue
-		if e is EnemyBase:
-			if e.is_alive:
-				alive_enemies += 1
-		elif e.get("element_state") != "dead":
-			alive_enemies += 1
+	var alive_enemies: int = _c._alive_enemy_count(_c._room_enemies)
 
 	if alive_enemies > 0:
 		_c._lock_gates_for_enemies()
+	elif _c._queued_wave_count() > 0:
+		# No live enemy but waves still queued (wave 1 rolled empty, or a save
+		# from inside a wave break): nothing will ever fire the break that
+		# spawns the next wave, so the room would stall — never clearing, and
+		# since #639 never dropping a deferred key. Kick the clear check; it
+		# schedules the next break itself.
+		_c._check_room_clear()
 	elif _c._needs_telepipe:
 		# No enemies on end cell — spawn telepipe immediately
 		_c._needs_telepipe = false
@@ -108,10 +116,6 @@ func _spawn_cell_objects() -> void:
 ## Spawn objects fresh (first visit to a cell).
 func _spawn_fresh_cell_objects(objects: Array) -> void:
 	print("[CellObjects] Spawning %d objects (fresh)" % objects.size())
-	_c._wave_enemy_data.clear()
-	_c._current_wave = 1
-	_c._max_wave = 1
-	_c._wave_break_pending = false
 
 	for obj in objects:
 		var obj_type: String = str(obj.get("type", ""))
@@ -235,8 +239,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 	print("[CellObjects] Restoring %d objects + %d drops from saved state (wave %d/%d)" % [
 		obj_states.size(), drop_states.size(), _c._current_wave, _c._max_wave])
 
-	# Rebuild wave enemy data from original cell objects so _spawn_wave works on restore
-	_c._wave_enemy_data.clear()
+	# Rebuild wave enemy data from original cell objects so _spawn_wave works
+	# on restore (the per-cell reset in _spawn_cell_objects already cleared it)
 	for obj in _c._current_cell.get("objects", []):
 		if str(obj.get("type", "")) == "enemy":
 			var wave: int = int(obj.get("wave", 1))

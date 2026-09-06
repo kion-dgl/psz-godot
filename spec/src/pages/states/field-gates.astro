@@ -8,11 +8,14 @@
 //   data/level_topology_builder.json   the economy, with parameter values
 //   data/level_generation_topology.json  the runtime parameter block
 //
-// NOTHING HERE IS IMPLEMENTED YET. This is step 1 of the working agreement —
-// the definition lands first, the generator and runtime are the next PRs, and
-// the tests are pinned against this page rather than against the code.
+// IMPLEMENTED, in the step order below: the generator (#595 step 2, PR #602)
+// and the runtime that reads the attributes. The page stays normative — the
+// seeded tests are pinned against it, not against the code, and psz-godot's
+// deliberate divergences from the measured rule are recorded inline (the
+// dead-end scatter preference; drop-on-clear in /mechanics/key-placement)
+// rather than taken silently.
 //
-// Will be implemented by:
+// Implemented by:
 //   scripts/3d/field/grid_generator.gd       assign door attributes during layout
 //   scripts/3d/field/portal_gate_manager.gd  read generated attributes
 //   scripts/3d/field/valley_field_controller.gd  enemy-defeat locking
@@ -26,7 +29,7 @@ const economy = `flowchart LR
   C -->|yes| D{"rand(100) < 30 (0x20 room)<br/>else < 10"}
   D -->|under| E["attr 2 - two-key gate"]
   D -->|over| F["attr 1 - one-key gate"]
-  E --> G["scatter keys:<br/>BFS depth &lt; 2, skip start/goal,<br/>max 2 per room"]
+  E --> G["scatter keys:<br/>BFS depth &lt; 2, skip start/goal,<br/>max 2 per room, dead ends first"]
   F --> G
   G --> H{"solvability:<br/>walk way-back chain,<br/>required == available?"}
   H -->|no| I["reject this gate"]
@@ -51,8 +54,11 @@ const economy = `flowchart LR
     number is <em>not</em> measured this page says so.
   </p>
   <p>
-    <strong>Status: contract only.</strong> None of this is implemented — see
-    "Where we are today" at the end for what the engine does instead right now.
+    <p>
+    <strong>Status: implemented and tested.</strong> The generator and runtime
+    landed with #595 steps 2–3 (PR #602 and follow-ups); the seeded sweeps in
+    <code>test_runner</code> are pinned against this page. Divergences from the
+    measured rule are recorded where they happen below.
   </p>
 
   <h2>Correction: there is no such thing as a spare door</h2>
@@ -204,6 +210,20 @@ const economy = `flowchart LR
     captures.
   </p>
   <p>
+    <strong>Divergence (psz-godot): dead ends first.</strong> The measured rule picks
+    from that pool uniformly; psz-godot <strong>SHOULD</strong> offer the pool's
+    dead-end rooms — degree-1 rooms that are neither start nor goal — before any
+    other room in it. A dead end that holds a key is a chosen side objective:
+    the player sees the branch, fights it, and the gate ahead opens. A dead end
+    that holds nothing is a wall you walk back from — forced backtracking once
+    you learn it is not the way on. This is an intentional divergence from the
+    measured rule, same category as the per-room treasure-box removal: the
+    original's economy is count-based, and the counts are untouched — the same
+    depth-&lt;2 pool, the same 2-per-room cap, the same required == available
+    balance. Preference stays <em>within</em> the pool for now; widening to any
+    pre-gate dead end is a follow-up knob if detours feel too shallow in play.
+  </p>
+  <p>
     Keys stay <strong>section-scoped and fungible</strong>, as
     <a href="/states/field-lifecycle">Field Stage Lifecycle</a> already defines them:
     any key opens any key gate in the same section. That reconciles with the measured
@@ -230,31 +250,37 @@ const economy = `flowchart LR
   </p>
 
   <h2>Where we are today</h2>
-  <p>None of the above is implemented. What the engine currently does:</p>
+  <p>Implemented: the generator assigns every door an attribute with the budget,
+  the adjacency rejection and the solvability invariant (#595 step 2, PR #602);
+  the runtime reads the generated attributes, builds two-key gates with their own
+  HUD state, persists opened gates across visits, and locks rooms that hold
+  enemies. The pre-#595 behaviour below is gone and is kept only as history:</p>
   <ul>
-    <li><code>valley_field_controller._lock_gates_for_enemies()</code> locks every
-      non-entry, non-visited exit whenever a room holds enemies — <em>always on</em>
-      and keyed to enemy presence, rather than a 75% per-room roll. It is the closest
-      existing analogue to attribute <code>4</code>.</li>
-    <li><code>portal_gate_manager._get_locked_gates()</code> reads
-      <code>key_gate_directions</code> / <code>key_gate_direction</code> off the cell —
-      <strong>hand-authored by the editor</strong>, not generated.</li>
-    <li>There are <strong>no two-key gates, no budget, no key placement and no
-      solvability check</strong>.</li>
+    <li><em>Was:</em> <code>valley_field_controller._lock_gates_for_enemies()</code>
+    locked every non-entry, non-visited exit whenever a room held enemies — always
+    on, keyed to enemy presence, rather than a 75% per-room roll.</li>
+    <li><em>Was:</em> <code>portal_gate_manager._get_locked_gates()</code> read
+    <code>key_gate_directions</code> / <code>key_gate_direction</code> off a cell
+    hand-authored by the editor, never generated.</li>
+    <li><em>Was:</em> no two-key gates, no budget, no key placement, no
+    solvability check.</li>
   </ul>
 
   <h2>Order of work</h2>
   <ol>
     <li>This page. <em>(done — it is the contract the rest is tested against.)</em></li>
     <li><strong>Generator</strong>: assign door attributes during layout, honouring the
-      budget, the adjacency rejection and the invariant. Seeded, so a seed reproduces
-      a field's gates exactly.</li>
+    budget, the adjacency rejection and the invariant. Seeded, so a seed reproduces
+    a field's gates exactly. <em>(done, #595 step 2 / PR #602.)</em></li>
     <li><strong>Runtime</strong>: <code>portal_gate_manager</code> reads generated
-      attributes instead of only authored ones; two-key gates need their own HUD and
-      minimap states.</li>
-    <li><strong>Keys</strong>: placement per the BFS rule, and the pickup/consume path
-      against a gate. Keys <strong>MAY</strong> be generator-placed, which is what the
-      original does, rather than waiting on the authored key object in #594.</li>
+    attributes instead of only authored ones; two-key gates need their own HUD and
+    minimap states. <em>(done, PR #602 and follow-ups.)</em></li>
+    <li><strong>Keys</strong>: placement per the BFS rule with the dead-end
+    preference above, and the pickup/consume path against a gate. Keys spawn with
+    the generator's own data rather than waiting on the authored key object in
+    #594; <em>when</em> they appear — on room clear — is
+    <a href="/mechanics/key-placement">Key Placement</a>'s contract. <em>(done;
+    the dead-end preference and drop-on-clear are #639.)</em></li>
   </ol>
 
   <h2>Verification the implementation owes</h2>

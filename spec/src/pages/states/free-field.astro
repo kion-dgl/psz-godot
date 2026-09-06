@@ -102,6 +102,15 @@ const tree = `flowchart TD
     to an unreachable room. Valley: a 2-key gate <code>B1 → C1</code>, with both keys
     on <code>B2</code>. This balance is a tested invariant.
   </p>
+  <p>
+    Two psz-godot divergences from the captured instance, both recorded on the
+    normative page: generated fields offer the scatter pool's <strong>dead-end rooms
+    first</strong> (#639), and a key <strong>drops when its room is cleared</strong>
+    rather than standing on the ground at load — the authored slots still decide
+    where it stands (<a href="/mechanics/key-placement">Key Placement</a>).
+    In the captured Valley above the keys sit on <code>B2</code> the moment the room
+    draws; in a generated field they appear when <code>B2</code>'s last enemy dies.
+  </p>
 
   <h2>Enemy population</h2>
   <p>
