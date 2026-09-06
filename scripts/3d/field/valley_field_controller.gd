@@ -123,6 +123,7 @@ var _debug_spawn_meshes: Array = []
 var _debug_all_collision_meshes: Array = []
 var _debug_floor_viz: MeshInstance3D       # DebugFloorViz green overlay
 var _debug_gate_spheres: Array = []        # GateMark/SpawnMark/TriggerMark spheres
+var _debug_gate_labels: Array = []         # GateLabel_* floating id/target labels
 var _debug_panel: PanelContainer
 
 ## Cell-object spawning + save/restore, extracted into its own module.
@@ -2304,6 +2305,10 @@ func _sync_debug_config() -> void:
 	for m in _debug_gate_spheres:
 		if is_instance_valid(m) and m.visible != DebugConfig.show_gate_dots:
 			m.visible = DebugConfig.show_gate_dots
+	# Floating gate id/target labels (GateLabel_*)
+	for l in _debug_gate_labels:
+		if is_instance_valid(l) and l.visible != DebugConfig.show_gate_labels:
+			l.visible = DebugConfig.show_gate_labels
 
 
 func _build_all_collision_debug() -> void:

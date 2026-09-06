@@ -320,6 +320,7 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 
 
 ## DEBUG: Add a floating 3D text label at gate position showing compass label + target cell.
+## Hidden unless DebugConfig.show_gate_labels is on (start menu → Debug).
 ## Also adds colored sphere markers for gate (yellow), spawn (green), and trigger (red).
 func _add_gate_label(direction: String, pos: Vector3, target_cell: String, portal_id: String = "") -> void:
 	var label := Label3D.new()
@@ -342,8 +343,12 @@ func _add_gate_label(direction: String, pos: Vector3, target_cell: String, porta
 	label.modulate = Color(1, 1, 0, 1)  # Bright yellow
 	label.outline_modulate = Color(0, 0, 0, 1)
 	label.outline_size = 8
+	label.visible = DebugConfig.show_gate_labels
 	_c.add_child(label)
 	label.global_position = Vector3(pos.x, 3.5, pos.z)
+	# Tracked so _sync_debug_config can flip labels when the start-menu
+	# toggle changes mid-session (same pattern as the gate-dot spheres).
+	_c._debug_gate_labels.append(label)
 
 	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
 	var clean_dir: String = direction.split(" ")[0]  # Strip "(EXIT)" suffix

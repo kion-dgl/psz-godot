@@ -604,6 +604,7 @@ func _get_debug_list() -> Array:
 		"Unlock All Missions",
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
+		"Gate Labels: %s" % (on if DebugConfig.show_gate_labels else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
 		"Combo Timing: %s" % (on if DebugConfig.show_combo_timing else off),
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
@@ -662,20 +663,21 @@ func _toggle_debug(idx: int) -> void:
 			_debug_msg = "Unlocked all missions (%d newly cleared)." % n
 		1: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
 		2: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		3: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		4: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		5:
+		3: DebugConfig.show_gate_labels = not DebugConfig.show_gate_labels
+		4: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		5: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		6:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		6:
-			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		7:
-			DebugConfig.show_player_position = not DebugConfig.show_player_position
+			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		8:
-			DebugConfig.equip_all = not DebugConfig.equip_all
+			DebugConfig.show_player_position = not DebugConfig.show_player_position
 		9:
-			DebugConfig.reveal_map = not DebugConfig.reveal_map
+			DebugConfig.equip_all = not DebugConfig.equip_all
 		10:
+			DebugConfig.reveal_map = not DebugConfig.reveal_map
+		11:
 			DebugConfig.unlock_all_areas = not DebugConfig.unlock_all_areas
 			_debug_msg = (
 				"Every field listed in the city warp."
