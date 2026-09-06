@@ -126,17 +126,27 @@ func _refresh_display() -> void:
 	_refresh_detail()
 
 
-## A group's header: behavior archetype + the areas its members appear in.
+## A group's header: behavior archetype + up to three areas its members appear
+## in. The label ellipsizes and never drives the panel's minimum width — wide
+## headers (rappy-family types appear everywhere) used to inflate the min size
+## and push the shop panel off the left screen edge (kion playtest).
 func _group_header(group: Dictionary) -> Control:
 	var areas := {}
 	for row in group["rows"]:
 		for area in row["areas"]:
 			areas[area] = true
+	var shown: Array = areas.keys()
+	if shown.size() > 3:
+		shown = shown.slice(0, 3)
+		shown.append("…")
 	var label := Label.new()
-	label.text = "%s  ·  %s" % [str(group["archetype"]).capitalize(), " / ".join(areas.keys())]
+	label.text = "%s  ·  %s" % [str(group["archetype"]).capitalize(), " / ".join(shown)]
 	label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
 	label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.clip_text = true
 	return label
 
 

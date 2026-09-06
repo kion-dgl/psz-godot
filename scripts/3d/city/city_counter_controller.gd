@@ -118,11 +118,12 @@ func _add_interactables() -> void:
 	# testing (the in-game counterpart of #/enemy-room). Model np_009 from the
 	# special_c2 city set (pack-shipped like the other np_* townsfolk).
 	_add_npc(
-		# Kion playtest position: by the south entrance (the y from the blocked
-		# debug read snaps to the shared counter floor). Well clear of the guild
-		# stand-point, the telepipe-arrival pad (x~2), and the office-exit
-		# trigger (x13+) — interaction zones don't overlap any of them.
-		"ColiseumMasterNPC", Vector3(9.0, -10.67, 121.28), 2.54,
+		# Kion playtest position: west side of the south entrance (the y from the
+		# blocked debug read snaps to the shared counter floor; the rot mirrors
+		# the original pick to face into the room, same compass as the guild
+		# NPC). Clear of the guild stand-point, the telepipe-arrival pad, and
+		# every exit trigger.
+		"ColiseumMasterNPC", Vector3(-9.0, -10.67, 121.28), 0.60,
 		"res://assets/npcs/np_009_00_0/np_009_00_0.glb",
 		"Coliseum Master",
 		"res://scenes/2d/shops/coliseum_pick.tscn",
