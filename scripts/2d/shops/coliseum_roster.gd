@@ -44,6 +44,9 @@ static func warp_data() -> Dictionary:
 		"spawn_edge": "",
 		"keys_collected": {},
 		"spawn_position": ARENA_SPAWN,
+		# Face into the arena (the spawn sits at the south wall — without this
+		# the player materialises looking at the wall behind them).
+		"spawn_rotation": PI,
 	}
 
 

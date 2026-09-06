@@ -45,6 +45,7 @@ class Watch extends Node:
 	var damaged := false
 	var killed := false
 	var warp_checked := false
+	var facing_checked := false
 
 	func _process(delta: float) -> void:
 		elapsed += delta
@@ -73,6 +74,15 @@ class Watch extends Node:
 				return
 			warp_checked = true
 			print("[coliseum] start warp beside the spawn at (%.1f, %.1f)" % [warp.global_position.x, warp.global_position.z])
+		if warp_checked and not facing_checked:
+			# player_rotation drives the model + movement facing (the body node
+			# itself never rotates) — assert against that.
+			var yaw := wrapf(float((player as Object).get("player_rotation")), -PI, PI)
+			if absf(absf(yaw)) < 0.1:
+				_fail("player faces the wall (yaw 0) — spawn_rotation not applied")
+				return
+			facing_checked = true
+			print("[coliseum] player faces the arena (yaw %.2f)" % yaw)
 
 		if not damaged:
 			if enemy == null:

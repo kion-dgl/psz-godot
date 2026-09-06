@@ -386,6 +386,10 @@ func _ready() -> void:
 		if sp != Vector3.ZERO:
 			spawn_pos = _map_root.to_global(sp)
 			spawn_reason = "warp spawn_position %s" % sp
+			# Optional yaw for explicit warp-ins (the coliseum spawn faces
+			# the arena, not the wall behind it — kion playtest).
+			if data.has("spawn_rotation"):
+				spawn_rot = float(data["spawn_rotation"])
 			# Infer spawn_edge from closest portal when not explicitly set
 			if _spawn_edge.is_empty():
 				var best_dist := INF
