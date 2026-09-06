@@ -371,9 +371,12 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 
 	# Section 1: Area A grid
 	var a_result: Dictionary = generate("a", params["a"], prefix)
+	var a_dirs: Dictionary = _section_warp_dirs(a_result["cells"])
 	sections.append({
 		"type": "grid", "area": "a", "cells": a_result["cells"],
 		"start_pos": a_result["start_pos"], "end_pos": a_result.get("end_pos", ""),
+		"entry_direction": a_dirs["entry_direction"],
+		"exit_direction": a_dirs["exit_direction"],
 	})
 
 	# Section 2: Area E transition (single room)
@@ -388,17 +391,26 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	# "south" here meant arriving at the north door and walking back out south,
 	# i.e. through the corridor backwards — which is what kion hit in play.
 	e_cell["warp_edge"] = "north"
+	# The arrival door is the way back to area A — same shape as a b-section
+	# start's entry_warp_edge, which is what _section_warp_dirs reads to emit the
+	# section's entry_direction. Without it the south portal is geometry only:
+	# the runtime builds no backward warp for it (the backtracking regression).
+	e_cell["entry_warp_edge"] = "south"
 	e_cell["objects"] = FieldPopulation.objects_for_single_room(e_stage, _rng)
 	sections.append({
 		"type": "transition", "area": "e", "cells": [e_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
+		"entry_direction": "south", "exit_direction": "north",
 	})
 
 	# Section 3: Area B grid
 	var b_result: Dictionary = generate("b", params["b"], prefix)
+	var b_dirs: Dictionary = _section_warp_dirs(b_result["cells"])
 	sections.append({
 		"type": "grid", "area": "b", "cells": b_result["cells"],
 		"start_pos": b_result["start_pos"], "end_pos": b_result.get("end_pos", ""),
+		"entry_direction": b_dirs["entry_direction"],
+		"exit_direction": b_dirs["exit_direction"],
 	})
 
 	# Section 4: Area Z boss arena (single room)
@@ -418,6 +430,29 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	})
 
 	return {"sections": sections}
+
+
+## Section-level warp metadata for the runtime's area-warp classification
+## (valley_field_controller._spawn_field_elements reads entry_direction /
+## exit_direction off the section dict). `entry_direction` is the start room's
+## way-back door — the portal the player materialises at when warping in — and
+## `exit_direction` is the end room's forward warp edge. Static field files
+## (data/field_quests/*.json) have carried these since backtracking shipped
+## (#202's section selector); generated fields dropped them when free fields
+## switched from static JSON to this generator's output, which left every
+## backward door — the b-start's way back, the transition room's south door —
+## as geometry with no warp node and no trigger behind it. The boss section
+## gets neither (its way out is the final exit / boss-clear telepipe), matching
+## the static files.
+func _section_warp_dirs(cells: Array) -> Dictionary:
+	var entry := ""
+	var exit := ""
+	for c in cells:
+		if c.get("is_start", false):
+			entry = str(c.get("entry_warp_edge", ""))
+		if c.get("is_end", false):
+			exit = str(c.get("warp_edge", ""))
+	return {"entry_direction": entry, "exit_direction": exit}
 
 
 ## Generate a linear tower field: entrance → floor rooms → transition → floor rooms → boss.
