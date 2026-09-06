@@ -14,26 +14,42 @@ const AREA_ORDER := ["Gurhacia", "Ozette", "Rioh", "Makara", "Paru", "Arca", "Da
 const ARENA_SPAWN := [0.0, 0.5, 15.0]
 
 
-## The 1:1 arena cell: one chosen enemy + a telepipe home on room clear. Same shape
-## as data/quests/debug_coliseum.json's section (stage s00a_nr2, city area), so the
-## field controller, spawner, and quest-complete flow all take their normal paths.
-static func make_sections(enemy_id: String) -> Array:
+## Shared one-cell section builder (the debug_coliseum shape): the coliseum pass
+## adds a room-clear telepipe; boss-section arenas rely on the boss-clear return
+## warp the field controller already spawns, so they carry no telepipe object.
+static func _one_cell_section(stage_id: String, area_variant: String, area_id: String,
+		objects: Array, boss_section: bool) -> Array:
 	return [{
-		"type": "grid", "area": "a", "area_id": "city",
+		"type": "boss" if boss_section else "grid",
+		"area": area_variant, "area_id": area_id,
 		"start_pos": "0,0", "end_pos": "0,0", "entry_direction": "south",
 		"cells": [{
-			"pos": "0,0", "stage_id": "s00a_nr2", "rotation": 0,
+			"pos": "0,0", "stage_id": stage_id, "rotation": 0,
 			"connections": {}, "portals": {"default": "default"},
 			"is_start": true, "is_end": true, "is_branch": false,
 			"has_key": false, "key_for_cell": "", "is_key_gate": false,
 			"key_gate_direction": "", "key_gate_directions": [], "key_drop": "",
 			"required_keys": 0, "warp_edge": "", "path_order": 0,
-			"objects": [
-				{"type": "enemy", "enemy_id": enemy_id, "position": [0.0, 0.0, 6.0]},
-				{"type": "telepipe", "spawn_condition": "room_clear", "position": [0.0, 0.0, -7.0]},
-			],
+			"objects": objects,
 		}],
 	}]
+
+
+## The 1:1 coliseum cell: one chosen enemy + a telepipe home on room clear.
+static func make_sections(enemy_id: String) -> Array:
+	return _one_cell_section("s00a_nr2", "a", "city", [
+		{"type": "enemy", "enemy_id": enemy_id, "position": [0.0, 0.0, 6.0]},
+		{"type": "telepipe", "spawn_condition": "room_clear", "position": [0.0, 0.0, -7.0]},
+	], false)
+
+
+## A solo boss-variation battle in its own arena (one enemy, boss-section rules —
+## the boss-clear return warp covers the exit).
+static func make_arena_sections(row: Dictionary) -> Array:
+	var arena: Dictionary = row["arena"]
+	return _one_cell_section(str(arena["stage"]), str(arena["variant"]), str(arena["area_id"]), [
+		{"type": "enemy", "enemy_id": str(row["id"]), "position": arena.get("position", [0.0, 0.0, 4.0])},
+	], true)
 
 
 ## The goto_scene payload for a coliseum warp — the picker and the headless probe
@@ -73,8 +89,11 @@ static func roster_rows() -> Array:
 			"areas": _areas_of(e),
 			"area_rank": _area_rank(_areas_of(e)),
 			# Bosses load their own arena (a debug_boss_* quest) when one exists —
-			# their scripted actions only make sense there (kion playtest).
+			# their scripted actions only make sense there (kion playtest). The
+			# mother variations get synthesized SOLO cells in the tower arena.
 			"quest_id": boss_quest_for(str(id)) if bool(e.is_boss) else "",
+			"arena": MOTHER_VARIATIONS.get(str(id), {}),
+			"boss_tab": bool(e.is_boss) or MOTHER_VARIATIONS.has(str(id)),
 		})
 	return rows
 
@@ -86,7 +105,7 @@ static func roster_rows() -> Array:
 static func grouped_roster(is_boss: bool) -> Array:
 	var by_archetype := {}
 	for row in roster_rows():
-		if bool(row["is_boss"]) != is_boss:
+		if bool(row["boss_tab"]) != is_boss:
 			continue
 		var arch: String = str(row["archetype"])
 		if not by_archetype.has(arch):
@@ -126,6 +145,15 @@ static func _areas_of(e) -> Array:
 ## stages the three mothers there, which is the trinity fight's arena).
 const ARENA_QUEST_OVERRIDES := {
 	"mother_trinity": "debug_boss_heavens_mother",
+}
+
+## Mother Trinity's variations are each their own Bosses-tab option, fighting
+## SOLO in the tower arena (kion) — not is_boss in data, so they're pinned here
+## (positions from the authored three-mother encounter).
+const MOTHER_VARIATIONS := {
+	"blade_mother": {"stage": "s087_na1", "variant": "z", "area_id": "tower", "position": [0.0, 0.0, 4.0]},
+	"force_mother": {"stage": "s087_na1", "variant": "z", "area_id": "tower", "position": [-4.0, 0.0, -3.0]},
+	"shot_mother": {"stage": "s087_na1", "variant": "z", "area_id": "tower", "position": [4.0, 0.0, -3.0]},
 }
 
 ## The debug_boss_* quest that stages this boss in its own arena, if any (bosses

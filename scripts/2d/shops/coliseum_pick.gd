@@ -56,7 +56,9 @@ func _open_confirm() -> void:
 	if row_v == null:
 		return
 	var row: Dictionary = row_v
-	var place := "its arena" if not str(row.get("quest_id", "")).is_empty() else "the coliseum"
+	var place := "the coliseum"
+	if not str(row.get("quest_id", "")).is_empty() or not (row.get("arena", {}) as Dictionary).is_empty():
+		place = "its arena"
 	ShopNav.confirm(self, "Battle %s in %s?" % [str(row["name"]), place],
 		func() -> void: _start_battle(row))
 
@@ -66,10 +68,10 @@ func _open_confirm() -> void:
 ## arena's south entrance). goto_scene clears the shop overlay stack itself, so
 ## no pop is needed first.
 func _start_battle(row: Dictionary) -> void:
-	var enemy_id := str(row["id"])
-	# Bosses with an arena quest load that quest verbatim — the scripted actions
-	# (Reyburn's flight phases, arena geometry) only make sense in their own
-	# stages (kion playtest).
+	# Bosses with an arena quest load that quest verbatim (the scripted actions —
+	# Reyburn's flight phases, arena geometry — only make sense in their own
+	# stages); boss VARIATIONS (the mothers) get a synthesized solo cell in their
+	# arena; everything else fights 1:1 in the coliseum.
 	var quest_id := str(row.get("quest_id", ""))
 	if not quest_id.is_empty():
 		SessionManager.enter_quest(quest_id, "normal")
@@ -79,7 +81,12 @@ func _start_battle(row: Dictionary) -> void:
 			"current_cell_pos": start_pos, "spawn_edge": "", "keys_collected": {}})
 		return
 	SessionManager.enter_quest(SHELL_QUEST_ID, "normal")
-	SessionManager.set_field_sections(ColiseumRoster.make_sections(enemy_id))
+	if not (row.get("arena", {}) as Dictionary).is_empty():
+		SessionManager.set_field_sections(ColiseumRoster.make_arena_sections(row))
+		SceneManager.goto_scene(FIELD_SCENE, {
+			"current_cell_pos": "0,0", "spawn_edge": "", "keys_collected": {}})
+		return
+	SessionManager.set_field_sections(ColiseumRoster.make_sections(str(row["id"])))
 	SceneManager.goto_scene(FIELD_SCENE, ColiseumRoster.warp_data())
 
 

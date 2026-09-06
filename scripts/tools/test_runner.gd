@@ -3135,6 +3135,24 @@ func test_coliseum_roster_grouping() -> void:
 	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
 	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_heavens_mother",
 		"mother_trinity fights in the eternal tower arena (s087_na1)")
+	# The mother variations are each their own boss-tab option fighting SOLO in
+	# the tower arena (kion) — not is_boss in data, pinned via MOTHER_VARIATIONS.
+	var mothers := {}
+	for g in bosses:
+		for row in g["rows"]:
+			if str(row["id"]) in ["blade_mother", "force_mother", "shot_mother", "mother_trinity"]:
+				mothers[str(row["id"])] = row
+	assert_eq(mothers.size(), 4, "all four mother entries sit on the boss tab")
+	for mid in ["blade_mother", "force_mother", "shot_mother"]:
+		assert_true(not (mothers[mid]["arena"] as Dictionary).is_empty(),
+			"%s carries its solo tower arena" % mid)
+		assert_eq(str(mothers[mid]["quest_id"]), "", "%s loads no whole-quest" % mid)
+	var solo: Array = ColiseumRoster.make_arena_sections(mothers["blade_mother"])
+	assert_eq(str(solo[0]["type"]), "boss", "solo mother cell is a boss section")
+	assert_eq(str(solo[0]["cells"][0]["stage_id"]), "s087_na1", "solo mother fights in the tower arena")
+	var solo_objs: Array = solo[0]["cells"][0]["objects"]
+	assert_eq(solo_objs.size(), 1, "one enemy only — not all three at once")
+	assert_eq(str(solo_objs[0]["enemy_id"]), "blade_mother", "the chosen variation spawns")
 	var saw_hildegigas := false
 	for g in enemies:
 		for row in g["rows"]:
