@@ -123,7 +123,7 @@ func _add_interactables() -> void:
 		# the original pick to face into the room, same compass as the guild
 		# NPC). Clear of the guild stand-point, the telepipe-arrival pad, and
 		# every exit trigger.
-		"ColiseumMasterNPC", Vector3(-9.0, -10.67, 121.28), 0.60,
+		"ColiseumMasterNPC", Vector3(-9.8, -10.67, 121.28), deg_to_rad(-229.0),
 		"res://assets/npcs/np_009_00_0/np_009_00_0.glb",
 		"Coliseum Master",
 		"res://scenes/2d/shops/coliseum_pick.tscn",

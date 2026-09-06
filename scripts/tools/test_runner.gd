@@ -3133,7 +3133,8 @@ func test_coliseum_roster_grouping() -> void:
 	# and falls back to the coliseum cell.
 	assert_eq(ColiseumRoster.boss_quest_for("reyburn"), "debug_boss_reyburn", "reyburn arena quest")
 	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
-	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "", "mother_trinity falls back to the coliseum")
+	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_heavens_mother",
+		"mother_trinity fights in the eternal tower arena (s087_na1)")
 	var saw_hildegigas := false
 	for g in enemies:
 		for row in g["rows"]:

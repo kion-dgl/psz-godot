@@ -121,12 +121,21 @@ static func _areas_of(e) -> Array:
 	return out
 
 
+## Explicit arena picks for bosses whose own quest doesn't place THEM (kion:
+## mother_trinity fights in the Eternal Tower boss arena s087_na1 — its quest
+## stages the three mothers there, which is the trinity fight's arena).
+const ARENA_QUEST_OVERRIDES := {
+	"mother_trinity": "debug_boss_heavens_mother",
+}
+
 ## The debug_boss_* quest that stages this boss in its own arena, if any (bosses
-## without one — mother_trinity today — fall back to the coliseum cell). Scanned
-## once from data/quests: first quest that places the enemy.
+## without one fall back to the coliseum cell). Scanned once from data/quests:
+## first quest that places the enemy.
 static var _boss_quests: Dictionary = {}
 
 static func boss_quest_for(enemy_id: String) -> String:
+	if ARENA_QUEST_OVERRIDES.has(enemy_id):
+		return str(ARENA_QUEST_OVERRIDES[enemy_id])
 	if _boss_quests.is_empty():
 		_boss_quests = _scan_boss_quests()
 	return str(_boss_quests.get(enemy_id, ""))
