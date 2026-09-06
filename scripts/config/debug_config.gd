@@ -3,6 +3,9 @@ class_name DebugConfig
 
 static var show_floor_collision := false
 static var show_gate_dots := false
+# Floating label above each gate showing its portal id + target cell. Off by
+# default; toggle in the start menu's Debug submenu (pairs with show_gate_dots).
+static var show_gate_labels := false
 static var show_time_room := false
 static var show_hitboxes := false
 static var show_combo_timing := false  # Show rhythm combo window indicator
