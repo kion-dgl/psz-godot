@@ -4161,6 +4161,7 @@ assets/stages/city_a/s00a_nr2/lndmd/s00_0_water1.png
 assets/stages/city_a/s00a_nr2/lndmd/s00_1_set1.png
 assets/stages/city_a/s00a_nr2/lndmd/s00_1_set2.png
 assets/stages/city_a/s00a_nr2/lndmd/s00_1_set3.png
+assets/stages/city_a/s00a_nr2/lndmd/s00a_nr2-floor.glb
 assets/stages/city_a/s00a_nr2/lndmd/s00a_nr2_m.glb
 assets/stages/city_a/s00a_nr3/lndmd/s00_0_field.png
 assets/stages/city_a/s00a_nr3/lndmd/s00_0_house1.png
