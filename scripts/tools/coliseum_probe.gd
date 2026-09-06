@@ -44,6 +44,7 @@ class Watch extends Node:
 	var hp0 := -1
 	var damaged := false
 	var killed := false
+	var warp_checked := false
 
 	func _process(delta: float) -> void:
 		elapsed += delta
@@ -59,6 +60,19 @@ class Watch extends Node:
 		if hp0 < 0:
 			hp0 = GameState.hp
 			print("[coliseum] field up: player in place (hp=%d)" % hp0)
+		# The return warp belongs beside the warp-in spawn (0, 15), not the
+		# stage's default portal (kion playtest). It spawns a frame or two after
+		# the player — allow a grace window before failing.
+		if not warp_checked and elapsed > 2.0:
+			var warp := _find_script_node_under(get_tree().current_scene, "start_warp.gd")
+			if warp == null:
+				_fail("no start warp on the arena cell")
+				return
+			if absf(warp.global_position.x) > 0.75 or absf(warp.global_position.z - 15.0) > 0.75:
+				_fail("start warp at %s — expected beside the spawn (0, 15)" % str(warp.global_position))
+				return
+			warp_checked = true
+			print("[coliseum] start warp beside the spawn at (%.1f, %.1f)" % [warp.global_position.x, warp.global_position.z])
 
 		if not damaged:
 			if enemy == null:
@@ -114,6 +128,18 @@ class Watch extends Node:
 	## Match by node name ("Telepipe" — what _spawn_telepipe names it): the
 	## `is Telepipe` class check from this inner class does not match the
 	## field's preloaded script instance (observed in the probe run).
+	func _find_script_node_under(root: Node, script_fragment: String) -> Node:
+		if root == null:
+			return null
+		var s: Script = root.get_script() as Script
+		if s != null and String(s.resource_path).contains(script_fragment):
+			return root
+		for c in root.get_children():
+			var found := _find_script_node_under(c, script_fragment)
+			if found:
+				return found
+		return null
+
 	func _find_telepipe_under(root: Node) -> Node:
 		if root == null:
 			return null

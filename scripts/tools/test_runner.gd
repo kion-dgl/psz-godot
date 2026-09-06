@@ -3098,6 +3098,13 @@ func test_coliseum_master_picker() -> void:
 	assert_eq(warp["spawn_position"], [0.0, 0.5, 15.0], "arena spawn at (0, 15)")
 	assert_eq(str(warp["current_cell_pos"]), "0,0", "warp targets the arena cell")
 
+	# The arena is an indoor stage (no weather, no day/night cycle) fixed at
+	# noon (kion playtest).
+	var FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	assert_true(FieldController._is_indoor_stage("s00a_nr2"), "coliseum classifies as indoors")
+	assert_eq(float(FieldController.INDOOR_STAGE_HOURS.get("s00a_nr2", -1.0)), 12.0,
+		"coliseum indoor hour is noon")
+
 	print("")
 
 
