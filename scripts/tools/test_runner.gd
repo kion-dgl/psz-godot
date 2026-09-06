@@ -60,6 +60,7 @@ func _run_tests_combat() -> void:
 	test_enemy_archetype_modules()
 	test_enemy_berserk_kamikaze()
 	test_coliseum_debug_quest()
+	test_coliseum_master_picker()
 	test_enemy_authored_table_charge_cycle()
 	test_enemy_authored_table_ranged_cycles()
 	test_enemy_difficulty_scaling()
@@ -3065,6 +3066,64 @@ func test_coliseum_debug_quest() -> void:
 	assert_true(attacks.any(func(a: Dictionary) -> bool: return str(a.get("kind")) == "charge"), "hildegigas carries a charge attack")
 	assert_eq(EnemyAttackRegistry.get_archetype("pelcatraz"), "flyer_combo", "pelcatraz is the flyer archetype")
 	assert_eq(EnemyAttackRegistry.get_fsm("bolix")["reveal_range"], 3.5, "mimic reveal range comes from the table")
+	print("")
+
+
+# ── Coliseum Master picker (#629 follow-up): NPC → enemy list → 1:1 arena ─────
+
+func test_coliseum_master_picker() -> void:
+	print("── Coliseum Master picker (#629) ──")
+	# Pure logic lives in ColiseumRoster (statics, node-free) — the picker UI is
+	# a thin Control over it; preloading the UI script here stalls the runner's
+	# compile chain, so tests pin the logic class directly.
+	var sections: Array = ColiseumRoster.make_sections("hildegigas")
+	assert_eq(sections.size(), 1, "one section")
+	var cell: Dictionary = sections[0]["cells"][0]
+	assert_eq(str(cell["stage_id"]), "s00a_nr2", "the arena is the coliseum room")
+	assert_eq(str(sections[0]["area_id"]), "city", "city area wiring")
+	var objs: Array = cell["objects"]
+	assert_eq(objs.size(), 2, "one enemy + one telepipe")
+	assert_eq(str(objs[0]["enemy_id"]), "hildegigas", "the chosen enemy is placed")
+	assert_eq(objs[0]["position"], [0.0, 0.0, 6.0], "enemy placed across the arena")
+	assert_eq(str(objs[1]["type"]), "telepipe", "the way home is a telepipe")
+	assert_eq(str(objs[1]["spawn_condition"]), "room_clear", "it spawns when the enemy dies")
+	var other: Array = ColiseumRoster.make_sections("poison_lily")
+	assert_true(str(other[0]["cells"][0]["objects"][0]["enemy_id"]) != "hildegigas",
+		"the choice drives the spawn")
+
+	# The picker roster: every roster enemy listed with its combat metadata,
+	# sorted by display name so the list is stable and scannable.
+	var rows: Array = ColiseumRoster.roster_rows()
+	assert_eq(rows.size(), EnemyRegistry.get_enemy_count(), "one row per roster enemy")
+	assert_true(EnemyRegistry.get_enemy_ids().has("korse"), "registry exposes sorted ids")
+	var by_name := {}
+	for row in rows:
+		by_name[str(row["name"])] = row
+	assert_true(by_name.has("Hildegigas"), "hildegigas is listed by display name")
+	if by_name.has("Hildegigas"):
+		var hg: Dictionary = by_name["Hildegigas"]
+		assert_eq(str(hg["archetype"]), "bigrig_combo", "row carries the archetype")
+		assert_true(("charge" in hg["kinds"]) and ("leap" in hg["kinds"]),
+			"row carries the authored delivery kinds")
+	var names_lower: Array = []
+	for r in rows:
+		names_lower.append(str(r["name"]).to_lower())
+	var names_sorted: Array = names_lower.duplicate()
+	names_sorted.sort()
+	assert_eq(names_lower, names_sorted, "rows are name-sorted")
+
+	# The picker scene itself: instantiates, builds its rows from the roster, and
+	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
+	# Runtime load() — a compile-time preload of the shop UI stalled the runner.
+	var pick_scene: PackedScene = load("res://scenes/2d/shops/coliseum_pick.tscn")
+	assert_true(pick_scene != null, "coliseum_pick.tscn loads")
+	if pick_scene:
+		var pick: Control = pick_scene.instantiate()
+		add_child(pick)
+		assert_eq(str(pick.title_label.text), "Coliseum Master", "picker screen titles itself")
+		assert_eq(pick._rows.size(), EnemyRegistry.get_enemy_count(), "picker lists the full roster")
+		assert_true(pick._pill_nodes.size() == pick._rows.size(), "one rendered row per enemy")
+		pick.queue_free()
 	print("")
 
 

@@ -21,3 +21,10 @@ func get_enemy(enemy_id: String):
 
 func get_enemy_count() -> int:
 	return _enemies.size()
+
+
+## All roster ids, sorted — a stable listing order for UIs (the coliseum picker).
+func get_enemy_ids() -> Array:
+	var ids := _enemies.keys()
+	ids.sort()
+	return ids

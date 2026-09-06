@@ -113,6 +113,17 @@ func _add_interactables() -> void:
 		"res://scenes/2d/guild_counter.tscn",
 		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
+	# Coliseum Master (kion): debug enemy lab beside the guild counter — pick any
+	# roster enemy and warp alone with it into the s00a_nr2 coliseum for 1:1 combat
+	# testing (the in-game counterpart of #/enemy-room). Model np_009 from the
+	# special_c2 city set (pack-shipped like the other np_* townsfolk).
+	_add_npc(
+		"ColiseumMasterNPC", Vector3(-5.2, -10.67, 111.39), 0.64,
+		"res://assets/npcs/np_009_00_0/np_009_00_0.glb",
+		"Coliseum Master",
+		"res://scenes/2d/shops/coliseum_pick.tscn",
+		"pso_ro_stand", "", "pso_f_emote_bow", Vector3(3.6, 3, 3.6)
+	)
 	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
 	# counter→warp trigger is gone; the teleporter lives in this scene now.
 	_add_area_trigger(
