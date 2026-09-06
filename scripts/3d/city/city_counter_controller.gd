@@ -127,7 +127,10 @@ func _add_interactables() -> void:
 		"res://assets/npcs/np_009_00_0/np_009_00_0.glb",
 		"Coliseum Master",
 		"res://scenes/2d/shops/coliseum_pick.tscn",
-		"pso_ro_stand", "", "pso_f_emote_bow", Vector3(2.8, 3, 2.8)
+		# No interact_anim (kion): the greet one-shot fired as the shop view
+		# disabled the city scene — freezing him mid-greet (the T-pose) and
+		# resuming the bow only when the menu closed. Plain idle throughout.
+		"pso_ro_stand", "", "", Vector3(2.8, 3, 2.8)
 	)
 	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
 	# counter→warp trigger is gone; the teleporter lives in this scene now.
