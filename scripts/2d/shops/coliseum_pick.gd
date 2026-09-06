@@ -56,15 +56,28 @@ func _open_confirm() -> void:
 	if row_v == null:
 		return
 	var row: Dictionary = row_v
-	ShopNav.confirm(self, "Battle %s in the coliseum?" % str(row["name"]),
-		func() -> void: _start_battle(str(row["id"])))
+	var place := "its arena" if not str(row.get("quest_id", "")).is_empty() else "the coliseum"
+	ShopNav.confirm(self, "Battle %s in %s?" % [str(row["name"]), place],
+		func() -> void: _start_battle(row))
 
 
 ## Warp: quest session shell from the on-disk debug quest, then our synthesized
 ## 1:1 sections override its cells, then straight into the field (spawn at the
 ## arena's south entrance). goto_scene clears the shop overlay stack itself, so
 ## no pop is needed first.
-func _start_battle(enemy_id: String) -> void:
+func _start_battle(row: Dictionary) -> void:
+	var enemy_id := str(row["id"])
+	# Bosses with an arena quest load that quest verbatim — the scripted actions
+	# (Reyburn's flight phases, arena geometry) only make sense in their own
+	# stages (kion playtest).
+	var quest_id := str(row.get("quest_id", ""))
+	if not quest_id.is_empty():
+		SessionManager.enter_quest(quest_id, "normal")
+		var sections: Array = SessionManager.get_field_sections()
+		var start_pos := str(sections[0].get("start_pos", "0,0")) if sections.size() > 0 else "0,0"
+		SceneManager.goto_scene(FIELD_SCENE, {
+			"current_cell_pos": start_pos, "spawn_edge": "", "keys_collected": {}})
+		return
 	SessionManager.enter_quest(SHELL_QUEST_ID, "normal")
 	SessionManager.set_field_sections(ColiseumRoster.make_sections(enemy_id))
 	SceneManager.goto_scene(FIELD_SCENE, ColiseumRoster.warp_data())
@@ -126,21 +139,12 @@ func _refresh_display() -> void:
 	_refresh_detail()
 
 
-## A group's header: behavior archetype + up to three areas its members appear
-## in. The label ellipsizes and never drives the panel's minimum width — wide
-## headers (rappy-family types appear everywhere) used to inflate the min size
-## and push the shop panel off the left screen edge (kion playtest).
+## A group's header: just the type name ("Bruiser", "Rappy") — the area list
+## lived here briefly and made the label (and the panel's minimum width) far
+## too long (kion playtest). The detail card carries each enemy's areas.
 func _group_header(group: Dictionary) -> Control:
-	var areas := {}
-	for row in group["rows"]:
-		for area in row["areas"]:
-			areas[area] = true
-	var shown: Array = areas.keys()
-	if shown.size() > 3:
-		shown = shown.slice(0, 3)
-		shown.append("…")
 	var label := Label.new()
-	label.text = "%s  ·  %s" % [str(group["archetype"]).capitalize(), " / ".join(shown)]
+	label.text = str(group["archetype"]).capitalize()
 	label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
 	label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT

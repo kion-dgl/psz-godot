@@ -72,6 +72,9 @@ static func roster_rows() -> Array:
 			"is_rare": bool(e.is_rare),
 			"areas": _areas_of(e),
 			"area_rank": _area_rank(_areas_of(e)),
+			# Bosses load their own arena (a debug_boss_* quest) when one exists —
+			# their scripted actions only make sense there (kion playtest).
+			"quest_id": boss_quest_for(str(id)) if bool(e.is_boss) else "",
 		})
 	return rows
 
@@ -116,6 +119,40 @@ static func _areas_of(e) -> Array:
 	for loc in e.get("locations"):
 		out.append(str(loc))
 	return out
+
+
+## The debug_boss_* quest that stages this boss in its own arena, if any (bosses
+## without one — mother_trinity today — fall back to the coliseum cell). Scanned
+## once from data/quests: first quest that places the enemy.
+static var _boss_quests: Dictionary = {}
+
+static func boss_quest_for(enemy_id: String) -> String:
+	if _boss_quests.is_empty():
+		_boss_quests = _scan_boss_quests()
+	return str(_boss_quests.get(enemy_id, ""))
+
+
+static func _scan_boss_quests() -> Dictionary:
+	var map := {}
+	var dir := DirAccess.open("res://data/quests")
+	if dir == null:
+		return map
+	for fname in dir.get_files():
+		var f := str(fname)
+		if not f.begins_with("debug_boss_") or not f.ends_with(".json"):
+			continue
+		var q = JSON.parse_string(FileAccess.get_file_as_string("res://data/quests/" + f))
+		if not q is Dictionary:
+			continue
+		for s in q.get("sections", []):
+			for c in s.get("cells", []):
+				for o in c.get("objects", []):
+					if str(o.get("type", "")) != "enemy":
+						continue
+					var eid := str(o.get("enemy_id", ""))
+					if not eid.is_empty() and not map.has(eid):
+						map[eid] = str(q.get("id", ""))
+	return map
 
 
 ## Earliest progression position of an enemy's areas; 99 = outside the known flow.

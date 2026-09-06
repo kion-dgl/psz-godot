@@ -3129,6 +3129,11 @@ func test_coliseum_roster_grouping() -> void:
 	assert_eq(enemy_count + boss_count, EnemyRegistry.get_enemy_count(), "tabs cover the roster")
 	assert_true(boss_count > 0, "boss tab is populated")
 	assert_true(saw_reyburn, "reyburn is on the boss tab")
+	# Bosses load their own arena quest (kion playtest); mother_trinity has none
+	# and falls back to the coliseum cell.
+	assert_eq(ColiseumRoster.boss_quest_for("reyburn"), "debug_boss_reyburn", "reyburn arena quest")
+	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
+	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "", "mother_trinity falls back to the coliseum")
 	var saw_hildegigas := false
 	for g in enemies:
 		for row in g["rows"]:
