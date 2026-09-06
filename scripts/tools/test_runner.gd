@@ -62,6 +62,7 @@ func _run_tests_combat() -> void:
 	test_coliseum_debug_quest()
 	test_coliseum_master_picker()
 	test_coliseum_roster_grouping()
+	test_coliseum_mother_variations()
 	test_enemy_authored_table_charge_cycle()
 	test_enemy_authored_table_ranged_cycles()
 	test_enemy_difficulty_scaling()
@@ -3105,6 +3106,23 @@ func test_coliseum_master_picker() -> void:
 	assert_eq(float(FieldController.INDOOR_STAGE_HOURS.get("s00a_nr2", -1.0)), 12.0,
 		"coliseum indoor hour is noon")
 
+	# The picker scene itself: instantiates, builds its rows from the roster, and
+	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
+	# Runtime load() — a compile-time preload of the shop UI stalled the runner.
+	var pick_scene: PackedScene = load("res://scenes/2d/shops/coliseum_pick.tscn")
+	assert_true(pick_scene != null, "coliseum_pick.tscn loads")
+	if pick_scene:
+		var pick: Control = pick_scene.instantiate()
+		add_child(pick)
+		assert_eq(str(pick.title_label.text), "Coliseum Master", "picker screen titles itself")
+		assert_true(pick._rows.size() > 0, "enemy tab lists rows")
+		assert_eq(pick._pill_nodes.size(), pick._rows.size(), "one rendered row per enemy")
+		assert_eq(pick._groups.size(), (ColiseumRoster.grouped_roster(false) as Array).size(),
+			"groups render")
+		pick._load_tab(1)
+		assert_true(pick._rows.size() > 0 and pick._rows.size() < EnemyRegistry.get_enemy_count(),
+			"boss tab is a smaller list")
+		pick.queue_free()
 	print("")
 
 
@@ -3135,24 +3153,7 @@ func test_coliseum_roster_grouping() -> void:
 	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
 	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_heavens_mother",
 		"mother_trinity fights in the eternal tower arena (s087_na1)")
-	# The mother variations are each their own boss-tab option fighting SOLO in
-	# the tower arena (kion) — not is_boss in data, pinned via MOTHER_VARIATIONS.
-	var mothers := {}
-	for g in bosses:
-		for row in g["rows"]:
-			if str(row["id"]) in ["blade_mother", "force_mother", "shot_mother", "mother_trinity"]:
-				mothers[str(row["id"])] = row
-	assert_eq(mothers.size(), 4, "all four mother entries sit on the boss tab")
-	for mid in ["blade_mother", "force_mother", "shot_mother"]:
-		assert_true(not (mothers[mid]["arena"] as Dictionary).is_empty(),
-			"%s carries its solo tower arena" % mid)
-		assert_eq(str(mothers[mid]["quest_id"]), "", "%s loads no whole-quest" % mid)
-	var solo: Array = ColiseumRoster.make_arena_sections(mothers["blade_mother"])
-	assert_eq(str(solo[0]["type"]), "boss", "solo mother cell is a boss section")
-	assert_eq(str(solo[0]["cells"][0]["stage_id"]), "s087_na1", "solo mother fights in the tower arena")
-	var solo_objs: Array = solo[0]["cells"][0]["objects"]
-	assert_eq(solo_objs.size(), 1, "one enemy only — not all three at once")
-	assert_eq(str(solo_objs[0]["enemy_id"]), "blade_mother", "the chosen variation spawns")
+
 	var saw_hildegigas := false
 	for g in enemies:
 		for row in g["rows"]:
@@ -3178,24 +3179,33 @@ func test_coliseum_roster_grouping() -> void:
 	assert_true(int(hg_group["area_rank"]) == 2, "hildegigas group ranks by Rioh (Snowfield)")
 	assert_true(("charge" in _picker_row(hg_group, "hildegigas")["kinds"]),
 		"rows carry the authored delivery kinds")
+	print("")
 
-	# The picker scene itself: instantiates, builds its rows from the roster, and
-	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
-	# Runtime load() — a compile-time preload of the shop UI stalled the runner.
-	var pick_scene: PackedScene = load("res://scenes/2d/shops/coliseum_pick.tscn")
-	assert_true(pick_scene != null, "coliseum_pick.tscn loads")
-	if pick_scene:
-		var pick: Control = pick_scene.instantiate()
-		add_child(pick)
-		assert_eq(str(pick.title_label.text), "Coliseum Master", "picker screen titles itself")
-		assert_true(pick._rows.size() > 0, "enemy tab lists rows")
-		assert_eq(pick._pill_nodes.size(), pick._rows.size(), "one rendered row per enemy")
-		assert_eq(pick._groups.size(), (ColiseumRoster.grouped_roster(false) as Array).size(),
-			"groups render")
-		pick._load_tab(1)
-		assert_true(pick._rows.size() > 0 and pick._rows.size() < EnemyRegistry.get_enemy_count(),
-			"boss tab is a smaller list")
-		pick.queue_free()
+
+# ── Mother variations (kion): separate solo boss options in the tower arena.
+
+func test_coliseum_mother_variations() -> void:
+	print("── Coliseum mother variations (#629) ──")
+	var bosses: Array = ColiseumRoster.grouped_roster(true)
+
+	var mothers := {}
+	for g in bosses:
+		for row in g["rows"]:
+			if str(row["id"]) in ["blade_mother", "force_mother", "shot_mother", "mother_trinity"]:
+				mothers[str(row["id"])] = row
+	assert_eq(mothers.size(), 4, "all four mother entries sit on the boss tab")
+	for mid in ["blade_mother", "force_mother", "shot_mother"]:
+		assert_true(not (mothers[mid]["arena"] as Dictionary).is_empty(),
+			"%s carries its solo tower arena" % mid)
+		assert_eq(str(mothers[mid]["quest_id"]), "", "%s loads no whole-quest" % mid)
+	var solo: Array = ColiseumRoster.make_arena_sections(mothers["blade_mother"])
+	assert_eq(str(solo[0]["type"]), "boss", "solo mother cell is a boss section")
+	assert_eq(str(solo[0]["cells"][0]["stage_id"]), "s087_na1", "solo mother fights in the tower arena")
+	var solo_objs: Array = solo[0]["cells"][0]["objects"]
+	assert_eq(solo_objs.size(), 1, "one enemy only — not all three at once")
+	assert_eq(str(solo_objs[0]["enemy_id"]), "blade_mother", "the chosen variation spawns")
+	print("")
+
 	print("")
 
 
