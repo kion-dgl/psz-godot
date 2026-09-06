@@ -114,6 +114,11 @@ func _load_entries() -> void:
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
 			continue
+		# Debug boss/arena quests are the Coliseum Master's job (launched via
+		# SessionManager.enter_quest from coliseum_pick) — keep the quest files
+		# out of the player-facing guild list.
+		if qid.begins_with("debug_"):
+			continue
 		var quest := QuestLoader.load_quest(qid)
 		if quest.is_empty():
 			continue
