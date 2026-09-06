@@ -34,8 +34,7 @@ func _ready() -> void:
 	# Deferred: the root is mid-setup during this scene's _ready, so a direct
 	# add_child is rejected; the deferred attach still lands before the swap.
 	get_tree().root.add_child.call_deferred(watcher)
-	SceneManager.goto_scene(FIELD_SCENE, {
-		"current_cell_pos": "0,0", "spawn_edge": "", "keys_collected": {}})
+	SceneManager.goto_scene(FIELD_SCENE, ColiseumRoster.warp_data())
 
 
 ## Root-level observer: survives the scene transition and asserts the live loop.
@@ -104,13 +103,6 @@ class Watch extends Node:
 	func _first_in_group(group: String) -> Node3D:
 		var nodes := get_tree().get_nodes_in_group(group)
 		return nodes[0] as Node3D if nodes.size() > 0 else null
-
-	func _dormant_enemy() -> EnemyBase:
-		for n in get_tree().get_nodes_in_group("enemies"):
-			var e := n as EnemyBase
-			if e and e.is_alive and e.dormant:
-				return e
-		return null
 
 	func _find_enemy() -> EnemyBase:
 		for n in get_tree().get_nodes_in_group("enemies"):

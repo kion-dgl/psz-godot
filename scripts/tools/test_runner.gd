@@ -61,6 +61,7 @@ func _run_tests_combat() -> void:
 	test_enemy_berserk_kamikaze()
 	test_coliseum_debug_quest()
 	test_coliseum_master_picker()
+	test_coliseum_roster_grouping()
 	test_enemy_authored_table_charge_cycle()
 	test_enemy_authored_table_ranged_cycles()
 	test_enemy_difficulty_scaling()
@@ -3073,9 +3074,9 @@ func test_coliseum_debug_quest() -> void:
 
 func test_coliseum_master_picker() -> void:
 	print("── Coliseum Master picker (#629) ──")
-	# Pure logic lives in ColiseumRoster (statics, node-free) — the picker UI is
-	# a thin Control over it; preloading the UI script here stalls the runner's
-	# compile chain, so tests pin the logic class directly.
+
+	# The synthesized 1:1 cell: the chosen enemy plus a room-clear telepipe home,
+	# on the coliseum stage with the city area wiring.
 	var sections: Array = ColiseumRoster.make_sections("hildegigas")
 	assert_eq(sections.size(), 1, "one section")
 	var cell: Dictionary = sections[0]["cells"][0]
@@ -3091,26 +3092,61 @@ func test_coliseum_master_picker() -> void:
 	assert_true(str(other[0]["cells"][0]["objects"][0]["enemy_id"]) != "hildegigas",
 		"the choice drives the spawn")
 
-	# The picker roster: every roster enemy listed with its combat metadata,
-	# sorted by display name so the list is stable and scannable.
-	var rows: Array = ColiseumRoster.roster_rows()
-	assert_eq(rows.size(), EnemyRegistry.get_enemy_count(), "one row per roster enemy")
-	assert_true(EnemyRegistry.get_enemy_ids().has("korse"), "registry exposes sorted ids")
-	var by_name := {}
-	for row in rows:
-		by_name[str(row["name"])] = row
-	assert_true(by_name.has("Hildegigas"), "hildegigas is listed by display name")
-	if by_name.has("Hildegigas"):
-		var hg: Dictionary = by_name["Hildegigas"]
-		assert_eq(str(hg["archetype"]), "bigrig_combo", "row carries the archetype")
-		assert_true(("charge" in hg["kinds"]) and ("leap" in hg["kinds"]),
-			"row carries the authored delivery kinds")
-	var names_lower: Array = []
-	for r in rows:
-		names_lower.append(str(r["name"]).to_lower())
-	var names_sorted: Array = names_lower.duplicate()
-	names_sorted.sort()
-	assert_eq(names_lower, names_sorted, "rows are name-sorted")
+	# The warp payload carries the playtest spawn (0, z 15) so the warp-in and
+	# the player start land at the same authored point.
+	var warp: Dictionary = ColiseumRoster.warp_data()
+	assert_eq(warp["spawn_position"], [0.0, 0.5, 15.0], "arena spawn at (0, 15)")
+	assert_eq(str(warp["current_cell_pos"]), "0,0", "warp targets the arena cell")
+
+	print("")
+
+
+# ── Coliseum roster grouping (kion playtest): tabs by boss flag, groups by
+# ── archetype ordered by earliest area.
+
+func test_coliseum_roster_grouping() -> void:
+	print("── Coliseum roster grouping (#629) ──")
+
+	var enemies: Array = ColiseumRoster.grouped_roster(false)
+	var bosses: Array = ColiseumRoster.grouped_roster(true)
+	var enemy_count := 0
+	for g in enemies:
+		enemy_count += (g["rows"] as Array).size()
+	var boss_count := 0
+	var saw_reyburn := false
+	for g in bosses:
+		for row in g["rows"]:
+			boss_count += 1
+			if str(row["id"]) == "reyburn":
+				saw_reyburn = true
+	assert_eq(enemy_count + boss_count, EnemyRegistry.get_enemy_count(), "tabs cover the roster")
+	assert_true(boss_count > 0, "boss tab is populated")
+	assert_true(saw_reyburn, "reyburn is on the boss tab")
+	var saw_hildegigas := false
+	for g in enemies:
+		for row in g["rows"]:
+			assert_true(not bool(row["is_boss"]), "enemy tab carries no bosses")
+			if str(row["id"]) == "hildegigas":
+				saw_hildegigas = true
+	assert_true(saw_hildegigas, "hildegigas is on the enemy tab")
+
+	# Groups order by earliest area (Gurhacia before Eternal Tower), rows within
+	# a group by (area rank, name).
+	var ranks: Array = []
+	for g in enemies:
+		ranks.append(int(g["area_rank"]))
+	var ranks_sorted: Array = ranks.duplicate()
+	ranks_sorted.sort()
+	assert_eq(ranks, ranks_sorted, "groups ordered by earliest area")
+	var hg_group: Dictionary = {}
+	for g in enemies:
+		for row in g["rows"]:
+			if str(row["id"]) == "hildegigas":
+				hg_group = g
+	assert_eq(str(hg_group["archetype"]), "bigrig_combo", "hildegigas groups under its archetype")
+	assert_true(int(hg_group["area_rank"]) == 2, "hildegigas group ranks by Rioh (Snowfield)")
+	assert_true(("charge" in _picker_row(hg_group, "hildegigas")["kinds"]),
+		"rows carry the authored delivery kinds")
 
 	# The picker scene itself: instantiates, builds its rows from the roster, and
 	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
@@ -3121,18 +3157,22 @@ func test_coliseum_master_picker() -> void:
 		var pick: Control = pick_scene.instantiate()
 		add_child(pick)
 		assert_eq(str(pick.title_label.text), "Coliseum Master", "picker screen titles itself")
-		assert_eq(pick._rows.size(), EnemyRegistry.get_enemy_count(), "picker lists the full roster")
-		assert_true(pick._pill_nodes.size() == pick._rows.size(), "one rendered row per enemy")
+		assert_true(pick._rows.size() > 0, "enemy tab lists rows")
+		assert_eq(pick._pill_nodes.size(), pick._rows.size(), "one rendered row per enemy")
+		assert_eq(pick._groups.size(), (ColiseumRoster.grouped_roster(false) as Array).size(),
+			"groups render")
+		pick._load_tab(1)
+		assert_true(pick._rows.size() > 0 and pick._rows.size() < EnemyRegistry.get_enemy_count(),
+			"boss tab is a smaller list")
 		pick.queue_free()
 	print("")
 
 
-# ── Authored-table cycles (#629) ─────
-## Drive REAL registry defs (not injected ones) through the machinery for one full
-## swing each: the charge slam (suffix segments), the lob, and the windup_clips
-## charged punch. Distances sit inside exactly one attack's band, so selection is
-## deterministic without seeding. Pins the registry merge against the kinds.
-
+func _picker_row(group: Dictionary, id: String) -> Dictionary:
+	for row in group["rows"]:
+		if str(row["id"]) == id:
+			return row
+	return {}
 func test_enemy_authored_table_charge_cycle() -> void:
 	print("── Authored table: hildegigas slam cycle (#629) ──")
 	var dt := 1.0 / 60.0

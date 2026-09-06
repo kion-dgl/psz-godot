@@ -1,21 +1,30 @@
 extends Control
 ## Coliseum Master — debug enemy lab (kion): pick any enemy from the roster and
 ## warp alone with it into the coliseum arena (stage s00a_nr2) for 1:1 combat
-## testing, the in-game counterpart of the #/enemy-room web tool. The shell quest
-## (`debug_coliseum`) provides the session/report frame; ColiseumRoster builds the
-## synthesized 1:1 field sections (one enemy + a room-clear telepipe home).
+## testing, the in-game counterpart of the #/enemy-room web tool. Normal enemies
+## and bosses sit on separate tabs; within a tab rows group by behavior type and
+## order by the areas they appear in (kion playtest). The shell quest
+## (`debug_coliseum`) provides the session/report frame; ColiseumRoster builds
+## the synthesized 1:1 field sections (one enemy + a room-clear telepipe home).
 
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 const FIELD_SCENE := "res://scenes/3d/field/valley_field.tscn"
 const SHELL_QUEST_ID := "debug_coliseum"
+const TAB_NAMES := ["Enemies", "Bosses"]
+const TAB_COUNT := 2
 
 var _selected_index: int = 0
-var _rows: Array = []
+var _tab: int = 0
+var _rows: Array = []          # selectable rows for the active tab
+var _groups: Array = []        # grouped_roster() result for the active tab
 var _detail_panel: PanelContainer = null
 var _active_modal: Control = null
-# Cached pill nodes (one per row) so a cursor move re-styles the selected row in
-# place rather than rebuilding the list (Kion playtest) — mirrors the other shops.
+# Cached pill nodes (one per SELECTABLE row) so a cursor move re-styles the
+# selected row in place rather than rebuilding the list (Kion playtest) — group
+# headers interleave in the list but stay out of this array, keeping indexes
+# aligned with _rows. Mirrors the other shops.
 var _pill_nodes: Array = []
+var _tab_row: HBoxContainer
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel
@@ -27,9 +36,8 @@ func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Coliseum Master"
 	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, "")
-	hint_label.text = "Up/Down: Select  Enter: Battle  Esc: Leave"
-	_rows = ColiseumRoster.roster_rows()
-	_refresh_display()
+	hint_label.text = "Up/Down: Select  ←/→: Tab  Enter: Battle  Esc: Leave"
+	_load_tab(0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -38,6 +46,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		"list_size": func() -> int: return _rows.size(),
 		"on_move": func(_old_index: int) -> void:
 			ShopNav.cursor_move(_pill_nodes, _old_index, _selected_index, _refresh_detail),
+		"on_tab": func(dir: int) -> void: _load_tab(_tab + dir),
 		"on_accept": _open_confirm,
 	})
 
@@ -52,17 +61,37 @@ func _open_confirm() -> void:
 
 
 ## Warp: quest session shell from the on-disk debug quest, then our synthesized
-## 1:1 sections override its cells, then straight into the field. goto_scene
-## clears the shop overlay stack itself, so no pop is needed first.
+## 1:1 sections override its cells, then straight into the field (spawn at the
+## arena's south entrance). goto_scene clears the shop overlay stack itself, so
+## no pop is needed first.
 func _start_battle(enemy_id: String) -> void:
 	SessionManager.enter_quest(SHELL_QUEST_ID, "normal")
 	SessionManager.set_field_sections(ColiseumRoster.make_sections(enemy_id))
-	SceneManager.goto_scene(FIELD_SCENE, {
-		"current_cell_pos": "0,0", "spawn_edge": "", "keys_collected": {}})
+	SceneManager.goto_scene(FIELD_SCENE, ColiseumRoster.warp_data())
+
+
+func _load_tab(tab: int) -> void:
+	_tab = wrapi(tab, 0, TAB_COUNT)
+	_selected_index = 0
+	_groups = ColiseumRoster.grouped_roster(_tab == 1)
+	_rows = []
+	for g in _groups:
+		_rows.append_array(g["rows"])
+	_refresh_display()
 
 
 func _refresh_display() -> void:
 	mode_label.visible = false
+	if not is_instance_valid(_tab_row):
+		_tab_row = HBoxContainer.new()
+		_tab_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		_tab_row.add_theme_constant_override("separation", 8)
+		mode_label.get_parent().add_child(_tab_row)
+		mode_label.get_parent().move_child(_tab_row, mode_label.get_index() + 1)
+	for child in _tab_row.get_children():
+		child.queue_free()
+	_tab_row.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
+
 	for child in content_panel.get_children():
 		child.queue_free()
 
@@ -74,29 +103,53 @@ func _refresh_display() -> void:
 	_pill_nodes.clear()
 	_pill_nodes.resize(_rows.size())
 	var selected_pill: Control = null
-	for i in range(_rows.size()):
-		var row: Dictionary = _rows[i]
-		var badges: Array = []
-		if bool(row["is_boss"]):
-			badges.append("Boss")
-		if bool(row["is_rare"]):
-			badges.append("Rare")
-		var right: String = " · ".join(badges) if not badges.is_empty() else str(row["archetype"])
-		var pill := PszStyle.shop_row(str(row["name"]), right, {"selected": i == _selected_index})
-		vbox.add_child(pill)
-		_pill_nodes[i] = pill
-		if i == _selected_index:
-			selected_pill = pill
+	var row_idx := 0
+	for g in _groups:
+		vbox.add_child(_group_header(g))
+		for row in g["rows"]:
+			var pill := _row_pill(row, row_idx == _selected_index)
+			vbox.add_child(pill)
+			_pill_nodes[row_idx] = pill
+			if row_idx == _selected_index:
+				selected_pill = pill
+			row_idx += 1
 
 	scroll.add_child(vbox)
 	content_panel.add_child(scroll)
 	if selected_pill != null:
 		PszStyle.scroll_selected_into_view(selected_pill)
+	elif _rows.is_empty():
+		var empty := Label.new()
+		empty.text = "(No %s in the roster)" % TAB_NAMES[_tab].to_lower()
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(empty)
 	_refresh_detail()
 
 
-## The selected enemy's detail card — element, HP, archetype, and its attack kinds
-## (the delivery behaviors the 1:1 run is about to exercise).
+## A group's header: behavior archetype + the areas its members appear in.
+func _group_header(group: Dictionary) -> Control:
+	var areas := {}
+	for row in group["rows"]:
+		for area in row["areas"]:
+			areas[area] = true
+	var label := Label.new()
+	label.text = "%s  ·  %s" % [str(group["archetype"]).capitalize(), " / ".join(areas.keys())]
+	label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
+	label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return label
+
+
+func _row_pill(row: Dictionary, selected: bool) -> PanelContainer:
+	var badges: Array = []
+	if bool(row["is_rare"]):
+		badges.append("Rare")
+	var right: String = " · ".join(badges) if not badges.is_empty() else str(row["element"])
+	return PszStyle.shop_row(str(row["name"]), right, {"selected": selected})
+
+
+## The selected enemy's detail card — element, HP, areas, archetype, and its
+## attack kinds (the delivery behaviors the 1:1 run is about to exercise).
 func _refresh_detail() -> void:
 	if not is_instance_valid(_detail_panel):
 		return
@@ -106,11 +159,13 @@ func _refresh_detail() -> void:
 	var row: Dictionary = _rows[_selected_index]
 	var kinds: Array = row["kinds"]
 	kinds.sort()
+	var areas: Array = row["areas"]
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 	vbox.add_child(PszStyle.detail_label(str(row["name"]), PszStyle.TITLE_BG))
 	vbox.add_child(PszStyle.detail_label("Element: %s" % str(row["element"])))
 	vbox.add_child(PszStyle.detail_label("HP: %d" % int(row["hp"])))
+	vbox.add_child(PszStyle.detail_label("Found in: %s" % ", ".join(PackedStringArray(areas))))
 	vbox.add_child(PszStyle.detail_label("Archetype: %s" % str(row["archetype"])))
 	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)),
 		PszStyle.TEXT_HIGHLIGHT))
@@ -126,7 +181,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid(_active_modal):
 		return
 	if _nav == null:
-		_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
+		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
 
 

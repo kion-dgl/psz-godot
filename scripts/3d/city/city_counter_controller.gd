@@ -118,11 +118,15 @@ func _add_interactables() -> void:
 	# testing (the in-game counterpart of #/enemy-room). Model np_009 from the
 	# special_c2 city set (pack-shipped like the other np_* townsfolk).
 	_add_npc(
-		"ColiseumMasterNPC", Vector3(-5.2, -10.67, 111.39), 0.64,
+		# Kion playtest position: by the south entrance (the y from the blocked
+		# debug read snaps to the shared counter floor). Well clear of the guild
+		# stand-point, the telepipe-arrival pad (x~2), and the office-exit
+		# trigger (x13+) — interaction zones don't overlap any of them.
+		"ColiseumMasterNPC", Vector3(9.0, -10.67, 121.28), 2.54,
 		"res://assets/npcs/np_009_00_0/np_009_00_0.glb",
 		"Coliseum Master",
 		"res://scenes/2d/shops/coliseum_pick.tscn",
-		"pso_ro_stand", "", "pso_f_emote_bow", Vector3(3.6, 3, 3.6)
+		"pso_ro_stand", "", "pso_f_emote_bow", Vector3(2.8, 3, 2.8)
 	)
 	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
 	# counter→warp trigger is gone; the teleporter lives in this scene now.
