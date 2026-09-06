@@ -527,7 +527,7 @@ func _ready() -> void:
 	_area_map_panel = AreaMapOverlayScript.new()
 	_map_overlay.add_child(_area_map_panel)
 	_area_map_panel.setup(cells, str(_current_cell.get("pos", "")),
-		_visited_cells, "Section %d" % (section_idx + 1))
+		_visited_cells, "Section %d" % (section_idx + 1), str(area_cfg["folder"]))
 
 	# Per-scene field HUD (minimap host, palette, log, FPS). The HP/PP/Lv stats
 	# panel is NOT rebuilt here — it persists on the HudStats autoload (#444).

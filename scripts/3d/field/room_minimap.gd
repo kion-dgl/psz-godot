@@ -4,7 +4,8 @@ extends Control
 ## via _draw().  Added as a child of the MapOverlay CanvasLayer.
 ##
 ## Uses embedded metadata from SVG (data-scale, data-offset-x/y) for player
-## position tracking, matching the web PreviewMinimap approach.
+## position tracking, matching the web PreviewMinimap approach. The SVG
+## parsing itself lives in MinimapSvg, shared with the area-map overlay.
 
 # Frame sprite (map.png) — committed in-repo under assets/ui/, so it ships with
 # the binary rather than the asset pack (no pck republish to iterate on it). The
@@ -89,8 +90,7 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	offset_bottom = 12 + total_h
 
 	# Load SVG text (not as texture — we need to parse geometry)
-	var subfolder: String = "%s_%s" % [area_folder, stage_id[3]] if stage_id.length() >= 4 else area_folder
-	var svg_path := "res://assets/stages/%s/%s/lndmd/%s_minimap.svg" % [subfolder, stage_id, stage_id]
+	var svg_path := MinimapSvg.svg_path(stage_id, area_folder)
 	var file := FileAccess.open(svg_path, FileAccess.READ)
 	if not file:
 		push_warning("[RoomMinimap] Could not open SVG: %s (error=%d)" % [svg_path, FileAccess.get_open_error()])
@@ -98,15 +98,18 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	var svg_text := file.get_as_text()
 	file.close()
 
-	# Parse geometry
-	_parse_floor(svg_text)
-	_parse_boundaries(svg_text)
+	# Parse geometry (shared parser — the area-map overlay reads the same SVGs)
+	_floor_triangles = MinimapSvg.parse_floor(svg_text)
+	_boundary_lines = MinimapSvg.parse_boundaries(svg_text)
 
 	# Parse embedded transform metadata
-	_parse_embedded_metadata(svg_text)
+	var meta := MinimapSvg.parse_metadata(svg_text)
+	_svg_scale = meta["scale"]
+	_svg_offset_x = meta["offset_x"]
+	_svg_offset_y = meta["offset_y"]
 
 	# Parse gates with their baked direction (data-gate-dir attribute)
-	var svg_gates := _parse_gates_with_dirs(svg_text)
+	var svg_gates := MinimapSvg.parse_gates(svg_text)
 
 	print("[RoomMinimap] stage=%s  svg_gates=%d  scale=%.2f  offset=(%.1f, %.1f)  rot=%d" % [
 		stage_id, svg_gates.size(), _svg_scale, _svg_offset_x, _svg_offset_y, _rotation_deg])
@@ -322,112 +325,8 @@ func update_keys(collected: int, _total: int) -> void:
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
 	## Apply cell rotation and scale SVG coordinates to display size.
 	## SVG Y already increases downward (north=top), matching display space.
-	var pos := Vector2(svg_pos.x, svg_pos.y)
-	if _rotation_deg != 0:
-		var center := Vector2(200.0, 200.0)
-		pos = (pos - center).rotated(deg_to_rad(float(_rotation_deg))) + center
-	return pos * (DISPLAY_SIZE / 400.0)
-
-
-# ── SVG parsing ─────────────────────────────────────────────────────────────
-
-func _parse_embedded_metadata(svg_text: String) -> void:
-	## Parse data-scale, data-offset-x, data-offset-y from SVG root element.
-	## These are baked by the stage editor's SVG exporter.
-	var first_line := ""
-	for line in svg_text.split("\n"):
-		if "<svg" in line:
-			first_line = line
-			break
-	if first_line.is_empty():
-		return
-
-	var scale_str := _attr(first_line, "data-scale")
-	var off_x_str := _attr(first_line, "data-offset-x")
-	var off_y_str := _attr(first_line, "data-offset-y")
-
-	if not scale_str.is_empty():
-		_svg_scale = float(scale_str)
-	if not off_x_str.is_empty():
-		_svg_offset_x = float(off_x_str)
-	if not off_y_str.is_empty():
-		_svg_offset_y = float(off_y_str)
-
-
-func _parse_floor(svg_text: String) -> void:
-	for line in svg_text.split("\n"):
-		if 'fill="#2a2a4e"' not in line:
-			continue
-		var d := _attr(line, "d")
-		if d.is_empty():
-			continue
-		for chunk in d.split(" Z "):
-			chunk = chunk.strip_edges()
-			if chunk.ends_with(" Z"):
-				chunk = chunk.substr(0, chunk.length() - 2)
-			if chunk.is_empty():
-				continue
-			var tri := _parse_triangle(chunk)
-			if tri.size() == 3:
-				_floor_triangles.append(tri)
-
-
-func _parse_boundaries(svg_text: String) -> void:
-	for line in svg_text.split("\n"):
-		if 'stroke="white"' not in line or 'fill="none"' not in line:
-			continue
-		var d := _attr(line, "d")
-		if d.is_empty():
-			continue
-		for seg in d.split(" M "):
-			seg = seg.strip_edges()
-			if seg.begins_with("M "):
-				seg = seg.substr(2)
-			if seg.is_empty():
-				continue
-			var parts := seg.split(" L ")
-			if parts.size() == 2:
-				_boundary_lines.append([
-					_pt(parts[0].strip_edges()),
-					_pt(parts[1].strip_edges()),
-				])
-
-
-func _parse_gates_with_dirs(svg_text: String) -> Array:
-	## Parse gate markers and their baked direction from data-gate-dir attribute.
-	## Returns Array of {center: Vector2, dir: String}.
-	var gates: Array = []
-	for line in svg_text.split("\n"):
-		line = line.strip_edges()
-		# New format: <rect ... data-gate="true" data-gate-dir="south" .../>
-		if line.begins_with("<rect") and 'data-gate="true"' in line:
-			var x := float(_attr(line, "x"))
-			var y := float(_attr(line, "y"))
-			var w := float(_attr(line, "width"))
-			var h := float(_attr(line, "height"))
-			var gate_dir := _attr(line, "data-gate-dir")
-			gates.append({
-				"center": Vector2(x + w * 0.5, y + h * 0.5),
-				"dir": gate_dir,
-			})
-		# Legacy format: <polygon fill="#4a9eff" .../>
-		elif line.begins_with("<polygon") and 'fill="#4a9eff"' in line:
-			var ps := _attr(line, "points")
-			if ps.is_empty():
-				continue
-			var sum := Vector2.ZERO
-			var n := 0
-			for pt in ps.strip_edges().split(" "):
-				pt = pt.strip_edges()
-				if pt.is_empty():
-					continue
-				var xy := pt.split(",")
-				if xy.size() == 2:
-					sum += Vector2(float(xy[0]), float(xy[1]))
-					n += 1
-			if n > 0:
-				gates.append({"center": sum / float(n), "dir": ""})
-	return gates
+	return MinimapSvg.svg_to_view(svg_pos, _rotation_deg,
+		Rect2(Vector2.ZERO, Vector2.ONE * DISPLAY_SIZE))
 
 
 # ── Gate entries ─────────────────────────────────────────────────────────────
@@ -467,35 +366,3 @@ func _build_gate_entries(svg_gates: Array, connections: Dictionary,
 		_gate_entries.append({"center": svg_center, "color": color, "label": label, "dir": grid_dir})
 		if not grid_dir.is_empty():
 			_gate_dir_index[grid_dir] = _gate_entries.size() - 1
-
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-func _attr(line: String, attr_name: String) -> String:
-	var key := attr_name + '="'
-	var idx := line.find(key)
-	if idx < 0:
-		return ""
-	var start := idx + key.length()
-	var end_idx := line.find('"', start)
-	if end_idx < 0:
-		return ""
-	return line.substr(start, end_idx - start)
-
-
-func _pt(s: String) -> Vector2:
-	var parts := s.split(",")
-	if parts.size() >= 2:
-		return Vector2(float(parts[0].strip_edges()), float(parts[1].strip_edges()))
-	return Vector2.ZERO
-
-
-func _parse_triangle(chunk: String) -> PackedVector2Array:
-	var verts := PackedVector2Array()
-	for tok in chunk.split(" "):
-		tok = tok.strip_edges()
-		if "," in tok:
-			verts.append(_pt(tok))
-	if verts.size() >= 3:
-		return PackedVector2Array([verts[0], verts[1], verts[2]])
-	return PackedVector2Array()
