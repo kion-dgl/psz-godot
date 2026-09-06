@@ -178,7 +178,7 @@ func _ready() -> void:
 	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
 	if _is_indoor_stage(initial_stage_id):
 		var saved_hour: float = TimeManager.current_hour
-		TimeManager.current_hour = 10.0
+		TimeManager.current_hour = float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 		TimeManager.current_hour = saved_hour
 	else:
@@ -386,6 +386,10 @@ func _ready() -> void:
 		if sp != Vector3.ZERO:
 			spawn_pos = _map_root.to_global(sp)
 			spawn_reason = "warp spawn_position %s" % sp
+			# Optional yaw for explicit warp-ins (the coliseum spawn faces
+			# the arena, not the wall behind it — kion playtest).
+			if data.has("spawn_rotation"):
+				spawn_rot = float(data["spawn_rotation"])
 			# Infer spawn_edge from closest portal when not explicitly set
 			if _spawn_edge.is_empty():
 				var best_dist := INF
@@ -741,9 +745,12 @@ func _on_player_died() -> void:
 	add_child(DefeatScreen.new())
 
 
-const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]
+## Fixed hour applied to indoor stages (they opt out of the day/night cycle):
+## the coliseum debug arena is deliberately noon (kion); other interiors 10:00.
+const INDOOR_STAGE_HOURS := {"s00a_nr2": 12.0}
+const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1", "s00a_nr2"]
 
-func _is_indoor_stage(stage_id: String) -> bool:
+static func _is_indoor_stage(stage_id: String) -> bool:
 	if stage_id in INDOOR_STAGES:
 		return true
 	# Interior areas covered by prefix:
@@ -1064,7 +1071,15 @@ func _spawn_field_elements() -> void:
 		start_warp.interacted.connect(_on_start_warp_interacted)
 		var start_pos := Vector3.ZERO
 		var start_rot := 0.0
-		if _portal_data.has("default"):
+		# An explicit warp-in position (coliseum picker, autopilot) is where the
+		# player materialises — the return warp belongs beside them, not at the
+		# stage's default portal (kion playtest).
+		var warp_spawn: Array = SceneManager.get_transition_data().get("spawn_position", [])
+		if warp_spawn.size() == 3 and Vector3(warp_spawn[0], warp_spawn[1], warp_spawn[2]) != Vector3.ZERO:
+			start_pos = _map_root.to_global(Vector3(warp_spawn[0], warp_spawn[1], warp_spawn[2]))
+			if _portal_data.has("default") and _portal_data["default"].has("default_rotation"):
+				start_rot = _portal_data["default"]["default_rotation"]
+		elif _portal_data.has("default"):
 			start_pos = _portal_data["default"]["spawn_pos"]
 			if _portal_data["default"].has("default_rotation"):
 				start_rot = _portal_data["default"]["default_rotation"]

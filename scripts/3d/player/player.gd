@@ -2544,8 +2544,15 @@ func _on_animation_finished(_anim_name: String) -> void:
 				transition_to(PlayerState.DAMAGED)  # DAMAGED → IDLE when wake-up finishes
 
 
-# Public API for external systems
-func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+## True during the dodge's invincible window — the shared test enemies use to know a
+## contact was dodged (charge stop_on_hit semantics, spec /mechanics/dodge).
+func is_dodge_iframed() -> bool:
+	return current_state == PlayerState.DODGING and dodge_timer < DODGE_IFRAME_DURATION
+
+
+# Public API for external systems. `force_knockdown` maps an attack's knockdown flag
+# (spec /mechanics/enemy-attacks) to the knock-down reaction regardless of damage tier.
+func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false) -> void:
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
 	# revive the defeat transaction applies on "Yes"; the field Player stays
@@ -2562,7 +2569,7 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 	# DODGE_IFRAME_DURATION of the roll is invincible (#377 tightened this
 	# from the whole move phase); a hit after the window damages AND
 	# interrupts the roll like any other hit.
-	if current_state == PlayerState.DODGING and dodge_timer < DODGE_IFRAME_DURATION:
+	if is_dodge_iframed():
 		return
 
 	GameState.set_hp(GameState.hp - damage)
@@ -2585,8 +2592,10 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 		play_animation(_anim_prefix + "_dam_d", false)
 		transition_to(PlayerState.DOWN)
 		died.emit()
-	elif damage > 20:
-		# Heavy hit: knockdown then get back up
+	elif damage > 20 or force_knockdown:
+		# Heavy hit (or an attack carrying the knockdown flag — the roller's roll,
+		# spec /mechanics/enemy-attacks): knockdown then get back up. A downed player
+		# can't punish what follows — that denial is the flag's purpose.
 		play_animation(_anim_prefix + "_dam_d", false)
 		transition_to(PlayerState.DOWN)
 	elif damage > 10:

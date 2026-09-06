@@ -51,6 +51,20 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
 	test_enemy_locomotion()
+	test_enemy_ranged_delivery()
+	test_enemy_leap_delivery()
+	test_enemy_charge_stop_on_hit()
+	test_enemy_charge_roll_through()
+	test_enemy_windup_prelude()
+	test_box_mimic_disguise()
+	test_enemy_archetype_modules()
+	test_enemy_berserk_kamikaze()
+	test_coliseum_debug_quest()
+	test_coliseum_master_picker()
+	test_coliseum_roster_grouping()
+	test_coliseum_mother_variations()
+	test_enemy_authored_table_charge_cycle()
+	test_enemy_authored_table_ranged_cycles()
 	test_enemy_difficulty_scaling()
 	test_combat_math()
 	test_combat_drops()
@@ -438,8 +452,11 @@ func test_area_objects() -> void:
 	print("── AreaObjects (per-field model resolution) ──")
 
 	# One row per area: the folder and scene number its models live under. These
-	# are the directories the storybook port created (PR #571).
+	# are the directories the storybook port created (PR #571). City (s00) has no
+	# field props of its own — quest-authored city stages (the coliseum debug
+	# arena) would fall back to Valley crates; nothing spawns crates there today.
 	var expected := {
+		"city": ["city", "00"],
 		"gurhacia": ["valley", "01"],
 		"ozette": ["wetlands", "02"],
 		"rioh": ["snowfield", "03"],
@@ -2407,8 +2424,11 @@ func _make_recovery_enemy(anim_names: Array, anim_len: float) -> EnemyBase:
 ## the player when driving an enemy's attack timeline.
 class _DamageCapture extends Node3D:
 	var hits: Array = []
-	func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+	var knockdowns: Array = []
+	func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false) -> void:
 		hits.append(damage)
+		if force_knockdown:
+			knockdowns.append(damage)
 
 
 # ── Enemy attack model (#509, spec /mechanics/enemy-attacks) ─────
@@ -2586,6 +2606,705 @@ func test_enemy_telegraph() -> void:
 	print("")
 
 
+# ── Attack delivery kinds (#629, spec /mechanics/enemy-attacks "kind") ─────
+## Seeded ports of the fsm.ts delivery models: projectile/lob released once at
+## window open, leap travel + landing AoE, segmented charge with stop_on_hit /
+## overshoot / punish window, and the windup_clips prelude offset.
+
+## Rig builder with per-clip lengths (the shared _make_recovery_enemy forces one
+## length on every clip; preludes and segments need their own timings).
+func _make_rig_enemy(clip_lengths: Dictionary) -> EnemyBase:
+	var e := EnemyBase.new()
+	e.enemy_data = EnemyData.new()
+	add_child(e)
+	var ap := AnimationPlayer.new()
+	e.add_child(ap)
+	var lib := AnimationLibrary.new()
+	for clip_name in clip_lengths:
+		var anim := Animation.new()
+		anim.length = float(clip_lengths[clip_name])
+		lib.add_animation(str(clip_name), anim)
+	ap.add_animation_library("", lib)
+	e.animation_player = ap
+	return e
+
+
+func _delivery_def(kind: String, extras: Dictionary = {}) -> Dictionary:
+	var def := {"id": "t", "clip": "atk", "kind": kind, "windup_frac": 0.35,
+		"damage_end_frac": 0.6, "hit_half_angle_deg": 45.0, "hit_reach": 2.0,
+		"damage_mult": 1.0, "min_range": 0.0, "max_range": 99.0}
+	for k in extras:
+		def[k] = extras[k]
+	return def
+
+
+func _find_delivery(cls: Script) -> Node:
+	# Newest first: queue_free is deferred (no frames pass mid-test), so deliveries
+	# from earlier cases are still children — the latest release is the one to step.
+	var kids := get_children()
+	for i in range(kids.size() - 1, -1, -1):
+		if kids[i].get_script() == cls:
+			return kids[i]
+	return null
+
+
+func test_enemy_ranged_delivery() -> void:
+	print("── Enemy ranged deliveries: projectile + lob (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# ── projectile: released once at window open, straight along the locked facing,
+	#    contact-tested by the delivery itself.
+	dummy.global_position = Vector3(0, 0, 6.0)
+	var p := _make_rig_enemy({"atk": 1.0})
+	p.enemy_data.attack_base = 10
+	p.enemy_data.move_speed = 4.0
+	p.target = dummy
+	p.current_state = EnemyBase.EnemyState.ATTACKING
+	p._attack_def = _delivery_def("projectile", {"hit_reach": 10.0})
+	p._start_attack()
+	p._attack_anim = ""          # headless: no real playback — force the accumulator
+	p._attack_fallback_timer = 3.0
+	assert_eq(p._attack_kind, "projectile", "kind read from the def")
+	var fired := false
+	for _i in range(45):  # window opens at 0.35 x 1.0s
+		p._process_attacking(dt)
+		if p._window_opened:
+			fired = true
+			break
+	assert_true(fired, "projectile window opens inside the clip")
+	assert_true(p._attack_hit_resolved, "release consumes the attack's one resolution")
+	var proj := _find_delivery(preload("res://scripts/3d/enemies/enemy_projectile.gd"))
+	assert_true(proj != null, "an EnemyProjectile was released")
+	if proj:
+		assert_true(is_equal_approx(float(proj.dir.dot(Vector3(0, 0, 1))), 1.0), "projectile travels the locked facing")
+		assert_eq(proj.max_range, 10.0, "hit_reach is the flight range")
+		for _t in range(120):  # 6m at 10 m/s ≈ 0.6s
+			proj._physics_process(dt)
+			if dummy.hits.size() > 0:
+				break
+		assert_eq(dummy.hits.size(), 1, "projectile damages the target on contact")
+		assert_eq(dummy.hits[0], 10, "damage = attack_base x damage_mult")
+		assert_true(not is_instance_valid(proj) or proj._hit, "contact consumed the projectile")
+	p.queue_free()
+
+	# ── lob: released at window open toward the target's position; area damage at
+	#    landing, hit_reach = blast radius, one resolution at landing.
+	dummy.hits.clear()
+	dummy.global_position = Vector3(0, 0, 5.0)
+	var l := _make_rig_enemy({"atkb": 1.0})
+	l.enemy_data.attack_base = 10
+	l.target = dummy
+	l.current_state = EnemyBase.EnemyState.ATTACKING
+	l._attack_def = _delivery_def("lob", {"clip": "atkb", "hit_reach": 1.6, "damage_mult": 1.5})
+	l._start_attack()
+	l._attack_anim = ""
+	l._attack_fallback_timer = 3.0
+	for _i in range(45):
+		l._process_attacking(dt)
+		if l._window_opened:
+			break
+	var lob := _find_delivery(preload("res://scripts/3d/enemies/enemy_lob.gd"))
+	assert_true(lob != null, "an EnemyLob was released")
+	if lob:
+		assert_true(Vector2(lob.to.x, lob.to.z).distance_to(Vector2(0, 5)) < 0.01, "lob lands at the target's release position")
+		for _t in range(75):  # LOB_FLIGHT_TIME 0.9s
+			lob._physics_process(dt)
+			if dummy.hits.size() > 0:
+				break
+		assert_eq(dummy.hits.size(), 1, "lob damages the target at landing")
+		assert_eq(dummy.hits[0], 15, "lob damage = attack_base x 1.5")
+	l.queue_free()
+
+
+func test_enemy_leap_delivery() -> void:
+	print("── Enemy leap delivery (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# ── leap: the enemy itself travels to the target's window-open position during
+	#    the window, landing at its close for area damage.
+	dummy.hits.clear()
+	dummy.global_position = Vector3(0, 0, 5.0)
+	var le := _make_rig_enemy({"atk3": 1.0})
+	le.enemy_data.attack_base = 10
+	le.target = dummy
+	le.current_state = EnemyBase.EnemyState.ATTACKING
+	le._attack_def = _delivery_def("leap", {"clip": "atk3", "windup_frac": 0.4, "damage_end_frac": 0.75, "hit_reach": 2.0, "damage_mult": 1.8})
+	le._start_attack()
+	le._attack_anim = ""
+	le._attack_fallback_timer = 3.0
+	for _i in range(120):
+		le._process_attacking(dt)
+	assert_true(le._window_closed, "leap window closed by end of clip")
+	assert_eq(dummy.hits.size(), 1, "leap landing damages the target once")
+	assert_eq(dummy.hits[0], 18, "leap damage = attack_base x 1.8")
+	assert_true(Vector2(le.global_position.x, le.global_position.z).distance_to(Vector2(0, 5)) < 0.05,
+		"the enemy lands on the captured target position")
+	le.queue_free()
+
+
+	dummy.queue_free()
+	print("")
+
+
+## Shared charge-test setup: rig + injected charge def + committed attack.
+func _make_charge_enemy(rig: Dictionary, def_extras: Dictionary, dummy: Node3D) -> EnemyBase:
+	var e := _make_rig_enemy(rig)
+	e.enemy_data.attack_base = 10
+	e.enemy_data.move_speed = 4.0
+	e.target = dummy
+	e.current_state = EnemyBase.EnemyState.ATTACKING
+	e._attack_def = _delivery_def("charge", def_extras)
+	e._start_attack()
+	return e
+
+
+func test_enemy_charge_stop_on_hit() -> void:
+	print("── Enemy charge: gorilla slam (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# ── charge (gorilla slam): st → lp travel along the locked facing → contact hit
+	#    ends it (stop_on_hit default) → ed recovery.
+	dummy.hits.clear()
+	dummy.knockdowns.clear()
+	dummy.global_position = Vector3(0, 0, 3.0)
+	var c := _make_charge_enemy({"r_atk2_st": 0.3, "r_atk2_lp": 0.3, "r_atk2_ed": 0.3},
+		{"clip": "atk2", "hit_reach": 1.4, "max_range": 9.0, "damage_mult": 1.4}, dummy)
+	assert_eq(String(c._charge["tokens"]["st"]), "atk2_st", "suffix tokens derived from the clip")
+	# st: stationary windup segment, no damage, no movement.
+	for _i in range(20):
+		c._process_attacking(dt)
+		# Integrate manually: from synchronous test code the physics server hasn't
+		# synced the body, so move_and_slide() wouldn't advance the transform.
+		c.global_position += c.velocity * dt
+	assert_eq(String(c._charge["phase"]), "lp", "st segment elapses into the charge loop")
+	assert_eq(dummy.hits.size(), 0, "no damage during the windup segment")
+	# lp: moves forward until first contact; stop_on_hit ends the charge.
+	var lp_start := c.global_position
+	for _i in range(120):
+		c._process_attacking(dt)
+		c.global_position += c.velocity * dt
+		if String(c._charge.get("phase", "ed")) == "ed":
+			break
+	assert_eq(dummy.hits.size(), 1, "charge hits on first contact")
+	assert_eq(dummy.hits[0], 14, "charge damage = attack_base x 1.4")
+	assert_true(c.global_position.z > lp_start.z + 0.5, "charge traveled forward along the facing")
+	assert_eq(String(c._charge["phase"]), "ed", "stop_on_hit (default) ends the charge on contact")
+	# ed: recovery runs its duration, then the attack ends.
+	for _i in range(30):
+		c._process_attacking(dt)
+	assert_eq(c.current_state, EnemyBase.EnemyState.LOAFING, "charge recovers to LOAFING after ed")
+	c.queue_free()
+
+
+
+func test_enemy_charge_roll_through() -> void:
+	print("── Enemy charge: roller roll-through + punish window (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# ── charge (roller roll): explicit segments, overshoot, rolls THROUGH the target
+	#    (stop_on_hit false), knockdown flag passes through, ed opens the punish window.
+	dummy.hits.clear()
+	dummy.knockdowns.clear()
+	dummy.global_position = Vector3(0, 0, 3.0)
+	var r := _make_charge_enemy({"trf1": 0.3, "wat3": 0.3, "trf2": 0.3}, {
+		"clip": "wat3", "hit_reach": 1.3, "max_range": 12.0, "damage_mult": 1.5,
+		"charge_segments": {"st": "trf1", "lp": "wat3", "ed": "trf2"},
+		"stop_on_hit": false, "overshoot": 3.0, "knockdown": true,
+		"recovery_vulnerable_mult": 2.0}, dummy)
+	assert_true(r._charge["rotate_model"], "explicit segments mean an engine-rolled loop clip")
+	assert_eq(float(r._charge["travel_target"]), 6.0, "overshoot: travel = start dist 3 + 3, capped by max_range")
+	for _i in range(20):
+		r._process_attacking(dt)
+		r.global_position += r.velocity * dt
+	var roll_z := r.global_position.z
+	for _i in range(240):
+		r._process_attacking(dt)
+		r.global_position += r.velocity * dt
+		if String(r._charge.get("phase", "ed")) == "ed":
+			break
+	assert_eq(dummy.hits.size(), 1, "roll resolves its one hit on contact")
+	assert_eq(dummy.knockdowns.size(), 1, "roll hit carries the knockdown flag")
+	assert_true(r.global_position.z > roll_z + 4.0, "stop_on_hit false rolls past the target")
+	assert_eq(String(r._charge["phase"]), "ed", "roll ends on the travel target, not the hit")
+	assert_eq(r._vulnerable_mult, 2.0, "recovery opens the punish window (recovery_vulnerable_mult)")
+	for _i in range(30):
+		r._process_attacking(dt)
+	assert_eq(r._vulnerable_mult, 1.0, "punish window closes with the recovery")
+	assert_eq(r.current_state, EnemyBase.EnemyState.LOAFING, "roll recovers to LOAFING")
+	r.queue_free()
+
+	dummy.queue_free()
+	print("")
+func test_enemy_windup_prelude() -> void:
+	print("── Enemy windup_clips prelude (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# ── windup_clips: sequential prelude, no damage before it, window offset past it.
+	dummy.hits.clear()
+	dummy.knockdowns.clear()
+	dummy.global_position = Vector3(0, 0, 1.0)
+	var w := _make_rig_enemy({"atckstt": 0.2, "atckwat": 0.2, "atckswg": 1.0})
+	w.enemy_data.attack_base = 10
+	w.target = dummy
+	w.current_state = EnemyBase.EnemyState.ATTACKING
+	w._attack_def = _delivery_def("melee_arc", {"clip": "atckswg", "windup_clips": ["atckstt", "atckwat"], "windup_frac": 0.35, "damage_mult": 1.6})
+	w._start_attack()
+	assert_true(not w._windup_done, "prelude armed")
+	assert_true(is_equal_approx(w._windup_total, 0.4), "prelude total = sum of resolved clip lengths")
+	assert_eq(w.current_anim, "atckstt", "first prelude clip plays")
+	var anims_seen := {"atckstt": true, "atckwat": false, "atckswg": false}
+	var windup_hit_pos := -1.0
+	for _i in range(90):  # 0.4 prelude + 0.35 windup + margin
+		w._process_attacking(dt)
+		if w._windup_done and w._attack_anim != "":
+			w._attack_anim = ""          # headless: force the accumulator past the prelude
+			w._attack_fallback_timer = 5.0
+		anims_seen[w.current_anim] = true
+		if dummy.hits.size() > 0 and windup_hit_pos < 0.0:
+			windup_hit_pos = w._attack_pos
+	assert_true(anims_seen["atckwat"] and anims_seen["atckswg"], "prelude clips play in sequence, then the swing")
+	assert_eq(dummy.hits.size(), 1, "exactly one hit lands")
+	assert_eq(dummy.hits[0], 16, "swing damage = attack_base x 1.6")
+	assert_true(windup_hit_pos >= 0.35 and windup_hit_pos <= 0.61, "hit inside the swing's window [0.35, 0.6] — the prelude delays it via its own gate (got %.3f)" % windup_hit_pos)
+	w.queue_free()
+
+	dummy.queue_free()
+	print("")
+
+
+# ── Archetype runtime modules (#629, spec /states/enemies) ─────
+## Box-mimic disguise/reveal, flyer hover-orbit chase, stationary rooting, and the
+## aggro threat display — seeded ports of the fsm.ts archetype branches.
+
+
+func test_box_mimic_disguise() -> void:
+	print("── Box-mimic disguise / reveal (#629) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# Box mimic: the disguise overrides detection_range entirely — only reveal_range
+	# breaks it. detection 15 would aggro at 10 m; the mimic must stay dormant.
+	var m := _make_rig_enemy({"stt": 0.3, "wlk2": 0.4, "tk2": 0.4, "wlk1": 0.5, "atk": 0.5})
+	m.enemy_data.detection_range = 15.0
+	m._archetype = "box_mimic"
+	m._fsm = {"reveal_range": 3.5}
+	m.target = dummy
+	dummy.global_position = Vector3(0, 0, 10.0)
+	m.current_state = EnemyBase.EnemyState.IDLE
+	m._process_idle(1.0 / 60.0)
+	assert_eq(m.current_state, EnemyBase.EnemyState.IDLE, "mimic ignores detection_range while disguised")
+	assert_eq(m.velocity.x, 0.0, "disguised mimic never moves")
+	dummy.global_position = Vector3(0, 0, 3.0)
+	m._process_idle(1.0 / 60.0)
+	assert_eq(m.current_state, EnemyBase.EnemyState.CHASING, "reveal_range breaks the disguise")
+	assert_true(m._threat_timer > 0.0, "reveal is a held display (stt)")
+	assert_eq(m.current_anim, "stt", "reveal plays stt (head out of the box)")
+	# Threat hold keeps it stationary; reveal-cancel retreats if the target flees.
+	m._process_chasing(1.0 / 60.0)
+	assert_eq(m.velocity.x, 0.0, "mimic holds through the reveal display")
+	dummy.global_position = Vector3(0, 0, 10.0)
+	m._process_chasing(1.0 / 60.0)
+	assert_eq(m.current_state, EnemyBase.EnemyState.IDLE, "backing off mid-reveal cancels into the disguise")
+	assert_eq(m.current_anim, "tk2", "reveal-cancel plays the retreat clip")
+	m.queue_free()
+
+
+
+func test_enemy_archetype_modules() -> void:
+	print("── Enemy archetype modules (#629) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 1.0)
+
+	# Flyer: approach beyond 1.4x orbit, hover-orbit inside it (math pinned on the
+	# static like the other locomotion decisions; the node path pins anims/airborne).
+	var fm := EnemyLocomotionLogic.flyer_move(8.0, 2.5, Vector3(0, 0, 1), 1.0)
+	assert_eq(fm["mode"], "approach", "far flyer approaches")
+	assert_true(fm["dir"].dot(Vector3(0, 0, 1)) > 0.99, "approach flies straight at the target")
+	fm = EnemyLocomotionLogic.flyer_move(2.0, 2.5, Vector3(0, 0, 1), 1.0)
+	assert_eq(fm["mode"], "orbit", "in-band flyer hover-orbits")
+	assert_true(absf(fm["dir"].dot(Vector3(0, 0, 1))) < 0.01, "orbit strafes perpendicular to the target line")
+	var f := _make_rig_enemy({"fly": 0.5, "tk": 0.5, "atk1": 0.5})
+	f._archetype = "flyer_combo"
+	f._fsm = {"hover_height": 1.3, "standoff_range": 2.5}
+	f.enemy_data.move_speed = 4.0
+	f.target = dummy
+	dummy.global_position = Vector3(0, 0, 8.0)
+	f.current_state = EnemyBase.EnemyState.CHASING
+	f._chase_flyer(8.0, Vector3(0, 0, 1))
+	assert_true(f._flying, "flyer is airborne while engaged")
+	assert_eq(f.current_anim, "fly", "fly clip closes distance")
+	f._chase_flyer(2.0, Vector3(0, 0, 1))
+	assert_eq(f.current_anim, "tk", "tk clip hover-orbits at standoff")
+	f.queue_free()
+
+	# Stationary: rooted in CHASING — faces the target, never moves (fsm.stationary).
+	var s := _make_rig_enemy({"waito": 0.5, "atk": 0.5})
+	s._fsm = {"stationary": true}
+	s._idle_clip = "waito"  # entry-level key — cached from the registry at _ready
+	s.enemy_data.move_speed = 4.0
+	s.target = dummy
+	dummy.global_position = Vector3(0, 0, 2.0)
+	s.current_state = EnemyBase.EnemyState.CHASING
+	s.attack_cooldown_timer = 5.0  # gate closed — the locomotion branch runs
+	s._process_chasing(1.0 / 60.0)
+	assert_eq(s.velocity.length(), 0.0, "rooted enemy never moves in CHASING")
+	assert_eq(s.current_anim, "waito", "rooted engaged idle is the authored idle_clip")
+	s.queue_free()
+
+	# Threat display: bigrig/roller/ape-gunner/flyer hold stt on aggro before pursuit.
+	var b := _make_rig_enemy({"stt": 0.3, "wlk": 0.5, "run": 0.5, "atk1": 0.5})
+	b._archetype = "bigrig_combo"
+	b.enemy_data.detection_range = 15.0
+	b.target = dummy
+	dummy.global_position = Vector3(0, 0, 5.0)
+	b.current_state = EnemyBase.EnemyState.IDLE
+	b._process_idle(1.0 / 60.0)
+	assert_eq(b.current_state, EnemyBase.EnemyState.CHASING, "bigrig aggroes in detection range")
+	assert_true(b._threat_timer > 0.0, "bigrig opens with the chest-beat display")
+	assert_eq(b.current_anim, "stt", "the display clip is its stt")
+	b._process_chasing(1.0 / 60.0)
+	assert_eq(b.velocity.x, 0.0, "display holds position")
+	b._threat_timer = 0.0
+	b._process_chasing(1.0 / 60.0)
+	assert_true(b.current_anim in ["wlk", "run"], "pursuit starts when the display ends (got %s)" % b.current_anim)
+	b.queue_free()
+
+	dummy.queue_free()
+	print("")
+
+
+# ── Berserk kamikaze + leader loss (#629, spec /states/enemies §shooter) ─────
+func test_enemy_berserk_kamikaze() -> void:
+	print("── Enemy berserk kamikaze (#629) ──")
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 4.0)
+
+	# apply_berserk: confusion display hold, then the dive; contact explodes once.
+	var e := _make_rig_enemy({"atk_an": 0.3, "atk_ji": 0.5, "atk_sh": 0.5})
+	e.enemy_data.attack_base = 10
+	e.enemy_data.move_speed = 4.0
+	e.target = dummy
+	e._kamikaze_def = {"id": "kamikaze", "clip": "atk_ji", "hit_reach": 1.5, "damage_mult": 2.5, "damage_end_frac": 1.0, "windup_frac": 0.0}
+	e.apply_berserk()
+	assert_true(e._berserk, "berserk engages when a kamikaze attack exists")
+	assert_true(e._threat_timer > 0.0, "the confusion display (atk_an) plays first")
+	assert_eq(e.current_anim, "atk_an", "confusion clip is atk_an")
+	e._threat_timer = 0.0
+	e._process_chasing(1.0 / 60.0)
+	assert_eq(e.current_anim, "atk_ji", "the dive loops the kamikaze clip")
+	assert_true(e.velocity.length() > 0.0, "the dive closes on the player")
+	dummy.global_position = Vector3(0, 0, 1.0)
+	assert_eq(dummy.hits.size(), 0, "no damage before contact")
+	e._process_chasing(1.0 / 60.0)
+	assert_eq(dummy.hits.size(), 1, "contact explodes exactly once")
+	assert_eq(dummy.hits[0], 25, "blast damage = attack_base x 2.5")
+	assert_true(not e.is_alive, "kamikaze self-destructs")
+	e.queue_free()
+
+	# Leader loss wiring: an Akorse (*_leader model) dying berserks its Korse pack
+	# (same model minus the suffix) — and nothing else.
+	var leader := _make_rig_enemy({"atk_sh": 0.5, "atk_an": 0.3})
+	leader.enemy_data.model_id = "shooter_leader"
+	var korse := _make_rig_enemy({"atk_sh": 0.5, "atk_ji": 0.5})
+	korse.enemy_data.model_id = "shooter"
+	korse._kamikaze_def = {"id": "kamikaze", "clip": "atk_ji", "hit_reach": 1.5, "damage_mult": 2.5}
+	var wolf := _make_rig_enemy({"atk": 0.5})
+	wolf.enemy_data.model_id = "wolf"
+	wolf._kamikaze_def = {"id": "kamikaze", "clip": "atk", "hit_reach": 1.5, "damage_mult": 1.0}
+	leader._die()
+	assert_true(korse._berserk, "leader death berserks the same-model pack")
+	assert_true(not wolf._berserk, "other models stay calm")
+	leader.queue_free()
+	korse.queue_free()
+	wolf.queue_free()
+	dummy.queue_free()
+	print("")
+
+
+# ── Coliseum debug quest (#629): the s00a_nr2 1:1 arena vs #/enemy-room ─────
+
+func test_coliseum_debug_quest() -> void:
+	print("── Coliseum debug quest (#629) ──")
+	# Quest JSON + manifest + area wiring are consistent, and every placed enemy
+	# resolves in the roster (the arena is only useful 1:1 if the ids are real).
+	var q = JSON.parse_string(FileAccess.get_file_as_string("res://data/quests/debug_coliseum.json"))
+	assert_true(q is Dictionary, "debug_coliseum.json parses")
+	if not q is Dictionary:
+		print("")
+		return
+	assert_eq(str(q["id"]), "debug_coliseum", "quest id")
+	assert_eq(str(q["area_id"]), "city", "quest sits in the city area")
+	var manifest: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/quests/manifest.json"))
+	assert_true(manifest.has("debug_coliseum"), "manifest lists debug_coliseum")
+	var cell: Dictionary = q["sections"][0]["cells"][0]
+	assert_eq(str(cell["stage_id"]), "s00a_nr2", "the arena is the coliseum room")
+	const GridGeneratorScript := preload("res://scripts/3d/field/grid_generator.gd")
+	assert_true(GridGeneratorScript.AREA_CONFIG.has("city"), "AREA_CONFIG resolves the city area")
+	assert_eq(str(GridGeneratorScript.AREA_CONFIG["city"]["folder"]), "city", "city folder")
+	var FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	assert_eq(FieldController._get_stage_subfolder("s00a_nr2", "city"), "city_a",
+		"s00a_nr2 resolves to the city_a asset folder")
+	var enemy_ids := {}
+	for o in cell["objects"]:
+		if str(o.get("type", "")) == "enemy":
+			enemy_ids[str(o["enemy_id"])] = true
+	assert_true(enemy_ids.size() >= 12, "the arena covers the archetype set (%d enemies)" % enemy_ids.size())
+	for eid in enemy_ids:
+		assert_true(EnemyRegistry.get_enemy(eid) != null, "roster resolves enemy '%s'" % eid)
+	# The runtime-relevant kinds/archetypes are represented in the lineup.
+	var attacks = EnemyAttackRegistry.get_attacks("hildegigas")
+	assert_true(attacks.any(func(a: Dictionary) -> bool: return str(a.get("kind")) == "charge"), "hildegigas carries a charge attack")
+	assert_eq(EnemyAttackRegistry.get_archetype("pelcatraz"), "flyer_combo", "pelcatraz is the flyer archetype")
+	assert_eq(EnemyAttackRegistry.get_fsm("bolix")["reveal_range"], 3.5, "mimic reveal range comes from the table")
+	print("")
+
+
+# ── Coliseum Master picker (#629 follow-up): NPC → enemy list → 1:1 arena ─────
+
+func test_coliseum_master_picker() -> void:
+	print("── Coliseum Master picker (#629) ──")
+
+	# The synthesized 1:1 cell: the chosen enemy plus a room-clear telepipe home,
+	# on the coliseum stage with the city area wiring.
+	var sections: Array = ColiseumRoster.make_sections("hildegigas")
+	assert_eq(sections.size(), 1, "one section")
+	var cell: Dictionary = sections[0]["cells"][0]
+	assert_eq(str(cell["stage_id"]), "s00a_nr2", "the arena is the coliseum room")
+	assert_eq(str(sections[0]["area_id"]), "city", "city area wiring")
+	var objs: Array = cell["objects"]
+	assert_eq(objs.size(), 2, "one enemy + one telepipe")
+	assert_eq(str(objs[0]["enemy_id"]), "hildegigas", "the chosen enemy is placed")
+	assert_eq(objs[0]["position"], [0.0, 0.0, 6.0], "enemy placed across the arena")
+	assert_eq(str(objs[1]["type"]), "telepipe", "the way home is a telepipe")
+	assert_eq(str(objs[1]["spawn_condition"]), "room_clear", "it spawns when the enemy dies")
+	var other: Array = ColiseumRoster.make_sections("poison_lily")
+	assert_true(str(other[0]["cells"][0]["objects"][0]["enemy_id"]) != "hildegigas",
+		"the choice drives the spawn")
+
+	# The warp payload carries the playtest spawn (0, z 15) so the warp-in and
+	# the player start land at the same authored point.
+	var warp: Dictionary = ColiseumRoster.warp_data()
+	assert_eq(warp["spawn_position"], [0.0, 0.5, 15.0], "arena spawn at (0, 15)")
+	assert_eq(str(warp["current_cell_pos"]), "0,0", "warp targets the arena cell")
+
+	# The arena is an indoor stage (no weather, no day/night cycle) fixed at
+	# noon (kion playtest).
+	var FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	assert_true(FieldController._is_indoor_stage("s00a_nr2"), "coliseum classifies as indoors")
+	assert_eq(float(FieldController.INDOOR_STAGE_HOURS.get("s00a_nr2", -1.0)), 12.0,
+		"coliseum indoor hour is noon")
+
+	# The picker scene itself: instantiates, builds its rows from the roster, and
+	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
+	# Runtime load() — a compile-time preload of the shop UI stalled the runner.
+	var pick_scene: PackedScene = load("res://scenes/2d/shops/coliseum_pick.tscn")
+	assert_true(pick_scene != null, "coliseum_pick.tscn loads")
+	if pick_scene:
+		var pick: Control = pick_scene.instantiate()
+		add_child(pick)
+		assert_eq(str(pick.title_label.text), "Coliseum Master", "picker screen titles itself")
+		assert_true(pick._rows.size() > 0, "enemy tab lists rows")
+		assert_eq(pick._pill_nodes.size(), pick._rows.size(), "one rendered row per enemy")
+		assert_eq(pick._groups.size(), (ColiseumRoster.grouped_roster(false) as Array).size(),
+			"groups render")
+		pick._load_tab(1)
+		assert_true(pick._rows.size() > 0 and pick._rows.size() < EnemyRegistry.get_enemy_count(),
+			"boss tab is a smaller list")
+		pick.queue_free()
+	print("")
+
+
+# ── Coliseum roster grouping (kion playtest): tabs by boss flag, groups by
+# ── archetype ordered by earliest area.
+
+func test_coliseum_roster_grouping() -> void:
+	print("── Coliseum roster grouping (#629) ──")
+
+	var enemies: Array = ColiseumRoster.grouped_roster(false)
+	var bosses: Array = ColiseumRoster.grouped_roster(true)
+	var enemy_count := 0
+	for g in enemies:
+		enemy_count += (g["rows"] as Array).size()
+	var boss_count := 0
+	var saw_reyburn := false
+	for g in bosses:
+		for row in g["rows"]:
+			boss_count += 1
+			if str(row["id"]) == "reyburn":
+				saw_reyburn = true
+	assert_eq(enemy_count + boss_count, EnemyRegistry.get_enemy_count(), "tabs cover the roster")
+	assert_true(boss_count > 0, "boss tab is populated")
+	assert_true(saw_reyburn, "reyburn is on the boss tab")
+	# Bosses load their own arena quest (kion playtest); mother_trinity has none
+	# and falls back to the coliseum cell.
+	assert_eq(ColiseumRoster.boss_quest_for("reyburn"), "debug_boss_reyburn", "reyburn arena quest")
+	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
+	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_heavens_mother",
+		"mother_trinity fights in the eternal tower arena (s087_na1)")
+
+	var saw_hildegigas := false
+	for g in enemies:
+		for row in g["rows"]:
+			assert_true(not bool(row["is_boss"]), "enemy tab carries no bosses")
+			if str(row["id"]) == "hildegigas":
+				saw_hildegigas = true
+	assert_true(saw_hildegigas, "hildegigas is on the enemy tab")
+
+	# Groups order by earliest area (Gurhacia before Eternal Tower), rows within
+	# a group by (area rank, name).
+	var ranks: Array = []
+	for g in enemies:
+		ranks.append(int(g["area_rank"]))
+	var ranks_sorted: Array = ranks.duplicate()
+	ranks_sorted.sort()
+	assert_eq(ranks, ranks_sorted, "groups ordered by earliest area")
+	var hg_group: Dictionary = {}
+	for g in enemies:
+		for row in g["rows"]:
+			if str(row["id"]) == "hildegigas":
+				hg_group = g
+	assert_eq(str(hg_group["archetype"]), "bigrig_combo", "hildegigas groups under its archetype")
+	assert_true(int(hg_group["area_rank"]) == 2, "hildegigas group ranks by Rioh (Snowfield)")
+	assert_true(("charge" in _picker_row(hg_group, "hildegigas")["kinds"]),
+		"rows carry the authored delivery kinds")
+	print("")
+
+
+# ── Mother variations (kion): separate solo boss options in the tower arena.
+
+func test_coliseum_mother_variations() -> void:
+	print("── Coliseum mother variations (#629) ──")
+	var bosses: Array = ColiseumRoster.grouped_roster(true)
+
+	var mothers := {}
+	for g in bosses:
+		for row in g["rows"]:
+			if str(row["id"]) in ["blade_mother", "force_mother", "shot_mother", "mother_trinity"]:
+				mothers[str(row["id"])] = row
+	assert_eq(mothers.size(), 4, "all four mother entries sit on the boss tab")
+	for mid in ["blade_mother", "force_mother", "shot_mother"]:
+		assert_true(not (mothers[mid]["arena"] as Dictionary).is_empty(),
+			"%s carries its solo tower arena" % mid)
+		assert_eq(str(mothers[mid]["quest_id"]), "", "%s loads no whole-quest" % mid)
+	var solo: Array = ColiseumRoster.make_arena_sections(mothers["blade_mother"])
+	assert_eq(str(solo[0]["type"]), "boss", "solo mother cell is a boss section")
+	assert_eq(str(solo[0]["cells"][0]["stage_id"]), "s087_na1", "solo mother fights in the tower arena")
+	var solo_objs: Array = solo[0]["cells"][0]["objects"]
+	assert_eq(solo_objs.size(), 1, "one enemy only — not all three at once")
+	assert_eq(str(solo_objs[0]["enemy_id"]), "blade_mother", "the chosen variation spawns")
+	print("")
+
+	print("")
+
+
+func _picker_row(group: Dictionary, id: String) -> Dictionary:
+	for row in group["rows"]:
+		if str(row["id"]) == id:
+			return row
+	return {}
+func test_enemy_authored_table_charge_cycle() -> void:
+	print("── Authored table: hildegigas slam cycle (#629) ──")
+	var dt := 1.0 / 60.0
+
+	# hildegigas at 8.5m: only the shoulder_slam band [3,9] contains it (the flop
+	# caps at 7, the punch at 2.2) — the charge kind, suffix atk2_st/lp/ed segments.
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+	dummy.global_position = Vector3(0, 0, 8.5)
+	var hg := _make_rig_enemy({"b070_stt": 0.3, "b070_wat": 0.5, "b070_wlk": 0.5,
+		"b070_atk1": 0.5, "b070_atk2_st": 0.3, "b070_atk2_lp": 0.3, "b070_atk2_ed": 0.3})
+	hg._attacks = EnemyAttackRegistry.get_attacks("hildegigas", 2.2)  # real table
+	hg.enemy_data.attack_base = 10
+	hg.target = dummy
+	hg.current_state = EnemyBase.EnemyState.ATTACKING
+	hg._begin_telegraph()
+	assert_eq(hg._attack_kind, "charge", "8.5m selects the shoulder slam")
+	assert_true(not hg._telegraphing, "the charge's st segment is its own telegraph")
+	for _i in range(400):
+		hg._process_attacking(dt)
+		hg.global_position += hg.velocity * dt
+		if hg.current_state == EnemyBase.EnemyState.LOAFING:
+			break
+	assert_eq(hg.current_state, EnemyBase.EnemyState.LOAFING, "slam cycle completes")
+	assert_eq(dummy.hits.size(), 1, "slam lands exactly one hit from the authored def")
+	hg.queue_free()
+
+
+
+func test_enemy_authored_table_ranged_cycles() -> void:
+	print("── Authored table: lob + windup cycles (#629) ──")
+	var dt := 1.0 / 60.0
+	var dummy := _DamageCapture.new()
+	add_child(dummy)
+
+	# azherowa_b2 at 11m: only the grenade band [4,12] contains it — the lob kind.
+	dummy.hits.clear()
+	dummy.global_position = Vector3(0, 0, 11.0)
+	var az := _make_rig_enemy({"q_stt": 0.3, "q_wat": 0.5, "q_atk": 0.5, "q_atkb": 1.0})
+	az._attacks = EnemyAttackRegistry.get_attacks("azherowa_b2", 2.0)
+	az.enemy_data.attack_base = 10
+	az.target = dummy
+	az.current_state = EnemyBase.EnemyState.ATTACKING
+	az._begin_telegraph()
+	assert_eq(az._attack_kind, "lob", "11m selects the grenade")
+	for _i in range(300):
+		az._process_attacking(dt)
+		# The uniform telegraph commits to _start_attack only after its hold — clear
+		# the anim AFTER that so the accumulator path is armed (headless playback).
+		if az.is_attacking and not az._telegraphing and az._attack_anim != "":
+			az._attack_anim = ""
+			az._attack_fallback_timer = 5.0
+		if az._window_opened:
+			break
+	assert_true(az._window_opened, "authored grenade releases at its window open")
+	var az_lob := _find_delivery(preload("res://scripts/3d/enemies/enemy_lob.gd"))
+	assert_true(az_lob != null, "the authored grenade releases an EnemyLob")
+	if az_lob:
+		for _t in range(75):
+			az_lob._physics_process(dt)
+			if dummy.hits.size() > 0:
+				break
+		assert_eq(dummy.hits.size(), 1, "authored lob damages at landing")
+	az.queue_free()
+
+	# froutang at 1m: only the charged punch band [0,2.4] contains it (pistols
+	# start at 2/3m) — windup_clips prelude into a melee arc swing.
+	dummy.hits.clear()
+	dummy.global_position = Vector3(0, 0, 1.0)
+	var fr := _make_rig_enemy({"o_stt": 0.3, "o_wat": 0.5, "o_atcksht": 0.5,
+		"o_atcktuki": 0.5, "o_atckstt": 0.3, "o_atckwat": 0.3, "o_atckswg": 1.0})
+	fr._attacks = EnemyAttackRegistry.get_attacks("froutang", 2.4)
+	fr.enemy_data.attack_base = 10
+	fr.target = dummy
+	fr.current_state = EnemyBase.EnemyState.ATTACKING
+	fr._begin_telegraph()
+	assert_eq(fr._attack_kind, "melee_arc", "1m selects the charged punch")
+	assert_true(not fr._telegraphing, "windup_clips ARE the telegraph — no generic hold")
+	assert_true(not fr._windup_done, "the atckstt → atckwat prelude is armed")
+	for _i in range(300):
+		fr._process_attacking(dt)
+		if fr._windup_done and fr._attack_anim != "":
+			fr._attack_anim = ""  # headless: force the accumulator
+			fr._attack_fallback_timer = 5.0
+		if fr.current_state == EnemyBase.EnemyState.LOAFING:
+			break
+	assert_eq(dummy.hits.size(), 1, "charged punch lands exactly one hit")
+	fr.queue_free()
+
+	dummy.queue_free()
+	print("")
 func test_enemy_attack_recovery() -> void:
 	print("── Enemy attack recovery (#477) ──")
 	var dummy := Node3D.new()

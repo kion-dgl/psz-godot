@@ -1,0 +1,178 @@
+{
+  "questId": "debug_coliseum",
+  "questName": "DEBUG: Coliseum Enemy Lab",
+  "areaId": "city",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "startPos": "0,0",
+      "endPos": "0,0",
+      "entryDirection": "south",
+      "steps": [
+        {
+          "label": "Arena 0,0",
+          "do": [
+            "kill_all",
+            "wait_quest_complete"
+          ],
+          "exit": "",
+          "exit_portal_id": "",
+          "target": "",
+          "_section_idx": 0,
+          "_pos": "0,0",
+          "stageId": "s00a_nr2",
+          "rotation": 0
+        }
+      ],
+      "_objects": {
+        "0,0": [
+          {
+            "type": "enemy",
+            "enemy_id": "hildegigas",
+            "position": [
+              0.0,
+              0,
+              7.0
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "rohjade",
+            "position": [
+              2.7,
+              0,
+              6.5
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "pelcatraz",
+            "position": [
+              4.9,
+              0,
+              4.9
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "bolix",
+            "position": [
+              6.5,
+              0,
+              2.7
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "goldix",
+            "position": [
+              7.0,
+              0,
+              0.0
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "akorse",
+            "position": [
+              6.5,
+              0,
+              -2.7
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "korse",
+            "position": [
+              4.9,
+              0,
+              -4.9
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "korse",
+            "position": [
+              2.7,
+              0,
+              -6.5
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "izhirak_s6",
+            "position": [
+              0.0,
+              0,
+              -7.0
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "froutang",
+            "position": [
+              -2.7,
+              0,
+              -6.5
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "hypao",
+            "position": [
+              -4.9,
+              0,
+              -4.9
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "poison_lily",
+            "position": [
+              -6.5,
+              0,
+              -2.7
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "porel",
+            "position": [
+              -7.0,
+              0,
+              -0.0
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "reyhound",
+            "position": [
+              -6.5,
+              0,
+              2.7
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "garapython",
+            "position": [
+              -4.9,
+              0,
+              4.9
+            ]
+          },
+          {
+            "type": "enemy",
+            "enemy_id": "rappy",
+            "position": [
+              -2.7,
+              0,
+              6.5
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -48,7 +48,6 @@ var _ground_attacks: Array = []
 var _flight_attacks: Array = []
 var _cur: Dictionary = {}           # attack currently telegraphing/executing
 var _attack_done := false           # damage already applied this swing
-var _ground_y: float = 0.0
 var _fly_target: Vector3 = Vector3.ZERO
 var _glow: OmniLight3D = null
 
@@ -440,23 +439,8 @@ func _spawn_fireball(dmg: int) -> void:
 
 
 func _spawn_shockwave(radius: float) -> void:
-	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = radius * 0.6
-	tm.outer_radius = radius * 0.7
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.6, 0.2, 0.7)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.5, 0.1)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	tm.material = mat
-	ring.mesh = tm
-	get_parent().add_child(ring)
-	ring.global_position = Vector3(global_position.x, _ground_y + 0.2, global_position.z)
-	var tw := ring.create_tween()
-	tw.parallel().tween_property(ring, "scale", Vector3.ONE * 1.4, 0.4)
-	tw.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.4)
-	tw.tween_callback(ring.queue_free)
+	EnemyLob.spawn_ring(get_parent(),
+		Vector3(global_position.x, _ground_y, global_position.z), radius)
 
 
 # ---- phase / movement helpers ----------------------------------------------

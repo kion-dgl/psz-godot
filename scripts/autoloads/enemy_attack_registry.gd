@@ -55,6 +55,17 @@ func get_fsm(enemy_id: String) -> Dictionary:
 	return out
 
 
+## Entry-level render scale for oversized source GLBs (spec /mechanics/enemy-attacks
+## model_scale — poison_lily is 0.09). 1.0 when unset: no scaling.
+func get_model_scale(enemy_id: String) -> float:
+	return float(_enemies.get(enemy_id, {}).get("model_scale", 1.0))
+
+
+## The engaged-idle clip token for rooted enemies (fsm.stationary); "" when unset.
+func get_idle_clip(enemy_id: String) -> String:
+	return str(_enemies.get(enemy_id, {}).get("idle_clip", ""))
+
+
 func get_enemy_count() -> int:
 	return _enemies.size()
 
