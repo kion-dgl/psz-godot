@@ -22,6 +22,7 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Fog of war</h2>
   <ul>
     <li>A cell MUST render only once the player has <strong>visited</strong> it (<code>_visited_cells</code>); unexplored cells stay dark windows — the map fills in as the player explores.</li>
+    <li>A revealed cell draws its <strong>room footprint</strong> — the actual floor shape from the stage's minimap SVG (<code>lndmd/&lt;stage&gt;_minimap.svg</code>, parsed by the shared <code>MinimapSvg</code> reader), rotated by the cell's rotation and fitted into the cell window so the grid reads as real rooms, not uniform squares (player request). Rooms relative sizes stay true to their SVGs, so gates land on the edges their door markers occupy. A stage without an SVG (≈10 rooms, or a packless CI run) SHOULD fall back to the plain square.</li>
     <li>A revealed cell draws its <strong>doors</strong> per state: green = open, red = locked (key gates, enemy locks, pending objectives — the same gate-state feed the room minimap uses).</li>
     <li>The <strong>start cell</strong> carries the return-warp marker (cyan ring — the warp back to the city); the section's <strong>exit edge</strong> (<code>warp_edge</code>) carries the area-warp marker (blue, locked-red while objectives are pending) to the next grid.</li>
     <li>The current cell is highlighted (bright green).</li>
@@ -32,8 +33,9 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/field/area_map_overlay.gd</code> — the overlay Control (layout, fog of war, doors/warps; sprite or procedural backdrop).</li>
-    <li><code>scripts/3d/field/valley_field_controller.gd</code> — mounts it in the <code>MapOverlay</code> CanvasLayer, feeds <code>setup(cells, current, visited, label)</code> per cell load and <code>set_gate_state</code> on gate changes, handles the <code>area_map</code> action.</li>
+    <li><code>scripts/3d/field/area_map_overlay.gd</code> — the overlay Control (layout, fog of war, room footprints, doors/warps; sprite or procedural backdrop).</li>
+    <li><code>scripts/3d/field/minimap_svg.gd</code> — shared minimap-SVG parser (floor triangles, boundaries, gates, transform metadata) used by both the area map and the room minimap.</li>
+    <li><code>scripts/3d/field/valley_field_controller.gd</code> — mounts it in the <code>MapOverlay</code> CanvasLayer, feeds <code>setup(cells, current, visited, label, area_folder)</code> per cell load and <code>set_gate_state</code> on gate changes, handles the <code>area_map</code> action.</li>
     <li><code>project.godot</code> — the <code>area_map</code> input action; <code>scripts/config/debug_config.gd</code> — <code>reveal_map</code>.</li>
   </ul>
 

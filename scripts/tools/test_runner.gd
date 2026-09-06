@@ -43,6 +43,7 @@ func _run_tests_combat() -> void:
 	test_damaging_frame()
 	test_target_info_panel()
 	test_area_map_overlay()
+	test_area_map_room_shapes()
 	test_element_status()
 	test_enemy_attack_recovery()
 	test_enemy_attack_clip_resolution()
@@ -8369,6 +8370,55 @@ func test_area_map_overlay() -> void:
 	assert_eq(str(map._gate_states.get("0,0>east", "")), "locked", "set_gate_state locks a door")
 	map.set_gate_state("0,0", "east", "open")
 	assert_eq(str(map._gate_states.get("0,0>east", "")), "open", "set_gate_state reopens it")
+	map.free()
+	print("")
+
+
+# ── Area map room shapes: per-cell SVG footprints (player request) ──
+# The map should read as actual rooms, not uniform squares: revealed cells
+# draw their stage's minimap-SVG floor outline, rotated per cell. The
+# parsing lives in MinimapSvg (extracted from room_minimap so both maps
+# share it — and so the near-dup ratchet keeps it that way). Seeded inline
+# SVG: CI runs without pack assets, so nothing here touches res://assets.
+func test_area_map_room_shapes() -> void:
+	print("── Area map room shapes (SVG footprints, shared parser) ──")
+	var svg := "<svg viewBox=\"0 0 400 400\" data-scale=\"15.5\" data-offset-x=\"1.5\" data-offset-y=\"-2.5\">\n<path fill=\"#2a2a4e\" d=\"M 10,20 L 30,20 L 10,60 Z M 100,100 L 140,100 L 100,160 Z\"/>\n<path fill=\"none\" stroke=\"white\" stroke-width=\"2\" d=\"M 10,20 L 30,20 M 5,5 L 9,9\"/>\n<rect x=\"123.2\" y=\"272.9\" width=\"48\" height=\"8\" fill=\"#ff4444\" data-gate=\"true\" data-gate-dir=\"south\"/>\n</svg>\n"
+	var tris: Array = MinimapSvg.parse_floor(svg)
+	assert_eq(tris.size(), 2, "floor path parses into its two triangles")
+	var first: PackedVector2Array = tris[0]
+	assert_eq(first.size(), 3, "each floor chunk is a 3-vertex triangle")
+	assert_true(Vector2(first[0]).is_equal_approx(Vector2(10, 20)),
+		"triangle verts parse from the path d")
+	var bounds: Array = MinimapSvg.parse_boundaries(svg)
+	assert_eq(bounds.size(), 2, "boundary path parses into its two segments")
+	var meta: Dictionary = MinimapSvg.parse_metadata(svg)
+	assert_true(is_equal_approx(float(meta["scale"]), 15.5), "data-scale parses")
+	assert_true(is_equal_approx(float(meta["offset_y"]), -2.5), "data-offset-y parses")
+	var gates: Array = MinimapSvg.parse_gates(svg)
+	assert_eq(gates.size(), 1, "data-gate rect parses")
+	assert_eq(str(gates[0]["dir"]), "south", "gate direction comes from data-gate-dir")
+	assert_true(Vector2(gates[0]["center"]).is_equal_approx(Vector2(147.2, 276.9)),
+		"gate center is the rect midpoint")
+	# View transform: unrotated SVG fills the window; rotation mirrors the CW
+	# label swap StageRotation applies to directions (north edge → east edge).
+	var win := Rect2(139.0, 219.0, 107.0, 107.0)
+	assert_true(MinimapSvg.svg_to_view(Vector2(0, 0), 0, win).is_equal_approx(win.position),
+		"unrotated SVG origin lands on the window corner")
+	var east_mid := Vector2(win.position.x + win.size.x, win.position.y + win.size.y * 0.5)
+	assert_true(MinimapSvg.svg_to_view(Vector2(200, 0), 90, win).is_equal_approx(east_mid),
+		"90° rotation maps the north edge onto the east edge")
+	# Overlay fallback: a cell whose stage has no SVG (bogus id) caches an
+	# empty shape and keeps the square; a cell without stage_id requests none.
+	const OverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
+	var map = OverlayScript.new()
+	var cells: Array = [
+		{"pos": "0,0", "stage_id": "s01z_zz9", "rotation": 90, "connections": {"east": "0,1"}},
+		{"pos": "0,1", "connections": {"west": "0,0"}},
+	]
+	map.setup(cells, "0,0", {"0,0": true}, "Section 1", "valley")
+	assert_true((map._room_shapes["0,0"] as Dictionary).get("triangles", []).is_empty(),
+		"stage without an SVG caches an empty shape → square fallback")
+	assert_true(not map._room_shapes.has("0,1"), "cell without stage_id requests no shape")
 	map.free()
 	print("")
 

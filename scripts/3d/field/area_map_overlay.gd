@@ -11,6 +11,12 @@ extends Control
 ## marker (cyan — the warp back to the city), and the section's exit edge
 ## the area-warp marker (blue) to the next grid.
 ##
+## Room footprints (player request): a revealed cell draws its stage's real
+## floor shape — the same minimap SVG the room minimap parses (MinimapSvg) —
+## rotated by the cell's rotation and fitted into the cell window, so the
+## grid reads as actual rooms instead of uniform squares. Stages without an
+## SVG (≈10 rooms, or a packless CI run) keep the plain-square fallback.
+##
 ## Drawn over assets/ui/hud/map_grid.png when present — kion's 5×5 grid
 ## sheet (1024 px wide, cell windows 107 px at 139 + col·120 / 219 + row·120).
 ## Until the sprite lands in the pack, a procedural plate with identical
@@ -40,6 +46,8 @@ const DOOR_LOCKED_COLOR := Color(1.0, 0.3, 0.3)
 const RETURN_WARP_COLOR := Color(0.3, 0.95, 1.0)
 const AREA_WARP_COLOR := Color(0.29, 0.62, 1.0)
 const HEADER_TEXT := Color(0.16, 0.22, 0.34)
+# Room-footprint strokes — subdued so shapes read as outlines, not noise.
+const SHAPE_BOUNDARY_COLOR := Color(1.0, 1.0, 1.0, 0.45)
 
 const DIR_OFFSETS := {
 	"north": Vector2i(-1, 0),
@@ -53,6 +61,8 @@ var _current_pos: String = ""
 var _visited_cells: Dictionary = {}
 var _gate_states: Dictionary = {}  # "pos>dir" → "open"|"locked"|"exit"
 var _section_label: String = ""
+var _area_folder: String = ""
+var _room_shapes: Dictionary = {}  # pos → MinimapSvg.load_stage() result
 var _cell_lookup: Dictionary = {}
 var _min_row: int = 0
 var _min_col: int = 0
@@ -71,13 +81,24 @@ func _ready() -> void:
 
 
 ## Same wiring contract the grid_minimap had — the field controller calls
-## setup on every cell load and set_gate_state on gate changes.
+## setup on every cell load and set_gate_state on gate changes. area_folder
+## (e.g. "valley") resolves each cell's stage SVG path; without it the stage
+## prefix is reverse-looked up from GridGenerator.AREA_CONFIG.
 func setup(cells: Array, current_pos: String, visited_cells: Dictionary,
-		section_label: String) -> void:
+		section_label: String, area_folder: String = "") -> void:
 	_cells = cells
 	_current_pos = current_pos
 	_visited_cells = visited_cells
 	_section_label = section_label
+	_area_folder = area_folder
+
+	_room_shapes.clear()
+	for cell in _cells:
+		var stage_id := str(cell.get("stage_id", ""))
+		if stage_id.is_empty():
+			continue
+		_room_shapes[str(cell.get("pos", "0,0"))] = \
+			MinimapSvg.load_stage(stage_id, _area_folder)
 
 	_cell_lookup.clear()
 	_min_row = 999
@@ -185,9 +206,10 @@ func _draw() -> void:
 		if not _is_revealed(pos):
 			continue
 		var win := _window_rect(pos, sc)
-		var inset: float = 6.0 * sc
-		var fill := win.grow(-inset)
-		draw_rect(fill, CURRENT_COLOR if pos == _current_pos else VISITED_COLOR)
+		var fill_color := CURRENT_COLOR if pos == _current_pos else VISITED_COLOR
+		if not _draw_room_shape(cell, pos, win, fill_color, sc):
+			var inset: float = 6.0 * sc
+			draw_rect(win.grow(-inset), fill_color)
 
 		# Doors on each connected edge: green open / red locked
 		var connections: Dictionary = cell.get("connections", {})
@@ -207,6 +229,31 @@ func _draw() -> void:
 		if cell.get("is_start", false):
 			var c := win.get_center()
 			draw_arc(c, 16.0 * sc, 0.0, TAU, 20, RETURN_WARP_COLOR, 4.0 * sc)
+
+
+## Real room footprint: the stage minimap SVG's floor triangles, rotated by
+## the cell's rotation and fitted into the cell window (the full 0..400 SVG
+## viewBox maps onto the window, so room sizes stay comparable and gates land
+## on the edges their door notches mark). Returns false when the stage has no
+## parsed SVG so the caller keeps the plain-square fallback.
+func _draw_room_shape(cell: Dictionary, pos: String, win: Rect2,
+		fill_color: Color, sc: float) -> bool:
+	var shape: Dictionary = _room_shapes.get(pos, {})
+	var triangles: Array = shape.get("triangles", [])
+	if triangles.is_empty():
+		return false
+	var rotation_deg := int(cell.get("rotation", 0))
+	for tri in triangles:
+		var pts := PackedVector2Array()
+		for v in tri:
+			pts.append(MinimapSvg.svg_to_view(v, rotation_deg, win))
+		draw_polygon(pts, [fill_color])
+	for seg in shape.get("boundaries", []):
+		draw_line(
+			MinimapSvg.svg_to_view(seg[0], rotation_deg, win),
+			MinimapSvg.svg_to_view(seg[1], rotation_deg, win),
+			SHAPE_BOUNDARY_COLOR, 1.5 * sc)
+	return true
 
 
 ## Door / warp notch centered on one edge of a cell window. Warp markers are
