@@ -1107,12 +1107,6 @@ func _spawn_field_elements() -> void:
 	var entry_dir: String = str(current_section_data.get("entry_direction", ""))
 	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
 	var room_has_enemies: bool = _cell_has_enemies(_current_cell)
-
-	# entry_direction is only meaningful at the section's start cell — that's
-	# where the player materialises. At any other cell (including the end cell
-	# where warp_edge lives), the same direction might collide with a
-	# warp_edge or exit_dir and mis-classify the portal as a backward entry.
-	# Restricting is_entry to the start cell prevents that collision.
 	var is_start_cell: bool = bool(_current_cell.get("is_start", false))
 
 	for portal_dir in _portal_data:
@@ -1121,26 +1115,26 @@ func _spawn_field_elements() -> void:
 		if connections.has(portal_dir):
 			continue  # Has a connection — handled by gate logic above
 
-		# Determine warp target based on direction
+		# Determine warp target based on direction (area_warp_kind owns the
+		# classification rules — see its doc comment).
+		var warp_kind: int = area_warp_kind(portal_dir, entry_dir, exit_dir,
+			warp_edge, is_start_cell, section_idx_for_warp, sections_for_warp.size())
+		if warp_kind == WARP_NONE:
+			continue  # No valid target — skip
+
 		var target_section := 0
 		var target_cell := ""
-		var is_entry: bool = is_start_cell and (portal_dir == entry_dir)
-		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
-
-		var is_final_exit: bool = false
-		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
+		var is_entry: bool = warp_kind == WARP_ENTRY
+		var is_exit: bool = warp_kind == WARP_EXIT or warp_kind == WARP_FINAL_EXIT
+		var is_final_exit: bool = warp_kind == WARP_FINAL_EXIT
+		if is_exit and not is_final_exit:
 			var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
 			target_section = section_idx_for_warp + 1
 			target_cell = str(next_sec.get("start_pos", ""))
-		elif is_exit:
-			# Last section — exit returns to city
-			is_final_exit = true
-		elif is_entry and section_idx_for_warp > 0:
+		elif is_entry:
 			var prev_sec: Dictionary = sections_for_warp[section_idx_for_warp - 1]
 			target_section = section_idx_for_warp - 1
 			target_cell = str(prev_sec.get("end_pos", ""))
-		else:
-			continue  # No valid target — skip
 
 		var pd: Dictionary = _portal_data[portal_dir]
 		var aw_gate_pos: Vector3 = pd.get("gate_pos", pd["trigger_pos"])
@@ -1732,6 +1726,30 @@ func _wire_fence_links() -> void:
 ## behaviour they had: a gate on every connection, key gates where the legacy
 ## `is_key_gate` / `key_gate_direction` fields say so.
 enum { GATE_NONE, GATE_KEY, GATE_ENEMY_DEFEAT }
+
+## Which section transition (if any) an UNCONNECTED portal represents — the
+## classifier behind the area-warp loop in _spawn_field_elements. Sections
+## carry entry_direction (the start cell's way-back door, where the player
+## materialises on warp-in) and exit_direction (the end cell's forward warp
+## edge); static field files have always had them, and generated fields emit
+## the same keys via grid_generator._section_warp_dirs. Before the generated
+## fields did, every backward door classified as WARP_NONE: portal geometry
+## with no warp and no trigger, which is how backtracking regressed.
+enum { WARP_NONE, WARP_ENTRY, WARP_EXIT, WARP_FINAL_EXIT }
+
+## entry_direction only classifies at the section's START cell — that is where
+## the player materialises. At any other cell (including the end cell where
+## warp_edge lives), the same direction might collide with a warp_edge or
+## exit_direction and mis-classify the portal as a backward entry. The first
+## section has nothing to warp back to, so its start's off-grid door is inert.
+static func area_warp_kind(portal_dir: String, entry_dir: String, exit_dir: String,
+		warp_edge: String, is_start_cell: bool, section_idx: int,
+		section_count: int) -> int:
+	if is_start_cell and portal_dir == entry_dir:
+		return WARP_ENTRY if section_idx > 0 else WARP_NONE
+	if portal_dir == warp_edge or portal_dir == exit_dir:
+		return WARP_EXIT if section_idx + 1 < section_count else WARP_FINAL_EXIT
+	return WARP_NONE
 
 static func gate_kind_for_door(attrs: Dictionary, dir: String, spawn_edge: String,
 		legacy_is_key_gate: bool, legacy_key_dirs: Array) -> int:

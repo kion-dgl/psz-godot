@@ -130,6 +130,7 @@ func _run_tests_core() -> void:
 	test_authored_walls_clear_doorways()
 	test_authored_fences_are_openable()
 	test_gate_kind_per_door()
+	test_area_warp_classification()
 	test_group_five_trap_roll()
 	test_enemies_stand_on_authored_slots()
 	test_keys_stand_on_authored_slots()
@@ -142,6 +143,7 @@ func _run_tests_core() -> void:
 	test_city_scroll_fixes()
 	test_area_objects()
 	test_generated_field_doors()
+	test_generated_section_warp_directions()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -644,6 +646,67 @@ func _portal_backed(configs: Dictionary, stage_id: String, rotation: int, game_d
 	return false
 
 
+## Generated sections carry the warp metadata the runtime's area-warp loop
+## classifies by (spec /states/field-lifecycle "Area gates are two-way").
+## Static field files have had entry_direction/exit_direction since #202;
+## generated fields dropped them when free fields switched from static JSON,
+## which left every backward door as geometry with no warp behind it.
+func test_generated_section_warp_directions() -> void:
+	print("── Generated free fields (section warp metadata) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var areas := ["gurhacia", "ozette", "rioh", "makara", "paru", "arca", "dark"]
+	var b_without_wayback := 0
+	for area in areas:
+		for roll in range(3):
+			var gen = GridGen.new()
+			gen.set_seed(roll)
+			var sections: Array = gen.generate_field("normal", area)["sections"]
+			assert_eq(sections.size(), 4, "%s roll %d: field has 4 sections" % [area, roll])
+			# Grid sections a and b: entry names the start room's way back,
+			# exit names the end room's warp edge.
+			for letter in ["a", "b"]:
+				var sec: Dictionary = {}
+				for s in sections:
+					if str(s.get("area", "")) == letter:
+						sec = s
+						break
+				var start: Dictionary = {}
+				var endc: Dictionary = {}
+				for c in sec.get("cells", []):
+					if c.get("is_start", false):
+						start = c
+					if c.get("is_end", false):
+						endc = c
+				assert_eq(str(sec.get("entry_direction", "")), str(start.get("entry_warp_edge", "")),
+					"%s roll %d %s: entry_direction is the start room's way back" % [area, roll, letter])
+				assert_eq(str(sec.get("exit_direction", "")), str(endc.get("warp_edge", "")),
+					"%s roll %d %s: exit_direction is the end room's warp edge" % [area, roll, letter])
+				if letter == "b":
+					var way_back := str(sec.get("entry_direction", ""))
+					if way_back.is_empty():
+						b_without_wayback += 1
+					else:
+						assert_true(not start.get("connections", {}).has(way_back),
+							"%s roll %d b: the way back is a warp door, not a connection" % [area, roll])
+			# Transition room: entered at the south door, exits north.
+			var e_sec: Dictionary = sections[1]
+			var e_cells: Array = e_sec.get("cells", [])
+			var e_cell: Dictionary = e_cells[0] if not e_cells.is_empty() else {}
+			assert_eq(str(e_sec.get("entry_direction", "")), "south",
+				"%s roll %d: transition is entered at its south door" % [area, roll])
+			assert_eq(str(e_sec.get("exit_direction", "")), str(e_cell.get("warp_edge", "")),
+				"%s roll %d: transition exit_direction matches its warp edge" % [area, roll])
+			# Boss section carries neither, matching the static field files —
+			# its way out is the final exit / boss-clear telepipe.
+			assert_true(not sections[3].has("entry_direction"),
+				"%s roll %d: boss section carries no entry_direction" % [area, roll])
+			assert_true(not sections[3].has("exit_direction"),
+				"%s roll %d: boss section carries no exit_direction" % [area, roll])
+	assert_eq(b_without_wayback, 0, "every generated b section names its way back")
+	print("  INFO: %d areas x 3 rolls, all sections classified" % areas.size())
+	print("")
+
+
 ## BFS over `connections`.
 func _connected(by_pos: Dictionary, from_pos: String, to_pos: String) -> bool:
 	var seen := {from_pos: true}
@@ -1085,6 +1148,77 @@ func test_gate_kind_per_door() -> void:
 		VF.GATE_KEY, "legacy field still key-gates what its old fields name")
 	assert_eq(VF.gate_kind_for_door({}, "south", "south", false, []),
 		VF.GATE_ENEMY_DEFEAT, "legacy field gates the entry edge as it always did")
+	print("")
+
+
+## The runtime half of generated-field backtracking: the classifier the
+## area-warp loop consults for unconnected portals (spec /states/field-lifecycle
+## "Area gates are two-way"). Same layer split as test_gate_kind_per_door — the
+## generator test asserts the metadata exists; this pins what the runtime does
+## with it, because the autopilot's free-roam smoke only walks forward.
+func test_area_warp_classification() -> void:
+	print("── Area-warp classification (spec /states/field-lifecycle) ──")
+	const VF := preload("res://scripts/3d/field/valley_field_controller.gd")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var gen = GridGen.new()
+	gen.set_seed(0)
+	var sections: Array = gen.generate_field("normal", "gurhacia")["sections"]
+	assert_eq(sections.size(), 4, "seeded gurhacia field has 4 sections")
+
+	# Transition room (section 1): south is the way back to a, north goes to b.
+	var e_sec: Dictionary = sections[1]
+	var e_cells: Array = e_sec.get("cells", [])
+	var e_warp: String = str(e_cells[0].get("warp_edge", ""))
+	var e_entry: String = str(e_sec.get("entry_direction", ""))
+	var e_exit: String = str(e_sec.get("exit_direction", ""))
+	assert_eq(VF.area_warp_kind("south", e_entry, e_exit, e_warp, true, 1, 4),
+		VF.WARP_ENTRY, "transition south door warps back to section a")
+	assert_eq(VF.area_warp_kind("north", e_entry, e_exit, e_warp, true, 1, 4),
+		VF.WARP_EXIT, "transition north door warps forward to section b")
+
+	# B section (section 2): the start room's way-back door is a backward warp,
+	# the end room's warp edge goes forward to the boss.
+	var b_sec: Dictionary = sections[2]
+	var b_start: Dictionary = {}
+	var b_end: Dictionary = {}
+	for c in b_sec.get("cells", []):
+		if c.get("is_start", false):
+			b_start = c
+		if c.get("is_end", false):
+			b_end = c
+	var b_entry: String = str(b_sec.get("entry_direction", ""))
+	var b_exit: String = str(b_sec.get("exit_direction", ""))
+	assert_true(not b_entry.is_empty(), "seeded b section has a way back")
+	assert_eq(VF.area_warp_kind(b_entry, b_entry, b_exit, str(b_start.get("warp_edge", "")), true, 2, 4),
+		VF.WARP_ENTRY, "b start's way back warps to the transition room")
+	assert_eq(VF.area_warp_kind(str(b_end.get("warp_edge", "")), b_entry, b_exit,
+			str(b_end.get("warp_edge", "")), false, 2, 4),
+		VF.WARP_EXIT, "b end's warp edge goes forward to the boss section")
+
+	# Boss section (last): its warp edge is the final exit, not a backward warp.
+	assert_eq(VF.area_warp_kind("south", "", "", "south", false, 3, 4),
+		VF.WARP_FINAL_EXIT, "boss warp edge is the final exit")
+
+	# A section (first): the start's off-grid door has nothing to warp back to.
+	var a_sec: Dictionary = sections[0]
+	var a_start: Dictionary = {}
+	for c in a_sec.get("cells", []):
+		if c.get("is_start", false):
+			a_start = c
+			break
+	var a_entry: String = str(a_start.get("entry_warp_edge", ""))
+	if not a_entry.is_empty():
+		assert_eq(VF.area_warp_kind(a_entry, str(a_sec.get("entry_direction", "")),
+				str(a_sec.get("exit_direction", "")), str(a_start.get("warp_edge", "")), true, 0, 4),
+			VF.WARP_NONE, "a start's off-grid door is inert — nothing before section a")
+
+	# Guards: entry_direction only classifies at the start cell, and without
+	# the metadata (the pre-fix generated shape) the way back classifies as
+	# nothing — the regression this test exists to pin.
+	assert_eq(VF.area_warp_kind("south", "south", "north", "", false, 2, 4),
+		VF.WARP_NONE, "entry_direction does not classify away from the start cell")
+	assert_eq(VF.area_warp_kind(b_entry, "", "", "", true, 2, 4),
+		VF.WARP_NONE, "no entry metadata = no backward warp (the regression)")
 	print("")
 
 
