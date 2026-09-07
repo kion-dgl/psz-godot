@@ -33,13 +33,15 @@ like authorization to fast-forward straight onto `main`. Don't.
 `main` is protected by the **"Merge to Main"** ruleset — it requires:
 
 - A pull request (so the diff shows up for review)
-- A Copilot code review (auto-runs on PR open / push to PR)
 - Plus the standard CI: `verify-assets`, `check-asset-refs`,
   `version-check`, the Godot test runner
 
 Admin-tier accounts have `bypass_mode: pull_request` — meaning they
-can self-merge once the rule's met, but **the PR + Copilot review step
-is not skippable**. Do not look for a way around it; it is load-bearing.
+can self-merge once the rule's met, but **the PR step is not
+skippable**. Do not look for a way around it; it is load-bearing.
+Review is human (kion reads the PR). Copilot code reviews were
+cancelled on purpose — there is no automated reviewer, so don't wait
+for one, request one, or try to re-enable one.
 
 Merging the PR also kicks off **release CD** (APK signing, Arweave
 publish if assets changed, etc.). Pushing to `main` directly skips
@@ -52,9 +54,9 @@ Workflow when the user asks to land changes:
 2. Commit and push the branch.
 3. `gh pr create` — write a real summary that explains *why*, not just
    *what*. The summary is the thing the human reviewer reads first.
-4. Wait for Copilot's automatic review and address its comments.
+4. Let CI finish and address anything it flags.
 5. Either the user merges (typical), or — if they explicitly authorize
-   "merge it for me" *after* Copilot has signed off — `gh pr merge`.
+   "merge it for me" — `gh pr merge`.
    Even then, default to merge-commit (or rebase if the user prefers
    linear history); never force-push to merge.
 

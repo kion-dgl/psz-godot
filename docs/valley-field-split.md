@@ -11,8 +11,8 @@ pre-beta refactor milestone (issue #215).
    `test_runner.tscn` (unit suite) + `run_regression_matrix.sh` (full spine).
    Red → fix before proceeding.
 3. **PR** — bump version (3 sources), push, `gh pr create`.
-4. **Review** — wait for Copilot + CI green; address comments.
-5. **Merge** — after Copilot signs off (user-authorized for this effort).
+4. **Review** — wait for CI green; kion reviews; address comments.
+5. **Merge** — after kion signs off (user-authorized for this effort).
 6. **Next** — branch the next increment off the freshly-merged `main`.
 
 ## Increments
@@ -71,4 +71,4 @@ Harness/infra that landed alongside: #257 (dbus-run-session wrapper),
   being merged — addressing review comments means re-running `npm run sanity-check`.
 - Version bump is **three sources** (VERSION, project.godot `config/version`,
   export_presets.cfg `version/name`) and only at PR-open.
-- `main` is protected — PR + Copilot review required; merging triggers release CD.
+- `main` is protected — PR required; merging triggers release CD.
