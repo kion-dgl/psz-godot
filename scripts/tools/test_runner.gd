@@ -150,6 +150,7 @@ func _run_tests_core() -> void:
 	test_safe_room_ambience()
 	test_safe_room_ambience_placement()
 	test_safe_room_ambience_spawn()
+	test_safe_room_ambience_quest_merge()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -1009,6 +1010,29 @@ func test_safe_room_ambience_spawn() -> void:
 	assert_eq(revisit_critters, 3, "a revisit rebuilds every critter (stateless)")
 	assert_eq(revisit_pads, 1, "a revisit rebuilds the heal pad (stateless)")
 	root.free()
+	print("")
+
+
+## The safe-room rule reaches quest-authored start cells (#644): a quest's
+## stage JSON carries its objects verbatim, so a customized map using e.g. the
+## city start room spawned bare — the merge at cell entry adds the room's
+## authored fauna, ambience only, and is idempotent for generated cells that
+## already carry it.
+func test_safe_room_ambience_quest_merge() -> void:
+	print("── Safe-room ambience in quest-authored start cells ──")
+	var spawner := CellObjectSpawner.new(_AmbienceStubController.new())
+	var quest: Array = [{"type": "dialog_trigger", "position": [0.0, 0.0, 0.0]}]
+	var merged: Array = spawner._merge_safe_room_ambience(quest, "s00e_sa1")
+	assert_eq(merged.size(), 3, "the city start cell gains its two butterflies")
+	for o in merged:
+		if str(o.get("type", "")) != "dialog_trigger":
+			assert_eq(str(o.get("type", "")), "ambience", "the merge yields ambience only")
+	assert_eq(spawner._merge_safe_room_ambience(merged, "s00e_sa1").size(), 3,
+		"the merge is idempotent")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01a_ib1").size(), 1,
+		"only sa1 rooms merge")
+	var valley: Array = spawner._merge_safe_room_ambience(quest, "s01a_sa1")
+	assert_true(valley.size() >= 3, "a field sa1 start cell merges too (%d objects)" % valley.size())
 	print("")
 
 

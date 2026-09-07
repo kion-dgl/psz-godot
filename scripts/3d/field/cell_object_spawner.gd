@@ -55,7 +55,9 @@ func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: A
 func _spawn_cell_objects() -> void:
 	var cell_pos: String = str(_c._current_cell.get("pos", ""))
 	var saved: Dictionary = _c._cell_states.get(cell_pos, {})
-	var objects: Array = _c._current_cell.get("objects", [])
+	var objects: Array = _merge_safe_room_ambience(
+		_c._current_cell.get("objects", []),
+		str(_c._current_cell.get("stage_id", "")))
 	print("[TelepipeDEBUG] _spawn_cell_objects cell_pos=%s, saved keys=%s, _cell_states all keys=%s" % [
 		cell_pos, str(saved.keys()), str(_c._cell_states.keys())])
 
@@ -385,7 +387,9 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 	# per-visit state, so a revisit rebuilds them from the cell's own object
 	# list exactly as a first visit did. They are absent from obj_states on
 	# purpose — nothing about them persists.
-	for obj in _c._current_cell.get("objects", []):
+	for obj in _merge_safe_room_ambience(
+			_c._current_cell.get("objects", []),
+			str(_c._current_cell.get("stage_id", ""))):
 		var stype: String = str(obj.get("type", ""))
 		if stype != "ambience" and stype != "heal_pad":
 			continue
@@ -1182,6 +1186,28 @@ func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true
 ## motion is ours. The heal pad is stateless the other way — reusable within
 ## a visit on a cooldown, rebuilt fresh on the next, so nothing about it
 ## enters the save either.
+## The safe-room rule reaches QUEST-authored start rooms too (#644): the
+## original authors its fauna into sa1 whether the field is free-roam or a
+## quest, and a quest's stage JSON carries its objects verbatim — so a
+## customized map using e.g. the city start room (whose butterflies live in
+## the authored table, not in any quest JSON) spawned bare. sa1 is BY
+## CONSTRUCTION the safe-room code, so the merge keys on it; the population
+## layer's start-room contract yields ambience ONLY — no wave, no loot, no
+## traps leak into a hand-authored room. Cells whose objects already carry
+## ambience (a generated field's) pass through unchanged, so this is
+## idempotent and safe to run on both the fresh and the revisit paths.
+func _merge_safe_room_ambience(objects: Array, stage_id: String) -> Array:
+	if not stage_id.ends_with("_sa1"):
+		return objects
+	for obj in objects:
+		if str(obj.get("type", "")) == "ambience":
+			return objects
+	var merged := objects.duplicate()
+	merged.append_array(FieldPopulation.objects_for_cell(
+		stage_id, true, false, RandomNumberGenerator.new()))
+	return merged
+
+
 func _spawn_stateless_flair(kind: String, pos: Vector3, model: String) -> void:
 	if kind == "heal_pad":
 		var pad := HealPadScript.new()
