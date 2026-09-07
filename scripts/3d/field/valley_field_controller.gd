@@ -88,6 +88,9 @@ var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _deferred_quest_complete_telepipe: Dictionary = {} # Telepipe deferred until SessionManager.quest_completed fires
 var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condition=room_clear, deferred until room clear
+# This cell's key pickup, held back until the room clears (#639): {key_for, count}.
+# Empty when the cell holds no key, or when it spawns on entry (no fight this visit).
+var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
@@ -490,17 +493,20 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	_cell_spawner._spawn_cell_objects()
 
-	# Place key pickup if this cell has one — AFTER the physics frame, because
-	# authored key slots (#627) floor-snap exactly like boxes and the ray needs
-	# that tick to see the floor. Earlier, a slot over raised floor snapped to
-	# nothing and buried the key: an unopenable gate, a soft lock.
+	# Place this cell's key — on CLEAR, not on entry (#639, spec
+	# /mechanics/key-placement "When the key appears"): the fight delivers the
+	# reward, standing on the authored slots that have always decided where.
+	# Still runs after the physics frame above, because the on-entry branches
+	# (no fight this visit, or a previously-cleared revisit) floor-snap exactly
+	# like boxes and the ray needs that tick to see the floor (#627) — a buried
+	# key is an unopenable gate, a soft lock.
 	if _current_cell.get("has_key", false):
 		var key_for: String = str(_current_cell.get("key_for_cell", ""))
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
 			# key_count is how many copies this cell holds; the gate it feeds
 			# consumes required_keys of them (key_gate.gd). Defaults to 1 for
 			# cells authored before multi-key gates existed.
-			_gate_mgr._create_key_pickup(key_for, int(_current_cell.get("key_count", 1)))
+			_apply_key_spawn_policy(key_for, int(_current_cell.get("key_count", 1)))
 
 	_setup_debug_panel()
 
@@ -1970,23 +1976,66 @@ func _unlock_area_warps() -> void:
 	_warp_edge_locked.clear()
 
 
+## #639, spec /mechanics/key-placement "When the key appears": a key room that
+## fights this visit holds its key for the clear event; one that never fights
+## (an authored cell with no enemies, a cleared revisit, a waveless roll)
+## cannot wait for a clear that will not come — a key that never drops is an
+## unopenable gate. Static so the runner pins the boundary without a field.
+static func key_drops_on_room_clear(alive_enemies: int, queued_waves: int) -> bool:
+	return alive_enemies > 0 or queued_waves > 0
+
+
+## Entry-time decision for a key this cell holds and the player has not taken.
+func _apply_key_spawn_policy(key_for: String, count: int) -> void:
+	if key_drops_on_room_clear(_alive_enemy_count(_room_enemies), _queued_wave_count()):
+		_deferred_key_pickup = {"key_for": key_for, "count": count}
+	else:
+		_gate_mgr._create_key_pickup(key_for, count)
+
+
+## Spawn the key this room deferred to its clear event. Called from the
+## room-cleared path only; the entry path's no-fight branch spawns directly.
+func _drop_deferred_room_key() -> void:
+	if _deferred_key_pickup.is_empty():
+		return
+	_gate_mgr._create_key_pickup(
+		str(_deferred_key_pickup.get("key_for", "")),
+		int(_deferred_key_pickup.get("count", 1)))
+	_deferred_key_pickup = {}
+
+
+## How many waves are still held back past the one running now.
+func _queued_wave_count() -> int:
+	var out := 0
+	for wave_num in _wave_enemy_data:
+		if int(wave_num) > _current_wave:
+			out += 1
+	return out
+
+
+## Live enemies among the roster. EnemyBase uses is_alive, the legacy
+## EnemySpawn uses element_state — the same two shapes every clear check reads.
+static func _alive_enemy_count(enemies: Array) -> int:
+	var alive := 0
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		if enemy is EnemyBase:
+			if enemy.is_alive:
+				alive += 1
+		elif str(enemy.get("element_state")) != "dead":
+			alive += 1
+	return alive
+
+
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
 	# A wave break is already counting down — the room is empty by definition
 	# and re-entering here would re-schedule the same next wave.
 	if _wave_break_pending:
 		return
-	var alive_count: int = 0
+	var alive_count: int = _alive_enemy_count(_room_enemies)
 	var total_count: int = _room_enemies.size()
-	for enemy in _room_enemies:
-		if not is_instance_valid(enemy):
-			continue
-		# EnemyBase uses is_alive, EnemySpawn uses element_state
-		if enemy is EnemyBase:
-			if enemy.is_alive:
-				alive_count += 1
-		elif enemy.get("element_state") != "dead":
-			alive_count += 1
 	_fdbg("[RoomClear] %d/%d enemies alive, %d locked gates, %d locked warps" % [
 		alive_count, total_count, _room_gates_locked.size(), _warp_edge_locked.size()])
 	if alive_count > 0:
@@ -2005,6 +2054,10 @@ func _check_room_clear() -> void:
 	_fdbg("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
 	_unlock_room_gates()
 	_unlock_area_warps()
+
+	# This room's key drops WITH the clear (#639) — see _apply_key_spawn_policy.
+	# Authored slots still decide where it stands; this decides when.
+	_drop_deferred_room_key()
 
 	# Drop key on room clear if configured. If the quest just completed,
 	# spawn a telepipe at the same drop position instead — the player has

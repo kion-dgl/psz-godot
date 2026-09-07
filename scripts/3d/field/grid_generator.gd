@@ -941,6 +941,10 @@ const ENEMY_DEFEAT_CHANCE := 75
 
 ## Keys scatter within BFS depth < 2 of the gated room, and a room drops out of
 ## the pool once it holds 2 — which is why no captured room ever holds more.
+## psz-godot offers the pool's dead ends first (#639, spec /states/field-gates
+## "Key placement"): a deliberate divergence from the original's uniform
+## scatter, so a dead end reads as a chosen side objective rather than a wall
+## the player walks back from.
 const KEY_SCATTER_DEPTH := 2
 const KEYS_PER_ROOM := 2
 
@@ -1113,9 +1117,14 @@ func _gates_on(grid: Dictionary, key: String) -> Array[String]:
 
 
 ## Place `count` keys across the pool, at most KEYS_PER_ROOM in any one room.
+## The shuffled pool is offered DEAD ENDS FIRST (#639): a degree-1 room takes a
+## key before any other room in the pool does, so a dead end holds a key
+## whenever the pool contains one with capacity left. The economy's counts are
+## the original's — only the order of offer is ours.
 func _scatter_keys(grid: Dictionary, pool: Array[String], count: int, gate_key: String) -> void:
 	var shuffled: Array[String] = pool.duplicate()
 	_shuffle(shuffled)
+	shuffled = _dead_ends_first(grid, shuffled)
 	var placed: int = 0
 	while placed < count:
 		var progressed := false
@@ -1134,6 +1143,24 @@ func _scatter_keys(grid: Dictionary, pool: Array[String], count: int, gate_key: 
 			progressed = true
 		if not progressed:
 			break
+
+
+## Dead ends before the rest, each group keeping the seeded shuffle's order.
+## Degree-1 rooms only — start and goal are never in a scatter pool to begin
+## with, and the gated room itself always has degree >= 2 (one way back plus
+## the door being gated).
+func _dead_ends_first(grid: Dictionary, pool: Array[String]) -> Array[String]:
+	var dead: Array[String] = []
+	var rest: Array[String] = []
+	for key in pool:
+		if _cell_connections(grid, key).size() == 1:
+			dead.append(key)
+		else:
+			rest.append(key)
+	var out: Array[String] = []
+	out.append_array(dead)
+	out.append_array(rest)
+	return out
 
 
 ## The enemy-defeat pass. ONE roll per ROOM, not per door.
@@ -1542,17 +1569,31 @@ func _populate_cell(cell: Dictionary) -> Dictionary:
 	if cell.get("has_key", false):
 		key_slots = FieldPopulation.key_slot_positions(
 			stage_id, maxi(1, int(cell.get("key_count", 1))), _rng, layout_mask)
+	var objects: Array = FieldPopulation.objects_for_cell(
+		stage_id,
+		cell.get("is_start", false),
+		cell.get("is_end", false),
+		_rng,
+		depth,
+		layout_mask,
+	)
+	# #639: the key drops on room clear, so a key cell with nothing to fight
+	# strands its gate (the runtime's on-entry fallback is the backstop, not
+	# the design). A key room MUST fight. Invariant swept in the gate-economy
+	# tests; guaranteed_enemy stays data-driven.
+	if cell.get("has_key", false) and not _objects_hold_enemy(objects):
+		objects.append(FieldPopulation.guaranteed_enemy(stage_id, _rng))
 	return {
-		"objects": FieldPopulation.objects_for_cell(
-			stage_id,
-			cell.get("is_start", false),
-			cell.get("is_end", false),
-			_rng,
-			depth,
-			layout_mask,
-		),
+		"objects": objects,
 		"key_slots": key_slots,
 	}
+
+
+static func _objects_hold_enemy(objects: Array) -> bool:
+	for obj in objects:
+		if str(obj.get("type", "")) == "enemy":
+			return true
+	return false
 
 
 ## Fallback: generate a minimal straight-line grid.

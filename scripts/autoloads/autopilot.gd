@@ -1102,12 +1102,22 @@ func _drive_office_briefing() -> void:
 func _drive_field_smoke() -> void:
 	SessionManager.return_to_city()
 	SessionManager.enter_field(_field_area, "normal")
-	var quest: Dictionary = QuestLoader.pick_field_quest(_field_area)
-	if quest.is_empty() or not quest.has("sections"):
-		print("[sanity] FAIL: no free-roam field authored for area %s" % _field_area)
+	# GENERATED field — the path the warp teleporter actually takes
+	# (_enter_fresh_field), not the static pick_field_quest JSON, which is the
+	# legacy pre-generator source and no longer what a player walks. The seed
+	# env is optional: unset rolls a fresh field like the game does; set, it
+	# reproduces one field exactly (GridGenerator.set_seed), which is how a
+	# stuck run gets replayed against a fix.
+	var GridGenerator := load("res://scripts/3d/field/grid_generator.gd")
+	var gen = GridGenerator.new()
+	var seed_env: String = OS.get_environment("PSZ_AUTOPILOT_FIELD_SEED")
+	if not seed_env.is_empty():
+		gen.set_seed(int(seed_env))
+	var sections: Array = gen.generate_field("normal", _field_area)["sections"]
+	if sections.is_empty():
+		print("[sanity] FAIL: generator produced no sections for area %s" % _field_area)
 		_after(STEP_DELAY, _save_and_quit)
 		return
-	var sections: Array = quest["sections"]
 	SessionManager.set_field_sections(sections)
 	_quest_id = "free_roam_%s" % _field_area
 	_quest_steps = _build_field_steps(sections)
@@ -1232,6 +1242,13 @@ func _emit_visit_step(walk: Array, wi: int, by_pos: Dictionary, sec: Dictionary,
 		if not (cell.get("portals", {}) as Dictionary).has(exit_dir):
 			goal_pad = true  # in-room warp pad, not a wall portal
 		if exit_dir == "" and si + 1 >= n_sections:
+			do_list.append("field_done")
+		# A GENERATED field's boss room (the z section, always last) has a
+		# warp_edge with no portal — its exit is the return-to-city warp the
+		# controller spawns when the boss dies, not an AreaWarp_goal_pad
+		# node. The run ends with the clear.
+		if si + 1 >= n_sections and goal_pad:
+			goal_pad = false
 			do_list.append("field_done")
 	var step := {
 		"label": "%s %s" % [str(sec.get("area", "?")), pos],
@@ -4163,7 +4180,15 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 		pos_by_id[id] = (map_root.to_global(local_pos)) if map_root != null else local_pos
 	if pos_by_id.is_empty():
 		return []
-	# Build undirected adjacency from edge pairs.
+	# Build undirected adjacency from edge pairs. Every authored edge is
+	# validated against the geometry with the SAME walkability test the BFS
+	# fallback uses — walls at three heights plus floor samples. The waypoint
+	# editor authors against floor visibility, so an edge can clip a centre
+	# block in a bent corridor (s01b_ib1's omamui→g7kjd9 diagonal walls the
+	# player mid-leg with floor 3/3 under them); generated fields sample every
+	# stage, so one bad edge stalls a whole run. Unwalkable edges are pruned;
+	# if the pruned graph can't route, the caller falls through to the BFS
+	# fallback.
 	var adj := {}
 	if typeof(edges) == TYPE_ARRAY:
 		for edge in edges:
@@ -4173,12 +4198,16 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 			var b := str(edge[1])
 			if not pos_by_id.has(a) or not pos_by_id.has(b):
 				continue
+			if not _raycast_walkable(pos_by_id[a], pos_by_id[b]):
+				continue
 			if not adj.has(a):
 				adj[a] = []
 			if not adj.has(b):
 				adj[b] = []
 			adj[a].append(b)
 			adj[b].append(a)
+	if adj.is_empty():
+		return []
 	# Nearest waypoint to start (entry node) and to target (exit node), XZ only.
 	var nearest_start := ""
 	var nearest_target := ""

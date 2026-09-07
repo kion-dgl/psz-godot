@@ -126,6 +126,7 @@ func _run_tests_core() -> void:
 	test_player_traps()
 	test_gate_economy_invariants()
 	test_gate_economy_solvability()
+	test_key_scatter_dead_ends()
 	test_authored_field_objects()
 	test_authored_walls_clear_doorways()
 	test_authored_fences_are_openable()
@@ -134,6 +135,7 @@ func _run_tests_core() -> void:
 	test_group_five_trap_roll()
 	test_enemies_stand_on_authored_slots()
 	test_keys_stand_on_authored_slots()
+	test_key_spawn_policy()
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
@@ -987,6 +989,110 @@ func test_gate_economy_solvability() -> void:
 	print("")
 
 
+## #639: every dead end a scatter pool offers takes a key before any other
+## room does (spec /states/field-gates "Key placement" — the dead-end-first
+## divergence), a key cell never emits without an enemy to drop it (spec
+## /mechanics/key-placement: drop-on-clear needs a fight), and no key sits
+## behind the gate it opens.
+func test_key_scatter_dead_ends() -> void:
+	print("── Key scatter: dead ends first, key rooms fight, nothing behind its gate ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var t: Dictionary = {
+		"keys": 0, "keys_on_dead_ends": 0, "offered": 0, "missed": 0,
+		"key_cells": 0, "key_cells_without_enemy": 0, "behind_own_gate": 0,
+	}
+	for area in ["gurhacia", "ozette", "rioh", "paru"]:
+		for seed_value in range(30):
+			var gen = GridGen.new()
+			gen.set_seed(seed_value)
+			for section in gen.generate_field("normal", area)["sections"]:
+				_tally_key_scatter(gen, _cells_by_pos(section), t)
+
+	assert_true(int(t["keys"]) > 100, "the sweep placed real keys (%d)" % t["keys"])
+	assert_true(int(t["key_cells"]) > 50, "the sweep covered real key cells (%d)" % t["key_cells"])
+	assert_true(int(t["offered"]) > 0,
+		"the sweep met dead ends in scatter pools (%d — widen it if 0)" % t["offered"])
+	assert_eq(int(t["missed"]), 0,
+		"every dead end a scatter pool offers takes a key first (#639)")
+	assert_eq(int(t["key_cells_without_enemy"]), 0,
+		"a key cell never emits without an enemy to drop it (#639)")
+	assert_eq(int(t["behind_own_gate"]), 0, "no key sits behind the gate it opens")
+	print("  (%d keys, %d landed on the %d dead ends pools offered)" % [
+		t["keys"], t["keys_on_dead_ends"], t["offered"]])
+	print("")
+
+
+## One section's contribution to test_key_scatter_dead_ends. The grid handed to
+## the generator's own pool/degree functions is rebuilt from the OUTPUT cells
+## (same stage_id/rotation) with key_count zeroed, so _key_scatter_pool reports
+## the pool as it stood BEFORE placement.
+func _tally_key_scatter(gen, cells: Dictionary, t: Dictionary) -> void:
+	if cells.is_empty():
+		return
+	var grid: Dictionary = {}
+	for pos in cells:
+		var zeroed: Dictionary = cells[pos].duplicate()
+		zeroed["key_count"] = 0
+		grid[pos] = zeroed
+	for pos in cells:
+		var cell: Dictionary = cells[pos]
+		var kc: int = int(cell.get("key_count", 0))
+		if kc <= 0:
+			continue
+		t["keys"] = int(t["keys"]) + kc
+		t["key_cells"] = int(t["key_cells"]) + 1
+		if (cell.get("connections", {}) as Dictionary).size() == 1:
+			t["keys_on_dead_ends"] = int(t["keys_on_dead_ends"]) + kc
+		if not gen._objects_hold_enemy(cell.get("objects", [])):
+			t["key_cells_without_enemy"] = int(t["key_cells_without_enemy"]) + 1
+		if _key_is_behind_own_gate(cells, pos):
+			t["behind_own_gate"] = int(t["behind_own_gate"]) + 1
+	# Re-run each gate's pool and check the dead ends it offered all hold keys.
+	for pos in cells:
+		var locked_dir := _key_gate_dir(cells[pos])
+		if locked_dir.is_empty():
+			continue
+		for p in gen._key_scatter_pool(grid, pos, locked_dir):
+			if gen._cell_connections(grid, p).size() == 1:
+				t["offered"] = int(t["offered"]) + 1
+				if int(cells[p].get("key_count", 0)) <= 0:
+					t["missed"] = int(t["missed"]) + 1
+
+
+## The direction of a cell's key gate (attr 1 or 2), or "" when it has none.
+func _key_gate_dir(cell: Dictionary) -> String:
+	for dir in cell.get("door_attributes", {}):
+		var a: int = int(cell["door_attributes"][dir])
+		if a == 1 or a == 2:
+			return str(dir)
+	return ""
+
+
+## Is `key_pos` in the subtree behind its own gate — the rooms you can only
+## reach by passing the gate the key opens? That key can never be fetched.
+func _key_is_behind_own_gate(cells: Dictionary, key_pos: String) -> bool:
+	var gate_pos := str(cells[key_pos].get("key_for_cell", ""))
+	if not cells.has(gate_pos):
+		return false
+	var locked_dir := _key_gate_dir(cells[gate_pos])
+	var conns: Dictionary = cells[gate_pos].get("connections", {})
+	if locked_dir.is_empty() or not conns.has(locked_dir):
+		return false
+	var seen: Dictionary = {str(conns[locked_dir]): true}
+	var queue: Array[String] = [str(conns[locked_dir])]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		if cur == key_pos:
+			return true
+		for dir in cells[cur].get("connections", {}):
+			var nkey := str(cells[cur]["connections"][dir])
+			if nkey == gate_pos or seen.has(nkey) or not cells.has(nkey):
+				continue
+			seen[nkey] = true
+			queue.append(nkey)
+	return false
+
+
 ## {pos: cell} for one generated section.
 func _cells_by_pos(section: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
@@ -1493,6 +1599,77 @@ func _key_slot_key(s: Dictionary) -> String:
 	return "%.2f,%.2f" % [
 		snappedf(float(s.get("x", 0.0)), 0.01),
 		snappedf(float(s.get("z", 0.0)), 0.01)]
+
+
+## #639: WHEN a key appears (spec /mechanics/key-placement "When the key
+## appears"). The classifier boundary first, then the entry decision and the
+## clear-event drop on a bare controller — no field scene, the same seam the
+## gate/area-warp classifiers use. The end-to-end loop (fight → clear → drop →
+## pickup → open) is the autopilot free-roam smoke's job.
+func test_key_spawn_policy() -> void:
+	print("── Key spawn policy: drops on room clear, spawns on entry when no fight ──")
+	const VF := preload("res://scripts/3d/field/valley_field_controller.gd")
+	const PGM := preload("res://scripts/3d/field/portal_gate_manager.gd")
+
+	# The boundary: a fight this visit (live enemies OR a wave still queued)
+	# waits for the clear event; anything else would wait forever.
+	assert_true(VF.key_drops_on_room_clear(2, 0), "live enemies defer the key")
+	assert_true(VF.key_drops_on_room_clear(0, 1), "a queued wave defers the key")
+	assert_true(not VF.key_drops_on_room_clear(0, 0),
+		"no fight and no queue spawns on entry — a never-dropped key is a soft lock")
+
+	# A room that fights defers: the pickup must NOT stand at entry.
+	var vf = VF.new()
+	vf._gate_mgr = PGM.new(vf)
+	vf._map_root = Node3D.new()
+	vf._current_cell = {"pos": "9,9", "key_count": 2}
+	vf._room_enemies = [_enemy_stub("wolf", true), _enemy_stub("lizard", false)]
+	vf._apply_key_spawn_policy("9,8", 2)
+	assert_eq(vf._deferred_key_pickup, {"key_for": "9,8", "count": 2},
+		"a fighting room holds its key for the clear event")
+	assert_eq(_key_pickup_count(vf), 0, "nothing spawns at entry in a fighting room")
+
+	# ...and a queued wave alone defers too (wave 1 rolled empty, wave 2 waits).
+	vf._room_enemies = []
+	vf._wave_enemy_data = {2: [{"type": "enemy"}]}
+	vf._current_wave = 1
+	vf._apply_key_spawn_policy("9,8", 1)
+	assert_eq(vf._deferred_key_pickup, {"key_for": "9,8", "count": 1},
+		"a queued wave alone defers the key")
+
+	# The clear event drops it, on the authored-slot resolution path.
+	vf._room_enemies = []
+	vf._wave_enemy_data = {}
+	vf._deferred_key_pickup = {"key_for": "9,8", "count": 2}
+	vf._drop_deferred_room_key()
+	assert_eq(_key_pickup_count(vf), 2, "the clear event drops both copies")
+	assert_eq(vf._deferred_key_pickup, {}, "the deferral is spent")
+
+	# A no-fight visit spawns on entry, exactly as before #639 — authored
+	# enemy-less key cells (arca, shrine, ruins ship several) rely on it.
+	vf._apply_key_spawn_policy("9,7", 1)
+	assert_eq(_key_pickup_count(vf), 3, "a waveless room spawns its key on entry")
+	assert_eq(vf._deferred_key_pickup, {}, "no deferral without a fight")
+	vf.free()
+	print("")
+
+
+## One live-or-dead EnemyBase for spawn-policy rosters.
+func _enemy_stub(id: String, alive: bool) -> EnemyBase:
+	var e := EnemyBase.new()
+	var d := EnemyData.new()
+	d.id = id
+	e.enemy_data = d
+	e.is_alive = alive
+	return e
+
+
+func _key_pickup_count(vf) -> int:
+	var n := 0
+	for child in vf._map_root.get_children():
+		if str(child.name).begins_with("KeyPickup_"):
+			n += 1
+	return n
 
 
 func test_group_five_trap_roll() -> void:
