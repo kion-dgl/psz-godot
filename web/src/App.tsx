@@ -49,6 +49,7 @@ const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'))
 const ShopIndex = lazy(() => import('./shop-3d/ShopIndex'));
 const WallDebug = lazy(() => import('./wall-debug/WallDebug'));
 const FieldGenerator = lazy(() => import('./field-generator/FieldGenerator'));
+const FieldSolver = lazy(() => import('./field-solver/FieldSolver'));
 const ShopMenu3D = lazy(() => import('./shop-3d/ShopMenu3D'));
 
 type NavLink = { to: string; label: string };
@@ -125,6 +126,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/texture-anim', label: 'Texture Anim' },
       { to: '/wall-debug', label: 'Wall #534' },
       { to: '/field-generator', label: 'Field Preview' },
+      { to: '/field-solver', label: 'Field Solver' },
     ],
   },
 ];
@@ -299,6 +301,7 @@ export default function App() {
             <Route path="/shop-3d/:shopId" element={<ShopMenu3D />} />
             <Route path="/wall-debug" element={<WallDebug />} />
             <Route path="/field-generator" element={<FieldGenerator />} />
+            <Route path="/field-solver" element={<FieldSolver />} />
           </Routes>
         </Suspense>
       </div>
