@@ -1,0 +1,51 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Safe-Room Ambience" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This page governs the ambient creatures and heal pads of the <strong>safe rooms</strong> — the start (<code>sa1</code>) and goal (<code>ga1</code>) rooms that never carry an enemy wave — plus one boss-arena flourish. It says which rooms get fauna, where the creatures stand, what they are forbidden to touch, and what the goal room's heal pad does.</p>
+
+  <h2>The rule, from psz-re</h2>
+
+  <p>The original <strong>authors</strong> its ambient creatures into exactly the rooms that terminate a section, per the decoded object tables (<code>data/re_reference/room_objects.json</code>, cross-checked against <code>room_reference.json</code>; psz-re <code>data/object_placement_per_room.json</code>, docs/godot-field-parity.md §8):</p>
+
+  <table>
+    <thead><tr><th>Object</th><th>Instances</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td><code>o0c_butterfly</code></td><td>16</td><td>valley (s01) <code>sa1</code> + <code>ga1</code>, a+b — 2–8 per room, groups 0 and 4</td></tr>
+      <tr><td><code>o0c_dragonfly</code></td><td>8</td><td>wetlands (s02) <code>sa1</code> + <code>ga1</code>, a+b — 2 per room</td></tr>
+      <tr><td><code>o0c_bird</code></td><td>1</td><td>paru's boss arena (<code>s05z_na1</code>) — a one-off</td></tr>
+      <tr><td><code>o0c_healhp</code></td><td>14</td><td><strong>every</strong> area's <code>ga1</code> carries exactly one (s01–s07, a+b)</td></tr>
+    </tbody>
+  </table>
+
+  <p>So each area's safe rooms carry the area's creature <em>instead of</em> a wave: butterflies are the valley's, dragonflies the wetlands'. s03–s07 author <strong>no</strong> creatures in the decoded table (snowfield reads as ambient through weather instead) — and psz-godot <strong>MUST NOT</strong> invent fauna for them. Faithful means the barren areas stay barren; the heal pad, not invented animals, is what those rooms gain.</p>
+
+  <h2>Placement</h2>
+
+  <ul>
+    <li>Critters <strong>MUST</strong> spawn at their authored positions, selected by the same layout-mask draw as every authored kind (<a href="/mechanics/key-placement">key placement</a> documents the shared draw). Valley swarms sit in group 0 — always eligible for a safe room's group table — with group-4 duplicates that never build, exactly as the mask rule intends.</li>
+    <li>A start room <strong>MUST</strong> build authored ambience and <strong>MUST NOT</strong> build any other authored kind: no wave, no loot, no traps in the room the player spawns into.</li>
+    <li>The start room's layout draw comes from a dedicated side stream seeded with the field, so a seed's field <strong>MUST</strong> populate byte-identically to before ambience existed — adding ambience <strong>MUST NOT</strong> reshuffle every later cell's rolls.</li>
+    <li>The boss arena's bird rides the single-room path, and only ambience does: those rooms stay a fight and a warp.</li>
+  </ul>
+
+  <h2>Inertness</h2>
+
+  <p>An ambient critter is scenery that moves. It <strong>MUST NOT</strong> collide, interact, appear on the minimap, join the enemy or box counts, enter the cell save, or wedge the autopilot's nav backbone. There is deliberately no <code>PSZ_AUTOPILOT_NO_*</code> gate for it: nothing about it can obstruct, so there is nothing to gate.</p>
+
+  <p>The models are unlit single-frame billboards with no embedded animation — the original animates them in runtime code, and psz-re publishes positions and facings only. The motion (a small-radius wander, a bob, a wing-beat) is psz-godot's own; the authored facing is <strong>not applied</strong>, because a critter that yaws to the camera or its travel direction has no fixed facing. Taste here is ours and labelled as such in <code>ambient_critter.gd</code>.</p>
+
+  <h2>The goal-room heal pad</h2>
+
+  <p>Since the goal-room terminal work, <code>ga1</code> ends every generated a/b section — which is what makes its heal pad worth porting: a pad in <em>every</em> section's terminal, before the next one begins.</p>
+
+  <ul>
+    <li>Every generated <code>ga1</code> <strong>MUST</strong> carry its heal pad at the authored position, under every layout draw.</li>
+    <li>The pad restores <strong>HP to full</strong> on contact. The amount the original restores is not measured (psz-re publishes the placement, not the parameter block); the object's own name — <em>heal hp</em> — is the reading, and it heals HP only, not PP.</li>
+    <li>The pad is reusable within a visit on a short cooldown and <strong>MUST NOT</strong> persist state: a revisit rebuilds it fresh, so nothing about it enters the cell save.</li>
+    <li>Like the critters it is trigger-only — no solid body, nothing to wedge on.</li>
+  </ul>
+</Concept>
