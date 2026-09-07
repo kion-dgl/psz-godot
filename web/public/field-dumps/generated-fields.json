@@ -28,7 +28,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -12.81,
+                        0.0,
+                        -3.84
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        8.98,
+                        0.0,
+                        3.57
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -436,20 +457,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -7.26,
                         0.0,
-                        0.0
+                        -2.34
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        -8.0,
+                        7.28,
                         0.0,
-                        0.0
+                        -6.73
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        13.63,
+                        0.0,
+                        7.44
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -740,7 +775,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -10.72,
+                        0.0,
+                        10.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        10.9,
+                        0.0,
+                        13.05
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1769178737883_7bppcx8w1",
@@ -1142,20 +1198,54 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -2.85,
                         0.0,
-                        0.0
+                        -11.85
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        -8.0,
+                        -2.26,
                         0.0,
-                        0.0
+                        -2.67
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        -0.78,
+                        0.0,
+                        -6.04
+                      ],
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        11.92,
+                        0.0,
+                        -6.78
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        15.36,
+                        0.0,
+                        -14.06
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -1329,7 +1419,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -12.81,
+                        0.0,
+                        -3.84
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        8.98,
+                        0.0,
+                        3.57
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -1809,20 +1920,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -7.26,
                         0.0,
-                        0.0
+                        -2.34
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        -8.0,
+                        7.28,
                         0.0,
-                        0.0
+                        -6.73
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        13.63,
+                        0.0,
+                        7.44
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -2055,7 +2180,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -10.72,
+                        0.0,
+                        10.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        10.9,
+                        0.0,
+                        13.05
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1769178737883_7bppcx8w1",
@@ -2512,20 +2658,54 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -2.85,
                         0.0,
-                        0.0
+                        -11.85
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        -8.0,
+                        -2.26,
                         0.0,
-                        0.0
+                        -2.67
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        -0.78,
+                        0.0,
+                        -6.04
+                      ],
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        11.92,
+                        0.0,
+                        -6.78
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        15.36,
+                        0.0,
+                        -14.06
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -2699,7 +2879,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -12.81,
+                        0.0,
+                        -3.84
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        8.98,
+                        0.0,
+                        3.57
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -3175,20 +3376,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -7.26,
                         0.0,
-                        0.0
+                        -2.34
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        -8.0,
+                        7.28,
                         0.0,
-                        0.0
+                        -6.73
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        13.63,
+                        0.0,
+                        7.44
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -3450,7 +3665,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -10.72,
+                        0.0,
+                        10.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        10.9,
+                        0.0,
+                        13.05
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1769178737883_7bppcx8w1",
@@ -3974,20 +4210,54 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -2.85,
                         0.0,
-                        0.0
+                        -11.85
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        -8.0,
+                        -2.26,
                         0.0,
-                        0.0
+                        -2.67
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        -0.78,
+                        0.0,
+                        -6.04
+                      ],
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        11.92,
+                        0.0,
+                        -6.78
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        15.36,
+                        0.0,
+                        -14.06
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -4170,7 +4440,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -12.81,
+                        0.0,
+                        -3.84
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        8.98,
+                        0.0,
+                        3.57
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -4697,20 +4988,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -7.26,
                         0.0,
-                        0.0
+                        -2.34
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        -8.0,
+                        7.28,
                         0.0,
-                        0.0
+                        -6.73
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        13.63,
+                        0.0,
+                        7.44
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -4981,7 +5286,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        -10.72,
+                        0.0,
+                        10.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        10.9,
+                        0.0,
+                        13.05
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1769178737883_7bppcx8w1",
@@ -5452,20 +5778,54 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        8.0,
+                        -2.85,
                         0.0,
-                        0.0
+                        -11.85
                       ],
-                      "type": "box"
+                      "type": "ambience"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_butterfly",
                       "position": [
-                        -8.0,
+                        -2.26,
                         0.0,
-                        0.0
+                        -2.67
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        -0.78,
+                        0.0,
+                        -6.04
+                      ],
+                      "type": "heal_pad"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        11.92,
+                        0.0,
+                        -6.78
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_butterfly",
+                      "position": [
+                        15.36,
+                        0.0,
+                        -14.06
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -5676,7 +6036,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -0.11,
+                        1.5,
+                        -1.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.35,
+                        1.5,
+                        -2.22
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -6369,20 +6750,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -3.27,
                         0.0,
-                        0.0
+                        4.19
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        0.11,
+                        1.5,
+                        3.6
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.28,
+                        1.5,
+                        3.25
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -6683,7 +7078,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -5.18,
+                        1.5,
+                        -6.26
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.25,
+                        0.0,
+                        -3.69
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1770722423559_s3hhqqfp8",
@@ -7344,20 +7760,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -11.92,
                         0.0,
-                        0.0
+                        1.3
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        -8.14,
+                        1.5,
+                        -4.13
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.97,
+                        1.5,
+                        -3.03
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -7661,7 +8091,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -0.11,
+                        1.5,
+                        -1.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.35,
+                        1.5,
+                        -2.22
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -8506,20 +8957,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -3.27,
                         0.0,
-                        0.0
+                        4.19
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        0.11,
+                        1.5,
+                        3.6
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.28,
+                        1.5,
+                        3.25
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -8780,7 +9245,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -5.18,
+                        1.5,
+                        -6.26
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.25,
+                        0.0,
+                        -3.69
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1770722423559_s3hhqqfp8",
@@ -9417,20 +9903,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -11.92,
                         0.0,
-                        0.0
+                        1.3
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        -8.14,
+                        1.5,
+                        -4.13
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.97,
+                        1.5,
+                        -3.03
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -9709,7 +10209,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -0.11,
+                        1.5,
+                        -1.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.35,
+                        1.5,
+                        -2.22
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -10468,20 +10989,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -3.27,
                         0.0,
-                        0.0
+                        4.19
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        0.11,
+                        1.5,
+                        3.6
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.28,
+                        1.5,
+                        3.25
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -10783,7 +11318,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -5.18,
+                        1.5,
+                        -6.26
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.25,
+                        0.0,
+                        -3.69
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1770722423559_s3hhqqfp8",
@@ -11408,20 +11964,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -11.92,
                         0.0,
-                        0.0
+                        1.3
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        -8.14,
+                        1.5,
+                        -4.13
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.97,
+                        1.5,
+                        -3.03
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -11720,7 +12290,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -0.11,
+                        1.5,
+                        -1.86
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.35,
+                        1.5,
+                        -2.22
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "default": "default",
@@ -12315,20 +12906,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -3.27,
                         0.0,
-                        0.0
+                        4.19
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        0.11,
+                        1.5,
+                        3.6
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        0.28,
+                        1.5,
+                        3.25
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -12682,7 +13287,28 @@
                   "key_for_cell": "",
                   "key_gate_direction": "",
                   "key_slots": [],
-                  "objects": [],
+                  "objects": [
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -5.18,
+                        1.5,
+                        -6.26
+                      ],
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.25,
+                        0.0,
+                        -3.69
+                      ],
+                      "type": "ambience"
+                    }
+                  ],
                   "path_order": 0,
                   "portals": {
                     "north": "portal_1770722423559_s3hhqqfp8",
@@ -13342,20 +13968,34 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -11.92,
                         0.0,
-                        0.0
+                        1.3
                       ],
-                      "type": "box"
+                      "type": "heal_pad"
                     },
                     {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
                       "position": [
-                        -8.0,
-                        0.0,
-                        0.0
+                        -8.14,
+                        1.5,
+                        -4.13
                       ],
-                      "type": "box"
+                      "type": "ambience"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_dragonfly",
+                      "position": [
+                        -4.97,
+                        1.5,
+                        -3.03
+                      ],
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 4,
@@ -14113,20 +14753,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.72,
                         0.0,
-                        0.0
+                        0.05
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -14862,20 +15496,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        6.91,
                         0.0,
-                        0.0
+                        3.98
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -15651,20 +16279,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.72,
                         0.0,
-                        0.0
+                        0.05
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -16287,20 +16909,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        6.91,
                         0.0,
-                        0.0
+                        3.98
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -16924,20 +17540,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.72,
                         0.0,
-                        0.0
+                        0.05
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -17636,20 +18246,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        6.91,
                         0.0,
-                        0.0
+                        3.98
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -18323,20 +18927,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.72,
                         0.0,
-                        0.0
+                        0.05
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -19002,20 +19600,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        6.91,
                         0.0,
-                        0.0
+                        3.98
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -19699,20 +20291,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.62,
                         0.0,
-                        0.0
+                        -10.39
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -20381,20 +20967,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.59,
                         0.0,
-                        0.0
+                        2.77
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -21081,20 +21661,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.62,
                         0.0,
-                        0.0
+                        -10.39
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -21800,20 +22374,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.59,
                         0.0,
-                        0.0
+                        2.77
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -22456,20 +23024,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.62,
                         0.0,
-                        0.0
+                        -10.39
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -23182,20 +23744,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.59,
                         0.0,
-                        0.0
+                        2.77
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -23898,20 +24454,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.62,
                         0.0,
-                        0.0
+                        -10.39
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -24590,20 +25140,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        2.59,
                         0.0,
-                        0.0
+                        2.77
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -25522,20 +26066,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -4.89,
                         0.0,
-                        0.0
+                        -6.29
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -26504,20 +27042,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -8.46,
                         0.0,
-                        0.0
+                        -3.55
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -26703,6 +27235,17 @@
                         3.0
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_bird",
+                      "position": [
+                        -0.02,
+                        0.0,
+                        10.0
+                      ],
+                      "rotation": 270.0,
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 0,
@@ -27344,20 +27887,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -4.89,
                         0.0,
-                        0.0
+                        -6.29
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -28688,20 +29225,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -8.46,
                         0.0,
-                        0.0
+                        -3.55
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -28945,6 +29476,17 @@
                         0.63
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_bird",
+                      "position": [
+                        -0.02,
+                        0.0,
+                        10.0
+                      ],
+                      "rotation": 270.0,
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 0,
@@ -29807,20 +30349,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -4.89,
                         0.0,
-                        0.0
+                        -6.29
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -30874,20 +31410,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -8.46,
                         0.0,
-                        0.0
+                        -3.55
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -31227,6 +31757,17 @@
                         -1.59
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_bird",
+                      "position": [
+                        -0.02,
+                        0.0,
+                        10.0
+                      ],
+                      "rotation": 270.0,
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 0,
@@ -31892,20 +32433,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -4.89,
                         0.0,
-                        0.0
+                        -6.29
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -32904,20 +33439,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        -8.46,
                         0.0,
-                        0.0
+                        -3.55
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -33197,6 +33726,17 @@
                         0.63
                       ],
                       "type": "enemy"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_bird",
+                      "position": [
+                        -0.02,
+                        0.0,
+                        10.0
+                      ],
+                      "rotation": 270.0,
+                      "type": "ambience"
                     }
                   ],
                   "path_order": 0,
@@ -33608,6 +34148,16 @@
                         1.73
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        3.56,
+                        0.0,
+                        -7.37
+                      ],
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -34341,20 +34891,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.29,
                         0.0,
-                        0.0
+                        6.88
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -35031,6 +35575,16 @@
                         1.73
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        3.56,
+                        0.0,
+                        -7.37
+                      ],
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -35712,20 +36266,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.29,
                         0.0,
-                        0.0
+                        6.88
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -36294,6 +36842,16 @@
                         1.73
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        3.56,
+                        0.0,
+                        -7.37
+                      ],
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -36968,20 +37526,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.29,
                         0.0,
-                        0.0
+                        6.88
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -37585,6 +38137,16 @@
                         1.73
                       ],
                       "type": "box"
+                    },
+                    {
+                      "authored": true,
+                      "model": "o0c_healhp",
+                      "position": [
+                        3.56,
+                        0.0,
+                        -7.37
+                      ],
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -38175,20 +38737,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.29,
                         0.0,
-                        0.0
+                        6.88
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -38830,20 +39386,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.22,
                         0.0,
-                        0.0
+                        -10.86
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -39437,20 +39987,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.77,
                         0.0,
-                        0.0
+                        9.06
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -40010,20 +40554,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.22,
                         0.0,
-                        0.0
+                        -10.86
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -40851,20 +41389,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.77,
                         0.0,
-                        0.0
+                        9.06
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -41608,20 +42140,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.22,
                         0.0,
-                        0.0
+                        -10.86
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -42148,20 +42674,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.77,
                         0.0,
-                        0.0
+                        9.06
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -42878,20 +43398,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        5.22,
                         0.0,
-                        0.0
+                        -10.86
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
@@ -43540,20 +44054,14 @@
                   "key_slots": [],
                   "objects": [
                     {
+                      "authored": true,
+                      "model": "o0c_healhp",
                       "position": [
-                        8.0,
+                        3.77,
                         0.0,
-                        0.0
+                        9.06
                       ],
-                      "type": "box"
-                    },
-                    {
-                      "position": [
-                        -8.0,
-                        0.0,
-                        0.0
-                      ],
-                      "type": "box"
+                      "type": "heal_pad"
                     }
                   ],
                   "path_order": 4,
