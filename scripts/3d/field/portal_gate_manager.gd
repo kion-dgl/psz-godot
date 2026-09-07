@@ -385,6 +385,9 @@ func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 		_c._map_root.add_child(key)
 		key.position = positions[i]
 
+		# Minimap marker — gold diamond where the key stands, gone when taken.
+		_c._register_room_key(key)
+
 		# Track collection for grid state and update HUD
 		key.interacted.connect(func(_player: Node3D) -> void:
 			remaining[0] -= 1

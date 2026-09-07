@@ -77,6 +77,7 @@ var _room_messages: Array = [] # MessagePack nodes in current room
 var _room_props: Array = []    # StoryProp nodes in current room
 var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
+var _room_keys: Array = []     # KeyPickup nodes standing in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _room_walls: Array = []       # Wall nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
@@ -564,6 +565,13 @@ func _ready() -> void:
 		if is_instance_valid(room_enemy):
 			_room_minimap.track_enemy(room_enemy)
 
+	# Key markers — same ordering story: the on-entry key branches run before
+	# the minimap is built, so backfill here; drops on room clear (#639)
+	# register directly from _register_room_key as they spawn.
+	for room_key in _room_keys:
+		if is_instance_valid(room_key):
+			_room_minimap.track_key(room_key)
+
 	# Key HUD (drawn below minimap)
 	_setup_key_hud(cells)
 
@@ -661,6 +669,7 @@ func _process(_delta: float) -> void:
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
 		_room_minimap.update_enemies(_map_root)
+		_room_minimap.update_key_markers(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
 
@@ -2002,6 +2011,18 @@ func _drop_deferred_room_key() -> void:
 		str(_deferred_key_pickup.get("key_for", "")),
 		int(_deferred_key_pickup.get("count", 1)))
 	_deferred_key_pickup = {}
+
+
+## A key pickup just spawned into this room — keep it for the minimap. The
+## entry-time branches run before the minimap is built (those are backfilled
+## in _ready); drops on room clear register live through this same call.
+## Called by portal_gate_manager._create_key_pickup for every pickup.
+func _register_room_key(key: Node3D) -> void:
+	if key == null:
+		return
+	_room_keys.append(key)
+	if _room_minimap and is_instance_valid(_room_minimap):
+		_room_minimap.track_key(key)
 
 
 ## How many waves are still held back past the one running now.

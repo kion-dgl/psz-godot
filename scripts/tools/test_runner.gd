@@ -235,6 +235,7 @@ func _run_tests_systems() -> void:
 	test_keys_gates_survive_section_roundtrip()
 	test_field_state_full_contract_roundtrip()
 	test_minimap_enemy_markers()
+	test_minimap_key_markers()
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 	test_orbit_camera_follow_y_damping()
@@ -11339,6 +11340,41 @@ func test_minimap_enemy_markers() -> void:
 	enemies[2].free()
 	boss.free()
 	map_root.queue_free()
+	minimap.queue_free()
+	print("")
+
+
+# Key markers on the room minimap (#641 playtest): keys standing in the room
+# draw as gold diamonds; the marker appears with the drop (or at load, for the
+# no-fight branches) and leaves with the pickup. Same harness shape as
+# test_minimap_enemy_markers — real KeyPickup instances kept out of the tree
+# (no _ready → no model loads), pack-free.
+func test_minimap_key_markers() -> void:
+	print("── Room minimap key markers ──")
+	const RoomMinimap := preload("res://scripts/3d/field/room_minimap.gd")
+	var minimap: Control = RoomMinimap.new()
+	add_child(minimap)
+
+	# A two-key room drops two pickups → two markers.
+	var keys: Array = []
+	for i in range(2):
+		var k := KeyPickup.new()
+		k.key_id = "key_test_%d" % i
+		minimap.track_key(k)
+		keys.append(k)
+	assert_eq(minimap.get_key_marker_count(), 2, "2 standing keys → 2 markers")
+	minimap.track_key(keys[0])
+	assert_eq(minimap.get_key_marker_count(), 2, "Re-tracking the same key does not duplicate its marker")
+
+	# Collected (GameElement.interacted fires on step-on) → marker removed.
+	keys[0].interacted.emit(keys[0])
+	assert_eq(minimap.get_key_marker_count(), 1, "Collection removes the marker → 1 marker")
+
+	# A freed key (room teardown without pickup) is swept too.
+	keys[1].free()
+	assert_eq(minimap.get_key_marker_count(), 0, "Freed instance swept from marker count")
+
+	keys[0].free()
 	minimap.queue_free()
 	print("")
 
