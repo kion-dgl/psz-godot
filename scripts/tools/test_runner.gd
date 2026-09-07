@@ -981,17 +981,25 @@ func test_safe_room_ambience_spawn() -> void:
 	assert_eq(critters, 3, "all three critter models spawn")
 	assert_true(pad != null, "the heal pad spawns")
 
-	# The pad heals HP to full on contact — the name is the behaviour.
+	# The pad heals HP to full and is SPENT — the storybook's `used` state
+	# (web objectCatalog 'heal-pad' is the contract); a second contact within
+	# the visit heals nothing, and the texture window drains to the spent
+	# frame over the ease.
 	var max_hp: int = GameState.max_hp
 	GameState.set_hp(maxi(10, max_hp / 4))
 	var player := Node3D.new()
 	player.add_to_group("player")
 	pad._on_body_entered(player)
 	assert_eq(GameState.hp, max_hp, "the pad restores HP to full")
-	# Cooldown: a second contact inside the window heals nothing.
+	assert_eq(pad.element_state, "used", "the pad is spent after its heal")
 	GameState.set_hp(maxi(10, max_hp / 2))
 	pad._on_body_entered(player)
-	assert_eq(GameState.hp, maxi(10, max_hp / 2), "the cooldown holds a contact inside it")
+	assert_eq(GameState.hp, maxi(10, max_hp / 2), "a spent pad heals nothing")
+	for i in range(60):
+		pad._update_animation(0.016)
+	if pad._mat:
+		assert_true(absf(pad._mat.uv1_offset.x - (-0.5)) < 0.01,
+			"the texture window drained to the spent frame")
 	player.free()
 
 	# Revisit: nothing about either kind is saved, and the restore path

@@ -124,8 +124,8 @@ export const cellObjects: CellObjectSpec[] = [
       { name: 'position', type: '[x, y, z]', note: 'authored goal-room position — exactly one per ga1' },
     ],
     spawns: 'Exactly one authored pad in every area\'s ga1 (s01–s07, a+b) — the room that terminates every generated section, which is what makes the pad land in each one\'s endgame.',
-    state: 'Stateless. Reusable within a visit on a short cooldown; rebuilt fresh on the next visit, so nothing about it persists.',
-    interactions: 'Standing on the pad restores HP to full. The amount the original restores is unmeasured (psz-re publishes the placement, not the parameter block); the object\'s own name — heal hp — is the reading, and it heals HP only, not PP.',
+    state: 'The storybook\'s two states: `unused` (charged) → `used` (spent). Both frames live on the one sheet (o0c_0_healhp.png, charged left / spent right); the state shifts the texture window ±0.5 offsetX with a 450ms ease, so the pad reads as draining. Nothing persists — a revisit rebuilds it charged (per-visit resource).',
+    interactions: 'Standing on the charged pad restores HP to full and consumes it. The amount the original restores is unmeasured (psz-re publishes the placement, not the parameter block); the object\'s own name — heal hp — is the reading, and it heals HP only, not PP. A full-HP step does not spend the pad.',
     notes: 'Trigger Area3D only — no solid body, nothing to wedge on. See /mechanics/safe-room-ambience.',
   },
   {

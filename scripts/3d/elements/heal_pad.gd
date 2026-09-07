@@ -4,26 +4,36 @@ class_name HealPad
 ## every area's ga1 — the room that terminates every generated section since
 ## #643, which is what makes the pad worth porting.
 ##
-## The name is the decoded behaviour — it heals HP. How MUCH the original
-## restores is not measured (psz-re publishes the placement, not the parameter
-## block), so this takes the reading the object's own name implies: standing
-## on it restores HP to full. Reusable within a visit on a short cooldown,
-## which keeps the element STATELESS — a revisit rebuilds it fresh and nothing
-## about it enters the cell save.
+## THE STATES ARE THE STORYBOOK'S (web objectCatalog 'heal-pad' — the mock is
+## the contract): `unused` (charged, can heal) → `used` (spent). Both frames
+## live on one sheet — o0c_0_healhp.png, charged left, spent right — and the
+## state shifts the texture window by ±0.5 offsetX, easing over 450ms so the
+## pad reads as draining rather than cutting. The pad is CONSUMED by its one
+## heal; how much the original restores is unmeasured, and the object's own
+## name — heal hp — is the reading: HP to full, not PP.
 ##
-## A trigger Area3D only (needle-trap layers): nothing solid for the autopilot
-## backbone or the player to wedge on.
+## The pad is trigger-only (needle-trap layers): nothing solid for the
+## autopilot backbone or the player to wedge on. Nothing about it persists —
+## a revisit rebuilds it charged (per-visit resource, spec
+## /mechanics/safe-room-ambience).
 
-const HEAL_COOLDOWN := 3.0
+const STATE_UNUSED := "unused"
+const STATE_USED := "used"
+## Texture-window offsets, straight off the storybook entry (threejs
+## texture.offset semantics match Godot's uv1_offset: sampled = uv + offset).
+const UNUSED_OFFSET := 0.5
+const USED_OFFSET := -0.5
+const DRAIN_SECONDS := 0.45
 
 var _trigger: Area3D = null
-var _since_heal: float = HEAL_COOLDOWN
-var _pulse: float = 0.0
+var _mat: StandardMaterial3D = null
+var _offset_target: float = UNUSED_OFFSET
+var _offset_now: float = UNUSED_OFFSET
 
 
 func _init() -> void:
 	model_path = "special_z/o0c_healhp.glb"
-	element_state = "on"
+	element_state = STATE_UNUSED
 
 
 func _ready() -> void:
@@ -32,6 +42,15 @@ func _ready() -> void:
 	# E-key element and never auto-collects.)
 	collision_size = Vector3(2.4, 0.8, 2.4)
 	super._ready()
+	if model:
+		# Per-instance material carrying the state's texture window (the base
+		# class's walker reaches every surface — the pad is one flat quad).
+		apply_to_all_materials(func(mat, mesh, surface):
+			if _mat == null and mat is StandardMaterial3D:
+				var dup := (mat as StandardMaterial3D).duplicate()
+				dup.uv1_offset = Vector3(_offset_now, 0.0, 0.0)
+				mesh.set_surface_override_material(surface, dup)
+				_mat = dup)
 	_trigger = Area3D.new()
 	_trigger.name = "HealArea"
 	_trigger.collision_layer = 4  # Triggers layer — same as every element area
@@ -47,26 +66,26 @@ func _ready() -> void:
 
 
 func _on_body_entered(body: Node3D) -> void:
-	if element_state != "on":
-		return
+	if element_state != STATE_UNUSED:
+		return  # spent for this visit
 	if not (body.is_in_group("player") or body.name == "Player"):
 		return
-	if _since_heal < HEAL_COOLDOWN:
-		return
 	if GameState.hp >= GameState.max_hp:
-		return
-	_since_heal = 0.0
-	_pulse = 1.0
+		return  # charged until it actually heals — a full-HP step is not a spend
+	set_state(STATE_USED)
 	GameState.set_hp(GameState.max_hp)
-	print("[HealPad] Restored HP to %d/%d at %s" % [GameState.hp, GameState.max_hp, global_position])
+	print("[HealPad] Restored HP to %d/%d at %s (pad spent)" % [
+		GameState.hp, GameState.max_hp, global_position])
+
+
+func _apply_state() -> void:
+	_offset_target = UNUSED_OFFSET if element_state != STATE_USED else USED_OFFSET
 
 
 func _update_animation(delta: float) -> void:
-	_since_heal += delta
-	# Idle: a slow breathing pulse; a heal lands as one fast bright beat.
-	_pulse = maxf(0.0, _pulse - delta * 1.5)
-	if not model:
+	if not _mat:
 		return
-	var breathe := 1.0 + 0.03 * sin(_time * 2.0)
-	var s := breathe + 0.12 * _pulse
-	model.scale = Vector3(s, s, s)
+	# Ease the texture window to the state's frame — the drain.
+	var step: float = absf(UNUSED_OFFSET - USED_OFFSET) * delta / DRAIN_SECONDS
+	_offset_now = move_toward(_offset_now, _offset_target, step)
+	_mat.uv1_offset = Vector3(_offset_now, 0.0, 0.0)
