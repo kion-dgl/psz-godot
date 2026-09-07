@@ -19,16 +19,20 @@ class_name AmbientCritter
 ## Model name under assets/objects/special_z/, e.g. "o0c_butterfly".
 @export var critter_model: String = ""
 
-## Motion parameters per model. The bird is rigged (body + two wing joints),
-## so it beats its wing NODES instead of squeezing the quad and faces its
-## travel direction rather than yawing to the camera.
+## Motion parameters per model. `hover` lifts the anchor off the authored
+## spot: the quads are ~30cm tall and centred on their origin, so an authored
+## y of 0 puts half the billboard under the floor — butterflies are authored
+## at 0 and fly at ~1m; dragonflies are AUTHORED at 1.5 already, so their
+## hover is 0. The bird is rigged (body + two wing joints), so it beats its
+## wing NODES instead of squeezing the quad and faces its travel direction
+## rather than yawing to the camera.
 const MOTION := {
 	"o0c_butterfly": {"radius": 1.6, "lap": 9.0, "bob": 0.22, "flap_hz": 6.0,
-		"flap_depth": 0.45, "billboard": true},
+		"flap_depth": 0.45, "billboard": true, "hover": 1.0},
 	"o0c_dragonfly": {"radius": 2.2, "lap": 7.0, "bob": 0.18, "flap_hz": 14.0,
-		"flap_depth": 0.18, "billboard": true},
+		"flap_depth": 0.18, "billboard": true, "hover": 0.0},
 	"o0c_bird": {"radius": 3.0, "lap": 12.0, "bob": 0.30, "flap_hz": 2.2,
-		"flap_depth": 0.7, "billboard": false},
+		"flap_depth": 0.7, "billboard": false, "hover": 1.0},
 }
 
 const MODEL_DIR := "res://assets/objects/special_z/"
@@ -48,6 +52,10 @@ var _last_xz := Vector2.ZERO
 func _ready() -> void:
 	if critter_model.is_empty():
 		return
+	_motion = MOTION.get(critter_model, MOTION["o0c_butterfly"])
+	# Lift the anchor by the kind's hover BEFORE capturing it, so the wander
+	# and bob orbit the flying height rather than the authored floor spot.
+	position.y += float(_motion["hover"])
 	_anchor = position
 	_last_xz = Vector2(_anchor.x, _anchor.z)
 
@@ -57,8 +65,6 @@ func _ready() -> void:
 		return
 	var model := packed.instantiate()
 	add_child(model)
-
-	_motion = MOTION.get(critter_model, MOTION["o0c_butterfly"])
 
 	# A quad billboard squeezes on X to sell the wing beat; the bird carries
 	# real wing joints (wings01/wings02) and beats those instead.
