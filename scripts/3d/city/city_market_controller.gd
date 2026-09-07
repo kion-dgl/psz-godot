@@ -37,6 +37,10 @@ func _ready() -> void:
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
 
+	# The market IS s00e_sa1 — its two authored butterflies (#644), from the
+	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).
+	_add_ambience("s00e_sa1")
+
 	# NPCs
 	# Low-poly PSZ shopkeeper. Reverted from the VRM-derived item_shop.glb
 	# (#535): the VRM model stuck out as the lone high-poly figure next to the
