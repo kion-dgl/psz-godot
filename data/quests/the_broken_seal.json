@@ -371,15 +371,15 @@
         },
         {
           "pos": "2,1",
-          "stage_id": "s04a_ga1",
+          "stage_id": "s04a_ib1",
           "rotation": 180,
           "connections": {
             "north": "1,1",
             "south": "3,1"
           },
           "portals": {
-            "north": "portal_1770745554384_9kncudq67",
-            "south": "portal_1770745579087_ckots2l1l"
+            "north": "portal_1770745604078_a1wjzjtr9",
+            "south": "portal_1770745613177_vqwq2i24x"
           },
           "is_start": false,
           "is_end": false,
@@ -2713,7 +2713,7 @@
     },
     {
       "speaker": "Dr. Carlo",
-      "text": "Hunters who've approached the perimeter report hearing voices. Not animal calls — words. None of them speak the language."
+      "text": "Hunters who've approached the perimeter report hearing voices. Not animal calls \u2014 words. None of them speak the language."
     },
     {
       "speaker": "Dr. Carlo",

@@ -402,15 +402,15 @@
         },
         {
           "pos": "2,4",
-          "stage_id": "s02a_ga1",
+          "stage_id": "s02a_ib1",
           "rotation": 180,
           "connections": {
             "south": "3,4",
             "north": "1,4"
           },
           "portals": {
-            "south": "portal_1770694163468_w6x5en6p1",
-            "north": "portal_1770694183466_bhd3dyy58"
+            "south": "portal_1770694802470_rabpz62p6",
+            "north": "portal_1770694814154_z0fveyavc"
           },
           "is_start": false,
           "is_end": false,
@@ -426,15 +426,15 @@
         },
         {
           "pos": "3,4",
-          "stage_id": "s02a_ga1",
+          "stage_id": "s02a_ib2",
           "rotation": 180,
           "connections": {
             "south": "4,4",
             "north": "2,4"
           },
           "portals": {
-            "south": "portal_1770694163468_w6x5en6p1",
-            "north": "portal_1770694183466_bhd3dyy58"
+            "north": "portal_1770694856803_2ys7twqc5",
+            "south": "portal_1770694873204_haxbz6f3g"
           },
           "is_start": false,
           "is_end": false,
@@ -994,15 +994,15 @@
         },
         {
           "pos": "3,0",
-          "stage_id": "s02a_ga1",
+          "stage_id": "s02a_ic1",
           "rotation": 0,
           "connections": {
             "north": "2,0",
             "south": "4,0"
           },
           "portals": {
-            "north": "portal_1770694163468_w6x5en6p1",
-            "south": "portal_1770694183466_bhd3dyy58"
+            "north": "portal_1770694894856_00sjm9ic7",
+            "south": "portal_1770694911889_192cql2fn"
           },
           "is_start": false,
           "is_end": false,

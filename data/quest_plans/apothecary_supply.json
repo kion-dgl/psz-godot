@@ -226,7 +226,7 @@
         },
         {
           "pos": "0,2",
-          "stageId": "s02a_ga1",
+          "stageId": "s02a_ib1",
           "rotation": 90,
           "pathOrder": 6,
           "isStart": false,
@@ -237,8 +237,8 @@
             "west": "0,1"
           },
           "portals": {
-            "east": "portal_1770694163468_w6x5en6p1",
-            "west": "portal_1770694183466_bhd3dyy58"
+            "east": "portal_1770694802470_rabpz62p6",
+            "west": "portal_1770694814154_z0fveyavc"
           },
           "warpEdge": null,
           "keyGate": {
@@ -637,11 +637,11 @@
             "pickup_quest_item"
           ],
           "exit": "west",
-          "exit_portal_id": "portal_1770694183466_bhd3dyy58",
+          "exit_portal_id": "portal_1770694814154_z0fveyavc",
           "target": "0,1",
           "_section_idx": 0,
           "_pos": "0,2",
-          "stageId": "s02a_ga1",
+          "stageId": "s02a_ib1",
           "rotation": 90
         },
         {
@@ -690,11 +690,11 @@
             "kill_all"
           ],
           "exit": "east",
-          "exit_portal_id": "portal_1770694163468_w6x5en6p1",
+          "exit_portal_id": "portal_1770694802470_rabpz62p6",
           "target": "0,3",
           "_section_idx": 0,
           "_pos": "0,2",
-          "stageId": "s02a_ga1",
+          "stageId": "s02a_ib1",
           "rotation": 90
         },
         {

@@ -1,24 +1,23 @@
 {
   "stageId": "s05a_ga1",
-  "shape": "I (corridor)",
-  "description": "Straight north-south corridor. The room is a simple I — two portals, one at the north end and one at the south, connected by a single uninterrupted corridor along X≈0. A midpoint waypoint (hzj4) sits at the center for objective dispatch.",
+  "shape": "Goal room — single-portal dead-end (south gate)",
+  "description": "Forgotten City variant A goal room. One measured doorway: the south (high-Z) gate, which is also the room's only connection in any layout it terminates (#641 corrected the phantom north portal — the original authors an in-room warp object at (-0.02, -14.16), not a second doorway). The section exit stands on that warp pad, not on a wall door.",
   "portals": {
-    "north": "spawn_north at (0.03, -19.30) — gate on the north (low-Z) end",
-    "south": "spawn_south at (-0.03, 15.66) — gate on the south (high-Z) end"
+    "south": "spawn_south at (-0.03, 15.66) — the only portal, on the south (high-Z) side"
   },
   "objectives": {},
   "anchors": [
-    { "id": "north_gate",   "position": [0.03, 0, -19.30], "description": "north portal area (matches wp_spawn_0)" },
-    { "id": "south_gate",   "position": [-0.03, 0, 15.66], "description": "south portal area (matches wp_spawn_1)" },
-    { "id": "corridor_mid", "position": [0,    0,   0.15], "description": "midpoint of the corridor — the dispatch anchor (matches wp_1780257542036_czhzj4)" }
+    { "id": "south_gate",   "position": [-0.03, 0,  15.66], "description": "south portal area (matches wp_spawn_1)" },
+    { "id": "corridor_mid", "position": [ 0,    0,   0.15], "description": "midpoint of the room — the dispatch anchor (matches wp_1780257542036_czhzj4)" },
+    { "id": "goal_pad",     "position": [-0.02, 0, -14.16], "description": "in-room warp pad (original's o0s_warpm object; the section exit)" }
   ],
   "anchorEdges": [
-    ["north_gate", "corridor_mid"],
-    ["corridor_mid", "south_gate"]
+    ["south_gate", "corridor_mid"],
+    ["corridor_mid", "goal_pad"]
   ],
   "traversalNotes": [
-    "Straight-line traversal: the autopilot can walk directly between spawn_north and spawn_south — no detour needed.",
-    "DISPATCH RULE: any in-cell objective (key drop, enemy kill, story trigger) should route through corridor_mid (hzj4). Walk from current gate → corridor_mid → objective → corridor_mid → next gate. This keeps the autopilot from cutting diagonals across the corridor that drift into the wall in narrow rooms.",
+    "DEAD-END topology: enter and leave via spawn_south; the section exit is the in-room goal pad, not a doorway.",
+    "DISPATCH RULE: any in-cell objective (key drop, enemy kill, story trigger) should route through corridor_mid (hzj4). Walk south_gate → corridor_mid → objective → corridor_mid → goal_pad. This keeps the autopilot from cutting diagonals across the room that drift into the wall in narrow areas.",
     "Stages are never physically rotated — all positions here are stage-local mesh-space XZ; cell.rotation in the quest plan is a gate-label swap only."
   ]
 }

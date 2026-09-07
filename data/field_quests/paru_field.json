@@ -487,13 +487,13 @@
         {
           "pos": "2,3",
           "stage_id": "s05a_ga1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "north": "1,3"
           },
           "portals": {
-            "north": "portal_1770760403879_4x5z4rlnq",
-            "south": "portal_1770760413999_g15jg63cq"
+            "north": "portal_1770760413999_g15jg63cq",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,
@@ -1272,7 +1272,8 @@
             "north": "1,3"
           },
           "portals": {
-            "north": "portal_1770762066212_1u5cs6987"
+            "north": "portal_1770762066212_1u5cs6987",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,

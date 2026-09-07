@@ -323,7 +323,7 @@
         },
         {
           "pos": "0,0",
-          "stageId": "s03a_ga1",
+          "stageId": "s03a_ib1",
           "rotation": 90,
           "pathOrder": 10,
           "isStart": false,
@@ -333,8 +333,8 @@
             "east": "0,1"
           },
           "portals": {
-            "east": "portal_1770723810436_8lyziqda8",
-            "west": "portal_1770723821191_ps69vm5m9"
+            "east": "portal_1770723916745_dtri7lila",
+            "west": "portal_1770723931285_tso6bvs29"
           },
           "warpEdge": "west",
           "keyGate": null,
@@ -525,11 +525,11 @@
             "pickup_quest_item"
           ],
           "exit": "west",
-          "exit_portal_id": "portal_1770723821191_ps69vm5m9",
+          "exit_portal_id": "portal_1770723931285_tso6bvs29",
           "target": "",
           "_section_idx": 0,
           "_pos": "0,0",
-          "stageId": "s03a_ga1",
+          "stageId": "s03a_ib1",
           "rotation": 90
         }
       ]

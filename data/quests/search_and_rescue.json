@@ -900,14 +900,14 @@
         },
         {
           "pos": "2,4",
-          "stage_id": "s01a_ga1",
+          "stage_id": "s01a_ib1",
           "rotation": 90,
           "connections": {
             "west": "2,3"
           },
           "portals": {
-            "west": "portal_1769002993382_c7pgnyd8v",
-            "east": "portal_1769002968090_15j7x91gm"
+            "east": "portal_1769053381372_5av2efj16",
+            "west": "portal_1769053417752_i1yyit48i"
           },
           "is_start": false,
           "is_end": true,

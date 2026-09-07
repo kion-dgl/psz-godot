@@ -524,8 +524,8 @@
             "south": "1,0"
           },
           "portals": {
-            "north": "portal_1770723810436_8lyziqda8",
-            "south": "portal_1770723821191_ps69vm5m9"
+            "south": "portal_1770723821191_ps69vm5m9",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,
@@ -1225,7 +1225,8 @@
             "south": "1,0"
           },
           "portals": {
-            "south": "portal_1770725676213_mbx0o9fxx"
+            "south": "portal_1770725676213_mbx0o9fxx",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,
