@@ -1,24 +1,23 @@
 {
   "stageId": "s02a_ga1",
-  "shape": "I (corridor, N+S gates)",
-  "description": "Straight north-south corridor in Ozette Wetlands variant A. Two portals (north end and south end) connected by an uninterrupted corridor along X≈0. A midpoint anchor (yt0xtl) sits at the center for objective dispatch. Same primitive as paru-A ga1.",
+  "shape": "Goal room — single-portal dead-end (south gate)",
+  "description": "Ozette Wetlands variant A goal room. One measured doorway: the south (high-Z) gate, which is also the room's only connection in any layout it terminates (#641 corrected the phantom north portal — the original authors an in-room warp object at (0, -4.5), not a second doorway). The section exit stands on that warp pad, not on a wall door.",
   "portals": {
-    "north": "spawn_north at (0.05, -16.75) — gate on the north (low-Z) end",
-    "south": "spawn_south at (-0.02, 22.90) — gate on the south (high-Z) end"
+    "south": "spawn_south at (-0.02, 22.90) — the only portal, on the south (high-Z) side"
   },
   "objectives": {},
   "anchors": [
-    { "id": "north_gate",   "position": [0.05,  0, -16.75], "description": "north portal area (matches wp_spawn_0)" },
     { "id": "south_gate",   "position": [-0.02, 0,  22.90], "description": "south portal area (matches wp_spawn_1)" },
-    { "id": "corridor_mid", "position": [-0.64, 0,   2.46], "description": "midpoint dispatch anchor (matches yt0xtl)" }
+    { "id": "corridor_mid", "position": [-0.64, 0,   2.46], "description": "midpoint dispatch anchor (matches yt0xtl)" },
+    { "id": "goal_pad",     "position": [ 0.0,  0,  -4.50], "description": "in-room warp pad (original's o0s_warpm object; the section exit)" }
   ],
   "anchorEdges": [
-    ["north_gate", "corridor_mid"],
-    ["corridor_mid", "south_gate"]
+    ["south_gate", "corridor_mid"],
+    ["corridor_mid", "goal_pad"]
   ],
   "traversalNotes": [
-    "Straight-line traversal: the autopilot can walk directly between spawn_north and spawn_south.",
-    "DISPATCH RULE: any in-cell objective routes through corridor_mid (yt0xtl). Walk current_gate → corridor_mid → objective → corridor_mid → next_gate.",
-    "Same shape primitive as paru-A ga1. Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+    "DEAD-END topology: enter and leave via spawn_south; the section exit is the in-room goal pad, not a doorway.",
+    "DISPATCH RULE: any in-cell objective routes through corridor_mid (yt0xtl). Walk south_gate → corridor_mid → objective → corridor_mid → goal_pad.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
   ]
 }

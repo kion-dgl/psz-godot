@@ -122,6 +122,25 @@ func _fitting_rotations(stage_id: String, entry_dir: String, row: int, col: int,
 	return fits
 
 
+## The section's goal room: the set's `ga1`, a 1-door leaf placed at the path's
+## end — see /states/free-field "The goal room ends the section". Its only door
+## is the entry connection, so the section exit is not a doorway at all: the
+## field controller stands an in-room warp pad on the stage's `defaultSpawn`
+## (the original authors a warp object there — psz-re room_reference.json).
+## `key_gate_direction` (emitted as the cell's `warp_edge`) stays the direction
+## the path was travelling — nominal, with no door on it. That is deliberate:
+## a warp_edge the room's portals do not contain is exactly what tells the
+## field controller to build the pad instead of a doorway area warp. (Written
+## as two words on purpose — the one-word class token is pack-only-preload
+## guarded, and naming it here would drag it into the autoload closure.)
+func _goal_room_fit(goal_stage: String, entry_dir: String) -> Dictionary:
+	for steps in range(4):
+		var gates: Array[String] = _gates_at_rotation(goal_stage, steps)
+		if gates.size() == 1 and gates[0] == entry_dir:
+			return {"stage": goal_stage, "rotation": steps}
+	return {}
+
+
 ## Get gate directions in grid-space for a cell, applying its rotation.
 func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 	var stage_id: String = str(cell.get("stage_id", ""))
@@ -163,7 +182,7 @@ const TOWER_DIFFICULTY_PARAMS := {
 const GATES := {
 	# s01a_ stages
 	"s01a_sa1": ["south"],
-	"s01a_ga1": ["north", "south"],
+	"s01a_ga1": ["south"],
 	"s01a_ib1": ["north", "south"],
 	"s01a_ib2": ["north", "south"],
 	"s01a_ic1": ["north", "south"],
@@ -613,9 +632,18 @@ func _try_generate(area: String, path_length: int, _key_gates_count: int,
 	var current_col: int = sa1_col
 	var last_exit_dir := "south"
 
+	# The set's ga1 is the section's terminal — reserved for the end cell and
+	# excluded from every pool below, so it can never roll mid-path, land on a
+	# branch dead end, or be picked by the retile. Only an area whose ga1 does
+	# not measure 1 door (none today; kept as a guard for hand-edited configs)
+	# keeps the old any-room end.
+	var goal_stage: String = prefix + "ga1"
+	var goal_reserved: bool = _get_gates(goal_stage).size() == 1
+
 	var all_stages: Array[String] = []
 	for stage_id in _active_gates:
-		if str(stage_id).begins_with(prefix) and stage_id != start_stage:
+		if str(stage_id).begins_with(prefix) and stage_id != start_stage \
+				and not (goal_reserved and str(stage_id) == goal_stage):
 			all_stages.append(str(stage_id))
 
 	while path.size() < path_length:
@@ -633,6 +661,28 @@ func _try_generate(area: String, path_length: int, _key_gates_count: int,
 
 		var is_last_cell: bool = path.size() == path_length - 1
 
+		if is_last_cell and goal_reserved:
+			# The terminal is the goal room. Its single door faces the parent;
+			# the warp edge is nominal (see _goal_room_fit).
+			var goal_fit: Dictionary = _goal_room_fit(goal_stage, entry_dir)
+			if goal_fit.is_empty():
+				break
+			grid[next_key] = {
+				"stage_id": goal_stage,
+				"rotation": int(goal_fit["rotation"]) * 90,
+				"entry_direction": entry_dir,
+				"is_start": false,
+				"is_end": true,
+				"is_branch": false,
+				"has_key": false,
+				"key_for_cell": "",
+				"is_key_gate": false,
+				"key_gate_direction": last_exit_dir,
+				"path_order": path.size(),
+			}
+			path.append(Vector2i(next_row, next_col))
+			break
+
 		# Find valid stages for this position
 		var candidates: Array[Dictionary] = []
 		for stage_id in all_stages:
@@ -644,7 +694,8 @@ func _try_generate(area: String, path_length: int, _key_gates_count: int,
 		if candidates.is_empty():
 			# Try to end early if we have enough cells
 			if path.size() >= 3:
-				if _try_place_end_cell(grid, path, all_stages, next_row, next_col, entry_dir):
+				if _try_place_end_cell(grid, path, all_stages, next_row, next_col,
+						entry_dir, goal_stage, goal_reserved):
 					break
 			break
 
@@ -681,7 +732,7 @@ func _try_generate(area: String, path_length: int, _key_gates_count: int,
 	var end_cell: Dictionary = grid[end_key]
 
 	if not end_cell.get("is_end", false) or str(end_cell.get("key_gate_direction", "")).is_empty():
-		if not _fix_end_cell(grid, end_cell, end_pos, all_stages):
+		if not _fix_end_cell(grid, end_cell, end_pos, all_stages, goal_stage, goal_reserved):
 			return {}
 
 	# Add dead-end branches
@@ -721,10 +772,27 @@ func _try_generate(area: String, path_length: int, _key_gates_count: int,
 	return _to_output(grid, path, branch_cells, start_pos, end_pos)
 
 
-## Try to place an end cell at the given position.
+## Try to place an end cell at the given position. With the goal room reserved
+## the terminal is always ga1 (a 1-door leaf); the pool walk below only runs
+## for areas without a measurable ga1.
 func _try_place_end_cell(grid: Dictionary, path: Array[Vector2i],
-		all_stages: Array[String], row: int, col: int, entry_dir: String) -> bool:
+		all_stages: Array[String], row: int, col: int, entry_dir: String,
+		goal_stage: String, goal_reserved: bool) -> bool:
 	var key := _pos_key(Vector2i(row, col))
+	if goal_reserved:
+		var goal_fit: Dictionary = _goal_room_fit(goal_stage, entry_dir)
+		if goal_fit.is_empty():
+			return false
+		grid[key] = {
+			"stage_id": goal_stage, "rotation": int(goal_fit["rotation"]) * 90,
+			"entry_direction": entry_dir, "is_start": false,
+			"is_end": true, "is_branch": false,
+			"has_key": false, "key_for_cell": "",
+			"is_key_gate": false, "key_gate_direction": OPPOSITE[entry_dir],
+			"path_order": path.size(),
+		}
+		path.append(Vector2i(row, col))
+		return true
 	for stage_id in all_stages:
 		var fits: Array[Dictionary] = _fitting_rotations(
 			stage_id, entry_dir, row, col, grid, true)
@@ -744,12 +812,25 @@ func _try_place_end_cell(grid: Dictionary, path: Array[Vector2i],
 	return false
 
 
-## Fix the last cell to be a valid end cell with warp exit.
+## Fix the last cell to be a valid end cell. With the goal room reserved that
+## means placing ga1 rotated so its single door is the entry connection and
+## the warp edge is the nominal forward direction; without it (no measurable
+## ga1), the old pool-based end applies.
 func _fix_end_cell(grid: Dictionary, end_cell: Dictionary, end_pos: Vector2i,
-		all_stages: Array[String]) -> bool:
+		all_stages: Array[String], goal_stage: String, goal_reserved: bool) -> bool:
 	var entry_dir: String = str(end_cell.get("entry_direction", ""))
 	if entry_dir.is_empty():
 		return false
+
+	if goal_reserved:
+		var goal_fit: Dictionary = _goal_room_fit(goal_stage, entry_dir)
+		if goal_fit.is_empty():
+			return false
+		end_cell["stage_id"] = goal_stage
+		end_cell["rotation"] = int(goal_fit["rotation"]) * 90
+		end_cell["is_end"] = true
+		end_cell["key_gate_direction"] = OPPOSITE[entry_dir]
+		return true
 
 	for stage_id in all_stages:
 		for steps in range(4):
@@ -1276,14 +1357,20 @@ func _field_is_solvable(grid: Dictionary, start_key: String) -> bool:
 ## breaks the "layout is a tree" invariant every field is validated against.
 ##
 ## The goal keeps its warp exit, which is a door with no cell behind it on
-## purpose — it leaves the field rather than leading nowhere.
+## purpose — it leaves the field rather than leading nowhere. (Since #641 the
+## terminal is a 1-door ga1 whose only door is its entry connection, so its
+## warp edge carries no door at all and the exit is the in-room goal pad;
+## the exemption below stays for configs where the end room still has one.)
 ##
 ## START CELLS ARE RETILED TOO, with one exception that is about spawning rather
 ## than doors: a stage carrying a `defaultSpawn` is where the player materialises
 ## when they warp into the section from outside, and no other tile has one, so
-## swapping it would leave them with nowhere to stand. Only `sNNa_sa1` and
-## `sNNz_na1` carry one, and `sNNa_sa1` has a single south door, so it is already
-## exact and never needs retiling. `sNNb_sa1` carries north+south and sits on row
+## swapping it would leave them with nowhere to stand. `sNNa_sa1`, `sNNz_na1`
+## and (since #641) the `ga1` goal rooms carry one — the goal's defaultSpawn is
+## where the in-room warp pad stands. `sNNa_sa1` has a single south door, so it
+## is already exact and never needs retiling; the goal room is a 1-door leaf
+## whose only door is its entry connection, so neither does it. `sNNb_sa1`
+## carries north+south and sits on row
 ## 0, which used to leave its north door hanging off-grid in every `b` section —
 ## it has no default spawn (a `b` section is entered by warp from the transition
 ## room), so it retiles like anything else.
@@ -1340,7 +1427,9 @@ func _spare_dirs(grid: Dictionary, key: String, cell: Dictionary) -> Array[Strin
 
 
 ## True when a door opens onto a placed cell, or is one of the section's two
-## warps — the goal's way out, or the start's way back.
+## warps — the goal's way out, or the start's way back. The goal's warp edge
+## is nominal since #641 (a 1-door terminal with an in-room exit pad), so the
+## first check only bites on configs whose end room still has a warp door.
 func _leads_somewhere(grid: Dictionary, key: String, cell: Dictionary, dir: String) -> bool:
 	if cell.get("is_end", false) and dir == str(cell.get("key_gate_direction", "")):
 		return true
@@ -1606,18 +1695,15 @@ func _generate_fallback(area: String, area_prefix: String = "s01") -> Dictionary
 		Vector2i(0, 2), prefix + "sa1", 0, true, false, false, 0))
 
 	# 3 middle cells (straight N/S stages)
-	var mid_stages: Array[String]
-	if area == "a":
-		mid_stages = [prefix + "ga1", prefix + "ib1", prefix + "ib2"]
-	else:
-		mid_stages = [prefix + "ib1", prefix + "ib2", prefix + "ic1"]
+	var mid_stages: Array[String] = [prefix + "ib1", prefix + "ib2", prefix + "ic1"]
 	for i in range(3):
 		cells.append(_make_output_cell(
 			Vector2i(i + 1, 2), mid_stages[i], 0, false, false, false, i + 1))
 
-	# End cell at row 4 — uses a N/S stage, south exits outside grid
-	var end_stage: String = prefix + "ga1" if area == "a" else prefix + "sa1"
-	var end := _make_output_cell(Vector2i(4, 2), end_stage, 0, false, true, false, 4)
+	# End cell at row 4 — the goal room, like every a/b terminal. Rotated 180
+	# so its single (south) door faces the parent to the north; the warp edge
+	# is the nominal forward direction with no door on it (in-room goal pad).
+	var end := _make_output_cell(Vector2i(4, 2), prefix + "ga1", 180, false, true, false, 4)
 	end["warp_edge"] = "south"
 	cells.append(end)
 

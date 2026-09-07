@@ -615,15 +615,15 @@
         },
         {
           "pos": "0,2",
-          "stage_id": "s02a_ga1",
+          "stage_id": "s02a_ib1",
           "rotation": 90,
           "connections": {
             "east": "0,3",
             "west": "0,1"
           },
           "portals": {
-            "east": "portal_1770694163468_w6x5en6p1",
-            "west": "portal_1770694183466_bhd3dyy58"
+            "east": "portal_1770694802470_rabpz62p6",
+            "west": "portal_1770694814154_z0fveyavc"
           },
           "is_start": false,
           "is_end": false,
@@ -1194,7 +1194,7 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "Star Atomizers heal the whole party — the backup for groups without a Force who can cast Resta."
+                  "text": "Star Atomizers heal the whole party \u2014 the backup for groups without a Force who can cast Resta."
                 },
                 {
                   "speaker": "Fern",

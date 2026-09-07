@@ -10,6 +10,7 @@
 //   scripts/tools/refield/derive_layout.py       — derives a layout from observations
 //   data/field_quests/valley_field.json          — the built Valley field
 //   scripts/3d/field/valley_field_controller.gd  — consumes the field sections
+//   scripts/3d/field/grid_generator.gd           — generated fields (goal terminal, #641)
 //   scripts/tools/test_field_layout.gd           — the invariant tests
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
@@ -68,6 +69,43 @@ const tree = `flowchart TD
     <li>The layout is a <strong>tree</strong>: edges = rooms − 1, no cycles, adjacency symmetric.</li>
     <li>The number of doors on a room <strong>equals the door count its shape letter implies</strong>.</li>
     <li>Each room stores an absolute <strong>grid cell</strong> (column A.., row 1..5); the in-game map draws a fixed grid the layout occupies part of.</li>
+  </ul>
+
+  <h2>The goal room ends the section</h2>
+  <p>
+    Every <code>a</code>/<code>b</code> section has <strong>exactly one goal room</strong>
+    — the set's <code>ga1</code> — and it is the section's <strong>terminal</strong>: a
+    <strong>1-door leaf</strong> whose only door is the connection it is entered through.
+    The section exit lives <strong>inside the room</strong>, as an in-room warp pad
+    standing where the original authors its warp object — never as a doorway warp bolted
+    onto whatever room the path happened to finish in. A generator MUST reserve
+    <code>ga1</code> for this role and never roll it as an ordinary mid-path room.
+  </p>
+  <ul>
+    <li>Four independent confirmations, all in <code>data/re_reference/</code>: the
+        naming table (<code>level_room_naming.json</code>, arm9 <code>0x020F24AD</code>)
+        orders the shape letter by connectivity and lists <code>g</code> among the 1-door
+        terminals (dead end <code>n</code>, start <code>s</code>, goal <code>g</code>);
+        the doorway measurements (<code>room_doorways.json</code>, from the ROM's
+        <code>lndpr</code> tables) give <strong>20 of 20</strong> <code>ga1</code> rooms
+        exactly one doorway; the captured layouts (<code>level_layouts_observed.json</code>)
+        hold exactly one <code>g</code> per section; and the observed graphs
+        (<code>level_graph_observed.json</code>) always show it as a <strong>leaf</strong>
+        with a single inbound edge.</li>
+    <li>The goal room is not necessarily the <em>list-last</em> room of a section — the
+        table order is generation order, not depth. The rule is "the section's terminal
+        is the <code>ga</code> room", not "the last room is the goal".</li>
+    <li>The goal room <strong>MAY sit behind a gate</strong>: valley, wetlands and
+        snowfield measure it behind an enemy-defeat gate, paru behind a two-key gate
+        (<code>level_graph_observed.json</code>). The gate lives on the parent room's
+        forward door; the goal room itself is never a gated room.</li>
+    <li><code>room_reference.json</code> shows every goal room carries an authored
+        in-room <strong>warp object</strong> (<code>o0s_warpm</code> in <code>a</code>
+        variants, <code>o0s_warpb</code> in <code>b</code>), and that object's position
+        is where a port's section exit stands. psz-godot's portal tables originally
+        misread that position as a second north doorway and authored a phantom portal
+        from it (corrected in #641, measured rather than designed). The tower floors
+        (<code>s08x_ga1</code>) carry the same phantom and are tracked separately.</li>
   </ul>
 
   <h2>Rotation is derived, not stored</h2>

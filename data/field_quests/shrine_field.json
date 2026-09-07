@@ -438,15 +438,15 @@
         },
         {
           "pos": "3,4",
-          "stage_id": "s07a_ga1",
+          "stage_id": "s07a_ib1",
           "rotation": 180,
           "connections": {
             "south": "4,4",
             "north": "2,4"
           },
           "portals": {
-            "south": "portal_1770820698313_sivtrwb7e",
-            "north": "portal_1770820706677_bt9phciaz"
+            "north": "portal_1770820717547_u1d9cr01x",
+            "south": "portal_1770820724599_3wgzta3bu"
           },
           "is_start": false,
           "is_end": false,

@@ -77,6 +77,7 @@ var _room_messages: Array = [] # MessagePack nodes in current room
 var _room_props: Array = []    # StoryProp nodes in current room
 var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
+var _room_keys: Array = []     # KeyPickup nodes standing in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _room_walls: Array = []       # Wall nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
@@ -564,6 +565,13 @@ func _ready() -> void:
 		if is_instance_valid(room_enemy):
 			_room_minimap.track_enemy(room_enemy)
 
+	# Key markers — same ordering story: the on-entry key branches run before
+	# the minimap is built, so backfill here; drops on room clear (#639)
+	# register directly from _register_room_key as they spawn.
+	for room_key in _room_keys:
+		if is_instance_valid(room_key):
+			_room_minimap.track_key(room_key)
+
 	# Key HUD (drawn below minimap)
 	_setup_key_hud(cells)
 
@@ -661,6 +669,7 @@ func _process(_delta: float) -> void:
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
 		_room_minimap.update_enemies(_map_root)
+		_room_minimap.update_key_markers(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
 
@@ -1157,13 +1166,13 @@ func _spawn_field_elements() -> void:
 		# Gate model — AreaWarp instead of Gate, or a BOSS WARP when the section
 		# this door leads to is the boss arena.
 		#
-		# BossWarp used to be reachable only from the goal-pad block below, which
-		# is guarded by `not _portal_data.has(warp_edge)` — a leaf room whose exit
-		# has no wall door. A generated field's b-section end cell always HAS one
-		# (grid_generator sets warp_edge from key_gate_direction, chosen from the
-		# tile's real gates, and the no-spare-doors retile deliberately exempts
-		# it), so the pad never fired and every boss entrance was a plain area
-		# gate. kion: "the transition to the boss should always be a boss warp".
+		# Since #641 a generated field's a/b end cell is a 1-door ga1 terminal
+		# whose only portal is its entry connection, so this doorway loop builds
+		# nothing for it and the section exit is the goal-pad block below (which
+		# carries its own to_boss swap). This loop now serves the entries, the
+		# e/z fixed rooms, and quest-authored fields whose warp_edge names a real
+		# baked portal. kion: "the transition to the boss should always be a
+		# boss warp" — still honoured by both paths.
 		var aw_to_boss: bool = not is_final_exit and target_section >= 0 \
 			and target_section < sections_for_warp.size() \
 			and str(sections_for_warp[target_section].get("type", "")) == "boss"
@@ -1493,19 +1502,25 @@ func _make_section_warp_callback(is_final: bool, t_section: int, t_cell: String,
 ## reads as a boss warp, not a plain area gate), else the medium AreaWarp.
 func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool, to_boss: bool = false) -> void:
 	var is_open: bool = not room_has_enemies
+	# GROUND THE PAD. `pad_pos` usually comes from `_portal_data["default"]`,
+	# which is authored as a PLAYER spawn — the parse paths hardcode y=1.0 so a
+	# warping-in player clears the floor. The warp model's origin is at its
+	# base (doorway warps sit at their gate position, y≈0), so an ungrounded
+	# pad floats a metre up. Set it on the floor the way a doorway warp sits.
+	var ground_pos := Vector3(pad_pos.x, 0.0, pad_pos.z)
 	var warp: WarpBase = BossWarpScript.new() if to_boss else AreaWarpScript.new()
 	warp.auto_collect = false
 	warp.name = "AreaWarp_goal_pad"  # kept stable for the autopilot's find_child
 	warp.element_state = "open" if is_open else "locked"
 	add_child(warp)
-	warp.global_position = pad_pos
-	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", pad_pos, callback, false, not is_open)
+	warp.global_position = ground_pos
+	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", ground_pos, callback, false, not is_open)
 	var waypoint := WaypointScript.new()
 	add_child(waypoint)
-	waypoint.global_position = Vector3(pad_pos.x, 1.5, pad_pos.z)
+	waypoint.global_position = Vector3(ground_pos.x, 1.5, ground_pos.z)
 	waypoint._base_y = waypoint.position.y
 	waypoint.set_state("new")
-	_add_debug_sphere(pad_pos, Color(0, 0.6, 1), "GoalPadMark")
+	_add_debug_sphere(ground_pos, Color(0, 0.6, 1), "GoalPadMark")
 
 
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
@@ -2002,6 +2017,18 @@ func _drop_deferred_room_key() -> void:
 		str(_deferred_key_pickup.get("key_for", "")),
 		int(_deferred_key_pickup.get("count", 1)))
 	_deferred_key_pickup = {}
+
+
+## A key pickup just spawned into this room — keep it for the minimap. The
+## entry-time branches run before the minimap is built (those are backfilled
+## in _ready); drops on room clear register live through this same call.
+## Called by portal_gate_manager._create_key_pickup for every pickup.
+func _register_room_key(key: Node3D) -> void:
+	if key == null:
+		return
+	_room_keys.append(key)
+	if _room_minimap and is_instance_valid(_room_minimap):
+		_room_minimap.track_key(key)
 
 
 ## How many waves are still held back past the one running now.

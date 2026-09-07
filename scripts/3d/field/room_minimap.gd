@@ -57,6 +57,16 @@ var _has_player_tracking := false
 var _tracked_enemies: Array = []       # alive enemy Node3Ds in this cell
 var _enemy_markers: Dictionary = {}    # instance_id → {"pos": Vector2, "radius": float}
 
+# Key markers — pickups standing in the loaded cell. Keys drop on room clear
+# (#639), so the marker must appear with the drop and vanish with the pickup;
+# collection removes it via GameElement's `interacted` signal. Gold diamonds,
+# visually distinct from the orange enemy dots and the green player arrow;
+# same loaded-cell scoping as both (the minimap is rebuilt per cell).
+const KEY_COLOR := Color(1.0, 0.82, 0.25)
+const KEY_MARKER_RADIUS := 3.0
+var _tracked_keys: Array = []      # live key-pickup Node3Ds in this cell
+var _key_markers: Dictionary = {}  # instance_id → Vector2 (display space)
+
 # Key-card count — number of key cards currently held (drawn as a single digit
 # in the frame's key slot).
 var _keys_collected: int = 0
@@ -250,6 +260,64 @@ static func enemy_marker_radius(is_boss: bool) -> float:
 	return ENEMY_DOT_RADIUS * sqrt(BOSS_DOT_AREA_RATIO) if is_boss else ENEMY_DOT_RADIUS
 
 
+# ── Key markers ──────────────────────────────────────────────────────────────
+
+## Register a key pickup standing in this cell. Mirrors track_enemy: the
+## minimap instance is rebuilt per loaded cell, so only this cell's keys ever
+## register. Collection removes the marker via `interacted`; a freed node is
+## swept by the validity pass below, so no stale diamonds survive either path.
+func track_key(key: Node3D) -> void:
+	if key == null or _tracked_keys.has(key):
+		return
+	_tracked_keys.append(key)
+	if key.has_signal("interacted"):
+		key.connect("interacted", func(_player: Node3D) -> void: untrack_key(key))
+	queue_redraw()
+
+
+func untrack_key(key: Node) -> void:
+	_tracked_keys.erase(key)
+	if key != null:
+		_key_markers.erase(key.get_instance_id())
+	queue_redraw()
+
+
+## Live marker count — the autopilot probe and the seeded tests assert this
+## the same way they assert the enemy roster.
+func get_key_marker_count() -> int:
+	_sweep_tracked_keys()
+	return _tracked_keys.size()
+
+
+func _sweep_tracked_keys() -> void:
+	for i in range(_tracked_keys.size() - 1, -1, -1):
+		if not is_instance_valid(_tracked_keys[i]):
+			_tracked_keys.remove_at(i)
+
+
+## Project every tracked pickup into display space — same SVG-metadata pipeline
+## as update_enemies. Keys never move, so this is about catching count changes
+## (a drop, a pickup) rather than following motion; called per-frame alongside
+## update_enemies by the field controller.
+func update_key_markers(map_root: Node3D) -> void:
+	if not _has_player_tracking:
+		return
+	_sweep_tracked_keys()
+	var inv := map_root.global_transform.affine_inverse()
+	var markers: Dictionary = {}
+	for key in _tracked_keys:
+		if not key.is_inside_tree():
+			continue
+		var local: Vector3 = inv * (key as Node3D).global_position
+		var svg := Vector2(
+			local.x * _svg_scale + _svg_offset_x,
+			local.z * _svg_scale + _svg_offset_y)
+		markers[key.get_instance_id()] = _svg_to_display(svg)
+	if markers.size() != _key_markers.size():
+		_key_markers = markers
+		queue_redraw()
+
+
 func _is_boss_enemy(enemy: Node) -> bool:
 	var edata: Variant = enemy.get("enemy_data")
 	if edata is Resource:
@@ -297,6 +365,16 @@ func _draw() -> void:
 	# Enemy markers — filled orange dots (#422); player arrow draws on top
 	for entry in _enemy_markers.values():
 		draw_circle(entry["pos"] + map_offset, entry["radius"], ENEMY_COLOR)
+
+	# Key markers — gold diamonds standing where the room's keys stand
+	for pos in _key_markers.values():
+		var kpos: Vector2 = pos + map_offset
+		draw_polygon(PackedVector2Array([
+			kpos + Vector2(0, -KEY_MARKER_RADIUS),
+			kpos + Vector2(KEY_MARKER_RADIUS, 0),
+			kpos + Vector2(0, KEY_MARKER_RADIUS),
+			kpos + Vector2(-KEY_MARKER_RADIUS, 0),
+		]), [KEY_COLOR])
 
 	# Player arrow
 	if _has_player_tracking:

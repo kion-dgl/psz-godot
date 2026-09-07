@@ -1167,15 +1167,15 @@
         },
         {
           "pos": "1,3",
-          "stage_id": "s06b_ga1",
+          "stage_id": "s06b_ib1",
           "rotation": 180,
           "connections": {
             "north": "0,3",
             "south": "2,3"
           },
           "portals": {
-            "north": "portal_1770802467476_q63ub62r5",
-            "south": "portal_1770802480568_0h2sa66c2"
+            "north": "portal_1770802559359_lg5kmdf50",
+            "south": "portal_1770802572268_pe6wm1u6o"
           },
           "is_start": false,
           "is_end": false,

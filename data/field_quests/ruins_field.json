@@ -306,15 +306,15 @@
         },
         {
           "pos": "1,0",
-          "stage_id": "s04a_ga1",
+          "stage_id": "s04a_ib2",
           "rotation": 0,
           "connections": {
             "south": "2,0",
             "north": "0,0"
           },
           "portals": {
-            "south": "portal_1770745554384_9kncudq67",
-            "north": "portal_1770745579087_ckots2l1l"
+            "south": "portal_1770745630171_nfnxixlqg",
+            "north": "portal_1770745638454_xum140dtp"
           },
           "is_start": false,
           "is_end": false,
@@ -349,7 +349,7 @@
             {
               "type": "box",
               "position": [
-                12,
+                4,
                 0,
                 -8
               ]
@@ -357,7 +357,7 @@
             {
               "type": "box",
               "position": [
-                14,
+                -4,
                 0,
                 -6
               ]
@@ -365,7 +365,7 @@
             {
               "type": "box",
               "position": [
-                13,
+                2,
                 0,
                 -10
               ]
@@ -374,15 +374,15 @@
         },
         {
           "pos": "2,0",
-          "stage_id": "s04a_ga1",
+          "stage_id": "s04a_ib2",
           "rotation": 180,
           "connections": {
             "north": "1,0",
             "south": "3,0"
           },
           "portals": {
-            "north": "portal_1770745554384_9kncudq67",
-            "south": "portal_1770745579087_ckots2l1l"
+            "north": "portal_1770745630171_nfnxixlqg",
+            "south": "portal_1770745638454_xum140dtp"
           },
           "is_start": false,
           "is_end": false,

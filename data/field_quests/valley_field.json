@@ -532,8 +532,8 @@
             "south": "1,0"
           },
           "portals": {
-            "north": "portal_1769002968090_15j7x91gm",
-            "south": "portal_1769002993382_c7pgnyd8v"
+            "south": "portal_1769002993382_c7pgnyd8v",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,
@@ -1125,7 +1125,8 @@
             "south": "2,3"
           },
           "portals": {
-            "south": "portal_1769176212440_n5b8n2v53"
+            "south": "portal_1769176212440_n5b8n2v53",
+            "default": "default"
           },
           "is_start": false,
           "is_end": true,

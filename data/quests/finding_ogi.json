@@ -291,7 +291,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "Wait— is that his head over there?"
+                  "text": "Wait\u2014 is that his head over there?"
                 }
               ],
               "actions": []
@@ -1040,14 +1040,14 @@
         },
         {
           "pos": "0,0",
-          "stage_id": "s03a_ga1",
+          "stage_id": "s03a_ib1",
           "rotation": 90,
           "connections": {
             "east": "0,1"
           },
           "portals": {
-            "east": "portal_1770723810436_8lyziqda8",
-            "west": "portal_1770723821191_ps69vm5m9"
+            "east": "portal_1770723916745_dtri7lila",
+            "west": "portal_1770723931285_tso6bvs29"
           },
           "is_start": false,
           "is_end": true,
