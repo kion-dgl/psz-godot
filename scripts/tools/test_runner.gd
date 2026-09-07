@@ -944,6 +944,12 @@ func test_safe_room_ambience_spawn() -> void:
 
 	var critters := 0
 	var pad: HealPad = null
+	# CI runs without the asset pack (raw /assets/ files are not in the repo —
+	# the suite's contract is config/logic layers), where load() returns null
+	# and the element stands model-less. The model assertion runs only when
+	# the GLB is actually present.
+	var models_local: bool = ResourceLoader.exists(
+		"res://assets/objects/special_z/o0c_butterfly.glb")
 	for child in root.get_children():
 		if child is AmbientCritter:
 			critters += 1
@@ -952,7 +958,8 @@ func test_safe_room_ambience_spawn() -> void:
 				if node is CollisionObject3D:
 					bodies += 1
 			assert_eq(bodies, 0, "a critter carries no collision object")
-			assert_true(child.get_child_count() > 0, "the critter model loaded")
+			if models_local:
+				assert_true(child.get_child_count() > 0, "the critter model loaded")
 		elif child is HealPad:
 			pad = child
 	assert_eq(critters, 3, "all three critter models spawn")
