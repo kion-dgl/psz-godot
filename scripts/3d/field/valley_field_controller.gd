@@ -1502,19 +1502,25 @@ func _make_section_warp_callback(is_final: bool, t_section: int, t_cell: String,
 ## reads as a boss warp, not a plain area gate), else the medium AreaWarp.
 func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies: bool, to_boss: bool = false) -> void:
 	var is_open: bool = not room_has_enemies
+	# GROUND THE PAD. `pad_pos` usually comes from `_portal_data["default"]`,
+	# which is authored as a PLAYER spawn — the parse paths hardcode y=1.0 so a
+	# warping-in player clears the floor. The warp model's origin is at its
+	# base (doorway warps sit at their gate position, y≈0), so an ungrounded
+	# pad floats a metre up. Set it on the floor the way a doorway warp sits.
+	var ground_pos := Vector3(pad_pos.x, 0.0, pad_pos.z)
 	var warp: WarpBase = BossWarpScript.new() if to_boss else AreaWarpScript.new()
 	warp.auto_collect = false
 	warp.name = "AreaWarp_goal_pad"  # kept stable for the autopilot's find_child
 	warp.element_state = "open" if is_open else "locked"
 	add_child(warp)
-	warp.global_position = pad_pos
-	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", pad_pos, callback, false, not is_open)
+	warp.global_position = ground_pos
+	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", ground_pos, callback, false, not is_open)
 	var waypoint := WaypointScript.new()
 	add_child(waypoint)
-	waypoint.global_position = Vector3(pad_pos.x, 1.5, pad_pos.z)
+	waypoint.global_position = Vector3(ground_pos.x, 1.5, ground_pos.z)
 	waypoint._base_y = waypoint.position.y
 	waypoint.set_state("new")
-	_add_debug_sphere(pad_pos, Color(0, 0.6, 1), "GoalPadMark")
+	_add_debug_sphere(ground_pos, Color(0, 0.6, 1), "GoalPadMark")
 
 
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
