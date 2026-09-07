@@ -146,6 +146,7 @@ func _run_tests_core() -> void:
 	test_area_objects()
 	test_generated_field_doors()
 	test_generated_section_warp_directions()
+	test_generated_goal_room_terminal()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -706,6 +707,71 @@ func test_generated_section_warp_directions() -> void:
 				"%s roll %d: boss section carries no exit_direction" % [area, roll])
 	assert_eq(b_without_wayback, 0, "every generated b section names its way back")
 	print("  INFO: %d areas x 3 rolls, all sections classified" % areas.size())
+	print("")
+
+
+## ── Generated free fields: the goal room is the terminal (#641) ───────
+## Spec /states/free-field "The goal room ends the section": exactly one ga1
+## per a/b section, a 1-door leaf, never mid-path, and the section exit is the
+## in-room warp pad — which the runtime builds exactly when the end cell's
+## warp_edge names a direction the room's portals do not carry. Pins both the
+## generator behaviour and the data it depends on (single-door ga1 records in
+## the unified config and the generator's GATES fallback).
+func test_generated_goal_room_terminal() -> void:
+	print("── Generated free fields (goal room terminal) ──")
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var areas := ["gurhacia", "ozette", "rioh", "makara", "paru", "arca", "dark"]
+	const AREA_PREFIX := {"gurhacia": "s01", "ozette": "s02", "rioh": "s03",
+		"makara": "s04", "paru": "s05", "arca": "s06", "dark": "s07"}
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	var cfg_json := JSON.new()
+	cfg_json.parse(cfg_file.get_as_text())
+	var configs: Dictionary = cfg_json.data
+
+	# Data first: every field ga1 measures exactly one doorway (psz-re
+	# room_doorways.json, 20 of 20) — the config the runtime reads and the
+	# generator's GATES fallback must both agree.
+	for n in range(1, 8):
+		for letter in ["a", "b"]:
+			var stage := "s0%d%s_ga1" % [n, letter]
+			var portals: Array = configs.get(stage, {}).get("portals", [])
+			assert_eq(portals.size(), 1, "%s carries exactly the measured one doorway" % stage)
+			if portals.size() == 1:
+				assert_eq(str(portals[0].get("direction", "")), "south",
+					"%s doorway is the south portal" % stage)
+	assert_eq(GridGen.GATES.get("s01a_ga1", []).size(), 1,
+		"GATES fallback: s01a_ga1 is single-door")
+
+	for area in areas:
+		var prefix: String = AREA_PREFIX[area]
+		for roll in range(3):
+			var gen = GridGen.new()
+			gen.set_seed(roll)
+			for section in gen.generate_field("normal", area)["sections"]:
+				var letter := str(section.get("area", ""))
+				if letter != "a" and letter != "b":
+					continue
+				var goal_count := 0
+				var endc: Dictionary = {}
+				for cell in section["cells"]:
+					if str(cell["stage_id"]).ends_with("_ga1"):
+						goal_count += 1
+						assert_true(cell.get("is_end", false),
+							"%s roll %d %s: ga1 never appears mid-path" % [area, roll, letter])
+					if cell.get("is_end", false):
+						endc = cell
+				assert_eq(goal_count, 1,
+					"%s roll %d %s: exactly one goal room" % [area, roll, letter])
+				assert_eq(str(endc.get("stage_id", "")), "%s%s_ga1" % [prefix, letter],
+					"%s roll %d %s: the section terminal is the set's ga1" % [area, roll, letter])
+				var warp_edge := str(endc.get("warp_edge", ""))
+				assert_true(not warp_edge.is_empty(),
+					"%s roll %d %s: terminal warp_edge is non-empty" % [area, roll, letter])
+				assert_true(not endc.get("portals", {}).has(warp_edge),
+					"%s roll %d %s: terminal warp_edge has no portal (in-room goal pad)" % [area, roll, letter])
+				assert_eq(endc.get("connections", {}).size(), 1,
+					"%s roll %d %s: goal room is a 1-door leaf" % [area, roll, letter])
+	print("  INFO: %d areas x 3 rolls, every a/b terminal is its set's ga1" % areas.size())
 	print("")
 
 
@@ -10046,7 +10112,8 @@ func test_wetlands_field() -> void:
 	var sa1_dirs: Array = gates.get("s02a_sa1", [])
 	assert_true("south" in sa1_dirs, "s02a_sa1 has south gate")
 	var ga1_dirs: Array = gates.get("s02a_ga1", [])
-	assert_true("north" in ga1_dirs and "south" in ga1_dirs, "s02a_ga1 has north+south gates")
+	assert_true(ga1_dirs.size() == 1 and "south" in ga1_dirs,
+		"s02a_ga1 has only its south gate (goal room, one measured doorway — #641)")
 	var lb1_dirs: Array = gates.get("s02a_lb1", [])
 	assert_true("north" in lb1_dirs and "east" in lb1_dirs, "s02a_lb1 has north+east gates")
 	var xb2_dirs: Array = gates.get("s02a_xb2", [])
