@@ -1157,13 +1157,13 @@ func _spawn_field_elements() -> void:
 		# Gate model — AreaWarp instead of Gate, or a BOSS WARP when the section
 		# this door leads to is the boss arena.
 		#
-		# BossWarp used to be reachable only from the goal-pad block below, which
-		# is guarded by `not _portal_data.has(warp_edge)` — a leaf room whose exit
-		# has no wall door. A generated field's b-section end cell always HAS one
-		# (grid_generator sets warp_edge from key_gate_direction, chosen from the
-		# tile's real gates, and the no-spare-doors retile deliberately exempts
-		# it), so the pad never fired and every boss entrance was a plain area
-		# gate. kion: "the transition to the boss should always be a boss warp".
+		# Since #641 a generated field's a/b end cell is a 1-door ga1 terminal
+		# whose only portal is its entry connection, so this doorway loop builds
+		# nothing for it and the section exit is the goal-pad block below (which
+		# carries its own to_boss swap). This loop now serves the entries, the
+		# e/z fixed rooms, and quest-authored fields whose warp_edge names a real
+		# baked portal. kion: "the transition to the boss should always be a
+		# boss warp" — still honoured by both paths.
 		var aw_to_boss: bool = not is_final_exit and target_section >= 0 \
 			and target_section < sections_for_warp.size() \
 			and str(sections_for_warp[target_section].get("type", "")) == "boss"
