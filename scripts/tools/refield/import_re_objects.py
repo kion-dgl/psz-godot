@@ -141,6 +141,37 @@ MODEL_TO_TYPE = {
 FENCE_LINK_ID = "authored"
 
 
+# The ambience/heal-pad models, as a set, for the cross-set fallback below.
+AMBIENCE_TYPES = {"ambience", "heal_pad"}
+
+
+def _take_offset_ambience(key: str, rec: dict, pending: list) -> None:
+    """Collect ambience/heal-pad records from a set outside the taken sets.
+
+    Emitted later (see build) only when the room has no row in the taken
+    sets -- keyed by the ORIGINAL room key, so the source set stays readable
+    in the file and the runtime can prefer deterministically.
+    """
+    for box in rec.get("boxes", []):
+        kind = str(box.get("kind", ""))
+        mapped = MODEL_TO_TYPE.get(kind)
+        if mapped not in AMBIENCE_TYPES:
+            continue
+        pending.append({
+            "key": key,
+            "groups": rec.get("group_sizes"),
+            "obj": {
+                "g": box.get("group"),
+                "k": mapped,
+                "x": _round(box.get("x", 0.0)),
+                "y": _round(box.get("y", 0.0)),
+                "z": _round(box.get("z", 0.0)),
+                "a": int(box.get("angle", 0)),
+                "m": kind,
+            },
+        })
+
+
 def psz_re_root(explicit: str | None) -> pathlib.Path | None:
     for candidate in (explicit, os.environ.get("PSZ_RE"),
                       str(ROOT.parent.parent / "psz-re"),
@@ -167,6 +198,7 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
     unknown_traps: set[str] = set()
     deferred: dict[str, int] = {}
     unlinked_fences: dict[str, int] = {}
+    pending_ambience: list = []
 
     def room_entry(key: str, rec: dict) -> dict:
         entry = rooms.get(key)
@@ -179,6 +211,15 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
 
     for key, rec in objects_doc.get("per_room", {}).items():
         if str(rec.get("set", "")) not in sets:
+            # ONE exception (#644): the safe-room ambience. A room's fauna is
+            # a property of the ROOM, not of the deploy set -- the city start
+            # room (s00e_sa1) authors its butterflies under set `c` and has no
+            # `d` row at all, so a set-d-only import leaves a customized map
+            # using that room bare. Take just the ambience/heal-pad kinds from
+            # a set the deploy roll never reads, ONLY for rooms with no row in
+            # the taken sets; everything else in those sets stays unimported
+            # (the "no consumer" argument still holds for it).
+            _take_offset_ambience(key, rec, pending_ambience)
             continue
         entry = room_entry(key, rec)
         # A fence needs a switch in the same room to be openable -- see
@@ -232,6 +273,20 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
                 "z": _round(trap.get("z", 0.0)),
                 "a": int(trap.get("angle", 0)),
             })
+
+    # Cross-set ambience (#644): emit the collected out-of-set rows whose room
+    # has no row in the taken sets -- today exactly the city start room, whose
+    # butterflies live under set `c` -- keyed by their ORIGINAL room key so
+    # the source set stays readable. FieldPopulation resolves a base with no
+    # taken-set row to these entries.
+    taken_bases = {key[:key.rfind("_")] for key in rooms}
+    emitted: dict[str, dict] = {}
+    for cand in pending_ambience:
+        if cand["key"][:cand["key"].rfind("_")] in taken_bases:
+            continue
+        entry = emitted.setdefault(cand["key"], {"groups": cand["groups"], "objects": []})
+        entry["objects"].append(cand["obj"])
+    rooms.update(emitted)
 
     # Slot order is not carried, so sort for a stable file: group first, then
     # the position. Two records never share a group AND a position.

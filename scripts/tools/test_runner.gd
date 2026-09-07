@@ -788,7 +788,8 @@ func test_safe_room_ambience() -> void:
 	# 1. DATA: the ambience ledger, exactly as psz-re authors it — butterflies
 	#    are the valley's (16), dragonflies the wetlands' (8), the bird paru's
 	#    one-off (1), and every area's ga1 carries exactly one heal pad (14).
-	#    "Faithful" is checkable, so it gets checked.
+	#    "Faithful" is checkable, so it gets checked. The citation numbers are
+	#    the deploy set's own; the city fallback below carries its own asserts.
 	var by_model := {}
 	var heal_pads := 0
 	var ambience_outside_safe_rooms := 0
@@ -802,11 +803,25 @@ func test_safe_room_ambience() -> void:
 					ambience_outside_safe_rooms += 1
 			elif k == "heal_pad":
 				heal_pads += 1
-	assert_eq(by_model.get("o0c_butterfly", 0), 16, "sixteen authored butterflies")
+	assert_eq(by_model.get("o0c_butterfly", 0) - 4, 16, "sixteen authored butterflies (set d; 4 more ride the city fallback)")
 	assert_eq(by_model.get("o0c_dragonfly", 0), 8, "eight authored dragonflies")
 	assert_eq(by_model.get("o0c_bird", 0), 1, "one authored bird (paru's arena)")
 	assert_eq(heal_pads, 14, "one heal pad per ga1, s01-s07 a+b")
 	assert_eq(ambience_outside_safe_rooms, 0, "creatures are authored in safe rooms only")
+
+	# 1b. THE CITY FALLBACK: s00e_sa1 authors its butterflies under set `c`
+	#     and has no `d` row, so the room resolves through the cross-set
+	#     fallback — flat, at the authored spots, drawing nothing from the rng
+	#     (two different seeds give the same answer).
+	var city: Array = Pop.authored_objects("s00e_sa1", 5, _seeded_rng(1))
+	assert_eq(city.size(), 2, "the city start room draws its two butterflies")
+	for o in city:
+		assert_eq(str(o.get("type", "")), "ambience", "the fallback yields ambience only")
+	var city_again: Array = Pop.authored_objects("s00e_sa1", 5, _seeded_rng(99))
+	assert_eq(JSON.stringify(city), JSON.stringify(city_again),
+		"the fallback draws nothing from the rng (seed-independent)")
+	var city_start: Array = Pop.objects_for_cell("s00e_sa1", true, false, _seeded_rng(3))
+	assert_eq(city_start.size(), 2, "the start-room path carries the city fauna through")
 
 	# 2. THE SWARMS BUILD: valley and wetlands start rooms always draw their
 	#    area's creature (their ambience sits in group 0, the always-eligible

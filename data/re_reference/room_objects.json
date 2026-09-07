@@ -62,7 +62,7 @@
   "fence": 115,
   "capture_trap": 66,
   "burn_trap": 43,
-  "ambience": 25,
+  "ambience": 29,
   "needler_trap": 16,
   "heal_pad": 14,
   "poison_trap": 7
@@ -111,6 +111,52 @@
     0
    ],
    "objects": []
+  },
+  "s00e_sa1_c": {
+   "groups": null,
+   "objects": [
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -9.667,
+     "y": 0.0,
+     "z": 34.814,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": 4.561,
+     "y": 0.0,
+     "z": 45.17,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
+  },
+  "s00e_sa1_cm": {
+   "groups": null,
+   "objects": [
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -9.667,
+     "y": 0.0,
+     "z": 34.814,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": 4.561,
+     "y": 0.0,
+     "z": 45.17,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
   },
   "s01a_ga1_d": {
    "groups": [

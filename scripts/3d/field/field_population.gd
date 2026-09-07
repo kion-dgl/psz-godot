@@ -120,6 +120,14 @@ const DEFAULT_WAVE_COUNT := 1
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
 
+## Rooms whose ambience is authored only OUTSIDE the deploy set — today the
+## city start room (s00e_sa1, its butterflies under set `c`). Keyed by base
+## room code, valued by the room entry; built in `_load` preferring the
+## lexicographically first set key so the pick is deterministic whatever the
+## JSON's key order. A room here resolves through the same
+## `authored_objects` contract as any other — see the fallback there.
+static var _ambience_fallback: Dictionary = {}
+
 ## Authored enemy spawn slots, room code -> Array of {x, y, z}. From
 ## room_reference.json, which is otherwise reference-only -- see the note there:
 ## its OBJECTS stay out of the game because an unhandled kind would eat a slot
@@ -155,6 +163,7 @@ static func _load() -> void:
 
 	var obj_doc: Dictionary = _read_json(RE_DIR + "room_objects.json")
 	_rooms = obj_doc.get("rooms", {})
+	_build_ambience_fallback()
 	_layout_masks = obj_doc.get("layout_masks", [])
 	_layout_weights = obj_doc.get("layout_weights_by_depth", {})
 	_group5_weights = obj_doc.get("group5_weights", [])
@@ -182,6 +191,26 @@ static func _read_json(path: String) -> Dictionary:
 		push_warning("FieldPopulation: bad JSON in " + path)
 		return {}
 	return json.data
+
+
+## Index the out-of-deploy-set rooms (the importer emits them only for bases
+## with no `d` row — see import_re_objects._take_offset_ambience). A base
+## keeps the entry of its lexicographically FIRST set key, so `s00e_sa1_c`
+## wins over the identical `s00e_sa1_cm` deterministically.
+static func _build_ambience_fallback() -> void:
+	_ambience_fallback.clear()
+	for key in _rooms.keys():
+		var k := str(key)
+		if k.ends_with("_" + DEPLOY_SET):
+			continue
+		var base := k.substr(0, k.rfind("_"))
+		if _rooms.has("%s_%s" % [base, DEPLOY_SET]):
+			continue
+		var held: Dictionary = _ambience_fallback.get(base, {})
+		if held.is_empty() or k < str(held.get("_key", "")):
+			var entry: Dictionary = _rooms[key].duplicate()
+			entry["_key"] = k
+			_ambience_fallback[base] = entry
 
 
 ## RE internal names with no enemy of their own, and what to do about them.
@@ -316,7 +345,7 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
 	var records: Array = entry.get("objects", [])
 	if records.is_empty():
-		return []
+		return _fallback_ambience(room_code)
 
 	var groups = entry.get("groups", null)
 	var picked: Array = []
@@ -340,6 +369,25 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 		if not obj.is_empty():
 			out.append(obj)
 	return _drop_unopenable_fences(out)
+
+
+## The cross-set ambience fallback (#644): a room whose table exists only
+## outside the deploy set — the city start room, whose butterflies psz-re
+## authors under set `c` — builds its authored fauna FLAT. Every record, no
+## layout mask (these rows carry ambience only), and deliberately NO rng
+## draw, so the generator's streams stay byte-identical whether or not a
+## room resolves through the fallback.
+static func _fallback_ambience(room_code: String) -> Array:
+	var entry: Dictionary = _ambience_fallback.get(room_code, {})
+	var records: Array = entry.get("objects", [])
+	if records.is_empty():
+		return []
+	var out: Array = []
+	for rec in _cap(records, _cap_per_room):
+		var obj := _to_object(rec)
+		if not obj.is_empty():
+			out.append(obj)
+	return out
 
 
 ## A fence with no switch in the room is a sealed room, so drop it.
