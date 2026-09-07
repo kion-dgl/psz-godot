@@ -41,6 +41,17 @@ class_name FieldPopulation
 ##            time, not generation time, so the field data is the same
 ##            either way.
 ##
+##   ambience DECODED (#644). The original authors its ambient creatures into
+##            the SAFE ROOMS that never carry a wave — o0c_butterfly is the
+##            valley's (s01 sa1/ga1), o0c_dragonfly the wetlands' (s02),
+##            o0c_bird a one-off in paru's boss arena — plus o0c_healhp, one
+##            heal pad in every area's ga1 (s01-s07, both variants). Same
+##            table, same rule; the creatures are inert (no collision, no
+##            interaction, no counts) and the motion is OURS — the models are
+##            single-frame billboards the original animates in runtime code.
+##            Faithful means faithful: s03-s07 author no creatures, so their
+##            safe rooms stay bare apart from the heal pad.
+##
 ## Enemy and key POSITIONS are authored and consumed (#604, #627): waves stand
 ## on the room's enemy slots, a cell's keys on its authored key slots. Which
 ## subset of either a given room instance uses is OUR seeded choice, not a
@@ -702,7 +713,14 @@ static func ring_positions(count: int, radius: float) -> Array:
 ## boss_dragon, s02z_na1 boss_octopus, s05z_na1 boss_robot, and so on — so the
 ## boss a generated field fights is read from the RE data rather than picked.
 ## No boxes: these rooms are a fight and a warp, not a loot round.
-static func objects_for_single_room(room_code: String, rng: RandomNumberGenerator) -> Array:
+## `ambience_rng` is the side stream the single-room ambience draws from
+## (#644). It exists because these rooms populate from the caller's MAIN
+## stream mid-generation — the e-transition between the a and b sections —
+## and letting the ambience's layout draw come off that stream would reshuffle
+## the whole next section for the same seed. Passing nothing falls back to
+## `rng`, which is what a test (or any caller with no stream to protect) wants.
+static func objects_for_single_room(room_code: String, rng: RandomNumberGenerator,
+		ambience_rng: RandomNumberGenerator = null) -> Array:
 	var wave: Array = roll_wave(room_code, rng)
 	var spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
 	if spots.is_empty():
@@ -712,11 +730,22 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 		objects.append({
 			"type": "enemy", "position": spots[i], "enemy_id": wave[i],
 		})
+	# #644: a single room's AUTHORED AMBIENCE builds too — in the corpus that
+	# is exactly paru's bird in s05z_na1. Ambience only: these rooms stay "a
+	# fight and a warp", and the authored table's other kinds (a warp object,
+	# a treasure box) are other systems'.
+	for obj in authored_objects(room_code, -1, ambience_rng if ambience_rng != null else rng):
+		if str(obj.get("type", "")) == "ambience":
+			objects.append(obj)
 	return objects
 
 
-## Objects for one generated cell. Start and goal rooms stay empty so nobody
-## spawns into a fight or onto loot they did not walk to.
+## Objects for one generated cell. Start and goal rooms carry no wave and no
+## loot — but since #644 a start room DOES build its AUTHORED AMBIENCE (the
+## valley's butterflies, the wetlands' dragonflies): inert, mask-filtered, the
+## only authored kinds a start room takes. The goal room needs no special case
+## — ga1 has no wave assignment, and its authored heal pad and ambience ride
+## the normal path.
 ##
 ## `depth` is the cell's path_order — how far along the generated route it sits
 ## — which is what the layout draw is banded on. Callers that do not track it
@@ -747,13 +776,24 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 ## here as before.
 static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1) -> Array:
-	# Only the START room is unconditionally empty. is_end is NOT: the goal is
+	# Only the START room is held to authored AMBIENCE alone: the original's
+	# sa1 never carries a wave, and loot nobody walked to has no business in
+	# the room the player spawns into. is_end is NOT: the goal is
 	# "not necessarily last" (free-field spec), so the last cell of a path is
 	# often an ordinary combat room, and suppressing its wave left whole rooms
 	# with no enemies. The actual goal room carries no assignment, so roll_wave
 	# returns [] for it on its own — no need to special-case is_end here.
+	#
+	# `layout_mask` must be the caller's drawn_mask() result here too: for a
+	# grouped room, passing -1 would draw the mask from `rng` INSIDE
+	# authored_objects, and the start room's draw must come from the
+	# ambience side-stream (grid_generator._populate_cell), not the field's.
 	if is_start:
-		return []
+		var critters: Array = []
+		for obj in authored_objects(room_code, depth, rng, layout_mask):
+			if str(obj.get("type", "")) == "ambience":
+				critters.append(obj)
+		return critters
 	var objects: Array = []
 	# A room runs a COUNT of waves (Enemy Waves spec), each an independent draw
 	# from the room's pool. Each enemy is tagged with its wave number; the

@@ -21,6 +21,8 @@ const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.g
 const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
+const AmbientCritterScript := preload("res://scripts/3d/elements/ambient_critter.gd")
+const HealPadScript := preload("res://scripts/3d/elements/heal_pad.gd")
 
 ## Back-reference to the ValleyFieldController that owns this spawner.
 var _c
@@ -215,16 +217,18 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				else:
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
-				_spawn_contact_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type)
 			"bear_trap", "capture_trap":
-				_spawn_bear_trap(pos)
+				_spawn_placed_trap(pos, obj_type)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
 			"poison_trap":
-				_spawn_contact_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
+			"ambience", "heal_pad":
+				_spawn_stateless_flair(obj_type, pos, str(obj.get("model", "")))
 
 	if _c._max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _c._max_wave)
@@ -362,13 +366,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					else:
 						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
-				_spawn_contact_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type)
 			"bear_trap", "capture_trap":
-				_spawn_bear_trap(pos)
+				_spawn_placed_trap(pos, obj_type)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
 			"poison_trap":
-				_spawn_contact_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -376,6 +380,21 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					for w in _c._room_walls:
 						if is_instance_valid(w) and (w as Node3D).position.distance_to(pos) < 0.1:
 							(w as Wall).set_state("destroyed")
+
+	# Stateless authored kinds (#644): ambience and the heal pad carry no
+	# per-visit state, so a revisit rebuilds them from the cell's own object
+	# list exactly as a first visit did. They are absent from obj_states on
+	# purpose — nothing about them persists.
+	for obj in _c._current_cell.get("objects", []):
+		var stype: String = str(obj.get("type", ""))
+		if stype != "ambience" and stype != "heal_pad":
+			continue
+		var spos_arr: Array = obj.get("position", [0, 0, 0])
+		var spos := Vector3(float(spos_arr[0]), float(spos_arr[1]), float(spos_arr[2]))
+		if stype == "ambience":
+			_spawn_stateless_flair("ambience", spos, str(obj.get("model", "")))
+		else:
+			_spawn_stateless_flair("heal_pad", spos, "")
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1082,8 +1101,18 @@ const CONTACT_TRAP_DAMAGE := {
 
 ## The four contact traps share one script and differ by data — the repo's
 ## hierarchy rule. Only the elemental family needs its own behaviour, because
-## only it is invisible and fused.
-func _spawn_contact_trap(pos: Vector3, kind: String) -> void:
+## only it is invisible and fused. The bear/capture traps are their own script
+## but the same spawn shape (place + arm), so they ride through here too —
+## the two wrappers were folded together when the dispatch's fan-out hit the
+## code-graph ratchet (#644); behaviour identical.
+func _spawn_placed_trap(pos: Vector3, kind: String) -> void:
+	if kind == "bear_trap" or kind == "capture_trap":
+		var bear: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
+		_c._map_root.add_child(bear)
+		bear.position = pos
+		bear.call("set_state", "on")
+		print("[CellObjects] BearTrap at %s" % pos)
+		return
 	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
 	if CONTACT_TRAP_DAMAGE.has(kind):
 		trap.set("damage", int(CONTACT_TRAP_DAMAGE[kind]))
@@ -1120,14 +1149,6 @@ func _difficulty_index() -> int:
 			return 0
 
 
-func _spawn_bear_trap(pos: Vector3) -> void:
-	var trap: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
-	_c._map_root.add_child(trap)
-	trap.position = pos
-	trap.call("set_state", "on")
-	print("[CellObjects] BearTrap at %s" % pos)
-
-
 ## Authored walls, skipped at SPAWN time under PSZ_AUTOPILOT_NO_WALLS.
 ##
 ## Deliberately its own variable rather than folded into NO_OBSTACLES: that one
@@ -1151,6 +1172,30 @@ func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true
 	_c._fixup_element_materials(wall)
 	_c._room_walls.append(wall)
 	print("[CellObjects] Wall at %s rot=%.0f° destructible=%s" % [pos, rotation_deg, is_destructible])
+
+
+## The stateless authored kinds (#644). An ambient critter — a valley
+## butterfly, a wetlands dragonfly, paru's bird — is inert by contract: no
+## collision, no interaction, no minimap, no room array, nothing saved, and
+## its authored FACING is deliberately not applied, because the critter yaws
+## to the camera or its travel direction: the data authors positions and the
+## motion is ours. The heal pad is stateless the other way — reusable within
+## a visit on a cooldown, rebuilt fresh on the next, so nothing about it
+## enters the save either.
+func _spawn_stateless_flair(kind: String, pos: Vector3, model: String) -> void:
+	if kind == "heal_pad":
+		var pad := HealPadScript.new()
+		_c._map_root.add_child(pad)
+		pad.position = pos
+		print("[CellObjects] HealPad at %s" % pos)
+		return
+	if model.is_empty():
+		return
+	var critter := AmbientCritterScript.new()
+	critter.critter_model = model
+	_c._map_root.add_child(critter)
+	critter.position = pos
+	print("[CellObjects] AmbientCritter '%s' at %s" % [model, pos])
 
 
 func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:

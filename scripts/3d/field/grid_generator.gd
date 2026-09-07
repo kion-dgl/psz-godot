@@ -12,6 +12,13 @@ extends RefCounted
 ## we compare our output against the game's own generation.
 var _rng := RandomNumberGenerator.new()
 
+## The START room's ambience stream (#644). Start rooms used to draw nothing
+## at all; letting their new layout mask come off `_rng` would reshuffle every
+## later cell's rolls for the same seed — every committed field dump and
+## pinned test would churn for nothing. The side stream is seeded alongside
+## `_rng`, so a field still reproduces exactly from one seed.
+var _ambience_rng := RandomNumberGenerator.new()
+
 ## Cells the retile pass could not make exact, from the last generate() call.
 ## Non-zero means a door somewhere still leads nowhere — see
 ## `_retile_no_spare_doors`, which explains the one case that is expected
@@ -23,6 +30,7 @@ var _spare_door_cells: int = 0
 ## rooms, rotations, gates, keys and enemy waves included.
 func set_seed(value: int) -> void:
 	_rng.seed = value
+	_ambience_rng.seed = value + 1013
 
 
 ## Fisher-Yates through _rng — Array.shuffle() would use the global RNG.
@@ -415,7 +423,7 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	# section's entry_direction. Without it the south portal is geometry only:
 	# the runtime builds no backward warp for it (the backtracking regression).
 	e_cell["entry_warp_edge"] = "south"
-	e_cell["objects"] = FieldPopulation.objects_for_single_room(e_stage, _rng)
+	e_cell["objects"] = FieldPopulation.objects_for_single_room(e_stage, _rng, _ambience_rng)
 	sections.append({
 		"type": "transition", "area": "e", "cells": [e_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
@@ -442,7 +450,7 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	z_cell["warp_edge"] = "south"
 	# The boss is read from the assignment table, not picked: s01z_na1 names
 	# boss_dragon, s02z_na1 boss_octopus, s05z_na1 boss_robot, and so on.
-	z_cell["objects"] = FieldPopulation.objects_for_single_room(z_stage, _rng)
+	z_cell["objects"] = FieldPopulation.objects_for_single_room(z_stage, _rng, _ambience_rng)
 	sections.append({
 		"type": "boss", "area": "z", "cells": [z_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
@@ -1644,25 +1652,31 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 ## so a key never stands in a group the room did not build (spec
 ## /mechanics/key-placement); the mask comes back as -1 for a flat build or a
 ## room with no object row, which leaves every key slot eligible. Start rooms
-## stay undrawn — objects_for_cell empties them before any draw, and they never
-## hold a key anyway. Key slots are selected HERE, at generation, so a field
-## populates identically on every revisit; [] leaves _create_key_pickup on its
-## centroid fallback (a room code the reference never covered).
+## draw too now — but from the AMBIENCE side stream, and the whole start-room
+## population rolls from it: the room's contents are authored ambience alone
+## (#644), and the field's own stream stays byte-identical to what it was
+## before ambience existed. Start rooms never hold a key. Key slots are
+## selected HERE, at generation, so a field populates identically on every
+## revisit; [] leaves _create_key_pickup on its centroid fallback (a room code
+## the reference never covered).
 func _populate_cell(cell: Dictionary) -> Dictionary:
 	var stage_id := str(cell["stage_id"])
 	var depth := int(cell.get("path_order", -1))
+	var is_start: bool = cell.get("is_start", false)
 	var layout_mask: int = -1
-	if not cell.get("is_start", false):
-		layout_mask = FieldPopulation.drawn_mask(stage_id, depth, _rng)
+	var pop_rng := _rng
+	if is_start:
+		pop_rng = _ambience_rng
+	layout_mask = FieldPopulation.drawn_mask(stage_id, depth, pop_rng)
 	var key_slots: Array = []
 	if cell.get("has_key", false):
 		key_slots = FieldPopulation.key_slot_positions(
 			stage_id, maxi(1, int(cell.get("key_count", 1))), _rng, layout_mask)
 	var objects: Array = FieldPopulation.objects_for_cell(
 		stage_id,
-		cell.get("is_start", false),
+		is_start,
 		cell.get("is_end", false),
-		_rng,
+		pop_rng,
 		depth,
 		layout_mask,
 	)
