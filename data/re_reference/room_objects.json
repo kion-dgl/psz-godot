@@ -62,7 +62,9 @@
   "fence": 115,
   "capture_trap": 66,
   "burn_trap": 43,
+  "ambience": 25,
   "needler_trap": 16,
+  "heal_pad": 14,
   "poison_trap": 7
  },
  "fences_skipped_no_switch": {
@@ -78,17 +80,13 @@
    "o0c_mspack": 102,
    "o0c_needle": 41,
    "o0s_warpm": 21,
-   "o0c_butterfly": 16,
    "o0s_warps": 15,
    "o0c_return": 15,
-   "o0c_healhp": 14,
    "o0s_warpb": 14,
    "o0c_warparena1": 14,
-   "o0c_dragonfly": 8,
    "np_011_00_0": 5,
    "np_014_00_0": 5,
-   "np_019_00_0": 5,
-   "o0c_bird": 1
+   "np_019_00_0": 5
   }
  },
  "rooms": {
@@ -123,7 +121,53 @@
     3,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": -7.257,
+     "y": 0.0,
+     "z": -2.336,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 7.275,
+     "y": 0.0,
+     "z": -6.726,
+     "a": 0,
+     "m": "o0c_healhp"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": 13.634,
+     "y": 0.0,
+     "z": 7.438,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": -7.257,
+     "y": 0.0,
+     "z": -2.336,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": 13.634,
+     "y": 0.0,
+     "z": 7.438,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
   },
   "s01a_ib1_d": {
    "groups": [
@@ -1835,7 +1879,26 @@
     0,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": -12.806,
+     "y": 0.0,
+     "z": -3.837,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": 8.981,
+     "y": 0.0,
+     "z": 3.571,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
   },
   "s01a_tb3_d": {
    "groups": [
@@ -2450,7 +2513,89 @@
     5,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": -2.846,
+     "y": 0.0,
+     "z": -11.848,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": -2.259,
+     "y": 0.0,
+     "z": -2.667,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": -0.777,
+     "y": 0.0,
+     "z": -6.039,
+     "a": 0,
+     "m": "o0c_healhp"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": 11.922,
+     "y": 0.0,
+     "z": -6.785,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": 15.356,
+     "y": 0.0,
+     "z": -14.058,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": -2.846,
+     "y": 0.0,
+     "z": -11.848,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": -2.259,
+     "y": 0.0,
+     "z": -2.667,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": 11.922,
+     "y": 0.0,
+     "z": -6.785,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 4,
+     "k": "ambience",
+     "x": 15.356,
+     "y": 0.0,
+     "z": -14.058,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
   },
   "s01b_ib1_d": {
    "groups": [
@@ -4074,7 +4219,26 @@
     0,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": -10.723,
+     "y": 0.0,
+     "z": 10.861,
+     "a": 0,
+     "m": "o0c_butterfly"
+    },
+    {
+     "g": 0,
+     "k": "ambience",
+     "x": 10.9,
+     "y": 0.0,
+     "z": 13.045,
+     "a": 0,
+     "m": "o0c_butterfly"
+    }
+   ]
   },
   "s01b_tb3_d": {
    "groups": [
@@ -4781,7 +4945,35 @@
   },
   "s02a_ga1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "heal_pad",
+     "x": -3.267,
+     "y": 0.0,
+     "z": 4.193,
+     "a": 0,
+     "m": "o0c_healhp"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": 0.114,
+     "y": 1.5,
+     "z": 3.6,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": 0.278,
+     "y": 1.5,
+     "z": 3.245,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    }
+   ]
   },
   "s02a_ib1_d": {
    "groups": null,
@@ -5813,7 +6005,26 @@
   },
   "s02a_sa1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -0.11,
+     "y": 1.5,
+     "z": -1.859,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": 0.352,
+     "y": 1.5,
+     "z": -2.218,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    }
+   ]
   },
   "s02a_tb3_d": {
    "groups": null,
@@ -6430,7 +6641,35 @@
   },
   "s02b_ga1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "heal_pad",
+     "x": -11.924,
+     "y": 0.0,
+     "z": 1.297,
+     "a": 0,
+     "m": "o0c_healhp"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -8.145,
+     "y": 1.5,
+     "z": -4.132,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -4.974,
+     "y": 1.5,
+     "z": -3.026,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    }
+   ]
   },
   "s02b_ib1_d": {
    "groups": null,
@@ -7578,7 +7817,26 @@
   },
   "s02b_sa1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -5.182,
+     "y": 1.5,
+     "z": -6.263,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    },
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -4.254,
+     "y": 0.0,
+     "z": -3.695,
+     "a": 0,
+     "m": "o0c_dragonfly"
+    }
+   ]
   },
   "s02b_tb3_d": {
    "groups": null,
@@ -8173,7 +8431,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 5.723,
+     "y": 0.0,
+     "z": 0.054,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s03a_ib1_d": {
    "groups": [
@@ -9813,7 +10081,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 6.911,
+     "y": 0.0,
+     "z": 3.978,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s03b_ib1_d": {
    "groups": [
@@ -11704,7 +11982,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 2.624,
+     "y": 0.0,
+     "z": -10.395,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s04a_ib1_d": {
    "groups": [
@@ -13878,7 +14166,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 2.586,
+     "y": 0.0,
+     "z": 2.771,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s04b_ib1_d": {
    "groups": [
@@ -16361,7 +16659,17 @@
   },
   "s05a_ga1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "heal_pad",
+     "x": -4.894,
+     "y": 0.0,
+     "z": -6.287,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s05a_ib1_d": {
    "groups": [
@@ -18714,7 +19022,17 @@
   },
   "s05b_ga1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "heal_pad",
+     "x": -8.463,
+     "y": 0.0,
+     "z": -3.554,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s05b_ib1_d": {
    "groups": null,
@@ -20789,7 +21107,17 @@
   },
   "s05z_na1_d": {
    "groups": null,
-   "objects": []
+   "objects": [
+    {
+     "g": null,
+     "k": "ambience",
+     "x": -0.018,
+     "y": 0.0,
+     "z": 10.004,
+     "a": 49152,
+     "m": "o0c_bird"
+    }
+   ]
   },
   "s06a_ga1_d": {
    "groups": [
@@ -20816,6 +21144,15 @@
      "y": 0.0,
      "z": 1.728,
      "a": 0
+    },
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 3.56,
+     "y": 0.0,
+     "z": -7.367,
+     "a": 0,
+     "m": "o0c_healhp"
     },
     {
      "g": 4,
@@ -22488,7 +22825,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 3.285,
+     "y": 0.0,
+     "z": 6.875,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s06b_ib1_d": {
    "groups": [
@@ -24072,6 +24419,15 @@
     0
    ],
    "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 5.218,
+     "y": 0.0,
+     "z": -10.857,
+     "a": 0,
+     "m": "o0c_healhp"
+    },
     {
      "g": 4,
      "k": "box",
@@ -25712,7 +26068,17 @@
     1,
     0
    ],
-   "objects": []
+   "objects": [
+    {
+     "g": 0,
+     "k": "heal_pad",
+     "x": 3.769,
+     "y": 0.0,
+     "z": 9.056,
+     "a": 0,
+     "m": "o0c_healhp"
+    }
+   ]
   },
   "s07b_ib1_d": {
    "groups": [

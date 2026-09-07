@@ -94,6 +94,20 @@ CONTAINER_KINDS = ("box", "rare_box", "wall")
 # needle_trap script through `trap_kind` like the other contact traps. That
 # keeps the object in the world -- which is the point -- without inventing a
 # poison mechanic nobody has measured.
+#
+# The safe-room AMBIENCE kinds (#644): the original authors its ambient
+# creatures into the sa1/ga1 rooms that never carry a wave -- o0c_butterfly is
+# valley's (16 records, s01 a+b), o0c_dragonfly the wetlands' (8, s02), and
+# o0c_bird a one-off flourish in paru's boss arena (s05z_na1). All three are
+# 2-3 KB unlit single-frame billboards with no embedded animation: the original
+# animates them in runtime code, so the motion is psz-godot's to author. They
+# share one inert element (no collision, no interaction, no counts) and ride
+# the layout-mask draw like every authored kind.
+#
+# o0c_healhp is the goal-room HEAL PAD: exactly one record in every area's ga1
+# (s01-s07, both variants, 14 records). The name is the behaviour -- it heals
+# HP -- and it lands in the rooms that terminate every generated section since
+# #643, which is why it is bundled with the ambience rather than deferred.
 MODEL_TO_TYPE = {
     "o0c_fence": "fence",
     "o0c_shfence": "fence",
@@ -103,6 +117,10 @@ MODEL_TO_TYPE = {
     "o0c_switchf": "step_switch",
     "o0c_switchs": "step_switch",
     "o0c_poisonm": "poison_trap",
+    "o0c_butterfly": "ambience",
+    "o0c_dragonfly": "ambience",
+    "o0c_bird": "ambience",
+    "o0c_healhp": "heal_pad",
 }
 
 # A fence is opened by a switch, and the pairing is NOT in psz-re's dump -- the
