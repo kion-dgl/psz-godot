@@ -51,7 +51,7 @@ var _p2: float = 0.0
 var _p3: float = 0.0
 var _motion: Dictionary = {}
 var _quad: Node3D = null
-var _quad_base_x: float = 1.0
+var _quad_base_y: float = 1.0
 var _wings: Array[Node3D] = []
 var _last_xz := Vector2.ZERO
 
@@ -79,7 +79,7 @@ func _ready() -> void:
 		_quad = model
 		# The dragonfly's skinned node ships a 1.097 base scale; squeeze
 		# RELATIVE to it rather than stomping the axis.
-		_quad_base_x = model.scale.x
+		_quad_base_y = model.scale.y
 		_face_camera_upright(model)
 	else:
 		for wing_name in ["wings01", "wings02"]:
@@ -125,7 +125,12 @@ func _process(delta: float) -> void:
 
 	var flap: float = 0.5 + 0.5 * sin(TAU * float(_motion["flap_hz"]) * _t + _p2)
 	if _quad:
-		_quad.scale.x = _quad_base_x * (1.0 - float(_motion["flap_depth"]) * flap)
+		# SIMPLE squash-Y beat — a deliberate placeholder (kion's call after
+		# the Flap Lab forensics): all faces visible, texture untouched, the
+		# whole billboard breathes vertically. The real wing mechanics (the
+		# crossed-quad X, pose swaps, hinge folds) are parked for a fidelity
+		# pass in the Flap Lab (#/storybook/flap-lab).
+		_quad.scale.y = _quad_base_y * (1.0 - float(_motion["flap_depth"]) * flap)
 	elif not _wings.is_empty():
 		# The rig's axis is unmeasured; a ±35° beat around X reads as flight
 		# whatever the orientation, and taste here is ours (see header).
