@@ -41,6 +41,11 @@ func _ready() -> void:
 	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).
 	_add_ambience("s00e_sa1")
 
+	# OUR near-spawn flair (#644 playtest): two butterflies right beside the
+	# city spawn — invented positions (kion's call; the authored pair keeps
+	# its mid-room spots), hovering ~1m at the south entrance.
+	_add_flair_critters([Vector3(6.6, 0.0, 57.9), Vector3(-4.5, 0.0, 58.5)])
+
 	# NPCs
 	# Low-poly PSZ shopkeeper. Reverted from the VRM-derived item_shop.glb
 	# (#535): the VRM model stuck out as the lone high-poly figure next to the

@@ -1197,14 +1197,19 @@ func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true
 ## ambience (a generated field's) pass through unchanged, so this is
 ## idempotent and safe to run on both the fresh and the revisit paths.
 func _merge_safe_room_ambience(objects: Array, stage_id: String) -> Array:
-	if not stage_id.ends_with("_sa1"):
-		return objects
-	for obj in objects:
-		if str(obj.get("type", "")) == "ambience":
-			return objects
 	var merged := objects.duplicate()
-	merged.append_array(FieldPopulation.objects_for_cell(
-		stage_id, true, false, RandomNumberGenerator.new()))
+	if stage_id.ends_with("_sa1"):
+		var has_ambience := false
+		for obj in merged:
+			if str(obj.get("type", "")) == "ambience":
+				has_ambience = true
+				break
+		if not has_ambience:
+			merged.append_array(FieldPopulation.objects_for_cell(
+				stage_id, true, false, RandomNumberGenerator.new()))
+	# The near-spawn flair (#644 playtest): OUR invented placements append
+	# even where authored ambience already exists — both are stateless.
+	merged.append_array(FieldPopulation.flair_objects(stage_id))
 	return merged
 
 

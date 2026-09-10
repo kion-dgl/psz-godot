@@ -609,3 +609,13 @@ func _add_ambience(room_code: String) -> void:
 		add_child(critter)
 		critter.position = Vector3(
 			float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+
+## OUR flair butterflies at hand-picked spots (#644 playtest) — invented
+## positions chosen for presence, unlike _add_ambience's authored table.
+func _add_flair_critters(spots: Array) -> void:
+	for spot in spots:
+		var critter := AmbientCritter.new()
+		critter.critter_model = "o0c_butterfly"
+		add_child(critter)
+		critter.position = spot

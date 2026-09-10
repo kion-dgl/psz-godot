@@ -26,7 +26,7 @@ const USED_OFFSET := -0.5
 const DRAIN_SECONDS := 0.45
 
 var _trigger: Area3D = null
-var _mat: StandardMaterial3D = null
+var _mat: ShaderMaterial = null
 var _offset_target: float = UNUSED_OFFSET
 var _offset_now: float = UNUSED_OFFSET
 
@@ -43,14 +43,25 @@ func _ready() -> void:
 	collision_size = Vector3(2.4, 0.8, 2.4)
 	super._ready()
 	if model:
-		# Per-instance material carrying the state's texture window (the base
-		# class's walker reaches every surface — the pad is one flat quad).
+		# The storybook's texture config, verbatim (web objectCatalog
+		# 'heal-pad'): o0c_0_healhp.png at offsetX ±0.5, repeat 1×1, mirrored
+		# wrap both axes. Godot materials have no mirrored-repeat, so this
+		# rides the repo's mirror shader — its uv math (offset, then mirror)
+		# matches threejs texture.offset semantics exactly, which is what the
+		# storybook config is written against. The mesh's authored window
+		# straddles the sheet's midline; ±0.5 folds it cleanly into one frame.
 		apply_to_all_materials(func(mat, mesh, surface):
-			if _mat == null and mat is StandardMaterial3D:
-				var dup := (mat as StandardMaterial3D).duplicate()
-				dup.uv1_offset = Vector3(_offset_now, 0.0, 0.0)
-				mesh.set_surface_override_material(surface, dup)
-				_mat = dup)
+			if _mat == null and mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture:
+				var std := mat as StandardMaterial3D
+				var shader_mat := ShaderMaterial.new()
+				shader_mat.shader = MIRROR_SHADER
+				shader_mat.set_shader_parameter("albedo_texture", std.albedo_texture)
+				shader_mat.set_shader_parameter("uv_scale", Vector2(1.0, 1.0))
+				shader_mat.set_shader_parameter("mirror_x", true)
+				shader_mat.set_shader_parameter("mirror_y", true)
+				shader_mat.set_shader_parameter("uv_offset", Vector2(_offset_now, 0.0))
+				mesh.set_surface_override_material(surface, shader_mat)
+				_mat = shader_mat)
 	_trigger = Area3D.new()
 	_trigger.name = "HealArea"
 	_trigger.collision_layer = 4  # Triggers layer — same as every element area
@@ -88,4 +99,4 @@ func _update_animation(delta: float) -> void:
 	# Ease the texture window to the state's frame — the drain.
 	var step: float = absf(UNUSED_OFFSET - USED_OFFSET) * delta / DRAIN_SECONDS
 	_offset_now = move_toward(_offset_now, _offset_target, step)
-	_mat.uv1_offset = Vector3(_offset_now, 0.0, 0.0)
+	_mat.set_shader_parameter("uv_offset", Vector2(_offset_now, 0.0))

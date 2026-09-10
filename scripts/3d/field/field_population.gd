@@ -371,6 +371,33 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 	return _drop_unopenable_fences(out)
 
 
+## OUR near-spawn flair (#644 playtest follow-up, kion's call): invented
+## butterfly placements where the authored table has nothing near the player
+## — the valley start rooms, the valley E corridor, and the valley boss
+## approach (the city spawn's pair lives in the market controller, which is
+## a hand-built scene). A RECORDED DIVERGENCE from the faithful rule: these
+## are positions we chose for presence, not measurements, and the spec says
+## so. Keyed by room code, valued as [x, z] pairs (y comes from the hover).
+const FLAIR := {
+	"s01a_sa1": [[-4.8, -7.4], [2.4, -12.2]],
+	"s01b_sa1": [[-3.5, -12.0], [3.5, -12.0]],
+	"s01e_ia1": [[2.0, 2.0], [-2.5, 8.0]],
+	"s01a_na1": [[-5.0, 6.0], [5.5, 6.5]],
+}
+
+
+## The flair critters for a room code, as psz-godot object dicts ([] when we
+## placed none). Draws nothing from the rng — static positions.
+static func flair_objects(room_code: String) -> Array:
+	var out: Array = []
+	for spot in FLAIR.get(room_code, []):
+		out.append({
+			"type": "ambience", "model": "o0c_butterfly",
+			"position": [float(spot[0]), 0.0, float(spot[1])],
+		})
+	return out
+
+
 ## The cross-set ambience fallback (#644): a room whose table exists only
 ## outside the deploy set — the city start room, whose butterflies psz-re
 ## authors under set `c` — builds its authored fauna FLAT. Every record, no

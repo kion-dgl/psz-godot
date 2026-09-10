@@ -998,7 +998,8 @@ func test_safe_room_ambience_spawn() -> void:
 	for i in range(60):
 		pad._update_animation(0.016)
 	if pad._mat:
-		assert_true(absf(pad._mat.uv1_offset.x - (-0.5)) < 0.01,
+		var window_x: float = float(pad._mat.get_shader_parameter("uv_offset").x)
+		assert_true(absf(window_x - (-0.5)) < 0.01,
 			"the texture window drained to the spent frame")
 	player.free()
 
@@ -1041,6 +1042,20 @@ func test_safe_room_ambience_quest_merge() -> void:
 		"only sa1 rooms merge")
 	var valley: Array = spawner._merge_safe_room_ambience(quest, "s01a_sa1")
 	assert_true(valley.size() >= 3, "a field sa1 start cell merges too (%d objects)" % valley.size())
+
+	# The near-spawn flair (#644 playtest): invented placements append on top
+	# of authored ambience — both stateless — and rooms we placed nothing for
+	# gain nothing.
+	var authored_two: Array = [
+		{"type": "ambience", "model": "o0c_butterfly", "position": [1.0, 0.0, 2.0]}]
+	var with_flair: Array = spawner._merge_safe_room_ambience(authored_two.duplicate(), "s01a_sa1")
+	assert_eq(with_flair.size(), 3, "flair appends beside authored ambience (2 flair + 1)")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01e_ia1").size(), 3,
+		"the valley E corridor gains its two flair butterflies")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01a_na1").size(), 3,
+		"the valley boss approach gains its two flair butterflies")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s03a_sa1").size(), 1,
+		"rooms with neither authored ambience nor flair gain nothing")
 	print("")
 
 
