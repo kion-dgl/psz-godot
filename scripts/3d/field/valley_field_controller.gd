@@ -1547,15 +1547,18 @@ func _check_goal_pad_accept() -> void:
 	if not accepted:
 		return
 	_goal_pad_armed = false
-	_fire_goal_pad()
+	_fire_goal_pad(player)
 
 
-func _fire_goal_pad() -> void:
+## Fires the pad's section-warp callback with the BODY it guards on — the
+## callback checks the player group itself, and it ERRORS (and warps nobody)
+## if called without one.
+func _fire_goal_pad(body: Node3D) -> void:
 	if _goal_pad_prompt:
 		_goal_pad_prompt.visible = false
 	var cb := _goal_pad_callback
 	_goal_pad_callback = Callable()
-	cb.call()
+	cb.call(body)
 
 
 func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool,
@@ -1584,7 +1587,7 @@ func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool,
 			if _goal_pad_prompt:
 				_goal_pad_prompt.visible = true
 		else:
-			_fire_goal_pad())
+			_fire_goal_pad(body))
 	trigger.body_exited.connect(func(body: Node3D) -> void:
 		if body.is_in_group("player"):
 			_goal_pad_armed = false
