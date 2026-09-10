@@ -645,6 +645,18 @@ func _on_quest_completed() -> void:
 
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
+	# The goal pad fires on ACCEPT while the player stands on it (see
+	# _create_goal_pad_trigger); under the autopilot it fires on arm instead.
+	if _goal_pad_armed and _goal_pad_callback.is_valid():
+		var accepted: bool = Input.is_action_just_pressed("interact") \
+				or OS.get_environment("PSZ_AUTOPILOT") == "1"
+		if accepted:
+			_goal_pad_armed = false
+			if _goal_pad_prompt:
+				_goal_pad_prompt.visible = false
+			var cb := _goal_pad_callback
+			_goal_pad_callback = Callable()
+			cb.call()
 	if _world_env and _sky_material and _dir_light:
 		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
 		if not _is_indoor_stage(cur_stage_id):
@@ -1514,13 +1526,67 @@ func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies
 	warp.element_state = "open" if is_open else "locked"
 	add_child(warp)
 	warp.global_position = ground_pos
-	_gate_mgr._create_fallback_trigger("GateTrigger_goal_pad", ground_pos, callback, false, not is_open)
+	_create_goal_pad_trigger(ground_pos, callback, is_open)
 	var waypoint := WaypointScript.new()
 	add_child(waypoint)
 	waypoint.global_position = Vector3(ground_pos.x, 1.5, ground_pos.z)
 	waypoint._base_y = waypoint.position.y
 	waypoint.set_state("new")
 	_add_debug_sphere(ground_pos, Color(0, 0.6, 1), "GoalPadMark")
+
+
+## Stand-and-accept trigger for the goal pad (kion's playtest): the pad ARMS
+## while the player stands on it and fires the warp on the interact/accept
+## press (E / joypad A) — stepping onto the pad no longer warps by itself.
+## Under the autopilot (PSZ_AUTOPILOT=1) the pad fires on arm: the walk
+## harness parks the player on the pad and presses no keys, and its oracle
+## expects the section warp exactly where the touch-warp used to fire.
+var _goal_pad_armed: bool = false
+var _goal_pad_callback: Callable = Callable()
+var _goal_pad_prompt: Label3D = null
+
+
+func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool) -> void:
+	_goal_pad_callback = callback
+	var trigger := Area3D.new()
+	trigger.name = "GateTrigger_goal_pad"
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2
+	if not open:
+		trigger.monitoring = false
+		_warp_edge_locked.append(trigger)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(6, 3, 6)
+	shape.shape = box
+	shape.position.y = 1.5
+	trigger.add_child(shape)
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body.is_in_group("player"):
+			_goal_pad_armed = true
+			if _goal_pad_prompt:
+				_goal_pad_prompt.visible = true)
+	trigger.body_exited.connect(func(body: Node3D) -> void:
+		if body.is_in_group("player"):
+			_goal_pad_armed = false
+			if _goal_pad_prompt:
+				_goal_pad_prompt.visible = false)
+	add_child(trigger)
+	trigger.global_position = pos
+	var prompt := Label3D.new()
+	prompt.name = "GoalPadPrompt"
+	prompt.text = "Press E"
+	prompt.font_size = 28
+	prompt.pixel_size = 0.01
+	prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	prompt.no_depth_test = true
+	prompt.modulate = Color(0.6, 1.0, 0.8)
+	prompt.outline_size = 8
+	prompt.outline_modulate = Color(0, 0, 0)
+	prompt.position = Vector3(pos.x, 2.4, pos.z)
+	prompt.visible = false
+	add_child(prompt)
+	_goal_pad_prompt = prompt
 
 
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
