@@ -102,6 +102,33 @@ export const cellObjects: CellObjectSpec[] = [
     interactions: 'The player reads the pack. Reading MAY advance an objective (when `objective_item_id` is set) and MAY fire `reaction_dialog`. The objective tick is guarded so re-reads do not double-count.',
   },
   {
+    slug: 'ambience',
+    title: 'Ambient Critter',
+    type: 'ambience',
+    glb: '/assets/objects/special_z/o0c_butterfly.glb',
+    configFields: [
+      { name: 'position', type: '[x, y, z]', note: 'authored safe-room position' },
+      { name: 'model', type: 'string', note: '"o0c_butterfly" | "o0c_dragonfly" | "o0c_bird" — the area\'s authored creature' },
+    ],
+    spawns: 'Authored into the safe rooms that never carry a wave — the valley\'s butterflies (s01 sa1/ga1), the wetlands\' dragonflies (s02), paru\'s one-off bird (s05z_na1) — riding the layout-mask draw like every authored kind. s03–s07 author none, so they MUST NOT get any.',
+    state: 'Stateless. Rebuilt identically on every visit; nothing about a critter enters the cell save.',
+    interactions: 'None. Inert by contract: no collision, no interaction, no minimap marker, no enemy/box count, nothing for the autopilot to wedge on.',
+    notes: 'The models are unlit single-frame billboards with no embedded animation — the original animates them in runtime code, so the motion (wander, bob, wing-beat) is authored in `ambient_critter.gd` and the authored facing is not applied. See /mechanics/safe-room-ambience.',
+  },
+  {
+    slug: 'heal-pad',
+    title: 'Heal Pad',
+    type: 'heal_pad',
+    glb: '/assets/objects/special_z/o0c_healhp.glb',
+    configFields: [
+      { name: 'position', type: '[x, y, z]', note: 'authored goal-room position — exactly one per ga1' },
+    ],
+    spawns: 'Exactly one authored pad in every area\'s ga1 (s01–s07, a+b) — the room that terminates every generated section, which is what makes the pad land in each one\'s endgame.',
+    state: 'The storybook\'s two states: `unused` (charged) → `used` (spent). Both frames live on the one sheet (o0c_0_healhp.png, charged left / spent right); the state shifts the texture window ±0.5 offsetX with a 450ms ease, so the pad reads as draining. Nothing persists — a revisit rebuilds it charged (per-visit resource).',
+    interactions: 'Standing on the charged pad restores HP to full and consumes it. The amount the original restores is unmeasured (psz-re publishes the placement, not the parameter block); the object\'s own name — heal hp — is the reading, and it heals HP only, not PP. A full-HP step does not spend the pad.',
+    notes: 'Trigger Area3D only — no solid body, nothing to wedge on. See /mechanics/safe-room-ambience.',
+  },
+  {
     slug: 'needle-trap',
     title: 'Needle Trap',
     type: 'needle_trap',

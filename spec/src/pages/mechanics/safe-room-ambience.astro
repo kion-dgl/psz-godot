@@ -1,0 +1,54 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Safe-Room Ambience" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This page governs the ambient creatures and heal pads of the <strong>safe rooms</strong> — the start (<code>sa1</code>) and goal (<code>ga1</code>) rooms that never carry an enemy wave — plus one boss-arena flourish. It says which rooms get fauna, where the creatures stand, what they are forbidden to touch, and what the goal room's heal pad does.</p>
+
+  <h2>The rule, from psz-re</h2>
+
+  <p>The original <strong>authors</strong> its ambient creatures into exactly the rooms that terminate a section, per the decoded object tables (<code>data/re_reference/room_objects.json</code>, cross-checked against <code>room_reference.json</code>; psz-re <code>data/object_placement_per_room.json</code>, docs/godot-field-parity.md §8):</p>
+
+  <table>
+    <thead><tr><th>Object</th><th>Instances</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td><code>o0c_butterfly</code></td><td>16</td><td>valley (s01) <code>sa1</code> + <code>ga1</code>, a+b — 2–8 per room, groups 0 and 4</td></tr>
+      <tr><td><code>o0c_dragonfly</code></td><td>8</td><td>wetlands (s02) <code>sa1</code> + <code>ga1</code>, a+b — 2 per room</td></tr>
+      <tr><td><code>o0c_bird</code></td><td>1</td><td>paru's boss arena (<code>s05z_na1</code>) — a one-off</td></tr>
+      <tr><td><code>o0c_healhp</code></td><td>14</td><td><strong>every</strong> area's <code>ga1</code> carries exactly one (s01–s07, a+b)</td></tr>
+    </tbody>
+  </table>
+
+  <p>So each area's safe rooms carry the area's creature <em>instead of</em> a wave: butterflies are the valley's, dragonflies the wetlands'. s03–s07 author <strong>no</strong> creatures in the decoded table (snowfield reads as ambient through weather instead) — and psz-godot <strong>MUST NOT</strong> invent fauna for them. Faithful means the barren areas stay barren; the heal pad, not invented animals, is what those rooms gain.</p>
+
+  <h2>Placement</h2>
+
+  <ul>
+    <li>Critters <strong>MUST</strong> spawn at their authored positions, selected by the same layout-mask draw as every authored kind (<a href="/mechanics/key-placement">key placement</a> documents the shared draw). Valley swarms sit in group 0 — always eligible for a safe room's group table — with group-4 duplicates that never build, exactly as the mask rule intends.</li>
+    <li>A start room <strong>MUST</strong> build authored ambience and <strong>MUST NOT</strong> build any other authored kind: no wave, no loot, no traps in the room the player spawns into.</li>
+    <li>The start room's layout draw comes from a dedicated side stream seeded with the field, so a seed's field <strong>MUST</strong> populate byte-identically to before ambience existed — adding ambience <strong>MUST NOT</strong> reshuffle every later cell's rolls.</li>
+    <li>A room whose table exists only <em>outside</em> the deploy set still gets its authored fauna: the <strong>city start room</strong> (<code>s00e_sa1</code>) authors its two butterflies under set <code>c</code> and has no <code>d</code> row at all, so it resolves through a cross-set fallback that builds flat, at the authored spots, and draws nothing from the field's streams. The set's other kinds stay unimported — the deploy roll never reads them. The city market is a hand-built scene, not a field cell, so its controller spawns the room's authored ambience directly.</li>
+    <li>The rule reaches <strong>quest-authored start rooms</strong> too: the original authors its fauna into <code>sa1</code> whether the field is free-roam or a quest, and a quest's stage JSON carries its objects verbatim — so at cell entry an <code>sa1</code> whose objects carry no ambience <strong>MUST</strong> gain its authored fauna, ambience only (no wave, no loot, no traps leak into a hand-authored room). A quest's other rooms stay exactly what its JSON authors.</li>
+    <li><strong>The near-spawn flair is OURS, and says so</strong> (kion's playtest call, a recorded divergence from the faithful rule): butterflies also stand at invented spots chosen for presence — two beside the city spawn, two at each valley start room, two in the valley E corridor, two before the valley boss warp. The authored placements stay where psz-re measured them; the flair is additive, equally stateless, and lives in <code>FieldPopulation.FLAIR</code> plus the market controller for the city.</li>
+    <li>The boss arena's bird rides the single-room path, and only ambience does: those rooms stay a fight and a warp.</li>
+  </ul>
+
+  <h2>Inertness</h2>
+
+  <p>An ambient critter is scenery that moves. It <strong>MUST NOT</strong> collide, interact, appear on the minimap, join the enemy or box counts, enter the cell save, or wedge the autopilot's nav backbone. There is deliberately no <code>PSZ_AUTOPILOT_NO_*</code> gate for it: nothing about it can obstruct, so there is nothing to gate.</p>
+
+  <p>The models are unlit single-frame billboards with no embedded animation — the original animates them in runtime code, and psz-re publishes positions and facings only. The motion is psz-godot's own and deliberately <strong>near-stationary</strong> (kion's playtest of the original: the butterflies "mostly stuck to one place") — a slight drift around the anchor and a gentle bob, never a path. The quads render as true <strong>camera-facing billboards</strong>, like the original's JIT sprites — the GLB bind poses are tilted planes that read tipped (or upside down) under any yaw-only facing — so the material carries <code>BILLBOARD_ENABLED</code> and the authored facing is <strong>not applied</strong>. The wing beat is, for now, a deliberately <strong>simple vertical squash</strong> — all faces visible, texture untouched — a placeholder by decision after prototyping the real mechanics (the mesh is two crossed quads; pose swaps, UV windows, and hinge folds were all tried) in the Flap Lab, which stays the workbench for the eventual fidelity pass. The quads are ~30&nbsp;cm tall and centred on their origin, so an authored <code>y</code> of 0 would sink half the billboard under the floor — butterflies and the bird lift their anchor by 1&nbsp;m, while the dragonflies are <em>authored</em> at 1.5 and keep it. Taste here is ours and labelled as such in <code>ambient_critter.gd</code>.</p>
+
+  <h2>The goal-room heal pad</h2>
+
+  <p>Since the goal-room terminal work, <code>ga1</code> ends every generated a/b section — which is what makes its heal pad worth porting: a pad in <em>every</em> section's terminal, before the next one begins.</p>
+
+  <ul>
+    <li>Every generated <code>ga1</code> <strong>MUST</strong> carry its heal pad at the authored position, under every layout draw.</li>
+    <li>The pad restores <strong>HP to full</strong> and is <strong>consumed</strong> by that one heal: the states are the storybook's (<code>unused</code> → <code>used</code>), both frames on the one texture sheet, the state shifting the window ±0.5 offsetX with a 450ms ease so the pad reads as draining. How much the original restores is not measured (psz-re publishes the placement, not the parameter block); the object's own name — <em>heal hp</em> — is the reading, and it heals HP only, not PP. A full-HP step <strong>MUST NOT</strong> spend the pad.</li>
+    <li>Nothing about the pad persists — a revisit rebuilds it charged. A per-visit resource, like the original's room.</li>
+    <li>Like the critters it is trigger-only — no solid body, nothing to wedge on.</li>
+  </ul>
+</Concept>

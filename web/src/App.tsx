@@ -8,6 +8,7 @@ const StorybookViewer = lazy(() => import('./storybook/StorybookViewer'));
 const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
 const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
 const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
+const FlapLab = lazy(() => import('./storybook/FlapLab'));
 const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 const FloorMeshEditor = lazy(() => import('./floor-mesh-editor/FloorMeshEditor'));
 const FloorColliderBuilder = lazy(() => import('./floor-collider-builder/FloorColliderBuilder'));
@@ -68,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/storybook/weapons', label: 'Weapons' },
       { to: '/storybook/basic-weapons', label: 'PSO Weapons' },
       { to: '/storybook/player-animations', label: 'Animations' },
+      { to: '/storybook/flap-lab', label: 'Flap Lab' },
     ],
   },
   {
@@ -260,6 +262,7 @@ export default function App() {
             <Route path="/storybook/weapons" element={<WeaponGallery />} />
             <Route path="/storybook/basic-weapons" element={<BasicWeaponPreview />} />
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
+            <Route path="/storybook/flap-lab" element={<FlapLab />} />
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/floor-mesh-editor" element={<FloorMeshEditor />} />
             <Route path="/floor-collider-builder" element={<FloorColliderBuilder />} />

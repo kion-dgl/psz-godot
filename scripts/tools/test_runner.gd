@@ -147,6 +147,10 @@ func _run_tests_core() -> void:
 	test_generated_field_doors()
 	test_generated_section_warp_directions()
 	test_generated_goal_room_terminal()
+	test_safe_room_ambience()
+	test_safe_room_ambience_placement()
+	test_safe_room_ambience_spawn()
+	test_safe_room_ambience_quest_merge()
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
@@ -774,6 +778,316 @@ func test_generated_goal_room_terminal() -> void:
 					"%s roll %d %s: goal room is a 1-door leaf" % [area, roll, letter])
 	print("  INFO: %d areas x 3 rolls, every a/b terminal is its set's ga1" % areas.size())
 	print("")
+
+
+func test_safe_room_ambience() -> void:
+	print("── Safe-room ambience + the goal-room heal pad (#644) ──")
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+	var rooms: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_objects.json").get("rooms", {})
+
+	# 1. DATA: the ambience ledger, exactly as psz-re authors it — butterflies
+	#    are the valley's (16), dragonflies the wetlands' (8), the bird paru's
+	#    one-off (1), and every area's ga1 carries exactly one heal pad (14).
+	#    "Faithful" is checkable, so it gets checked. The citation numbers are
+	#    the deploy set's own; the city fallback below carries its own asserts.
+	var by_model := {}
+	var heal_pads := 0
+	var ambience_outside_safe_rooms := 0
+	for key in rooms.keys():
+		for o in rooms[key].get("objects", []):
+			var k: String = str(o.get("k", ""))
+			if k == "ambience":
+				var m: String = str(o.get("m", ""))
+				by_model[m] = int(by_model.get(m, 0)) + 1
+				if not (key.contains("_sa1") or key.contains("_ga1") or key.contains("_na1")):
+					ambience_outside_safe_rooms += 1
+			elif k == "heal_pad":
+				heal_pads += 1
+	assert_eq(by_model.get("o0c_butterfly", 0) - 4, 16, "sixteen authored butterflies (set d; 4 more ride the city fallback)")
+	assert_eq(by_model.get("o0c_dragonfly", 0), 8, "eight authored dragonflies")
+	assert_eq(by_model.get("o0c_bird", 0), 1, "one authored bird (paru's arena)")
+	assert_eq(heal_pads, 14, "one heal pad per ga1, s01-s07 a+b")
+	assert_eq(ambience_outside_safe_rooms, 0, "creatures are authored in safe rooms only")
+
+	# 1b. THE CITY FALLBACK: s00e_sa1 authors its butterflies under set `c`
+	#     and has no `d` row, so the room resolves through the cross-set
+	#     fallback — flat, at the authored spots, drawing nothing from the rng
+	#     (two different seeds give the same answer).
+	var city: Array = Pop.authored_objects("s00e_sa1", 5, _seeded_rng(1))
+	assert_eq(city.size(), 2, "the city start room draws its two butterflies")
+	for o in city:
+		assert_eq(str(o.get("type", "")), "ambience", "the fallback yields ambience only")
+	var city_again: Array = Pop.authored_objects("s00e_sa1", 5, _seeded_rng(99))
+	assert_eq(JSON.stringify(city), JSON.stringify(city_again),
+		"the fallback draws nothing from the rng (seed-independent)")
+	var city_start: Array = Pop.objects_for_cell("s00e_sa1", true, false, _seeded_rng(3))
+	assert_eq(city_start.size(), 2, "the start-room path carries the city fauna through")
+
+	# 2. THE SWARMS BUILD: valley and wetlands start rooms always draw their
+	#    area's creature (their ambience sits in group 0, the always-eligible
+	#    mask for a safe room's group table).
+	var valley := 0
+	var wetlands := 0
+	for seed_i in range(20):
+		for o in Pop.objects_for_cell("s01a_sa1", true, false, _seeded_rng(seed_i)):
+			if str(o.get("model", "")) == "o0c_butterfly":
+				valley += 1
+		for o in Pop.objects_for_cell("s02a_sa1", true, false, _seeded_rng(seed_i)):
+			if str(o.get("model", "")) == "o0c_dragonfly":
+				wetlands += 1
+	assert_true(valley >= 20, "valley start rooms draw butterflies (%d rolls hit)" % valley)
+	assert_true(wetlands >= 20, "wetlands start rooms draw dragonflies (%d rolls hit)" % wetlands)
+
+	# 3. THE BIRD: the boss arena's one-off, through the single-room path.
+	var birds := 0
+	for o in Pop.objects_for_single_room("s05z_na1", _seeded_rng(7)):
+		if str(o.get("type", "")) == "ambience" and str(o.get("model", "")) == "o0c_bird":
+			birds += 1
+	assert_eq(birds, 1, "paru's bird flies its arena")
+	print("")
+
+
+## The placement half of #644: what a generated field actually holds. Kept a
+## separate test from the data-ledger half so neither crosses the code-health
+## size bound — see CLAUDE.md's two-list test registration note.
+func test_safe_room_ambience_placement() -> void:
+	print("── Safe-room ambience placement (population + generator) ──")
+	var rooms: Dictionary = QuestLoader._load_json(
+		"res://data/re_reference/room_objects.json").get("rooms", {})
+
+	# 1. POPULATION: a start room takes AMBIENCE and nothing else — no wave, no
+	#    loot, no traps — every critter stands on an authored position, and
+	#    every area's ga1 draws exactly one heal pad under every mask.
+	var sweep := _sweep_safe_room_population(rooms)
+	assert_eq(sweep["start_strays"], 0, "start rooms hold authored ambience only")
+	assert_eq(sweep["off_table"], 0, "critters stand on authored positions")
+	assert_eq(sweep["pad_misses"], 0, "every ga1 draw carries exactly one heal pad")
+	assert_eq(sweep["barren"], 0, "s03-s07 start rooms stay bare (no invented fauna)")
+
+	# 2. GENERATOR: the seeded field carries it end to end — critters in the
+	#    start cell (and nothing else there), one heal pad in the terminal.
+	const GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var areas := ["gurhacia", "ozette", "rioh", "makara", "paru", "arca", "dark"]
+	var gen_start_strays := 0
+	var gen_pads := 0
+	var gen_goal_cells := 0
+	var gen_critter_cells := 0
+	for area in areas:
+		for roll in range(3):
+			var gen = GridGen.new()
+			gen.set_seed(roll)
+			for section in gen.generate_field("normal", area)["sections"]:
+				var letter := str(section.get("area", ""))
+				if letter != "a" and letter != "b":
+					continue
+				for cell in section["cells"]:
+					var kinds := {}
+					for o in cell.get("objects", []):
+						var t: String = str(o.get("type", ""))
+						kinds[t] = int(kinds.get(t, 0)) + 1
+					if cell.get("is_start", false):
+						if int(kinds.get("ambience", 0)) > 0:
+							gen_critter_cells += 1
+						# A start cell holds ambience and NOTHING else.
+						for t in kinds.keys():
+							if t != "ambience":
+								gen_start_strays += 1
+					if str(cell.get("stage_id", "")).ends_with("_ga1"):
+						gen_goal_cells += 1
+						if int(kinds.get("heal_pad", 0)) == 1:
+							gen_pads += 1
+	assert_eq(gen_start_strays, 0, "generated start cells hold ambience only")
+	assert_eq(gen_pads, gen_goal_cells,
+		"every generated ga1 terminal carries its heal pad (%d/%d)" % [gen_pads, gen_goal_cells])
+	assert_true(gen_critter_cells > 0, "the seeded sweep reaches critter-bearing start cells")
+	print("  INFO: %d/%d goal cells healed, %d critter start cells" % [gen_pads, gen_goal_cells, gen_critter_cells])
+	print("")
+
+
+## One seeded sweep of every area's sa1/ga1 through the population layer:
+## {start_strays, off_table, pad_misses, barren} — counts the test asserts on
+## in one line each, and keeps the loop out of the test body's size budget.
+func _sweep_safe_room_population(rooms: Dictionary) -> Dictionary:
+	const Pop := preload("res://scripts/3d/field/field_population.gd")
+	var out := {"start_strays": 0, "off_table": 0, "pad_misses": 0, "barren": 0}
+	for n in range(1, 8):
+		for letter in ["a", "b"]:
+			var base := "s0%d%s" % [n, letter]
+			var table_pos := _authored_ambience_positions(rooms, base)
+			for seed_i in range(20):
+				var mask: int = Pop.drawn_mask(base + "_sa1", -1, _seeded_rng(seed_i))
+				var cell_objects: Array = Pop.objects_for_cell(
+					base + "_sa1", true, false, _seeded_rng(seed_i), -1, mask)
+				for o in cell_objects:
+					var t: String = str(o.get("type", ""))
+					if t != "ambience":
+						out["start_strays"] += 1
+					elif not _pos_in(o.get("position", []), table_pos):
+						out["off_table"] += 1
+				if n >= 3 and not cell_objects.is_empty():
+					out["barren"] += 1
+				var pads := 0
+				for o in Pop.authored_objects(base + "_ga1", -1, _seeded_rng(seed_i)):
+					if str(o.get("type", "")) == "heal_pad":
+						pads += 1
+				if pads != 1:
+					out["pad_misses"] += 1
+	return out
+
+
+## The runtime half of #644: the spawner builds the real elements in a live
+## tree, they are inert (a critter carries no collision body at all), the pad
+## heals HP to full on contact, the cooldown holds, and a REVISIT rebuilds
+## both stateless kinds from the cell's own objects exactly as the first
+## visit did.
+func test_safe_room_ambience_spawn() -> void:
+	print("── Safe-room ambience spawn (live elements) ──")
+	var root := Node3D.new()
+	add_child(root)
+	var stub := _AmbienceStubController.new()
+	stub._map_root = root
+	var authored: Array = [
+		{"type": "ambience", "model": "o0c_butterfly", "position": [1.0, 0.0, 2.0]},
+		{"type": "ambience", "model": "o0c_dragonfly", "position": [-1.0, 1.5, 0.0]},
+		{"type": "ambience", "model": "o0c_bird", "position": [0.0, 0.0, 10.0]},
+		{"type": "heal_pad", "position": [7.3, 0.0, -6.7]},
+	]
+	stub._current_cell = {"pos": "0,0", "objects": authored}
+
+	var spawner := CellObjectSpawner.new(stub)
+	spawner._spawn_fresh_cell_objects(authored)
+
+	var critters := 0
+	var pad: HealPad = null
+	# CI runs without the asset pack (raw /assets/ files are not in the repo —
+	# the suite's contract is config/logic layers), where load() returns null
+	# and the element stands model-less. The model assertion runs only when
+	# the GLB is actually present.
+	var models_local: bool = ResourceLoader.exists(
+		"res://assets/objects/special_z/o0c_butterfly.glb")
+	for child in root.get_children():
+		if child is AmbientCritter:
+			critters += 1
+			var bodies := 0
+			for node in child.get_children():
+				if node is CollisionObject3D:
+					bodies += 1
+			assert_eq(bodies, 0, "a critter carries no collision object")
+			if models_local:
+				assert_true(child.get_child_count() > 0, "the critter model loaded")
+		elif child is HealPad:
+			pad = child
+	assert_eq(critters, 3, "all three critter models spawn")
+	assert_true(pad != null, "the heal pad spawns")
+
+	# The pad heals HP to full and is SPENT — the storybook's `used` state
+	# (web objectCatalog 'heal-pad' is the contract); a second contact within
+	# the visit heals nothing, and the texture window drains to the spent
+	# frame over the ease.
+	var max_hp: int = GameState.max_hp
+	GameState.set_hp(maxi(10, max_hp / 4))
+	var player := Node3D.new()
+	player.add_to_group("player")
+	pad._on_body_entered(player)
+	assert_eq(GameState.hp, max_hp, "the pad restores HP to full")
+	assert_eq(pad.element_state, "used", "the pad is spent after its heal")
+	GameState.set_hp(maxi(10, max_hp / 2))
+	pad._on_body_entered(player)
+	assert_eq(GameState.hp, maxi(10, max_hp / 2), "a spent pad heals nothing")
+	for i in range(60):
+		pad._update_animation(0.016)
+	if pad._mat:
+		var window_x: float = float(pad._mat.get_shader_parameter("uv_offset").x)
+		assert_true(absf(window_x - (-0.5)) < 0.01,
+			"the texture window drained to the spent frame")
+	player.free()
+
+	# Revisit: nothing about either kind is saved, and the restore path
+	# rebuilds them from the cell's own objects.
+	for child in root.get_children():
+		child.free()
+	spawner._restore_cell_objects(
+		{"objects": [], "drops": [], "current_wave": 1, "max_wave": 1})
+	var revisit_critters := 0
+	var revisit_pads := 0
+	for child in root.get_children():
+		if child is AmbientCritter:
+			revisit_critters += 1
+		elif child is HealPad:
+			revisit_pads += 1
+	assert_eq(revisit_critters, 3, "a revisit rebuilds every critter (stateless)")
+	assert_eq(revisit_pads, 1, "a revisit rebuilds the heal pad (stateless)")
+	root.free()
+	print("")
+
+
+## The safe-room rule reaches quest-authored start cells (#644): a quest's
+## stage JSON carries its objects verbatim, so a customized map using e.g. the
+## city start room spawned bare — the merge at cell entry adds the room's
+## authored fauna, ambience only, and is idempotent for generated cells that
+## already carry it.
+func test_safe_room_ambience_quest_merge() -> void:
+	print("── Safe-room ambience in quest-authored start cells ──")
+	var spawner := CellObjectSpawner.new(_AmbienceStubController.new())
+	var quest: Array = [{"type": "dialog_trigger", "position": [0.0, 0.0, 0.0]}]
+	var merged: Array = spawner._merge_safe_room_ambience(quest, "s00e_sa1")
+	assert_eq(merged.size(), 3, "the city start cell gains its two butterflies")
+	for o in merged:
+		if str(o.get("type", "")) != "dialog_trigger":
+			assert_eq(str(o.get("type", "")), "ambience", "the merge yields ambience only")
+	assert_eq(spawner._merge_safe_room_ambience(merged, "s00e_sa1").size(), 3,
+		"the merge is idempotent")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01a_ib1").size(), 1,
+		"only sa1 rooms merge")
+	var valley: Array = spawner._merge_safe_room_ambience(quest, "s01a_sa1")
+	assert_true(valley.size() >= 3, "a field sa1 start cell merges too (%d objects)" % valley.size())
+
+	# The near-spawn flair (#644 playtest): invented placements append on top
+	# of authored ambience — both stateless — and rooms we placed nothing for
+	# gain nothing.
+	var authored_two: Array = [
+		{"type": "ambience", "model": "o0c_butterfly", "position": [1.0, 0.0, 2.0]}]
+	var with_flair: Array = spawner._merge_safe_room_ambience(authored_two.duplicate(), "s01a_sa1")
+	assert_eq(with_flair.size(), 3, "flair appends beside authored ambience (2 flair + 1)")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01e_ia1").size(), 3,
+		"the valley E corridor gains its two flair butterflies")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s01a_na1").size(), 3,
+		"the valley boss approach gains its two flair butterflies")
+	assert_eq(spawner._merge_safe_room_ambience(quest, "s03a_sa1").size(), 1,
+		"rooms with neither authored ambience nor flair gain nothing")
+	print("")
+
+
+## The DISTINCT authored ambience positions for a room code (base like
+## "s01a"), straight off the imported table. Group-4 duplicates collapse —
+## the same authored spot repeated under a second group is one spot.
+func _authored_ambience_positions(rooms: Dictionary, base: String) -> Array:
+	var out: Array = []
+	for suffix in ["_sa1", "_ga1"]:
+		var entry: Dictionary = rooms.get("%s%s_d" % [base, suffix], {})
+		for o in entry.get("objects", []):
+			if str(o.get("k", "")) != "ambience":
+				continue
+			var pos := [
+				snappedf(float(o.get("x", 0.0)), 0.01),
+				snappedf(float(o.get("y", 0.0)), 0.01),
+				snappedf(float(o.get("z", 0.0)), 0.01),
+			]
+			if not _pos_in(pos, out):
+				out.append(pos)
+	return out
+
+
+func _pos_in(pos, list: Array) -> bool:
+	if pos == null or not (pos is Array) or pos.size() != 3:
+		return false
+	for other in list:
+		if absf(float(pos[0]) - float(other[0])) < 0.02 \
+				and absf(float(pos[1]) - float(other[1])) < 0.02 \
+				and absf(float(pos[2]) - float(other[2])) < 0.02:
+			return true
+	return false
 
 
 ## BFS over `connections`.
@@ -11711,5 +12025,15 @@ class _KillStateStubController extends RefCounted:
 	var _room_quest_items: Array = []
 	var _room_walls: Array = []
 	var _fence_links: Dictionary = {}
+	var _current_wave: int = 1
+	var _max_wave: int = 1
+
+
+## The two fields the #644 spawn paths read: a live map root to parent
+## elements under, and the cell's own object list for the stateless revisit
+## rebuild.
+class _AmbienceStubController extends RefCounted:
+	var _map_root: Node3D = null
+	var _current_cell: Dictionary = {}
 	var _current_wave: int = 1
 	var _max_wave: int = 1

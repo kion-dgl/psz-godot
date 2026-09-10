@@ -591,3 +591,31 @@ func _fix_materials_recursive(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, new_mat)
 	for child in node.get_children():
 		_fix_materials_recursive(child)
+
+
+## The city rooms are hand-built scenes, not field cells — CellObjectSpawner
+## never runs here — so the safe-room ambience rule (#644) needs its own hook.
+## The market IS s00e_sa1, whose butterflies psz-re authors under set `c`
+## (FieldPopulation's cross-set fallback resolves them). Positions are
+## room-local in the same frame as the stage mesh; ambience only, inert.
+func _add_ambience(room_code: String) -> void:
+	for obj in FieldPopulation.objects_for_cell(
+			room_code, true, false, RandomNumberGenerator.new()):
+		if str(obj.get("type", "")) != "ambience":
+			continue
+		var pos_arr: Array = obj.get("position", [0.0, 0.0, 0.0])
+		var critter := AmbientCritter.new()
+		critter.critter_model = str(obj.get("model", ""))
+		add_child(critter)
+		critter.position = Vector3(
+			float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+
+## OUR flair butterflies at hand-picked spots (#644 playtest) — invented
+## positions chosen for presence, unlike _add_ambience's authored table.
+func _add_flair_critters(spots: Array) -> void:
+	for spot in spots:
+		var critter := AmbientCritter.new()
+		critter.critter_model = "o0c_butterfly"
+		add_child(critter)
+		critter.position = spot

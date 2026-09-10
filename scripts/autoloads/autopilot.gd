@@ -871,6 +871,18 @@ func _drive_scene(path: String) -> void:
 		_after(STEP_DELAY * 2.0, _drive_city_counter)
 	elif path == VALLEY_FIELD:
 		print("[sanity] checkpoint: valley_field entered")
+		if _field_phase and _quest_id == "search_and_rescue" \
+				and not SessionManager.get_field_sections().is_empty():
+			# Entered via the teleporter's free-roam route (no quest): build
+			# the walk plan from the LIVE sections — the same shape
+			# _drive_field_smoke drives for its own generated field.
+			_quest_id = "free_roam_%s" % _field_area
+			_quest_steps = _build_field_steps(SessionManager.get_field_sections())
+			_steps_by_cell = _populate_steps_by_cell(_quest_steps)
+			_dump_plan(_quest_steps, _steps_by_cell)
+			SessionManager.set_current_section(0)
+			print("[sanity] checkpoint: free-roam field entered (%d sections, %d steps)" % [
+				SessionManager.get_field_sections().size(), _quest_steps.size()])
 		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
 		# same frame this scene-change does, so don't drive anything here.
 
@@ -2235,6 +2247,19 @@ func _drive_city_counter() -> void:
 		return
 
 	if not SessionManager.has_accepted_quest():
+		if _field_phase:
+			# FREE-ROAM route (kion's spec): from the counter, straight to the
+			# teleporter — no guild desk, no quest, exactly how a player
+			# enters free roam. The walk plan is rebuilt from the entered
+			# sections on valley_field entry (see that scene branch). The
+			# quest matrix stays the default for every run without
+			# PSZ_AUTOPILOT_FIELD.
+			if not _warp_pad_interacted:
+				_warp_pad_interacted = true
+				print("[sanity] counter: free-roam route — straight to warp pad (guild skipped)")
+				_teleport_player(WARP_PAD_POS)
+				_after(0.8, func() -> void: _press_action("interact"))
+			return
 		if not _counter_npc_interacted:
 			_counter_npc_interacted = true
 			print("[sanity] counter: teleport to guild NPC")

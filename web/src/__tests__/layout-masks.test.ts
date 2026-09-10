@@ -187,15 +187,21 @@ describe('room_objects.json through the preview logic', () => {
     expect(filterByLayout(entry.objects, 33, 2).filter((o) => o.g === 5).length).toBe(2);
   });
 
-  it("s07a_ga1_d: only masks 33/48 eligible, and every reachable layout renders nothing", () => {
+  it("s07a_ga1_d: only masks 33/48 eligible; L0 renders the heal pad, never the group-4 boxes", () => {
     const entry = doc.rooms['s07a_ga1_d'];
     const eligible = layoutEligibility(entry.groups!, MASKS);
     expect(eligible).toEqual([true, false, false, false, true]);
     const shares = layoutShares(MASKS, eligible, doc.layout_weights_by_depth['4_6']);
     expect(shares[0]).toBe(100);
-    // All imported objects are group 4, so the layout the room actually takes
-    // builds none of them — the documented fall-through-to-the-ring case.
-    expect(filterByLayout(entry.objects, 33, 3)).toEqual([]);
+    // The room's only imported records used to sit in group 4 — the
+    // documented fall-through-to-the-ring case. Since #644 its heal pad is
+    // the group-0 record, so the layout the room actually takes (#644: every
+    // ga1 carries its pad under every draw) renders exactly the pad, and the
+    // two group-4 boxes stay unreachable (mask 48 never draws).
+    const reachable = filterByLayout(entry.objects, 33, 3);
+    expect(reachable.length).toBe(1);
+    expect(reachable[0].k).toBe('heal_pad');
+    expect(filterByLayout(entry.objects, 33, 0).filter((o) => o.g === 4)).toEqual([]);
   });
 });
 

@@ -41,6 +41,17 @@ class_name FieldPopulation
 ##            time, not generation time, so the field data is the same
 ##            either way.
 ##
+##   ambience DECODED (#644). The original authors its ambient creatures into
+##            the SAFE ROOMS that never carry a wave — o0c_butterfly is the
+##            valley's (s01 sa1/ga1), o0c_dragonfly the wetlands' (s02),
+##            o0c_bird a one-off in paru's boss arena — plus o0c_healhp, one
+##            heal pad in every area's ga1 (s01-s07, both variants). Same
+##            table, same rule; the creatures are inert (no collision, no
+##            interaction, no counts) and the motion is OURS — the models are
+##            single-frame billboards the original animates in runtime code.
+##            Faithful means faithful: s03-s07 author no creatures, so their
+##            safe rooms stay bare apart from the heal pad.
+##
 ## Enemy and key POSITIONS are authored and consumed (#604, #627): waves stand
 ## on the room's enemy slots, a cell's keys on its authored key slots. Which
 ## subset of either a given room instance uses is OUR seeded choice, not a
@@ -109,6 +120,14 @@ const DEFAULT_WAVE_COUNT := 1
 ## data/re_reference/room_objects.json, split out at load.
 static var _rooms: Dictionary = {}
 
+## Rooms whose ambience is authored only OUTSIDE the deploy set — today the
+## city start room (s00e_sa1, its butterflies under set `c`). Keyed by base
+## room code, valued by the room entry; built in `_load` preferring the
+## lexicographically first set key so the pick is deterministic whatever the
+## JSON's key order. A room here resolves through the same
+## `authored_objects` contract as any other — see the fallback there.
+static var _ambience_fallback: Dictionary = {}
+
 ## Authored enemy spawn slots, room code -> Array of {x, y, z}. From
 ## room_reference.json, which is otherwise reference-only -- see the note there:
 ## its OBJECTS stay out of the game because an unhandled kind would eat a slot
@@ -144,6 +163,7 @@ static func _load() -> void:
 
 	var obj_doc: Dictionary = _read_json(RE_DIR + "room_objects.json")
 	_rooms = obj_doc.get("rooms", {})
+	_build_ambience_fallback()
 	_layout_masks = obj_doc.get("layout_masks", [])
 	_layout_weights = obj_doc.get("layout_weights_by_depth", {})
 	_group5_weights = obj_doc.get("group5_weights", [])
@@ -171,6 +191,26 @@ static func _read_json(path: String) -> Dictionary:
 		push_warning("FieldPopulation: bad JSON in " + path)
 		return {}
 	return json.data
+
+
+## Index the out-of-deploy-set rooms (the importer emits them only for bases
+## with no `d` row — see import_re_objects._take_offset_ambience). A base
+## keeps the entry of its lexicographically FIRST set key, so `s00e_sa1_c`
+## wins over the identical `s00e_sa1_cm` deterministically.
+static func _build_ambience_fallback() -> void:
+	_ambience_fallback.clear()
+	for key in _rooms.keys():
+		var k := str(key)
+		if k.ends_with("_" + DEPLOY_SET):
+			continue
+		var base := k.substr(0, k.rfind("_"))
+		if _rooms.has("%s_%s" % [base, DEPLOY_SET]):
+			continue
+		var held: Dictionary = _ambience_fallback.get(base, {})
+		if held.is_empty() or k < str(held.get("_key", "")):
+			var entry: Dictionary = _rooms[key].duplicate()
+			entry["_key"] = k
+			_ambience_fallback[base] = entry
 
 
 ## RE internal names with no enemy of their own, and what to do about them.
@@ -305,7 +345,7 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
 	var records: Array = entry.get("objects", [])
 	if records.is_empty():
-		return []
+		return _fallback_ambience(room_code)
 
 	var groups = entry.get("groups", null)
 	var picked: Array = []
@@ -329,6 +369,52 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 		if not obj.is_empty():
 			out.append(obj)
 	return _drop_unopenable_fences(out)
+
+
+## OUR near-spawn flair (#644 playtest follow-up, kion's call): invented
+## butterfly placements where the authored table has nothing near the player
+## — the valley start rooms, the valley E corridor, and the valley boss
+## approach (the city spawn's pair lives in the market controller, which is
+## a hand-built scene). A RECORDED DIVERGENCE from the faithful rule: these
+## are positions we chose for presence, not measurements, and the spec says
+## so. Keyed by room code, valued as [x, z] pairs (y comes from the hover).
+const FLAIR := {
+	"s01a_sa1": [[-4.8, -7.4], [2.4, -12.2]],
+	"s01b_sa1": [[-3.5, -12.0], [3.5, -12.0]],
+	"s01e_ia1": [[2.0, 2.0], [-2.5, 8.0]],
+	"s01a_na1": [[-5.0, 6.0], [5.5, 6.5]],
+}
+
+
+## The flair critters for a room code, as psz-godot object dicts ([] when we
+## placed none). Draws nothing from the rng — static positions.
+static func flair_objects(room_code: String) -> Array:
+	var out: Array = []
+	for spot in FLAIR.get(room_code, []):
+		out.append({
+			"type": "ambience", "model": "o0c_butterfly",
+			"position": [float(spot[0]), 0.0, float(spot[1])],
+		})
+	return out
+
+
+## The cross-set ambience fallback (#644): a room whose table exists only
+## outside the deploy set — the city start room, whose butterflies psz-re
+## authors under set `c` — builds its authored fauna FLAT. Every record, no
+## layout mask (these rows carry ambience only), and deliberately NO rng
+## draw, so the generator's streams stay byte-identical whether or not a
+## room resolves through the fallback.
+static func _fallback_ambience(room_code: String) -> Array:
+	var entry: Dictionary = _ambience_fallback.get(room_code, {})
+	var records: Array = entry.get("objects", [])
+	if records.is_empty():
+		return []
+	var out: Array = []
+	for rec in _cap(records, _cap_per_room):
+		var obj := _to_object(rec)
+		if not obj.is_empty():
+			out.append(obj)
+	return out
 
 
 ## A fence with no switch in the room is a sealed room, so drop it.
@@ -702,7 +788,14 @@ static func ring_positions(count: int, radius: float) -> Array:
 ## boss_dragon, s02z_na1 boss_octopus, s05z_na1 boss_robot, and so on — so the
 ## boss a generated field fights is read from the RE data rather than picked.
 ## No boxes: these rooms are a fight and a warp, not a loot round.
-static func objects_for_single_room(room_code: String, rng: RandomNumberGenerator) -> Array:
+## `ambience_rng` is the side stream the single-room ambience draws from
+## (#644). It exists because these rooms populate from the caller's MAIN
+## stream mid-generation — the e-transition between the a and b sections —
+## and letting the ambience's layout draw come off that stream would reshuffle
+## the whole next section for the same seed. Passing nothing falls back to
+## `rng`, which is what a test (or any caller with no stream to protect) wants.
+static func objects_for_single_room(room_code: String, rng: RandomNumberGenerator,
+		ambience_rng: RandomNumberGenerator = null) -> Array:
 	var wave: Array = roll_wave(room_code, rng)
 	var spots: Array = enemy_slot_positions(room_code, wave.size(), rng)
 	if spots.is_empty():
@@ -712,11 +805,22 @@ static func objects_for_single_room(room_code: String, rng: RandomNumberGenerato
 		objects.append({
 			"type": "enemy", "position": spots[i], "enemy_id": wave[i],
 		})
+	# #644: a single room's AUTHORED AMBIENCE builds too — in the corpus that
+	# is exactly paru's bird in s05z_na1. Ambience only: these rooms stay "a
+	# fight and a warp", and the authored table's other kinds (a warp object,
+	# a treasure box) are other systems'.
+	for obj in authored_objects(room_code, -1, ambience_rng if ambience_rng != null else rng):
+		if str(obj.get("type", "")) == "ambience":
+			objects.append(obj)
 	return objects
 
 
-## Objects for one generated cell. Start and goal rooms stay empty so nobody
-## spawns into a fight or onto loot they did not walk to.
+## Objects for one generated cell. Start and goal rooms carry no wave and no
+## loot — but since #644 a start room DOES build its AUTHORED AMBIENCE (the
+## valley's butterflies, the wetlands' dragonflies): inert, mask-filtered, the
+## only authored kinds a start room takes. The goal room needs no special case
+## — ga1 has no wave assignment, and its authored heal pad and ambience ride
+## the normal path.
 ##
 ## `depth` is the cell's path_order — how far along the generated route it sits
 ## — which is what the layout draw is banded on. Callers that do not track it
@@ -747,13 +851,24 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 ## here as before.
 static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1) -> Array:
-	# Only the START room is unconditionally empty. is_end is NOT: the goal is
+	# Only the START room is held to authored AMBIENCE alone: the original's
+	# sa1 never carries a wave, and loot nobody walked to has no business in
+	# the room the player spawns into. is_end is NOT: the goal is
 	# "not necessarily last" (free-field spec), so the last cell of a path is
 	# often an ordinary combat room, and suppressing its wave left whole rooms
 	# with no enemies. The actual goal room carries no assignment, so roll_wave
 	# returns [] for it on its own — no need to special-case is_end here.
+	#
+	# `layout_mask` must be the caller's drawn_mask() result here too: for a
+	# grouped room, passing -1 would draw the mask from `rng` INSIDE
+	# authored_objects, and the start room's draw must come from the
+	# ambience side-stream (grid_generator._populate_cell), not the field's.
 	if is_start:
-		return []
+		var critters: Array = []
+		for obj in authored_objects(room_code, depth, rng, layout_mask):
+			if str(obj.get("type", "")) == "ambience":
+				critters.append(obj)
+		return critters
 	var objects: Array = []
 	# A room runs a COUNT of waves (Enemy Waves spec), each an independent draw
 	# from the room's pool. Each enemy is tagged with its wave number; the
