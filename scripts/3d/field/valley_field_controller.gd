@@ -1515,7 +1515,7 @@ func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies
 	warp.element_state = "open" if is_open else "locked"
 	add_child(warp)
 	warp.global_position = ground_pos
-	_create_goal_pad_trigger(ground_pos, callback, is_open)
+	_create_goal_pad_trigger(ground_pos, callback, is_open, to_boss)
 	var waypoint := WaypointScript.new()
 	add_child(waypoint)
 	waypoint.global_position = Vector3(ground_pos.x, 1.5, ground_pos.z)
@@ -1547,6 +1547,10 @@ func _check_goal_pad_accept() -> void:
 	if not accepted:
 		return
 	_goal_pad_armed = false
+	_fire_goal_pad()
+
+
+func _fire_goal_pad() -> void:
 	if _goal_pad_prompt:
 		_goal_pad_prompt.visible = false
 	var cb := _goal_pad_callback
@@ -1554,7 +1558,8 @@ func _check_goal_pad_accept() -> void:
 	cb.call()
 
 
-func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool) -> void:
+func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool,
+		require_accept: bool) -> void:
 	_goal_pad_callback = callback
 	var trigger := Area3D.new()
 	trigger.name = "GateTrigger_goal_pad"
@@ -1570,10 +1575,16 @@ func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool) -> v
 	shape.position.y = 1.5
 	trigger.add_child(shape)
 	trigger.body_entered.connect(func(body: Node3D) -> void:
-		if body.is_in_group("player"):
+		if not body.is_in_group("player"):
+			return
+		# Only the BOSS warp demands the accept press (kion's playtest): the
+		# ordinary section transitions (A→E, E→B and back) stay touch-warps.
+		if require_accept:
 			_goal_pad_armed = true
 			if _goal_pad_prompt:
-				_goal_pad_prompt.visible = true)
+				_goal_pad_prompt.visible = true
+		else:
+			_fire_goal_pad())
 	trigger.body_exited.connect(func(body: Node3D) -> void:
 		if body.is_in_group("player"):
 			_goal_pad_armed = false
@@ -1594,7 +1605,10 @@ func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool) -> v
 	prompt.position = Vector3(pos.x, 2.4, pos.z)
 	prompt.visible = false
 	add_child(prompt)
-	_goal_pad_prompt = prompt
+	if require_accept:
+		_goal_pad_prompt = prompt
+	else:
+		prompt.queue_free()
 
 
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
