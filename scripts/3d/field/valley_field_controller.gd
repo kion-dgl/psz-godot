@@ -645,18 +645,7 @@ func _on_quest_completed() -> void:
 
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
-	# The goal pad fires on ACCEPT while the player stands on it (see
-	# _create_goal_pad_trigger); under the autopilot it fires on arm instead.
-	if _goal_pad_armed and _goal_pad_callback.is_valid():
-		var accepted: bool = Input.is_action_just_pressed("interact") \
-				or OS.get_environment("PSZ_AUTOPILOT") == "1"
-		if accepted:
-			_goal_pad_armed = false
-			if _goal_pad_prompt:
-				_goal_pad_prompt.visible = false
-			var cb := _goal_pad_callback
-			_goal_pad_callback = Callable()
-			cb.call()
+	_check_goal_pad_accept()
 	if _world_env and _sky_material and _dir_light:
 		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
 		if not _is_indoor_stage(cur_stage_id):
@@ -1544,6 +1533,25 @@ func _spawn_goal_pad_warp(pad_pos: Vector3, callback: Callable, room_has_enemies
 var _goal_pad_armed: bool = false
 var _goal_pad_callback: Callable = Callable()
 var _goal_pad_prompt: Label3D = null
+
+
+## The goal pad fires on ACCEPT while the player stands on it (see
+## _create_goal_pad_trigger); under the autopilot it fires on arm instead —
+## the walk harness presses no keys and its oracle expects the section warp
+## where the touch-warp used to fire.
+func _check_goal_pad_accept() -> void:
+	if not (_goal_pad_armed and _goal_pad_callback.is_valid()):
+		return
+	var accepted: bool = Input.is_action_just_pressed("interact") \
+			or OS.get_environment("PSZ_AUTOPILOT") == "1"
+	if not accepted:
+		return
+	_goal_pad_armed = false
+	if _goal_pad_prompt:
+		_goal_pad_prompt.visible = false
+	var cb := _goal_pad_callback
+	_goal_pad_callback = Callable()
+	cb.call()
 
 
 func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool) -> void:
