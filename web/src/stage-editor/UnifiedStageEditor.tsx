@@ -7,6 +7,7 @@ import { getPortalRotation } from './types';
 import { getAreaFromMapId, getAllMapsForArea } from './constants';
 import StageSelector from './StageSelector';
 import StageCanvas from './StageCanvas';
+import { detectLanterns } from './lanternDetect';
 import FloorOverlay from './FloorOverlay';
 import PortalOverlay from './PortalOverlay';
 import MeasuredDoorwayOverlay from './MeasuredDoorwayOverlay';
@@ -817,6 +818,27 @@ export default function UnifiedStageEditor() {
     [particlePlacementPreset, repositionEffectId, particles]
   );
 
+  // Seed lantern lights from the room mesh (#646): run lantern detection
+  // over the loaded GLB and replace any existing lantern-preset effects.
+  const handleAutoDetectLanterns = useCallback((): number => {
+    if (!stageScene) return 0;
+    stageScene.updateMatrixWorld(true);
+    const anchors = detectLanterns(stageScene);
+    if (!anchors.length) return 0;
+    const preset = PLACED_PRESETS['lantern'];
+    if (!preset) return 0;
+    const lanterns = anchors.map((p, i) => ({
+      ...preset,
+      id: `placed_lantern_${i}_${Date.now()}`,
+      position: [p.x, p.y, p.z] as [number, number, number],
+    })) as ParticleEffect[];
+    setParticles(prev => [
+      ...prev.filter(p => !((p as any).preset === 'lantern' && p.category === 'placed')),
+      ...lanterns,
+    ]);
+    return lanterns.length;
+  }, [stageScene]);
+
   // Render the active tab's control panel
   const renderTabPanel = () => {
     if (!config) return null;
@@ -913,6 +935,7 @@ export default function UnifiedStageEditor() {
               setRepositionEffectId(id);
               setParticlePlacementMode(true);
             }}
+            onAutoDetectLanterns={handleAutoDetectLanterns}
           />
         );
       case 'waypoints':

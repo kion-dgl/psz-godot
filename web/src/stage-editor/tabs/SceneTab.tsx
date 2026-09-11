@@ -113,6 +113,15 @@ export const PLACED_PRESETS: Record<string, Omit<PlacedEffect, 'id' | 'position'
     color: [1.0, 0.5, 0.1], count: 40, speed: 1.5, size: 2.5,
     radius: 2, height: 4, lightIntensity: 1.5, lightRadius: 6,
   },
+  // Snowfield path lamps (#646). lightIntensity 3 / lightRadius 11 land at
+  // Godot energy 24 / range 22 — the values the LightingLab proved out for
+  // lantern pools. Positions seed from detectLanterns() over the room's
+  // 1_lamp1 mesh.
+  lantern: {
+    category: 'placed', preset: 'lantern',
+    color: [1.0, 0.3, 0.12], count: 24, speed: 0.9, size: 1.8,
+    radius: 0.9, height: 2.2, lightIntensity: 3.0, lightRadius: 11,
+  },
 };
 
 const WEATHER_PRESETS: Record<string, Omit<WeatherEffect, 'id'>> = {
@@ -164,6 +173,9 @@ interface SceneTabProps {
   onIndoorChange: (indoor: boolean) => void;
   repositionEffectId: string | null;
   onStartReposition: (id: string) => void;
+  /** Runs lantern auto-detection over the loaded room mesh; returns the
+   * number of lanterns found (0 for rooms without lamp geometry). */
+  onAutoDetectLanterns: () => number;
 }
 
 export default function SceneTab({
@@ -171,9 +183,10 @@ export default function SceneTab({
   placementMode, onSetPlacementMode, placementPreset, onSetPlacementPreset,
   selectedEffectId, onSelectEffect,
   mapId, indoor, onIndoorChange,
-  repositionEffectId, onStartReposition,
+  repositionEffectId, onStartReposition, onAutoDetectLanterns,
 }: SceneTabProps) {
   const [copied, setCopied] = useState(false);
+  const [detectResult, setDetectResult] = useState<string | null>(null);
   const phase = getPhaseLabel(timeOfDay);
   const placed = particles.filter((p): p is PlacedEffect => p.category === 'placed');
   const weather = particles.filter((p): p is WeatherEffect => p.category === 'weather');
@@ -313,6 +326,22 @@ export default function SceneTab({
             Click in the 3D scene to place the emitter. Press the button again to cancel.
           </div>
         )}
+
+        {/* Lantern seeding from the room mesh — replaces existing lanterns */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <button
+            onClick={() => {
+              const n = onAutoDetectLanterns();
+              setDetectResult(n > 0
+                ? `Placed ${n} lantern${n === 1 ? '' : 's'} from the 1_lamp1 mesh (existing lanterns replaced)`
+                : 'No lanterns found in this room\'s mesh');
+            }}
+            style={{ ...presetBtnStyle, background: '#433010', color: '#e8b87a' }}
+          >
+            auto: lanterns from texture
+          </button>
+          {detectResult && <span style={{ fontSize: '10px', color: '#888' }}>{detectResult}</span>}
+        </div>
 
         {/* List of placed effects */}
         {placed.map(p => {

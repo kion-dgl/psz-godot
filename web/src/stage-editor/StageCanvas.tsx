@@ -33,6 +33,9 @@ function convertToLit(root: THREE.Object3D) {
     const converted = materials.map((mat) => {
       if (mat instanceof THREE.MeshBasicMaterial) {
         const lambert = new THREE.MeshLambertMaterial({
+          // Name preserved — lantern detection (lanternDetect.ts) matches the
+          // lamp materials by name after this one-time conversion.
+          name: mat.name,
           color: mat.color,
           map: mat.map,
           transparent: mat.transparent,

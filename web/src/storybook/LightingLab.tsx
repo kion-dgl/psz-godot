@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import { applyObjectTextures } from '../elements/materials';
+import { detectLanterns } from '../stage-editor/lanternDetect';
 
 /**
  * LightingLab — adaptive-lighting viability testbed for field/city rooms.
@@ -205,109 +206,6 @@ function collectStats(meshes: THREE.Mesh[]): RoomStats | null {
   };
 }
 
-/**
- * Find the lantern-head anchor of every lamp instance in a room.
- *
- * Lamps are the mesh whose material is NAMED `…lamp…` — snowfield's
- * 1_lamp1. Name only, never the texture: the `0_fire` material shares the
- * very same sheet (the flame frames live on s03_1_lamp1.png) and matches by
- * filename, which dragged the authored fire billboards — treetops included
- * — into the anchor set.
- *
- * The exporter wrote fully flat vertices (no shared verts between
- * triangles), and the geometry chains lamps together along a path — so
- * neither triangle connectivity nor naive XZ clustering separates
- * instances. What DOES: lantern heads are where the lamp geometry reaches
- * high. Grid the verts 2×2 in XZ, keep cells whose maxY clears MIN_HEIGHT
- * (chains sag below it), merge adjacent cells, and each surviving region is
- * one lamp — a post (~5 units) or a perimeter tower (~30). Measured against
- * the rooms: sa1→18, na1→20, ic1→7, ga1→4.
- *
- * MAX_TOP then drops the tree population: across all snowfield rooms the
- * detected tops split cleanly into path lamp posts at 5.1–6.1 units and
- * ceiling-height snow pines at 29.5–31.6 (na1 alone carries 20 of those).
- * Keep the posts, lose the forest.
- *
- * Positions are mesh-local on purpose: the node transform is identity and
- * the "skeleton" is one bone with out-of-range joint indices (a degenerate
- * no-op), so matrixWorld alone is the correct world placement.
- */
-function findLampFires(root: THREE.Object3D): THREE.Vector3[] {
-  const CELL = 2;
-  const MIN_HEIGHT = 2.2;
-  const MAX_TOP = 10;
-  const MIN_VERTS = 12;
-
-  const pts: THREE.Vector3[] = [];
-  const v = new THREE.Vector3();
-  root.traverse((child) => {
-    const mesh = child as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-    if (!(mat?.name ?? '').toLowerCase().includes('lamp')) return;
-    const pos = mesh.geometry.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i);
-      pts.push(v.clone().applyMatrix4(mesh.matrixWorld));
-    }
-  });
-  if (!pts.length) return [];
-
-  const cells = new Map<string, { ix: number; iz: number; n: number; maxY: number }>();
-  for (const p of pts) {
-    const ix = Math.floor(p.x / CELL);
-    const iz = Math.floor(p.z / CELL);
-    const k = `${ix},${iz}`;
-    let c = cells.get(k);
-    if (!c) {
-      c = { ix, iz, n: 0, maxY: -Infinity };
-      cells.set(k, c);
-    }
-    c.n += 1;
-    c.maxY = Math.max(c.maxY, p.y);
-  }
-
-  const cand = [...cells.values()].filter((c) => c.maxY >= MIN_HEIGHT);
-  const parent = new Map<string, string>();
-  const find = (k: string): string => {
-    let a = k;
-    while (parent.get(a) !== a) a = parent.get(a) as string;
-    return a;
-  };
-  for (const c of cand) parent.set(`${c.ix},${c.iz}`, `${c.ix},${c.iz}`);
-  for (const c of cand) {
-    const ck = `${c.ix},${c.iz}`;
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dz = -1; dz <= 1; dz++) {
-        const nk = `${c.ix + dx},${c.iz + dz}`;
-        if (parent.has(nk)) parent.set(find(nk), find(ck));
-      }
-    }
-  }
-
-  const regions = new Map<string, { sx: number; sz: number; n: number; top: number; cells: number }>();
-  for (const c of cand) {
-    const rk = find(`${c.ix},${c.iz}`);
-    let r = regions.get(rk);
-    if (!r) {
-      r = { sx: 0, sz: 0, n: 0, top: -Infinity, cells: 0 };
-      regions.set(rk, r);
-    }
-    r.sx += c.ix + 0.5;
-    r.sz += c.iz + 0.5;
-    r.n += c.n;
-    r.top = Math.max(r.top, c.maxY);
-    r.cells += 1;
-  }
-
-  return [...regions.values()]
-    .filter((r) => r.n >= MIN_VERTS && r.top <= MAX_TOP)
-    .map((r) => new THREE.Vector3(
-      (r.sx / r.cells) * CELL,
-      r.top - 0.5,
-      (r.sz / r.cells) * CELL,
-    ));
-}
 
 /**
  * The fire rig: one flickering point light + additive glow per lantern.
@@ -488,7 +386,7 @@ function Room({ def, mode, ctrl, onReady }: RoomProps) {
   useEffect(() => {
     prepared.node.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(prepared.node);
-    const lamps = findLampFires(prepared.node);
+    const lamps = detectLanterns(prepared.node);
     onReady?.(prepared.meshes, box, lamps);
   }, [prepared, onReady]);
 
