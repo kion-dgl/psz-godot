@@ -7,7 +7,9 @@
  *   - Floor:   rise from ground across the whole stage (ambient spores, mist)
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TransformControls } from '@react-three/drei';
+import * as THREE from 'three';
 import type { TimeOfDayLighting } from '../StageCanvas';
 import type { ParticleEffect, PlacedEffect, WeatherEffect, FloorEffect } from '../ParticleOverlay';
 
@@ -155,6 +157,67 @@ const FLOOR_PRESETS: Record<string, Omit<FloorEffect, 'id'>> = {
   },
 };
 
+// ---------- Lantern tweak handles ----------
+//
+// The lamp posts bend at the top and the lantern head hangs off the arm —
+// the detected centroid lands close but not exactly on the head, and the
+// bend isn't consistent between lanterns. So each placed lantern gets a
+// drag handle: click the white ball to select, then drag the gizmo —
+// constrained to XZ only (showY={false} plus a Y lock on write), since the
+// lantern height is what the detector got right.
+
+export function LanternHandles({
+  lanterns, editId, onEdit, onMove,
+}: {
+  lanterns: PlacedEffect[];
+  editId: string | null;
+  onEdit: (id: string | null) => void;
+  onMove: (id: string, pos: [number, number, number]) => void;
+}) {
+  const proxy = useMemo(() => new THREE.Object3D(), []);
+  const edited = lanterns.find((l) => l.id === editId) ?? null;
+
+  // Pin the proxy to the stored position when the SELECTION changes. State
+  // updates during a drag deliberately don't re-pin — the proxy drives.
+  useEffect(() => {
+    if (edited) proxy.position.set(edited.position[0], edited.position[1], edited.position[2]);
+  }, [editId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {lanterns.map((l) => (
+        <mesh
+          key={l.id}
+          position={l.position}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onEdit(l.id === editId ? null : l.id);
+          }}
+        >
+          <sphereGeometry args={[0.28, 8, 8]} />
+          <meshBasicMaterial color={l.id === editId ? '#ffdd55' : '#7fd4ff'} toneMapped={false} />
+        </mesh>
+      ))}
+      {edited && (
+        <>
+          <primitive object={proxy} />
+          <TransformControls
+            object={proxy}
+            mode="translate"
+            showY={false}
+            size={0.7}
+            onMouseDown={() => { /* drag starts — OrbitControls yields via makeDefault */ }}
+            onObjectChange={() => {
+              const y = edited.position[1]; // Y stays at the detected height
+              onMove(edited.id, [proxy.position.x, y, proxy.position.z]);
+            }}
+          />
+        </>
+      )}
+    </>
+  );
+}
+
 // ---------- Component ----------
 
 interface SceneTabProps {
@@ -176,6 +239,8 @@ interface SceneTabProps {
   /** Runs lantern auto-detection over the loaded room mesh; returns the
    * number of lanterns found (0 for rooms without lamp geometry). */
   onAutoDetectLanterns: () => number;
+  /** Whether draggable lantern tweak handles are available. */
+  lanternTweakable: boolean;
 }
 
 export default function SceneTab({
@@ -183,7 +248,7 @@ export default function SceneTab({
   placementMode, onSetPlacementMode, placementPreset, onSetPlacementPreset,
   selectedEffectId, onSelectEffect,
   mapId, indoor, onIndoorChange,
-  repositionEffectId, onStartReposition, onAutoDetectLanterns,
+  repositionEffectId, onStartReposition, onAutoDetectLanterns, lanternTweakable,
 }: SceneTabProps) {
   const [copied, setCopied] = useState(false);
   const [detectResult, setDetectResult] = useState<string | null>(null);
@@ -327,20 +392,29 @@ export default function SceneTab({
           </div>
         )}
 
-        {/* Lantern seeding from the room mesh — replaces existing lanterns */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          {/* Lantern seeding from the room mesh — replaces existing lanterns */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={() => {
               const n = onAutoDetectLanterns();
-              setDetectResult(n > 0
-                ? `Placed ${n} lantern${n === 1 ? '' : 's'} from the 1_lamp1 mesh (existing lanterns replaced)`
-                : 'No lanterns found in this room\'s mesh');
+              setDetectResult(n < 0
+                ? 'Scene still loading — try again in a moment'
+                : n > 0
+                  ? `Placed ${n} lantern${n === 1 ? '' : 's'} from the 1_lamp1 mesh (existing lanterns replaced)`
+                  : 'No lanterns found in this room\'s mesh');
             }}
             style={{ ...presetBtnStyle, background: '#433010', color: '#e8b87a' }}
           >
             auto: lanterns from texture
           </button>
           {detectResult && <span style={{ fontSize: '10px', color: '#888' }}>{detectResult}</span>}
+          {lanternTweakable && (
+            <span style={{ fontSize: '10px', color: '#888', flexBasis: '100%' }}>
+              cyan handles: click a lantern's ball to select, drag the XZ
+              arrows to nudge it onto the head (height stays fixed); click
+              again to deselect. Ball turns yellow when selected.
+            </span>
+          )}
         </div>
 
         {/* List of placed effects */}
