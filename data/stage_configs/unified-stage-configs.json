@@ -17580,7 +17580,7 @@
       "unreachable": [
         "south"
       ],
-      "reason": "Broken bridge \u2014 the south gate is visible across the gap but intentionally not traversable. The spawn/exit pair exists so the gate still reads correctly, but nothing routes to it."
+      "reason": "Broken bridge — the south gate is visible across the gap but intentionally not traversable. The spawn/exit pair exists so the gate still reads correctly, but nothing routes to it."
     }
   },
   "s02b_lc1": {
@@ -20173,7 +20173,7 @@
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-23T05:36:20.129Z",
+    "lastModified": "2026-09-11T00:00:00.000Z",
     "mapId": "s03a_ga1",
     "obstacles": [],
     "portals": [
@@ -20245,6 +20245,88 @@
         "wp_1780455528383_trptrr",
         "wp_spawn_1_1780455525300"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "position": [
+          -15.5,
+          4.1,
+          -1.4
+        ],
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 3,
+        "light_radius": 11
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "position": [
+          -3.5,
+          4.1,
+          -13.2
+        ],
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 3,
+        "light_radius": 11
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "position": [
+          3.5,
+          4.1,
+          12.3
+        ],
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 3,
+        "light_radius": 11
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "position": [
+          14.8,
+          4.1,
+          2.9
+        ],
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 3,
+        "light_radius": 11
+      }
     ]
   },
   "s03a_ib1": {

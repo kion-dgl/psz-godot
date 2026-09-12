@@ -356,6 +356,21 @@ export default function UnifiedStageEditor() {
   // Get config for current map
   const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
 
+  // Scene effects live in the unified stage config (alongside floor/portals
+  // per room, #646): hydrate when the stage's config arrives, persist back
+  // debounced — the drag gizmo updates positions every frame.
+  useEffect(() => {
+    if (config) setParticles((config.effects as ParticleEffect[] | undefined) ?? []);
+  }, [config?.mapId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!config) return;
+    if (JSON.stringify(config.effects ?? []) === JSON.stringify(particles)) return;
+    const timer = setTimeout(() => {
+      updateConfig((prev) => ({ ...prev, effects: particles }));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [particles, config]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const manhattan = useManhattanGrid({
     mapId: selectedMapId,
     enabled: showManhattanGrid && activeTab === 'waypoints',

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { ParticleEffect } from './ParticleOverlay';
 
 // =============== Core Types ===============
 
@@ -102,6 +103,9 @@ export interface UnifiedStageConfig {
   waypoints?: WaypointData[];
   waypointEdges?: [string, string][]; // undirected edges by waypoint id
   svgSettings?: SvgSettings;
+  /** Authored scene effects (lanterns, spores, …) — placed/light effects
+   * spawned by Godot's weather pass at room load (#646). */
+  effects?: ParticleEffect[];
   lastModified: string;
   exportedAt?: string;
 }

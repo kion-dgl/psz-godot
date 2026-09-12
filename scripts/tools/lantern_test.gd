@@ -12,7 +12,10 @@ extends Node3D
 
 const STAGE_ID := "s03a_ga1"
 const STAGE_GLB := "res://assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_m.glb"
-const EFFECTS_JSON := "res://assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_effects.json"
+## Lanterns are authored in the stage editor and committed with the rest of
+## the per-room data (floor, portals, waypoints) in the unified stage
+## config — the same file the field controller reads at room load.
+const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 
 # TimeManager's NIGHT preset (scripts/autoloads/time_manager.gd).
 const NIGHT_AMBIENT := Color(0.2, 0.25, 0.45)
@@ -33,8 +36,8 @@ var _glow_dot_tex: ImageTexture
 func _ready() -> void:
 	_build_environment()
 	_load_stage()
-	var count := _spawn_effects_from_json()
-	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, EFFECTS_JSON])
+	var count := _spawn_effects_from_config()
+	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, UNIFIED_CONFIG])
 
 
 func _process(_delta: float) -> void:
@@ -83,17 +86,18 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
-func _spawn_effects_from_json() -> int:
-	if not FileAccess.file_exists(EFFECTS_JSON):
-		push_error("[LanternTest] missing %s" % EFFECTS_JSON)
+func _spawn_effects_from_config() -> int:
+	if not FileAccess.file_exists(UNIFIED_CONFIG):
+		push_error("[LanternTest] missing %s" % UNIFIED_CONFIG)
 		return 0
-	var file := FileAccess.open(EFFECTS_JSON, FileAccess.READ)
+	var file := FileAccess.open(UNIFIED_CONFIG, FileAccess.READ)
 	var json := JSON.new()
 	if json.parse(file.get_as_text()) != OK:
-		push_error("[LanternTest] failed to parse %s: %s" % [EFFECTS_JSON, json.get_error_message()])
+		push_error("[LanternTest] failed to parse %s: %s" % [UNIFIED_CONFIG, json.get_error_message()])
 		return 0
+	var stage := (json.data as Dictionary).get(STAGE_ID, {}) as Dictionary
 	var count := 0
-	for effect in (json.data as Dictionary).get("effects", []):
+	for effect in stage.get("effects", []):
 		if str(effect.get("category", "")) == "placed":
 			_spawn_placed_effect(effect)
 			count += 1

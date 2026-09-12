@@ -313,6 +313,12 @@ func _ready() -> void:
 	# Spawn stage particle effects (spores, embers, etc.)
 	_weather._spawn_stage_effects(stage_id)
 
+	# Authored scene effects (lanterns etc.) from the unified stage config —
+	# same placed-effect format the _effects.json pass reads (#646).
+	for effect in _stage_config.get("effects", []):
+		if str(effect.get("category", "")) == "placed":
+			_weather._spawn_placed_effect(effect)
+
 	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
 	_debug_show_floor_collision()
 
