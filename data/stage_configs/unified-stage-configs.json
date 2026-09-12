@@ -20264,7 +20264,7 @@
         "radius": 0.9,
         "height": 2.2,
         "speed": 0.9,
-        "light_intensity": 3,
+        "light_intensity": 1.5,
         "light_radius": 11
       },
       {
@@ -20284,7 +20284,7 @@
         "radius": 0.9,
         "height": 2.2,
         "speed": 0.9,
-        "light_intensity": 3,
+        "light_intensity": 1.5,
         "light_radius": 11
       },
       {
@@ -20304,7 +20304,7 @@
         "radius": 0.9,
         "height": 2.2,
         "speed": 0.9,
-        "light_intensity": 3,
+        "light_intensity": 1.5,
         "light_radius": 11
       },
       {
@@ -20324,7 +20324,7 @@
         "radius": 0.9,
         "height": 2.2,
         "speed": 0.9,
-        "light_intensity": 3,
+        "light_intensity": 1.5,
         "light_radius": 11
       }
     ]

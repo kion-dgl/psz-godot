@@ -17,12 +17,14 @@ const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 
-# TimeManager's NIGHT preset (scripts/autoloads/time_manager.gd).
+# TimeManager's NIGHT preset (scripts/autoloads/time_manager.gd) — moon
+# doubled from 0.25 for this test: with near-black ambient, the eye has no
+# mid-range reference and the lantern pools read as an instant clip.
 const NIGHT_AMBIENT := Color(0.2, 0.25, 0.45)
 const NIGHT_AMBIENT_ENERGY := 0.5
 const NIGHT_SKY := Color(0.02, 0.02, 0.08)
 const NIGHT_MOON_COLOR := Color(0.6, 0.7, 1.0)
-const NIGHT_MOON_ENERGY := 0.25
+const NIGHT_MOON_ENERGY := 0.55
 
 const PLAYER_SPAWN := Vector3(0, 1.5, 6)
 

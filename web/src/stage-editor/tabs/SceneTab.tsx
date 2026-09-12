@@ -115,14 +115,16 @@ export const PLACED_PRESETS: Record<string, Omit<PlacedEffect, 'id' | 'position'
     color: [1.0, 0.5, 0.1], count: 40, speed: 1.5, size: 2.5,
     radius: 2, height: 4, lightIntensity: 1.5, lightRadius: 6,
   },
-  // Snowfield path lamps (#646). lightIntensity 3 / lightRadius 11 land at
-  // Godot energy 24 / range 22 — the values the LightingLab proved out for
-  // lantern pools. Positions seed from detectLanterns() over the room's
+  // Snowfield path lamps (#646). light_intensity 1.5 / lightRadius 11 land
+  // at Godot energy 12 / range 22 — ×8 (the weather-pass scaling) on the
+  // original 3 proved too hot for a light the player stands beside:
+  // inverse-square at 1–3 units clips a character to saturated orange even
+  // under ACES. Positions seed from detectLanterns() over the room's
   // 1_lamp1 mesh.
   lantern: {
     category: 'placed', preset: 'lantern',
     color: [1.0, 0.3, 0.12], count: 24, speed: 0.9, size: 1.8,
-    radius: 0.9, height: 2.2, lightIntensity: 3.0, lightRadius: 11,
+    radius: 0.9, height: 2.2, lightIntensity: 1.5, lightRadius: 11,
   },
 };
 
