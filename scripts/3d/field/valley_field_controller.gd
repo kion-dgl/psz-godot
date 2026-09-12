@@ -282,12 +282,14 @@ func _ready() -> void:
 	SmoothNormals.ensure(_map_root, 2)
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
-	# #646 objective — no baked-in lighting: Godot imports these unlit
-	# materials as UNSHADED (the bake IS the whole look). For the always-night
-	# snowfield, neutralize COLOR_0 to white and force per-pixel shading so
-	# the rig owns everything (validated in scenes/tools/snowfield_mattest.tscn).
+	# #646: Godot imports these unlit materials as UNSHADED (the bake IS
+	# the whole look). For the always-night snowfield, force per-pixel
+	# shading so the dynamic rig drives lighting, with the authored bake
+	# neutralized 10% toward white — the blend dialed in via
+	# scenes/tools/snowfield_mattest.tscn (mix 0.1 keeps the DS art while
+	# smoothing its harshest baked contrast).
 	if _is_snowfield_night_stage(stage_id):
-		SmoothNormals.neutralize_vertex_colors(_map_root, 1.0)
+		SmoothNormals.neutralize_vertex_colors(_map_root, 0.1)
 		SmoothNormals.make_lit(_map_root)
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
