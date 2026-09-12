@@ -94,7 +94,7 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
-var _night_bake_mix := 0.05  # Snowfield-night COLOR_0 mix (#646) — locked from the 2026-09-12 in-game read-out: bake-dominant
+var _night_bake_mix := 0.25  # Snowfield-night COLOR_0 mix (#646) — locked from the follow-up playtest read-out
 
 # Wave spawning
 var _current_wave: int = 1
@@ -237,13 +237,13 @@ func _ready() -> void:
 		# with white albedo they saturate the snow to flat white. Drop the
 		# sun-at-night and keep the single moonlight fill.
 		if _is_snowfield_night_stage(initial_stage_id):
-			# Snowfield-night rig (#646), locked from the 2026-09-12 in-game
-			# P read-out (ambient 0.84, moon 0.13, bake mix 0.05): the bake
-			# carries the ground, COLOR-source ambient lifts it, and the
-			# faint moon is the player's dynamic shadow source.
+			# Snowfield-night rig (#646) — locked from the follow-up playtest
+			# P read-out (ambient 1.50, moon 0.35, bake mix 0.25): bright
+			# night, bake quarter-mixed for depth, moon strong enough that
+			# the player/enemy shadows read.
 			_dir_light.light_energy = 0.0
-			_world_env.environment.ambient_light_energy = 0.84
-			_moonlight.light_energy = 0.13
+			_world_env.environment.ambient_light_energy = 1.5
+			_moonlight.light_energy = 0.35
 			_moonlight.shadow_enabled = true
 			_moonlight.shadow_blur = 1.0
 	else:
@@ -782,28 +782,31 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
 
-	# Blob shadow — dark circle under the player (unshaded, always visible)
-	_blob_shadow = MeshInstance3D.new()
-	var shadow_quad := QuadMesh.new()
-	shadow_quad.size = Vector2(1.8, 1.8)
-	shadow_quad.orientation = PlaneMesh.FACE_Y
-	_blob_shadow.mesh = shadow_quad
-	_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var shadow_shader := Shader.new()
-	shadow_shader.code = \
-		"shader_type spatial;\n" + \
-		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
-		"void fragment() {\n" + \
-		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
-		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
-		"\tALBEDO = vec3(0.0);\n" + \
-		"\tALPHA = alpha;\n" + \
-		"}\n"
-	var shadow_mat := ShaderMaterial.new()
-	shadow_mat.shader = shadow_shader
-	_blob_shadow.material_override = shadow_mat
-	add_child(_blob_shadow)
-	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
+	# Blob shadow — dark circle under the player (unshaded, always visible).
+	# Snowfield-night stages skip it (#646): the moonlight casts real dynamic
+	# shadows there, and blob + moon shadow reads as a double shadow.
+	if not _is_snowfield_night_stage(str(_current_cell.get("stage_id", ""))):
+		_blob_shadow = MeshInstance3D.new()
+		var shadow_quad := QuadMesh.new()
+		shadow_quad.size = Vector2(1.8, 1.8)
+		shadow_quad.orientation = PlaneMesh.FACE_Y
+		_blob_shadow.mesh = shadow_quad
+		_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var shadow_shader := Shader.new()
+		shadow_shader.code = \
+			"shader_type spatial;\n" + \
+			"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
+			"void fragment() {\n" + \
+			"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
+			"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
+			"\tALBEDO = vec3(0.0);\n" + \
+			"\tALPHA = alpha;\n" + \
+			"}\n"
+		var shadow_mat := ShaderMaterial.new()
+		shadow_mat.shader = shadow_shader
+		_blob_shadow.material_override = shadow_mat
+		add_child(_blob_shadow)
+		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 ## Player HP reached 0 (spec /states/player-death). Raise the "You were

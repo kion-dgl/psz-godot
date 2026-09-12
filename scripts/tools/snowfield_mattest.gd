@@ -34,7 +34,7 @@ var _status: Label
 func _ready() -> void:
 	_build_environment()
 	_load_stage()
-	_bake_mix = 0.05  # mirror the shipped controller default
+	_bake_mix = 0.25  # mirror the shipped controller default
 	_apply_mix()
 	_load_floor_collision()
 	_spawn_player(PLAYER_SPAWN)
@@ -127,11 +127,11 @@ func _build_environment() -> void:
 	TimeManager.apply_to_scene(_env, _sky_mat, _dir_light, _moonlight)
 	TimeManager.current_hour = 10.0
 	_dir_light.light_energy = 0.0  # snowfield pin: single moonlight fill
-	# Shipped snowfield-night baseline (#646, locked 2026-09-12 from the
-	# in-game read-out): bake-dominant mix, COLOR ambient high, moon a faint
-	# shadow source. Tune live with [ and -/=.
-	_env.ambient_light_energy = 0.84
-	_moonlight.light_energy = 0.13
+	# Shipped snowfield-night baseline (#646, follow-up playtest read-out):
+	# bright night (ambient 1.5), bake quarter-mixed, moon the shadow
+	# source. Tune live with [ and -/=.
+	_env.ambient_light_energy = 1.5
+	_moonlight.light_energy = 0.35
 	print("[MatTest] env: ambient src=%d color=%s energy=%.2f | sun=%.2f moon=%.2f vis=%s" % [
 		_env.ambient_light_source, _env.ambient_light_color, _env.ambient_light_energy,
 		_dir_light.light_energy, _moonlight.light_energy, _moonlight.visible])
@@ -144,7 +144,7 @@ func _load_stage() -> void:
 	add_child(map_root)
 	var n := SmoothNormals.ensure(map_root, 2)
 	_apply_texture_fixes(map_root)
-	print("[MatTest] room: %d meshes normal-fixed (shipped mix 0.05 applied — ,/. tune, R reloads)" % n)
+	print("[MatTest] room: %d meshes normal-fixed (shipped mix 0.25 applied — ,/. tune, R reloads)" % n)
 
 
 ## The field controller's _fix_materials core: mirror-wrap textures get the
