@@ -1,21 +1,21 @@
 extends Node3D
 ## Lantern test scene (#646) — one room, night rig, the authored lantern
-## effects from the stage editor.
+## effects from the stage editor, falling snow, and a walkable player.
 ##
-## Loads s03a_ga1 straight from its GLB, reads the SAME _effects.json the
-## field controller's weather pass reads (assets/stages/<sub>/<stage>/lndmd/
-## <stage>_effects.json), and spawns each placed effect with the identical
-## parameter math as WeatherController._spawn_placed_effect (GPUParticles +
-## OmniLight energy = light_intensity × 8, range = light_radius × 2). A
-## minimal night environment stands in for TimeManager so the lantern pools
-## are the star of the show. Slow auto-orbit; ESC quits.
+## Loads s03a_ga1 straight from its GLB plus its floor-collision GLB, reads
+## the unified stage config (same file the field controller reads — lanterns
+## live there alongside floor/portals per room), and spawns each placed
+## effect with the identical parameter math as
+## WeatherController._spawn_placed_effect. A minimal night environment
+## stands in for TimeManager so the lantern pools are the star of the show.
+## SPACE toggles COLOR_0 baked ⇄ white; ESC quits.
 
 const STAGE_ID := "s03a_ga1"
 const STAGE_GLB := "res://assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_m.glb"
-## Lanterns are authored in the stage editor and committed with the rest of
-## the per-room data (floor, portals, waypoints) in the unified stage
-## config — the same file the field controller reads at room load.
+const FLOOR_GLB := "res://assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1-floor.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
+const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
+const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 
 # TimeManager's NIGHT preset (scripts/autoloads/time_manager.gd).
 const NIGHT_AMBIENT := Color(0.2, 0.25, 0.45)
@@ -24,12 +24,9 @@ const NIGHT_SKY := Color(0.02, 0.02, 0.08)
 const NIGHT_MOON_COLOR := Color(0.6, 0.7, 1.0)
 const NIGHT_MOON_ENERGY := 0.25
 
-const ORBIT_RADIUS := 38.0
-const ORBIT_HEIGHT := 20.0
-const ORBIT_SPEED_DEG := 6.0
+const PLAYER_SPAWN := Vector3(0, 1.5, 6)
 
-var _camera: Camera3D
-var _orbit_center := Vector3(0, 3, 0)
+var player: CharacterBody3D
 var _glow_dot_tex: ImageTexture
 # Per-surface duplicated room materials — flipping vertex_color_use_as_albedo
 # on these never touches the imported shared resources.
@@ -40,6 +37,8 @@ var _vertex_colors_baked := true
 func _ready() -> void:
 	_build_environment()
 	_load_stage()
+	_load_floor_collision()
+	_spawn_player(PLAYER_SPAWN)
 	_build_snow()
 	var count := _spawn_effects_from_config()
 	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, UNIFIED_CONFIG])
@@ -49,11 +48,6 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_pressed("ui_cancel"):
 		get_tree().quit()
-	if _camera:
-		var angle := Time.get_ticks_msec() / 1000.0 * deg_to_rad(ORBIT_SPEED_DEG)
-		_camera.position = _orbit_center + Vector3(
-			cos(angle) * ORBIT_RADIUS, ORBIT_HEIGHT, sin(angle) * ORBIT_RADIUS)
-		_camera.look_at(_orbit_center)
 
 
 ## SPACE toggles COLOR_0: the authored bake (vertex_color_use_as_albedo ON —
@@ -69,13 +63,6 @@ func _input(event: InputEvent) -> void:
 
 
 func _build_environment() -> void:
-	_camera = Camera3D.new()
-	_camera.fov = 50.0
-	_camera.far = 600.0
-	_camera.position = Vector3(ORBIT_RADIUS, ORBIT_HEIGHT, 0)
-	add_child(_camera)
-	_camera.make_current()
-
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = NIGHT_SKY
@@ -92,6 +79,59 @@ func _build_environment() -> void:
 	moon.light_energy = NIGHT_MOON_ENERGY
 	moon.rotation_degrees = Vector3(-40, 30, 0)
 	add_child(moon)
+
+
+## Floor collision from the stage's floor GLB, exactly as the field loads it
+## (import-suffix StaticBodies when present, else built from the mesh).
+func _load_floor_collision() -> void:
+	if not ResourceLoader.exists(FLOOR_GLB):
+		push_error("[LanternTest] missing floor GLB %s" % FLOOR_GLB)
+		return
+	var floor_root := (load(FLOOR_GLB) as PackedScene).instantiate() as Node3D
+	floor_root.name = "FloorCollision"
+	add_child(floor_root)
+	if MapCollisionBuilder.has_static_body(floor_root):
+		MapCollisionBuilder.setup_map_collision(floor_root)
+	else:
+		MapCollisionBuilder.create_collision_from_meshes(floor_root)
+
+
+## The game's own player + follow camera, spawned the way the field does
+## (orbit camera targets the player; blob shadow grounds them on the snow).
+func _spawn_player(pos: Vector3) -> void:
+	player = PLAYER_SCENE.instantiate() as CharacterBody3D
+	player.add_to_group("player")
+	add_child(player)
+	player.global_position = pos
+	player.spawn_position = pos
+
+	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
+	add_child(orbit_camera)
+	orbit_camera.set_target(player)
+	orbit_camera.camera_rotation = PI
+
+	var shadow := MeshInstance3D.new()
+	shadow.name = "BlobShadow"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.8, 1.8)
+	quad.orientation = PlaneMesh.FACE_Y
+	shadow.mesh = quad
+	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shadow_shader := Shader.new()
+	shadow_shader.code = \
+		"shader_type spatial;\n" + \
+		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
+		"void fragment() {\n" + \
+		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
+		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
+		"\tALBEDO = vec3(0.0);\n" + \
+		"\tALPHA = alpha;\n" + \
+		"}\n"
+	var shadow_mat := ShaderMaterial.new()
+	shadow_mat.shader = shadow_shader
+	shadow.material_override = shadow_mat
+	add_child(shadow)
+	shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 func _load_stage() -> void:
@@ -168,7 +208,9 @@ func _build_snow() -> void:
 
 	snow.preprocess = 5.0
 	snow.position.y = 16.0
-	add_child(snow)
+	# Player-attached, like the field's weather pass — the volume follows
+	# the walker instead of sitting at the room center.
+	player.add_child(snow)
 	# Same kick the weather pass uses: restart after the first frames so the
 	# preprocess runs against settled transforms and snow appears mid-fall.
 	await get_tree().process_frame
