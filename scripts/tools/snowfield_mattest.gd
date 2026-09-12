@@ -155,7 +155,7 @@ func _apply_texture_fixes(root: Node) -> void:
 func _apply_fix_pass(node: Node, fixes: Dictionary) -> void:
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
-		for i in range(mi.get_surface_override_material_count()):
+		for i in range(SmoothNormals._surface_count(mi)):
 			var mat := mi.get_active_material(i)
 			if not (mat is StandardMaterial3D):
 				continue
@@ -332,7 +332,7 @@ func _dump_pass(node: Node, lines: Array[String]) -> Array:
 		var has_normals := false
 		if mesh is ArrayMesh and mesh.get_surface_count() > 0:
 			has_normals = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] != null
-		for i in range(mi.get_surface_override_material_count()):
+		for i in range(SmoothNormals._surface_count(mi)):
 			var mat := mi.get_active_material(i)
 			if mat is ShaderMaterial:
 				shader_count += 1

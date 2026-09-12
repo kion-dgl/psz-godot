@@ -211,7 +211,7 @@ static func make_lit(root: Node) -> int:
 	if root is MeshInstance3D:
 		var mi := root as MeshInstance3D
 		var changed := false
-		for i in range(mi.get_surface_override_material_count()):
+		for i in range(_surface_count(mi)):
 			var mat := mi.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std := mat as StandardMaterial3D
@@ -240,7 +240,7 @@ static func strip_vertex_albedo(root: Node) -> int:
 	if root is MeshInstance3D:
 		var mi := root as MeshInstance3D
 		var changed := false
-		for i in range(mi.get_surface_override_material_count()):
+		for i in range(_surface_count(mi)):
 			var mat := mi.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std := mat as StandardMaterial3D
@@ -267,3 +267,12 @@ static func strip_vertex_albedo(root: Node) -> int:
 	for child in root.get_children():
 		touched += strip_vertex_albedo(child)
 	return touched
+
+## Iterate MESH surface count, not the override array — overrides only
+## exist for surfaces some pass has already touched, so the override count
+## silently skips every untouched surface (the planks bug: strips and
+## make_lit never visited surfaces past the texture-fix overrides).
+static func _surface_count(mi: MeshInstance3D) -> int:
+	if mi.mesh is ArrayMesh:
+		return (mi.mesh as ArrayMesh).get_surface_count()
+	return mi.get_surface_override_material_count()
