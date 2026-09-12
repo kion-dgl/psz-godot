@@ -17,6 +17,7 @@ const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const GLOBAL_FIXES := "res://data/stage_configs/global-texture-fixes.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
+const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 
 const PLAYER_SPAWN := Vector3(0, 1.5, 6)
 
@@ -191,6 +192,10 @@ func _spawn_player(pos: Vector3) -> void:
 	player.spawn_position = pos
 	SmoothNormals.ensure(player, 2)
 	SmoothNormals.make_lit(player)
+	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
+	add_child(orbit_camera)
+	orbit_camera.set_target(player)
+	orbit_camera.camera_rotation = PI
 
 
 func _spawn_snow() -> void:
