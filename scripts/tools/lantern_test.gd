@@ -72,10 +72,16 @@ func _build_environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = NIGHT_AMBIENT
 	env.ambient_light_energy = NIGHT_AMBIENT_ENERGY
-	# Without a tone mapper, HDR light above 1.0 clips to saturated color —
-	# the "whole character goes bright orange" blowout. ACES rolls highlights
-	# off so nearby lights read as soft falloff instead.
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	# Tone mapping research (docs/tutorials/3d/environment_and_post_processing):
+	# - Linear clips brights (the original "whole character goes orange").
+	# - tonemap_white defaults to 1.0 — anything above 1.0 saturates hard;
+	#   photoreal setups use 6–8.
+	# - ACES in Godot has a known gamma bug (#87251: dark mids, oversaturated
+	#   highlights — the "straight line" crunchy terminator).
+	# - AgX preserves hue as values brighten (white point fixed at 16.29) —
+	#   the right mapper for saturated lantern light that must roll off, not
+	#   clip. Desktop renderer only.
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
 	env.tonemap_exposure = 1.0
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
