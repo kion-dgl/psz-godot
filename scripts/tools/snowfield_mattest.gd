@@ -199,6 +199,7 @@ func _load_floor_collision() -> void:
 		return
 	var floor_root := (load(FLOOR_GLB) as PackedScene).instantiate() as Node3D
 	add_child(floor_root)
+	floor_root.visible = false  # collision only — it covers the real floor
 	if MapCollisionBuilder.has_static_body(floor_root):
 		MapCollisionBuilder.setup_map_collision(floor_root)
 	else:

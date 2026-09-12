@@ -94,7 +94,7 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
-var _night_bake_mix := 0.1  # Snowfield-night COLOR_0 neutralization (#646)
+var _night_bake_mix := 1.0  # Snowfield-night COLOR_0 neutralization (#646) — full white
 
 # Wave spawning
 var _current_wave: int = 1
@@ -286,11 +286,9 @@ func _ready() -> void:
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
 	# #646: Godot imports these unlit materials as UNSHADED (the bake IS
-	# the whole look). For the always-night snowfield, force per-pixel
-	# shading so the dynamic rig drives lighting, with the authored bake
-	# neutralized 10% toward white — the blend dialed in via
-	# scenes/tools/snowfield_mattest.tscn (mix 0.1 keeps the DS art while
-	# smoothing its harshest baked contrast).
+	# the whole look). For the always-night snowfield: neutralize COLOR_0
+	# fully to white — the stated objective is NO baked-in lighting — and
+	# force per-pixel shading so the dynamic rig drives everything.
 	if _is_snowfield_night_stage(stage_id):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
@@ -314,6 +312,12 @@ func _ready() -> void:
 			var floor_root := floor_scene.instantiate() as Node3D
 			floor_root.name = "FloorCollision"
 			add_child(floor_root)
+			# Collision only — never render. The floor GLB is a texture-less,
+			# unshaded shell at the walkable height; visible, it sat ON TOP of
+			# the room's real floor surfaces and ignored every light (the
+			# 'ground not affected by light' playtest). Physics is unaffected
+			# by visibility.
+			floor_root.visible = false
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
