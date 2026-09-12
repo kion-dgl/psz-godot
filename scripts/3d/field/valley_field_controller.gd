@@ -202,7 +202,12 @@ func _ready() -> void:
 		# sun-at-night and keep the single moonlight fill — the balance the
 		# lantern test scene proved out.
 		if _is_snowfield_night_stage(initial_stage_id):
+			# White strategy (#646): rooms run texture-only albedo, so the
+			# bake-tuned energies saturate — the moon-only rig at the white
+			# balance proven in scenes/tools/snowfield_mattest.tscn.
 			_dir_light.light_energy = 0.0
+			_world_env.environment.ambient_light_energy = 0.35
+			_moonlight.light_energy = 0.4
 	else:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 

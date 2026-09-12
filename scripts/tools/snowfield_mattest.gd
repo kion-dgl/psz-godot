@@ -119,6 +119,11 @@ func _build_environment() -> void:
 	TimeManager.apply_to_scene(_env, _sky_mat, _dir_light, _moonlight)
 	TimeManager.current_hour = 10.0
 	_dir_light.light_energy = 0.0  # snowfield pin: single moonlight fill
+	# White-mode baseline (#646): with vertex albedo stripped, bright
+	# textures saturate under the bake-tuned energies. Approved white
+	# balance starts lower; tune live with [ and -/=.
+	_env.ambient_light_energy = 0.35
+	_moonlight.light_energy = 0.4
 	print("[MatTest] env: ambient src=%d color=%s energy=%.2f | sun=%.2f moon=%.2f vis=%s" % [
 		_env.ambient_light_source, _env.ambient_light_color, _env.ambient_light_energy,
 		_dir_light.light_energy, _moonlight.light_energy, _moonlight.visible])

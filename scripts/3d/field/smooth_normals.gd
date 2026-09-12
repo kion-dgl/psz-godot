@@ -90,10 +90,12 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 		for seed_tri in range(tri_count):
 			if visited.has(seed_tri):
 				continue
+			var component: Array = []
 			var queue: Array = [seed_tri]
 			visited[seed_tri] = true
 			while not queue.is_empty():
 				var t: int = queue.pop_front()
+				component.append(t)
 				for e in (tri_edges[t] as Array):
 					var ek := _edge_key(e[0], e[1])
 					var tris_on_edge: Array = edge_tris[ek]
@@ -114,6 +116,30 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 					flip_flags[other] = flip_flags[t] if (mine_forward != other_forward) else (1 - flip_flags[t])
 					visited[other] = true
 					queue.append(other)
+			# Global orientation for the component: disconnected islands
+			# (separate boards, props) can be consistently wound yet globally
+			# backwards — normals into the surface, forever unlit. Point the
+			# island's normals away from its own centroid.
+			var centroid := Vector3.ZERO
+			var vert_count := 0
+			var seen_verts := {}
+			for t in component:
+				for vi in _tri_indices(idx, t):
+					if not seen_verts.has(vi):
+						seen_verts[vi] = true
+						centroid += verts[vi]
+						vert_count += 1
+			if vert_count > 0:
+				centroid /= float(vert_count)
+				var alignment := 0.0
+				for t in component:
+					var tri := _tri_indices(idx, t)
+					var fn := (verts[tri[1]] - verts[tri[0]]).cross(verts[tri[2]] - verts[tri[0]])
+					var fc := (verts[tri[0]] + verts[tri[1]] + verts[tri[2]]) / 3.0
+					alignment += fn.dot(fc - centroid)
+				if alignment < 0.0:
+					for t in component:
+						flip_flags[t] = 1 - flip_flags[t]
 		for t in range(tri_count):
 			var a: int = t * 3 if idx.size() == 0 else idx[t * 3]
 			var b: int = t * 3 + 1 if idx.size() == 0 else idx[t * 3 + 1]
@@ -289,3 +315,8 @@ static func _active_material(mi: MeshInstance3D, i: int) -> Material:
 	if mi.mesh is ArrayMesh:
 		return (mi.mesh as ArrayMesh).surface_get_material(i)
 	return null
+
+static func _tri_indices(idx: PackedInt32Array, t: int) -> Array:
+	if idx.size() == 0:
+		return [t * 3, t * 3 + 1, t * 3 + 2]
+	return [idx[t * 3], idx[t * 3 + 1], idx[t * 3 + 2]]
