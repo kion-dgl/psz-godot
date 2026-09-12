@@ -165,11 +165,12 @@ static func make_lit(root: Node) -> int:
 
 
 ## Room albedo = texture × COLOR_0, and the snowfield bake is mostly dark
-## (median luminance 0.19 — authored for another time of day). Under night
-## lighting that multiplies to pitch black no matter how much light lands.
-## For the always-night snowfield (#646 objective: COLOR_0 white), strip
-## the vertex-color modulation so the albedo is the texture alone and the
-## dynamic rig owns shading. Returns the number of meshes touched.
+## (median luminance 0.19 — authored for another time of day). Worse: Godot
+## imports these unlit glTF materials as SHADING_MODE_UNSHADED, so the room
+## never responds to light at all — the bake IS the entire look. For the
+## dynamic-rig strategy (#646: no baked-in lighting), strip the vertex-color
+## modulation AND force per-pixel shading, so albedo = texture and the rig
+## owns everything. Returns the number of meshes touched.
 static func strip_vertex_albedo(root: Node) -> int:
 	var touched := 0
 	if root is MeshInstance3D:
@@ -179,12 +180,12 @@ static func strip_vertex_albedo(root: Node) -> int:
 			var mat := mi.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std := mat as StandardMaterial3D
-				if not std.vertex_color_use_as_albedo:
-					continue
-				var dup := std.duplicate() as StandardMaterial3D
-				dup.vertex_color_use_as_albedo = false
-				mi.set_surface_override_material(i, dup)
-				changed = true
+				if std.vertex_color_use_as_albedo and std.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+					var dup := std.duplicate() as StandardMaterial3D
+					dup.vertex_color_use_as_albedo = false
+					dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+					mi.set_surface_override_material(i, dup)
+					changed = true
 			elif mat is ShaderMaterial:
 				# Mirror-wrap surfaces (snow ground among them) run
 				# texture_fix_shader, whose ALBEDO multiplies COLOR.rgb.

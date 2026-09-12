@@ -71,8 +71,12 @@ func _input(event: InputEvent) -> void:
 			KEY_P:
 				_dump_materials()
 			KEY_T:
-				_white = not _white
-				_apply_strategy()
+				_white = true
+				var map := get_node_or_null("Map")
+				if map:
+					var s := SmoothNormals.strip_vertex_albedo(map)
+					print("[MatTest] white strategy: %d meshes stripped + forced lit (R reloads to bake)" % s)
+				_update_status()
 			KEY_R:
 				get_tree().reload_current_scene()
 
@@ -286,31 +290,6 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 
 ## Dump every room surface's material state — the ground truth for
 ## debugging "white/unlit": class, shader, texture bound, vertex flags.
-## Strategy toggle: bake (COLOR_0 × dynamic light — the approved look) vs
-## white (rig owns shading). Flips the flag on the CURRENT active materials,
-## so it round-trips without duplicating again.
-func _apply_strategy() -> void:
-	var map := get_node_or_null("Map")
-	if map:
-		_strategy_pass(map)
-	_update_status()
-
-
-func _strategy_pass(node: Node) -> void:
-	if node is MeshInstance3D:
-		var mi := node as MeshInstance3D
-		for i in range(mi.get_surface_override_material_count()):
-			var mat := mi.get_active_material(i)
-			if mat is StandardMaterial3D:
-				(mat as StandardMaterial3D).vertex_color_use_as_albedo = not _white
-			elif mat is ShaderMaterial:
-				var sm := mat as ShaderMaterial
-				if sm.shader and sm.shader.has_uniform("use_vertex_color"):
-					sm.set_shader_parameter("use_vertex_color", not _white)
-	for child in node.get_children():
-		_strategy_pass(child)
-
-
 func _build_status_label() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 50
