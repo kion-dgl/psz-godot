@@ -212,7 +212,7 @@ static func make_lit(root: Node) -> int:
 		var mi := root as MeshInstance3D
 		var changed := false
 		for i in range(_surface_count(mi)):
-			var mat := mi.get_active_material(i)
+			var mat := _active_material(mi, i)
 			if mat is StandardMaterial3D:
 				var std := mat as StandardMaterial3D
 				if std.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
@@ -241,7 +241,7 @@ static func strip_vertex_albedo(root: Node) -> int:
 		var mi := root as MeshInstance3D
 		var changed := false
 		for i in range(_surface_count(mi)):
-			var mat := mi.get_active_material(i)
+			var mat := _active_material(mi, i)
 			if mat is StandardMaterial3D:
 				var std := mat as StandardMaterial3D
 				if std.vertex_color_use_as_albedo and std.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
@@ -276,3 +276,16 @@ static func _surface_count(mi: MeshInstance3D) -> int:
 	if mi.mesh is ArrayMesh:
 		return (mi.mesh as ArrayMesh).get_surface_count()
 	return mi.get_surface_override_material_count()
+
+## The material actually used by surface i — the override when set, else the
+## mesh's own surface material. NB: get_active_material() bounds-checks
+## against the OVERRIDE array, which only grows as overrides are set, so it
+## silently skips untouched surfaces past its length (the one-surface
+## strip bug).
+static func _active_material(mi: MeshInstance3D, i: int) -> Material:
+	var override_mat := mi.get_surface_override_material(i)
+	if override_mat != null:
+		return override_mat
+	if mi.mesh is ArrayMesh:
+		return (mi.mesh as ArrayMesh).surface_get_material(i)
+	return null

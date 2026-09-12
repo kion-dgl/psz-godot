@@ -156,7 +156,7 @@ func _apply_fix_pass(node: Node, fixes: Dictionary) -> void:
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		for i in range(SmoothNormals._surface_count(mi)):
-			var mat := mi.get_active_material(i)
+			var mat := SmoothNormals._active_material(mi, i)
 			if not (mat is StandardMaterial3D):
 				continue
 			var std := mat as StandardMaterial3D
@@ -333,7 +333,7 @@ func _dump_pass(node: Node, lines: Array[String]) -> Array:
 		if mesh is ArrayMesh and mesh.get_surface_count() > 0:
 			has_normals = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] != null
 		for i in range(SmoothNormals._surface_count(mi)):
-			var mat := mi.get_active_material(i)
+			var mat := SmoothNormals._active_material(mi, i)
 			if mat is ShaderMaterial:
 				shader_count += 1
 				var sm := mat as ShaderMaterial
