@@ -70,6 +70,11 @@ func _build_environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = NIGHT_AMBIENT
 	env.ambient_light_energy = NIGHT_AMBIENT_ENERGY
+	# Without a tone mapper, HDR light above 1.0 clips to saturated color —
+	# the "whole character goes bright orange" blowout. ACES rolls highlights
+	# off so nearby lights read as soft falloff instead.
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.0
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)
@@ -131,29 +136,6 @@ func _spawn_player(pos: Vector3) -> void:
 	add_child(orbit_camera)
 	orbit_camera.set_target(player)
 	orbit_camera.camera_rotation = PI
-
-	var shadow := MeshInstance3D.new()
-	shadow.name = "BlobShadow"
-	var quad := QuadMesh.new()
-	quad.size = Vector2(1.8, 1.8)
-	quad.orientation = PlaneMesh.FACE_Y
-	shadow.mesh = quad
-	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var shadow_shader := Shader.new()
-	shadow_shader.code = \
-		"shader_type spatial;\n" + \
-		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
-		"void fragment() {\n" + \
-		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
-		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
-		"\tALBEDO = vec3(0.0);\n" + \
-		"\tALPHA = alpha;\n" + \
-		"}\n"
-	var shadow_mat := ShaderMaterial.new()
-	shadow_mat.shader = shadow_shader
-	shadow.material_override = shadow_mat
-	add_child(shadow)
-	shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 func _load_stage() -> void:
@@ -331,7 +313,9 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		light.light_color = color
 		light.light_energy = light_intensity * 8.0
 		light.omni_range = light_radius * 2.0
-		light.omni_attenuation = 0.8
+		# 1.0 = true inverse-square falloff — the weather pass's 0.8 decays
+		# slower than physical and blasts anything that walks close.
+		light.omni_attenuation = 1.0
 		root.add_child(light)
 
 
