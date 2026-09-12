@@ -387,6 +387,13 @@ func _setup_model() -> void:
 	else:
 		push_warning("[Enemy] No AnimationPlayer found in model")
 
+	# DS enemy GLBs ship unlit with no normals (like every stage model):
+	# generate smoothed normals and force per-pixel shading so dynamic
+	# lights — lantern pools, moonlight — reach them (#646). Before the
+	# material cache so status tints operate on the lit overrides.
+	SmoothNormals.ensure(model, 2)
+	SmoothNormals.make_lit(model)
+
 	# Cache material references for status effect tinting
 	_cache_model_materials()
 

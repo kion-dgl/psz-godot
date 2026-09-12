@@ -261,6 +261,10 @@ func _ready() -> void:
 	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
 	add_child(_map_root)
+	# The GLBs ship no normals and Godot doesn't generate them — without
+	# this every surface shades with a constant normal (flat lighting, no
+	# per-side diffuse). Same for the player below (#646).
+	SmoothNormals.ensure(_map_root, 2)
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
 
@@ -720,6 +724,10 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	player.add_to_group("player")
 	add_child(player)
 	player.global_position = pos
+	# Player model GLB is unlit + normal-less like the rooms — lit materials
+	# and smoothed normals so lights reach it (#646).
+	SmoothNormals.ensure(player, 2)
+	SmoothNormals.make_lit(player)
 	# HP-zero defeat (spec /states/player-death): raise the "You were defeated"
 	# screen when this player dies. CONNECT_ONE_SHOT — a fresh player is spawned
 	# per cell, so the signal only ever fires once on this instance anyway, but

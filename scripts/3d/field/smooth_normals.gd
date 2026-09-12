@@ -137,3 +137,28 @@ static func _link(neighbors: Array, a: int, b: int) -> void:
 		neighbors[a] = []
 	if not (neighbors[a] as Array).has(b):
 		(neighbors[a] as Array).append(b)
+
+
+## DS GLBs import unshaded (KHR_materials_unlit) — lights can't touch them.
+## Duplicate each surface material into a per-pixel-shaded override so
+## dynamic light reaches the mesh. Returns the number of meshes touched.
+static func make_lit(root: Node) -> int:
+	var touched := 0
+	if root is MeshInstance3D:
+		var mi := root as MeshInstance3D
+		var changed := false
+		for i in range(mi.get_surface_override_material_count()):
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if std.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+					continue
+				var dup := std.duplicate() as StandardMaterial3D
+				dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+				mi.set_surface_override_material(i, dup)
+				changed = true
+		if changed:
+			touched += 1
+	for child in root.get_children():
+		touched += make_lit(child)
+	return touched
