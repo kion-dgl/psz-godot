@@ -116,10 +116,13 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 					flip_flags[other] = flip_flags[t] if (mine_forward != other_forward) else (1 - flip_flags[t])
 					visited[other] = true
 					queue.append(other)
-			# Global orientation for the component: disconnected islands
-			# (separate boards, props) can be consistently wound yet globally
-			# backwards — normals into the surface, forever unlit. Point the
-			# island's normals away from its own centroid.
+			# Global orientation for the component: islands can be
+			# consistently wound yet globally backwards — normals into the
+			# surface, forever unlit. Closed/curved islands: point normals
+			# away from the island's own centroid. FLAT islands (walkway
+			# planks, sheets) degenerate — the centroid lies in-plane, the
+			# alignment dot is ~0 — so they use frame cues instead: face UP
+			# if roughly horizontal, face the room center if vertical.
 			var centroid := Vector3.ZERO
 			var vert_count := 0
 			var seen_verts := {}
@@ -131,13 +134,34 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 						vert_count += 1
 			if vert_count > 0:
 				centroid /= float(vert_count)
-				var alignment := 0.0
+				var sum_face := Vector3.ZERO
+				var total_area := 0.0
 				for t in component:
 					var tri := _tri_indices(idx, t)
 					var fn := (verts[tri[1]] - verts[tri[0]]).cross(verts[tri[2]] - verts[tri[0]])
-					var fc := (verts[tri[0]] + verts[tri[1]] + verts[tri[2]]) / 3.0
-					alignment += fn.dot(fc - centroid)
-				if alignment < 0.0:
+					if flip_flags[t]:
+						fn = -fn
+					sum_face += fn
+					total_area += fn.length()
+				var flip_island := false
+				if total_area > 1e-9 and sum_face.length() > 0.95 * total_area:
+					# Flat island — all faces nearly parallel.
+					var n := sum_face.normalized()
+					if absf(n.y) > 0.7:
+						flip_island = n.y < 0.0
+					else:
+						flip_island = n.dot(-centroid) < 0.0
+				else:
+					var alignment := 0.0
+					for t in component:
+						var tri := _tri_indices(idx, t)
+						var fn := (verts[tri[1]] - verts[tri[0]]).cross(verts[tri[2]] - verts[tri[0]])
+						if flip_flags[t]:
+							fn = -fn
+						var fc := (verts[tri[0]] + verts[tri[1]] + verts[tri[2]]) / 3.0
+						alignment += fn.dot(fc - centroid)
+					flip_island = alignment < 0.0
+				if flip_island:
 					for t in component:
 						flip_flags[t] = 1 - flip_flags[t]
 		for t in range(tri_count):
