@@ -946,6 +946,7 @@ export default function UnifiedStageEditor() {
             }}
             onAutoDetectLanterns={handleAutoDetectLanterns}
             lanternTweakable={lanternEffects.length > 0}
+            onEditLanternHandle={setLanternEditId}
           />
         );
       case 'waypoints':

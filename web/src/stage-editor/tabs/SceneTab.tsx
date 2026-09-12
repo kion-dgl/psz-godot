@@ -194,7 +194,7 @@ export function LanternHandles({
             onEdit(l.id === editId ? null : l.id);
           }}
         >
-          <sphereGeometry args={[0.28, 8, 8]} />
+          <sphereGeometry args={[0.35, 8, 8]} />
           <meshBasicMaterial color={l.id === editId ? '#ffdd55' : '#7fd4ff'} toneMapped={false} />
         </mesh>
       ))}
@@ -241,6 +241,8 @@ interface SceneTabProps {
   onAutoDetectLanterns: () => number;
   /** Whether draggable lantern tweak handles are available. */
   lanternTweakable: boolean;
+  /** Selects a lantern's drag handle (its gizmo) from the effect list. */
+  onEditLanternHandle: (id: string | null) => void;
 }
 
 export default function SceneTab({
@@ -248,7 +250,7 @@ export default function SceneTab({
   placementMode, onSetPlacementMode, placementPreset, onSetPlacementPreset,
   selectedEffectId, onSelectEffect,
   mapId, indoor, onIndoorChange,
-  repositionEffectId, onStartReposition, onAutoDetectLanterns, lanternTweakable,
+  repositionEffectId, onStartReposition, onAutoDetectLanterns, lanternTweakable, onEditLanternHandle,
 }: SceneTabProps) {
   const [copied, setCopied] = useState(false);
   const [detectResult, setDetectResult] = useState<string | null>(null);
@@ -434,17 +436,32 @@ export default function SceneTab({
                   {p.preset} ({p.position[0].toFixed(1)}, {p.position[1].toFixed(1)}, {p.position[2].toFixed(1)})
                 </span>
                 <div style={{ display: 'flex', gap: '3px' }}>
-                  <button
-                    onClick={() => onStartReposition(p.id)}
-                    style={{
-                      ...removeBtnStyle,
-                      background: repositionEffectId === p.id ? '#2a3a5a' : '#222244',
-                      border: `1px solid ${repositionEffectId === p.id ? '#4a9eff' : '#444466'}`,
-                      color: repositionEffectId === p.id ? '#4a9eff' : '#8888aa',
-                    }}
-                  >
-                    {repositionEffectId === p.id ? 'Click scene...' : 'Move'}
-                  </button>
+                  {p.preset === 'lantern' ? (
+                    <button
+                      onClick={() => onEditLanternHandle(p.id)}
+                      style={{
+                        ...removeBtnStyle,
+                        background: '#2a2a18',
+                        border: '1px solid #6a5a2a',
+                        color: '#e8b87a',
+                      }}
+                      title="Selects this lantern's drag handle in the 3D view — drag the XZ arrows onto the lantern head"
+                    >
+                      drag
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onStartReposition(p.id)}
+                      style={{
+                        ...removeBtnStyle,
+                        background: repositionEffectId === p.id ? '#2a3a5a' : '#222244',
+                        border: `1px solid ${repositionEffectId === p.id ? '#4a9eff' : '#444466'}`,
+                        color: repositionEffectId === p.id ? '#4a9eff' : '#8888aa',
+                      }}
+                    >
+                      {repositionEffectId === p.id ? 'Click scene...' : 'Move'}
+                    </button>
+                  )}
                   <button onClick={() => remove(p.id)} style={removeBtnStyle}>X</button>
                 </div>
               </div>

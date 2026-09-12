@@ -114,7 +114,7 @@ export function detectLanterns(
     .filter((r) => r.n >= minVerts && r.top <= maxTop)
     .map((r) => new THREE.Vector3(
       (r.sx / r.cells) * cell,
-      r.top - 0.5,
+      r.top - 0.8, // the flame sits below the lantern's top cap — 4.3 on the 5.1-tall posts
       (r.sz / r.cells) * cell,
     ));
 }
