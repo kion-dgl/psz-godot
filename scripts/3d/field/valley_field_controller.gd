@@ -197,6 +197,12 @@ func _ready() -> void:
 			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 		TimeManager.current_hour = saved_hour
+		# The night preset's energies were tuned against the dark bake:
+		# with white albedo they saturate the snow to flat white. Drop the
+		# sun-at-night and keep the single moonlight fill — the balance the
+		# lantern test scene proved out.
+		if _is_snowfield_night_stage(initial_stage_id):
+			_dir_light.light_energy = 0.0
 	else:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
