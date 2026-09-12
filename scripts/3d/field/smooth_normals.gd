@@ -62,13 +62,70 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 				pos_to_rep[key] = i
 		var neighbors: Array = []
 		neighbors.resize(verts.size())
+		# Winding consistency: two triangles sharing an edge (by position)
+		# must traverse it in OPPOSITE directions. BFS-propagate flip flags
+		# from that rule; backwards-wound triangles then contribute negated
+		# face normals below instead of normals pointing into the surface.
+		var flip_flags := PackedByteArray()
+		flip_flags.resize(tri_count)
+		var edge_tris := {}
+		var tri_edges: Array = []
+		tri_edges.resize(tri_count)
+		for t in range(tri_count):
+			var va: int = t * 3 if idx.size() == 0 else idx[t * 3]
+			var vb: int = t * 3 + 1 if idx.size() == 0 else idx[t * 3 + 1]
+			var vc: int = t * 3 + 2 if idx.size() == 0 else idx[t * 3 + 2]
+			var edges := [
+				[_pos_key(verts[va]), _pos_key(verts[vb])],
+				[_pos_key(verts[vb]), _pos_key(verts[vc])],
+				[_pos_key(verts[vc]), _pos_key(verts[va])],
+			]
+			tri_edges[t] = edges
+			for e in edges:
+				var ek := _edge_key(e[0], e[1])
+				if not edge_tris.has(ek):
+					edge_tris[ek] = []
+				(edge_tris[ek] as Array).append(t)
+		var visited := {}
+		for seed_tri in range(tri_count):
+			if visited.has(seed_tri):
+				continue
+			var queue: Array = [seed_tri]
+			visited[seed_tri] = true
+			while not queue.is_empty():
+				var t: int = queue.pop_front()
+				for e in (tri_edges[t] as Array):
+					var ek := _edge_key(e[0], e[1])
+					var tris_on_edge: Array = edge_tris[ek]
+					if tris_on_edge.size() != 2:
+						continue
+					var other: int = tris_on_edge[0] if tris_on_edge[1] == t else tris_on_edge[1]
+					if visited.has(other):
+						continue
+					# Same-direction traversal of the shared edge → opposite
+					# flip state; opposite traversal → same flip state.
+					var mine_forward: bool = e[0] < e[1]
+					var other_edge: Array = []
+					for oe in (tri_edges[other] as Array):
+						if _edge_key(oe[0], oe[1]) == ek:
+							other_edge = oe
+							break
+					var other_forward: bool = other_edge[0] < other_edge[1]
+					flip_flags[other] = flip_flags[t] if (mine_forward != other_forward) else (1 - flip_flags[t])
+					visited[other] = true
+					queue.append(other)
 		for t in range(tri_count):
 			var a: int = t * 3 if idx.size() == 0 else idx[t * 3]
 			var b: int = t * 3 + 1 if idx.size() == 0 else idx[t * 3 + 1]
 			var c: int = t * 3 + 2 if idx.size() == 0 else idx[t * 3 + 2]
 			# Unnormalized cross = area-weighted accumulation, so big faces
-			# dominate their vertices' normals — smooth shading.
+			# dominate their vertices' normals — smooth shading. The DS meshes
+			# wind some triangles backwards (why several materials are
+			# double-sided); the consistency pass flips those faces first so
+			# their normals don't point into the surface.
 			var face := (verts[b] - verts[a]).cross(verts[c] - verts[a])
+			if flip_flags[t]:
+				face = -face
 			out[a] += face
 			out[b] += face
 			out[c] += face
@@ -128,6 +185,13 @@ static func _pos_key(v: Vector3) -> Vector3i:
 		int(round(v.x * 4096.0)),
 		int(round(v.y * 4096.0)),
 		int(round(v.z * 4096.0)))
+
+
+static func _edge_key(a: Vector3i, b: Vector3i) -> String:
+	# Order-independent key for an edge between two positions.
+	var lo := a if a < b else b
+	var hi := b if a < b else a
+	return "%d,%d,%d|%d,%d,%d" % [lo.x, lo.y, lo.z, hi.x, hi.y, hi.z]
 
 
 static func _link(neighbors: Array, a: int, b: int) -> void:
