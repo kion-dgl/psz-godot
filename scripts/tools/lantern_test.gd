@@ -72,17 +72,19 @@ func _build_environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = NIGHT_AMBIENT
 	env.ambient_light_energy = NIGHT_AMBIENT_ENERGY
-	# Tone mapping research (docs/tutorials/3d/environment_and_post_processing):
-	# - Linear clips brights (the original "whole character goes orange").
-	# - tonemap_white defaults to 1.0 — anything above 1.0 saturates hard;
-	#   photoreal setups use 6–8.
-	# - ACES in Godot has a known gamma bug (#87251: dark mids, oversaturated
-	#   highlights — the "straight line" crunchy terminator).
-	# - AgX preserves hue as values brighten (white point fixed at 16.29) —
-	#   the right mapper for saturated lantern light that must roll off, not
-	#   clip. Desktop renderer only.
-	env.tonemap_mode = Environment.TONE_MAPPER_AGX
-	env.tonemap_exposure = 1.0
+	# Tone mapping research:
+	# - Linear clips brights; ACES has a gamma bug (#87251: dark mids,
+	#   oversaturated highlights, crunchy terminator).
+	# - Plain AgX crushes low values — moon+ambient fell to apparent black,
+	#   leaving the lantern as the only visible light ("one light at a
+	#   time"). Blender pairs AgX with 8–10 look controls; Godot ships none
+	#   (godot-proposals #7545).
+	# - The docs' photoreal recipe: FILMIC with tonemap_white 6–8 — film-like
+	#   rolloff without ACES's bug, highlights desaturate toward the light
+	#   tint, mids survive. Exposure lifted for the night baseline.
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_white = 6.0
+	env.tonemap_exposure = 1.2
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)
