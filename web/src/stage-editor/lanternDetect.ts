@@ -17,11 +17,12 @@ import * as THREE from 'three';
  * (chains sag below it), merge adjacent cells, and each surviving region is
  * one lantern.
  *
- * MAX_TOP then drops the tree population: across all snowfield rooms the
- * detected tops split cleanly into path lamp posts at 5.1–6.1 units and
- * ceiling-height snow pines at 29.5–31.6 (na1 alone carries 20 of those).
- * Keep the posts, lose the forest. Measured: ic1→2, sa1→1, ga1→4, most
- * rooms 2–5, snowfield B rooms 0.
+ * Trees are separated by REGION VERTEX COUNT, not height: real lanterns
+ * are chunky (42–53 verts whether short 5.1u posts or tall 29.5u posts —
+ * lc2/na1/nc2 carry ONLY the tall variant), while tree clusters run
+ * 12–23 verts. minVerts=40 keeps the lanterns and loses the forest.
+ * Measured against the original: lc2→4, nc2→4, na1→2 (tall), ic1→2,
+ * sa1→1, ga1→4 (short), most short-post rooms 2–5, snowfield B 0.
  *
  * Positions are mesh-local on purpose: the node transform is identity and
  * the "skeleton" is one bone with out-of-range joint indices (a degenerate
@@ -38,8 +39,8 @@ export interface LanternDetectParams {
 export const DEFAULT_LANTERN_PARAMS: LanternDetectParams = {
   cell: 2,
   minHeight: 2.2,
-  maxTop: 10,
-  minVerts: 12,
+  maxTop: 1e9,
+  minVerts: 40,
 };
 
 export function detectLanterns(
@@ -111,7 +112,7 @@ export function detectLanterns(
   }
 
   return [...regions.values()]
-    .filter((r) => r.n >= minVerts && r.top <= maxTop)
+    .filter((r) => r.n >= minVerts)
     .map((r) => new THREE.Vector3(
       (r.sx / r.cells) * cell,
       r.top - 1.0, // the flame sits below the lantern's top cap — 4.1 on the 5.1-tall posts

@@ -23167,6 +23167,92 @@
         "wp_1780456455333_f9wbzd",
         "wp_1780456389334_4fqa6w"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          8.6,
+          28.5,
+          -3.4
+        ],
+        "id": "placed_lantern_0_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -21.0,
+          28.5,
+          -21.0
+        ],
+        "id": "placed_lantern_1_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -29.6,
+          28.5,
+          14.4
+        ],
+        "id": "placed_lantern_2_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          21.7,
+          28.5,
+          23.3
+        ],
+        "id": "placed_lantern_3_tall"
+      }
     ]
   },
   "s03a_na1": {
@@ -23364,6 +23450,50 @@
         "wp_1780456489467_cwkl2d",
         "wp_1780456487983_eye0aj"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.4,
+          29.8,
+          18.7
+        ],
+        "id": "placed_lantern_0_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          8.3,
+          29.8,
+          17.7
+        ],
+        "id": "placed_lantern_1_tall"
+      }
     ]
   },
   "s03a_nb2": {
@@ -23847,6 +23977,92 @@
         "wp_1780456634065_gqjnd0",
         "wp_spawn_0_1780456631732"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -14.4,
+          28.5,
+          -29.6
+        ],
+        "id": "placed_lantern_0_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          3.4,
+          28.5,
+          8.6
+        ],
+        "id": "placed_lantern_1_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          21.0,
+          28.5,
+          -21.0
+        ],
+        "id": "placed_lantern_2_tall"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -23.3,
+          28.5,
+          21.7
+        ],
+        "id": "placed_lantern_3_tall"
+      }
     ]
   },
   "s03a_sa1": {
