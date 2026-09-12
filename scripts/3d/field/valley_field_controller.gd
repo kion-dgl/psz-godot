@@ -94,7 +94,7 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
-var _night_bake_mix := 1.0  # Snowfield-night COLOR_0 neutralization (#646) — full white
+var _night_bake_mix := 0.05  # Snowfield-night COLOR_0 mix (#646) — locked from the 2026-09-12 in-game read-out: bake-dominant
 
 # Wave spawning
 var _current_wave: int = 1
@@ -186,34 +186,6 @@ func _ready() -> void:
 	_moonlight.visible = false
 	add_child(_moonlight)
 
-	# Indoor stages take a one-shot daylight apply and then opt out of the
-	# per-frame _process update — interior lighting shouldn't track the
-	# day/night cycle. Save and restore current_hour so the world clock
-	# isn't affected. Snowfield A (#646) pins the same way but to NIGHT —
-	# its lantern-lit ambience only reads after dark.
-	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-	if _is_indoor_stage(initial_stage_id) or _is_snowfield_night_stage(initial_stage_id):
-		var saved_hour: float = TimeManager.current_hour
-		TimeManager.current_hour = 22.0 if _is_snowfield_night_stage(initial_stage_id) \
-			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
-		TimeManager.current_hour = saved_hour
-		# The night preset's energies were tuned against the dark bake:
-		# with white albedo they saturate the snow to flat white. Drop the
-		# sun-at-night and keep the single moonlight fill — the balance the
-		# lantern test scene proved out.
-		if _is_snowfield_night_stage(initial_stage_id):
-			# Snowfield-night rig (#646), tuned in scenes/tools/
-			# snowfield_mattest.tscn: moon-only fill, the dynamic shadow
-			# source for the player, ambient held low so the bake reads.
-			_dir_light.light_energy = 0.0
-			_world_env.environment.ambient_light_energy = 0.2
-			_moonlight.light_energy = 0.4
-			_moonlight.shadow_enabled = true
-			_moonlight.shadow_blur = 1.0
-	else:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
-
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
 	_spawn_edge = str(data.get("spawn_edge", ""))
@@ -245,6 +217,37 @@ func _ready() -> void:
 
 	# Track visited cells
 	_visited_cells[current_cell_pos] = true
+
+	# Indoor stages take a one-shot daylight apply and then opt out of the
+	# per-frame _process update — interior lighting shouldn't track the
+	# day/night cycle. Save and restore current_hour so the world clock
+	# isn't affected. Snowfield A (#646) pins the same way but to NIGHT —
+	# its lantern-lit ambience only reads after dark. This block must sit
+	# after _current_cell is populated: it originally read an empty cell,
+	# never fired, and the raw world clock painted the field instead (the
+	# 2026-09-12 tuning session ran under a stray sunset apply that way).
+	var initial_stage_id := str(_current_cell.get("stage_id", ""))
+	if _is_indoor_stage(initial_stage_id) or _is_snowfield_night_stage(initial_stage_id):
+		var saved_hour: float = TimeManager.current_hour
+		TimeManager.current_hour = 22.0 if _is_snowfield_night_stage(initial_stage_id) \
+			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		TimeManager.current_hour = saved_hour
+		# The night preset's energies were tuned against the dark bake:
+		# with white albedo they saturate the snow to flat white. Drop the
+		# sun-at-night and keep the single moonlight fill.
+		if _is_snowfield_night_stage(initial_stage_id):
+			# Snowfield-night rig (#646), locked from the 2026-09-12 in-game
+			# P read-out (ambient 0.84, moon 0.13, bake mix 0.05): the bake
+			# carries the ground, COLOR-source ambient lifts it, and the
+			# faint moon is the player's dynamic shadow source.
+			_dir_light.light_energy = 0.0
+			_world_env.environment.ambient_light_energy = 0.84
+			_moonlight.light_energy = 0.13
+			_moonlight.shadow_enabled = true
+			_moonlight.shadow_blur = 1.0
+	else:
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
