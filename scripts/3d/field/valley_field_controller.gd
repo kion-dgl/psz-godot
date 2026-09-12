@@ -94,6 +94,7 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
+var _night_bake_mix := 0.1  # Snowfield-night COLOR_0 neutralization (#646)
 
 # Wave spawning
 var _current_wave: int = 1
@@ -291,7 +292,7 @@ func _ready() -> void:
 	# scenes/tools/snowfield_mattest.tscn (mix 0.1 keeps the DS art while
 	# smoothing its harshest baked contrast).
 	if _is_snowfield_night_stage(stage_id):
-		SmoothNormals.neutralize_vertex_colors(_map_root, 0.1)
+		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
@@ -2736,6 +2737,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_BRACKETRIGHT:
 				_moonlight.light_energy += 0.05
 				_print_night_tuning()
+			KEY_MINUS:
+				_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
+				if _map_root:
+					SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+				_print_night_tuning()
+			KEY_EQUAL:
+				_night_bake_mix = minf(1.0, _night_bake_mix + 0.05)
+				if _map_root:
+					SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+				_print_night_tuning()
 			KEY_P:
 				_print_night_tuning()
 	# Area map (spec /states/area-map): R2 / M toggles the centered overlay.
@@ -2834,8 +2845,8 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
 
 func _print_night_tuning() -> void:
-	var msg := "[SnowfieldNight] ambient %.2f  moon %.2f" % [
-		_world_env.environment.ambient_light_energy, _moonlight.light_energy]
+	var msg := "[SnowfieldNight] ambient %.2f  moon %.2f  bake mix %.2f" % [
+		_world_env.environment.ambient_light_energy, _moonlight.light_energy, _night_bake_mix]
 	if player:
 		var stats := _player_mat_stats(player)
 		msg += " | player: %d per-pixel / %d unshaded, %d/%d meshes with normals" % [
