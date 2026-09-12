@@ -43,6 +43,7 @@ func _ready() -> void:
 	var count := _spawn_effects_from_config()
 	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, UNIFIED_CONFIG])
 	print("[LanternTest] SPACE toggles COLOR_0: baked ⇄ white (currently baked)")
+	print("[LanternTest] player materials forced lit; moonlight casts shadows")
 
 
 func _process(_delta: float) -> void:
@@ -78,7 +79,27 @@ func _build_environment() -> void:
 	moon.light_color = NIGHT_MOON_COLOR
 	moon.light_energy = NIGHT_MOON_ENERGY
 	moon.rotation_degrees = Vector3(-40, 30, 0)
+	# The character and the room geometry cast real shadows (DS rooms ship
+	# SHADOW_CASTING defaults — nothing strips them here).
+	moon.shadow_enabled = true
+	moon.shadow_blur = 1.0
 	add_child(moon)
+
+
+## The player model GLB is KHR_materials_unlit like the rooms — it imports
+## unshaded, so lights can't touch it and the lanterns can't paint it
+## orange. Flip its duplicated materials to per-pixel shading.
+func _make_player_lit(root: Node) -> void:
+	if root is MeshInstance3D:
+		var mesh_inst := root as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+				dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+				mesh_inst.set_surface_override_material(i, dup)
+	for child in root.get_children():
+		_make_player_lit(child)
 
 
 ## Floor collision from the stage's floor GLB, exactly as the field loads it
@@ -104,6 +125,7 @@ func _spawn_player(pos: Vector3) -> void:
 	add_child(player)
 	player.global_position = pos
 	player.spawn_position = pos
+	_make_player_lit(player)
 
 	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
 	add_child(orbit_camera)
