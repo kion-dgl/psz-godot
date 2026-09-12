@@ -188,8 +188,10 @@ static func strip_vertex_albedo(root: Node) -> int:
 			elif mat is ShaderMaterial:
 				# Mirror-wrap surfaces (snow ground among them) run
 				# texture_fix_shader, whose ALBEDO multiplies COLOR.rgb.
+				# NB: get_shader_parameter returns null for unset defaults —
+				# gate on the shader's declared uniforms, not the value.
 				var shader_mat := mat as ShaderMaterial
-				if shader_mat.get_shader_parameter("use_vertex_color") == null:
+				if shader_mat.shader == null or not shader_mat.shader.has_uniform("use_vertex_color"):
 					continue
 				var dup := shader_mat.duplicate() as ShaderMaterial
 				dup.set_shader_parameter("use_vertex_color", false)
