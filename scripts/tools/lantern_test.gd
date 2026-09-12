@@ -31,6 +31,10 @@ const ORBIT_SPEED_DEG := 6.0
 var _camera: Camera3D
 var _orbit_center := Vector3(0, 3, 0)
 var _glow_dot_tex: ImageTexture
+# Per-surface duplicated room materials — flipping vertex_color_use_as_albedo
+# on these never touches the imported shared resources.
+var _room_materials: Array[StandardMaterial3D] = []
+var _vertex_colors_baked := true
 
 
 func _ready() -> void:
@@ -39,6 +43,7 @@ func _ready() -> void:
 	_build_snow()
 	var count := _spawn_effects_from_config()
 	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, UNIFIED_CONFIG])
+	print("[LanternTest] SPACE toggles COLOR_0: baked ⇄ white (currently baked)")
 
 
 func _process(_delta: float) -> void:
@@ -49,6 +54,18 @@ func _process(_delta: float) -> void:
 		_camera.position = _orbit_center + Vector3(
 			cos(angle) * ORBIT_RADIUS, ORBIT_HEIGHT, sin(angle) * ORBIT_RADIUS)
 		_camera.look_at(_orbit_center)
+
+
+## SPACE toggles COLOR_0: the authored bake (vertex_color_use_as_albedo ON —
+## how every field renders today) versus white (OFF — the rig owns shading,
+## the LightingLab's "white" strategy and #646 objective 2).
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+		_vertex_colors_baked = not _vertex_colors_baked
+		for mat in _room_materials:
+			mat.vertex_color_use_as_albedo = _vertex_colors_baked
+		print("[LanternTest] vertex colors: %s" % (
+			"BAKED (authored COLOR_0)" if _vertex_colors_baked else "WHITE (rig owns shading)"))
 
 
 func _build_environment() -> void:
@@ -85,6 +102,23 @@ func _load_stage() -> void:
 	var map_root := packed.instantiate() as Node3D
 	map_root.name = "Map"
 	add_child(map_root)
+	_collect_room_materials(map_root)
+
+
+## Duplicate each surface material into an override so the SPACE toggle can
+## flip vertex_color_use_as_albedo without mutating the imported resource
+## (which is shared across instantiations).
+func _collect_room_materials(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+				mesh_inst.set_surface_override_material(i, dup)
+				_room_materials.append(dup)
+	for child in node.get_children():
+		_collect_room_materials(child)
 
 
 ## Falling snow — the WeatherController snow rig (scripts/3d/field/
@@ -95,7 +129,7 @@ func _load_stage() -> void:
 func _build_snow() -> void:
 	var snow := GPUParticles3D.new()
 	snow.name = "WeatherSnow"
-	snow.amount = 900
+	snow.amount = 450
 	snow.lifetime = 5.0
 	snow.visibility_aabb = AABB(Vector3(-70, -4, -70), Vector3(140, 40, 140))
 	# Deterministic sim — the default (fixed_fps=0, interpolate=true) can
