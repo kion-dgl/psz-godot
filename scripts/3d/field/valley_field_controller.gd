@@ -169,6 +169,10 @@ func _ready() -> void:
 	# test scene; Godot's ACES has a known gamma bug).
 	_world_env.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	_world_env.environment.tonemap_white = 6.0
+	# Ambient must come from the COLOR TimeManager sets — with the scene's
+	# default SKY source, night ambient tracks the (near-black) sky and the
+	# world loses its fill regardless of ambient_color/energy.
+	_world_env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_dir_light = $DirectionalLight3D
 	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
 

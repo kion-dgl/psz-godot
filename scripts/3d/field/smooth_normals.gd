@@ -185,6 +185,16 @@ static func strip_vertex_albedo(root: Node) -> int:
 				dup.vertex_color_use_as_albedo = false
 				mi.set_surface_override_material(i, dup)
 				changed = true
+			elif mat is ShaderMaterial:
+				# Mirror-wrap surfaces (snow ground among them) run
+				# texture_fix_shader, whose ALBEDO multiplies COLOR.rgb.
+				var shader_mat := mat as ShaderMaterial
+				if shader_mat.get_shader_parameter("use_vertex_color") == null:
+					continue
+				var dup := shader_mat.duplicate() as ShaderMaterial
+				dup.set_shader_parameter("use_vertex_color", false)
+				mi.set_surface_override_material(i, dup)
+				changed = true
 		if changed:
 			touched += 1
 	for child in root.get_children():
