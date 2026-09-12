@@ -36,6 +36,7 @@ var _glow_dot_tex: ImageTexture
 func _ready() -> void:
 	_build_environment()
 	_load_stage()
+	_build_snow()
 	var count := _spawn_effects_from_config()
 	print("[LanternTest] %s ready — %d lantern effects from %s" % [STAGE_ID, count, UNIFIED_CONFIG])
 
@@ -84,6 +85,61 @@ func _load_stage() -> void:
 	var map_root := packed.instantiate() as Node3D
 	map_root.name = "Map"
 	add_child(map_root)
+
+
+## Falling snow — the WeatherController snow rig (scripts/3d/field/
+## weather_controller.gd) verbatim in parameter terms: same fall velocity
+## (2.0–3.5), drift gravity, spin, damping and 0.08 soft-white quads — just
+## pinned to the room center with a wider emission box since the orbiting
+## camera frames the whole room instead of a player.
+func _build_snow() -> void:
+	var snow := GPUParticles3D.new()
+	snow.name = "WeatherSnow"
+	snow.amount = 900
+	snow.lifetime = 5.0
+	snow.visibility_aabb = AABB(Vector3(-70, -4, -70), Vector3(140, 40, 140))
+	# Deterministic sim — the default (fixed_fps=0, interpolate=true) can
+	# freeze the particle system until something invalidates the transform.
+	snow.fixed_fps = 30
+	snow.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 10.0
+	mat.initial_velocity_min = 2.0
+	mat.initial_velocity_max = 3.5
+	mat.gravity = Vector3(0.3, -0.5, 0.1)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(26, 0.5, 26)
+	mat.angle_min = 0.0
+	mat.angle_max = 360.0
+	mat.angular_velocity_min = -30.0
+	mat.angular_velocity_max = 30.0
+	mat.scale_min = 0.6
+	mat.scale_max = 1.4
+	mat.damping_min = 0.2
+	mat.damping_max = 0.5
+	snow.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.08, 0.08)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	snow.draw_pass_1 = quad
+
+	snow.preprocess = 5.0
+	snow.position.y = 16.0
+	add_child(snow)
+	# Same kick the weather pass uses: restart after the first frames so the
+	# preprocess runs against settled transforms and snow appears mid-fall.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	snow.restart()
 
 
 func _spawn_effects_from_config() -> int:
