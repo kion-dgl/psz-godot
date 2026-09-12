@@ -229,7 +229,9 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		var light := OmniLight3D.new()
 		light.name = "SporeLight"
 		light.light_color = color
-		light.light_energy = light_intensity * 8.0
+		# 12×: playtest wanted the lantern pools to punch through the bright
+		# night ambient (1.5) — 8× read as a faint tint on the snow.
+		light.light_energy = light_intensity * 12.0
 		light.omni_range = light_radius * 2.0
 		# 2.0 is true inverse-square (docs: class_omnilight3d). The old 0.8
 		# held near-full brightness across the whole range and cut to zero at

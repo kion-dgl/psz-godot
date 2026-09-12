@@ -282,7 +282,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	add_child(root)
 	var light := OmniLight3D.new()
 	light.light_color = color
-	light.light_energy = float(effect.get("light_intensity", 1.0)) * 8.0
+	light.light_energy = float(effect.get("light_intensity", 1.0)) * 12.0
 	light.omni_range = float(effect.get("light_radius", 5.0)) * 2.0
 	light.omni_attenuation = 2.0
 	root.add_child(light)
