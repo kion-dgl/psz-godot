@@ -128,7 +128,7 @@ func _build_environment() -> void:
 	# White-mode baseline (#646): with vertex albedo stripped, bright
 	# textures saturate under the bake-tuned energies. Approved white
 	# balance starts lower; tune live with [ and -/=.
-	_env.ambient_light_energy = 0.35
+	_env.ambient_light_energy = 0.25
 	_moonlight.light_energy = 0.4
 	print("[MatTest] env: ambient src=%d color=%s energy=%.2f | sun=%.2f moon=%.2f vis=%s" % [
 		_env.ambient_light_source, _env.ambient_light_color, _env.ambient_light_energy,
