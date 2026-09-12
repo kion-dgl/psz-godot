@@ -267,6 +267,11 @@ func _ready() -> void:
 	SmoothNormals.ensure(_map_root, 2)
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
+	# Always-night snowfield: the bake's COLOR_0 multiplies room albedo to
+	# near-black under night light (median vertex luminance 0.19). Strip it
+	# so the rig owns shading — the white-COLOR_0 objective (#646).
+	if _is_snowfield_night_stage(stage_id):
+		SmoothNormals.strip_vertex_albedo(_map_root)
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]

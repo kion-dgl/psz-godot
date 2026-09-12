@@ -162,3 +162,31 @@ static func make_lit(root: Node) -> int:
 	for child in root.get_children():
 		touched += make_lit(child)
 	return touched
+
+
+## Room albedo = texture × COLOR_0, and the snowfield bake is mostly dark
+## (median luminance 0.19 — authored for another time of day). Under night
+## lighting that multiplies to pitch black no matter how much light lands.
+## For the always-night snowfield (#646 objective: COLOR_0 white), strip
+## the vertex-color modulation so the albedo is the texture alone and the
+## dynamic rig owns shading. Returns the number of meshes touched.
+static func strip_vertex_albedo(root: Node) -> int:
+	var touched := 0
+	if root is MeshInstance3D:
+		var mi := root as MeshInstance3D
+		var changed := false
+		for i in range(mi.get_surface_override_material_count()):
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if not std.vertex_color_use_as_albedo:
+					continue
+				var dup := std.duplicate() as StandardMaterial3D
+				dup.vertex_color_use_as_albedo = false
+				mi.set_surface_override_material(i, dup)
+				changed = true
+		if changed:
+			touched += 1
+	for child in root.get_children():
+		touched += strip_vertex_albedo(child)
+	return touched
