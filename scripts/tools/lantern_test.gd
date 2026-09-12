@@ -140,6 +140,8 @@ func _spawn_player(pos: Vector3) -> void:
 	add_child(player)
 	player.global_position = pos
 	player.spawn_position = pos
+	var player_meshes := SmoothNormals.ensure(player)
+	print("[LanternTest] smooth normals generated on %d player meshes" % player_meshes)
 	_make_player_lit(player)
 
 	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
@@ -156,6 +158,11 @@ func _load_stage() -> void:
 	var map_root := packed.instantiate() as Node3D
 	map_root.name = "Map"
 	add_child(map_root)
+	# The GLBs ship no NORMAL attribute and Godot's importer doesn't generate
+	# one — without this every surface shades with a constant normal (flat,
+	# flip-on-rotate lighting). Same for the player below.
+	var normaled := SmoothNormals.ensure(map_root)
+	print("[LanternTest] smooth normals generated on %d room meshes" % normaled)
 	_collect_room_materials(map_root)
 
 
