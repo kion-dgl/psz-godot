@@ -819,10 +819,13 @@ func _on_player_died() -> void:
 const INDOOR_STAGE_HOURS := {"s00a_nr2": 12.0}
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1", "s00a_nr2"]
 
-## Snowfield A is permanently night (#646): its identity is lantern light
-## in the dark — pin the phase instead of tracking the world clock.
+## The snowfield is permanently night (#646): its identity is lantern light
+## in the dark — pin the phase instead of tracking the world clock. BOTH
+## variants (s03a open field, s03b cave rooms): the generated field mixes
+## them in one grid, and the white-COLOR_0 objective covers all of it —
+## treating only s03a left baked B-cells beside white A-cells.
 static func _is_snowfield_night_stage(stage_id: String) -> bool:
-	return stage_id.begins_with("s03a")
+	return stage_id.begins_with("s03")
 
 
 static func _is_indoor_stage(stage_id: String) -> bool:
