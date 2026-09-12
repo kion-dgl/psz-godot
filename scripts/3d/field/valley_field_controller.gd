@@ -164,6 +164,11 @@ func _ready() -> void:
 
 	# Grab lighting nodes immediately so _process() applies TimeManager from frame 1
 	_world_env = $WorldEnvironment
+	# Filmic + white 6 — the docs' photoreal recipe (#646): Linear clips the
+	# lantern highlights to saturated orange at night (proven in the lantern
+	# test scene; Godot's ACES has a known gamma bug).
+	_world_env.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_world_env.environment.tonemap_white = 6.0
 	_dir_light = $DirectionalLight3D
 	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
 
@@ -179,11 +184,13 @@ func _ready() -> void:
 	# Indoor stages take a one-shot daylight apply and then opt out of the
 	# per-frame _process update — interior lighting shouldn't track the
 	# day/night cycle. Save and restore current_hour so the world clock
-	# isn't affected.
+	# isn't affected. Snowfield A (#646) pins the same way but to NIGHT —
+	# its lantern-lit ambience only reads after dark.
 	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-	if _is_indoor_stage(initial_stage_id):
+	if _is_indoor_stage(initial_stage_id) or _is_snowfield_night_stage(initial_stage_id):
 		var saved_hour: float = TimeManager.current_hour
-		TimeManager.current_hour = float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
+		TimeManager.current_hour = 22.0 if _is_snowfield_night_stage(initial_stage_id) \
+			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 		TimeManager.current_hour = saved_hour
 	else:
@@ -654,7 +661,7 @@ func _process(_delta: float) -> void:
 	_check_goal_pad_accept()
 	if _world_env and _sky_material and _dir_light:
 		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-		if not _is_indoor_stage(cur_stage_id):
+		if not _is_indoor_stage(cur_stage_id) and not _is_snowfield_night_stage(cur_stage_id):
 			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
@@ -772,6 +779,12 @@ func _on_player_died() -> void:
 ## the coliseum debug arena is deliberately noon (kion); other interiors 10:00.
 const INDOOR_STAGE_HOURS := {"s00a_nr2": 12.0}
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1", "s00a_nr2"]
+
+## Snowfield A is permanently night (#646): its identity is lantern light
+## in the dark — pin the phase instead of tracking the world clock.
+static func _is_snowfield_night_stage(stage_id: String) -> bool:
+	return stage_id.begins_with("s03a")
+
 
 static func _is_indoor_stage(stage_id: String) -> bool:
 	if stage_id in INDOOR_STAGES:
