@@ -27,6 +27,8 @@ var _dir_light: DirectionalLight3D
 var _moonlight: DirectionalLight3D
 var player: CharacterBody3D
 var _glow_dot_tex: ImageTexture
+var _white := false
+var _status: Label
 
 
 func _ready() -> void:
@@ -36,7 +38,9 @@ func _ready() -> void:
 	_spawn_player(PLAYER_SPAWN)
 	_spawn_snow()
 	var count := _spawn_lanterns()
-	print("[MatTest] ready — %d lanterns; keys: [/] moon, -/= ambient, P dump" % count)
+	_build_status_label()
+	_update_status()
+	print("[MatTest] ready — %d lanterns; keys: [/] moon, -/= ambient, T white toggle, P dump" % count)
 	_dump_materials()
 
 
@@ -51,22 +55,24 @@ func _input(event: InputEvent) -> void:
 			KEY_BRACKETLEFT:
 				_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.1)
 				print("[MatTest] moon energy %.2f" % _moonlight.light_energy)
+				_update_status()
 			KEY_BRACKETRIGHT:
 				_moonlight.light_energy = _moonlight.light_energy + 0.1
 				print("[MatTest] moon energy %.2f" % _moonlight.light_energy)
+				_update_status()
 			KEY_MINUS:
 				_env.ambient_light_energy = maxf(0.0, _env.ambient_light_energy - 0.05)
 				print("[MatTest] ambient energy %.2f" % _env.ambient_light_energy)
+				_update_status()
 			KEY_EQUAL:
 				_env.ambient_light_energy = _env.ambient_light_energy + 0.05
 				print("[MatTest] ambient energy %.2f" % _env.ambient_light_energy)
+				_update_status()
 			KEY_P:
 				_dump_materials()
-			KEY_W:
-				var map := get_node_or_null("Map")
-				if map:
-					var s := SmoothNormals.strip_vertex_albedo(map)
-					print("[MatTest] vertex albedo stripped from %d meshes (W = white strategy)" % s)
+			KEY_T:
+				_white = not _white
+				_apply_strategy()
 			KEY_R:
 				get_tree().reload_current_scene()
 
@@ -280,6 +286,53 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 
 ## Dump every room surface's material state — the ground truth for
 ## debugging "white/unlit": class, shader, texture bound, vertex flags.
+## Strategy toggle: bake (COLOR_0 × dynamic light — the approved look) vs
+## white (rig owns shading). Flips the flag on the CURRENT active materials,
+## so it round-trips without duplicating again.
+func _apply_strategy() -> void:
+	var map := get_node_or_null("Map")
+	if map:
+		_strategy_pass(map)
+	_update_status()
+
+
+func _strategy_pass(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in range(mi.get_surface_override_material_count()):
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				(mat as StandardMaterial3D).vertex_color_use_as_albedo = not _white
+			elif mat is ShaderMaterial:
+				var sm := mat as ShaderMaterial
+				if sm.shader and sm.shader.has_uniform("use_vertex_color"):
+					sm.set_shader_parameter("use_vertex_color", not _white)
+	for child in node.get_children():
+		_strategy_pass(child)
+
+
+func _build_status_label() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	add_child(layer)
+	_status = Label.new()
+	_status.add_theme_font_size_override("font_size", 16)
+	_status.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
+	_status.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	_status.position = Vector2(12, 8)
+	layer.add_child(_status)
+
+
+func _update_status() -> void:
+	if not _status:
+		return
+	_status.text = "%s | moon %.2f  ambient %.2f | T white-strategy · R reload · P dump" % [
+		"WHITE strategy (rig owns shading)" if _white else "BAKE × dynamic light",
+		_moonlight.light_energy if _moonlight else 0.0,
+		_env.ambient_light_energy if _env else 0.0,
+	]
+
+
 func _dump_materials() -> void:
 	var map := get_node_or_null("Map")
 	if not map:
