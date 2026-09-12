@@ -218,6 +218,11 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 				out[i] = (snapshot[i].lerp(avg, 0.5)).normalized()
 		arrays[Mesh.ARRAY_NORMAL] = out
 		replacement.add_surface_from_arrays(am.surface_get_primitive_type(s), arrays)
+		# Stash the baked COLOR_0 so the neutralize pass can re-blend from
+		# the authored values any number of times.
+		var orig_color = arrays[Mesh.ARRAY_COLOR]
+		if orig_color is PackedColorArray:
+			replacement.set_meta("orig_color_%d" % s, (orig_color as PackedColorArray).duplicate())
 		rebuilt = true
 
 	if not rebuilt:
@@ -344,3 +349,42 @@ static func _tri_indices(idx: PackedInt32Array, t: int) -> Array:
 	if idx.size() == 0:
 		return [t * 3, t * 3 + 1, t * 3 + 2]
 	return [idx[t * 3], idx[t * 3 + 1], idx[t * 3 + 2]]
+
+## The LightingLab's neutralize slider, ported: rewrite COLOR_0 blended
+## toward white by k (0 = full authored bake, 1 = fully white — the no-bake
+## strategy #646). Works for StandardMaterial3D and texture_fix_shader
+## surfaces alike (white vertex colors modulate nothing), so it replaces
+## strip_vertex_albedo. Meshes rebuild from the stashed originals —
+## idempotent at any k. Returns meshes touched.
+static func neutralize_vertex_colors(root: Node, k: float) -> int:
+	var touched := 0
+	if root is MeshInstance3D and root.mesh is ArrayMesh:
+		var mi := root as MeshInstance3D
+		var am := root.mesh as ArrayMesh
+		var rebuilt := false
+		var replacement := ArrayMesh.new()
+		for s in range(am.get_surface_count()):
+			var arrays := am.surface_get_arrays(s)
+			var stash = am.get_meta("orig_color_%d" % s, null)
+			if stash is PackedColorArray:
+				var blended := PackedColorArray()
+				var orig: PackedColorArray = stash
+				blended.resize(orig.size())
+				for i in range(orig.size()):
+					blended[i] = orig[i].lerp(Color.WHITE, k)
+				arrays[Mesh.ARRAY_COLOR] = blended
+				replacement.add_surface_from_arrays(am.surface_get_primitive_type(s), arrays)
+				replacement.set_meta("orig_color_%d" % s, orig)
+				rebuilt = true
+			else:
+				replacement.add_surface_from_arrays(am.surface_get_primitive_type(s), arrays)
+		if rebuilt:
+			for s in range(am.get_surface_count()):
+				replacement.surface_set_material(s, am.surface_get_material(s))
+				if am.surface_get_name(s) != "":
+					replacement.surface_set_name(s, am.surface_get_name(s))
+			mi.mesh = replacement
+			touched += 1
+	for child in root.get_children():
+		touched += neutralize_vertex_colors(child, k)
+	return touched

@@ -27,7 +27,7 @@ var _dir_light: DirectionalLight3D
 var _moonlight: DirectionalLight3D
 var player: CharacterBody3D
 var _glow_dot_tex: ImageTexture
-var _white := false
+var _bake_mix := -1.0  # -1 = untouched bake; 0..1 = neutralize blend
 var _status: Label
 
 
@@ -71,12 +71,18 @@ func _input(event: InputEvent) -> void:
 			KEY_P:
 				_dump_materials()
 			KEY_T:
-				_white = true
-				var map := get_node_or_null("Map")
-				if map:
-					var s := SmoothNormals.strip_vertex_albedo(map)
-					print("[MatTest] white strategy: %d meshes stripped + forced lit (R reloads to bake)" % s)
-				_update_status()
+				_bake_mix = 1.0
+				_apply_mix()
+			KEY_COMMA:
+				if _bake_mix < 0.0:
+					_bake_mix = 1.0
+				_bake_mix = maxf(0.0, _bake_mix - 0.1)
+				_apply_mix()
+			KEY_PERIOD:
+				if _bake_mix < 0.0:
+					_bake_mix = 1.0
+				_bake_mix = minf(1.0, _bake_mix + 0.1)
+				_apply_mix()
 			KEY_R:
 				get_tree().reload_current_scene()
 
@@ -310,8 +316,9 @@ func _build_status_label() -> void:
 func _update_status() -> void:
 	if not _status:
 		return
-	_status.text = "%s | moon %.2f  ambient %.2f | T white-strategy · R reload · P dump" % [
-		"WHITE strategy (rig owns shading)" if _white else "BAKE × dynamic light",
+	var mode := "BAKE untouched" if _bake_mix < 0.0 else "bake mix %.1f" % _bake_mix
+	_status.text = "%s | moon %.2f  ambient %.2f | T white · ,/. mix · R reload · P dump" % [
+		mode,
 		_moonlight.light_energy if _moonlight else 0.0,
 		_env.ambient_light_energy if _env else 0.0,
 	]
@@ -357,3 +364,13 @@ func _dump_pass(node: Node, lines: Array[String]) -> Array:
 		out[0] += sub[0]
 		out[1] += sub[1]
 	return out
+
+## The neutralize blend (the LightingLab slider): 0 = full bake, 1 = white.
+## Live via , and . — T snaps to full white.
+func _apply_mix() -> void:
+	var map := get_node_or_null("Map")
+	if map:
+		var n := SmoothNormals.neutralize_vertex_colors(map, _bake_mix)
+		SmoothNormals.make_lit(map)
+		print("[MatTest] bake mix %.1f (%d meshes)" % [_bake_mix, n])
+	_update_status()
