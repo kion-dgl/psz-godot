@@ -202,12 +202,14 @@ func _ready() -> void:
 		# sun-at-night and keep the single moonlight fill — the balance the
 		# lantern test scene proved out.
 		if _is_snowfield_night_stage(initial_stage_id):
-			# White strategy (#646): rooms run texture-only albedo, so the
-			# bake-tuned energies saturate — the moon-only rig at the white
-			# balance proven in scenes/tools/snowfield_mattest.tscn.
+			# Snowfield-night rig (#646), tuned in scenes/tools/
+			# snowfield_mattest.tscn: moon-only fill, the dynamic shadow
+			# source for the player, ambient held low so the bake reads.
 			_dir_light.light_energy = 0.0
-			_world_env.environment.ambient_light_energy = 0.25
+			_world_env.environment.ambient_light_energy = 0.2
 			_moonlight.light_energy = 0.4
+			_moonlight.shadow_enabled = true
+			_moonlight.shadow_blur = 1.0
 	else:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
@@ -2714,6 +2716,28 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Snowfield-night live tuning (#646): ,/. ambient, [/] moon, P logs the
+	# rig plus player material diagnostics (same knobs as the material
+	# test scene, in the field where it counts).
+	var night_stage := _is_snowfield_night_stage(
+		str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else "")
+	if night_stage and event is InputEventKey and event.pressed and not event.echo:
+		var night_key: Key = (event as InputEventKey).keycode
+		match night_key:
+			KEY_COMMA:
+				_world_env.environment.ambient_light_energy = maxf(0.0, _world_env.environment.ambient_light_energy - 0.05)
+				_print_night_tuning()
+			KEY_PERIOD:
+				_world_env.environment.ambient_light_energy += 0.05
+				_print_night_tuning()
+			KEY_BRACKETLEFT:
+				_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
+				_print_night_tuning()
+			KEY_BRACKETRIGHT:
+				_moonlight.light_energy += 0.05
+				_print_night_tuning()
+			KEY_P:
+				_print_night_tuning()
 	# Area map (spec /states/area-map): R2 / M toggles the centered overlay.
 	if event.is_action_pressed("area_map"):
 		if _map_overlay:
@@ -2808,3 +2832,39 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var gp := nearest.global_position
 	_fdbg("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
+
+func _print_night_tuning() -> void:
+	var msg := "[SnowfieldNight] ambient %.2f  moon %.2f" % [
+		_world_env.environment.ambient_light_energy, _moonlight.light_energy]
+	if player:
+		var stats := _player_mat_stats(player)
+		msg += " | player: %d per-pixel / %d unshaded, %d/%d meshes with normals" % [
+			stats[0], stats[1], stats[2], stats[3]]
+	print(msg)
+
+
+func _player_mat_stats(node: Node) -> Array:
+	var shaded := 0
+	var flat := 0
+	var with_normals := 0
+	var mesh_count := 0
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		mesh_count += 1
+		if mi.mesh is ArrayMesh and mi.mesh.get_surface_count() > 0 \
+				and mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] != null:
+			with_normals += 1
+		for i in range(SmoothNormals._surface_count(mi)):
+			var mat := SmoothNormals._active_material(mi, i)
+			if mat is StandardMaterial3D:
+				if (mat as StandardMaterial3D).shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+					shaded += 1
+				elif (mat as StandardMaterial3D).shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+					flat += 1
+	for child in node.get_children():
+		var sub := _player_mat_stats(child)
+		shaded += sub[0]
+		flat += sub[1]
+		with_normals += sub[2]
+		mesh_count += sub[3]
+	return [shaded, flat, with_normals, mesh_count]
