@@ -321,9 +321,12 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		light.light_color = color
 		light.light_energy = light_intensity * 8.0
 		light.omni_range = light_radius * 2.0
-		# 1.0 = true inverse-square falloff — the weather pass's 0.8 decays
-		# slower than physical and blasts anything that walks close.
-		light.omni_attenuation = 1.0
+		# Godot docs (class_omnilight3d): attenuation 2.0 IS inverse-square;
+		# 1.0 is ≈1/d — with energy 12 everything in range stays above 1.0
+		# (AgX crunches it all bright) while the range edge is a hard cutoff
+		# to zero. Bright-or-black, no partial falloff. 2.0 gives the
+		# three.js-style gradient: bright at arm's length, subtle by ~8u.
+		light.omni_attenuation = 2.0
 		root.add_child(light)
 
 

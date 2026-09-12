@@ -227,7 +227,11 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		light.light_color = color
 		light.light_energy = light_intensity * 8.0
 		light.omni_range = light_radius * 2.0
-		light.omni_attenuation = 0.8
+		# 2.0 is true inverse-square (docs: class_omnilight3d). The old 0.8
+		# held near-full brightness across the whole range and cut to zero at
+		# the edge — lights read binary (bright-or-black) instead of falling
+		# off (#646).
+		light.omni_attenuation = 2.0
 		light.shadow_enabled = false
 		light.position = Vector3(0, 1.5, 0)
 		root.add_child(light)
