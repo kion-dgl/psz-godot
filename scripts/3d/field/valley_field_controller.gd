@@ -697,26 +697,10 @@ func _on_quest_completed() -> void:
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
 	_check_goal_pad_accept()
-	if _world_env and _sky_material and _dir_light:
-		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-		if not _is_indoor_stage(cur_stage_id) and not _is_snowfield_night_stage(cur_stage_id):
-			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	_update_dynamic_lighting()
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
-	# Dormant wave 1 reveals when the player walks into the room — distance
-	# from the entry point, or proximity to any one dormant enemy as a safety
-	# net for entry placements that already sit deep in the room.
-	if _enemies_pending_reveal and player and _map_root:
-		var lp := _map_root.to_local(player.global_position)
-		var walked_in := lp.distance_to(_reveal_origin_local) >= ENEMY_REVEAL_DIST
-		if not walked_in:
-			for e in _room_enemies:
-				if is_instance_valid(e) and e.get("dormant") \
-						and lp.distance_to((e as Node3D).position) < 2.5:
-					walked_in = true
-					break
-		if walked_in:
-			_reveal_dormant_enemies()
+	_check_dormant_reveal()
 	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
@@ -724,6 +708,34 @@ func _process(_delta: float) -> void:
 		_room_minimap.update_key_markers(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
+
+
+## Outdoor unpinned stages track the day/night cycle per frame; indoor and
+## snowfield-night stages are one-shot pinned in _ready().
+func _update_dynamic_lighting() -> void:
+	if not (_world_env and _sky_material and _dir_light):
+		return
+	var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if not _is_indoor_stage(cur_stage_id) and not _is_snowfield_night_stage(cur_stage_id):
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+
+
+## Dormant wave 1 reveals when the player walks into the room — distance
+## from the entry point, or proximity to any one dormant enemy as a safety
+## net for entry placements that already sit deep in the room.
+func _check_dormant_reveal() -> void:
+	if not (_enemies_pending_reveal and player and _map_root):
+		return
+	var lp := _map_root.to_local(player.global_position)
+	var walked_in := lp.distance_to(_reveal_origin_local) >= ENEMY_REVEAL_DIST
+	if not walked_in:
+		for e in _room_enemies:
+			if is_instance_valid(e) and e.get("dormant") \
+					and lp.distance_to((e as Node3D).position) < 2.5:
+				walked_in = true
+				break
+	if walked_in:
+		_reveal_dormant_enemies()
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -2730,38 +2742,7 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Snowfield-night live tuning (#646): ,/. ambient, [/] moon, P logs the
-	# rig plus player material diagnostics (same knobs as the material
-	# test scene, in the field where it counts).
-	var night_stage := _is_snowfield_night_stage(
-		str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else "")
-	if night_stage and event is InputEventKey and event.pressed and not event.echo:
-		var night_key: Key = (event as InputEventKey).keycode
-		match night_key:
-			KEY_COMMA:
-				_world_env.environment.ambient_light_energy = maxf(0.0, _world_env.environment.ambient_light_energy - 0.05)
-				_print_night_tuning()
-			KEY_PERIOD:
-				_world_env.environment.ambient_light_energy += 0.05
-				_print_night_tuning()
-			KEY_BRACKETLEFT:
-				_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
-				_print_night_tuning()
-			KEY_BRACKETRIGHT:
-				_moonlight.light_energy += 0.05
-				_print_night_tuning()
-			KEY_MINUS:
-				_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
-				if _map_root:
-					SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
-				_print_night_tuning()
-			KEY_EQUAL:
-				_night_bake_mix = minf(1.0, _night_bake_mix + 0.05)
-				if _map_root:
-					SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
-				_print_night_tuning()
-			KEY_P:
-				_print_night_tuning()
+	_handle_night_tuning(event)
 	# Area map (spec /states/area-map): R2 / M toggles the centered overlay.
 	if event.is_action_pressed("area_map"):
 		if _map_overlay:
@@ -2816,6 +2797,41 @@ func _unhandled_input(event: InputEvent) -> void:
 		if nudge.length() > 0:
 			_nudge_nearest_gate(nudge)
 			get_viewport().set_input_as_handled()
+
+
+## Snowfield-night live tuning (#646): ,/. ambient, [/] moon, -/= bake mix,
+## P logs the rig plus player material diagnostics (same knobs as the
+## material test scene, in the field where it counts).
+func _handle_night_tuning(event: InputEvent) -> void:
+	var stage_id := str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if not (_is_snowfield_night_stage(stage_id) \
+			and event is InputEventKey and event.pressed and not event.echo):
+		return
+	match (event as InputEventKey).keycode:
+		KEY_COMMA:
+			_world_env.environment.ambient_light_energy = maxf(0.0, _world_env.environment.ambient_light_energy - 0.05)
+			_print_night_tuning()
+		KEY_PERIOD:
+			_world_env.environment.ambient_light_energy += 0.05
+			_print_night_tuning()
+		KEY_BRACKETLEFT:
+			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
+			_print_night_tuning()
+		KEY_BRACKETRIGHT:
+			_moonlight.light_energy += 0.05
+			_print_night_tuning()
+		KEY_MINUS:
+			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
+			if _map_root:
+				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+			_print_night_tuning()
+		KEY_EQUAL:
+			_night_bake_mix = minf(1.0, _night_bake_mix + 0.05)
+			if _map_root:
+				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+			_print_night_tuning()
+		KEY_P:
+			_print_night_tuning()
 
 
 func _nudge_nearest_gate(nudge: Vector3) -> void:

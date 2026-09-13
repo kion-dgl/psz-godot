@@ -29,7 +29,6 @@ const NIGHT_MOON_ENERGY := 0.55
 const PLAYER_SPAWN := Vector3(0, 1.5, 6)
 
 var player: CharacterBody3D
-var _glow_dot_tex: ImageTexture
 # Per-surface duplicated room materials — flipping vertex_color_use_as_albedo
 # on these never touches the imported shared resources.
 var _room_materials: Array[StandardMaterial3D] = []
@@ -310,7 +309,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	quad.size = Vector2(0.15, 0.15)
 	var quad_mat := StandardMaterial3D.new()
 	quad_mat.albedo_color = color
-	quad_mat.albedo_texture = _get_glow_dot_texture()
+	quad_mat.albedo_texture = WeatherController.create_glow_dot_texture()
 	quad_mat.emission_enabled = true
 	quad_mat.emission = color
 	quad_mat.emission_energy_multiplier = 3.0
@@ -337,24 +336,3 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		# three.js-style gradient: bright at arm's length, subtle by ~8u.
 		light.omni_attenuation = 2.0
 		root.add_child(light)
-
-
-func _get_glow_dot_texture() -> ImageTexture:
-	if _glow_dot_tex:
-		return _glow_dot_tex
-	var size := 32
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	var center := Vector2(size / 2.0, size / 2.0)
-	var max_r := size / 2.0
-	for y in range(size):
-		for x in range(size):
-			var dist: float = Vector2(x + 0.5, y + 0.5).distance_to(center) / max_r
-			var alpha: float = clampf(1.0 - _smoothstep(0.0, 1.0, dist), 0.0, 1.0)
-			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
-	_glow_dot_tex = ImageTexture.create_from_image(img)
-	return _glow_dot_tex
-
-
-static func _smoothstep(edge0: float, edge1: float, x: float) -> float:
-	var t: float = clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0)
-	return t * t * (3.0 - 2.0 * t)

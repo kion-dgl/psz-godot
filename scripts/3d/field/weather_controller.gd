@@ -210,7 +210,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	quad.size = Vector2(0.15, 0.15)
 	var quad_mat := StandardMaterial3D.new()
 	quad_mat.albedo_color = color
-	quad_mat.albedo_texture = _get_glow_dot_texture()
+	quad_mat.albedo_texture = create_glow_dot_texture()
 	quad_mat.emission_enabled = true
 	quad_mat.emission = color
 	quad_mat.emission_energy_multiplier = 3.0
@@ -223,28 +223,33 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	quad.material = quad_mat
 	particles.draw_pass_1 = quad
 	root.add_child(particles)
-
-	# Point light for ambient glow
 	if light_intensity > 0:
-		var light := OmniLight3D.new()
-		light.name = "SporeLight"
-		light.light_color = color
-		# 12×: playtest wanted the lantern pools to punch through the bright
-		# night ambient (1.5) — 8× read as a faint tint on the snow.
-		light.light_energy = light_intensity * 12.0
-		light.omni_range = light_radius * 2.0
-		# 2.0 is true inverse-square (docs: class_omnilight3d). The old 0.8
-		# held near-full brightness across the whole range and cut to zero at
-		# the edge — lights read binary (bright-or-black) instead of falling
-		# off (#646).
-		light.omni_attenuation = 2.0
-		light.shadow_enabled = false
-		light.position = Vector3(0, 1.5, 0)
-		root.add_child(light)
-		print("[StageEffect] Spore light at %s energy=%.1f range=%.1f" % [pos, light.light_energy, light_radius])
+		_attach_spore_light(root, pos, color, light_intensity, light_radius)
 
 
-static func _get_glow_dot_texture() -> ImageTexture:
+func _attach_spore_light(root: Node3D, pos: Vector3, color: Color,
+		light_intensity: float, light_radius: float) -> void:
+	var light := OmniLight3D.new()
+	light.name = "SporeLight"
+	light.light_color = color
+	# 12×: playtest wanted the lantern pools to punch through the bright
+	# night ambient (1.5) — 8× read as a faint tint on the snow.
+	light.light_energy = light_intensity * 12.0
+	light.omni_range = light_radius * 2.0
+	# 2.0 is true inverse-square (docs: class_omnilight3d). The old 0.8
+	# held near-full brightness across the whole range and cut to zero at
+	# the edge — lights read binary (bright-or-black) instead of falling
+	# off (#646).
+	light.omni_attenuation = 2.0
+	light.shadow_enabled = false
+	light.position = Vector3(0, 1.5, 0)
+	root.add_child(light)
+	print("[StageEffect] Spore light at %s energy=%.1f range=%.1f" % [pos, light.light_energy, light_radius])
+
+
+## Soft radial glow-dot texture (cached). Public static so tool scenes
+## (lantern_test) share it instead of carrying copies (#295).
+static func create_glow_dot_texture() -> ImageTexture:
 	if _glow_dot_tex:
 		return _glow_dot_tex
 	var size := 32
@@ -254,12 +259,7 @@ static func _get_glow_dot_texture() -> ImageTexture:
 	for y in range(size):
 		for x in range(size):
 			var dist: float = Vector2(x + 0.5, y + 0.5).distance_to(center) / max_r
-			var alpha: float = clampf(1.0 - _smoothstep(0.0, 1.0, dist), 0.0, 1.0)
+			var alpha: float = clampf(1.0 - smoothstep(0.0, 1.0, dist), 0.0, 1.0)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
 	_glow_dot_tex = ImageTexture.create_from_image(img)
 	return _glow_dot_tex
-
-
-static func _smoothstep(edge0: float, edge1: float, x: float) -> float:
-	var t: float = clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0)
-	return t * t * (3.0 - 2.0 * t)
