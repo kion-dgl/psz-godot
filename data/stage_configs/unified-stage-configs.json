@@ -17580,7 +17580,7 @@
       "unreachable": [
         "south"
       ],
-      "reason": "Broken bridge \u2014 the south gate is visible across the gap but intentionally not traversable. The spawn/exit pair exists so the gate still reads correctly, but nothing routes to it."
+      "reason": "Broken bridge — the south gate is visible across the gap but intentionally not traversable. The spawn/exit pair exists so the gate still reads correctly, but nothing routes to it."
     }
   },
   "s02b_lc1": {
@@ -20173,7 +20173,7 @@
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-23T05:36:20.129Z",
+    "lastModified": "2026-09-11T00:00:00.000Z",
     "mapId": "s03a_ga1",
     "obstacles": [],
     "portals": [
@@ -20245,6 +20245,92 @@
         "wp_1780455528383_trptrr",
         "wp_spawn_1_1780455525300"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -16.6,
+          4.1,
+          -1.3
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.6,
+          4.1,
+          -13.2
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          4.6,
+          4.1,
+          12.2
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          16.0,
+          4.1,
+          2.9
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03a_ib1": {
@@ -20611,6 +20697,113 @@
         "wp_1780455563749_yiircw",
         "wp_1780455565065_04uzho"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -24.2,
+          4.1,
+          -13.1
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -21.9,
+          4.1,
+          8.0
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.6,
+          4.1,
+          -21.2
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          13.9,
+          4.1,
+          21.2
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          26.2,
+          4.1,
+          -8.4
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_ib2": {
@@ -20875,6 +21068,113 @@
         "wp_1780455654780_rkgh6h",
         "wp_1780455661013_gdqbqy"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -20.6,
+          4.1,
+          -19.6
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -12.1,
+          4.1,
+          11.8
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          1.9,
+          4.1,
+          -22.8
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          18.0,
+          4.1,
+          22.7
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          23.5,
+          4.1,
+          3.8
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_ic1": {
@@ -21152,6 +21452,92 @@
         "wp_1780455840641_e9lbbs",
         "wp_spawn_1_1780455825876"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -14.9,
+          4.1,
+          -14.5
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -0.6,
+          4.1,
+          -0.7
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          18.4,
+          4.1,
+          22.2
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          20.8,
+          4.1,
+          -2.7
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03a_ic3": {
@@ -21445,6 +21831,92 @@
         "wp_1780455937105_7se083",
         "wp_1780455938305_2poxse"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.3,
+          4.1,
+          -2.1
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -1.9,
+          4.1,
+          -21.3
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          7.4,
+          4.1,
+          -2.0
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          8.4,
+          4.1,
+          23.0
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03a_lb1": {
@@ -21735,6 +22207,113 @@
         "wp_1780456035369_uppmg8",
         "wp_1780456042836_anaco8"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -26.2,
+          4.1,
+          9.5
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -12.1,
+          4.1,
+          -21.8
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -1.5,
+          4.1,
+          22.7
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          22.7,
+          4.1,
+          -9.9
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          23.1,
+          4.1,
+          14.5
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_lb3": {
@@ -21989,6 +22568,113 @@
         "wp_1780456242836_7nyp3r",
         "wp_1780456253053_5g5sm6"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -26.1,
+          4.1,
+          17.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -21.2,
+          4.1,
+          -20.0
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.0,
+          4.1,
+          24.9
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          9.2,
+          4.1,
+          -5.8
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          18.4,
+          4.1,
+          13.7
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_lc1": {
@@ -22272,6 +22958,71 @@
         "wp_1780456319502_1jjwjy",
         "wp_1780456320801_k8ft8c"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -10.9,
+          4.1,
+          -22.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          0.7,
+          4.1,
+          0.4
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          2.7,
+          4.1,
+          20.8
+        ],
+        "id": "placed_lantern_2_flame"
+      }
     ]
   },
   "s03a_lc2": {
@@ -22525,6 +23276,92 @@
         "wp_1780456455333_f9wbzd",
         "wp_1780456389334_4fqa6w"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -28.9,
+          4.1,
+          13.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -21.9,
+          4.1,
+          -22.5
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          9.1,
+          4.1,
+          -3.4
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          22.2,
+          4.1,
+          21.9
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03a_na1": {
@@ -22722,6 +23559,50 @@
         "wp_1780456489467_cwkl2d",
         "wp_1780456487983_eye0aj"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -4.8,
+          4.9,
+          17.6
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          9.8,
+          4.9,
+          17.6
+        ],
+        "id": "placed_lantern_1_flame"
+      }
     ]
   },
   "s03a_nb2": {
@@ -22935,6 +23816,113 @@
         "wp_1780456541633_qjmryk",
         "wp_1780456553366_x0fi5u"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -17.2,
+          4.1,
+          -14.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -9.2,
+          4.1,
+          5.8
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          4.0,
+          4.1,
+          -24.9
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          21.2,
+          4.1,
+          20.0
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          26.1,
+          4.1,
+          -17.2
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_nc2": {
@@ -23098,6 +24086,92 @@
         "wp_1780456634065_gqjnd0",
         "wp_spawn_0_1780456631732"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -21.9,
+          4.1,
+          22.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -13.2,
+          4.1,
+          -28.9
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          3.4,
+          4.1,
+          9.1
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          22.5,
+          4.1,
+          -21.9
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03a_sa1": {
@@ -23274,6 +24348,50 @@
         "wp_spawn_0_1780456706431",
         "wp_spawn_default_1780456706431"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -0.4,
+          4.9,
+          50.5
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          7.3,
+          4.9,
+          31.7
+        ],
+        "id": "placed_lantern_1_flame"
+      }
     ]
   },
   "s03a_tb3": {
@@ -23650,6 +24768,113 @@
         "wp_1780456800497_089tdx",
         "wp_1780456722581_nxkkky"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -22.8,
+          4.1,
+          -1.9
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -11.1,
+          4.1,
+          23.4
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          3.8,
+          4.1,
+          -23.5
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          12.1,
+          4.1,
+          10.3
+        ],
+        "id": "placed_lantern_3_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          22.7,
+          4.1,
+          -18.0
+        ],
+        "id": "placed_lantern_4_flame"
+      }
     ]
   },
   "s03a_tc3": {
@@ -24056,6 +25281,71 @@
         "wp_1780456869896_y2drud",
         "wp_1780456867013_lwa41z"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -7.4,
+          4.1,
+          -0.2
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          1.9,
+          4.1,
+          22.0
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          4.3,
+          4.1,
+          -0.2
+        ],
+        "id": "placed_lantern_2_flame"
+      }
     ]
   },
   "s03a_td1": {
@@ -24576,6 +25866,29 @@
         "wp_1780457011594_hep3cb",
         "wp_spawn_2_1780457005695"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          7.8,
+          5.1,
+          22.2
+        ],
+        "id": "placed_lantern_0_flame"
+      }
     ]
   },
   "s03a_td2": {
@@ -24970,6 +26283,71 @@
         "wp_1780457140659_w3lio8",
         "wp_spawn_0_1780457125443"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -22.0,
+          5.1,
+          11.5
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          3.8,
+          5.1,
+          20.2
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          19.6,
+          5.1,
+          -15.8
+        ],
+        "id": "placed_lantern_2_flame"
+      }
     ]
   },
   "s03a_xb2": {
@@ -25329,6 +26707,92 @@
         "wp_1780457217858_zj7g66",
         "wp_1780457232574_gs7ac2"
       ]
+    ],
+    "effects": [
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -22.7,
+          4.1,
+          6.1
+        ],
+        "id": "placed_lantern_0_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -14.9,
+          4.1,
+          22.7
+        ],
+        "id": "placed_lantern_1_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          -12.4,
+          4.1,
+          -22.7
+        ],
+        "id": "placed_lantern_2_flame"
+      },
+      {
+        "type": "lantern",
+        "category": "placed",
+        "color": [
+          1,
+          0.3,
+          0.12
+        ],
+        "count": 24,
+        "radius": 0.9,
+        "height": 2.2,
+        "speed": 0.9,
+        "light_intensity": 1.5,
+        "light_radius": 11,
+        "position": [
+          22.7,
+          4.1,
+          9.4
+        ],
+        "id": "placed_lantern_3_flame"
+      }
     ]
   },
   "s03b_ga1": {

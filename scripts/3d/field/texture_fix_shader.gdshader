@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_back, vertex_lighting;
+render_mode cull_back;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
@@ -11,6 +11,9 @@ uniform int wrap_t = 0;
 uniform vec2 uv_scroll = vec2(0.0, 0.0);
 // 0 = alpha scissor (opaque), 1 = alpha blend (transparent)
 uniform int alpha_mode = 0;
+// Off = the dynamic lighting rig owns shading (#646): the baked COLOR_0 is
+// authored for another time of day and multiplies night light to black.
+uniform bool use_vertex_color = true;
 
 float apply_wrap(float coord, int mode, float half_texel) {
 	if (mode == 2) {
@@ -37,7 +40,8 @@ void fragment() {
 	vec4 tex = texture(albedo_texture, uv);
 	// Use vertex color for RGB tint only — Three.js ignores vertex alpha for
 	// transparency, and GLB meshes often have COLOR.a=0 which would hide geometry.
-	ALBEDO = tex.rgb * COLOR.rgb * albedo_color.rgb;
+	vec3 tint = use_vertex_color ? COLOR.rgb : vec3(1.0);
+	ALBEDO = tex.rgb * tint * albedo_color.rgb;
 	ALPHA = tex.a * albedo_color.a;
 	if (alpha_mode == 0) {
 		ALPHA_SCISSOR_THRESHOLD = 0.1;

@@ -7,7 +7,9 @@
  *   - Floor:   rise from ground across the whole stage (ambient spores, mist)
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TransformControls } from '@react-three/drei';
+import * as THREE from 'three';
 import type { TimeOfDayLighting } from '../StageCanvas';
 import type { ParticleEffect, PlacedEffect, WeatherEffect, FloorEffect } from '../ParticleOverlay';
 
@@ -113,6 +115,17 @@ export const PLACED_PRESETS: Record<string, Omit<PlacedEffect, 'id' | 'position'
     color: [1.0, 0.5, 0.1], count: 40, speed: 1.5, size: 2.5,
     radius: 2, height: 4, lightIntensity: 1.5, lightRadius: 6,
   },
+  // Snowfield path lamps (#646). light_intensity 1.5 / lightRadius 11 land
+  // at Godot energy 12 / range 22 — ×8 (the weather-pass scaling) on the
+  // original 3 proved too hot for a light the player stands beside:
+  // inverse-square at 1–3 units clips a character to saturated orange even
+  // under ACES. Positions seed from detectLanterns() over the room's
+  // 1_lamp1 mesh.
+  lantern: {
+    category: 'placed', preset: 'lantern',
+    color: [1.0, 0.3, 0.12], count: 24, speed: 0.9, size: 1.8,
+    radius: 0.9, height: 2.2, lightIntensity: 1.5, lightRadius: 11,
+  },
 };
 
 const WEATHER_PRESETS: Record<string, Omit<WeatherEffect, 'id'>> = {
@@ -146,6 +159,67 @@ const FLOOR_PRESETS: Record<string, Omit<FloorEffect, 'id'>> = {
   },
 };
 
+// ---------- Lantern tweak handles ----------
+//
+// The lamp posts bend at the top and the lantern head hangs off the arm —
+// the detected centroid lands close but not exactly on the head, and the
+// bend isn't consistent between lanterns. So each placed lantern gets a
+// drag handle: click the white ball to select, then drag the gizmo —
+// constrained to XZ only (showY={false} plus a Y lock on write), since the
+// lantern height is what the detector got right.
+
+export function LanternHandles({
+  lanterns, editId, onEdit, onMove,
+}: {
+  lanterns: PlacedEffect[];
+  editId: string | null;
+  onEdit: (id: string | null) => void;
+  onMove: (id: string, pos: [number, number, number]) => void;
+}) {
+  const proxy = useMemo(() => new THREE.Object3D(), []);
+  const edited = lanterns.find((l) => l.id === editId) ?? null;
+
+  // Pin the proxy to the stored position when the SELECTION changes. State
+  // updates during a drag deliberately don't re-pin — the proxy drives.
+  useEffect(() => {
+    if (edited) proxy.position.set(edited.position[0], edited.position[1], edited.position[2]);
+  }, [editId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {lanterns.map((l) => (
+        <mesh
+          key={l.id}
+          position={l.position}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onEdit(l.id === editId ? null : l.id);
+          }}
+        >
+          <sphereGeometry args={[0.35, 8, 8]} />
+          <meshBasicMaterial color={l.id === editId ? '#ffdd55' : '#7fd4ff'} toneMapped={false} />
+        </mesh>
+      ))}
+      {edited && (
+        <>
+          <primitive object={proxy} />
+          <TransformControls
+            object={proxy}
+            mode="translate"
+            showY={false}
+            size={0.7}
+            onMouseDown={() => { /* drag starts — OrbitControls yields via makeDefault */ }}
+            onObjectChange={() => {
+              const y = edited.position[1]; // Y stays at the detected height
+              onMove(edited.id, [proxy.position.x, y, proxy.position.z]);
+            }}
+          />
+        </>
+      )}
+    </>
+  );
+}
+
 // ---------- Component ----------
 
 interface SceneTabProps {
@@ -164,6 +238,13 @@ interface SceneTabProps {
   onIndoorChange: (indoor: boolean) => void;
   repositionEffectId: string | null;
   onStartReposition: (id: string) => void;
+  /** Runs lantern auto-detection over the loaded room mesh; returns the
+   * number of lanterns found (0 for rooms without lamp geometry). */
+  onAutoDetectLanterns: () => number;
+  /** Whether draggable lantern tweak handles are available. */
+  lanternTweakable: boolean;
+  /** Selects a lantern's drag handle (its gizmo) from the effect list. */
+  onEditLanternHandle: (id: string | null) => void;
 }
 
 export default function SceneTab({
@@ -171,9 +252,10 @@ export default function SceneTab({
   placementMode, onSetPlacementMode, placementPreset, onSetPlacementPreset,
   selectedEffectId, onSelectEffect,
   mapId, indoor, onIndoorChange,
-  repositionEffectId, onStartReposition,
+  repositionEffectId, onStartReposition, onAutoDetectLanterns, lanternTweakable, onEditLanternHandle,
 }: SceneTabProps) {
   const [copied, setCopied] = useState(false);
+  const [detectResult, setDetectResult] = useState<string | null>(null);
   const phase = getPhaseLabel(timeOfDay);
   const placed = particles.filter((p): p is PlacedEffect => p.category === 'placed');
   const weather = particles.filter((p): p is WeatherEffect => p.category === 'weather');
@@ -314,6 +396,31 @@ export default function SceneTab({
           </div>
         )}
 
+          {/* Lantern seeding from the room mesh — replaces existing lanterns */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              const n = onAutoDetectLanterns();
+              setDetectResult(n < 0
+                ? 'Scene still loading — try again in a moment'
+                : n > 0
+                  ? `Placed ${n} lantern${n === 1 ? '' : 's'} from the 1_lamp1 mesh (existing lanterns replaced)`
+                  : 'No lanterns found in this room\'s mesh');
+            }}
+            style={{ ...presetBtnStyle, background: '#433010', color: '#e8b87a' }}
+          >
+            auto: lanterns from texture
+          </button>
+          {detectResult && <span style={{ fontSize: '10px', color: '#888' }}>{detectResult}</span>}
+          {lanternTweakable && (
+            <span style={{ fontSize: '10px', color: '#888', flexBasis: '100%' }}>
+              cyan handles: click a lantern's ball to select, drag the XZ
+              arrows to nudge it onto the head (height stays fixed); click
+              again to deselect. Ball turns yellow when selected.
+            </span>
+          )}
+        </div>
+
         {/* List of placed effects */}
         {placed.map(p => {
           const selected = p.id === selectedEffectId;
@@ -331,17 +438,32 @@ export default function SceneTab({
                   {p.preset} ({p.position[0].toFixed(1)}, {p.position[1].toFixed(1)}, {p.position[2].toFixed(1)})
                 </span>
                 <div style={{ display: 'flex', gap: '3px' }}>
-                  <button
-                    onClick={() => onStartReposition(p.id)}
-                    style={{
-                      ...removeBtnStyle,
-                      background: repositionEffectId === p.id ? '#2a3a5a' : '#222244',
-                      border: `1px solid ${repositionEffectId === p.id ? '#4a9eff' : '#444466'}`,
-                      color: repositionEffectId === p.id ? '#4a9eff' : '#8888aa',
-                    }}
-                  >
-                    {repositionEffectId === p.id ? 'Click scene...' : 'Move'}
-                  </button>
+                  {p.preset === 'lantern' ? (
+                    <button
+                      onClick={() => onEditLanternHandle(p.id)}
+                      style={{
+                        ...removeBtnStyle,
+                        background: '#2a2a18',
+                        border: '1px solid #6a5a2a',
+                        color: '#e8b87a',
+                      }}
+                      title="Selects this lantern's drag handle in the 3D view — drag the XZ arrows onto the lantern head"
+                    >
+                      drag
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onStartReposition(p.id)}
+                      style={{
+                        ...removeBtnStyle,
+                        background: repositionEffectId === p.id ? '#2a3a5a' : '#222244',
+                        border: `1px solid ${repositionEffectId === p.id ? '#4a9eff' : '#444466'}`,
+                        color: repositionEffectId === p.id ? '#4a9eff' : '#8888aa',
+                      }}
+                    >
+                      {repositionEffectId === p.id ? 'Click scene...' : 'Move'}
+                    </button>
+                  )}
                   <button onClick={() => remove(p.id)} style={removeBtnStyle}>X</button>
                 </div>
               </div>

@@ -94,6 +94,7 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
+var _night_bake_mix := 0.25  # Snowfield-night COLOR_0 mix (#646) — locked from the follow-up playtest read-out
 
 # Wave spawning
 var _current_wave: int = 1
@@ -164,6 +165,15 @@ func _ready() -> void:
 
 	# Grab lighting nodes immediately so _process() applies TimeManager from frame 1
 	_world_env = $WorldEnvironment
+	# Filmic + white 6 — the docs' photoreal recipe (#646): Linear clips the
+	# lantern highlights to saturated orange at night (proven in the lantern
+	# test scene; Godot's ACES has a known gamma bug).
+	_world_env.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_world_env.environment.tonemap_white = 6.0
+	# Ambient must come from the COLOR TimeManager sets — with the scene's
+	# default SKY source, night ambient tracks the (near-black) sky and the
+	# world loses its fill regardless of ambient_color/energy.
+	_world_env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_dir_light = $DirectionalLight3D
 	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
 
@@ -175,19 +185,6 @@ func _ready() -> void:
 	_moonlight.shadow_enabled = false
 	_moonlight.visible = false
 	add_child(_moonlight)
-
-	# Indoor stages take a one-shot daylight apply and then opt out of the
-	# per-frame _process update — interior lighting shouldn't track the
-	# day/night cycle. Save and restore current_hour so the world clock
-	# isn't affected.
-	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-	if _is_indoor_stage(initial_stage_id):
-		var saved_hour: float = TimeManager.current_hour
-		TimeManager.current_hour = float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
-		TimeManager.current_hour = saved_hour
-	else:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
@@ -220,6 +217,37 @@ func _ready() -> void:
 
 	# Track visited cells
 	_visited_cells[current_cell_pos] = true
+
+	# Indoor stages take a one-shot daylight apply and then opt out of the
+	# per-frame _process update — interior lighting shouldn't track the
+	# day/night cycle. Save and restore current_hour so the world clock
+	# isn't affected. Snowfield A (#646) pins the same way but to NIGHT —
+	# its lantern-lit ambience only reads after dark. This block must sit
+	# after _current_cell is populated: it originally read an empty cell,
+	# never fired, and the raw world clock painted the field instead (the
+	# 2026-09-12 tuning session ran under a stray sunset apply that way).
+	var initial_stage_id := str(_current_cell.get("stage_id", ""))
+	if _is_indoor_stage(initial_stage_id) or _is_snowfield_night_stage(initial_stage_id):
+		var saved_hour: float = TimeManager.current_hour
+		TimeManager.current_hour = 22.0 if _is_snowfield_night_stage(initial_stage_id) \
+			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		TimeManager.current_hour = saved_hour
+		# The night preset's energies were tuned against the dark bake:
+		# with white albedo they saturate the snow to flat white. Drop the
+		# sun-at-night and keep the single moonlight fill.
+		if _is_snowfield_night_stage(initial_stage_id):
+			# Snowfield-night rig (#646) — locked from the follow-up playtest
+			# P read-out (ambient 1.50, moon 0.35, bake mix 0.25): bright
+			# night, bake quarter-mixed for depth, moon strong enough that
+			# the player/enemy shadows read.
+			_dir_light.light_energy = 0.0
+			_world_env.environment.ambient_light_energy = 1.5
+			_moonlight.light_energy = 0.35
+			_moonlight.shadow_enabled = true
+			_moonlight.shadow_blur = 1.0
+	else:
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
@@ -254,8 +282,19 @@ func _ready() -> void:
 	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
 	add_child(_map_root)
+	# The GLBs ship no normals and Godot doesn't generate them — without
+	# this every surface shades with a constant normal (flat lighting, no
+	# per-side diffuse). Same for the player below (#646).
+	SmoothNormals.ensure(_map_root, 2)
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
+	# #646: Godot imports these unlit materials as UNSHADED (the bake IS
+	# the whole look). For the always-night snowfield: neutralize COLOR_0
+	# fully to white — the stated objective is NO baked-in lighting — and
+	# force per-pixel shading so the dynamic rig drives everything.
+	if _is_snowfield_night_stage(stage_id):
+		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+		SmoothNormals.make_lit(_map_root)
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]
@@ -276,6 +315,12 @@ func _ready() -> void:
 			var floor_root := floor_scene.instantiate() as Node3D
 			floor_root.name = "FloorCollision"
 			add_child(floor_root)
+			# Collision only — never render. The floor GLB is a texture-less,
+			# unshaded shell at the walkable height; visible, it sat ON TOP of
+			# the room's real floor surfaces and ignored every light (the
+			# 'ground not affected by light' playtest). Physics is unaffected
+			# by visibility.
+			floor_root.visible = false
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
@@ -312,6 +357,12 @@ func _ready() -> void:
 
 	# Spawn stage particle effects (spores, embers, etc.)
 	_weather._spawn_stage_effects(stage_id)
+
+	# Authored scene effects (lanterns etc.) from the unified stage config —
+	# same placed-effect format the _effects.json pass reads (#646).
+	for effect in _stage_config.get("effects", []):
+		if str(effect.get("category", "")) == "placed":
+			_weather._spawn_placed_effect(effect)
 
 	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
 	_debug_show_floor_collision()
@@ -646,26 +697,10 @@ func _on_quest_completed() -> void:
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
 	_check_goal_pad_accept()
-	if _world_env and _sky_material and _dir_light:
-		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-		if not _is_indoor_stage(cur_stage_id):
-			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	_update_dynamic_lighting()
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
-	# Dormant wave 1 reveals when the player walks into the room — distance
-	# from the entry point, or proximity to any one dormant enemy as a safety
-	# net for entry placements that already sit deep in the room.
-	if _enemies_pending_reveal and player and _map_root:
-		var lp := _map_root.to_local(player.global_position)
-		var walked_in := lp.distance_to(_reveal_origin_local) >= ENEMY_REVEAL_DIST
-		if not walked_in:
-			for e in _room_enemies:
-				if is_instance_valid(e) and e.get("dormant") \
-						and lp.distance_to((e as Node3D).position) < 2.5:
-					walked_in = true
-					break
-		if walked_in:
-			_reveal_dormant_enemies()
+	_check_dormant_reveal()
 	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
@@ -673,6 +708,34 @@ func _process(_delta: float) -> void:
 		_room_minimap.update_key_markers(_map_root)
 	_sync_debug_config()
 	FrameProfiler.mark("field_done")
+
+
+## Outdoor unpinned stages track the day/night cycle per frame; indoor and
+## snowfield-night stages are one-shot pinned in _ready().
+func _update_dynamic_lighting() -> void:
+	if not (_world_env and _sky_material and _dir_light):
+		return
+	var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if not _is_indoor_stage(cur_stage_id) and not _is_snowfield_night_stage(cur_stage_id):
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+
+
+## Dormant wave 1 reveals when the player walks into the room — distance
+## from the entry point, or proximity to any one dormant enemy as a safety
+## net for entry placements that already sit deep in the room.
+func _check_dormant_reveal() -> void:
+	if not (_enemies_pending_reveal and player and _map_root):
+		return
+	var lp := _map_root.to_local(player.global_position)
+	var walked_in := lp.distance_to(_reveal_origin_local) >= ENEMY_REVEAL_DIST
+	if not walked_in:
+		for e in _room_enemies:
+			if is_instance_valid(e) and e.get("dormant") \
+					and lp.distance_to((e as Node3D).position) < 2.5:
+				walked_in = true
+				break
+	if walked_in:
+		_reveal_dormant_enemies()
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -707,6 +770,10 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	player.add_to_group("player")
 	add_child(player)
 	player.global_position = pos
+	# Player model GLB is unlit + normal-less like the rooms — lit materials
+	# and smoothed normals so lights reach it (#646).
+	SmoothNormals.ensure(player, 2)
+	SmoothNormals.make_lit(player)
 	# HP-zero defeat (spec /states/player-death): raise the "You were defeated"
 	# screen when this player dies. CONNECT_ONE_SHOT — a fresh player is spawned
 	# per cell, so the signal only ever fires once on this instance anyway, but
@@ -727,28 +794,31 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
 
-	# Blob shadow — dark circle under the player (unshaded, always visible)
-	_blob_shadow = MeshInstance3D.new()
-	var shadow_quad := QuadMesh.new()
-	shadow_quad.size = Vector2(1.8, 1.8)
-	shadow_quad.orientation = PlaneMesh.FACE_Y
-	_blob_shadow.mesh = shadow_quad
-	_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var shadow_shader := Shader.new()
-	shadow_shader.code = \
-		"shader_type spatial;\n" + \
-		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
-		"void fragment() {\n" + \
-		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
-		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
-		"\tALBEDO = vec3(0.0);\n" + \
-		"\tALPHA = alpha;\n" + \
-		"}\n"
-	var shadow_mat := ShaderMaterial.new()
-	shadow_mat.shader = shadow_shader
-	_blob_shadow.material_override = shadow_mat
-	add_child(_blob_shadow)
-	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
+	# Blob shadow — dark circle under the player (unshaded, always visible).
+	# Snowfield-night stages skip it (#646): the moonlight casts real dynamic
+	# shadows there, and blob + moon shadow reads as a double shadow.
+	if not _is_snowfield_night_stage(str(_current_cell.get("stage_id", ""))):
+		_blob_shadow = MeshInstance3D.new()
+		var shadow_quad := QuadMesh.new()
+		shadow_quad.size = Vector2(1.8, 1.8)
+		shadow_quad.orientation = PlaneMesh.FACE_Y
+		_blob_shadow.mesh = shadow_quad
+		_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var shadow_shader := Shader.new()
+		shadow_shader.code = \
+			"shader_type spatial;\n" + \
+			"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
+			"void fragment() {\n" + \
+			"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
+			"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
+			"\tALBEDO = vec3(0.0);\n" + \
+			"\tALPHA = alpha;\n" + \
+			"}\n"
+		var shadow_mat := ShaderMaterial.new()
+		shadow_mat.shader = shadow_shader
+		_blob_shadow.material_override = shadow_mat
+		add_child(_blob_shadow)
+		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 ## Player HP reached 0 (spec /states/player-death). Raise the "You were
@@ -766,6 +836,15 @@ func _on_player_died() -> void:
 ## the coliseum debug arena is deliberately noon (kion); other interiors 10:00.
 const INDOOR_STAGE_HOURS := {"s00a_nr2": 12.0}
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1", "s00a_nr2"]
+
+## The snowfield is permanently night (#646): its identity is lantern light
+## in the dark — pin the phase instead of tracking the world clock. BOTH
+## variants (s03a open field, s03b cave rooms): the generated field mixes
+## them in one grid, and the white-COLOR_0 objective covers all of it —
+## treating only s03a left baked B-cells beside white A-cells.
+static func _is_snowfield_night_stage(stage_id: String) -> bool:
+	return stage_id.begins_with("s03")
+
 
 static func _is_indoor_stage(stage_id: String) -> bool:
 	if stage_id in INDOOR_STAGES:
@@ -2663,6 +2742,7 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	_handle_night_tuning(event)
 	# Area map (spec /states/area-map): R2 / M toggles the centered overlay.
 	if event.is_action_pressed("area_map"):
 		if _map_overlay:
@@ -2719,6 +2799,41 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
+## Snowfield-night live tuning (#646): ,/. ambient, [/] moon, -/= bake mix,
+## P logs the rig plus player material diagnostics (same knobs as the
+## material test scene, in the field where it counts).
+func _handle_night_tuning(event: InputEvent) -> void:
+	var stage_id := str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if not (_is_snowfield_night_stage(stage_id) \
+			and event is InputEventKey and event.pressed and not event.echo):
+		return
+	match (event as InputEventKey).keycode:
+		KEY_COMMA:
+			_world_env.environment.ambient_light_energy = maxf(0.0, _world_env.environment.ambient_light_energy - 0.05)
+			_print_night_tuning()
+		KEY_PERIOD:
+			_world_env.environment.ambient_light_energy += 0.05
+			_print_night_tuning()
+		KEY_BRACKETLEFT:
+			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
+			_print_night_tuning()
+		KEY_BRACKETRIGHT:
+			_moonlight.light_energy += 0.05
+			_print_night_tuning()
+		KEY_MINUS:
+			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
+			if _map_root:
+				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+			_print_night_tuning()
+		KEY_EQUAL:
+			_night_bake_mix = minf(1.0, _night_bake_mix + 0.05)
+			if _map_root:
+				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
+			_print_night_tuning()
+		KEY_P:
+			_print_night_tuning()
+
+
 func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var player_pos: Vector3 = player.global_position if player else Vector3.ZERO
 	var nearest: Node3D = null
@@ -2757,3 +2872,39 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var gp := nearest.global_position
 	_fdbg("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
+
+func _print_night_tuning() -> void:
+	var msg := "[SnowfieldNight] ambient %.2f  moon %.2f  bake mix %.2f" % [
+		_world_env.environment.ambient_light_energy, _moonlight.light_energy, _night_bake_mix]
+	if player:
+		var stats := _player_mat_stats(player)
+		msg += " | player: %d per-pixel / %d unshaded, %d/%d meshes with normals" % [
+			stats[0], stats[1], stats[2], stats[3]]
+	print(msg)
+
+
+func _player_mat_stats(node: Node) -> Array:
+	var shaded := 0
+	var flat := 0
+	var with_normals := 0
+	var mesh_count := 0
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		mesh_count += 1
+		if mi.mesh is ArrayMesh and mi.mesh.get_surface_count() > 0 \
+				and mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL] != null:
+			with_normals += 1
+		for i in range(SmoothNormals._surface_count(mi)):
+			var mat := SmoothNormals._active_material(mi, i)
+			if mat is StandardMaterial3D:
+				if (mat as StandardMaterial3D).shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+					shaded += 1
+				elif (mat as StandardMaterial3D).shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+					flat += 1
+	for child in node.get_children():
+		var sub := _player_mat_stats(child)
+		shaded += sub[0]
+		flat += sub[1]
+		with_normals += sub[2]
+		mesh_count += sub[3]
+	return [shaded, flat, with_normals, mesh_count]

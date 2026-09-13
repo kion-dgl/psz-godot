@@ -279,6 +279,10 @@
       "jaccard": 0.897
     },
     {
+      "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
+      "jaccard": 0.886
+    },
+    {
       "sig": "scripts/2d/guild_counter.gd:_process#0||scripts/2d/shops/tekker.gd:_process#0",
       "jaccard": 0.885
     },
@@ -309,6 +313,10 @@
     {
       "sig": "scripts/3d/city/city_area_base.gd:_fix_materials_recursive#0||scripts/3d/field/valley_field_controller.gd:_fix_materials#0",
       "jaccard": 0.885
+    },
+    {
+      "sig": "scripts/tools/lantern_test.gd:_build_snow#0||scripts/tools/snowfield_mattest.gd:_spawn_snow#0",
+      "jaccard": 0.88
     },
     {
       "sig": "scripts/2d/shops/item_shop.gd:_generate_sell_list#0||scripts/2d/shops/weapon_shop.gd:_generate_sell_list#0",
@@ -357,6 +365,14 @@
     {
       "sig": "scripts/3d/elements/interact_switch.gd:_init#0||scripts/3d/elements/key_pickup.gd:_init#0",
       "jaccard": 0.87
+    },
+    {
+      "sig": "scripts/tools/lantern_test.gd:_spawn_effects_from_config#0||scripts/tools/snowfield_mattest.gd:_spawn_lanterns#0",
+      "jaccard": 0.865
+    },
+    {
+      "sig": "scripts/tools/lantern_test.gd:_spawn_player#0||scripts/tools/snowfield_mattest.gd:_spawn_player#0",
+      "jaccard": 0.865
     },
     {
       "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",

@@ -26,6 +26,12 @@ var spawn_position: Vector3 = Vector3.ZERO
 # the visible model lags. Snaps on a large drop (a real fall) so it never floats.
 const MODEL_Y_SMOOTH_TAU: float = 0.07
 const MODEL_Y_SNAP_DIST: float = 0.9
+# Visual ground offset (#646): the runtime animations hold the skeleton's
+# feet ~0.55 above the body origin (bind pose measures 0.0 — what the
+# capsule was built against), so the character visibly floats. -0.20 is
+# the playtest-tuned planting (live -/= tuner session); the smoothing
+# below glides it down stairs along with the body.
+const MODEL_GROUND_OFFSET_Y: float = -0.20
 var _model_world_y: float = 0.0
 var _model_y_valid: bool = false
 
@@ -690,6 +696,20 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	# Apply tint and additive blending to blade materials
 	_apply_weapon_materials(node, weapon_data)
 
+	# Photon light (#646): a tinted weapon reads as a light source — a small
+	# omni so the blade tints the player and nearby ground at night. Attached
+	# to the bone attachment (unscaled) so range isn't shrunk by weapon scale.
+	if weapon_data.tint_color != Color.WHITE:
+		var photon := OmniLight3D.new()
+		photon.name = "PhotonLight"
+		photon.light_color = weapon_data.tint_color
+		photon.light_energy = 0.2
+		photon.omni_range = 2.5
+		photon.omni_attenuation = 2.0  # true inverse-square
+		photon.shadow_enabled = false
+		photon.position = Vector3(0, 0.4, 0)
+		bone_attachment.add_child(photon)
+
 	print("[Player] SUCCESS: Weapon '%s' attached to bone '%s' (mirror=%s, scale=%f)" % [
 		weapon_data.name, bone_attachment.bone_name, mirror, s])
 	return node
@@ -1302,10 +1322,10 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 func _smooth_model_y(delta: float) -> void:
 	var body_y := global_position.y
 	if not _model_y_valid:
-		_model_world_y = body_y
+		_model_world_y = body_y + MODEL_GROUND_OFFSET_Y
 		_model_y_valid = true
 	else:
-		_model_world_y = _damp_scalar(_model_world_y, body_y, MODEL_Y_SMOOTH_TAU, MODEL_Y_SNAP_DIST, delta)
+		_model_world_y = _damp_scalar(_model_world_y, body_y + MODEL_GROUND_OFFSET_Y, MODEL_Y_SMOOTH_TAU, MODEL_Y_SNAP_DIST, delta)
 	model.position.y = _model_world_y - body_y
 
 

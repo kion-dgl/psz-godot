@@ -7,6 +7,7 @@ import { getPortalRotation } from './types';
 import { getAreaFromMapId, getAllMapsForArea } from './constants';
 import StageSelector from './StageSelector';
 import StageCanvas from './StageCanvas';
+import { detectLanterns } from './lanternDetect';
 import FloorOverlay from './FloorOverlay';
 import PortalOverlay from './PortalOverlay';
 import MeasuredDoorwayOverlay from './MeasuredDoorwayOverlay';
@@ -32,8 +33,8 @@ import { rotateDirection } from '../quest-editor/hooks/useStageConfigs';
 import type { Direction } from '../quest-editor/types';
 import type { SimLeg } from './CapsuleSimOverlay';
 import SvgTab from './tabs/SvgTab';
-import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
-import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
+import SceneTab, { computeLighting, PLACED_PRESETS, LanternHandles } from './tabs/SceneTab';
+import ParticleOverlay, { type ParticleEffect, type PlacedEffect } from './ParticleOverlay';
 
 // Extract floor triangles from scene
 function extractFloorTriangles(
@@ -242,6 +243,7 @@ export default function UnifiedStageEditor() {
   useEffect(() => {
     setAuthoredMask(null);
     setAuthoredGroup5(0);
+    setLanternEditId(null);
   }, [selectedMapId]);
 
   // Default spawn placement state
@@ -265,6 +267,12 @@ export default function UnifiedStageEditor() {
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
   const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
   const [indoor, setIndoor] = useState(false);
+  // Selected lantern for the XZ tweak gizmo (null = none). The lantern
+  // posts bend toward their heads, so detected positions get hand-nudged.
+  const [lanternEditId, setLanternEditId] = useState<string | null>(null);
+  const lanternEffects = particles.filter(
+    (p): p is PlacedEffect => p.category === 'placed' && p.preset === 'lantern',
+  );
 
   // Waypoint tab state
   const [waypointPlacementMode, setWaypointPlacementMode] = useState(false);
@@ -347,6 +355,21 @@ export default function UnifiedStageEditor() {
 
   // Get config for current map
   const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
+
+  // Scene effects live in the unified stage config (alongside floor/portals
+  // per room, #646): hydrate when the stage's config arrives, persist back
+  // debounced — the drag gizmo updates positions every frame.
+  useEffect(() => {
+    if (config) setParticles((config.effects as ParticleEffect[] | undefined) ?? []);
+  }, [config?.mapId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!config) return;
+    if (JSON.stringify(config.effects ?? []) === JSON.stringify(particles)) return;
+    const timer = setTimeout(() => {
+      updateConfig((prev) => ({ ...prev, effects: particles }));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [particles, config]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const manhattan = useManhattanGrid({
     mapId: selectedMapId,
@@ -817,6 +840,29 @@ export default function UnifiedStageEditor() {
     [particlePlacementPreset, repositionEffectId, particles]
   );
 
+  // Seed lantern lights from the room mesh (#646): run lantern detection
+  // over the loaded GLB and replace any existing lantern-preset effects.
+  // Positions land on the region centroid; the XZ tweak handles finish the
+  // job per lantern (the heads hang off the bent arms).
+  const handleAutoDetectLanterns = useCallback((): number => {
+    if (!stageScene) return -1; // scene not loaded yet — caller reports it
+    stageScene.updateMatrixWorld(true);
+    const anchors = detectLanterns(stageScene);
+    if (!anchors.length) return 0;
+    const preset = PLACED_PRESETS['lantern'];
+    if (!preset) return 0;
+    const lanterns = anchors.map((p, i) => ({
+      ...preset,
+      id: `placed_lantern_${i}_${Date.now()}`,
+      position: [p.x, p.y, p.z] as [number, number, number],
+    })) as ParticleEffect[];
+    setParticles(prev => [
+      ...prev.filter(p => !((p as any).preset === 'lantern' && p.category === 'placed')),
+      ...lanterns,
+    ]);
+    return lanterns.length;
+  }, [stageScene]);
+
   // Render the active tab's control panel
   const renderTabPanel = () => {
     if (!config) return null;
@@ -913,6 +959,9 @@ export default function UnifiedStageEditor() {
               setRepositionEffectId(id);
               setParticlePlacementMode(true);
             }}
+            onAutoDetectLanterns={handleAutoDetectLanterns}
+            lanternTweakable={lanternEffects.length > 0}
+            onEditLanternHandle={setLanternEditId}
           />
         );
       case 'waypoints':
@@ -1461,15 +1510,27 @@ export default function UnifiedStageEditor() {
               {renderCanvasOverlays()}
               <TextureAnimator animatedTextures={animatedTextures} />
               {activeTab === 'scene' && (
-                <ParticleOverlay
-                  effects={particles}
-                  placementMode={particlePlacementMode}
-                  placementPreset={particlePlacementPreset}
-                  placementColor={PLACED_PRESETS[particlePlacementPreset]?.color || [0.2, 1.0, 0.3]}
-                  selectedEffectId={selectedEffectId}
-                  onPlaceEffect={handlePlaceEffect}
-                  onSelectEffect={setSelectedEffectId}
-                />
+                <>
+                  <ParticleOverlay
+                    effects={particles}
+                    placementMode={particlePlacementMode}
+                    placementPreset={particlePlacementPreset}
+                    placementColor={PLACED_PRESETS[particlePlacementPreset]?.color || [0.2, 1.0, 0.3]}
+                    selectedEffectId={selectedEffectId}
+                    onPlaceEffect={handlePlaceEffect}
+                    onSelectEffect={setSelectedEffectId}
+                  />
+                  {!particlePlacementMode && (
+                    <LanternHandles
+                      lanterns={lanternEffects}
+                      editId={lanternEditId}
+                      onEdit={setLanternEditId}
+                      onMove={(id, pos) => setParticles((prev) => prev.map((p) =>
+                        p.id === id ? { ...p, position: pos } as ParticleEffect : p,
+                      ))}
+                    />
+                  )}
+                </>
               )}
             </StageCanvas>
           </Suspense>
