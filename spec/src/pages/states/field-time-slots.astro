@@ -1,0 +1,118 @@
+---
+// Field time slots — the normative contract for time-of-day and weather in
+// field play (#655). Decided direction (playtest notes, post-#646): the game
+// does NOT ship a dynamic day-night cycle. Time of day is authored per field,
+// and each field ships exactly one well-executed fixed slot before any
+// variation logic exists.
+//
+// Implemented by:
+//   scripts/3d/field/field_slot_table.gd    — the slot table + resolve ladder
+//   scripts/3d/field/valley_field_controller.gd — the once-per-cell pin apply
+//   scripts/autoloads/time_manager.gd       — phase presets, no free-running clock
+//   scripts/3d/field/weather_controller.gd  — weather rides the slot row
+import Concept from '../../layouts/Concept.astro';
+
+const slots = [
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
+  { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below)' },
+  { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
+  { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
+  { key: 'arca', area: 'Moon Facility (s06)', hour: '10.0 — day', weather: '—', note: 'interim; #652 authors fixture lights' },
+  { key: 'dark', area: 'Dark Shrine (s07)', hour: '10.0 — day', weather: '—', note: 'interim; #653 authors the dark-interior pin' },
+  { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
+  { key: 'city', area: 'City field stages (s00)', hour: '10.0 — day', weather: '—', note: 'coliseum debug arena excepts to noon' },
+];
+---
+
+<Concept title="Field Time Slots" section="States">
+  <p>This page defines how time of day and weather behave during field play.
+  The key words <strong>MUST</strong>, <strong>MUST NOT</strong>,
+  <strong>SHALL</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are
+  used as in RFC 2119 — they define expected behavior, not current
+  implementation status.</p>
+
+  <p>The decision (playtest notes, post-#646): the game does
+  <strong>not</strong> ship a dynamic day-night cycle. A moving clock in a
+  field implies shops closing and NPCs going home — the wrong genre of
+  simulation for this game. Time of day is <strong>authored per field</strong>:
+  each field ships exactly one deliberate, tuned slot — its identity time
+  (valley day, snowfield night, ruins torch-dark). The snowfield's pinned
+  hour-22 night is the template; this contract generalizes it from a
+  per-area spelling into the slot table.</p>
+
+  <h2>The rules</h2>
+  <ul>
+    <li>The runtime <strong>MUST NOT</strong> run a free-running clock during
+    field play. There is no 24-real-minute day. <code>TimeManager</code>'s
+    hour changes only when a slot is applied or a debug key previews one.</li>
+    <li>Each field <strong>SHALL</strong> ship exactly one authored slot per
+    area — chosen deliberately in that area's own issue, not generated. The
+    slot <strong>MUST</strong> be applied once at field/cell entry through the
+    pin block in <code>valley_field_controller._ready()</code>; lighting
+    <strong>MUST NOT</strong> be re-tracked per frame.</li>
+    <li>The applied slot hour <strong>MUST</strong> own
+    <code>TimeManager.current_hour</code> for the duration of field play, so
+    hour-derived consumers (the player's lantern glow via the darkness factor)
+    read the field's authored time, not a leftover session value.</li>
+    <li>The city (s00) <strong>MUST</strong> be always day. The city scenes
+    carry no clock at all — their lighting is authored interiors. City stages
+    reached through the field controller (the coliseum debug arena) pin
+    <code>12.0</code> (noon, deliberate).</li>
+  </ul>
+
+  <h2>The slot row</h2>
+  <p>A slot row carries the area's identity: an <code>hour</code> (float —
+  fractional hours pick a stable lerped palette between phase presets), an
+  optional <code>weather</code>, and optional rig overrides applied after the
+  phase preset (ambient/sun/moon energies, moon shadows, the tonemap white
+  point, and the vertex-color bake mix that blends the baked lighting toward
+  white so the dynamic rig drives the look). Rows resolve most-specific-first:
+  exact <code>stage_id</code> → variant prefix (<code>s03a</code>,
+  <code>s03b</code>, tower floor styles) → area id → default day.</p>
+
+  <table>
+    <thead><tr><th>Area row</th><th>Area</th><th>Hour</th><th>Weather</th><th>Note</th></tr></thead>
+    <tbody>
+      {slots.map(s => (
+        <tr><td><code>{s.key}</code></td><td>{s.area}</td><td>{s.hour}</td><td>{s.weather}</td><td>{s.note}</td></tr>
+      ))}
+    </tbody>
+  </table>
+
+  <p>The snowfield row reproduces the #646 lock verbatim: hour 22, snow,
+  sun energy 0, ambient 1.50, moon 0.35 with moon shadows on, bake mix 0.25.
+  The interim rows (10.0 day) preserve pre-#655 behavior for areas whose
+  identity issues (#648–#654, #657) have not authored a slot yet; each issue
+  replaces its row's values and locks them from a playtest read-out.</p>
+
+  <h2>Weather precedence</h2>
+  <ul>
+    <li>A quest-authored <code>weather</code> key (session level)
+    <strong>MUST</strong> override the slot row's weather — explicit per-quest
+    authoring beats the area default.</li>
+    <li>Otherwise the slot row's weather <strong>SHALL</strong> apply (this is
+    the #609 unification: per-area weather config, not scattered prefixes).</li>
+    <li>Indoor stages <strong>MUST NOT</strong> spawn weather particles
+    regardless of source.</li>
+  </ul>
+
+  <h2>Debug preview</h2>
+  <p>The <code>[</code> / <code>]</code> keys preview the current field at an
+  adjacent hour: they set <code>TimeManager.current_hour</code> and the field
+  controller re-applies the active slot's rig at the previewed hour. The
+  preview <strong>MUST NOT</strong> persist across cell transitions — each
+  cell entry re-applies the authored slot. On fields whose slot ships rig
+  overrides, the tuning keys (`,`, `.`, `[`, `]`, `-`, `=`, `P` for the
+  read-out) own those keycodes and the hour preview yields.</p>
+
+  <h2>Explicitly deferred (phase 2 — do not build)</h2>
+  <ul>
+    <li>Additional slot variations per field (valley evening, wetlands
+    dusk-rain, …) — added one at a time only after that field's first slot is
+    locked and plays well.</li>
+    <li>Selection/advancement logic — rolled at field selection vs. fixed
+    A→B progression. This only becomes a real question once variations exist.</li>
+  </ul>
+  <p>Supersedes the always-day ask in #605 (day becomes Valley's one slot).</p>
+</Concept>

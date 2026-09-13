@@ -25,11 +25,11 @@ func _init(controller) -> void:
 
 
 func _spawn_weather() -> void:
-	var weather: String = str(SessionManager.get_session().get("weather", ""))
-	# Snowfield defaults to snow (#646): quests can override via their own
-	# weather key, but a free-roam snowfield without one should still snow.
-	if weather.is_empty() and str(_c._current_cell.get("stage_id", "")).begins_with("s03"):
-		weather = "snow"
+	# Weather rides the field slot row (#655, unifying with #609's per-area
+	# ask): a quest-authored session weather key overrides, otherwise the
+	# area's slot row carries it (the snowfield's snow). Indoor stages skip.
+	var weather: String = FieldSlotTable.resolve_weather(
+		str(SessionManager.get_session().get("weather", "")), _c._slot)
 	if weather.is_empty():
 		return
 	var stage_id: String = str(_c._current_cell.get("stage_id", ""))

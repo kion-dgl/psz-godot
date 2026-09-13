@@ -1,18 +1,23 @@
 extends Node
-## TimeManager — In-game clock with day/night cycle and lighting control.
-## Autoload that tracks time, calculates phase-based lighting, and applies
-## it to 3D scenes with WorldEnvironment + DirectionalLight3D.
+## TimeManager — time-of-day phase presets + field lighting apply (#655).
+## Autoload that holds the current hour and calculates phase-based lighting,
+## applied to 3D scenes with WorldEnvironment + DirectionalLight3D.
+##
+## NO free-running clock: the hour changes only when a field slot is applied
+## (once per cell entry — see FieldSlotTable) or when the debug keys preview
+## an adjacent hour. The hour_changed signal lets the field controller
+## re-apply the active slot's rig at a previewed hour.
 ##
 ## Stage geometry uses shaded materials with vertex_color_use_as_albedo,
 ## so DirectionalLight3D + ambient light drive the day/night atmosphere
 ## directly.  Scene lights (OmniLight3D, SpotLight3D) also affect geometry.
 
+signal hour_changed(hour: float)
+
 enum Phase { NIGHT, SUNRISE, DAY, SUNSET }
 
-## Clock state
-var current_hour: float = 10.0  # Start at 10am (daytime)
-var time_speed: float = 1.0     # 1.0 = 1 real sec per game minute (full day in ~24 real min)
-var paused: bool = false
+## Clock state — set by the field slot apply or the debug preview keys
+var current_hour: float = 10.0  # Day default; fields pin their authored slot
 
 ## HUD
 var _hud_layer: CanvasLayer
@@ -92,12 +97,10 @@ func _ready() -> void:
 	_hud_layer.visible = false
 
 
-func _process(delta: float) -> void:
-	if paused:
-		return
-	current_hour += delta * time_speed / 60.0
-	if current_hour >= 24.0:
-		current_hour -= 24.0
+func _process(_delta: float) -> void:
+	# No clock advance (#655): fields pin their authored slot at cell entry.
+	# The per-frame pass only refreshes the debug HUD read-out (cheap no-op
+	# while hidden) so it tracks hour/stage-label changes.
 	_update_hud()
 
 
@@ -199,6 +202,7 @@ func set_hour(h: float) -> void:
 	current_hour = fmod(h, 24.0)
 	if current_hour < 0.0:
 		current_hour += 24.0
+	hour_changed.emit(current_hour)
 
 
 func _lerp_config(from: Dictionary, to: Dictionary, t: float) -> Dictionary:
@@ -230,6 +234,9 @@ func _update_hud() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_BRACKETRIGHT:
+			# Debug hour preview (#655): set_hour emits hour_changed, and the
+			# field controller re-applies the active slot's rig at the new
+			# hour. No effect outside fields (nothing else consumes the hour).
 			set_hour(current_hour + 1.0)
 			print("[TimeManager] Hour: %.1f  Phase: %s" % [current_hour, get_phase()])
 			get_viewport().set_input_as_handled()
