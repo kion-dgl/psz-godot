@@ -27129,6 +27129,88 @@
         "wp_1780458122103_uinb9q",
         "wp_1780458114670_uzz3hu"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -38.35,
+          4.47,
+          -6.28
+        ],
+        "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -6.95,
+          4.38,
+          42.18
+        ],
+        "id": "placed_anchor_1_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          20.31,
+          5.08,
+          -20.32
+        ],
+        "id": "placed_anchor_2_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          32.94,
+          5.67,
+          -2.62
+        ],
+        "id": "placed_anchor_3_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03b_ib2": {
@@ -27883,6 +27965,156 @@
         "wp_1780458463285_x7zzfa",
         "wp_1780458460585_36c4qn"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -26.67,
+          -0.5,
+          2.2
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -23.37,
+          -0.5,
+          -25.19
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -20.38,
+          -0.5,
+          21.8
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -0.84,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          11.79,
+          -0.5,
+          -25.19
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          21.25,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          26.2,
+          -0.5,
+          0.9
+        ],
+        "id": "placed_anchor_7_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_ic3": {
@@ -28360,6 +28592,190 @@
         "wp_1780458559417_ihewg0",
         "wp_1780458562150_45rc8k"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -36.21,
+          -0.5,
+          -3.13
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -29.92,
+          -0.5,
+          16.47
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -25.56,
+          -0.5,
+          -29.95
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -10.24,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -5.79,
+          -0.5,
+          -35.35
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          3.82,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          17.88,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_7_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          22.04,
+          -0.5,
+          -30.08
+        ],
+        "id": "placed_anchor_8_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          32.02,
+          -0.5,
+          -1.45
+        ],
+        "id": "placed_anchor_9_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_lb1": {
@@ -29036,6 +29452,88 @@
         "wp_1780458793199_6k1ckf",
         "wp_1780458784649_9i7nne"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -20.32,
+          5.08,
+          -22.66
+        ],
+        "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -6.28,
+          4.47,
+          36.0
+        ],
+        "id": "placed_anchor_1_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -2.62,
+          5.67,
+          -35.29
+        ],
+        "id": "placed_anchor_2_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          42.18,
+          4.38,
+          4.59
+        ],
+        "id": "placed_anchor_3_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03b_lc1": {
@@ -29300,6 +29798,173 @@
         "wp_1780459162563_2y01co",
         "wp_1780459161296_v700m0"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -31.18,
+          -0.5,
+          -10.48
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -26.04,
+          -0.5,
+          15.48
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -17.74,
+          -0.5,
+          -30.96
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -8.16,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          12.2,
+          -0.5,
+          -30.96
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          17.86,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          31.78,
+          -0.5,
+          -18.59
+        ],
+        "id": "placed_anchor_7_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          31.78,
+          -0.5,
+          10.26
+        ],
+        "id": "placed_anchor_8_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_lc2": {
@@ -29594,6 +30259,173 @@
         "wp_1780459205896_g8ln5p",
         "wp_1780459205130_hi7gbf"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -36.21,
+          -0.5,
+          -4.67
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -25.19,
+          -0.5,
+          -31.17
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -25.19,
+          -0.5,
+          23.37
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -1.1,
+          -0.5,
+          -34.71
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          2.2,
+          -0.5,
+          26.67
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          21.8,
+          -0.5,
+          20.38
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          29.96,
+          -0.5,
+          -21.25
+        ],
+        "id": "placed_anchor_7_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          29.96,
+          -0.5,
+          0.84
+        ],
+        "id": "placed_anchor_8_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_na1": {
@@ -29709,6 +30541,37 @@
         "wp_1780459364559_e77rhb",
         "wp_1780459369260_nl30n9"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          35.85,
+          5.67,
+          -2.62
+        ],
+        "id": "placed_anchor_0_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03b_nb2": {
@@ -29926,6 +30789,173 @@
         "wp_1780459393476_j3mzoc",
         "wp_1780459394610_d7ugzm"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -26.67,
+          -0.5,
+          2.2
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -23.37,
+          -0.5,
+          -25.19
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -20.38,
+          -0.5,
+          21.8
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -0.84,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          4.67,
+          -0.5,
+          -36.21
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          21.25,
+          -0.5,
+          29.96
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          31.17,
+          -0.5,
+          -25.19
+        ],
+        "id": "placed_anchor_7_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          34.71,
+          -0.5,
+          -1.1
+        ],
+        "id": "placed_anchor_8_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_nc2": {
@@ -31366,6 +32396,190 @@
         "wp_1780459827776_0nb2nm",
         "wp_1780459826460_ynisx2"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -30.61,
+          -0.5,
+          -28.12
+        ],
+        "id": "placed_anchor_0_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -30.61,
+          -0.5,
+          7.32
+        ],
+        "id": "placed_anchor_1_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -21.16,
+          -0.5,
+          29.45
+        ],
+        "id": "placed_anchor_2_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          -1.45,
+          -0.5,
+          -36.22
+        ],
+        "id": "placed_anchor_3_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "id": "placed_anchor_4_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          3.51,
+          -0.5,
+          33.07
+        ],
+        "id": "placed_anchor_5_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          23.32,
+          -0.5,
+          33.07
+        ],
+        "id": "placed_anchor_6_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          32.72,
+          -0.5,
+          -22.52
+        ],
+        "id": "placed_anchor_7_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          32.72,
+          -0.5,
+          -3.82
+        ],
+        "id": "placed_anchor_8_mizu2"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          0.45,
+          0.65,
+          0.95
+        ],
+        "intensity": 0.8,
+        "radius": 7.0,
+        "position": [
+          32.72,
+          -0.5,
+          10.24
+        ],
+        "id": "placed_anchor_9_mizu2"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_mizu2",
+        "emission": [
+          0.3,
+          0.5,
+          0.8
+        ],
+        "energy": 0.45,
+        "roughness": 0.12
+      }
     ]
   },
   "s03b_td1": {
@@ -31756,6 +32970,71 @@
         "wp_1780459942593_j0d6ma",
         "wp_1780459941459_pcdrqm"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -6.95,
+          4.38,
+          42.18
+        ],
+        "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          20.31,
+          5.08,
+          -20.32
+        ],
+        "id": "placed_anchor_1_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          32.94,
+          5.67,
+          -2.62
+        ],
+        "id": "placed_anchor_2_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03b_td2": {
@@ -32086,6 +33365,88 @@
         "wp_1780460014476_yq74j0",
         "wp_1780460013426_f8aj7k"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -3.56,
+          4.38,
+          41.96
+        ],
+        "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          0.03,
+          4.38,
+          43.4
+        ],
+        "id": "placed_anchor_1_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          10.19,
+          5.13,
+          -37.31
+        ],
+        "id": "placed_anchor_2_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          35.85,
+          5.67,
+          -2.62
+        ],
+        "id": "placed_anchor_3_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03b_xb2": {
@@ -32446,6 +33807,105 @@
         "wp_1780460112742_1bm2f8",
         "wp_spawn_1_1780460097293"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -27.89,
+          5.08,
+          -17.42
+        ],
+        "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -2.62,
+          5.67,
+          -40.8
+        ],
+        "id": "placed_anchor_1_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          -2.48,
+          4.47,
+          38.35
+        ],
+        "id": "placed_anchor_2_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          0.03,
+          4.47,
+          38.35
+        ],
+        "id": "placed_anchor_3_kinoko"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "intensity": 0.55,
+        "radius": 6.0,
+        "position": [
+          42.93,
+          4.38,
+          -0.93
+        ],
+        "id": "placed_anchor_4_kinoko"
+      }
+    ],
+    "glowMaterials": [
+      {
+        "material": "1_kinoko",
+        "emission": [
+          1.0,
+          0.45,
+          0.25
+        ],
+        "energy": 0.6,
+        "roughness": 0.7
+      }
     ]
   },
   "s03e_ia1": {

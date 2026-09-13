@@ -13,9 +13,10 @@
 import Concept from '../../layouts/Concept.astro';
 
 const slots = [
+  { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: '—', note: '#657: first variant row; anchors are authored placed lights' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
-  { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below)' },
+  { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
   { key: 'arca', area: 'Moon Facility (s06)', hour: '10.0 — day', weather: '—', note: 'interim; #652 authors fixture lights' },
@@ -80,11 +81,18 @@ const slots = [
     </tbody>
   </table>
 
-  <p>The snowfield row reproduces the #646 lock verbatim: hour 22, snow,
-  sun energy 0, ambient 1.50, moon 0.35 with moon shadows on, bake mix 0.25.
-  The interim rows (10.0 day) preserve pre-#655 behavior for areas whose
-  identity issues (#648–#654, #657) have not authored a slot yet; each issue
-  replaces its row's values and locks them from a playtest read-out.</p>
+  <p>The snowfield rows split by variant (#657, the first variant row):
+  <code>s03b</code> caves pin 5.5 — the sunrise ramp's midpoint, a stable
+  lerped pre-dawn palette — with the sun off and ambient carrying a dim cool
+  base, while <code>s03a</code> open-field stages keep the #646 night lock
+  verbatim (hour 22, snow, sun energy 0, ambient 1.50, moon 0.35 with moon
+  shadows on, bake mix 0.25). The B caves' light anchors are authored placed
+  <code>light</code> effects from the stage config — the art ships no
+  crystals, so the pools are the blue reflective anchors and the red
+  mushroom clusters the warm accents. The interim rows (10.0 day) preserve
+  pre-#655 behavior for areas whose identity issues (#648–#654) have not
+  authored a slot yet; each issue replaces its row's values and locks them
+  from a playtest read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>

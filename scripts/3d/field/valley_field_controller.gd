@@ -281,6 +281,9 @@ func _ready() -> void:
 	if _slot.has("bake_mix"):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
+	# #657: anchor meshes read as light sources where the stage config
+	# authors it — emissive tint + roughness, matched by material name.
+	_apply_glow_materials()
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]
@@ -968,6 +971,22 @@ static func _wrap_mode_int(mode: String) -> int:
 		"mirror": return 1
 		"clamp": return 2
 	return 0  # repeat
+
+
+## #657 glow pass: the stage config's glowMaterials list makes anchor meshes
+## read as sources — emissive tint + authored roughness, matched by material
+## resource name (e.g. the s03b water pools and mushroom clusters). Materials
+## are duplicated before mutation: imported GLB materials are shared across
+## stages, and the glow must not leak.
+func _apply_glow_materials() -> void:
+	var passes: Dictionary = {}
+	for g in _stage_config.get("glowMaterials", []):
+		passes[str(g.get("material", ""))] = g
+	if passes.is_empty():
+		return
+	var touched := MeshUtils.apply_glow_materials(_map_root, passes)
+	if touched:
+		_fdbg("[ValleyField] Glow pass on %d surfaces (%s)" % [touched, ", ".join(passes.keys())])
 
 
 func _fix_materials(node: Node) -> void:

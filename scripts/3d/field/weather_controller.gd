@@ -164,14 +164,21 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 	var color_arr: Array = effect.get("color", [1, 1, 1])
 	var color := Color(float(color_arr[0]), float(color_arr[1]), float(color_arr[2]))
+
+	var effect_type: String = str(effect.get("type", "spores"))
+
+	# Plain light (#636/#657): an omni with no particle footprint — the s03b
+	# cave anchors (water pools, mushroom clusters).
+	if effect_type == "light":
+		_spawn_plain_light(effect, pos, color)
+		return
+
 	var count: int = int(effect.get("count", 10))
 	var radius: float = float(effect.get("radius", 1.0))
 	var height: float = float(effect.get("height", 5.0))
 	var speed: float = float(effect.get("speed", 1.0))
 	var light_intensity: float = float(effect.get("light_intensity", 0.0))
 	var light_radius: float = float(effect.get("light_radius", 5.0))
-
-	var effect_type: String = str(effect.get("type", "spores"))
 
 	var root := Node3D.new()
 	root.name = "StageEffect_%s" % effect_type
@@ -226,6 +233,22 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	root.add_child(particles)
 	if light_intensity > 0:
 		_attach_spore_light(root, pos, color, light_intensity, light_radius)
+
+
+## Plain placed light (#636/#657): an omni with no particle footprint.
+## Inverse-square 2.0 like every placed light; intensity rides the authored
+## value directly (the ×12 spore multiplier is a punch-through-ambient
+## correction specific to the bright A-night's lantern pools).
+func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
+	var light := OmniLight3D.new()
+	light.name = "AnchorLight"
+	light.light_color = color
+	light.light_energy = float(effect.get("intensity", 1.0))
+	light.omni_range = float(effect.get("radius", 6.0))
+	light.omni_attenuation = 2.0
+	light.shadow_enabled = false
+	light.position = pos
+	_c._map_root.add_child(light)
 
 
 func _attach_spore_light(root: Node3D, pos: Vector3, color: Color,

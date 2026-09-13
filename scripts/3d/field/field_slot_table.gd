@@ -22,9 +22,9 @@ extends RefCounted
 ##   tonemap_white float  tonemap white point override
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
-## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
-## variant rung ships no rows yet; #657's s03b early-morning caves will be the
-## first.
+## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
+## row is the first variant slot (#657): it splits the B caves off the snowfield
+## night while s03a stages keep the area row untouched.
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -32,6 +32,20 @@ const SLOTS := {
 	# ── per-stage exceptions (most specific) ──
 	# The coliseum debug arena is deliberately noon (kion); other s00 stages day.
 	"s00a_nr2": {"hour": 12.0},
+
+	# ── per-variant rows (#657: the first) ──
+	# Snowfield B caves — early-morning pre-dawn (#657). NOT A's night: caves
+	# see no sky, so ambient carries a dim cool base at the sunrise ramp's
+	# 5.5 midpoint (stable lerped palette), sun off, a faint moon as the sky
+	# fill that keeps per-pixel depth reading. Anchors are the cave's own
+	# props (water pools / mushrooms), authored as placed light effects.
+	"s03b": {
+		"hour": 5.5,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.6,
+		"moon_energy": 0.12,
+		"bake_mix": 0.25,
+	},
 
 	# ── per-area identity slots ──
 	"gurhacia": {"hour": 10.0},   # Valley day — #648 tunes the balance
@@ -59,8 +73,7 @@ const SLOTS := {
 
 ## Resolve the slot for a cell: stage-level rows beat variant-prefix rows beat
 ## the area row. Returns a row with "hour" always present. The table parameter
-## exists so the unit test can exercise the ladder with synthetic rows — the
-## shipped table carries no variant rows until #657.
+## exists so the unit test can exercise the ladder with synthetic rows.
 static func slot_for(area_id: String, stage_id: String, table: Dictionary = SLOTS) -> Dictionary:
 	if table.has(stage_id):
 		return (table[stage_id] as Dictionary).duplicate()
