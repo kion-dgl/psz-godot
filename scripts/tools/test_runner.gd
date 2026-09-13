@@ -216,6 +216,10 @@ func _run_tests_systems() -> void:
 	test_field_config()
 	test_wetlands_field()
 	test_tower_field()
+	test_field_time_slots()
+	test_time_manager_clock()
+	test_s03b_anchor_lights()
+	test_s03b_anchor_config()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -3792,12 +3796,13 @@ func test_coliseum_master_picker() -> void:
 	assert_eq(warp["spawn_position"], [0.0, 0.5, 15.0], "arena spawn at (0, 15)")
 	assert_eq(str(warp["current_cell_pos"]), "0,0", "warp targets the arena cell")
 
-	# The arena is an indoor stage (no weather, no day/night cycle) fixed at
-	# noon (kion playtest).
+	# The arena is an indoor stage (no weather) whose slot pins noon
+	# (kion playtest) — the exception row in the slot table (#655).
 	var FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	var SlotTable := preload("res://scripts/3d/field/field_slot_table.gd")
 	assert_true(FieldController._is_indoor_stage("s00a_nr2"), "coliseum classifies as indoors")
-	assert_eq(float(FieldController.INDOOR_STAGE_HOURS.get("s00a_nr2", -1.0)), 12.0,
-		"coliseum indoor hour is noon")
+	assert_eq(float(SlotTable.slot_for("city", "s00a_nr2").get("hour", -1.0)), 12.0,
+		"coliseum slot hour is noon")
 
 	# The picker scene itself: instantiates, builds its rows from the roster, and
 	# wires the shared shop nav (catches node-path/@onready drift in the .tscn).
@@ -10175,13 +10180,21 @@ func test_valley_grid() -> void:
 	assert_eq(StageRotation.rotate_dir("east", 90), "south", "Rotate east by 90")
 	assert_eq(StageRotation.rotate_dir("west", 180), "east", "Rotate west by 180")
 
-	# Rotated gates
-	var sa1_gates: Array[String] = gen.get_rotated_gates("s01a_sa1", 0)
+	# Rotated gates. get_rotated_gates(stage_id, rot) was folded into the
+	# cell-dict _get_rotated_gates during the gate-economy rework; this dead
+	# call had been silently aborting the whole test function. Express the
+	# same checks through GATES + StageRotation so the asserts actually run.
+	var rot_gates := func(stage_id: String, rot: int) -> Array[String]:
+		var out: Array[String] = []
+		for g in GridGen.GATES.get(stage_id, []):
+			out.append(StageRotation.rotate_dir(str(g), rot))
+		return out
+	var sa1_gates: Array[String] = rot_gates.call("s01a_sa1", 0)
 	assert_eq(sa1_gates.size(), 1, "sa1 has 1 gate")
 	assert_eq(sa1_gates[0], "south", "sa1 gate is south at rot 0")
-	var sa1_rot90: Array[String] = gen.get_rotated_gates("s01a_sa1", 90)
+	var sa1_rot90: Array[String] = rot_gates.call("s01a_sa1", 90)
 	assert_eq(sa1_rot90[0], "west", "sa1 gate is west at rot 90")
-	var lb1_gates: Array[String] = gen.get_rotated_gates("s01a_lb1", 90)
+	var lb1_gates: Array[String] = rot_gates.call("s01a_lb1", 90)
 	assert_true("east" in lb1_gates and "north" in lb1_gates, "lb1 at rot 90 has east+north")
 
 	# Gate data completeness
@@ -10194,6 +10207,10 @@ func test_valley_grid() -> void:
 	assert_eq(total_stages, 37, "GATES has all 37 stages (18 a + 18 b + 1 e)")
 
 	# ── Grid generation: area a ──
+	# Seeded: RandomNumberGenerator seeds randomly per instance, and the
+	# gate-economy rolls (TWO_KEY chance) ride _rng — unseeded generations
+	# made the key/gate asserts flaky. Same seed + params = same field.
+	gen.set_seed(20260913)
 	var result: Dictionary = gen.generate("a", {"path_length": 5, "key_gates": 0, "branches": 0})
 	var cells: Array = result.get("cells", [])
 	assert_true(cells.size() >= 3, "Grid A has >= 3 cells (got %d)" % cells.size())
@@ -10247,18 +10264,13 @@ func test_valley_grid() -> void:
 					bidi_ok = false
 	assert_true(bidi_ok, "All connections are bidirectional")
 
-	# GLBs exist
-	var all_glbs_exist := true
-	for cell in cells:
-		var stage_id: String = cell.get("stage_id", "")
-		var variant: String = stage_id[3] if stage_id.length() >= 4 else "a"
-		var glb_path := "res://assets/stages/valley_%s/%s/lndmd/%s_m.glb" % [variant, stage_id, stage_id]
-		if not ResourceLoader.exists(glb_path):
-			all_glbs_exist = false
-			print("    Missing GLB: %s" % glb_path)
-	assert_true(all_glbs_exist, "All grid cell GLBs exist")
+	# Per-file GLB existence is verified server-side against R2 — not here.
+	# (This assert used to run on dev boxes only, by accident: the dead
+	# get_rotated_gates call above silently aborted the test before it. CI
+	# checks out no raw assets, so a filesystem assert can't pass there.)
 
 	# ── Grid generation: area b ──
+	gen.set_seed(7013)
 	var b_result: Dictionary = gen.generate("b", {"path_length": 5, "key_gates": 0, "branches": 0})
 	var b_cells: Array = b_result.get("cells", [])
 	assert_true(b_cells.size() >= 3, "Grid B has >= 3 cells (got %d)" % b_cells.size())
@@ -10270,6 +10282,7 @@ func test_valley_grid() -> void:
 	assert_eq(str(b_start.get("stage_id", "")), "s01b_sa1", "Grid B start uses s01b_sa1")
 
 	# ── Branches ──
+	gen.set_seed(4242)
 	var br_result: Dictionary = gen.generate("a", {"path_length": 6, "key_gates": 0, "branches": 2})
 	var br_cells: Array = br_result.get("cells", [])
 	var branch_count := 0
@@ -10280,6 +10293,7 @@ func test_valley_grid() -> void:
 	assert_true(branch_count >= 0, "Branch generation runs without error (placed %d)" % branch_count)
 
 	# ── Key-gates ──
+	gen.set_seed(6565)
 	var kg_result: Dictionary = gen.generate("a", {"path_length": 8, "key_gates": 1, "branches": 1})
 	var kg_cells: Array = kg_result.get("cells", [])
 	var key_count := 0
@@ -10659,6 +10673,190 @@ func test_tower_field() -> void:
 	# ── Valley still works after tower changes (regression) ──
 	var valley_field: Dictionary = gen.generate_field("normal", "gurhacia")
 	assert_eq(valley_field.get("sections", []).size(), 4, "Valley still generates 4 sections")
+
+	print("")
+
+
+# ── Field Time Slots tests (#655) ──────────────────────────────
+
+func test_field_time_slots() -> void:
+	print("── Field Time Slots (#655) ──")
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+
+	# ── Every area in AREA_CONFIG ships a slot row (phase-1 completeness) ──
+	for area_id in GridGen.AREA_CONFIG:
+		var slot := Slots.slot_for(str(area_id), "zz_none")
+		assert_true(slot.has("hour"), "Area %s resolves a slot hour" % area_id)
+		assert_true(float(slot["hour"]) >= 0.0 and float(slot["hour"]) < 24.0,
+			"Area %s slot hour is a valid clock hour (%s)" % [area_id, str(slot.get("hour"))])
+
+	# Unknown area falls back to the default day slot
+	assert_eq(Slots.slot_for("nowhere", "zz_none").get("hour"), 10.0,
+		"Unknown area falls back to default day hour 10.0")
+
+	# ── The snowfield row reproduces the #646 lock verbatim ──
+	var rioh := Slots.slot_for("rioh", "s03a_ic1")
+	assert_eq(rioh.get("hour"), 22.0, "Snowfield slot pins hour 22 (night)")
+	assert_eq(str(rioh.get("weather", "")), "snow", "Snowfield slot rides weather snow")
+	assert_eq(rioh.get("sun_energy"), 0.0, "Snowfield rig: sun energy 0")
+	assert_eq(rioh.get("ambient_energy"), 1.5, "Snowfield rig: ambient 1.50 (playtest lock)")
+	assert_eq(rioh.get("moon_energy"), 0.35, "Snowfield rig: moon 0.35 (playtest lock)")
+	assert_eq(rioh.get("moon_shadows"), true, "Snowfield rig: moon casts shadows")
+	assert_eq(rioh.get("bake_mix"), 0.25, "Snowfield rig: bake mix 0.25 (playtest lock)")
+
+	# ── Stage-level exception: the coliseum debug arena is deliberately noon ──
+	assert_eq(Slots.slot_for("city", "s00a_nr2").get("hour"), 12.0,
+		"Coliseum stage exception pins noon")
+	assert_eq(Slots.slot_for("city", "s00a_zz9").get("hour"), 10.0,
+		"Other s00 city stages stay on the city day row")
+
+	# ── Variant-prefix rung (#657 ships the first row): a variant row beats
+	# the area row for its stages only. ──
+	var variant_table: Dictionary = Slots.SLOTS.duplicate()
+	variant_table["s03z"] = {"hour": 7.25}
+	assert_eq(Slots.slot_for("rioh", "s03z_lc1", variant_table).get("hour"), 7.25,
+		"Variant rows beat the area row for their stages")
+	assert_eq(Slots.slot_for("rioh", "s03a_ic1", variant_table).get("hour"), 22.0,
+		"A-variant stages keep the area row while a variant row exists")
+
+	# ── The shipped s03b row (#657): pre-dawn caves split off the snowfield
+	# night — and A's #646 lock must not move. ──
+	var s03b := Slots.slot_for("rioh", "s03b_lc1")
+	assert_eq(s03b.get("hour"), 5.5, "s03b pins 5.5 (sunrise-ramp midpoint)")
+	assert_eq(s03b.get("sun_energy"), 0.0, "s03b rig: sun off (caves see no sky)")
+	assert_eq(s03b.get("ambient_energy"), 0.6, "s03b rig: dim ambient base")
+	assert_eq(s03b.get("moon_energy"), 0.12, "s03b rig: faint moon sky-fill")
+	assert_eq(s03b.get("bake_mix"), 0.25, "s03b keeps the white-strategy bake mix")
+	assert_true(not s03b.has("weather"), "s03b row authors no weather (indoor skip)")
+	var s03a := Slots.slot_for("rioh", "s03a_ic1")
+	assert_eq(s03a.get("hour"), 22.0, "s03a stages keep the rioh night (A lock intact)")
+	assert_eq(s03a.get("ambient_energy"), 1.5, "A's ambient lock intact")
+
+	# ── Resolved slots are copies: tuning a returned row can't poison the table ──
+	var mut := Slots.slot_for("rioh", "s03a_ic1")
+	mut["hour"] = 3.0
+	assert_eq(Slots.slot_for("rioh", "s03a_ic1").get("hour"), 22.0,
+		"slot_for returns a copy — table row unchanged")
+
+	# ── Weather precedence: quest session weather overrides the row ──
+	assert_eq(Slots.resolve_weather("rain", rioh), "rain",
+		"Quest weather overrides the slot row")
+	assert_eq(Slots.resolve_weather("", rioh), "snow",
+		"Empty quest weather falls back to the slot row")
+	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "",
+		"Valley row authors no weather")
+
+	print("")
+
+
+# ── TimeManager clock semantics (#655): no free-run; set_hour wraps + emits. ──
+func test_time_manager_clock() -> void:
+	print("── TimeManager Clock (#655) ──")
+	assert_true(not ("time_speed" in TimeManager), "TimeManager no longer ships time_speed")
+	assert_true(not ("paused" in TimeManager), "TimeManager no longer ships paused")
+	TimeManager.current_hour = 10.0
+	TimeManager._process(600.0)
+	assert_eq(TimeManager.current_hour, 10.0,
+		"_process does not advance the hour (10 real min changes nothing)")
+
+	# set_hour wraps and emits hour_changed (the field's preview re-apply hook)
+	var emitted: Array = []
+	var listener := func(h): emitted.append(h)
+	TimeManager.hour_changed.connect(listener)
+	TimeManager.set_hour(25.0)
+	assert_eq(TimeManager.current_hour, 1.0, "set_hour(25) wraps to 1.0")
+	TimeManager.set_hour(-1.0)
+	assert_eq(TimeManager.current_hour, 23.0, "set_hour(-1) wraps to 23.0")
+	assert_eq(emitted.size(), 2, "set_hour emitted hour_changed on every call")
+	assert_eq(emitted[0], 1.0, "hour_changed carries the wrapped hour")
+	TimeManager.hour_changed.disconnect(listener)
+
+	print("")
+
+
+# Stub host for WeatherController — it only needs the controller back-ref's
+# _map_root to parent spawned effects.
+class StubWeatherHost extends RefCounted:
+	var _map_root: Node3D
+
+
+# ── s03b anchor lights (#657): the plain `light` effect path (#636) and the
+# authored cave anchors' integrity. ──────────────────────────────
+func test_s03b_anchor_lights() -> void:
+	print("── s03b Anchor Lights (#657) ──")
+	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
+	var host := StubWeatherHost.new()
+	var map_root := Node3D.new()
+	add_child(map_root)
+	host._map_root = map_root
+	var weather = WeatherCtl.new(host)
+
+	# Plain light effect: one omni, authored values, inverse-square, shadowless
+	weather._spawn_placed_effect({
+		"type": "light", "category": "placed",
+		"color": [0.45, 0.65, 0.95], "intensity": 0.8, "radius": 7.0,
+		"position": [1.5, -0.5, 2.5],
+	})
+	var omnis: Array = []
+	for child in map_root.get_children():
+		if child is OmniLight3D:
+			omnis.append(child)
+	assert_eq(omnis.size(), 1, "plain light effect spawns exactly one omni")
+	if omnis.size() == 1:
+		var l := omnis[0] as OmniLight3D
+		assert_true(is_equal_approx(l.light_energy, 0.8), "light energy is the authored intensity (no ×12)")
+		assert_true(is_equal_approx(l.omni_range, 7.0), "light range is the authored radius")
+		assert_eq(l.omni_attenuation, 2.0, "inverse-square attenuation 2.0 (#646 fact)")
+		assert_true(not l.shadow_enabled, "no shadows (gl_compatibility convention)")
+		assert_true(l.light_color.is_equal_approx(Color(0.45, 0.65, 0.95)),
+			"light color is the authored anchor blue")
+		assert_true(is_equal_approx(l.position.y, -0.5), "light sits at the authored position")
+	map_root.queue_free()
+
+	print("")
+
+
+# ── s03b authored-anchor integrity (#657): the unified config's light
+# entries and glow materials are well-formed, in-room, and absent from A. ──
+func test_s03b_anchor_config() -> void:
+	print("── s03b Anchor Config (#657) ──")
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	assert_true(cfg_file != null, "unified stage config loads")
+	var json := JSON.new()
+	assert_eq(json.parse(cfg_file.get_as_text()), OK, "unified stage config parses")
+	cfg_file.close()
+	var cfg: Dictionary = json.data
+	var anchor_count := 0
+	var allowed_glow := ["1_mizu2", "1_0mizu", "1_kinoko"]
+	for key in cfg:
+		if not str(key).begins_with("s03"):
+			continue
+		var stage: Dictionary = cfg[key]
+		var stage_lights := 0
+		for e in stage.get("effects", []):
+			if str(e.get("type", "")) != "light":
+				continue
+			assert_true(not str(key).begins_with("s03a"),
+				"s03a stage %s must carry no anchor lights (A untouched)" % key)
+			stage_lights += 1
+			anchor_count += 1
+			var pos: Array = e.get("position", [])
+			assert_eq(pos.size(), 3, "%s anchor %s has a 3-component position" % [key, e.get("id")])
+			if pos.size() == 3:
+				assert_true(absf(float(pos[0])) < 45.0 and absf(float(pos[2])) < 45.0,
+					"%s anchor %s is inside the room" % [key, e.get("id")])
+			assert_gt(float(e.get("intensity", 0.0)), 0.0,
+				"%s anchor %s intensity is positive" % [key, e.get("id")])
+			assert_true(str(e.get("id", "")).begins_with("placed_anchor_"),
+				"%s anchor id follows the authoring convention" % key)
+		if stage_lights > 0:
+			var glow: Array = stage.get("glowMaterials", [])
+			assert_gt(glow.size(), 0, "%s carries glow materials for its anchors" % key)
+			for g in glow:
+				assert_true(str(g.get("material", "")) in allowed_glow,
+					"%s glow material %s is a known anchor material" % [key, g.get("material")])
+	assert_gt(anchor_count, 30, "the B caves carry their authored anchors (76 expected)")
 
 	print("")
 
