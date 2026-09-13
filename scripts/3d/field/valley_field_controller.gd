@@ -16,6 +16,7 @@ const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
+const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 # Lazily loaded by CellObjectSpawner via the controller back-reference; the
 # assignment lands here so the load happens at most once per controller.
@@ -94,7 +95,11 @@ var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condi
 var _deferred_key_pickup: Dictionary = {}
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
-var _night_bake_mix := 0.25  # Snowfield-night COLOR_0 mix (#646) — locked from the follow-up playtest read-out
+# Resolved field time slot (#655) — the area's authored hour/weather/rig row.
+var _slot: Dictionary = {}
+# COLOR_0 → white bake mix for slot-driven white-strategy fields; seeded from
+# the slot row (snowfield #646 lock: 0.25), live-tunable via the -/= keys.
+var _night_bake_mix := 0.25
 
 # Wave spawning
 var _current_wave: int = 1
@@ -218,41 +223,22 @@ func _ready() -> void:
 	# Track visited cells
 	_visited_cells[current_cell_pos] = true
 
-	# Indoor stages take a one-shot daylight apply and then opt out of the
-	# per-frame _process update — interior lighting shouldn't track the
-	# day/night cycle. Save and restore current_hour so the world clock
-	# isn't affected. Snowfield A (#646) pins the same way but to NIGHT —
-	# its lantern-lit ambience only reads after dark. This block must sit
-	# after _current_cell is populated: it originally read an empty cell,
-	# never fired, and the raw world clock painted the field instead (the
-	# 2026-09-12 tuning session ran under a stray sunset apply that way).
-	var initial_stage_id := str(_current_cell.get("stage_id", ""))
-	if _is_indoor_stage(initial_stage_id) or _is_snowfield_night_stage(initial_stage_id):
-		var saved_hour: float = TimeManager.current_hour
-		TimeManager.current_hour = 22.0 if _is_snowfield_night_stage(initial_stage_id) \
-			else float(INDOOR_STAGE_HOURS.get(initial_stage_id, 10.0))
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
-		TimeManager.current_hour = saved_hour
-		# The night preset's energies were tuned against the dark bake:
-		# with white albedo they saturate the snow to flat white. Drop the
-		# sun-at-night and keep the single moonlight fill.
-		if _is_snowfield_night_stage(initial_stage_id):
-			# Snowfield-night rig (#646) — locked from the follow-up playtest
-			# P read-out (ambient 1.50, moon 0.35, bake mix 0.25): bright
-			# night, bake quarter-mixed for depth, moon strong enough that
-			# the player/enemy shadows read.
-			_dir_light.light_energy = 0.0
-			_world_env.environment.ambient_light_energy = 1.5
-			_moonlight.light_energy = 0.35
-			_moonlight.shadow_enabled = true
-			_moonlight.shadow_blur = 1.0
-	else:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	# Field time slot (#655): the slot table owns this area's authored hour,
+	# weather, and rig — applied ONCE here. No per-frame tracking, no
+	# free-running clock; the slot hour owns current_hour for the whole field
+	# stay so hour-derived consumers (the player's lantern glow via the
+	# darkness factor) read the authored time. This block must sit after
+	# _current_cell is populated: the pre-#646 pin originally read an empty
+	# cell, never fired, and the raw world clock painted the field instead.
+	var area_id: String = SessionManager.get_current_area_id()
+	_slot = FieldSlotTableScript.slot_for(area_id, str(_current_cell.get("stage_id", "")))
+	_apply_field_slot()
+	if not TimeManager.hour_changed.is_connected(_on_time_hour_changed):
+		TimeManager.hour_changed.connect(_on_time_hour_changed)
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
 	TimeManager.stage_label = stage_id
-	var area_id: String = SessionManager.get_current_area_id()
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 
 	# Play area music based on area_id + section variant
@@ -288,11 +274,11 @@ func _ready() -> void:
 	SmoothNormals.ensure(_map_root, 2)
 	_weather._strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
-	# #646: Godot imports these unlit materials as UNSHADED (the bake IS
-	# the whole look). For the always-night snowfield: neutralize COLOR_0
-	# fully to white — the stated objective is NO baked-in lighting — and
-	# force per-pixel shading so the dynamic rig drives everything.
-	if _is_snowfield_night_stage(stage_id):
+	# #646/#655: Godot imports these unlit materials as UNSHADED (the bake IS
+	# the whole look). Slots that carry a bake_mix run the white-strategy
+	# material pass: COLOR_0 lerped toward white by the mix (the bake keeps
+	# depth, the rig drives the look) and forced per-pixel shading.
+	if _slot.has("bake_mix"):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
 
@@ -697,7 +683,6 @@ func _on_quest_completed() -> void:
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
 	_check_goal_pad_accept()
-	_update_dynamic_lighting()
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 	_check_dormant_reveal()
@@ -710,14 +695,39 @@ func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_done")
 
 
-## Outdoor unpinned stages track the day/night cycle per frame; indoor and
-## snowfield-night stages are one-shot pinned in _ready().
-func _update_dynamic_lighting() -> void:
+## Apply the resolved field slot (#655): pin the hour, apply the phase preset,
+## then layer the row's rig overrides on top. preview_hour >= 0 re-applies the
+## active rig at a debug-previewed hour instead of the authored one.
+func _apply_field_slot(preview_hour: float = -1.0) -> void:
 	if not (_world_env and _sky_material and _dir_light):
 		return
-	var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-	if not _is_indoor_stage(cur_stage_id) and not _is_snowfield_night_stage(cur_stage_id):
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	var hour: float = preview_hour if preview_hour >= 0.0 else float(_slot.get("hour", 10.0))
+	TimeManager.current_hour = hour
+	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	# Row rig overrides — the snowfield night rig is the template (#646 lock):
+	# sun off, bright ambient against white albedo, moon as the shadow source.
+	if _slot.has("sun_energy"):
+		_dir_light.light_energy = float(_slot["sun_energy"])
+	if _slot.has("ambient_energy"):
+		_world_env.environment.ambient_light_energy = float(_slot["ambient_energy"])
+	if _slot.has("moon_energy"):
+		_moonlight.light_energy = float(_slot["moon_energy"])
+		_moonlight.visible = true
+	if _slot.get("moon_shadows", false):
+		_moonlight.shadow_enabled = true
+		_moonlight.shadow_blur = 1.0
+	if _slot.has("bake_mix"):
+		_night_bake_mix = float(_slot["bake_mix"])
+	if _slot.has("tonemap_white"):
+		_world_env.environment.tonemap_white = float(_slot["tonemap_white"])
+
+
+## Debug hour preview (#655): the [/] keys set TimeManager's hour; re-apply the
+## active slot's rig at the previewed hour. Never persists — every cell entry
+## re-applies the authored slot.
+func _on_time_hour_changed(hour: float) -> void:
+	if not _slot.is_empty():
+		_apply_field_slot(hour)
 
 
 ## Dormant wave 1 reveals when the player walks into the room — distance
@@ -795,9 +805,9 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.camera_rotation = rot + PI
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
-	# Snowfield-night stages skip it (#646): the moonlight casts real dynamic
+	# Slots with real moon shadows skip it (#646): the moonlight casts dynamic
 	# shadows there, and blob + moon shadow reads as a double shadow.
-	if not _is_snowfield_night_stage(str(_current_cell.get("stage_id", ""))):
+	if not _slot.get("moon_shadows", false):
 		_blob_shadow = MeshInstance3D.new()
 		var shadow_quad := QuadMesh.new()
 		shadow_quad.size = Vector2(1.8, 1.8)
@@ -832,18 +842,10 @@ func _on_player_died() -> void:
 	add_child(DefeatScreen.new())
 
 
-## Fixed hour applied to indoor stages (they opt out of the day/night cycle):
-## the coliseum debug arena is deliberately noon (kion); other interiors 10:00.
-const INDOOR_STAGE_HOURS := {"s00a_nr2": 12.0}
+## Indoor-stage classification — used by the weather skip (indoor stages never
+## spawn weather particles). The time-of-day half of the old classification
+## moved to FieldSlotTable rows (#655): interior hours are slot data now.
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1", "s00a_nr2"]
-
-## The snowfield is permanently night (#646): its identity is lantern light
-## in the dark — pin the phase instead of tracking the world clock. BOTH
-## variants (s03a open field, s03b cave rooms): the generated field mixes
-## them in one grid, and the white-COLOR_0 objective covers all of it —
-## treating only s03a left baked B-cells beside white A-cells.
-static func _is_snowfield_night_stage(stage_id: String) -> bool:
-	return stage_id.begins_with("s03")
 
 
 static func _is_indoor_stage(stage_id: String) -> bool:
@@ -2799,39 +2801,44 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## Snowfield-night live tuning (#646): ,/. ambient, [/] moon, -/= bake mix,
-## P logs the rig plus player material diagnostics (same knobs as the
-## material test scene, in the field where it counts).
+## Slot-rig live tuning (#646, generalized by #655): ,/. ambient, [/] moon,
+## -/= bake mix, P logs the rig plus player material diagnostics (same knobs
+## as the material test scene, in the field where it counts). Owned by slots
+## that ship a rig (a bake_mix row); handled keys stop the TimeManager hour
+## preview from double-firing on [/].
 func _handle_night_tuning(event: InputEvent) -> void:
-	var stage_id := str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
-	if not (_is_snowfield_night_stage(stage_id) \
+	if not (_slot.has("bake_mix") \
 			and event is InputEventKey and event.pressed and not event.echo):
 		return
+	var handled := false
 	match (event as InputEventKey).keycode:
 		KEY_COMMA:
 			_world_env.environment.ambient_light_energy = maxf(0.0, _world_env.environment.ambient_light_energy - 0.05)
-			_print_night_tuning()
+			handled = true
 		KEY_PERIOD:
 			_world_env.environment.ambient_light_energy += 0.05
-			_print_night_tuning()
+			handled = true
 		KEY_BRACKETLEFT:
 			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
-			_print_night_tuning()
+			handled = true
 		KEY_BRACKETRIGHT:
 			_moonlight.light_energy += 0.05
-			_print_night_tuning()
+			handled = true
 		KEY_MINUS:
 			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
 			if _map_root:
 				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
-			_print_night_tuning()
+			handled = true
 		KEY_EQUAL:
 			_night_bake_mix = minf(1.0, _night_bake_mix + 0.05)
 			if _map_root:
 				SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
-			_print_night_tuning()
+			handled = true
 		KEY_P:
-			_print_night_tuning()
+			handled = true
+	if handled:
+		_print_night_tuning()
+		get_viewport().set_input_as_handled()
 
 
 func _nudge_nearest_gate(nudge: Vector3) -> void:
@@ -2874,7 +2881,8 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
 
 func _print_night_tuning() -> void:
-	var msg := "[SnowfieldNight] ambient %.2f  moon %.2f  bake mix %.2f" % [
+	var msg := "[FieldSlot %s] ambient %.2f  moon %.2f  bake mix %.2f" % [
+		str(_current_cell.get("stage_id", "?")),
 		_world_env.environment.ambient_light_energy, _moonlight.light_energy, _night_bake_mix]
 	if player:
 		var stats := _player_mat_stats(player)

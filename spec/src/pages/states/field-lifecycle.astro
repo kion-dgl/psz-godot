@@ -325,7 +325,7 @@ const lifecycle = `flowchart TD
     <tr><td>Player spawn + orbit camera</td><td>⏳ controller</td></tr>
     <tr><td>Floor / map collision</td><td>⏳ controller → <code>MapCollisionBuilder</code></td></tr>
     <tr><td>Portals, gate triggers + labels</td><td>⏳ controller → <code>PortalGateManager</code></td></tr>
-    <tr><td>Weather, sky, lights, stage effects</td><td>⏳ controller → <code>WeatherController</code></td></tr>
+    <tr><td>Weather, sky, lights, stage effects</td><td>⏳ controller → <code>WeatherController</code> (time-of-day via <a href="/states/field-time-slots"><code>FieldSlotTable</code></a>)</td></tr>
     <tr><td>Telepipe, companion, combat waves</td><td>⏳ controller</td></tr>
   </table>
 
