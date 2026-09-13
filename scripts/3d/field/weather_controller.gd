@@ -9,6 +9,7 @@ extends RefCounted
 ## inline implementation — this is a relocation refactor, not a logic change.
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
+const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 
 ## Cache for stage effects JSON (keyed by stage_id, null = no file).
 static var _stage_effects_cache: Dictionary = {}
@@ -28,7 +29,7 @@ func _spawn_weather() -> void:
 	# Weather rides the field slot row (#655, unifying with #609's per-area
 	# ask): a quest-authored session weather key overrides, otherwise the
 	# area's slot row carries it (the snowfield's snow). Indoor stages skip.
-	var weather: String = FieldSlotTable.resolve_weather(
+	var weather: String = FieldSlotTableScript.resolve_weather(
 		str(SessionManager.get_session().get("weather", "")), _c._slot)
 	if weather.is_empty():
 		return

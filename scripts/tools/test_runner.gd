@@ -3794,10 +3794,11 @@ func test_coliseum_master_picker() -> void:
 	assert_eq(str(warp["current_cell_pos"]), "0,0", "warp targets the arena cell")
 
 	# The arena is an indoor stage (no weather) whose slot pins noon
-	# (kion playtest) — the exception row in FieldSlotTable (#655).
+	# (kion playtest) — the exception row in the slot table (#655).
 	var FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	var SlotTable := preload("res://scripts/3d/field/field_slot_table.gd")
 	assert_true(FieldController._is_indoor_stage("s00a_nr2"), "coliseum classifies as indoors")
-	assert_eq(float(FieldSlotTable.slot_for("city", "s00a_nr2").get("hour", -1.0)), 12.0,
+	assert_eq(float(SlotTable.slot_for("city", "s00a_nr2").get("hour", -1.0)), 12.0,
 		"coliseum slot hour is noon")
 
 	# The picker scene itself: instantiates, builds its rows from the roster, and
@@ -10256,16 +10257,10 @@ func test_valley_grid() -> void:
 					bidi_ok = false
 	assert_true(bidi_ok, "All connections are bidirectional")
 
-	# GLBs exist
-	var all_glbs_exist := true
-	for cell in cells:
-		var stage_id: String = cell.get("stage_id", "")
-		var variant: String = stage_id[3] if stage_id.length() >= 4 else "a"
-		var glb_path := "res://assets/stages/valley_%s/%s/lndmd/%s_m.glb" % [variant, stage_id, stage_id]
-		if not ResourceLoader.exists(glb_path):
-			all_glbs_exist = false
-			print("    Missing GLB: %s" % glb_path)
-	assert_true(all_glbs_exist, "All grid cell GLBs exist")
+	# Per-file GLB existence is verified server-side against R2 — not here.
+	# (This assert used to run on dev boxes only, by accident: the dead
+	# get_rotated_gates call above silently aborted the test before it. CI
+	# checks out no raw assets, so a filesystem assert can't pass there.)
 
 	# ── Grid generation: area b ──
 	var b_result: Dictionary = gen.generate("b", {"path_length": 5, "key_gates": 0, "branches": 0})
@@ -10677,20 +10672,21 @@ func test_tower_field() -> void:
 func test_field_time_slots() -> void:
 	print("── Field Time Slots (#655) ──")
 	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 
 	# ── Every area in AREA_CONFIG ships a slot row (phase-1 completeness) ──
 	for area_id in GridGen.AREA_CONFIG:
-		var slot := FieldSlotTable.slot_for(str(area_id), "zz_none")
+		var slot := Slots.slot_for(str(area_id), "zz_none")
 		assert_true(slot.has("hour"), "Area %s resolves a slot hour" % area_id)
 		assert_true(float(slot["hour"]) >= 0.0 and float(slot["hour"]) < 24.0,
 			"Area %s slot hour is a valid clock hour (%s)" % [area_id, str(slot.get("hour"))])
 
 	# Unknown area falls back to the default day slot
-	assert_eq(FieldSlotTable.slot_for("nowhere", "zz_none").get("hour"), 10.0,
+	assert_eq(Slots.slot_for("nowhere", "zz_none").get("hour"), 10.0,
 		"Unknown area falls back to default day hour 10.0")
 
 	# ── The snowfield row reproduces the #646 lock verbatim ──
-	var rioh := FieldSlotTable.slot_for("rioh", "s03a_ic1")
+	var rioh := Slots.slot_for("rioh", "s03a_ic1")
 	assert_eq(rioh.get("hour"), 22.0, "Snowfield slot pins hour 22 (night)")
 	assert_eq(str(rioh.get("weather", "")), "snow", "Snowfield slot rides weather snow")
 	assert_eq(rioh.get("sun_energy"), 0.0, "Snowfield rig: sun energy 0")
@@ -10700,35 +10696,35 @@ func test_field_time_slots() -> void:
 	assert_eq(rioh.get("bake_mix"), 0.25, "Snowfield rig: bake mix 0.25 (playtest lock)")
 
 	# ── Stage-level exception: the coliseum debug arena is deliberately noon ──
-	assert_eq(FieldSlotTable.slot_for("city", "s00a_nr2").get("hour"), 12.0,
+	assert_eq(Slots.slot_for("city", "s00a_nr2").get("hour"), 12.0,
 		"Coliseum stage exception pins noon")
-	assert_eq(FieldSlotTable.slot_for("city", "s00a_zz9").get("hour"), 10.0,
+	assert_eq(Slots.slot_for("city", "s00a_zz9").get("hour"), 10.0,
 		"Other s00 city stages stay on the city day row")
 
 	# ── Variant-prefix rung (#657 will ship the first row): a variant row
 	# beats the area row for its stages only. Exercised through a synthetic
 	# table — the shipped one carries no variant rows yet. ──
-	var variant_table: Dictionary = FieldSlotTable.SLOTS.duplicate()
+	var variant_table: Dictionary = Slots.SLOTS.duplicate()
 	variant_table["s03b"] = {"hour": 5.5}
-	assert_eq(FieldSlotTable.slot_for("rioh", "s03b_lc1", variant_table).get("hour"), 5.5,
+	assert_eq(Slots.slot_for("rioh", "s03b_lc1", variant_table).get("hour"), 5.5,
 		"Variant row s03b beats the area row for s03b stages")
-	assert_eq(FieldSlotTable.slot_for("rioh", "s03a_ic1", variant_table).get("hour"), 22.0,
+	assert_eq(Slots.slot_for("rioh", "s03a_ic1", variant_table).get("hour"), 22.0,
 		"A-variant stages keep the area row while a B-variant row exists")
-	assert_eq(FieldSlotTable.slot_for("rioh", "s03b_lc1").get("hour"), 22.0,
+	assert_eq(Slots.slot_for("rioh", "s03b_lc1").get("hour"), 22.0,
 		"Shipped table has no variant rows — s03b stages ride the area row")
 
 	# ── Resolved slots are copies: tuning a returned row can't poison the table ──
-	var mut := FieldSlotTable.slot_for("rioh", "s03a_ic1")
+	var mut := Slots.slot_for("rioh", "s03a_ic1")
 	mut["hour"] = 3.0
-	assert_eq(FieldSlotTable.slot_for("rioh", "s03a_ic1").get("hour"), 22.0,
+	assert_eq(Slots.slot_for("rioh", "s03a_ic1").get("hour"), 22.0,
 		"slot_for returns a copy — table row unchanged")
 
 	# ── Weather precedence: quest session weather overrides the row ──
-	assert_eq(FieldSlotTable.resolve_weather("rain", rioh), "rain",
+	assert_eq(Slots.resolve_weather("rain", rioh), "rain",
 		"Quest weather overrides the slot row")
-	assert_eq(FieldSlotTable.resolve_weather("", rioh), "snow",
+	assert_eq(Slots.resolve_weather("", rioh), "snow",
 		"Empty quest weather falls back to the slot row")
-	assert_eq(FieldSlotTable.resolve_weather("", FieldSlotTable.slot_for("gurhacia", "zz_none")), "",
+	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "",
 		"Valley row authors no weather")
 
 	# ── TimeManager: no free-running clock (#655) ──

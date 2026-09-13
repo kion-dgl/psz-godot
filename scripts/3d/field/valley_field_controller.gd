@@ -16,6 +16,7 @@ const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
+const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 # Lazily loaded by CellObjectSpawner via the controller back-reference; the
 # assignment lands here so the load happens at most once per controller.
@@ -230,7 +231,7 @@ func _ready() -> void:
 	# _current_cell is populated: the pre-#646 pin originally read an empty
 	# cell, never fired, and the raw world clock painted the field instead.
 	var area_id: String = SessionManager.get_current_area_id()
-	_slot = FieldSlotTable.slot_for(area_id, str(_current_cell.get("stage_id", "")))
+	_slot = FieldSlotTableScript.slot_for(area_id, str(_current_cell.get("stage_id", "")))
 	_apply_field_slot()
 	if not TimeManager.hour_changed.is_connected(_on_time_hour_changed):
 		TimeManager.hour_changed.connect(_on_time_hour_changed)
