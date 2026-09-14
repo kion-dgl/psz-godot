@@ -140,6 +140,7 @@ func _run_tests_core() -> void:
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
 	test_source_wrap_per_axis()
+	test_s03e_texture_fixes()
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_city_scroll_fixes()
@@ -2263,6 +2264,66 @@ func test_source_wrap_per_axis() -> void:
 		"res://assets/objects/valley/o01_wall.glb", "not_a_texture.png").is_empty(),
 		"an unknown texture yields no opinion")
 	print("")
+
+
+## ── s03e_ia1 texture fixes (hardware-pass find, #659) ───────────
+## The playtest found maki1 / mizu10 wrong in Godot but fine in threejs: the
+## source .glb declares MIRRORED_REPEAT for both (threejs honours it; Godot's
+## importer collapses wraps into a repeat bool), and mizu10's material is
+## alphaMode BLEND, which a scissor hard-cuts mid-strip. The table carries the
+## mirror rows; the GLB stays the source of truth they must agree with.
+func test_s03e_texture_fixes() -> void:
+	print("── s03e texture fixes (maki1 / mizu10) ──")
+	const STAGE := "res://assets/stages/snowfield_e/s03e_ia1/lndmd/s03e_ia1_m.glb"
+	if not FileAccess.file_exists(STAGE):
+		print("  SKIP: no local /assets/ tree (pack-free CI)")
+		print("")
+		return
+	var fixes := MeshUtils.load_texture_fixes()
+	for tex in ["s03_1_maki1.png", "s03_2_mizu10.png"]:
+		var fix: Dictionary = fixes.get(tex, {})
+		assert_eq(str(fix.get("wrapS", "")), "mirror", "%s fix-table wrapS is mirror" % tex)
+		assert_eq(str(fix.get("wrapT", "")), "mirror", "%s fix-table wrapT is mirror" % tex)
+	# The table must agree with the source .glb (the survey contract, #576).
+	var wraps := SourceWrap.for_glb(STAGE)
+	for tex in ["s03_1_maki1.png", "s03_2_mizu10.png"]:
+		assert_eq(str(wraps.get(tex, {}).get("s", "")), "mirror", "%s source wrapS is mirror" % tex)
+		assert_eq(str(wraps.get(tex, {}).get("t", "")), "mirror", "%s source wrapT is mirror" % tex)
+	# mizu10's water material is BLEND in the source; Godot imports that as a
+	# blend-capable mode (observed: ALPHA_HASH on 4.5), which the mirror
+	# branches map to the shader's alpha_mode=1. The scissor default was the
+	# "pixels not drawn" half of the playtest report.
+	var packed := load(STAGE) as PackedScene
+	assert_true(packed != null, "stage GLB loads")
+	if packed == null:
+		print("")
+		return
+	var inst := packed.instantiate()
+	var water: StandardMaterial3D = _find_material_by_resource_name(inst, "1_water")
+	assert_true(water != null, "1_water material present")
+	if water:
+		assert_eq(MeshUtils.mirror_alpha_mode(water.transparency), 1,
+			"mizu10 water's imported alpha mode maps to shader blend")
+		assert_eq(MeshUtils.mirror_alpha_mode(BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR), 0,
+			"scissored (MASK) materials keep the scissor")
+		assert_eq(MeshUtils.mirror_alpha_mode(BaseMaterial3D.TRANSPARENCY_DISABLED), 0,
+			"opaque materials stay scissor-opaque")
+	inst.free()
+	print("")
+
+
+static func _find_material_by_resource_name(node: Node, want: String) -> StandardMaterial3D:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in range(mi.get_surface_override_material_count()):
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D and (mat as StandardMaterial3D).resource_name == want:
+				return mat as StandardMaterial3D
+	for child in node.get_children():
+		var found := _find_material_by_resource_name(child, want)
+		if found:
+			return found
+	return null
 
 
 func test_teleporter_dressing() -> void:

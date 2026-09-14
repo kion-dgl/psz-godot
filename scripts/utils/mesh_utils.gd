@@ -64,6 +64,19 @@ static func load_texture_fixes() -> Dictionary:
 	return fixes
 
 
+## The GLB's alphaMode for a mirror-wrap surface, expressed for the fix
+## shader's alpha_mode uniform: blend-capable imports (BLEND arrives from the
+## Godot 4.5 GLTF importer as ALPHA_HASH on some meshes) stay blended; the
+## scissor default is only right for MASK-style materials. Static so the
+## runner can pin the mapping (#659 playtest: scissored water = missing pixels).
+static func mirror_alpha_mode(transparency: int) -> int:
+	match transparency:
+		BaseMaterial3D.TRANSPARENCY_DISABLED, BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR:
+			return 0
+		_:
+			return 1
+
+
 ## The field controller's mirror-wrap pass, extracted for the tool scenes:
 ## surfaces whose texture fix asks for mirror wrap get the custom shader —
 ## Godot can't mirror-repeat imported textures natively.
@@ -96,6 +109,10 @@ static func apply_mirror_wrap_fixes(node: Node, fixes: Dictionary, fix_shader: S
 				float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
 			shader_mat.set_shader_parameter("wrap_s", 1 if wrap_s == "mirror" else 0)
 			shader_mat.set_shader_parameter("wrap_t", 1 if wrap_t == "mirror" else 0)
+			# Keep the GLB's alphaMode (BLEND stays blended; the shader default
+			# scissor hard-cuts smooth-alpha texels) — mirrors the field's
+			# _fix_materials branch so lab renders read as the field does.
+			shader_mat.set_shader_parameter("alpha_mode", mirror_alpha_mode(std.transparency))
 			mi.set_surface_override_material(i, shader_mat)
 	for child in node.get_children():
 		apply_mirror_wrap_fixes(child, fixes, fix_shader)

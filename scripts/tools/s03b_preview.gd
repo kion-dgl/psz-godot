@@ -8,14 +8,17 @@ extends Node3D
 ## can iterate the rig without typing into the window:
 ##
 ##   PSZ_PREVIEW_STAGE=s03b_xb2   stage id (snowfield_b/<id>)
+##   PSZ_PREVIEW_DIR=snowfield_b  area folder holding the stage (default)
 ##   PSZ_PREVIEW_HOUR=5.5         override the slot hour
 ##   PSZ_PREVIEW_AMBIENT=0.6      override ambient energy
 ##   PSZ_PREVIEW_MOON=0.12        override moon energy
 ##   PSZ_PREVIEW_BAKE=0.25        override bake mix
+##   PSZ_PREVIEW_MOON_SHADOWS=1   moonlight casts real shadows (experiment:
+##                                white COLOR_0 + moon shadows = dynamic bake)
 ##   PSZ_PREVIEW_SHOT=/tmp/o.png  write screenshot + quit (else live keys:
 ##                                [/] moon, ,/. ambient, R reload)
 
-const STAGE_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/%s_m.glb"
+const STAGE_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s_m.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
@@ -93,12 +96,19 @@ func _build_environment() -> void:
 	if _slot.has("moon_energy"):
 		_moonlight.light_energy = float(_slot["moon_energy"])
 		_moonlight.visible = true
+	if _slot.get("moon_shadows", false):
+		_moonlight.shadow_enabled = true
 	if not OS.get_environment("PSZ_PREVIEW_AMBIENT").is_empty():
 		_env.ambient_light_energy = float(OS.get_environment("PSZ_PREVIEW_AMBIENT"))
+	if OS.get_environment("PSZ_PREVIEW_MOON_SHADOWS") == "1":
+		_moonlight.shadow_enabled = true
 
 
 func _load_stage() -> void:
-	var packed := load(STAGE_GLB_FMT % [_stage_id, _stage_id]) as PackedScene
+	var dir: String = OS.get_environment("PSZ_PREVIEW_DIR")
+	if dir.is_empty():
+		dir = "snowfield_b"
+	var packed := load(STAGE_GLB_FMT % [dir, _stage_id, _stage_id]) as PackedScene
 	if not packed:
 		push_error("[BPreview] no stage GLB for %s" % _stage_id)
 		return

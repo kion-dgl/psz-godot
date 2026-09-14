@@ -1033,6 +1033,11 @@ func _fix_materials(node: Node) -> void:
 					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
 					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
 					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
+					# Keep the GLB's alphaMode: BLEND surfaces (e.g. s03e's mizu10
+					# water strip) must stay blended — the shader's scissor default
+					# hard-cuts smooth-alpha texels mid-strip.
+					shader_mat.set_shader_parameter("alpha_mode",
+						MeshUtils.mirror_alpha_mode(std_mat.transparency))
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
