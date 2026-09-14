@@ -3,6 +3,7 @@
   "accepted_orphans": [
     "scenes/tools/lantern_test.tscn",
     "scenes/tools/s03b_preview.tscn",
+    "scenes/tools/s03b_walktest.tscn",
     "scenes/tools/snowfield_mattest.tscn"
   ]
 }
