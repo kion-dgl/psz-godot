@@ -10,6 +10,8 @@ extends Node3D
 ##   PSZ_PREVIEW_STAGE=s03b_xb2   stage id (snowfield_b/<id>)
 ##   PSZ_PREVIEW_HOUR=5.5         override the slot hour
 ##   PSZ_PREVIEW_AMBIENT=0.6      override ambient energy
+##   PSZ_PREVIEW_MOON=0.12        override moon energy
+##   PSZ_PREVIEW_BAKE=0.25        override bake mix
 ##   PSZ_PREVIEW_SHOT=/tmp/o.png  write screenshot + quit (else live keys:
 ##                                [/] moon, ,/. ambient, R reload)
 
@@ -77,6 +79,10 @@ func _build_environment() -> void:
 	_slot = FieldSlotTableScript.slot_for("rioh", _stage_id)
 	if not OS.get_environment("PSZ_PREVIEW_HOUR").is_empty():
 		_slot["hour"] = float(OS.get_environment("PSZ_PREVIEW_HOUR"))
+	if not OS.get_environment("PSZ_PREVIEW_MOON").is_empty():
+		_slot["moon_energy"] = float(OS.get_environment("PSZ_PREVIEW_MOON"))
+	if not OS.get_environment("PSZ_PREVIEW_BAKE").is_empty():
+		_slot["bake_mix"] = float(OS.get_environment("PSZ_PREVIEW_BAKE"))
 	var hour: float = float(_slot.get("hour", 5.5))
 	TimeManager.current_hour = hour
 	TimeManager.apply_to_scene(_env, _sky_mat, _dir_light, _moonlight)
