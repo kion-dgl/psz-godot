@@ -77,6 +77,105 @@ static func mirror_alpha_mode(transparency: int) -> int:
 			return 1
 
 
+## Fix-table row for a material's albedo texture (bare filename key), or {}.
+## Loaded once per process — the table is static data.
+static var _fixes_cache: Dictionary = {}
+
+
+static func fix_for_material(mat: StandardMaterial3D) -> Dictionary:
+	if _fixes_cache.is_empty():
+		_fixes_cache = load_texture_fixes()
+	if not mat.albedo_texture:
+		return {}
+	return _fixes_cache.get(mat.albedo_texture.resource_path.get_file(), {})
+
+
+## The field's per-surface material treatment, extracted from the valley
+## controller's _fix_materials so tool scenes render EXACTLY what the field
+## renders (the #659 walk lab's see-through pools were this pass missing):
+## the fix row picks the branch — scrolling/"_fall" surfaces take the
+## additive waterfall shader, mirror-wrap surfaces the wrap shader (keeping
+## the GLB's alpha mode), everything else the generic duplicated material
+## (per-vertex albedo, alpha scissor, always depth-draw). `cast_shadows`
+## carries the slot's geometry_casts_shadows row — map geometry is
+## collision-floor-deep and shadows off by default; a moon rig that stands
+## on real shadows turns it on.
+static func apply_field_materials(node: Node, fix_shader: Shader,
+		waterfall_shader: Shader, cast_shadows := false) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
+				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# SmoothNormals._surface_count + _active_material, not the plain
+		# override-count API — get_active_material() bounds-checks against the
+		# override array, which only grows as overrides are set (the
+		# one-surface strip bug, #646).
+		for i in range(SmoothNormals._surface_count(mi)):
+			var mat := SmoothNormals._active_material(mi, i)
+			if not (mat is StandardMaterial3D):
+				continue
+			var std_mat := mat as StandardMaterial3D
+			var fix := fix_for_material(std_mat)
+			var has_scroll := fix.has("scrollX") or fix.has("scrollY")
+			var is_waterfall := has_scroll \
+					or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
+			if is_waterfall and waterfall_shader:
+				# Waterfall / scrolling texture: additive blend + scrolling UV
+				var shader_mat := ShaderMaterial.new()
+				shader_mat.shader = waterfall_shader
+				if std_mat.albedo_texture:
+					shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+				shader_mat.set_shader_parameter("uv_scale", Vector3(
+					float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
+				shader_mat.set_shader_parameter("uv_offset", Vector3(
+					float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
+				var scroll_x: float = float(fix.get("scrollX", 0.0))
+				var scroll_y: float = float(fix.get("scrollY", -0.35))
+				shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
+				shader_mat.render_priority = 1
+				mi.set_surface_override_material(i, shader_mat)
+			elif str(fix.get("wrapS", "repeat")) == "mirror" \
+					or str(fix.get("wrapT", "repeat")) == "mirror":
+				# Mirror wrap: custom shader with wrap modes
+				var shader_mat := ShaderMaterial.new()
+				shader_mat.shader = fix_shader
+				if std_mat.albedo_texture:
+					shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+				shader_mat.set_shader_parameter("uv_scale", Vector3(
+					float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
+				shader_mat.set_shader_parameter("uv_offset", Vector3(
+					float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
+				shader_mat.set_shader_parameter("wrap_s",
+					1 if str(fix.get("wrapS", "repeat")) == "mirror" else 0)
+				shader_mat.set_shader_parameter("wrap_t",
+					1 if str(fix.get("wrapT", "repeat")) == "mirror" else 0)
+				# Keep the GLB's alphaMode (BLEND stays blended; the shader
+				# default scissor hard-cuts smooth-alpha texels).
+				shader_mat.set_shader_parameter("alpha_mode", mirror_alpha_mode(std_mat.transparency))
+				mi.set_surface_override_material(i, shader_mat)
+			else:
+				var new_mat := std_mat.duplicate() as StandardMaterial3D
+				new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+				new_mat.vertex_color_use_as_albedo = true
+				new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				new_mat.alpha_scissor_threshold = 0.1
+				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+				new_mat.texture_repeat = true
+				if not fix.is_empty():
+					new_mat.uv1_scale = Vector3(
+						float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0)
+					new_mat.uv1_offset = Vector3(
+						float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0)
+					if str(fix.get("wrapS", "repeat")) == "clamp" \
+							or str(fix.get("wrapT", "repeat")) == "clamp":
+						new_mat.texture_repeat = false
+				mi.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		apply_field_materials(child, fix_shader, waterfall_shader, cast_shadows)
+
+
 ## The field controller's mirror-wrap pass, extracted for the tool scenes:
 ## surfaces whose texture fix asks for mirror wrap get the custom shader —
 ## Godot can't mirror-repeat imported textures natively.

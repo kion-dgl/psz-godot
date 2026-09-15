@@ -10781,18 +10781,23 @@ func test_field_time_slots() -> void:
 	assert_eq(Slots.slot_for("rioh", "s03a_ic1", variant_table).get("hour"), 22.0,
 		"A-variant stages keep the area row while a variant row exists")
 
-	# ── The shipped s03b row (#657): pre-dawn caves split off the snowfield
-	# night — and A's #646 lock must not move. ──
+	# ── The shipped s03b row (#659 walk pass): pre-dawn caves under a blanket
+	# moon — white COLOR_0, real moon shadows, geometry casting — and A's
+	# #646 lock must not move. ──
 	var s03b := Slots.slot_for("rioh", "s03b_lc1")
 	assert_eq(s03b.get("hour"), 5.5, "s03b pins 5.5 (sunrise-ramp midpoint)")
 	assert_eq(s03b.get("sun_energy"), 0.0, "s03b rig: sun off (caves see no sky)")
-	assert_eq(s03b.get("ambient_energy"), 0.6, "s03b rig: dim ambient base")
-	assert_eq(s03b.get("moon_energy"), 0.12, "s03b rig: faint moon sky-fill")
-	assert_eq(s03b.get("bake_mix"), 0.25, "s03b keeps the white-strategy bake mix")
+	assert_eq(s03b.get("ambient_energy"), 0.2, "s03b rig: moon carries the look, ambient is the low fill")
+	assert_eq(s03b.get("moon_energy"), 0.6, "s03b rig: the moon is the primary light")
+	assert_eq(s03b.get("bake_mix"), 1.0, "s03b neutralizes COLOR_0 to white — the moon replaces the bake")
+	assert_eq(s03b.get("moon_shadows"), true, "s03b rig: moonlight casts real shadows")
+	assert_eq(s03b.get("geometry_casts_shadows"), true, "s03b rig: map geometry casts under the moon")
 	assert_true(not s03b.has("weather"), "s03b row authors no weather (indoor skip)")
 	var s03a := Slots.slot_for("rioh", "s03a_ic1")
 	assert_eq(s03a.get("hour"), 22.0, "s03a stages keep the rioh night (A lock intact)")
 	assert_eq(s03a.get("ambient_energy"), 1.5, "A's ambient lock intact")
+	assert_true(not s03a.has("geometry_casts_shadows"),
+		"A's row does not turn on geometry casting (the #646 look is the bake)")
 
 	# ── Resolved slots are copies: tuning a returned row can't poison the table ──
 	var mut := Slots.slot_for("rioh", "s03a_ic1")

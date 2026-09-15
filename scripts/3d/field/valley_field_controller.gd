@@ -917,8 +917,6 @@ static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
 
 ## Static cache for unified stage config (loaded once, shared across cell transitions).
 static var _unified_config_cache: Dictionary = {}
-## Static cache for global texture fixes (keyed by texture filename, e.g. "s01_2_fall.png#1").
-static var _global_texture_fixes: Dictionary = {}
 
 
 func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
@@ -933,44 +931,11 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 				_fdbg("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
 			file.close()
 
-	# Load global texture fixes on first access
-	if _global_texture_fixes.is_empty():
-		var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
-		var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
-		if gtf_file:
-			var gtf_json := JSON.new()
-			if gtf_json.parse(gtf_file.get_as_text()) == OK:
-				_global_texture_fixes = gtf_json.data as Dictionary
-				_fdbg("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
-			gtf_file.close()
-
 	# Look up by stage_id
 	if _unified_config_cache.has(stage_id):
 		return _unified_config_cache[stage_id] as Dictionary
 
 	return {}
-
-
-func _find_global_fix_for_material(mat: StandardMaterial3D) -> Dictionary:
-	## Look up texture fix from global-texture-fixes.json by the material's albedo texture filename.
-	## Keys in global fixes use "filename.png#1" format (the #1 suffix is from GLTF material index).
-	if not mat.albedo_texture or _global_texture_fixes.is_empty():
-		return {}
-	var tex_path: String = mat.albedo_texture.resource_path
-	var tex_basename: String = tex_path.get_file()  # e.g. "s01_2_fall.png"
-	# Try with common suffixes (#0, #1) since GLTF keys include material index
-	for suffix in ["#1", "#0", ""]:
-		var key: String = tex_basename + suffix
-		if _global_texture_fixes.has(key):
-			return _global_texture_fixes[key] as Dictionary
-	return {}
-
-
-static func _wrap_mode_int(mode: String) -> int:
-	match mode:
-		"mirror": return 1
-		"clamp": return 2
-	return 0  # repeat
 
 
 ## #657 glow pass: the stage config's glowMaterials list makes anchor meshes
@@ -993,68 +958,13 @@ func _fix_materials(node: Node) -> void:
 	## Stage materials use per-vertex shading with vertex_color_use_as_albedo
 	## so pre-baked vertex colors provide surface detail while real 3D lighting
 	## (DirectionalLight3D, ambient, OmniLight3D) drives day/night atmosphere.
-	if node is MeshInstance3D:
-		var mesh_inst := node as MeshInstance3D
-		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		for i in range(mesh_inst.get_surface_override_material_count()):
-			var mat := mesh_inst.get_active_material(i)
-			if mat is StandardMaterial3D:
-				var std_mat := mat as StandardMaterial3D
-				# Look up global texture fix from material's albedo texture filename
-				var fix := _find_global_fix_for_material(std_mat)
-				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
-				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
-				var needs_shader := not fix.is_empty() and (
-					is_waterfall or
-					str(fix.get("wrapS", "repeat")) == "mirror" or
-					str(fix.get("wrapT", "repeat")) == "mirror")
-				if is_waterfall:
-					# Waterfall / scrolling texture: additive blend + scrolling UV
-					var shader_mat := ShaderMaterial.new()
-					shader_mat.shader = WATERFALL_SHADER
-					if std_mat.albedo_texture:
-						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
-					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
-					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
-					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
-					var scroll_x: float = fix.get("scrollX", 0.0)
-					var scroll_y: float = fix.get("scrollY", -0.35)
-					shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
-					shader_mat.render_priority = 1
-					mesh_inst.set_surface_override_material(i, shader_mat)
-				elif needs_shader:
-					# Mirror wrap: custom shader with wrap modes
-					var shader_mat := ShaderMaterial.new()
-					shader_mat.shader = TEXTURE_FIX_SHADER
-					if std_mat.albedo_texture:
-						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
-					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
-					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
-					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
-					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
-					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
-					# Keep the GLB's alphaMode: BLEND surfaces (e.g. s03e's mizu10
-					# water strip) must stay blended — the shader's scissor default
-					# hard-cuts smooth-alpha texels mid-strip.
-					shader_mat.set_shader_parameter("alpha_mode",
-						MeshUtils.mirror_alpha_mode(std_mat.transparency))
-					mesh_inst.set_surface_override_material(i, shader_mat)
-				else:
-					var new_mat := std_mat.duplicate() as StandardMaterial3D
-					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-					new_mat.vertex_color_use_as_albedo = true
-					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-					new_mat.alpha_scissor_threshold = 0.1
-					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
-					new_mat.texture_repeat = true
-					if not fix.is_empty():
-						new_mat.uv1_scale = Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0)
-						new_mat.uv1_offset = Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0)
-						if str(fix.get("wrapS", "repeat")) == "clamp" or str(fix.get("wrapT", "repeat")) == "clamp":
-							new_mat.texture_repeat = false
-					mesh_inst.set_surface_override_material(i, new_mat)
-	for child in node.get_children():
-		_fix_materials(child)
+	## The surface treatment lives in MeshUtils.apply_field_materials — shared
+	## with the walk/preview tool scenes so labs render what the field renders.
+	## cast_shadows carries the slot's geometry_casts_shadows row: map geometry
+	## ships shadows-off (the bake is the look); a moon rig that stands on real
+	## shadows (s03b, #659) turns casting on.
+	MeshUtils.apply_field_materials(node, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
+		_slot.get("geometry_casts_shadows", false))
 
 
 func _has_pending_objectives() -> bool:

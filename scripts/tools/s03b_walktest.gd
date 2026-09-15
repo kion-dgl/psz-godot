@@ -14,9 +14,12 @@ extends Node3D
 
 const STAGE_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/%s_m.glb"
 const FLOOR_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/%s-floor.glb"
+const SKYBOX_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/skybox/o0s_zsky.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
+const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 
@@ -157,10 +160,24 @@ func _load_stage() -> void:
 	_map_root = packed.instantiate() as Node3D
 	_map_root.name = "Map"
 	add_child(_map_root)
+	# The field's room-build order verbatim (valley_field_controller._ready):
+	# normals → strip embedded GLB lights → the full surface pass → bake
+	# neutralize + make_lit. The surface pass is the shared MeshUtils one —
+	# the earlier lab-only mirror pass left non-mirror surfaces (the pools)
+	# as raw BLEND, which read see-through from the ground.
 	SmoothNormals.ensure(_map_root, 2)
-	MeshUtils.apply_mirror_wrap_fixes(_map_root, MeshUtils.load_texture_fixes(), TEXTURE_FIX_SHADER)
+	WeatherControllerScript.new(null)._strip_embedded_lights(_map_root)
+	MeshUtils.apply_field_materials(_map_root, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
+		_slot.get("geometry_casts_shadows", false))
 	SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
 	SmoothNormals.make_lit(_map_root)
+	# Per-stage skybox GLB when the stage ships one (B caves so far do not).
+	if ResourceLoader.exists(SKYBOX_GLB_FMT % [_stage_id, _stage_id]):
+		var skybox := (load(SKYBOX_GLB_FMT % [_stage_id, _stage_id]) as PackedScene).instantiate() as Node3D
+		skybox.name = "Skybox"
+		_map_root.add_child(skybox)
+		MeshUtils.apply_field_materials(skybox, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
+			_slot.get("geometry_casts_shadows", false))
 
 
 ## The stage's collision floor (mattest pattern): covers the real floor, kept

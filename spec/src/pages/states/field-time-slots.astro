@@ -13,7 +13,7 @@
 import Concept from '../../layouts/Concept.astro';
 
 const slots = [
-  { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: '—', note: '#657: first variant row; anchors are authored placed lights' },
+  { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: '—', note: 'blanket moon (#659): white bake, real moon shadows, geometry casting; anchors are authored placed lights' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
@@ -68,7 +68,10 @@ const slots = [
   optional <code>weather</code>, and optional rig overrides applied after the
   phase preset (ambient/sun/moon energies, moon shadows, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
-  white so the dynamic rig drives the look). Rows resolve most-specific-first:
+  white so the dynamic rig drives the look). A row <strong>MAY</strong> set
+  <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the
+  bake is the look), and a rig that stands on real moon shadows turns casting
+  on so models shadow each other by position. Rows resolve most-specific-first:
   exact <code>stage_id</code> → variant prefix (<code>s03a</code>,
   <code>s03b</code>, tower floor styles) → area id → default day.</p>
 
@@ -83,10 +86,14 @@ const slots = [
 
   <p>The snowfield rows split by variant (#657, the first variant row):
   <code>s03b</code> caves pin 5.5 — the sunrise ramp's midpoint, a stable
-  lerped pre-dawn palette — with the sun off and ambient carrying a dim cool
-  base, while <code>s03a</code> open-field stages keep the #646 night lock
-  verbatim (hour 22, snow, sun energy 0, ambient 1.50, moon 0.35 with moon
-  shadows on, bake mix 0.25). The B caves' light anchors are authored placed
+  lerped pre-dawn palette — under a blanket moon (#659 walk pass): sun off,
+  COLOR_0 neutralized to white (bake mix 1.0) with the moon as the primary
+  light (0.6, real shadows, geometry casting) and a low ambient fill (0.2),
+  so models and rocks shadow each other by position the way the original's
+  implied moon position reads. The <code>s03a</code> open-field stages keep
+  the #646 night lock verbatim (hour 22, snow, sun energy 0, ambient 1.50,
+  moon 0.35 with moon shadows on, bake mix 0.25 — geometry casting off: the
+  bake is the look there). The B caves' light anchors are authored placed
   <code>light</code> effects from the stage config — the art ships no
   crystals, so the pools are the blue reflective anchors and the red
   mushroom clusters the warm accents. The interim rows (10.0 day) preserve

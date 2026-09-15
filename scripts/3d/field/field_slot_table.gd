@@ -20,6 +20,9 @@ extends RefCounted
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
+##   geometry_casts_shadows bool map geometry casts shadows (default off — the
+##                        bake is the look); a rig that stands on real moon
+##                        shadows (s03b, #659) turns it on
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
@@ -34,17 +37,21 @@ const SLOTS := {
 	"s00a_nr2": {"hour": 12.0},
 
 	# ── per-variant rows (#657: the first) ──
-	# Snowfield B caves — early-morning pre-dawn (#657). NOT A's night: caves
-	# see no sky, so ambient carries a dim cool base at the sunrise ramp's
-	# 5.5 midpoint (stable lerped palette), sun off, a faint moon as the sky
-	# fill that keeps per-pixel depth reading. Anchors are the cave's own
-	# props (water pools / mushrooms), authored as placed light effects.
+	# Snowfield B caves — pre-dawn under a blanket moon (#659 walk pass): the
+	# caves see no sky, so the moon IS the rig — COLOR_0 neutralized to white
+	# (bake 1.0) and a real moonlight at 0.6 with shadows, geometry casting
+	# (the moon stands in for the bake, but models/rocks shadow each other by
+	# position — the "implied moon position" of the original art). Anchors
+	# (pools / mushrooms) stay the local color accents on top. Values are the
+	# lab-swept best; the in-field lock pass finalizes them.
 	"s03b": {
 		"hour": 5.5,
 		"sun_energy": 0.0,
-		"ambient_energy": 0.6,
-		"moon_energy": 0.12,
-		"bake_mix": 0.25,
+		"ambient_energy": 0.2,
+		"moon_energy": 0.6,
+		"moon_shadows": true,
+		"bake_mix": 1.0,
+		"geometry_casts_shadows": true,
 	},
 
 	# ── per-area identity slots ──

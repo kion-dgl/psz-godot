@@ -356,7 +356,10 @@ func _ready() -> void:
 		_glow_light.omni_range = 8.0
 		_glow_light.omni_attenuation = 1.2
 		_glow_light.shadow_enabled = false
-		_glow_light.position = Vector3(0, 1.2, 0)
+		# Head height: the visible model spans 0..1.84 while the capsule is
+		# 1.4 — at the old 1.2 the omni sat at navel height and lit the
+		# character from below (the "armpit lantern" of the #659 night pass).
+		_glow_light.position = Vector3(0, 1.6, 0)
 		add_child(_glow_light)
 
 	# Start in idle state
