@@ -66,7 +66,8 @@ const slots = [
   <p>A slot row carries the area's identity: an <code>hour</code> (float —
   fractional hours pick a stable lerped palette between phase presets), an
   optional <code>weather</code>, and optional rig overrides applied after the
-  phase preset (ambient/sun/moon energies, moon shadows, the tonemap white
+  phase preset (ambient/sun/moon energies, the moon's elevation via
+  <code>moon_pitch</code> and its shadows, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
   white so the dynamic rig drives the look). A row <strong>MAY</strong> set
   <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the

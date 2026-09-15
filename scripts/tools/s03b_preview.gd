@@ -96,6 +96,8 @@ func _build_environment() -> void:
 	if _slot.has("moon_energy"):
 		_moonlight.light_energy = float(_slot["moon_energy"])
 		_moonlight.visible = true
+	if _slot.has("moon_pitch"):
+		_moonlight.rotation_degrees.x = float(_slot["moon_pitch"])
 	if _slot.get("moon_shadows", false):
 		_moonlight.shadow_enabled = true
 	if not OS.get_environment("PSZ_PREVIEW_AMBIENT").is_empty():

@@ -9,8 +9,9 @@ extends Node3D
 ## Env:  PSZ_WALK_STAGE=s03b_xb2   boot stage (one of the 12 anchored caves)
 ##       PSZ_WALK_SHOT=/tmp/o.png  screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05      [ / ]  moon ∓/± 0.05
-##       - / =  bake mix ∓/± 0.05     P      read-out (field format)
-##       M       moon shadows toggle  N      next cave · R reload · ESC quit
+##       - / =  bake mix ∓/± 0.05     9 / 0  moon higher / lower (pitch ∓/± 5°)
+##       P       read-out (field format)     M      moon shadows toggle
+##       N       next cave · R reload · ESC quit
 
 const STAGE_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/%s_m.glb"
 const FLOOR_GLB_FMT := "res://assets/stages/snowfield_b/%s/lndmd/%s-floor.glb"
@@ -98,6 +99,10 @@ func _input(event: InputEvent) -> void:
 			SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
 		KEY_M:
 			_moonlight.shadow_enabled = not _moonlight.shadow_enabled
+		KEY_9:
+			_moonlight.rotation_degrees.x = maxf(-89.0, _moonlight.rotation_degrees.x - 5.0)
+		KEY_0:
+			_moonlight.rotation_degrees.x = minf(-5.0, _moonlight.rotation_degrees.x + 5.0)
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -147,6 +152,8 @@ func _build_environment() -> void:
 	if _slot.has("moon_energy"):
 		_moonlight.light_energy = float(_slot["moon_energy"])
 		_moonlight.visible = true
+	if _slot.has("moon_pitch"):
+		_moonlight.rotation_degrees.x = float(_slot["moon_pitch"])
 	if _slot.get("moon_shadows", false):
 		_moonlight.shadow_enabled = true
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
@@ -248,9 +255,10 @@ func _spawn_authored_effects() -> void:
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
-	print("[FieldSlot %s] ambient %.2f  moon %.2f  bake mix %.2f  moon_shadows %s" % [
+	print("[FieldSlot %s] ambient %.2f  moon %.2f  bake mix %.2f  moon_pitch %.0f  moon_shadows %s" % [
 		_stage_id, _env.ambient_light_energy, _moonlight.light_energy,
-		_bake_mix, str(_moonlight.shadow_enabled).to_lower()])
+		_bake_mix, _moonlight.rotation_degrees.x,
+		str(_moonlight.shadow_enabled).to_lower()])
 
 
 func _build_status_label() -> void:
@@ -263,6 +271,7 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  moon %.2f  bake %.2f  shadows %s" % [
+	_status.text = "%s — ambient %.2f  moon %.2f  bake %.2f  pitch %.0f°  shadows %s" % [
 		_stage_id, _env.ambient_light_energy, _moonlight.light_energy,
-		_bake_mix, "on" if _moonlight.shadow_enabled else "off"]
+		_bake_mix, _moonlight.rotation_degrees.x,
+		"on" if _moonlight.shadow_enabled else "off"]

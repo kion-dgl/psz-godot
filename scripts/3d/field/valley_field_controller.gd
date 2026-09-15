@@ -716,6 +716,11 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 	if _slot.has("moon_energy"):
 		_moonlight.light_energy = float(_slot["moon_energy"])
 		_moonlight.visible = true
+	if _slot.has("moon_pitch"):
+		# Elevation as authored data: the hour-lerped preset parks the moon
+		# at grazing angles (−26° at 5.5), whose long shadows read against
+		# the overhead moon look (#659 walk pass — direction is the rig).
+		_moonlight.rotation_degrees.x = float(_slot["moon_pitch"])
 	if _slot.get("moon_shadows", false):
 		_moonlight.shadow_enabled = true
 		_moonlight.shadow_blur = 1.0

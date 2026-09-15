@@ -10789,6 +10789,7 @@ func test_field_time_slots() -> void:
 	assert_eq(s03b.get("sun_energy"), 0.0, "s03b rig: sun off (caves see no sky)")
 	assert_eq(s03b.get("ambient_energy"), 0.2, "s03b rig: moon carries the look, ambient is the low fill")
 	assert_eq(s03b.get("moon_energy"), 0.6, "s03b rig: the moon is the primary light")
+	assert_eq(s03b.get("moon_pitch"), -55.0, "s03b rig: moon elevation authored — overhead look, short directional shadows")
 	assert_eq(s03b.get("bake_mix"), 1.0, "s03b neutralizes COLOR_0 to white — the moon replaces the bake")
 	assert_eq(s03b.get("moon_shadows"), true, "s03b rig: moonlight casts real shadows")
 	assert_eq(s03b.get("geometry_casts_shadows"), true, "s03b rig: map geometry casts under the moon")

@@ -15,6 +15,11 @@ extends RefCounted
 ##   sun_energy    float  DirectionalLight3D energy override
 ##   ambient_energy float ambient energy override
 ##   moon_energy   float  moonlight energy override (moon becomes visible)
+##   moon_pitch    float  moonlight elevation in degrees (rotation.x; the
+##                        hour-lerped preset parks it at grazing angles —
+##                        −26° at 5.5 — whose long shadows read against the
+##                        moon's own look; rows that stand on moon shadows
+##                        pin their own elevation)
 ##   moon_shadows  bool   moonlight casts real shadows (also skips the player
 ##                        blob shadow — blob + moon shadow reads double)
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
@@ -49,6 +54,7 @@ const SLOTS := {
 		"sun_energy": 0.0,
 		"ambient_energy": 0.2,
 		"moon_energy": 0.6,
+		"moon_pitch": -55.0,
 		"moon_shadows": true,
 		"bake_mix": 1.0,
 		"geometry_casts_shadows": true,
