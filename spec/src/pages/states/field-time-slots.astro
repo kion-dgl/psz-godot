@@ -54,8 +54,13 @@ const slots = [
     <strong>MUST NOT</strong> be re-tracked per frame.</li>
     <li>The applied slot hour <strong>MUST</strong> own
     <code>TimeManager.current_hour</code> for the duration of field play, so
-    hour-derived consumers (the player's lantern glow via the darkness factor)
-    read the field's authored time, not a leftover session value.</li>
+    hour-derived consumers (the sky palette, the moonlight) read the field's
+    authored time, not a leftover session value.</li>
+    <li>Light <strong>MUST NOT</strong> come from the player. The old
+    player-carried lantern omni was a night-visibility crutch from the
+    free-running-clock era (#659 removed it): every field's lighting is
+    authored — the rig and the stage's placed effects carry it, and the
+    player reads as part of the scene, not a source.</li>
     <li>The city (s00) <strong>MUST</strong> be always day. The city scenes
     carry no clock at all — their lighting is authored interiors. City stages
     reached through the field controller (the coliseum debug arena) pin

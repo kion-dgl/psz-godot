@@ -206,7 +206,6 @@ var _charge_particles: GPUParticles3D = null
 var _charge_timer: float = 0.0
 var _charge_active: bool = false
 var _charge_color: Color = Color.WHITE
-var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
 var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow effects
 
 # Technique charge (hold-to-charge)
@@ -347,20 +346,10 @@ func _ready() -> void:
 	if start_menu and start_menu.has_signal("opened"):
 		start_menu.opened.connect(_drop_charge)
 
-	# Lantern-style warm light — only in field areas, toggled by time of day
-	if not in_city:
-		_glow_light = OmniLight3D.new()
-		_glow_light.name = "PlayerGlow"
-		_glow_light.light_color = Color(1.0, 0.8, 0.5)
-		_glow_light.light_energy = 1.2 * TimeManager.get_darkness_factor()
-		_glow_light.omni_range = 8.0
-		_glow_light.omni_attenuation = 1.2
-		_glow_light.shadow_enabled = false
-		# Head height: the visible model spans 0..1.84 while the capsule is
-		# 1.4 — at the old 1.2 the omni sat at navel height and lit the
-		# character from below (the "armpit lantern" of the #659 night pass).
-		_glow_light.position = Vector3(0, 1.6, 0)
-		add_child(_glow_light)
+	# No player-carried light (#659): the lantern omni was a night-visibility
+	# crutch from the free-running day/night era. Fields curate their own
+	# lighting now (FieldSlotTable, #655) — light comes from the authored rig,
+	# never from the player.
 
 	# Start in idle state
 	transition_to(PlayerState.IDLE)
@@ -1034,11 +1023,6 @@ func _physics_process(delta: float) -> void:
 				SfxManager.play_at(sfx, global_position, -8.0)
 	else:
 		_footstep_timer = 0.0
-
-	# Smoothly fade lantern glow based on time of day (check every ~0.5s)
-	if _glow_light and Engine.get_physics_frames() % 30 == 0:
-		var darkness: float = TimeManager.get_darkness_factor()
-		_glow_light.light_energy = 1.2 * darkness
 
 	# Technique charge timer
 	if _charging_slot >= 0:
