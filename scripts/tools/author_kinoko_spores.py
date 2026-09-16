@@ -37,6 +37,10 @@ def build_entries(anchors):
             "radius": 1.6,
             "height": 3.5,
             "speed": 0.3,
+            # A very small light so the motes stay the main effect — just a
+            # pink whisper on the cluster beneath the drift.
+            "light_intensity": 0.03,
+            "light_radius": 2.5,
             "position": a["centroid"],
             "id": f"kinoko_spore_{i}",
         }

@@ -27211,6 +27211,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -38.35,
           4.12,
@@ -27230,6 +27232,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -37.49,
           10.79,
@@ -27249,6 +27253,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -7.92,
           7.41,
@@ -27268,6 +27274,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -6.95,
           3.82,
@@ -27287,6 +27295,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           15.8,
           10.77,
@@ -27306,6 +27316,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           18.27,
           10.77,
@@ -27325,6 +27337,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           20.31,
           4.15,
@@ -27344,6 +27358,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           32.94,
           5.32,
@@ -29686,6 +29702,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -37.83,
           7.41,
@@ -29705,6 +29723,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -20.32,
           4.15,
@@ -29724,6 +29744,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -20.3,
           10.79,
@@ -29743,6 +29765,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -10.3,
           9.43,
@@ -29762,6 +29786,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -7.87,
           9.43,
@@ -29781,6 +29807,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -6.28,
           4.12,
@@ -29800,6 +29828,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -2.62,
           5.32,
@@ -29819,6 +29849,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           33.58,
           0.41,
@@ -29838,6 +29870,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           42.18,
           3.82,
@@ -29857,6 +29891,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           43.34,
           10.77,
@@ -30914,6 +30950,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           35.85,
           5.32,
@@ -33396,6 +33434,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -6.95,
           3.82,
@@ -33415,6 +33455,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           20.31,
           4.15,
@@ -33434,6 +33476,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           32.94,
           5.32,
@@ -33865,6 +33909,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -3.56,
           3.75,
@@ -33884,6 +33930,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           0.03,
           4.03,
@@ -33903,6 +33951,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           10.19,
           4.21,
@@ -33922,6 +33972,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           35.85,
           5.32,
@@ -34400,6 +34452,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -38.11,
           7.07,
@@ -34419,6 +34473,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -38.11,
           7.07,
@@ -34438,6 +34494,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -27.89,
           4.15,
@@ -34457,6 +34515,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -2.62,
           5.32,
@@ -34476,6 +34536,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           -2.48,
           4.12,
@@ -34495,6 +34557,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           0.03,
           4.12,
@@ -34514,6 +34578,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           42.93,
           3.82,
@@ -34533,6 +34599,8 @@
         "radius": 1.6,
         "height": 3.5,
         "speed": 0.3,
+        "light_intensity": 0.03,
+        "light_radius": 2.5,
         "position": [
           44.18,
           10.77,

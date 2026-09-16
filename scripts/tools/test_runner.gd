@@ -10945,6 +10945,9 @@ func test_s03b_anchor_config() -> void:
 			var sc: Array = e.get("color", [])
 			assert_true(sc.size() == 3 and float(sc[0]) > float(sc[2]),
 				"%s spore %s is pink (red over blue)" % [key, e.get("id")])
+			var sli: float = float(e.get("light_intensity", 0.0))
+			assert_true(sli > 0.0 and sli <= 0.05,
+				"%s spore %s carries a very small light — the motes are the main effect" % [key, e.get("id")])
 			var spos: Array = e.get("position", [])
 			assert_eq(spos.size(), 3, "%s spore %s has a 3-component position" % [key, e.get("id")])
 			spore_count += 1
