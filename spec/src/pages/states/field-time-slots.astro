@@ -13,7 +13,7 @@
 import Concept from '../../layouts/Concept.astro';
 
 const slots = [
-  { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: '—', note: 'blanket moon (#659): white bake, real moon shadows, geometry casting; anchors are authored placed lights' },
+  { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
@@ -92,20 +92,23 @@ const slots = [
 
   <p>The snowfield rows split by variant (#657, the first variant row):
   <code>s03b</code> caves pin 5.5 — the sunrise ramp's midpoint, a stable
-  lerped pre-dawn palette — under a blanket moon (#659 walk pass): sun off,
-  COLOR_0 neutralized to white (bake mix 1.0) with the moon as the primary
-  light (0.6, real shadows, geometry casting) and a low ambient fill (0.2),
-  so models and rocks shadow each other by position the way the original's
-  implied moon position reads. The <code>s03a</code> open-field stages keep
-  the #646 night lock verbatim (hour 22, snow, sun energy 0, ambient 1.50,
-  moon 0.35 with moon shadows on, bake mix 0.25 — geometry casting off: the
-  bake is the look there). The B caves' light anchors are authored placed
+  lerped pre-dawn palette — under a blanket moon, LOCKED from the walk-lab
+  read-out: sun off, ambient 0.05 floor, moon 0.6 at −55° elevation with
+  real shadows and geometry casting (models and rocks shadow each other by
+  position, the original's implied moon position), bake mix 0.75 so a
+  breath of the blue bake survives under the moon. Open-ceiling B stages
+  carry the row's snow; the five enclosed ones stay weather-skipped by the
+  indoor gate. The <code>s03a</code> open-field stages keep the #646 night
+  lock verbatim (hour 22, snow, sun energy 0, ambient 1.50, moon 0.35 with
+  moon shadows on, bake mix 0.25 — geometry casting off: the bake is the
+  look there). The B caves' light anchors are authored placed
   <code>light</code> effects from the stage config — the art ships no
   crystals, so the pools are the blue reflective anchors and the red
-  mushroom clusters the warm accents. The interim rows (10.0 day) preserve
-  pre-#655 behavior for areas whose identity issues (#648–#654) have not
-  authored a slot yet; each issue replaces its row's values and locks them
-  from a playtest read-out.</p>
+  mushroom clusters the warm accents, each kinoko cluster dusted by an
+  authored pink <code>spores</code> drift. The interim rows (10.0 day)
+  preserve pre-#655 behavior for areas whose identity issues (#648–#654)
+  have not authored a slot yet; each issue replaces its row's values and
+  locks them from a playtest read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>

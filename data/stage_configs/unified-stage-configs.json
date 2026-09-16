@@ -27198,6 +27198,158 @@
           -2.62
         ],
         "id": "placed_anchor_3_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -38.35,
+          4.12,
+          -6.28
+        ],
+        "id": "kinoko_spore_0"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -37.49,
+          10.79,
+          -20.3
+        ],
+        "id": "kinoko_spore_1"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -7.92,
+          7.41,
+          -37.83
+        ],
+        "id": "kinoko_spore_2"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -6.95,
+          3.82,
+          42.18
+        ],
+        "id": "kinoko_spore_3"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          15.8,
+          10.77,
+          43.55
+        ],
+        "id": "kinoko_spore_4"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          18.27,
+          10.77,
+          43.12
+        ],
+        "id": "kinoko_spore_5"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          20.31,
+          4.15,
+          -20.32
+        ],
+        "id": "kinoko_spore_6"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          32.94,
+          5.32,
+          -2.62
+        ],
+        "id": "kinoko_spore_7"
       }
     ],
     "glowMaterials": [
@@ -29521,6 +29673,196 @@
           4.59
         ],
         "id": "placed_anchor_3_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -37.83,
+          7.41,
+          5.57
+        ],
+        "id": "kinoko_spore_0"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -20.32,
+          4.15,
+          -22.66
+        ],
+        "id": "kinoko_spore_1"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -20.3,
+          10.79,
+          35.14
+        ],
+        "id": "kinoko_spore_2"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -10.3,
+          9.43,
+          -40.64
+        ],
+        "id": "kinoko_spore_3"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -7.87,
+          9.43,
+          -41.29
+        ],
+        "id": "kinoko_spore_4"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -6.28,
+          4.12,
+          36.0
+        ],
+        "id": "kinoko_spore_5"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -2.62,
+          5.32,
+          -35.29
+        ],
+        "id": "kinoko_spore_6"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          33.58,
+          0.41,
+          -10.21
+        ],
+        "id": "kinoko_spore_7"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          42.18,
+          3.82,
+          4.59
+        ],
+        "id": "kinoko_spore_8"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          43.34,
+          10.77,
+          -19.39
+        ],
+        "id": "kinoko_spore_9"
       }
     ],
     "glowMaterials": [
@@ -30559,6 +30901,25 @@
           -2.62
         ],
         "id": "placed_anchor_0_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          35.85,
+          5.32,
+          -2.62
+        ],
+        "id": "kinoko_spore_0"
       }
     ],
     "glowMaterials": [
@@ -33022,6 +33383,63 @@
           -2.62
         ],
         "id": "placed_anchor_2_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -6.95,
+          3.82,
+          42.18
+        ],
+        "id": "kinoko_spore_0"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          20.31,
+          4.15,
+          -20.32
+        ],
+        "id": "kinoko_spore_1"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          32.94,
+          5.32,
+          -2.62
+        ],
+        "id": "kinoko_spore_2"
       }
     ],
     "glowMaterials": [
@@ -33434,6 +33852,82 @@
           -2.62
         ],
         "id": "placed_anchor_3_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -3.56,
+          3.75,
+          41.96
+        ],
+        "id": "kinoko_spore_0"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          0.03,
+          4.03,
+          43.4
+        ],
+        "id": "kinoko_spore_1"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          10.19,
+          4.21,
+          -37.31
+        ],
+        "id": "kinoko_spore_2"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          35.85,
+          5.32,
+          -2.62
+        ],
+        "id": "kinoko_spore_3"
       }
     ],
     "glowMaterials": [
@@ -33893,6 +34387,158 @@
           -0.93
         ],
         "id": "placed_anchor_4_kinoko"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -38.11,
+          7.07,
+          7.82
+        ],
+        "id": "kinoko_spore_0"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -38.11,
+          7.07,
+          10.34
+        ],
+        "id": "kinoko_spore_1"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -27.89,
+          4.15,
+          -17.42
+        ],
+        "id": "kinoko_spore_2"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -2.62,
+          5.32,
+          -40.8
+        ],
+        "id": "kinoko_spore_3"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          -2.48,
+          4.12,
+          38.35
+        ],
+        "id": "kinoko_spore_4"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          0.03,
+          4.12,
+          38.35
+        ],
+        "id": "kinoko_spore_5"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          42.93,
+          3.82,
+          -0.93
+        ],
+        "id": "kinoko_spore_6"
+      },
+      {
+        "type": "spores",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.5,
+          0.72
+        ],
+        "count": 14,
+        "radius": 1.6,
+        "height": 3.5,
+        "speed": 0.3,
+        "position": [
+          44.18,
+          10.77,
+          -9.32
+        ],
+        "id": "kinoko_spore_7"
       }
     ],
     "glowMaterials": [

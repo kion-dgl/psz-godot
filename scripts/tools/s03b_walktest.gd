@@ -21,6 +21,7 @@ const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.g
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
+const ValleyFieldScript := preload("res://scripts/3d/field/valley_field_controller.gd")
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 
@@ -37,6 +38,7 @@ static var _pending_stage := ""
 
 var _stage_id := "s03b_xb2"
 var _map_root: Node3D
+var _player: CharacterBody3D
 var _env: Environment
 var _sky_mat: ProceduralSkyMaterial
 var _dir_light: DirectionalLight3D
@@ -60,6 +62,7 @@ func _ready() -> void:
 	_load_floor_collision()
 	_spawn_player(Vector3(0, 1.5, 10))
 	_spawn_authored_effects()
+	_spawn_snow()
 	_build_status_label()
 	_readout()
 	print("[BWalk] ready — N next cave, R reload, ESC quit")
@@ -203,21 +206,23 @@ func _load_floor_collision() -> void:
 
 
 func _spawn_player(pos: Vector3) -> void:
-	var player := PLAYER_SCENE.instantiate() as CharacterBody3D
-	player.add_to_group("player")
-	add_child(player)
-	player.global_position = pos
-	player.spawn_position = pos
-	SmoothNormals.ensure(player, 2)
-	SmoothNormals.make_lit(player)
+	_player = PLAYER_SCENE.instantiate() as CharacterBody3D
+	_player.add_to_group("player")
+	add_child(_player)
+	_player.global_position = pos
+	_player.spawn_position = pos
+	SmoothNormals.ensure(_player, 2)
+	SmoothNormals.make_lit(_player)
 	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
 	add_child(orbit_camera)
-	orbit_camera.set_target(player)
+	orbit_camera.set_target(_player)
 	orbit_camera.camera_rotation = PI
 
 
-## The authored placed effects for this stage — plain `light` entries become
-## omnis exactly as the field builds them, plus the glow material pass.
+## The authored placed effects for this stage — every category:"placed" entry
+## goes through the REAL WeatherController._spawn_placed_effect (lights AND
+## the kinoko spore drifts), so what walks here is what spawns in-field.
+## The glow material pass follows, exactly as the field orders it.
 func _spawn_authored_effects() -> void:
 	var file := FileAccess.open(UNIFIED_CONFIG, FileAccess.READ)
 	if not file:
@@ -228,28 +233,66 @@ func _spawn_authored_effects() -> void:
 	if not ok:
 		return
 	var cfg: Dictionary = (json.data as Dictionary).get(_stage_id, {})
-	var count := 0
+	var weather := WeatherControllerScript.new(self)
+	var lights := 0
+	var spores := 0
 	for effect in cfg.get("effects", []):
-		if str(effect.get("category", "")) != "placed" \
-				or str(effect.get("type", "")) != "light":
+		if str(effect.get("category", "")) != "placed":
 			continue
-		var pos_arr: Array = effect.get("position", [0, 0, 0])
-		var color_arr: Array = effect.get("color", [1, 1, 1])
-		var light := OmniLight3D.new()
-		light.name = "AnchorLight_%d" % count
-		light.light_color = Color(float(color_arr[0]), float(color_arr[1]), float(color_arr[2]))
-		light.light_energy = float(effect.get("intensity", 1.0))
-		light.omni_range = float(effect.get("radius", 6.0))
-		light.omni_attenuation = 2.0
-		light.shadow_enabled = false
-		light.position = Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
-		_map_root.add_child(light)
-		count += 1
+		weather._spawn_placed_effect(effect)
+		if str(effect.get("type", "")) == "light":
+			lights += 1
+		else:
+			spores += 1
 	var passes: Dictionary = {}
 	for g in cfg.get("glowMaterials", []):
 		passes[str(g.get("material", ""))] = g
 	var touched := MeshUtils.apply_glow_materials(_map_root, passes)
-	print("[BWalk] %s — %d anchors, glow on %d surfaces" % [_stage_id, count, touched])
+	print("[BWalk] %s — %d anchors, %d spores, glow on %d surfaces" % [
+		_stage_id, lights, spores, touched])
+
+
+## The row's weather, for the open-ceiling caves (the 5 enclosed stages stay
+## skipped, same INDOOR_STAGES gate the field applies). Falls as the field's
+## snow does: attached to the player, following them through the room.
+func _spawn_snow() -> void:
+	if str(_slot.get("weather", "")) != "snow" \
+			or _stage_id in ValleyFieldScript.INDOOR_STAGES:
+		return
+	var snow := GPUParticles3D.new()
+	snow.name = "WeatherSnow"
+	snow.amount = 450
+	snow.lifetime = 5.0
+	snow.visibility_aabb = AABB(Vector3(-70, -4, -70), Vector3(140, 40, 140))
+	snow.fixed_fps = 30
+	snow.interpolate = false
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 10.0
+	mat.initial_velocity_min = 2.0
+	mat.initial_velocity_max = 3.5
+	mat.gravity = Vector3(0.3, -0.5, 0.1)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(26, 0.5, 26)
+	mat.scale_min = 0.6
+	mat.scale_max = 1.4
+	mat.damping_min = 0.2
+	mat.damping_max = 0.5
+	snow.process_material = mat
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.08, 0.08)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	snow.draw_pass_1 = quad
+	snow.preprocess = 5.0
+	snow.position.y = 16.0
+	_player.add_child(snow)
+	print("[BWalk] snow (open-ceiling cave)")
 
 
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is

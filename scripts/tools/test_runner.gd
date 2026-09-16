@@ -10781,19 +10781,20 @@ func test_field_time_slots() -> void:
 	assert_eq(Slots.slot_for("rioh", "s03a_ic1", variant_table).get("hour"), 22.0,
 		"A-variant stages keep the area row while a variant row exists")
 
-	# ── The shipped s03b row (#659 walk pass): pre-dawn caves under a blanket
-	# moon — white COLOR_0, real moon shadows, geometry casting — and A's
-	# #646 lock must not move. ──
+	# ── The shipped s03b row: LOCKED from the in-field walk-lab read-out
+	# (2026-09-14) — moon rig + open-ceiling snow — and A's #646 lock must
+	# not move. ──
 	var s03b := Slots.slot_for("rioh", "s03b_lc1")
 	assert_eq(s03b.get("hour"), 5.5, "s03b pins 5.5 (sunrise-ramp midpoint)")
 	assert_eq(s03b.get("sun_energy"), 0.0, "s03b rig: sun off (caves see no sky)")
-	assert_eq(s03b.get("ambient_energy"), 0.2, "s03b rig: moon carries the look, ambient is the low fill")
+	assert_eq(s03b.get("ambient_energy"), 0.05, "s03b rig: faint ambient floor (lock read-out)")
 	assert_eq(s03b.get("moon_energy"), 0.6, "s03b rig: the moon is the primary light")
 	assert_eq(s03b.get("moon_pitch"), -55.0, "s03b rig: moon elevation authored — overhead look, short directional shadows")
-	assert_eq(s03b.get("bake_mix"), 1.0, "s03b neutralizes COLOR_0 to white — the moon replaces the bake")
+	assert_eq(s03b.get("bake_mix"), 0.75, "s03b keeps a breath of the blue bake under the moon (lock read-out)")
 	assert_eq(s03b.get("moon_shadows"), true, "s03b rig: moonlight casts real shadows")
 	assert_eq(s03b.get("geometry_casts_shadows"), true, "s03b rig: map geometry casts under the moon")
-	assert_true(not s03b.has("weather"), "s03b row authors no weather (indoor skip)")
+	assert_eq(str(s03b.get("weather", "")), "snow",
+		"s03b row authors snow — open-ceiling caves weather, the enclosed five stay indoor-skipped")
 	var s03a := Slots.slot_for("rioh", "s03a_ic1")
 	assert_eq(s03a.get("hour"), 22.0, "s03a stages keep the rioh night (A lock intact)")
 	assert_eq(s03a.get("ambient_energy"), 1.5, "A's ambient lock intact")
@@ -10924,6 +10925,30 @@ func test_s03b_anchor_config() -> void:
 				assert_true(str(g.get("material", "")) in allowed_glow,
 					"%s glow material %s is a known anchor material" % [key, g.get("material")])
 	assert_gt(anchor_count, 30, "the B caves carry their authored anchors (76 expected)")
+
+	# ── Kinoko spores (#659 walk pass): pink drifts where the red mushrooms
+	# stand, authored from the 1_kinoko meshes (incl. the wall-edge growth
+	# the anchor lights skip as scenic). ──
+	var spore_count := 0
+	for key in cfg:
+		if not str(key).begins_with("s03"):
+			continue
+		for e in (cfg[key] as Dictionary).get("effects", []):
+			if str(e.get("type", "")) != "spores":
+				continue
+			assert_true(not str(key).begins_with("s03a"),
+				"s03a stage %s must carry no kinoko spores (A untouched)" % key)
+			assert_true(str(e.get("id", "")).begins_with("kinoko_spore_"),
+				"%s spore id follows the authoring convention" % key)
+			assert_eq(str(key).begins_with("s03b"), true,
+				"%s spores only author for the B caves" % key)
+			var sc: Array = e.get("color", [])
+			assert_true(sc.size() == 3 and float(sc[0]) > float(sc[2]),
+				"%s spore %s is pink (red over blue)" % [key, e.get("id")])
+			var spos: Array = e.get("position", [])
+			assert_eq(spos.size(), 3, "%s spore %s has a 3-component position" % [key, e.get("id")])
+			spore_count += 1
+	assert_eq(spore_count, 34, "the kinoko stages carry their 34 authored spore drifts")
 
 	print("")
 

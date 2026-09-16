@@ -42,22 +42,24 @@ const SLOTS := {
 	"s00a_nr2": {"hour": 12.0},
 
 	# ── per-variant rows (#657: the first) ──
-	# Snowfield B caves — pre-dawn under a blanket moon (#659 walk pass): the
-	# caves see no sky, so the moon IS the rig — COLOR_0 neutralized to white
-	# (bake 1.0) and a real moonlight at 0.6 with shadows, geometry casting
-	# (the moon stands in for the bake, but models/rocks shadow each other by
-	# position — the "implied moon position" of the original art). Anchors
-	# (pools / mushrooms) stay the local color accents on top. Values are the
-	# lab-swept best; the in-field lock pass finalizes them.
+	# Snowfield B caves — pre-dawn under a blanket moon. LOCKED from the
+	# in-field walk-lab read-out (2026-09-14): sun 0, ambient a faint 0.05
+	# floor, moon 0.6 at −55° elevation with real shadows and geometry
+	# casting (models/rocks shadow each other by position — the "implied
+	# moon position" of the original art), COLOR_0 0.75 toward white so a
+	# breath of the blue bake survives under the moon. Open-ceiling caves
+	# snow (the 5 enclosed stages stay weather-skipped via INDOOR_STAGES);
+	# anchors (pools / mushrooms / kinoko spores) are the local accents.
 	"s03b": {
 		"hour": 5.5,
 		"sun_energy": 0.0,
-		"ambient_energy": 0.2,
+		"ambient_energy": 0.05,
 		"moon_energy": 0.6,
 		"moon_pitch": -55.0,
 		"moon_shadows": true,
-		"bake_mix": 1.0,
+		"bake_mix": 0.75,
 		"geometry_casts_shadows": true,
+		"weather": "snow",
 	},
 
 	# ── per-area identity slots ──
