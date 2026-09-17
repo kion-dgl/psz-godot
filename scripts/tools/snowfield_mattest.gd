@@ -14,10 +14,8 @@ const STAGE_ID := "s03a_ic1"
 const STAGE_GLB := "res://assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1_m.glb"
 const FLOOR_GLB := "res://assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1-floor.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
-const GLOBAL_FIXES := "res://data/stage_configs/global-texture-fixes.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
-const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
-const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
+const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
 const PLAYER_SPAWN := Vector3(0, 1.5, 6)
 
@@ -143,57 +141,8 @@ func _load_stage() -> void:
 	map_root.name = "Map"
 	add_child(map_root)
 	var n := SmoothNormals.ensure(map_root, 2)
-	_apply_texture_fixes(map_root)
+	MeshUtils.apply_mirror_wrap_fixes(map_root, MeshUtils.load_texture_fixes(), TEXTURE_FIX_SHADER)
 	print("[MatTest] room: %d meshes normal-fixed (shipped mix 0.25 applied — ,/. tune, R reloads)" % n)
-
-
-## The field controller's _fix_materials core: mirror-wrap textures get the
-## custom shader (Godot can't mirror-repeat imported textures natively).
-func _apply_texture_fixes(root: Node) -> void:
-	var fixes := {}
-	var file := FileAccess.open(GLOBAL_FIXES, FileAccess.READ)
-	if file:
-		var json := JSON.new()
-		if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
-			for key in json.data:
-				# Keys may carry a "#N" material suffix — the texture name is
-				# everything before it.
-				var tex_name: String = str(key).split("#")[0]
-				fixes[tex_name] = json.data[key]
-	if fixes.is_empty():
-		print("[MatTest] WARNING: no global texture fixes parsed")
-	_apply_fix_pass(root, fixes)
-
-
-func _apply_fix_pass(node: Node, fixes: Dictionary) -> void:
-	if node is MeshInstance3D:
-		var mi := node as MeshInstance3D
-		for i in range(SmoothNormals._surface_count(mi)):
-			var mat := SmoothNormals._active_material(mi, i)
-			if not (mat is StandardMaterial3D):
-				continue
-			var std := mat as StandardMaterial3D
-			if not std.albedo_texture:
-				continue
-			var tex_name: String = std.albedo_texture.resource_path.get_file()
-			var fix: Dictionary = fixes.get(tex_name, {})
-			var wrap_s: String = str(fix.get("wrapS", "repeat"))
-			var wrap_t: String = str(fix.get("wrapT", "repeat"))
-			if wrap_s != "mirror" and wrap_t != "mirror":
-				continue
-			var shader_mat := ShaderMaterial.new()
-			shader_mat.shader = TEXTURE_FIX_SHADER
-			shader_mat.set_shader_parameter("albedo_texture", std.albedo_texture)
-			shader_mat.set_shader_parameter("albedo_color", std.albedo_color)
-			shader_mat.set_shader_parameter("uv_scale", Vector3(
-				float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
-			shader_mat.set_shader_parameter("uv_offset", Vector3(
-				float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
-			shader_mat.set_shader_parameter("wrap_s", 1 if wrap_s == "mirror" else 0)
-			shader_mat.set_shader_parameter("wrap_t", 1 if wrap_t == "mirror" else 0)
-			mi.set_surface_override_material(i, shader_mat)
-	for child in node.get_children():
-		_apply_fix_pass(child, fixes)
 
 
 func _load_floor_collision() -> void:
@@ -209,17 +158,9 @@ func _load_floor_collision() -> void:
 
 
 func _spawn_player(pos: Vector3) -> void:
-	player = PLAYER_SCENE.instantiate() as CharacterBody3D
-	player.add_to_group("player")
-	add_child(player)
-	player.global_position = pos
-	player.spawn_position = pos
-	SmoothNormals.ensure(player, 2)
-	SmoothNormals.make_lit(player)
-	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
-	add_child(orbit_camera)
-	orbit_camera.set_target(player)
-	orbit_camera.camera_rotation = PI
+	# Shared lab spawn (field_lab.gd) — the #659 walk lab needed the same
+	# construction and code-graph's dup gate consolidated it.
+	player = FieldLabScript.spawn_player(self, pos)
 
 
 func _spawn_snow() -> void:

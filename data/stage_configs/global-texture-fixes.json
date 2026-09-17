@@ -328,6 +328,22 @@
     "repeatY": 2,
     "wrapS": "mirror"
   },
+  "s03_1_maki1.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "wrapS": "mirror",
+    "wrapT": "mirror"
+  },
+  "s03_2_mizu10.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "wrapS": "mirror",
+    "wrapT": "mirror"
+  },
   "s04_0_kaidan.png#1": {
     "offsetX": 0,
     "offsetY": 0,
