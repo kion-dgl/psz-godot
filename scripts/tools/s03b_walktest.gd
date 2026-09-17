@@ -22,8 +22,7 @@ const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdsha
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const ValleyFieldScript := preload("res://scripts/3d/field/valley_field_controller.gd")
-const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
-const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
+const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
 ## The 12 anchored caves (unified-config authors effects/glow for exactly
 ## these) — N cycles in this order.
@@ -120,45 +119,15 @@ func _input(event: InputEvent) -> void:
 
 ## The field scene's environment + the production slot apply — the real s03b
 ## row the field controller resolves (hour 5.5 pre-dawn, sun 0, moon sky-fill),
-## with the row's energies and moon_shadows honored verbatim.
+## with the row's energies, elevation, and moon_shadows honored verbatim.
 func _build_environment() -> void:
-	_sky_mat = ProceduralSkyMaterial.new()
-	_sky_mat.sky_top_color = Color(0.3, 0.55, 0.65)
-	_sky_mat.sky_horizon_color = Color(0.6, 0.7, 0.6)
-	_sky_mat.ground_bottom_color = Color(0.15, 0.12, 0.08)
-	_sky_mat.ground_horizon_color = Color(0.45, 0.42, 0.35)
-	var sky := Sky.new()
-	sky.sky_material = _sky_mat
-	_env = Environment.new()
-	_env.background_mode = Environment.BG_SKY
-	_env.sky = sky
-	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.tonemap_white = 6.0
-	var world_env := WorldEnvironment.new()
-	world_env.environment = _env
-	add_child(world_env)
-	_dir_light = DirectionalLight3D.new()
-	add_child(_dir_light)
-	_moonlight = DirectionalLight3D.new()
-	_moonlight.light_color = Color(0.5, 0.6, 0.9)
-	_moonlight.light_energy = 0.0
-	_moonlight.visible = false
-	add_child(_moonlight)
+	var built := FieldLabScript.build_environment(self)
+	_env = built["env"]
+	_sky_mat = built["sky_mat"]
+	_dir_light = built["dir_light"]
+	_moonlight = built["moonlight"]
 	_slot = FieldSlotTableScript.slot_for("rioh", _stage_id)
-	TimeManager.current_hour = float(_slot.get("hour", 5.5))
-	TimeManager.apply_to_scene(_env, _sky_mat, _dir_light, _moonlight)
-	if _slot.has("sun_energy"):
-		_dir_light.light_energy = float(_slot["sun_energy"])
-	if _slot.has("ambient_energy"):
-		_env.ambient_light_energy = float(_slot["ambient_energy"])
-	if _slot.has("moon_energy"):
-		_moonlight.light_energy = float(_slot["moon_energy"])
-		_moonlight.visible = true
-	if _slot.has("moon_pitch"):
-		_moonlight.rotation_degrees.x = float(_slot["moon_pitch"])
-	if _slot.get("moon_shadows", false):
-		_moonlight.shadow_enabled = true
+	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
 
 
@@ -206,17 +175,7 @@ func _load_floor_collision() -> void:
 
 
 func _spawn_player(pos: Vector3) -> void:
-	_player = PLAYER_SCENE.instantiate() as CharacterBody3D
-	_player.add_to_group("player")
-	add_child(_player)
-	_player.global_position = pos
-	_player.spawn_position = pos
-	SmoothNormals.ensure(_player, 2)
-	SmoothNormals.make_lit(_player)
-	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
-	add_child(orbit_camera)
-	orbit_camera.set_target(_player)
-	orbit_camera.camera_rotation = PI
+	_player = FieldLabScript.spawn_player(self, pos)
 
 
 ## The authored placed effects for this stage — every category:"placed" entry

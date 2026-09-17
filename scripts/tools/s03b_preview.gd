@@ -22,6 +22,7 @@ const STAGE_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s_m.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
+const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
 var _env: Environment
 var _sky_mat: ProceduralSkyMaterial
@@ -50,32 +51,14 @@ func _ready() -> void:
 
 
 func _build_environment() -> void:
-	_sky_mat = ProceduralSkyMaterial.new()
-	_sky_mat.sky_top_color = Color(0.3, 0.55, 0.65)
-	_sky_mat.sky_horizon_color = Color(0.6, 0.7, 0.6)
-	_sky_mat.ground_bottom_color = Color(0.15, 0.12, 0.08)
-	_sky_mat.ground_horizon_color = Color(0.45, 0.42, 0.35)
-	var sky := Sky.new()
-	sky.sky_material = _sky_mat
-	_env = Environment.new()
-	_env.background_mode = Environment.BG_SKY
-	_env.sky = sky
-	# The valley_field scene's setup (#646): Filmic + white 6, COLOR ambient.
-	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.tonemap_white = 6.0
-	var world_env := WorldEnvironment.new()
-	world_env.environment = _env
-	add_child(world_env)
-
-	_dir_light = DirectionalLight3D.new()
+	# The valley_field scene's setup (#646), shared with the other labs:
+	# Filmic + white 6, COLOR ambient, sun + moon directionals.
+	var built := FieldLabScript.build_environment(self)
+	_env = built["env"]
+	_sky_mat = built["sky_mat"]
+	_dir_light = built["dir_light"]
 	_dir_light.shadow_enabled = false
-	add_child(_dir_light)
-	_moonlight = DirectionalLight3D.new()
-	_moonlight.light_color = Color(0.5, 0.6, 0.9)
-	_moonlight.light_energy = 0.0
-	_moonlight.visible = false
-	add_child(_moonlight)
+	_moonlight = built["moonlight"]
 
 	# The production slot apply — the real row the field controller resolves
 	# for s03b stages, with env overrides for the tuning loop.
@@ -86,20 +69,7 @@ func _build_environment() -> void:
 		_slot["moon_energy"] = float(OS.get_environment("PSZ_PREVIEW_MOON"))
 	if not OS.get_environment("PSZ_PREVIEW_BAKE").is_empty():
 		_slot["bake_mix"] = float(OS.get_environment("PSZ_PREVIEW_BAKE"))
-	var hour: float = float(_slot.get("hour", 5.5))
-	TimeManager.current_hour = hour
-	TimeManager.apply_to_scene(_env, _sky_mat, _dir_light, _moonlight)
-	if _slot.has("sun_energy"):
-		_dir_light.light_energy = float(_slot["sun_energy"])
-	if _slot.has("ambient_energy"):
-		_env.ambient_light_energy = float(_slot["ambient_energy"])
-	if _slot.has("moon_energy"):
-		_moonlight.light_energy = float(_slot["moon_energy"])
-		_moonlight.visible = true
-	if _slot.has("moon_pitch"):
-		_moonlight.rotation_degrees.x = float(_slot["moon_pitch"])
-	if _slot.get("moon_shadows", false):
-		_moonlight.shadow_enabled = true
+	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
 	if not OS.get_environment("PSZ_PREVIEW_AMBIENT").is_empty():
 		_env.ambient_light_energy = float(OS.get_environment("PSZ_PREVIEW_AMBIENT"))
 	if OS.get_environment("PSZ_PREVIEW_MOON_SHADOWS") == "1":

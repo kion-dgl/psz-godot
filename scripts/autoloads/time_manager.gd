@@ -168,20 +168,6 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 			moonlight.rotation_degrees = Vector3(cfg["light_pitch"], light.rotation_degrees.y + 180.0, 0)
 
 
-func get_darkness_factor() -> float:
-	## Returns 0.0 during full day, 1.0 during full night, with smooth ramps
-	## during sunset (17:00-21:00) and sunrise (5:00-7:00).
-	if current_hour >= 21.0 or current_hour < 5.0:
-		return 1.0
-	elif current_hour >= 7.0 and current_hour < 17.0:
-		return 0.0
-	elif current_hour >= 17.0 and current_hour < 21.0:
-		return (current_hour - 17.0) / 4.0
-	else:
-		# 5:00-7:00 sunrise
-		return 1.0 - (current_hour - 5.0) / 2.0
-
-
 func _get_moonlight_energy() -> float:
 	## Returns moonlight intensity: 0 during day, ramps up at sunset, full at night,
 	## ramps down at sunrise.
