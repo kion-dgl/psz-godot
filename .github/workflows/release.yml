@@ -7,7 +7,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The asset fetch below can take 20+ minutes on a cold cache (R2's public
+    # r2.dev endpoint throttles the 20k-file download); exports need ~7 more.
+    # 60 leaves headroom for a slow fetch without risking a mid-upload kill.
+    timeout-minutes: 60
     # The Android signing secrets (ANDROID_KEYSTORE_B64,
     # ANDROID_KEYSTORE_PASSWORD) live in the `prod` environment, not as
     # plain repo secrets. Declaring the environment here is what makes
@@ -99,6 +102,29 @@ jobs:
         with:
           path: ~/.local/share/godot/export_templates
           key: godot-templates-4.5.1
+
+      - name: Hash asset tree manifest
+        # The fetch below re-downloads anything whose md5 doesn't match, so
+        # caching the previous run's trees keyed on the published manifest's
+        # sha turns a 20+ minute cold download into a md5-verify pass when the
+        # pack hasn't been republished. Pull the base URL out of the script so
+        # there's a single source of truth for it.
+        id: asset_tree
+        run: |
+          BASE=$(grep -m1 '^DEFAULT_BASE=' scripts/tools/fetch_assets_dev.sh | cut -d'"' -f2)
+          SHA=$(curl -fsSL -A "psz-godot-dev-fetch/1.0" "$BASE/assets_tree.json" | sha256sum | awk '{print $1}')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Cache downloaded asset tree
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets
+            web/public/assets/psobb_sfx
+          key: assets-tree-${{ steps.asset_tree.outputs.sha }}
+          # Partial restore on a republish is still a win: fetch skips every
+          # unchanged file by md5 and only downloads the delta.
+          restore-keys: assets-tree-
 
       - name: Fetch assets for UID table
         # exclude_filter drops the actual asset bytes from the exe, but the
