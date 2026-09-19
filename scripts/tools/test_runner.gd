@@ -10830,20 +10830,20 @@ func test_valley_day_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var valley := Slots.slot_for("gurhacia", "s01a_ga1")
 	assert_eq(valley.get("hour"), 10.0, "Valley pins hour 10 (day)")
-	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.9 (#648 sweep)")
-	assert_eq(valley.get("ambient_energy"), 0.8, "Valley rig: ambient 0.80 — carries the canyon-shade B rooms")
-	assert_eq(valley.get("bake_mix"), 0.5, "Valley rig: the day-authored bake half-neutralized")
+	assert_eq(valley.get("sun_energy"), 0.55, "Valley rig: sun 0.55 (hardware walk lock)")
+	assert_eq(valley.get("ambient_energy"), 0.6, "Valley rig: ambient 0.60 (hardware walk lock)")
+	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
 	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
 	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
 	assert_true(not valley.has("moon_energy"), "Valley rig: no moon (day — the sun is the source)")
-	# Stage exception: the boss arena's bright material set (0_iwa/0_jime)
-	# blows out at the area row (34% highlight clip) — its own energies.
+	# The boss arena needs no exception at the hardware lock: the area row
+	# lands where the sweep-era exception was heading (8.5% clip there, all
+	# but ~the sky band) — one row serves every s01 stage.
 	var boss := Slots.slot_for("gurhacia", "s01z_na1")
-	assert_eq(boss.get("sun_energy"), 0.55, "s01z exception: pulled-down sun")
-	assert_eq(boss.get("ambient_energy"), 0.5, "s01z exception: pulled-down ambient")
-	assert_eq(boss.get("bake_mix"), 0.3, "s01z exception: bake 0.3")
-	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
+	assert_eq(boss.get("sun_energy"), 0.55, "s01z rides the area row (exception dropped)")
+	assert_eq(boss.get("bake_mix"), 0.15, "s01z keeps the area bake")
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.55,
 		"s01b stages keep the area row (no variant split needed)")
 	# The slot row's presence implies the white-strategy pass: valley rooms
 	# run neutralize + make_lit (per-pixel) like the s03 stages.

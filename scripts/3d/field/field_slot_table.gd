@@ -43,17 +43,6 @@ const SLOTS := {
 	# ── per-stage exceptions (most specific) ──
 	# The coliseum debug arena is deliberately noon (kion); other s00 stages day.
 	"s00a_nr2": {"hour": 12.0},
-	# The valley boss arena's own material set (0_iwa/0_jime — bright for a
-	# climax fight) blows out at the area rig: pull its energies down (~#648
-	# sweep; 34% highlight clip at the area row → 1.4% here).
-	"s01z_na1": {
-		"hour": 10.0,
-		"sun_energy": 0.55,
-		"ambient_energy": 0.5,
-		"bake_mix": 0.3,
-		"sun_shadows": true,
-		"geometry_casts_shadows": true,
-	},
 
 	# ── per-variant rows (#657: the first) ──
 	# Snowfield B caves — pre-dawn under a blanket moon. LOCKED from the
@@ -78,19 +67,20 @@ const SLOTS := {
 
 	# ── per-area identity slots ──
 	# Valley day — the #648 sun rig, the moon rig's daylight counterpart.
-	# LOCKED from the valley walk-lab sweep (2026-09-19): hour 10 pins the
-	# DAY palette and the SUN is the shadow source (sun_shadows re-arms what
-	# the phase preset ships off) with geometry casting on. The valley bake
-	# was authored FOR daylight (median COLOR_0 luminance ~0.52 vs snowfield's
-	# 0.19), so it half-neutralizes and the dynamic sun drives the look;
-	# ambient 0.80 carries the canyon-shade B rooms. Blowing sand drift; the
-	# toro lanterns (td1/td2, warm pools at 6.0 — day anchors must beat the
-	# ambient) are the local accents.
+	# LOCKED from the hardware walk read-out (2026-09-19, supersedes the
+	# same-day screenshot sweep): hour 10 pins the DAY palette and the SUN
+	# is the shadow source (sun_shadows re-arms what the phase preset ships
+	# off) with geometry casting on. The valley bake was authored FOR
+	# daylight (median COLOR_0 luminance ~0.52 vs snowfield's 0.19) and
+	# mostly SURVIVES — bake 0.15 keeps the authored shading; sun 0.55 +
+	# ambient 0.60 layer the dynamic light on top (the sweep's brighter
+	# 0.9/0.80/0.5 read hot on hardware). Blowing sand drift; the toro
+	# lanterns (td1/td2, warm pools at 6.0) are the local accents.
 	"gurhacia": {
 		"hour": 10.0,
-		"sun_energy": 0.9,
-		"ambient_energy": 0.8,
-		"bake_mix": 0.5,
+		"sun_energy": 0.55,
+		"ambient_energy": 0.6,
+		"bake_mix": 0.15,
 		"sun_shadows": true,
 		"geometry_casts_shadows": true,
 		"weather": "sand",

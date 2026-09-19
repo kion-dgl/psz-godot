@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (walk-lab sweep, #648): sun 0.9 with real sun shadows + geometry casting, ambient 0.80, bake 0.5, sand drift; s01z_na1 excepts to sun 0.55 / ambient 0.50 / bake 0.3 (bright arena set)' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (hardware walk, #648): sun 0.55 with real sun shadows + geometry casting, ambient 0.60, bake 0.15 (the authored day bake mostly survives), sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -118,18 +118,18 @@ const slots = [
   the <strong>sun</strong> is the shadow source (<code>sun_shadows</code> —
   the phase preset ships sun shadows off, so the row re-arms them) with
   geometry casting on. The valley bake was authored <em>for</em> daylight
-  (median COLOR_0 luminance ~0.52 vs the snowfield's 0.19), so unlike the
-  snowfield's quarter-mix the row neutralizes COLOR_0 half toward white
-  (0.5) and lets the dynamic sun drive the shading; ambient 0.80 carries the
-  canyon-shade B rooms whose walls block the sun. Weather is a blowing
-  <code>sand</code> drift (the valley's dust), the first non-snow weather
-  type. The stone-lantern stages (<code>s01a_td1/td2</code>, the only
-  <code>1_toro</code> art) carry warm placed-light anchors at day-punch
-  intensity — pools must beat the ambient, the night anchors' ×12 lesson.
-  The boss arena excepts to its own row: its bright material set blows out
-  at the area rig. The arena's <code>2_kemu</code> smoke stays un-authored —
-  detection puts every cluster on the distant backdrop ring, scenery rather
-  than sources.</p>
+  (median COLOR_0 luminance ~0.52 vs the snowfield's 0.19), so it mostly
+  survives — the lock keeps 0.15 toward white and layers sun 0.55 + ambient
+  0.60 on top of the authored shading (the screenshot sweep's brighter
+  0.9/0.80/0.5 read hot on hardware; the hardware walk re-locked it).
+  Weather is a blowing <code>sand</code> drift (the valley's dust), the
+  first non-snow weather type. The stone-lantern stages
+  (<code>s01a_td1/td2</code>, the only <code>1_toro</code> art) carry warm
+  placed-light anchors at day-punch intensity — pools must beat the ambient,
+  the night anchors' ×12 lesson. The boss arena needs no exception at this
+  lock (the sweep-era pull-down row landed where the area row now sits), and
+  its <code>2_kemu</code> smoke stays un-authored — detection puts every
+  cluster on the distant backdrop ring, scenery rather than sources.</p>
 
   <h2>Weather precedence</h2>
   <ul>
