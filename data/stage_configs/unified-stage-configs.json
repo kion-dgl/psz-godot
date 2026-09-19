@@ -4627,6 +4627,93 @@
         "wp_1780361593623_6i4wox",
         "wp_1780361589889_rlezog"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          -21.82,
+          2.26,
+          -2.01
+        ],
+        "id": "placed_anchor_0_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          -12.92,
+          2.3,
+          -2.03
+        ],
+        "id": "placed_anchor_1_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          4.88,
+          2.3,
+          -10.87
+        ],
+        "id": "placed_anchor_2_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          5.44,
+          1.95,
+          -2.45
+        ],
+        "id": "placed_anchor_3_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          8.13,
+          2.3,
+          11.93
+        ],
+        "id": "placed_anchor_4_toro"
+      }
     ]
   },
   "s01a_td2": {
@@ -5042,6 +5129,93 @@
         "wp_1780361895916_pv8w9o",
         "wp_1780361815364_3mu5x1"
       ]
+    ],
+    "effects": [
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          -3.67,
+          2.26,
+          17.31
+        ],
+        "id": "placed_anchor_0_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          -3.25,
+          2.3,
+          11.12
+        ],
+        "id": "placed_anchor_1_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          -1.24,
+          2.26,
+          -6.98
+        ],
+        "id": "placed_anchor_2_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          6.68,
+          2.3,
+          -7.57
+        ],
+        "id": "placed_anchor_3_toro"
+      },
+      {
+        "type": "light",
+        "category": "placed",
+        "color": [
+          1.0,
+          0.72,
+          0.42
+        ],
+        "intensity": 6.0,
+        "radius": 7.0,
+        "position": [
+          7.49,
+          2.3,
+          8.56
+        ],
+        "id": "placed_anchor_4_toro"
+      }
     ]
   },
   "s01a_xb2": {
