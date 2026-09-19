@@ -218,9 +218,12 @@ func _run_tests_systems() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_field_time_slots()
+	test_valley_day_slot()
 	test_time_manager_clock()
 	test_s03b_anchor_lights()
 	test_s03b_anchor_config()
+	test_valley_anchor_config()
+	test_valley_sand_weather()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -10812,8 +10815,40 @@ func test_field_time_slots() -> void:
 		"Quest weather overrides the slot row")
 	assert_eq(Slots.resolve_weather("", rioh), "snow",
 		"Empty quest weather falls back to the slot row")
-	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "",
-		"Valley row authors no weather")
+	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "sand",
+		"Valley row rides its sand drift (#648)")
+
+	print("")
+
+
+# ── The valley day slot (#648): the first sun rig — the moon rig's daylight
+# counterpart, locked from the walk-lab sweep. The bake was authored FOR
+# daylight, so COLOR_0 half-neutralizes and the dynamic sun drives the look;
+# ambient 0.80 lifts the canyon-shade B rooms; sand drifts. ──
+func test_valley_day_slot() -> void:
+	print("── Valley Day Slot (#648) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	var valley := Slots.slot_for("gurhacia", "s01a_ga1")
+	assert_eq(valley.get("hour"), 10.0, "Valley pins hour 10 (day)")
+	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.9 (#648 sweep)")
+	assert_eq(valley.get("ambient_energy"), 0.8, "Valley rig: ambient 0.80 — carries the canyon-shade B rooms")
+	assert_eq(valley.get("bake_mix"), 0.5, "Valley rig: the day-authored bake half-neutralized")
+	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
+	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
+	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
+	assert_true(not valley.has("moon_energy"), "Valley rig: no moon (day — the sun is the source)")
+	# Stage exception: the boss arena's bright material set (0_iwa/0_jime)
+	# blows out at the area row (34% highlight clip) — its own energies.
+	var boss := Slots.slot_for("gurhacia", "s01z_na1")
+	assert_eq(boss.get("sun_energy"), 0.55, "s01z exception: pulled-down sun")
+	assert_eq(boss.get("ambient_energy"), 0.5, "s01z exception: pulled-down ambient")
+	assert_eq(boss.get("bake_mix"), 0.3, "s01z exception: bake 0.3")
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
+		"s01b stages keep the area row (no variant split needed)")
+	# The slot row's presence implies the white-strategy pass: valley rooms
+	# run neutralize + make_lit (per-pixel) like the s03 stages.
+	assert_true(valley.has("bake_mix"),
+		"bake_mix presence opts valley into the white-strategy material pass")
 
 	print("")
 
@@ -10953,6 +10988,70 @@ func test_s03b_anchor_config() -> void:
 			spore_count += 1
 	assert_eq(spore_count, 34, "the kinoko stages carry their 34 authored spore drifts")
 
+	print("")
+
+
+# ── Valley toro anchors (#648): td1/td2 stone lanterns carry day-punch warm
+# pools (6.0 — the night anchors' ×12 lesson: pools must beat the ambient);
+# every other s01 stage stays anchor-free — the boss arena's 2_kemu smoke is
+# backdrop scenery, not a source, and no glow materials ride the toro (its
+# texture-fix shader can't take an emissive swap without losing the wrap). ──
+func test_valley_anchor_config() -> void:
+	print("── Valley Toro Anchors (#648) ──")
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	assert_true(cfg_file != null, "unified stage config loads")
+	var json := JSON.new()
+	assert_eq(json.parse(cfg_file.get_as_text()), OK, "unified stage config parses")
+	cfg_file.close()
+	var cfg: Dictionary = json.data
+	var toro_count := 0
+	for key in cfg:
+		if not str(key).begins_with("s01"):
+			continue
+		var stage: Dictionary = cfg[key]
+		for e in stage.get("effects", []):
+			if str(e.get("type", "")) != "light":
+				continue
+			assert_true(str(key) in ["s01a_td1", "s01a_td2"],
+				"%s carries valley anchor lights — only the toro rooms do" % key)
+			assert_true(str(e.get("id", "")).begins_with("placed_anchor_"),
+				"%s anchor id follows the authoring convention" % key)
+			var pos: Array = e.get("position", [])
+			assert_eq(pos.size(), 3, "%s anchor %s has a 3-component position" % [key, e.get("id")])
+			if pos.size() == 3:
+				assert_true(absf(float(pos[0])) < 45.0 and absf(float(pos[2])) < 45.0,
+					"%s anchor %s is inside the room" % [key, e.get("id")])
+				assert_true(float(pos[1]) > 0.5 and float(pos[1]) < 3.5,
+					"%s anchor %s rides the lantern head band" % [key, e.get("id")])
+			var c: Array = e.get("color", [])
+			assert_true(c.size() == 3 and float(c[0]) > float(c[2]),
+				"%s anchor %s is warm (red over blue — lantern flame)" % [key, e.get("id")])
+			assert_gt(float(e.get("intensity", 0.0)), 4.0,
+				"%s anchor %s punches through the day rig (≥ 4.0)" % [key, e.get("id")])
+			toro_count += 1
+		if str(key) in ["s01a_td1", "s01a_td2"]:
+			assert_eq(stage.get("glowMaterials", []).size(), 0,
+				"%s authors no glow materials (toro's fix shader can't take them)" % key)
+	assert_eq(toro_count, 10, "td1 + td2 carry their 5 toro lanterns each")
+
+	print("")
+
+
+# ── Sand weather (#648): the valley's blowing dust — horizontal drift, low
+# band, built by the shared WeatherController factory the labs preview from. ──
+func test_valley_sand_weather() -> void:
+	print("── Valley Sand Weather (#648) ──")
+	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
+	var sand = WeatherCtl.build_weather_node("sand")
+	assert_true(sand is GPUParticles3D, "sand builds a particle node")
+	if sand is GPUParticles3D:
+		var mat := sand.process_material as ParticleProcessMaterial
+		assert_true(absf(mat.direction.x) > absf(mat.direction.y),
+			"sand drifts horizontally (XZ wind, not a fall)")
+		assert_true(absf(sand.position.y) < 8.0,
+			"sand rides a low band (skims the ground — snow sits at 8)")
+	assert_true(WeatherCtl.build_weather_node("sleet") == null,
+		"unknown weather keys build nothing")
 	print("")
 
 
