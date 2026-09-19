@@ -155,12 +155,28 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/tools/s03b_walktest.gd:_build_environment#0||scripts/tools/valley_walktest.gd:_build_environment#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_build_status_label#0||scripts/tools/valley_walktest.gd:_build_status_label#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_process#0||scripts/tools/valley_walktest.gd:_process#0",
+      "jaccard": 1.0
+    },
+    {
       "sig": "scripts/ui/choice_dialog.gd:_panel_style#0||scripts/ui/confirm_dialog.gd:_panel_style#0",
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/city/city_area_base.gd:_find_global_fix_for_material#0||scripts/3d/field/valley_field_controller.gd:_find_global_fix_for_material#0",
+      "sig": "scripts/tools/s03b_walktest.gd:_load_floor_collision#0||scripts/tools/valley_walktest.gd:_load_floor_collision#0",
       "jaccard": 0.974
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_spawn_authored_effects#0||scripts/tools/valley_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 0.969
     },
     {
       "sig": "scripts/2d/shops/crafting_shop.gd:_ready#0||scripts/2d/shops/photon_shop.gd:_ready#0",
@@ -213,6 +229,10 @@
     {
       "sig": "scripts/2d/character_select.gd:_remap_animation#0||scripts/3d/player/player.gd:_remap_animation#0",
       "jaccard": 0.949
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_ready#0||scripts/tools/valley_walktest.gd:_ready#0",
+      "jaccard": 0.943
     },
     {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
@@ -271,6 +291,10 @@
       "jaccard": 0.909
     },
     {
+      "sig": "scripts/tools/s03b_walktest.gd:_load_stage#0||scripts/tools/valley_walktest.gd:_load_stage#0",
+      "jaccard": 0.906
+    },
+    {
       "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
       "jaccard": 0.905
     },
@@ -279,8 +303,12 @@
       "jaccard": 0.897
     },
     {
-      "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
-      "jaccard": 0.886
+      "sig": "scripts/tools/s03b_walktest.gd:_input#0||scripts/tools/valley_walktest.gd:_input#0",
+      "jaccard": 0.889
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
+      "jaccard": 0.889
     },
     {
       "sig": "scripts/2d/guild_counter.gd:_process#0||scripts/2d/shops/tekker.gd:_process#0",
@@ -311,10 +339,6 @@
       "jaccard": 0.885
     },
     {
-      "sig": "scripts/3d/city/city_area_base.gd:_fix_materials_recursive#0||scripts/3d/field/valley_field_controller.gd:_fix_materials#0",
-      "jaccard": 0.885
-    },
-    {
       "sig": "scripts/tools/lantern_test.gd:_build_snow#0||scripts/tools/snowfield_mattest.gd:_spawn_snow#0",
       "jaccard": 0.88
     },
@@ -333,6 +357,10 @@
     {
       "sig": "scripts/3d/combat/projectile.gd:_ready#0||scripts/3d/player/player.gd:_ready#1",
       "jaccard": 0.873
+    },
+    {
+      "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
+      "jaccard": 0.872
     },
     {
       "sig": "scripts/3d/elements/bear_trap.gd:_init#0||scripts/3d/elements/enemy_spawn.gd:_init#0",
@@ -371,16 +399,16 @@
       "jaccard": 0.865
     },
     {
-      "sig": "scripts/tools/lantern_test.gd:_spawn_player#0||scripts/tools/snowfield_mattest.gd:_spawn_player#0",
-      "jaccard": 0.865
-    },
-    {
       "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
       "jaccard": 0.864
     },
     {
       "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
       "jaccard": 0.863
+    },
+    {
+      "sig": "scripts/tools/s03b_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
+      "jaccard": 0.862
     },
     {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
