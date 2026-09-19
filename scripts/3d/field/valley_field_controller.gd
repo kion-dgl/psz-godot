@@ -724,6 +724,11 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 	if _slot.get("moon_shadows", false):
 		_moonlight.shadow_enabled = true
 		_moonlight.shadow_blur = 1.0
+	if _slot.get("sun_shadows", false):
+		# Day rigs (#648) stand on the sun: the phase preset ships sun
+		# shadows off (the bake was the look), so the row re-arms them.
+		_dir_light.shadow_enabled = true
+		_dir_light.shadow_blur = 1.0
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
@@ -813,9 +818,10 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.camera_rotation = rot + PI
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
-	# Slots with real moon shadows skip it (#646): the moonlight casts dynamic
-	# shadows there, and blob + moon shadow reads as a double shadow.
-	if not _slot.get("moon_shadows", false):
+	# Slots with real directional shadows skip it (#646): a shadow-casting
+	# sun (#648) or moon casts dynamic shadows there, and blob + real shadow
+	# reads as a double shadow.
+	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false)):
 		_blob_shadow = MeshInstance3D.new()
 		var shadow_quad := QuadMesh.new()
 		shadow_quad.size = Vector2(1.8, 1.8)
@@ -2740,11 +2746,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## Slot-rig live tuning (#646, generalized by #655): ,/. ambient, [/] moon,
-## -/= bake mix, P logs the rig plus player material diagnostics (same knobs
-## as the material test scene, in the field where it counts). Owned by slots
-## that ship a rig (a bake_mix row); handled keys stop the TimeManager hour
-## preview from double-firing on [/].
+## Slot-rig live tuning (#646, generalized by #655; sun keys #648): ,/.
+## ambient, [/] moon, 9/0 sun, -/= bake mix, P logs the rig plus player
+## material diagnostics (same knobs as the material test scene, in the field
+## where it counts). Owned by slots that ship a rig (a bake_mix row); handled
+## keys stop the TimeManager hour preview from double-firing on [/].
 func _handle_night_tuning(event: InputEvent) -> void:
 	if not (_slot.has("bake_mix") \
 			and event is InputEventKey and event.pressed and not event.echo):
@@ -2762,6 +2768,12 @@ func _handle_night_tuning(event: InputEvent) -> void:
 			handled = true
 		KEY_BRACKETRIGHT:
 			_moonlight.light_energy += 0.05
+			handled = true
+		KEY_9:
+			_dir_light.light_energy = maxf(0.0, _dir_light.light_energy - 0.05)
+			handled = true
+		KEY_0:
+			_dir_light.light_energy += 0.05
 			handled = true
 		KEY_MINUS:
 			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
@@ -2820,9 +2832,10 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
 
 func _print_night_tuning() -> void:
-	var msg := "[FieldSlot %s] ambient %.2f  moon %.2f  bake mix %.2f" % [
+	var msg := "[FieldSlot %s] ambient %.2f  sun %.2f  moon %.2f  bake mix %.2f" % [
 		str(_current_cell.get("stage_id", "?")),
-		_world_env.environment.ambient_light_energy, _moonlight.light_energy, _night_bake_mix]
+		_world_env.environment.ambient_light_energy, _dir_light.light_energy,
+		_moonlight.light_energy, _night_bake_mix]
 	if player:
 		var stats := _player_mat_stats(player)
 		msg += " | player: %d per-pixel / %d unshaded, %d/%d meshes with normals" % [

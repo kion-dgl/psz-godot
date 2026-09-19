@@ -2,8 +2,9 @@ extends Node3D
 ## Snowfield B cave preview (#657) — screenshot lab for the s03b slot rig.
 ##
 ## Boots a B-cave stage through the production material pipeline (SmoothNormals
-## → texture-fix pass → white-strategy mix) under the real FieldSlotTable s03b
-## row, spawns the authored placed effects from the unified config, and writes
+## → texture-fix pass → white-strategy mix) under the real FieldSlotTable row
+## (area derived from the stage prefix — any area's stages preview here),
+## spawns the authored placed effects from the unified config, and writes
 ## a screenshot after the scene settles. Env knobs so a headless-friendly loop
 ## can iterate the rig without typing into the window:
 ##
@@ -12,9 +13,11 @@ extends Node3D
 ##   PSZ_PREVIEW_HOUR=5.5         override the slot hour
 ##   PSZ_PREVIEW_AMBIENT=0.6      override ambient energy
 ##   PSZ_PREVIEW_MOON=0.12        override moon energy
+##   PSZ_PREVIEW_SUN=1.2          override sun energy (day rigs, #648)
 ##   PSZ_PREVIEW_BAKE=0.25        override bake mix
 ##   PSZ_PREVIEW_MOON_SHADOWS=1   moonlight casts real shadows (experiment:
 ##                                white COLOR_0 + moon shadows = dynamic bake)
+##   PSZ_PREVIEW_SUN_SHADOWS=1    sunlight casts real shadows (day rigs)
 ##   PSZ_PREVIEW_SHOT=/tmp/o.png  write screenshot + quit (else live keys:
 ##                                [/] moon, ,/. ambient, R reload)
 
@@ -61,12 +64,17 @@ func _build_environment() -> void:
 	_moonlight = built["moonlight"]
 
 	# The production slot apply — the real row the field controller resolves
-	# for s03b stages, with env overrides for the tuning loop.
-	_slot = FieldSlotTableScript.slot_for("rioh", _stage_id)
+	# for the stage's area (prefix-derived), with env overrides for the
+	# tuning loop.
+	var area_id := str(SessionManager.STAGE_PREFIX_TO_AREA.get(
+		_stage_id.substr(0, 3), ""))
+	_slot = FieldSlotTableScript.slot_for(area_id, _stage_id)
 	if not OS.get_environment("PSZ_PREVIEW_HOUR").is_empty():
 		_slot["hour"] = float(OS.get_environment("PSZ_PREVIEW_HOUR"))
 	if not OS.get_environment("PSZ_PREVIEW_MOON").is_empty():
 		_slot["moon_energy"] = float(OS.get_environment("PSZ_PREVIEW_MOON"))
+	if not OS.get_environment("PSZ_PREVIEW_SUN").is_empty():
+		_slot["sun_energy"] = float(OS.get_environment("PSZ_PREVIEW_SUN"))
 	if not OS.get_environment("PSZ_PREVIEW_BAKE").is_empty():
 		_slot["bake_mix"] = float(OS.get_environment("PSZ_PREVIEW_BAKE"))
 	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
@@ -74,6 +82,9 @@ func _build_environment() -> void:
 		_env.ambient_light_energy = float(OS.get_environment("PSZ_PREVIEW_AMBIENT"))
 	if OS.get_environment("PSZ_PREVIEW_MOON_SHADOWS") == "1":
 		_moonlight.shadow_enabled = true
+	if OS.get_environment("PSZ_PREVIEW_SUN_SHADOWS") == "1":
+		_dir_light.shadow_enabled = true
+		_dir_light.shadow_blur = 1.0
 
 
 func _load_stage() -> void:

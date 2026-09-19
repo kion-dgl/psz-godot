@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (walk-lab sweep, #648): sun 0.9 with real sun shadows + geometry casting, ambient 0.80, bake 0.5, sand drift; s01z_na1 excepts to sun 0.55 / ambient 0.50 / bake 0.3 (bright arena set)' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -72,12 +72,15 @@ const slots = [
   fractional hours pick a stable lerped palette between phase presets), an
   optional <code>weather</code>, and optional rig overrides applied after the
   phase preset (ambient/sun/moon energies, the moon's elevation via
-  <code>moon_pitch</code> and its shadows, the tonemap white
+  <code>moon_pitch</code> and its shadows, the sun's shadows via
+  <code>sun_shadows</code>, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
   white so the dynamic rig drives the look). A row <strong>MAY</strong> set
   <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the
-  bake is the look), and a rig that stands on real moon shadows turns casting
-  on so models shadow each other by position. Rows resolve most-specific-first:
+  bake is the look), and a rig that stands on real shadows — moon
+  (<code>moon_shadows</code>) or sun (<code>sun_shadows</code>) — turns casting
+  on so models shadow each other by position; either shadow row also skips the
+  player blob shadow (blob + real shadow reads double). Rows resolve most-specific-first:
   exact <code>stage_id</code> → variant prefix (<code>s03a</code>,
   <code>s03b</code>, tower floor styles) → area id → default day.</p>
 
@@ -110,6 +113,24 @@ const slots = [
   have not authored a slot yet; each issue replaces its row's values and
   locks them from a playtest read-out.</p>
 
+  <p>The valley row (#648) is the first sun-driven rig — the daylight
+  counterpart of the snowfield's moon rig: hour 10 pins the DAY palette, and
+  the <strong>sun</strong> is the shadow source (<code>sun_shadows</code> —
+  the phase preset ships sun shadows off, so the row re-arms them) with
+  geometry casting on. The valley bake was authored <em>for</em> daylight
+  (median COLOR_0 luminance ~0.52 vs the snowfield's 0.19), so unlike the
+  snowfield's quarter-mix the row neutralizes COLOR_0 half toward white
+  (0.5) and lets the dynamic sun drive the shading; ambient 0.80 carries the
+  canyon-shade B rooms whose walls block the sun. Weather is a blowing
+  <code>sand</code> drift (the valley's dust), the first non-snow weather
+  type. The stone-lantern stages (<code>s01a_td1/td2</code>, the only
+  <code>1_toro</code> art) carry warm placed-light anchors at day-punch
+  intensity — pools must beat the ambient, the night anchors' ×12 lesson.
+  The boss arena excepts to its own row: its bright material set blows out
+  at the area rig. The arena's <code>2_kemu</code> smoke stays un-authored —
+  detection puts every cluster on the distant backdrop ring, scenery rather
+  than sources.</p>
+
   <h2>Weather precedence</h2>
   <ul>
     <li>A quest-authored <code>weather</code> key (session level)
@@ -127,7 +148,8 @@ const slots = [
   controller re-applies the active slot's rig at the previewed hour. The
   preview <strong>MUST NOT</strong> persist across cell transitions — each
   cell entry re-applies the authored slot. On fields whose slot ships rig
-  overrides, the tuning keys (`,`, `.`, `[`, `]`, `-`, `=`, `P` for the
+  overrides, the tuning keys (`,`, `.`, ambient; `[`, `]`, moon; `9`, `0`,
+  sun; `-`, `=`, bake mix; `P` for the
   read-out) own those keycodes and the hour preview yields.</p>
 
   <h2>Explicitly deferred (phase 2 — do not build)</h2>

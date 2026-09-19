@@ -55,6 +55,10 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		moonlight.rotation_degrees.x = float(slot["moon_pitch"])
 	if slot.get("moon_shadows", false):
 		moonlight.shadow_enabled = true
+		moonlight.shadow_blur = 1.0
+	if slot.get("sun_shadows", false):
+		dir_light.shadow_enabled = true
+		dir_light.shadow_blur = 1.0
 
 
 ## A walkable player + orbit camera on the production material path
