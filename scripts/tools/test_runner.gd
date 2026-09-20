@@ -10950,9 +10950,11 @@ func test_valley_sun_enclosure() -> void:
 		"the model's meshes stop casting (broken skin never double-shadows)")
 	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
 		"the proxy casts normally (compat ignores SHADOWS_ONLY, alpha-0 gets scissored away)")
-	var skin := proxy.material_override as StandardMaterial3D
-	assert_true(skin != null and skin.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED,
-		"the proxy is opaque — nested inside the body, hidden by the model")
+	var ghost := proxy.material_override as StandardMaterial3D
+	assert_true(ghost != null and ghost.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR,
+		"the proxy ghosts via alpha-scissor (casts solid, draws as a 2% whisper)")
+	assert_true(ghost != null and ghost.alpha_scissor_threshold <= 0.01,
+		"the scissor threshold sits below the proxy's alpha so the shadow pass keeps its fragments")
 	assert_true(proxy.mesh is CapsuleMesh, "the proxy is a capsule")
 	assert_eq(proxy.get_parent(), puppet, "the proxy rides the player root")
 	puppet.queue_free()

@@ -474,30 +474,51 @@ static func place_light_inside_room(light: DirectionalLight3D,
 ## #648 player shadow proxy: the compatibility renderer's shadow pass fails
 ## to rasterize the player's SKINNED mesh — s03b's locked moon rig proved the
 ## machinery (rocks/geometry shadowed fine); the player just never shadowed
-## and the room's shadows carried the look. Two "invisible caster" tricks
-## also fail under compat: SHADOW_CASTING_SETTING_SHADOWS_ONLY is a silent
-## no-op, and a transparent material is discarded by the shadow pass's
-## alpha-scissor (alpha 0 → no fragments). So the proxy is the classic
-## battle-proven shape: an OPAQUE capsule NESTED INSIDE the body volume —
-## the model hides it in the color pass, the shadow pass rasterizes it
-## solidly. Slightly slimmer than the body (r 0.24) so limbs swing outside
-## it; dark neutral albedo for the rare texel-gap peek. The model's own
-## casting turns off so the broken skin never double-shadows. Attached by
-## both spawn paths (controller + lab).
+## and the room's shadows carried the look. The invisible-caster attempts all
+## lose under compat: SHADOW_CASTING_SETTING_SHADOWS_ONLY is a silent no-op,
+## transparent materials are scissored out of the shadow pass, and an opaque
+## capsule nested "inside" the body pokes through the alpha-scissored model
+## (reads as a stray circle with its own shadow — the hardware walk caught
+## it). The robust trick is the camera cull mask: the proxy lives ONLY on
+## render layer 20, the play camera masks that layer out (color pass never
+## draws it), and the directional shadow pass — rendered from the light,
+## which has no camera cull mask — rasterizes it solidly. Capsule sized to
+## the model's measured AABB so the shadow tracks the silhouette. The model's
+## own casting turns off. Attached by both spawn paths (controller + lab);
+## the spawn paths mask layer 20 off their play camera.
 static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
+	var box := AABB()
+	var first := true
 	for node in root.find_children("*", "MeshInstance3D", true, false):
-		(node as MeshInstance3D).cast_shadow = \
-			GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var mi := node as MeshInstance3D
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if mi.mesh == null:
+			continue
+		var b: AABB = mi.transform * mi.get_aabb()
+		if first:
+			box = b
+			first = false
+		else:
+			box = box.merge(b)
+	if box.size == Vector3.ZERO:
+		box = AABB(Vector3(-0.25, 0, -0.25), Vector3(0.5, 1.8, 0.5))
 	var proxy := MeshInstance3D.new()
 	proxy.name = "ShadowProxy"
 	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.24
-	capsule.height = 1.5
+	capsule.radius = clampf(minf(box.size.x, box.size.z) * 0.4, 0.12, 0.18)
+	capsule.height = clampf(box.size.y * 0.7, 0.8, 1.3)
 	proxy.mesh = capsule
-	var skin := StandardMaterial3D.new()
-	skin.albedo_color = Color(0.12, 0.10, 0.09)
-	proxy.material_override = skin
+	# The ghost: alpha-scissor keeps 2%-alpha fragments in EVERY pass — the
+	# shadow pass rasterizes them solid, the color pass blends a whisper no
+	# eye reads. (Blend-alpha is discarded by the shadow pass; camera cull
+	# masks leak into compat's shadow pass — both verified dead ends.)
+	var ghost := StandardMaterial3D.new()
+	ghost.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	ghost.alpha_scissor_threshold = 0.01
+	ghost.albedo_color = Color(0.12, 0.10, 0.09, 0.02)
+	proxy.material_override = ghost
 	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	proxy.position = Vector3(0, 0.78, 0)
+	proxy.position = box.get_center() + Vector3(0, 0.1, 0)
 	root.add_child(proxy)
 	return proxy
+
