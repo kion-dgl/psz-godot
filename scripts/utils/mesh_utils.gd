@@ -472,15 +472,18 @@ static func place_light_inside_room(light: DirectionalLight3D,
 
 
 ## #648 player shadow proxy: the compatibility renderer's shadow pass fails
-## to rasterize the player's SKINNED mesh (a static capsule in the same spot,
-## same light, same room shadows crisply — the pillar/prop castters prove the
-## pipeline). Workaround: a casting capsule child with a fully TRANSPARENT
-## material — invisible to the color pass, solid to the shadow pass. NOT
-## SHADOW_CASTING_SETTING_SHADOWS_ONLY: the compatibility renderer ignores
-## that mode (nothing reaches the shadow map — the hardware A/B caught it).
-## The model's own casting turns off so the broken skin never double-shadows.
-## Attached by both spawn paths (controller + lab). Returns the proxy,
-## parented to `root` at the body's center column.
+## to rasterize the player's SKINNED mesh — s03b's locked moon rig proved the
+## machinery (rocks/geometry shadowed fine); the player just never shadowed
+## and the room's shadows carried the look. Two "invisible caster" tricks
+## also fail under compat: SHADOW_CASTING_SETTING_SHADOWS_ONLY is a silent
+## no-op, and a transparent material is discarded by the shadow pass's
+## alpha-scissor (alpha 0 → no fragments). So the proxy is the classic
+## battle-proven shape: an OPAQUE capsule NESTED INSIDE the body volume —
+## the model hides it in the color pass, the shadow pass rasterizes it
+## solidly. Slightly slimmer than the body (r 0.24) so limbs swing outside
+## it; dark neutral albedo for the rare texel-gap peek. The model's own
+## casting turns off so the broken skin never double-shadows. Attached by
+## both spawn paths (controller + lab).
 static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		(node as MeshInstance3D).cast_shadow = \
@@ -488,14 +491,13 @@ static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	var proxy := MeshInstance3D.new()
 	proxy.name = "ShadowProxy"
 	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.3
-	capsule.height = 1.8
+	capsule.radius = 0.24
+	capsule.height = 1.5
 	proxy.mesh = capsule
-	var ghost := StandardMaterial3D.new()
-	ghost.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ghost.albedo_color = Color(1, 1, 1, 0)
-	proxy.material_override = ghost
+	var skin := StandardMaterial3D.new()
+	skin.albedo_color = Color(0.12, 0.10, 0.09)
+	proxy.material_override = skin
 	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	proxy.position = Vector3(0, 0.9, 0)
+	proxy.position = Vector3(0, 0.78, 0)
 	root.add_child(proxy)
 	return proxy

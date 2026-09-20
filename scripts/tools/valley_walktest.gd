@@ -109,13 +109,20 @@ func _ready() -> void:
 		cap.position = Vector3(0, 0.85, 10)
 	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
 		var pillar := MeshInstance3D.new()
+		pillar.name = "A/BPillar"
 		var bm := BoxMesh.new()
 		bm.size = Vector3(1, 3, 1)
 		var bmat := StandardMaterial3D.new()
 		bmat.albedo_color = Color(0.6, 0.3, 0.2)
 		pillar.mesh = bm
 		pillar.material_override = bmat
-		pillar.position = Vector3(2.5, _floor_top + 1.5 if is_finite(_floor_top) else 1.5, 10)
+		var px := 2.5
+		var pz := 10.0
+		if not OS.get_environment("PSZ_WALK_PILLAR_POS").is_empty():
+			var p := OS.get_environment("PSZ_WALK_PILLAR_POS").split(",")
+			px = float(p[0])
+			pz = float(p[1])
+		pillar.position = Vector3(px, _floor_top + 1.5 if is_finite(_floor_top) else 1.5, pz)
 		add_child(pillar)
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
@@ -140,18 +147,22 @@ func _process(_delta: float) -> void:
 	if _shot_path.is_empty():
 		return
 	if _shadow_ab:
-		# Single-boot A/B: shot A with the proxy, hide it, shot B without.
-		# Identical everything — the diff IS the proxy's shadow.
+		# Single-boot A/B: shot A with the target caster, hide it, shot B
+		# without. Identical everything — the diff IS the caster's shadow.
+		# Target: the pillar if spawned (static — immune to the idle-sway
+		# confound that fooled the player-proxy version), else the proxy.
+		var target := (get_node_or_null("A/BPillar") as Node3D) \
+			if get_node_or_null("A/BPillar") else _player.get_node("ShadowProxy")
 		match _shot_frame:
 			44:
 				_shot(("%s_A.png" % _shot_path.get_basename()))
-				(_player.get_node("ShadowProxy") as Node3D).visible = false
-			90:
+				target.visible = false
+			46:
 				_shot(("%s_B.png" % _shot_path.get_basename()))
 				var a := Image.load_from_file("%s_A.png" % _shot_path.get_basename())
 				var b := Image.load_from_file("%s_B.png" % _shot_path.get_basename())
 				if a and b:
-					_strip_report(a, b)
+					_strip_report(a, b, target)
 				get_tree().quit()
 		return
 	if _shot_frame < 45:
@@ -175,29 +186,60 @@ func img_probe() -> Image:
 	return get_viewport().get_texture().get_image()
 
 
-## Row of Δluma (A−B, proxy on minus proxy off) across a strip at the
-## player's feet: a contiguous negative dip is the proxy's shadow, with its
-## screen position printed. Numbers, not eyeballs.
-func _strip_report(a: Image, b: Image) -> void:
-	var c := _player_screen_center()
-	var y := c.y + 18
-	var parts: Array[String] = []
+## Row of Δluma (A−B, caster on minus caster off) across a strip at the
+## caster's screen base: a contiguous negative dip is its shadow. The strip
+## sits BELOW the caster's silhouette bottom (floor pixels + shadow only),
+## away from animated geometry. Numbers, not eyeballs.
+func _strip_report(a: Image, b: Image, target: Node3D) -> void:
+	var cam := get_viewport().get_camera_3d()
+	var base: Vector3 = target.global_position
+	var top: Vector3 = base + Vector3(0, 1.8, 0)
+	var sp_base := cam.unproject_position(base)
+	var sp_top := cam.unproject_position(top)
+	var c := Vector2i(int(sp_base.x), int(sp_base.y) + int((sp_base.y - sp_top.y)) / 3)
+	var y := c.y + 26
+	var vals := _strip_values(a, b, c.x, y)
+	var parts := _strip(a, b, c.x, y)
+	var ctrl := _strip(a, b, c.x + 420, y)
 	var dip_x := -1
 	var dip := 0.0
-	for i in range(14):
-		var x := c.x - 126 + i * 18
-		var d := 0.0
-		for yy in range(y - 4, y + 5):
-			d += a.get_pixel(x, yy).v - b.get_pixel(x, yy).v
-		d /= 9.0
-		parts.append("%+.2f" % d)
-		if d < dip:
-			dip = d
-			dip_x = x
-	print("[ValleyWalk] Δstrip @y=%d: %s" % [y, " ".join(parts)])
-	print("[ValleyWalk] deepest dip %.2f at x=%d (player x=%d) — %s" % [
+	for i in range(vals.size()):
+		if vals[i] < dip:
+			dip = vals[i]
+			dip_x = c.x - 126 + i * 18
+	print("[ValleyWalk] Δstrip   @y=%d: %s" % [y, " ".join(parts)])
+	print("[ValleyWalk] Δctrl   @y=%d: %s" % [y, " ".join(ctrl)])
+	print("[ValleyWalk] deepest dip %.2f at x=%d (caster x=%d) — %s" % [
 		dip, dip_x, c.x,
-		"PROXY SHADOW RENDERS" if dip < -0.04 and absi(dip_x - c.x) < 120 else "no proxy shadow"])
+		"SHADOW RENDERS" if dip < -0.04 and absi(dip_x - c.x) < 120 else "no shadow"])
+
+
+func _strip_values(a: Image, b: Image, cx: int, y: int) -> Array[float]:
+	var vals: Array[float] = []
+	for i in range(14):
+		var x := cx - 126 + i * 18
+		var d := 0.0
+		var n := 0
+		for yy in range(y - 4, y + 5):
+			if x >= 0 and yy >= 0 and x < a.get_size().x and yy < a.get_size().y:
+				d += a.get_pixel(x, yy).v - b.get_pixel(x, yy).v
+				n += 1
+		vals.append(d / maxf(1.0, float(n)))
+	return vals
+
+
+func _strip(a: Image, b: Image, cx: int, y: int) -> Array[String]:
+	var parts: Array[String] = []
+	for i in range(14):
+		var x := cx - 126 + i * 18
+		var d := 0.0
+		var n := 0
+		for yy in range(y - 4, y + 5):
+			if x >= 0 and yy >= 0 and x < a.get_size().x and yy < a.get_size().y:
+				d += a.get_pixel(x, yy).v - b.get_pixel(x, yy).v
+				n += 1
+		parts.append("%+.2f" % (d / maxf(1.0, float(n))))
+	return parts
 
 
 func _luma_probe(img: Image) -> void:
