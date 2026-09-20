@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (hardware walk, #648): sun 0.55 with real sun shadows + geometry casting, ambient 0.60, bake 0.15 (the authored day bake mostly survives), sand drift' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (hardware walk, #648): sun 0.55 with real sun shadows + geometry casting, ambient 0.60, bake 0.15 (the authored day bake mostly survives), sun −60° elevation (sweep lock), sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -72,7 +72,8 @@ const slots = [
   fractional hours pick a stable lerped palette between phase presets), an
   optional <code>weather</code>, and optional rig overrides applied after the
   phase preset (ambient/sun/moon energies, the moon's elevation via
-  <code>moon_pitch</code> and its shadows, the sun's shadows via
+  <code>moon_pitch</code> and its shadows, the sun's elevation via
+  <code>sun_pitch</code> and its shadows via
   <code>sun_shadows</code>, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
   white so the dynamic rig drives the look). A row <strong>MAY</strong> set
@@ -122,7 +123,13 @@ const slots = [
   survives — the lock keeps 0.15 toward white and layers sun 0.55 + ambient
   0.60 on top of the authored shading (the screenshot sweep's brighter
   0.9/0.80/0.5 read hot on hardware; the hardware walk re-locked it).
-  Weather is a blowing <code>sand</code> drift (the valley's dust), the
+  The row pins <code>sun_pitch</code> −60° — off the DAY band's −45° rest —
+  for a high-desert-sun character: the sweep (−30/−45/−60/−75 across the
+  oasis, bridge+waterfall, and boss arena) read −75 near-noon as flat with
+  blown floors, −30 as floor-striping afternoon against the hour-10 palette;
+  −60 keeps cast shadows readable (~0.6× caster height) while cleaning the
+  open floors' patchiness. Weather is a blowing <code>sand</code> drift (the
+  valley's dust), the
   first non-snow weather type. The stone-lantern stages
   (<code>s01a_td1/td2</code>, the only <code>1_toro</code> art) carry warm
   placed-light anchors at day-punch intensity — pools must beat the ambient,
@@ -149,7 +156,7 @@ const slots = [
   preview <strong>MUST NOT</strong> persist across cell transitions — each
   cell entry re-applies the authored slot. On fields whose slot ships rig
   overrides, the tuning keys (`,`, `.`, ambient; `[`, `]`, moon; `9`, `0`,
-  sun; `-`, `=`, bake mix; `P` for the
+  sun; `7`, `8`, sun elevation; `-`, `=`, bake mix; `P` for the
   read-out) own those keycodes and the hour preview yields.</p>
 
   <h2>Explicitly deferred (phase 2 — do not build)</h2>

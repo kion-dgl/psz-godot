@@ -14,6 +14,7 @@ extends Node3D
 ##   PSZ_PREVIEW_AMBIENT=0.6      override ambient energy
 ##   PSZ_PREVIEW_MOON=0.12        override moon energy
 ##   PSZ_PREVIEW_SUN=1.2          override sun energy (day rigs, #648)
+##   PSZ_PREVIEW_SUN_PITCH=-30    override sun elevation (day rigs)
 ##   PSZ_PREVIEW_BAKE=0.25        override bake mix
 ##   PSZ_PREVIEW_MOON_SHADOWS=1   moonlight casts real shadows (experiment:
 ##                                white COLOR_0 + moon shadows = dynamic bake)
@@ -75,6 +76,8 @@ func _build_environment() -> void:
 		_slot["moon_energy"] = float(OS.get_environment("PSZ_PREVIEW_MOON"))
 	if not OS.get_environment("PSZ_PREVIEW_SUN").is_empty():
 		_slot["sun_energy"] = float(OS.get_environment("PSZ_PREVIEW_SUN"))
+	if not OS.get_environment("PSZ_PREVIEW_SUN_PITCH").is_empty():
+		_slot["sun_pitch"] = float(OS.get_environment("PSZ_PREVIEW_SUN_PITCH"))
 	if not OS.get_environment("PSZ_PREVIEW_BAKE").is_empty():
 		_slot["bake_mix"] = float(OS.get_environment("PSZ_PREVIEW_BAKE"))
 	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)

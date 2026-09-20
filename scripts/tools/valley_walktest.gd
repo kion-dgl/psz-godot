@@ -9,7 +9,10 @@ extends Node3D
 ##
 ## Env:  PSZ_WALK_STAGE=s01a_ga1   boot stage (default: first of STAGES)
 ##       PSZ_WALK_SHOT=/tmp/o.png  screenshot + quit (smoke; else live keys)
+##       PSZ_WALK_SUN_PITCH=-60    sun elevation override (screenshot sweeps;
+##                                 the live path is the 7/8 keys)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
+##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       N       next room · R reload · ESC quit
@@ -91,6 +94,10 @@ func _input(event: InputEvent) -> void:
 			_dir_light.light_energy = maxf(0.0, _dir_light.light_energy - 0.05)
 		KEY_0:
 			_dir_light.light_energy += 0.05
+		KEY_7:
+			_dir_light.rotation_degrees.x = maxf(-89.0, _dir_light.rotation_degrees.x - 5.0)
+		KEY_8:
+			_dir_light.rotation_degrees.x = minf(-5.0, _dir_light.rotation_degrees.x + 5.0)
 		KEY_BRACKETLEFT:
 			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
 		KEY_BRACKETRIGHT:
@@ -127,6 +134,8 @@ func _build_environment() -> void:
 	_moonlight = built["moonlight"]
 	_slot = FieldSlotTableScript.slot_for("gurhacia", _stage_id)
 	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
+	if not OS.get_environment("PSZ_WALK_SUN_PITCH").is_empty():
+		_dir_light.rotation_degrees.x = float(OS.get_environment("PSZ_WALK_SUN_PITCH"))
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
 
 
@@ -222,9 +231,9 @@ func _spawn_weather() -> void:
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
-	print("[FieldSlot %s] ambient %.2f  sun %.2f  moon %.2f  bake mix %.2f  sun_shadows %s" % [
+	print("[FieldSlot %s] ambient %.2f  sun %.2f  moon %.2f  bake mix %.2f  sun_pitch %.0f  sun_shadows %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
-		_moonlight.light_energy, _bake_mix,
+		_moonlight.light_energy, _bake_mix, _dir_light.rotation_degrees.x,
 		str(_dir_light.shadow_enabled).to_lower()])
 
 
@@ -238,6 +247,7 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  shadows %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  pitch %.0f°  shadows %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
-		_bake_mix, "on" if _dir_light.shadow_enabled else "off"]
+		_bake_mix, _dir_light.rotation_degrees.x,
+		"on" if _dir_light.shadow_enabled else "off"]

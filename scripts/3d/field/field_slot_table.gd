@@ -25,6 +25,9 @@ extends RefCounted
 ##   sun_shadows   bool   the sun casts real shadows (day rigs, #648; the
 ##                        phase preset ships them off — the row re-arms them).
 ##                        Same blob-shadow skip as moon_shadows
+##   sun_pitch     float  sun elevation in degrees (rotation.x; the DAY band
+##                        parks every hour at −45° — rows that want a noon
+##                        or afternoon character pin their own elevation)
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
@@ -74,12 +77,19 @@ const SLOTS := {
 	# daylight (median COLOR_0 luminance ~0.52 vs snowfield's 0.19) and
 	# mostly SURVIVES — bake 0.15 keeps the authored shading; sun 0.55 +
 	# ambient 0.60 layer the dynamic light on top (the sweep's brighter
-	# 0.9/0.80/0.5 read hot on hardware). Blowing sand drift; the toro
-	# lanterns (td1/td2, warm pools at 6.0) are the local accents.
+	# 0.9/0.80/0.5 read hot on hardware). sun_pitch −60 lifts the sun off
+	# the DAY band's −45° rest (2026-09-20 sweep across −30/−45/−60/−75 ×
+	# ga1/lb1/na1: −75 near-noon flattens and blows floors, −30 stripes
+	# the open floors and reads afternoon against the hour-10 palette,
+	# −60 keeps shadows readable at 0.58× while cleaning the floor
+	# patchiness — the high-desert-sun read; hardware walk to confirm).
+	# Blowing sand drift; the toro lanterns (td1/td2, warm pools at 6.0)
+	# are the local accents.
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.55,
 		"ambient_energy": 0.6,
+		"sun_pitch": -60.0,
 		"bake_mix": 0.15,
 		"sun_shadows": true,
 		"geometry_casts_shadows": true,

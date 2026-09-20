@@ -729,6 +729,10 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# shadows off (the bake was the look), so the row re-arms them.
 		_dir_light.shadow_enabled = true
 		_dir_light.shadow_blur = 1.0
+	if _slot.has("sun_pitch"):
+		# The DAY band parks every hour at −45° (#648): rows that want a
+		# noon (steep) or afternoon (low, long-shadow) character pin it.
+		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):

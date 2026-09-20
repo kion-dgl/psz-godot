@@ -10833,6 +10833,8 @@ func test_valley_day_slot() -> void:
 	assert_eq(valley.get("sun_energy"), 0.55, "Valley rig: sun 0.55 (hardware walk lock)")
 	assert_eq(valley.get("ambient_energy"), 0.6, "Valley rig: ambient 0.60 (hardware walk lock)")
 	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
+	assert_eq(valley.get("sun_pitch"), -60.0,
+		"Valley rig: sun pinned at −60° (high desert sun; sweep lock pending hardware walk)")
 	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
 	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
