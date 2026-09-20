@@ -79,6 +79,9 @@ func _ready() -> void:
 	if _slot.get("sun_shadows", false):
 		_shells_disarmed = MeshUtils.disable_enclosing_casters(_map_root,
 			_dir_light.global_transform.basis.z, _floor_top)
+		# Panorama placement (#648): the compat shadow eye must sit in the
+		# interior air — at the origin it's under the bridge deck in lb rooms.
+		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 	_spawn_player(Vector3(0, 1.5, 10))
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false

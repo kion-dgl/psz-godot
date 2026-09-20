@@ -447,3 +447,25 @@ static func make_player_blob() -> MeshInstance3D:
 	mat.shader = shader
 	blob.material_override = mat
 	return blob
+
+
+## #648 panorama placement: the compatibility renderer anchors its
+## directional shadow pass at the LIGHT NODE'S position — for a panorama
+## room (scenery painted on an enclosing shell) the eye must sit in the
+## interior air, above the floor and below the ceiling. An eye at the
+## origin sits at floor level — in bridge rooms, inside the chasm UNDER
+## the deck, with geometry between the eye and the player, and the player
+## standing on the deck loses its dynamic shadow entirely. Position is
+## meaningless to a directional light's shading, so this only moves the
+## shadow eye: midway up the interior, on the room's center column.
+static func place_light_inside_room(light: DirectionalLight3D,
+		map_root: Node3D, floor_top: float = NAN) -> void:
+	if light == null or map_root == null:
+		return
+	var box := _global_mesh_aabb(map_root)
+	if box.size == Vector3.ZERO:
+		return
+	var base := floor_top if is_finite(floor_top) else box.position.y
+	var y := clampf(lerpf(base, box.end.y, 0.6), base + 4.0, base + 30.0)
+	var c := box.get_center()
+	light.global_position = Vector3(c.x, y, c.z)

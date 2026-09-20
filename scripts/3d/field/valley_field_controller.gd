@@ -341,6 +341,11 @@ func _ready() -> void:
 			_dir_light.global_transform.basis.z, _floor_top)
 		if disarmed > 0:
 			_fdbg("[ValleyField] %d enclosing shell mesh(es) disarmed from casting" % disarmed)
+		# Panorama placement (#648): the compatibility renderer anchors the
+		# directional shadow pass at the light node's position — the eye must
+		# sit in the room's interior air (the scene light ships at (10,20,10),
+		# which lands in the shell wall / under decks for some stages).
+		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
