@@ -66,6 +66,7 @@ var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
 var _light_follow := false
+var _shadow_ab := false
 
 
 func _ready() -> void:
@@ -92,6 +93,7 @@ func _ready() -> void:
 		# interior air — at the origin it's under the bridge deck in lb rooms.
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 	_light_follow = OS.get_environment("PSZ_WALK_LIGHT_FOLLOW") == "1"
+	_shadow_ab = OS.get_environment("PSZ_WALK_SHADOW_AB") == "1"
 	_spawn_player(Vector3(0, 1.5, 10))
 	if OS.get_environment("PSZ_WALK_PLAYER_PROXY") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
@@ -117,6 +119,9 @@ func _ready() -> void:
 		add_child(pillar)
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
+		var proxy := _player.get_node_or_null("ShadowProxy")
+		if proxy:
+			(proxy as Node3D).visible = false
 	_spawn_authored_effects()
 	_spawn_weather()
 	_build_status_label()
@@ -132,12 +137,95 @@ func _process(_delta: float) -> void:
 	if _shot_path.is_empty():
 		return
 	_shot_frame += 1
+	if _shot_path.is_empty():
+		return
+	if _shadow_ab:
+		# Single-boot A/B: shot A with the proxy, hide it, shot B without.
+		# Identical everything — the diff IS the proxy's shadow.
+		match _shot_frame:
+			44:
+				_shot(("%s_A.png" % _shot_path.get_basename()))
+				(_player.get_node("ShadowProxy") as Node3D).visible = false
+			90:
+				_shot(("%s_B.png" % _shot_path.get_basename()))
+				var a := Image.load_from_file("%s_A.png" % _shot_path.get_basename())
+				var b := Image.load_from_file("%s_B.png" % _shot_path.get_basename())
+				if a and b:
+					_strip_report(a, b)
+				get_tree().quit()
+		return
 	if _shot_frame < 45:
 		return
-	var img := get_viewport().get_texture().get_image()
-	img.save_png(_shot_path)
-	print("[ValleyWalk] screenshot → %s" % _shot_path)
+	_shot(_shot_path)
+	_luma_probe(img_probe())
 	get_tree().quit()
+
+
+## Ground-truth shadow probe: sample the rendered pixels at the floor just
+## past the player's feet (where a −60° sun throws the proxy shadow) against
+## the floor to the side (same material, unshadowed). Printed numbers, not
+## eyeballing — the shadow reads as a clear luma gap between the two.
+func _shot(path: String) -> void:
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(path)
+	print("[ValleyWalk] screenshot → %s" % path)
+
+
+func img_probe() -> Image:
+	return get_viewport().get_texture().get_image()
+
+
+## Row of Δluma (A−B, proxy on minus proxy off) across a strip at the
+## player's feet: a contiguous negative dip is the proxy's shadow, with its
+## screen position printed. Numbers, not eyeballs.
+func _strip_report(a: Image, b: Image) -> void:
+	var c := _player_screen_center()
+	var y := c.y + 18
+	var parts: Array[String] = []
+	var dip_x := -1
+	var dip := 0.0
+	for i in range(14):
+		var x := c.x - 126 + i * 18
+		var d := 0.0
+		for yy in range(y - 4, y + 5):
+			d += a.get_pixel(x, yy).v - b.get_pixel(x, yy).v
+		d /= 9.0
+		parts.append("%+.2f" % d)
+		if d < dip:
+			dip = d
+			dip_x = x
+	print("[ValleyWalk] Δstrip @y=%d: %s" % [y, " ".join(parts)])
+	print("[ValleyWalk] deepest dip %.2f at x=%d (player x=%d) — %s" % [
+		dip, dip_x, c.x,
+		"PROXY SHADOW RENDERS" if dip < -0.04 and absi(dip_x - c.x) < 120 else "no proxy shadow"])
+
+
+func _luma_probe(img: Image) -> void:
+	var c := _player_screen_center()
+	var shadow := Vector2i(c.x - int(img.get_size().x * 0.02), c.y - 26)
+	var aside := Vector2i(c.x - int(img.get_size().x * 0.20), c.y - 10)
+	var l_shadow := _region_luma(img, shadow, 46)
+	var l_aside := _region_luma(img, aside, 46)
+	print("[ValleyWalk] luma probe: shadow-side %.3f  aside %.3f  gap %.3f%s" % [
+		l_shadow, l_aside, l_aside - l_shadow,
+		"  ← SHADOW" if l_aside - l_shadow > 0.05 else "  ← no shadow"])
+
+
+func _player_screen_center() -> Vector2i:
+	var cam := get_viewport().get_camera_3d()
+	var sp := cam.unproject_position(_player.global_position + Vector3(0, 0.9, 0))
+	return Vector2i(int(sp.x), int(sp.y))
+
+
+func _region_luma(img: Image, at: Vector2i, box: int) -> float:
+	var sum := 0.0
+	var n := 0
+	for y in range(at.y - box / 2, at.y + box / 2):
+		for x in range(at.x - box / 2, at.x + box / 2):
+			if x >= 0 and y >= 0 and x < img.get_size().x and y < img.get_size().y:
+				sum += img.get_pixel(x, y).v
+				n += 1
+	return sum / maxf(1.0, float(n))
 
 
 func _input(event: InputEvent) -> void:

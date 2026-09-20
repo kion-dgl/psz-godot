@@ -10948,8 +10948,11 @@ func test_valley_sun_enclosure() -> void:
 	var proxy := MeshUtils.attach_shadow_proxy(puppet)
 	assert_eq(model_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 		"the model's meshes stop casting (broken skin never double-shadows)")
-	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
-		"the proxy is shadows-only (never drawn, only its shadow)")
+	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+		"the proxy casts normally (compat ignores SHADOWS_ONLY — hardware A/B)")
+	var ghost := proxy.material_override as StandardMaterial3D
+	assert_true(ghost != null and absf(ghost.albedo_color.a) < 0.01,
+		"the proxy's material is fully transparent (invisible, yet casts)")
 	assert_true(proxy.mesh is CapsuleMesh, "the proxy is a capsule")
 	assert_eq(proxy.get_parent(), puppet, "the proxy rides the player root")
 	puppet.queue_free()

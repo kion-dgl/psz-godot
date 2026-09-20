@@ -474,10 +474,13 @@ static func place_light_inside_room(light: DirectionalLight3D,
 ## #648 player shadow proxy: the compatibility renderer's shadow pass fails
 ## to rasterize the player's SKINNED mesh (a static capsule in the same spot,
 ## same light, same room shadows crisply — the pillar/prop castters prove the
-## pipeline). Engine-native workaround: a SHADOWS_ONLY capsule child (never
-## drawn, only its shadow) + the model's own casting off so the broken skin
-## never double-shadow. Attached by both spawn paths (controller + lab).
-## Returns the proxy, parented to `root` at the body's center column.
+## pipeline). Workaround: a casting capsule child with a fully TRANSPARENT
+## material — invisible to the color pass, solid to the shadow pass. NOT
+## SHADOW_CASTING_SETTING_SHADOWS_ONLY: the compatibility renderer ignores
+## that mode (nothing reaches the shadow map — the hardware A/B caught it).
+## The model's own casting turns off so the broken skin never double-shadows.
+## Attached by both spawn paths (controller + lab). Returns the proxy,
+## parented to `root` at the body's center column.
 static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		(node as MeshInstance3D).cast_shadow = \
@@ -488,7 +491,11 @@ static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	capsule.radius = 0.3
 	capsule.height = 1.8
 	proxy.mesh = capsule
-	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	var ghost := StandardMaterial3D.new()
+	ghost.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ghost.albedo_color = Color(1, 1, 1, 0)
+	proxy.material_override = ghost
+	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	proxy.position = Vector3(0, 0.9, 0)
 	root.add_child(proxy)
 	return proxy
