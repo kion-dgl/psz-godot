@@ -403,14 +403,15 @@ static func disable_enclosing_casters(map_root: Node3D, sun_dir: Vector3, floor_
 			if not m_box.has_point(o):
 				contains_all = false
 				break
-		# Far scenery: anything whose whole AABB sits well outside the play
-		# space is panorama, not architecture — the edge mountains' shadows
-		# graze the room rim as blocky artifacts without ever blocking the
-		# center samples. Distance alone disarms them; near walls stay (they
-		# legitimately shade the raking sun).
+		# Far scenery: only the painted panorama at the room's very rim (the
+		# edge mountains whose blocky shadows graze the border) disarms on
+		# distance. Mid-ground mesas and rocks STAY armed — their shadows
+		# must drape the props standing in the regions the authored bake
+		# shades (a lit cart inside a baked-shadow strip reads broken, #648).
+		# 70 units: past the play space, short of the rim panorama.
 		var far_scenery := true
 		for o in origins:
-			if _aabb_point_distance(m_box, o) < 40.0:
+			if _aabb_point_distance(m_box, o) < 70.0:
 				far_scenery = false
 				break
 		if far_scenery or (contains_all and _node_blocks_all(mi, origins, d)):
