@@ -13,6 +13,10 @@ extends Node3D
 ##                                 the live path is the 7/8 keys)
 ##       PSZ_WALK_SUN_SHADOWS=0    force sun shadows off (A/B diffs; the row
 ##                                 default is on)
+##       PSZ_WALK_HIDE_PLAYER=1    hide the player model (A/B shadow diffs)
+##       PSZ_WALK_WEATHER=0        skip the weather node (clean A/B diffs)
+##       PSZ_WALK_SUN=0.9          sun energy override · PSZ_WALK_AMBIENT=0.4
+##                                 ambient override (balance sweeps)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
@@ -76,6 +80,8 @@ func _ready() -> void:
 		_shells_disarmed = MeshUtils.disable_enclosing_casters(_map_root,
 			_dir_light.global_transform.basis.z, _floor_top)
 	_spawn_player(Vector3(0, 1.5, 10))
+	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
+		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()
 	_spawn_weather()
 	_build_status_label()
@@ -153,6 +159,10 @@ func _build_environment() -> void:
 		_dir_light.rotation_degrees.x = float(OS.get_environment("PSZ_WALK_SUN_PITCH"))
 	if OS.get_environment("PSZ_WALK_SUN_SHADOWS") == "0":
 		_dir_light.shadow_enabled = false
+	if not OS.get_environment("PSZ_WALK_SUN").is_empty():
+		_dir_light.light_energy = float(OS.get_environment("PSZ_WALK_SUN"))
+	if not OS.get_environment("PSZ_WALK_AMBIENT").is_empty():
+		_env.ambient_light_energy = float(OS.get_environment("PSZ_WALK_AMBIENT"))
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
 
 
@@ -255,8 +265,10 @@ func _spawn_authored_effects() -> void:
 
 
 ## The row's weather, as the field spawns it (the shared WeatherController
-## build — no lab copy to drift).
+## build — no lab copy to drift). PSZ_WALK_WEATHER=0 skips it (clean diffs).
 func _spawn_weather() -> void:
+	if OS.get_environment("PSZ_WALK_WEATHER") == "0":
+		return
 	var node := WeatherControllerScript.build_weather_node(str(_slot.get("weather", "")))
 	if not node:
 		return
