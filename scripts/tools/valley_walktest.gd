@@ -17,6 +17,9 @@ extends Node3D
 ##       PSZ_WALK_WEATHER=0        skip the weather node (clean A/B diffs)
 ##       PSZ_WALK_SUN=0.9          sun energy override · PSZ_WALK_AMBIENT=0.4
 ##                                 ambient override (balance sweeps)
+##       PSZ_WALK_LIGHT_FOLLOW=1   brute-force: the light node rides 3 units
+##                                 above the player's head (sanity check —
+##                                 the compat shadow eye pinned to the player)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
@@ -57,6 +60,7 @@ var _status: Label
 var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
+var _light_follow := false
 
 
 func _ready() -> void:
@@ -82,6 +86,7 @@ func _ready() -> void:
 		# Panorama placement (#648): the compat shadow eye must sit in the
 		# interior air — at the origin it's under the bridge deck in lb rooms.
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
+	_light_follow = OS.get_environment("PSZ_WALK_LIGHT_FOLLOW") == "1"
 	_spawn_player(Vector3(0, 1.5, 10))
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
@@ -95,6 +100,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_pressed("ui_cancel"):
 		get_tree().quit()
+	if _light_follow and _player:
+		_dir_light.global_position = _player.global_position + Vector3(0, 3, 0)
 	if _shot_path.is_empty():
 		return
 	_shot_frame += 1
