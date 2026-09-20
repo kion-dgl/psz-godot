@@ -62,6 +62,7 @@ static func build_weather_node(weather: String) -> GPUParticles3D:
 
 static func _build_snow_node() -> GPUParticles3D:
 	var snow := GPUParticles3D.new()
+	snow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	snow.name = "WeatherSnow"
 	snow.amount = 300
 	snow.lifetime = 4.0
@@ -113,6 +114,7 @@ static func _build_snow_node() -> GPUParticles3D:
 ## the player walks through, not weather they stand under.
 static func _build_sand_node() -> GPUParticles3D:
 	var sand := GPUParticles3D.new()
+	sand.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sand.name = "WeatherSand"
 	sand.amount = 240
 	sand.lifetime = 5.0
@@ -253,6 +255,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	_c._map_root.add_child(root)
 
 	var particles := GPUParticles3D.new()
+	particles.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	particles.name = "%sParticles" % effect_type.capitalize()
 	particles.amount = count
 	particles.lifetime = height / maxf(speed, 0.1)

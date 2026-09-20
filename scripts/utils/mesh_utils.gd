@@ -469,3 +469,26 @@ static func place_light_inside_room(light: DirectionalLight3D,
 	var y := clampf(lerpf(base, box.end.y, 0.6), base + 4.0, base + 30.0)
 	var c := box.get_center()
 	light.global_position = Vector3(c.x, y, c.z)
+
+
+## #648 player shadow proxy: the compatibility renderer's shadow pass fails
+## to rasterize the player's SKINNED mesh (a static capsule in the same spot,
+## same light, same room shadows crisply — the pillar/prop castters prove the
+## pipeline). Engine-native workaround: a SHADOWS_ONLY capsule child (never
+## drawn, only its shadow) + the model's own casting off so the broken skin
+## never double-shadow. Attached by both spawn paths (controller + lab).
+## Returns the proxy, parented to `root` at the body's center column.
+static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		(node as MeshInstance3D).cast_shadow = \
+			GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var proxy := MeshInstance3D.new()
+	proxy.name = "ShadowProxy"
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.3
+	capsule.height = 1.8
+	proxy.mesh = capsule
+	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	proxy.position = Vector3(0, 0.9, 0)
+	root.add_child(proxy)
+	return proxy

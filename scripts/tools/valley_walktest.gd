@@ -20,6 +20,11 @@ extends Node3D
 ##       PSZ_WALK_LIGHT_FOLLOW=1   brute-force: the light node rides 3 units
 ##                                 above the player's head (sanity check —
 ##                                 the compat shadow eye pinned to the player)
+##       PSZ_WALK_PILLAR=1         spawn a 3m control pillar beside the player
+##                                 (a caster that provably shadows — splits
+##                                 room-level vs player-level shadow loss)
+##       PSZ_WALK_PLAYER_PROXY=1   hide the model, stand a casting capsule in
+##                                 the player's spot (shadow-proxy trial)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
@@ -88,6 +93,28 @@ func _ready() -> void:
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 	_light_follow = OS.get_environment("PSZ_WALK_LIGHT_FOLLOW") == "1"
 	_spawn_player(Vector3(0, 1.5, 10))
+	if OS.get_environment("PSZ_WALK_PLAYER_PROXY") == "1":
+		(_player.get_node("PlayerModel") as Node3D).visible = false
+		var cap := MeshInstance3D.new()
+		var cm := CapsuleMesh.new()
+		cm.radius = 0.3
+		cm.height = 1.7
+		var cmat := StandardMaterial3D.new()
+		cmat.albedo_color = Color(0.8, 0.7, 0.6)
+		cap.mesh = cm
+		cap.material_override = cmat
+		add_child(cap)
+		cap.position = Vector3(0, 0.85, 10)
+	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
+		var pillar := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(1, 3, 1)
+		var bmat := StandardMaterial3D.new()
+		bmat.albedo_color = Color(0.6, 0.3, 0.2)
+		pillar.mesh = bm
+		pillar.material_override = bmat
+		pillar.position = Vector3(2.5, _floor_top + 1.5 if is_finite(_floor_top) else 1.5, 10)
+		add_child(pillar)
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()

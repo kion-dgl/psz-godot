@@ -75,6 +75,9 @@ static func spawn_player(root: Node, pos: Vector3) -> CharacterBody3D:
 	player.spawn_position = pos
 	SmoothNormals.ensure(player, 2)
 	SmoothNormals.make_lit(player)
+	# #648: the compat shadow pass can't rasterize the skinned model — a
+	# SHADOWS_ONLY capsule proxy carries the player's dynamic shadow.
+	MeshUtils.attach_shadow_proxy(player)
 	var orbit_camera := ORBIT_CAMERA_SCENE.instantiate()
 	root.add_child(orbit_camera)
 	orbit_camera.set_target(player)

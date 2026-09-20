@@ -10937,6 +10937,23 @@ func test_valley_sun_enclosure() -> void:
 	assert_true(blob.mesh is QuadMesh, "the blob is a quad disc")
 	assert_true(blob.material_override is ShaderMaterial, "the blob carries its unshaded shader")
 
+	# The player's shadow proxy (#648): the compat shadow pass can't
+	# rasterize the skinned model, so a SHADOWS_ONLY capsule carries the
+	# player's dynamic shadow and the model stops casting.
+	var puppet := Node3D.new()
+	var model_mi := MeshInstance3D.new()
+	model_mi.mesh = BoxMesh.new()
+	puppet.add_child(model_mi)
+	add_child(puppet)
+	var proxy := MeshUtils.attach_shadow_proxy(puppet)
+	assert_eq(model_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the model's meshes stop casting (broken skin never double-shadows)")
+	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+		"the proxy is shadows-only (never drawn, only its shadow)")
+	assert_true(proxy.mesh is CapsuleMesh, "the proxy is a capsule")
+	assert_eq(proxy.get_parent(), puppet, "the proxy rides the player root")
+	puppet.queue_free()
+
 	print("")
 
 
@@ -11137,6 +11154,8 @@ func test_valley_sand_weather() -> void:
 			"sand drifts horizontally (XZ wind, not a fall)")
 		assert_true(absf(sand.position.y) < 8.0,
 			"sand rides a low band (skims the ground — snow sits at 8)")
+		assert_eq(sand.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			"weather particles never cast (#648: the drift's quads were spattering the floor with their own shadows)")
 	assert_true(WeatherCtl.build_weather_node("sleet") == null,
 		"unknown weather keys build nothing")
 	print("")
