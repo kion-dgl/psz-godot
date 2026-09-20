@@ -60,6 +60,7 @@ var _room_minimap: Control
 var _area_map_panel: Control  # AreaMapOverlay inside _map_overlay
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
+var _floor_top := NAN
 var _stage_config: Dictionary = {}
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
@@ -310,6 +311,11 @@ func _ready() -> void:
 			# 'ground not affected by light' playtest). Physics is unaffected
 			# by visibility.
 			floor_root.visible = false
+			# The floor shell's top is the walkable height — the sun-enclosure
+			# test samples its rays from there (#648).
+			var box := _floor_aabb(floor_root)
+			if box.size != Vector3.ZERO:
+				_floor_top = box.end.y
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
@@ -323,6 +329,18 @@ func _ready() -> void:
 			MapCollisionBuilder.setup_map_collision(_map_root)
 	else:
 		MapCollisionBuilder.setup_map_collision(_map_root)
+
+	# #648 shell carve-out: an enclosing stage shell (walls + ceiling +
+	# backdrop, one mesh) must not CAST — with the row's geometry casting on
+	# it would shadow its own interior and delete the sun (and the player's
+	# dynamic shadow with it). Disarmed, the shell still receives: the player
+	# and placed objects cast real shadows on it. Sun rows only — the moon
+	# rigs keep their walked behavior.
+	if _slot.get("sun_shadows", false) and _map_root:
+		var disarmed: int = MeshUtils.disable_enclosing_casters(_map_root,
+			_dir_light.global_transform.basis.z, _floor_top)
+		if disarmed > 0:
+			_fdbg("[ValleyField] %d enclosing shell mesh(es) disarmed from casting" % disarmed)
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
@@ -824,29 +842,31 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Blob shadow — dark circle under the player (unshaded, always visible).
 	# Slots with real directional shadows skip it (#646): a shadow-casting
 	# sun (#648) or moon casts dynamic shadows there, and blob + real shadow
-	# reads as a double shadow.
+	# reads as a double shadow. Enclosed stage shells were disarmed above so
+	# the sun reaches every room's interior — the player always has its
+	# dynamic shadow under a shadow row.
 	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false)):
-		_blob_shadow = MeshInstance3D.new()
-		var shadow_quad := QuadMesh.new()
-		shadow_quad.size = Vector2(1.8, 1.8)
-		shadow_quad.orientation = PlaneMesh.FACE_Y
-		_blob_shadow.mesh = shadow_quad
-		_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var shadow_shader := Shader.new()
-		shadow_shader.code = \
-			"shader_type spatial;\n" + \
-			"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
-			"void fragment() {\n" + \
-			"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
-			"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
-			"\tALBEDO = vec3(0.0);\n" + \
-			"\tALPHA = alpha;\n" + \
-			"}\n"
-		var shadow_mat := ShaderMaterial.new()
-		shadow_mat.shader = shadow_shader
-		_blob_shadow.material_override = shadow_mat
+		_blob_shadow = MeshUtils.make_player_blob()
 		add_child(_blob_shadow)
 		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
+
+
+## AABB over every mesh under the (invisible) floor shell — its top is the
+## walkable height (#648 sun-enclosure sampling).
+func _floor_aabb(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var b := mi.global_transform * mi.get_aabb()
+		if first:
+			box = b
+			first = false
+		else:
+			box = box.merge(b)
+	return box
 
 
 ## Player HP reached 0 (spec /states/player-death). Raise the "You were

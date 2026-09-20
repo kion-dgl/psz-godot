@@ -81,7 +81,14 @@ const slots = [
   bake is the look), and a rig that stands on real shadows — moon
   (<code>moon_shadows</code>) or sun (<code>sun_shadows</code>) — turns casting
   on so models shadow each other by position; either shadow row also skips the
-  player blob shadow (blob + real shadow reads double). Rows resolve most-specific-first:
+  player blob shadow (blob + real shadow reads double). One carve-out on the
+  sun side: a stage shell that ENCLOSES a room (walls + ceiling + backdrop,
+  often one mesh) must not cast — its own shadow would delete the sun from
+  its interior, and with it every dynamic shadow including the player's. At
+  room build, each casting mesh is ray-tested alone against the applied sun;
+  one that blocks every sample ray is disarmed from casting (it still
+  receives), so the player and placed objects cast real shadows on it.
+  Partial blockers — walls, rims — keep casting. Rows resolve most-specific-first:
   exact <code>stage_id</code> → variant prefix (<code>s03a</code>,
   <code>s03b</code>, tower floor styles) → area id → default day.</p>
 
@@ -124,11 +131,14 @@ const slots = [
   0.60 on top of the authored shading (the screenshot sweep's brighter
   0.9/0.80/0.5 read hot on hardware; the hardware walk re-locked it).
   The row pins <code>sun_pitch</code> −60° — off the DAY band's −45° rest —
-  for a high-desert-sun character: the sweep (−30/−45/−60/−75 across the
-  oasis, bridge+waterfall, and boss arena) read −75 near-noon as flat with
-  blown floors, −30 as floor-striping afternoon against the hour-10 palette;
-  −60 keeps cast shadows readable (~0.6× caster height) while cleaning the
-  open floors' patchiness. Weather is a blowing <code>sand</code> drift (the
+  as the high-desert-sun character. Most s01 rooms are closed stage shells
+  (a geometric sun-ray probe, 2026-09-20: ga1, td1, lb1, the boss arena)
+  whose casting is disarmed by the enclosure carve-out above: their
+  interiors receive the sun and the player + placed objects cast the real
+  shadows; the room's own walls/rim self-shadowing stays authored in the
+  bake, which was painted for daylight anyway. The open stages (the
+  e-corridor ia1, and any future authored openings) carry the full rig —
+  geometry casting and all. Weather is a blowing <code>sand</code> drift (the
   valley's dust), the
   first non-snow weather type. The stone-lantern stages
   (<code>s01a_td1/td2</code>, the only <code>1_toro</code> art) carry warm

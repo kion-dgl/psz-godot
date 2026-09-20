@@ -244,3 +244,206 @@ static func apply_glow_materials(node: Node, passes: Dictionary) -> int:
 	for child in node.get_children():
 		touched += apply_glow_materials(child, passes)
 	return touched
+
+
+## #648 enclosure test: does the sun reach this room's interior? PSO stage
+## shells are closed boxes (walls, ceiling and backdrop in one mesh), so with
+## geometry casting on the shell shadows its OWN interior — no dynamic sun
+## shadow can exist inside, and the player blob must return (the blob-skip
+## presumes the directional source actually reaches the player). Casts a few
+## body-height rays from the room's floor grid toward `sun_dir` (direction
+## TOWARD the sun, global space) against every mesh triangle: any clear ray
+## counts the room as sun-open. Pure math — no physics space, safe from _ready.
+## `floor_y` is the walkable surface height (the floor GLB's top); without it
+## the shell AABB's mid-height stands in — the mesh min is useless (PSO
+## backdrops skirt far below the floor).
+static func sun_reaches_room(map_root: Node3D, sun_dir: Vector3, floor_y: float = NAN) -> bool:
+	if map_root == null or not (sun_dir.length() > 0.5):
+		return true
+	var d := sun_dir.normalized()
+	var aabb := _global_mesh_aabb(map_root)
+	if aabb.size == Vector3.ZERO:
+		return true
+	var y := floor_y + 1.5 if is_finite(floor_y) else aabb.get_center().y + 2.5
+	var c := aabb.get_center()
+	var q := aabb.size * 0.25
+	var origins := [
+		Vector3(c.x, y, c.z),
+		Vector3(c.x - q.x, y, c.z - q.z),
+		Vector3(c.x + q.x, y, c.z - q.z),
+		Vector3(c.x - q.x, y, c.z + q.z),
+		Vector3(c.x + q.x, y, c.z + q.z),
+	]
+	# Per-origin blocking: the room is sun-open iff ANY origin's ray escapes
+	# every triangle. No facing prefilter — from inside a shell the blockers
+	# present their back faces. (No primitive-counter early-out: lambdas
+	# capture ints by value, so only the reference-type array propagates.)
+	var blocked: Array = [false, false, false, false, false]
+	_walk_triangles(map_root, func(p0: Vector3, p1: Vector3, p2: Vector3):
+		for i in origins.size():
+			if not blocked[i] and _segment_hit_triangle(origins[i], d, p0, p1, p2):
+				blocked[i] = true
+	)
+	return blocked.has(false)
+
+
+## AABB over every mesh instance under `root`, in global space.
+static func _global_mesh_aabb(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for node in _collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var b := mi.global_transform * mi.get_aabb()
+		if first:
+			box = b
+			first = false
+		else:
+			box = box.merge(b)
+	return box
+
+
+static func _collect_mesh_instances(node: Node, out: Array) -> Array:
+	if node is MeshInstance3D:
+		out.append(node)
+	for child in node.get_children():
+		_collect_mesh_instances(child, out)
+	return out
+
+
+## Every mesh triangle under `root` in global space, fed to `cb(p0, p1, p2)`.
+static func _walk_triangles(root: Node, cb: Callable) -> void:
+	for node in _collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh
+		if mesh == null:
+			continue
+		for s in range(mesh.get_surface_count()):
+			var arrays := mesh.surface_get_arrays(s)
+			if arrays.is_empty():
+				continue
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			if verts.size() == 0:
+				continue
+			var xform := mi.global_transform
+			var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			if idx.size() > 0:
+				for t in range(0, idx.size() - 2, 3):
+					cb.call(
+						xform * verts[idx[t]],
+						xform * verts[idx[t + 1]],
+						xform * verts[idx[t + 2]])
+			else:
+				for t in range(0, verts.size() - 2, 3):
+					cb.call(xform * verts[t], xform * verts[t + 1], xform * verts[t + 2])
+
+
+## Möller–Trumbore ray/triangle hit (double-sided), within 300 units.
+static func _segment_hit_triangle(o: Vector3, d: Vector3, p0: Vector3, p1: Vector3, p2: Vector3) -> bool:
+	const EPS := 0.0001
+	const MAX_T := 300.0
+	var e1 := p1 - p0
+	var e2 := p2 - p0
+	var h := d.cross(e2)
+	var det_a := e1.dot(h)
+	if absf(det_a) < EPS:
+		return false
+	var inv := 1.0 / det_a
+	var s := o - p0
+	var u := s.dot(h) * inv
+	if u < 0.0 or u > 1.0:
+		return false
+	var rk := s.cross(e1)
+	var v := d.dot(rk) * inv
+	if v < 0.0 or u + v > 1.0:
+		return false
+	var t := e2.dot(rk) * inv
+	return t > EPS and t < MAX_T
+
+
+## #648 shell carve-out: a stage shell that encloses the room must not CAST.
+## The shells are single meshes (walls + ceiling + backdrop) — with casting
+## on, a shell shadows its own interior, deleting the sun (and every dynamic
+## shadow with it, the player's included). Each mesh is tested alone: one
+## that blocks every sample ray BY ITSELF encloses the room and gets
+## SHADOW_CASTING_SETTING_OFF; it still receives shadows, so the player and
+## placed objects cast real ones on it. Partials (a wall, a rim) keep
+## casting. Returns how many meshes were disarmed. Run it after the row's
+## geometry-casting pass, with the applied sun's direction.
+static func disable_enclosing_casters(map_root: Node3D, sun_dir: Vector3, floor_y: float = NAN) -> int:
+	if map_root == null or not (sun_dir.length() > 0.5):
+		return 0
+	var d := sun_dir.normalized()
+	var aabb := _global_mesh_aabb(map_root)
+	if aabb.size == Vector3.ZERO:
+		return 0
+	var y := floor_y + 1.5 if is_finite(floor_y) else aabb.get_center().y + 2.5
+	var c := aabb.get_center()
+	var q := aabb.size * 0.25
+	var origins := [
+		Vector3(c.x, y, c.z),
+		Vector3(c.x - q.x, y, c.z - q.z),
+		Vector3(c.x + q.x, y, c.z - q.z),
+		Vector3(c.x - q.x, y, c.z + q.z),
+		Vector3(c.x + q.x, y, c.z + q.z),
+	]
+	var disarmed := 0
+	for node in _collect_mesh_instances(map_root, []):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null or mi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			continue
+		# Containment first: a shell's bounds hold the whole sample volume.
+		# A wide wall can block every sun ray by itself at a grazing angle,
+		# but its thin bounds don't contain the samples — disarming it would
+		# let the sun shine through a solid wall.
+		var m_box := mi.global_transform * mi.get_aabb()
+		var contains_all := true
+		for o in origins:
+			if not m_box.has_point(o):
+				contains_all = false
+				break
+		if contains_all and _node_blocks_all(mi, origins, d):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			disarmed += 1
+	return disarmed
+
+
+## Do THIS node's own triangles block every origin ray? (The per-mesh half of
+## sun_reaches_room — a mesh that does, encloses the sample volume.)
+static func _node_blocks_all(node: MeshInstance3D, origins: Array, d: Vector3) -> bool:
+	var blocked: Array = []
+	for i in origins.size():
+		blocked.append(false)
+	_walk_triangles(node, func(p0: Vector3, p1: Vector3, p2: Vector3):
+		for i in origins.size():
+			if not blocked[i] and _segment_hit_triangle(origins[i], d, p0, p1, p2):
+				blocked[i] = true
+	)
+	return not blocked.has(false)
+
+
+## The player's blob shadow (#646): an unshaded dark disc that grounds the
+## player when no directional light can shadow them — rows without a shadow
+## source. The controller parents it and tracks the player each frame.
+static func make_player_blob() -> MeshInstance3D:
+	var blob := MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.8, 1.8)
+	quad.orientation = PlaneMesh.FACE_Y
+	blob.mesh = quad
+	blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shader := Shader.new()
+	shader.code = \
+		"shader_type spatial;\n" + \
+		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
+		"void fragment() {\n" + \
+		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
+		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
+		"\tALBEDO = vec3(0.0);\n" + \
+		"\tALPHA = alpha;\n" + \
+		"}\n"
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	blob.material_override = mat
+	return blob

@@ -219,6 +219,7 @@ func _run_tests_systems() -> void:
 	test_tower_field()
 	test_field_time_slots()
 	test_valley_day_slot()
+	test_valley_sun_enclosure()
 	test_time_manager_clock()
 	test_s03b_anchor_lights()
 	test_s03b_anchor_config()
@@ -10834,7 +10835,7 @@ func test_valley_day_slot() -> void:
 	assert_eq(valley.get("ambient_energy"), 0.6, "Valley rig: ambient 0.60 (hardware walk lock)")
 	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
 	assert_eq(valley.get("sun_pitch"), -60.0,
-		"Valley rig: sun pinned at −60° (high desert sun; sweep lock pending hardware walk)")
+		"Valley rig: sun pinned at −60° (high desert sun character)")
 	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
 	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
@@ -10851,6 +10852,90 @@ func test_valley_day_slot() -> void:
 	# run neutralize + make_lit (per-pixel) like the s03 stages.
 	assert_true(valley.has("bake_mix"),
 		"bake_mix presence opts valley into the white-strategy material pass")
+
+	print("")
+
+
+# ── Sun-rig enclosure (#648): the geometric sun-ray probe and the shell
+# casting carve-out — an enclosing stage mesh must not cast (its own shadow
+# deletes the sun from its interior, the player's dynamic shadow with it).
+## Synthetic room: a floor plane at y=0 plus optional walls/shell, mirroring
+## the PSO stage layout the probe walks.
+func _enclosure_room(with_shell: bool) -> Node3D:
+	var holder := Node3D.new()
+	var floor_mi := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(60, 60)
+	floor_mi.mesh = plane
+	holder.add_child(floor_mi)
+	if with_shell:
+		var box_mi := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(60, 40, 60)
+		box_mi.mesh = box
+		box_mi.position = Vector3(0, 20, 0)
+		holder.add_child(box_mi)
+	return holder
+
+
+func test_valley_sun_enclosure() -> void:
+	print("── Valley Sun Enclosure (#648) ──")
+	var steep := Vector3(0, 0.866, 0.5)   # −60° sun, the row pin
+	var rake := Vector3(0, 0.2, 0.98)     # −12° grazing sun
+
+	# The probe: geometry truth, independent of casting flags
+	var shell := _enclosure_room(true)
+	add_child(shell)
+	assert_true(not MeshUtils.sun_reaches_room(shell, steep, 0.0),
+		"a closed shell blocks the sun (room reads enclosed)")
+	var open := _enclosure_room(false)
+	add_child(open)
+	assert_true(MeshUtils.sun_reaches_room(open, steep, 0.0),
+		"a bare floor under the sun reads open")
+
+	# The carve-out: the enclosing mesh stops casting, partials keep it
+	var disarmed: int = MeshUtils.disable_enclosing_casters(shell, steep, 0.0)
+	assert_eq(disarmed, 1, "the closed shell's one mesh is disarmed")
+	var shell_mi := shell.get_child(1) as MeshInstance3D
+	assert_eq(shell_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the shell casts no more (its own shadow deleted the interior sun)")
+	assert_eq(MeshUtils.disable_enclosing_casters(open, steep, 0.0), 0,
+		"a bare floor disarms nothing (nothing encloses)")
+
+	# A wall ring: blocks the rake but not the steep sun — partials cast on
+	var ring := Node3D.new()
+	add_child(ring)
+	var floor_mi := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(60, 60)
+	floor_mi.mesh = plane
+	ring.add_child(floor_mi)
+	for w in range(4):
+		var wall := MeshInstance3D.new()
+		var wm := BoxMesh.new()
+		wm.size = Vector3(60, 30, 2)
+		wall.mesh = wm
+		var ang := w * PI / 2.0
+		wall.position = Vector3(0, 15, -30).rotated(Vector3.UP, ang)
+		wall.rotation.y = ang
+		ring.add_child(wall)
+	assert_true(MeshUtils.sun_reaches_room(ring, steep, 0.0),
+		"a steep sun clears the wall ring (open)")
+	assert_true(not MeshUtils.sun_reaches_room(ring, rake, 0.0),
+		"a grazing rake is blocked by the walls (enclosed at that pitch)")
+	assert_eq(MeshUtils.disable_enclosing_casters(ring, rake, 0.0), 0,
+		"partial blockers (walls) keep casting even when they block")
+
+	shell.queue_free()
+	open.queue_free()
+	ring.queue_free()
+
+	# The shared blob builder (rows without a shadow source)
+	var blob := MeshUtils.make_player_blob()
+	assert_eq(blob.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the blob never casts")
+	assert_true(blob.mesh is QuadMesh, "the blob is a quad disc")
+	assert_true(blob.material_override is ShaderMaterial, "the blob carries its unshaded shader")
 
 	print("")
 

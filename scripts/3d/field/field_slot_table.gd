@@ -78,13 +78,14 @@ const SLOTS := {
 	# mostly SURVIVES — bake 0.15 keeps the authored shading; sun 0.55 +
 	# ambient 0.60 layer the dynamic light on top (the sweep's brighter
 	# 0.9/0.80/0.5 read hot on hardware). sun_pitch −60 lifts the sun off
-	# the DAY band's −45° rest (2026-09-20 sweep across −30/−45/−60/−75 ×
-	# ga1/lb1/na1: −75 near-noon flattens and blows floors, −30 stripes
-	# the open floors and reads afternoon against the hour-10 palette,
-	# −60 keeps shadows readable at 0.58× while cleaning the floor
-	# patchiness — the high-desert-sun read; hardware walk to confirm).
-	# Blowing sand drift; the toro lanterns (td1/td2, warm pools at 6.0)
-	# are the local accents.
+	# the DAY band's −45° rest (high-desert-sun character). NOTE the 2026-
+	# 09-20 geometric sun-ray probe: most s01 rooms are CLOSED stage shells
+	# (ga1/td1/lb1/na1 — one mesh boxes the room), disarmed from casting by
+	# the enclosure carve-out so their interiors receive the sun and the
+	# player + placed objects cast the real dynamic shadows (their wall
+	# self-shadowing stays in the authored bake); open stages (s01e_ia1)
+	# carry the full rig with geometry casting. Blowing sand drift; the
+	# toro lanterns (td1/td2, warm pools at 6.0) are the local accents.
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.55,

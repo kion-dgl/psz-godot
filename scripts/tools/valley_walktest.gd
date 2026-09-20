@@ -11,6 +11,8 @@ extends Node3D
 ##       PSZ_WALK_SHOT=/tmp/o.png  screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_SUN_PITCH=-60    sun elevation override (screenshot sweeps;
 ##                                 the live path is the 7/8 keys)
+##       PSZ_WALK_SUN_SHADOWS=0    force sun shadows off (A/B diffs; the row
+##                                 default is on)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
@@ -48,6 +50,9 @@ var _slot := {}
 var _shot_path := ""
 var _shot_frame := 0
 var _status: Label
+var _sun_open := false
+var _shells_disarmed := 0
+var _floor_top := NAN
 
 
 func _ready() -> void:
@@ -60,6 +65,16 @@ func _ready() -> void:
 	_build_environment()
 	_load_stage()
 	_load_floor_collision()
+	# #648 shell carve-out, production order: the row's geometry casting armed
+	# everything in _load_stage's material pass; an enclosing shell now stops
+	# CASTING (it would shadow its own interior and delete the player's
+	# dynamic shadow) while still receiving shadows.
+	_sun_open = _slot.get("sun_shadows", false) \
+		and MeshUtils.sun_reaches_room(_map_root,
+			_dir_light.global_transform.basis.z, _floor_top)
+	if _slot.get("sun_shadows", false):
+		_shells_disarmed = MeshUtils.disable_enclosing_casters(_map_root,
+			_dir_light.global_transform.basis.z, _floor_top)
 	_spawn_player(Vector3(0, 1.5, 10))
 	_spawn_authored_effects()
 	_spawn_weather()
@@ -136,6 +151,8 @@ func _build_environment() -> void:
 	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
 	if not OS.get_environment("PSZ_WALK_SUN_PITCH").is_empty():
 		_dir_light.rotation_degrees.x = float(OS.get_environment("PSZ_WALK_SUN_PITCH"))
+	if OS.get_environment("PSZ_WALK_SUN_SHADOWS") == "0":
+		_dir_light.shadow_enabled = false
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
 
 
@@ -166,7 +183,8 @@ func _load_stage() -> void:
 
 
 ## The stage's collision floor (mattest pattern): covers the real floor, kept
-## invisible — the _m visuals come from the map root above.
+## invisible — the _m visuals come from the map root above. Its AABB top is
+## the walkable height the sun-enclosure test samples from.
 func _load_floor_collision() -> void:
 	var floor_path := FLOOR_GLB_FMT % [_subfolder(), _stage_id, _stage_id]
 	if not ResourceLoader.exists(floor_path):
@@ -174,10 +192,29 @@ func _load_floor_collision() -> void:
 	var floor_root := (load(floor_path) as PackedScene).instantiate() as Node3D
 	add_child(floor_root)
 	floor_root.visible = false
+	var box := _node_aabb(floor_root)
+	if box.size != Vector3.ZERO:
+		_floor_top = box.end.y
 	if MapCollisionBuilder.has_static_body(floor_root):
 		MapCollisionBuilder.setup_map_collision(floor_root)
 	else:
 		MapCollisionBuilder.create_collision_from_meshes(floor_root)
+
+
+func _node_aabb(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var b := mi.global_transform * mi.get_aabb()
+		if first:
+			box = b
+			first = false
+		else:
+			box = box.merge(b)
+	return box
 
 
 func _spawn_player(pos: Vector3) -> void:
@@ -235,6 +272,8 @@ func _readout() -> void:
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_moonlight.light_energy, _bake_mix, _dir_light.rotation_degrees.x,
 		str(_dir_light.shadow_enabled).to_lower()])
+	print("[ValleyWalk] room sun: %s" %
+		("open" if _sun_open else "enclosed — %d shell mesh(es) cast-off (#648)" % _shells_disarmed))
 
 
 func _build_status_label() -> void:
@@ -247,7 +286,8 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  pitch %.0f°  shadows %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  pitch %.0f°  shadows %s  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_bake_mix, _dir_light.rotation_degrees.x,
-		"on" if _dir_light.shadow_enabled else "off"]
+		"on" if _dir_light.shadow_enabled else "off",
+		"sun-open" if _sun_open else "shell-cast-off"]
