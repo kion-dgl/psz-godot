@@ -87,6 +87,11 @@ func _ready() -> void:
 		and MeshUtils.sun_reaches_room(_map_root,
 			_dir_light.global_transform.basis.z, _floor_top)
 	if _slot.get("sun_shadows", false):
+		# #648 per-surface split first: rooms ship as one mesh (backdrop +
+		# floor + props in a dozen surfaces) but casting is per-instance —
+		# split so the carve-out disarms the panorama shell without taking
+		# the props' (carts, bridge) shadows with it.
+		MeshUtils.split_mesh_surfaces(_map_root)
 		_shells_disarmed = MeshUtils.disable_enclosing_casters(_map_root,
 			_dir_light.global_transform.basis.z, _floor_top)
 		# Panorama placement (#648): the compat shadow eye must sit in the

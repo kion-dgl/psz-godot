@@ -337,10 +337,15 @@ func _ready() -> void:
 	# and placed objects cast real shadows on it. Sun rows only — the moon
 	# rigs keep their walked behavior.
 	if _slot.get("sun_shadows", false) and _map_root:
+		# #648 per-surface split first: rooms ship as one mesh (backdrop +
+		# floor + props in a dozen surfaces) but casting is per-instance —
+		# split so the carve-out disarms the panorama shell without taking
+		# the props' (carts, bridge) shadows with it.
+		MeshUtils.split_mesh_surfaces(_map_root)
 		var disarmed: int = MeshUtils.disable_enclosing_casters(_map_root,
 			_dir_light.global_transform.basis.z, _floor_top)
 		if disarmed > 0:
-			_fdbg("[ValleyField] %d enclosing shell mesh(es) disarmed from casting" % disarmed)
+			_fdbg("[ValleyField] %d enclosing shell surface(s) disarmed from casting" % disarmed)
 		# Panorama placement (#648): the compatibility renderer anchors the
 		# directional shadow pass at the light node's position — the eye must
 		# sit in the room's interior air (the scene light ships at (10,20,10),

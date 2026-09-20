@@ -403,10 +403,29 @@ static func disable_enclosing_casters(map_root: Node3D, sun_dir: Vector3, floor_
 			if not m_box.has_point(o):
 				contains_all = false
 				break
-		if contains_all and _node_blocks_all(mi, origins, d):
+		# Far scenery: anything whose whole AABB sits well outside the play
+		# space is panorama, not architecture — the edge mountains' shadows
+		# graze the room rim as blocky artifacts without ever blocking the
+		# center samples. Distance alone disarms them; near walls stay (they
+		# legitimately shade the raking sun).
+		var far_scenery := true
+		for o in origins:
+			if _aabb_point_distance(m_box, o) < 40.0:
+				far_scenery = false
+				break
+		if far_scenery or (contains_all and _node_blocks_all(mi, origins, d)):
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			disarmed += 1
 	return disarmed
+
+
+## Point-to-box distance (0 inside) — this Godot's AABB lacks distance_to.
+static func _aabb_point_distance(box: AABB, p: Vector3) -> float:
+	var q := Vector3(
+		maxf(box.position.x - p.x, maxf(0.0, p.x - box.end.x)),
+		maxf(box.position.y - p.y, maxf(0.0, p.y - box.end.y)),
+		maxf(box.position.z - p.z, maxf(0.0, p.z - box.end.z)))
+	return q.length()
 
 
 ## Do THIS node's own triangles block every origin ray? (The per-mesh half of
@@ -471,3 +490,42 @@ static func place_light_inside_room(light: DirectionalLight3D,
 	light.global_position = Vector3(c.x, y, c.z)
 
 
+
+
+## #648 per-surface split: PSO rooms ship as ONE mesh with a dozen surfaces
+## (backdrop, floor, bridge, props…), but casting is per-instance — an
+## all-or-nothing carve-out either disarms the props with the shell or
+## leaves the panorama casting square mountains. This splits every
+## multi-surface MeshInstance into per-surface children (transform, surface
+## materials, surface override materials, and casting carried over), so the
+## enclosure test can judge each surface on its own geometry. Returns the
+## number of instances created. Static room meshes only — run after the
+## material pass, before the carve-out.
+static func split_mesh_surfaces(root: Node3D) -> int:
+	var created := 0
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh as ArrayMesh
+		if mesh == null or mesh.get_surface_count() <= 1:
+			continue
+		var parent := mi.get_parent()
+		for s in range(mesh.get_surface_count()):
+			var part := ArrayMesh.new()
+			part.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mesh.surface_get_arrays(s))
+			part.surface_set_material(0, mesh.surface_get_material(s))
+			var child := MeshInstance3D.new()
+			child.name = "%s_s%d" % [mi.name, s]
+			child.mesh = part
+			# Sibling of the original (same transform slot), so the freed
+			# original can't take the split parts with it.
+			child.transform = mi.transform
+			child.cast_shadow = mi.cast_shadow
+			var override: Material = mi.get_surface_override_material(s)
+			if override:
+				child.set_surface_override_material(0, override)
+			parent.add_child(child)
+			created += 1
+		mi.visible = false
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.queue_free()
+	return created
