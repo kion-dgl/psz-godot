@@ -824,11 +824,6 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# and smoothed normals so lights reach it (#646).
 	SmoothNormals.ensure(player, 2)
 	SmoothNormals.make_lit(player)
-	# #648: the compatibility renderer's shadow pass can't rasterize the
-	# skinned model — a SHADOWS_ONLY capsule proxy carries the player's
-	# dynamic shadow (model casting off so the broken skin never double-
-	# shadows on renderers where it works).
-	MeshUtils.attach_shadow_proxy(player)
 	# HP-zero defeat (spec /states/player-death): raise the "You were defeated"
 	# screen when this player dies. CONNECT_ONE_SHOT — a fresh player is spawned
 	# per cell, so the signal only ever fires once on this instance anyway, but

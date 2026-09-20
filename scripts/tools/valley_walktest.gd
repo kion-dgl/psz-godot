@@ -152,7 +152,7 @@ func _process(_delta: float) -> void:
 		# Target: the pillar if spawned (static — immune to the idle-sway
 		# confound that fooled the player-proxy version), else the proxy.
 		var target := (get_node_or_null("A/BPillar") as Node3D) \
-			if get_node_or_null("A/BPillar") else _player.get_node("ShadowProxy")
+			if get_node_or_null("A/BPillar") else _player.get_node("PlayerModel")
 		match _shot_frame:
 			44:
 				_shot(("%s_A.png" % _shot_path.get_basename()))

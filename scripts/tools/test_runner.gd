@@ -10937,26 +10937,17 @@ func test_valley_sun_enclosure() -> void:
 	assert_true(blob.mesh is QuadMesh, "the blob is a quad disc")
 	assert_true(blob.material_override is ShaderMaterial, "the blob carries its unshaded shader")
 
-	# The player's shadow proxy (#648): the compat shadow pass can't
-	# rasterize the skinned model, so a SHADOWS_ONLY capsule carries the
-	# player's dynamic shadow and the model stops casting.
+	# The player's own dynamic shadow (#648): the model casts (verified by
+	# single-boot A/B — contiguous −0.5 dips centered on the player). Nothing
+	# may touch its casting; the earlier proxy saga turned it off on a wrong
+	# assumption and every later test measured the proxy instead of the model.
 	var puppet := Node3D.new()
 	var model_mi := MeshInstance3D.new()
 	model_mi.mesh = BoxMesh.new()
 	puppet.add_child(model_mi)
 	add_child(puppet)
-	var proxy := MeshUtils.attach_shadow_proxy(puppet)
-	assert_eq(model_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
-		"the model's meshes stop casting (broken skin never double-shadows)")
-	assert_eq(proxy.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
-		"the proxy casts normally (compat ignores SHADOWS_ONLY, alpha-0 gets scissored away)")
-	var tone := proxy.material_override as StandardMaterial3D
-	assert_true(tone != null and tone.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED,
-		"the proxy is an opaque body-toned caster (compat shows every caster — style it into the character)")
-	assert_true(proxy.mesh is CapsuleMesh, "the proxy is a capsule")
-	var cap := proxy.mesh as CapsuleMesh
-	assert_true(cap.radius < 0.15, "the proxy stays spine-slim (limb gaps peek body, not artifact)")
-	assert_eq(proxy.get_parent(), puppet, "the proxy rides the player root")
+	assert_eq(model_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+		"a freshly spawned player's meshes keep default casting ON")
 	puppet.queue_free()
 
 	print("")
