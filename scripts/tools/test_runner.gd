@@ -10831,8 +10831,8 @@ func test_valley_day_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var valley := Slots.slot_for("gurhacia", "s01a_ga1")
 	assert_eq(valley.get("hour"), 10.0, "Valley pins hour 10 (day)")
-	assert_eq(valley.get("sun_energy"), 0.55, "Valley rig: sun 0.55 (hardware walk lock)")
-	assert_eq(valley.get("ambient_energy"), 0.6, "Valley rig: ambient 0.60 (hardware walk lock)")
+	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.90 (shadow-readability re-lock, post-carve-out)")
+	assert_eq(valley.get("ambient_energy"), 0.4, "Valley rig: ambient 0.40 (shadow-readability re-lock, post-carve-out)")
 	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
 	assert_eq(valley.get("sun_pitch"), -60.0,
 		"Valley rig: sun pinned at −60° (high desert sun character)")
@@ -10844,9 +10844,9 @@ func test_valley_day_slot() -> void:
 	# lands where the sweep-era exception was heading (8.5% clip there, all
 	# but ~the sky band) — one row serves every s01 stage.
 	var boss := Slots.slot_for("gurhacia", "s01z_na1")
-	assert_eq(boss.get("sun_energy"), 0.55, "s01z rides the area row (exception dropped)")
+	assert_eq(boss.get("sun_energy"), 0.9, "s01z rides the area row (exception dropped)")
 	assert_eq(boss.get("bake_mix"), 0.15, "s01z keeps the area bake")
-	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.55,
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
 		"s01b stages keep the area row (no variant split needed)")
 	# The slot row's presence implies the white-strategy pass: valley rooms
 	# run neutralize + make_lit (per-pixel) like the s03 stages.

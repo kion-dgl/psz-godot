@@ -77,7 +77,14 @@ const SLOTS := {
 	# daylight (median COLOR_0 luminance ~0.52 vs snowfield's 0.19) and
 	# mostly SURVIVES — bake 0.15 keeps the authored shading; sun 0.55 +
 	# ambient 0.60 layer the dynamic light on top (the sweep's brighter
-	# 0.9/0.80/0.5 read hot on hardware). sun_pitch −60 lifts the sun off
+	# 0.9/0.80/0.5 read hot on hardware). RE-LOCKED 2026-09-20 after the
+	# shell carve-out let the sun into the interiors: sun 0.55/ambient 0.60
+	# was struck while a casting bug kept rooms sunless, and at that balance
+	# the dynamic sun shadows the rig exists for are nearly invisible
+	# (< half a stop of contrast). Sun 0.90 / ambient 0.40 gives readable
+	# player shadows and swept clean across A/B/E/Z (ga1/td1/sa1/lb1/ic1/
+	# ia1/na1: highlights held, nothing crushed; the user confirmed the
+	# shadow on hardware). sun_pitch −60 lifts the sun off
 	# the DAY band's −45° rest (high-desert-sun character). NOTE the 2026-
 	# 09-20 geometric sun-ray probe: most s01 rooms are CLOSED stage shells
 	# (ga1/td1/lb1/na1 — one mesh boxes the room), disarmed from casting by
@@ -88,8 +95,8 @@ const SLOTS := {
 	# toro lanterns (td1/td2, warm pools at 6.0) are the local accents.
 	"gurhacia": {
 		"hour": 10.0,
-		"sun_energy": 0.55,
-		"ambient_energy": 0.6,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
 		"sun_pitch": -60.0,
 		"bake_mix": 0.15,
 		"sun_shadows": true,

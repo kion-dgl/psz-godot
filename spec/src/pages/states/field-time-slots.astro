@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (hardware walk, #648): sun 0.55 with real sun shadows + geometry casting, ambient 0.60, bake 0.15 (the authored day bake mostly survives), sun −60° elevation (sweep lock), sand drift' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (#648, re-locked post-carve-out): sun 0.90 with real sun shadows + geometry casting, ambient 0.40, bake 0.15 (the authored day bake mostly survives), sun −60° elevation, sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -127,9 +127,16 @@ const slots = [
   the phase preset ships sun shadows off, so the row re-arms them) with
   geometry casting on. The valley bake was authored <em>for</em> daylight
   (median COLOR_0 luminance ~0.52 vs the snowfield's 0.19), so it mostly
-  survives — the lock keeps 0.15 toward white and layers sun 0.55 + ambient
-  0.60 on top of the authored shading (the screenshot sweep's brighter
-  0.9/0.80/0.5 read hot on hardware; the hardware walk re-locked it).
+  survives — the lock keeps 0.15 toward white and layers the dynamic sun on
+  top of the authored shading. Energies re-locked 2026-09-20 (sun 0.90 +
+  ambient 0.40) after the enclosure carve-out let the sun into the closed
+  stage shells: the original 0.55/0.60 hardware walk was struck while a
+  casting bug kept interiors sunless, and at that balance the rig's dynamic
+  shadows read at under half a stop — invisible. At the re-lock the player's
+  shadow is clearly readable (verified on hardware and by single-boot pixel
+  A/B), and the sweep across all four variants (oasis, toro courtyard,
+  start room, both bridge canyons, the e-corridor, the boss arena) holds:
+  nothing blown, nothing crushed.
   The row pins <code>sun_pitch</code> −60° — off the DAY band's −45° rest —
   as the high-desert-sun character. Most s01 rooms are closed stage shells
   (a geometric sun-ray probe, 2026-09-20: ga1, td1, lb1, the boss arena)
