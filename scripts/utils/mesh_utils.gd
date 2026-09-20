@@ -474,18 +474,15 @@ static func place_light_inside_room(light: DirectionalLight3D,
 ## #648 player shadow proxy: the compatibility renderer's shadow pass fails
 ## to rasterize the player's SKINNED mesh — s03b's locked moon rig proved the
 ## machinery (rocks/geometry shadowed fine); the player just never shadowed
-## and the room's shadows carried the look. The invisible-caster attempts all
-## lose under compat: SHADOW_CASTING_SETTING_SHADOWS_ONLY is a silent no-op,
-## transparent materials are scissored out of the shadow pass, and an opaque
-## capsule nested "inside" the body pokes through the alpha-scissored model
-## (reads as a stray circle with its own shadow — the hardware walk caught
-## it). The robust trick is the camera cull mask: the proxy lives ONLY on
-## render layer 20, the play camera masks that layer out (color pass never
-## draws it), and the directional shadow pass — rendered from the light,
-## which has no camera cull mask — rasterizes it solidly. Capsule sized to
-## the model's measured AABB so the shadow tracks the silhouette. The model's
-## own casting turns off. Attached by both spawn paths (controller + lab);
-## the spawn paths mask layer 20 off their play camera.
+## and the room's shadows carried the look. Every invisible-caster route is
+## closed under compat: SHADOW_CASTING_SETTING_SHADOWS_ONLY skips both
+## passes, blend-alpha is discarded by the shadow pass, camera cull masks
+## leak into the shadow pass, and alpha-scissor draws fully opaque (a hard
+## cutout, never a blend). Compat renders every caster visibly — so the
+## caster is styled INTO the character: a spine-slim capsule toned from the
+## model's own albedo textures (averaged, darkened), tucked in the torso
+## column. Limb-gap peeks read as body. The model's own casting turns off.
+## Attached by both spawn paths (controller + lab).
 static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	var box := AABB()
 	var first := true
@@ -505,20 +502,46 @@ static func attach_shadow_proxy(root: Node3D) -> MeshInstance3D:
 	var proxy := MeshInstance3D.new()
 	proxy.name = "ShadowProxy"
 	var capsule := CapsuleMesh.new()
-	capsule.radius = clampf(minf(box.size.x, box.size.z) * 0.4, 0.12, 0.18)
-	capsule.height = clampf(box.size.y * 0.7, 0.8, 1.3)
+	capsule.radius = clampf(minf(box.size.x, box.size.z) * 0.25, 0.10, 0.14)
+	capsule.height = clampf(box.size.y * 0.6, 0.8, 1.2)
 	proxy.mesh = capsule
-	# The ghost: alpha-scissor keeps 2%-alpha fragments in EVERY pass — the
-	# shadow pass rasterizes them solid, the color pass blends a whisper no
-	# eye reads. (Blend-alpha is discarded by the shadow pass; camera cull
-	# masks leak into compat's shadow pass — both verified dead ends.)
-	var ghost := StandardMaterial3D.new()
-	ghost.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	ghost.alpha_scissor_threshold = 0.01
-	ghost.albedo_color = Color(0.12, 0.10, 0.09, 0.02)
-	proxy.material_override = ghost
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = _model_average_tone(root, Color(0.35, 0.3, 0.28))
+	proxy.material_override = mat
 	proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	proxy.position = box.get_center() + Vector3(0, 0.1, 0)
+	proxy.position = Vector3(box.get_center().x, box.get_center().y * 0.9, box.get_center().z)
 	root.add_child(proxy)
 	return proxy
+
+
+## Average albedo of the model's textures — the proxy's body tone. Coarse
+## sampling (every 8th texel); falls back to `fallback` when textureless.
+static func _model_average_tone(root: Node3D, fallback: Color) -> Color:
+	var sum := Color(0, 0, 0)
+	var n := 0
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for i in range(mi.mesh.get_surface_count()):
+			var mat := mi.mesh.surface_get_material(i)
+			if not (mat is StandardMaterial3D):
+				continue
+			var tex := (mat as StandardMaterial3D).albedo_texture
+			if tex == null:
+				continue
+			var img := tex.get_image()
+			if img == null:
+				continue
+			for y in range(0, img.get_height(), 8):
+				for x in range(0, img.get_width(), 8):
+					var c := img.get_pixel(x, y)
+					if c.a > 0.5:
+						sum += c
+						n += 1
+	if n == 0:
+		return fallback
+	var avg := Color(sum.r / n, sum.g / n, sum.b / n) * 0.8
+	avg.a = 1.0
+	return avg
 
