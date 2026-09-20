@@ -28,6 +28,8 @@ extends Node3D
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       [ / ]  moon ∓/± 0.05         - / =  bake mix ∓/± 0.05
+##       F / G  shadow normal bias ∓/± 1 (acne stripes on grazing ground)
+##       C / V  shadow bias ∓/± 0.05
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       N       next room · R reload · ESC quit
 
@@ -303,6 +305,14 @@ func _input(event: InputEvent) -> void:
 			SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
 		KEY_M:
 			_dir_light.shadow_enabled = not _dir_light.shadow_enabled
+		KEY_F:
+			_dir_light.shadow_normal_bias = maxf(0.0, _dir_light.shadow_normal_bias - 1.0)
+		KEY_G:
+			_dir_light.shadow_normal_bias = minf(16.0, _dir_light.shadow_normal_bias + 1.0)
+		KEY_C:
+			_dir_light.shadow_bias = maxf(0.0, _dir_light.shadow_bias - 0.05)
+		KEY_V:
+			_dir_light.shadow_bias = minf(1.0, _dir_light.shadow_bias + 0.05)
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()] \
 				if _stage_id in STAGES else STAGES[0]
@@ -331,6 +341,11 @@ func _build_environment() -> void:
 		_dir_light.rotation_degrees.x = float(OS.get_environment("PSZ_WALK_SUN_PITCH"))
 	if OS.get_environment("PSZ_WALK_SUN_SHADOWS") == "0":
 		_dir_light.shadow_enabled = false
+	if not OS.get_environment("PSZ_WALK_SHADOW_BIAS").is_empty():
+		_dir_light.shadow_bias = float(OS.get_environment("PSZ_WALK_SHADOW_BIAS"))
+	if not OS.get_environment("PSZ_WALK_SHADOW_NORMAL_BIAS").is_empty():
+		_dir_light.shadow_normal_bias = float(OS.get_environment("PSZ_WALK_SHADOW_NORMAL_BIAS"))
+
 	if not OS.get_environment("PSZ_WALK_SUN").is_empty():
 		_dir_light.light_energy = float(OS.get_environment("PSZ_WALK_SUN"))
 	if not OS.get_environment("PSZ_WALK_AMBIENT").is_empty():
@@ -456,6 +471,8 @@ func _readout() -> void:
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_moonlight.light_energy, _bake_mix, _dir_light.rotation_degrees.x,
 		str(_dir_light.shadow_enabled).to_lower()])
+	print("[FieldSlot %s] shadow_bias %.2f  shadow_normal_bias %.1f" % [
+		_stage_id, _dir_light.shadow_bias, _dir_light.shadow_normal_bias])
 	print("[ValleyWalk] room sun: %s" %
 		("open" if _sun_open else "enclosed — %d shell mesh(es) cast-off (#648)" % _shells_disarmed))
 
@@ -470,8 +487,9 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  pitch %.0f°  shadows %s  room %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  bake %.2f  pitch %.0f°  shadows %s  nb %.1f  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_bake_mix, _dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",
+		_dir_light.shadow_normal_bias,
 		"sun-open" if _sun_open else "shell-cast-off"]

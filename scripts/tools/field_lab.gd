@@ -59,6 +59,9 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 	if slot.get("sun_shadows", false):
 		dir_light.shadow_enabled = true
 		dir_light.shadow_blur = 1.0
+		# Acne guard (#648): grazing-angle ground under a steep sun bands
+		# at the default normal bias — 4.0 holds shadows smooth.
+		dir_light.shadow_normal_bias = 4.0
 	if slot.has("sun_pitch"):
 		dir_light.rotation_degrees.x = float(slot["sun_pitch"])
 

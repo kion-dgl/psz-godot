@@ -757,6 +757,10 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# shadows off (the bake was the look), so the row re-arms them.
 		_dir_light.shadow_enabled = true
 		_dir_light.shadow_blur = 1.0
+		# Acne guard: the valley's terraced ground meets the steep sun at
+		# grazing angles — the default normal bias bandings those shadows
+		# (#648). 4.0 holds them smooth without detaching contact shadows.
+		_dir_light.shadow_normal_bias = 4.0
 	if _slot.has("sun_pitch"):
 		# The DAY band parks every hour at −45° (#648): rows that want a
 		# noon (steep) or afternoon (low, long-shadow) character pin it.
