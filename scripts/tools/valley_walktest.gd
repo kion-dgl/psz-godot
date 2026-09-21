@@ -237,15 +237,8 @@ func _strip_values(a: Image, b: Image, cx: int, y: int) -> Array[float]:
 
 func _strip(a: Image, b: Image, cx: int, y: int) -> Array[String]:
 	var parts: Array[String] = []
-	for i in range(14):
-		var x := cx - 126 + i * 18
-		var d := 0.0
-		var n := 0
-		for yy in range(y - 4, y + 5):
-			if x >= 0 and yy >= 0 and x < a.get_size().x and yy < a.get_size().y:
-				d += a.get_pixel(x, yy).v - b.get_pixel(x, yy).v
-				n += 1
-		parts.append("%+.2f" % (d / maxf(1.0, float(n))))
+	for v in _strip_values(a, b, cx, y):
+		parts.append("%+.2f" % v)
 	return parts
 
 
@@ -389,29 +382,13 @@ func _load_floor_collision() -> void:
 	var floor_root := (load(floor_path) as PackedScene).instantiate() as Node3D
 	add_child(floor_root)
 	floor_root.visible = false
-	var box := _node_aabb(floor_root)
+	var box := MeshUtils.global_mesh_aabb(floor_root)
 	if box.size != Vector3.ZERO:
 		_floor_top = box.end.y
 	if MapCollisionBuilder.has_static_body(floor_root):
 		MapCollisionBuilder.setup_map_collision(floor_root)
 	else:
 		MapCollisionBuilder.create_collision_from_meshes(floor_root)
-
-
-func _node_aabb(root: Node3D) -> AABB:
-	var box := AABB()
-	var first := true
-	for node in root.find_children("*", "MeshInstance3D", true, false):
-		var mi := node as MeshInstance3D
-		if mi.mesh == null:
-			continue
-		var b := mi.global_transform * mi.get_aabb()
-		if first:
-			box = b
-			first = false
-		else:
-			box = box.merge(b)
-	return box
 
 
 func _spawn_player(pos: Vector3) -> void:

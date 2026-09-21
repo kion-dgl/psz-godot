@@ -84,3 +84,28 @@ static func spawn_player(root: Node, pos: Vector3) -> CharacterBody3D:
 	orbit_camera.set_target(player)
 	orbit_camera.camera_rotation = PI
 	return player
+
+
+## A lab's screenshot smoke-run state: the env-read shot path plus the frame
+## counter. step() is the shared _process body — it advances the counter, ESC
+## quits a live (shot-less) lab, and with a path set frame 45 saves the
+## viewport PNG and quits (the run needs ~40 frames to settle: spawn, weather,
+## first shadow frame; ESC cannot abort a capture mid-run). Labs whose
+## _process does more (the valley A/B flow) keep their own counters instead.
+class ShotRun:
+	extends RefCounted
+	var path := ""
+	var frame := 0
+
+	func step(lab: Node, tag: String) -> void:
+		frame += 1
+		if path.is_empty():
+			if Input.is_action_pressed("ui_cancel"):
+				lab.get_tree().quit()
+			return
+		if frame < 45:
+			return
+		var img := lab.get_viewport().get_texture().get_image()
+		img.save_png(path)
+		print("[%s] screenshot → %s" % [tag, path])
+		lab.get_tree().quit()

@@ -261,7 +261,7 @@ static func sun_reaches_room(map_root: Node3D, sun_dir: Vector3, floor_y: float 
 	if map_root == null or not (sun_dir.length() > 0.5):
 		return true
 	var d := sun_dir.normalized()
-	var aabb := _global_mesh_aabb(map_root)
+	var aabb := global_mesh_aabb(map_root)
 	if aabb.size == Vector3.ZERO:
 		return true
 	var y := floor_y + 1.5 if is_finite(floor_y) else aabb.get_center().y + 2.5
@@ -287,11 +287,13 @@ static func sun_reaches_room(map_root: Node3D, sun_dir: Vector3, floor_y: float 
 	return blocked.has(false)
 
 
-## AABB over every mesh instance under `root`, in global space.
-static func _global_mesh_aabb(root: Node3D) -> AABB:
+## AABB over every mesh instance under `root`, in global space. The field
+## controller reads the floor shell's top from it; the shadow geometry here
+## and the labs share the same walk.
+static func global_mesh_aabb(root: Node3D) -> AABB:
 	var box := AABB()
 	var first := true
-	for node in _collect_mesh_instances(root, []):
+	for node in collect_mesh_instances(root, []):
 		var mi := node as MeshInstance3D
 		if mi.mesh == null:
 			continue
@@ -304,17 +306,18 @@ static func _global_mesh_aabb(root: Node3D) -> AABB:
 	return box
 
 
-static func _collect_mesh_instances(node: Node, out: Array) -> Array:
+## Every MeshInstance3D under `node`, depth-first, appended to `out`.
+static func collect_mesh_instances(node: Node, out: Array) -> Array:
 	if node is MeshInstance3D:
 		out.append(node)
 	for child in node.get_children():
-		_collect_mesh_instances(child, out)
+		collect_mesh_instances(child, out)
 	return out
 
 
 ## Every mesh triangle under `root` in global space, fed to `cb(p0, p1, p2)`.
 static func _walk_triangles(root: Node, cb: Callable) -> void:
-	for node in _collect_mesh_instances(root, []):
+	for node in collect_mesh_instances(root, []):
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh
 		if mesh == null:
@@ -375,7 +378,7 @@ static func disable_enclosing_casters(map_root: Node3D, sun_dir: Vector3, floor_
 	if map_root == null or not (sun_dir.length() > 0.5):
 		return 0
 	var d := sun_dir.normalized()
-	var aabb := _global_mesh_aabb(map_root)
+	var aabb := global_mesh_aabb(map_root)
 	if aabb.size == Vector3.ZERO:
 		return 0
 	var y := floor_y + 1.5 if is_finite(floor_y) else aabb.get_center().y + 2.5
@@ -389,7 +392,7 @@ static func disable_enclosing_casters(map_root: Node3D, sun_dir: Vector3, floor_
 		Vector3(c.x + q.x, y, c.z + q.z),
 	]
 	var disarmed := 0
-	for node in _collect_mesh_instances(map_root, []):
+	for node in collect_mesh_instances(map_root, []):
 		var mi := node as MeshInstance3D
 		if mi.mesh == null or mi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 			continue
@@ -482,7 +485,7 @@ static func place_light_inside_room(light: DirectionalLight3D,
 		map_root: Node3D, floor_top: float = NAN) -> void:
 	if light == null or map_root == null:
 		return
-	var box := _global_mesh_aabb(map_root)
+	var box := global_mesh_aabb(map_root)
 	if box.size == Vector3.ZERO:
 		return
 	var base := floor_top if is_finite(floor_top) else box.position.y

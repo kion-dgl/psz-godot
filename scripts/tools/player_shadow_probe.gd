@@ -9,12 +9,11 @@ extends Node3D
 
 const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
-var _shot_path := ""
-var _shot_frame := 0
+var _shot := FieldLabScript.ShotRun.new()
 
 
 func _ready() -> void:
-	_shot_path = OS.get_environment("PSZ_WALK_SHOT")
+	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
 	var hide_player := OS.get_environment("PROBE_HIDE_PLAYER") == "1"
 	var built := FieldLabScript.build_environment(self)
 	var env: Environment = built["env"]
@@ -81,14 +80,4 @@ func _dump(node: Node) -> void:
 
 
 func _process(_delta: float) -> void:
-	if _shot_path.is_empty():
-		if Input.is_action_pressed("ui_cancel"):
-			get_tree().quit()
-		return
-	_shot_frame += 1
-	if _shot_frame < 45:
-		return
-	var img := get_viewport().get_texture().get_image()
-	img.save_png(_shot_path)
-	print("[ShadowProbe] screenshot → %s" % _shot_path)
-	get_tree().quit()
+	_shot.step(self, "ShadowProbe")

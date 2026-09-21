@@ -246,7 +246,7 @@ func _add_trimesh_floor(glb_path: String, offset: Vector3) -> void:
 	# inherits the mesh's world transform (the holder offset) exactly once. Don't
 	# use MapCollisionBuilder here: it sets body.global_transform before the body
 	# is in the tree, which double-applies the offset under a non-identity root.
-	for mi in _collect_mesh_instances(holder, []):
+	for mi in MeshUtils.collect_mesh_instances(holder, []):
 		if mi.mesh == null:
 			continue
 		var shape: Shape3D = mi.mesh.create_trimesh_shape()
@@ -261,14 +261,6 @@ func _add_trimesh_floor(glb_path: String, offset: Vector3) -> void:
 		body.add_child(cs)
 		mi.add_child(body)
 		mi.visible = false
-
-
-func _collect_mesh_instances(node: Node, out: Array) -> Array:
-	if node is MeshInstance3D:
-		out.append(node)
-	for c in node.get_children():
-		_collect_mesh_instances(c, out)
-	return out
 
 
 func _heal_character() -> void:

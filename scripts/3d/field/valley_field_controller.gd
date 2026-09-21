@@ -313,7 +313,7 @@ func _ready() -> void:
 			floor_root.visible = false
 			# The floor shell's top is the walkable height — the sun-enclosure
 			# test samples its rays from there (#648).
-			var box := _floor_aabb(floor_root)
+			var box := MeshUtils.global_mesh_aabb(floor_root)
 			if box.size != Vector3.ZERO:
 				_floor_top = box.end.y
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
@@ -863,24 +863,6 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 		_blob_shadow = MeshUtils.make_player_blob()
 		add_child(_blob_shadow)
 		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
-
-
-## AABB over every mesh under the (invisible) floor shell — its top is the
-## walkable height (#648 sun-enclosure sampling).
-func _floor_aabb(root: Node3D) -> AABB:
-	var box := AABB()
-	var first := true
-	for node in root.find_children("*", "MeshInstance3D", true, false):
-		var mi := node as MeshInstance3D
-		if mi.mesh == null:
-			continue
-		var b := mi.global_transform * mi.get_aabb()
-		if first:
-			box = b
-			first = false
-		else:
-			box = box.merge(b)
-	return box
 
 
 ## Player HP reached 0 (spec /states/player-death). Raise the "You were
