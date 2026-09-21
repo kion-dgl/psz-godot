@@ -36,9 +36,9 @@ extends RefCounted
 ##                        shadows (s03b, #659) turns it on
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
-## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
-## row is the first variant slot (#657): it splits the B caves off the snowfield
-## night while s03a stages keep the area row untouched.
+## 4 chars — "s03a"/"s03b"/"s01a", tower floor styles) → area_id → DEFAULT.
+## Variant slots so far: s03b (#657, the first — the B caves split off the
+## snowfield night) and s01a (#648 — valley A's near-overhead sun).
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -66,6 +66,22 @@ const SLOTS := {
 		"bake_mix": 0.75,
 		"geometry_casts_shadows": true,
 		"weather": "snow",
+	},
+
+	# Valley A (#648, kion hardware read-out 2026-09-20): at the area row's
+	# −60° the sun sits low enough that surrounding walls/mesas throw their
+	# shadows well into the play space. A reads best with the sun closer to
+	# overhead — the full area rig with pitch −75 (shadow ≈0.27× the caster's
+	# height vs 0.58× at −60). B/E/Z keep −60 until their own read-outs.
+	"s01a": {
+		"hour": 10.0,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
+		"sun_pitch": -75.0,
+		"bake_mix": 0.15,
+		"sun_shadows": true,
+		"geometry_casts_shadows": true,
+		"weather": "sand",
 	},
 
 	# ── per-area identity slots ──

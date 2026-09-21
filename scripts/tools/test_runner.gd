@@ -10834,12 +10834,18 @@ func test_valley_day_slot() -> void:
 	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.90 (shadow-readability re-lock, post-carve-out)")
 	assert_eq(valley.get("ambient_energy"), 0.4, "Valley rig: ambient 0.40 (shadow-readability re-lock, post-carve-out)")
 	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
-	assert_eq(valley.get("sun_pitch"), -60.0,
-		"Valley rig: sun pinned at −60° (high desert sun character)")
+	assert_eq(valley.get("sun_pitch"), -75.0,
+		"Valley A: sun pinned near overhead (−60° threw surrounding-area shadows into the room — kion hardware read-out)")
 	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
 	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
 	assert_true(not valley.has("moon_energy"), "Valley rig: no moon (day — the sun is the source)")
+	# The A row is the area rig verbatim except the pitch — energies and bake
+	# must not drift with the variant split.
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_pitch"), -60.0,
+		"Valley B/E/Z keep the area row's −60° until their own read-outs")
+	assert_eq(Slots.slot_for("gurhacia", "s01e_ia1").get("sun_pitch"), -60.0,
+		"Valley E keeps the area row's −60°")
 	# The boss arena needs no exception at the hardware lock: the area row
 	# lands where the sweep-era exception was heading (8.5% clip there, all
 	# but ~the sky band) — one row serves every s01 stage.
@@ -10847,7 +10853,7 @@ func test_valley_day_slot() -> void:
 	assert_eq(boss.get("sun_energy"), 0.9, "s01z rides the area row (exception dropped)")
 	assert_eq(boss.get("bake_mix"), 0.15, "s01z keeps the area bake")
 	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
-		"s01b stages keep the area row (no variant split needed)")
+		"s01b stages keep the area row's energies (only the pitch split)")
 	# The slot row's presence implies the white-strategy pass: valley rooms
 	# run neutralize + make_lit (per-pixel) like the s03 stages.
 	assert_true(valley.has("bake_mix"),
