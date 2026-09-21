@@ -2767,12 +2767,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Slot-rig live tuning (#646, generalized by #655; sun keys #648): ,/.
-## ambient, [/] moon, 9/0 sun energy, 7/8 sun elevation, -/= bake mix, P logs
-## the rig plus player material diagnostics (same knobs as the material test
-## scene, in the field where it counts). Owned by slots that ship a rig (a
-## bake_mix row); handled keys stop the TimeManager hour preview from
-## double-firing on [/. Like every tuner knob, the elevation never persists —
-## each cell entry re-applies the authored slot.
+## ambient, [/] moon, 9/0 sun energy, 7/8 sun elevation, I/J/K/L + U/O the
+## sun's shadow eye (compat anchors the directional shadow pass at the light
+## node's position — what the eye covers decides which rim scenery casts),
+## -/= bake mix, P logs the rig plus player material diagnostics (same knobs
+## as the material test scene, in the field where it counts). Owned by slots
+## that ship a rig (a bake_mix row); handled keys stop the TimeManager hour
+## preview from double-firing on [/. Like every tuner knob, the elevation
+## and the eye never persist — each cell entry re-applies the authored slot
+## and panorama placement.
 func _handle_night_tuning(event: InputEvent) -> void:
 	if not (_slot.has("bake_mix") \
 			and event is InputEventKey and event.pressed and not event.echo):
@@ -2802,6 +2805,24 @@ func _handle_night_tuning(event: InputEvent) -> void:
 			handled = true
 		KEY_8:
 			_dir_light.rotation_degrees.x = minf(-5.0, _dir_light.rotation_degrees.x + 5.0)
+			handled = true
+		KEY_J:
+			_dir_light.global_position += Vector3(-5, 0, 0)
+			handled = true
+		KEY_L:
+			_dir_light.global_position += Vector3(5, 0, 0)
+			handled = true
+		KEY_I:
+			_dir_light.global_position += Vector3(0, 0, -5)
+			handled = true
+		KEY_K:
+			_dir_light.global_position += Vector3(0, 0, 5)
+			handled = true
+		KEY_U:
+			_dir_light.global_position += Vector3(0, -5, 0)
+			handled = true
+		KEY_O:
+			_dir_light.global_position += Vector3(0, 5, 0)
 			handled = true
 		KEY_MINUS:
 			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
@@ -2860,10 +2881,10 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
 
 func _print_night_tuning() -> void:
-	var msg := "[FieldSlot %s] ambient %.2f  sun %.2f @ %.0f°  moon %.2f  bake mix %.2f" % [
+	var msg := "[FieldSlot %s] ambient %.2f  sun %.2f @ %.0f°  eye %s  moon %.2f  bake mix %.2f" % [
 		str(_current_cell.get("stage_id", "?")),
 		_world_env.environment.ambient_light_energy, _dir_light.light_energy,
-		_dir_light.rotation_degrees.x,
+		_dir_light.rotation_degrees.x, _dir_light.global_position,
 		_moonlight.light_energy, _night_bake_mix]
 	if player:
 		var stats := _player_mat_stats(player)

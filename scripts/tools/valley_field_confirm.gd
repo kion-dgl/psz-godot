@@ -12,6 +12,9 @@ extends Node3D
 ## rooms each run — the R key re-rolls the whole expedition.
 ##
 ## Env:  PSZ_FIELD_CONFIRM=a|b|e|z   boot variant (default a)
+##       PSZ_FIELD_SUN_POS=x,y,z    pin the sun node's position — the compat
+##                                   shadow eye (probe-scene PROBE_LIGHT_POS
+##                                   pattern; harness-only, never ships)
 ##       PSZ_WALK_SHOT=/tmp/o.png    screenshot + quit smoke (FieldLab.ShotRun)
 ## Keys: N next variant (A→B→E→Z) · R re-roll the expedition · ESC quit
 
@@ -86,6 +89,20 @@ func _enter_variant(variant: String) -> void:
 	}
 	_field = FIELD_SCENE.instantiate()
 	add_child(_field)
+
+	# The compat renderer anchors the directional shadow pass at the light
+	# node's position; the controller's panorama placement parks it in the
+	# room's interior. An env-pinned eye overrides that for edge-shadow
+	# experiments — read back with the controller's P read-out.
+	var sun_pos := OS.get_environment("PSZ_FIELD_SUN_POS")
+	if not sun_pos.is_empty():
+		var parts := sun_pos.split(",")
+		if parts.size() == 3:
+			var light := _field.get("_dir_light") as DirectionalLight3D
+			if light:
+				light.global_position = Vector3(
+					float(parts[0]), float(parts[1]), float(parts[2]))
+				print("[FieldConfirm] sun eye pinned at %s" % light.global_position)
 
 	var stage_id := str(start_cell.get("stage_id", "?"))
 	var slot := FieldSlotTableScript.slot_for("gurhacia", stage_id)
