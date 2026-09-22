@@ -10865,12 +10865,18 @@ func test_valley_day_slot() -> void:
 	# catcher owns the walkable surfaces instead.
 	var lit: Array = valley.get("lit_surfaces", [])
 	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"), "the leaf materials receive the rig")
-	assert_true(lit.has("1_deco1") and lit.has("1_toro"), "the prop objects (deco, lanterns) receive the rig")
+	assert_true(lit.has("1_toro"), "the stone lanterns receive the rig")
+	assert_true(not lit.has("1_deco1"), "deco1 stays baked — ground detail decals, not props (kion read-out)")
 	assert_true(not lit.has("1_oas1"), "oas* stays baked — suspected oasis terrain (the lit low ground read-out)")
 	assert_true(not lit.has("1_flo1") and not lit.has("1_pass1"),
-		"the floors stay baked — the catcher receives, they don't light")
+		"the floors/paths stay baked — mirror-wrapped pass1 runs the UNSHADED shader twin")
 	assert_true(not lit.has("1_rock1") and not lit.has("1_view1"),
 		"scenery (rocks, the panorama) stays baked")
+	# The twin: a custom ALBEDO shader is LIT by default — the unlit twin
+	# must carry render_mode unshaded or the mirror surfaces leak the sun.
+	var twin := load("res://scripts/3d/field/texture_fix_shader_unlit.gdshader") as Shader
+	assert_true(twin != null and twin.code.contains("unshaded"),
+		"the cheat rig's mirror shader twin declares render_mode unshaded")
 	# One row for every variant — the A-only pitch/pull split went with the
 	# shadow rig it existed to steer.
 	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1"), valley,

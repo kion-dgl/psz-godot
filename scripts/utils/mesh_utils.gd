@@ -101,7 +101,9 @@ static func fix_for_material(mat: StandardMaterial3D) -> Dictionary:
 ## collision-floor-deep and shadows off by default; a moon rig that stands
 ## on real shadows turns it on.
 static func apply_field_materials(node: Node, fix_shader: Shader,
-		waterfall_shader: Shader, cast_shadows := false) -> void:
+		waterfall_shader: Shader, cast_shadows := false,
+		unlit_stage := false, unlit_fix_shader: Shader = null,
+		keep_lit: Array = []) -> void:
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
@@ -137,28 +139,8 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				mi.set_surface_override_material(i, shader_mat)
 			elif str(fix.get("wrapS", "repeat")) == "mirror" \
 					or str(fix.get("wrapT", "repeat")) == "mirror":
-				# Mirror wrap: custom shader with wrap modes
-				var shader_mat := ShaderMaterial.new()
-				shader_mat.shader = fix_shader
-				if std_mat.albedo_texture:
-					shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
-				shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
-				shader_mat.set_shader_parameter("uv_scale", Vector3(
-					float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
-				shader_mat.set_shader_parameter("uv_offset", Vector3(
-					float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
-				shader_mat.set_shader_parameter("wrap_s",
-					1 if str(fix.get("wrapS", "repeat")) == "mirror" else 0)
-				shader_mat.set_shader_parameter("wrap_t",
-					1 if str(fix.get("wrapT", "repeat")) == "mirror" else 0)
-				# Keep the GLB's alphaMode (BLEND stays blended; the shader
-				# default scissor hard-cuts smooth-alpha texels).
-				shader_mat.set_shader_parameter("alpha_mode", mirror_alpha_mode(std_mat.transparency))
-				# The bake owns the look under the cheat rig — the mirror
-				# shader multiplies COLOR.rgb explicitly (its default, pinned
-				# here so no stray parameter can strip it).
-				shader_mat.set_shader_parameter("use_vertex_color", true)
-				mi.set_surface_override_material(i, shader_mat)
+				mi.set_surface_override_material(i, _mirror_material(std_mat, fix,
+					fix_shader, unlit_stage, unlit_fix_shader, keep_lit))
 			else:
 				var new_mat := std_mat.duplicate() as StandardMaterial3D
 				new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
@@ -177,7 +159,38 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 						new_mat.texture_repeat = false
 				mi.set_surface_override_material(i, new_mat)
 	for child in node.get_children():
-		apply_field_materials(child, fix_shader, waterfall_shader, cast_shadows)
+		apply_field_materials(child, fix_shader, waterfall_shader, cast_shadows,
+			unlit_stage, unlit_fix_shader, keep_lit)
+
+
+## The mirror-wrap surface treatment: the custom wrap shader — swapped to
+## its UNSHADED twin under the cheat rig unless the material is lit-listed
+## (a custom ALBEDO shader is LIT by default: the pass1/deco1 leak). The
+## bake always tints (use_vertex_color pinned true).
+static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
+		fix_shader: Shader, unlit_stage: bool, unlit_fix_shader: Shader,
+		keep_lit: Array) -> ShaderMaterial:
+	var shader: Shader = fix_shader
+	if unlit_stage and unlit_fix_shader and not keep_lit.has(std_mat.resource_name):
+		shader = unlit_fix_shader
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = shader
+	if std_mat.albedo_texture:
+		shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+	shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+	shader_mat.set_shader_parameter("uv_scale", Vector3(
+		float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
+	shader_mat.set_shader_parameter("uv_offset", Vector3(
+		float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0))
+	shader_mat.set_shader_parameter("wrap_s",
+		1 if str(fix.get("wrapS", "repeat")) == "mirror" else 0)
+	shader_mat.set_shader_parameter("wrap_t",
+		1 if str(fix.get("wrapT", "repeat")) == "mirror" else 0)
+	# Keep the GLB's alphaMode (BLEND stays blended; the shader default
+	# scissor hard-cuts smooth-alpha texels).
+	shader_mat.set_shader_parameter("alpha_mode", mirror_alpha_mode(std_mat.transparency))
+	shader_mat.set_shader_parameter("use_vertex_color", true)
+	return shader_mat
 
 
 ## The field controller's mirror-wrap pass, extracted for the tool scenes:

@@ -37,6 +37,7 @@ const STAGE_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s_m.glb"
 const FLOOR_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s-floor.glb"
 const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const TEXTURE_FIX_SHADER_UNLIT := preload("res://scripts/3d/field/texture_fix_shader_unlit.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
@@ -369,8 +370,10 @@ func _load_stage() -> void:
 	# authored lit_surfaces.
 	SmoothNormals.ensure(_map_root, 2)
 	WeatherControllerScript.new(null)._strip_embedded_lights(_map_root)
+	var cheat := _slot.has("lit_surfaces") and not _slot.has("bake_mix")
 	MeshUtils.apply_field_materials(_map_root, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
-		_slot.get("geometry_casts_shadows", false))
+		_slot.get("geometry_casts_shadows", false), cheat,
+		TEXTURE_FIX_SHADER_UNLIT, _slot.get("lit_surfaces", []))
 	if _slot.has("bake_mix"):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
 		SmoothNormals.make_lit(_map_root)

@@ -132,6 +132,8 @@ func _settle_eye() -> void:
 					var m2 := SmoothNormals._active_material(mi2, si)
 					if m2 is StandardMaterial3D and (m2 as StandardMaterial3D).shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED:
 						shaded[(m2 as StandardMaterial3D).resource_name] = true
+					elif m2 is ShaderMaterial:
+						shaded["shader: " + (m2 as ShaderMaterial).shader.resource_path.get_file()] = true
 			print("[FieldConfirm] map casters (not OFF): %d" % casters)
 			print("[FieldConfirm] shaded (non-UNSHADED) stage materials: %s" % str(shaded.keys()))
 	var slot: Dictionary = _field.get("_slot")

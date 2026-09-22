@@ -7,6 +7,7 @@ const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const AreaMapOverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const TEXTURE_FIX_SHADER_UNLIT := preload("res://scripts/3d/field/texture_fix_shader_unlit.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
@@ -1006,9 +1007,14 @@ func _fix_materials(node: Node) -> void:
 	## with the walk/preview tool scenes so labs render what the field renders.
 	## cast_shadows carries the slot's geometry_casts_shadows row: map geometry
 	## ships shadows-off (the bake is the look); a moon rig that stands on real
-	## shadows (s03b, #659) turns casting on.
+	## shadows (s03b, #659) turns casting on. Under the cheat rig
+	## (lit_surfaces, no bake_mix) the stage must not react to light, so the
+	## mirror-wrap surfaces take the UNSHADED fix-shader twin unless they're
+	## on the lit list.
+	var cheat := _slot.has("lit_surfaces") and not _slot.has("bake_mix")
 	MeshUtils.apply_field_materials(node, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
-		_slot.get("geometry_casts_shadows", false))
+		_slot.get("geometry_casts_shadows", false), cheat,
+		TEXTURE_FIX_SHADER_UNLIT, _slot.get("lit_surfaces", []))
 
 
 func _has_pending_objectives() -> bool:

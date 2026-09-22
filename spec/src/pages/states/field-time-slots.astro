@@ -140,8 +140,11 @@ const slots = [
   guarantee includes the bake's other half: the flip also forces
   <code>vertex_color_use_as_albedo</code>, because imports without the
   flag render raw-texture bright (the transparent ground detail planes and
-  the flat cliff faces of the 2026-09-21 read-out); the mirror-wrap fix
-  shader pins its <code>use_vertex_color</code> for the same reason. Lighting
+  the flat cliff faces of the 2026-09-21 read-out). Mirror-wrapped
+  surfaces (<code>pass1</code>, <code>deco1</code>) run the custom wrap
+  shader, and a custom ALBEDO shader is <em>lit</em> by default — under
+  the cheat they swap to its UNSHADED twin (COLOR_0 tint preserved)
+  unless they're on the lit list. Lighting
   the floors themselves proved wrong twice over: it
   erased the bake's intentionally dark unwalkable low ground (the
   "you can only walk on the raised area" read) and drew harsh lines at
