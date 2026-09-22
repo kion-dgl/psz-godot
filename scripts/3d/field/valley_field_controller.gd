@@ -282,6 +282,15 @@ func _ready() -> void:
 	if _slot.has("bake_mix"):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
+	# The "cheat" rig (#648, kion art-direction call): the stage KEEPS its
+	# bake — no bake_mix, no double-lighting — and only the authored
+	# greenery/prop materials receive the sun (player + enemies light on
+	# their own spawn paths). Split first: rooms ship as one mesh and
+	# shading is per-instance, so the match needs per-surface instances.
+	if _slot.has("lit_surfaces"):
+		MeshUtils.split_mesh_surfaces(_map_root)
+		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
+		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, stage keeps its bake" % lit_n)
 	# #657: anchor meshes read as light sources where the stage config
 	# authors it — emissive tint + roughness, matched by material name.
 	_apply_glow_materials()
@@ -2773,12 +2782,13 @@ func _unhandled_input(event: InputEvent) -> void:
 ## node's position — what the eye covers decides which rim scenery casts),
 ## -/= bake mix, P logs the rig plus player material diagnostics (same knobs
 ## as the material test scene, in the field where it counts). Owned by slots
-## that ship a rig (a bake_mix row); handled keys stop the TimeManager hour
+## that ship a rig (a bake_mix row, or the cheat rows that light actors +
+## lit_surfaces with no bake at all); handled keys stop the TimeManager hour
 ## preview from double-firing on [/. Like every tuner knob, the elevation
 ## and the eye never persist — each cell entry re-applies the authored slot
 ## and panorama placement.
 func _handle_night_tuning(event: InputEvent) -> void:
-	if not (_slot.has("bake_mix") \
+	if not ((_slot.has("bake_mix") or _slot.has("sun_energy")) \
 			and event is InputEventKey and event.pressed and not event.echo):
 		return
 	var handled := false

@@ -115,7 +115,9 @@ func _settle_eye() -> void:
 	var light := _field.get("_dir_light") as DirectionalLight3D
 	if light == null:
 		return
-	print("[FieldConfirm] eye (placement + row pull) at %s" % [light.global_position])
+	var slot: Dictionary = _field.get("_slot")
+	if slot.get("sun_shadows", false) or slot.get("moon_shadows", false):
+		print("[FieldConfirm] eye (placement + row pull) at %s" % [light.global_position])
 	var sun_pos := OS.get_environment("PSZ_FIELD_SUN_POS")
 	if sun_pos.is_empty():
 		return

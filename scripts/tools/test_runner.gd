@@ -219,6 +219,7 @@ func _run_tests_systems() -> void:
 	test_tower_field()
 	test_field_time_slots()
 	test_valley_day_slot()
+	test_valley_lit_surfaces()
 	test_valley_shadow_eye()
 	test_valley_sun_enclosure()
 	test_time_manager_clock()
@@ -10838,39 +10839,91 @@ func test_valley_day_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var valley := Slots.slot_for("gurhacia", "s01a_ga1")
 	assert_eq(valley.get("hour"), 10.0, "Valley pins hour 10 (day)")
-	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.90 (shadow-readability re-lock, post-carve-out)")
-	assert_eq(valley.get("ambient_energy"), 0.4, "Valley rig: ambient 0.40 (shadow-readability re-lock, post-carve-out)")
-	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
-	assert_eq(valley.get("sun_pitch"), -75.0,
-		"Valley A: sun pinned near overhead (−60° threw surrounding-area shadows into the room — kion hardware read-out)")
-	assert_eq((valley.get("sun_eye_pull") as Array)[0], -0.45,
-		"Valley A: the rim pull shifts the eye −0.45× the panorama width (sa1 −67/150 hand-tuned)")
-	assert_eq((valley.get("sun_eye_pull") as Array)[1], -0.05,
-		"Valley A: the rim pull's z share (sa1 −7.3 hand-tuned)")
-	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
-	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
+	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.90 lights the actors + lit surfaces")
+	assert_eq(valley.get("ambient_energy"), 0.4, "Valley rig: ambient 0.40 fills them")
+	assert_eq(valley.get("sun_pitch"), -60.0,
+		"Valley rig: sun −60° — the actor-lighting character (off the DAY band's −45° rest)")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
 	assert_true(not valley.has("moon_energy"), "Valley rig: no moon (day — the sun is the source)")
-	# The A row is the area rig verbatim except the pitch — energies and bake
-	# must not drift with the variant split.
-	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_pitch"), -60.0,
-		"Valley B/E/Z keep the area row's −60° until their own read-outs")
-	assert_eq(Slots.slot_for("gurhacia", "s01e_ia1").get("sun_pitch"), -60.0,
-		"Valley E keeps the area row's −60°")
-	# The boss arena needs no exception at the hardware lock: the area row
-	# lands where the sweep-era exception was heading (8.5% clip there, all
-	# but ~the sky band) — one row serves every s01 stage.
+	# The cheat rig (kion art-direction call, 2026-09-21): the stage KEEPS its
+	# bake — the full-rig double-lighting read uncanny — so no white-strategy
+	# pass; but the WALKABLE surfaces receive, so the player's DYNAMIC shadow
+	# lands on them (blob skipped under any shadow row) while walls/panorama
+	# stay baked and nothing but the actors casts.
+	assert_true(not valley.has("bake_mix"),
+		"the cheat rig: no bake_mix — the authored bake IS the stage's light")
+	assert_eq(valley.get("sun_shadows"), true,
+		"the cheat rig: sun shadows on — the actors' dynamic shadows land on the lit floors")
+	assert_true(not valley.get("geometry_casts_shadows", false),
+		"the cheat rig: geometry doesn't cast — actor shadows only, no rim drama")
+	# lit_surfaces: the greenery + props that DO receive the sun, and the
+	# walkable surfaces the dynamic shadows land on.
+	var lit: Array = valley.get("lit_surfaces", [])
+	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"), "the leaf materials receive the rig")
+	assert_true(lit.has("1_oas1"), "the oasis greenery receives the rig")
+	assert_true(lit.has("1_deco1") and lit.has("1_toro"), "the prop objects (deco, lanterns) receive the rig")
+	assert_true(lit.has("1_flo1") and lit.has("1_pass1") and lit.has("1_step1"),
+		"the walkable surfaces (floors, paths, steps) receive — the shadow catchers")
+	assert_true(lit.has("0_jime"), "the boss arena's ground receives")
+	assert_true(not lit.has("1_rock1") and not lit.has("1_view1"),
+		"scenery (rocks, the panorama) stays baked")
+	# One row for every variant — the A-only pitch/pull split went with the
+	# shadow rig it existed to steer.
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1"), valley,
+		"s01b rides the same row (no variant split under the cheat rig)")
 	var boss := Slots.slot_for("gurhacia", "s01z_na1")
 	assert_eq(boss.get("sun_energy"), 0.9, "s01z rides the area row (exception dropped)")
-	assert_eq(boss.get("bake_mix"), 0.15, "s01z keeps the area bake")
-	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
-		"s01b stages keep the area row's energies (only the pitch split)")
-	assert_true(not Slots.slot_for("gurhacia", "s01b_lb1").has("sun_eye_pull"),
-		"the rim pull is A-only until another variant's read-out")
-	# The slot row's presence implies the white-strategy pass: valley rooms
-	# run neutralize + make_lit (per-pixel) like the s03 stages.
-	assert_true(valley.has("bake_mix"),
-		"bake_mix presence opts valley into the white-strategy material pass")
+
+	print("")
+
+
+## The cheat rig's lit pass (#648): authored materials flip to per-pixel,
+## everything else keeps its bake.
+func _tri_arrays() -> Array:
+	## One unit triangle — the minimal valid surface for material tests.
+	var verts := PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.BACK])
+	var normals := PackedVector3Array([Vector3.UP, Vector3.UP, Vector3.UP])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	return arrays
+
+
+func test_valley_lit_surfaces() -> void:
+	print("── Valley Lit Surfaces (#648) ──")
+	var root := Node3D.new()
+	add_child(root)
+
+	var plant := MeshInstance3D.new()
+	root.add_child(plant)
+	var plant_mesh := ArrayMesh.new()
+	var pm := StandardMaterial3D.new()
+	pm.resource_name = "1_reaf1"
+	pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	plant_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	plant_mesh.surface_set_material(0, pm)
+	plant.mesh = plant_mesh
+
+	var rock := MeshInstance3D.new()
+	root.add_child(rock)
+	var rock_mesh := ArrayMesh.new()
+	var rm := StandardMaterial3D.new()
+	rm.resource_name = "1_rock1"
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rock_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	rock_mesh.surface_set_material(0, rm)
+	rock.mesh = rock_mesh
+
+	var lit_n: int = MeshUtils.make_lit_surfaces(root, ["1_reaf1", "1_deco1"])
+	assert_eq(lit_n, 1, "only the authored material flips (1 of 2 surfaces)")
+	var plant_mat := SmoothNormals._active_material(plant, 0) as StandardMaterial3D
+	assert_eq(plant_mat.shading_mode, BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"the leaf surface receives the rig")
+	var rock_mat := SmoothNormals._active_material(rock, 0) as StandardMaterial3D
+	assert_eq(rock_mat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
+		"the rock keeps its bake")
+	assert_true(plant_mat != pm, "the flip duplicates the material — the shared import never mutates")
 
 	print("")
 

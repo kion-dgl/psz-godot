@@ -315,6 +315,38 @@ static func collect_mesh_instances(node: Node, out: Array) -> Array:
 	return out
 
 
+## The "cheat" pass (#648 valley): flip ONLY the authored materials to
+## per-pixel shading while the rest of the stage keeps its bake — the
+## greenery and props read as lit, the architecture stays authored.
+## Matches by material resource name (imported GLB materials carry the GLB
+## name), skipping anything already per-pixel or non-Standard (waterfall
+## shader surfaces). Run AFTER the field material pass. Rooms ship as one
+## multi-surface mesh and shading is per-instance — call
+## split_mesh_surfaces first or the match stays all-or-nothing. Returns how
+## many surfaces were lit.
+static func make_lit_surfaces(root: Node, names: Array) -> int:
+	var wanted: Dictionary = {}
+	for n in names:
+		wanted[n] = true
+	var touched := 0
+	for node in collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		for i in range(SmoothNormals._surface_count(mi)):
+			var mat := SmoothNormals._active_material(mi, i)
+			if not (mat is StandardMaterial3D):
+				continue
+			var std := mat as StandardMaterial3D
+			if std.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+				continue
+			if not wanted.has(std.resource_name):
+				continue
+			var dup := std.duplicate() as StandardMaterial3D
+			dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+			mi.set_surface_override_material(i, dup)
+			touched += 1
+	return touched
+
+
 ## The floor shell's top = the walkable height (#648 sun-enclosure sampling).
 ## Floor GLBs instantiate MESH-LESS — the import is a StaticBody3D +
 ## ConcavePolygonShape3D pair with zero MeshInstance3D, so the mesh AABB is

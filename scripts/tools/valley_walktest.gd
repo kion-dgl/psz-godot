@@ -365,13 +365,21 @@ func _load_stage() -> void:
 	add_child(_map_root)
 	# The field's room-build order verbatim (valley_field_controller._ready):
 	# normals → strip embedded GLB lights → the full surface pass (geometry
-	# casting per the row) → bake neutralize + make_lit.
+	# casting per the row) → bake neutralize + make_lit → the cheat rig's
+	# authored lit_surfaces.
 	SmoothNormals.ensure(_map_root, 2)
 	WeatherControllerScript.new(null)._strip_embedded_lights(_map_root)
 	MeshUtils.apply_field_materials(_map_root, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
 		_slot.get("geometry_casts_shadows", false))
-	SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
-	SmoothNormals.make_lit(_map_root)
+	if _slot.has("bake_mix"):
+		SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
+		SmoothNormals.make_lit(_map_root)
+	# The cheat rig, same as the field (#648): authored greenery/prop
+	# surfaces receive the sun, the stage keeps its bake.
+	if _slot.has("lit_surfaces"):
+		MeshUtils.split_mesh_surfaces(_map_root)
+		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
+		print("[ValleyWalk] cheat rig: %d surface(s) lit" % lit_n)
 
 
 ## The stage's collision floor (mattest pattern): covers the real floor, kept

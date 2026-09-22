@@ -38,11 +38,17 @@ extends RefCounted
 ##                        panorama box [x, z], applied after panorama
 ##                        placement — slides the compat shadow frustum off
 ##                        the rim so edge scenery stops casting (#648)
+##   lit_surfaces Array  material names that DO receive the rig while the
+##                        rest of the stage keeps its bake — the "cheat"
+##                        strategy (#648 valley): greenery + props light,
+##                        architecture stays authored. Needs no bake_mix;
+##                        run after the field material pass so special-
+##                        shader surfaces (waterfalls) are skipped
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
-## 4 chars — "s03a"/"s03b"/"s01a", tower floor styles) → area_id → DEFAULT.
-## Variant slots so far: s03b (#657, the first — the B caves split off the
-## snowfield night) and s01a (#648 — valley A's near-overhead sun).
+## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
+## row is the variant slot so far (#657: the B caves split off the snowfield
+## night while s03a stages keep the area row).
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -72,60 +78,38 @@ const SLOTS := {
 		"weather": "snow",
 	},
 
-	# Valley A (#648, kion hardware read-outs 2026-09-20/21): at the area row's
-	# −60° the sun sits low enough that surrounding walls/mesas throw their
-	# shadows well into the play space. A reads best with the sun closer to
-	# overhead — the full area rig with pitch −75 (shadow ≈0.27× the caster's
-	# height vs 0.58× at −60) — plus a rim pull on the shadow eye: −0.45× the
-	# panorama width on x (sa1 hand-tuned −67 on a 150-wide box; tc3 −15),
-	# −0.05× on z. B/E/Z keep the area row until their own read-outs.
-	"s01a": {
-		"hour": 10.0,
-		"sun_energy": 0.9,
-		"ambient_energy": 0.4,
-		"sun_pitch": -75.0,
-		"bake_mix": 0.15,
-		"sun_shadows": true,
-		"geometry_casts_shadows": true,
-		"weather": "sand",
-		"sun_eye_pull": [-0.45, -0.05],
-	},
-
 	# ── per-area identity slots ──
-	# Valley day — the #648 sun rig, the moon rig's daylight counterpart.
-	# LOCKED from the hardware walk read-out (2026-09-19, supersedes the
-	# same-day screenshot sweep): hour 10 pins the DAY palette and the SUN
-	# is the shadow source (sun_shadows re-arms what the phase preset ships
-	# off) with geometry casting on. The valley bake was authored FOR
-	# daylight (median COLOR_0 luminance ~0.52 vs snowfield's 0.19) and
-	# mostly SURVIVES — bake 0.15 keeps the authored shading; sun 0.55 +
-	# ambient 0.60 layer the dynamic light on top (the sweep's brighter
-	# 0.9/0.80/0.5 read hot on hardware). RE-LOCKED 2026-09-20 after the
-	# shell carve-out let the sun into the interiors: sun 0.55/ambient 0.60
-	# was struck while a casting bug kept rooms sunless, and at that balance
-	# the dynamic sun shadows the rig exists for are nearly invisible
-	# (< half a stop of contrast). Sun 0.90 / ambient 0.40 gives readable
-	# player shadows and swept clean across A/B/E/Z (ga1/td1/sa1/lb1/ic1/
-	# ia1/na1: highlights held, nothing crushed; the user confirmed the
-	# shadow on hardware). sun_pitch −60 lifts the sun off
-	# the DAY band's −45° rest (high-desert-sun character). NOTE the 2026-
-	# 09-20 geometric sun-ray probe: most s01 rooms are CLOSED stage shells
-	# (ga1/td1/lb1/na1 — one mesh boxes the room), disarmed from casting by
-	# the enclosure carve-out so their interiors receive the sun and the
-	# player + placed objects cast the real dynamic shadows (their wall
-	# self-shadowing stays in the authored bake); open stages (s01e_ia1)
-	# carry the full rig with geometry casting. Blowing sand drift; the
-	# toro lanterns (td1/td2, warm pools at 6.0) are the local accents.
+	# Valley day — the #648 "cheat" rig (kion art-direction call, 2026-09-21):
+	# the stage KEEPS its authored bake (no bake_mix → the white-strategy
+	# pass never runs; the double-lighting that read uncanny is gone), and
+	# the dynamic sun lights only what the bake could not account for —
+	# player + enemies (lit on their own spawn paths) and the authored
+	# lit_surfaces. The WALKABLE surfaces (floors, paths, steps) are in that
+	# set so the player's DYNAMIC shadow lands on them (sun_shadows on; the
+	# blob shadow is skipped under any shadow row — kion: "it needs the
+	# dynamic shadows, not the circular shadow") — while walls, rocks, and
+	# the panorama stay baked. No geometry casting: the only dynamic shadows
+	# are the actors', so no carve-out drama, no rim shadows; the panorama
+	# shadow-eye placement still runs (compat anchors the pass at the light
+	# node). Blowing sand drift. sun_pitch −60 is the actor/floor-lighting
+	# character (the DAY band parks −45).
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.9,
 		"ambient_energy": 0.4,
 		"sun_pitch": -60.0,
-		"bake_mix": 0.15,
 		"sun_shadows": true,
-		"geometry_casts_shadows": true,
 		"weather": "sand",
+		"lit_surfaces": [
+			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
+			"1_oas1", "1_oas2", "1_oas2_1",
+			"1_deco1", "1_toro", "1_rail1", "1_bri2", "1_bri3",
+			"1_flo1", "1_flo2", "1_flo2b", "1_pass1",
+			"1_step1", "1_step2", "1_step3", "1_step3b",
+			"0_flo2", "0_jime", "0_jime2",
+		],
 	},
+
 	"ozette":   {"hour": 10.0},   # interim; #649 authors the overcast mood
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the
 	# white-albedo snow reads, moon 0.35 as the shadow source, bake quarter-
