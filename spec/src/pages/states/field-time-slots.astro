@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: '—', note: '#648 tunes the balance' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery, props); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -72,12 +72,23 @@ const slots = [
   fractional hours pick a stable lerped palette between phase presets), an
   optional <code>weather</code>, and optional rig overrides applied after the
   phase preset (ambient/sun/moon energies, the moon's elevation via
-  <code>moon_pitch</code> and its shadows, the tonemap white
+  <code>moon_pitch</code> and its shadows, the sun's elevation via
+  <code>sun_pitch</code> and its shadows via
+  <code>sun_shadows</code>, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
   white so the dynamic rig drives the look). A row <strong>MAY</strong> set
   <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the
-  bake is the look), and a rig that stands on real moon shadows turns casting
-  on so models shadow each other by position. Rows resolve most-specific-first:
+  bake is the look), and a rig that stands on real shadows — moon
+  (<code>moon_shadows</code>) or sun (<code>sun_shadows</code>) — turns casting
+  on so models shadow each other by position; either shadow row also skips the
+  player blob shadow (blob + real shadow reads double). One carve-out on the
+  sun side: a stage shell that ENCLOSES a room (walls + ceiling + backdrop,
+  often one mesh) must not cast — its own shadow would delete the sun from
+  its interior, and with it every dynamic shadow including the player's. At
+  room build, each casting mesh is ray-tested alone against the applied sun;
+  one that blocks every sample ray is disarmed from casting (it still
+  receives), so the player and placed objects cast real shadows on it.
+  Partial blockers — walls, rims — keep casting. Rows resolve most-specific-first:
   exact <code>stage_id</code> → variant prefix (<code>s03a</code>,
   <code>s03b</code>, tower floor styles) → area id → default day.</p>
 
@@ -110,6 +121,65 @@ const slots = [
   have not authored a slot yet; each issue replaces its row's values and
   locks them from a playtest read-out.</p>
 
+  <p>The valley row (#648) is the <strong>cheat rig</strong> — the
+  art-direction call from the 2026-09-21 hardware passes: the stage
+  <strong>keeps its authored bake</strong> (pure baked vertex color; no
+  <code>bake_mix</code>, so the white-strategy pass never runs), and the
+  dynamic sun lights only what the bake could not account for: the
+  <strong>player and enemies</strong> (lit on their own spawn paths) and
+  the row's <code>lit_surfaces</code> — the leaf/oasis greenery and prop
+  objects (<code>1_reaf1–5</code>, <code>1_oas1/2</code>,
+  <code>1_deco1</code>, <code>1_toro</code>, <code>1_rail1</code>,
+  <code>1_bri2/3</code>), matched by material name after the per-surface
+  split. The stage's light-independence is <em>forced</em>, not assumed:
+  some glTF materials import shaded (the diagnostic caught
+  <code>1_flo1</code>/<code>1_view1</code>/<code>1_rock1</code>/
+  <code>1_step2</code> — the low ground lit up and the panorama
+  self-shaded under the rig), so a force-unlit pass flips every non-listed
+  Standard surface to UNSHADED — the MeshBasicMaterial guarantee. That
+  guarantee includes the bake's other half: the flip also forces
+  <code>vertex_color_use_as_albedo</code>, because imports without the
+  flag render raw-texture bright (the transparent ground detail planes and
+  the flat cliff faces of the 2026-09-21 read-out). Mirror-wrapped
+  surfaces (<code>pass1</code>, <code>deco1</code>) run the custom wrap
+  shader, and a custom ALBEDO shader is <em>lit</em> by default — under
+  the cheat they swap to its UNSHADED twin (COLOR_0 tint preserved)
+  unless they're on the lit list. Lighting
+  the floors themselves proved wrong twice over: it
+  erased the bake's intentionally dark unwalkable low ground (the
+  "you can only walk on the raised area" read) and drew harsh lines at
+  lit/unlit floor boundaries. Instead the row carries
+  <code>shadow_catcher</code>: the <strong>collision shell</strong> — the
+  walkable surface, exactly — renders as a white, multiply-blended,
+  per-pixel receiver lifted a hair above the walk height. Lit, it
+  multiplies the bake by ~1 (invisible); inside a shadow it multiplies
+  down — so the actors' <strong>dynamic shadows</strong> (the row's
+  <code>sun_shadows</code>; the blob shadow is skipped under any shadow
+  row) read as painted onto the authored look, the low ground keeps its
+  baked darkness, and the unwalkable areas get no shadows at all. No
+  <code>geometry_casts_shadows</code>: only the actors cast, so no rim
+  scenery shadows into the play space; the panorama shadow-eye placement
+  still runs. Sun 0.90 / ambient 0.40 at <code>sun_pitch</code> −60° is
+  the actor-lighting character — and, via the catcher's multiply, the
+  shadow depth (ambient is the shadow floor); the in-field tuner (,/.
+  ambient, 9/0 sun, 7/8 elevation, P read-out) owns the balance until
+  locked from a walk. Weather is a blowing <code>sand</code> drift (the
+  valley's dust), the first non-snow weather type. The stone-lantern
+  stages (<code>s01a_td1/td2</code>, the only <code>1_toro</code> art)
+  carry warm placed-light anchors at day-punch intensity. The boss
+  arena's <code>2_kemu</code> smoke stays un-authored — detection puts
+  every cluster on the distant backdrop ring, scenery rather than
+  sources.</p>
+
+  <p>The full sun-shadow rig that preceded the cheat (per-pixel stage,
+  geometry casting, the enclosure carve-out, panorama shadow-eye
+  placement and its rim pull) remains in the codebase and the row
+  schema — <code>sun_shadows</code> re-arms all of it — documented here
+  as the lesson: at every balance the dynamic stage shadows either read
+  invisible (under half a stop) or read wrong (rim scenery casting into
+  the play space; double lighting over the bake). A future row that
+  wants real stage shadows re-authors those fields knowingly.</p>
+
   <h2>Weather precedence</h2>
   <ul>
     <li>A quest-authored <code>weather</code> key (session level)
@@ -127,7 +197,8 @@ const slots = [
   controller re-applies the active slot's rig at the previewed hour. The
   preview <strong>MUST NOT</strong> persist across cell transitions — each
   cell entry re-applies the authored slot. On fields whose slot ships rig
-  overrides, the tuning keys (`,`, `.`, `[`, `]`, `-`, `=`, `P` for the
+  overrides, the tuning keys (`,`, `.`, ambient; `[`, `]`, moon; `9`, `0`,
+  sun; `7`, `8`, sun elevation; `-`, `=`, bake mix; `P` for the
   read-out) own those keycodes and the hour preview yields.</p>
 
   <h2>Explicitly deferred (phase 2 — do not build)</h2>

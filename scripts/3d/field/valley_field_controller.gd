@@ -7,6 +7,7 @@ const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const AreaMapOverlayScript := preload("res://scripts/3d/field/area_map_overlay.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const TEXTURE_FIX_SHADER_UNLIT := preload("res://scripts/3d/field/texture_fix_shader_unlit.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
@@ -60,6 +61,7 @@ var _room_minimap: Control
 var _area_map_panel: Control  # AreaMapOverlay inside _map_overlay
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
+var _floor_top := NAN
 var _stage_config: Dictionary = {}
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
@@ -281,6 +283,20 @@ func _ready() -> void:
 	if _slot.has("bake_mix"):
 		SmoothNormals.neutralize_vertex_colors(_map_root, _night_bake_mix)
 		SmoothNormals.make_lit(_map_root)
+	# The "cheat" rig (#648, kion art-direction call): the stage KEEPS its
+	# bake — no bake_mix, no double-lighting — and only the authored
+	# greenery/prop materials receive the sun (player + enemies light on
+	# their own spawn paths). Split first: rooms ship as one mesh and
+	# shading is per-instance, so the match needs per-surface instances.
+	if _slot.has("lit_surfaces"):
+		MeshUtils.split_mesh_surfaces(_map_root)
+		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
+		# The MeshBasic guarantee: everything NOT in the lit list is forced
+		# UNSHADED — some glTF materials import shaded (flo1/view1/rock1 were
+		# caught lighting the low ground and self-shading the panorama), and
+		# the cheat's contract is that the stage never reacts to light.
+		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
+		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, %d forced unlit, stage keeps its bake" % [lit_n, forced])
 	# #657: anchor meshes read as light sources where the stage config
 	# authors it — emissive tint + roughness, matched by material name.
 	_apply_glow_materials()
@@ -310,6 +326,10 @@ func _ready() -> void:
 			# 'ground not affected by light' playtest). Physics is unaffected
 			# by visibility.
 			floor_root.visible = false
+			# The floor shell's top is the walkable height — the sun-enclosure
+			# test samples its rays from there (#648). The mesh-less import
+			# fallback lives in the helper.
+			_floor_top = MeshUtils.floor_top(floor_root)
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
@@ -319,10 +339,44 @@ func _ready() -> void:
 				# Suffix import didn't create collision — build manually from meshes
 				MapCollisionBuilder.create_collision_from_meshes(floor_root)
 				_fdbg("[ValleyField] Floor collision built manually from mesh: %s" % floor_path)
+			# The cheat rig's shadow catcher (#648): the collision shell — the
+			# walkable surface, exactly — becomes the shadow receiver, a white
+			# multiply-blended overlay at the walk height. The stage keeps its
+			# pure baked look; the actors' shadows multiply onto it; the
+			# unwalkable low ground isn't in the shell and keeps its baked
+			# darkness.
+			if _slot.get("shadow_catcher", false):
+				var catcher := MeshUtils.make_shadow_catcher(floor_root)
+				if catcher:
+					add_child(catcher)
 		else:
 			MapCollisionBuilder.setup_map_collision(_map_root)
 	else:
 		MapCollisionBuilder.setup_map_collision(_map_root)
+
+	# #648 shell carve-out: an enclosing stage shell (walls + ceiling +
+	# backdrop, one mesh) must not CAST — with the row's geometry casting on
+	# it would shadow its own interior and delete the sun (and the player's
+	# dynamic shadow with it). Disarmed, the shell still receives: the player
+	# and placed objects cast real shadows on it. Sun rows only — the moon
+	# rigs keep their walked behavior.
+	if _slot.get("sun_shadows", false) and _map_root:
+		# #648 per-surface split first: rooms ship as one mesh (backdrop +
+		# floor + props in a dozen surfaces) but casting is per-instance —
+		# split so the carve-out disarms the panorama shell without taking
+		# the props' (carts, bridge) shadows with it.
+		MeshUtils.split_mesh_surfaces(_map_root)
+		var disarmed: int = MeshUtils.disable_enclosing_casters(_map_root,
+			_dir_light.global_transform.basis.z, _floor_top)
+		if disarmed > 0:
+			_fdbg("[ValleyField] %d enclosing shell surface(s) disarmed from casting" % disarmed)
+		# Panorama placement (#648): the compatibility renderer anchors the
+		# directional shadow pass at the light node's position — the eye must
+		# sit in the room's interior air (the scene light ships at (10,20,10),
+		# which lands in the shell wall / under decks for some stages).
+		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
+		# The row's rim pull slides the frustum off the panorama edge (#648).
+		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
@@ -724,6 +778,19 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 	if _slot.get("moon_shadows", false):
 		_moonlight.shadow_enabled = true
 		_moonlight.shadow_blur = 1.0
+	if _slot.get("sun_shadows", false):
+		# Day rigs (#648) stand on the sun: the phase preset ships sun
+		# shadows off (the bake was the look), so the row re-arms them.
+		_dir_light.shadow_enabled = true
+		_dir_light.shadow_blur = 1.0
+		# Acne guard: the valley's terraced ground meets the steep sun at
+		# grazing angles — the default normal bias bandings those shadows
+		# (#648). 4.0 holds them smooth without detaching contact shadows.
+		_dir_light.shadow_normal_bias = 4.0
+	if _slot.has("sun_pitch"):
+		# The DAY band parks every hour at −45° (#648): rows that want a
+		# noon (steep) or afternoon (low, long-shadow) character pin it.
+		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
@@ -813,28 +880,13 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.camera_rotation = rot + PI
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
-	# Slots with real moon shadows skip it (#646): the moonlight casts dynamic
-	# shadows there, and blob + moon shadow reads as a double shadow.
-	if not _slot.get("moon_shadows", false):
-		_blob_shadow = MeshInstance3D.new()
-		var shadow_quad := QuadMesh.new()
-		shadow_quad.size = Vector2(1.8, 1.8)
-		shadow_quad.orientation = PlaneMesh.FACE_Y
-		_blob_shadow.mesh = shadow_quad
-		_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var shadow_shader := Shader.new()
-		shadow_shader.code = \
-			"shader_type spatial;\n" + \
-			"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
-			"void fragment() {\n" + \
-			"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
-			"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
-			"\tALBEDO = vec3(0.0);\n" + \
-			"\tALPHA = alpha;\n" + \
-			"}\n"
-		var shadow_mat := ShaderMaterial.new()
-		shadow_mat.shader = shadow_shader
-		_blob_shadow.material_override = shadow_mat
+	# Slots with real directional shadows skip it (#646): a shadow-casting
+	# sun (#648) or moon casts dynamic shadows there, and blob + real shadow
+	# reads as a double shadow. Enclosed stage shells were disarmed above so
+	# the sun reaches every room's interior — the player always has its
+	# dynamic shadow under a shadow row.
+	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false)):
+		_blob_shadow = MeshUtils.make_player_blob()
 		add_child(_blob_shadow)
 		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
@@ -874,23 +926,10 @@ static func _is_indoor_stage(stage_id: String) -> bool:
 
 func _debug_show_floor_collision() -> void:
 	## Visualize all floor collision shapes as a semi-transparent green mesh overlay.
-	var faces := PackedVector3Array()
-	MapCollisionBuilder.collect_collision_faces(self, faces)
-	if faces.is_empty():
+	var arr_mesh := MeshUtils.collision_face_mesh(self)
+	if arr_mesh == null:
 		_fdbg("[ValleyField] DEBUG: No collision faces found to visualize")
 		return
-
-	var arr_mesh := ArrayMesh.new()
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = faces
-	# Compute normals (all pointing up for flat shading)
-	var normals := PackedVector3Array()
-	normals.resize(faces.size())
-	for i in range(faces.size()):
-		normals[i] = Vector3(0, 1, 0)
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0, 1, 0, 0.35)
@@ -906,7 +945,8 @@ func _debug_show_floor_collision() -> void:
 	mi.visible = DebugConfig.show_floor_collision
 	add_child(mi)
 	_debug_floor_viz = mi
-	_fdbg("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
+	_fdbg("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (
+		arr_mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() / 3))
 
 
 ## Derive the assets/stages/ subfolder from a stage_id and area folder name.
@@ -967,9 +1007,14 @@ func _fix_materials(node: Node) -> void:
 	## with the walk/preview tool scenes so labs render what the field renders.
 	## cast_shadows carries the slot's geometry_casts_shadows row: map geometry
 	## ships shadows-off (the bake is the look); a moon rig that stands on real
-	## shadows (s03b, #659) turns casting on.
+	## shadows (s03b, #659) turns casting on. Under the cheat rig
+	## (lit_surfaces, no bake_mix) the stage must not react to light, so the
+	## mirror-wrap surfaces take the UNSHADED fix-shader twin unless they're
+	## on the lit list.
+	var cheat := _slot.has("lit_surfaces") and not _slot.has("bake_mix")
 	MeshUtils.apply_field_materials(node, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
-		_slot.get("geometry_casts_shadows", false))
+		_slot.get("geometry_casts_shadows", false), cheat,
+		TEXTURE_FIX_SHADER_UNLIT, _slot.get("lit_surfaces", []))
 
 
 func _has_pending_objectives() -> bool:
@@ -2740,13 +2785,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## Slot-rig live tuning (#646, generalized by #655): ,/. ambient, [/] moon,
+## Slot-rig live tuning (#646, generalized by #655; sun keys #648): ,/.
+## ambient, [/] moon, 9/0 sun energy, 7/8 sun elevation, I/J/K/L + U/O the
+## sun's shadow eye (compat anchors the directional shadow pass at the light
+## node's position — what the eye covers decides which rim scenery casts),
 ## -/= bake mix, P logs the rig plus player material diagnostics (same knobs
 ## as the material test scene, in the field where it counts). Owned by slots
-## that ship a rig (a bake_mix row); handled keys stop the TimeManager hour
-## preview from double-firing on [/].
+## that ship a rig (a bake_mix row, or the cheat rows that light actors +
+## lit_surfaces with no bake at all); handled keys stop the TimeManager hour
+## preview from double-firing on [/. Like every tuner knob, the elevation
+## and the eye never persist — each cell entry re-applies the authored slot
+## and panorama placement.
 func _handle_night_tuning(event: InputEvent) -> void:
-	if not (_slot.has("bake_mix") \
+	if not ((_slot.has("bake_mix") or _slot.has("sun_energy")) \
 			and event is InputEventKey and event.pressed and not event.echo):
 		return
 	var handled := false
@@ -2762,6 +2813,36 @@ func _handle_night_tuning(event: InputEvent) -> void:
 			handled = true
 		KEY_BRACKETRIGHT:
 			_moonlight.light_energy += 0.05
+			handled = true
+		KEY_9:
+			_dir_light.light_energy = maxf(0.0, _dir_light.light_energy - 0.05)
+			handled = true
+		KEY_0:
+			_dir_light.light_energy += 0.05
+			handled = true
+		KEY_7:
+			_dir_light.rotation_degrees.x = maxf(-89.0, _dir_light.rotation_degrees.x - 5.0)
+			handled = true
+		KEY_8:
+			_dir_light.rotation_degrees.x = minf(-5.0, _dir_light.rotation_degrees.x + 5.0)
+			handled = true
+		KEY_J:
+			_dir_light.global_position += Vector3(-5, 0, 0)
+			handled = true
+		KEY_L:
+			_dir_light.global_position += Vector3(5, 0, 0)
+			handled = true
+		KEY_I:
+			_dir_light.global_position += Vector3(0, 0, -5)
+			handled = true
+		KEY_K:
+			_dir_light.global_position += Vector3(0, 0, 5)
+			handled = true
+		KEY_U:
+			_dir_light.global_position += Vector3(0, -5, 0)
+			handled = true
+		KEY_O:
+			_dir_light.global_position += Vector3(0, 5, 0)
 			handled = true
 		KEY_MINUS:
 			_night_bake_mix = maxf(0.0, _night_bake_mix - 0.05)
@@ -2820,9 +2901,11 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
 
 func _print_night_tuning() -> void:
-	var msg := "[FieldSlot %s] ambient %.2f  moon %.2f  bake mix %.2f" % [
+	var msg := "[FieldSlot %s] ambient %.2f  sun %.2f @ %.0f°  eye %s  moon %.2f  bake mix %.2f" % [
 		str(_current_cell.get("stage_id", "?")),
-		_world_env.environment.ambient_light_energy, _moonlight.light_energy, _night_bake_mix]
+		_world_env.environment.ambient_light_energy, _dir_light.light_energy,
+		_dir_light.rotation_degrees.x, _dir_light.global_position,
+		_moonlight.light_energy, _night_bake_mix]
 	if player:
 		var stats := _player_mat_stats(player)
 		msg += " | player: %d per-pixel / %d unshaded, %d/%d meshes with normals" % [

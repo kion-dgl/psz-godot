@@ -28,7 +28,8 @@ func _init(controller) -> void:
 func _spawn_weather() -> void:
 	# Weather rides the field slot row (#655, unifying with #609's per-area
 	# ask): a quest-authored session weather key overrides, otherwise the
-	# area's slot row carries it (the snowfield's snow). Indoor stages skip.
+	# area's slot row carries it (the snowfield's snow, the valley's sand).
+	# Indoor stages skip.
 	var weather: String = FieldSlotTableScript.resolve_weather(
 		str(SessionManager.get_session().get("weather", "")), _c._slot)
 	if weather.is_empty():
@@ -37,57 +38,125 @@ func _spawn_weather() -> void:
 	if _c._is_indoor_stage(stage_id):
 		print("[ValleyField] Weather: skipping %s (indoor stage %s)" % [weather, stage_id])
 		return
+	var node := build_weather_node(weather)
+	if not node:
+		return
+	_c._weather_node = node
+	_c.player.add_child(_c._weather_node)
+	# Defer a restart after the player transform has settled and the render
+	# loop has had a chance to start. Without this, particles stay frozen
+	# until the player or camera first moves.
+	_kick_weather()
+	print("[ValleyField] Weather: %s particles attached to player" % weather)
+
+
+## The fully-configured weather particle node for a key (""-ish keys → null).
+## Static + shared so the walk labs preview exactly what spawns in-field.
+static func build_weather_node(weather: String) -> GPUParticles3D:
 	if weather == "snow":
-		_c._weather_node = GPUParticles3D.new()
-		_c._weather_node.name = "WeatherSnow"
-		_c._weather_node.amount = 300
-		_c._weather_node.lifetime = 4.0
-		# Large local AABB so the snow volume is always considered visible
-		# regardless of where the player is within the room. Without this, the
-		# particle system can freeze until the camera moves.
-		_c._weather_node.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
-		# Force deterministic simulation; default (fixed_fps=0, interpolate=true)
-		# can freeze the particle sim until something invalidates the transform.
-		_c._weather_node.fixed_fps = 30
-		_c._weather_node.interpolate = false
+		return _build_snow_node()
+	if weather == "sand":
+		return _build_sand_node()
+	return null
 
-		var mat := ParticleProcessMaterial.new()
-		mat.direction = Vector3(0, -1, 0)
-		mat.spread = 10.0
-		mat.initial_velocity_min = 2.0
-		mat.initial_velocity_max = 3.5
-		mat.gravity = Vector3(0.3, -0.5, 0.1)
-		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-		mat.emission_box_extents = Vector3(20, 0.5, 20)
-		mat.angle_min = 0.0
-		mat.angle_max = 360.0
-		mat.angular_velocity_min = -30.0
-		mat.angular_velocity_max = 30.0
-		mat.scale_min = 0.6
-		mat.scale_max = 1.4
-		mat.damping_min = 0.2
-		mat.damping_max = 0.5
-		_c._weather_node.process_material = mat
 
-		var quad := QuadMesh.new()
-		quad.size = Vector2(0.08, 0.08)
-		var quad_mat := StandardMaterial3D.new()
-		quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
-		quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-		quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		quad.material = quad_mat
-		_c._weather_node.draw_pass_1 = quad
+static func _build_snow_node() -> GPUParticles3D:
+	var snow := GPUParticles3D.new()
+	snow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	snow.name = "WeatherSnow"
+	snow.amount = 300
+	snow.lifetime = 4.0
+	# Large local AABB so the snow volume is always considered visible
+	# regardless of where the player is within the room. Without this, the
+	# particle system can freeze until the camera moves.
+	snow.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	# Force deterministic simulation; default (fixed_fps=0, interpolate=true)
+	# can freeze the particle sim until something invalidates the transform.
+	snow.fixed_fps = 30
+	snow.interpolate = false
 
-		_c._weather_node.preprocess = 4.0
-		_c._weather_node.position.y = 8.0
-		_c.player.add_child(_c._weather_node)
-		# Defer a restart after the player transform has settled and the render
-		# loop has had a chance to start. Without this, snow stays frozen until
-		# the player or camera first moves.
-		_kick_weather()
-		print("[ValleyField] Weather: snow particles attached to player")
+	var snow_mat := ParticleProcessMaterial.new()
+	snow_mat.direction = Vector3(0, -1, 0)
+	snow_mat.spread = 10.0
+	snow_mat.initial_velocity_min = 2.0
+	snow_mat.initial_velocity_max = 3.5
+	snow_mat.gravity = Vector3(0.3, -0.5, 0.1)
+	snow_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	snow_mat.emission_box_extents = Vector3(20, 0.5, 20)
+	snow_mat.angle_min = 0.0
+	snow_mat.angle_max = 360.0
+	snow_mat.angular_velocity_min = -30.0
+	snow_mat.angular_velocity_max = 30.0
+	snow_mat.scale_min = 0.6
+	snow_mat.scale_max = 1.4
+	snow_mat.damping_min = 0.2
+	snow_mat.damping_max = 0.5
+	snow.process_material = snow_mat
+
+	var snow_quad := QuadMesh.new()
+	snow_quad.size = Vector2(0.08, 0.08)
+	var snow_quad_mat := StandardMaterial3D.new()
+	snow_quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+	snow_quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	snow_quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	snow_quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	snow_quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	snow_quad.material = snow_quad_mat
+	snow.draw_pass_1 = snow_quad
+
+	snow.preprocess = 4.0
+	snow.position.y = 8.0
+	return snow
+
+
+## The valley's blowing dust (#648): unlike snow's fall, sand drifts
+## horizontally through a low band, skimmed along the ground — a haze
+## the player walks through, not weather they stand under.
+static func _build_sand_node() -> GPUParticles3D:
+	var sand := GPUParticles3D.new()
+	sand.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sand.name = "WeatherSand"
+	sand.amount = 240
+	sand.lifetime = 5.0
+	sand.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	sand.fixed_fps = 30
+	sand.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(1.0, -0.06, 0.35)
+	mat.spread = 25.0
+	mat.initial_velocity_min = 3.0
+	mat.initial_velocity_max = 5.5
+	mat.gravity = Vector3(0, -0.3, 0)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(22, 1.5, 22)
+	mat.angle_min = 0.0
+	mat.angle_max = 360.0
+	mat.angular_velocity_min = -40.0
+	mat.angular_velocity_max = 40.0
+	mat.scale_min = 0.5
+	mat.scale_max = 1.1
+	mat.damping_min = 0.1
+	mat.damping_max = 0.3
+	mat.turbulence_enabled = true
+	mat.turbulence_noise_strength = 0.6
+	mat.turbulence_noise_scale = 2.0
+	sand.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.07, 0.07)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = Color(0.86, 0.73, 0.52, 0.45)
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	sand.draw_pass_1 = quad
+
+	sand.preprocess = 4.0
+	sand.position.y = 3.0
+	return sand
 
 
 func _kick_weather() -> void:
@@ -186,6 +255,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	_c._map_root.add_child(root)
 
 	var particles := GPUParticles3D.new()
+	particles.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	particles.name = "%sParticles" % effect_type.capitalize()
 	particles.amount = count
 	particles.lifetime = height / maxf(speed, 0.1)

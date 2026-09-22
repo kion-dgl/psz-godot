@@ -44,8 +44,7 @@ var _dir_light: DirectionalLight3D
 var _moonlight: DirectionalLight3D
 var _bake_mix := 0.25
 var _slot := {}
-var _shot_path := ""
-var _shot_frame := 0
+var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
 
@@ -55,7 +54,7 @@ func _ready() -> void:
 		_pending_stage = ""
 	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
 		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
-	_shot_path = OS.get_environment("PSZ_WALK_SHOT")
+	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
 	_build_environment()
 	_load_stage()
 	_load_floor_collision()
@@ -68,17 +67,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if Input.is_action_pressed("ui_cancel"):
-		get_tree().quit()
-	if _shot_path.is_empty():
-		return
-	_shot_frame += 1
-	if _shot_frame < 45:
-		return
-	var img := get_viewport().get_texture().get_image()
-	img.save_png(_shot_path)
-	print("[BWalk] screenshot → %s" % _shot_path)
-	get_tree().quit()
+	_shot.step(self, "BWalk")
 
 
 func _input(event: InputEvent) -> void:

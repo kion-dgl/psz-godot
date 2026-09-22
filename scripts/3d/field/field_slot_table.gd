@@ -22,17 +22,37 @@ extends RefCounted
 ##                        pin their own elevation)
 ##   moon_shadows  bool   moonlight casts real shadows (also skips the player
 ##                        blob shadow — blob + moon shadow reads double)
+##   sun_shadows   bool   the sun casts real shadows (day rigs, #648; the
+##                        phase preset ships them off — the row re-arms them).
+##                        Same blob-shadow skip as moon_shadows
+##   sun_pitch     float  sun elevation in degrees (rotation.x; the DAY band
+##                        parks every hour at −45° — rows that want a noon
+##                        or afternoon character pin their own elevation)
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
 ##   geometry_casts_shadows bool map geometry casts shadows (default off — the
 ##                        bake is the look); a rig that stands on real moon
 ##                        shadows (s03b, #659) turns it on
+##   sun_eye_pull  [float, float] shadow-eye offset as fractions of the
+##                        panorama box [x, z], applied after panorama
+##                        placement — slides the compat shadow frustum off
+##                        the rim so edge scenery stops casting (#648)
+##   lit_surfaces Array  material names that DO receive the rig while the
+##                        rest of the stage keeps its bake — the "cheat"
+##                        strategy (#648 valley): greenery + props light,
+##                        architecture stays authored. Needs no bake_mix;
+##                        run after the field material pass so special-
+##                        shader surfaces (waterfalls) are skipped
+##   shadow_catcher bool the collision shell renders as the shadow receiver
+##                        — white, multiply-blended, at the walk height:
+##                        the actors' dynamic shadows multiply onto the
+##                        bake while lit ground multiplies by ~1 (#648)
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
-## row is the first variant slot (#657): it splits the B caves off the snowfield
-## night while s03a stages keep the area row untouched.
+## row is the variant slot so far (#657: the B caves split off the snowfield
+## night while s03a stages keep the area row).
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -63,7 +83,40 @@ const SLOTS := {
 	},
 
 	# ── per-area identity slots ──
-	"gurhacia": {"hour": 10.0},   # Valley day — #648 tunes the balance
+	# Valley day — the #648 "cheat" rig (kion art-direction calls, 2026-09-21):
+	# the stage KEEPS its authored bake — pure baked vertex color, no bake_mix,
+	# no white-strategy pass — and the dynamic sun lights only what the bake
+	# could not account for: player + enemies (their own spawn paths) and the
+	# lit_surfaces greenery/props. The player's DYNAMIC shadow lands via the
+	# shadow_catcher: the collision shell (the walkable surface, exactly)
+	# renders as a white multiply-blended receiver — shadows multiply onto
+	# the bake, lit ground multiplies by ~1 — so the unwalkable low ground
+	# keeps its intentional baked darkness ("you can't walk there") and no
+	# lit/unlit floor boundary exists. sun_shadows arms the rig (blob
+	# skipped); no geometry casting — only the actors cast, so no rim drama;
+	# the panorama shadow-eye placement still runs. Blowing sand drift.
+	# sun_pitch −60 is the actor-lighting character (DAY band parks −45).
+	# lit_surfaces is DELIBERATELY sparse — only certain greenery/props —
+	# because not every stage material imports unlit: 1_flo1/1_view1/
+	# 1_rock1/1_step2 arrive SHADED, and the mirror-wrapped pass1/deco1 run
+	# the fix shader (a custom ALBEDO shader is LIT by default) — the cheat
+	# rig force-unlits the Standards and swaps mirror surfaces to the
+	# UNSHADED shader twin. deco1 is OFF the list (ground decals, not
+	# props — kion read-out) and oas* stays OUT pending a look.
+	"gurhacia": {
+		"hour": 10.0,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"weather": "sand",
+		"lit_surfaces": [
+			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
+			"1_toro", "1_rail1", "1_bri2", "1_bri3",
+		],
+	},
+
 	"ozette":   {"hour": 10.0},   # interim; #649 authors the overcast mood
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the
 	# white-albedo snow reads, moon 0.35 as the shadow source, bake quarter-

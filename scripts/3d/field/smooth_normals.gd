@@ -38,12 +38,20 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 		return 0
 
 	var rebuilt := false
+	var carried_stash := false
 	var replacement := ArrayMesh.new()
 	for s in range(am.get_surface_count()):
 		var arrays := am.surface_get_arrays(s)
 		var normals = arrays[Mesh.ARRAY_NORMAL]
 		if normals is PackedVector3Array and not (normals as PackedVector3Array).is_empty():
 			replacement.add_surface_from_arrays(am.surface_get_primitive_type(s), arrays)
+			# Normal-carrying surfaces skip the rebuild — stash their COLOR_0
+			# too or the neutralize pass can't re-blend them (#648: the valley
+			# B rooms are the first DS exports that ship normals).
+			var skip_color = arrays[Mesh.ARRAY_COLOR]
+			if skip_color is PackedColorArray:
+				replacement.set_meta("orig_color_%d" % s, (skip_color as PackedColorArray).duplicate())
+				carried_stash = true
 			continue
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var out := PackedVector3Array()
@@ -225,7 +233,7 @@ static func _fix_mesh(mi: MeshInstance3D, smooth_passes: int) -> int:
 			replacement.set_meta("orig_color_%d" % s, (orig_color as PackedColorArray).duplicate())
 		rebuilt = true
 
-	if not rebuilt:
+	if not (rebuilt or carried_stash):
 		return 0
 	for s in range(am.get_surface_count()):
 		replacement.surface_set_material(s, am.surface_get_material(s))
@@ -365,7 +373,9 @@ static func neutralize_vertex_colors(root: Node, k: float) -> int:
 		var replacement := ArrayMesh.new()
 		for s in range(am.get_surface_count()):
 			var arrays := am.surface_get_arrays(s)
-			var stash = am.get_meta("orig_color_%d" % s, null)
+			# has_meta guard: get_meta with an explicit null default still
+			# takes the error path in Godot — un-stashed surfaces would spam.
+			var stash = am.get_meta("orig_color_%d" % s) if am.has_meta("orig_color_%d" % s) else null
 			if stash is PackedColorArray:
 				var blended := PackedColorArray()
 				var orig: PackedColorArray = stash

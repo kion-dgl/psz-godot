@@ -218,9 +218,16 @@ func _run_tests_systems() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_field_time_slots()
+	test_valley_day_slot()
+	test_valley_lit_surfaces()
+	test_valley_shadow_catcher()
+	test_valley_shadow_eye()
+	test_valley_sun_enclosure()
 	test_time_manager_clock()
 	test_s03b_anchor_lights()
 	test_s03b_anchor_config()
+	test_valley_anchor_config()
+	test_valley_sand_weather()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -266,6 +273,12 @@ func assert_eq(a, b, label: String) -> void:
 	else:
 		_fail += 1
 		print("  FAIL: %s — got %s, expected %s" % [label, str(a), str(b)])
+
+
+## Float-tolerant equality (geometry/AABB reads wobble in the last ulps).
+func assert_almost_eq(a: float, b: float, tol: float, label: String) -> void:
+	assert_true(absf(a - b) <= tol,
+		"%s (got %.4f, expected %.4f ± %.4f)" % [label, a, b, tol])
 
 
 func assert_gt(a, b, label: String) -> void:
@@ -10812,8 +10825,342 @@ func test_field_time_slots() -> void:
 		"Quest weather overrides the slot row")
 	assert_eq(Slots.resolve_weather("", rioh), "snow",
 		"Empty quest weather falls back to the slot row")
-	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "",
-		"Valley row authors no weather")
+	assert_eq(Slots.resolve_weather("", Slots.slot_for("gurhacia", "zz_none")), "sand",
+		"Valley row rides its sand drift (#648)")
+
+	print("")
+
+
+# ── The valley day slot (#648): the first sun rig — the moon rig's daylight
+# counterpart, locked from the walk-lab sweep. The bake was authored FOR
+# daylight, so COLOR_0 half-neutralizes and the dynamic sun drives the look;
+# ambient 0.80 lifts the canyon-shade B rooms; sand drifts. ──
+func test_valley_day_slot() -> void:
+	print("── Valley Day Slot (#648) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	var valley := Slots.slot_for("gurhacia", "s01a_ga1")
+	assert_eq(valley.get("hour"), 10.0, "Valley pins hour 10 (day)")
+	assert_eq(valley.get("sun_energy"), 0.9, "Valley rig: sun 0.90 lights the actors + lit surfaces")
+	assert_eq(valley.get("ambient_energy"), 0.4, "Valley rig: ambient 0.40 fills them")
+	assert_eq(valley.get("sun_pitch"), -60.0,
+		"Valley rig: sun −60° — the actor-lighting character (off the DAY band's −45° rest)")
+	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
+	assert_true(not valley.has("moon_energy"), "Valley rig: no moon (day — the sun is the source)")
+	# The cheat rig (kion art-direction call, 2026-09-21): the stage KEEPS its
+	# bake — the full-rig double-lighting read uncanny — so no white-strategy
+	# pass; but the WALKABLE surfaces receive, so the player's DYNAMIC shadow
+	# lands on them (blob skipped under any shadow row) while walls/panorama
+	# stay baked and nothing but the actors casts.
+	assert_true(not valley.has("bake_mix"),
+		"the cheat rig: no bake_mix — the authored bake IS the stage's light")
+	assert_eq(valley.get("sun_shadows"), true,
+		"the cheat rig: sun shadows on — the actors' dynamic shadows land on the catcher")
+	assert_eq(valley.get("shadow_catcher"), true,
+		"the cheat rig: the collision shell is the shadow receiver — shadows multiply onto the bake")
+	assert_true(not valley.get("geometry_casts_shadows", false),
+		"the cheat rig: geometry doesn't cast — actor shadows only, no rim drama")
+	# lit_surfaces: the greenery + props that DO receive the sun. The FLOORS
+	# stay out — lighting them erased the bake's intentional dark low ground
+	# ("you can't walk there") and drew lit/unlit boundary lines; the shadow
+	# catcher owns the walkable surfaces instead.
+	var lit: Array = valley.get("lit_surfaces", [])
+	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"), "the leaf materials receive the rig")
+	assert_true(lit.has("1_toro"), "the stone lanterns receive the rig")
+	assert_true(not lit.has("1_deco1"), "deco1 stays baked — ground detail decals, not props (kion read-out)")
+	assert_true(not lit.has("1_oas1"), "oas* stays baked — suspected oasis terrain (the lit low ground read-out)")
+	assert_true(not lit.has("1_flo1") and not lit.has("1_pass1"),
+		"the floors/paths stay baked — mirror-wrapped pass1 runs the UNSHADED shader twin")
+	assert_true(not lit.has("1_rock1") and not lit.has("1_view1"),
+		"scenery (rocks, the panorama) stays baked")
+	# The twin: a custom ALBEDO shader is LIT by default — the unlit twin
+	# must carry render_mode unshaded or the mirror surfaces leak the sun.
+	var twin := load("res://scripts/3d/field/texture_fix_shader_unlit.gdshader") as Shader
+	assert_true(twin != null and twin.code.contains("unshaded"),
+		"the cheat rig's mirror shader twin declares render_mode unshaded")
+	# One row for every variant — the A-only pitch/pull split went with the
+	# shadow rig it existed to steer.
+	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1"), valley,
+		"s01b rides the same row (no variant split under the cheat rig)")
+	var boss := Slots.slot_for("gurhacia", "s01z_na1")
+	assert_eq(boss.get("sun_energy"), 0.9, "s01z rides the area row (exception dropped)")
+
+	print("")
+
+
+## The cheat rig's lit pass (#648): authored materials flip to per-pixel,
+## everything else keeps its bake.
+func _tri_arrays() -> Array:
+	## One unit triangle — the minimal valid surface for material tests.
+	var verts := PackedVector3Array([Vector3.ZERO, Vector3.RIGHT, Vector3.BACK])
+	var normals := PackedVector3Array([Vector3.UP, Vector3.UP, Vector3.UP])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	return arrays
+
+
+func test_valley_lit_surfaces() -> void:
+	print("── Valley Lit Surfaces (#648) ──")
+	var root := Node3D.new()
+	add_child(root)
+
+	var plant := MeshInstance3D.new()
+	root.add_child(plant)
+	var plant_mesh := ArrayMesh.new()
+	var pm := StandardMaterial3D.new()
+	pm.resource_name = "1_reaf1"
+	pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	plant_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	plant_mesh.surface_set_material(0, pm)
+	plant.mesh = plant_mesh
+
+	var rock := MeshInstance3D.new()
+	root.add_child(rock)
+	var rock_mesh := ArrayMesh.new()
+	var rm := StandardMaterial3D.new()
+	rm.resource_name = "1_rock1"
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rock_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	rock_mesh.surface_set_material(0, rm)
+	rock.mesh = rock_mesh
+
+	var lit_n: int = MeshUtils.make_lit_surfaces(root, ["1_reaf1", "1_deco1"])
+	assert_eq(lit_n, 1, "only the authored material flips (1 of 2 surfaces)")
+	var plant_mat := SmoothNormals._active_material(plant, 0) as StandardMaterial3D
+	assert_eq(plant_mat.shading_mode, BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"the leaf surface receives the rig")
+	var rock_mat := SmoothNormals._active_material(rock, 0) as StandardMaterial3D
+	assert_eq(rock_mat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
+		"the rock keeps its bake")
+	assert_true(plant_mat != pm, "the flip duplicates the material — the shared import never mutates")
+
+	# The MeshBasic guarantee: shaded-import surfaces (flo1/view1 arrive
+	# PER_PIXEL from glTF) are forced UNSHADED unless they're in the keep
+	# list — the stage must never react to light.
+	var impostor := MeshInstance3D.new()
+	root.add_child(impostor)
+	var im_mesh := ArrayMesh.new()
+	var vm := StandardMaterial3D.new()
+	vm.resource_name = "1_view1"
+	vm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	im_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	im_mesh.surface_set_material(0, vm)
+	impostor.mesh = im_mesh
+	var kept_pm := StandardMaterial3D.new()
+	kept_pm.resource_name = "1_reaf1"
+	kept_pm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	plant_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	plant_mesh.surface_set_material(1, kept_pm)
+	var forced: int = MeshUtils.make_unlit(root, ["1_reaf1"])
+	assert_eq(forced, 1, "only the shaded non-keep surface flips (the view import)")
+	assert_eq((SmoothNormals._active_material(impostor, 0) as StandardMaterial3D).shading_mode,
+		BaseMaterial3D.SHADING_MODE_UNSHADED,
+		"the shaded-import panorama material no longer reacts to light")
+	var forced_mat := SmoothNormals._active_material(impostor, 0) as StandardMaterial3D
+	assert_true(forced_mat.vertex_color_use_as_albedo,
+		"the MeshBasic contract: forced-unlit surfaces still carry the bake (COLOR_0 modulates albedo)")
+	assert_eq((SmoothNormals._active_material(plant, 1) as StandardMaterial3D).shading_mode,
+		BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"keep-listed surfaces keep their per-pixel shading")
+
+	print("")
+
+
+## The shadow catcher (#648): the collision shell as the multiply-blended
+## receiver — shadows darken the bake, lit ground multiplies by ~1.
+func test_valley_shadow_catcher() -> void:
+	print("── Valley Shadow Catcher (#648) ──")
+	var floor_root := Node3D.new()
+	add_child(floor_root)
+	var body := StaticBody3D.new()
+	floor_root.add_child(body)
+	var cs := CollisionShape3D.new()
+	body.add_child(cs)
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = Vector3(20, 1, 20)
+	cs.shape = box_mesh.create_trimesh_shape()
+	body.position = Vector3(0, 0.5, 0)
+
+	var catcher := MeshUtils.make_shadow_catcher(floor_root)
+	assert_true(catcher != null, "the mesh-less collision shell yields a catcher")
+	if catcher == null:
+		print("")
+		return
+	assert_eq(catcher.name, "ShadowCatcher", "the catcher names itself")
+	assert_eq(catcher.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the catcher never casts (it only receives)")
+	assert_almost_eq(catcher.position.y, 0.04, 0.001,
+		"lifted a hair above the walk height — wins depth without z-fighting")
+	var mat := catcher.mesh.surface_get_material(0) as StandardMaterial3D
+	assert_eq(mat.blend_mode, BaseMaterial3D.BLEND_MODE_MUL,
+		"multiply blend: shadows darken the bake beneath, lit ≈ ×1")
+	assert_eq(mat.shading_mode, BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"per-pixel — it must receive the directional shadow")
+	assert_eq(mat.albedo_color, Color(1, 1, 1, 1),
+		"white albedo — the multiply passes the bake through when lit")
+	assert_true(MeshUtils.make_shadow_catcher(Node3D.new()) == null,
+		"no collision faces → no catcher")
+
+	print("")
+
+
+## Shadow eye (#648): the floor-shell read survives mesh-less collision-only
+## imports, and the row's rim pull shifts the eye by panorama fractions.
+func test_valley_shadow_eye() -> void:
+	print("── Valley Shadow Eye (#648) ──")
+
+	# Floor GLBs instantiate mesh-less: StaticBody3D + ConcavePolygonShape3D,
+	# zero MeshInstance3D — the old mesh-only read returned NAN and the
+	# panorama placement clamped the eye to ground level.
+	var floor_root := Node3D.new()
+	add_child(floor_root)
+	var body := StaticBody3D.new()
+	floor_root.add_child(body)
+	var cs := CollisionShape3D.new()
+	body.add_child(cs)
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = Vector3(40, 2, 40)
+	cs.shape = box_mesh.create_trimesh_shape()
+	body.position = Vector3(0, 1, 0)
+	assert_almost_eq(MeshUtils.floor_top(floor_root), 2.0, 0.01,
+		"the mesh-less floor shell's top reads from its collision faces")
+
+	# A mesh-bearing floor keeps the direct read.
+	var mesh_floor := MeshInstance3D.new()
+	add_child(mesh_floor)
+	var fm := BoxMesh.new()
+	fm.size = Vector3(30, 1, 30)
+	mesh_floor.mesh = fm
+	mesh_floor.position = Vector3(0, 0.5, 0)
+	assert_almost_eq(MeshUtils.floor_top(mesh_floor), 1.0, 0.01,
+		"a mesh-bearing floor reads its AABB top directly")
+
+	# Nothing geometric at all → NAN (the callers' NAN path).
+	var bare := Node3D.new()
+	add_child(bare)
+	assert_true(is_nan(MeshUtils.floor_top(bare)),
+		"no meshes and no concave collision → NAN")
+
+	# The rim pull: fractions of the panorama box, x and z, y untouched.
+	var map_root := Node3D.new()
+	add_child(map_root)
+	var pano := MeshInstance3D.new()
+	var pano_mesh := BoxMesh.new()
+	pano_mesh.size = Vector3(150, 65, 150)
+	pano.mesh = pano_mesh
+	map_root.add_child(pano)
+	var light := DirectionalLight3D.new()
+	add_child(light)
+	light.global_position = Vector3(0, 21, 0)
+	MeshUtils.apply_sun_eye_pull(light, map_root, {"sun_eye_pull": [-0.45, -0.05]})
+	assert_almost_eq(light.global_position.x, -67.5, 0.01,
+		"−0.45 × 150 panorama width = −67.5 (kion's sa1 hand-tune was −67)")
+	assert_almost_eq(light.global_position.z, -7.5, 0.01,
+		"−0.05 × 150 = −7.5 (kion's sa1 hand-tune was −7.3)")
+	assert_almost_eq(light.global_position.y, 21.0, 0.01,
+		"the pull is horizontal — the placement owns the eye's height")
+	var before := light.global_position
+	MeshUtils.apply_sun_eye_pull(light, map_root, {})
+	assert_eq(light.global_position, before,
+		"no sun_eye_pull in the row → no pull (B/E/Z keep plain placement)")
+
+	print("")
+
+
+# ── Sun-rig enclosure (#648): the geometric sun-ray probe and the shell
+# casting carve-out — an enclosing stage mesh must not cast (its own shadow
+# deletes the sun from its interior, the player's dynamic shadow with it).
+## Synthetic room: a floor plane at y=0 plus optional walls/shell, mirroring
+## the PSO stage layout the probe walks.
+func _enclosure_room(with_shell: bool) -> Node3D:
+	var holder := Node3D.new()
+	var floor_mi := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(60, 60)
+	floor_mi.mesh = plane
+	holder.add_child(floor_mi)
+	if with_shell:
+		var box_mi := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(60, 40, 60)
+		box_mi.mesh = box
+		box_mi.position = Vector3(0, 20, 0)
+		holder.add_child(box_mi)
+	return holder
+
+
+func test_valley_sun_enclosure() -> void:
+	print("── Valley Sun Enclosure (#648) ──")
+	var steep := Vector3(0, 0.866, 0.5)   # −60° sun, the row pin
+	var rake := Vector3(0, 0.2, 0.98)     # −12° grazing sun
+
+	# The probe: geometry truth, independent of casting flags
+	var shell := _enclosure_room(true)
+	add_child(shell)
+	assert_true(not MeshUtils.sun_reaches_room(shell, steep, 0.0),
+		"a closed shell blocks the sun (room reads enclosed)")
+	var open := _enclosure_room(false)
+	add_child(open)
+	assert_true(MeshUtils.sun_reaches_room(open, steep, 0.0),
+		"a bare floor under the sun reads open")
+
+	# The carve-out: the enclosing mesh stops casting, partials keep it
+	var disarmed: int = MeshUtils.disable_enclosing_casters(shell, steep, 0.0)
+	assert_eq(disarmed, 1, "the closed shell's one mesh is disarmed")
+	var shell_mi := shell.get_child(1) as MeshInstance3D
+	assert_eq(shell_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the shell casts no more (its own shadow deleted the interior sun)")
+	assert_eq(MeshUtils.disable_enclosing_casters(open, steep, 0.0), 0,
+		"a bare floor disarms nothing (nothing encloses)")
+
+	# A wall ring: blocks the rake but not the steep sun — partials cast on
+	var ring := Node3D.new()
+	add_child(ring)
+	var floor_mi := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(60, 60)
+	floor_mi.mesh = plane
+	ring.add_child(floor_mi)
+	for w in range(4):
+		var wall := MeshInstance3D.new()
+		var wm := BoxMesh.new()
+		wm.size = Vector3(60, 30, 2)
+		wall.mesh = wm
+		var ang := w * PI / 2.0
+		wall.position = Vector3(0, 15, -30).rotated(Vector3.UP, ang)
+		wall.rotation.y = ang
+		ring.add_child(wall)
+	assert_true(MeshUtils.sun_reaches_room(ring, steep, 0.0),
+		"a steep sun clears the wall ring (open)")
+	assert_true(not MeshUtils.sun_reaches_room(ring, rake, 0.0),
+		"a grazing rake is blocked by the walls (enclosed at that pitch)")
+	assert_eq(MeshUtils.disable_enclosing_casters(ring, rake, 0.0), 0,
+		"partial blockers (walls) keep casting even when they block")
+
+	shell.queue_free()
+	open.queue_free()
+	ring.queue_free()
+
+	# The shared blob builder (rows without a shadow source)
+	var blob := MeshUtils.make_player_blob()
+	assert_eq(blob.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the blob never casts")
+	assert_true(blob.mesh is QuadMesh, "the blob is a quad disc")
+	assert_true(blob.material_override is ShaderMaterial, "the blob carries its unshaded shader")
+
+	# The player's own dynamic shadow (#648): the model casts (verified by
+	# single-boot A/B — contiguous −0.5 dips centered on the player). Nothing
+	# may touch its casting; the earlier proxy saga turned it off on a wrong
+	# assumption and every later test measured the proxy instead of the model.
+	var puppet := Node3D.new()
+	var model_mi := MeshInstance3D.new()
+	model_mi.mesh = BoxMesh.new()
+	puppet.add_child(model_mi)
+	add_child(puppet)
+	assert_eq(model_mi.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+		"a freshly spawned player's meshes keep default casting ON")
+	puppet.queue_free()
 
 	print("")
 
@@ -10953,6 +11300,72 @@ func test_s03b_anchor_config() -> void:
 			spore_count += 1
 	assert_eq(spore_count, 34, "the kinoko stages carry their 34 authored spore drifts")
 
+	print("")
+
+
+# ── Valley toro anchors (#648): td1/td2 stone lanterns carry day-punch warm
+# pools (6.0 — the night anchors' ×12 lesson: pools must beat the ambient);
+# every other s01 stage stays anchor-free — the boss arena's 2_kemu smoke is
+# backdrop scenery, not a source, and no glow materials ride the toro (its
+# texture-fix shader can't take an emissive swap without losing the wrap). ──
+func test_valley_anchor_config() -> void:
+	print("── Valley Toro Anchors (#648) ──")
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	assert_true(cfg_file != null, "unified stage config loads")
+	var json := JSON.new()
+	assert_eq(json.parse(cfg_file.get_as_text()), OK, "unified stage config parses")
+	cfg_file.close()
+	var cfg: Dictionary = json.data
+	var toro_count := 0
+	for key in cfg:
+		if not str(key).begins_with("s01"):
+			continue
+		var stage: Dictionary = cfg[key]
+		for e in stage.get("effects", []):
+			if str(e.get("type", "")) != "light":
+				continue
+			assert_true(str(key) in ["s01a_td1", "s01a_td2"],
+				"%s carries valley anchor lights — only the toro rooms do" % key)
+			assert_true(str(e.get("id", "")).begins_with("placed_anchor_"),
+				"%s anchor id follows the authoring convention" % key)
+			var pos: Array = e.get("position", [])
+			assert_eq(pos.size(), 3, "%s anchor %s has a 3-component position" % [key, e.get("id")])
+			if pos.size() == 3:
+				assert_true(absf(float(pos[0])) < 45.0 and absf(float(pos[2])) < 45.0,
+					"%s anchor %s is inside the room" % [key, e.get("id")])
+				assert_true(float(pos[1]) > 0.5 and float(pos[1]) < 3.5,
+					"%s anchor %s rides the lantern head band" % [key, e.get("id")])
+			var c: Array = e.get("color", [])
+			assert_true(c.size() == 3 and float(c[0]) > float(c[2]),
+				"%s anchor %s is warm (red over blue — lantern flame)" % [key, e.get("id")])
+			assert_gt(float(e.get("intensity", 0.0)), 4.0,
+				"%s anchor %s punches through the day rig (≥ 4.0)" % [key, e.get("id")])
+			toro_count += 1
+		if str(key) in ["s01a_td1", "s01a_td2"]:
+			assert_eq(stage.get("glowMaterials", []).size(), 0,
+				"%s authors no glow materials (toro's fix shader can't take them)" % key)
+	assert_eq(toro_count, 10, "td1 + td2 carry their 5 toro lanterns each")
+
+	print("")
+
+
+# ── Sand weather (#648): the valley's blowing dust — horizontal drift, low
+# band, built by the shared WeatherController factory the labs preview from. ──
+func test_valley_sand_weather() -> void:
+	print("── Valley Sand Weather (#648) ──")
+	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
+	var sand = WeatherCtl.build_weather_node("sand")
+	assert_true(sand is GPUParticles3D, "sand builds a particle node")
+	if sand is GPUParticles3D:
+		var mat := sand.process_material as ParticleProcessMaterial
+		assert_true(absf(mat.direction.x) > absf(mat.direction.y),
+			"sand drifts horizontally (XZ wind, not a fall)")
+		assert_true(absf(sand.position.y) < 8.0,
+			"sand rides a low band (skims the ground — snow sits at 8)")
+		assert_eq(sand.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			"weather particles never cast (#648: the drift's quads were spattering the floor with their own shadows)")
+	assert_true(WeatherCtl.build_weather_node("sleet") == null,
+		"unknown weather keys build nothing")
 	print("")
 
 
