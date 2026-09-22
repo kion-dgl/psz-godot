@@ -375,11 +375,13 @@ func _load_stage() -> void:
 		SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
 		SmoothNormals.make_lit(_map_root)
 	# The cheat rig, same as the field (#648): authored greenery/prop
-	# surfaces receive the sun, the stage keeps its bake.
+	# surfaces receive the sun, everything else is forced unlit (the
+	# MeshBasic guarantee), the stage keeps its bake.
 	if _slot.has("lit_surfaces"):
 		MeshUtils.split_mesh_surfaces(_map_root)
 		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
-		print("[ValleyWalk] cheat rig: %d surface(s) lit" % lit_n)
+		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
+		print("[ValleyWalk] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
 
 
 ## The stage's collision floor (mattest pattern): covers the real floor, kept

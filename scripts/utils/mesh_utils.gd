@@ -367,16 +367,13 @@ static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
 	return mi
 
 
-## The "cheat" pass (#648 valley): flip ONLY the authored materials to
-## per-pixel shading while the rest of the stage keeps its bake — the
-## greenery and props read as lit, the architecture stays authored.
-## Matches by material resource name (imported GLB materials carry the GLB
-## name), skipping anything already per-pixel or non-Standard (waterfall
-## shader surfaces). Run AFTER the field material pass. Rooms ship as one
-## multi-surface mesh and shading is per-instance — call
-## split_mesh_surfaces first or the match stays all-or-nothing. Returns how
-## many surfaces were lit.
-static func make_lit_surfaces(root: Node, names: Array) -> int:
+## Flip surface shading by material-name membership — the cheat rig's two
+## passes are one walk: the lit pass (listed → PER_PIXEL) and the MeshBasic
+## guarantee (unlisted → UNSHADED, imports are shared so duplicate first).
+## Returns how many surfaces flipped.
+static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> int:
+	var target := BaseMaterial3D.SHADING_MODE_PER_PIXEL if listed_per_pixel \
+			else BaseMaterial3D.SHADING_MODE_UNSHADED
 	var wanted: Dictionary = {}
 	for n in names:
 		wanted[n] = true
@@ -388,15 +385,37 @@ static func make_lit_surfaces(root: Node, names: Array) -> int:
 			if not (mat is StandardMaterial3D):
 				continue
 			var std := mat as StandardMaterial3D
-			if std.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+			if std.shading_mode == target:
 				continue
-			if not wanted.has(std.resource_name):
+			if wanted.has(std.resource_name) != listed_per_pixel:
 				continue
 			var dup := std.duplicate() as StandardMaterial3D
-			dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+			dup.shading_mode = target
 			mi.set_surface_override_material(i, dup)
 			touched += 1
 	return touched
+
+
+## The "cheat" pass (#648 valley): flip ONLY the authored materials to
+## per-pixel shading while the rest of the stage keeps its bake — the
+## greenery and props read as lit, the architecture stays authored.
+## Matches by material resource name (imported GLB materials carry the GLB
+## name), skipping anything non-Standard (waterfall shader surfaces). Run
+## AFTER the field material pass. Rooms ship as one multi-surface mesh and
+## shading is per-instance — call split_mesh_surfaces first or the match
+## stays all-or-nothing. Returns how many surfaces were lit.
+static func make_lit_surfaces(root: Node, names: Array) -> int:
+	return _flip_shading(root, names, true)
+
+
+## The MeshBasic guarantee (#648, kion's three.js instinct): force every
+## Standard surface to UNSHADED — not-react-to-light — except the authored
+## keep-list. Not every glTF material imports unlit (the diagnostic caught
+## 1_flo1/1_view1/1_rock1/1_step2 shaded: the low ground lit up and the
+## panorama self-shaded under the rig); this pass closes that regardless of
+## import flags. Returns how many surfaces were forced.
+static func make_unlit(root: Node, keep: Array) -> int:
+	return _flip_shading(root, keep, false)
 
 
 ## The floor shell's top = the walkable height (#648 sun-enclosure sampling).

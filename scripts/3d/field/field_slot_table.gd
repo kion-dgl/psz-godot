@@ -96,6 +96,12 @@ const SLOTS := {
 	# skipped); no geometry casting — only the actors cast, so no rim drama;
 	# the panorama shadow-eye placement still runs. Blowing sand drift.
 	# sun_pitch −60 is the actor-lighting character (DAY band parks −45).
+	# lit_surfaces is DELIBERATELY sparse — only certain greenery/props —
+	# because not every stage material imports unlit: 1_flo1/1_view1/
+	# 1_rock1/1_step2 arrive SHADED, which is why the cheat rig also runs
+	# the force-unlit pass (the MeshBasic guarantee) over everything not
+	# listed. oas* stays OUT pending a look (suspected oasis terrain, and
+	# the lit low ground in the 2026-09-21 screenshot read exactly like it).
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.9,
@@ -106,7 +112,6 @@ const SLOTS := {
 		"weather": "sand",
 		"lit_surfaces": [
 			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
-			"1_oas1", "1_oas2", "1_oas2_1",
 			"1_deco1", "1_toro", "1_rail1", "1_bri2", "1_bri3",
 		],
 	},

@@ -10865,8 +10865,8 @@ func test_valley_day_slot() -> void:
 	# catcher owns the walkable surfaces instead.
 	var lit: Array = valley.get("lit_surfaces", [])
 	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"), "the leaf materials receive the rig")
-	assert_true(lit.has("1_oas1"), "the oasis greenery receives the rig")
 	assert_true(lit.has("1_deco1") and lit.has("1_toro"), "the prop objects (deco, lanterns) receive the rig")
+	assert_true(not lit.has("1_oas1"), "oas* stays baked — suspected oasis terrain (the lit low ground read-out)")
 	assert_true(not lit.has("1_flo1") and not lit.has("1_pass1"),
 		"the floors stay baked — the catcher receives, they don't light")
 	assert_true(not lit.has("1_rock1") and not lit.has("1_view1"),
@@ -10928,6 +10928,32 @@ func test_valley_lit_surfaces() -> void:
 	assert_eq(rock_mat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
 		"the rock keeps its bake")
 	assert_true(plant_mat != pm, "the flip duplicates the material — the shared import never mutates")
+
+	# The MeshBasic guarantee: shaded-import surfaces (flo1/view1 arrive
+	# PER_PIXEL from glTF) are forced UNSHADED unless they're in the keep
+	# list — the stage must never react to light.
+	var impostor := MeshInstance3D.new()
+	root.add_child(impostor)
+	var im_mesh := ArrayMesh.new()
+	var vm := StandardMaterial3D.new()
+	vm.resource_name = "1_view1"
+	vm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	im_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	im_mesh.surface_set_material(0, vm)
+	impostor.mesh = im_mesh
+	var kept_pm := StandardMaterial3D.new()
+	kept_pm.resource_name = "1_reaf1"
+	kept_pm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	plant_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+	plant_mesh.surface_set_material(1, kept_pm)
+	var forced: int = MeshUtils.make_unlit(root, ["1_reaf1"])
+	assert_eq(forced, 1, "only the shaded non-keep surface flips (the view import)")
+	assert_eq((SmoothNormals._active_material(impostor, 0) as StandardMaterial3D).shading_mode,
+		BaseMaterial3D.SHADING_MODE_UNSHADED,
+		"the shaded-import panorama material no longer reacts to light")
+	assert_eq((SmoothNormals._active_material(plant, 1) as StandardMaterial3D).shading_mode,
+		BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"keep-listed surfaces keep their per-pixel shading")
 
 	print("")
 

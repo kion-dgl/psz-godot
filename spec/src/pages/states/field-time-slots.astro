@@ -131,7 +131,13 @@ const slots = [
   objects (<code>1_reaf1–5</code>, <code>1_oas1/2</code>,
   <code>1_deco1</code>, <code>1_toro</code>, <code>1_rail1</code>,
   <code>1_bri2/3</code>), matched by material name after the per-surface
-  split. Lighting the floors themselves proved wrong twice over: it
+  split. The stage's light-independence is <em>forced</em>, not assumed:
+  some glTF materials import shaded (the diagnostic caught
+  <code>1_flo1</code>/<code>1_view1</code>/<code>1_rock1</code>/
+  <code>1_step2</code> — the low ground lit up and the panorama
+  self-shaded under the rig), so a force-unlit pass flips every non-listed
+  Standard surface to UNSHADED — the MeshBasicMaterial guarantee. Lighting
+  the floors themselves proved wrong twice over: it
   erased the bake's intentionally dark unwalkable low ground (the
   "you can only walk on the raised area" read) and drew harsh lines at
   lit/unlit floor boundaries. Instead the row carries

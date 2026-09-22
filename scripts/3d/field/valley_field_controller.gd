@@ -290,7 +290,12 @@ func _ready() -> void:
 	if _slot.has("lit_surfaces"):
 		MeshUtils.split_mesh_surfaces(_map_root)
 		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
-		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, stage keeps its bake" % lit_n)
+		# The MeshBasic guarantee: everything NOT in the lit list is forced
+		# UNSHADED — some glTF materials import shaded (flo1/view1/rock1 were
+		# caught lighting the low ground and self-shading the panorama), and
+		# the cheat's contract is that the stage never reacts to light.
+		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
+		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, %d forced unlit, stage keeps its bake" % [lit_n, forced])
 	# #657: anchor meshes read as light sources where the stage config
 	# authors it — emissive tint + roughness, matched by material name.
 	_apply_glow_materials()

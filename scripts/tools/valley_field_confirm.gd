@@ -115,6 +115,25 @@ func _settle_eye() -> void:
 	var light := _field.get("_dir_light") as DirectionalLight3D
 	if light == null:
 		return
+	# Diagnostics (PSZ_FIELD_DIAG=1): who still casts, who still reacts to
+	# light — after the cheat passes the shaded list should be exactly the
+	# row's lit_surfaces.
+	if OS.get_environment("PSZ_FIELD_DIAG") == "1":
+		var mr: Node3D = _field.get("_map_root")
+		if mr:
+			var casters := 0
+			var shaded := {}
+			for n in MeshUtils.collect_mesh_instances(mr, []):
+				var mi2 := n as MeshInstance3D
+				if mi2.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+					casters += 1
+					print("[FieldConfirm] CASTS: %s" % mi2.name)
+				for si in range(SmoothNormals._surface_count(mi2)):
+					var m2 := SmoothNormals._active_material(mi2, si)
+					if m2 is StandardMaterial3D and (m2 as StandardMaterial3D).shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED:
+						shaded[(m2 as StandardMaterial3D).resource_name] = true
+			print("[FieldConfirm] map casters (not OFF): %d" % casters)
+			print("[FieldConfirm] shaded (non-UNSHADED) stage materials: %s" % str(shaded.keys()))
 	var slot: Dictionary = _field.get("_slot")
 	if slot.get("sun_shadows", false) or slot.get("moon_shadows", false):
 		print("[FieldConfirm] eye (placement + row pull) at %s" % [light.global_position])
