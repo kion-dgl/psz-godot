@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery, props); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -127,11 +127,18 @@ const slots = [
   <code>bake_mix</code>, so the white-strategy pass never runs), and the
   dynamic sun lights only what the bake could not account for: the
   <strong>player and enemies</strong> (lit on their own spawn paths) and
-  the row's <code>lit_surfaces</code> — the leaf/oasis greenery and prop
-  objects (<code>1_reaf1–5</code>, <code>1_oas1/2</code>,
-  <code>1_deco1</code>, <code>1_toro</code>, <code>1_rail1</code>,
-  <code>1_bri2/3</code>), matched by material name after the per-surface
-  split. The stage's light-independence is <em>forced</em>, not assumed:
+  the row's <code>lit_surfaces</code> — the leaf greenery
+  (<code>1_reaf1–5</code>) only, matched by material name after the
+  per-surface split. The list is greenery-only by accumulated read-out:
+  every hard-surface class lit on trial — the ground decals
+  (<code>1_deco1</code>), oasis terrain (<code>1_oas*</code>), and the
+  bridge/rail/lantern-stone set (<code>1_bri2</code> the final strike:
+  its mirror shader stays the lit variant under the keep-list, sunning
+  the bridge against baked rock) — read bright and out of place against
+  the baked world. Plants blend; stone and lumber don't. The toro
+  lanterns keep their warm placed-light pools without being lit
+  themselves. The stage's light-independence is <em>forced</em>, not
+  assumed:
   some glTF materials import shaded (the diagnostic caught
   <code>1_flo1</code>/<code>1_view1</code>/<code>1_rock1</code>/
   <code>1_step2</code> — the low ground lit up and the panorama
