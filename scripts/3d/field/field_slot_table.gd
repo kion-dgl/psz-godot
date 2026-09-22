@@ -44,6 +44,10 @@ extends RefCounted
 ##                        architecture stays authored. Needs no bake_mix;
 ##                        run after the field material pass so special-
 ##                        shader surfaces (waterfalls) are skipped
+##   shadow_catcher bool the collision shell renders as the shadow receiver
+##                        — white, multiply-blended, at the walk height:
+##                        the actors' dynamic shadows multiply onto the
+##                        bake while lit ground multiplies by ~1 (#648)
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
@@ -79,34 +83,31 @@ const SLOTS := {
 	},
 
 	# ── per-area identity slots ──
-	# Valley day — the #648 "cheat" rig (kion art-direction call, 2026-09-21):
-	# the stage KEEPS its authored bake (no bake_mix → the white-strategy
-	# pass never runs; the double-lighting that read uncanny is gone), and
-	# the dynamic sun lights only what the bake could not account for —
-	# player + enemies (lit on their own spawn paths) and the authored
-	# lit_surfaces. The WALKABLE surfaces (floors, paths, steps) are in that
-	# set so the player's DYNAMIC shadow lands on them (sun_shadows on; the
-	# blob shadow is skipped under any shadow row — kion: "it needs the
-	# dynamic shadows, not the circular shadow") — while walls, rocks, and
-	# the panorama stay baked. No geometry casting: the only dynamic shadows
-	# are the actors', so no carve-out drama, no rim shadows; the panorama
-	# shadow-eye placement still runs (compat anchors the pass at the light
-	# node). Blowing sand drift. sun_pitch −60 is the actor/floor-lighting
-	# character (the DAY band parks −45).
+	# Valley day — the #648 "cheat" rig (kion art-direction calls, 2026-09-21):
+	# the stage KEEPS its authored bake — pure baked vertex color, no bake_mix,
+	# no white-strategy pass — and the dynamic sun lights only what the bake
+	# could not account for: player + enemies (their own spawn paths) and the
+	# lit_surfaces greenery/props. The player's DYNAMIC shadow lands via the
+	# shadow_catcher: the collision shell (the walkable surface, exactly)
+	# renders as a white multiply-blended receiver — shadows multiply onto
+	# the bake, lit ground multiplies by ~1 — so the unwalkable low ground
+	# keeps its intentional baked darkness ("you can't walk there") and no
+	# lit/unlit floor boundary exists. sun_shadows arms the rig (blob
+	# skipped); no geometry casting — only the actors cast, so no rim drama;
+	# the panorama shadow-eye placement still runs. Blowing sand drift.
+	# sun_pitch −60 is the actor-lighting character (DAY band parks −45).
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.9,
 		"ambient_energy": 0.4,
 		"sun_pitch": -60.0,
 		"sun_shadows": true,
+		"shadow_catcher": true,
 		"weather": "sand",
 		"lit_surfaces": [
 			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
 			"1_oas1", "1_oas2", "1_oas2_1",
 			"1_deco1", "1_toro", "1_rail1", "1_bri2", "1_bri3",
-			"1_flo1", "1_flo2", "1_flo2b", "1_pass1",
-			"1_step1", "1_step2", "1_step3", "1_step3b",
-			"0_flo2", "0_jime", "0_jime2",
 		],
 	},
 

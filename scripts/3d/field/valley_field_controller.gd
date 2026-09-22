@@ -333,6 +333,16 @@ func _ready() -> void:
 				# Suffix import didn't create collision — build manually from meshes
 				MapCollisionBuilder.create_collision_from_meshes(floor_root)
 				_fdbg("[ValleyField] Floor collision built manually from mesh: %s" % floor_path)
+			# The cheat rig's shadow catcher (#648): the collision shell — the
+			# walkable surface, exactly — becomes the shadow receiver, a white
+			# multiply-blended overlay at the walk height. The stage keeps its
+			# pure baked look; the actors' shadows multiply onto it; the
+			# unwalkable low ground isn't in the shell and keeps its baked
+			# darkness.
+			if _slot.get("shadow_catcher", false):
+				var catcher := MeshUtils.make_shadow_catcher(floor_root)
+				if catcher:
+					add_child(catcher)
 		else:
 			MapCollisionBuilder.setup_map_collision(_map_root)
 	else:
@@ -910,23 +920,10 @@ static func _is_indoor_stage(stage_id: String) -> bool:
 
 func _debug_show_floor_collision() -> void:
 	## Visualize all floor collision shapes as a semi-transparent green mesh overlay.
-	var faces := PackedVector3Array()
-	MapCollisionBuilder.collect_collision_faces(self, faces)
-	if faces.is_empty():
+	var arr_mesh := MeshUtils.collision_face_mesh(self)
+	if arr_mesh == null:
 		_fdbg("[ValleyField] DEBUG: No collision faces found to visualize")
 		return
-
-	var arr_mesh := ArrayMesh.new()
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = faces
-	# Compute normals (all pointing up for flat shading)
-	var normals := PackedVector3Array()
-	normals.resize(faces.size())
-	for i in range(faces.size()):
-		normals[i] = Vector3(0, 1, 0)
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0, 1, 0, 0.35)
@@ -942,7 +939,8 @@ func _debug_show_floor_collision() -> void:
 	mi.visible = DebugConfig.show_floor_collision
 	add_child(mi)
 	_debug_floor_viz = mi
-	_fdbg("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
+	_fdbg("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (
+		arr_mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() / 3))
 
 
 ## Derive the assets/stages/ subfolder from a stage_id and area folder name.

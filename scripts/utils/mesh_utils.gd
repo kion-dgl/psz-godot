@@ -315,6 +315,58 @@ static func collect_mesh_instances(node: Node, out: Array) -> Array:
 	return out
 
 
+## One ArrayMesh from every collision triangle under `root`, in global space
+## (flat up normals — the shells are walk decks, not detail work). The mesh
+## the debug floor-viz and the shadow catcher share; null when `root` carries
+## no concave collision.
+static func collision_face_mesh(root: Node) -> ArrayMesh:
+	var faces := PackedVector3Array()
+	MapCollisionBuilder.collect_collision_faces(root, faces)
+	if faces.is_empty():
+		return null
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = faces
+	var normals := PackedVector3Array()
+	normals.resize(faces.size())
+	for i in range(faces.size()):
+		normals[i] = Vector3(0, 1, 0)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## The cheat rig's shadow catcher (#648, kion's call): the collision shell —
+## the walkable surface, EXACTLY — rendered as the shadow receiver over the
+## baked stage. A white per-pixel material with MULTIPLY blending: lit, it
+## multiplies the bake by ~1 (clamped — invisible); inside a shadow it
+## multiplies down by the ambient share, so the actors' dynamic shadows read
+## as painted onto the authored look. The unwalkable low ground isn't in the
+## shell, so its intentional baked darkness (the "you can't walk there" read)
+## survives untouched. Lifted a hair above the walk height to win depth
+## without z-fighting; never casts. Null when the floor has no collision
+## faces.
+static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root)
+	if mesh == null:
+		return null
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 1, 1, 1)
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	mat.roughness = 1.0
+	mat.specular = 0.0
+	mesh.surface_set_material(0, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "ShadowCatcher"
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position.y = 0.04
+	return mi
+
+
 ## The "cheat" pass (#648 valley): flip ONLY the authored materials to
 ## per-pixel shading while the rest of the stage keeps its bake — the
 ## greenery and props read as lit, the architecture stays authored.

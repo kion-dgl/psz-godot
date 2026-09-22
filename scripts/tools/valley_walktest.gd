@@ -397,6 +397,12 @@ func _load_floor_collision() -> void:
 		MapCollisionBuilder.setup_map_collision(floor_root)
 	else:
 		MapCollisionBuilder.create_collision_from_meshes(floor_root)
+	# The cheat rig's shadow catcher, same as the field (#648).
+	if _slot.get("shadow_catcher", false):
+		var catcher := MeshUtils.make_shadow_catcher(floor_root)
+		if catcher:
+			add_child(catcher)
+			print("[ValleyWalk] shadow catcher on the collision shell")
 
 
 func _spawn_player(pos: Vector3) -> void:

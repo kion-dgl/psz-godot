@@ -220,6 +220,7 @@ func _run_tests_systems() -> void:
 	test_field_time_slots()
 	test_valley_day_slot()
 	test_valley_lit_surfaces()
+	test_valley_shadow_catcher()
 	test_valley_shadow_eye()
 	test_valley_sun_enclosure()
 	test_time_manager_clock()
@@ -10853,18 +10854,21 @@ func test_valley_day_slot() -> void:
 	assert_true(not valley.has("bake_mix"),
 		"the cheat rig: no bake_mix — the authored bake IS the stage's light")
 	assert_eq(valley.get("sun_shadows"), true,
-		"the cheat rig: sun shadows on — the actors' dynamic shadows land on the lit floors")
+		"the cheat rig: sun shadows on — the actors' dynamic shadows land on the catcher")
+	assert_eq(valley.get("shadow_catcher"), true,
+		"the cheat rig: the collision shell is the shadow receiver — shadows multiply onto the bake")
 	assert_true(not valley.get("geometry_casts_shadows", false),
 		"the cheat rig: geometry doesn't cast — actor shadows only, no rim drama")
-	# lit_surfaces: the greenery + props that DO receive the sun, and the
-	# walkable surfaces the dynamic shadows land on.
+	# lit_surfaces: the greenery + props that DO receive the sun. The FLOORS
+	# stay out — lighting them erased the bake's intentional dark low ground
+	# ("you can't walk there") and drew lit/unlit boundary lines; the shadow
+	# catcher owns the walkable surfaces instead.
 	var lit: Array = valley.get("lit_surfaces", [])
 	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"), "the leaf materials receive the rig")
 	assert_true(lit.has("1_oas1"), "the oasis greenery receives the rig")
 	assert_true(lit.has("1_deco1") and lit.has("1_toro"), "the prop objects (deco, lanterns) receive the rig")
-	assert_true(lit.has("1_flo1") and lit.has("1_pass1") and lit.has("1_step1"),
-		"the walkable surfaces (floors, paths, steps) receive — the shadow catchers")
-	assert_true(lit.has("0_jime"), "the boss arena's ground receives")
+	assert_true(not lit.has("1_flo1") and not lit.has("1_pass1"),
+		"the floors stay baked — the catcher receives, they don't light")
 	assert_true(not lit.has("1_rock1") and not lit.has("1_view1"),
 		"scenery (rocks, the panorama) stays baked")
 	# One row for every variant — the A-only pitch/pull split went with the
@@ -10924,6 +10928,44 @@ func test_valley_lit_surfaces() -> void:
 	assert_eq(rock_mat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
 		"the rock keeps its bake")
 	assert_true(plant_mat != pm, "the flip duplicates the material — the shared import never mutates")
+
+	print("")
+
+
+## The shadow catcher (#648): the collision shell as the multiply-blended
+## receiver — shadows darken the bake, lit ground multiplies by ~1.
+func test_valley_shadow_catcher() -> void:
+	print("── Valley Shadow Catcher (#648) ──")
+	var floor_root := Node3D.new()
+	add_child(floor_root)
+	var body := StaticBody3D.new()
+	floor_root.add_child(body)
+	var cs := CollisionShape3D.new()
+	body.add_child(cs)
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = Vector3(20, 1, 20)
+	cs.shape = box_mesh.create_trimesh_shape()
+	body.position = Vector3(0, 0.5, 0)
+
+	var catcher := MeshUtils.make_shadow_catcher(floor_root)
+	assert_true(catcher != null, "the mesh-less collision shell yields a catcher")
+	if catcher == null:
+		print("")
+		return
+	assert_eq(catcher.name, "ShadowCatcher", "the catcher names itself")
+	assert_eq(catcher.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the catcher never casts (it only receives)")
+	assert_almost_eq(catcher.position.y, 0.04, 0.001,
+		"lifted a hair above the walk height — wins depth without z-fighting")
+	var mat := catcher.mesh.surface_get_material(0) as StandardMaterial3D
+	assert_eq(mat.blend_mode, BaseMaterial3D.BLEND_MODE_MUL,
+		"multiply blend: shadows darken the bake beneath, lit ≈ ×1")
+	assert_eq(mat.shading_mode, BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"per-pixel — it must receive the directional shadow")
+	assert_eq(mat.albedo_color, Color(1, 1, 1, 1),
+		"white albedo — the multiply passes the bake through when lit")
+	assert_true(MeshUtils.make_shadow_catcher(Node3D.new()) == null,
+		"no collision faces → no catcher")
 
 	print("")
 

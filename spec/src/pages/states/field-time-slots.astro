@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery, props, and the walkable floors so dynamic actor shadows land); no geometry casting; sand drift' },
+  { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery, props); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -122,37 +122,40 @@ const slots = [
   locks them from a playtest read-out.</p>
 
   <p>The valley row (#648) is the <strong>cheat rig</strong> — the
-  art-direction call from the 2026-09-21 hardware pass: the stage
-  <strong>keeps its authored bake</strong> (the DS look; no
+  art-direction call from the 2026-09-21 hardware passes: the stage
+  <strong>keeps its authored bake</strong> (pure baked vertex color; no
   <code>bake_mix</code>, so the white-strategy pass never runs), and the
-  dynamic sun lights only what the bake could not account for. That is:
-  the <strong>player and enemies</strong> (lit on their own spawn paths)
-  and the row's <code>lit_surfaces</code> — matched by material name after
-  the per-surface split: the leaf/oasis greenery and prop objects
-  (<code>1_reaf1–5</code>, <code>1_oas1/2</code>,
+  dynamic sun lights only what the bake could not account for: the
+  <strong>player and enemies</strong> (lit on their own spawn paths) and
+  the row's <code>lit_surfaces</code> — the leaf/oasis greenery and prop
+  objects (<code>1_reaf1–5</code>, <code>1_oas1/2</code>,
   <code>1_deco1</code>, <code>1_toro</code>, <code>1_rail1</code>,
-  <code>1_bri2/3</code>) <em>plus the walkable surfaces</em> (floors,
-  paths, steps — <code>1_flo1/2/2b</code>, <code>1_pass1</code>,
-  <code>1_step1–3b</code>, the arena grounds), so the player's
-  <strong>dynamic shadow</strong> lands somewhere real: the row carries
-  <code>sun_shadows</code> (which also skips the blob shadow — the
-  circular ground shadow read wrong), while walls, rocks, and the
-  panorama stay baked — lighting the whole stage layered a second light
-  over painted shadows and read uncanny. The row carries no
-  <code>geometry_casts_shadows</code>: the only dynamic shadows are the
-  actors', so no rim scenery casts into the play space; the panorama
-  shadow-eye placement still runs (compat anchors the directional shadow
-  pass at the light node's position). Sun 0.90 / ambient 0.40 at
-  <code>sun_pitch</code> −60° is the actor/floor-lighting character; the
-  in-field tuner (,/. ambient, 9/0 sun, 7/8 elevation, P read-out) owns
-  the balance until it's locked from a walk. Weather is a blowing
-  <code>sand</code> drift (the valley's dust), the first non-snow
-  weather type. The stone-lantern stages (<code>s01a_td1/td2</code>, the
-  only <code>1_toro</code> art) carry warm placed-light anchors at
-  day-punch intensity — they light the actors and the lit greenery that
-  pass through them. The boss arena's <code>2_kemu</code> smoke stays
-  un-authored — detection puts every cluster on the distant backdrop
-  ring, scenery rather than sources.</p>
+  <code>1_bri2/3</code>), matched by material name after the per-surface
+  split. Lighting the floors themselves proved wrong twice over: it
+  erased the bake's intentionally dark unwalkable low ground (the
+  "you can only walk on the raised area" read) and drew harsh lines at
+  lit/unlit floor boundaries. Instead the row carries
+  <code>shadow_catcher</code>: the <strong>collision shell</strong> — the
+  walkable surface, exactly — renders as a white, multiply-blended,
+  per-pixel receiver lifted a hair above the walk height. Lit, it
+  multiplies the bake by ~1 (invisible); inside a shadow it multiplies
+  down — so the actors' <strong>dynamic shadows</strong> (the row's
+  <code>sun_shadows</code>; the blob shadow is skipped under any shadow
+  row) read as painted onto the authored look, the low ground keeps its
+  baked darkness, and the unwalkable areas get no shadows at all. No
+  <code>geometry_casts_shadows</code>: only the actors cast, so no rim
+  scenery shadows into the play space; the panorama shadow-eye placement
+  still runs. Sun 0.90 / ambient 0.40 at <code>sun_pitch</code> −60° is
+  the actor-lighting character — and, via the catcher's multiply, the
+  shadow depth (ambient is the shadow floor); the in-field tuner (,/.
+  ambient, 9/0 sun, 7/8 elevation, P read-out) owns the balance until
+  locked from a walk. Weather is a blowing <code>sand</code> drift (the
+  valley's dust), the first non-snow weather type. The stone-lantern
+  stages (<code>s01a_td1/td2</code>, the only <code>1_toro</code> art)
+  carry warm placed-light anchors at day-punch intensity. The boss
+  arena's <code>2_kemu</code> smoke stays un-authored — detection puts
+  every cluster on the distant backdrop ring, scenery rather than
+  sources.</p>
 
   <p>The full sun-shadow rig that preceded the cheat (per-pixel stage,
   geometry casting, the enclosure carve-out, panorama shadow-eye
