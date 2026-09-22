@@ -34,6 +34,10 @@ extends RefCounted
 ##   geometry_casts_shadows bool map geometry casts shadows (default off — the
 ##                        bake is the look); a rig that stands on real moon
 ##                        shadows (s03b, #659) turns it on
+##   sun_eye_pull  [float, float] shadow-eye offset as fractions of the
+##                        panorama box [x, z], applied after panorama
+##                        placement — slides the compat shadow frustum off
+##                        the rim so edge scenery stops casting (#648)
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b"/"s01a", tower floor styles) → area_id → DEFAULT.
@@ -68,11 +72,13 @@ const SLOTS := {
 		"weather": "snow",
 	},
 
-	# Valley A (#648, kion hardware read-out 2026-09-20): at the area row's
+	# Valley A (#648, kion hardware read-outs 2026-09-20/21): at the area row's
 	# −60° the sun sits low enough that surrounding walls/mesas throw their
 	# shadows well into the play space. A reads best with the sun closer to
 	# overhead — the full area rig with pitch −75 (shadow ≈0.27× the caster's
-	# height vs 0.58× at −60). B/E/Z keep −60 until their own read-outs.
+	# height vs 0.58× at −60) — plus a rim pull on the shadow eye: −0.45× the
+	# panorama width on x (sa1 hand-tuned −67 on a 150-wide box; tc3 −15),
+	# −0.05× on z. B/E/Z keep the area row until their own read-outs.
 	"s01a": {
 		"hour": 10.0,
 		"sun_energy": 0.9,
@@ -82,6 +88,7 @@ const SLOTS := {
 		"sun_shadows": true,
 		"geometry_casts_shadows": true,
 		"weather": "sand",
+		"sun_eye_pull": [-0.45, -0.05],
 	},
 
 	# ── per-area identity slots ──

@@ -14,7 +14,7 @@ import Concept from '../../layouts/Concept.astro';
 
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
-  { key: 's01a', area: 'Valley A (variant row)', hour: '10.0 — day', weather: 'sand', note: 'the area rig with the sun near overhead (−75°) — at −60° the surrounding walls/mesas shadowed the play space (kion hardware read-out)' },
+  { key: 's01a', area: 'Valley A (variant row)', hour: '10.0 — day', weather: 'sand', note: 'the area rig with the sun near overhead (−75°) + a rim pull on the shadow eye (−0.45×/−0.05× the panorama box) — at −60° the surrounding walls/mesas shadowed the play space (kion hardware read-out)' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'LOCKED (#648, re-locked post-carve-out): sun 0.90 with real sun shadows + geometry casting, ambient 0.40, bake 0.15 (the authored day bake mostly survives), sun −60° elevation (A rides the s01a variant row), sand drift' },
   { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
@@ -143,8 +143,13 @@ const slots = [
   <code>s01a</code> row (the second variant slot, after s03b) carries the
   area rig verbatim with the sun at −75°, near overhead — at −60° the
   A-field's surrounding walls and mesas threw their shadows well into the
-  play space (kion hardware read-out, 2026-09-20). B/E/Z keep −60° until
-  their own read-outs. Most s01 rooms are closed stage shells
+  play space (kion hardware read-out, 2026-09-20). The s01a row also pins
+  a <code>sun_eye_pull</code>: the shadow eye shifts by fractions of the
+  panorama box after panorama placement (−0.45× on x, −0.05× on z), which
+  slides the compat shadow frustum off the rim so edge scenery stops
+  casting into the play space — the proportional form of a hand-tuned
+  −67/−7 offset on sa1's 150-wide panorama. B/E/Z keep −60° and plain
+  placement until their own read-outs. Most s01 rooms are closed stage shells
   (a geometric sun-ray probe, 2026-09-20: ga1, td1, lb1, the boss arena)
   whose casting is disarmed by the enclosure carve-out above: their
   interiors receive the sun and the player + placed objects cast the real

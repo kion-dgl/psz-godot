@@ -312,10 +312,9 @@ func _ready() -> void:
 			# by visibility.
 			floor_root.visible = false
 			# The floor shell's top is the walkable height — the sun-enclosure
-			# test samples its rays from there (#648).
-			var box := MeshUtils.global_mesh_aabb(floor_root)
-			if box.size != Vector3.ZERO:
-				_floor_top = box.end.y
+			# test samples its rays from there (#648). The mesh-less import
+			# fallback lives in the helper.
+			_floor_top = MeshUtils.floor_top(floor_root)
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
@@ -351,6 +350,8 @@ func _ready() -> void:
 		# sit in the room's interior air (the scene light ships at (10,20,10),
 		# which lands in the shell wall / under decks for some stages).
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
+		# The row's rim pull slides the frustum off the panorama edge (#648).
+		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the

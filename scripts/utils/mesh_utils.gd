@@ -315,6 +315,41 @@ static func collect_mesh_instances(node: Node, out: Array) -> Array:
 	return out
 
 
+## The floor shell's top = the walkable height (#648 sun-enclosure sampling).
+## Floor GLBs instantiate MESH-LESS — the import is a StaticBody3D +
+## ConcavePolygonShape3D pair with zero MeshInstance3D, so the mesh AABB is
+## empty and the read used to silently return NAN (the panorama placement
+## then based the eye's height on the backdrop skirt and clamped it to ground
+## level). Fallback: derive the bounds from the collision faces. NAN only
+## when the floor carries neither meshes nor concave collision.
+static func floor_top(floor_root: Node3D) -> float:
+	var box := global_mesh_aabb(floor_root)
+	if box.size == Vector3.ZERO:
+		var faces := PackedVector3Array()
+		MapCollisionBuilder.collect_collision_faces(floor_root, faces)
+		if not faces.is_empty():
+			box = AABB(faces[0], Vector3.ZERO)
+			for f in faces:
+				box = box.expand(f)
+	if box.size == Vector3.ZERO:
+		return NAN
+	return box.end.y
+
+
+## Shift the sun's shadow eye by fractions of the panorama box (#648, kion
+## hardware read-out): the row's `sun_eye_pull [x_frac, z_frac]` slides the
+## compat shadow frustum off the rim so edge scenery stops casting into the
+## play space — a −0.45 x pull on the A-field reads clean (sa1's hand-tuned
+## −67 on a 150-wide panorama). Applied AFTER panorama placement; no-op
+## without the row field.
+static func apply_sun_eye_pull(light: DirectionalLight3D, map_root: Node3D, slot: Dictionary) -> void:
+	var fracs: Array = slot.get("sun_eye_pull", [])
+	if light == null or map_root == null or fracs.size() < 2:
+		return
+	var box := global_mesh_aabb(map_root)
+	light.global_position += Vector3(fracs[0] * box.size.x, 0.0, fracs[1] * box.size.z)
+
+
 ## Every mesh triangle under `root` in global space, fed to `cb(p0, p1, p2)`.
 static func _walk_triangles(root: Node, cb: Callable) -> void:
 	for node in collect_mesh_instances(root, []):
@@ -482,13 +517,13 @@ static func make_player_blob() -> MeshInstance3D:
 ## meaningless to a directional light's shading, so this only moves the
 ## shadow eye: midway up the interior, on the room's center column.
 static func place_light_inside_room(light: DirectionalLight3D,
-		map_root: Node3D, floor_top: float = NAN) -> void:
+		map_root: Node3D, floor_y: float = NAN) -> void:
 	if light == null or map_root == null:
 		return
 	var box := global_mesh_aabb(map_root)
 	if box.size == Vector3.ZERO:
 		return
-	var base := floor_top if is_finite(floor_top) else box.position.y
+	var base := floor_y if is_finite(floor_y) else box.position.y
 	var y := clampf(lerpf(base, box.end.y, 0.6), base + 4.0, base + 30.0)
 	var c := box.get_center()
 	light.global_position = Vector3(c.x, y, c.z)

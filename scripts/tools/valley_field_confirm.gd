@@ -90,20 +90,6 @@ func _enter_variant(variant: String) -> void:
 	_field = FIELD_SCENE.instantiate()
 	add_child(_field)
 
-	# The compat renderer anchors the directional shadow pass at the light
-	# node's position; the controller's panorama placement parks it in the
-	# room's interior. An env-pinned eye overrides that for edge-shadow
-	# experiments — read back with the controller's P read-out.
-	var sun_pos := OS.get_environment("PSZ_FIELD_SUN_POS")
-	if not sun_pos.is_empty():
-		var parts := sun_pos.split(",")
-		if parts.size() == 3:
-			var light := _field.get("_dir_light") as DirectionalLight3D
-			if light:
-				light.global_position = Vector3(
-					float(parts[0]), float(parts[1]), float(parts[2]))
-				print("[FieldConfirm] sun eye pinned at %s" % light.global_position)
-
 	var stage_id := str(start_cell.get("stage_id", "?"))
 	var slot := FieldSlotTableScript.slot_for("gurhacia", stage_id)
 	print("[FieldConfirm] variant %s (section %d %s): %s — hour %.0f  sun %.2f  ambient %.2f  pitch %.0f°  bake %.2f  shadows %s" % [
@@ -116,6 +102,28 @@ func _enter_variant(variant: String) -> void:
 		variant.to_upper(), stage_id,
 		float(slot.get("sun_energy", 0.0)), float(slot.get("ambient_energy", 0.0)),
 		float(slot.get("sun_pitch", 0.0))]
+	_settle_eye()
+
+
+## Panorama placement + the row's rim pull land a frame AFTER field entry
+## (the controller's post-await pass) — anything applied at add_child time
+## gets overwritten. Settle two frames, log the eye the row produced, then
+## apply the env pin last so it wins.
+func _settle_eye() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var light := _field.get("_dir_light") as DirectionalLight3D
+	if light == null:
+		return
+	print("[FieldConfirm] eye (placement + row pull) at %s" % [light.global_position])
+	var sun_pos := OS.get_environment("PSZ_FIELD_SUN_POS")
+	if sun_pos.is_empty():
+		return
+	var parts := sun_pos.split(",")
+	if parts.size() == 3:
+		light.global_position = Vector3(
+			float(parts[0]), float(parts[1]), float(parts[2]))
+		print("[FieldConfirm] sun eye pinned at %s (post-placement)" % [light.global_position])
 
 
 func _build_label() -> void:

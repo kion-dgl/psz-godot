@@ -219,6 +219,7 @@ func _run_tests_systems() -> void:
 	test_tower_field()
 	test_field_time_slots()
 	test_valley_day_slot()
+	test_valley_shadow_eye()
 	test_valley_sun_enclosure()
 	test_time_manager_clock()
 	test_s03b_anchor_lights()
@@ -270,6 +271,12 @@ func assert_eq(a, b, label: String) -> void:
 	else:
 		_fail += 1
 		print("  FAIL: %s — got %s, expected %s" % [label, str(a), str(b)])
+
+
+## Float-tolerant equality (geometry/AABB reads wobble in the last ulps).
+func assert_almost_eq(a: float, b: float, tol: float, label: String) -> void:
+	assert_true(absf(a - b) <= tol,
+		"%s (got %.4f, expected %.4f ± %.4f)" % [label, a, b, tol])
 
 
 func assert_gt(a, b, label: String) -> void:
@@ -10836,6 +10843,10 @@ func test_valley_day_slot() -> void:
 	assert_eq(valley.get("bake_mix"), 0.15, "Valley rig: the day-authored bake mostly survives")
 	assert_eq(valley.get("sun_pitch"), -75.0,
 		"Valley A: sun pinned near overhead (−60° threw surrounding-area shadows into the room — kion hardware read-out)")
+	assert_eq((valley.get("sun_eye_pull") as Array)[0], -0.45,
+		"Valley A: the rim pull shifts the eye −0.45× the panorama width (sa1 −67/150 hand-tuned)")
+	assert_eq((valley.get("sun_eye_pull") as Array)[1], -0.05,
+		"Valley A: the rim pull's z share (sa1 −7.3 hand-tuned)")
 	assert_eq(valley.get("sun_shadows"), true, "Valley rig: the sun is the shadow source (#648)")
 	assert_eq(valley.get("geometry_casts_shadows"), true, "Valley rig: geometry casts under the sun")
 	assert_eq(str(valley.get("weather", "")), "sand", "Valley rides the blowing sand drift")
@@ -10854,10 +10865,75 @@ func test_valley_day_slot() -> void:
 	assert_eq(boss.get("bake_mix"), 0.15, "s01z keeps the area bake")
 	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1").get("sun_energy"), 0.9,
 		"s01b stages keep the area row's energies (only the pitch split)")
+	assert_true(not Slots.slot_for("gurhacia", "s01b_lb1").has("sun_eye_pull"),
+		"the rim pull is A-only until another variant's read-out")
 	# The slot row's presence implies the white-strategy pass: valley rooms
 	# run neutralize + make_lit (per-pixel) like the s03 stages.
 	assert_true(valley.has("bake_mix"),
 		"bake_mix presence opts valley into the white-strategy material pass")
+
+	print("")
+
+
+## Shadow eye (#648): the floor-shell read survives mesh-less collision-only
+## imports, and the row's rim pull shifts the eye by panorama fractions.
+func test_valley_shadow_eye() -> void:
+	print("── Valley Shadow Eye (#648) ──")
+
+	# Floor GLBs instantiate mesh-less: StaticBody3D + ConcavePolygonShape3D,
+	# zero MeshInstance3D — the old mesh-only read returned NAN and the
+	# panorama placement clamped the eye to ground level.
+	var floor_root := Node3D.new()
+	add_child(floor_root)
+	var body := StaticBody3D.new()
+	floor_root.add_child(body)
+	var cs := CollisionShape3D.new()
+	body.add_child(cs)
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = Vector3(40, 2, 40)
+	cs.shape = box_mesh.create_trimesh_shape()
+	body.position = Vector3(0, 1, 0)
+	assert_almost_eq(MeshUtils.floor_top(floor_root), 2.0, 0.01,
+		"the mesh-less floor shell's top reads from its collision faces")
+
+	# A mesh-bearing floor keeps the direct read.
+	var mesh_floor := MeshInstance3D.new()
+	add_child(mesh_floor)
+	var fm := BoxMesh.new()
+	fm.size = Vector3(30, 1, 30)
+	mesh_floor.mesh = fm
+	mesh_floor.position = Vector3(0, 0.5, 0)
+	assert_almost_eq(MeshUtils.floor_top(mesh_floor), 1.0, 0.01,
+		"a mesh-bearing floor reads its AABB top directly")
+
+	# Nothing geometric at all → NAN (the callers' NAN path).
+	var bare := Node3D.new()
+	add_child(bare)
+	assert_true(is_nan(MeshUtils.floor_top(bare)),
+		"no meshes and no concave collision → NAN")
+
+	# The rim pull: fractions of the panorama box, x and z, y untouched.
+	var map_root := Node3D.new()
+	add_child(map_root)
+	var pano := MeshInstance3D.new()
+	var pano_mesh := BoxMesh.new()
+	pano_mesh.size = Vector3(150, 65, 150)
+	pano.mesh = pano_mesh
+	map_root.add_child(pano)
+	var light := DirectionalLight3D.new()
+	add_child(light)
+	light.global_position = Vector3(0, 21, 0)
+	MeshUtils.apply_sun_eye_pull(light, map_root, {"sun_eye_pull": [-0.45, -0.05]})
+	assert_almost_eq(light.global_position.x, -67.5, 0.01,
+		"−0.45 × 150 panorama width = −67.5 (kion's sa1 hand-tune was −67)")
+	assert_almost_eq(light.global_position.z, -7.5, 0.01,
+		"−0.05 × 150 = −7.5 (kion's sa1 hand-tune was −7.3)")
+	assert_almost_eq(light.global_position.y, 21.0, 0.01,
+		"the pull is horizontal — the placement owns the eye's height")
+	var before := light.global_position
+	MeshUtils.apply_sun_eye_pull(light, map_root, {})
+	assert_eq(light.global_position, before,
+		"no sun_eye_pull in the row → no pull (B/E/Z keep plain placement)")
 
 	print("")
 

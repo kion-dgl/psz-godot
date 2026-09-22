@@ -99,6 +99,8 @@ func _ready() -> void:
 		# Panorama placement (#648): the compat shadow eye must sit in the
 		# interior air — at the origin it's under the bridge deck in lb rooms.
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
+		# The row's rim pull, same as the field (#648).
+		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
 	_light_follow = OS.get_environment("PSZ_WALK_LIGHT_FOLLOW") == "1"
 	_shadow_ab = OS.get_environment("PSZ_WALK_SHADOW_AB") == "1"
 	_spawn_player(Vector3(0, 1.5, 10))
@@ -382,9 +384,7 @@ func _load_floor_collision() -> void:
 	var floor_root := (load(floor_path) as PackedScene).instantiate() as Node3D
 	add_child(floor_root)
 	floor_root.visible = false
-	var box := MeshUtils.global_mesh_aabb(floor_root)
-	if box.size != Vector3.ZERO:
-		_floor_top = box.end.y
+	_floor_top = MeshUtils.floor_top(floor_root)
 	if MapCollisionBuilder.has_static_body(floor_root):
 		MapCollisionBuilder.setup_map_collision(floor_root)
 	else:
