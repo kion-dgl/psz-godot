@@ -10951,6 +10951,9 @@ func test_valley_lit_surfaces() -> void:
 	assert_eq((SmoothNormals._active_material(impostor, 0) as StandardMaterial3D).shading_mode,
 		BaseMaterial3D.SHADING_MODE_UNSHADED,
 		"the shaded-import panorama material no longer reacts to light")
+	var forced_mat := SmoothNormals._active_material(impostor, 0) as StandardMaterial3D
+	assert_true(forced_mat.vertex_color_use_as_albedo,
+		"the MeshBasic contract: forced-unlit surfaces still carry the bake (COLOR_0 modulates albedo)")
 	assert_eq((SmoothNormals._active_material(plant, 1) as StandardMaterial3D).shading_mode,
 		BaseMaterial3D.SHADING_MODE_PER_PIXEL,
 		"keep-listed surfaces keep their per-pixel shading")

@@ -154,6 +154,10 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				# Keep the GLB's alphaMode (BLEND stays blended; the shader
 				# default scissor hard-cuts smooth-alpha texels).
 				shader_mat.set_shader_parameter("alpha_mode", mirror_alpha_mode(std_mat.transparency))
+				# The bake owns the look under the cheat rig — the mirror
+				# shader multiplies COLOR.rgb explicitly (its default, pinned
+				# here so no stray parameter can strip it).
+				shader_mat.set_shader_parameter("use_vertex_color", true)
 				mi.set_surface_override_material(i, shader_mat)
 			else:
 				var new_mat := std_mat.duplicate() as StandardMaterial3D
@@ -358,6 +362,11 @@ static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
 	mat.roughness = 1.0
 	mat.specular = 0.0
+	# Draw after the transparent detail planes and the waterfall (priority 1):
+	# the multiply must reach THEM too — a shadow that stops at a decal edge
+	# reads exactly like the harsh-line bug. The MUL blend already sorts in
+	# the transparent queue; priority orders within it.
+	mat.render_priority = 2
 	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()
 	mi.name = "ShadowCatcher"
@@ -391,6 +400,12 @@ static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> i
 				continue
 			var dup := std.duplicate() as StandardMaterial3D
 			dup.shading_mode = target
+			if not listed_per_pixel:
+				# The MeshBasic contract completes here: unlit surfaces still
+				# carry the bake — COLOR_0 MUST modulate albedo. Imports without
+				# the flag read raw-texture bright (the light-patch detail planes
+				# and the flat cliff faces, 2026-09-21 read-out).
+				dup.vertex_color_use_as_albedo = true
 			mi.set_surface_override_material(i, dup)
 			touched += 1
 	return touched

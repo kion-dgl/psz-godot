@@ -136,7 +136,12 @@ const slots = [
   <code>1_flo1</code>/<code>1_view1</code>/<code>1_rock1</code>/
   <code>1_step2</code> — the low ground lit up and the panorama
   self-shaded under the rig), so a force-unlit pass flips every non-listed
-  Standard surface to UNSHADED — the MeshBasicMaterial guarantee. Lighting
+  Standard surface to UNSHADED — the MeshBasicMaterial guarantee. That
+  guarantee includes the bake's other half: the flip also forces
+  <code>vertex_color_use_as_albedo</code>, because imports without the
+  flag render raw-texture bright (the transparent ground detail planes and
+  the flat cliff faces of the 2026-09-21 read-out); the mirror-wrap fix
+  shader pins its <code>use_vertex_color</code> for the same reason. Lighting
   the floors themselves proved wrong twice over: it
   erased the bake's intentionally dark unwalkable low ground (the
   "you can only walk on the raised area" read) and drew harsh lines at
