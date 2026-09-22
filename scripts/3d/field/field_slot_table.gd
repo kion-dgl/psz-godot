@@ -40,8 +40,9 @@ extends RefCounted
 ##                        the rim so edge scenery stops casting (#648)
 ##   lit_surfaces Array  material names that DO receive the rig while the
 ##                        rest of the stage keeps its bake — the "cheat"
-##                        strategy (#648 valley): greenery + props light,
-##                        architecture stays authored. Needs no bake_mix;
+##                        strategy (#648 valley): greenery lights, hard
+##                        surfaces don't (every prop class read bright and
+##                        out of place against the bake). Needs no bake_mix;
 ##                        run after the field material pass so special-
 ##                        shader surfaces (waterfalls) are skipped
 ##   shadow_catcher bool the collision shell renders as the shadow receiver
@@ -96,13 +97,14 @@ const SLOTS := {
 	# skipped); no geometry casting — only the actors cast, so no rim drama;
 	# the panorama shadow-eye placement still runs. Blowing sand drift.
 	# sun_pitch −60 is the actor-lighting character (DAY band parks −45).
-	# lit_surfaces is DELIBERATELY sparse — only certain greenery/props —
-	# because not every stage material imports unlit: 1_flo1/1_view1/
-	# 1_rock1/1_step2 arrive SHADED, and the mirror-wrapped pass1/deco1 run
-	# the fix shader (a custom ALBEDO shader is LIT by default) — the cheat
-	# rig force-unlits the Standards and swaps mirror surfaces to the
-	# UNSHADED shader twin. deco1 is OFF the list (ground decals, not
-	# props — kion read-out) and oas* stays OUT pending a look.
+	# lit_surfaces is GREENERY ONLY. Every hard-surface "prop" eventually
+	# read bright and out of place against the baked world and came off:
+	# deco1 (ground decals), oas* (oasis terrain), and the bridge/rail/toro
+	# class (bri2 was the final read-out, 2026-09-22 — its mirror shader
+	# stays the LIT variant under the keep-list, sunning the bridge against
+	# baked rock). Plants blend because they're organic and soft; stone and
+	# lumber don't. The toro lanterns keep their warm placed-light pools
+	# without being lit themselves.
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.9,
@@ -113,7 +115,6 @@ const SLOTS := {
 		"weather": "sand",
 		"lit_surfaces": [
 			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
-			"1_toro", "1_rail1", "1_bri2", "1_bri3",
 		],
 	},
 
