@@ -28,6 +28,11 @@ const FONT: Font = preload("res://bootstrap/fonts/VT323-Regular.ttf")
 
 # ── Mock palette (exact values from the React components) ──────────────────────
 const C_STAGE := Color("#ffffff")
+## The mock's stage base is opaque white, but the legacy start menu is a
+## translucent non-pausing overlay (the player keeps walking while it's up,
+## legacy C_BACKDROP alpha 0.82) — so the stage paints at 82% and the game
+## shows through. Panels stay opaque for text readability.
+const STAGE_ALPHA := 0.82
 const C_FRAME_TOP := Color("#c8dbf5")
 const C_FRAME_MID := Color("#b6d0ee")
 const C_FRAME_BOT := Color("#9dbde6")
@@ -343,16 +348,17 @@ class Backdrop extends Control:
 		var h := size.y
 		var strip_w := StartMenuMainSkin._s(StartMenuMainSkin.STRIP_W)
 		var band_y := StartMenuMainSkin._s(StartMenuMainSkin.BAND_Y)
+		var stage_mod := Color(1, 1, 1, StartMenuMainSkin.STAGE_ALPHA)
 
 		# 1. Base + bottom atmospheric wash (mock: from y=620 down).
-		draw_rect(Rect2(Vector2.ZERO, size), StartMenuMainSkin.C_STAGE)
+		draw_rect(Rect2(Vector2.ZERO, size), stage_mod)
 		var wash_h := h - StartMenuMainSkin._s(620)
-		draw_texture_rect(StartMenuMainSkin.tex_wash(), Rect2(Vector2(0, h - wash_h), Vector2(w, wash_h)), false, Color.WHITE, true)
+		draw_texture_rect(StartMenuMainSkin.tex_wash(), Rect2(Vector2(0, h - wash_h), Vector2(w, wash_h)), false, stage_mod, true)
 
 		# 2. Bottom-right radial glow (mock: ellipse anchored at 85%/90%).
 		var glow_size := Vector2(StartMenuMainSkin._s(1000), StartMenuMainSkin._s(600))
 		var glow_center := Vector2(w * 0.85, h * 0.9)
-		draw_texture_rect(StartMenuMainSkin.tex_glow(), Rect2(glow_center - glow_size * 0.5, glow_size), false)
+		draw_texture_rect(StartMenuMainSkin.tex_glow(), Rect2(glow_center - glow_size * 0.5, glow_size), false, stage_mod)
 
 		# 3. Octagon band, bottom — solid near the strip, fading out to the
 		# right (mock mask: opaque to 55%, gone by 92% of the band) and fading
@@ -374,22 +380,23 @@ class Backdrop extends Control:
 				_draw_oct_cell(origin, StartMenuMainSkin.C_OCT.a * alpha)
 
 		# 4. Left strip: fill, octagon tiling, top light, right edge.
-		draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), StartMenuMainSkin.C_STRIP_BG)
+		draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), Color(StartMenuMainSkin.C_STRIP_BG, StartMenuMainSkin.STAGE_ALPHA))
 		var sgx1 := int(ceil(strip_w / OCT_TILE)) + 1
 		var sgy1 := int(ceil(h / OCT_TILE)) + 1
 		for gx in range(-1, sgx1):
 			for gy in range(-1, sgy1):
 				_draw_oct_cell(Vector2(gx * OCT_TILE, gy * OCT_TILE), StartMenuMainSkin.C_OCT.a)
-		draw_texture_rect(StartMenuMainSkin.tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false, Color.WHITE, true)
-		draw_texture_rect(StartMenuMainSkin.tex_strip_edge(), Rect2(Vector2(strip_w - StartMenuMainSkin._s(2), 0), Vector2(StartMenuMainSkin._s(2), h)), false, Color.WHITE, true)
+		draw_texture_rect(StartMenuMainSkin.tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false, stage_mod, true)
+		draw_texture_rect(StartMenuMainSkin.tex_strip_edge(), Rect2(Vector2(strip_w - StartMenuMainSkin._s(2), 0), Vector2(StartMenuMainSkin._s(2), h)), false, stage_mod, true)
 
 	const OCT_TILE := 48.0  # mock 72px tile
 
 	func _draw_oct_cell(origin: Vector2, alpha: float) -> void:
 		# One cell of the mock's truncated-square tiling: a diamond (chamfer 14)
 		# plus four tick segments crossing the cell borders so diamonds read as
-		# connected octagons when tiled.
-		var col := Color(1, 1, 1, alpha)
+		# connected octagons when tiled. Scaled by STAGE_ALPHA so the lines sit
+		# ON the translucent stage rather than looking denser than its base.
+		var col := Color(1, 1, 1, alpha * StartMenuMainSkin.STAGE_ALPHA)
 		var line_w := StartMenuMainSkin._s(2.2)
 		var cx := origin.x + 24.0
 		var cy := origin.y + 24.0
