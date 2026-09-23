@@ -451,18 +451,23 @@ static func make_unlit(root: Node, keep: Array) -> int:
 ## are no per-post nodes to hang lights on. This pass reads that surface's
 ## world-space vertices, clusters them on the XZ grid (a post's footprint is
 ## far narrower than the post spacing, so each connected blob is one post),
-## and drops a warm OmniLight3D pool at each blob's head. The post itself
-## keeps its baked look — only the actors and lit props receive the pool (the
-## toro-lantern contract from #648). Matching is by the MESH's own surface
-## material name, not the active override: the 0_light texture is mirror-
-## wrapped, so the fix pass replaces its override with an anonymous
-## ShaderMaterial while the imported surface material keeps the GLB name.
-## Returns how many lights were placed.
+## and drops a warm OmniLight3D pool at each blob's head plus a soft additive
+## ground-glow disc at its base. The omni is for the ACTORS — the stage is
+## unlit and the catcher only multiplies, so the omni's floor footprint would
+## be invisible; the disc is the readable pool (and the energy must punch
+## through the area ambient — the snowfield's ×12 lantern lesson). The post
+## itself keeps its baked look (the toro-lantern contract from #648).
+## Matching is by the MESH's own surface material name, not the active
+## override: the 0_light texture is mirror-wrapped, so the fix pass replaces
+## its override with an anonymous ShaderMaterial while the imported surface
+## material keeps the GLB name. Returns how many posts were lit.
 const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
 const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
-const POST_LIGHT_COLOR := Color(1.0, 0.92, 0.78)
-const POST_LIGHT_ENERGY := 0.55
-const POST_LIGHT_RANGE := 4.5
+const POST_LIGHT_COLOR := Color(1.0, 0.85, 0.62)
+const POST_LIGHT_ENERGY := 2.0
+const POST_LIGHT_RANGE := 5.5
+const POST_GLOW_SIZE := 2.4        ## the ground disc's side, in world units
+const POST_GLOW_OPACITY := 0.35
 
 static func place_post_lights(root: Node3D, material_name: String) -> int:
 	if material_name.is_empty():
@@ -515,9 +520,13 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 			continue
 		var sum := Vector3.ZERO
 		var top: float = blob[0].y
+		var base: float = blob[0].y
 		for w in blob:
 			sum += w
 			top = maxf(top, w.y)
+			base = minf(base, w.y)
+		var center_x := sum.x / blob.size()
+		var center_z := sum.z / blob.size()
 		var light := OmniLight3D.new()
 		# Unique per post — a duplicate sibling name gets @-mangled by
 		# add_child, hiding the light from PostLight* lookups (the lab's
@@ -531,10 +540,55 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		light.omni_attenuation = 2.0
 		light.shadow_enabled = false
 		root.add_child(light)
-		light.global_position = Vector3(
-			sum.x / blob.size(), top + 0.15, sum.z / blob.size())
+		light.global_position = Vector3(center_x, top + 0.15, center_z)
+		# The readable pool: an additive radial glow disc at the post's base.
+		var glow_mat := StandardMaterial3D.new()
+		glow_mat.albedo_color = Color(
+			POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b,
+			POST_GLOW_OPACITY)
+		glow_mat.albedo_texture = _radial_glow_texture()
+		glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		glow_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		# After the catcher (priority 2) — the pool draws over the multiply
+		# receiver, not under it.
+		glow_mat.render_priority = 3
+		var disc := PlaneMesh.new()
+		disc.size = Vector2(POST_GLOW_SIZE, POST_GLOW_SIZE)
+		disc.material = glow_mat
+		var glow := MeshInstance3D.new()
+		glow.name = "PostGlow%d" % (placed + 1)
+		glow.mesh = disc
+		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(glow)
+		# A hair above the catcher's lift (floor_top + 0.04) so the disc
+		# never z-fights the receiver it draws over.
+		glow.global_position = Vector3(center_x, base + 0.08, center_z)
 		placed += 1
 	return placed
+
+
+## Soft radial white falloff (cached) for the post glow discs — engine
+## GradientTexture2D radial fill, no hand-rolled pixel loop and no
+## WeatherController dependency for one texture.
+static var _radial_glow_tex: Texture2D = null
+
+
+static func _radial_glow_texture() -> Texture2D:
+	if _radial_glow_tex:
+		return _radial_glow_tex
+	var grad := Gradient.new()
+	grad.set_color(0, Color(1, 1, 1, 1))
+	grad.set_color(1, Color(1, 1, 1, 0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 64
+	tex.height = 64
+	_radial_glow_tex = tex
+	return tex
 
 
 ## Surface material-name match for the placement passes: the active

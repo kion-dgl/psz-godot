@@ -208,9 +208,13 @@ const slots = [
   actors: <code>post_lights</code> names a lamp-post surface material
   (<code>0_light</code>, merged into every s02a stage mesh) whose
   vertices are clustered on the XZ grid — each connected blob is one
-  post — and each post head gets a warm placed omni pool (the posts
-  themselves stay baked, the toro-lantern contract; the s02b/e/z
-  variants ship no such surface and place nothing), and
+  post — and each post head gets a warm placed omni pool plus a soft
+  additive ground-glow disc at its base. The stage is unlit and the
+  catcher only multiplies, so the omni's floor footprint would otherwise
+  be invisible — the disc is the readable pool, and the omni's energy
+  must punch through the area ambient (the snowfield's ×12 lantern
+  lesson). The posts themselves stay baked, the toro-lantern contract;
+  the s02b/e/z variants ship no such surface and place nothing), and
   <code>lit_props</code> raises the field-scoped GameElement flag so
   boxes, fences, drops, and field NPCs load per-pixel like the player
   and enemies — the flag is cleared on field exit, so city scenes

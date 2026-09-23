@@ -22,13 +22,16 @@ extends Node3D
 ##                                 (a caster that provably shadows)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
+##       [ / ]  post pools ∓/± 0.25× (omni energy + glow strength)
 ##       F / G  shadow normal bias ∓/± 1 (acne stripes on grazing ground)
 ##       C / V  shadow bias ∓/± 0.05
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       N       next room · R reload · ESC quit
 ##
-## Post-light energy/range/color are MeshUtils constants (POST_LIGHT_*) —
-## edit + R reload; the read-out prints where the pools landed.
+## Post-light base energy/range/color are MeshUtils constants (POST_LIGHT_*);
+## [ / ] scale the pools live against those bases — read the multiplier out
+## with P and fold it back into the constant (or say the word and it becomes
+## row data).
 
 const STAGE_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s_m.glb"
 const FLOOR_GLB_FMT := "res://assets/stages/%s/%s/lndmd/%s-floor.glb"
@@ -67,6 +70,7 @@ var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
 var _posts := 0
+var _post_mult := 1.0
 
 
 func _ready() -> void:
@@ -143,6 +147,10 @@ func _input(event: InputEvent) -> void:
 			_dir_light.rotation_degrees.x = maxf(-89.0, _dir_light.rotation_degrees.x - 5.0)
 		KEY_8:
 			_dir_light.rotation_degrees.x = minf(-5.0, _dir_light.rotation_degrees.x + 5.0)
+		KEY_BRACKETLEFT:
+			_set_post_energy(_post_mult - 0.25)
+		KEY_BRACKETRIGHT:
+			_set_post_energy(_post_mult + 0.25)
 		KEY_M:
 			_dir_light.shadow_enabled = not _dir_light.shadow_enabled
 		KEY_F:
@@ -314,6 +322,17 @@ func _spawn_weather() -> void:
 	print("[WetlandsWalk] weather: %s" % str(_slot.get("weather", "")))
 
 
+## Scale every post pool against its MeshUtils base — the omni energy and
+## the glow strength move together so the A/B reads as one pool.
+func _set_post_energy(mult: float) -> void:
+	_post_mult = clampf(mult, 0.0, 4.0)
+	for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
+		(light as OmniLight3D).light_energy = MeshUtils.POST_LIGHT_ENERGY * _post_mult
+	for glow in _map_root.find_children("PostGlow*", "MeshInstance3D", true, false):
+		var mat := ((glow as MeshInstance3D).mesh as PlaneMesh).material as StandardMaterial3D
+		mat.albedo_color.a = MeshUtils.POST_GLOW_OPACITY * _post_mult
+
+
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
@@ -322,9 +341,9 @@ func _readout() -> void:
 		_dir_light.rotation_degrees.x, str(_dir_light.shadow_enabled).to_lower()])
 	print("[FieldSlot %s] shadow_bias %.2f  shadow_normal_bias %.1f" % [
 		_stage_id, _dir_light.shadow_bias, _dir_light.shadow_normal_bias])
-	print("[WetlandsWalk] room sun: %s  posts: %d pool(s)" % [
+	print("[WetlandsWalk] room sun: %s  posts: %d pool(s) × %.2f (energy %.2f)" % [
 		"open" if _sun_open else "enclosed — %d shell mesh(es) cast-off" % _shells_disarmed,
-		_posts])
+		_posts, _post_mult, MeshUtils.POST_LIGHT_ENERGY * _post_mult])
 
 
 func _build_status_label() -> void:
@@ -337,9 +356,9 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  nb %.1f  posts %d  room %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  nb %.1f  posts %d ×%.2f  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",
-		_dir_light.shadow_normal_bias, _posts,
+		_dir_light.shadow_normal_bias, _posts, _post_mult,
 		"sun-open" if _sun_open else "shell-cast-off"]

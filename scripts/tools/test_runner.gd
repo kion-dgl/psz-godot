@@ -11508,6 +11508,22 @@ func test_wetlands_post_lights() -> void:
 			"omnis never cast (the gl_compatibility convention)")
 		assert_almost_eq(a.omni_attenuation, 2.0, 0.01,
 			"true inverse-square falloff (the placed-light convention)")
+		assert_true(a.light_energy > 1.0,
+			"the energy punches through the area ambient (the snowfield ×12 lantern lesson)")
+	# The readable pool: each post also carries an additive ground glow disc
+	# at its base — the stage is unlit and the catcher only multiplies, so
+	# the omni alone can't show on the floor.
+	var glows := root.find_children("PostGlow*", "MeshInstance3D", true, false)
+	assert_eq(glows.size(), 2, "each post carries a ground glow disc")
+	if glows.size() == 2:
+		var disc := (glows[0] as MeshInstance3D).mesh as PlaneMesh
+		var gmat := disc.material as StandardMaterial3D
+		assert_eq(gmat.blend_mode, BaseMaterial3D.BLEND_MODE_ADD,
+			"the glow is additive — a light pool over the bake")
+		assert_eq(gmat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
+			"the glow is unshaded")
+		assert_almost_eq((glows[0] as Node3D).global_position.y, 0.0 + 0.08, 0.01,
+			"the disc rides the post base, a hair above the catcher's lift")
 	# The 0_light texture is mirror-wrapped — _fix_materials swaps the
 	# surface's OVERRIDE to an anonymous ShaderMaterial while the mesh's own
 	# surface material keeps the GLB name. The match must survive that.
