@@ -465,8 +465,9 @@ static func make_unlit(root: Node, keep: Array) -> int:
 ## ELECTRIC (kion, 2026-09-23) — no flame particles, no glow disc: the stage
 ## receives the rig under this row (lit_surfaces "*"), so the lantern paints
 ## its own real pool on the pathway — a fake disc read as a circle in the
-## air under the HANGING lanterns. The light sits ~1m under the cluster top:
-## the authored anchors sit at y≈4 under a ~5m post. The energy must punch
+## air under the HANGING lanterns. The light sits ~1.2m under the cluster
+## top (the authored anchors' height, 0.2 down — kion read-out). The energy
+## must punch
 ## through the area ambient (the snowfield's ×12 lantern lesson). Matching
 ## is by the MESH's own surface material name, not the active override: the
 ## 0_light texture is mirror-wrapped, so the fix pass replaces its override
@@ -482,7 +483,7 @@ const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
 ## the model means the lantern reaches the actors. Revert to
 ## POST_LIGHT_COLOR once confirmed.
 const POST_LIGHT_OMNI_COLOR := Color(0.25, 0.5, 1.0)
-const POST_LIGHT_ENERGY := 4.0
+const POST_LIGHT_ENERGY := 8.0
 const POST_LIGHT_RANGE := 11.0
 
 
@@ -561,9 +562,11 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		light.shadow_enabled = true
 		light.shadow_blur = 1.0
 		root.add_child(light)
-		# ~1m under the cluster top — the authored anchors sit at y≈4 under
-		# a ~5m post: at the hanging lantern, not the pole tip.
-		light.global_position = Vector3(center_x, top - 1.0, center_z)
+		# ~1.2m under the cluster top, 0.2 down of the authored anchors'
+		# height (kion 2026-09-23 read-out: the player only read the
+		# lanterns in stupid darkness — closer to the ground and twice the
+		# energy makes the pool own the player at rig values).
+		light.global_position = Vector3(center_x, top - 1.2, center_z)
 		placed += 1
 	return placed
 

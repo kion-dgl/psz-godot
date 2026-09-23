@@ -11527,8 +11527,8 @@ func test_wetlands_post_lights() -> void:
 		var b := lights[1] as OmniLight3D
 		assert_almost_eq(a.global_position.x, 0.0, 0.3, "pool A sits on post A's spine")
 		assert_almost_eq(b.global_position.x, 10.0, 0.3, "pool B sits on post B's spine")
-		assert_almost_eq(a.global_position.y, 2.9 - 1.0, 0.05,
-			"the omni sits at the hanging lantern (~1m under the pole tip)")
+		assert_almost_eq(a.global_position.y, 2.9 - 1.2, 0.05,
+			"the omni sits at the hanging lantern (~1.2m under the pole tip — 0.2 down of the anchors, kion read-out)")
 		assert_true(a.shadow_enabled,
 			"the lanterns CAST — the dark-room read-out wants lantern-dominant shadow direction (the placed-omni convention's one exception)")
 		assert_almost_eq(a.omni_attenuation, 2.0, 0.01,
