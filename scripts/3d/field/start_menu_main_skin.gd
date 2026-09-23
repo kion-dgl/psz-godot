@@ -990,6 +990,14 @@ func sync() -> void:
 	if in_main != _last_in_main:
 		_last_in_main = in_main
 		visible = in_main
+		# The input path queues its redraw while the skin may still be
+		# covering the canvas (_draw_menu early-returns then); re-queue on
+		# every coverage change so the layer below ALWAYS gets one repaint
+		# after the skin steps aside. Without this, entering a sub-mode can
+		# leave a blank frame that reads as "the menu closed" (the round-5
+		# "legacy menu appears randomly" was the same race, won or lost
+		# depending on whether input flushes before or after _process).
+		_c._canvas.queue_redraw()
 		if in_main:
 			_refresh_all()
 	if not in_main:
