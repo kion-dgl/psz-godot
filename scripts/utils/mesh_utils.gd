@@ -550,10 +550,16 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		light.light_color = POST_LIGHT_OMNI_COLOR
 		light.light_energy = POST_LIGHT_ENERGY
 		light.omni_range = POST_LIGHT_RANGE
-		# True inverse-square + no casting — the placed-light conventions
-		# (weather_controller.gd; omnis never cast under gl_compatibility).
 		light.omni_attenuation = 2.0
-		light.shadow_enabled = false
+		# The wetlands' lanterns CAST (kion's 2026-09-23 dark-room read-out):
+		# in the moody overcast the nearest lantern is the dominant light, so
+		# the actors' shadows must swing with it — the deliberate exception
+		# to the placed-omnis-never-cast convention. The compat renderer's
+		# dual-paraboloid omni shadows land on the per-pixel ground (the
+		# vertex-shaded-material caveat doesn't apply); only actors cast, so
+		# the extra shadow passes stay cheap.
+		light.shadow_enabled = true
+		light.shadow_blur = 1.0
 		root.add_child(light)
 		# ~1m under the cluster top — the authored anchors sit at y≈4 under
 		# a ~5m post: at the hanging lantern, not the pole tip.
