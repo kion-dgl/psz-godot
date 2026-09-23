@@ -30,9 +30,10 @@ const FONT: Font = preload("res://bootstrap/fonts/VT323-Regular.ttf")
 const C_STAGE := Color("#ffffff")
 ## Deviations from the mock (playtest feedback, 2026-09-22): the mock's
 ## opaque white stage is gone entirely — the start menu is a non-pausing
-## overlay, so only the blue octagon L (left strip + full-width bottom band)
-## and the chamfered panels paint over the game. The bottom band also runs
-## across the whole width instead of fading out to the right.
+## overlay, so only the blue octagon L (left strip + bottom band) and the
+## chamfered panels paint over the game. Round 4 also dropped the mock's
+## name panel (the persistent HudStats plate owns that corner, on top) and
+## the footer key guide, and moved the stats window to the far right.
 const STAGE_ALPHA := 0.82
 const C_FRAME_TOP := Color("#c8dbf5")
 const C_FRAME_MID := Color("#b6d0ee")
@@ -63,15 +64,11 @@ const C_SHOULDER_RING := Color("#1a2a44")
 const C_ARROW_FILL := Color("#3bd57d")
 const C_ARROW_HOVER := Color("#7af3a9")
 const C_ARROW_STROKE := Color("#0d3521")
-const C_FOOTER := Color(0.153, 0.275, 0.463, 0.82)  # #274676 @ 0.82
-const C_KBD_BORDER := Color(0.153, 0.275, 0.463, 0.4)
 
 # ── Mock typography, scaled ────────────────────────────────────────────────────
 const FS_MAIN := 32       # mock 48px body text
 const FS_COUNTER := 29    # mock 44px page counter
 const FS_SHOULDER := 28   # mock 42px L/R key labels
-const FS_FOOTER := 19     # mock 28px hint text
-const FS_KBD := 8         # mock 12px kbd chips
 
 # ── Mock layout (stage-space values, scaled on use) ────────────────────────────
 const NAME_POS := Vector2(32, 48)
@@ -127,13 +124,10 @@ var _counter_label: Label
 var _stats_rows: Control
 var _stats_base_x := 0.0
 var _stats_tween: Tween
-var _name_plate: NamePlate
 var _last_in_main := false
 var _last_menu := -1
 var _last_page := -1
 var _last_labels := ""
-var _last_hp_frac := -1.0
-var _last_pp_frac := -1.0
 var _numeric_font: Font
 
 
@@ -524,8 +518,10 @@ class HpBar extends Control:
 		draw_rect(ring, StartMenuMainSkin.C_HP_TRACK)
 		var fill_w := size.x * fraction
 		if fill_w > 0.5:
+			# Round 4: the gloss sweeps ACROSS (light left → dark right),
+			# matching the selection row — not top-to-bottom.
 			var tex := fill_tex if fill_tex != null else StartMenuMainSkin.tex_hp()
-			draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(fill_w, size.y)), false, Color.WHITE, true)
+			draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(fill_w, size.y)), false)
 		draw_rect(ring, StartMenuMainSkin.C_RING_WHITE, false, StartMenuMainSkin._s(1.5))
 		draw_rect(ring.grow(StartMenuMainSkin._s(1.0)), StartMenuMainSkin.C_RING_NAVY, false, StartMenuMainSkin._s(1.0))
 
@@ -728,58 +724,11 @@ class StatRow extends Control:
 			draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.35))
 
 
-## Footer kbd chip: box + a row of glyph content. VT323 has no arrow
-## codepoints, so arrows are drawn as tiny triangles instead of characters,
-## laid out inline before/after text via draw_string.
-class KbdChip extends Control:
-	var items: Array = []  # [{"t": "ENTER"} | {"g": "up"|"down"|"left"|"right"}]
-
-	const TRI_W := 4.0
-	const GAP := 2.0
-
-	func _ready() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-
-	func measure() -> float:
-		var w := 6.0
-		for item in items:
-			if item.has("g"):
-				w += TRI_W + GAP
-			else:
-				w += StartMenuMainSkin.FONT.get_string_size(str(item.t), HORIZONTAL_ALIGNMENT_LEFT, -1, StartMenuMainSkin.FS_KBD).x + GAP
-		return w + 2.0
-
-	func _draw() -> void:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(1, 1, 1, 0.7)
-		sb.border_color = StartMenuMainSkin.C_KBD_BORDER
-		sb.set_border_width_all(1)
-		sb.set_corner_radius_all(2)
-		draw_style_box(sb, Rect2(Vector2.ZERO, size))
-		var x := 4.0
-		var cy := size.y * 0.5
-		for item in items:
-			if item.has("g"):
-				var kind := str(item.g)
-				var pts := PackedVector2Array()
-				match kind:
-					"up": pts = [Vector2(x + TRI_W * 0.5, cy - 3), Vector2(x + TRI_W, cy + 2), Vector2(x, cy + 2)]
-					"down": pts = [Vector2(x, cy - 2), Vector2(x + TRI_W, cy - 2), Vector2(x + TRI_W * 0.5, cy + 3)]
-					"left": pts = [Vector2(x + TRI_W, cy - 3), Vector2(x + TRI_W, cy + 3), Vector2(x, cy)]
-					"right": pts = [Vector2(x, cy - 3), Vector2(x, cy + 3), Vector2(x + TRI_W, cy)]
-				draw_colored_polygon(pts, StartMenuMainSkin.C_FOOTER)
-				x += TRI_W + GAP
-			else:
-				var text := str(item.t)
-				var ascent: float = StartMenuMainSkin.FONT.get_ascent(StartMenuMainSkin.FS_KBD)
-				draw_string(StartMenuMainSkin.FONT, Vector2(x, cy + ascent * 0.5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, StartMenuMainSkin.FS_KBD, StartMenuMainSkin.C_FOOTER)
-				x += StartMenuMainSkin.FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, StartMenuMainSkin.FS_KBD).x + GAP
-
-
-## The name / HP / PP plate — one visual language shared by the menu's MAIN
-## page and the persistent HudStats panel (playtest round 3: the Flauros
-## plate REPLACES the legacy hp-pp.png HUD rather than just echoing it while
-## the menu is open). Geometry is the mock's NamePanel.
+## The name / HP / PP plate — the persistent gameplay HUD (HudStats). It
+## replaced the legacy hp-pp.png panel in playtest round 3 and became the
+## ONLY instance in round 4: the menu no longer draws its own copy, and at
+## layer 200 this plate renders on top of the start menu while it's open.
+## Geometry is the mock's NamePanel.
 class NamePlate extends Control:
 	var _name_label: Label
 	var _hp_bar: HpBar
@@ -878,22 +827,12 @@ func setup(controller: CanvasLayer) -> void:
 	backdrop.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(backdrop)
 
-	_build_name_panel()
 	_build_menu_panel()
 	_build_description_panel()
 	_build_stats_panel()
-	_build_footer()
 
 	_refresh_all()
 	_play_entry()
-
-
-func _build_name_panel() -> void:
-	var holder := _holder(_v(NAME_POS), _v(NAME_SIZE))
-	_name_plate = NamePlate.new()
-	_name_plate.setup_plate(_character_name())
-	holder.add_child(_name_plate)
-	set_meta("holder_name", holder)
 
 
 func _build_menu_panel() -> void:
@@ -937,7 +876,8 @@ func _build_description_panel() -> void:
 
 
 func _build_stats_panel() -> void:
-	var holder := _holder(_v(STATS_POS), _v(STATS_SIZE))
+	# Round 4: pinned to the far right edge instead of the mock's center-right.
+	var holder := _holder(Vector2(VIEW_W - _v(STATS_SIZE).x - 24.0, _v(STATS_POS).y), _v(STATS_SIZE))
 	_add_chamfer(holder, STATS_OUTER, [{"poly": STATS_INNER, "tone": "sky"}])
 
 	# Page header: [◀] [L] counter [R] [▶], centered in the frame band.
@@ -989,39 +929,6 @@ func _build_stats_panel() -> void:
 	set_meta("holder_stats", holder)
 
 
-func _build_footer() -> void:
-	# Mock: [↑↓ / W S] Select [←→ / Q E] Page [ENTER] Confirm — adapted to the
-	# game's real bindings (arrows/dpad, LB/RB page flip, Enter/Start accept).
-	var holder := Control.new()
-	holder.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(holder)
-	set_meta("holder_footer", holder)
-
-	var groups := [
-		{"chip": [{"g": "up"}, {"g": "down"}, {"t": "/ D-PAD"}], "label": "Select"},
-		{"chip": [{"g": "left"}, {"g": "right"}, {"t": "/ LB RB"}], "label": "Page"},
-		{"chip": [{"t": "ENTER"}], "label": "Confirm"},
-	]
-	var gap := _s(24)
-	var row_h := _s(30)
-	var x := 0.0
-	for group in groups:
-		var chip := KbdChip.new()
-		chip.items = group.chip
-		chip.size = Vector2(chip.measure(), _s(24))
-		chip.position = Vector2(x, (row_h - chip.size.y) * 0.5)
-		holder.add_child(chip)
-		x += chip.size.x + _s(10)
-		var lbl := _make_label(str(group.label), FS_FOOTER, C_FOOTER)
-		lbl.size = Vector2(FONT.get_string_size(str(group.label), HORIZONTAL_ALIGNMENT_LEFT, -1, FS_FOOTER).x + 2, row_h)
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.position = Vector2(x, 0)
-		holder.add_child(lbl)
-		x += lbl.size.x + gap
-	holder.size = Vector2(x, row_h)
-	holder.position = Vector2(VIEW_W - _s(42) - x, VIEW_H - _s(24) - row_h)
-
-
 # ── Refresh / sync ──────────────────────────────────────────────────────────────
 
 
@@ -1033,7 +940,6 @@ func sync() -> void:
 	if in_main != _last_in_main:
 		_last_in_main = in_main
 		visible = in_main
-		HudStats.visible = not in_main  # NamePanel already shows name+HP
 		if in_main:
 			_refresh_all()
 	if not in_main:
@@ -1046,21 +952,13 @@ func sync() -> void:
 		_refresh_selection()
 	if _c._info_page != _last_page:
 		_refresh_stats(true)
-	var hp_frac := _hp_fraction()
-	var pp_frac := _pp_fraction()
-	if absf(hp_frac - _last_hp_frac) > 0.001 or absf(pp_frac - _last_pp_frac) > 0.001:
-		_last_hp_frac = hp_frac
-		_last_pp_frac = pp_frac
-		_name_plate.set_fractions(hp_frac, pp_frac)
+	# Live name/HP/PP is the persistent HudStats plate's job (layer 200, so
+	# it renders ON TOP of this skin while the menu is open — round 4).
 
 
 func _refresh_all() -> void:
-	_name_plate.set_name_text(_character_name())
 	_refresh_selection()
 	_refresh_stats(false)
-	_last_hp_frac = _hp_fraction()
-	_last_pp_frac = _pp_fraction()
-	_name_plate.set_fractions(_last_hp_frac, _last_pp_frac)
 
 
 func _refresh_selection() -> void:
@@ -1121,11 +1019,9 @@ func _set_description(text: String) -> void:
 ## and footer slide up — 0/80/160/240/400ms, 550ms ease-out.
 func _play_entry() -> void:
 	var specs := [
-		[get_meta("holder_name"), Vector2(-28, 0), 0.0],
 		[get_meta("holder_menu"), Vector2(-28, 0), 0.08],
 		[get_meta("holder_desc"), Vector2(-28, 0), 0.16],
 		[get_meta("holder_stats"), Vector2(0, 28), 0.24],
-		[get_meta("holder_footer"), Vector2(0, 28), 0.4],
 	]
 	for spec in specs:
 		var h: Control = spec[0]
@@ -1138,11 +1034,6 @@ func _play_entry() -> void:
 		tw.tween_interval(delay)
 		tw.tween_property(h, "position", final_pos, 0.55).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 		tw.parallel().tween_property(h, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
-	# Bars sweep up from empty (mock: 500ms ease-out width transition).
-	_name_plate.set_fractions(0.0, 0.0, false)
-	_last_hp_frac = _hp_fraction()
-	_last_pp_frac = _pp_fraction()
-	_name_plate.set_fractions(_last_hp_frac, _last_pp_frac)
 
 
 # ── Helpers ═══
@@ -1177,38 +1068,6 @@ func _make_label(text: String, font_size: int, color: Color) -> Label:
 	lbl.add_theme_color_override("font_color", color)
 	lbl.add_theme_constant_override("line_spacing", 0)
 	return lbl
-
-
-func _character_name() -> String:
-	return str(_c._get_character().get("name", "???"))
-
-
-func _hp_fraction() -> float:
-	if GameState.max_hp > 0:
-		return clampf(float(GameState.hp) / float(GameState.max_hp), 0.0, 1.0)
-	var ch: Dictionary = _c._get_character()
-	var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
-	var level := int(ch.get("level", 1))
-	var base_hp := 1
-	if class_data != null:
-		base_hp = class_data.get_stat_at_level("hp", level)
-	var max_hp := maxi(base_hp + int(ch.get("material_bonuses", {}).get("hp", 0)), 1)
-	var hp := int(ch.get("hp", max_hp))
-	return clampf(float(hp) / float(max_hp), 0.0, 1.0)
-
-
-func _pp_fraction() -> float:
-	if GameState.max_mp > 0:
-		return clampf(float(GameState.mp) / float(GameState.max_mp), 0.0, 1.0)
-	var ch: Dictionary = _c._get_character()
-	var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
-	var level := int(ch.get("level", 1))
-	var base_pp := 1
-	if class_data != null:
-		base_pp = class_data.get_stat_at_level("pp", level)
-	var max_pp := maxi(base_pp + int(ch.get("material_bonuses", {}).get("pp", 0)), 1)
-	var pp := int(ch.get("pp", max_pp))
-	return clampf(float(pp) / float(max_pp), 0.0, 1.0)
 
 
 func _on_row_hover(index: int) -> void:

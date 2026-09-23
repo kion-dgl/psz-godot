@@ -6116,6 +6116,7 @@ func test_start_menu_main_skin() -> void:
 	if PsoStartMenu.is_open():
 		PsoStartMenu.close()
 
+	var hud_visible_before: bool = HudStats.visible
 	PsoStartMenu.open()
 	assert_true(PsoStartMenu._main_skin != null, "open() attaches the MAIN skin")
 	assert_true(PsoStartMenu._main_skin.visible, "skin visible while Mode.MAIN")
@@ -6126,20 +6127,19 @@ func test_start_menu_main_skin() -> void:
 	PsoStartMenu._info_page = 2
 	PsoStartMenu._main_skin.sync()
 	assert_eq(PsoStartMenu._main_skin.counter_text(), "3/4", "counter tracks _info_page")
-	assert_true(not HudStats.visible, "HUD stats hidden under the full-screen MAIN page")
+	assert_eq(HudStats.visible, hud_visible_before, "menu open leaves HudStats alone (plate sits on top, layer 200)")
 
 	# MAIN <-> sub-mode transitions show/hide the skin without re-attaching.
 	PsoStartMenu._enter_sub(0)
 	PsoStartMenu._main_skin.sync()
 	assert_true(not PsoStartMenu._main_skin.visible, "entering a sub-mode hides the skin")
-	assert_true(HudStats.visible, "HUD stats restored over sub-modes")
 	PsoStartMenu._mode = PsoStartMenu.Mode.MAIN
 	PsoStartMenu._main_skin.sync()
 	assert_true(PsoStartMenu._main_skin.visible, "back to MAIN re-shows the skin")
 
 	PsoStartMenu.close()
 	assert_true(PsoStartMenu._main_skin == null, "close() detaches the skin")
-	assert_true(HudStats.visible, "close() restores the HUD stats panel")
+	assert_eq(HudStats.visible, hud_visible_before, "menu close leaves HudStats alone")
 	print("")
 
 

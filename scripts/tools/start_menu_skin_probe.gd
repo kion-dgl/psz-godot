@@ -52,6 +52,11 @@ func _shoot(shot: Dictionary) -> void:
 	img.save_png(str(shot.path))
 	# Round-3 samples: selected-row gradient direction (two x on one row),
 	# bottom-left seam (single style), band body vs far-right fade, open area.
-	for sample in [[40, 138], [140, 138], [80, 500], [900, 650], [1230, 700], [640, 360]]:
+	for sample in [[40, 138], [140, 138], [600, 650], [640, 300]]:
 		print("[skin-probe] px(%d,%d)=%s" % [sample[0], sample[1], img.get_pixel(sample[0], sample[1]).to_html(false)])
+	# Scanline across the stats window band (y=520) — find the panel edges.
+	var row := ""
+	for x in range(760, 1280, 40):
+		row += " %d:%s" % [x, img.get_pixel(x, 520).to_html(false)]
+	print("[skin-probe] y520:" + row)
 	print("[skin-probe] wrote %s" % shot.path)

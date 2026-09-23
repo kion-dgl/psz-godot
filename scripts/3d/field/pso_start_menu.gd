@@ -191,9 +191,6 @@ func _detach_main_skin() -> void:
 	if _main_skin != null:
 		_main_skin.queue_free()
 		_main_skin = null
-	# The skin hides the HUD stats panel while it covers the viewport (the
-	# NamePanel already shows name + HP); restore it on the way out.
-	HudStats.visible = true
 
 
 ## Open a multi-button ChoiceDialog. The callback receives the chosen
