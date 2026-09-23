@@ -11383,17 +11383,14 @@ func test_wetlands_overcast_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
-	assert_eq(wet.get("sun_energy"), 0.35,
-		"Wetlands rig: weak sun 0.35 — the subtle overcast shadow source")
-	assert_eq(wet.get("ambient_energy"), 0.65,
-		"Wetlands rig: ambient 0.65 — moody (kion 2026-09-23 read-out)")
-	assert_eq(wet.get("sun_pitch"), -55.0, "Wetlands rig: sun −55° — short soft shadows")
+	assert_eq(wet.get("sun_energy"), 0.0,
+		"Wetlands rig: the sun is OFF — the lanterns are the light sources (kion 2026-09-23)")
+	assert_eq(wet.get("ambient_energy"), 0.45,
+		"Wetlands rig: dark ambient 0.45 — the lanterns own the scene (kion read-out)")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
-	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon (day — the weak sun is the source)")
-	# Overcast colors desaturate the DAY preset's warm light — a warm sun
-	# through gray would read sunny.
-	assert_eq(wet.get("sun_color"), Color(0.82, 0.87, 0.93),
-		"sun color: neutral-cool, not the preset's warm white")
+	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
+	assert_true(not wet.has("sun_pitch") and not wet.has("sun_color"),
+		"no sun character fields — there is no sun to character")
 	assert_eq(wet.get("ambient_color"), Color(0.70, 0.75, 0.82),
 		"ambient color: gray-blue fill")
 	assert_eq(wet.get("sky_top_color"), Color(0.42, 0.47, 0.53),
@@ -11407,8 +11404,8 @@ func test_wetlands_overcast_slot() -> void:
 	assert_eq(wet.get("lit_surfaces"), ["*"],
 		"the wildcard lights the WHOLE stage per-pixel — bake kept as albedo")
 	assert_true(not wet.has("bake_mix"), "no bake_mix — the bake IS the look")
-	assert_eq(wet.get("sun_shadows"), true,
-		"sun shadows on — the actors' shadows land on the lit ground directly")
+	assert_true(not wet.get("sun_shadows", false),
+		"no directional shadow source — the lantern omnis cast, and the blob shadow skips via post_lights")
 	assert_true(not wet.get("shadow_catcher", false),
 		"no catcher — the lit ground already receives; a catcher would double-darken")
 	assert_true(not wet.get("geometry_casts_shadows", false),
@@ -11543,8 +11540,8 @@ func test_wetlands_post_lights() -> void:
 	assert_true(root.find_children("PostGlow*", "MeshInstance3D", true, false).is_empty(),
 		"no glow disc — the lit ground IS the pool")
 	if lights.size() == 2:
-		assert_eq((lights[0] as OmniLight3D).light_color, Color(0.25, 0.5, 1.0),
-			"the omni rides the debug blue (#649 receive-path verification)")
+		assert_eq((lights[0] as OmniLight3D).light_color, Color(1.0, 0.7, 0.3),
+			"the kion yellow-orange lantern color (the debug blue retired)")
 	# The 0_light texture is mirror-wrapped — _fix_materials swaps the
 	# surface's OVERRIDE to an anonymous ShaderMaterial while the mesh's own
 	# surface material keeps the GLB name. The match must survive that.

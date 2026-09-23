@@ -15,7 +15,7 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*" — real light pools on the pathway); weak desaturated sun 0.35 / moody ambient 0.65 with gray sky bands; no catcher (the lit ground takes the actors' shadows directly); the 0_light surface clusters into hanging electric-lantern omni pools; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*"); sun OFF, dark ambient 0.45 — the yellow-orange electric lanterns are the primary light and the shadow source (0_light clusters into hanging-lantern omni pools; the blob skips); lit_props brings boxes/fences/drops/NPCs onto the receive path' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -202,22 +202,24 @@ const slots = [
   the hanging lanterns — the marsh deck isn't flat, so nothing pinned to
   one walk height connects lantern to ground; real light is the only pool
   that lands.) With the ground lit there is <strong>no
-  <code>shadow_catcher</code></strong>: the actors' sun shadows land on the
+  <code>shadow_catcher</code></strong>: the actors' shadows land on the
   lit ground directly, and a catcher would double-darken them. The
-  overcast character: weak sun 0.35 against a moody ambient 0.65, both
-  desaturated (<code>sun_color</code> / <code>ambient_color</code>; the
-  DAY preset's warm light would read sunny through the gray) with
-  <code>sky_top_color</code> / <code>sky_horizon_color</code> overcast
-  bands. <code>post_lights</code> names the lamp surface material
+  overcast character (kion 2026-09-23): the sun is <strong>off</strong>
+  and the ambient is dark (0.45, gray-blue) with overcast sky bands —
+  the lanterns are the primary light, their pools owning the pathway
+  (<code>sun_energy</code> 0.0 like the snowfield night; the blob
+  shadow skips under <code>post_lights</code> rows, whose omnis are the
+  shadow source — blob + lantern shadow reads double).
+  <code>post_lights</code> names the lamp surface material
   (<code>0_light</code>, merged into every s02a stage mesh) whose
   vertices are clustered on the XZ grid — each connected blob is one
-  post — and each hanging lantern gets an electric omni pool (the
-  authored spec: color 1.0/0.3/0.12, light radius 11, ~1.2m under the pole
-  tip (0.2 down of the authored anchors, and doubled energy — the kion
-  read-out: the player only read the lanterns in stupid darkness); no
-  flame particles ride them — the
-  lamps are electric), its energy punching through the ambient (the
-  snowfield's ×12 lantern lesson). The s02b/e/z variants ship no such
+  post — and each hanging lantern gets an electric omni pool
+  (yellow-orange 1.0/0.7/0.3 — the kion color call, the debug blue
+  retired after receive-path confirmation — light radius 11, ~1.2m under
+  the pole tip, energy 10 on a flattened 1.0 falloff: true
+  inverse-square starves a lantern hanging ~3.8m over its pool; no
+  flame particles ride them — the lamps are electric). The s02b/e/z
+  variants ship no such
   surface and place nothing. The lanterns <strong>cast</strong> — the one
   deliberate exception to the placed-omnis-never-cast convention: in the
   moody dark the nearest lantern is the dominant light, and the actors'

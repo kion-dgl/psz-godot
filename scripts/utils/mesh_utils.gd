@@ -475,14 +475,8 @@ static func make_unlit(root: Node, keep: Array) -> int:
 ## keeps the GLB name. Returns how many posts were lit.
 const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
 const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
-## The authored lantern look (kion's s02a_ga1 data): fire-orange, light
-## radius 11.
-const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
-## DEBUG (#649 hardware verification): the omni rides an unmistakable blue
-## so the player's receive path is confirmable on the Mac — a blue tint on
-## the model means the lantern reaches the actors. Revert to
-## POST_LIGHT_COLOR once confirmed.
-const POST_LIGHT_OMNI_COLOR := Color(0.25, 0.5, 1.0)
+## The lantern color (kion 2026-09-23 call): yellow-orange, light radius 11.
+const POST_LIGHT_COLOR := Color(1.0, 0.7, 0.3)
 const POST_LIGHT_ENERGY := 10.0
 const POST_LIGHT_RANGE := 11.0
 ## The falloff departure (kion 2026-09-23 read-out): the placed-light
@@ -555,7 +549,7 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		# add_child, hiding the light from PostLight* lookups (the lab's
 		# position read-out).
 		light.name = "PostLight%d" % (placed + 1)
-		light.light_color = POST_LIGHT_OMNI_COLOR
+		light.light_color = POST_LIGHT_COLOR
 		light.light_energy = POST_LIGHT_ENERGY
 		light.omni_range = POST_LIGHT_RANGE
 		light.omni_attenuation = POST_LIGHT_ATTENUATION

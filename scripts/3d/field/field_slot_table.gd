@@ -138,28 +138,22 @@ const SLOTS := {
 		],
 	},
 
-	# Wetlands overcast — the #649 rig (the valley cheat rig turned inside
-	# out, kion 2026-09-23 call): the bake STAYS (vertex_color_use_as_albedo
-	# everywhere) but the stage RECEIVES the rig — lit_surfaces "*" flips the
-	# whole stage per-pixel so the lanterns paint real pools on the pathway
-	# (the fake glow disc read as a circle in the air under the hanging
-	# lanterns). No shadow_catcher: the lit ground receives the actors' sun
-	# shadows directly (a catcher would double-darken them). A weak
-	# desaturated sun + a MOODY ambient (0.65) carry the overcast; the lamps
-	# are electric (omni pools, no flame particles; post_lights clusters the
-	# 0_light surface — every s02a stage ships it, the b/e/z variants don't
-	# and no-op); lit_props brings boxes/fences/drops/NPCs onto the receive
-	# path. Rain rides the row.
+	# Wetlands overcast — the #649 rig (kion 2026-09-23 calls): the bake
+	# STAYS (vertex_color_use_as_albedo everywhere) and the whole stage
+	# RECEIVES (lit_surfaces "*") — but the sun is OFF and a dark ambient
+	# (0.45) makes the yellow-orange electric lanterns the primary light:
+	# post_lights clusters the 0_light surface (every s02a stage ships it;
+	# the b/e/z variants don't and no-op) into pools that paint the pathway
+	# and CAST the actors' shadows (the blob shadow skips under post_lights
+	# rows — lantern shadows + blob would read double). lit_props brings
+	# boxes/fences/drops/NPCs onto the receive path. Rain rides the row.
 	"ozette": {
 		"hour": 10.0,
-		"sun_energy": 0.35,
-		"sun_color": Color(0.82, 0.87, 0.93),
-		"ambient_energy": 0.65,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.45,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
-		"sun_pitch": -55.0,
-		"sun_shadows": true,
 		"weather": "rain",
 		"lit_surfaces": ["*"],
 		"post_lights": "0_light",

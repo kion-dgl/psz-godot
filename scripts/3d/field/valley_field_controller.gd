@@ -914,12 +914,11 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.camera_rotation = rot + PI
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
-	# Slots with real directional shadows skip it (#646): a shadow-casting
-	# sun (#648) or moon casts dynamic shadows there, and blob + real shadow
-	# reads as a double shadow. Enclosed stage shells were disarmed above so
-	# the sun reaches every room's interior — the player always has its
-	# dynamic shadow under a shadow row.
-	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false)):
+	# Slots with real dynamic shadows skip it (#646): a shadow-casting sun
+	# (#648) or moon, or lantern pools (#649 — the wetlands' post omnis are
+	# the shadow source; blob + lantern shadow reads as a double shadow).
+	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false) \
+			or _slot.has("post_lights")):
 		_blob_shadow = MeshUtils.make_player_blob()
 		add_child(_blob_shadow)
 		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
