@@ -876,8 +876,8 @@ func _build_description_panel() -> void:
 
 
 func _build_stats_panel() -> void:
-	# Round 4: pinned to the far right edge instead of the mock's center-right.
-	var holder := _holder(Vector2(VIEW_W - _v(STATS_SIZE).x - 24.0, _v(STATS_POS).y), _v(STATS_SIZE))
+	# Pinned near the right edge with 40px of breathing room (round 5).
+	var holder := _holder(Vector2(VIEW_W - _v(STATS_SIZE).x - 40.0, _v(STATS_POS).y), _v(STATS_SIZE))
 	_add_chamfer(holder, STATS_OUTER, [{"poly": STATS_INNER, "tone": "sky"}])
 
 	# Page header: [◀] [L] counter [R] [▶], centered in the frame band.
