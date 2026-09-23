@@ -228,6 +228,10 @@ func _run_tests_systems() -> void:
 	test_s03b_anchor_config()
 	test_valley_anchor_config()
 	test_valley_sand_weather()
+	test_wetlands_overcast_slot()
+	test_wetlands_rain_weather()
+	test_wetlands_post_lights()
+	test_wetlands_lit_props()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -11367,6 +11371,182 @@ func test_valley_sand_weather() -> void:
 			"weather particles never cast (#648: the drift's quads were spattering the floor with their own shadows)")
 	assert_true(WeatherCtl.build_weather_node("sleet") == null,
 		"unknown weather keys build nothing")
+	print("")
+
+
+# ── The wetlands overcast slot (#649): the valley cheat rig's flat-light
+# cousin — the stage keeps its bake with NOTHING lit (empty list), a weak
+# desaturated sun stands over the actors, rain falls, and the lamp posts
+# + field props join the receive path. ──
+func test_wetlands_overcast_slot() -> void:
+	print("── Wetlands Overcast Slot (#649) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	var wet := Slots.slot_for("ozette", "s02a_ga1")
+	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
+	assert_eq(wet.get("sun_energy"), 0.35,
+		"Wetlands rig: weak sun 0.35 — the subtle overcast shadow source")
+	assert_eq(wet.get("ambient_energy"), 0.9,
+		"Wetlands rig: ambient 0.90 — flat diffuse fill dominates the sun")
+	assert_eq(wet.get("sun_pitch"), -55.0, "Wetlands rig: sun −55° — short soft shadows")
+	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
+	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon (day — the weak sun is the source)")
+	# Overcast colors desaturate the DAY preset's warm light — a warm sun
+	# through gray would read sunny.
+	assert_eq(wet.get("sun_color"), Color(0.82, 0.87, 0.93),
+		"sun color: neutral-cool, not the preset's warm white")
+	assert_eq(wet.get("ambient_color"), Color(0.70, 0.75, 0.82),
+		"ambient color: gray-blue fill")
+	assert_eq(wet.get("sky_top_color"), Color(0.42, 0.47, 0.53),
+		"sky band: overcast gray")
+	assert_eq(wet.get("sky_horizon_color"), Color(0.58, 0.62, 0.66),
+		"horizon band: pale gray")
+	# The cheat rig, wetlands flavor: the key is present but EMPTY — the
+	# presence arms the rig (unlit twin + MeshBasic guarantee + split) while
+	# flat overcast light gives no surface an authoring story the way the
+	# valley's high sun did its greenery.
+	assert_true(wet.has("lit_surfaces") and (wet["lit_surfaces"] as Array).is_empty(),
+		"the cheat rig arms with an EMPTY lit list — the whole stage keeps its bake")
+	assert_true(not wet.has("bake_mix"), "no bake_mix — the bake IS the look")
+	assert_eq(wet.get("sun_shadows"), true,
+		"sun shadows on — the actors' shadows land on the catcher")
+	assert_eq(wet.get("shadow_catcher"), true,
+		"the collision shell is the shadow receiver — shadows multiply onto the bake")
+	assert_true(not wet.get("geometry_casts_shadows", false),
+		"geometry doesn't cast — actor shadows only, no rim drama")
+	# The lamps + the props.
+	assert_eq(str(wet.get("post_lights", "")), "0_light",
+		"post_lights: the lamp-post surface material (every s02a stage ships it)")
+	assert_eq(wet.get("lit_props"), true,
+		"lit_props: field elements load onto the receive path with the actors")
+	# Every s02 variant rides the area row (no variant exceptions).
+	assert_eq(Slots.slot_for("ozette", "s02b_lb1"), wet, "s02b rides the area row")
+	assert_eq(Slots.slot_for("ozette", "s02e_ia1"), wet, "s02e rides the area row")
+	assert_eq(Slots.slot_for("ozette", "s02z_na1"), wet, "s02z rides the area row")
+	assert_eq(Slots.resolve_weather("", wet), "rain",
+		"the row's rain resolves with no session override")
+	assert_eq(Slots.resolve_weather("snow", wet), "snow",
+		"quest session weather still overrides the row")
+	print("")
+
+
+## The wetlands' rain (#649): the snow's counter-image — fast vertical
+## streaks filling the volume above the player.
+func test_wetlands_rain_weather() -> void:
+	print("── Wetlands Rain Weather (#649) ──")
+	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
+	var rain = WeatherCtl.build_weather_node("rain")
+	assert_true(rain is GPUParticles3D, "rain builds a particle node")
+	if rain is GPUParticles3D:
+		var mat := rain.process_material as ParticleProcessMaterial
+		assert_true(absf(mat.direction.y) > absf(mat.direction.x),
+			"rain FALLS (vertical — sand drifts, snow floats)")
+		assert_true(mat.initial_velocity_min > 10.0,
+			"rain falls fast — streaks, not flakes")
+		assert_eq(rain.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			"weather particles never cast (#648 convention)")
+		assert_eq(rain.fixed_fps, 30,
+			"deterministic sim (the frozen-until-move guard)")
+		var quad := rain.draw_pass_1 as QuadMesh
+		assert_true(quad != null and quad.size.y > quad.size.x * 4.0,
+			"the draw pass is an elongated streak (tall — not a flake quad)")
+		if quad != null:
+			var qmat := quad.material as StandardMaterial3D
+			assert_eq(qmat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
+				"streaks are unshaded — the bake is the look")
+			assert_eq(qmat.billboard_mode, BaseMaterial3D.BILLBOARD_FIXED_Y,
+				"FIXED_Y billboarding — streaks stay vertical at any camera azimuth")
+			assert_true(qmat.albedo_color.a < 1.0,
+				"semi-transparent — subtle overcast rain, not a downpour overlay")
+		assert_true(rain.position.y > 6.0,
+			"the emitter sits high — rain fills the volume above the player (snow: 8, sand: 3)")
+	# The siblings are untouched.
+	assert_true(WeatherCtl.build_weather_node("snow") != null, "snow still builds")
+	assert_true(WeatherCtl.build_weather_node("sand") != null, "sand still builds")
+	assert_true(WeatherCtl.build_weather_node("drizzle") == null,
+		"unknown weather keys build nothing")
+	print("")
+
+
+## The post-light clustering (#649): the lamp posts are one merged surface —
+## XZ vertex clusters become per-post omni pools.
+func test_wetlands_post_lights() -> void:
+	print("── Wetlands Post Lights (#649) ──")
+	var root := Node3D.new()
+	add_child(root)
+	var mi := MeshInstance3D.new()
+	root.add_child(mi)
+	var mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	var verts := PackedVector3Array()
+	for i in range(30):   # post A: a 0–2.9m spine at x=0
+		verts.append(Vector3(0.0, float(i) * 0.1, 0.0))
+	for i in range(30):   # post B: the same at x=10 (9 cells away — separate blob)
+		verts.append(Vector3(10.0, float(i) * 0.1, 0.0))
+	for i in range(3):    # stray texel speck at x=20 — under the min-vert guard
+		verts.append(Vector3(20.0, float(i) * 0.1, 0.0))
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mat := StandardMaterial3D.new()
+	mat.resource_name = "0_light"
+	mesh.surface_set_material(0, mat)
+	mi.mesh = mesh
+
+	var placed: int = MeshUtils.place_post_lights(root, "0_light")
+	assert_eq(placed, 2, "two separated posts → two pools (the speck is guarded off)")
+	var lights := root.find_children("PostLight*", "OmniLight3D", true, false)
+	assert_eq(lights.size(), 2, "the pools are PostLight omnis")
+	if lights.size() == 2:
+		lights.sort_custom(func(a, b): return (a as Node3D).global_position.x < (b as Node3D).global_position.x)
+		var a := lights[0] as OmniLight3D
+		var b := lights[1] as OmniLight3D
+		assert_almost_eq(a.global_position.x, 0.0, 0.3, "pool A sits on post A's spine")
+		assert_almost_eq(b.global_position.x, 10.0, 0.3, "pool B sits on post B's spine")
+		assert_almost_eq(a.global_position.y, 2.9 + 0.15, 0.05,
+			"the pool rides the post head (cluster top + a hair)")
+		assert_true(not a.shadow_enabled,
+			"omnis never cast (the gl_compatibility convention)")
+		assert_almost_eq(a.omni_attenuation, 2.0, 0.01,
+			"true inverse-square falloff (the placed-light convention)")
+	# The 0_light texture is mirror-wrapped — _fix_materials swaps the
+	# surface's OVERRIDE to an anonymous ShaderMaterial while the mesh's own
+	# surface material keeps the GLB name. The match must survive that.
+	mi.set_surface_override_material(0, ShaderMaterial.new())
+	assert_eq(MeshUtils.place_post_lights(root, "0_light"), 2,
+		"the match survives an anonymous shader override (name read off the mesh surface)")
+	assert_eq(MeshUtils.place_post_lights(root, "1_wall1"), 0,
+		"non-matching material places nothing")
+	assert_eq(MeshUtils.place_post_lights(root, ""), 0,
+		"empty material name is a no-op")
+	print("")
+
+
+## Lit props (#649): under the flag, GameElement models load per-pixel —
+## boxes/fences/drops/NPCs receive the rig like the actors do.
+func test_wetlands_lit_props() -> void:
+	print("── Wetlands Lit Props (#649) ──")
+	# Default OFF — the city contract: city scenes share the subclasses and
+	# their props keep the baked, unlit look.
+	assert_true(not GameElement.lit_rig, "the lit-props flag defaults off (city contract)")
+	GameElement.lit_rig = true
+	var el := GameElement.new()
+	el.model_path = "wetlands/o02_cont.glb"
+	add_child(el)  # _ready → _load_model runs the flag's treatment
+	var found := 0
+	var lit := 0
+	if el.model:
+		for node in el.model.find_children("*", "MeshInstance3D", true, false):
+			var mi := node as MeshInstance3D
+			for i in range(SmoothNormals._surface_count(mi)):
+				var m := SmoothNormals._active_material(mi, i)
+				if m is StandardMaterial3D:
+					found += 1
+					if (m as StandardMaterial3D).shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL:
+						lit += 1
+	assert_true(found > 0 and lit == found,
+		"under the flag the container loads per-pixel (receives the rig)")
+	GameElement.lit_rig = false
+	el.queue_free()
 	print("")
 
 

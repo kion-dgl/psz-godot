@@ -13,7 +13,15 @@ extends RefCounted
 ##                        palette between phase presets (e.g. 5.5 pre-dawn)
 ##   weather       String rides the row (#609 unification): "", "snow", …
 ##   sun_energy    float  DirectionalLight3D energy override
+##   sun_color     Color  DirectionalLight3D color override (the phase preset
+##                        ships warm daylight; overcast rows desaturate it
+##                        toward neutral-cool, #649)
 ##   ambient_energy float ambient energy override
+##   ambient_color Color  ambient color override (same overcast use)
+##   sky_top_color Color  ProceduralSkyMaterial overrides — the visible sky
+##   sky_horizon_color Color band under the preset, for moods whose sky must
+##                        read through (overcast gray; no effect where the
+##                        stage's baked panorama hides the sky)
 ##   moon_energy   float  moonlight energy override (moon becomes visible)
 ##   moon_pitch    float  moonlight elevation in degrees (rotation.x; the
 ##                        hour-lerped preset parks it at grazing angles —
@@ -49,6 +57,15 @@ extends RefCounted
 ##                        — white, multiply-blended, at the walk height:
 ##                        the actors' dynamic shadows multiply onto the
 ##                        bake while lit ground multiplies by ~1 (#648)
+##   post_lights   String material name whose surface geometry marks light
+##                        posts: the pass clusters that surface's vertices
+##                        on the XZ grid (one cluster per post) and drops an
+##                        OmniLight3D at each post head — actors/props read
+##                        the pools, the post itself keeps its bake (#649)
+##   lit_props     bool  field GameElements (boxes, fences, drops, NPCs)
+##                        receive the rig (SmoothNormals + per-pixel, their
+##                        own load path). Default off — pre-#649 fields keep
+##                        the baked props look
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
@@ -118,7 +135,33 @@ const SLOTS := {
 		],
 	},
 
-	"ozette":   {"hour": 10.0},   # interim; #649 authors the overcast mood
+	# Wetlands overcast — the #649 rig (the valley cheat rig's flat-light
+	# cousin): the stage KEEPS its bake (lit_surfaces empty — nothing
+	# receives the sun; even the greenery stays baked under flat gray
+	# light) while a WEAK sun stands over the actors only: low energy,
+	# desaturated neutral-cool sun/ambient colors + gray sky bands (the
+	# DAY preset's warm light would read sunny), catcher shadows, no
+	# geometry casting. The lamps are the local accents: post_lights
+	# clusters the 0_light surface (every s02a stage ships it; the b/e/z
+	# variants don't and no-op) into warm omni pools, and lit_props brings
+	# boxes/fences/drops/NPCs onto the receive path so the pools and the
+	# weak sun reach more than the actors. Rain rides the row.
+	"ozette": {
+		"hour": 10.0,
+		"sun_energy": 0.35,
+		"sun_color": Color(0.82, 0.87, 0.93),
+		"ambient_energy": 0.9,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"sun_pitch": -55.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"weather": "rain",
+		"lit_surfaces": [],
+		"post_lights": "0_light",
+		"lit_props": true,
+	},
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the
 	# white-albedo snow reads, moon 0.35 as the shadow source, bake quarter-
 	# mixed for depth. Lantern pools punch through via ×12 spore-light energy.

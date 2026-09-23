@@ -15,7 +15,7 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the cheat rig with an EMPTY lit list (the whole stage keeps its bake); weak desaturated sun 0.35 / ambient 0.90 with gray sky bands; catcher shadows; the 0_light lamp-post surface clusters into warm omni pools; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -76,7 +76,11 @@ const slots = [
   <code>sun_pitch</code> and its shadows via
   <code>sun_shadows</code>, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
-  white so the dynamic rig drives the look). A row <strong>MAY</strong> set
+  white so the dynamic rig drives the look). Rows <strong>MAY</strong> also
+  desaturate the preset's warm daylight: <code>sun_color</code>,
+  <code>ambient_color</code>, and the <code>sky_top_color</code> /
+  <code>sky_horizon_color</code> bands carry moods whose light must read
+  neutral (the wetlands' overcast, #649). A row <strong>MAY</strong> set
   <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the
   bake is the look), and a rig that stands on real shadows — moon
   (<code>moon_shadows</code>) or sun (<code>sun_shadows</code>) — turns casting
@@ -117,7 +121,7 @@ const slots = [
   crystals, so the pools are the blue reflective anchors and the red
   mushroom clusters the warm accents, each kinoko cluster dusted by an
   authored pink <code>spores</code> drift. The interim rows (10.0 day)
-  preserve pre-#655 behavior for areas whose identity issues (#648–#654)
+  preserve pre-#655 behavior for areas whose identity issues (#650–#654)
   have not authored a slot yet; each issue replaces its row's values and
   locks them from a playtest read-out.</p>
 
@@ -186,6 +190,36 @@ const slots = [
   invisible (under half a stop) or read wrong (rim scenery casting into
   the play space; double lighting over the bake). A future row that
   wants real stage shadows re-authors those fields knowingly.</p>
+
+  <p>The wetlands row (#649) is the cheat rig's <strong>overcast
+  cousin</strong> — the same contract taken flatter: the stage keeps its
+  bake with an <strong>empty</strong> <code>lit_surfaces</code> list (the
+  key's presence arms the rig — the surface split, the force-unlit
+  guarantee, the unlit mirror-shader twin — while flat gray light gives
+  no surface the authoring story the valley's high sun gave its
+  greenery), and the sun stands over the <strong>actors only</strong>:
+  energy 0.35 against ambient 0.90, both desaturated
+  (<code>sun_color</code> / <code>ambient_color</code>; the DAY preset's
+  warm light would read sunny through the gray) with
+  <code>sky_top_color</code> / <code>sky_horizon_color</code> overcast
+  bands. The catcher owns the ground as in the valley — the weak sun's
+  shadows multiply subtly onto the bake (ambient is the shadow floor,
+  and here it is high). Two fields widen the receive path beyond the
+  actors: <code>post_lights</code> names a lamp-post surface material
+  (<code>0_light</code>, merged into every s02a stage mesh) whose
+  vertices are clustered on the XZ grid — each connected blob is one
+  post — and each post head gets a warm placed omni pool (the posts
+  themselves stay baked, the toro-lantern contract; the s02b/e/z
+  variants ship no such surface and place nothing), and
+  <code>lit_props</code> raises the field-scoped GameElement flag so
+  boxes, fences, drops, and field NPCs load per-pixel like the player
+  and enemies — the flag is cleared on field exit, so city scenes
+  sharing those subclasses keep their baked look. Weather is
+  <code>rain</code>: fast vertical semi-transparent streaks on FIXED_Y
+  billboards filling the volume above the player, built by the shared
+  WeatherController like snow and sand. The wetlands walk lab
+  (<code>wetlands_walktest</code>) owns the tuning until locked from a
+  read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>

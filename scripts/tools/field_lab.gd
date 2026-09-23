@@ -64,6 +64,17 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		dir_light.shadow_normal_bias = 4.0
 	if slot.has("sun_pitch"):
 		dir_light.rotation_degrees.x = float(slot["sun_pitch"])
+	# Overcast rows (#649): desaturated rig + sky bands over the preset —
+	# kept in lockstep with ValleyFieldController._apply_field_slot (the
+	# dup-gate: this must apply exactly what the field applies).
+	if slot.has("sun_color"):
+		dir_light.light_color = slot["sun_color"]
+	if slot.has("ambient_color"):
+		env.ambient_light_color = slot["ambient_color"]
+	if slot.has("sky_top_color"):
+		sky_mat.sky_top_color = slot["sky_top_color"]
+	if slot.has("sky_horizon_color"):
+		sky_mat.sky_horizon_color = slot["sky_horizon_color"]
 
 
 ## A walkable player + orbit camera on the production material path

@@ -235,6 +235,11 @@ func _ready() -> void:
 	var area_id: String = SessionManager.get_current_area_id()
 	_slot = FieldSlotTableScript.slot_for(area_id, str(_current_cell.get("stage_id", "")))
 	_apply_field_slot()
+	# Lit props (#649): rows that bring the field elements (boxes, fences,
+	# drops, NPCs) onto the receive path raise the GameElement flag — set
+	# before any cell object spawns. _exit_tree clears it so city scenes
+	# (which share the subclasses) never inherit the field rig.
+	GameElement.lit_rig = bool(_slot.get("lit_props", false))
 	if not TimeManager.hour_changed.is_connected(_on_time_hour_changed):
 		TimeManager.hour_changed.connect(_on_time_hour_changed)
 
@@ -377,6 +382,16 @@ func _ready() -> void:
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		# The row's rim pull slides the frustum off the panorama edge (#648).
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
+
+	# The row's post lights (#649): the lamp-post surface (material name
+	# rides the row — "0_light" on every s02a stage) clusters per post and
+	# each head gets a warm omni pool. Runs after the cheat rig's surface
+	# split, but reads per-surface arrays, so unsplit meshes work too. The
+	# s02b/e/z variants carry no such surface and place zero lights.
+	if _slot.has("post_lights") and _map_root:
+		var posts: int = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
+		if posts > 0:
+			_fdbg("[ValleyField] post lights: %d pool(s) from '%s'" % [posts, _slot["post_lights"]])
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
@@ -752,6 +767,13 @@ func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_done")
 
 
+func _exit_tree() -> void:
+	# The lit-props flag is field-scoped (#649): clear it on the way out so
+	# the city scenes sharing the GameElement subclasses keep their baked,
+	# unlit props look.
+	GameElement.lit_rig = false
+
+
 ## Apply the resolved field slot (#655): pin the hour, apply the phase preset,
 ## then layer the row's rig overrides on top. preview_hour >= 0 re-applies the
 ## active rig at a debug-previewed hour instead of the authored one.
@@ -791,6 +813,17 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# The DAY band parks every hour at −45° (#648): rows that want a
 		# noon (steep) or afternoon (low, long-shadow) character pin it.
 		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
+	# Overcast rows (#649): the phase preset ships warm daylight — moods
+	# like the wetlands' flat gray desaturate the rig and the sky bands
+	# (the DAY preset's warm light would read sunny through any gap).
+	if _slot.has("sun_color"):
+		_dir_light.light_color = _slot["sun_color"]
+	if _slot.has("ambient_color"):
+		_world_env.environment.ambient_light_color = _slot["ambient_color"]
+	if _slot.has("sky_top_color"):
+		_sky_material.sky_top_color = _slot["sky_top_color"]
+	if _slot.has("sky_horizon_color"):
+		_sky_material.sky_horizon_color = _slot["sky_horizon_color"]
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):

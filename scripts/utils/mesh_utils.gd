@@ -446,6 +446,111 @@ static func make_unlit(root: Node, keep: Array) -> int:
 	return _flip_shading(root, keep, false)
 
 
+## The row's post lights (#649 wetlands): the lamp posts are one merged
+## surface in the stage mesh (material "0_light" on every s02a stage) — there
+## are no per-post nodes to hang lights on. This pass reads that surface's
+## world-space vertices, clusters them on the XZ grid (a post's footprint is
+## far narrower than the post spacing, so each connected blob is one post),
+## and drops a warm OmniLight3D pool at each blob's head. The post itself
+## keeps its baked look — only the actors and lit props receive the pool (the
+## toro-lantern contract from #648). Matching is by the MESH's own surface
+## material name, not the active override: the 0_light texture is mirror-
+## wrapped, so the fix pass replaces its override with an anonymous
+## ShaderMaterial while the imported surface material keeps the GLB name.
+## Returns how many lights were placed.
+const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
+const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
+const POST_LIGHT_COLOR := Color(1.0, 0.92, 0.78)
+const POST_LIGHT_ENERGY := 0.55
+const POST_LIGHT_RANGE := 4.5
+
+static func place_post_lights(root: Node3D, material_name: String) -> int:
+	if material_name.is_empty():
+		return 0
+	# World vertices of every matching surface, binned on the XZ grid.
+	var cells: Dictionary = {}
+	for node in collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh as ArrayMesh
+		if mesh == null:
+			continue
+		for i in range(mesh.get_surface_count()):
+			if not _surface_named(mi, i, material_name):
+				continue
+			var arrays := mesh.surface_get_arrays(i)
+			if arrays.is_empty():
+				continue
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			if verts.size() == 0:
+				continue
+			var xform := mi.global_transform
+			for v in verts:
+				var w := xform * v
+				var cell := Vector2i(int(floor(w.x / POST_LIGHT_CELL)), \
+					int(floor(w.z / POST_LIGHT_CELL)))
+				if not cells.has(cell):
+					cells[cell] = []
+				(cells[cell] as Array).append(w)
+	if cells.is_empty():
+		return 0
+	# Flood-fill 8-neighbor blobs — each blob is one post.
+	var visited: Dictionary = {}
+	var placed := 0
+	for cell in cells:
+		if visited.has(cell):
+			continue
+		visited[cell] = true
+		var stack: Array = [cell]
+		var blob: Array = []
+		while not stack.is_empty():
+			var c: Vector2i = stack.pop_back()
+			blob.append_array(cells[c])
+			for dx in range(-1, 2):
+				for dz in range(-1, 2):
+					var n := Vector2i(c.x + dx, c.y + dz)
+					if not visited.has(n) and cells.has(n):
+						visited[n] = true
+						stack.append(n)
+		if blob.size() < POST_LIGHT_MIN_VERTS:
+			continue
+		var sum := Vector3.ZERO
+		var top: float = blob[0].y
+		for w in blob:
+			sum += w
+			top = maxf(top, w.y)
+		var light := OmniLight3D.new()
+		# Unique per post — a duplicate sibling name gets @-mangled by
+		# add_child, hiding the light from PostLight* lookups (the lab's
+		# position read-out).
+		light.name = "PostLight%d" % (placed + 1)
+		light.light_color = POST_LIGHT_COLOR
+		light.light_energy = POST_LIGHT_ENERGY
+		light.omni_range = POST_LIGHT_RANGE
+		# True inverse-square + no casting — the placed-light conventions
+		# (weather_controller.gd; omnis never cast under gl_compatibility).
+		light.omni_attenuation = 2.0
+		light.shadow_enabled = false
+		root.add_child(light)
+		light.global_position = Vector3(
+			sum.x / blob.size(), top + 0.15, sum.z / blob.size())
+		placed += 1
+	return placed
+
+
+## Surface material-name match for the placement passes: the active
+## (override) material when it carries a name, else the mesh's own surface
+## material — the mirror-wrap fix pass swaps overrides to anonymous
+## ShaderMaterials, so the imported name only survives on the mesh.
+static func _surface_named(mi: MeshInstance3D, i: int, material_name: String) -> bool:
+	var active := SmoothNormals._active_material(mi, i)
+	if active and active.resource_name == material_name:
+		return true
+	if mi.mesh is ArrayMesh:
+		var own := (mi.mesh as ArrayMesh).surface_get_material(i)
+		return own != null and own.resource_name == material_name
+	return false
+
+
 ## The floor shell's top = the walkable height (#648 sun-enclosure sampling).
 ## Floor GLBs instantiate MESH-LESS — the import is a StaticBody3D +
 ## ConcavePolygonShape3D pair with zero MeshInstance3D, so the mesh AABB is
