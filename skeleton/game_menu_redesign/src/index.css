@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+:root {
+  --ui-blue-top: #c6dbf5;
+  --ui-blue-bot: #9dbde6;
+  --ui-line: #2f4c7c;
+  --ui-orange: #f7a52a;
+  --bg-strip: #c4d8f0;
+  --bg-band: #cfe0f4;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #bfd4ed;
+  font-family: "VT323", "Courier New", monospace;
+  color: #111;
+  -webkit-font-smoothing: none;
+}
+
+/* 
+ * Seamless Truncated Square Tiling (Octagons + Diamonds).
+ * S = 72px, c = 21px.
+ * Octagons have 8 sides of length ~30px.
+ * Diamonds have 4 sides of length ~29.7px.
+ * Perfectly tiled with zero line doubling or seams.
+ */
+.octagon-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cpath d='M36,15 L57,36 L36,57 L15,36 Z M36,-1 L36,15 M36,57 L36,73 M-1,36 L15,36 M57,36 L73,36' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='square' stroke-opacity='0.48' /%3E%3C/svg%3E");
+  background-size: 72px 72px;
+  background-repeat: repeat;
+}
+
+.pixel-text {
+  font-family: "VT323", "Courier New", monospace;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.stage-text {
+  text-rendering: optimizeSpeed;
+}
+
+/* Entry animations */
+@keyframes panel-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes panel-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cursor-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 0 0 0 rgba(247, 165, 42, 0);
+  }
+  50% {
+    filter: brightness(1.12);
+    box-shadow: 0 0 12px 1px rgba(247, 165, 42, 0.45);
+  }
+}
+
+@keyframes text-swap {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.anim-left {
+  animation: panel-in-left 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-up {
+  animation: panel-in-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-swap {
+  animation: text-swap 0.22s ease-out both;
+}
+.cursor-pulse {
+  animation: cursor-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-left,
+  .anim-up,
+  .anim-swap,
+  .cursor-pulse {
+    animation: none;
+  }
+}
