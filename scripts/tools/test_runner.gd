@@ -11527,12 +11527,13 @@ func test_wetlands_post_lights() -> void:
 			"the glow is unshaded")
 		assert_almost_eq((glows[0] as Node3D).global_position.y, 0.0 + 0.08, 0.01,
 			"no floor_y → the cluster-base fallback, a hair above the catcher's lift")
-	var embers := root.find_children("PostEmbers*", "GPUParticles3D", true, false)
-	assert_eq(embers.size(), 2, "each post breathes rising embers (the original's lantern)")
-	if embers.size() == 2:
-		var em := (embers[0] as GPUParticles3D).process_material as ParticleProcessMaterial
-		assert_true(em.direction.y > em.direction.x, "the embers RISE (the s03b spore recipe)")
-		assert_eq((embers[0] as GPUParticles3D).amount, 24, "the original's ember count")
+	# Electric lanterns (kion, 2026-09-23): no flame particles — the pass
+	# spawns only the omni and the disc.
+	assert_true(root.find_children("PostEmbers*", "GPUParticles3D", true, false).is_empty(),
+		"no ember particles — the wetlands lamps are electric")
+	if lights.size() == 2:
+		assert_eq((lights[0] as OmniLight3D).light_color, Color(0.25, 0.5, 1.0),
+			"the omni rides the debug blue (#649 receive-path verification)")
 	# The 0_light texture is mirror-wrapped — _fix_materials swaps the
 	# surface's OVERRIDE to an anonymous ShaderMaterial while the mesh's own
 	# surface material keeps the GLB name. The match must survive that.

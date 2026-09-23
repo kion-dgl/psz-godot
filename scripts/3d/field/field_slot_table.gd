@@ -141,10 +141,10 @@ const SLOTS := {
 	# light) while a WEAK sun stands over the actors only: low energy,
 	# desaturated neutral-cool sun/ambient colors + gray sky bands (the
 	# DAY preset's warm light would read sunny), catcher shadows, no
-	# geometry casting. The lamps are the original's fire-orange lanterns:
-	# post_lights clusters the 0_light surface (every s02a stage ships it;
-	# the b/e/z variants don't and no-op) and each post gets its omni
-	# pool, ground-glow disc, and rising embers; lit_props brings
+	# geometry casting. The lamps are electric lanterns: post_lights
+	# clusters the 0_light surface (every s02a stage ships it; the b/e/z
+	# variants don't and no-op) and each post gets its omni pool + ground
+	# glow disc (no flame particles); lit_props brings
 	# boxes/fences/drops/NPCs onto the receive path so the pools and the
 	# weak sun reach more than the actors. Rain rides the row.
 	"ozette": {
