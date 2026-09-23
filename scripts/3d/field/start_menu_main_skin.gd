@@ -67,6 +67,7 @@ const C_ARROW_STROKE := Color("#0d3521")
 
 # ── Mock typography, scaled ────────────────────────────────────────────────────
 const FS_MAIN := 32       # mock 48px body text
+const FS_NAME := 22       # HUD plate name (round 6: smaller)
 const FS_COUNTER := 29    # mock 44px page counter
 const FS_SHOULDER := 28   # mock 42px L/R key labels
 
@@ -812,18 +813,18 @@ class NamePlate extends Control:
 
 		_name_label = Label.new()
 		_name_label.text = char_name
-		_name_label.position = StartMenuMainSkin._v(Vector2(66, 26))
-		_name_label.size = StartMenuMainSkin._v(Vector2(152, 48))
+		_name_label.position = StartMenuMainSkin._v(Vector2(66, 30))
+		_name_label.size = StartMenuMainSkin._v(Vector2(152, 32))
 		_name_label.mouse_filter = MOUSE_FILTER_IGNORE
 		_name_label.clip_text = true
 		_name_label.add_theme_font_override("font", StartMenuMainSkin.FONT)
-		_name_label.add_theme_font_size_override("font_size", StartMenuMainSkin.FS_MAIN)
+		_name_label.add_theme_font_size_override("font_size", StartMenuMainSkin.FS_NAME)
 		_name_label.add_theme_color_override("font_color", StartMenuMainSkin.C_TEXT)
 		_name_label.add_theme_constant_override("line_spacing", 0)
 		add_child(_name_label)
 
-		_hp_bar = _make_bar(Vector2(68, 76), StartMenuMainSkin.tex_hp())
-		_pp_bar = _make_bar(Vector2(68, 90), StartMenuMainSkin.tex_pp())
+		_hp_bar = _make_bar(Vector2(68, 66), StartMenuMainSkin.tex_hp())
+		_pp_bar = _make_bar(Vector2(68, 80), StartMenuMainSkin.tex_pp())
 
 	func _make_bar(pos: Vector2, tex: GradientTexture1D) -> HpBar:
 		var bar := HpBar.new()

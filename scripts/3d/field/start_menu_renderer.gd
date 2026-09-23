@@ -68,34 +68,11 @@ func _draw_menu() -> void:
 	# the L-backdrop doesn't bleed around it. Sub-modes still paint here.
 	if _c._main_skin != null and _c._main_skin.visible:
 		return
-	var font: Font = MENU_FONT
+	# Round 6: every screen draws the Flauros octagon L + VT323 — the legacy
+	# dark L-backdrop is retired.
+	var font: Font = StartMenuMainSkin.FONT
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
-
-	# The sub-menu port (round 5): ported screens draw the Flauros octagon L
-	# and set VT323; everything else keeps the legacy dark look until its turn.
-	const FLAUROS_MODES := [PsoStartMenu.Mode.ITEMS, PsoStartMenu.Mode.ITEMS_MOVE]
-	if _c._mode in FLAUROS_MODES:
-		StartMenuMainSkin.draw_backdrop(c, vp.x, vp.y)
-		font = StartMenuMainSkin.FONT
-		_draw_items(c, font)
-		return
-
-	# L-shaped backdrop
-	var left_top := Rect2(0, 0, PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H)
-	var bottom_right := Rect2(PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H, vp.x - PsoStartMenu.LEFT_W, PsoStartMenu.BOTTOM_H)
-	var bottom_left := Rect2(0, vp.y - PsoStartMenu.BOTTOM_H, PsoStartMenu.LEFT_W, PsoStartMenu.BOTTOM_H)
-	c.draw_rect(left_top, PsoStartMenu.C_BACKDROP)
-	c.draw_rect(bottom_right, PsoStartMenu.C_BACKDROP)
-	c.draw_rect(bottom_left, PsoStartMenu.C_BACKDROP)
-	# Subtle scanline overlay
-	_draw_scanlines(c, left_top)
-	_draw_scanlines(c, bottom_right)
-	_draw_scanlines(c, bottom_left)
-	# Borders
-	c.draw_line(Vector2(PsoStartMenu.LEFT_W, 0), Vector2(PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H), PsoStartMenu.C_BACKDROP_BORDER, 1.5)
-	c.draw_line(Vector2(PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H), Vector2(vp.x, vp.y - PsoStartMenu.BOTTOM_H), PsoStartMenu.C_BACKDROP_BORDER, 1.5)
-
-	# HUD draws its own HP/PP — no duplicate status panel here
+	StartMenuMainSkin.draw_backdrop(c, vp.x, vp.y)
 
 	match _c._mode:
 		PsoStartMenu.Mode.ITEMS, PsoStartMenu.Mode.ITEMS_MOVE: _draw_items(c, font)
@@ -107,19 +84,6 @@ func _draw_menu() -> void:
 		PsoStartMenu.Mode.SYSTEM: _draw_system(c, font)
 		PsoStartMenu.Mode.OPTIONS: _draw_options(c, font)
 		PsoStartMenu.Mode.DEBUG: _draw_debug(c, font)
-
-
-func _draw_scanlines(c: Control, rect: Rect2) -> void:
-	var x1: float = rect.position.x
-	var x2: float = rect.position.x + rect.size.x
-	var y_end: float = rect.position.y + rect.size.y
-	# Start the first line one SPACING in so the very top edge of the rect
-	# isn't always painted — otherwise a visible dark seam lands exactly on
-	# the bottom-right rect's top border (y = VIEWPORT_H - BOTTOM_H).
-	var y: float = rect.position.y + PsoStartMenu.SCANLINE_SPACING
-	while y < y_end:
-		c.draw_line(Vector2(x1, y), Vector2(x2, y), PsoStartMenu.C_SCANLINE, 1.0)
-		y += PsoStartMenu.SCANLINE_SPACING
 
 
 func _draw_items(c: Control, font: Font) -> void:
@@ -247,7 +211,7 @@ func _draw_items(c: Control, font: Font) -> void:
 		c.draw_string(font, Vector2(px + pw - 70, py + ph - 10), "v more", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, skin.C_INNER_NAVY)
 
 	# Description sits to the right of the (wider) items list, not the default 310px.
-	_draw_bottom_desc(c, font, _items_description(inv), 350.0, 380.0, true)
+	_draw_bottom_desc(c, font, _items_description(inv), 350.0, 380.0)
 
 
 ## The detail text for the currently-selected inventory item — stats from the
@@ -325,7 +289,7 @@ func _draw_equip(c: Control, font: Font) -> void:
 			"mag": header = "Mag" if last_type != "mag" else ""
 		if not header.is_empty():
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
-			c.draw_string(font, Vector2(px + 8, draw_y + 13), header, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_LIGHT)
+			c.draw_string(font, Vector2(px + 8, draw_y + 13), header, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, StartMenuMainSkin.C_INNER_NAVY)
 			draw_y += 20
 		last_type = slot_type
 
@@ -469,7 +433,6 @@ func _draw_palette(c: Control, font: Font) -> void:
 	var lx: float = 5.0
 	var lw: float = 230.0
 	_draw_inner_panel(c, Rect2(lx, base_y, lw, panel_h))
-	_draw_scanlines(c, Rect2(lx, base_y, lw, panel_h))
 
 	# Page tabs
 	var tab_y: float = base_y + 8
@@ -542,7 +505,6 @@ func _draw_palette(c: Control, font: Font) -> void:
 	var rw: float = 280.0
 	var total_w: float = (rx + rw) - mx
 	_draw_inner_panel(c, Rect2(mx, base_y, total_w, panel_h))
-	_draw_scanlines(c, Rect2(mx, base_y, total_w, panel_h))
 
 	var sel_flat: int = _c._sub_idx if _c._mode == PsoStartMenu.Mode.PALETTE_PICK else -1
 	var current_id: String = str(page[_c._pal_slot_idx])
@@ -781,42 +743,27 @@ func _draw_debug(c: Control, font: Font) -> void:
 var _panel_sbox: StyleBoxFlat = null
 
 
-func _inner_panel_sbox() -> StyleBoxFlat:
-	if _panel_sbox == null:
-		var s := StyleBoxFlat.new()
-		s.bg_color = PsoStartMenu.C_PANEL
-		s.border_color = PsoStartMenu.C_PANEL_BORDER
-		s.set_border_width_all(2)
-		s.set_corner_radius_all(6)
-		_panel_sbox = s
-	return _panel_sbox
-
-
 func _draw_inner_panel(c: Control, rect: Rect2) -> void:
-	c.draw_style_box(_inner_panel_sbox(), rect)
+	StartMenuMainSkin.draw_chamfer_rect(c, rect)
 
 
 # Reusable rounded-rect style for list ROWS (the inventory pills) so they read like
 # the 2D shop's rounded list rows instead of hard-cornered bars (Kion). One
 # instance, recoloured per row — draw_style_box paints with the current bg_color
 # synchronously, so reusing it across rows in a frame is safe.
-var _row_sbox: StyleBoxFlat = null
-
-
 func _draw_row_pill(c: Control, rect: Rect2, color: Color) -> void:
-	if _row_sbox == null:
-		_row_sbox = StyleBoxFlat.new()
-		_row_sbox.set_corner_radius_all(4)
-	_row_sbox.bg_color = color
-	c.draw_style_box(_row_sbox, rect)
+	# The selection tint draws the mock's orange sweep; every other tint
+	# (manual-sort blue, idle white) is a flat square wash.
+	if color.is_equal_approx(PsoStartMenu.C_SELECT):
+		StartMenuMainSkin.draw_menu_row(c, rect, 1)
+	else:
+		c.draw_rect(rect, color)
 
 
 func _draw_section_label(c: Control, font: Font, text: String) -> void:
-	var lx := PsoStartMenu.PAD
-	var ly := 110.0  # Below the HUD stats panel
-	var lw: float = PsoStartMenu.LEFT_W - PsoStartMenu.PAD * 2
-	c.draw_rect(Rect2(lx, ly, lw, 28), PsoStartMenu.C_LABEL_BG)
-	c.draw_string(font, Vector2(lx + 12, ly + 20), text, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE, PsoStartMenu.C_TEXT_LIGHT)
+	# Flauros title: dark VT323 on the octagon strip, no backing chip.
+	c.draw_string(font, Vector2(PsoStartMenu.PAD + 2.0, 132.0), text,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 26, StartMenuMainSkin.C_TEXT)
 
 
 func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> void:
@@ -859,30 +806,23 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 			var icon_letter: String = str(PsoStartMenu.TYPE_ICONS.get(item_type, "?"))
 			var icon_color: Color = PsoStartMenu.TYPE_COLORS.get(item_type, Color.GRAY) if i != selected else Color(1, 1, 1, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 9, iy + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 9, iy + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 		var qty: int = int(items[i].get("quantity", 0))
 		var qty_str: String = "x%d" % qty if qty > 1 else ""
 		c.draw_string(font, Vector2(px + 28, iy + 15), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
 		if not qty_str.is_empty():
 			c.draw_string(font, Vector2(px + pw - 40, iy + 15), qty_str, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
-	# Scroll cue: "▲ more" / "▼ more" hints in the corners when content
-	# extends past the visible window.
+	# Scroll cues — ASCII, since VT323 has no arrow glyphs.
 	if scroll_offset > 0:
-		c.draw_string(font, Vector2(px + pw - 60, py + 14), "▲ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+		c.draw_string(font, Vector2(px + pw - 70, py + 16), "^ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 	if scroll_offset + visible_rows < items.size():
-		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+		c.draw_string(font, Vector2(px + pw - 70, py + ph - 8), "v more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
 
-func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0, flauros := false) -> void:
+func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0) -> void:
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
 	var ph: float = 300.0
 	var lines := text.split("\n")
-	if flauros:
-		StartMenuMainSkin.draw_chamfer_rect(c, Rect2(px, py, pw, ph))
-		for i in range(lines.size()):
-			c.draw_string(font, Vector2(px + 16, py + 28 + i * 24), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, StartMenuMainSkin.C_TEXT)
-		return
-	_draw_inner_panel(c, Rect2(px, py, pw, ph))
-	# Simple multi-line text
+	StartMenuMainSkin.draw_chamfer_rect(c, Rect2(px, py, pw, ph))
 	for i in range(lines.size()):
-		c.draw_string(font, Vector2(px + 12, py + 20 + i * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT)
+		c.draw_string(font, Vector2(px + 16, py + 28 + i * 24), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, StartMenuMainSkin.C_TEXT)

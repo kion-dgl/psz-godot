@@ -21,13 +21,9 @@ const HUD_STATS_LAYER := 200  # HUD stats drawn above start menu
 const PAD := 12.0           # Inner padding
 
 # ── Colors ──────────────────────────────────────────────────────────────────────
-const C_BACKDROP := Color(0.16, 0.24, 0.39, 0.82)
-const C_BACKDROP_BORDER := Color(0.39, 0.59, 0.82, 0.6)
-## Subtle CRT scanline overlay painted on top of the backdrop rects.
-const C_SCANLINE := Color(0, 0, 0, 0.12)
-const SCANLINE_SPACING := 3  # 1 dim line every N pixels
-const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
-const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
+# Round 6: the legacy dark-L palette is retired — these shared values now
+# carry the Flauros look (dark text on paper windows, orange selection).
+# The octagon L backdrop itself lives in StartMenuMainSkin.draw_backdrop.
 const C_TEXT := Color(0.10, 0.15, 0.25)
 const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
 # Grey for DISABLED inventory rows (cannot-use / already-known disks). This is
@@ -37,19 +33,20 @@ const C_TEXT_MUTED := Color(0.29, 0.35, 0.47)
 # the two"). Single source of truth → they can't drift. Disabled rows also dim
 # their icon (PszStyle.DISABLED_ICON_MOD), matching the shop.
 const C_TEXT_DISABLED := PszStyle.TEXT_MUTED
-const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)
-const C_SELECT := Color(0.88, 0.53, 0.13)
-const C_SELECT_TEXT := Color.WHITE
+const C_TEXT_LIGHT := Color(0.91, 0.93, 0.97)  # palette-grid cells over art
+const C_SELECT := Color(0.94, 0.63, 0.13)      # mock orange (#f0a020 family)
+const C_SELECT_TEXT := Color("#121212")        # dark on orange, per the mock
 const C_HP := Color(0.16, 0.72, 0.28)
 const C_PP := Color(0.16, 0.47, 0.85)
-const C_LABEL_BG := Color(0.20, 0.29, 0.47, 0.9)
 const C_ICON_BG := Color(0.91, 0.93, 0.96)
 const C_ICON_FG := Color(0.17, 0.23, 0.31)
 
-const FONT_SIZE := 15
-const FONT_SIZE_SM := 13
-const FONT_SIZE_XS := 11
-const FONT_SIZE_LG := 17
+# VT323 reads ~30% smaller than JetBrains at the same px, so the scale
+# bumps with the round-6 font swap.
+const FONT_SIZE := 20
+const FONT_SIZE_SM := 17
+const FONT_SIZE_XS := 14
+const FONT_SIZE_LG := 24
 ## Inventory item-name size — matches the 2D shop row name size (PszStyle.FONT_ITEM)
 ## so the start-menu items list and the shop lists read at the same weight (#417).
 const FONT_SIZE_ITEM := 14
