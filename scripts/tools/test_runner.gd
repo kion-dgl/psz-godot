@@ -11531,8 +11531,8 @@ func test_wetlands_post_lights() -> void:
 			"the omni sits at the hanging lantern (~1.2m under the pole tip — 0.2 down of the anchors, kion read-out)")
 		assert_true(a.shadow_enabled,
 			"the lanterns CAST — the dark-room read-out wants lantern-dominant shadow direction (the placed-omni convention's one exception)")
-		assert_almost_eq(a.omni_attenuation, 2.0, 0.01,
-			"true inverse-square falloff (the placed-light convention)")
+		assert_almost_eq(a.omni_attenuation, 1.0, 0.01,
+			"flattened falloff — true inverse-square starves a lantern hanging ~3.8m over its pool")
 		assert_true(a.light_energy > 1.0,
 			"the energy punches through the area ambient (the snowfield ×12 lantern lesson)")
 	# Electric lanterns (kion, 2026-09-23): no flame particles and no glow

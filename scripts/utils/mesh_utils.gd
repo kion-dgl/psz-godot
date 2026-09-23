@@ -483,8 +483,15 @@ const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
 ## the model means the lantern reaches the actors. Revert to
 ## POST_LIGHT_COLOR once confirmed.
 const POST_LIGHT_OMNI_COLOR := Color(0.25, 0.5, 1.0)
-const POST_LIGHT_ENERGY := 8.0
+const POST_LIGHT_ENERGY := 10.0
 const POST_LIGHT_RANGE := 11.0
+## The falloff departure (kion 2026-09-23 read-out): the placed-light
+## convention's true inverse-square (2.0) starves a HANGING lantern — at
+## the ~3.8m lantern-to-ground distance it leaves a few percent of the
+## energy on the pathway, so the pool reads only at absurd energies (×4 on
+## 8.0 in a black room). 1.0 flattens the curve for the lantern's
+## meters-off-the-ground geometry.
+const POST_LIGHT_ATTENUATION := 1.0
 
 
 static func place_post_lights(root: Node3D, material_name: String) -> int:
@@ -551,7 +558,7 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		light.light_color = POST_LIGHT_OMNI_COLOR
 		light.light_energy = POST_LIGHT_ENERGY
 		light.omni_range = POST_LIGHT_RANGE
-		light.omni_attenuation = 2.0
+		light.omni_attenuation = POST_LIGHT_ATTENUATION
 		# The wetlands' lanterns CAST (kion's 2026-09-23 dark-room read-out):
 		# in the moody overcast the nearest lantern is the dominant light, so
 		# the actors' shadows must swing with it — the deliberate exception
