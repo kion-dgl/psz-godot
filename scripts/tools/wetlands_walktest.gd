@@ -17,12 +17,17 @@ extends Node3D
 ##       PSZ_WALK_SUN=0.35         sun energy override · PSZ_WALK_AMBIENT=0.9
 ##                                 ambient override (balance sweeps)
 ##       PSZ_WALK_POST_LIGHTS=0    skip the lamp-post pools (A/B diffs)
+##       PSZ_WALK_SPAWN=x,z        boot the player at authored coordinates
+##                                 (e.g. -5.35,12 — under a ga1 lantern)
 ##       PSZ_WALK_PROP=0           skip the lit-prop preview crate
 ##       PSZ_WALK_PILLAR=1         spawn a 3m control pillar beside the player
 ##                                 (a caster that provably shadows)
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
-##       [ / ]  post pools ∓/± 0.25× (omni energy + glow strength)
+##       [ / ]  post pools ∓/± 0.25× (omni energy; 0.00 kills them — mind
+##              the status line when the lanterns go dark)
+##       D       dark room — sun 0 + sun shadows OFF + ambient 0.05 (the
+##               lantern-dominance probe state); press again to restore
 ##       F / G  shadow normal bias ∓/± 1 (acne stripes on grazing ground)
 ##       C / V  shadow bias ∓/± 0.05
 ##       P       read-out (field format)     M      sun shadows toggle
@@ -71,6 +76,7 @@ var _shells_disarmed := 0
 var _floor_top := NAN
 var _posts := 0
 var _post_mult := 1.0
+var _dark_room := false
 
 
 func _ready() -> void:
@@ -101,7 +107,7 @@ func _ready() -> void:
 		_posts = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
 		for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
 			print("[WetlandsWalk] post light at %s" % (light as Node3D).global_position)
-	_spawn_player(Vector3(0, 1.5, 8))
+	_spawn_player(_boot_spawn())
 	_spawn_prop_preview()
 	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
 		var pillar := MeshInstance3D.new()
@@ -157,6 +163,8 @@ func _input(event: InputEvent) -> void:
 			_set_post_energy(_post_mult - 0.25)
 		KEY_BRACKETRIGHT:
 			_set_post_energy(_post_mult + 0.25)
+		KEY_D:
+			_toggle_dark_room()
 		KEY_M:
 			_dir_light.shadow_enabled = not _dir_light.shadow_enabled
 		KEY_F:
@@ -269,6 +277,17 @@ func _spawn_player(pos: Vector3) -> void:
 	_player = FieldLabScript.spawn_player(self, pos)
 
 
+## PSZ_WALK_SPAWN=x,z — boot the player at authored coordinates (e.g. under
+## a lantern: PSZ_WALK_SPAWN=-5.35,12), defaulting to the room's middle.
+func _boot_spawn() -> Vector3:
+	var raw := OS.get_environment("PSZ_WALK_SPAWN")
+	if not raw.is_empty():
+		var p := raw.split(",")
+		if p.size() >= 2:
+			return Vector3(float(p[0]), 1.5, float(p[1]))
+	return Vector3(0, 1.5, 8)
+
+
 ## The lit_props preview (#649): the field container on the element receive
 ## path — the same SmoothNormals + make_lit treatment GameElement._load_model
 ## applies under the flag, so the lab previews what a dropped crate reads.
@@ -330,6 +349,23 @@ func _set_post_energy(mult: float) -> void:
 		(light as OmniLight3D).light_energy = MeshUtils.POST_LIGHT_ENERGY * _post_mult
 
 
+## The lantern-dominance probe state: sun 0 with its shadows disarmed (a
+## zero-energy sun still leaves its fixed-direction shadow map armed) and
+## ambient at a floor — only the lanterns light the room, so the actors'
+## shadows must swing with the nearest pool. Restores the row on the
+## second press.
+func _toggle_dark_room() -> void:
+	_dark_room = not _dark_room
+	if _dark_room:
+		_dir_light.light_energy = 0.0
+		_dir_light.shadow_enabled = false
+		_env.ambient_light_energy = 0.05
+	else:
+		_dir_light.light_energy = float(_slot.get("sun_energy", 0.35))
+		_dir_light.shadow_enabled = _slot.get("sun_shadows", false)
+		_env.ambient_light_energy = float(_slot.get("ambient_energy", 0.65))
+
+
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
@@ -353,7 +389,8 @@ func _build_status_label() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  nb %.1f  posts %d ×%.2f  room %s" % [
+	_status.text = "%s%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  nb %.1f  posts %d ×%.2f  room %s" % [
+		"DARK " if _dark_room else "",
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",
