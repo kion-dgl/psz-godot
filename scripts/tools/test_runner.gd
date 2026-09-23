@@ -6229,14 +6229,15 @@ func test_hud_stats_persistent_panel() -> void:
 	GameState.set_hp(77)
 	GameState.set_max_mp(90)
 	GameState.set_mp(41)
-	assert_eq(panel._hp_cur_label.text, "77", "HP label reads live GameState.hp")
-	assert_eq(panel._hp_max_label.text, "200", "max-HP label reads live GameState.max_hp")
-	assert_eq(panel._pp_cur_label.text, "41", "PP label reads live GameState.mp")
-	assert_eq(panel._pp_max_label.text, "90", "max-PP label reads live GameState.max_mp")
+	# The Flauros plate (StartMenuMainSkin.NamePlate) draws bars, not text
+	# labels — assert the target fractions the bars animate toward.
+	assert_eq(panel._plate.hp_target, 77.0 / 200.0, "HP bar reads live GameState.hp")
+	assert_eq(panel._plate.pp_target, 41.0 / 90.0, "PP bar reads live GameState.mp")
 
-	# Level comes from the CharacterManager autoload's level_up signal.
+	# Level comes from the CharacterManager autoload's level_up signal (the
+	# plate draws no level; set_char_level still records it for callers).
 	CharacterManager.level_up.emit(7)
-	assert_eq(panel._level_label.text, "7", "Lv label tracks CharacterManager.level_up")
+	assert_eq(panel.char_level, 7, "char_level tracks CharacterManager.level_up")
 
 	# Non-gameplay scene (this test scene) → panel hidden.
 	SceneManager._transitioning = false
@@ -6258,7 +6259,7 @@ func test_hud_stats_persistent_panel() -> void:
 	assert_true(is_instance_valid(panel) and panel.is_inside_tree(),
 		"panel still in the tree after the scene change")
 	assert_true(panel.visible, "no absent frame: panel still rendered mid-transition")
-	assert_eq(panel._hp_cur_label.text, "63", "panel holds the last GameState values across the warp")
+	assert_eq(panel._plate.hp_target, 63.0 / 200.0, "panel holds the last GameState values across the warp")
 
 	# Full-screen SceneManager overlays (shops, storage, guild) hide the panel;
 	# clearing the overlay restores it — the old FieldHud keep_stats contract,

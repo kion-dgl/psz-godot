@@ -12,13 +12,14 @@ extends CanvasLayer
 ##
 ## COMPILE CONTRACT: this script is an AUTOLOAD, so it MUST compile in
 ## repo-only CI (no downloaded asset pack — the pack mounts at runtime, after
-## bootstrap). The panel backdrop (res://assets/hud/hp-pp.png) is pack-only:
-## it is load()ed lazily behind ResourceLoader.exists and retried on every
-## update until the pack mounts. NEVER preload() a pack path here — a parse
-## failure on an autoload takes down the whole test run.
+## bootstrap). The panel is drawn by StartMenuMainSkin.NamePlate (Flauros
+## restyle, playtest 2026-09-22 — it replaced the old pack-only hp-pp.png
+## backdrop), which only touches repo-committed resources (VT323 from
+## bootstrap/). NEVER preload() a pack path here — a parse failure on an
+## autoload takes down the whole test run.
 
 const LAYER := 200  # Above the PSO start menu (150); below the fade canvas (250)
-const MARGIN := 12.0
+const MARGIN := 16.0
 
 var _stats_panel: StatsPanel
 ## True while the current scene is a gameplay scene (city / field). Held —
@@ -79,6 +80,7 @@ func _refresh_character_info() -> void:
 	var ch = CharacterManager.get_active_character()
 	if ch:
 		_stats_panel.char_level = int(ch.get("level", 1))
+		_stats_panel.set_char_name(str(ch.get("name", "???")))
 	if _stats_panel.is_inside_tree():
 		_stats_panel.update_display()
 
@@ -117,119 +119,40 @@ func _on_scene_changed(scene_path: String) -> void:
 
 
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
-# Moved verbatim from field_hud.gd's _StatsPanel (#444), except the backdrop
-# texture: preload() became a lazy load() so this autoload compiles repo-only.
+# Restyled for the Flauros menu redesign (playtest 2026-09-22): the drawing
+# lives in StartMenuMainSkin.NamePlate so the persistent HUD and the start
+# menu's MAIN page are literally the same component. This shell keeps
+# HudStats' public surface (char_level / update_display) and the stable
+# instance id the autopilot observes across scene changes.
 
 class StatsPanel extends Control:
-	const BG_PATH := "res://assets/hud/hp-pp.png"
-	const PANEL_W := 256.0
-	const PANEL_H := 120.0
-	const BAR_LEFT := 76.0
-	const BAR_WIDTH := 160.0
-	const BAR_HEIGHT := 7.0
-	const HP_BAR_TOP := 62.0
-	const PP_BAR_TOP := 98.0
-	const LEVEL_FONT_SIZE := 16
-	const VAL_FONT_SIZE := 14
-
-	const HP_COLOR := Color(0.27, 0.85, 0.27)
-	const PP_COLOR := Color(0.22, 0.56, 0.93)
-	const LEVEL_COLOR := Color(1, 1, 1, 1)
-	const VALUE_COLOR := Color(0, 0, 0, 1)
-	const PANEL_SCALE := 0.8
-
-	var char_level: int = 1
-
-	var _bg: TextureRect
-	var _level_label: Label
-	var _hp_cur_label: Label
-	var _hp_max_label: Label
-	var _pp_cur_label: Label
-	var _pp_max_label: Label
-	var _hp_bar: ColorRect
-	var _pp_bar: ColorRect
+	var char_level: int = 1  # kept for set_char_level callers; the plate draws no level
+	var _plate: StartMenuMainSkin.NamePlate
+	var _char_name: String = "???"
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
-		position = Vector2(MARGIN, MARGIN)
-		size = Vector2(PANEL_W, PANEL_H)
-		custom_minimum_size = size
-		pivot_offset = Vector2.ZERO
-		scale = Vector2(PANEL_SCALE, PANEL_SCALE)
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-		_bg = TextureRect.new()
-		_bg.position = Vector2.ZERO
-		_bg.size = Vector2(PANEL_W, PANEL_H)
-		_bg.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(_bg)
-		_ensure_bg_texture()
-
-		_hp_bar = ColorRect.new()
-		_hp_bar.color = HP_COLOR
-		_hp_bar.position = Vector2(BAR_LEFT, HP_BAR_TOP)
-		_hp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
-		_hp_bar.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(_hp_bar)
-
-		_pp_bar = ColorRect.new()
-		_pp_bar.color = PP_COLOR
-		_pp_bar.position = Vector2(BAR_LEFT, PP_BAR_TOP)
-		_pp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
-		_pp_bar.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(_pp_bar)
-
-		_level_label = _make_label(Vector2(109, 13), Vector2(46, 22), LEVEL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, LEVEL_COLOR)
-		_hp_cur_label = _make_label(Vector2(109, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
-		_hp_max_label = _make_label(Vector2(190, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
-		_pp_cur_label = _make_label(Vector2(109, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
-		_pp_max_label = _make_label(Vector2(190, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
-
+		position = Vector2(16.0, 16.0)
+		size = StartMenuMainSkin._v(StartMenuMainSkin.NAME_SIZE)
+		_plate = StartMenuMainSkin.NamePlate.new()
+		_plate.position = Vector2.ZERO
+		add_child(_plate)
+		_plate.setup_plate(_char_name)
 		update_display()
 
-	## The hp-pp.png backdrop lives in the downloadable asset pack, which mounts
-	## AFTER this autoload's _ready on a fresh install (and never in repo-only
-	## CI). Retry on every update until it resolves — the bars and labels render
-	## fine without the backdrop in the meantime. Mirrors PsoStartMenu's
-	## lazy-icon contract: nulls are never cached, so a later pack mount
-	## recovers without a restart.
-	func _ensure_bg_texture() -> void:
-		if _bg.texture != null:
-			return
-		if ResourceLoader.exists(BG_PATH):
-			_bg.texture = load(BG_PATH)
-
-	func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
-		var lbl := Label.new()
-		lbl.position = pos
-		lbl.size = sz
-		lbl.custom_minimum_size = sz
-		lbl.horizontal_alignment = align
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", font_size)
-		lbl.add_theme_color_override("font_color", color)
-		lbl.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(lbl)
-		return lbl
+	func set_char_name(new_name: String) -> void:
+		_char_name = new_name
+		if _plate != null:
+			_plate.set_name_text(new_name)
 
 	func update_display() -> void:
-		if not is_inside_tree():
+		if not is_inside_tree() or _plate == null:
 			return
-		_ensure_bg_texture()
 		var hp: int = GameState.hp
 		var max_hp: int = GameState.max_hp
 		var pp: int = GameState.mp
 		var max_pp: int = GameState.max_mp
-
-		_level_label.text = str(char_level)
-		_hp_cur_label.text = str(hp)
-		_hp_max_label.text = str(max_hp)
-		_pp_cur_label.text = str(pp)
-		_pp_max_label.text = str(max_pp)
-
 		var hp_ratio: float = clampf(float(hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 0.0
 		var pp_ratio: float = clampf(float(pp) / float(max_pp), 0.0, 1.0) if max_pp > 0 else 0.0
-		_hp_bar.size.x = BAR_WIDTH * hp_ratio
-		_hp_bar.visible = hp_ratio > 0.0
-		_pp_bar.size.x = BAR_WIDTH * pp_ratio
-		_pp_bar.visible = pp_ratio > 0.0
+		_plate.set_fractions(hp_ratio, pp_ratio)

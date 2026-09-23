@@ -120,7 +120,6 @@ const ITEM_DESC := {
 # ── State ───────────────────────────────────────────────────────────────────────
 var _c: CanvasLayer  # PsoStartMenu back-reference (extracted-controller pattern)
 var _rows: Array = []
-var _name_label: Label
 var _desc_label: Label
 var _desc_base_x := 0.0
 var _desc_tween: Tween
@@ -128,12 +127,13 @@ var _counter_label: Label
 var _stats_rows: Control
 var _stats_base_x := 0.0
 var _stats_tween: Tween
-var _hp_bar: HpBar
+var _name_plate: NamePlate
 var _last_in_main := false
 var _last_menu := -1
 var _last_page := -1
 var _last_labels := ""
 var _last_hp_frac := -1.0
+var _last_pp_frac := -1.0
 var _numeric_font: Font
 
 
@@ -145,6 +145,7 @@ static var _sky_tex: ImageTexture
 static var _frame_grad: GradientTexture1D
 static var _orange_grad: GradientTexture1D
 static var _hp_grad: GradientTexture1D
+static var _pp_grad: GradientTexture1D
 static var _orb_radial: GradientTexture2D
 static var _glint_radial: GradientTexture2D
 static var _band_tex: ImageTexture
@@ -223,6 +224,20 @@ static func tex_hp() -> GradientTexture1D:
 	return _hp_grad
 
 
+## PP fill — the HP bar's glossy style in the legacy PP blue.
+static func tex_pp() -> GradientTexture1D:
+	if _pp_grad == null:
+		var grad := Gradient.new()
+		grad.set_color(0, Color("#a4c8f5"))
+		grad.set_color(1, Color("#2863aa"))
+		grad.add_point(0.35, Color("#7cabee"))
+		grad.add_point(0.36, Color("#3b78d9"))
+		_pp_grad = GradientTexture1D.new()
+		_pp_grad.gradient = grad
+		_pp_grad.width = 8
+	return _pp_grad
+
+
 ## Vertical gradients are baked 1x64 ImageTextures, NOT transposed
 ## GradientTexture1Ds: on the GL compatibility renderer, draw_texture_rect
 ## with transpose=true silently draws nothing when the gradient contains a
@@ -248,16 +263,25 @@ static func _sample_stops(stops: Array, t: float) -> Color:
 	return stops[stops.size() - 1][1]
 
 
-## Bottom-band fill: transparent at the top edge, the strip blue at
-## STAGE_ALPHA after the mock's 50px fade-in (33px scaled), then constant.
+## Bottom-band fill, baked 64x64 with BOTH fades multiplied into the alpha:
+## the vertical fade-in over the mock's first 50px (33px scaled) and the
+## far-right dissolve to full transparency (playtest round 3).
 static func tex_band() -> ImageTexture:
 	if _band_tex == null:
-		_band_tex = _vertical_tex([
-			[0.0, Color(C_STRIP_BG, 0.0)],
-			[0.115, Color(C_STRIP_BG, STAGE_ALPHA)],
-			[1.0, Color(C_STRIP_BG, STAGE_ALPHA)],
-		])
+		var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		for y in 64:
+			var v_alpha := STAGE_ALPHA * clampf(float(y) / 63.0 / 0.115, 0.0, 1.0)
+			for x in 64:
+				var right_f := band_right_fade(float(x) / 63.0, 1.0)
+				img.set_pixel(x, y, Color(C_STRIP_BG.r, C_STRIP_BG.g, C_STRIP_BG.b, v_alpha * right_f))
+		_band_tex = ImageTexture.create_from_image(img)
 	return _band_tex
+
+
+## Far-right fade shared by the band fill (UV space) and its octagon lines
+## (pixel space): solid to 82% of the width, fully transparent by 99.5%.
+static func band_right_fade(x: float, w: float) -> float:
+	return clampf((0.995 * w - x) / (0.175 * w), 0.0, 1.0)
 
 
 static func tex_top_light() -> ImageTexture:
@@ -353,30 +377,34 @@ class Backdrop extends Control:
 	func _draw() -> void:
 		var w := size.x
 		var h := size.y
-		var strip_w := StartMenuMainSkin._s(StartMenuMainSkin.STRIP_W)
 		var band_y := StartMenuMainSkin._s(StartMenuMainSkin.BAND_Y)
+		# Snap the strip out to a whole number of octagon tiles (176.67 → 192)
+		# so every diamond fits INSIDE the fill — the playtest complaint was
+		# exactly the pattern poking past the blue (round 3), and 4.5 has no
+		# per-draw clip rect to trim it any other way.
+		var strip_w := ceilf(StartMenuMainSkin._s(StartMenuMainSkin.STRIP_W) / OCT_TILE) * OCT_TILE
 
-		# 1. Bottom band: translucent blue fill fading in over the first 33px
-		# (mock's 50px bottom mask), running the FULL width (playtest round 2 —
-		# the mock's right fade hid the pattern past the stats panel).
-		var band_h := h - band_y
-		draw_texture_rect(StartMenuMainSkin.tex_band(), Rect2(Vector2(0, band_y), Vector2(w, band_h)), false)
+		# The blue octagon L, split at the strip's right edge so the two
+		# styles never stack in the bottom-left corner (playtest round 3):
+		# the strip owns its full column, the band owns everything right of
+		# it. Both passes share one tiling grid and butt exactly at strip_w.
+		draw_texture_rect(StartMenuMainSkin.tex_band(), Rect2(Vector2(strip_w, band_y), Vector2(w - strip_w, h - band_y)), false)
+		var gx0 := int(strip_w / OCT_TILE)
 		var gx1 := int(ceil(w / OCT_TILE)) + 1
 		var gy0 := int(floor(band_y / OCT_TILE))
 		var gy1 := int(ceil(h / OCT_TILE)) + 1
-		for gx in range(0, gx1):
+		for gx in range(gx0, gx1):
 			for gy in range(gy0, gy1):
 				var origin := Vector2(gx * OCT_TILE, gy * OCT_TILE)
 				var bottom_f := clampf((origin.y - band_y) / StartMenuMainSkin._s(50), 0.0, 1.0)
-				var alpha := StartMenuMainSkin.C_OCT.a * bottom_f
+				var right_f := StartMenuMainSkin.band_right_fade(origin.x, w)
+				var alpha := StartMenuMainSkin.C_OCT.a * bottom_f * right_f
 				if alpha <= 0.01:
 					continue
 				_draw_oct_cell(origin, alpha)
 
-		# 2. Left strip: fill, octagon tiling, top light, right edge. Same
-		# tiling grid as the band, so the L's pattern interlocks seamlessly.
 		draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), Color(StartMenuMainSkin.C_STRIP_BG, StartMenuMainSkin.STAGE_ALPHA))
-		var sgx1 := int(ceil(strip_w / OCT_TILE)) + 1
+		var sgx1 := int(strip_w / OCT_TILE)
 		var sgy1 := int(ceil(h / OCT_TILE)) + 1
 		for gx in range(-1, sgx1):
 			for gy in range(-1, sgy1):
@@ -395,19 +423,19 @@ class Backdrop extends Control:
 		var line_w := StartMenuMainSkin._s(2.2)
 		var cx := origin.x + 24.0
 		var cy := origin.y + 24.0
-		var ch := 14.0  # mock chamfer 21
+		var ch := 14.0  # mock chamfer 21, scaled — also the diamond vertex offset
 		var half := OCT_TILE * 0.5
 		var diamond := PackedVector2Array([
-			Vector2(cx, cy - half + ch),
-			Vector2(cx + half - ch, cy),
-			Vector2(cx, cy + half - ch),
-			Vector2(cx - half + ch, cy),
+			Vector2(cx, cy - ch),
+			Vector2(cx + ch, cy),
+			Vector2(cx, cy + ch),
+			Vector2(cx - ch, cy),
 		])
 		StartMenuMainSkin._closed_polyline(self, diamond, col, line_w)
-		draw_line(Vector2(cx, cy - half - 1), Vector2(cx, cy - half + ch), col, line_w)
-		draw_line(Vector2(cx, cy + half - ch), Vector2(cx, cy + half + 1), col, line_w)
-		draw_line(Vector2(cx - half - 1, cy), Vector2(cx - half + ch, cy), col, line_w)
-		draw_line(Vector2(cx + half - ch, cy), Vector2(cx + half + 1, cy), col, line_w)
+		draw_line(Vector2(cx, cy - half - 1), Vector2(cx, cy - ch), col, line_w)
+		draw_line(Vector2(cx, cy + ch), Vector2(cx, cy + half + 1), col, line_w)
+		draw_line(Vector2(cx - half - 1, cy), Vector2(cx - ch, cy), col, line_w)
+		draw_line(Vector2(cx + ch, cy), Vector2(cx + half + 1, cy), col, line_w)
 
 
 ## One chamfered blue window: white halo, gradient body, scanlines, and any
@@ -483,6 +511,9 @@ class HpOrb extends Control:
 
 ## HP bar: dark track, gradient fill (animated width), white+navy rings.
 class HpBar extends Control:
+	## Fill texture override (the PP bar uses the blue variant); drawn
+	## transposed like the HP fill — opaque-stop gradients transpose fine.
+	var fill_tex: GradientTexture1D = null
 	var fraction := 1.0:
 		set(value):
 			fraction = clampf(value, 0.0, 1.0)
@@ -493,7 +524,8 @@ class HpBar extends Control:
 		draw_rect(ring, StartMenuMainSkin.C_HP_TRACK)
 		var fill_w := size.x * fraction
 		if fill_w > 0.5:
-			draw_texture_rect(StartMenuMainSkin.tex_hp(), Rect2(Vector2.ZERO, Vector2(fill_w, size.y)), false, Color.WHITE, true)
+			var tex := fill_tex if fill_tex != null else StartMenuMainSkin.tex_hp()
+			draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(fill_w, size.y)), false, Color.WHITE, true)
 		draw_rect(ring, StartMenuMainSkin.C_RING_WHITE, false, StartMenuMainSkin._s(1.5))
 		draw_rect(ring.grow(StartMenuMainSkin._s(1.0)), StartMenuMainSkin.C_RING_NAVY, false, StartMenuMainSkin._s(1.0))
 
@@ -565,7 +597,9 @@ class MenuRow extends Control:
 	func _draw() -> void:
 		if not selected:
 			return
-		draw_texture_rect(StartMenuMainSkin.tex_orange(), Rect2(Vector2.ZERO, size), false, Color.WHITE, true)
+		# Mock gradient runs 180deg (down); playtest round 3 wants it ACROSS —
+		# light at the left, dark at the right, like PSO's selection sweep.
+		draw_texture_rect(StartMenuMainSkin.tex_orange(), Rect2(Vector2.ZERO, size), false)
 		draw_line(Vector2(0, 0.5), Vector2(size.x, 0.5), StartMenuMainSkin.C_SEL_TOP_INSET, 1.0)
 		draw_line(Vector2(0, size.y - 0.5), Vector2(size.x, size.y - 0.5), StartMenuMainSkin.C_SEL_BOT_INSET, 1.0)
 		if pulse > 0.01:
@@ -742,6 +776,93 @@ class KbdChip extends Control:
 				x += StartMenuMainSkin.FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, StartMenuMainSkin.FS_KBD).x + GAP
 
 
+## The name / HP / PP plate — one visual language shared by the menu's MAIN
+## page and the persistent HudStats panel (playtest round 3: the Flauros
+## plate REPLACES the legacy hp-pp.png HUD rather than just echoing it while
+## the menu is open). Geometry is the mock's NamePanel.
+class NamePlate extends Control:
+	var _name_label: Label
+	var _hp_bar: HpBar
+	var _pp_bar: HpBar
+	var _hp_tween: Tween
+	var _pp_tween: Tween
+
+	func setup_plate(char_name: String) -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		size = StartMenuMainSkin._v(StartMenuMainSkin.NAME_SIZE)
+
+		var frame := StartMenuMainSkin.ChamferPanel.new()
+		frame.outer = StartMenuMainSkin._p(StartMenuMainSkin.NAME_OUTER)
+		frame.windows = [{"poly": StartMenuMainSkin._p(StartMenuMainSkin.NAME_INNER), "tone": "paper"}]
+		frame.position = Vector2.ZERO
+		frame.size = size
+		frame.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(frame)
+
+		var star := StartMenuMainSkin.StarBadge.new()
+		star.position = StartMenuMainSkin._v(StartMenuMainSkin.STAR_POS)
+		star.size = Vector2.ONE * StartMenuMainSkin._s(StartMenuMainSkin.STAR_SIZE)
+		star.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(star)
+
+		var orb := StartMenuMainSkin.HpOrb.new()
+		orb.position = StartMenuMainSkin._v(StartMenuMainSkin.ORB_POS)
+		orb.size = Vector2.ONE * StartMenuMainSkin._s(StartMenuMainSkin.ORB_SIZE)
+		orb.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(orb)
+
+		_name_label = Label.new()
+		_name_label.text = char_name
+		_name_label.position = StartMenuMainSkin._v(Vector2(66, 26))
+		_name_label.size = StartMenuMainSkin._v(Vector2(152, 48))
+		_name_label.mouse_filter = MOUSE_FILTER_IGNORE
+		_name_label.clip_text = true
+		_name_label.add_theme_font_override("font", StartMenuMainSkin.FONT)
+		_name_label.add_theme_font_size_override("font_size", StartMenuMainSkin.FS_MAIN)
+		_name_label.add_theme_color_override("font_color", StartMenuMainSkin.C_TEXT)
+		_name_label.add_theme_constant_override("line_spacing", 0)
+		add_child(_name_label)
+
+		_hp_bar = _make_bar(Vector2(68, 76), StartMenuMainSkin.tex_hp())
+		_pp_bar = _make_bar(Vector2(68, 90), StartMenuMainSkin.tex_pp())
+
+	func _make_bar(pos: Vector2, tex: GradientTexture1D) -> HpBar:
+		var bar := HpBar.new()
+		bar.fill_tex = tex
+		bar.position = StartMenuMainSkin._v(pos)
+		bar.size = StartMenuMainSkin._v(Vector2(195, 10))
+		bar.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(bar)
+		return bar
+
+	func set_name_text(char_name: String) -> void:
+		if _name_label != null:
+			_name_label.text = char_name
+
+	## Target fractions — the synchronous readback (the bars themselves
+	## animate toward these over 500ms, so mid-tween reads aren't stable).
+	var hp_target := 0.0
+	var pp_target := 0.0
+
+	## Bars sweep to their new fractions (mock: 500ms ease-out width).
+	func set_fractions(hp: float, pp: float, animate: bool = true) -> void:
+		hp_target = hp
+		pp_target = pp
+		_hp_tween = _bar_tween(_hp_bar, hp, animate, _hp_tween)
+		_pp_tween = _bar_tween(_pp_bar, pp, animate, _pp_tween)
+
+	func _bar_tween(bar: HpBar, target: float, animate: bool, prev: Tween) -> Tween:
+		if prev != null:
+			prev.kill()
+		if not animate:
+			bar.fraction = target
+			return null
+		var tw := create_tween()
+		tw.tween_property(bar, "fraction", target, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		return tw
+
+
 # ═══ Build / refresh ═══
 
 
@@ -769,31 +890,9 @@ func setup(controller: CanvasLayer) -> void:
 
 func _build_name_panel() -> void:
 	var holder := _holder(_v(NAME_POS), _v(NAME_SIZE))
-	_add_chamfer(holder, NAME_OUTER, [{"poly": NAME_INNER, "tone": "paper"}])
-
-	var star := StarBadge.new()
-	star.position = _v(STAR_POS)
-	star.size = Vector2.ONE * _s(STAR_SIZE)
-	star.mouse_filter = MOUSE_FILTER_IGNORE
-	holder.add_child(star)
-
-	var orb := HpOrb.new()
-	orb.position = _v(ORB_POS)
-	orb.size = Vector2.ONE * _s(ORB_SIZE)
-	orb.mouse_filter = MOUSE_FILTER_IGNORE
-	holder.add_child(orb)
-
-	_name_label = _make_label(_character_name(), FS_MAIN, C_TEXT)
-	_name_label.position = _v(Vector2(66, 33))
-	_name_label.size = Vector2(_s(150), _s(48))
-	_name_label.clip_text = true
-	holder.add_child(_name_label)
-
-	_hp_bar = HpBar.new()
-	_hp_bar.position = _v(Vector2(68, 80))
-	_hp_bar.size = _v(Vector2(195, 18))
-	_hp_bar.mouse_filter = MOUSE_FILTER_IGNORE
-	holder.add_child(_hp_bar)
+	_name_plate = NamePlate.new()
+	_name_plate.setup_plate(_character_name())
+	holder.add_child(_name_plate)
 	set_meta("holder_name", holder)
 
 
@@ -948,17 +1047,20 @@ func sync() -> void:
 	if _c._info_page != _last_page:
 		_refresh_stats(true)
 	var hp_frac := _hp_fraction()
-	if absf(hp_frac - _last_hp_frac) > 0.001:
+	var pp_frac := _pp_fraction()
+	if absf(hp_frac - _last_hp_frac) > 0.001 or absf(pp_frac - _last_pp_frac) > 0.001:
 		_last_hp_frac = hp_frac
-		_animate_hp(hp_frac)
+		_last_pp_frac = pp_frac
+		_name_plate.set_fractions(hp_frac, pp_frac)
 
 
 func _refresh_all() -> void:
-	_name_label.text = _character_name()
+	_name_plate.set_name_text(_character_name())
 	_refresh_selection()
 	_refresh_stats(false)
 	_last_hp_frac = _hp_fraction()
-	_animate_hp(_last_hp_frac)
+	_last_pp_frac = _pp_fraction()
+	_name_plate.set_fractions(_last_hp_frac, _last_pp_frac)
 
 
 func _refresh_selection() -> void:
@@ -1015,11 +1117,6 @@ func _set_description(text: String) -> void:
 	_desc_tween.parallel().tween_property(_desc_label, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-func _animate_hp(target: float) -> void:
-	var tw := create_tween()
-	tw.tween_property(_hp_bar, "fraction", target, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-
 ## Mock's staggered entry cascade: left panels slide in from the left, stats
 ## and footer slide up — 0/80/160/240/400ms, 550ms ease-out.
 func _play_entry() -> void:
@@ -1041,10 +1138,11 @@ func _play_entry() -> void:
 		tw.tween_interval(delay)
 		tw.tween_property(h, "position", final_pos, 0.55).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 		tw.parallel().tween_property(h, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
-	# HP bar sweeps up from empty (mock: 500ms ease-out width transition).
-	_hp_bar.fraction = 0.0
+	# Bars sweep up from empty (mock: 500ms ease-out width transition).
+	_name_plate.set_fractions(0.0, 0.0, false)
 	_last_hp_frac = _hp_fraction()
-	_animate_hp(_last_hp_frac)
+	_last_pp_frac = _pp_fraction()
+	_name_plate.set_fractions(_last_hp_frac, _last_pp_frac)
 
 
 # ── Helpers ═══
@@ -1086,6 +1184,8 @@ func _character_name() -> String:
 
 
 func _hp_fraction() -> float:
+	if GameState.max_hp > 0:
+		return clampf(float(GameState.hp) / float(GameState.max_hp), 0.0, 1.0)
 	var ch: Dictionary = _c._get_character()
 	var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
 	var level := int(ch.get("level", 1))
@@ -1095,6 +1195,20 @@ func _hp_fraction() -> float:
 	var max_hp := maxi(base_hp + int(ch.get("material_bonuses", {}).get("hp", 0)), 1)
 	var hp := int(ch.get("hp", max_hp))
 	return clampf(float(hp) / float(max_hp), 0.0, 1.0)
+
+
+func _pp_fraction() -> float:
+	if GameState.max_mp > 0:
+		return clampf(float(GameState.mp) / float(GameState.max_mp), 0.0, 1.0)
+	var ch: Dictionary = _c._get_character()
+	var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
+	var level := int(ch.get("level", 1))
+	var base_pp := 1
+	if class_data != null:
+		base_pp = class_data.get_stat_at_level("pp", level)
+	var max_pp := maxi(base_pp + int(ch.get("material_bonuses", {}).get("pp", 0)), 1)
+	var pp := int(ch.get("pp", max_pp))
+	return clampf(float(pp) / float(max_pp), 0.0, 1.0)
 
 
 func _on_row_hover(index: int) -> void:

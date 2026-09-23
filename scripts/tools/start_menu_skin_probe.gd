@@ -50,6 +50,8 @@ func _shoot(shot: Dictionary) -> void:
 	await get_tree().create_timer(shot.delay).timeout
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(str(shot.path))
-	for sample in [[1150, 440], [1150, 470], [1150, 500], [1150, 560], [1150, 640], [1150, 700], [10, 300]]:
+	# Round-3 samples: selected-row gradient direction (two x on one row),
+	# bottom-left seam (single style), band body vs far-right fade, open area.
+	for sample in [[40, 138], [140, 138], [80, 500], [900, 650], [1230, 700], [640, 360]]:
 		print("[skin-probe] px(%d,%d)=%s" % [sample[0], sample[1], img.get_pixel(sample[0], sample[1]).to_html(false)])
 	print("[skin-probe] wrote %s" % shot.path)
