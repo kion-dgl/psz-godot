@@ -20,9 +20,6 @@ const BOTTOM_H := 320.0     # Bottom backdrop strip
 const HUD_STATS_LAYER := 200  # HUD stats drawn above start menu
 const PAD := 12.0           # Inner padding
 
-const STATS_BG: Texture2D = preload("res://assets/ui/stats.png")
-const MAIN_BG: Texture2D = preload("res://assets/ui/main.png")
-
 # ── Colors ──────────────────────────────────────────────────────────────────────
 const C_BACKDROP := Color(0.16, 0.24, 0.39, 0.82)
 const C_BACKDROP_BORDER := Color(0.39, 0.59, 0.82, 0.6)
@@ -78,6 +75,9 @@ var _move_from_idx: int = -1  # Origin row when in Mode.ITEMS_MOVE (Manual sort)
 var _move_from_id: String = ""  # Origin item id, used to relocate cursor after move
 
 var _canvas: Control  # Child control for drawing
+## Redesigned MAIN page (StartMenuMainSkin) — node-based skin attached on
+## open() while Mode.MAIN is active. Sub-modes keep the legacy canvas look.
+var _main_skin: StartMenuMainSkin = null
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _pal_bg_cache: Dictionary = {}  # palette page_idx → background Texture2D (#421)
@@ -171,6 +171,29 @@ func _process(delta: float) -> void:
 			_nav.tick(delta)
 		else:
 			_nav.reset()
+	# The MAIN skin diffs controller state (mode / cursor / page / HP) here, so
+	# StartMenuInput stays the single owner of input and never learns about it.
+	if _is_open and _main_skin != null:
+		_main_skin.sync()
+
+
+## Attach the redesigned MAIN-page skin (rebuilt on every open so the mock's
+## staggered entry cascade replays). The skin hides itself while a sub-mode
+## owns the screen and repaints on state changes via sync().
+func _attach_main_skin() -> void:
+	_detach_main_skin()
+	_main_skin = StartMenuMainSkin.new()
+	_canvas.add_child(_main_skin)
+	_main_skin.setup(self)
+
+
+func _detach_main_skin() -> void:
+	if _main_skin != null:
+		_main_skin.queue_free()
+		_main_skin = null
+	# The skin hides the HUD stats panel while it covers the viewport (the
+	# NamePanel already shows name + HP); restore it on the way out.
+	HudStats.visible = true
 
 
 ## Open a multi-button ChoiceDialog. The callback receives the chosen
@@ -434,6 +457,7 @@ func open() -> void:
 	_debug_idx = 0
 	_debug_msg = ""
 	_action_message = ""
+	_attach_main_skin()
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
 	opened.emit()
@@ -446,6 +470,7 @@ func close() -> void:
 	GameState.pop_modal()
 	_is_open = false
 	visible = false
+	_detach_main_skin()
 	closed.emit()
 
 
@@ -963,6 +988,63 @@ func _count_equipped_units(equip: Dictionary) -> int:
 		if not str(equip.get("unit%d" % (i + 1), "")).is_empty():
 			count += 1
 	return count
+
+
+## The 4 stat pages shown in the MAIN stats window. Moved out of the legacy
+## renderer's info panel when the Flauros redesign took over MAIN (mock:
+## skeleton/game_menu_redesign/) — the ONE source of what the stats window
+## shows, so the skin can never drift from the data it replaced.
+func _build_stat_pages() -> Array:
+	var ch: Dictionary = _get_character()
+	var class_id: String = str(ch.get("class_id", ""))
+	var class_data = ClassRegistry.get_class_data(class_id)
+	var level: int = int(ch.get("level", 1))
+	var equip: Dictionary = ch.get("equipment", {})
+
+	# Base stats from class at current level
+	var base_hp: int = class_data.get_stat_at_level("hp", level) if class_data else 0
+	var base_pp: int = class_data.get_stat_at_level("pp", level) if class_data else 0
+	var base_atk: int = class_data.get_stat_at_level("attack", level) if class_data else 0
+	var base_def: int = class_data.get_stat_at_level("defense", level) if class_data else 0
+	var base_acc: int = class_data.get_stat_at_level("accuracy", level) if class_data else 0
+	var base_eva: int = class_data.get_stat_at_level("evasion", level) if class_data else 0
+	var base_mst: int = class_data.get_stat_at_level("technique", level) if class_data else 0
+
+	# Equipment bonuses
+	var weapon_id: String = str(equip.get("weapon", ""))
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id)) if not weapon_id.is_empty() else null
+	var weapon_grind: int = int(ch.get("weapon_grinds", {}).get(weapon_id, 0))
+	var weapon_atk: int = weapon.get_attack_at_grind(weapon_grind) if weapon else 0
+	var weapon_acc: int = weapon.get_accuracy_at_grind(weapon_grind) if weapon else 0
+	var weapon_name: String = weapon.name if weapon else "--"
+
+	var frame_id: String = str(equip.get("frame", ""))
+	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id)) if not frame_id.is_empty() else null
+	var armor_def: int = int(armor.defense_base) if armor else 0
+	var armor_eva: int = int(armor.evasion_base) if armor else 0
+	var frame_name: String = armor.name if armor else "--"
+	# Per-instance rolled slot count of the equipped frame (not resource max_slots).
+	var frame_slots: int = EquipmentUtils.get_unit_slot_count(frame_id, ch)
+
+	# Material bonuses
+	var mat_bonuses: Dictionary = ch.get("material_bonuses", {})
+
+	# EXP progress
+	var exp_progress: Dictionary = CharacterManager.get_exp_progress() if CharacterManager.has_method("get_exp_progress") else {}
+	var to_next: String = str(exp_progress.get("needed", "---"))
+
+	# Weapon special
+	var ws: Dictionary = ch.get("weapon_stats", {}).get(weapon_id, {})
+	var special_el: String = str(ws.get("element", ""))
+	var special_str: String = special_el.capitalize() if not special_el.is_empty() else "--"
+
+	var pages := [
+		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(int(ch.get("experience", 0)))], ["To Next Lv", to_next], ["Meseta", str(int(ch.get("meseta", 0)))]],
+		[["ATP", str(base_atk + weapon_atk + int(mat_bonuses.get("attack", 0)))], ["ATA", str(base_acc + weapon_acc + int(mat_bonuses.get("accuracy", 0)))], ["Weapon", weapon_name], ["Grind", "+%d" % weapon_grind if weapon_grind > 0 else "--"], ["Special", special_str]],
+		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(frame_slots)], ["Units", "%d / %d" % [_count_equipped_units(equip), frame_slots]]],
+		[["MST", str(base_mst + int(mat_bonuses.get("technique", 0)))], ["HP", "%d / %d" % [int(ch.get("hp", base_hp)), base_hp + int(mat_bonuses.get("hp", 0))]], ["PP", "%d / %d" % [int(ch.get("pp", base_pp)), base_pp + int(mat_bonuses.get("pp", 0))]]],
+	]
+	return pages
 
 
 func _is_gameplay_scene() -> bool:

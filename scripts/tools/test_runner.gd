@@ -113,6 +113,7 @@ func _run_tests_core() -> void:
 	test_quick_weapon_menu_unequip_and_order()
 	test_quick_weapon_menu_captures_input()
 	test_start_menu_data()
+	test_start_menu_main_skin()
 	test_start_menu_palette_bg_cached()
 	test_scene_manager_fade_rect_full_size()
 	test_scene_manager_transition_settles()
@@ -6098,6 +6099,47 @@ func test_start_menu_data() -> void:
 		assert_true(not PsoStartMenu._can_use_techs(), "_can_use_techs false for a CAST (HUcast)")
 		assert_true(not PsoStartMenu._get_menu_labels().has("Techs"), "Techs view absent for a CAST")
 		sm_char["class_id"] = sm_saved_class
+	print("")
+
+
+## The redesigned MAIN page (StartMenuMainSkin) — attach/hide lifecycle and
+## the state diffing the skin does against the controller. Input routing is
+## deliberately NOT retested here: StartMenuInput is unchanged and the skin
+## only observes _menu_idx / _info_page / _mode.
+func test_start_menu_main_skin() -> void:
+	print("── Start Menu MAIN skin (Flauros redesign) ──")
+	# Needs the staged active character from the core group's earlier tests.
+	if CharacterManager.get_active_character() == null:
+		print("SKIP: no active character staged")
+		print("")
+		return
+	if PsoStartMenu.is_open():
+		PsoStartMenu.close()
+
+	PsoStartMenu.open()
+	assert_true(PsoStartMenu._main_skin != null, "open() attaches the MAIN skin")
+	assert_true(PsoStartMenu._main_skin.visible, "skin visible while Mode.MAIN")
+	assert_eq(PsoStartMenu._main_skin.menu_row_count(), PsoStartMenu._get_menu_labels().size(),
+		"one row per menu label (Techs gating included)")
+
+	# Page flip via controller state (the input path only mutates _info_page).
+	PsoStartMenu._info_page = 2
+	PsoStartMenu._main_skin.sync()
+	assert_eq(PsoStartMenu._main_skin.counter_text(), "3/4", "counter tracks _info_page")
+	assert_true(not HudStats.visible, "HUD stats hidden under the full-screen MAIN page")
+
+	# MAIN <-> sub-mode transitions show/hide the skin without re-attaching.
+	PsoStartMenu._enter_sub(0)
+	PsoStartMenu._main_skin.sync()
+	assert_true(not PsoStartMenu._main_skin.visible, "entering a sub-mode hides the skin")
+	assert_true(HudStats.visible, "HUD stats restored over sub-modes")
+	PsoStartMenu._mode = PsoStartMenu.Mode.MAIN
+	PsoStartMenu._main_skin.sync()
+	assert_true(PsoStartMenu._main_skin.visible, "back to MAIN re-shows the skin")
+
+	PsoStartMenu.close()
+	assert_true(PsoStartMenu._main_skin == null, "close() detaches the skin")
+	assert_true(HudStats.visible, "close() restores the HUD stats panel")
 	print("")
 
 

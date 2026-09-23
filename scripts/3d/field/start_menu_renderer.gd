@@ -63,6 +63,11 @@ func _item_mute_state(item_id: String) -> Array:
 
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
+	# The redesigned MAIN page is a node-based skin (StartMenuMainSkin) that
+	# covers the viewport while visible; skip the legacy canvas painting so
+	# the L-backdrop doesn't bleed around it. Sub-modes still paint here.
+	if _c._main_skin != null and _c._main_skin.visible:
+		return
 	var font: Font = MENU_FONT
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
 
@@ -84,7 +89,6 @@ func _draw_menu() -> void:
 	# HUD draws its own HP/PP — no duplicate status panel here
 
 	match _c._mode:
-		PsoStartMenu.Mode.MAIN: _draw_main(c, font)
 		PsoStartMenu.Mode.ITEMS, PsoStartMenu.Mode.ITEMS_MOVE: _draw_items(c, font)
 		PsoStartMenu.Mode.EQUIP, PsoStartMenu.Mode.EQUIP_PICK: _draw_equip(c, font)
 		PsoStartMenu.Mode.TECHS: _draw_techs(c, font)
@@ -94,34 +98,6 @@ func _draw_menu() -> void:
 		PsoStartMenu.Mode.SYSTEM: _draw_system(c, font)
 		PsoStartMenu.Mode.OPTIONS: _draw_options(c, font)
 		PsoStartMenu.Mode.DEBUG: _draw_debug(c, font)
-
-
-func _draw_main(c: Control, font: Font) -> void:
-	# Main menu uses the assets/ui/main.png sprite (200×292). Text area inside
-	# the sprite: x=12, y=29, 176×233. Selection highlight and menu rows live
-	# inside that region.
-	var bg_x: float = PsoStartMenu.PAD
-	var bg_y: float = 110.0
-	c.draw_texture(PsoStartMenu.MAIN_BG, Vector2(bg_x, bg_y))
-
-	var text_x: float = bg_x + 12
-	var text_y: float = bg_y + 29
-	var text_w: float = 176
-	var text_h: float = 233
-
-	# Menu list rows — distribute evenly across the full text area height so
-	# we use the space the old description panel took.
-	var labels: Array = _c._get_menu_labels()
-	var row_h: float = text_h / float(maxi(labels.size(), 1))
-	for i in range(labels.size()):
-		var iy: float = text_y + i * row_h
-		if i == _c._menu_idx:
-			c.draw_rect(Rect2(text_x + 2, iy, text_w - 4, row_h - 2), PsoStartMenu.C_SELECT)
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if i == _c._menu_idx else PsoStartMenu.C_TEXT
-		c.draw_string(font, Vector2(text_x + 12, iy + row_h * 0.7), labels[i], HORIZONTAL_ALIGNMENT_LEFT, text_w - 16, PsoStartMenu.FONT_SIZE_LG, col)
-
-	# Info panel (bottom right)
-	_draw_info_panel(c, font)
 
 
 func _draw_scanlines(c: Control, rect: Rect2) -> void:
@@ -135,83 +111,6 @@ func _draw_scanlines(c: Control, rect: Rect2) -> void:
 	while y < y_end:
 		c.draw_line(Vector2(x1, y), Vector2(x2, y), PsoStartMenu.C_SCANLINE, 1.0)
 		y += PsoStartMenu.SCANLINE_SPACING
-
-
-func _draw_info_panel(c: Control, font: Font) -> void:
-	# Stats panel uses the assets/ui/stats.png sprite (440×273, scaled 1.72×
-	# from a 256×159 DS source). Layout coords inside the sprite:
-	#   page indicator box: x=191, y=24, 65×28 (between the L/R icons)
-	#   stat text area:     x=17,  y=58, 402×162
-	var px: float = PsoStartMenu.VIEWPORT_W - PsoStartMenu.STATS_BG.get_width() - 50
-	var py: float = PsoStartMenu.VIEWPORT_H - PsoStartMenu.STATS_BG.get_height() - 20
-	c.draw_texture(PsoStartMenu.STATS_BG, Vector2(px, py))
-
-	# Page selector centered in the indicator box
-	var page_label := "%d/4" % [_c._info_page + 1]
-	c.draw_string(font, Vector2(px + 191, py + 44), page_label, HORIZONTAL_ALIGNMENT_CENTER, 65, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT)
-
-	# Stat rows — pull real data from character + class + equipment
-	var ch: Dictionary = _c._get_character()
-	var class_id: String = str(ch.get("class_id", ""))
-	var class_data = ClassRegistry.get_class_data(class_id)
-	var level: int = int(ch.get("level", 1))
-	var equip: Dictionary = ch.get("equipment", {})
-
-	# Base stats from class at current level
-	var base_hp: int = class_data.get_stat_at_level("hp", level) if class_data else 0
-	var base_pp: int = class_data.get_stat_at_level("pp", level) if class_data else 0
-	var base_atk: int = class_data.get_stat_at_level("attack", level) if class_data else 0
-	var base_def: int = class_data.get_stat_at_level("defense", level) if class_data else 0
-	var base_acc: int = class_data.get_stat_at_level("accuracy", level) if class_data else 0
-	var base_eva: int = class_data.get_stat_at_level("evasion", level) if class_data else 0
-	var base_mst: int = class_data.get_stat_at_level("technique", level) if class_data else 0
-
-	# Equipment bonuses
-	var weapon_id: String = str(equip.get("weapon", ""))
-	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id)) if not weapon_id.is_empty() else null
-	var weapon_grind: int = int(ch.get("weapon_grinds", {}).get(weapon_id, 0))
-	var weapon_atk: int = weapon.get_attack_at_grind(weapon_grind) if weapon else 0
-	var weapon_acc: int = weapon.get_accuracy_at_grind(weapon_grind) if weapon else 0
-	var weapon_name: String = weapon.name if weapon else "--"
-
-	var frame_id: String = str(equip.get("frame", ""))
-	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id)) if not frame_id.is_empty() else null
-	var armor_def: int = int(armor.defense_base) if armor else 0
-	var armor_eva: int = int(armor.evasion_base) if armor else 0
-	var frame_name: String = armor.name if armor else "--"
-	# Per-instance rolled slot count of the equipped frame (not resource max_slots).
-	var frame_slots: int = EquipmentUtils.get_unit_slot_count(frame_id, ch)
-
-	# Material bonuses
-	var mat_bonuses: Dictionary = ch.get("material_bonuses", {})
-
-	# EXP progress
-	var exp_progress: Dictionary = CharacterManager.get_exp_progress() if CharacterManager.has_method("get_exp_progress") else {}
-	var to_next: String = str(exp_progress.get("needed", "---"))
-
-	# Weapon special
-	var ws: Dictionary = ch.get("weapon_stats", {}).get(weapon_id, {})
-	var special_el: String = str(ws.get("element", ""))
-	var special_str: String = special_el.capitalize() if not special_el.is_empty() else "--"
-
-	var pages := [
-		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(int(ch.get("experience", 0)))], ["To Next Lv", to_next], ["Meseta", str(int(ch.get("meseta", 0)))]],
-		[["ATP", str(base_atk + weapon_atk + int(mat_bonuses.get("attack", 0)))], ["ATA", str(base_acc + weapon_acc + int(mat_bonuses.get("accuracy", 0)))], ["Weapon", weapon_name], ["Grind", "+%d" % weapon_grind if weapon_grind > 0 else "--"], ["Special", special_str]],
-		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(frame_slots)], ["Units", "%d / %d" % [_c._count_equipped_units(equip), frame_slots]]],
-		[["MST", str(base_mst + int(mat_bonuses.get("technique", 0)))], ["HP", "%d / %d" % [int(ch.get("hp", base_hp)), base_hp + int(mat_bonuses.get("hp", 0))]], ["PP", "%d / %d" % [int(ch.get("pp", base_pp)), base_pp + int(mat_bonuses.get("pp", 0))]]],
-	]
-	var rows: Array = pages[_c._info_page] if _c._info_page < pages.size() else []
-	# Text area inside the stats sprite: x=17, y=58, 402×162.
-	# Row height targets ~30px so 5 rows fit in 162 with a bit of breathing room.
-	var rows_x: float = px + 17
-	var rows_y: float = py + 58
-	var rows_w: float = 402
-	var row_h: float = 30
-	for i in range(rows.size()):
-		var ry: float = rows_y + i * row_h + 22  # +22 for baseline offset inside the row
-		c.draw_string(font, Vector2(rows_x + 8, ry), str(rows[i][0]), HORIZONTAL_ALIGNMENT_LEFT, rows_w - 16, PsoStartMenu.FONT_SIZE, PsoStartMenu.C_TEXT_MUTED)
-		# Right-align value within the same row box so long strings don't overflow off-screen.
-		c.draw_string(font, Vector2(rows_x + 8, ry), str(rows[i][1]), HORIZONTAL_ALIGNMENT_RIGHT, rows_w - 16, PsoStartMenu.FONT_SIZE, PsoStartMenu.C_TEXT)
 
 
 func _draw_items(c: Control, font: Font) -> void:
