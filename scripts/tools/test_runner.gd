@@ -11385,8 +11385,8 @@ func test_wetlands_overcast_slot() -> void:
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
 	assert_eq(wet.get("sun_energy"), 0.35,
 		"Wetlands rig: weak sun 0.35 — the subtle overcast shadow source")
-	assert_eq(wet.get("ambient_energy"), 0.9,
-		"Wetlands rig: ambient 0.90 — flat diffuse fill dominates the sun")
+	assert_eq(wet.get("ambient_energy"), 0.65,
+		"Wetlands rig: ambient 0.65 — moody (kion 2026-09-23 read-out)")
 	assert_eq(wet.get("sun_pitch"), -55.0, "Wetlands rig: sun −55° — short soft shadows")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon (day — the weak sun is the source)")
@@ -11400,17 +11400,17 @@ func test_wetlands_overcast_slot() -> void:
 		"sky band: overcast gray")
 	assert_eq(wet.get("sky_horizon_color"), Color(0.58, 0.62, 0.66),
 		"horizon band: pale gray")
-	# The cheat rig, wetlands flavor: the key is present but EMPTY — the
-	# presence arms the rig (unlit twin + MeshBasic guarantee + split) while
-	# flat overcast light gives no surface an authoring story the way the
-	# valley's high sun did its greenery.
-	assert_true(wet.has("lit_surfaces") and (wet["lit_surfaces"] as Array).is_empty(),
-		"the cheat rig arms with an EMPTY lit list — the whole stage keeps its bake")
+	# The cheat rig turned inside out (kion 2026-09-23): the bake STAYS
+	# (vertex_color_use_as_albedo) but the WHOLE stage receives the rig —
+	# the lanterns paint real pools on the pathway (the fake glow disc read
+	# as a circle in the air under the hanging lanterns).
+	assert_eq(wet.get("lit_surfaces"), ["*"],
+		"the wildcard lights the WHOLE stage per-pixel — bake kept as albedo")
 	assert_true(not wet.has("bake_mix"), "no bake_mix — the bake IS the look")
 	assert_eq(wet.get("sun_shadows"), true,
-		"sun shadows on — the actors' shadows land on the catcher")
-	assert_eq(wet.get("shadow_catcher"), true,
-		"the collision shell is the shadow receiver — shadows multiply onto the bake")
+		"sun shadows on — the actors' shadows land on the lit ground directly")
+	assert_true(not wet.get("shadow_catcher", false),
+		"no catcher — the lit ground already receives; a catcher would double-darken")
 	assert_true(not wet.get("geometry_casts_shadows", false),
 		"geometry doesn't cast — actor shadows only, no rim drama")
 	# The lamps + the props.
@@ -11426,6 +11426,28 @@ func test_wetlands_overcast_slot() -> void:
 		"the row's rain resolves with no session override")
 	assert_eq(Slots.resolve_weather("snow", wet), "snow",
 		"quest session weather still overrides the row")
+	# The wildcard, functionally: "*" flips every Standard surface per-pixel
+	# (bake kept), and a wildcard keep-list forces nothing unlit.
+	var wroot := Node3D.new()
+	add_child(wroot)
+	var wmi := MeshInstance3D.new()
+	wroot.add_child(wmi)
+	var wmesh := ArrayMesh.new()
+	for mname in ["0_ground", "1_grass3", "1_wall2"]:
+		var m := StandardMaterial3D.new()
+		m.resource_name = mname
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+		wmesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+		wmesh.surface_set_material(wmesh.get_surface_count() - 1, m)
+	wmi.mesh = wmesh
+	assert_eq(MeshUtils.make_lit_surfaces(wroot, ["*"]), 3,
+		"the wildcard lit pass flips every Standard surface")
+	for i in range(3):
+		assert_eq((SmoothNormals._active_material(wmi, i) as StandardMaterial3D).shading_mode,
+			BaseMaterial3D.SHADING_MODE_PER_PIXEL, "surface %d receives per-pixel" % i)
+	assert_eq(MeshUtils.make_unlit(wroot, ["*"]), 0,
+		"a wildcard keep-list forces nothing unlit")
+	wroot.queue_free()
 	print("")
 
 
@@ -11505,32 +11527,21 @@ func test_wetlands_post_lights() -> void:
 		var b := lights[1] as OmniLight3D
 		assert_almost_eq(a.global_position.x, 0.0, 0.3, "pool A sits on post A's spine")
 		assert_almost_eq(b.global_position.x, 10.0, 0.3, "pool B sits on post B's spine")
-		assert_almost_eq(a.global_position.y, 2.9 + 0.15, 0.05,
-			"the pool rides the post head (cluster top + a hair)")
+		assert_almost_eq(a.global_position.y, 2.9 - 1.0, 0.05,
+			"the omni sits at the hanging lantern (~1m under the pole tip)")
 		assert_true(not a.shadow_enabled,
 			"omnis never cast (the gl_compatibility convention)")
 		assert_almost_eq(a.omni_attenuation, 2.0, 0.01,
 			"true inverse-square falloff (the placed-light convention)")
 		assert_true(a.light_energy > 1.0,
 			"the energy punches through the area ambient (the snowfield ×12 lantern lesson)")
-	# The readable pool: each post also carries an additive ground glow disc
-	# and rising embers — the stage is unlit and the catcher only multiplies,
-	# so the omni alone can't show on the floor.
-	var glows := root.find_children("PostGlow*", "MeshInstance3D", true, false)
-	assert_eq(glows.size(), 2, "each post carries a ground glow disc")
-	if glows.size() == 2:
-		var disc := (glows[0] as MeshInstance3D).mesh as PlaneMesh
-		var gmat := disc.material as StandardMaterial3D
-		assert_eq(gmat.blend_mode, BaseMaterial3D.BLEND_MODE_ADD,
-			"the glow is additive — a light pool over the bake")
-		assert_eq(gmat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
-			"the glow is unshaded")
-		assert_almost_eq((glows[0] as Node3D).global_position.y, 0.0 + 0.08, 0.01,
-			"no floor_y → the cluster-base fallback, a hair above the catcher's lift")
-	# Electric lanterns (kion, 2026-09-23): no flame particles — the pass
-	# spawns only the omni and the disc.
+	# Electric lanterns (kion, 2026-09-23): no flame particles and no glow
+	# disc — the stage receives the rig, so the omni paints its own real
+	# pool on the pathway.
 	assert_true(root.find_children("PostEmbers*", "GPUParticles3D", true, false).is_empty(),
 		"no ember particles — the wetlands lamps are electric")
+	assert_true(root.find_children("PostGlow*", "MeshInstance3D", true, false).is_empty(),
+		"no glow disc — the lit ground IS the pool")
 	if lights.size() == 2:
 		assert_eq((lights[0] as OmniLight3D).light_color, Color(0.25, 0.5, 1.0),
 			"the omni rides the debug blue (#649 receive-path verification)")
@@ -11544,19 +11555,6 @@ func test_wetlands_post_lights() -> void:
 		"non-matching material places nothing")
 	assert_eq(MeshUtils.place_post_lights(root, ""), 0,
 		"empty material name is a no-op")
-	# The walk-height anchor: with floor_y the disc rides the FLOOR, not the
-	# cluster base — the marsh posts root ~7m under the deck, and a
-	# base-anchored disc lands beneath it, depth-tested out of existence.
-	var root2 := Node3D.new()
-	add_child(root2)
-	var mi2 := MeshInstance3D.new()
-	root2.add_child(mi2)
-	mi2.mesh = mesh
-	assert_eq(MeshUtils.place_post_lights(root2, "0_light", 2.0), 2,
-		"the floor-anchored pass places the same pools")
-	var disc2 := root2.find_children("PostGlow*", "MeshInstance3D", true, false)
-	assert_almost_eq((disc2[0] as Node3D).global_position.y, 2.0 + 0.08, 0.01,
-		"the disc anchors to the walk height — never the buried post base")
 	print("")
 
 

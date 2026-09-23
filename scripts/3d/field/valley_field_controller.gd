@@ -390,7 +390,7 @@ func _ready() -> void:
 	# s02b/e/z variants carry no such surface and place zero lights.
 	if _slot.has("post_lights") and _map_root:
 		var posts: int = MeshUtils.place_post_lights(_map_root,
-			str(_slot["post_lights"]), _floor_top)
+			str(_slot["post_lights"]))
 		if posts > 0:
 			_fdbg("[ValleyField] post lights: %d pool(s) from '%s'" % [posts, _slot["post_lights"]])
 

@@ -96,10 +96,9 @@ func _ready() -> void:
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
 	# The row's post-light pools (#649) — after the floor load, same as the
-	# field: the glow discs anchor to the walk height.
+	# field.
 	if _slot.has("post_lights") and OS.get_environment("PSZ_WALK_POST_LIGHTS") != "0":
-		_posts = MeshUtils.place_post_lights(_map_root,
-			str(_slot["post_lights"]), _floor_top)
+		_posts = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
 		for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
 			print("[WetlandsWalk] post light at %s" % (light as Node3D).global_position)
 	_spawn_player(Vector3(0, 1.5, 8))
@@ -324,15 +323,11 @@ func _spawn_weather() -> void:
 	print("[WetlandsWalk] weather: %s" % str(_slot.get("weather", "")))
 
 
-## Scale every post pool against its MeshUtils base — the omni energy and
-## the glow strength move together so the A/B reads as one pool.
+## Scale every post pool against its MeshUtils base.
 func _set_post_energy(mult: float) -> void:
 	_post_mult = clampf(mult, 0.0, 4.0)
 	for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
 		(light as OmniLight3D).light_energy = MeshUtils.POST_LIGHT_ENERGY * _post_mult
-	for glow in _map_root.find_children("PostGlow*", "MeshInstance3D", true, false):
-		var mat := ((glow as MeshInstance3D).mesh as PlaneMesh).material as StandardMaterial3D
-		mat.albedo_color.a = MeshUtils.POST_GLOW_OPACITY * _post_mult
 
 
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is

@@ -50,9 +50,12 @@ extends RefCounted
 ##                        rest of the stage keeps its bake — the "cheat"
 ##                        strategy (#648 valley): greenery lights, hard
 ##                        surfaces don't (every prop class read bright and
-##                        out of place against the bake). Needs no bake_mix;
-##                        run after the field material pass so special-
-##                        shader surfaces (waterfalls) are skipped
+##                        out of place against the bake). A "*" entry is the
+##                        wildcard (#649 wetlands): the WHOLE stage receives
+##                        per-pixel, bake kept as albedo — real light pools
+##                        on the ground. Needs no bake_mix; run after the
+##                        field material pass so special-shader surfaces
+##                        (waterfalls) are skipped
 ##   shadow_catcher bool the collision shell renders as the shadow receiver
 ##                        — white, multiply-blended, at the walk height:
 ##                        the actors' dynamic shadows multiply onto the
@@ -135,31 +138,30 @@ const SLOTS := {
 		],
 	},
 
-	# Wetlands overcast — the #649 rig (the valley cheat rig's flat-light
-	# cousin): the stage KEEPS its bake (lit_surfaces empty — nothing
-	# receives the sun; even the greenery stays baked under flat gray
-	# light) while a WEAK sun stands over the actors only: low energy,
-	# desaturated neutral-cool sun/ambient colors + gray sky bands (the
-	# DAY preset's warm light would read sunny), catcher shadows, no
-	# geometry casting. The lamps are electric lanterns: post_lights
-	# clusters the 0_light surface (every s02a stage ships it; the b/e/z
-	# variants don't and no-op) and each post gets its omni pool + ground
-	# glow disc (no flame particles); lit_props brings
-	# boxes/fences/drops/NPCs onto the receive path so the pools and the
-	# weak sun reach more than the actors. Rain rides the row.
+	# Wetlands overcast — the #649 rig (the valley cheat rig turned inside
+	# out, kion 2026-09-23 call): the bake STAYS (vertex_color_use_as_albedo
+	# everywhere) but the stage RECEIVES the rig — lit_surfaces "*" flips the
+	# whole stage per-pixel so the lanterns paint real pools on the pathway
+	# (the fake glow disc read as a circle in the air under the hanging
+	# lanterns). No shadow_catcher: the lit ground receives the actors' sun
+	# shadows directly (a catcher would double-darken them). A weak
+	# desaturated sun + a MOODY ambient (0.65) carry the overcast; the lamps
+	# are electric (omni pools, no flame particles; post_lights clusters the
+	# 0_light surface — every s02a stage ships it, the b/e/z variants don't
+	# and no-op); lit_props brings boxes/fences/drops/NPCs onto the receive
+	# path. Rain rides the row.
 	"ozette": {
 		"hour": 10.0,
 		"sun_energy": 0.35,
 		"sun_color": Color(0.82, 0.87, 0.93),
-		"ambient_energy": 0.9,
+		"ambient_energy": 0.65,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
 		"sun_pitch": -55.0,
 		"sun_shadows": true,
-		"shadow_catcher": true,
 		"weather": "rain",
-		"lit_surfaces": [],
+		"lit_surfaces": ["*"],
 		"post_lights": "0_light",
 		"lit_props": true,
 	},

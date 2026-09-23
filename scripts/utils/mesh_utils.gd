@@ -165,13 +165,15 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 
 ## The mirror-wrap surface treatment: the custom wrap shader — swapped to
 ## its UNSHADED twin under the cheat rig unless the material is lit-listed
-## (a custom ALBEDO shader is LIT by default: the pass1/deco1 leak). The
-## bake always tints (use_vertex_color pinned true).
+## (a custom ALBEDO shader is LIT by default: the pass1/deco1 leak; "*"
+## wildcards keep every mirror lit, #649). The bake always tints
+## (use_vertex_color pinned true).
 static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 		fix_shader: Shader, unlit_stage: bool, unlit_fix_shader: Shader,
 		keep_lit: Array) -> ShaderMaterial:
 	var shader: Shader = fix_shader
-	if unlit_stage and unlit_fix_shader and not keep_lit.has(std_mat.resource_name):
+	if unlit_stage and unlit_fix_shader \
+			and not (keep_lit.has("*") or keep_lit.has(std_mat.resource_name)):
 		shader = unlit_fix_shader
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = shader
@@ -392,13 +394,16 @@ static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
 ## Flip surface shading by material-name membership — the cheat rig's two
 ## passes are one walk: the lit pass (listed → PER_PIXEL) and the MeshBasic
 ## guarantee (unlisted → UNSHADED, imports are shared so duplicate first).
-## Returns how many surfaces flipped.
+## A "*" entry is the wildcard (#649 wetlands): every surface matches — the
+## lit pass flips the WHOLE stage to per-pixel (bake kept as albedo), and a
+## wildcard keep-list forces nothing unlit. Returns how many surfaces flipped.
 static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> int:
 	var target := BaseMaterial3D.SHADING_MODE_PER_PIXEL if listed_per_pixel \
 			else BaseMaterial3D.SHADING_MODE_UNSHADED
 	var wanted: Dictionary = {}
 	for n in names:
 		wanted[n] = true
+	var wildcard := wanted.has("*")
 	var touched := 0
 	for node in collect_mesh_instances(root, []):
 		var mi := node as MeshInstance3D
@@ -409,7 +414,12 @@ static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> i
 			var std := mat as StandardMaterial3D
 			if std.shading_mode == target:
 				continue
-			if wanted.has(std.resource_name) != listed_per_pixel:
+			# "*" puts every surface on the list — for the lit pass that's
+			# "light everything"; for the unlit pass the list is the KEEP
+			# list, so it means "force nothing" (the two passes read the
+			# same row key with opposite directions).
+			var on_list := wildcard or wanted.has(std.resource_name)
+			if on_list != listed_per_pixel:
 				continue
 			var dup := std.duplicate() as StandardMaterial3D
 			dup.shading_mode = target
@@ -451,24 +461,21 @@ static func make_unlit(root: Node, keep: Array) -> int:
 ## are no per-post nodes to hang lights on. This pass reads that surface's
 ## world-space vertices, clusters them on the XZ grid (a post's footprint is
 ## far narrower than the post spacing, so each connected blob is one post),
-## and drops each post's lantern: an OmniLight3D at the head plus a soft
-## additive ground-glow disc. The posts are ELECTRIC (kion, 2026-09-23) —
-## no flame particles ride them. The omni is for the ACTORS — the stage is
-## unlit and the catcher only multiplies, so the omni's floor footprint
-## would be invisible; the disc is the readable pool (and the energy must
-## punch through the area ambient — the snowfield's ×12 lantern lesson).
-## The disc anchors to the WALK height (`floor_y`), never the cluster's
-## base — the marsh posts root ~7m below the deck, and a base-anchored disc
-## lands beneath the floor, depth-tested out of existence. The post itself
-## keeps its baked look (the toro-lantern contract from #648). Matching is
-## by the MESH's own surface material name, not the active override: the
+## and drops each post's lantern: a single OmniLight3D. The posts are
+## ELECTRIC (kion, 2026-09-23) — no flame particles, no glow disc: the stage
+## receives the rig under this row (lit_surfaces "*"), so the lantern paints
+## its own real pool on the pathway — a fake disc read as a circle in the
+## air under the HANGING lanterns. The light sits ~1m under the cluster top:
+## the authored anchors sit at y≈4 under a ~5m post. The energy must punch
+## through the area ambient (the snowfield's ×12 lantern lesson). Matching
+## is by the MESH's own surface material name, not the active override: the
 ## 0_light texture is mirror-wrapped, so the fix pass replaces its override
 ## with an anonymous ShaderMaterial while the imported surface material
 ## keeps the GLB name. Returns how many posts were lit.
 const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
 const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
-## The authored lantern look (kion's s02a_ga1 data): fire-orange pools,
-## light radius 11 — the disc and eventual omni color.
+## The authored lantern look (kion's s02a_ga1 data): fire-orange, light
+## radius 11.
 const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
 ## DEBUG (#649 hardware verification): the omni rides an unmistakable blue
 ## so the player's receive path is confirmable on the Mac — a blue tint on
@@ -477,12 +484,9 @@ const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
 const POST_LIGHT_OMNI_COLOR := Color(0.25, 0.5, 1.0)
 const POST_LIGHT_ENERGY := 4.0
 const POST_LIGHT_RANGE := 11.0
-const POST_GLOW_SIZE := 3.6        ## the ground disc's side, in world units
-const POST_GLOW_OPACITY := 0.4
 
 
-static func place_post_lights(root: Node3D, material_name: String,
-		floor_y: float = NAN) -> int:
+static func place_post_lights(root: Node3D, material_name: String) -> int:
 	if material_name.is_empty():
 		return 0
 	# World vertices of every matching surface, binned on the XZ grid.
@@ -533,11 +537,9 @@ static func place_post_lights(root: Node3D, material_name: String,
 			continue
 		var sum := Vector3.ZERO
 		var top: float = blob[0].y
-		var base: float = blob[0].y
 		for w in blob:
 			sum += w
 			top = maxf(top, w.y)
-			base = minf(base, w.y)
 		var center_x := sum.x / blob.size()
 		var center_z := sum.z / blob.size()
 		var light := OmniLight3D.new()
@@ -553,57 +555,11 @@ static func place_post_lights(root: Node3D, material_name: String,
 		light.omni_attenuation = 2.0
 		light.shadow_enabled = false
 		root.add_child(light)
-		light.global_position = Vector3(center_x, top + 0.15, center_z)
-		# The readable pool: an additive radial glow disc at the post's base.
-		var glow_mat := StandardMaterial3D.new()
-		glow_mat.albedo_color = Color(
-			POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b,
-			POST_GLOW_OPACITY)
-		glow_mat.albedo_texture = _radial_glow_texture()
-		glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		glow_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-		glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		# After the catcher (priority 2) — the pool draws over the multiply
-		# receiver, not under it.
-		glow_mat.render_priority = 3
-		var disc := PlaneMesh.new()
-		disc.size = Vector2(POST_GLOW_SIZE, POST_GLOW_SIZE)
-		disc.material = glow_mat
-		var glow := MeshInstance3D.new()
-		glow.name = "PostGlow%d" % (placed + 1)
-		glow.mesh = disc
-		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(glow)
-		# A hair above the catcher's lift (floor_top + 0.04) so the disc
-		# never z-fights the receiver it draws over. Anchored to the WALK
-		# height when known — the cluster's base is ~7m underground.
-		var disc_y: float = (floor_y if is_finite(floor_y) else base) + 0.08
-		glow.global_position = Vector3(center_x, disc_y, center_z)
+		# ~1m under the cluster top — the authored anchors sit at y≈4 under
+		# a ~5m post: at the hanging lantern, not the pole tip.
+		light.global_position = Vector3(center_x, top - 1.0, center_z)
 		placed += 1
 	return placed
-
-
-## Soft radial white falloff (cached) for the post glow discs — engine
-## GradientTexture2D radial fill, no hand-rolled pixel loop and no
-## WeatherController dependency for one texture.
-static var _radial_glow_tex: Texture2D = null
-
-
-static func _radial_glow_texture() -> Texture2D:
-	if _radial_glow_tex:
-		return _radial_glow_tex
-	var grad := Gradient.new()
-	grad.set_color(0, Color(1, 1, 1, 1))
-	grad.set_color(1, Color(1, 1, 1, 0))
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 0.5)
-	tex.width = 64
-	tex.height = 64
-	_radial_glow_tex = tex
-	return tex
 
 
 ## Surface material-name match for the placement passes: the active

@@ -15,7 +15,7 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the cheat rig with an EMPTY lit list (the whole stage keeps its bake); weak desaturated sun 0.35 / ambient 0.90 with gray sky bands; catcher shadows; the 0_light lamp-post surface clusters into warm omni pools; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*" — real light pools on the pathway); weak desaturated sun 0.35 / moody ambient 0.65 with gray sky bands; no catcher (the lit ground takes the actors' shadows directly); the 0_light surface clusters into hanging electric-lantern omni pools; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -191,43 +191,41 @@ const slots = [
   the play space; double lighting over the bake). A future row that
   wants real stage shadows re-authors those fields knowingly.</p>
 
-  <p>The wetlands row (#649) is the cheat rig's <strong>overcast
-  cousin</strong> — the same contract taken flatter: the stage keeps its
-  bake with an <strong>empty</strong> <code>lit_surfaces</code> list (the
-  key's presence arms the rig — the surface split, the force-unlit
-  guarantee, the unlit mirror-shader twin — while flat gray light gives
-  no surface the authoring story the valley's high sun gave its
-  greenery), and the sun stands over the <strong>actors only</strong>:
-  energy 0.35 against ambient 0.90, both desaturated
-  (<code>sun_color</code> / <code>ambient_color</code>; the DAY preset's
-  warm light would read sunny through the gray) with
+  <p>The wetlands row (#649) is the cheat rig's <strong>inversion</strong>
+  (kion, 2026-09-23): the bake <strong>stays</strong> —
+  <code>vertex_color_use_as_albedo</code> everywhere, no
+  <code>bake_mix</code>, no white-strategy pass — but the stage
+  <strong>receives the rig</strong>: <code>lit_surfaces</code> carries the
+  <code>"*"</code> wildcard, flipping the whole stage per-pixel so the
+  lanterns paint <strong>real light pools on the pathway</strong>. (A fake
+  additive glow disc was tried first and read as a circle in the air under
+  the hanging lanterns — the marsh deck isn't flat, so nothing pinned to
+  one walk height connects lantern to ground; real light is the only pool
+  that lands.) With the ground lit there is <strong>no
+  <code>shadow_catcher</code></strong>: the actors' sun shadows land on the
+  lit ground directly, and a catcher would double-darken them. The
+  overcast character: weak sun 0.35 against a moody ambient 0.65, both
+  desaturated (<code>sun_color</code> / <code>ambient_color</code>; the
+  DAY preset's warm light would read sunny through the gray) with
   <code>sky_top_color</code> / <code>sky_horizon_color</code> overcast
-  bands. The catcher owns the ground as in the valley — the weak sun's
-  shadows multiply subtly onto the bake (ambient is the shadow floor,
-  and here it is high). Two fields widen the receive path beyond the
-  actors: <code>post_lights</code> names a lamp-post surface material
+  bands. <code>post_lights</code> names the lamp surface material
   (<code>0_light</code>, merged into every s02a stage mesh) whose
   vertices are clustered on the XZ grid — each connected blob is one
-  post — and each post head gets its electric lantern (the authored
-  spec: color 1.0/0.3/0.12, light radius 11): an omni pool and a soft
-  additive ground-glow disc — no flame particles ride them. The
-  stage is unlit and the catcher only multiplies, so the omni's floor
-  footprint would otherwise be invisible — the disc is the readable pool,
-  and the omni's energy must punch through the area ambient (the
-  snowfield's ×12 lantern lesson). The disc anchors to the WALK height,
-  never the post's base — the marsh posts root ~7m under the deck, and a
-  base-anchored disc lands beneath the floor. The posts themselves stay
-  baked, the toro-lantern contract; the s02b/e/z variants ship no such
-  surface and place nothing), and
-  <code>lit_props</code> raises the field-scoped GameElement flag so
-  boxes, fences, drops, and field NPCs load per-pixel like the player
-  and enemies — the flag is cleared on field exit, so city scenes
-  sharing those subclasses keep their baked look. Weather is
-  <code>rain</code>: the original's spec — 400 blue-gray semi-transparent
-  streaks falling ~8u/s on FIXED_Y billboards through the volume above
-  the player, built by the shared WeatherController like snow and sand.
-  The wetlands walk lab (<code>wetlands_walktest</code>) owns the tuning
-  until locked from a read-out.</p>
+  post — and each hanging lantern gets an electric omni pool (the
+  authored spec: color 1.0/0.3/0.12, light radius 11, ~1m under the pole
+  tip where the authored anchors sit; no flame particles ride them — the
+  lamps are electric), its energy punching through the ambient (the
+  snowfield's ×12 lantern lesson). The s02b/e/z variants ship no such
+  surface and place nothing. <code>lit_props</code> raises the
+  field-scoped GameElement flag so boxes, fences, drops, and field NPCs
+  load per-pixel like the player and enemies — the flag is cleared on
+  field exit, so city scenes sharing those subclasses keep their baked
+  look. Weather is <code>rain</code>: the original's spec — 400 blue-gray
+  semi-transparent streaks falling ~8u/s on FIXED_Y billboards through
+  the volume above the player, built by the shared WeatherController
+  like snow and sand. The wetlands walk lab
+  (<code>wetlands_walktest</code>) owns the tuning until locked from a
+  read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>
