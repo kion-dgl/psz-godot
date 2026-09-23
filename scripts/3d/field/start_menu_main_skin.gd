@@ -28,10 +28,11 @@ const FONT: Font = preload("res://bootstrap/fonts/VT323-Regular.ttf")
 
 # ── Mock palette (exact values from the React components) ──────────────────────
 const C_STAGE := Color("#ffffff")
-## The mock's stage base is opaque white, but the legacy start menu is a
-## translucent non-pausing overlay (the player keeps walking while it's up,
-## legacy C_BACKDROP alpha 0.82) — so the stage paints at 82% and the game
-## shows through. Panels stay opaque for text readability.
+## Deviations from the mock (playtest feedback, 2026-09-22): the mock's
+## opaque white stage is gone entirely — the start menu is a non-pausing
+## overlay, so only the blue octagon L (left strip + full-width bottom band)
+## and the chamfered panels paint over the game. The bottom band also runs
+## across the whole width instead of fading out to the right.
 const STAGE_ALPHA := 0.82
 const C_FRAME_TOP := Color("#c8dbf5")
 const C_FRAME_MID := Color("#b6d0ee")
@@ -144,12 +145,11 @@ static var _sky_tex: ImageTexture
 static var _frame_grad: GradientTexture1D
 static var _orange_grad: GradientTexture1D
 static var _hp_grad: GradientTexture1D
-static var _glow_radial: GradientTexture2D
 static var _orb_radial: GradientTexture2D
 static var _glint_radial: GradientTexture2D
-static var _strip_edge_grad: GradientTexture1D
-static var _top_light_grad: GradientTexture1D
-static var _wash_grad: GradientTexture1D
+static var _band_tex: ImageTexture
+static var _top_light_tex: ImageTexture
+static var _strip_edge_tex: ImageTexture
 
 
 static func tex_scan() -> ImageTexture:
@@ -211,36 +211,83 @@ static func tex_hp() -> GradientTexture1D:
 	if _hp_grad == null:
 		var grad := Gradient.new()
 		grad.set_color(0, Color("#a4f5c5"))
+		grad.set_color(1, Color("#28aa63"))
+		# End colors FIRST, then midpoints: set_color() indexes shift when
+		# add_point() inserts, so setting the end last hits the new midpoint
+		# and leaves the real end at Gradient's default opaque white.
 		grad.add_point(0.35, Color("#7cf0aa"))
 		grad.add_point(0.36, Color("#3bc87e"))
-		grad.set_color(1, Color("#28aa63"))
 		_hp_grad = GradientTexture1D.new()
 		_hp_grad.gradient = grad
 		_hp_grad.width = 8
 	return _hp_grad
 
 
-static func tex_glow() -> GradientTexture2D:
-	if _glow_radial == null:
-		var grad := Gradient.new()
-		grad.set_color(0, Color(0.765, 0.855, 0.963, 0.7))   # rgba(195,218,246,.7)
-		grad.add_point(0.45, Color(0.824, 0.894, 0.973, 0.35))
-		grad.set_color(1, Color(1, 1, 1, 0))
-		_glow_radial = GradientTexture2D.new()
-		_glow_radial.gradient = grad
-		_glow_radial.fill = GradientTexture2D.FILL_RADIAL
-		_glow_radial.fill_from = Vector2(0.5, 0.5)
-		_glow_radial.fill_to = Vector2(1.0, 0.5)
-	return _glow_radial
+## Vertical gradients are baked 1x64 ImageTextures, NOT transposed
+## GradientTexture1Ds: on the GL compatibility renderer, draw_texture_rect
+## with transpose=true silently draws nothing when the gradient contains a
+## fully-transparent stop (verified with a scratch probe — opaque-stop
+## gradients like the HP fill transpose fine, alpha-fade ones don't).
+static func _vertical_tex(stops: Array) -> ImageTexture:
+	var img := Image.create(1, 64, false, Image.FORMAT_RGBA8)
+	for y in 64:
+		img.set_pixel(0, y, _sample_stops(stops, float(y) / 63.0))
+	return ImageTexture.create_from_image(img)
+
+
+static func _sample_stops(stops: Array, t: float) -> Color:
+	if t <= float(stops[0][0]):
+		return stops[0][1]
+	for i in range(stops.size() - 1):
+		var o1 := float(stops[i + 1][0])
+		if t <= o1:
+			var o0 := float(stops[i][0])
+			var f := (t - o0) / maxf(o1 - o0, 0.0001)
+			var c0: Color = stops[i][1]
+			return c0.lerp(stops[i + 1][1], f)
+	return stops[stops.size() - 1][1]
+
+
+## Bottom-band fill: transparent at the top edge, the strip blue at
+## STAGE_ALPHA after the mock's 50px fade-in (33px scaled), then constant.
+static func tex_band() -> ImageTexture:
+	if _band_tex == null:
+		_band_tex = _vertical_tex([
+			[0.0, Color(C_STRIP_BG, 0.0)],
+			[0.115, Color(C_STRIP_BG, STAGE_ALPHA)],
+			[1.0, Color(C_STRIP_BG, STAGE_ALPHA)],
+		])
+	return _band_tex
+
+
+static func tex_top_light() -> ImageTexture:
+	if _top_light_tex == null:
+		_top_light_tex = _vertical_tex([
+			[0.0, Color(1, 1, 1, 0.65)],
+			[0.2, Color(1, 1, 1, 0.2)],
+			[0.55, Color(1, 1, 1, 0.0)],
+			[1.0, Color(1, 1, 1, 0.0)],
+		])
+	return _top_light_tex
+
+
+static func tex_strip_edge() -> ImageTexture:
+	if _strip_edge_tex == null:
+		_strip_edge_tex = _vertical_tex([
+			[0.0, Color(1, 1, 1, 0.95)],
+			[0.6, Color(1, 1, 1, 0.8)],
+			[1.0, Color(1, 1, 1, 0.4)],
+		])
+	return _strip_edge_tex
 
 
 static func tex_orb() -> GradientTexture2D:
 	if _orb_radial == null:
 		var grad := Gradient.new()
 		grad.set_color(0, Color("#ff9898"))
+		grad.set_color(1, Color("#590404"))
 		grad.add_point(0.35, Color("#ee2c2c"))
 		grad.add_point(0.85, Color("#9b0b0b"))
-		grad.set_color(1, Color("#590404"))
 		_orb_radial = GradientTexture2D.new()
 		_orb_radial.gradient = grad
 		_orb_radial.fill = GradientTexture2D.FILL_RADIAL
@@ -253,8 +300,8 @@ static func tex_glint() -> GradientTexture2D:
 	if _glint_radial == null:
 		var grad := Gradient.new()
 		grad.set_color(0, Color(1, 1, 1, 0.85))
-		grad.add_point(0.8, Color(1, 1, 1, 0.0))
 		grad.set_color(1, Color(1, 1, 1, 0.0))
+		grad.add_point(0.8, Color(1, 1, 1, 0.0))
 		_glint_radial = GradientTexture2D.new()
 		_glint_radial.gradient = grad
 		_glint_radial.fill = GradientTexture2D.FILL_RADIAL
@@ -263,47 +310,6 @@ static func tex_glint() -> GradientTexture2D:
 	return _glint_radial
 
 
-static func tex_strip_edge() -> GradientTexture1D:
-	if _strip_edge_grad == null:
-		var grad := Gradient.new()
-		grad.set_color(0, Color(1, 1, 1, 0.95))
-		grad.add_point(0.6, Color(1, 1, 1, 0.8))
-		grad.set_color(1, Color(1, 1, 1, 0.4))
-		_strip_edge_grad = GradientTexture1D.new()
-		_strip_edge_grad.gradient = grad
-		_strip_edge_grad.width = 8
-	return _strip_edge_grad
-
-
-static func tex_top_light() -> GradientTexture1D:
-	if _top_light_grad == null:
-		var grad := Gradient.new()
-		grad.set_color(0, Color(1, 1, 1, 0.65))
-		grad.add_point(0.2, Color(1, 1, 1, 0.2))
-		grad.add_point(0.55, Color(1, 1, 1, 0.0))
-		grad.set_color(1, Color(1, 1, 1, 0.0))
-		_top_light_grad = GradientTexture1D.new()
-		_top_light_grad.gradient = grad
-		_top_light_grad.width = 8
-	return _top_light_grad
-
-
-static func tex_wash() -> GradientTexture1D:
-	if _wash_grad == null:
-		var grad := Gradient.new()
-		grad.set_color(0, Color(1, 1, 1, 0.0))
-		grad.add_point(0.25, Color("#d8e5f5"))
-		grad.add_point(0.65, Color("#c8ddf3"))
-		grad.set_color(1, Color("#bdd5f0"))
-		_wash_grad = GradientTexture1D.new()
-		_wash_grad.gradient = grad
-		_wash_grad.width = 8
-	return _wash_grad
-
-
-## PSO's spaced-out digit readout (mock `.26em` tracking): VT323 has no glyph
-## tracking we can set at runtime, so numeric values get thin space-joined
-## digits instead — same intent, e.g. "1180" renders as "1 1 8 0".
 static func spread_digits(value: String) -> String:
 	if not value.strip_edges().is_valid_int():
 		return value
@@ -340,54 +346,43 @@ static func _p(pts: PackedVector2Array) -> PackedVector2Array:
 # ═══ Inner drawing Controls ═══
 
 
-## Full-stage backdrop: white base, atmospheric wash + glow, octagon-tiled left
-## strip and bottom band (the mock's StageBackdrop layers).
+## Full-stage backdrop: no stage base at all (the game shows through
+## everywhere the pattern isn't) — just the blue octagon L: a translucent
+## left strip and a full-width bottom band that fades in over its top edge.
 class Backdrop extends Control:
 	func _draw() -> void:
 		var w := size.x
 		var h := size.y
 		var strip_w := StartMenuMainSkin._s(StartMenuMainSkin.STRIP_W)
 		var band_y := StartMenuMainSkin._s(StartMenuMainSkin.BAND_Y)
-		var stage_mod := Color(1, 1, 1, StartMenuMainSkin.STAGE_ALPHA)
 
-		# 1. Base + bottom atmospheric wash (mock: from y=620 down).
-		draw_rect(Rect2(Vector2.ZERO, size), stage_mod)
-		var wash_h := h - StartMenuMainSkin._s(620)
-		draw_texture_rect(StartMenuMainSkin.tex_wash(), Rect2(Vector2(0, h - wash_h), Vector2(w, wash_h)), false, stage_mod, true)
-
-		# 2. Bottom-right radial glow (mock: ellipse anchored at 85%/90%).
-		var glow_size := Vector2(StartMenuMainSkin._s(1000), StartMenuMainSkin._s(600))
-		var glow_center := Vector2(w * 0.85, h * 0.9)
-		draw_texture_rect(StartMenuMainSkin.tex_glow(), Rect2(glow_center - glow_size * 0.5, glow_size), false, stage_mod)
-
-		# 3. Octagon band, bottom — solid near the strip, fading out to the
-		# right (mock mask: opaque to 55%, gone by 92% of the band) and fading
-		# in over the first 50px of height.
-		var fade_start := strip_w + 0.55 * (w - strip_w)
-		var fade_end := strip_w + 0.92 * (w - strip_w)
-		var gx0 := int(floor(strip_w / OCT_TILE))
+		# 1. Bottom band: translucent blue fill fading in over the first 33px
+		# (mock's 50px bottom mask), running the FULL width (playtest round 2 —
+		# the mock's right fade hid the pattern past the stats panel).
+		var band_h := h - band_y
+		draw_texture_rect(StartMenuMainSkin.tex_band(), Rect2(Vector2(0, band_y), Vector2(w, band_h)), false)
 		var gx1 := int(ceil(w / OCT_TILE)) + 1
 		var gy0 := int(floor(band_y / OCT_TILE))
 		var gy1 := int(ceil(h / OCT_TILE)) + 1
-		for gx in range(gx0, gx1):
+		for gx in range(0, gx1):
 			for gy in range(gy0, gy1):
 				var origin := Vector2(gx * OCT_TILE, gy * OCT_TILE)
-				var right_f := 1.0 - clampf((origin.x - fade_start) / maxi(int(fade_end - fade_start), 1), 0.0, 1.0)
 				var bottom_f := clampf((origin.y - band_y) / StartMenuMainSkin._s(50), 0.0, 1.0)
-				var alpha := right_f * bottom_f
+				var alpha := StartMenuMainSkin.C_OCT.a * bottom_f
 				if alpha <= 0.01:
 					continue
-				_draw_oct_cell(origin, StartMenuMainSkin.C_OCT.a * alpha)
+				_draw_oct_cell(origin, alpha)
 
-		# 4. Left strip: fill, octagon tiling, top light, right edge.
+		# 2. Left strip: fill, octagon tiling, top light, right edge. Same
+		# tiling grid as the band, so the L's pattern interlocks seamlessly.
 		draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), Color(StartMenuMainSkin.C_STRIP_BG, StartMenuMainSkin.STAGE_ALPHA))
 		var sgx1 := int(ceil(strip_w / OCT_TILE)) + 1
 		var sgy1 := int(ceil(h / OCT_TILE)) + 1
 		for gx in range(-1, sgx1):
 			for gy in range(-1, sgy1):
 				_draw_oct_cell(Vector2(gx * OCT_TILE, gy * OCT_TILE), StartMenuMainSkin.C_OCT.a)
-		draw_texture_rect(StartMenuMainSkin.tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false, stage_mod, true)
-		draw_texture_rect(StartMenuMainSkin.tex_strip_edge(), Rect2(Vector2(strip_w - StartMenuMainSkin._s(2), 0), Vector2(StartMenuMainSkin._s(2), h)), false, stage_mod, true)
+		draw_texture_rect(StartMenuMainSkin.tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false)
+		draw_texture_rect(StartMenuMainSkin.tex_strip_edge(), Rect2(Vector2(strip_w - StartMenuMainSkin._s(2), 0), Vector2(StartMenuMainSkin._s(2), h)), false)
 
 	const OCT_TILE := 48.0  # mock 72px tile
 
