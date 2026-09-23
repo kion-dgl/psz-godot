@@ -288,16 +288,12 @@ func _draw_equip(c: Control, font: Font) -> void:
 			"unit": header = "Units" if last_type != "unit" else ""
 			"mag": header = "Mag" if last_type != "mag" else ""
 		if not header.is_empty():
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
 			c.draw_string(font, Vector2(px + 8, draw_y + 13), header, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, StartMenuMainSkin.C_INNER_NAVY)
 			draw_y += 20
 		last_type = slot_type
 
 		var is_sel: bool = i == idx
-		if is_sel:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 22), PsoStartMenu.C_SELECT)
-		else:
-			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 22), Color(1, 1, 1, 0.85))
+		StartMenuMainSkin.draw_menu_row(c, Rect2(px + 2, draw_y, pw - 4, 22), 1 if is_sel else 0)
 		var col: Color = PsoStartMenu.C_SELECT_TEXT if is_sel else PsoStartMenu.C_TEXT
 
 		# Slot label
@@ -384,7 +380,7 @@ func _draw_techs(c: Control, font: Font) -> void:
 		if is_sel:
 			col = PsoStartMenu.C_SELECT_TEXT
 		elif not learned:
-			col = Color(0.5, 0.5, 0.5)
+			col = StartMenuMainSkin.C_TEXT_DISABLED
 		else:
 			col = PsoStartMenu.C_TEXT
 
@@ -392,7 +388,7 @@ func _draw_techs(c: Control, font: Font) -> void:
 		var icon: Texture2D = _c._get_action_icon(str(tech.get("id", "")))
 		if icon:
 			if not learned:
-				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false, Color(0.4, 0.4, 0.4))
+				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false, PszStyle.DISABLED_ICON_MOD)
 			else:
 				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false)
 
@@ -478,7 +474,7 @@ func _draw_palette(c: Control, font: Font) -> void:
 		var row_y: float = slot_y + si * 30
 
 		if is_sel and browsing:
-			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 28), PsoStartMenu.C_SELECT)
+			StartMenuMainSkin.draw_menu_row(c, Rect2(lx + 4, row_y, lw - 8, 28), 1)
 		elif is_sel and picking:
 			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 28), Color(0.12, 0.18, 0.35, 0.9))
 
@@ -607,8 +603,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 			var form_name: String = form.name if form else "Mag"
 			var level: int = MagManager.get_level(mag_state)
 
-			c.draw_rect(Rect2(px + 2, dy, pw - 4, 18), Color(0.12, 0.16, 0.28))
-			c.draw_string(font, Vector2(px + 8, dy + 13), "%s  Lv.%d" % [form_name, level], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT_LIGHT)
+			c.draw_string(font, Vector2(px + 8, dy + 13), "%s  Lv.%d" % [form_name, level], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, StartMenuMainSkin.C_INNER_NAVY)
 			dy += 22
 
 			var stats_dict: Dictionary = mag_state.get("stats", {})
@@ -620,7 +615,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 				var gauge: int = raw % MagManager.STATS_PER_LEVEL
 				var gauge_pct: float = float(gauge) / float(MagManager.STATS_PER_LEVEL)
 
-				c.draw_rect(Rect2(px + 2, dy, pw - 4, 24), Color(1, 1, 1, 0.85))
+				c.draw_rect(Rect2(px + 2, dy, pw - 4, 24), Color(1, 1, 1, 0.45))
 				c.draw_string(font, Vector2(px + 8, dy + 17), stat_labels[stat_key], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT)
 				c.draw_string(font, Vector2(px + 55, dy + 17), str(stat_lvl), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT)
 				# Gauge bar
@@ -632,13 +627,13 @@ func _draw_mags(c: Control, font: Font) -> void:
 				dy += 26
 
 			dy += 4
-			c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.85))
+			c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.45))
 			c.draw_string(font, Vector2(px + 8, dy + 14), "Sync: %d/%d" % [int(mag_state.get("sync", 0)), MagManager.MAX_SYNC], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 			c.draw_string(font, Vector2(px + 150, dy + 14), "IQ: %d/%d" % [int(mag_state.get("iq", 0)), MagManager.MAX_IQ], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 			dy += 22
 
 			if form and not str(form.photon_blast).is_empty():
-				c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.85))
+				c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.45))
 				c.draw_string(font, Vector2(px + 8, dy + 14), "P.Blast: %s" % str(form.photon_blast), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, Color(0.2, 0.6, 0.3))
 				dy += 22
 
@@ -649,17 +644,13 @@ func _draw_mags(c: Control, font: Font) -> void:
 		var dpw: float = 200.0
 		var dph: float = 300.0
 		_draw_inner_panel(c, Rect2(dpx, dpy, dpw, dph))
-		c.draw_rect(Rect2(dpx + 2, dpy + 2, dpw - 4, 16), Color(0.12, 0.16, 0.28))
-		c.draw_string(font, Vector2(dpx + 6, dpy + 14), "Feed Item", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_LIGHT)
+		c.draw_string(font, Vector2(dpx + 6, dpy + 14), "Feed Item", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, StartMenuMainSkin.C_INNER_NAVY)
 		var feed_y: float = dpy + 20
 		for i in range(feed.size()):
 			if feed_y > dpy + dph - 6:
 				break
 			var is_sel: bool = i == _c._sub_idx
-			if is_sel:
-				c.draw_rect(Rect2(dpx + 2, feed_y, dpw - 4, 20), PsoStartMenu.C_SELECT)
-			else:
-				c.draw_rect(Rect2(dpx + 2, feed_y, dpw - 4, 20), Color(1, 1, 1, 0.85))
+			StartMenuMainSkin.draw_menu_row(c, Rect2(dpx + 2, feed_y, dpw - 4, 20), 1 if is_sel else 0)
 			var col: Color = PsoStartMenu.C_SELECT_TEXT if is_sel else PsoStartMenu.C_TEXT
 			c.draw_string(font, Vector2(dpx + 6, feed_y + 14), str(feed[i].get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
 			var qty: int = int(feed[i].get("quantity", 0))

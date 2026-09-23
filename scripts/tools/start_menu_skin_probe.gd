@@ -44,17 +44,26 @@ func _ready() -> void:
 	PsoStartMenu._main_skin.sync()  # hide the skin so the renderer draws the sub-mode
 	PsoStartMenu._canvas.queue_redraw()  # the input handler does this in-game
 	await _shoot({"path": "/tmp/menu_skin_sub.png", "page": -1, "delay": 0.5})
-	PsoStartMenu._mode = PsoStartMenu.Mode.SYSTEM
-	PsoStartMenu._canvas.queue_redraw()
-	await _shoot({"path": "/tmp/menu_skin_system.png", "page": -1, "delay": 0.3})
+	for mode_name in ["SYSTEM", "EQUIP", "TECHS", "PALETTE", "MAGS", "QUEST", "OPTIONS", "DEBUG"]:
+		PsoStartMenu._mode = PsoStartMenu.Mode[mode_name]
+		PsoStartMenu._canvas.queue_redraw()
+		print("[skin-probe] switching to %s (enum=%d)" % [mode_name, PsoStartMenu._mode])
+		await _shoot({"path": "/tmp/menu_port_%s.png" % mode_name.to_lower(), "page": -1, "delay": 0.3})
 	PsoStartMenu.close()
 	get_tree().quit()
 
 
 func _shoot(shot: Dictionary) -> void:
 	await get_tree().create_timer(shot.delay).timeout
+	# Deterministic capture: wait for the frame's draw to land before readback.
+	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(str(shot.path))
+	if str(shot.path).begins_with("/tmp/menu_port_"):
+		var probe := ""
+		for s in [[150, 430], [150, 470], [400, 500], [700, 500]]:
+			probe += " (%d,%d)=%s" % [s[0], s[1], img.get_pixel(s[0], s[1]).to_html(false)]
+		print("[skin-probe] %s%s" % [shot.path, probe])
 	# Round-3 samples: selected-row gradient direction (two x on one row),
 	# bottom-left seam (single style), band body vs far-right fade, open area.
 	for sample in [[40, 138], [140, 138], [600, 650], [640, 300]]:
