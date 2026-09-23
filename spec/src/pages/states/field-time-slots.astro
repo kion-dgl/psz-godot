@@ -208,22 +208,26 @@ const slots = [
   actors: <code>post_lights</code> names a lamp-post surface material
   (<code>0_light</code>, merged into every s02a stage mesh) whose
   vertices are clustered on the XZ grid — each connected blob is one
-  post — and each post head gets a warm placed omni pool plus a soft
-  additive ground-glow disc at its base. The stage is unlit and the
-  catcher only multiplies, so the omni's floor footprint would otherwise
-  be invisible — the disc is the readable pool, and the omni's energy
-  must punch through the area ambient (the snowfield's ×12 lantern
-  lesson). The posts themselves stay baked, the toro-lantern contract;
-  the s02b/e/z variants ship no such surface and place nothing), and
+  post — and each post head gets the original's fire-orange lantern (the
+  authored spec: color 1.0/0.3/0.12, light radius 11): an omni pool, a
+  soft additive ground-glow disc, and rising embers at the lamp. The
+  stage is unlit and the catcher only multiplies, so the omni's floor
+  footprint would otherwise be invisible — the disc is the readable pool,
+  and the omni's energy must punch through the area ambient (the
+  snowfield's ×12 lantern lesson). The disc anchors to the WALK height,
+  never the post's base — the marsh posts root ~7m under the deck, and a
+  base-anchored disc lands beneath the floor. The posts themselves stay
+  baked, the toro-lantern contract; the s02b/e/z variants ship no such
+  surface and place nothing), and
   <code>lit_props</code> raises the field-scoped GameElement flag so
   boxes, fences, drops, and field NPCs load per-pixel like the player
   and enemies — the flag is cleared on field exit, so city scenes
   sharing those subclasses keep their baked look. Weather is
-  <code>rain</code>: fast vertical semi-transparent streaks on FIXED_Y
-  billboards filling the volume above the player, built by the shared
-  WeatherController like snow and sand. The wetlands walk lab
-  (<code>wetlands_walktest</code>) owns the tuning until locked from a
-  read-out.</p>
+  <code>rain</code>: the original's spec — 400 blue-gray semi-transparent
+  streaks falling ~8u/s on FIXED_Y billboards through the volume above
+  the player, built by the shared WeatherController like snow and sand.
+  The wetlands walk lab (<code>wetlands_walktest</code>) owns the tuning
+  until locked from a read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>

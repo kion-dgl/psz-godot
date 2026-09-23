@@ -11440,8 +11440,9 @@ func test_wetlands_rain_weather() -> void:
 		var mat := rain.process_material as ParticleProcessMaterial
 		assert_true(absf(mat.direction.y) > absf(mat.direction.x),
 			"rain FALLS (vertical — sand drifts, snow floats)")
-		assert_true(mat.initial_velocity_min > 10.0,
-			"rain falls fast — streaks, not flakes")
+		assert_true(mat.initial_velocity_min > 5.0,
+			"rain falls at the original's ~8u/s — streaks, not flakes")
+		assert_eq(rain.amount, 400, "the original's streak count")
 		assert_eq(rain.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			"weather particles never cast (#648 convention)")
 		assert_eq(rain.fixed_fps, 30,
@@ -11455,6 +11456,8 @@ func test_wetlands_rain_weather() -> void:
 				"streaks are unshaded — the bake is the look")
 			assert_eq(qmat.billboard_mode, BaseMaterial3D.BILLBOARD_FIXED_Y,
 				"FIXED_Y billboarding — streaks stay vertical at any camera azimuth")
+			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.35),
+				"the original's blue-gray, semi-transparent")
 			assert_true(qmat.albedo_color.a < 1.0,
 				"semi-transparent — subtle overcast rain, not a downpour overlay")
 		assert_true(rain.position.y > 6.0,
@@ -11511,8 +11514,8 @@ func test_wetlands_post_lights() -> void:
 		assert_true(a.light_energy > 1.0,
 			"the energy punches through the area ambient (the snowfield ×12 lantern lesson)")
 	# The readable pool: each post also carries an additive ground glow disc
-	# at its base — the stage is unlit and the catcher only multiplies, so
-	# the omni alone can't show on the floor.
+	# and rising embers — the stage is unlit and the catcher only multiplies,
+	# so the omni alone can't show on the floor.
 	var glows := root.find_children("PostGlow*", "MeshInstance3D", true, false)
 	assert_eq(glows.size(), 2, "each post carries a ground glow disc")
 	if glows.size() == 2:
@@ -11523,7 +11526,13 @@ func test_wetlands_post_lights() -> void:
 		assert_eq(gmat.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED,
 			"the glow is unshaded")
 		assert_almost_eq((glows[0] as Node3D).global_position.y, 0.0 + 0.08, 0.01,
-			"the disc rides the post base, a hair above the catcher's lift")
+			"no floor_y → the cluster-base fallback, a hair above the catcher's lift")
+	var embers := root.find_children("PostEmbers*", "GPUParticles3D", true, false)
+	assert_eq(embers.size(), 2, "each post breathes rising embers (the original's lantern)")
+	if embers.size() == 2:
+		var em := (embers[0] as GPUParticles3D).process_material as ParticleProcessMaterial
+		assert_true(em.direction.y > em.direction.x, "the embers RISE (the s03b spore recipe)")
+		assert_eq((embers[0] as GPUParticles3D).amount, 24, "the original's ember count")
 	# The 0_light texture is mirror-wrapped — _fix_materials swaps the
 	# surface's OVERRIDE to an anonymous ShaderMaterial while the mesh's own
 	# surface material keeps the GLB name. The match must survive that.
@@ -11534,6 +11543,19 @@ func test_wetlands_post_lights() -> void:
 		"non-matching material places nothing")
 	assert_eq(MeshUtils.place_post_lights(root, ""), 0,
 		"empty material name is a no-op")
+	# The walk-height anchor: with floor_y the disc rides the FLOOR, not the
+	# cluster base — the marsh posts root ~7m under the deck, and a
+	# base-anchored disc lands beneath it, depth-tested out of existence.
+	var root2 := Node3D.new()
+	add_child(root2)
+	var mi2 := MeshInstance3D.new()
+	root2.add_child(mi2)
+	mi2.mesh = mesh
+	assert_eq(MeshUtils.place_post_lights(root2, "0_light", 2.0), 2,
+		"the floor-anchored pass places the same pools")
+	var disc2 := root2.find_children("PostGlow*", "MeshInstance3D", true, false)
+	assert_almost_eq((disc2[0] as Node3D).global_position.y, 2.0 + 0.08, 0.01,
+		"the disc anchors to the walk height — never the buried post base")
 	print("")
 
 

@@ -161,18 +161,19 @@ static func _build_sand_node() -> GPUParticles3D:
 	return sand
 
 
-## The wetlands' rain (#649): fast vertical streaks under the overcast rig —
-## the snow's counter-image, falling through the FULL volume above the player
-## instead of drifting in a band. The streaks billboard on FIXED_Y: vertical
-## whatever the camera's azimuth, turning only around the post axis — a plain
-## particle billboard would pin the streak flat to the screen at glancing
-## angles and read as fog.
+## The wetlands' rain (#649): the original's spec (kion's authored data) —
+## 400 blue-gray streaks falling the original's ~8u/s through the volume
+## above the player; slower than a storm but unmistakably falling, unlike
+## snow's float or sand's drift. The streaks billboard on FIXED_Y: vertical
+## whatever the camera's azimuth, turning only around the post axis — a
+## plain particle billboard would pin the streak flat to the screen at
+## glancing angles and read as fog.
 static func _build_rain_node() -> GPUParticles3D:
 	var rain := GPUParticles3D.new()
 	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	rain.name = "WeatherRain"
-	rain.amount = 380
-	rain.lifetime = 1.8
+	rain.amount = 400
+	rain.lifetime = 1.5
 	rain.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	rain.fixed_fps = 30
 	rain.interpolate = false
@@ -180,11 +181,11 @@ static func _build_rain_node() -> GPUParticles3D:
 	var mat := ParticleProcessMaterial.new()
 	mat.direction = Vector3(0.12, -1.0, 0.05)
 	mat.spread = 6.0
-	mat.initial_velocity_min = 16.0
-	mat.initial_velocity_max = 20.0
-	mat.gravity = Vector3(0, -3, 0)
+	mat.initial_velocity_min = 8.0
+	mat.initial_velocity_max = 10.0
+	mat.gravity = Vector3.ZERO
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	mat.emission_box_extents = Vector3(20, 0.4, 20)
+	mat.emission_box_extents = Vector3(25, 0.4, 25)
 	mat.scale_min = 0.8
 	mat.scale_max = 1.25
 	rain.process_material = mat
@@ -192,7 +193,7 @@ static func _build_rain_node() -> GPUParticles3D:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.03, 0.45)
 	var quad_mat := StandardMaterial3D.new()
-	quad_mat.albedo_color = Color(0.72, 0.78, 0.86, 0.32)
+	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, 0.35)
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -201,7 +202,7 @@ static func _build_rain_node() -> GPUParticles3D:
 	rain.draw_pass_1 = quad
 
 	rain.preprocess = 4.0
-	rain.position.y = 9.0
+	rain.position.y = 12.0
 	return rain
 
 

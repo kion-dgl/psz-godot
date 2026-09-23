@@ -451,25 +451,38 @@ static func make_unlit(root: Node, keep: Array) -> int:
 ## are no per-post nodes to hang lights on. This pass reads that surface's
 ## world-space vertices, clusters them on the XZ grid (a post's footprint is
 ## far narrower than the post spacing, so each connected blob is one post),
-## and drops a warm OmniLight3D pool at each blob's head plus a soft additive
-## ground-glow disc at its base. The omni is for the ACTORS — the stage is
-## unlit and the catcher only multiplies, so the omni's floor footprint would
-## be invisible; the disc is the readable pool (and the energy must punch
-## through the area ambient — the snowfield's ×12 lantern lesson). The post
-## itself keeps its baked look (the toro-lantern contract from #648).
-## Matching is by the MESH's own surface material name, not the active
-## override: the 0_light texture is mirror-wrapped, so the fix pass replaces
-## its override with an anonymous ShaderMaterial while the imported surface
-## material keeps the GLB name. Returns how many posts were lit.
+## and drops the original's fire-orange lantern at each blob: an OmniLight3D
+## at the head, a soft additive ground-glow disc, and rising embers at the
+## lamp. The omni is for the ACTORS — the stage is unlit and the catcher only
+## multiplies, so the omni's floor footprint would be invisible; the disc is
+## the readable pool (and the energy must punch through the area ambient —
+## the snowfield's ×12 lantern lesson). The disc anchors to the WALK height
+## (`floor_y`), never the cluster's base — the marsh posts root ~7m below
+## the deck, and a base-anchored disc lands beneath the floor, depth-tested
+## out of existence. The post itself keeps its baked look (the toro-lantern
+## contract from #648). Matching is by the MESH's own surface material name,
+## not the active override: the 0_light texture is mirror-wrapped, so the fix
+## pass replaces its override with an anonymous ShaderMaterial while the
+## imported surface material keeps the GLB name. Returns how many posts were
+## lit.
 const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
 const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
-const POST_LIGHT_COLOR := Color(1.0, 0.85, 0.62)
-const POST_LIGHT_ENERGY := 2.0
-const POST_LIGHT_RANGE := 5.5
-const POST_GLOW_SIZE := 2.4        ## the ground disc's side, in world units
-const POST_GLOW_OPACITY := 0.35
+## The original's lantern spec (kion's authored s02a_ga1 data): fire-orange
+## pools, light radius 11, embers rising count 24 / radius 0.9 / height 2.2
+## / speed 0.9 from ~1m under the lamp head.
+const POST_LIGHT_COLOR := Color(1.0, 0.3, 0.12)
+const POST_LIGHT_ENERGY := 4.0
+const POST_LIGHT_RANGE := 11.0
+const POST_GLOW_SIZE := 3.6        ## the ground disc's side, in world units
+const POST_GLOW_OPACITY := 0.4
+const POST_EMBER_COUNT := 24
+const POST_EMBER_RADIUS := 0.9
+const POST_EMBER_HEIGHT := 2.2
+const POST_EMBER_SPEED := 0.9
 
-static func place_post_lights(root: Node3D, material_name: String) -> int:
+
+static func place_post_lights(root: Node3D, material_name: String,
+		floor_y: float = NAN) -> int:
 	if material_name.is_empty():
 		return 0
 	# World vertices of every matching surface, binned on the XZ grid.
@@ -562,8 +575,56 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(glow)
 		# A hair above the catcher's lift (floor_top + 0.04) so the disc
-		# never z-fights the receiver it draws over.
-		glow.global_position = Vector3(center_x, base + 0.08, center_z)
+		# never z-fights the receiver it draws over. Anchored to the WALK
+		# height when known — the cluster's base is ~7m underground.
+		var disc_y: float = (floor_y if is_finite(floor_y) else base) + 0.08
+		glow.global_position = Vector3(center_x, disc_y, center_z)
+		# The original's rising embers (the s03b spore recipe, fire-orange)
+		# — the visible life of the lantern between the disc and the
+		# actors' warm tint. The authored anchors sit ~1m under the ~5m
+		# post top, rising 2.2 through the lamp.
+		var embers := GPUParticles3D.new()
+		embers.name = "PostEmbers%d" % (placed + 1)
+		embers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		embers.amount = POST_EMBER_COUNT
+		embers.lifetime = POST_EMBER_HEIGHT / maxf(POST_EMBER_SPEED, 0.1)
+		embers.visibility_aabb = AABB(
+			Vector3(-POST_EMBER_RADIUS, 0, -POST_EMBER_RADIUS),
+			Vector3(POST_EMBER_RADIUS * 2, POST_EMBER_HEIGHT, POST_EMBER_RADIUS * 2))
+		var emat := ParticleProcessMaterial.new()
+		emat.direction = Vector3(0, 1, 0)
+		emat.spread = 15.0
+		emat.initial_velocity_min = POST_EMBER_SPEED * 0.7
+		emat.initial_velocity_max = POST_EMBER_SPEED * 1.3
+		emat.gravity = Vector3.ZERO
+		emat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+		emat.emission_sphere_radius = POST_EMBER_RADIUS
+		emat.scale_min = 1.0
+		emat.scale_max = 2.0
+		emat.color = POST_LIGHT_COLOR
+		var ramp := Gradient.new()
+		ramp.set_color(0, Color(POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b, 0.0))
+		ramp.add_point(0.15, Color(POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b, 1.0))
+		ramp.add_point(0.7, Color(POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b, 1.0))
+		ramp.set_color(ramp.get_point_count() - 1, Color(POST_LIGHT_COLOR.r, POST_LIGHT_COLOR.g, POST_LIGHT_COLOR.b, 0.0))
+		var ramp_tex := GradientTexture1D.new()
+		ramp_tex.gradient = ramp
+		emat.color_ramp = ramp_tex
+		embers.process_material = emat
+		var dot := QuadMesh.new()
+		dot.size = Vector2(0.12, 0.12)
+		var dot_mat := StandardMaterial3D.new()
+		dot_mat.albedo_color = POST_LIGHT_COLOR
+		dot_mat.albedo_texture = _radial_glow_texture()
+		dot_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		dot_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		dot_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		dot_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		dot_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		dot.material = dot_mat
+		embers.draw_pass_1 = dot
+		root.add_child(embers)
+		embers.global_position = Vector3(center_x, top - 1.0, center_z)
 		placed += 1
 	return placed
 

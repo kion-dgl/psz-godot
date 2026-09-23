@@ -389,7 +389,8 @@ func _ready() -> void:
 	# split, but reads per-surface arrays, so unsplit meshes work too. The
 	# s02b/e/z variants carry no such surface and place zero lights.
 	if _slot.has("post_lights") and _map_root:
-		var posts: int = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
+		var posts: int = MeshUtils.place_post_lights(_map_root,
+			str(_slot["post_lights"]), _floor_top)
 		if posts > 0:
 			_fdbg("[ValleyField] post lights: %d pool(s) from '%s'" % [posts, _slot["post_lights"]])
 

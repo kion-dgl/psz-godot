@@ -95,6 +95,13 @@ func _ready() -> void:
 			_dir_light.global_transform.basis.z, _floor_top)
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
+	# The row's post-light pools (#649) — after the floor load, same as the
+	# field: the glow discs anchor to the walk height.
+	if _slot.has("post_lights") and OS.get_environment("PSZ_WALK_POST_LIGHTS") != "0":
+		_posts = MeshUtils.place_post_lights(_map_root,
+			str(_slot["post_lights"]), _floor_top)
+		for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
+			print("[WetlandsWalk] post light at %s" % (light as Node3D).global_position)
 	_spawn_player(Vector3(0, 1.5, 8))
 	_spawn_prop_preview()
 	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
@@ -226,11 +233,6 @@ func _load_stage() -> void:
 		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
 		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
 		print("[WetlandsWalk] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
-	# The row's post-light pools (#649) — same call, same order as the field.
-	if _slot.has("post_lights") and OS.get_environment("PSZ_WALK_POST_LIGHTS") != "0":
-		_posts = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
-		for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
-			print("[WetlandsWalk] post light at %s" % (light as Node3D).global_position)
 	# The boss arena's separate skybox model (the field loads it the same way).
 	var skybox_path := SKYBOX_GLB_FMT % [_subfolder(), _stage_id]
 	if ResourceLoader.exists(skybox_path):
