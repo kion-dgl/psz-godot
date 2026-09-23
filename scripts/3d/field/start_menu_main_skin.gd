@@ -339,6 +339,115 @@ static func spread_digits(value: String) -> String:
 	return out
 
 
+const OCT_TILE := 48.0  # mock 72px octagon tile
+
+## The octagon L backdrop — the same pass Backdrop draws for MAIN, callable
+## from the legacy renderer's canvas so ported sub-menus share one look.
+static func draw_backdrop(c: Control, w: float, h: float) -> void:
+	var band_y := _s(BAND_Y)
+	# Snap the strip out to a whole number of octagon tiles (176.67 → 192)
+	# so every diamond fits INSIDE the fill (playtest round 3).
+	var strip_w := ceilf(_s(STRIP_W) / OCT_TILE) * OCT_TILE
+
+	# Band: fill + pattern, butting the strip's edge, dissolving far right.
+	c.draw_texture_rect(tex_band(), Rect2(Vector2(strip_w, band_y), Vector2(w - strip_w, h - band_y)), false)
+	var gx0 := int(strip_w / OCT_TILE)
+	var gx1 := int(ceil(w / OCT_TILE)) + 1
+	var gy0 := int(floor(band_y / OCT_TILE))
+	var gy1 := int(ceil(h / OCT_TILE)) + 1
+	for gx in range(gx0, gx1):
+		for gy in range(gy0, gy1):
+			var origin := Vector2(gx * OCT_TILE, gy * OCT_TILE)
+			var bottom_f := clampf((origin.y - band_y) / _s(50), 0.0, 1.0)
+			var alpha := C_OCT.a * bottom_f * band_right_fade(origin.x, w)
+			if alpha > 0.01:
+				_oct_cell(c, origin, alpha)
+
+	# Left strip: fill, tiling, top light, right edge.
+	c.draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), Color(C_STRIP_BG, STAGE_ALPHA))
+	var sgx1 := int(strip_w / OCT_TILE)
+	var sgy1 := int(ceil(h / OCT_TILE)) + 1
+	for gx in range(-1, sgx1 + 1):
+		for gy in range(-1, sgy1):
+			_oct_cell(c, Vector2(gx * OCT_TILE, gy * OCT_TILE), C_OCT.a)
+	c.draw_texture_rect(tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false)
+	c.draw_texture_rect(tex_strip_edge(), Rect2(Vector2(strip_w - _s(2), 0), Vector2(_s(2), h)), false)
+
+
+## One cell of the mock's truncated-square tiling: a diamond at the chamfer
+## offset plus four ticks crossing the cell borders (reads as octagons).
+static func _oct_cell(c: Control, origin: Vector2, alpha: float) -> void:
+	var col := Color(1, 1, 1, alpha * STAGE_ALPHA)
+	var line_w := _s(2.2)
+	var cx := origin.x + 24.0
+	var cy := origin.y + 24.0
+	var ch := 14.0  # mock chamfer 21, scaled — also the diamond vertex offset
+	var half := OCT_TILE * 0.5
+	var diamond := PackedVector2Array([
+		Vector2(cx, cy - ch), Vector2(cx + ch, cy),
+		Vector2(cx, cy + ch), Vector2(cx - ch, cy),
+	])
+	_closed_polyline(c, diamond, col, line_w)
+	c.draw_line(Vector2(cx, cy - half - 1), Vector2(cx, cy - ch), col, line_w)
+	c.draw_line(Vector2(cx, cy + ch), Vector2(cx, cy + half + 1), col, line_w)
+	c.draw_line(Vector2(cx - half - 1, cy), Vector2(cx - ch, cy), col, line_w)
+	c.draw_line(Vector2(cx + ch, cy), Vector2(cx + half + 1, cy), col, line_w)
+
+
+## A chamfered window from a plain rect — halo, gradient body, scanlines,
+## contour, and a stroked inner window in the paper/sky tone. The immediate-
+## mode twin of the node-based ChamferPanel.
+static func draw_chamfer_rect(c: Control, rect: Rect2, chamfer := 16.0, tone := "paper") -> void:
+	var ch := minf(chamfer, rect.size.y * 0.5)
+	var outer := _chamfer_poly(rect.position, rect.size, ch)
+	_closed_polyline(c, outer, Color.WHITE, _s(6))
+	var uvs := PackedVector2Array()
+	for pt in outer:
+		uvs.append(Vector2((pt.y - rect.position.y) / maxf(rect.size.y, 1.0), 0.0))
+	c.draw_colored_polygon(outer, Color.WHITE, uvs, tex_frame_grad())
+	c.draw_colored_polygon(outer, Color.WHITE, _tile_uvs(outer), tex_scan())
+	_closed_polyline(c, outer, C_CONTOUR, _s(2.5))
+	var inset := _s(8.0)
+	var inner := _chamfer_poly(rect.position + Vector2(inset, inset), rect.size - Vector2(inset * 2, inset * 2), maxf(ch - inset, 2.0))
+	var tone_tex := tex_sky() if tone == "sky" else tex_paper()
+	c.draw_colored_polygon(inner, Color.WHITE, _tile_uvs(inner), tone_tex)
+	_closed_polyline(c, inner, Color.WHITE, _s(3.5))
+	_closed_polyline(c, inner, C_INNER_NAVY, _s(1.6))
+
+
+static func _chamfer_poly(pos: Vector2, sz: Vector2, ch: float) -> PackedVector2Array:
+	var x0 := pos.x
+	var y0 := pos.y
+	var x1 := x0 + sz.x
+	var y1 := y0 + sz.y
+	return PackedVector2Array([
+		Vector2(x0 + ch, y0), Vector2(x1 - ch, y0), Vector2(x1, y0 + ch),
+		Vector2(x1, y1 - ch), Vector2(x1 - ch, y1), Vector2(x0 + ch, y1),
+		Vector2(x0, y1 - ch), Vector2(x0, y0 + ch),
+	])
+
+
+static func _tile_uvs(pts: PackedVector2Array) -> PackedVector2Array:
+	var uvs := PackedVector2Array()
+	for pt in pts:
+		uvs.append(pt / 4.0)
+	return uvs
+
+
+## A list row in the three states the sub-menus use: selected (orange sweep),
+## manual-sort origin (cool blue), plain (subtle white wash).
+static func draw_menu_row(c: Control, rect: Rect2, state: int) -> void:
+	match state:
+		1:
+			c.draw_texture_rect(tex_orange(), rect, false)
+			c.draw_line(Vector2(rect.position.x, rect.position.y + 0.5), Vector2(rect.end.x, rect.position.y + 0.5), C_SEL_TOP_INSET, 1.0)
+			c.draw_line(Vector2(rect.position.x, rect.end.y - 0.5), Vector2(rect.end.x, rect.end.y - 0.5), C_SEL_BOT_INSET, 1.0)
+		2:
+			c.draw_rect(rect, Color(0.34, 0.55, 0.85, 0.92))
+		_:
+			c.draw_rect(rect, Color(1, 1, 1, 0.45))
+
+
 static func _closed_polyline(c: Control, pts: PackedVector2Array, color: Color, width: float) -> void:
 	var loop := pts.duplicate()
 	loop.append(pts[0])
@@ -369,67 +478,7 @@ static func _p(pts: PackedVector2Array) -> PackedVector2Array:
 ## left strip and a full-width bottom band that fades in over its top edge.
 class Backdrop extends Control:
 	func _draw() -> void:
-		var w := size.x
-		var h := size.y
-		var band_y := StartMenuMainSkin._s(StartMenuMainSkin.BAND_Y)
-		# Snap the strip out to a whole number of octagon tiles (176.67 → 192)
-		# so every diamond fits INSIDE the fill — the playtest complaint was
-		# exactly the pattern poking past the blue (round 3), and 4.5 has no
-		# per-draw clip rect to trim it any other way.
-		var strip_w := ceilf(StartMenuMainSkin._s(StartMenuMainSkin.STRIP_W) / OCT_TILE) * OCT_TILE
-
-		# The blue octagon L, split at the strip's right edge so the two
-		# styles never stack in the bottom-left corner (playtest round 3):
-		# the strip owns its full column, the band owns everything right of
-		# it. Both passes share one tiling grid and butt exactly at strip_w.
-		draw_texture_rect(StartMenuMainSkin.tex_band(), Rect2(Vector2(strip_w, band_y), Vector2(w - strip_w, h - band_y)), false)
-		var gx0 := int(strip_w / OCT_TILE)
-		var gx1 := int(ceil(w / OCT_TILE)) + 1
-		var gy0 := int(floor(band_y / OCT_TILE))
-		var gy1 := int(ceil(h / OCT_TILE)) + 1
-		for gx in range(gx0, gx1):
-			for gy in range(gy0, gy1):
-				var origin := Vector2(gx * OCT_TILE, gy * OCT_TILE)
-				var bottom_f := clampf((origin.y - band_y) / StartMenuMainSkin._s(50), 0.0, 1.0)
-				var right_f := StartMenuMainSkin.band_right_fade(origin.x, w)
-				var alpha := StartMenuMainSkin.C_OCT.a * bottom_f * right_f
-				if alpha <= 0.01:
-					continue
-				_draw_oct_cell(origin, alpha)
-
-		draw_rect(Rect2(Vector2.ZERO, Vector2(strip_w, h)), Color(StartMenuMainSkin.C_STRIP_BG, StartMenuMainSkin.STAGE_ALPHA))
-		var sgx1 := int(strip_w / OCT_TILE)
-		var sgy1 := int(ceil(h / OCT_TILE)) + 1
-		for gx in range(-1, sgx1):
-			for gy in range(-1, sgy1):
-				_draw_oct_cell(Vector2(gx * OCT_TILE, gy * OCT_TILE), StartMenuMainSkin.C_OCT.a)
-		draw_texture_rect(StartMenuMainSkin.tex_top_light(), Rect2(Vector2.ZERO, Vector2(strip_w, h * 0.55)), false)
-		draw_texture_rect(StartMenuMainSkin.tex_strip_edge(), Rect2(Vector2(strip_w - StartMenuMainSkin._s(2), 0), Vector2(StartMenuMainSkin._s(2), h)), false)
-
-	const OCT_TILE := 48.0  # mock 72px tile
-
-	func _draw_oct_cell(origin: Vector2, alpha: float) -> void:
-		# One cell of the mock's truncated-square tiling: a diamond (chamfer 14)
-		# plus four tick segments crossing the cell borders so diamonds read as
-		# connected octagons when tiled. Scaled by STAGE_ALPHA so the lines sit
-		# ON the translucent stage rather than looking denser than its base.
-		var col := Color(1, 1, 1, alpha * StartMenuMainSkin.STAGE_ALPHA)
-		var line_w := StartMenuMainSkin._s(2.2)
-		var cx := origin.x + 24.0
-		var cy := origin.y + 24.0
-		var ch := 14.0  # mock chamfer 21, scaled — also the diamond vertex offset
-		var half := OCT_TILE * 0.5
-		var diamond := PackedVector2Array([
-			Vector2(cx, cy - ch),
-			Vector2(cx + ch, cy),
-			Vector2(cx, cy + ch),
-			Vector2(cx - ch, cy),
-		])
-		StartMenuMainSkin._closed_polyline(self, diamond, col, line_w)
-		draw_line(Vector2(cx, cy - half - 1), Vector2(cx, cy - ch), col, line_w)
-		draw_line(Vector2(cx, cy + ch), Vector2(cx, cy + half + 1), col, line_w)
-		draw_line(Vector2(cx - half - 1, cy), Vector2(cx - ch, cy), col, line_w)
-		draw_line(Vector2(cx + ch, cy), Vector2(cx + half + 1, cy), col, line_w)
+		StartMenuMainSkin.draw_backdrop(self, size.x, size.y)
 
 
 ## One chamfered blue window: white halo, gradient body, scanlines, and any
@@ -876,8 +925,8 @@ func _build_description_panel() -> void:
 
 
 func _build_stats_panel() -> void:
-	# Round 4: pinned to the far right edge instead of the mock's center-right.
-	var holder := _holder(Vector2(VIEW_W - _v(STATS_SIZE).x - 24.0, _v(STATS_POS).y), _v(STATS_SIZE))
+	# Round 5: pinned near the right edge, 40px of breathing room.
+	var holder := _holder(Vector2(VIEW_W - _v(STATS_SIZE).x - 40.0, _v(STATS_POS).y), _v(STATS_SIZE))
 	_add_chamfer(holder, STATS_OUTER, [{"poly": STATS_INNER, "tone": "sky"}])
 
 	# Page header: [◀] [L] counter [R] [▶], centered in the frame band.

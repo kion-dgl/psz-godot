@@ -71,6 +71,15 @@ func _draw_menu() -> void:
 	var font: Font = MENU_FONT
 	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
 
+	# The sub-menu port (round 5): ported screens draw the Flauros octagon L
+	# and set VT323; everything else keeps the legacy dark look until its turn.
+	const FLAUROS_MODES := [PsoStartMenu.Mode.ITEMS, PsoStartMenu.Mode.ITEMS_MOVE]
+	if _c._mode in FLAUROS_MODES:
+		StartMenuMainSkin.draw_backdrop(c, vp.x, vp.y)
+		font = StartMenuMainSkin.FONT
+		_draw_items(c, font)
+		return
+
 	# L-shaped backdrop
 	var left_top := Rect2(0, 0, PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H)
 	var bottom_right := Rect2(PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H, vp.x - PsoStartMenu.LEFT_W, PsoStartMenu.BOTTOM_H)
@@ -114,7 +123,10 @@ func _draw_scanlines(c: Control, rect: Rect2) -> void:
 
 
 func _draw_items(c: Control, font: Font) -> void:
-	_draw_section_label(c, font, "Items")
+	# Flauros port (round 5): same geometry and scroll/mute logic, new chrome.
+	var skin := StartMenuMainSkin
+	c.draw_string(font, Vector2(PsoStartMenu.PAD + 2.0, 132.0), "Items",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 26, skin.C_TEXT)
 	var inv: Array = _c._get_inventory()
 
 	var px: float = 5.0
@@ -124,10 +136,10 @@ func _draw_items(c: Control, font: Font) -> void:
 	# call below). The bottom backdrop strip is full-width, so there's ample room.
 	var pw: float = 340.0
 	var ph: float = 300.0
-	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+	skin.draw_chamfer_rect(c, Rect2(px, py, pw, ph))
 
 	# Slot count header
-	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+	c.draw_string(font, Vector2(px + 16, py + 20), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, skin.C_INNER_NAVY)
 
 	# Taller rows + the shop's name-font size, so the list reads with the same
 	# padding/weight as the 2D shop lists instead of the old cramped 22px/size-13
@@ -166,11 +178,8 @@ func _draw_items(c: Control, font: Font) -> void:
 		var is_sel: bool = i == _c._sub_idx
 		var is_move_origin: bool = i == move_idx
 
-		# Rounded row pill (like the shop's list rows), tinted by state: orange when
-		# selected, cool blue for the manual-sort origin, else translucent white.
-		var row_color: Color = PsoStartMenu.C_SELECT if is_sel \
-			else (Color(0.34, 0.55, 0.85) if is_move_origin else Color(1, 1, 1, 0.85))
-		_draw_row_pill(c, Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), row_color)
+		var row_state: int = 1 if is_sel else (2 if is_move_origin else 0)
+		skin.draw_menu_row(c, Rect2(px + 2, draw_y, pw - 4, ROW_RECT_H), row_state)
 		var item_id: String = str(item.get("id", ""))
 		var category: String = str(item.get("category", "Other"))
 		var is_equipped: bool = bool(item.get("equipped", false))
@@ -185,18 +194,20 @@ func _draw_items(c: Control, font: Font) -> void:
 		# disk already known at this level / below the required level). A highlighted
 		# row stays readable so the cursor is visible even on a disabled item.
 		var disabled: bool = (cannot_use or soft_disabled) and not is_highlight
-		var col: Color = PsoStartMenu.C_SELECT_TEXT if is_highlight else PsoStartMenu.C_TEXT
+		# Dark-on-paper / dark-on-orange text (the mock's palette); disabled
+		# items keep the grey.
+		var col: Color = skin.C_TEXT
 		if disabled:
-			col = PsoStartMenu.C_TEXT_DISABLED
+			col = skin.C_TEXT_DISABLED
 
 		# Leftmost fixed marker slot (✕ can't-use / [E] equipped / empty),
 		# reserved on every row so item names stay aligned — same convention as
 		# the shops and storage. ✕ takes precedence (equipped gear is equippable).
 		# The slot is wide enough for the "[E]" tag so it doesn't crowd the item icon.
 		if cannot_use:
-			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 6, icon_y, 16, 16), false)
+			c.draw_texture_rect(PszStyle.cannot_use_icon(), Rect2(px + 8, icon_y, 16, 16), false)
 		elif is_equipped:
-			c.draw_string(font, Vector2(px + 6, text_y), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, col)
+			c.draw_string(font, Vector2(px + 8, text_y), "[E]", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, col)
 
 		# Per-item icon (PNG when known, fallback to colored letter block), past the
 		# fixed ~26px marker slot so the [E] tag and the icon never overlap.
@@ -216,26 +227,27 @@ func _draw_items(c: Control, font: Font) -> void:
 			elif disabled:
 				icon_color = Color(icon_color, 0.4)
 			c.draw_rect(icon_rect, icon_color)
-			c.draw_string(font, Vector2(px + 35, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+			c.draw_string(font, Vector2(px + 35, icon_y + 13), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 
 		# Item name (the [E]/✕ marker lives in the leftmost slot, not the name).
-		c.draw_string(font, Vector2(px + 54, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_ITEM, col)
+		c.draw_string(font, Vector2(px + 54, text_y), str(item.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
 		if qty > 1:
-			c.draw_string(font, Vector2(px + pw - 40, text_y), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, PsoStartMenu.FONT_SIZE_XS, Color(col, 0.7))
+			c.draw_string(font, Vector2(px + pw - 40, text_y), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, 15, Color(col, 0.7))
 
 	# Scroll cues when the list extends past the visible window (matches the
 	# ▲/▼ hints the other start-menu lists draw via _draw_bottom_list).
+	# VT323 has no arrow glyphs — ASCII cues (the MAIN footer drew vector
+	# triangles for the same reason).
 	if scroll_offset > 0:
-		c.draw_string(font, Vector2(px + pw - 60, py + 14), "▲ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+		c.draw_string(font, Vector2(px + pw - 70, py + 20), "^ more", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, skin.C_INNER_NAVY)
 	if scroll_offset + visible_rows < inv.size():
-		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
+		c.draw_string(font, Vector2(px + pw - 70, py + ph - 10), "v more", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, skin.C_INNER_NAVY)
 
 	# Description sits to the right of the (wider) items list, not the default 310px.
-	# Built in its own helper to keep this draw routine's call fan-out down.
-	_draw_bottom_desc(c, font, _items_description(inv), 350.0)
+	_draw_bottom_desc(c, font, _items_description(inv), 350.0, 380.0, true)
 
 
 ## The detail text for the currently-selected inventory item — stats from the
@@ -861,11 +873,16 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_XS, PsoStartMenu.C_TEXT_MUTED)
 
 
-func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0) -> void:
+func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0, flauros := false) -> void:
 	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
 	var ph: float = 300.0
+	var lines := text.split("\n")
+	if flauros:
+		StartMenuMainSkin.draw_chamfer_rect(c, Rect2(px, py, pw, ph))
+		for i in range(lines.size()):
+			c.draw_string(font, Vector2(px + 16, py + 28 + i * 24), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, StartMenuMainSkin.C_TEXT)
+		return
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 	# Simple multi-line text
-	var lines := text.split("\n")
 	for i in range(lines.size()):
 		c.draw_string(font, Vector2(px + 12, py + 20 + i * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, PsoStartMenu.C_TEXT)

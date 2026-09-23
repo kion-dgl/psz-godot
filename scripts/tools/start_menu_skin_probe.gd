@@ -41,6 +41,7 @@ func _ready() -> void:
 	await _shoot(SHOTS[1])
 	# Sub-mode keeps the legacy renderer look — capture that boundary too.
 	PsoStartMenu._enter_sub(0)
+	PsoStartMenu._main_skin.sync()  # hide the skin so the renderer draws the sub-mode
 	await _shoot({"path": "/tmp/menu_skin_sub.png", "page": -1, "delay": 0.5})
 	PsoStartMenu.close()
 	get_tree().quit()

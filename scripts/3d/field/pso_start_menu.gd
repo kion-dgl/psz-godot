@@ -132,6 +132,8 @@ func _ready() -> void:
 
 	_canvas = Control.new()
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The Flauros sub-menu chrome tiles its pattern fills via UVs > 1.0.
+	_canvas.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_renderer = StartMenuRenderer.new(self)
 	_input = StartMenuInput.new(self)
 	# Shared hold-to-repeat (d-pad + right stick). Repeats route back through the
