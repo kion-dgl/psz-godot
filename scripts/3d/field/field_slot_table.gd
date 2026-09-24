@@ -77,9 +77,9 @@ extends RefCounted
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
-## s03b row and the wetlands weather arc (s02e/s02b + the s02b_ga1 turn,
-## #649) are the variant slots so far (#657: the B caves split off the
-## snowfield night while s03a stages keep the area row).
+## s03b row and the wetlands turn (s02b_ga1 + the s02z downpour, #649) are
+## the variant slots so far (#657: the B caves split off the snowfield
+## night while s03a stages keep the area row).
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -145,66 +145,34 @@ const SLOTS := {
 	},
 
 	# ── the wetlands weather arc (#649, kion 2026-09-23) ──
-	# A (area row): dark, rain, heavy overcast — no sun; the lanterns are
-	# everything (light + the omni shadows on the catcher). E is the
-	# transition: the rain breaks, a faint warm sun peeks through at the
-	# stage art's baked spot (the kion-locked reads: 0.10, −49° pinned
-	# over the origin aim) and casts the player's catcher shadow under a
-	# drizzle. B continues the transition's style — EXCEPT s02b_ga1, which
-	# turns dark and rainy again as the road into Z, where the octopus
-	# boss waits in the same dark downpour. The stage keeps its bake
-	# everywhere (empty lit list — the sun never lights the stage); the
-	# catcher owns the floor; lit_props brings boxes/fences/drops/NPCs
-	# onto the receive path. The b/e/z stages ship no 0_light surface, so
-	# their rows carry no post_lights (nothing to cluster; the blob
-	# returns there as the only grounding — no shadow source exists).
+	# The settled overcast look rides the area row — A/E/B all wear it
+	# (the peeking-sun transition values were tuned ON the E stage): faint
+	# warm sun at the baked spot, dark-moody ambient, the light drizzle,
+	# lantern pools, the catcher floor. The turn is s02b_ga1: dark and
+	# rainy overcast again (sun off, the heavy rain) on the road into Z,
+	# where the octopus boss waits in the same downpour. The stage keeps
+	# its bake everywhere (empty lit list — the sun never lights the
+	# stage); lit_props brings boxes/fences/drops/NPCs onto the receive
+	# path. The b/e/z stages ship no 0_light surface, so the dark rows
+	# carry no post_lights (the blob returns there — no shadow source).
 	"ozette": {
 		"hour": 10.0,
-		"sun_energy": 0.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_pitch": -49.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
 		"ambient_energy": 0.3,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
-		"weather": "rain",
+		"weather": "drizzle",
 		"lit_surfaces": [],
-		"shadow_catcher": true,
 		"post_lights": "0_light",
 		"lit_props": true,
 	},
-	"s02e": {
-		"hour": 10.0,
-		"sun_energy": 0.1,
-		"sun_color": Color(1.0, 0.94, 0.82),
-		"sun_origin": [15.8, 14.7, -55.6],
-		"sun_pitch": -49.0,
-		"sun_shadows": true,
-		"shadow_catcher": true,
-		"ambient_energy": 0.3,
-		"ambient_color": Color(0.70, 0.75, 0.82),
-		"sky_top_color": Color(0.42, 0.47, 0.53),
-		"sky_horizon_color": Color(0.58, 0.62, 0.66),
-		"weather": "drizzle",
-		"lit_surfaces": [],
-		"lit_props": true,
-	},
-	# B carries the transition's look.
-	"s02b": {
-		"hour": 10.0,
-		"sun_energy": 0.1,
-		"sun_color": Color(1.0, 0.94, 0.82),
-		"sun_origin": [15.8, 14.7, -55.6],
-		"sun_pitch": -49.0,
-		"sun_shadows": true,
-		"shadow_catcher": true,
-		"ambient_energy": 0.3,
-		"ambient_color": Color(0.70, 0.75, 0.82),
-		"sky_top_color": Color(0.42, 0.47, 0.53),
-		"sky_horizon_color": Color(0.58, 0.62, 0.66),
-		"weather": "drizzle",
-		"lit_surfaces": [],
-		"lit_props": true,
-	},
-	# ...except ga1, which turns dark again on the road into Z.
+	# The turn: b_ga1 goes dark and rainy on the road into Z (kion).
 	"s02b_ga1": {
 		"hour": 10.0,
 		"sun_energy": 0.0,

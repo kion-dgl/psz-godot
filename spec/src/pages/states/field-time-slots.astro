@@ -15,10 +15,8 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands A (s02a)', hour: '10.0 — day', weather: 'rain', note: 'the arc\'s opening (#649): dark overcast rain, sun OFF — the stage keeps its bake (empty lit list), the yellow-orange electric lanterns are the light and the omni-shadow source on the catcher floor; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
-  { key: 's02e', area: 'Wetlands E transition', hour: '10.0 — day', weather: 'drizzle', note: 'the rain breaks: a faint warm sun (0.10) hangs at the baked sun spot (sun_origin + pinned −49° pitch) and casts the player\'s catcher shadow under a light drizzle — the baked rainbow reads' },
-  { key: 's02b', area: 'Wetlands B (s02b_*)', hour: '10.0 — day', weather: 'drizzle', note: 'continues the transition\'s style verbatim (variant row)' },
-  { key: 's02b_ga1', area: 'Wetlands B turn', hour: '10.0 — day', weather: 'rain', note: 'the exception: dark and rainy overcast again — the road into Z (stage-level row)' },
+  { key: 'ozette', area: 'Wetlands (s02 a/e/b)', hour: '10.0 — day', weather: 'drizzle', note: 'the settled overcast look (#649): the stage keeps its bake (empty lit list), a faint warm sun hangs at the baked sun spot (sun_origin + pinned −49° pitch) casting the player\'s catcher shadow under a drizzle — the baked rainbow reads on E; the yellow-orange electric lanterns pool and cast on A; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 's02b_ga1', area: 'Wetlands B turn', hour: '10.0 — day', weather: 'rain', note: 'the dark turn: sun off, the heavy rain, overcast — the road into Z (stage-level row)' },
   { key: 's02z', area: 'Wetlands Z boss', hour: '10.0 — day', weather: 'rain', note: 'the octopus boss waits in the same dark downpour (variant row)' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -195,14 +193,14 @@ const slots = [
   the play space; double lighting over the bake). A future row that
   wants real stage shadows re-authors those fields knowingly.</p>
 
-  <p>The wetlands rows (#649) are the valley contract told as a
-  <strong>weather arc</strong> (kion, 2026-09-23): <strong>A</strong>
-  opens dark — heavy overcast, the downpour, sun off, the lanterns
-  everything; <strong>E</strong> is the transition where the rain
-  breaks and a faint warm sun peeks through; <strong>B</strong> carries
-  the break; <strong>s02b_ga1</strong> turns dark and rainy again on
-  the road into <strong>Z</strong>, where the octopus boss waits in
-  the same downpour. The mechanics hold everywhere: the bake
+  <p>The wetlands rows (#649) are the valley contract with a
+  <strong>dark turn</strong> (kion, 2026-09-23): the settled overcast
+  look — tuned on the E transition, where the rain breaks and a faint
+  warm sun peeks through — rides the area row, so <strong>A, E, and
+  B</strong> all wear it; <strong>s02b_ga1</strong> is the turn, dark
+  and rainy with the sun off and the heavy rain, on the road into
+  <strong>Z</strong>, where the octopus boss waits in the same
+  downpour. The mechanics hold everywhere: the bake
   <strong>stays</strong> — <code>lit_surfaces</code> EMPTY, the sun
   never lights the stage — the actors receive, and the
   <code>shadow_catcher</code> renders the collision shell as the
