@@ -11401,17 +11401,16 @@ func test_wetlands_overcast_slot() -> void:
 		"sky band: overcast gray")
 	assert_eq(wet.get("sky_horizon_color"), Color(0.58, 0.62, 0.66),
 		"horizon band: pale gray")
-	# The cheat rig turned inside out (kion 2026-09-23): the bake STAYS
-	# (vertex_color_use_as_albedo) but the WHOLE stage receives the rig —
-	# the lanterns paint real pools on the pathway (the fake glow disc read
-	# as a circle in the air under the hanging lanterns).
-	assert_eq(wet.get("lit_surfaces"), ["*"],
-		"the wildcard lights the WHOLE stage per-pixel — bake kept as albedo")
+	# The valley contract returns (kion 2026-09-23): the stage KEEPS its
+	# bake — the sun must not light the stage — while it lights the actors
+	# and, via the catcher, casts their shadows onto the floor.
+	assert_true(wet.has("lit_surfaces") and (wet["lit_surfaces"] as Array).is_empty(),
+		"the stage keeps its bake — empty lit list, nothing receives (the sun doesn't touch the stage)")
 	assert_true(not wet.has("bake_mix"), "no bake_mix — the bake IS the look")
-	assert_true(not wet.get("sun_shadows", false),
-		"no directional shadow source — the lantern omnis cast, and the blob shadow skips via post_lights")
-	assert_true(not wet.get("shadow_catcher", false),
-		"no catcher — the lit ground already receives; a catcher would double-darken")
+	assert_eq(wet.get("sun_shadows"), true,
+		"the player casts a real shadow — the catcher receives it on the floor mesh")
+	assert_eq(wet.get("shadow_catcher"), true,
+		"the collision shell is the shadow receiver over the unlit stage")
 	assert_true(not wet.get("geometry_casts_shadows", false),
 		"geometry doesn't cast — actor shadows only, no rim drama")
 	# The lamps + the props.

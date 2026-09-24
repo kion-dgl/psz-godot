@@ -143,28 +143,30 @@ const SLOTS := {
 		],
 	},
 
-	# Wetlands overcast — the #649 rig (kion 2026-09-23 calls): the bake
-	# STAYS (vertex_color_use_as_albedo everywhere) and the whole stage
-	# RECEIVES (lit_surfaces "*"). The yellow-orange electric lanterns are
-	# the primary light and the shadow source (post_lights clusters the
-	# 0_light surface — every s02a stage ships it; the b/e/z variants don't
-	# and no-op; the blob shadow skips under post_lights rows — lantern
-	# shadows + blob would read double). A weak WARM sun hangs at the stage
-	# art's baked sun spot (sun_origin, the E stage's read) — the rainbow
-	# maker, not the light source; it doesn't cast. lit_props brings
-	# boxes/fences/drops/NPCs onto the receive path. A light drizzle rides
-	# the row.
+	# Wetlands overcast — the #649 rig (kion 2026-09-23 calls): the valley
+	# contract — the stage KEEPS its bake (lit_surfaces EMPTY: nothing
+	# receives; the sun must not light the stage) while a weak WARM sun
+	# hung at the stage art's baked spot (sun_origin, the E read — the
+	# rainbow maker) lights the ACTORS and, via shadow_catcher on the
+	# collision shell, casts their shadows onto the floor. The yellow-
+	# orange electric lanterns tint actors near posts and cast swinging
+	# omni shadows onto the catcher (post_lights clusters the 0_light
+	# surface — every s02a stage ships it; b/e/z no-op; the blob skips
+	# under shadow/post rows). lit_props brings boxes/fences/drops/NPCs
+	# onto the receive path. A light drizzle rides the row.
 	"ozette": {
 		"hour": 10.0,
 		"sun_energy": 0.45,
 		"sun_color": Color(1.0, 0.94, 0.82),
 		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_shadows": true,
+		"shadow_catcher": true,
 		"ambient_energy": 0.45,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
 		"weather": "rain",
-		"lit_surfaces": ["*"],
+		"lit_surfaces": [],
 		"post_lights": "0_light",
 		"lit_props": true,
 	},
