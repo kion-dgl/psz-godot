@@ -50,11 +50,11 @@ const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.g
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
-## Representative rooms (N cycles in this order): an A room with lamp posts,
-## a D room, a B variant (no 0_light — zero pools, rig must hold without
-## them), the e transition, the boss arena with its skybox.
+## The weather arc in walk order (N cycles): A's dark overcast rain, a
+## second A room, the E transition (rain breaks, sun peeks), B carrying
+## the break, b_ga1 turning dark again, the Z octopus-boss downpour.
 const STAGES := [
-	"s02a_ga1", "s02a_td1", "s02b_lb1", "s02e_ia1", "s02z_na1",
+	"s02a_ga1", "s02a_td1", "s02e_ia1", "s02b_lb1", "s02b_ga1", "s02z_na1",
 ]
 
 ## N's selection survives the scene reload that swaps the room.

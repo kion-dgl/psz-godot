@@ -11374,56 +11374,80 @@ func test_valley_sand_weather() -> void:
 	print("")
 
 
-# ── The wetlands overcast slot (#649): the valley cheat rig's flat-light
-# cousin — the stage keeps its bake with NOTHING lit (empty list), a weak
-# desaturated sun stands over the actors, rain falls, and the lamp posts
-# + field props join the receive path. ──
+# ── The wetlands weather arc (#649, kion 2026-09-23): A dark overcast rain
+# (no sun — lanterns only) → the E transition (rain breaks, a faint warm
+# sun peeks and casts) → B carries the break → s02b_ga1 turns dark again
+# → Z's octopus boss waits in the same downpour. The stage keeps its bake
+# everywhere; the catcher owns the floor. ──
 func test_wetlands_overcast_slot() -> void:
 	print("── Wetlands Overcast Slot (#649) ──")
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	# ── A (the area row): dark, rain, heavy overcast — no sun at all. ──
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
-	assert_eq(wet.get("sun_energy"), 0.1,
-		"Wetlands rig: a faint warm sun — 0.10, the rainbow maker (kion read-out)")
+	assert_eq(wet.get("sun_energy"), 0.0,
+		"A: the sun is OFF — heavy overcast, the lanterns are everything (kion arc call)")
 	assert_eq(wet.get("ambient_energy"), 0.3,
-		"Wetlands rig: ambient 0.30 — the dark-moody lock (kion read-out)")
-	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
+		"A: ambient 0.30 — the dark-moody lock (kion read-out)")
+	assert_eq(str(wet.get("weather", "")), "rain", "A rides the heavy-overcast rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
-	assert_eq(wet.get("sun_pitch"), -49.0,
-		"a pinned elevation that survives the origin aim — longer shadows than the steep rainbow-spot aim (kion read-out)")
-	assert_eq(wet.get("sun_color"), Color(1.0, 0.94, 0.82),
-		"sun color: warm — the rainbow's sun, not the neutral overcast fill")
-	assert_eq(wet.get("sun_origin"), [15.8, 14.7, -55.6],
-		"the sun hangs at the stage art's baked sun spot (the E stage read)")
+	assert_true(not wet.has("sun_pitch") and not wet.has("sun_origin") and not wet.has("sun_color"),
+		"A: no sun character fields — heavy overcast has no sun")
 	assert_eq(wet.get("ambient_color"), Color(0.70, 0.75, 0.82),
 		"ambient color: gray-blue fill")
 	assert_eq(wet.get("sky_top_color"), Color(0.42, 0.47, 0.53),
 		"sky band: overcast gray")
 	assert_eq(wet.get("sky_horizon_color"), Color(0.58, 0.62, 0.66),
 		"horizon band: pale gray")
-	# The valley contract returns (kion 2026-09-23): the stage KEEPS its
-	# bake — the sun must not light the stage — while it lights the actors
-	# and, via the catcher, casts their shadows onto the floor.
+	# The valley contract (kion 2026-09-23): the stage KEEPS its bake — the
+	# sun never lights the stage; the actors receive and the catcher owns
+	# the floor.
 	assert_true(wet.has("lit_surfaces") and (wet["lit_surfaces"] as Array).is_empty(),
-		"the stage keeps its bake — empty lit list, nothing receives (the sun doesn't touch the stage)")
+		"the stage keeps its bake — empty lit list, nothing receives")
 	assert_true(not wet.has("bake_mix"), "no bake_mix — the bake IS the look")
-	assert_eq(wet.get("sun_shadows"), true,
-		"the player casts a real shadow — the catcher receives it on the floor mesh")
+	assert_true(not wet.get("sun_shadows", false),
+		"A: no sun shadows — the lantern omnis cast on the catcher")
 	assert_eq(wet.get("shadow_catcher"), true,
 		"the collision shell is the shadow receiver over the unlit stage")
 	assert_true(not wet.get("geometry_casts_shadows", false),
 		"geometry doesn't cast — actor shadows only, no rim drama")
-	# The lamps + the props.
 	assert_eq(str(wet.get("post_lights", "")), "0_light",
-		"post_lights: the lamp-post surface material (every s02a stage ships it)")
+		"A keeps the lantern pools (every s02a stage ships the surface)")
 	assert_eq(wet.get("lit_props"), true,
 		"lit_props: field elements load onto the receive path with the actors")
-	# Every s02 variant rides the area row (no variant exceptions).
-	assert_eq(Slots.slot_for("ozette", "s02b_lb1"), wet, "s02b rides the area row")
-	assert_eq(Slots.slot_for("ozette", "s02e_ia1"), wet, "s02e rides the area row")
-	assert_eq(Slots.slot_for("ozette", "s02z_na1"), wet, "s02z rides the area row")
+	# ── E (the transition): the rain breaks — the kion-locked peeking sun
+	# under a drizzle. ──
+	var e := Slots.slot_for("ozette", "s02e_ia1")
+	assert_eq(e.get("sun_energy"), 0.1,
+		"E: a faint warm sun — 0.10, the rainbow maker (kion read-out)")
+	assert_eq(e.get("sun_pitch"), -49.0,
+		"E: a pinned elevation that survives the origin aim — longer shadows (kion read-out)")
+	assert_eq(e.get("sun_color"), Color(1.0, 0.94, 0.82),
+		"E: sun color warm — the rainbow's sun, not the neutral overcast fill")
+	assert_eq(e.get("sun_origin"), [15.8, 14.7, -55.6],
+		"E: the sun hangs at the stage art's baked sun spot (the E stage read)")
+	assert_eq(e.get("sun_shadows"), true,
+		"E: the player casts a real shadow — the catcher receives it on the floor mesh")
+	assert_eq(str(e.get("weather", "")), "drizzle", "E rides the transition drizzle")
+	assert_eq(e.get("ambient_energy"), 0.3, "E keeps the dark-moody ambient")
+	assert_eq(e.get("lit_props"), true, "E keeps lit props")
+	assert_true(not e.has("post_lights"),
+		"E carries no lanterns (no 0_light surface — nothing to cluster)")
+	# ── B continues the transition; b_ga1 turns dark; Z bosses in the rain. ──
+	assert_eq(Slots.slot_for("ozette", "s02b_lb1"), e,
+		"B stages ride the transition row verbatim (the break continues)")
+	var bga1 := Slots.slot_for("ozette", "s02b_ga1")
+	assert_eq(bga1.get("sun_energy"), 0.0,
+		"s02b_ga1 turns dark again — the road into Z (kion arc call)")
+	assert_eq(str(bga1.get("weather", "")), "rain", "s02b_ga1 rides the rain")
+	var z := Slots.slot_for("ozette", "s02z_na1")
+	assert_eq(z.get("sun_energy"), 0.0, "Z: dark — the octopus boss waits")
+	assert_eq(str(z.get("weather", "")), "rain", "Z rides the downpour")
+	assert_eq(z.get("shadow_catcher"), true, "Z keeps the catcher floor")
 	assert_eq(Slots.resolve_weather("", wet), "rain",
 		"the row's rain resolves with no session override")
+	assert_eq(Slots.resolve_weather("", e), "drizzle",
+		"the transition row's drizzle resolves")
 	assert_eq(Slots.resolve_weather("snow", wet), "snow",
 		"quest session weather still overrides the row")
 	# The wildcard, functionally: "*" flips every Standard surface per-pixel
@@ -11451,8 +11475,9 @@ func test_wetlands_overcast_slot() -> void:
 	print("")
 
 
-## The wetlands' rain (#649): the snow's counter-image — fast vertical
-## streaks filling the volume above the player.
+## The wetlands' rain (#649), in the arc's two weights: the heavy-overcast
+## downpour (A/Z) and the transition drizzle (E/B) — vertical streaks
+## filling the volume above the player.
 func test_wetlands_rain_weather() -> void:
 	print("── Wetlands Rain Weather (#649) ──")
 	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
@@ -11463,8 +11488,8 @@ func test_wetlands_rain_weather() -> void:
 		assert_true(absf(mat.direction.y) > absf(mat.direction.x),
 			"rain FALLS (vertical — sand drifts, snow floats)")
 		assert_true(mat.initial_velocity_min > 5.0,
-			"rain falls at the original's ~8u/s — streaks, not flakes")
-		assert_eq(rain.amount, 160, "the light drizzle (kion read-out — was the original's 400)")
+			"rain falls at a purposeful ~8–10u/s — streaks, not flakes")
+		assert_eq(rain.amount, 280, "the A/Z heavy-overcast downpour (kion arc call)")
 		assert_eq(rain.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			"weather particles never cast (#648 convention)")
 		assert_eq(rain.fixed_fps, 30,
@@ -11478,16 +11503,25 @@ func test_wetlands_rain_weather() -> void:
 				"streaks are unshaded — the bake is the look")
 			assert_eq(qmat.billboard_mode, BaseMaterial3D.BILLBOARD_FIXED_Y,
 				"FIXED_Y billboarding — streaks stay vertical at any camera azimuth")
-			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.22),
-				"the original's blue-gray, drizzle-soft")
-			assert_true(qmat.albedo_color.a < 1.0,
-				"semi-transparent — subtle overcast rain, not a downpour overlay")
+			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.28),
+				"the original's blue-gray at downpour weight")
 		assert_true(rain.position.y > 6.0,
 			"the emitter sits high — rain fills the volume above the player (snow: 8, sand: 3)")
+	# The transition drizzle: same recipe, lighter hand.
+	var drizzle = WeatherCtl.build_weather_node("drizzle")
+	assert_true(drizzle is GPUParticles3D, "drizzle builds a particle node")
+	if drizzle is GPUParticles3D:
+		assert_eq(drizzle.amount, 160, "the E/B transition drizzle (the kion read-out)")
+		var dmat := (drizzle.draw_pass_1 as QuadMesh).material as StandardMaterial3D
+		assert_eq(dmat.albedo_color, Color(0.5, 0.6, 0.8, 0.22),
+			"the drizzle's softer alpha — the baked rainbow reads under it")
+		assert_true((drizzle.process_material as ParticleProcessMaterial).initial_velocity_max
+			< (rain.process_material as ParticleProcessMaterial).initial_velocity_max,
+			"the drizzle falls gentler than the downpour")
 	# The siblings are untouched.
 	assert_true(WeatherCtl.build_weather_node("snow") != null, "snow still builds")
 	assert_true(WeatherCtl.build_weather_node("sand") != null, "sand still builds")
-	assert_true(WeatherCtl.build_weather_node("drizzle") == null,
+	assert_true(WeatherCtl.build_weather_node("sleet") == null,
 		"unknown weather keys build nothing")
 	print("")
 

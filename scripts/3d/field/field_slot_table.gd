@@ -76,9 +76,10 @@ extends RefCounted
 ##                        the baked props look
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
-## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
-## row is the variant slot so far (#657: the B caves split off the snowfield
-## night while s03a stages keep the area row).
+## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
+## s03b row and the wetlands weather arc (s02e/s02b + the s02b_ga1 turn,
+## #649) are the variant slots so far (#657: the B caves split off the
+## snowfield night while s03a stages keep the area row).
 
 const DEFAULT_SLOT := {"hour": 10.0}
 
@@ -143,18 +144,34 @@ const SLOTS := {
 		],
 	},
 
-	# Wetlands overcast — the #649 rig (kion 2026-09-23 calls): the valley
-	# contract — the stage KEEPS its bake (lit_surfaces EMPTY: nothing
-	# receives; the sun must not light the stage) while a weak WARM sun
-	# hung at the stage art's baked spot (sun_origin, the E read — the
-	# rainbow maker) lights the ACTORS and, via shadow_catcher on the
-	# collision shell, casts their shadows onto the floor. The yellow-
-	# orange electric lanterns tint actors near posts and cast swinging
-	# omni shadows onto the catcher (post_lights clusters the 0_light
-	# surface — every s02a stage ships it; b/e/z no-op; the blob skips
-	# under shadow/post rows). lit_props brings boxes/fences/drops/NPCs
-	# onto the receive path. A light drizzle rides the row.
+	# ── the wetlands weather arc (#649, kion 2026-09-23) ──
+	# A (area row): dark, rain, heavy overcast — no sun; the lanterns are
+	# everything (light + the omni shadows on the catcher). E is the
+	# transition: the rain breaks, a faint warm sun peeks through at the
+	# stage art's baked spot (the kion-locked reads: 0.10, −49° pinned
+	# over the origin aim) and casts the player's catcher shadow under a
+	# drizzle. B continues the transition's style — EXCEPT s02b_ga1, which
+	# turns dark and rainy again as the road into Z, where the octopus
+	# boss waits in the same dark downpour. The stage keeps its bake
+	# everywhere (empty lit list — the sun never lights the stage); the
+	# catcher owns the floor; lit_props brings boxes/fences/drops/NPCs
+	# onto the receive path. The b/e/z stages ship no 0_light surface, so
+	# their rows carry no post_lights (nothing to cluster; the blob
+	# returns there as the only grounding — no shadow source exists).
 	"ozette": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "rain",
+		"lit_surfaces": [],
+		"shadow_catcher": true,
+		"post_lights": "0_light",
+		"lit_props": true,
+	},
+	"s02e": {
 		"hour": 10.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(1.0, 0.94, 0.82),
@@ -166,9 +183,51 @@ const SLOTS := {
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": [],
+		"lit_props": true,
+	},
+	# B carries the transition's look.
+	"s02b": {
+		"hour": 10.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_pitch": -49.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": [],
+		"lit_props": true,
+	},
+	# ...except ga1, which turns dark again on the road into Z.
+	"s02b_ga1": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
 		"weather": "rain",
 		"lit_surfaces": [],
-		"post_lights": "0_light",
+		"shadow_catcher": true,
+		"lit_props": true,
+	},
+	# The octopus boss waits in the same dark downpour.
+	"s02z": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "rain",
+		"lit_surfaces": [],
+		"shadow_catcher": true,
 		"lit_props": true,
 	},
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the

@@ -58,7 +58,9 @@ static func build_weather_node(weather: String) -> GPUParticles3D:
 	if weather == "sand":
 		return _build_sand_node()
 	if weather == "rain":
-		return _build_rain_node()
+		return _build_rain_node(280, 8.0, 10.0, 0.45, 0.28)
+	if weather == "drizzle":
+		return _build_rain_node(160, 6.0, 8.0, 0.35, 0.22)
 	return null
 
 
@@ -161,18 +163,20 @@ static func _build_sand_node() -> GPUParticles3D:
 	return sand
 
 
-## The wetlands' drizzle (#649): the original's fall (~8u/s blue-gray
-## streaks on FIXED_Y billboards through the volume above the player),
-## taken to a LIGHT drizzle on the kion read-outs — the E stages' baked
-## rainbow (s02_0_niji) reads only under soft rain and a hung sun.
-## Slower than a storm but unmistakably falling, unlike snow's float or
-## sand's drift; a plain particle billboard would pin the streak flat to
-## the screen at glancing angles and read as fog.
-static func _build_rain_node() -> GPUParticles3D:
+## The wetlands' rain (#649), in two weights on the same recipe — blue-gray
+## streaks on FIXED_Y billboards through the volume above the player
+## (a plain particle billboard would pin the streak flat to the screen at
+## glancing angles and read as fog):
+##   "rain"    the A/Z heavy-overcast downpour — 280 streaks, 0.28 alpha,
+##             a purposeful 8–10u/s fall
+##   "drizzle" the E/B transition break — 160 short streaks, 0.22 alpha,
+##             a gentle 6–8u/s fall (the baked rainbow reads under this)
+static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
+		streak_len: float, alpha: float) -> GPUParticles3D:
 	var rain := GPUParticles3D.new()
 	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	rain.name = "WeatherRain"
-	rain.amount = 160
+	rain.amount = amount
 	rain.lifetime = 1.5
 	rain.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	rain.fixed_fps = 30
@@ -181,8 +185,8 @@ static func _build_rain_node() -> GPUParticles3D:
 	var mat := ParticleProcessMaterial.new()
 	mat.direction = Vector3(0.12, -1.0, 0.05)
 	mat.spread = 6.0
-	mat.initial_velocity_min = 6.0
-	mat.initial_velocity_max = 8.0
+	mat.initial_velocity_min = speed_min
+	mat.initial_velocity_max = speed_max
 	mat.gravity = Vector3.ZERO
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	mat.emission_box_extents = Vector3(25, 0.4, 25)
@@ -191,9 +195,9 @@ static func _build_rain_node() -> GPUParticles3D:
 	rain.process_material = mat
 
 	var quad := QuadMesh.new()
-	quad.size = Vector2(0.03, 0.35)
+	quad.size = Vector2(0.03, streak_len)
 	var quad_mat := StandardMaterial3D.new()
-	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, 0.22)
+	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, alpha)
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
