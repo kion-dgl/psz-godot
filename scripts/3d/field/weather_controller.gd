@@ -161,18 +161,17 @@ static func _build_sand_node() -> GPUParticles3D:
 	return sand
 
 
-## The wetlands' rain (#649): the original's spec (kion's authored data) —
-## 400 blue-gray streaks falling the original's ~8u/s through the volume
-## above the player; slower than a storm but unmistakably falling, unlike
-## snow's float or sand's drift. The streaks billboard on FIXED_Y: vertical
-## whatever the camera's azimuth, turning only around the post axis — a
-## plain particle billboard would pin the streak flat to the screen at
-## glancing angles and read as fog.
+## The wetlands' rain (#649): the original's fall (~8u/s blue-gray streaks
+## on FIXED_Y billboards through the volume above the player), lightened on
+## the kion read-out — the E stages' baked rainbow (s02_0_niji) reads only
+## under a softer drizzle. Slower than a storm but unmistakably falling,
+## unlike snow's float or sand's drift; a plain particle billboard would
+## pin the streak flat to the screen at glancing angles and read as fog.
 static func _build_rain_node() -> GPUParticles3D:
 	var rain := GPUParticles3D.new()
 	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	rain.name = "WeatherRain"
-	rain.amount = 400
+	rain.amount = 260
 	rain.lifetime = 1.5
 	rain.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	rain.fixed_fps = 30
@@ -193,7 +192,7 @@ static func _build_rain_node() -> GPUParticles3D:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.03, 0.45)
 	var quad_mat := StandardMaterial3D.new()
-	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, 0.35)
+	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, 0.28)
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

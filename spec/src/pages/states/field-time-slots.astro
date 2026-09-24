@@ -15,7 +15,7 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*"); sun OFF, dark ambient 0.35 — the yellow-orange electric lanterns are the primary light and the shadow source (0_light clusters into hanging-lantern omni pools; the blob skips); lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*"); sun OFF, ambient 0.45 — the yellow-orange electric lanterns are the primary light and the shadow source (0_light clusters into hanging-lantern omni pools; the blob skips); lit_props brings boxes/fences/drops/NPCs onto the receive path' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -205,7 +205,8 @@ const slots = [
   <code>shadow_catcher</code></strong>: the actors' shadows land on the
   lit ground directly, and a catcher would double-darken them. The
   overcast character (kion 2026-09-23): the sun is <strong>off</strong>
-  and the ambient is dark (0.35, gray-blue) with overcast sky bands —
+  and the ambient sits at 0.45 (gray-blue; lifted a notch for the E
+  stages' baked rainbow, kion read-out) with overcast sky bands —
   the lanterns are the primary light, their pools owning the pathway
   (<code>sun_energy</code> 0.0 like the snowfield night; the blob
   shadow skips under <code>post_lights</code> rows, whose omnis are the
@@ -232,10 +233,12 @@ const slots = [
   field-scoped GameElement flag so boxes, fences, drops, and field NPCs
   load per-pixel like the player and enemies — the flag is cleared on
   field exit, so city scenes sharing those subclasses keep their baked
-  look. Weather is <code>rain</code>: the original's spec — 400 blue-gray
-  semi-transparent streaks falling ~8u/s on FIXED_Y billboards through
-  the volume above the player, built by the shared WeatherController
-  like snow and sand. The wetlands walk lab
+  look. Weather is <code>rain</code>: the original's ~8u/s blue-gray
+  streaks on FIXED_Y billboards through the volume above the player,
+  lightened to a 260-streak 0.28-alpha drizzle (kion read-out — the E
+  stages' baked rainbow, s02_0_niji, reads only under softer rain and
+  more light in the air), built by the shared WeatherController like
+  snow and sand. The wetlands walk lab
   (<code>wetlands_walktest</code>) owns the tuning until locked from a
   read-out.</p>
 
