@@ -814,6 +814,15 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# The DAY band parks every hour at −45° (#648): rows that want a
 		# noon (steep) or afternoon (low, long-shadow) character pin it.
 		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
+	if _slot.has("sun_origin"):
+		# Hang the sun at the stage art's baked sun spot (#649 — the
+		# wetlands' rainbow maker): placed and aimed at the origin, which
+		# overrides the preset pitch/yaw entirely. The position doubles as
+		# the compat shadow eye if a row ever re-arms sun shadows.
+		var origin: Array = _slot["sun_origin"]
+		_dir_light.global_position = Vector3(
+			float(origin[0]), float(origin[1]), float(origin[2]))
+		_dir_light.look_at(Vector3.ZERO, Vector3.UP)
 	# Overcast rows (#649): the phase preset ships warm daylight — moods
 	# like the wetlands' flat gray desaturate the rig and the sky bands
 	# (the DAY preset's warm light would read sunny through any gap).

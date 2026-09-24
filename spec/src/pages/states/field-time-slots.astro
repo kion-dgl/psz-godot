@@ -15,7 +15,7 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*"); sun OFF, ambient 0.45 — the yellow-orange electric lanterns are the primary light and the shadow source (0_light clusters into hanging-lantern omni pools; the blob skips); lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: 'rain', note: 'the overcast rig (#649): the bake STAYS as albedo but the WHOLE stage receives (lit_surfaces "*"); a weak warm sun hangs at the baked sun spot (sun_origin, the rainbow maker), ambient 0.45 — the yellow-orange electric lanterns are the primary light and the shadow source (0_light clusters into hanging-lantern omni pools; the blob skips); a light drizzle; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -204,11 +204,14 @@ const slots = [
   that lands.) With the ground lit there is <strong>no
   <code>shadow_catcher</code></strong>: the actors' shadows land on the
   lit ground directly, and a catcher would double-darken them. The
-  overcast character (kion 2026-09-23): the sun is <strong>off</strong>
-  and the ambient sits at 0.45 (gray-blue; lifted a notch for the E
-  stages' baked rainbow, kion read-out) with overcast sky bands —
-  the lanterns are the primary light, their pools owning the pathway
-  (<code>sun_energy</code> 0.0 like the snowfield night; the blob
+  overcast character (kion 2026-09-23): a weak WARM sun (0.45,
+  1.0/0.94/0.82) hung at the stage art's baked sun spot —
+  <code>sun_origin</code> places and aims the directional at the origin
+  (the E stage read: 15.8/14.7/−55.6) — the rainbow maker, not the
+  light source; it doesn't cast. The ambient sits at 0.45 (gray-blue)
+  with overcast sky bands; the lanterns remain the primary light, their
+  pools owning the pathway
+  (<code>sun_energy</code> rides like any row; the blob
   shadow skips under <code>post_lights</code> rows, whose omnis are the
   shadow source — blob + lantern shadow reads double).
   <code>post_lights</code> names the lamp surface material
@@ -233,12 +236,12 @@ const slots = [
   field-scoped GameElement flag so boxes, fences, drops, and field NPCs
   load per-pixel like the player and enemies — the flag is cleared on
   field exit, so city scenes sharing those subclasses keep their baked
-  look. Weather is <code>rain</code>: the original's ~8u/s blue-gray
+  look. Weather is <code>rain</code>: the original's blue-gray
   streaks on FIXED_Y billboards through the volume above the player,
-  lightened to a 260-streak 0.28-alpha drizzle (kion read-out — the E
-  stages' baked rainbow, s02_0_niji, reads only under softer rain and
-  more light in the air), built by the shared WeatherController like
-  snow and sand. The wetlands walk lab
+  taken to a light drizzle — 160 short streaks at 0.22 alpha and a
+  gentler ~6–8u/s fall (kion read-outs — the E stages' baked rainbow,
+  s02_0_niji, reads only under soft rain and the hung sun), built by
+  the shared WeatherController like snow and sand. The wetlands walk lab
   (<code>wetlands_walktest</code>) owns the tuning until locked from a
   read-out.</p>
 

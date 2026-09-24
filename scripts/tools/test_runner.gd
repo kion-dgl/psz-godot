@@ -11383,14 +11383,18 @@ func test_wetlands_overcast_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
-	assert_eq(wet.get("sun_energy"), 0.0,
-		"Wetlands rig: the sun is OFF — the lanterns are the light sources (kion 2026-09-23)")
+	assert_eq(wet.get("sun_energy"), 0.45,
+		"Wetlands rig: a weak warm sun returns — 0.45, the rainbow maker (kion E read)")
 	assert_eq(wet.get("ambient_energy"), 0.45,
 		"Wetlands rig: ambient 0.45 — lifted a notch for the E-rainbow read (kion)")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
-	assert_true(not wet.has("sun_pitch") and not wet.has("sun_color"),
-		"no sun character fields — there is no sun to character")
+	assert_true(not wet.has("sun_pitch"),
+		"no pinned elevation — the sun hangs at its authored origin instead")
+	assert_eq(wet.get("sun_color"), Color(1.0, 0.94, 0.82),
+		"sun color: warm — the rainbow's sun, not the neutral overcast fill")
+	assert_eq(wet.get("sun_origin"), [15.8, 14.7, -55.6],
+		"the sun hangs at the stage art's baked sun spot (the E stage read)")
 	assert_eq(wet.get("ambient_color"), Color(0.70, 0.75, 0.82),
 		"ambient color: gray-blue fill")
 	assert_eq(wet.get("sky_top_color"), Color(0.42, 0.47, 0.53),
@@ -11461,7 +11465,7 @@ func test_wetlands_rain_weather() -> void:
 			"rain FALLS (vertical — sand drifts, snow floats)")
 		assert_true(mat.initial_velocity_min > 5.0,
 			"rain falls at the original's ~8u/s — streaks, not flakes")
-		assert_eq(rain.amount, 260, "the lightened drizzle (kion E-rainbow read-out — was the original's 400)")
+		assert_eq(rain.amount, 160, "the light drizzle (kion read-out — was the original's 400)")
 		assert_eq(rain.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			"weather particles never cast (#648 convention)")
 		assert_eq(rain.fixed_fps, 30,
@@ -11475,8 +11479,8 @@ func test_wetlands_rain_weather() -> void:
 				"streaks are unshaded — the bake is the look")
 			assert_eq(qmat.billboard_mode, BaseMaterial3D.BILLBOARD_FIXED_Y,
 				"FIXED_Y billboarding — streaks stay vertical at any camera azimuth")
-			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.28),
-				"the original's blue-gray, softened for the E-rainbow read")
+			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.22),
+				"the original's blue-gray, drizzle-soft")
 			assert_true(qmat.albedo_color.a < 1.0,
 				"semi-transparent — subtle overcast rain, not a downpour overlay")
 		assert_true(rain.position.y > 6.0,

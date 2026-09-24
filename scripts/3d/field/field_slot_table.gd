@@ -36,6 +36,11 @@ extends RefCounted
 ##   sun_pitch     float  sun elevation in degrees (rotation.x; the DAY band
 ##                        parks every hour at −45° — rows that want a noon
 ##                        or afternoon character pin their own elevation)
+##   sun_origin    [x, y, z] hang the sun AT a world position, aimed at the
+##                        origin (the stage art's baked sun spot — the
+##                        wetlands' rainbow maker, #649; overrides the
+##                        preset pitch/yaw and sets the compat shadow-eye
+##                        position if shadows ever re-arm)
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
@@ -140,16 +145,20 @@ const SLOTS := {
 
 	# Wetlands overcast — the #649 rig (kion 2026-09-23 calls): the bake
 	# STAYS (vertex_color_use_as_albedo everywhere) and the whole stage
-	# RECEIVES (lit_surfaces "*") — but the sun is OFF and a dark ambient
-	# (0.45) makes the yellow-orange electric lanterns the primary light:
-	# post_lights clusters the 0_light surface (every s02a stage ships it;
-	# the b/e/z variants don't and no-op) into pools that paint the pathway
-	# and CAST the actors' shadows (the blob shadow skips under post_lights
-	# rows — lantern shadows + blob would read double). lit_props brings
-	# boxes/fences/drops/NPCs onto the receive path. Rain rides the row.
+	# RECEIVES (lit_surfaces "*"). The yellow-orange electric lanterns are
+	# the primary light and the shadow source (post_lights clusters the
+	# 0_light surface — every s02a stage ships it; the b/e/z variants don't
+	# and no-op; the blob shadow skips under post_lights rows — lantern
+	# shadows + blob would read double). A weak WARM sun hangs at the stage
+	# art's baked sun spot (sun_origin, the E stage's read) — the rainbow
+	# maker, not the light source; it doesn't cast. lit_props brings
+	# boxes/fences/drops/NPCs onto the receive path. A light drizzle rides
+	# the row.
 	"ozette": {
 		"hour": 10.0,
-		"sun_energy": 0.0,
+		"sun_energy": 0.45,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
 		"ambient_energy": 0.45,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),

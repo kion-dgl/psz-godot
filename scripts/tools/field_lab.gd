@@ -64,6 +64,13 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		dir_light.shadow_normal_bias = 4.0
 	if slot.has("sun_pitch"):
 		dir_light.rotation_degrees.x = float(slot["sun_pitch"])
+	# The baked-sun-spot hang (#649) — kept in lockstep with
+	# ValleyFieldController._apply_field_slot (the dup-gate).
+	if slot.has("sun_origin"):
+		var origin: Array = slot["sun_origin"]
+		dir_light.global_position = Vector3(
+			float(origin[0]), float(origin[1]), float(origin[2]))
+		dir_light.look_at(Vector3.ZERO, Vector3.UP)
 	# Overcast rows (#649): desaturated rig + sky bands over the preset —
 	# kept in lockstep with ValleyFieldController._apply_field_slot (the
 	# dup-gate: this must apply exactly what the field applies).
