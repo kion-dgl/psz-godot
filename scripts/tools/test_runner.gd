@@ -11429,8 +11429,8 @@ func test_wetlands_overcast_slot() -> void:
 		"s02b_ga1 is the dark turn — sun off, the heavy rain (kion arc call)")
 	assert_eq(str(bga1.get("weather", "")), "rain", "s02b_ga1 rides the downpour")
 	assert_eq(bga1.get("ambient_energy"), 0.3, "the turn keeps the dark-moody ambient")
-	assert_eq(bga1.get("lit_surfaces"), ["1_sky2"],
-		"the turn lit-lists the painted backdrop — an unlit bake can't be darkened, and the authored sky edge read stupidly bright (kion read-out)")
+	assert_eq(bga1.get("lit_surfaces"), ["*"],
+		"the turn lights the WHOLE stage — full-bake edges (water, walls, sky) read stupidly bright next to the catcher-held floor (kion read-outs)")
 	var z := Slots.slot_for("ozette", "s02z_na1")
 	assert_eq(z.get("sun_energy"), 0.0, "Z: dark — the octopus boss waits")
 	assert_eq(str(z.get("weather", "")), "rain", "Z rides the downpour")

@@ -173,9 +173,10 @@ const SLOTS := {
 		"lit_props": true,
 	},
 	# The turn: b_ga1 goes dark and rainy on the road into Z (kion). The
-	# painted backdrop (1_sky2) joins the receive path — an unlit bake
-	# can't be darkened by the rig, and the authored sky edge read
-	# stupidly bright against the dark turn (kion read-out).
+	# WHOLE stage joins the receive path (lit_surfaces "*"): an unlit bake
+	# can't be darkened, and with the sun off the catcher already holds
+	# the floor at ambient — full-bright baked edges (water, walls, the
+	# painted sky) read stupidly bright against it (kion read-outs).
 	"s02b_ga1": {
 		"hour": 10.0,
 		"sun_energy": 0.0,
@@ -184,7 +185,7 @@ const SLOTS := {
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
 		"weather": "rain",
-		"lit_surfaces": ["1_sky2"],
+		"lit_surfaces": ["*"],
 		"shadow_catcher": true,
 		"lit_props": true,
 	},
