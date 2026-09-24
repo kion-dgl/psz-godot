@@ -11385,8 +11385,8 @@ func test_wetlands_overcast_slot() -> void:
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
 	assert_eq(wet.get("sun_energy"), 0.0,
 		"Wetlands rig: the sun is OFF — the lanterns are the light sources (kion 2026-09-23)")
-	assert_eq(wet.get("ambient_energy"), 0.45,
-		"Wetlands rig: dark ambient 0.45 — the lanterns own the scene (kion read-out)")
+	assert_eq(wet.get("ambient_energy"), 0.35,
+		"Wetlands rig: dark ambient 0.35 — the lanterns own the scene (kion ×0.50 pool read-out)")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
 	assert_true(not wet.has("sun_pitch") and not wet.has("sun_color"),

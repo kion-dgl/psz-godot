@@ -477,7 +477,7 @@ const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
 const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
 ## The lantern color (kion 2026-09-23 call): yellow-orange, light radius 11.
 const POST_LIGHT_COLOR := Color(1.0, 0.7, 0.3)
-const POST_LIGHT_ENERGY := 10.0
+const POST_LIGHT_ENERGY := 5.0
 const POST_LIGHT_RANGE := 11.0
 ## The falloff departure (kion 2026-09-23 read-out): the placed-light
 ## convention's true inverse-square (2.0) starves a HANGING lantern — at
