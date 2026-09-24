@@ -201,16 +201,16 @@ const slots = [
   pathway — and a fake glow disc before that, which read as a circle in
   the air under the hanging lanterns; the unlit stage + catcher won the
   read-outs. The <code>"*"</code> wildcard remains in the schema for a
-  future row that wants it.) The overcast character: a weak WARM sun
-  (0.45, 1.0/0.94/0.82) hung at the stage art's baked sun spot —
-  <code>sun_origin</code> places and aims the directional at the origin
-  (the E stage read: 15.8/14.7/−55.6) — the rainbow maker; it lights the
-  actors and casts their catcher shadows (the panorama eye placement
-  then anchors the compat shadow frustum without touching the aimed
-  direction). The ambient sits at 0.45 (gray-blue) with overcast sky
+  future row that wants it.) The ambient sits at 0.45 (gray-blue) with overcast sky
   bands, and the blob shadow skips under the shadow/post rows — blob +
-  real shadow reads double.
-  <code>post_lights</code> names the lamp surface material
+  real shadow reads double. The sun is a faint WARM 0.20
+  (1.0/0.94/0.82) hung at the stage art's baked sun spot —
+  <code>sun_origin</code> places and aims the directional at the origin
+  (the E stage read: 15.8/14.7/−55.6), with <code>sun_pitch</code> −49
+  pinned OVER the aim (applied after it) for longer shadows — the
+  rainbow maker lights the actors and casts their catcher shadows; the
+  panorama eye placement then anchors the compat shadow frustum without
+  touching the aimed direction.  <code>post_lights</code> names the lamp surface material
   (<code>0_light</code>, merged into every s02a stage mesh) whose
   vertices are clustered on the XZ grid — each connected blob is one
   post — and each hanging lantern gets an electric omni pool

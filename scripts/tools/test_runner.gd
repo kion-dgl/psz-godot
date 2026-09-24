@@ -11383,14 +11383,14 @@ func test_wetlands_overcast_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
-	assert_eq(wet.get("sun_energy"), 0.45,
-		"Wetlands rig: a weak warm sun returns — 0.45, the rainbow maker (kion E read)")
+	assert_eq(wet.get("sun_energy"), 0.2,
+		"Wetlands rig: a faint warm sun — 0.20, the rainbow maker (kion read-out)")
 	assert_eq(wet.get("ambient_energy"), 0.45,
 		"Wetlands rig: ambient 0.45 — lifted a notch for the E-rainbow read (kion)")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
-	assert_true(not wet.has("sun_pitch"),
-		"no pinned elevation — the sun hangs at its authored origin instead")
+	assert_eq(wet.get("sun_pitch"), -49.0,
+		"a pinned elevation that survives the origin aim — longer shadows than the steep rainbow-spot aim (kion read-out)")
 	assert_eq(wet.get("sun_color"), Color(1.0, 0.94, 0.82),
 		"sun color: warm — the rainbow's sun, not the neutral overcast fill")
 	assert_eq(wet.get("sun_origin"), [15.8, 14.7, -55.6],

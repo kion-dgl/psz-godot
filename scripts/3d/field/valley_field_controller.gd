@@ -810,10 +810,6 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# grazing angles — the default normal bias bandings those shadows
 		# (#648). 4.0 holds them smooth without detaching contact shadows.
 		_dir_light.shadow_normal_bias = 4.0
-	if _slot.has("sun_pitch"):
-		# The DAY band parks every hour at −45° (#648): rows that want a
-		# noon (steep) or afternoon (low, long-shadow) character pin it.
-		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
 	if _slot.has("sun_origin"):
 		# Hang the sun at the stage art's baked sun spot (#649 — the
 		# wetlands' rainbow maker): placed and aimed at the origin, which
@@ -823,6 +819,13 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		_dir_light.global_position = Vector3(
 			float(origin[0]), float(origin[1]), float(origin[2]))
 		_dir_light.look_at(Vector3.ZERO, Vector3.UP)
+	if _slot.has("sun_pitch"):
+		# The DAY band parks every hour at −45° (#648): rows that want a
+		# noon (steep) or afternoon (low, long-shadow) character pin it.
+		# Applied AFTER sun_origin so a pinned elevation survives the
+		# aim — the wetlands pins −49 over the rainbow spot's steep aim
+		# (kion read-out: longer shadows).
+		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
 	# Overcast rows (#649): the phase preset ships warm daylight — moods
 	# like the wetlands' flat gray desaturate the rig and the sky bands
 	# (the DAY preset's warm light would read sunny through any gap).
