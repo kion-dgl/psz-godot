@@ -11383,10 +11383,10 @@ func test_wetlands_overcast_slot() -> void:
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
-	assert_eq(wet.get("sun_energy"), 0.2,
-		"Wetlands rig: a faint warm sun — 0.20, the rainbow maker (kion read-out)")
-	assert_eq(wet.get("ambient_energy"), 0.45,
-		"Wetlands rig: ambient 0.45 — lifted a notch for the E-rainbow read (kion)")
+	assert_eq(wet.get("sun_energy"), 0.1,
+		"Wetlands rig: a faint warm sun — 0.10, the rainbow maker (kion read-out)")
+	assert_eq(wet.get("ambient_energy"), 0.3,
+		"Wetlands rig: ambient 0.30 — the dark-moody lock (kion read-out)")
 	assert_eq(str(wet.get("weather", "")), "rain", "Wetlands rides the rain")
 	assert_true(not wet.has("moon_energy"), "Wetlands rig: no moon — lanterns only")
 	assert_eq(wet.get("sun_pitch"), -49.0,

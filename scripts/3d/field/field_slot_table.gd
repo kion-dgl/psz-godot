@@ -156,13 +156,13 @@ const SLOTS := {
 	# onto the receive path. A light drizzle rides the row.
 	"ozette": {
 		"hour": 10.0,
-		"sun_energy": 0.2,
+		"sun_energy": 0.1,
 		"sun_color": Color(1.0, 0.94, 0.82),
 		"sun_origin": [15.8, 14.7, -55.6],
 		"sun_pitch": -49.0,
 		"sun_shadows": true,
 		"shadow_catcher": true,
-		"ambient_energy": 0.45,
+		"ambient_energy": 0.3,
 		"ambient_color": Color(0.70, 0.75, 0.82),
 		"sky_top_color": Color(0.42, 0.47, 0.53),
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
