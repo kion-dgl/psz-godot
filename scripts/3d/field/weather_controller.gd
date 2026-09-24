@@ -58,7 +58,7 @@ static func build_weather_node(weather: String) -> GPUParticles3D:
 	if weather == "sand":
 		return _build_sand_node()
 	if weather == "rain":
-		return _build_rain_node(280, 8.0, 10.0, 0.45, 0.28)
+		return _build_rain_node(380, 8.0, 10.0, 0.45, 0.32)
 	if weather == "drizzle":
 		return _build_rain_node(160, 6.0, 8.0, 0.35, 0.22)
 	return null
@@ -167,7 +167,7 @@ static func _build_sand_node() -> GPUParticles3D:
 ## streaks on FIXED_Y billboards through the volume above the player
 ## (a plain particle billboard would pin the streak flat to the screen at
 ## glancing angles and read as fog):
-##   "rain"    the A/Z heavy-overcast downpour — 280 streaks, 0.28 alpha,
+##   "rain"    the A/Z heavy-overcast downpour — 380 streaks, 0.32 alpha,
 ##             a purposeful 8–10u/s fall
 ##   "drizzle" the E/B transition break — 160 short streaks, 0.22 alpha,
 ##             a gentle 6–8u/s fall (the baked rainbow reads under this)

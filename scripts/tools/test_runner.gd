@@ -11480,7 +11480,7 @@ func test_wetlands_rain_weather() -> void:
 			"rain FALLS (vertical — sand drifts, snow floats)")
 		assert_true(mat.initial_velocity_min > 5.0,
 			"rain falls at a purposeful ~8–10u/s — streaks, not flakes")
-		assert_eq(rain.amount, 280, "the A/Z heavy-overcast downpour (kion arc call)")
+		assert_eq(rain.amount, 380, "the A/Z heavy-overcast downpour (kion arc call, strengthened on read)")
 		assert_eq(rain.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			"weather particles never cast (#648 convention)")
 		assert_eq(rain.fixed_fps, 30,
@@ -11494,7 +11494,7 @@ func test_wetlands_rain_weather() -> void:
 				"streaks are unshaded — the bake is the look")
 			assert_eq(qmat.billboard_mode, BaseMaterial3D.BILLBOARD_FIXED_Y,
 				"FIXED_Y billboarding — streaks stay vertical at any camera azimuth")
-			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.28),
+			assert_eq(qmat.albedo_color, Color(0.5, 0.6, 0.8, 0.32),
 				"the original's blue-gray at downpour weight")
 		assert_true(rain.position.y > 6.0,
 			"the emitter sits high — rain fills the volume above the player (snow: 8, sand: 3)")
