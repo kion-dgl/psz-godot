@@ -15,8 +15,10 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02 a/e/b)', hour: '10.0 — day', weather: 'drizzle', note: 'the settled overcast look (#649): the stage keeps its bake (empty lit list), a faint warm sun hangs at the baked sun spot (sun_origin + pinned −49° pitch) casting the player\'s catcher shadow under a drizzle — the baked rainbow reads on E; the yellow-orange electric lanterns pool and cast on A; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
-  { key: 's02b_ga1', area: 'Wetlands B turn', hour: '10.0 — day', weather: 'rain', note: 'the dark turn: sun off, the heavy rain, overcast — and the WHOLE stage joins the receive path (lit_surfaces "*"): with the sun off the catcher already holds the floor at ambient, and full-bake edges beside it read stupidly bright; LIGHTNING strobes over it — the road into Z (stage-level row)' },
+  { key: 'ozette', area: 'Wetlands A (s02a)', hour: '10.0 — day', weather: 'drizzle', note: 'the approved pre-transition look (#649): the WHOLE stage receives (lit_surfaces "*"), sun off, ambient 0.35 — the yellow-orange electric lanterns are the light, painting pools on the pathway and casting the actors\' swinging shadows onto the lit ground; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 's02e', area: 'Wetlands E transition', hour: '10.0 — day', weather: 'drizzle', note: 'the rain breaks: the valley contract (unlit bake + catcher floor) with a faint warm sun (0.10) hung at the baked sun spot (sun_origin + pinned −49° pitch) casting the player\'s shadow under a drizzle — the baked rainbow reads' },
+  { key: 's02b', area: 'Wetlands B (s02b_*)', hour: '10.0 — day', weather: 'drizzle', note: 'continues the transition\'s style verbatim (variant row)' },
+  { key: 's02b_ga1', area: 'Wetlands B turn', hour: '10.0 — day', weather: 'rain', note: 'the dark turn: sun off, the heavy rain, lightning — and the WHOLE stage joins the receive path (lit_surfaces "*"): full-bake edges beside the catcher-held floor read stupidly bright — the road into Z (stage-level row)' },
   { key: 's02z', area: 'Wetlands Z boss', hour: '10.0 — day', weather: 'rain', note: 'the octopus boss waits in the same dark downpour, lightning strobing (variant row)' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
@@ -193,27 +195,28 @@ const slots = [
   the play space; double lighting over the bake). A future row that
   wants real stage shadows re-authors those fields knowingly.</p>
 
-  <p>The wetlands rows (#649) are the valley contract with a
-  <strong>dark turn</strong> (kion, 2026-09-23): the settled overcast
-  look — tuned on the E transition, where the rain breaks and a faint
-  warm sun peeks through — rides the area row, so <strong>A, E, and
-  B</strong> all wear it; <strong>s02b_ga1</strong> is the turn, dark
-  and rainy with the sun off and the heavy rain, on the road into
+  <p>The wetlands rows (#649) tell a <strong>weather arc</strong> in two
+  strategies (kion, 2026-09-23): <strong>A</strong> opens with the
+  approved dark-lantern look — the <em>wildcard</em> rig
+  (<code>lit_surfaces "*"</code>, sun off, ambient 0.35): ambient owns
+  the whole stage's bake (the flat full-bright unlit bake read "ewww
+  too bright" in the free-field pass) and the yellow-orange lantern
+  pools paint the pathway, their omnis casting the actors' swinging
+  shadows onto the lit ground. <strong>E</strong> breaks the rain with
+  the valley contract — unlit bake + the
+  <code>shadow_catcher</code> floor and a faint warm sun peeking
+  through at the baked sun spot (the transition's flatter, brighter
+  read); <strong>B</strong> carries the transition.
+  <strong>s02b_ga1</strong> is the turn, back on the wildcard with the
+  sun off, the heavy rain, and lightning, on the road into
   <strong>Z</strong>, where the octopus boss waits in the same
-  downpour. The mechanics hold everywhere: the bake
-  <strong>stays</strong> — <code>lit_surfaces</code> EMPTY, the sun
-  never lights the stage — the actors receive, and the
-  <code>shadow_catcher</code> renders the collision shell as the
-  floor's shadow receiver, so the player casts a real shadow on the
-  floor mesh wherever a shadow source exists. (A whole-stage-receives
-  <code>"*"</code> variant was walked first — real lantern pools on the
-  pathway — and a fake glow disc before that, which read as a circle in
-  the air under the hanging lanterns; the unlit stage + catcher won the
-  read-outs. The <code>"*"</code> wildcard remains in the schema for a
-  future row that wants it.) The ambient sits at 0.30 (gray-blue; the
-  dark-moody kion lock) with overcast sky
-  bands, and the blob shadow skips under the shadow/post rows — blob +
-  real shadow reads double. The transition's sun is a faint WARM 0.10
+  downpour. (A fake glow disc was tried and read as a circle in the
+  air under the hanging lanterns; the wildcard and the valley contract
+  each won the read-outs where they now sit.) The ambient sits dark
+  (0.35 on A, 0.30 through the transition and the turn — the kion
+  locks) with overcast sky
+  bands, and the blob shadow skips under the shadow/post rows — blob
+  + real shadow reads double. The transition's sun is a faint WARM 0.10
   (1.0/0.94/0.82) hung at the stage art's baked sun spot —
   <code>sun_origin</code> places and aims the directional at the origin
   (the E stage read: 15.8/14.7/−55.6), with <code>sun_pitch</code> −49

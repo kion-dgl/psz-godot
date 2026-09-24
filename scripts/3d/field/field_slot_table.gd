@@ -148,17 +148,28 @@ const SLOTS := {
 	},
 
 	# ── the wetlands weather arc (#649, kion 2026-09-23) ──
-	# The settled overcast look rides the area row — A/E/B all wear it
-	# (the peeking-sun transition values were tuned ON the E stage): faint
-	# warm sun at the baked spot, dark-moody ambient, the light drizzle,
-	# lantern pools, the catcher floor. The turn is s02b_ga1: dark and
-	# rainy overcast again (sun off, the heavy rain) on the road into Z,
-	# where the octopus boss waits in the same downpour. The stage keeps
-	# its bake everywhere (empty lit list — the sun never lights the
-	# stage); lit_props brings boxes/fences/drops/NPCs onto the receive
-	# path. The b/e/z stages ship no 0_light surface, so the dark rows
-	# carry no post_lights (the blob returns there — no shadow source).
+	# A (area row): the APPROVED pre-transition look, verbatim — the whole
+	# stage on the receive path (lit_surfaces "*": ambient owns the bake,
+	# dark-moody), sun off, the yellow-orange lantern pools painting the
+	# pathway and casting the actors' swinging shadows onto the lit
+	# ground. E is the transition: the rain breaks and a faint warm sun
+	# peeks through the valley contract (unlit bake + catcher floor).
+	# B continues the transition — EXCEPT s02b_ga1, the dark turn
+	# (wildcard-lit again, sun off, the heavy rain, lightning) on the
+	# road into Z, where the octopus boss waits in the same downpour.
 	"ozette": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": ["*"],
+		"post_lights": "0_light",
+		"lit_props": true,
+	},
+	"s02e": {
 		"hour": 10.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(1.0, 0.94, 0.82),
@@ -172,7 +183,23 @@ const SLOTS := {
 		"sky_horizon_color": Color(0.58, 0.62, 0.66),
 		"weather": "drizzle",
 		"lit_surfaces": [],
-		"post_lights": "0_light",
+		"lit_props": true,
+	},
+	# B carries the transition's look.
+	"s02b": {
+		"hour": 10.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_pitch": -49.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": [],
 		"lit_props": true,
 	},
 	# The turn: b_ga1 goes dark and rainy on the road into Z (kion). The
