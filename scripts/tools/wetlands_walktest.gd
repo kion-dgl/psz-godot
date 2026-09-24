@@ -17,8 +17,8 @@ extends Node3D
 ##       PSZ_WALK_SUN=0.35         sun energy override · PSZ_WALK_AMBIENT=0.9
 ##                                 ambient override (balance sweeps)
 ##       PSZ_WALK_POST_LIGHTS=0    skip the lamp-post pools (A/B diffs)
-##       PSZ_WALK_SPAWN=x,z        boot the player at authored coordinates
-##                                 (e.g. -5.35,12 — under a ga1 lantern)
+##       PSZ_WALK_SPAWN=x,z        override the boot spawn (default: the
+##                                 stage config's gate/defaultSpawn)
 ##       PSZ_WALK_PROP=0           skip the lit-prop preview crate
 ##       PSZ_WALK_PILLAR=1         spawn a 3m control pillar beside the player
 ##                                 (a caster that provably shadows)
@@ -107,8 +107,9 @@ func _ready() -> void:
 		_posts = MeshUtils.place_post_lights(_map_root, str(_slot["post_lights"]))
 		for light in _map_root.find_children("PostLight*", "OmniLight3D", true, false):
 			print("[WetlandsWalk] post light at %s" % (light as Node3D).global_position)
-	_spawn_player(_boot_spawn())
-	_spawn_prop_preview()
+	var spawn_pos := _boot_spawn()
+	_spawn_player(spawn_pos)
+	_spawn_prop_preview(spawn_pos)
 	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
 		var pillar := MeshInstance3D.new()
 		pillar.name = "A/BPillar"
@@ -118,7 +119,8 @@ func _ready() -> void:
 		bmat.albedo_color = Color(0.6, 0.3, 0.2)
 		pillar.mesh = bm
 		pillar.material_override = bmat
-		pillar.position = Vector3(2.5, _floor_top + 1.5 if is_finite(_floor_top) else 1.5, 8.0)
+		pillar.position = Vector3(spawn_pos.x + 2.5,
+			_floor_top + 1.5 if is_finite(_floor_top) else 1.5, spawn_pos.z)
 		add_child(pillar)
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
@@ -277,21 +279,50 @@ func _spawn_player(pos: Vector3) -> void:
 	_player = FieldLabScript.spawn_player(self, pos)
 
 
-## PSZ_WALK_SPAWN=x,z — boot the player at authored coordinates (e.g. under
-## a lantern: PSZ_WALK_SPAWN=-5.35,12), defaulting to the room's middle.
+## The boot spawn: PSZ_WALK_SPAWN=x,z overrides; otherwise the stage
+## config's own spawn-in (defaultSpawn, else the first spawn waypoint —
+## the gate's authored position) so every stage in the cycle lands on
+## walkable ground — the old fixed (0, 1.5, 8) fell through s02b_ga1's
+## boardwalk into the marsh.
 func _boot_spawn() -> Vector3:
 	var raw := OS.get_environment("PSZ_WALK_SPAWN")
 	if not raw.is_empty():
 		var p := raw.split(",")
 		if p.size() >= 2:
 			return Vector3(float(p[0]), 1.5, float(p[1]))
+	var pos = _config_spawn()
+	if pos is Vector3:
+		return Vector3(pos.x, 1.5, pos.z)
 	return Vector3(0, 1.5, 8)
+
+
+## The stage's authored spawn from the unified config (kion: "the gate").
+func _config_spawn():
+	var file := FileAccess.open(UNIFIED_CONFIG, FileAccess.READ)
+	if file == null:
+		return null
+	var json := JSON.new()
+	var ok := json.parse(file.get_as_text()) == OK
+	file.close()
+	if not ok:
+		return null
+	var cfg: Dictionary = (json.data as Dictionary).get(_stage_id, {})
+	var ds: Dictionary = cfg.get("defaultSpawn", {})
+	if ds.has("position"):
+		var arr: Array = ds["position"]
+		return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+	for w in cfg.get("waypoints", []):
+		if str(w.get("kind", "")) == "spawn":
+			var arr: Array = w["position"]
+			return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+	return null
 
 
 ## The lit_props preview (#649): the field container on the element receive
 ## path — the same SmoothNormals + make_lit treatment GameElement._load_model
 ## applies under the flag, so the lab previews what a dropped crate reads.
-func _spawn_prop_preview() -> void:
+## Spawned beside the player so it always lands on walkable ground.
+func _spawn_prop_preview(spawn_pos: Vector3) -> void:
 	if OS.get_environment("PSZ_WALK_PROP") == "0":
 		return
 	var packed := load(PROP_GLB) as PackedScene
@@ -301,7 +332,8 @@ func _spawn_prop_preview() -> void:
 	add_child(prop)
 	SmoothNormals.ensure(prop, 2)
 	SmoothNormals.make_lit(prop)
-	prop.global_position = Vector3(-2.0, _floor_top if is_finite(_floor_top) else 0.0, 8.0)
+	prop.global_position = Vector3(spawn_pos.x - 1.5,
+		_floor_top if is_finite(_floor_top) else spawn_pos.y - 1.5, spawn_pos.z)
 
 
 ## The authored placed effects for this stage — every category:"placed" entry
