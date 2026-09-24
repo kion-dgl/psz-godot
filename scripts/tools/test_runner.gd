@@ -228,8 +228,9 @@ func _run_tests_systems() -> void:
 	test_s03b_anchor_config()
 	test_valley_anchor_config()
 	test_valley_sand_weather()
-	test_wetlands_overcast_slot()
+	test_wetlands_a_row()
 	test_wetlands_rain_weather()
+	test_wetlands_transition_arc()
 	test_wetlands_lightning()
 	test_wetlands_post_lights()
 	test_wetlands_lit_props()
@@ -11375,15 +11376,12 @@ func test_valley_sand_weather() -> void:
 	print("")
 
 
-# ── The wetlands weather arc (#649, kion 2026-09-23): A opens with the
-# APPROVED pre-transition look (whole stage receiving, sun off, lantern
-# pools on the pathway); E breaks the rain with a peeking sun under the
-# valley contract; B carries the transition; s02b_ga1 is the dark turn
-# into Z's octopus-boss downpour. ──
-func test_wetlands_overcast_slot() -> void:
-	print("── Wetlands Overcast Slot (#649) ──")
+# ── The wetlands A row (#649, kion 2026-09-23): the APPROVED pre-transition
+# look — whole stage receiving (the wildcard), sun off, lantern pools on the
+# pathway. ──
+func test_wetlands_a_row() -> void:
+	print("── Wetlands A Row (#649) ──")
 	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
-	# ── A (the area row): the approved pre-transition look, verbatim. ──
 	var wet := Slots.slot_for("ozette", "s02a_ga1")
 	assert_eq(wet.get("hour"), 10.0, "Wetlands pins hour 10 (the overcast colors carry the mood)")
 	assert_eq(wet.get("sun_energy"), 0.0,
@@ -11416,6 +11414,37 @@ func test_wetlands_overcast_slot() -> void:
 		"the lantern pools (every s02a stage ships the surface)")
 	assert_eq(wet.get("lit_props"), true,
 		"lit_props: field elements load onto the receive path with the actors")
+	# The wildcard, functionally: "*" flips every Standard surface per-pixel
+	# (bake kept), and a wildcard keep-list forces nothing unlit.
+	var wroot := Node3D.new()
+	add_child(wroot)
+	var wmi := MeshInstance3D.new()
+	wroot.add_child(wmi)
+	var wmesh := ArrayMesh.new()
+	for mname in ["0_ground", "1_grass3", "1_wall2"]:
+		var m := StandardMaterial3D.new()
+		m.resource_name = mname
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+		wmesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
+		wmesh.surface_set_material(wmesh.get_surface_count() - 1, m)
+	wmi.mesh = wmesh
+	assert_eq(MeshUtils.make_lit_surfaces(wroot, ["*"]), 3,
+		"the wildcard lit pass flips every Standard surface")
+	for i in range(3):
+		assert_eq((SmoothNormals._active_material(wmi, i) as StandardMaterial3D).shading_mode,
+			BaseMaterial3D.SHADING_MODE_PER_PIXEL, "surface %d receives per-pixel" % i)
+	assert_eq(MeshUtils.make_unlit(wroot, ["*"]), 0,
+		"a wildcard keep-list forces nothing unlit")
+	wroot.queue_free()
+	print("")
+
+
+# ── The wetlands arc past A (#649): E breaks the rain with the peeking sun
+# under the valley contract; B carries it; s02b_ga1 is the dark turn into
+# Z's octopus-boss downpour. ──
+func test_wetlands_transition_arc() -> void:
+	print("── Wetlands Transition Arc (#649) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
 	# ── E (the transition): the rain breaks — the kion-locked peeking sun
 	# under the valley contract. ──
 	var e := Slots.slot_for("ozette", "s02e_ia1")
@@ -11451,34 +11480,12 @@ func test_wetlands_overcast_slot() -> void:
 	assert_eq(z.get("sun_energy"), 0.0, "Z: dark — the octopus boss waits")
 	assert_eq(str(z.get("weather", "")), "rain", "Z rides the downpour")
 	assert_eq(z.get("shadow_catcher"), true, "Z keeps the catcher floor")
-	assert_eq(Slots.resolve_weather("", wet), "drizzle",
+	assert_eq(Slots.resolve_weather("", Slots.slot_for("ozette", "s02a_ga1")), "drizzle",
 		"the A row's light rain resolves with no session override")
 	assert_eq(Slots.resolve_weather("", bga1), "rain",
 		"the turn's rain resolves")
-	assert_eq(Slots.resolve_weather("snow", wet), "snow",
+	assert_eq(Slots.resolve_weather("snow", e), "snow",
 		"quest session weather still overrides the row")
-	# The wildcard, functionally: "*" flips every Standard surface per-pixel
-	# (bake kept), and a wildcard keep-list forces nothing unlit.
-	var wroot := Node3D.new()
-	add_child(wroot)
-	var wmi := MeshInstance3D.new()
-	wroot.add_child(wmi)
-	var wmesh := ArrayMesh.new()
-	for mname in ["0_ground", "1_grass3", "1_wall2"]:
-		var m := StandardMaterial3D.new()
-		m.resource_name = mname
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-		wmesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _tri_arrays())
-		wmesh.surface_set_material(wmesh.get_surface_count() - 1, m)
-	wmi.mesh = wmesh
-	assert_eq(MeshUtils.make_lit_surfaces(wroot, ["*"]), 3,
-		"the wildcard lit pass flips every Standard surface")
-	for i in range(3):
-		assert_eq((SmoothNormals._active_material(wmi, i) as StandardMaterial3D).shading_mode,
-			BaseMaterial3D.SHADING_MODE_PER_PIXEL, "surface %d receives per-pixel" % i)
-	assert_eq(MeshUtils.make_unlit(wroot, ["*"]), 0,
-		"a wildcard keep-list forces nothing unlit")
-	wroot.queue_free()
 	print("")
 
 
@@ -11642,6 +11649,13 @@ func test_wetlands_lit_props() -> void:
 	# Default OFF — the city contract: city scenes share the subclasses and
 	# their props keep the baked, unlit look.
 	assert_true(not GameElement.lit_rig, "the lit-props flag defaults off (city contract)")
+	# The model-path half needs the container GLB — CI checkouts carry no
+	# raw /assets (hosted on R2; see ci.yml), so it runs only where the
+	# assets are present.
+	if load("res://assets/objects/wetlands/o02_cont.glb") == null:
+		print("  INFO: wetlands container GLB absent (asset-less checkout) — skipping the model-path half")
+		print("")
+		return
 	GameElement.lit_rig = true
 	var el := GameElement.new()
 	el.model_path = "wetlands/o02_cont.glb"

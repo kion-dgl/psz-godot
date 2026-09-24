@@ -491,7 +491,25 @@ const POST_LIGHT_ATTENUATION := 1.0
 static func place_post_lights(root: Node3D, material_name: String) -> int:
 	if material_name.is_empty():
 		return 0
-	# World vertices of every matching surface, binned on the XZ grid.
+	var cells := _post_cells(root, material_name)
+	if cells.is_empty():
+		return 0
+	# Flood-fill 8-neighbor blobs — each blob is one post.
+	var visited: Dictionary = {}
+	var placed := 0
+	for cell in cells:
+		if visited.has(cell):
+			continue
+		var blob := _post_blob(cells, cell, visited)
+		if blob.size() >= POST_LIGHT_MIN_VERTS:
+			_spawn_post_pool(root, blob, placed)
+			placed += 1
+	return placed
+
+
+## World vertices of every surface matching the material, binned on the XZ
+## cluster grid.
+static func _post_cells(root: Node3D, material_name: String) -> Dictionary:
 	var cells: Dictionary = {}
 	for node in collect_mesh_instances(root, []):
 		var mi := node as MeshInstance3D
@@ -515,61 +533,57 @@ static func place_post_lights(root: Node3D, material_name: String) -> int:
 				if not cells.has(cell):
 					cells[cell] = []
 				(cells[cell] as Array).append(w)
-	if cells.is_empty():
-		return 0
-	# Flood-fill 8-neighbor blobs — each blob is one post.
-	var visited: Dictionary = {}
-	var placed := 0
-	for cell in cells:
-		if visited.has(cell):
-			continue
-		visited[cell] = true
-		var stack: Array = [cell]
-		var blob: Array = []
-		while not stack.is_empty():
-			var c: Vector2i = stack.pop_back()
-			blob.append_array(cells[c])
-			for dx in range(-1, 2):
-				for dz in range(-1, 2):
-					var n := Vector2i(c.x + dx, c.y + dz)
-					if not visited.has(n) and cells.has(n):
-						visited[n] = true
-						stack.append(n)
-		if blob.size() < POST_LIGHT_MIN_VERTS:
-			continue
-		var sum := Vector3.ZERO
-		var top: float = blob[0].y
-		for w in blob:
-			sum += w
-			top = maxf(top, w.y)
-		var center_x := sum.x / blob.size()
-		var center_z := sum.z / blob.size()
-		var light := OmniLight3D.new()
-		# Unique per post — a duplicate sibling name gets @-mangled by
-		# add_child, hiding the light from PostLight* lookups (the lab's
-		# position read-out).
-		light.name = "PostLight%d" % (placed + 1)
-		light.light_color = POST_LIGHT_COLOR
-		light.light_energy = POST_LIGHT_ENERGY
-		light.omni_range = POST_LIGHT_RANGE
-		light.omni_attenuation = POST_LIGHT_ATTENUATION
-		# The wetlands' lanterns CAST (kion's 2026-09-23 dark-room read-out):
-		# in the moody overcast the nearest lantern is the dominant light, so
-		# the actors' shadows must swing with it — the deliberate exception
-		# to the placed-omnis-never-cast convention. The compat renderer's
-		# dual-paraboloid omni shadows land on the per-pixel ground (the
-		# vertex-shaded-material caveat doesn't apply); only actors cast, so
-		# the extra shadow passes stay cheap.
-		light.shadow_enabled = true
-		light.shadow_blur = 1.0
-		root.add_child(light)
-		# ~1.2m under the cluster top, 0.2 down of the authored anchors'
-		# height (kion 2026-09-23 read-out: the player only read the
-		# lanterns in stupid darkness — closer to the ground and twice the
-		# energy makes the pool own the player at rig values).
-		light.global_position = Vector3(center_x, top - 1.2, center_z)
-		placed += 1
-	return placed
+	return cells
+
+
+## One connected post blob out of the XZ cell grid, marking cells visited.
+static func _post_blob(cells: Dictionary, start, visited: Dictionary) -> Array:
+	visited[start] = true
+	var stack: Array = [start]
+	var blob: Array = []
+	while not stack.is_empty():
+		var c: Vector2i = stack.pop_back()
+		blob.append_array(cells[c])
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var n := Vector2i(c.x + dx, c.y + dz)
+				if not visited.has(n) and cells.has(n):
+					visited[n] = true
+					stack.append(n)
+	return blob
+
+
+## The lantern for one clustered post: a casting yellow-orange omni at the
+## hanging height (~1.2m under the cluster top, 0.2 down of the authored
+## anchors — kion 2026-09-23 read-out).
+static func _spawn_post_pool(root: Node3D, blob: Array, index: int) -> OmniLight3D:
+	var sum := Vector3.ZERO
+	var top: float = blob[0].y
+	for w in blob:
+		sum += w
+		top = maxf(top, w.y)
+	var light := OmniLight3D.new()
+	# Unique per post — a duplicate sibling name gets @-mangled by
+	# add_child, hiding the light from PostLight* lookups (the lab's
+	# position read-out).
+	light.name = "PostLight%d" % (index + 1)
+	light.light_color = POST_LIGHT_COLOR
+	light.light_energy = POST_LIGHT_ENERGY
+	light.omni_range = POST_LIGHT_RANGE
+	light.omni_attenuation = POST_LIGHT_ATTENUATION
+	# The wetlands' lanterns CAST (kion's 2026-09-23 dark-room read-out):
+	# in the moody overcast the nearest lantern is the dominant light, so
+	# the actors' shadows must swing with it — the deliberate exception
+	# to the placed-omnis-never-cast convention. The compat renderer's
+	# dual-paraboloid omni shadows land on the per-pixel ground (the
+	# vertex-shaded-material caveat doesn't apply); only actors cast, so
+	# the extra shadow passes stay cheap.
+	light.shadow_enabled = true
+	light.shadow_blur = 1.0
+	root.add_child(light)
+	light.global_position = Vector3(
+		sum.x / blob.size(), top - 1.2, sum.z / blob.size())
+	return light
 
 
 ## Surface material-name match for the placement passes: the active
