@@ -575,6 +575,10 @@ func _ready() -> void:
 
 	_spawn_player(spawn_pos, spawn_rot)
 	_weather._spawn_weather()
+	# The storm rows' lightning (#649): strobes over the dark turn and the
+	# boss downpour — the settled rows stay calm.
+	if _slot.get("lightning", false):
+		WeatherController.build_lightning(self)
 	if from_cell_pos.is_empty():
 		SfxManager.play("res://assets/sfx/common/common_010.wav")
 	await get_tree().process_frame

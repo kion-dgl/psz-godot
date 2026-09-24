@@ -210,6 +210,80 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 	return rain
 
 
+## The storm's lightning (#649, kion ask): a scene-level cool directional
+## strobing in random multi-pulse strokes — each flash lights the actors
+## and every per-pixel surface (on the wildcard-lit dark turn the whole
+## room blinks) from a fresh random azimuth. Shadows stay off: the flash
+## must not fight the catcher's. The light is built in _init so the unit
+## test can drive _process deterministically out of the tree.
+class LightningStrobe extends Node3D:
+	const PEAK := 3.5            # ≈10× the storm ambient — a flash dominates
+	const WAIT_MIN := 5.0        # seconds between strokes
+	const WAIT_MAX := 14.0
+	const PULSE_DECAY := 0.13
+
+	var light: DirectionalLight3D
+	var _wait := 3.0
+	var _stroke_t := -1.0
+	var _pulses: Array[float] = []
+
+	func _init() -> void:
+		light = DirectionalLight3D.new()
+		light.name = "LightningFlash"
+		light.light_color = Color(0.75, 0.8, 1.0)
+		light.light_energy = 0.0
+		light.shadow_enabled = false
+		add_child(light)
+		_new_azimuth()
+
+	func _process(delta: float) -> void:
+		if _stroke_t < 0.0:
+			_wait -= delta
+			if _wait <= 0.0:
+				flash()
+			return
+		_stroke_t += delta
+		light.light_energy = _envelope(_stroke_t)
+		if _stroke_t > _pulses[_pulses.size() - 1] + PULSE_DECAY:
+			_end()
+
+	## Force a stroke now — the test hook; the field rides the timer.
+	func flash() -> void:
+		_stroke_t = 0.0
+		_pulses = [0.0]
+		var t := 0.12 + randf() * 0.1
+		for i in range(randi_range(1, 2)):
+			_pulses.append(t)
+			t += 0.14 + randf() * 0.12
+		_new_azimuth()
+
+	func _envelope(t: float) -> float:
+		var e := 0.0
+		for p in _pulses:
+			var dt := t - p
+			if dt >= 0.0 and dt < PULSE_DECAY:
+				e = maxf(e, PEAK * (1.0 - dt / PULSE_DECAY))
+		return e
+
+	func _end() -> void:
+		_stroke_t = -1.0
+		light.light_energy = 0.0
+		_wait = randf_range(WAIT_MIN, WAIT_MAX)
+
+	func _new_azimuth() -> void:
+		light.rotation_degrees = Vector3(
+			randf_range(-70.0, -50.0), randf_range(0.0, 360.0), 0.0)
+
+
+## Shared storm-lightning builder — the field controller and the walk labs
+## preview the exact same strobe.
+static func build_lightning(root: Node) -> LightningStrobe:
+	var strobe := LightningStrobe.new()
+	strobe.name = "Lightning"
+	root.add_child(strobe)
+	return strobe
+
+
 func _kick_weather() -> void:
 	# Wait a couple frames so the player transform is fully committed, then
 	# restart the particle system. preprocess runs again on restart and the

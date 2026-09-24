@@ -126,6 +126,11 @@ func _ready() -> void:
 		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()
 	_spawn_weather()
+	# The storm rows' lightning (#649) — the shared builder, exactly what
+	# the field spawns.
+	if _slot.get("lightning", false):
+		WeatherControllerScript.build_lightning(self)
+		print("[WetlandsWalk] lightning strobes armed")
 	_build_status_label()
 	_readout()
 	print("[WetlandsWalk] ready — N next room, R reload, ESC quit")

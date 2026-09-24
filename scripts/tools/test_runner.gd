@@ -230,6 +230,7 @@ func _run_tests_systems() -> void:
 	test_valley_sand_weather()
 	test_wetlands_overcast_slot()
 	test_wetlands_rain_weather()
+	test_wetlands_lightning()
 	test_wetlands_post_lights()
 	test_wetlands_lit_props()
 	test_quest_lifecycle()
@@ -11514,6 +11515,42 @@ func test_wetlands_rain_weather() -> void:
 	assert_true(WeatherCtl.build_weather_node("sand") != null, "sand still builds")
 	assert_true(WeatherCtl.build_weather_node("sleet") == null,
 		"unknown weather keys build nothing")
+	print("")
+
+
+## The storm lightning (#649): the strobe rides the storm rows — multi-pulse
+## cool flashes that light the receive path and fade back to dark.
+func test_wetlands_lightning() -> void:
+	print("── Wetlands Lightning (#649) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	assert_true(Slots.slot_for("ozette", "s02b_ga1").get("lightning", false),
+		"the dark turn strobes")
+	assert_true(Slots.slot_for("ozette", "s02z_na1").get("lightning", false),
+		"the octopus-boss downpour strobes")
+	assert_true(not Slots.slot_for("ozette", "s02a_ga1").get("lightning", false),
+		"the settled rows stay calm")
+	var WeatherCtl := preload("res://scripts/3d/field/weather_controller.gd")
+	# Driven out of the tree so the manual _process stepping is the only clock.
+	var strobe = WeatherCtl.LightningStrobe.new()
+	assert_eq(strobe.light.shadow_enabled, false,
+		"the flash never casts — it must not fight the catcher's shadows")
+	assert_eq(strobe.light.light_energy, 0.0, "dark at rest")
+	assert_eq(strobe.light.light_color, Color(0.75, 0.8, 1.0),
+		"cool white-blue lightning")
+	strobe.flash()
+	var peak := 0.0
+	var pulses_seen := 0
+	var was_dark := true
+	for i in range(120):
+		strobe._process(1.0 / 60.0)
+		var e: float = strobe.light.light_energy
+		peak = maxf(peak, e)
+		if was_dark and e > 0.0:
+			pulses_seen += 1
+		was_dark = e <= 0.0
+	assert_true(peak > 2.0, "the stroke spikes past 2.0 (the flash dominates the storm)")
+	assert_true(pulses_seen >= 2, "the stroke is multi-pulse (flicker, not a pop)")
+	assert_eq(strobe.light.light_energy, 0.0, "back to dark after the stroke")
 	print("")
 
 

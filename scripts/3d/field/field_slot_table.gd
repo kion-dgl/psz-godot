@@ -74,6 +74,9 @@ extends RefCounted
 ##                        receive the rig (SmoothNormals + per-pixel, their
 ##                        own load path). Default off — pre-#649 fields keep
 ##                        the baked props look
+##   lightning     bool  the storm strobes — a scene-level cool directional
+##                        flashing random multi-pulse strokes (the wetlands'
+##                        dark turn + boss downpour, #649)
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
@@ -188,6 +191,7 @@ const SLOTS := {
 		"lit_surfaces": ["*"],
 		"shadow_catcher": true,
 		"lit_props": true,
+		"lightning": true,
 	},
 	# The octopus boss waits in the same dark downpour.
 	"s02z": {
@@ -201,6 +205,7 @@ const SLOTS := {
 		"lit_surfaces": [],
 		"shadow_catcher": true,
 		"lit_props": true,
+		"lightning": true,
 	},
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the
 	# white-albedo snow reads, moon 0.35 as the shadow source, bake quarter-
