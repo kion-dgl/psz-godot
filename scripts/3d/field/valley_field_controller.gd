@@ -235,6 +235,11 @@ func _ready() -> void:
 	var area_id: String = SessionManager.get_current_area_id()
 	_slot = FieldSlotTableScript.slot_for(area_id, str(_current_cell.get("stage_id", "")))
 	_apply_field_slot()
+	# Lit props (#649): rows that bring the field elements (boxes, fences,
+	# drops, NPCs) onto the receive path raise the GameElement flag — set
+	# before any cell object spawns. _exit_tree clears it so city scenes
+	# (which share the subclasses) never inherit the field rig.
+	GameElement.lit_rig = bool(_slot.get("lit_props", false))
 	if not TimeManager.hour_changed.is_connected(_on_time_hour_changed):
 		TimeManager.hour_changed.connect(_on_time_hour_changed)
 
@@ -377,6 +382,17 @@ func _ready() -> void:
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		# The row's rim pull slides the frustum off the panorama edge (#648).
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
+
+	# The row's post lights (#649): the lamp-post surface (material name
+	# rides the row — "0_light" on every s02a stage) clusters per post and
+	# each head gets a warm omni pool. Runs after the cheat rig's surface
+	# split, but reads per-surface arrays, so unsplit meshes work too. The
+	# s02b/e/z variants carry no such surface and place zero lights.
+	if _slot.has("post_lights") and _map_root:
+		var posts: int = MeshUtils.place_post_lights(_map_root,
+			str(_slot["post_lights"]))
+		if posts > 0:
+			_fdbg("[ValleyField] post lights: %d pool(s) from '%s'" % [posts, _slot["post_lights"]])
 
 	# Load obstacle collision (walls) from separate obstacles GLB.
 	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
@@ -559,6 +575,10 @@ func _ready() -> void:
 
 	_spawn_player(spawn_pos, spawn_rot)
 	_weather._spawn_weather()
+	# The storm rows' lightning (#649): strobes over the dark turn and the
+	# boss downpour — the settled rows stay calm.
+	if _slot.get("lightning", false):
+		WeatherController.build_lightning(self)
 	if from_cell_pos.is_empty():
 		SfxManager.play("res://assets/sfx/common/common_010.wav")
 	await get_tree().process_frame
@@ -752,6 +772,13 @@ func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_done")
 
 
+func _exit_tree() -> void:
+	# The lit-props flag is field-scoped (#649): clear it on the way out so
+	# the city scenes sharing the GameElement subclasses keep their baked,
+	# unlit props look.
+	GameElement.lit_rig = false
+
+
 ## Apply the resolved field slot (#655): pin the hour, apply the phase preset,
 ## then layer the row's rig overrides on top. preview_hour >= 0 re-applies the
 ## active rig at a debug-previewed hour instead of the authored one.
@@ -787,10 +814,33 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# grazing angles — the default normal bias bandings those shadows
 		# (#648). 4.0 holds them smooth without detaching contact shadows.
 		_dir_light.shadow_normal_bias = 4.0
+	if _slot.has("sun_origin"):
+		# Hang the sun at the stage art's baked sun spot (#649 — the
+		# wetlands' rainbow maker): placed and aimed at the origin, which
+		# overrides the preset pitch/yaw entirely. The position doubles as
+		# the compat shadow eye if a row ever re-arms sun shadows.
+		var origin: Array = _slot["sun_origin"]
+		_dir_light.global_position = Vector3(
+			float(origin[0]), float(origin[1]), float(origin[2]))
+		_dir_light.look_at(Vector3.ZERO, Vector3.UP)
 	if _slot.has("sun_pitch"):
 		# The DAY band parks every hour at −45° (#648): rows that want a
 		# noon (steep) or afternoon (low, long-shadow) character pin it.
+		# Applied AFTER sun_origin so a pinned elevation survives the
+		# aim — the wetlands pins −49 over the rainbow spot's steep aim
+		# (kion read-out: longer shadows).
 		_dir_light.rotation_degrees.x = float(_slot["sun_pitch"])
+	# Overcast rows (#649): the phase preset ships warm daylight — moods
+	# like the wetlands' flat gray desaturate the rig and the sky bands
+	# (the DAY preset's warm light would read sunny through any gap).
+	if _slot.has("sun_color"):
+		_dir_light.light_color = _slot["sun_color"]
+	if _slot.has("ambient_color"):
+		_world_env.environment.ambient_light_color = _slot["ambient_color"]
+	if _slot.has("sky_top_color"):
+		_sky_material.sky_top_color = _slot["sky_top_color"]
+	if _slot.has("sky_horizon_color"):
+		_sky_material.sky_horizon_color = _slot["sky_horizon_color"]
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
@@ -880,12 +930,11 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.camera_rotation = rot + PI
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
-	# Slots with real directional shadows skip it (#646): a shadow-casting
-	# sun (#648) or moon casts dynamic shadows there, and blob + real shadow
-	# reads as a double shadow. Enclosed stage shells were disarmed above so
-	# the sun reaches every room's interior — the player always has its
-	# dynamic shadow under a shadow row.
-	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false)):
+	# Slots with real dynamic shadows skip it (#646): a shadow-casting sun
+	# (#648) or moon, or lantern pools (#649 — the wetlands' post omnis are
+	# the shadow source; blob + lantern shadow reads as a double shadow).
+	if not (_slot.get("moon_shadows", false) or _slot.get("sun_shadows", false) \
+			or _slot.has("post_lights")):
 		_blob_shadow = MeshUtils.make_player_blob()
 		add_child(_blob_shadow)
 		_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)

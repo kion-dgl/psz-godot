@@ -253,11 +253,7 @@ func _readout() -> void:
 
 
 func _build_status_label() -> void:
-	_status = Label.new()
-	_status.position = Vector2(12, 12)
-	_status.add_theme_font_size_override("font_size", 18)
-	_status.modulate = Color(1, 1, 0.8, 0.9)
-	add_child(_status)
+	_status = FieldLabScript.make_status_label(self)
 	_update_status()
 
 

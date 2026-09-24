@@ -55,6 +55,11 @@ func _load_npc_model() -> void:
 
 	model = packed.instantiate()
 	add_child(model)
+	# The wetlands overcast rig lights NPCs with everything else (#649) —
+	# before the texture pass below so its duplicates inherit the flip.
+	if lit_rig:
+		SmoothNormals.ensure(model, 2)
+		SmoothNormals.make_lit(model)
 
 	# Apply separate texture if specified
 	var tex_path: String = entry.get("texture", "")

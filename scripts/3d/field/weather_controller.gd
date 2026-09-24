@@ -57,6 +57,10 @@ static func build_weather_node(weather: String) -> GPUParticles3D:
 		return _build_snow_node()
 	if weather == "sand":
 		return _build_sand_node()
+	if weather == "rain":
+		return _build_rain_node(380, 8.0, 10.0, 0.45, 0.32)
+	if weather == "drizzle":
+		return _build_rain_node(160, 6.0, 8.0, 0.35, 0.22)
 	return null
 
 
@@ -157,6 +161,127 @@ static func _build_sand_node() -> GPUParticles3D:
 	sand.preprocess = 4.0
 	sand.position.y = 3.0
 	return sand
+
+
+## The wetlands' rain (#649), in two weights on the same recipe — blue-gray
+## streaks on FIXED_Y billboards through the volume above the player
+## (a plain particle billboard would pin the streak flat to the screen at
+## glancing angles and read as fog):
+##   "rain"    the A/Z heavy-overcast downpour — 380 streaks, 0.32 alpha,
+##             a purposeful 8–10u/s fall
+##   "drizzle" the E/B transition break — 160 short streaks, 0.22 alpha,
+##             a gentle 6–8u/s fall (the baked rainbow reads under this)
+static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
+		streak_len: float, alpha: float) -> GPUParticles3D:
+	var rain := GPUParticles3D.new()
+	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	rain.name = "WeatherRain"
+	rain.amount = amount
+	rain.lifetime = 1.5
+	rain.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	rain.fixed_fps = 30
+	rain.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0.12, -1.0, 0.05)
+	mat.spread = 6.0
+	mat.initial_velocity_min = speed_min
+	mat.initial_velocity_max = speed_max
+	mat.gravity = Vector3.ZERO
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(25, 0.4, 25)
+	mat.scale_min = 0.8
+	mat.scale_max = 1.25
+	rain.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.03, streak_len)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = Color(0.5, 0.6, 0.8, alpha)
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	rain.draw_pass_1 = quad
+
+	rain.preprocess = 4.0
+	rain.position.y = 12.0
+	return rain
+
+
+## The storm's lightning (#649, kion ask): a scene-level cool directional
+## strobing in random multi-pulse strokes — each flash lights the actors
+## and every per-pixel surface (on the wildcard-lit dark turn the whole
+## room blinks) from a fresh random azimuth. Shadows stay off: the flash
+## must not fight the catcher's. The light is built in _init so the unit
+## test can drive _process deterministically out of the tree.
+class LightningStrobe extends Node3D:
+	const PEAK := 3.5            # ≈10× the storm ambient — a flash dominates
+	const WAIT_MIN := 5.0        # seconds between strokes
+	const WAIT_MAX := 14.0
+	const PULSE_DECAY := 0.13
+
+	var light: DirectionalLight3D
+	var _wait := 3.0
+	var _stroke_t := -1.0
+	var _pulses: Array[float] = []
+
+	func _init() -> void:
+		light = DirectionalLight3D.new()
+		light.name = "LightningFlash"
+		light.light_color = Color(0.75, 0.8, 1.0)
+		light.light_energy = 0.0
+		light.shadow_enabled = false
+		add_child(light)
+		_new_azimuth()
+
+	func _process(delta: float) -> void:
+		if _stroke_t < 0.0:
+			_wait -= delta
+			if _wait <= 0.0:
+				flash()
+			return
+		_stroke_t += delta
+		light.light_energy = _envelope(_stroke_t)
+		if _stroke_t > _pulses[_pulses.size() - 1] + PULSE_DECAY:
+			_end()
+
+	## Force a stroke now — the test hook; the field rides the timer.
+	func flash() -> void:
+		_stroke_t = 0.0
+		_pulses = [0.0]
+		var t := 0.12 + randf() * 0.1
+		for i in range(randi_range(1, 2)):
+			_pulses.append(t)
+			t += 0.14 + randf() * 0.12
+		_new_azimuth()
+
+	func _envelope(t: float) -> float:
+		var e := 0.0
+		for p in _pulses:
+			var dt := t - p
+			if dt >= 0.0 and dt < PULSE_DECAY:
+				e = maxf(e, PEAK * (1.0 - dt / PULSE_DECAY))
+		return e
+
+	func _end() -> void:
+		_stroke_t = -1.0
+		light.light_energy = 0.0
+		_wait = randf_range(WAIT_MIN, WAIT_MAX)
+
+	func _new_azimuth() -> void:
+		light.rotation_degrees = Vector3(
+			randf_range(-70.0, -50.0), randf_range(0.0, 360.0), 0.0)
+
+
+## Shared storm-lightning builder — the field controller and the walk labs
+## preview the exact same strobe.
+static func build_lightning(root: Node) -> LightningStrobe:
+	var strobe := LightningStrobe.new()
+	strobe.name = "Lightning"
+	root.add_child(strobe)
+	return strobe
 
 
 func _kick_weather() -> void:

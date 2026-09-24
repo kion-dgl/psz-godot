@@ -13,7 +13,15 @@ extends RefCounted
 ##                        palette between phase presets (e.g. 5.5 pre-dawn)
 ##   weather       String rides the row (#609 unification): "", "snow", …
 ##   sun_energy    float  DirectionalLight3D energy override
+##   sun_color     Color  DirectionalLight3D color override (the phase preset
+##                        ships warm daylight; overcast rows desaturate it
+##                        toward neutral-cool, #649)
 ##   ambient_energy float ambient energy override
+##   ambient_color Color  ambient color override (same overcast use)
+##   sky_top_color Color  ProceduralSkyMaterial overrides — the visible sky
+##   sky_horizon_color Color band under the preset, for moods whose sky must
+##                        read through (overcast gray; no effect where the
+##                        stage's baked panorama hides the sky)
 ##   moon_energy   float  moonlight energy override (moon becomes visible)
 ##   moon_pitch    float  moonlight elevation in degrees (rotation.x; the
 ##                        hour-lerped preset parks it at grazing angles —
@@ -28,6 +36,11 @@ extends RefCounted
 ##   sun_pitch     float  sun elevation in degrees (rotation.x; the DAY band
 ##                        parks every hour at −45° — rows that want a noon
 ##                        or afternoon character pin their own elevation)
+##   sun_origin    [x, y, z] hang the sun AT a world position, aimed at the
+##                        origin (the stage art's baked sun spot — the
+##                        wetlands' rainbow maker, #649; overrides the
+##                        preset pitch/yaw and sets the compat shadow-eye
+##                        position if shadows ever re-arm)
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
@@ -42,17 +55,33 @@ extends RefCounted
 ##                        rest of the stage keeps its bake — the "cheat"
 ##                        strategy (#648 valley): greenery lights, hard
 ##                        surfaces don't (every prop class read bright and
-##                        out of place against the bake). Needs no bake_mix;
-##                        run after the field material pass so special-
-##                        shader surfaces (waterfalls) are skipped
+##                        out of place against the bake). A "*" entry is the
+##                        wildcard (#649 wetlands): the WHOLE stage receives
+##                        per-pixel, bake kept as albedo — real light pools
+##                        on the ground. Needs no bake_mix; run after the
+##                        field material pass so special-shader surfaces
+##                        (waterfalls) are skipped
 ##   shadow_catcher bool the collision shell renders as the shadow receiver
 ##                        — white, multiply-blended, at the walk height:
 ##                        the actors' dynamic shadows multiply onto the
 ##                        bake while lit ground multiplies by ~1 (#648)
+##   post_lights   String material name whose surface geometry marks light
+##                        posts: the pass clusters that surface's vertices
+##                        on the XZ grid (one cluster per post) and drops an
+##                        OmniLight3D at each post head — actors/props read
+##                        the pools, the post itself keeps its bake (#649)
+##   lit_props     bool  field GameElements (boxes, fences, drops, NPCs)
+##                        receive the rig (SmoothNormals + per-pixel, their
+##                        own load path). Default off — pre-#649 fields keep
+##                        the baked props look
+##   lightning     bool  the storm strobes — a scene-level cool directional
+##                        flashing random multi-pulse strokes (the wetlands'
+##                        dark turn + boss downpour, #649)
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
-## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The s03b
-## row is the variant slot so far (#657: the B caves split off the snowfield
+## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
+## s03b row and the wetlands turn (s02b_ga1 + the s02z downpour, #649) are
+## the variant slots so far (#657: the B caves split off the snowfield
 ## night while s03a stages keep the area row).
 
 const DEFAULT_SLOT := {"hour": 10.0}
@@ -118,7 +147,93 @@ const SLOTS := {
 		],
 	},
 
-	"ozette":   {"hour": 10.0},   # interim; #649 authors the overcast mood
+	# ── the wetlands weather arc (#649, kion 2026-09-23) ──
+	# A (area row): the APPROVED pre-transition look, verbatim — the whole
+	# stage on the receive path (lit_surfaces "*": ambient owns the bake,
+	# dark-moody), sun off, the yellow-orange lantern pools painting the
+	# pathway and casting the actors' swinging shadows onto the lit
+	# ground. E is the transition: the rain breaks and a faint warm sun
+	# peeks through the valley contract (unlit bake + catcher floor).
+	# B continues the transition — EXCEPT s02b_ga1, the dark turn
+	# (wildcard-lit again, sun off, the heavy rain, lightning) on the
+	# road into Z, where the octopus boss waits in the same downpour.
+	"ozette": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": ["*"],
+		"post_lights": "0_light",
+		"lit_props": true,
+	},
+	"s02e": {
+		"hour": 10.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_pitch": -49.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": [],
+		"lit_props": true,
+	},
+	# B carries the transition's look.
+	"s02b": {
+		"hour": 10.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(1.0, 0.94, 0.82),
+		"sun_origin": [15.8, 14.7, -55.6],
+		"sun_pitch": -49.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "drizzle",
+		"lit_surfaces": [],
+		"lit_props": true,
+	},
+	# The turn: b_ga1 goes dark and rainy on the road into Z (kion). The
+	# WHOLE stage joins the receive path (lit_surfaces "*"): an unlit bake
+	# can't be darkened, and with the sun off the catcher already holds
+	# the floor at ambient — full-bright baked edges (water, walls, the
+	# painted sky) read stupidly bright against it (kion read-outs).
+	"s02b_ga1": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "rain",
+		"lit_surfaces": ["*"],
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lightning": true,
+	},
+	# The octopus boss waits in the same dark downpour.
+	"s02z": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.70, 0.75, 0.82),
+		"sky_top_color": Color(0.42, 0.47, 0.53),
+		"sky_horizon_color": Color(0.58, 0.62, 0.66),
+		"weather": "rain",
+		"lit_surfaces": [],
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lightning": true,
+	},
 	# Snowfield night — the #646 lock, verbatim: sun off, bright ambient so the
 	# white-albedo snow reads, moon 0.35 as the shadow source, bake quarter-
 	# mixed for depth. Lantern pools punch through via ×12 spore-light energy.

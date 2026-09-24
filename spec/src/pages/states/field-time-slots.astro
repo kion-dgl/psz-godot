@@ -15,7 +15,11 @@ import Concept from '../../layouts/Concept.astro';
 const slots = [
   { key: 's03b', area: 'Snowfield B caves (variant row)', hour: '5.5 — pre-dawn', weather: 'snow (open ceilings)', note: 'LOCKED (walk-lab read-out): moon 0.6 @ −55°, ambient 0.05, bake 0.75, geometry casting; kinoko spores + anchors authored' },
   { key: 'gurhacia', area: 'Valley (s01)', hour: '10.0 — day', weather: 'sand', note: 'the cheat rig (#648): stage keeps its bake; sun 0.90 / ambient 0.40 @ −60° lights actors + lit_surfaces (greenery only — every hard-surface prop read out of place); the collision-shell shadow catcher multiplies the actors\' dynamic shadows onto the walkable ground; sand drift' },
-  { key: 'ozette', area: 'Wetlands (s02)', hour: '10.0 — day', weather: '—', note: 'interim; #649 authors the overcast mood' },
+  { key: 'ozette', area: 'Wetlands A (s02a)', hour: '10.0 — day', weather: 'drizzle', note: 'the approved pre-transition look (#649): the WHOLE stage receives (lit_surfaces "*"), sun off, ambient 0.35 — the yellow-orange electric lanterns are the light, painting pools on the pathway and casting the actors\' swinging shadows onto the lit ground; lit_props brings boxes/fences/drops/NPCs onto the receive path' },
+  { key: 's02e', area: 'Wetlands E transition', hour: '10.0 — day', weather: 'drizzle', note: 'the rain breaks: the valley contract (unlit bake + catcher floor) with a faint warm sun (0.10) hung at the baked sun spot (sun_origin + pinned −49° pitch) casting the player\'s shadow under a drizzle — the baked rainbow reads' },
+  { key: 's02b', area: 'Wetlands B (s02b_*)', hour: '10.0 — day', weather: 'drizzle', note: 'continues the transition\'s style verbatim (variant row)' },
+  { key: 's02b_ga1', area: 'Wetlands B turn', hour: '10.0 — day', weather: 'rain', note: 'the dark turn: sun off, the heavy rain, lightning — and the WHOLE stage joins the receive path (lit_surfaces "*"): full-bake edges beside the catcher-held floor read stupidly bright — the road into Z (stage-level row)' },
+  { key: 's02z', area: 'Wetlands Z boss', hour: '10.0 — day', weather: 'rain', note: 'the octopus boss waits in the same dark downpour, lightning strobing (variant row)' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
   { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
@@ -76,7 +80,11 @@ const slots = [
   <code>sun_pitch</code> and its shadows via
   <code>sun_shadows</code>, the tonemap white
   point, and the vertex-color bake mix that blends the baked lighting toward
-  white so the dynamic rig drives the look). A row <strong>MAY</strong> set
+  white so the dynamic rig drives the look). Rows <strong>MAY</strong> also
+  desaturate the preset's warm daylight: <code>sun_color</code>,
+  <code>ambient_color</code>, and the <code>sky_top_color</code> /
+  <code>sky_horizon_color</code> bands carry moods whose light must read
+  neutral (the wetlands' overcast, #649). A row <strong>MAY</strong> set
   <code>geometry_casts_shadows</code>: map geometry ships shadows-off (the
   bake is the look), and a rig that stands on real shadows — moon
   (<code>moon_shadows</code>) or sun (<code>sun_shadows</code>) — turns casting
@@ -117,7 +125,7 @@ const slots = [
   crystals, so the pools are the blue reflective anchors and the red
   mushroom clusters the warm accents, each kinoko cluster dusted by an
   authored pink <code>spores</code> drift. The interim rows (10.0 day)
-  preserve pre-#655 behavior for areas whose identity issues (#648–#654)
+  preserve pre-#655 behavior for areas whose identity issues (#650–#654)
   have not authored a slot yet; each issue replaces its row's values and
   locks them from a playtest read-out.</p>
 
@@ -186,6 +194,72 @@ const slots = [
   invisible (under half a stop) or read wrong (rim scenery casting into
   the play space; double lighting over the bake). A future row that
   wants real stage shadows re-authors those fields knowingly.</p>
+
+  <p>The wetlands rows (#649) tell a <strong>weather arc</strong> in two
+  strategies (kion, 2026-09-23): <strong>A</strong> opens with the
+  approved dark-lantern look — the <em>wildcard</em> rig
+  (<code>lit_surfaces "*"</code>, sun off, ambient 0.35): ambient owns
+  the whole stage's bake (the flat full-bright unlit bake read "ewww
+  too bright" in the free-field pass) and the yellow-orange lantern
+  pools paint the pathway, their omnis casting the actors' swinging
+  shadows onto the lit ground. <strong>E</strong> breaks the rain with
+  the valley contract — unlit bake + the
+  <code>shadow_catcher</code> floor and a faint warm sun peeking
+  through at the baked sun spot (the transition's flatter, brighter
+  read); <strong>B</strong> carries the transition.
+  <strong>s02b_ga1</strong> is the turn, back on the wildcard with the
+  sun off, the heavy rain, and lightning, on the road into
+  <strong>Z</strong>, where the octopus boss waits in the same
+  downpour. (A fake glow disc was tried and read as a circle in the
+  air under the hanging lanterns; the wildcard and the valley contract
+  each won the read-outs where they now sit.) The ambient sits dark
+  (0.35 on A, 0.30 through the transition and the turn — the kion
+  locks) with overcast sky
+  bands, and the blob shadow skips under the shadow/post rows — blob
+  + real shadow reads double. The transition's sun is a faint WARM 0.10
+  (1.0/0.94/0.82) hung at the stage art's baked sun spot —
+  <code>sun_origin</code> places and aims the directional at the origin
+  (the E stage read: 15.8/14.7/−55.6), with <code>sun_pitch</code> −49
+  pinned OVER the aim (applied after it) for longer shadows — the
+  rainbow maker lights the actors and casts their catcher shadows; the
+  panorama eye placement then anchors the compat shadow frustum without
+  touching the aimed direction. <code>post_lights</code> names the lamp surface material
+  (<code>0_light</code>, merged into every s02a stage mesh) whose
+  vertices are clustered on the XZ grid — each connected blob is one
+  post — and each hanging lantern gets an electric omni pool
+  (yellow-orange 1.0/0.7/0.3 — the kion color call, the debug blue
+  retired after receive-path confirmation — light radius 11, ~1.2m under
+  the pole tip, energy 5 (the kion ×0.50 read-out) on a flattened 1.0
+  falloff: true
+  inverse-square starves a lantern hanging ~3.8m over its pool; no
+  flame particles ride them — the lamps are electric). The s02b/e/z
+  variants ship no such
+  surface and place nothing. The lanterns <strong>cast</strong> — the one
+  deliberate exception to the placed-omnis-never-cast convention: in the
+  moody dark the nearest lantern is the dominant light, and the actors'
+  shadows must swing with it rather than stay pinned to the weak sun
+  (kion's dark-room read-out, 2026-09-23). The compatibility renderer's
+  dual-paraboloid omni shadows land on the catcher — the stage's only
+  per-pixel receiver, which takes every light's shadow.
+  <code>lit_props</code> raises the
+  field-scoped GameElement flag so boxes, fences, drops, and field NPCs
+  load per-pixel like the player and enemies — the flag is cleared on
+  field exit, so city scenes sharing those subclasses keep their baked
+  look. Weather is the arc's rain in two weights on one recipe —
+  blue-gray streaks on FIXED_Y billboards through the volume above the
+  player: <code>rain</code>, the A/Z heavy-overcast downpour (380
+  streaks, 0.32 alpha, a purposeful 8–10u/s fall), and
+  <code>drizzle</code>, the E/B transition break (160 short streaks,
+  0.22 alpha, a gentle 6–8u/s fall — the E stages' baked rainbow,
+  s02_0_niji, reads under it and the peeking sun), built by the shared
+  WeatherController like snow and sand. The storm rows
+  (<code>s02b_ga1</code>, <code>s02z</code>) also carry
+  <code>lightning</code>: a scene-level cool directional strobing
+  random multi-pulse strokes — each flash lights the receive path (on
+  the wildcard-lit turn, the whole room blinks) from a fresh azimuth,
+  never casting. The wetlands walk lab
+  (<code>wetlands_walktest</code>) owns the tuning until locked from a
+  read-out.</p>
 
   <h2>Weather precedence</h2>
   <ul>

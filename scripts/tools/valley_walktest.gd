@@ -276,19 +276,11 @@ func _region_luma(img: Image, at: Vector2i, box: int) -> float:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
-	match (event as InputEventKey).keycode:
-		KEY_COMMA:
-			_env.ambient_light_energy = maxf(0.0, _env.ambient_light_energy - 0.05)
-		KEY_PERIOD:
-			_env.ambient_light_energy += 0.05
-		KEY_9:
-			_dir_light.light_energy = maxf(0.0, _dir_light.light_energy - 0.05)
-		KEY_0:
-			_dir_light.light_energy += 0.05
-		KEY_7:
-			_dir_light.rotation_degrees.x = maxf(-89.0, _dir_light.rotation_degrees.x - 5.0)
-		KEY_8:
-			_dir_light.rotation_degrees.x = minf(-5.0, _dir_light.rotation_degrees.x + 5.0)
+	var keycode: int = (event as InputEventKey).keycode
+	if FieldLabScript.handle_tune_key(keycode, _env, _dir_light):
+		_update_status()
+		return
+	match keycode:
 		KEY_BRACKETLEFT:
 			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
 		KEY_BRACKETRIGHT:
@@ -299,16 +291,6 @@ func _input(event: InputEvent) -> void:
 		KEY_EQUAL:
 			_bake_mix = minf(1.0, _bake_mix + 0.05)
 			SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
-		KEY_M:
-			_dir_light.shadow_enabled = not _dir_light.shadow_enabled
-		KEY_F:
-			_dir_light.shadow_normal_bias = maxf(0.0, _dir_light.shadow_normal_bias - 1.0)
-		KEY_G:
-			_dir_light.shadow_normal_bias = minf(16.0, _dir_light.shadow_normal_bias + 1.0)
-		KEY_C:
-			_dir_light.shadow_bias = maxf(0.0, _dir_light.shadow_bias - 0.05)
-		KEY_V:
-			_dir_light.shadow_bias = minf(1.0, _dir_light.shadow_bias + 0.05)
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()] \
 				if _stage_id in STAGES else STAGES[0]
@@ -323,29 +305,14 @@ func _input(event: InputEvent) -> void:
 
 
 ## The field scene's environment + the production slot apply — the real
-## gurhacia row the field controller resolves (hour 10 day, sun the shadow
-## source), with the row's energies and sun_shadows honored verbatim.
+## gurhacia row the field controller resolves, via the shared lab boot.
 func _build_environment() -> void:
-	var built := FieldLabScript.build_environment(self)
+	var built := FieldLabScript.boot_environment(self, "gurhacia", _stage_id)
 	_env = built["env"]
 	_sky_mat = built["sky_mat"]
 	_dir_light = built["dir_light"]
 	_moonlight = built["moonlight"]
-	_slot = FieldSlotTableScript.slot_for("gurhacia", _stage_id)
-	FieldLabScript.apply_slot(_slot, _env, _sky_mat, _dir_light, _moonlight)
-	if not OS.get_environment("PSZ_WALK_SUN_PITCH").is_empty():
-		_dir_light.rotation_degrees.x = float(OS.get_environment("PSZ_WALK_SUN_PITCH"))
-	if OS.get_environment("PSZ_WALK_SUN_SHADOWS") == "0":
-		_dir_light.shadow_enabled = false
-	if not OS.get_environment("PSZ_WALK_SHADOW_BIAS").is_empty():
-		_dir_light.shadow_bias = float(OS.get_environment("PSZ_WALK_SHADOW_BIAS"))
-	if not OS.get_environment("PSZ_WALK_SHADOW_NORMAL_BIAS").is_empty():
-		_dir_light.shadow_normal_bias = float(OS.get_environment("PSZ_WALK_SHADOW_NORMAL_BIAS"))
-
-	if not OS.get_environment("PSZ_WALK_SUN").is_empty():
-		_dir_light.light_energy = float(OS.get_environment("PSZ_WALK_SUN"))
-	if not OS.get_environment("PSZ_WALK_AMBIENT").is_empty():
-		_env.ambient_light_energy = float(OS.get_environment("PSZ_WALK_AMBIENT"))
+	_slot = built["slot"]
 	_bake_mix = float(_slot.get("bake_mix", 0.0))
 
 
@@ -357,57 +324,14 @@ func _subfolder() -> String:
 
 
 func _load_stage() -> void:
-	var packed := load(STAGE_GLB_FMT % [_subfolder(), _stage_id, _stage_id]) as PackedScene
-	if not packed:
-		push_error("[ValleyWalk] no stage GLB for %s" % _stage_id)
-		return
-	_map_root = packed.instantiate() as Node3D
-	_map_root.name = "Map"
-	add_child(_map_root)
-	# The field's room-build order verbatim (valley_field_controller._ready):
-	# normals → strip embedded GLB lights → the full surface pass (geometry
-	# casting per the row) → bake neutralize + make_lit → the cheat rig's
-	# authored lit_surfaces.
-	SmoothNormals.ensure(_map_root, 2)
-	WeatherControllerScript.new(null)._strip_embedded_lights(_map_root)
-	var cheat := _slot.has("lit_surfaces") and not _slot.has("bake_mix")
-	MeshUtils.apply_field_materials(_map_root, TEXTURE_FIX_SHADER, WATERFALL_SHADER,
-		_slot.get("geometry_casts_shadows", false), cheat,
-		TEXTURE_FIX_SHADER_UNLIT, _slot.get("lit_surfaces", []))
-	if _slot.has("bake_mix"):
-		SmoothNormals.neutralize_vertex_colors(_map_root, _bake_mix)
-		SmoothNormals.make_lit(_map_root)
-	# The cheat rig, same as the field (#648): authored greenery/prop
-	# surfaces receive the sun, everything else is forced unlit (the
-	# MeshBasic guarantee), the stage keeps its bake.
-	if _slot.has("lit_surfaces"):
-		MeshUtils.split_mesh_surfaces(_map_root)
-		var lit_n: int = MeshUtils.make_lit_surfaces(_map_root, _slot["lit_surfaces"])
-		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
-		print("[ValleyWalk] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
+	_map_root = FieldLabScript.load_field_stage(self, _slot,
+		_subfolder(), _stage_id, _bake_mix)
 
 
-## The stage's collision floor (mattest pattern): covers the real floor, kept
-## invisible — the _m visuals come from the map root above. Its AABB top is
-## the walkable height the sun-enclosure test samples from.
+## The stage's collision floor + the row's catcher, via the shared boot.
 func _load_floor_collision() -> void:
-	var floor_path := FLOOR_GLB_FMT % [_subfolder(), _stage_id, _stage_id]
-	if not ResourceLoader.exists(floor_path):
-		return
-	var floor_root := (load(floor_path) as PackedScene).instantiate() as Node3D
-	add_child(floor_root)
-	floor_root.visible = false
-	_floor_top = MeshUtils.floor_top(floor_root)
-	if MapCollisionBuilder.has_static_body(floor_root):
-		MapCollisionBuilder.setup_map_collision(floor_root)
-	else:
-		MapCollisionBuilder.create_collision_from_meshes(floor_root)
-	# The cheat rig's shadow catcher, same as the field (#648).
-	if _slot.get("shadow_catcher", false):
-		var catcher := MeshUtils.make_shadow_catcher(floor_root)
-		if catcher:
-			add_child(catcher)
-			print("[ValleyWalk] shadow catcher on the collision shell")
+	_floor_top = FieldLabScript.load_floor_collision(self,
+		FLOOR_GLB_FMT % [_subfolder(), _stage_id, _stage_id], _slot)
 
 
 func _spawn_player(pos: Vector3) -> void:
@@ -447,17 +371,10 @@ func _spawn_authored_effects() -> void:
 		_stage_id, lights, other, touched])
 
 
-## The row's weather, as the field spawns it (the shared WeatherController
-## build — no lab copy to drift). PSZ_WALK_WEATHER=0 skips it (clean diffs).
+## The row's weather, as the field spawns it (the shared boot — no lab
+## copy to drift).
 func _spawn_weather() -> void:
-	if OS.get_environment("PSZ_WALK_WEATHER") == "0":
-		return
-	var node := WeatherControllerScript.build_weather_node(str(_slot.get("weather", "")))
-	if not node:
-		return
-	_player.add_child(node)
-	node.restart()
-	print("[ValleyWalk] weather: %s" % str(_slot.get("weather", "")))
+	FieldLabScript.spawn_weather(_player, _slot)
 
 
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
@@ -474,11 +391,7 @@ func _readout() -> void:
 
 
 func _build_status_label() -> void:
-	_status = Label.new()
-	_status.position = Vector2(12, 12)
-	_status.add_theme_font_size_override("font_size", 18)
-	_status.modulate = Color(1, 1, 0.8, 0.9)
-	add_child(_status)
+	_status = FieldLabScript.make_status_label(self)
 	_update_status()
 
 

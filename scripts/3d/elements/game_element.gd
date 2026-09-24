@@ -29,6 +29,13 @@ var model: Node3D
 var interaction_area: Area3D
 var _time: float = 0.0
 
+## Field-lit props (#649): raised by the field controller while a
+## lit_props slot row is active (the wetlands overcast rig) so elements
+## load onto the receive path — smoothed normals + per-pixel shading, the
+## same treatment the player and enemies get on their spawn paths. City
+## scenes never raise it; their props keep the baked, unlit look.
+static var lit_rig := false
+
 
 func _ready() -> void:
 	_load_model()
@@ -54,6 +61,11 @@ func _load_model() -> void:
 
 	model = packed.instantiate()
 	add_child(model)
+	if lit_rig:
+		# Before any subclass texture pass duplicates materials, so the
+		# duplicates inherit the flip.
+		SmoothNormals.ensure(model, 2)
+		SmoothNormals.make_lit(model)
 
 
 ## Set up collision area for interaction/collection

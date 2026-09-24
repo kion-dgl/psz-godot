@@ -165,13 +165,15 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 
 ## The mirror-wrap surface treatment: the custom wrap shader — swapped to
 ## its UNSHADED twin under the cheat rig unless the material is lit-listed
-## (a custom ALBEDO shader is LIT by default: the pass1/deco1 leak). The
-## bake always tints (use_vertex_color pinned true).
+## (a custom ALBEDO shader is LIT by default: the pass1/deco1 leak; "*"
+## wildcards keep every mirror lit, #649). The bake always tints
+## (use_vertex_color pinned true).
 static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 		fix_shader: Shader, unlit_stage: bool, unlit_fix_shader: Shader,
 		keep_lit: Array) -> ShaderMaterial:
 	var shader: Shader = fix_shader
-	if unlit_stage and unlit_fix_shader and not keep_lit.has(std_mat.resource_name):
+	if unlit_stage and unlit_fix_shader \
+			and not (keep_lit.has("*") or keep_lit.has(std_mat.resource_name)):
 		shader = unlit_fix_shader
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = shader
@@ -392,13 +394,16 @@ static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
 ## Flip surface shading by material-name membership — the cheat rig's two
 ## passes are one walk: the lit pass (listed → PER_PIXEL) and the MeshBasic
 ## guarantee (unlisted → UNSHADED, imports are shared so duplicate first).
-## Returns how many surfaces flipped.
+## A "*" entry is the wildcard (#649 wetlands): every surface matches — the
+## lit pass flips the WHOLE stage to per-pixel (bake kept as albedo), and a
+## wildcard keep-list forces nothing unlit. Returns how many surfaces flipped.
 static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> int:
 	var target := BaseMaterial3D.SHADING_MODE_PER_PIXEL if listed_per_pixel \
 			else BaseMaterial3D.SHADING_MODE_UNSHADED
 	var wanted: Dictionary = {}
 	for n in names:
 		wanted[n] = true
+	var wildcard := wanted.has("*")
 	var touched := 0
 	for node in collect_mesh_instances(root, []):
 		var mi := node as MeshInstance3D
@@ -409,7 +414,12 @@ static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> i
 			var std := mat as StandardMaterial3D
 			if std.shading_mode == target:
 				continue
-			if wanted.has(std.resource_name) != listed_per_pixel:
+			# "*" puts every surface on the list — for the lit pass that's
+			# "light everything"; for the unlit pass the list is the KEEP
+			# list, so it means "force nothing" (the two passes read the
+			# same row key with opposite directions).
+			var on_list := wildcard or wanted.has(std.resource_name)
+			if on_list != listed_per_pixel:
 				continue
 			var dup := std.duplicate() as StandardMaterial3D
 			dup.shading_mode = target
@@ -444,6 +454,150 @@ static func make_lit_surfaces(root: Node, names: Array) -> int:
 ## import flags. Returns how many surfaces were forced.
 static func make_unlit(root: Node, keep: Array) -> int:
 	return _flip_shading(root, keep, false)
+
+
+## The row's post lights (#649 wetlands): the lamp posts are one merged
+## surface in the stage mesh (material "0_light" on every s02a stage) — there
+## are no per-post nodes to hang lights on. This pass reads that surface's
+## world-space vertices, clusters them on the XZ grid (a post's footprint is
+## far narrower than the post spacing, so each connected blob is one post),
+## and drops each post's lantern: a single OmniLight3D. The posts are
+## ELECTRIC (kion, 2026-09-23) — no flame particles, no glow disc: the stage
+## receives the rig under this row (lit_surfaces "*"), so the lantern paints
+## its own real pool on the pathway — a fake disc read as a circle in the
+## air under the HANGING lanterns. The light sits ~1.2m under the cluster
+## top (the authored anchors' height, 0.2 down — kion read-out). The energy
+## must punch
+## through the area ambient (the snowfield's ×12 lantern lesson). Matching
+## is by the MESH's own surface material name, not the active override: the
+## 0_light texture is mirror-wrapped, so the fix pass replaces its override
+## with an anonymous ShaderMaterial while the imported surface material
+## keeps the GLB name. Returns how many posts were lit.
+const POST_LIGHT_CELL := 1.1       ## XZ cluster grid cell, in world units
+const POST_LIGHT_MIN_VERTS := 24   ## stray-texel guard — a post is hundreds
+## The lantern color (kion 2026-09-23 call): yellow-orange, light radius 11.
+const POST_LIGHT_COLOR := Color(1.0, 0.7, 0.3)
+const POST_LIGHT_ENERGY := 5.0
+const POST_LIGHT_RANGE := 11.0
+## The falloff departure (kion 2026-09-23 read-out): the placed-light
+## convention's true inverse-square (2.0) starves a HANGING lantern — at
+## the ~3.8m lantern-to-ground distance it leaves a few percent of the
+## energy on the pathway, so the pool reads only at absurd energies (×4 on
+## 8.0 in a black room). 1.0 flattens the curve for the lantern's
+## meters-off-the-ground geometry.
+const POST_LIGHT_ATTENUATION := 1.0
+
+
+static func place_post_lights(root: Node3D, material_name: String) -> int:
+	if material_name.is_empty():
+		return 0
+	var cells := _post_cells(root, material_name)
+	if cells.is_empty():
+		return 0
+	# Flood-fill 8-neighbor blobs — each blob is one post.
+	var visited: Dictionary = {}
+	var placed := 0
+	for cell in cells:
+		if visited.has(cell):
+			continue
+		var blob := _post_blob(cells, cell, visited)
+		if blob.size() >= POST_LIGHT_MIN_VERTS:
+			_spawn_post_pool(root, blob, placed)
+			placed += 1
+	return placed
+
+
+## World vertices of every surface matching the material, binned on the XZ
+## cluster grid.
+static func _post_cells(root: Node3D, material_name: String) -> Dictionary:
+	var cells: Dictionary = {}
+	for node in collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh as ArrayMesh
+		if mesh == null:
+			continue
+		for i in range(mesh.get_surface_count()):
+			if not _surface_named(mi, i, material_name):
+				continue
+			var arrays := mesh.surface_get_arrays(i)
+			if arrays.is_empty():
+				continue
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			if verts.size() == 0:
+				continue
+			var xform := mi.global_transform
+			for v in verts:
+				var w := xform * v
+				var cell := Vector2i(int(floor(w.x / POST_LIGHT_CELL)), \
+					int(floor(w.z / POST_LIGHT_CELL)))
+				if not cells.has(cell):
+					cells[cell] = []
+				(cells[cell] as Array).append(w)
+	return cells
+
+
+## One connected post blob out of the XZ cell grid, marking cells visited.
+static func _post_blob(cells: Dictionary, start, visited: Dictionary) -> Array:
+	visited[start] = true
+	var stack: Array = [start]
+	var blob: Array = []
+	while not stack.is_empty():
+		var c: Vector2i = stack.pop_back()
+		blob.append_array(cells[c])
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var n := Vector2i(c.x + dx, c.y + dz)
+				if not visited.has(n) and cells.has(n):
+					visited[n] = true
+					stack.append(n)
+	return blob
+
+
+## The lantern for one clustered post: a casting yellow-orange omni at the
+## hanging height (~1.2m under the cluster top, 0.2 down of the authored
+## anchors — kion 2026-09-23 read-out).
+static func _spawn_post_pool(root: Node3D, blob: Array, index: int) -> OmniLight3D:
+	var sum := Vector3.ZERO
+	var top: float = blob[0].y
+	for w in blob:
+		sum += w
+		top = maxf(top, w.y)
+	var light := OmniLight3D.new()
+	# Unique per post — a duplicate sibling name gets @-mangled by
+	# add_child, hiding the light from PostLight* lookups (the lab's
+	# position read-out).
+	light.name = "PostLight%d" % (index + 1)
+	light.light_color = POST_LIGHT_COLOR
+	light.light_energy = POST_LIGHT_ENERGY
+	light.omni_range = POST_LIGHT_RANGE
+	light.omni_attenuation = POST_LIGHT_ATTENUATION
+	# The wetlands' lanterns CAST (kion's 2026-09-23 dark-room read-out):
+	# in the moody overcast the nearest lantern is the dominant light, so
+	# the actors' shadows must swing with it — the deliberate exception
+	# to the placed-omnis-never-cast convention. The compat renderer's
+	# dual-paraboloid omni shadows land on the per-pixel ground (the
+	# vertex-shaded-material caveat doesn't apply); only actors cast, so
+	# the extra shadow passes stay cheap.
+	light.shadow_enabled = true
+	light.shadow_blur = 1.0
+	root.add_child(light)
+	light.global_position = Vector3(
+		sum.x / blob.size(), top - 1.2, sum.z / blob.size())
+	return light
+
+
+## Surface material-name match for the placement passes: the active
+## (override) material when it carries a name, else the mesh's own surface
+## material — the mirror-wrap fix pass swaps overrides to anonymous
+## ShaderMaterials, so the imported name only survives on the mesh.
+static func _surface_named(mi: MeshInstance3D, i: int, material_name: String) -> bool:
+	var active := SmoothNormals._active_material(mi, i)
+	if active and active.resource_name == material_name:
+		return true
+	if mi.mesh is ArrayMesh:
+		var own := (mi.mesh as ArrayMesh).surface_get_material(i)
+		return own != null and own.resource_name == material_name
+	return false
 
 
 ## The floor shell's top = the walkable height (#648 sun-enclosure sampling).
