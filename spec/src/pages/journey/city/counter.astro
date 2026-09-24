@@ -16,6 +16,17 @@ import StagePreview from '../../../components/screens/StagePreview';
   <h2>Context</h2>
   <p>Quest management hub. Accept missions, report completions, cancel active quests. Also has the storage counter.</p>
 
+  <h2>Lighting</h2>
+  <p>
+    The mood rig is data-authored (#656): <code>data/stage_configs/city-lights/s00e_sa2.json</code>
+    holds the omni lights (positions, color, energy, range, attenuation, shadows) and the ambient
+    override in Godot units. It is authored in the web <code>#/city-lab</code> tool, which previews
+    the values 1:1 against the scene, and loaded by
+    <code>CityAreaBase._add_authored_lights</code> at scene entry. Until a sidecar lands, the
+    legacy rig (seven warm omnis strung down the hallway at <code>y=4</code>, well above the
+    −10.67 floor) still rides.
+  </p>
+
   <h2>NPCs</h2>
   <ul>
     <li><strong>Guild Counter NPC</strong> — accept/report/cancel quests</li>

@@ -484,6 +484,95 @@ func _add_interior_lights(positions: Array = []) -> void:
 	print("[CityLights] Added %d interior lights" % positions.size())
 
 
+static func parse_lights_spec(text: String) -> Dictionary:
+	## Parse a city-lights sidecar (authored in web #/city-lab) into
+	## OmniLight3D-ready rows: {"lights": [...], "ambient": {...}|{}}.
+	## Each light row carries typed name/pos/color/energy/range/attenuation/
+	## shadows; rows with a bad pos/color are skipped, not fatal. A malformed
+	## file yields {} so callers treat it as "no sidecar".
+	var parsed: Variant = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {}
+	var doc: Dictionary = parsed
+	# A missing lights key is malformed (legacy rig rides); an EMPTY array
+	# present is a valid authored-dark sidecar.
+	if not doc.has("lights") or typeof(doc["lights"]) != TYPE_ARRAY:
+		return {}
+	var lights_raw: Variant = doc["lights"]
+	var out: Array = []
+	for entry in lights_raw:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var spec: Dictionary = entry
+		var pos_raw: Variant = spec.get("pos", [])
+		var col_raw: Variant = spec.get("color", [])
+		if typeof(pos_raw) != TYPE_ARRAY or pos_raw.size() != 3:
+			continue
+		if typeof(col_raw) != TYPE_ARRAY or col_raw.size() != 3:
+			continue
+		var pos := Vector3(float(pos_raw[0]), float(pos_raw[1]), float(pos_raw[2]))
+		var col := Color(float(col_raw[0]), float(col_raw[1]), float(col_raw[2]))
+		out.append({
+			"name": String(spec.get("name", "AuthoredLight")),
+			"pos": pos,
+			"color": col,
+			"energy": float(spec.get("energy", 2.0)),
+			"range": float(spec.get("range", 15.0)),
+			"attenuation": float(spec.get("attenuation", 1.0)),
+			"shadows": bool(spec.get("shadows", false)),
+		})
+	var ambient: Dictionary = {}
+	var amb_raw: Variant = doc.get("ambient", {})
+	if typeof(amb_raw) == TYPE_DICTIONARY:
+		var amb_col: Variant = amb_raw.get("color", [])
+		if typeof(amb_col) == TYPE_ARRAY and amb_col.size() == 3:
+			var col := Color(float(amb_col[0]), float(amb_col[1]), float(amb_col[2]))
+			ambient = {"color": col, "energy": float(amb_raw.get("energy", 1.0))}
+	return {"lights": out, "ambient": ambient}
+
+
+func _add_authored_lights(stage_id: String) -> bool:
+	## Data-driven city lights (#656, #636 direction): load the sidecar the
+	## web #/city-lab tool authors and spawn it — light_energy/omni_range/
+	## omni_attenuation are the exact values the tool previewed. The ambient
+	## override (if any) lands on this scene's WorldEnvironment. Returns
+	## false when no valid sidecar exists; callers keep their legacy rig.
+	var path := "res://data/stage_configs/city-lights/%s.json" % stage_id
+	if not FileAccess.file_exists(path):
+		return false
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var spec := parse_lights_spec(file.get_as_text())
+	if spec.is_empty():
+		push_warning("[CityLights] malformed sidecar %s — keeping legacy rig" % path)
+		return false
+	var rows: Array = spec["lights"]
+	for i in range(rows.size()):
+		var row: Dictionary = rows[i]
+		var light := OmniLight3D.new()
+		light.name = String(row.get("name", "AuthoredLight_%d" % i))
+		var col: Color = row["color"]
+		light.light_color = col
+		light.light_energy = float(row["energy"])
+		light.omni_range = float(row["range"])
+		light.omni_attenuation = float(row["attenuation"])
+		light.shadow_enabled = bool(row["shadows"])
+		var pos: Vector3 = row["pos"]
+		light.position = pos
+		add_child(light)
+	var ambient: Dictionary = spec["ambient"]
+	if not ambient.is_empty():
+		var env_node := find_child("WorldEnvironment", true, false)
+		if env_node is WorldEnvironment and env_node.environment != null:
+			env_node.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+			var amb_col: Color = ambient["color"]
+			env_node.environment.ambient_light_color = amb_col
+			env_node.environment.ambient_light_energy = float(ambient["energy"])
+	print("[CityLights] %s: %d authored lights" % [stage_id, rows.size()])
+	return true
+
+
 static func _load_global_texture_fixes() -> void:
 	if not _global_texture_fixes.is_empty():
 		return

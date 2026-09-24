@@ -4,6 +4,7 @@ import path from 'path';
 import floorMeshPatchPlugin from './vite-plugin-floor-mesh-patch';
 import stageConfigSavePlugin from './vite-plugin-stage-config-save';
 import colliderExportPlugin from './vite-plugin-collider-export';
+import cityLabPlugin from './vite-plugin-city-lab';
 
 export default defineConfig({
   plugins: [
@@ -11,6 +12,7 @@ export default defineConfig({
     floorMeshPatchPlugin(path.resolve(__dirname, '..')),
     stageConfigSavePlugin(path.resolve(__dirname, '..')),
     colliderExportPlugin(path.resolve(__dirname, '..')),
+    cityLabPlugin(path.resolve(__dirname, '..')),
   ],
   base: '/psz-godot/',
   server: {
