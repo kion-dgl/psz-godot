@@ -69,6 +69,16 @@ export const STAGES: StageDef[] = [
     exportPath: 'assets/stages/city_e/market/dairon3.glb',
   },
   {
+    id: 'market-fixed',
+    label: 'Market (dairon3 — fixes applied)',
+    models: [
+      { path: 'assets/stages/city_e/market/dairon3.glb', label: 'dairon3' },
+      { path: 'assets/stages/city_e/market/wall_extension.glb', label: 'wall_extension' },
+    ],
+    vertexColors: true,
+    sceneRig: { ambientColor: [0.95, 0.85, 0.7], ambientEnergy: 1.6, sunEnergy: 0.3 },
+  },
+  {
     id: 'counter',
     label: 'Guild Counter (s00e_sa2)',
     models: [{ path: 'assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2_m.glb', label: 's00e_sa2_m' }],
