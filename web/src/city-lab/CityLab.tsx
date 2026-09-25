@@ -254,12 +254,16 @@ export default function CityLab() {
         if (!(obj instanceof THREE.Mesh)) return;
         const idx = obj.geometry.index;
         const pos = obj.geometry.attributes.position;
+        const uv = obj.geometry.attributes.uv;
         if (!idx || !pos) return;
         const matrix = obj.matrixWorld;
         const world = (i: number): Vec3 => {
           const v = new THREE.Vector3().fromBufferAttribute(pos as THREE.BufferAttribute, i).applyMatrix4(matrix);
           return [v.x, v.y, v.z];
         };
+        const uvOf = uv
+          ? (i: number): [number, number] => [uv.getX(i), uv.getY(i)]
+          : null;
         for (let f = 0; f < idx.count / 3; f++) {
           faces.push({
             meshName: obj.name,
@@ -267,6 +271,9 @@ export default function CityLab() {
             v0: world(idx.getX(f * 3)),
             v1: world(idx.getX(f * 3 + 1)),
             v2: world(idx.getX(f * 3 + 2)),
+            ...(uvOf
+              ? { uvs: [uvOf(idx.getX(f * 3)), uvOf(idx.getX(f * 3 + 1)), uvOf(idx.getX(f * 3 + 2))] as [[number, number], [number, number], [number, number]] }
+              : {}),
           });
         }
       });
@@ -558,7 +565,8 @@ export default function CityLab() {
                   {audit.stats.faces} faces / {audit.stats.meshes} meshes ·{' '}
                   <span style={{ color: '#f66' }}>{audit.stats.byClass.nonfinite} nonfinite</span>{' '}
                   <span style={{ color: '#f80' }}>{audit.stats.byClass['zero-area'] + audit.stats.byClass['duplicate-vertex']} degenerate</span>{' '}
-                  <span style={{ color: '#fc0' }}>{audit.stats.byClass.sliver} sliver</span>
+                  <span style={{ color: '#fc0' }}>{audit.stats.byClass.sliver} sliver</span>{' '}
+                  <span style={{ color: '#c6f' }}>{audit.stats.byClass['uv-degenerate']} uv-deg</span>
                 </div>
               )}
               <div style={{ marginTop: 8, maxHeight: 260, overflowY: 'auto' }}>

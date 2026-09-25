@@ -23,6 +23,12 @@ import type { AuditStats, IssueClass, TriangleIssue, Vec3 } from './types';
 export const ZERO_AREA_EPS = 1e-9;
 export const SLIVER_ASPECT = 40;
 export const DUPLICATE_EPS = 1e-9;
+/** Below this UV span a duplicate-UV face is a deliberate flat-color fill
+ *  (one texel region of the atlas), not a striping bug. */
+export const UV_SPAN_MIN = 0.05;
+export const UV_DUP_EPS = 1e-4;
+
+export type Vec2 = [number, number];
 
 export interface TriFace {
   meshName: string;
@@ -30,6 +36,8 @@ export interface TriFace {
   v0: Vec3;
   v1: Vec3;
   v2: Vec3;
+  /** Per-vertex UVs, when the mesh carries TEXCOORD_0. */
+  uvs?: [Vec2, Vec2, Vec2];
 }
 
 function dist(a: Vec3, b: Vec3): number {
@@ -89,11 +97,31 @@ export function classifyFace(f: TriFace): TriangleIssue | null {
 
   const longest = Math.max(dist(v0, v1), dist(v1, v2), dist(v0, v2));
   const aspect = (longest * longest) / (4 * Math.sqrt(3) * area);
+
+  // Texture-space degeneracy: two verts share a UV, so the face maps onto
+  // a single texel line stretched across real area — visible as stripes
+  // when the sampled line has color variation (flat-band atlas fills do
+  // this harmlessly, hence the span floor). Ranked below the geometric
+  // classes but above slivers, which are the weakest signal.
+  if (f.uvs) {
+    const [a, c, d] = f.uvs;
+    const duvs = [dist2d(a, c), dist2d(c, d), dist2d(a, d)];
+    const hasDup = duvs.some((d2) => d2 < UV_DUP_EPS);
+    const span = Math.max(...duvs);
+    if (hasDup && span > UV_SPAN_MIN) {
+      return { ...base, cls: 'uv-degenerate', severity: 1, area, aspect };
+    }
+  }
+
   if (aspect > SLIVER_ASPECT) {
     return { ...base, cls: 'sliver', severity: 1, area, aspect };
   }
 
   return null;
+}
+
+function dist2d(a: Vec2, b: Vec2): number {
+  return Math.hypot(a[0] - b[0], a[1] - b[1]);
 }
 
 /**
@@ -106,6 +134,7 @@ export function auditTriangles(faces: TriFace[]): { issues: TriangleIssue[]; sta
     nonfinite: 0,
     'zero-area': 0,
     'duplicate-vertex': 0,
+    'uv-degenerate': 0,
     sliver: 0,
   };
   const meshes = new Set<string>();

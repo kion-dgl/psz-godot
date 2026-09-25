@@ -106,7 +106,7 @@ export function stageById(id: string): StageDef {
 /* Triangle audit                                                      */
 /* ------------------------------------------------------------------ */
 
-export type IssueClass = 'nonfinite' | 'zero-area' | 'duplicate-vertex' | 'sliver';
+export type IssueClass = 'nonfinite' | 'zero-area' | 'duplicate-vertex' | 'uv-degenerate' | 'sliver';
 
 export interface TriangleIssue {
   /** `${meshName}#${faceIndex}` */

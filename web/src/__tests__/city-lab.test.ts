@@ -5,6 +5,26 @@ import { lightsDocJson, lightsGdscript, parseLightsDoc, toLightsDoc } from '../c
 import { robustStageBox, threePointLightProps } from '../city-lab/lightingRig';
 import { STAGES } from '../city-lab/types';
 
+const faceWithUvs = (
+  meshName: string,
+  faceIndex: number,
+  v0: number[],
+  v1: number[],
+  v2: number[],
+  uvs: [number, number][],
+): TriFace => ({
+  meshName,
+  faceIndex,
+  v0: [v0[0], v0[1], v0[2]],
+  v1: [v1[0], v1[1], v1[2]],
+  v2: [v2[0], v2[1], v2[2]],
+  uvs: [
+    [uvs[0][0], uvs[0][1]],
+    [uvs[1][0], uvs[1][1]],
+    [uvs[2][0], uvs[2][1]],
+  ],
+});
+
 const face = (meshName: string, faceIndex: number, v0: number[], v1: number[], v2: number[]): TriFace => ({
   meshName,
   faceIndex,
@@ -51,6 +71,39 @@ describe('classifyFace', () => {
   it('keys issues by mesh#face', () => {
     const issue = classifyFace(face('s00e_sa1_m.001', 42, [0, 0, 0], [NaN, 0, 0], [1, 1, 1]));
     expect(issue?.key).toBe('s00e_sa1_m.001#42');
+  });
+});
+
+describe('uv-degenerate faces (stripes)', () => {
+  // The exact dairon2 shape: two of three verts share a UV with real
+  // span — the whole face samples one texel line = stripes.
+  it('flags a duplicate-UV pair with real span', () => {
+    const issue = classifyFace(
+      faceWithUvs('m', 318, [-13.048, 0.73, 37.113], [-8.443, 1.398, 39.043], [-7.689, -0.015, 38.421], [
+        [1.75, 0.753], [2.25, 0.753], [2.25, 0.753],
+      ]),
+    );
+    expect(issue?.cls).toBe('uv-degenerate');
+    expect(issue?.severity).toBe(1);
+  });
+
+  it('leaves deliberate single-texel fills alone (all UVs identical)', () => {
+    expect(
+      classifyFace(faceWithUvs('m', 0, [0, 0, 0], [1, 0, 0], [0, 1, 0], [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5]])),
+    ).toBeNull();
+  });
+
+  it('leaves healthy UV triangles alone', () => {
+    expect(
+      classifyFace(faceWithUvs('m', 1, [0, 0, 0], [1, 0, 0], [0, 1, 0], [[0, 0], [0.5, 0], [0, 0.5]])),
+    ).toBeNull();
+  });
+
+  it('ranks below geometric degenerates', () => {
+    const issue = classifyFace(
+      faceWithUvs('m', 2, [0, 0, 0], [1, 1, 1], [2, 2, 2], [[0, 0], [0.5, 0], [0.5, 0]]),
+    );
+    expect(issue?.cls).toBe('zero-area');
   });
 });
 
