@@ -305,6 +305,23 @@ export default function CityLab() {
 
   const focusedIssue = audit?.issues.find((i) => i.key === focusKey) ?? null;
 
+  /** The selected triangle's outline: cyan when driven from the audit
+   *  list, white when picked straight off the mesh. */
+  const outline = useMemo(() => {
+    if (focusedIssue) {
+      return {
+        v0: focusedIssue.v0,
+        v1: focusedIssue.v1,
+        v2: focusedIssue.v2,
+        color: '#00e5ff',
+      };
+    }
+    if (pick && mode !== 'lighting') {
+      return { v0: pick.v0, v1: pick.v1, v2: pick.v2, color: '#ffffff' };
+    }
+    return null;
+  }, [focusedIssue, pick, mode]);
+
   /* ------------------------------------------------------------ */
   /* Pick routing                                                  */
   /* ------------------------------------------------------------ */
@@ -317,6 +334,8 @@ export default function CityLab() {
         return;
       }
       setPick(p);
+      // A fresh scene pick supersedes the audit-list focus.
+      if (p) setFocusKey(null);
     },
     [mode, placeArmed, selected, draft, setDraft],
   );
@@ -477,6 +496,7 @@ export default function CityLab() {
             markedFaces={mode === 'triangles' ? markedFaces : NO_MARKS}
             issues={audit?.issues ?? []}
             focus={focusedIssue ? focusedIssue.centroid : null}
+            outline={outline}
             lights={mode === 'lighting' ? previewLights : []}
             selectedLightId={selectedLightId}
             ambientColor={previewAmbient.color}

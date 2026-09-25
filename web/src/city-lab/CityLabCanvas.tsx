@@ -246,6 +246,45 @@ function FocusMarker({ target }: { target: Vec3 }) {
   );
 }
 
+export interface OutlineSpec {
+  v0: Vec3;
+  v1: Vec3;
+  v2: Vec3;
+  color: string;
+}
+
+/** The selected triangle itself: a bright edge loop plus a translucent
+ *  fill so even needle-thin slivers read at a glance. Built from stored
+ *  world verts, so it still draws when the face is deleted from the
+ *  display by a mark (the outline is the record of what was there). */
+function TriangleOutline({ spec }: { spec: OutlineSpec }) {
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute(
+      'position',
+      new THREE.Float32BufferAttribute([...spec.v0, ...spec.v1, ...spec.v2], 3),
+    );
+    return g;
+  }, [spec]);
+  return (
+    <group>
+      <mesh geometry={geometry} renderOrder={997} raycast={() => null}>
+        <meshBasicMaterial
+          color={spec.color}
+          transparent
+          opacity={0.3}
+          depthTest={false}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+      <lineLoop geometry={geometry} renderOrder={999} raycast={() => null}>
+        <lineBasicMaterial color={spec.color} depthTest={false} transparent toneMapped={false} />
+      </lineLoop>
+    </group>
+  );
+}
+
 interface LightRigProps {
   lights: LightSpec[];
   selectedId: string | null;
@@ -435,6 +474,8 @@ export interface CityLabCanvasProps {
   markedFaces: Map<string, Set<number>>;
   issues: TriangleIssue[];
   focus: Vec3 | null;
+  /** Edge outline of the selected triangle (list focus or scene pick). */
+  outline: OutlineSpec | null;
   lights: LightSpec[];
   selectedLightId: string | null;
   ambientColor: Vec3;
@@ -451,7 +492,7 @@ export interface CityLabCanvasProps {
 
 export default function CityLabCanvas(props: CityLabCanvasProps) {
   const {
-    def, mode, markedFaces, issues, focus, lights, selectedLightId,
+    def, mode, markedFaces, issues, focus, outline, lights, selectedLightId,
     ambientColor, ambientEnergy, sunEnergy,
     onPick, onSelectLight, onMoveLight, onRootReady, onGltfsReady,
   } = props;
@@ -493,6 +534,7 @@ export default function CityLabCanvas(props: CityLabCanvasProps) {
         <Markers def={def} />
       </Suspense>
       {focus && <FocusMarker target={focus} />}
+      {outline && <TriangleOutline spec={outline} />}
       {mode !== 'lighting' && <gridHelper args={[40, 40, 0x444466, 0x2a2a44]} />}
       <axesHelper args={[2]} />
       <OrbitControls makeDefault />
