@@ -96,6 +96,40 @@ export function vec3ToColor(v: Vec3): THREE.Color {
 }
 
 /**
+ * Outlier-robust stage bounds. dairon2 ships six stray vertices shot to
+ * y = −1e9 (the spike triangles the audit flags); Box3.setFromObject on
+ * the whole stage would span a billion units and any auto-fit camera
+ * lands sub-pixel. Nothing in the game exceeds ~600 units (the market's
+ * panorama skirt is the largest at ~400), so when the whole-stage box
+ * blows past FRAME_CAP only the absurd boxes are dropped — a legit
+ * ground plane sitting 200× above the tile-size median still frames.
+ */
+export const FRAME_CAP = 2000;
+
+export function robustStageBox(root: THREE.Object3D): THREE.Box3 {
+  root.updateMatrixWorld(true);
+  const entries: { box: THREE.Box3; size: number }[] = [];
+  root.traverse((child) => {
+    const mesh = child as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.visible) return;
+    const box = new THREE.Box3().setFromObject(mesh);
+    if (box.isEmpty()) return;
+    entries.push({ box, size: box.getSize(new THREE.Vector3()).length() });
+  });
+  const full = new THREE.Box3();
+  for (const e of entries) full.union(e.box);
+  if (entries.length === 0 || full.getSize(new THREE.Vector3()).length() <= FRAME_CAP) {
+    return full;
+  }
+  // Poisoned stage: drop only boxes on the order of the poison itself.
+  const limit = Math.max(FRAME_CAP, full.getSize(new THREE.Vector3()).length() * 0.5);
+  const out = new THREE.Box3();
+  const kept = entries.filter((e) => e.size <= limit);
+  for (const e of kept.length > 0 ? kept : entries) out.union(e.box);
+  return out;
+}
+
+/**
  * Swap materials on a prepared stage node for the requested view.
  * `bake` is the reference look (what Godot's unlit path renders); `lit`
  * is the authored-lighting workbench. Source material NAME is preserved —

@@ -5,7 +5,7 @@ import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.j
 import * as THREE from 'three';
 import { assetUrl } from '../utils/assets';
 import { STAGES, type CityLabMode, type LightSpec, type StageDef, type TriangleIssue, type Vec3 } from './types';
-import { applyViewMaterials, threePointLightProps, vec3ToColor } from './lightingRig';
+import { applyViewMaterials, robustStageBox, threePointLightProps, vec3ToColor } from './lightingRig';
 
 export interface FacePick {
   meshName: string;
@@ -404,14 +404,17 @@ function Markers({ def }: { def: StageDef }) {
   );
 }
 
-/** Frame the freshly loaded stage once per stage change. */
+/** Frame the freshly loaded stage once per stage change. Bounds come
+ *  from robustStageBox — the raw Box3 would frame to dairon2's stray
+ *  y = −1e9 spike vertices and clip the whole market out of view. */
 function FitCamera({ watchKey, rootRef }: { watchKey: string; rootRef: React.RefObject<THREE.Object3D | null> }) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null;
   useEffect(() => {
     const root = rootRef.current;
     if (!root || !controls) return;
-    const box = new THREE.Box3().setFromObject(root);
+    const box = robustStageBox(root);
+    if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     const radius = Math.max(size.length() / 2, 1);

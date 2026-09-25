@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import * as THREE from 'three';
 import { auditTriangles, classifyFace, faceArea, type TriFace } from '../city-lab/triangleAudit';
 import { lightsDocJson, lightsGdscript, parseLightsDoc, toLightsDoc } from '../city-lab/lightExport';
-import { threePointLightProps } from '../city-lab/lightingRig';
+import { robustStageBox, threePointLightProps } from '../city-lab/lightingRig';
 import { STAGES } from '../city-lab/types';
 
 const face = (meshName: string, faceIndex: number, v0: number[], v1: number[], v2: number[]): TriFace => ({
@@ -173,5 +174,53 @@ describe('stage table', () => {
     expect(counter?.vertexColors).toBe(false);
     const market = STAGES.find((s) => s.id === 'market');
     expect(market?.exportPath).toBe('assets/stages/city_e/market/dairon3.glb');
+  });
+});
+
+describe('robustStageBox', () => {
+  const boxMesh = (w: number, h: number, d: number, x = 0, y = 0, z = 0) => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d));
+    mesh.position.set(x, y, z);
+    return mesh;
+  };
+
+  it('frames a clean stage normally', () => {
+    const root = new THREE.Group();
+    root.add(boxMesh(10, 10, 10, 0, 0, 0), boxMesh(4, 4, 4, 30, 0, 0));
+    const box = robustStageBox(root);
+    expect(box.min.x).toBeCloseTo(-5, 5);
+    expect(box.max.x).toBeCloseTo(32, 5);
+  });
+
+  it('ignores dairon2-style spike vertices a billion units out', () => {
+    // Reproduces the blank-market bug: one mesh carries stray vertices at
+    // y = -1e9 (the six spike triangles), poisoning a whole-stage Box3.
+    const root = new THREE.Group();
+    root.add(boxMesh(20, 20, 20, 0, 0, 100));
+    const spike = new THREE.BufferGeometry();
+    spike.setAttribute(
+      'position',
+      new THREE.BufferAttribute(
+        new Float32Array([
+          -32.69, -1e9, 25.23,
+          -32.6, -1e9, 24.97,
+          -32.6, 11.09, 24.97,
+        ]),
+        3,
+      ),
+    );
+    const spikeMesh = new THREE.Mesh(spike);
+    spikeMesh.position.set(0, 0, 100);
+    root.add(spikeMesh);
+    const box = robustStageBox(root);
+    expect(box.min.y).toBeGreaterThan(-1e6);
+    expect(box.getSize(new THREE.Vector3()).length()).toBeLessThan(100);
+  });
+
+  it('falls back to every mesh when all boxes are uniformly huge', () => {
+    const root = new THREE.Group();
+    root.add(boxMesh(5000, 5000, 5000), boxMesh(6000, 6000, 6000));
+    const box = robustStageBox(root);
+    expect(box.isEmpty()).toBe(false);
   });
 });
