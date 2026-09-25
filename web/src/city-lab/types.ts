@@ -58,8 +58,21 @@ export interface StageDef {
 
 export const STAGES: StageDef[] = [
   {
+    // What the game renders (city_market.tscn instances dairon3).
     id: 'market',
-    label: 'Market (dairon2 + wall extension)',
+    label: 'Market (dairon3 — the shipped build)',
+    models: [
+      { path: 'assets/stages/city_e/market/dairon3.glb', label: 'dairon3' },
+      { path: 'assets/stages/city_e/market/wall_extension.glb', label: 'wall_extension' },
+    ],
+    vertexColors: true,
+    sceneRig: { ambientColor: [0.95, 0.85, 0.7], ambientEnergy: 1.6, sunEnergy: 0.3 },
+  },
+  {
+    // The source asset — kept for before/after audit comparison
+    // (spike slivers, stripe faces, the dark cent5 quad).
+    id: 'market-source',
+    label: 'Market (dairon2 — source, pre-fix)',
     models: [
       { path: 'assets/stages/city_e/market/dairon2.glb', label: 'dairon2' },
       { path: 'assets/stages/city_e/market/wall_extension.glb', label: 'wall_extension' },
@@ -67,16 +80,6 @@ export const STAGES: StageDef[] = [
     vertexColors: true,
     sceneRig: { ambientColor: [0.95, 0.85, 0.7], ambientEnergy: 1.6, sunEnergy: 0.3 },
     exportPath: 'assets/stages/city_e/market/dairon3.glb',
-  },
-  {
-    id: 'market-fixed',
-    label: 'Market (dairon3 — fixes applied)',
-    models: [
-      { path: 'assets/stages/city_e/market/dairon3.glb', label: 'dairon3' },
-      { path: 'assets/stages/city_e/market/wall_extension.glb', label: 'wall_extension' },
-    ],
-    vertexColors: true,
-    sceneRig: { ambientColor: [0.95, 0.85, 0.7], ambientEnergy: 1.6, sunEnergy: 0.3 },
   },
   {
     id: 'counter',

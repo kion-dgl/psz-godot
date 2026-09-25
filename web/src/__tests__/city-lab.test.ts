@@ -221,18 +221,20 @@ describe('threePointLightProps', () => {
 });
 
 describe('stage table', () => {
-  it('gives the counter a sidecar id and the market a lineage export path', () => {
+  it('gives the counter a sidecar id and the market-source a lineage export path', () => {
     const counter = STAGES.find((s) => s.id === 'counter');
     expect(counter?.lightStageId).toBe('s00e_sa2');
     expect(counter?.vertexColors).toBe(false);
-    const market = STAGES.find((s) => s.id === 'market');
-    expect(market?.exportPath).toBe('assets/stages/city_e/market/dairon3.glb');
+    const source = STAGES.find((s) => s.id === 'market-source');
+    expect(source?.exportPath).toBe('assets/stages/city_e/market/dairon3.glb');
   });
 
-  it('pairs the market with its fixed dairon3 build (what the game renders)', () => {
-    const fixed = STAGES.find((s) => s.id === 'market-fixed');
-    expect(fixed?.models[0].path).toBe('assets/stages/city_e/market/dairon3.glb');
-    expect(fixed?.exportPath).toBeUndefined();
+  it('shows the shipped dairon3 build as the primary market, dairon2 as the pre-fix source', () => {
+    const market = STAGES.find((s) => s.id === 'market');
+    expect(market?.models[0].path).toBe('assets/stages/city_e/market/dairon3.glb');
+    const source = STAGES.find((s) => s.id === 'market-source');
+    expect(source?.models[0].path).toBe('assets/stages/city_e/market/dairon2.glb');
+    expect(source?.exportPath).toBe('assets/stages/city_e/market/dairon3.glb');
   });
 });
 

@@ -142,7 +142,7 @@ const input: React.CSSProperties = {
 
 export default function CityLab() {
   const [stageId, setStageId] = useState<string>(
-    () => localStorage.getItem(LS_STAGE) ?? STAGES[1].id,
+    () => localStorage.getItem(LS_STAGE) ?? STAGES[0].id,
   );
   const [mode, setMode] = useState<CityLabMode>(
     () => (localStorage.getItem(LS_MODE) as CityLabMode) ?? 'inspect',
@@ -311,6 +311,38 @@ export default function CityLab() {
   };
 
   const focusedIssue = audit?.issues.find((i) => i.key === focusKey) ?? null;
+  /** A double-clicked face to fly to (inspect navigation). */
+  const [framePick, setFramePick] = useState<FacePick | null>(null);
+
+  /** Tight camera frame for the focused triangle (audit list ⇄ scene). */
+  const issueFrame = useMemo(() => {
+    if (!focusedIssue) return null;
+    const edge = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    const longest = Math.max(
+      edge(focusedIssue.v0, focusedIssue.v1),
+      edge(focusedIssue.v1, focusedIssue.v2),
+      edge(focusedIssue.v0, focusedIssue.v2),
+    );
+    return { center: focusedIssue.centroid, radius: longest * 1.5, key: focusedIssue.key };
+  }, [focusedIssue]);
+
+  const pickFrame = useMemo(() => {
+    if (!framePick) return null;
+    const edge = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    const longest = Math.max(
+      edge(framePick.v0, framePick.v1),
+      edge(framePick.v1, framePick.v2),
+      edge(framePick.v0, framePick.v2),
+    );
+    const center: Vec3 = [
+      (framePick.v0[0] + framePick.v1[0] + framePick.v2[0]) / 3,
+      (framePick.v0[1] + framePick.v1[1] + framePick.v2[1]) / 3,
+      (framePick.v0[2] + framePick.v1[2] + framePick.v2[2]) / 3,
+    ];
+    return { center, radius: longest * 1.5, key: `pick:${framePick.meshName}#${framePick.faceIndex}` };
+  }, [framePick]);
+
+  const focusFrame = issueFrame ?? pickFrame;
 
   /** The selected triangle's outline: cyan when driven from the audit
    *  list, white when picked straight off the mesh. */
@@ -465,6 +497,7 @@ export default function CityLab() {
             setStageId(e.target.value);
             setPick(null);
             setFocusKey(null);
+            setFramePick(null);
             setSelectedLightId(null);
             setPlaceArmed(false);
           }}
@@ -504,6 +537,8 @@ export default function CityLab() {
             issues={audit?.issues ?? []}
             focus={focusedIssue ? focusedIssue.centroid : null}
             outline={outline}
+            focusFrame={focusFrame}
+            onFramePick={setFramePick}
             lights={mode === 'lighting' ? previewLights : []}
             selectedLightId={selectedLightId}
             ambientColor={previewAmbient.color}

@@ -56,13 +56,15 @@ interface StageModelsProps {
   /** Original face indexes marked for deletion, per mesh name. */
   markedFaces: Map<string, Set<number>>;
   onPick: (pick: FacePick | null, worldPoint?: Vec3) => void;
+  /** Double-click: fly the camera to the clicked face. */
+  onFramePick: (pick: FacePick | null) => void;
   onRootReady: (root: THREE.Object3D | null) => void;
 }
 
 /** Load + prepare the current city map. The GLTF cache is shared across
  *  tools, so the scene and every geometry are cloned before any in-place
  *  mutation (face filtering, material swaps) — LightingLab discipline. */
-function StageModels({ def, gltfs, mode, markedFaces, onPick, onRootReady }: StageModelsProps) {
+function StageModels({ def, gltfs, mode, markedFaces, onPick, onFramePick, onRootReady }: StageModelsProps) {
   const origIndices = useRef<Map<string, THREE.BufferAttribute>>(new Map());
 
   const root = useMemo(() => {
@@ -122,24 +124,20 @@ function StageModels({ def, gltfs, mode, markedFaces, onPick, onRootReady }: Sta
     });
   }, [root, markedFaces]);
 
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+  /** Shared raycast → FacePick. Maps the clicked (possibly filtered) face
+   *  back to its ORIGINAL index so audit issues and marks stay stable
+   *  across deletions. */
+  const buildPick = (e: ThreeEvent<MouseEvent>): { pick: FacePick | null; point: Vec3 | null } => {
     e.stopPropagation();
     const hit = e.intersections[0];
-    if (!hit) return;
+    if (!hit) return { pick: null, point: null };
     const worldPoint: Vec3 = [hit.point.x, hit.point.y, hit.point.z];
     let target: THREE.Object3D | null = hit.object;
     while (target && !(target instanceof THREE.Mesh)) target = target.parent;
-    if (!(target instanceof THREE.Mesh) || hit.faceIndex == null) {
-      onPick(null, worldPoint);
-      return;
-    }
-    if (!target.geometry.index) {
-      onPick(null, worldPoint);
-      return;
+    if (!(target instanceof THREE.Mesh) || hit.faceIndex == null || !target.geometry.index) {
+      return { pick: null, point: worldPoint };
     }
 
-    // Map the clicked (possibly filtered) face back to its ORIGINAL index
-    // so audit issues and marks stay stable across deletions.
     const current = target.geometry.index;
     const a = current.getX(hit.faceIndex * 3);
     const b = current.getX(hit.faceIndex * 3 + 1);
@@ -153,8 +151,7 @@ function StageModels({ def, gltfs, mode, markedFaces, onPick, onRootReady }: Sta
       }
     }
     if (origFace < 0) {
-      onPick(null, worldPoint);
-      return;
+      return { pick: null, point: worldPoint };
     }
 
     const attr = target.geometry.attributes.position as THREE.BufferAttribute;
@@ -164,8 +161,8 @@ function StageModels({ def, gltfs, mode, markedFaces, onPick, onRootReady }: Sta
       return [v.x, v.y, v.z];
     };
     const mat = target.material as THREE.Material | undefined;
-    onPick(
-      {
+    return {
+      pick: {
         meshName: target.name,
         nodePath: target.name,
         materialName: mat?.name || '(unnamed)',
@@ -175,11 +172,26 @@ function StageModels({ def, gltfs, mode, markedFaces, onPick, onRootReady }: Sta
         v2: world(c),
         point: worldPoint,
       },
-      worldPoint,
-    );
+      point: worldPoint,
+    };
   };
 
-  return <primitive object={root} onClick={handleClick} />;
+  return (
+    // key on the object id: swapping `object` in place leaves R3F's event
+    // registry pointed at the old clone after a stage switch, killing picks
+    <primitive
+      key={root.uuid}
+      object={root}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        const { pick, point } = buildPick(e);
+        onPick(pick, point ?? undefined);
+      }}
+      onDoubleClick={(e: ThreeEvent<MouseEvent>) => {
+        const { pick } = buildPick(e);
+        onFramePick(pick);
+      }}
+    />
+  );
 }
 
 /** Red/amber overlay of every audit issue triangle (world space). Never
@@ -443,28 +455,50 @@ function Markers({ def }: { def: StageDef }) {
   );
 }
 
-/** Frame the freshly loaded stage once per stage change. Bounds come
- *  from robustStageBox — the raw Box3 would frame to dairon2's stray
+/** Frame the freshly loaded stage once per stage change, then fly to
+ *  whichever triangle the audit list focuses. Bounds come from
+ *  robustStageBox — the raw Box3 would frame to dairon2's stray
  *  y = −1e9 spike vertices and clip the whole market out of view. */
-function FitCamera({ watchKey, rootRef }: { watchKey: string; rootRef: React.RefObject<THREE.Object3D | null> }) {
+function FitCamera({
+  watchKey,
+  rootRef,
+  focusFrame,
+}: {
+  watchKey: string;
+  rootRef: React.RefObject<THREE.Object3D | null>;
+  focusFrame: { center: Vec3; radius: number; key: string } | null;
+}) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null;
+
+  const frame = (center: THREE.Vector3, radius: number) => {
+    if (!controls) return;
+    const dir = new THREE.Vector3(0.7, 0.5, 0.9).normalize();
+    camera.position.copy(center.clone().add(dir.multiplyScalar(radius * 2.2)));
+    camera.near = Math.max(radius / 500, 0.01);
+    camera.far = Math.max(radius * 60, 5000);
+    camera.updateProjectionMatrix();
+    controls.target.copy(center);
+    controls.update();
+  };
+
   useEffect(() => {
+    if (focusFrame) {
+      // Tight frame on the selected triangle — clamped so a spike face's
+      // billion-unit edges don't fling the camera into the void.
+      const center = new THREE.Vector3(...focusFrame.center);
+      frame(center, Math.min(Math.max(focusFrame.radius, 4), 40));
+      return;
+    }
     const root = rootRef.current;
     if (!root || !controls) return;
     const box = robustStageBox(root);
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    const radius = Math.max(size.length() / 2, 1);
-    const dir = new THREE.Vector3(0.7, 0.5, 0.9).normalize();
-    camera.position.copy(center.clone().add(dir.multiplyScalar(radius * 2.2)));
-    camera.near = Math.max(radius / 500, 0.01);
-    camera.far = radius * 60;
-    camera.updateProjectionMatrix();
-    controls.target.copy(center);
-    controls.update();
-  }, [watchKey, camera, controls, rootRef]);
+    frame(center, Math.max(size.length() / 2, 1));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchKey, focusFrame?.key, camera, controls, rootRef]);
   return null;
 }
 
@@ -485,16 +519,19 @@ export interface CityLabCanvasProps {
   onSelectLight: (id: string) => void;
   onMoveLight: (id: string, pos: Vec3) => void;
   onRootReady: (root: THREE.Object3D | null) => void;
+  onFramePick: (pick: FacePick | null) => void;
   /** Receives the pristine (un-mutated) GLTF scenes — the audit walks
    *  these so face indexes stay stable regardless of deletion marks. */
   onGltfsReady?: (cache: Record<string, THREE.Object3D>) => void;
+  /** When set, the camera flies to this tight frame (audit-row focus). */
+  focusFrame?: { center: Vec3; radius: number; key: string } | null;
 }
 
 export default function CityLabCanvas(props: CityLabCanvasProps) {
   const {
     def, mode, markedFaces, issues, focus, outline, lights, selectedLightId,
-    ambientColor, ambientEnergy, sunEnergy,
-    onPick, onSelectLight, onMoveLight, onRootReady, onGltfsReady,
+    ambientColor, ambientEnergy, sunEnergy, focusFrame,
+    onPick, onSelectLight, onMoveLight, onRootReady, onFramePick, onGltfsReady,
   } = props;
   const rootRef = useRef<THREE.Object3D | null>(null);
   const gltfs = useCityGltfs(onGltfsReady);
@@ -516,6 +553,7 @@ export default function CityLabCanvas(props: CityLabCanvasProps) {
           mode={mode}
           markedFaces={markedFaces}
           onPick={onPick}
+          onFramePick={onFramePick}
           onRootReady={handleRootReady}
         />
         {def.floorPath && gltfs[def.floorPath] && <FloorWire scene={gltfs[def.floorPath]} />}
@@ -538,7 +576,7 @@ export default function CityLabCanvas(props: CityLabCanvasProps) {
       {mode !== 'lighting' && <gridHelper args={[40, 40, 0x444466, 0x2a2a44]} />}
       <axesHelper args={[2]} />
       <OrbitControls makeDefault />
-      <FitCamera watchKey={`${def.id}:${mode}`} rootRef={rootRef} />
+      <FitCamera watchKey={`${def.id}:${mode}`} rootRef={rootRef} focusFrame={focusFrame ?? null} />
     </Canvas>
   );
 }
