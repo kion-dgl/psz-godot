@@ -395,39 +395,51 @@ static func collision_face_mesh(root: Node, up_facing_min := -1.0) -> ArrayMesh:
 ## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
 ## would sit exactly coplanar with the stage (the counter's wall z-fight).
 ##
-## The cheat rig's shadow catcher (#648, kion's call): the collision shell —
-## the walkable surface, EXACTLY — rendered as the shadow receiver over the
-## baked stage. A white per-pixel material with MULTIPLY blending: lit, it
-## multiplies the bake by ~1 (clamped — invisible); inside a shadow it
-## multiplies down by the ambient share, so the actors' dynamic shadows read
-## as painted onto the authored look. The unwalkable low ground isn't in the
-## shell, so its intentional baked darkness (the "you can't walk there" read)
-## survives untouched. Lifted a hair above the walk height to win depth
-## without z-fighting; never casts. Null when the floor has no collision
-## faces. `up_facing_only` drops the non-walk slopes — the field shells are
-## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
-## would sit exactly coplanar with the stage (the counter's wall z-fight).
-##
-## NOT the city indoor answer (#656, probe log 2026-09-26): the FIELD rig
-## works because its sun is directional — uniform, so the lit catcher clamps
-## to x1 everywhere and no pool can exist. An omni rig cannot use this
-## catcher: pool contrast and shadow contrast are the same term under
-## multiply blending. shadow_to_opacity (shader form) does render per-light
-## shadows on the compatibility renderer, but its alpha reads 1 - received
-## light, so falloff veils the whole floor black; a fill light that clears
-## the veil erases the shadows with it (zero-sum, both measured). The city
-## uses projected blob shadows instead — counter_walktest's BlobShadows.
-static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false) -> MeshInstance3D:
+## The CITY indoor contract (#656) uses the same catcher with a different
+## MATERIAL: lights exist for actors + shadows, so a pool on the floor IS
+## the stage being lit. shadow_to_opacity is exactly that — lit reads
+## transparent, shadowed reads a dark overlay — but the StandardMaterial3D
+## FLAG no-ops on the compatibility renderer (probe, 2026-09-26) while the
+## SHADER render_mode works (second probe, same day: omni shadow, partial
+## alpha, no overlay — upstream #62257 says opacity scales with ambient, so
+## the ambient share tunes shadow depth). The valley keeps the MUL material
+## below; only the city catcher takes the shader.
+const SHADOW_CATCHER_SHADER := "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
+
+static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
+		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
 	if mesh == null:
 		return null
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 1)
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
-	mat.roughness = 1.0
-	mat.specular = 0.0
+	var mat: Material
+	if shadow_only:
+		var cmat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = SHADOW_CATCHER_SHADER
+		cmat.shader = sh
+		mat = cmat
+	else:
+		var mmat := StandardMaterial3D.new()
+		mmat.albedo_color = Color(1, 1, 1, 1)
+		mmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		mmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mmat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+		mmat.roughness = 1.0
+		mmat.specular = 0.0
+		# Draw after the transparent detail planes and the waterfall
+		# (priority 1): the multiply must reach THEM too — a shadow that
+		# stops at a decal edge reads exactly like the harsh-line bug. The
+		# MUL blend already sorts in the transparent queue; priority orders
+		# within it.
+		mmat.render_priority = 2
+		mat = mmat
+	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()
 	mi.name = "ShadowCatcher"
 	mi.mesh = mesh
