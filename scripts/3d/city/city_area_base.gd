@@ -563,7 +563,14 @@ func _add_authored_lights(stage_id: String) -> bool:
 		add_child(light)
 	var ambient: Dictionary = spec["ambient"]
 	if not ambient.is_empty():
-		var env_node := find_child("WorldEnvironment", true, false)
+		# By TYPE, not name: the tscn authors "WorldEnvironment", but any
+		# runtime-built scene (the walk labs) gets @WorldEnvironment@N
+		# auto-names that defeat a by-name find_child.
+		var env_node: Node = null
+		for child in get_children():
+			if child is WorldEnvironment:
+				env_node = child
+				break
 		if env_node is WorldEnvironment and env_node.environment != null:
 			env_node.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 			var amb_col: Color = ambient["color"]
