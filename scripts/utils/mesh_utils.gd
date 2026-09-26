@@ -337,18 +337,44 @@ static func collect_mesh_instances(node: Node, out: Array) -> Array:
 ## One ArrayMesh from every collision triangle under `root`, in global space
 ## (flat up normals — the shells are walk decks, not detail work). The mesh
 ## the debug floor-viz and the shadow catcher share; null when `root` carries
-## no concave collision.
-static func collision_face_mesh(root: Node) -> ArrayMesh:
+## no concave collision. `up_facing_min >= 0` keeps only walkable-slope
+## triangles (normalized geometric normal.y at or above it) — the city
+## "floor" GLBs are whole-room shells (walls and all; the counter's spans
+## y −21.5..14.7), and a vertical face has no business multiplying the stage.
+static func collision_face_mesh(root: Node, up_facing_min := -1.0) -> ArrayMesh:
 	var faces := PackedVector3Array()
 	MapCollisionBuilder.collect_collision_faces(root, faces)
 	if faces.is_empty():
 		return null
+	# Winding is whatever the source shell shipped; a shell's faces flip
+	# together, so the majority vertical sign picks which way "up" is before
+	# the filter reads it.
+	var up_sign := 1.0
+	if up_facing_min >= 0.0:
+		var votes := 0
+		for t in range(0, faces.size(), 3):
+			var raw := (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t])
+			if raw.y > 0.001:
+				votes += 1
+			elif raw.y < -0.001:
+				votes -= 1
+		if votes < 0:
+			up_sign = -1.0
+	var kept := PackedVector3Array()
+	for t in range(0, faces.size(), 3):
+		if up_facing_min >= 0.0:
+			var n := (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t])
+			if up_sign * n.y / maxf(n.length(), 0.0001) < up_facing_min:
+				continue
+		kept.append(faces[t])
+		kept.append(faces[t + 1])
+		kept.append(faces[t + 2])
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = faces
+	arrays[Mesh.ARRAY_VERTEX] = kept
 	var normals := PackedVector3Array()
-	normals.resize(faces.size())
-	for i in range(faces.size()):
+	normals.resize(kept.size())
+	for i in range(kept.size()):
 		normals[i] = Vector3(0, 1, 0)
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	var mesh := ArrayMesh.new()
@@ -365,9 +391,11 @@ static func collision_face_mesh(root: Node) -> ArrayMesh:
 ## shell, so its intentional baked darkness (the "you can't walk there" read)
 ## survives untouched. Lifted a hair above the walk height to win depth
 ## without z-fighting; never casts. Null when the floor has no collision
-## faces.
-static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
-	var mesh := collision_face_mesh(floor_root)
+## faces. `up_facing_only` drops the non-walk slopes — the field shells are
+## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
+## would sit exactly coplanar with the stage (the counter's wall z-fight).
+static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
 	if mesh == null:
 		return null
 	var mat := StandardMaterial3D.new()

@@ -13,9 +13,10 @@ extends CityAreaBase
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune) + the collision shell as a
-##               shadow-catcher floor (the valley #648 rig): the omnis then
-##               matter only to actors and the catcher
+##               modulates albedo, light-immune) + the collision shell's
+##               walk surfaces as a shadow-catcher floor (the valley #648
+##               rig; walls filtered out — the city floor GLB wraps the room)
+##               + every omni shadow-casting, so actors cast dynamic shadows
 ##       M       omni shadows toggle (all authored lights at once)
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
@@ -43,6 +44,7 @@ var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
+var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
 var _catcher: MeshInstance3D
 var _shot := FieldLabScript.ShotRun.new()
@@ -186,12 +188,21 @@ func _set_bake_mode(on: bool) -> void:
 	if on and _catcher == null:
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
-			_catcher = MeshUtils.make_shadow_catcher(floor_root)
+			# up-facing only: the city floor GLB wraps the whole room, and its
+			# walls sat exactly coplanar with the stage — the crazy z-fight.
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true)
 			if _catcher:
 				add_child(_catcher)
 	elif not on and _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
+	# The architecture's dynamic half: an actor shadow needs a caster — every
+	# authored omni switches its shadows on with the bake (the lantern is the
+	# only light that ships with them). Leaving bake restores each sidecar's
+	# own state; M still flips everything live.
+	for light in _authored_lights():
+		light.shadow_enabled = true if on \
+				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
 	_update_status()
 
 
@@ -206,6 +217,7 @@ func _authored_lights() -> Array[OmniLight3D]:
 func _capture_base_energies() -> void:
 	for light in _authored_lights():
 		_base_energies[light.get_path()] = light.light_energy
+		_base_shadows[light.get_path()] = light.shadow_enabled
 
 
 func _apply_pool_scale() -> void:
