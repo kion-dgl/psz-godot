@@ -1,16 +1,139 @@
 {
   "stage": "s00e_sa2",
   "ambient": {
-    "color": [0.9, 0.88, 0.82],
+    "color": [
+      0.9,
+      0.88,
+      0.82
+    ],
     "energy": 0.5
   },
   "lights": [
-    { "id": "Lmuhx2i94-1", "name": "Light 1", "pos": [17.060767238208676, -8.276787734723975, 110.3019154292588], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false },
-    { "id": "Lmuhx2t4b-2", "name": "Light 2", "pos": [10.934416699706729, -8.06755099726621, 105.52548321164434], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false },
-    { "id": "Lmuhx396k-3", "name": "Light 3", "pos": [0.09953564050772101, 0.47557708382238495, 121.94116050480822], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false },
-    { "id": "Lmuhx3vze-4", "name": "Light 4", "pos": [-8.680494420686239, -7.802016322004153, 112.89361074930163], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false },
-    { "id": "Lmuhx4gmx-5", "name": "Light 5", "pos": [13.722646470008046, -12.631357401585257, 136.5442494072757], "color": [1, 0.7, 0.3], "energy": 2, "range": 11, "attenuation": 1, "shadows": true },
-    { "id": "Lmuhx514w-6", "name": "Light 6", "pos": [0.061509674719476326, -5.563745931026002, 98.63788313319223], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false },
-    { "id": "Lmuhx5owf-8", "name": "Light 8", "pos": [0.056713652390525615, -6.092656738908192, 141.00946916926836], "color": [1, 0.95, 0.88], "energy": 2, "range": 15, "attenuation": 1, "shadows": false }
+    {
+      "id": "Lmuhx2i94-1",
+      "name": "Light 1",
+      "pos": [
+        16.221689582362796,
+        -8.276787734723975,
+        110.92656282368034
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuhx2t4b-2",
+      "name": "Light 2",
+      "pos": [
+        10.934416699706729,
+        -8.06755099726621,
+        105.52548321164434
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuhx396k-3",
+      "name": "Light 3",
+      "pos": [
+        0.09953564050772101,
+        0.47557708382238495,
+        121.94116050480822
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuhx3vze-4",
+      "name": "Light 4",
+      "pos": [
+        -8.680494420686239,
+        -7.802016322004153,
+        112.89361074930163
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuhx4gmx-5",
+      "name": "Light 5",
+      "pos": [
+        13.722646470008046,
+        -12.631357401585257,
+        136.5442494072757
+      ],
+      "color": [
+        1,
+        0.7,
+        0.3
+      ],
+      "energy": 2,
+      "range": 11,
+      "attenuation": 1,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx514w-6",
+      "name": "Light 6",
+      "pos": [
+        0.061509674719476326,
+        -5.563745931026002,
+        98.63788313319223
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuhx5owf-8",
+      "name": "Light 8",
+      "pos": [
+        0.056713652390525615,
+        -6.092656738908192,
+        141.00946916926836
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    }
   ]
 }
