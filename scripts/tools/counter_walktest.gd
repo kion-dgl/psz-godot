@@ -10,14 +10,15 @@ extends CityAreaBase
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
-##       PSZ_WALK_SHADOWS=0          boot with the blobs hidden (diff control)
+##       PSZ_WALK_SHADOWS=0          boot with the actor shadow off (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
 ##               modulates albedo, light-immune), omnis lighting actors
-##               alone, and the PS0 blob rig: one projected shadow per
-##               placed light, direction and fade from the light itself
-##       M       blob shadows toggle
+##               alone, and a REAL shadow-map silhouette from one
+##               directional whose direction tracks the strongest placed
+##               light near the player (swings light to light as you walk)
+##       M       actor-shadow toggle
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
 ##       N       next stage · R reload · ESC quit
@@ -46,8 +47,10 @@ var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _bake_mode := false
 var _player: Node3D
-var _blob_root: Node3D
-var _blobs: Array[MeshInstance3D] = []
+var _catcher: MeshInstance3D
+var _shadow_dir: DirectionalLight3D
+var _shadow_dir_current := Vector3(0, -1, 0)
+var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -88,8 +91,8 @@ func _ready() -> void:
 	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
 
 
-func _process(_delta: float) -> void:
-	_update_blobs()
+func _process(delta: float) -> void:
+	_update_actor_shadow_light(delta)
 	_shot.step(self, "CWalk")
 
 
@@ -110,8 +113,8 @@ func _input(event: InputEvent) -> void:
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
-			if _blob_root:
-				_blob_root.visible = not _blob_root.visible
+			if _shadow_dir:
+				_shadow_dir.shadow_enabled = not _shadow_dir.shadow_enabled
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -166,16 +169,17 @@ func _load_stage() -> void:
 
 ## The DS architecture A/B (B): the stage keeps its pure baked look —
 ## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
-## (the MeshBasic contract; light cannot touch it) — the omnis light the
-## actors alone, and the actors' shadows are PROJECTED BLOBS (the PS0
-## solution): one soft radial quad per placed light, centered along the
-## light→actor ray, faded by that light's real energy and distance. Real
-## per-light shadow maps are unreachable here — the probe log in
-## mesh_utils.make_shadow_catcher documents every path — but the blobs carry
-## the contract: shadow direction from the light you stand near, nothing on
-## the floor the bake didn't author.
-const BLOB_FLOOR_Y := -10.63  # the authored walk height + the catcher's old lift
-const ACTOR_HEIGHT := 1.4     # the player's casting height
+## (the MeshBasic contract; light cannot touch it). The omnis light the
+## ACTORS alone (culled off the catcher's render layer — a pool on the floor
+## is the stage being lit). The shadow is a REAL shadow-map silhouette: one
+## directional, culled to the catcher alone, its direction tracking the
+## strongest placed light near the player — walk between the authored lights
+## and the shadow swings light to light. Its energy auto-compensates the
+## ambient so the lit catcher ALWAYS clamps at ×1: the black-floor veil of
+## the shadow_to_opacity attempt cannot exist here by construction.
+## (N simultaneous per-light shadow maps are unreachable on this renderer —
+## the probe log in mesh_utils.make_shadow_catcher measures every path.)
+const CATCHER_LAYER := 2  # render layer — the omnis are masked off it
 
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
@@ -194,86 +198,80 @@ func _set_bake_mode(on: bool) -> void:
 						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 						dup.vertex_color_use_as_albedo = false
 						mi.set_surface_override_material(i, dup)
-	if on and _blob_root == null:
-		_build_blob_rig()
-		# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake, no blobs).
-		_blob_root.visible = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
-	elif not on and _blob_root != null:
-		_blob_root.queue_free()
-		_blob_root = null
-		_blobs.clear()
+		# The stage never casts — indoors the whole room is the valley's
+		# enclosing shell. The actor-shadow directional lights only actors'
+		# silhouettes onto the catcher, nothing of the room itself.
+		for node in MeshUtils.collect_mesh_instances(map, []):
+			(node as MeshInstance3D).cast_shadow = \
+					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
+					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if on and _catcher == null:
+		var floor_root := get_node_or_null("FloorCollision")
+		if floor_root:
+			# up-facing only: the city floor GLB wraps the whole room, and its
+			# walls sat exactly coplanar with the stage — the crazy z-fight.
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true)
+			if _catcher:
+				_catcher.layers = CATCHER_LAYER
+				add_child(_catcher)
+		# The actor-shadow light: a directional that may touch ONLY the
+		# catcher (its energy exists to clamp the MUL at x1 and to shade the
+		# silhouette; the actors get their light from the omnis).
+		_shadow_dir = DirectionalLight3D.new()
+		_shadow_dir.name = "ActorShadowLight"
+		# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake, no caster).
+		_shadow_dir.shadow_enabled = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+		_shadow_dir.directional_shadow_max_distance = 40.0
+		_shadow_dir.light_cull_mask = CATCHER_LAYER
+		add_child(_shadow_dir)
+	elif not on and _catcher != null:
+		_catcher.queue_free()
+		_catcher = null
+		_shadow_dir.queue_free()
+		_shadow_dir = null
+	# The omnis: actors only, both ways. Culled off the catcher in bake;
+	# their shadows off — nothing they may light receives them usefully.
+	# Leaving bake restores each sidecar's own state and full mask.
+	for light in _authored_lights():
+		light.shadow_enabled = false if on \
+				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
+		light.light_cull_mask = 0xFFFFFFFF & ~CATCHER_LAYER if on else 0xFFFFFFFF
 	_update_status()
 
 
-## The blob rig: one unlit radial-gradient quad per authored light, flat on
-## the walk height. _update_blobs() drives position/opacity per frame.
-func _build_blob_rig() -> void:
-	_blob_root = Node3D.new()
-	_blob_root.name = "BlobShadows"
-	add_child(_blob_root)
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0, 0, 0, 1.0))
-	grad.set_offset(0, 0.0)
-	grad.add_point(0.55, Color(0, 0, 0, 0.45))
-	grad.set_color(1, Color(0, 0, 0, 0.0))
-	grad.set_offset(1, 1.0)
-	var tex := GradientTexture2D.new()
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 0.5)
-	tex.width = 128
-	tex.height = 128
-	tex.gradient = grad
-	for light in _authored_lights():
-		var quad := QuadMesh.new()
-		quad.size = Vector2(1.3, 1.3)
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_texture = tex
-		mat.albedo_color = Color(1, 1, 1, 0)
-		quad.material = mat
-		var mi := MeshInstance3D.new()
-		mi.mesh = quad
-		mi.rotation_degrees.x = -90.0
-		mi.visible = false
-		_blob_root.add_child(mi)
-		_blobs.append(mi)
-
-
-## Each light throws the actor's blob away from itself: project the actor's
-## top along the light→actor ray onto the walk plane, fade by the light's
-## energy over distance², spread a touch as the light nears. Lights out of
-## range (or behind the actor) throw nothing — walk past every placed light
-## and the shadow swings light to light.
-func _update_blobs() -> void:
-	if _blob_root == null or not _blob_root.visible or _player == null:
+## The actor-shadow directional rides the player: the compatibility
+## renderer anchors the directional shadow frustum at the light node (the
+## valley's place_light_inside_room lesson), so a static origin drops the
+## player out of the default 100-unit shadow distance in this hall. Its
+## DIRECTION is the placed lights' gift: aim along (player − strongest
+## light), smoothed so walking between lights swings the shadow instead of
+## snapping it. Energy compensates the ambient keys so the lit catcher
+## stays clamped at x1 — no veil can appear.
+func _update_actor_shadow_light(delta: float) -> void:
+	if _shadow_dir == null or _player == null:
 		return
 	var p := _player.global_position
-	var i := 0
+	var best: OmniLight3D = null
+	var best_score := 0.0
 	for light in _authored_lights():
-		if i >= _blobs.size():
-			break
-		var blob := _blobs[i]
-		i += 1
 		var l := light.global_position
 		var dy := l.y - p.y
-		var dist2 := p.distance_squared_to(l)
-		if dy < 0.3 or dist2 > light.omni_range * light.omni_range:
-			blob.visible = false
+		if dy < 2.0:
+			continue  # at-eye or below-floor lights throw no sane shadow
+		var d2 := p.distance_squared_to(l)
+		if d2 > light.omni_range * light.omni_range:
 			continue
-		var strength: float = clampf(8.0 * light.light_energy / maxf(dist2, 0.25), 0.0, 1.0)
-		if strength < 0.03:
-			blob.visible = false
-			continue
-		var t := dy / maxf(dy - ACTOR_HEIGHT, 0.1)
-		blob.visible = true
-		blob.position = Vector3(
-			l.x + (p.x - l.x) * t, BLOB_FLOOR_Y, l.z + (p.z - l.z) * t)
-		var spread: float = clampf(1.0 + ACTOR_HEIGHT / dy, 1.0, 1.8)
-		blob.scale = Vector3(spread, spread, spread)
-		var mat := (blob.mesh as QuadMesh).material as StandardMaterial3D
-		mat.albedo_color = Color(1, 1, 1, strength * 0.55)
+		var score := light.light_energy / maxf(d2, 0.25)
+		if score > best_score:
+			best_score = score
+			best = light
+	var target := Vector3(0, -1, 0)
+	if best != null:
+		target = (p - best.global_position).normalized()
+	_shadow_dir_current = _shadow_dir_current.lerp(target, clampf(delta * 4.0, 0.0, 1.0)).normalized()
+	_shadow_dir.global_position = p + Vector3(0, 8.0, 0)
+	_shadow_dir.look_at(_shadow_dir.global_position + _shadow_dir_current)
+	_shadow_dir.light_energy = maxf(0.1, 1.05 - _env.ambient_light_energy)
 
 
 func _authored_lights() -> Array[OmniLight3D]:
@@ -287,6 +285,7 @@ func _authored_lights() -> Array[OmniLight3D]:
 func _capture_base_energies() -> void:
 	for light in _authored_lights():
 		_base_energies[light.get_path()] = light.light_energy
+		_base_shadows[light.get_path()] = light.shadow_enabled
 
 
 func _apply_pool_scale() -> void:
@@ -332,4 +331,4 @@ func _update_status() -> void:
 	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
-		"on" if _blob_root != null and _blob_root.visible else "off"]
+		"on" if _shadow_dir != null and _shadow_dir.shadow_enabled else "off"]
