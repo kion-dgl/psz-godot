@@ -10,15 +10,14 @@ extends CityAreaBase
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
-##       PSZ_WALK_SHADOWS=0          boot with omni shadows off (diff control)
+##       PSZ_WALK_SHADOWS=0          boot with the blobs hidden (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune), stage meshes never cast,
-##               and the shader catcher takes the omnis' shadows alone (lit
-##               reads transparent — no pools; each placed light throws its
-##               own actor shadow from its own position)
-##       M       omni shadows toggle (all authored lights at once)
+##               modulates albedo, light-immune), omnis lighting actors
+##               alone, and the PS0 blob rig: one projected shadow per
+##               placed light, direction and fade from the light itself
+##       M       blob shadows toggle
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
 ##       N       next stage · R reload · ESC quit
@@ -45,9 +44,10 @@ var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
-var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
-var _catcher: MeshInstance3D
+var _player: Node3D
+var _blob_root: Node3D
+var _blobs: Array[MeshInstance3D] = []
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -74,6 +74,7 @@ func _ready() -> void:
 	_capture_base_energies()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
+	_player = lab_player
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
@@ -88,6 +89,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_blobs()
 	_shot.step(self, "CWalk")
 
 
@@ -108,9 +110,8 @@ func _input(event: InputEvent) -> void:
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
-			var shadows := not _authored_lights()[0].shadow_enabled if not _authored_lights().is_empty() else false
-			for light in _authored_lights():
-				light.shadow_enabled = shadows
+			if _blob_root:
+				_blob_root.visible = not _blob_root.visible
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -165,12 +166,17 @@ func _load_stage() -> void:
 
 ## The DS architecture A/B (B): the stage keeps its pure baked look —
 ## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
-## (the MeshBasic contract; light cannot touch it) — while the catcher
-## becomes SHADOW-ONLY (make_shadow_catcher's shadow_to_opacity shader: lit
-## reads transparent, so the omnis cannot pool on the floor; their SHADOW
-## MAPS drive the alpha, so each placed light throws its own actor shadow
-## from its own position). The stage meshes stop casting — only actors
-## shadow (the valley #648 rig's indoor contract, per-light instead of sun).
+## (the MeshBasic contract; light cannot touch it) — the omnis light the
+## actors alone, and the actors' shadows are PROJECTED BLOBS (the PS0
+## solution): one soft radial quad per placed light, centered along the
+## light→actor ray, faded by that light's real energy and distance. Real
+## per-light shadow maps are unreachable here — the probe log in
+## mesh_utils.make_shadow_catcher documents every path — but the blobs carry
+## the contract: shadow direction from the light you stand near, nothing on
+## the floor the bake didn't author.
+const BLOB_FLOOR_Y := -10.63  # the authored walk height + the catcher's old lift
+const ACTOR_HEIGHT := 1.4     # the player's casting height
+
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
 	var map := get_node_or_null("Map")
@@ -188,34 +194,86 @@ func _set_bake_mode(on: bool) -> void:
 						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 						dup.vertex_color_use_as_albedo = false
 						mi.set_surface_override_material(i, dup)
-		# The stage never casts — indoors the whole room is the valley's
-		# enclosing shell. Actors (the player, NPCs) are the only casters, so
-		# the omnis' shadows are the actors' shadows and nothing else's.
-		for node in MeshUtils.collect_mesh_instances(map, []):
-			(node as MeshInstance3D).cast_shadow = \
-					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
-					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	if on and _catcher == null:
-		var floor_root := get_node_or_null("FloorCollision")
-		if floor_root:
-			# up-facing only: the city floor GLB wraps the whole room, and its
-			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			# shadow_only: the shader catcher — lights drive alpha, not color.
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
-			if _catcher:
-				add_child(_catcher)
-	elif not on and _catcher != null:
-		_catcher.queue_free()
-		_catcher = null
-	# The omnis' shadows ARE the rig's shadows now — every authored light
-	# casts (the lantern alone ships with them). Leaving bake restores each
-	# sidecar's own state; M still flips everything live. PSZ_WALK_SHADOWS=0
-	# is the screenshot A/B control (bake + catcher, no casters).
-	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
-	for light in _authored_lights():
-		light.shadow_enabled = shadows_on if on \
-				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
+	if on and _blob_root == null:
+		_build_blob_rig()
+		# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake, no blobs).
+		_blob_root.visible = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+	elif not on and _blob_root != null:
+		_blob_root.queue_free()
+		_blob_root = null
+		_blobs.clear()
 	_update_status()
+
+
+## The blob rig: one unlit radial-gradient quad per authored light, flat on
+## the walk height. _update_blobs() drives position/opacity per frame.
+func _build_blob_rig() -> void:
+	_blob_root = Node3D.new()
+	_blob_root.name = "BlobShadows"
+	add_child(_blob_root)
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0, 0, 0, 1.0))
+	grad.set_offset(0, 0.0)
+	grad.add_point(0.55, Color(0, 0, 0, 0.45))
+	grad.set_color(1, Color(0, 0, 0, 0.0))
+	grad.set_offset(1, 1.0)
+	var tex := GradientTexture2D.new()
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 128
+	tex.height = 128
+	tex.gradient = grad
+	for light in _authored_lights():
+		var quad := QuadMesh.new()
+		quad.size = Vector2(1.3, 1.3)
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_texture = tex
+		mat.albedo_color = Color(1, 1, 1, 0)
+		quad.material = mat
+		var mi := MeshInstance3D.new()
+		mi.mesh = quad
+		mi.rotation_degrees.x = -90.0
+		mi.visible = false
+		_blob_root.add_child(mi)
+		_blobs.append(mi)
+
+
+## Each light throws the actor's blob away from itself: project the actor's
+## top along the light→actor ray onto the walk plane, fade by the light's
+## energy over distance², spread a touch as the light nears. Lights out of
+## range (or behind the actor) throw nothing — walk past every placed light
+## and the shadow swings light to light.
+func _update_blobs() -> void:
+	if _blob_root == null or not _blob_root.visible or _player == null:
+		return
+	var p := _player.global_position
+	var i := 0
+	for light in _authored_lights():
+		if i >= _blobs.size():
+			break
+		var blob := _blobs[i]
+		i += 1
+		var l := light.global_position
+		var dy := l.y - p.y
+		var dist2 := p.distance_squared_to(l)
+		if dy < 0.3 or dist2 > light.omni_range * light.omni_range:
+			blob.visible = false
+			continue
+		var strength: float = clampf(8.0 * light.light_energy / maxf(dist2, 0.25), 0.0, 1.0)
+		if strength < 0.03:
+			blob.visible = false
+			continue
+		var t := dy / maxf(dy - ACTOR_HEIGHT, 0.1)
+		blob.visible = true
+		blob.position = Vector3(
+			l.x + (p.x - l.x) * t, BLOB_FLOOR_Y, l.z + (p.z - l.z) * t)
+		var spread: float = clampf(1.0 + ACTOR_HEIGHT / dy, 1.0, 1.8)
+		blob.scale = Vector3(spread, spread, spread)
+		var mat := (blob.mesh as QuadMesh).material as StandardMaterial3D
+		mat.albedo_color = Color(1, 1, 1, strength * 0.55)
 
 
 func _authored_lights() -> Array[OmniLight3D]:
@@ -229,7 +287,6 @@ func _authored_lights() -> Array[OmniLight3D]:
 func _capture_base_energies() -> void:
 	for light in _authored_lights():
 		_base_energies[light.get_path()] = light.light_energy
-		_base_shadows[light.get_path()] = light.shadow_enabled
 
 
 func _apply_pool_scale() -> void:
@@ -275,4 +332,4 @@ func _update_status() -> void:
 	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
-		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]
+		"on" if _blob_root != null and _blob_root.visible else "off"]
