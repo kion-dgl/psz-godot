@@ -13,9 +13,9 @@
       "id": "Lmuhx2i94-1",
       "name": "Light 1",
       "pos": [
-        16.221689582362796,
-        -8.276787734723975,
-        110.92656282368034
+        16.430636035577017,
+        -8.276787734723904,
+        110.92480519732747
       ],
       "color": [
         1,
@@ -58,7 +58,7 @@
         0.95,
         0.88
       ],
-      "energy": 2,
+      "energy": 40,
       "range": 15,
       "attenuation": 1,
       "shadows": false
@@ -94,7 +94,7 @@
         0.7,
         0.3
       ],
-      "energy": 2,
+      "energy": 5,
       "range": 11,
       "attenuation": 1,
       "shadows": true
@@ -131,6 +131,24 @@
         0.88
       ],
       "energy": 2,
+      "range": 15,
+      "attenuation": 1,
+      "shadows": false
+    },
+    {
+      "id": "Lmuimbx9n-1",
+      "name": "Light 1",
+      "pos": [
+        0.04807563021959549,
+        1.8784909177178797,
+        60.612504538593456
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 40,
       "range": 15,
       "attenuation": 1,
       "shadows": false
