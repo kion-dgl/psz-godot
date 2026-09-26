@@ -9,13 +9,16 @@
 //                    (0.07–0.09) on its bottom corners while the adjacent
 //                    triangle of the same quad is pure white at the same
 //                    positions — reconciled to the healthy twin values.
-//   3. uv-degenerate seven faces (set01 318–321, gr01 161–164) whose
-//                    bottom-edge verts had the top-edge UVs copied onto
-//                    them, mapping the whole face onto one texel line —
-//                    stripes. Repaired by extending the adjacent healthy
-//                    quad's world→UV affine (linear part only, offset
-//                    re-fit to each face's known-good verts so the tiling
-//                    stays continuous).
+//   3. uv-degenerate faces (dup UV pair + span > 0.05, the tool's audit
+//                    predicate) whose verts had a neighbour's UVs copied
+//                    onto them, mapping the whole face onto one texel
+//                    line — stripes. Auto-detected across every UV-carrying
+//                    primitive (set02 is 200+ faces), repaired by extending
+//                    the adjacent healthy face's world→UV affine (linear
+//                    part only, offset re-fit to each face's known-good
+//                    verts so the tiling stays continuous). Passes chain:
+//                    faces repaired in pass N become anchors in pass N+1,
+//                    so vert islands repair without hand-authored lists.
 //
 // Output: assets/stages/city_e/market/dairon3.glb (dairon2 stays the
 // rollback). Idempotent by construction: reads dairon2, writes dairon3.
@@ -28,13 +31,11 @@ const ROOT = path.resolve(import.meta.dirname, '..', '..');
 const SRC = path.join(ROOT, 'assets/stages/city_e/market/dairon2.glb');
 const OUT = path.join(ROOT, 'assets/stages/city_e/market/dairon3.glb');
 
-// Authored repair list for class 3: [material, faces..., anchorFace].
-// The anchor is the adjacent healthy quad whose world→UV affine defines
-// the strip's texel direction and density.
-const UV_REPAIRS = [
-  { material: 'set01_COLOR_0', faces: [318, 319, 320, 321], anchor: 317 },
-  { material: 'gr01_COLOR_0', faces: [161, 162, 163, 164], anchor: 160 },
-];
+// Class 3 thresholds — mirror web/src/city-lab/triangleAudit.ts so the
+// surgery fixes exactly what the audit flags (deliberate flat-color fills
+// with span ≤ UV_SPAN_MIN are left alone).
+const UV_DUP_EPS = 1e-4;
+const UV_SPAN_MIN = 0.05;
 
 // Class 2: cent5 quad corners to reconcile, by quantised position.
 const CENT5_FIX_VERTS = [
@@ -88,7 +89,6 @@ function writeVec2(acc, i, v) {
 }
 
 const qpos = (p) => p.map((n) => Math.round(n * 1000)).join(',');
-const dist2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 /* ------------------------------------------------------------------ */
 /* Repairs                                                             */
@@ -145,83 +145,142 @@ for (const mesh of gltf.meshes) {
   }
 }
 
-// --- 3. uv-degenerate faces: repair via the anchor affine, offset-fit per face
-for (const spec of UV_REPAIRS) {
-  let done = false;
-  for (const mesh of gltf.meshes) {
-    for (const prim of mesh.primitives) {
-      if (matName(prim) !== spec.material || prim.attributes.TEXCOORD_0 == null) continue;
-      const pos = new Reader(gltf.accessors[prim.attributes.POSITION]);
-      const uv = new Reader(gltf.accessors[prim.attributes.TEXCOORD_0]);
-      const idx = new Reader(gltf.accessors[prim.indices]);
-      const P = (v) => pos.vec3(v);
-      const U = (v) => uv.vec2(v);
+// --- 3. uv-degenerate faces: auto-detect, repair via adjacent healthy anchor
+const UV_MAX_PASSES = 6;
+for (const mesh of gltf.meshes) {
+  for (const prim of mesh.primitives) {
+    if (prim.attributes.TEXCOORD_0 == null || prim.indices == null || prim.attributes.POSITION == null) continue;
+    const pos = new Reader(gltf.accessors[prim.attributes.POSITION]);
+    const uv = new Reader(gltf.accessors[prim.attributes.TEXCOORD_0]);
+    const idx = new Reader(gltf.accessors[prim.indices]);
+    const faceCount = idx.count() / 3;
+    const P = (v) => pos.vec3(v);
+    const U = (v) => uv.vec2(v);
+    const F = (f) => [idx.scalar(f * 3), idx.scalar(f * 3 + 1), idx.scalar(f * 3 + 2)];
+
+    const d2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const isDegenerate = (vs) => {
+      const us = vs.map(U);
+      const duvs = [d2(us[0], us[1]), d2(us[1], us[2]), d2(us[0], us[2])];
+      return duvs.some((x) => x < UV_DUP_EPS) && Math.max(...duvs) > UV_SPAN_MIN;
+    };
+    const isHealthy = (vs) => {
+      const us = vs.map(U);
+      return d2(us[0], us[1]) > 1e-4 && d2(us[1], us[2]) > 1e-4 && d2(us[0], us[2]) > 1e-4;
+    };
+
+    let repairedTotal = 0;
+    for (let pass = 1; pass <= UV_MAX_PASSES; pass++) {
+      const bad = [];
+      for (let f = 0; f < faceCount; f++) {
+        if (isDegenerate(F(f))) bad.push(f);
+      }
+      if (bad.length === 0) break;
 
       // position → UV candidates from healthy faces (3 distinct UVs)
       const cand = new Map();
-      for (let f = 0; f < idx.count() / 3; f++) {
-        const vs = [idx.scalar(f * 3), idx.scalar(f * 3 + 1), idx.scalar(f * 3 + 2)];
-        const us = vs.map(U);
-        if (dist2(us[0], us[1]) < 1e-4 || dist2(us[1], us[2]) < 1e-4 || dist2(us[0], us[2]) < 1e-4) continue;
+      for (let f = 0; f < faceCount; f++) {
+        const vs = F(f);
+        if (!isHealthy(vs)) continue;
         vs.forEach((v, i) => {
           const k = qpos(P(v));
           if (!cand.has(k)) cand.set(k, []);
-          cand.get(k).push(us[i]);
+          cand.get(k).push(U(v));
         });
       }
+      const badSet = new Set(bad);
 
-      // anchor affine: linear part via two edge vectors of the anchor face
-      const av = [idx.scalar(spec.anchor * 3), idx.scalar(spec.anchor * 3 + 1), idx.scalar(spec.anchor * 3 + 2)];
-      const p0 = P(av[0]), e1 = P(av[1]).map((n, k) => n - p0[k]), e2 = P(av[2]).map((n, k) => n - p0[k]);
-      const u0 = U(av[0]), d1 = U(av[1]).map((n, k) => n - u0[k]), d2 = U(av[2]).map((n, k) => n - u0[k]);
-      // solve the 2x2 [e1 e2] [a b; c d] = [d1 d2] per uv component via
-      // least squares on the 3D edges: uv(M·p) with M = pinhole of the
-      // two edges — approximate linear map from world to uv.
-      const gram = [
-        [e1.reduce((s, n) => s + n * n, 0), e1.reduce((s, n, k) => s + n * e2[k], 0)],
-        [e1.reduce((s, n, k) => s + n * e2[k], 0), e2.reduce((s, n) => s + n * n, 0)],
-      ];
-      const det = gram[0][0] * gram[1][1] - gram[0][1] * gram[1][0];
-      const lin = (p) => {
-        // coordinates of p in the anchor's edge basis
-        const c1 = (p.reduce((s, n, k) => s + n * e1[k], 0) * gram[1][1] - p.reduce((s, n, k) => s + n * e2[k], 0) * gram[0][1]) / det;
-        const c2 = (p.reduce((s, n, k) => s + n * e2[k], 0) * gram[0][0] - p.reduce((s, n, k) => s + n * e1[k], 0) * gram[1][0]) / det;
-        return [u0[0] + c1 * d1[0] + c2 * d2[0], u0[1] + c1 * d1[1] + c2 * d2[1]];
-      };
+      let repairedThisPass = 0;
+      for (const f of bad) {
+        const vs = F(f);
+        // anchor: healthy face sharing the most verts with this one;
+        // the bad faces often carry unwelded (duplicated) verts, so fall
+        // back to the nearest healthy face by centroid distance. Multiple
+        // candidates are tried in order — the affine must reproduce the
+        // face's known-good verts (below) before it is trusted, which
+        // rejects non-coplanar neighbours.
+        const cx = (fs) => fs.reduce((s, v) => s + P(v)[0], 0) / fs.length;
+        const cy = (fs) => fs.reduce((s, v) => s + P(v)[1], 0) / fs.length;
+        const cz = (fs) => fs.reduce((s, v) => s + P(v)[2], 0) / fs.length;
+        const cands = [];
+        for (let g = 0; g < faceCount; g++) {
+          if (badSet.has(g)) continue;
+          const gs = F(g);
+          if (!isHealthy(gs)) continue;
+          const shared = vs.filter((v) => gs.includes(v)).length;
+          const cd = Math.hypot(cx(vs) - cx(gs), cy(vs) - cy(gs), cz(vs) - cz(gs));
+          cands.push({ g, score: shared * 1e6 - cd });
+        }
+        cands.sort((a, b) => b.score - a.score);
 
-      for (const f of spec.faces) {
-        const vs = [idx.scalar(f * 3), idx.scalar(f * 3 + 1), idx.scalar(f * 3 + 2)];
-        // offset correction: anchor the linear map onto this face's
-        // known-good verts (position-confirmed UVs)
+        // known-good verts (position-confirmed UVs) are anchor-independent
         const good = [];
         for (const v of vs) {
           const c = cand.get(qpos(P(v)));
-          if (c && c.some((cu) => dist2(cu, U(v)) < 1e-3)) good.push(v);
+          if (c && c.some((cu) => d2(cu, U(v)) < 1e-3)) good.push(v);
         }
         if (good.length === 0) {
-          console.warn(`  face ${f}: no known-good vert — left as-is`);
+          console.warn(`  ${matName(prim)} face ${f}: no known-good vert — left as-is`);
           continue;
         }
-        let ox = 0, oy = 0;
-        for (const v of good) {
-          const m = lin(P(v));
-          ox += U(v)[0] - m[0];
-          oy += U(v)[1] - m[1];
+
+        let repaired = false;
+        for (const { g: anchor } of cands.slice(0, 8)) {
+          const av = F(anchor);
+          const p0 = P(av[0]), e1 = P(av[1]).map((n, k) => n - p0[k]), e2 = P(av[2]).map((n, k) => n - p0[k]);
+          const u0 = U(av[0]), d1 = U(av[1]).map((n, k) => n - u0[k]), d2v = U(av[2]).map((n, k) => n - u0[k]);
+          // world→UV linear map: coordinates in the anchor's edge basis
+          const gram = [
+            [e1.reduce((s, n) => s + n * n, 0), e1.reduce((s, n, k) => s + n * e2[k], 0)],
+            [e1.reduce((s, n, k) => s + n * e2[k], 0), e2.reduce((s, n) => s + n * n, 0)],
+          ];
+          const det = gram[0][0] * gram[1][1] - gram[0][1] * gram[1][0];
+          if (Math.abs(det) < 1e-12) continue;
+          const lin = (p) => {
+            const c1 = (p.reduce((s, n, k) => s + n * e1[k], 0) * gram[1][1] - p.reduce((s, n, k) => s + n * e2[k], 0) * gram[0][1]) / det;
+            const c2 = (p.reduce((s, n, k) => s + n * e2[k], 0) * gram[0][0] - p.reduce((s, n, k) => s + n * e1[k], 0) * gram[1][0]) / det;
+            return [u0[0] + c1 * d1[0] + c2 * d2v[0], u0[1] + c1 * d1[1] + c2 * d2v[1]];
+          };
+
+          // offset correction + coplanarity guard: the affine must
+          // reproduce the known-good verts (residual < 0.05 UV units)
+          // before it is trusted to extrapolate the bad verts
+          let ox = 0, oy = 0, maxRes = 0;
+          for (const v of good) {
+            const m = lin(P(v));
+            ox += U(v)[0] - m[0];
+            oy += U(v)[1] - m[1];
+          }
+          ox /= good.length; oy /= good.length;
+          for (const v of good) {
+            const m = lin(P(v));
+            maxRes = Math.max(maxRes, Math.abs(U(v)[0] - m[0] - ox), Math.abs(U(v)[1] - m[1] - oy));
+          }
+          if (maxRes > 0.05) continue;
+
+          for (const v of vs) {
+            const c = cand.get(qpos(P(v)));
+            const known = c && c.some((cu) => d2(cu, U(v)) < 1e-3);
+            if (known) continue;
+            const m = lin(P(v));
+            writeVec2(gltf.accessors[prim.attributes.TEXCOORD_0], v, [m[0] + ox, m[1] + oy]);
+            report.repairedUvs++;
+            repairedThisPass++;
+          }
+          repaired = true;
+          break;
         }
-        ox /= good.length; oy /= good.length;
-        for (const v of vs) {
-          const c = cand.get(qpos(P(v)));
-          const known = c && c.some((cu) => dist2(cu, U(v)) < 1e-3);
-          if (known) continue;
-          const m = lin(P(v));
-          writeVec2(gltf.accessors[prim.attributes.TEXCOORD_0], v, [m[0] + ox, m[1] + oy]);
-          report.repairedUvs++;
+        if (!repaired) {
+          console.warn(`  ${matName(prim)} face ${f}: no coplanar anchor — left as-is`);
         }
       }
-      done = true;
-      break;
+      repairedTotal += repairedThisPass;
+      if (repairedThisPass === 0) {
+        console.warn(`  ${matName(prim)}: ${bad.length} faces unrepairable (no anchors/known-good verts)`);
+        break;
+      }
     }
-    if (done) break;
+    if (repairedTotal > 0) console.log(`uv: ${matName(prim)} — repaired ${repairedTotal} faces`);
   }
 }
 
