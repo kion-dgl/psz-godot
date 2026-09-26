@@ -10,15 +10,17 @@ extends CityAreaBase
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
-##       PSZ_WALK_SHADOWS=0          boot with omni shadows off (diff control)
+##       PSZ_WALK_SHADOWS=0          boot with the shadow twin off (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune), stage meshes never cast,
-##               and the shader catcher takes the omnis' shadows alone (lit
-##               reads transparent — no pools; each placed light throws its
-##               own actor shadow from its own position)
-##       M       omni shadows toggle (all authored lights at once)
+##               modulates albedo, light-immune), omnis lighting actors
+##               alone, and the valley #648 catcher contract driven by a
+##               SHADOW TWIN: one directional aimed from the dominant placed
+##               light through the player over a shadowless glow — lit floor
+##               clamps at x1 (transparent), the actor's silhouette drops to
+##               the base, direction from the light you stand near
+##       M       shadow twin toggle
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
 ##       N       next stage · R reload · ESC quit
@@ -41,13 +43,27 @@ const DEFAULT_SPAWN := Vector3(-0.05, -9.0, 121.78)
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
+## Render layer the catcher lives on: the omnis are masked off it (they
+## light actors only — a pool on the floor is the stage being lit) and the
+## glow + shadow twin are masked ONTO it (they exist for the catcher alone).
+const CATCHER_LAYER := 2
+## The catcher's lit clamp target: ambient + glow + twin ≥ this everywhere,
+## so the MUL reads ×1 (transparent floor) at every lit pixel. The shadowed
+## pixel loses the twin's TWIN_ENERGY — that drop IS the shadow depth.
+const BASE_TARGET := 1.08
+const TWIN_ENERGY := 0.55
+
 var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
+var _player: Node3D
 var _catcher: MeshInstance3D
+var _glow: DirectionalLight3D
+var _twin: DirectionalLight3D
+var _twin_owner: OmniLight3D          # the placed light the twin currently serves
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -74,6 +90,7 @@ func _ready() -> void:
 	_capture_base_energies()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
+	_player = lab_player
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
@@ -88,6 +105,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_twin()
 	_shot.step(self, "CWalk")
 
 
@@ -108,9 +126,8 @@ func _input(event: InputEvent) -> void:
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
-			var shadows := not _authored_lights()[0].shadow_enabled if not _authored_lights().is_empty() else false
-			for light in _authored_lights():
-				light.shadow_enabled = shadows
+			if _twin:
+				_twin.shadow_enabled = not _twin.shadow_enabled
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -163,14 +180,18 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
-## The DS architecture A/B (B): the stage keeps its pure baked look —
-## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
-## (the MeshBasic contract; light cannot touch it) — while the catcher
-## becomes SHADOW-ONLY (make_shadow_catcher's shadow_to_opacity shader: lit
-## reads transparent, so the omnis cannot pool on the floor; their SHADOW
-## MAPS drive the alpha, so each placed light throws its own actor shadow
-## from its own position). The stage meshes stop casting — only actors
-## shadow (the valley #648 rig's indoor contract, per-light instead of sun).
+## The DS architecture A/B (B) — the valley #648 contract, indoors, with a
+## placed light standing in for the sun. The stage keeps its pure baked
+## look (MeshUtils.make_unlit: UNSHADED, COLOR_0 as albedo — light cannot
+## touch it). The catcher is the valley's own white MUL on the catcher-only
+## render layer; exactly two lights may touch it: a shadowless GLOW (the
+## uniform base — straight down, every pixel, no falloff: the piece an omni
+## field can never provide) and the SHADOW TWIN (one directional whose
+## direction comes from the dominant placed light). Lit pixels read
+## ambient + glow + twin ≥ 1 → clamp ×1 → the floor is TRANSPARENT, the
+## bake verbatim; the actor's silhouette blocks the twin and drops the
+## pixel to the base — a real shadow-map shadow, ~TWIN_ENERGY deep, thrown
+## away from the light you stand near. The omnis light the actors alone.
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
 	var map := get_node_or_null("Map")
@@ -189,8 +210,8 @@ func _set_bake_mode(on: bool) -> void:
 						dup.vertex_color_use_as_albedo = false
 						mi.set_surface_override_material(i, dup)
 		# The stage never casts — indoors the whole room is the valley's
-		# enclosing shell. Actors (the player, NPCs) are the only casters, so
-		# the omnis' shadows are the actors' shadows and nothing else's.
+		# enclosing shell; only the actors' silhouettes reach the twin's
+		# shadow map.
 		for node in MeshUtils.collect_mesh_instances(map, []):
 			(node as MeshInstance3D).cast_shadow = \
 					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
@@ -200,22 +221,90 @@ func _set_bake_mode(on: bool) -> void:
 		if floor_root:
 			# up-facing only: the city floor GLB wraps the whole room, and its
 			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			# shadow_only: the shader catcher — lights drive alpha, not color.
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true)
 			if _catcher:
+				_catcher.layers = CATCHER_LAYER
 				add_child(_catcher)
+		# The uniform base: shadowless, straight down, catcher-only. Its
+		# energy is recomputed every frame against the ambient keys so the
+		# lit clamp target survives live tuning.
+		_glow = DirectionalLight3D.new()
+		_glow.name = "CatcherGlow"
+		_glow.rotation_degrees = Vector3(-90, 0, 0)
+		_glow.shadow_enabled = false
+		_glow.light_cull_mask = CATCHER_LAYER
+		add_child(_glow)
+		# The shadow twin: casts the actors' silhouettes, rides the player
+		# (the compatibility renderer anchors the directional shadow frustum
+		# at the light node — the valley's place_light_inside_room lesson).
+		# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake, no caster).
+		_twin = DirectionalLight3D.new()
+		_twin.name = "ShadowTwin"
+		_twin.shadow_enabled = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+		_twin.directional_shadow_max_distance = 40.0
+		_twin.light_energy = TWIN_ENERGY
+		_twin.light_cull_mask = CATCHER_LAYER
+		add_child(_twin)
 	elif not on and _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
-	# The omnis' shadows ARE the rig's shadows now — every authored light
-	# casts (the lantern alone ships with them). Leaving bake restores each
-	# sidecar's own state; M still flips everything live. PSZ_WALK_SHADOWS=0
-	# is the screenshot A/B control (bake + catcher, no casters).
-	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+		_glow.queue_free()
+		_glow = null
+		_twin.queue_free()
+		_twin = null
+		_twin_owner = null
+	# The omnis: actors only. Culled off the catcher in bake (their direct
+	# term on the catcher would pool — and one more time, the min/sum math
+	# means any light that could hold the floor up also fills the shadows
+	# in); shadows off, nothing they may light receives them. Leaving bake
+	# restores each sidecar's own state and full mask.
 	for light in _authored_lights():
-		light.shadow_enabled = shadows_on if on \
+		light.shadow_enabled = false if on \
 				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
+		light.light_cull_mask = 0xFFFFFFFF & ~CATCHER_LAYER if on else 0xFFFFFFFF
 	_update_status()
+
+
+## Per frame: pick the placed light the twin serves (hard switch with
+## hysteresis — the incumbent keeps its post until a challenger clearly
+## out-scores it, so the shadow never oscillates while walking a seam),
+## aim mostly DOWN tilted away from that light (a ceiling light's shadow:
+## straight down under it, swinging out as you step away), anchor above
+## the player, and keep the glow's energy compensating the ambient keys so
+## the lit floor stays clamped at ×1.
+func _update_twin() -> void:
+	if _twin == null or _player == null:
+		return
+	var p := _player.global_position
+	var owner_score := -1.0
+	var challenger: OmniLight3D = null
+	var challenger_score := 0.0
+	for light in _authored_lights():
+		var l := light.global_position
+		if l.y - p.y < 2.0:
+			continue  # at-eye or below-floor lights throw no sane shadow
+		var d2 := p.distance_squared_to(l)
+		if d2 > light.omni_range * light.omni_range:
+			continue
+		var score := light.light_energy / maxf(d2, 0.25)
+		if light == _twin_owner:
+			owner_score = score
+		elif score > challenger_score:
+			challenger_score = score
+			challenger = light
+	if _twin_owner == null or not is_instance_valid(_twin_owner) or owner_score < 0.0:
+		_twin_owner = challenger
+	elif challenger != null and challenger_score > owner_score * 1.6:
+		_twin_owner = challenger
+	var aim := Vector3.DOWN
+	if _twin_owner != null:
+		var horiz := Vector3(p.x - _twin_owner.global_position.x, 0.0,
+				p.z - _twin_owner.global_position.z)
+		if horiz.length() > 0.05:
+			aim = (Vector3.DOWN + horiz.normalized() * clampf(horiz.length() / 12.0, 0.0, 0.6)).normalized()
+	_twin.global_position = p + Vector3(0, 8.0, 0)
+	_twin.look_at(_twin.global_position + aim)
+	_glow.light_energy = maxf(0.1, BASE_TARGET - _env.ambient_light_energy - TWIN_ENERGY)
 
 
 func _authored_lights() -> Array[OmniLight3D]:
@@ -275,4 +364,4 @@ func _update_status() -> void:
 	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
-		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]
+		"on" if _twin != null and _twin.shadow_enabled else "off"]
