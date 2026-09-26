@@ -9,6 +9,7 @@ extends CityAreaBase
 ## land exactly as they do in-game — including the sun going dark.
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
+##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
@@ -75,6 +76,11 @@ func _ready() -> void:
 	lab_player.fall_respawn_y = -25.0
 	_build_status_label()
 	_readout()
+	# The DS architecture is the DEFAULT look (the #656 objective: bake on the
+	# stage, lights for the actors, catcher floor for the shadows). B still
+	# A/Bs live; PSZ_WALK_BAKE=0 boots the pre-bake lit look instead.
+	if OS.get_environment("PSZ_WALK_BAKE") != "0":
+		_set_bake_mode(true)
 	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
 
 
