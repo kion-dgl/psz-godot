@@ -3,9 +3,13 @@
 // place NPC / warp / spawn / trigger markers. Export the positions as GDScript
 // so Godot just has to match the mock.
 //
-// URL: /psz-godot/#/city-walk-mock?glb=<model.glb>&floor=<floor.glb>
+// URL: /psz-godot/#/city-walk-mock?glb=<model.glb>&floor=<floor.glb>&stage=<id>
 //   - glb:   textured visual model (defaults to s00e_sa2_m.glb)
 //   - floor: collision mesh the capsule walks on (defaults to s00e_sa2-floor.glb)
+//   - stage: city-lights sidecar id (defaults to s00e_sa2). When the sidecar
+//     exists the walk runs under the AUTHORED rig — ambient + omnis, Lambert,
+//     vertex colors off, same parity as the city-lab lit view — so the rig can
+//     be judged at ground level. Toggle "generic fill" for the old flat look.
 //
 // Controls: WASD move (camera-relative), drag to orbit, scroll to zoom,
 // Space = jump. Click "place: <thing>" then click the floor to drop that marker.
@@ -16,9 +20,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import AssetDriftWarning from '../components/AssetDriftWarning';
+import { parseLightsDoc } from '../city-lab/lightExport';
+import { applyViewMaterials, threePointLightProps, vec3ToColor } from '../city-lab/lightingRig';
+import type { LightsDoc } from '../city-lab/types';
+import { localAssetUrl } from '../utils/assets';
 
 const DEFAULT_MODEL = '/psz-godot/assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2_m.glb';
 const DEFAULT_FLOOR = '/psz-godot/assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb';
+const DEFAULT_STAGE = 's00e_sa2';
 
 const MARKER_KINDS = [
   { key: 'spawn', label: 'spawn', color: 0xffffff },
@@ -45,17 +54,43 @@ export default function CityWalkMock() {
   const [params] = useSearchParams();
   const modelUrl = params.get('glb') || DEFAULT_MODEL;
   const floorUrl = params.get('floor') || DEFAULT_FLOOR;
+  const stageId = params.get('stage') || DEFAULT_STAGE;
 
   const mountRef = useRef<HTMLDivElement>(null);
   const placeKindRef = useRef<MarkerKey | null>(null);
   const markersRef = useRef<Record<string, { mesh: THREE.Object3D; pos: THREE.Vector3 }>>({});
+  // Scene handles for the rig effect — the main effect owns the renderer and
+  // must not rebuild on rig toggles (it would refetch the GLBs and reset the
+  // walk), so lights and materials swap imperatively through these refs.
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const baseLightsRef = useRef<THREE.Light[]>([]);
+  const modelMeshRef = useRef<THREE.Object3D | null>(null);
+  const rigGroupRef = useRef<THREE.Group | null>(null);
+  const rigModeRef = useRef<'authored' | 'generic'>('authored');
 
   const [status, setStatus] = useState('loading…');
   const [placeKind, setPlaceKind] = useState<MarkerKey | null>(null);
   const [placed, setPlaced] = useState<Record<string, [number, number, number]>>({});
   const [feetPos, setFeetPos] = useState<[number, number, number]>([0, 0, 0]);
+  const [rig, setRig] = useState<LightsDoc | null>(null);
+  const [rigMode, setRigMode] = useState<'authored' | 'generic'>('authored');
 
   useEffect(() => { placeKindRef.current = placeKind; }, [placeKind]);
+  useEffect(() => { rigModeRef.current = rigMode; }, [rigMode]);
+
+  // Authored sidecar — same source of truth Godot loads.
+  useEffect(() => {
+    let alive = true;
+    fetch(localAssetUrl(`data/stage_configs/city-lights/${stageId}.json`))
+      .then((r) => (r.ok ? r.text() : null))
+      .then((text) => {
+        if (!alive || !text) return;
+        const doc = parseLightsDoc(text);
+        if (doc) setRig(doc);
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, [stageId]);
 
   useEffect(() => {
     const el = mountRef.current;
@@ -72,10 +107,13 @@ export default function CityWalkMock() {
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
     orbit.enabled = false;
-    scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+    sceneRef.current = scene;
+    // Generic fill — the pre-sidecar look, kept as the A/B baseline.
+    const ambient = new THREE.AmbientLight(0xffffff, 1.1);
     const dir = new THREE.DirectionalLight(0xffffff, 0.6);
     dir.position.set(40, 80, 40);
-    scene.add(dir);
+    scene.add(ambient, dir);
+    baseLightsRef.current = [ambient, dir];
     scene.add(new THREE.GridHelper(400, 80, 0x223044, 0x16202e));
 
     // Capsule (the "player"). Tracks FEET position.
@@ -100,10 +138,14 @@ export default function CityWalkMock() {
 
     // Visual model (textured). The model is a static mesh (skin stripped), so
     // GLTFLoader applies its node transform directly — same world frame as the
-    // baked floor + Godot. No manual offset needed.
+    // baked floor + Godot. No manual offset needed. Materials follow the rig
+    // mode: authored = Lambert, vertex colors off (game parity); generic =
+    // the GLB's own unlit bake look.
     loader.load(modelUrl, (g) => {
       scene.add(g.scene);
       modelMesh = g.scene;
+      modelMeshRef.current = g.scene;
+      applyViewMaterials(g.scene, rigModeRef.current === 'authored' ? 'lit' : 'bake', rigModeRef.current !== 'authored');
       done();
     }, undefined, (e) => setStatus('model load failed: ' + (e as any).message));
 
@@ -287,6 +329,42 @@ export default function CityWalkMock() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelUrl, floorUrl]);
 
+  // Rig swap — authored sidecar vs generic fill. Runs after the scene exists
+  // and again on toggle; never rebuilds the scene.
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    if (rigGroupRef.current) {
+      scene.remove(rigGroupRef.current);
+      rigGroupRef.current = null;
+    }
+    const authored = rigMode === 'authored' && rig != null && rig.lights.length > 0;
+    for (const l of baseLightsRef.current) l.visible = !authored;
+    if (modelMeshRef.current) {
+      applyViewMaterials(modelMeshRef.current, authored ? 'lit' : 'bake', !authored);
+    }
+    if (!authored || !rig) return;
+    const grp = new THREE.Group();
+    grp.name = 'authored-rig';
+    grp.add(new THREE.AmbientLight(vec3ToColor(rig.ambient.color), rig.ambient.energy));
+    for (const spec of rig.lights) {
+      const p = threePointLightProps(spec);
+      const light = new THREE.PointLight(p.color, p.intensity, p.distance, p.decay);
+      light.position.set(spec.pos[0], spec.pos[1], spec.pos[2]);
+      grp.add(light);
+      // Tiny emissive orb at each light — find them while walking without
+      // polluting the lighting itself.
+      const orb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 8, 8),
+        new THREE.MeshBasicMaterial({ color: p.color, toneMapped: false }),
+      );
+      orb.position.copy(light.position);
+      grp.add(orb);
+    }
+    scene.add(grp);
+    rigGroupRef.current = grp;
+  }, [rig, rigMode]);
+
   const gdscript = MARKER_KINDS
     .filter((m) => placed[m.key])
     .map((m) => {
@@ -318,6 +396,19 @@ export default function CityWalkMock() {
       </div>
       <aside style={{ width: 300, flexShrink: 0, padding: 16, background: '#161b22', borderLeft: '1px solid #30363d', overflowY: 'auto' }}>
         <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>City walk mock</h2>
+        <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
+          {(['authored', 'generic'] as const).map((m) => (
+            <button key={m} onClick={() => setRigMode(m)} disabled={m === 'authored' && !rig}
+              style={{
+                flex: 1, padding: '6px 8px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                border: '1px solid ' + (rigMode === m ? '#1f6feb' : '#30363d'),
+                background: rigMode === m ? '#1f6feb' : '#21262d',
+                color: '#e6edf3', opacity: m === 'authored' && !rig ? 0.5 : 1,
+              }}>
+              {m === 'authored' ? `authored rig${rig ? ` (${rig.lights.length})` : ' — none'}` : 'generic fill'}
+            </button>
+          ))}
+        </div>
         <p style={{ margin: '0 0 10px', fontSize: 12, color: '#8b949e' }}>
           Tank controls: <b>W/S</b> drive, <b>A/D</b> turn, <b>Q/E</b> strafe,
           <b> Space</b> jump. Green = floor collider — walk it to find gaps/slopes.

@@ -569,6 +569,13 @@ func _add_authored_lights(stage_id: String) -> bool:
 			var amb_col: Color = ambient["color"]
 			env_node.environment.ambient_light_color = amb_col
 			env_node.environment.ambient_light_energy = float(ambient["energy"])
+	# The sidecar is the whole rig (#656): scene-authored placeholder suns
+	# (city_counter's 0.3 DirectionalLight3D, tuned for the no-sidecar look)
+	# read as a flat ambient wash on top of it — the lab previews rig-only,
+	# so the game must too. Zero rather than free: inspectable, reversible.
+	for child in get_children():
+		if child is DirectionalLight3D:
+			child.light_energy = 0.0
 	print("[CityLights] %s: %d authored lights" % [stage_id, rows.size()])
 	return true
 
