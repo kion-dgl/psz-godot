@@ -394,15 +394,27 @@ static func collision_face_mesh(root: Node, up_facing_min := -1.0) -> ArrayMesh:
 ## faces. `up_facing_only` drops the non-walk slopes — the field shells are
 ## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
 ## would sit exactly coplanar with the stage (the counter's wall z-fight).
-static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false) -> MeshInstance3D:
+##
+## `shadow_only` is the city/indoor contract (the counter, #656): the lights
+## exist for ACTORS alone — a pool on the floor IS the stage being lit. The
+## valley's MUL catcher only works because its sun is directional and covers
+## every catcher pixel (lit clamps to ×1, no pools possible); an omni rig
+## pools. shadow_to_opacity flips the material: opacity driven by the shadow
+## map — invisible where lit, a dark overlay only inside shadows. Ambient
+## can't touch it (ambient never shadow-maps), so the bake shows verbatim.
+static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
+		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
 	if mesh == null:
 		return null
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 1)
+	mat.albedo_color = Color(0, 0, 0, 0.55) if shadow_only else Color(1, 1, 1, 1)
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	if shadow_only:
+		mat.shadow_to_opacity = true
+	else:
+		mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
 	mat.roughness = 1.0
 	mat.specular = 0.0
 	# Draw after the transparent detail planes and the waterfall (priority 1):

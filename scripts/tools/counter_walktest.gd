@@ -190,7 +190,9 @@ func _set_bake_mode(on: bool) -> void:
 		if floor_root:
 			# up-facing only: the city floor GLB wraps the whole room, and its
 			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true)
+			# shadow_only: the city contract — lights are for ACTORS; a pool on
+			# the floor is the stage being lit. The catcher shows shadows alone.
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
 			if _catcher:
 				add_child(_catcher)
 	elif not on and _catcher != null:
