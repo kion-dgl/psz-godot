@@ -10,17 +10,15 @@ extends CityAreaBase
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
-##       PSZ_WALK_SHADOWS=0          boot with the projector shadows off (diff control)
+##       PSZ_WALK_SHADOWS=0          boot with omni shadows off (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune), the authored omnis
-##               lighting the actors, and per-light PROJECTED shadows: a
-##               shadow viewport per placed light renders the actor's
-##               silhouette from the light's own position and the catcher
-##               composites them onto the transparent floor — stand
-##               between two lights and two shadows fall away from each
-##       M       projector shadows toggle
+##               modulates albedo, light-immune), stage meshes never cast,
+##               and the shader catcher takes the omnis' shadows alone (lit
+##               reads transparent — no pools; each placed light throws its
+##               own actor shadow from its own position)
+##       M       omni shadows toggle (all authored lights at once)
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
 ##       N       next stage · R reload · ESC quit
@@ -43,121 +41,13 @@ const DEFAULT_SPAWN := Vector3(-0.05, -9.0, 121.78)
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
-## The per-light projector rig: one SubViewport per placed light renders the
-## actor's SILHOUETTE from that light's position (camera at the light, aimed
-## at the actor, actors-only cull layer); the catcher is an UNSHADED quad
-## field whose shader projects each silhouette onto the floor through the
-## same camera's matrices and composites them with per-light weights
-## (energy / distance²). Transparent floor by construction (the catcher is
-## unlit — no engine light can touch it, no min formula, no veil), N real
-## per-light shadows, renderer-proof. Every engine-shadow path was measured
-## or derived dead first — see mesh_utils.make_shadow_catcher's doc.
-const PROJECTOR_SHADER := "
-shader_type spatial;
-render_mode blend_mix, unshaded, depth_draw_never;
-
-uniform sampler2D u_tex0; uniform mat4 u_view0; uniform mat4 u_proj0; uniform float u_w0;
-uniform sampler2D u_tex1; uniform mat4 u_view1; uniform mat4 u_proj1; uniform float u_w1;
-uniform sampler2D u_tex2; uniform mat4 u_view2; uniform mat4 u_proj2; uniform float u_w2;
-uniform sampler2D u_tex3; uniform mat4 u_view3; uniform mat4 u_proj3; uniform float u_w3;
-uniform sampler2D u_tex4; uniform mat4 u_view4; uniform mat4 u_proj4; uniform float u_w4;
-uniform sampler2D u_tex5; uniform mat4 u_view5; uniform mat4 u_proj5; uniform float u_w5;
-uniform sampler2D u_tex6; uniform mat4 u_view6; uniform mat4 u_proj6; uniform float u_w6;
-uniform sampler2D u_tex7; uniform mat4 u_view7; uniform mat4 u_proj7; uniform float u_w7;
-
-uniform float u_debug;
-
-varying vec3 world_pos;
-
-void vertex() {
-	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-}
-
-void fragment() {
-	ALBEDO = vec3(0.0);
-	float a = 0.0;
-	vec4 c;
-	vec2 uv;
-	c = u_proj0 * (u_view0 * vec4(world_pos, 1.0));
-	if (u_w0 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex0, uv).a * u_w0);
-		}
-	}
-	c = u_proj1 * (u_view1 * vec4(world_pos, 1.0));
-	if (u_w1 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex1, uv).a * u_w1);
-		}
-	}
-	c = u_proj2 * (u_view2 * vec4(world_pos, 1.0));
-	if (u_w2 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex2, uv).a * u_w2);
-		}
-	}
-	c = u_proj3 * (u_view3 * vec4(world_pos, 1.0));
-	if (u_w3 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex3, uv).a * u_w3);
-		}
-	}
-	c = u_proj4 * (u_view4 * vec4(world_pos, 1.0));
-	if (u_w4 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex4, uv).a * u_w4);
-		}
-	}
-	c = u_proj5 * (u_view5 * vec4(world_pos, 1.0));
-	if (u_w5 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex5, uv).a * u_w5);
-		}
-	}
-	c = u_proj6 * (u_view6 * vec4(world_pos, 1.0));
-	if (u_w6 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex6, uv).a * u_w6);
-		}
-	}
-	c = u_proj7 * (u_view7 * vec4(world_pos, 1.0));
-	if (u_w7 > 0.001 && c.w > 0.0) {
-		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
-		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-			a = max(a, texture(u_tex7, uv).a * u_w7);
-		}
-	}
-	ALPHA = a;
-	if (u_debug > 0.5) {
-		ALBEDO = vec3(0.85, 0.1, 0.1);
-		ALPHA = clamp(0.18 + a, 0.0, 0.9);
-	}
-}
-"
-
-## The render layer the projector cameras see: actor meshes only.
-const ACTOR_LAYER := 8
-## Shadow strength at the strongest — the max composite alpha.
-const SHADOW_MAX_ALPHA := 0.55
-
 var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
-var _player: Node3D
 var _catcher: MeshInstance3D
-var _catcher_mat: ShaderMaterial
-var _projectors: Array[Dictionary] = []  # {vp, cam, light}
-var _shadows_on := true
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -184,19 +74,6 @@ func _ready() -> void:
 	_capture_base_energies()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
-	_player = lab_player
-	# PSZ_WALK_TELEPORT="x,y,z": drop the player elsewhere before the shot —
-	# the between-two-lights smoke.
-	var tp := OS.get_environment("PSZ_WALK_TELEPORT")
-	if not tp.is_empty():
-		var parts := tp.split(",")
-		if parts.size() == 3:
-			_player.global_position = Vector3(
-				parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
-	# The player's meshes join the projector layer: every shadow viewport
-	# camera sees exactly the actors, nothing of the stage.
-	for node in MeshUtils.collect_mesh_instances(_player, []):
-		(node as GeometryInstance3D).layers |= ACTOR_LAYER
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
@@ -211,37 +88,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	_update_projectors()
 	_shot.step(self, "CWalk")
-	# PSZ_WALK_DUMP: after the shot frame, save projector 0's texture — the
-	# debug read for "is the silhouette even captured?"
-	var dump := OS.get_environment("PSZ_WALK_DUMP")
-	if not dump.is_empty() and _dump_frame < 40:
-		_dump_frame += 1
-		if _dump_frame == 40:
-			var img := (_projectors[0]["vp"] as SubViewport).get_texture().get_image()
-			img.save_png(dump)
-			print("[CWalk] projector 0 texture → %s (%dx%d)" % [dump, img.get_width(), img.get_height()])
-			var l := _projectors[0]["light"] as OmniLight3D
-			print("[CWalk] projector 0: light=%s d=%.1f w=%.2f" % [l.name,
-				l.global_position.distance_to(_player.global_position),
-				float(_catcher_mat.get_shader_parameter("u_w0"))])
-			# Projector 2 (the plaza light at spawn): where do the player's
-			# FEET land in its shadow texture? Should be ~center (0.4-0.6).
-			var pr2 := _projectors[2]
-			var cam2 := pr2["cam"] as Camera3D
-			var feet: Vector3 = _player.global_position
-			var view_pt: Vector3 = cam2.global_transform.inverse() * feet
-			var clip: Vector4 = (cam2.get_camera_projection()
-				* Vector4(view_pt.x, view_pt.y, view_pt.z, 1.0))
-			var uv := Vector2(clip.x / clip.w, clip.y / clip.w) * 0.5 + Vector2(0.5, 0.5)
-			print("[CWalk] projector 2: light=%s w=%.2f feet_uv=(%.2f, %.2f) w_clip=%.2f far=%.1f" % [
-				(pr2["light"] as OmniLight3D).name,
-				float(_catcher_mat.get_shader_parameter("u_w2")),
-				uv.x, uv.y, clip.w, cam2.far])
-
-
-var _dump_frame := 0
 
 
 func _input(event: InputEvent) -> void:
@@ -261,7 +108,9 @@ func _input(event: InputEvent) -> void:
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
-			_shadows_on = not _shadows_on
+			var shadows := not _authored_lights()[0].shadow_enabled if not _authored_lights().is_empty() else false
+			for light in _authored_lights():
+				light.shadow_enabled = shadows
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -314,20 +163,14 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
-## The DS architecture A/B (B) — "normal freaking shadows": N real
-## per-light shadows over a transparent floor. The stage keeps its pure
-## baked look (MeshUtils.make_unlit: UNSHADED, COLOR_0 as albedo). The
-## authored omnis light the actors exactly as authored. The shadows are
-## PROJECTIVE: every placed light gets a shadow viewport whose camera
-## sits AT the light aimed at the actor (actors-only layer), rendering
-## the actor's silhouette; the catcher is an UNSHADED quad field whose
-## shader projects each silhouette onto the floor through the same
-## camera matrices, weighted by energy/distance². No engine shadow path
-## is involved — every one was measured or derived dead (the min-formula
-## veil, the zero-sum fills; the full log lives in
-## mesh_utils.make_shadow_catcher's doc) — so the floor is transparent
-## BY CONSTRUCTION and each light throws its own shadow its own way:
-## stand between two lights and two shadows fall away from each.
+## The DS architecture A/B (B): the stage keeps its pure baked look —
+## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
+## (the MeshBasic contract; light cannot touch it) — while the catcher
+## becomes SHADOW-ONLY (make_shadow_catcher's shadow_to_opacity shader: lit
+## reads transparent, so the omnis cannot pool on the floor; their SHADOW
+## MAPS drive the alpha, so each placed light throws its own actor shadow
+## from its own position). The stage meshes stop casting — only actors
+## shadow (the valley #648 rig's indoor contract, per-light instead of sun).
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
 	var map := get_node_or_null("Map")
@@ -346,8 +189,8 @@ func _set_bake_mode(on: bool) -> void:
 						dup.vertex_color_use_as_albedo = false
 						mi.set_surface_override_material(i, dup)
 		# The stage never casts — indoors the whole room is the valley's
-		# enclosing shell; only the actors appear in the shadow viewports.
-		# shadow maps.
+		# enclosing shell. Actors (the player, NPCs) are the only casters, so
+		# the omnis' shadows are the actors' shadows and nothing else's.
 		for node in MeshUtils.collect_mesh_instances(map, []):
 			(node as MeshInstance3D).cast_shadow = \
 					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
@@ -357,86 +200,22 @@ func _set_bake_mode(on: bool) -> void:
 		if floor_root:
 			# up-facing only: the city floor GLB wraps the whole room, and its
 			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			# The projector shader catcher: unlit, composited manually.
-			var mesh := MeshUtils.collision_face_mesh(floor_root, 0.6)
-			if mesh != null:
-				_catcher_mat = ShaderMaterial.new()
-				var sh := Shader.new()
-				sh.code = PROJECTOR_SHADER
-				_catcher_mat.shader = sh
-				# PSZ_WALK_CATCHER_DEBUG=1: the catcher glows faint red where
-				# it covers and strong red where shadow alpha lands — the
-				# unambiguous read for "is it rendering, and where".
-				if OS.get_environment("PSZ_WALK_CATCHER_DEBUG") == "1":
-					_catcher_mat.set_shader_parameter("u_debug", 1.0)
-				mesh.surface_set_material(0, _catcher_mat)
-				_catcher = MeshInstance3D.new()
-				_catcher.name = "ShadowProjector"
-				_catcher.mesh = mesh
-				_catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				_catcher.position.y = 0.04
+			# shadow_only: the shader catcher — lights drive alpha, not color.
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
+			if _catcher:
 				add_child(_catcher)
-		_build_projectors()
 	elif not on and _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
-		for pr in _projectors:
-			(pr["vp"] as SubViewport).queue_free()
-		_projectors.clear()
-	# The authored omnis are the ACTOR rig — full mask, their sidecar shadow
-	# states untouched; the catcher is unlit and cannot see them at all.
+	# The omnis' shadows ARE the rig's shadows now — every authored light
+	# casts (the lantern alone ships with them). Leaving bake restores each
+	# sidecar's own state; M still flips everything live. PSZ_WALK_SHADOWS=0
+	# is the screenshot A/B control (bake + catcher, no casters).
+	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
 	for light in _authored_lights():
-		light.shadow_enabled = bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
-		light.light_cull_mask = 0xFFFFFFFF
+		light.shadow_enabled = shadows_on if on \
+				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
 	_update_status()
-
-
-## One SubViewport per placed light, its camera sitting AT the light aimed
-## at the actor, seeing only the actor layer (ACTOR_LAYER — the player's
-## meshes join it after spawn). The catcher shader samples these each frame.
-func _build_projectors() -> void:
-	_shadows_on = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
-	var lights := _authored_lights()
-	for i in lights.size():
-		var vp := SubViewport.new()
-		vp.name = "ShadowVP_%d" % i
-		vp.size = Vector2(256, 256)
-		vp.transparent_bg = true
-		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-		var cam := Camera3D.new()
-		cam.cull_mask = ACTOR_LAYER
-		cam.set_orthogonal(2.6, 0.05, 60.0)
-		vp.add_child(cam)
-		add_child(vp)
-		_catcher_mat.set_shader_parameter("u_tex%d" % i, vp.get_texture())
-		_projectors.append({"vp": vp, "cam": cam, "light": lights[i]})
-
-
-## Per frame: aim every projector camera at the actor and feed the catcher
-## shader each light's view/projection and weight (energy / distance², in
-## range, above the actor). Lights out of range or below the actor's plane
-## throw nothing — walk the hall and the shadows trade off light to light.
-func _update_projectors() -> void:
-	if _catcher_mat == null or _player == null:
-		return
-	var p := _player.global_position + Vector3(0, 0.8, 0)
-	for i in _projectors.size():
-		var pr := _projectors[i]
-		var light := pr["light"] as OmniLight3D
-		var cam := pr["cam"] as Camera3D
-		var l := light.global_position
-		var d := l.distance_to(p)
-		cam.position = l
-		cam.look_at(p)
-		cam.far = d + 3.0
-		var w := 0.0
-		if _shadows_on and d < light.omni_range and l.y > p.y:
-			# 20× energy/d²: an e2 sconce reads a full shadow to ~6 units and
-			# a fading one to its range edge; the e40s carry across the hall.
-			w = clampf(20.0 * light.light_energy / maxf(d * d, 0.25), 0.0, 1.0) * SHADOW_MAX_ALPHA
-		_catcher_mat.set_shader_parameter("u_view%d" % i, cam.global_transform)
-		_catcher_mat.set_shader_parameter("u_proj%d" % i, cam.get_camera_projection())
-		_catcher_mat.set_shader_parameter("u_w%d" % i, w)
 
 
 func _authored_lights() -> Array[OmniLight3D]:
@@ -496,4 +275,4 @@ func _update_status() -> void:
 	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
-		"on" if _shadows_on else "off"]
+		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]
