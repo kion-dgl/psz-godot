@@ -207,6 +207,8 @@ export default function CityLab() {
   const [selectedLightId, setSelectedLightId] = useState<string | null>(null);
   const [rigView, setRigView] = useState<'authored' | 'scene'>('authored');
   const [placeArmed, setPlaceArmed] = useState(false);
+  /** Armed place-new mode: the next map click spawns a light of this preset. */
+  const [placeNew, setPlaceNew] = useState<'warm' | 'pool' | null>(null);
   const selected = draft.lights.find((l) => l.id === selectedLightId) ?? null;
 
   // Load an existing sidecar once per stage so the tool starts from what
@@ -366,17 +368,35 @@ export default function CityLab() {
   /* ------------------------------------------------------------ */
   const handlePick = useCallback(
     (p: FacePick | null, worldPoint?: Vec3) => {
+      // Lighting placement: an armed place-new mode spawns a light at the
+      // click (single-shot, like snap-to-click) and selects it for the
+      // translate gizmo.
+      if (mode === 'lighting' && placeNew && worldPoint) {
+        const preset = placeNew === 'warm' ? PRESET_INTERIOR : PRESET_POOL;
+        const light = { ...newLight(preset), pos: [...worldPoint] as Vec3 };
+        setDraft({ ...draft, lights: [...draft.lights, light] });
+        setSelectedLightId(light.id);
+        setPlaceNew(null);
+        setStatus(`${light.name} placed at ${worldPoint.map((n) => n.toFixed(2)).join(', ')}`);
+        return;
+      }
       if (mode === 'lighting' && placeArmed && selected && worldPoint) {
         setDraft({ ...draft, lights: draft.lights.map((l) => (l.id === selected.id ? { ...l, pos: [...worldPoint] as Vec3 } : l)) });
         setPlaceArmed(false);
         setStatus(`${selected.name} → ${worldPoint.map((n) => n.toFixed(2)).join(', ')}`);
         return;
       }
+      // Armed but the click found no surface (sky / off-model): say so —
+      // a silent miss reads as "clicking does nothing".
+      if (mode === 'lighting' && (placeNew || placeArmed) && !worldPoint) {
+        setStatus('missed the map — click a surface to place the light');
+        return;
+      }
       setPick(p);
       // A fresh scene pick supersedes the audit-list focus.
       if (p) setFocusKey(null);
     },
-    [mode, placeArmed, selected, draft, setDraft],
+    [mode, placeNew, placeArmed, selected, draft, setDraft],
   );
 
   /* ------------------------------------------------------------ */
@@ -435,11 +455,6 @@ export default function CityLab() {
   /* ------------------------------------------------------------ */
   /* Light editing helpers                                         */
   /* ------------------------------------------------------------ */
-  const addLight = (preset: typeof PRESET_INTERIOR | typeof PRESET_POOL) => {
-    const light = { ...newLight(preset), pos: [...(draft.lights.length ? draft.lights[draft.lights.length - 1].pos : ([0, 0, 0] as Vec3))] as Vec3 };
-    setDraft({ ...draft, lights: [...draft.lights, light] });
-    setSelectedLightId(light.id);
-  };
   const updateLight = (id: string, patch: Partial<LightSpec>) =>
     setDraft({ ...draft, lights: draft.lights.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
   const removeLight = (id: string) => {
@@ -732,11 +747,23 @@ export default function CityLab() {
               </div>
 
               <div style={sectionTitle}>Lights ({draft.lights.length})</div>
-              <button onClick={() => addLight(PRESET_INTERIOR)} style={btn('#2f4f6f')}>
-                + interior warm
+              <button
+                onClick={() => {
+                  setPlaceArmed(false);
+                  setPlaceNew(placeNew === 'warm' ? null : 'warm');
+                }}
+                style={btn(placeNew === 'warm' ? '#2f7f6f' : '#2f4f6f')}
+              >
+                {placeNew === 'warm' ? 'click on the map…' : '+ warm ⌖ click'}
               </button>
-              <button onClick={() => addLight(PRESET_POOL)} style={btn('#6f4f2f')}>
-                + lantern pool
+              <button
+                onClick={() => {
+                  setPlaceArmed(false);
+                  setPlaceNew(placeNew === 'pool' ? null : 'pool');
+                }}
+                style={btn(placeNew === 'pool' ? '#8f5f2f' : '#6f4f2f')}
+              >
+                {placeNew === 'pool' ? 'click on the map…' : '+ pool ⌖ click'}
               </button>
               <button
                 onClick={() => {
@@ -749,6 +776,37 @@ export default function CityLab() {
                 seed legacy 7
               </button>
 
+              {/* Every light in the rig, clickable to select — the 3D labels
+                  can't reach off-screen clusters and half-buried gizmos. */}
+              <div style={{ maxHeight: 150, overflowY: 'auto', marginTop: 6, background: '#121428', borderRadius: 4 }}>
+                {draft.lights.map((l) => (
+                  <div
+                    key={l.id}
+                    onClick={() => setSelectedLightId(l.id)}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 6,
+                      padding: '3px 6px',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                      background: l.id === selectedLightId ? '#233a5e' : 'transparent',
+                      color: l.id === selectedLightId ? '#cfe6ff' : '#9a9ab0',
+                      borderBottom: '1px solid #1c1e36',
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</span>
+                    <span style={{ color: '#666', whiteSpace: 'nowrap' }}>
+                      {l.energy.toFixed(1)}·{l.range.toFixed(0)}m {l.pos.map((n) => n.toFixed(0)).join(',')}
+                    </span>
+                  </div>
+                ))}
+                {draft.lights.length === 0 && (
+                  <div style={{ padding: '6px', fontSize: 11, color: '#666' }}>no lights — arm a ⌖ button and click the map</div>
+                )}
+              </div>
+
               {selected && (
                 <div style={{ marginTop: 10, padding: 8, background: '#181a30', borderRadius: 4 }}>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
@@ -758,7 +816,10 @@ export default function CityLab() {
                       onChange={(e) => updateLight(selected.id, { name: e.target.value })}
                     />
                     <button
-                      onClick={() => setPlaceArmed(!placeArmed)}
+                      onClick={() => {
+                        setPlaceNew(null);
+                        setPlaceArmed(!placeArmed);
+                      }}
                       style={btn(placeArmed ? '#8f2f5f' : '#2a2a4a')}
                     >
                       {placeArmed ? 'click on the map…' : 'snap to click'}

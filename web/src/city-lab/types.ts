@@ -91,8 +91,16 @@ export const STAGES: StageDef[] = [
       { pos: [-10.53, -10.67, 114.15], label: 'Storage NPC', color: '#7fd4ff' },
       { pos: [0.05, -5.08, 60.96], label: 'Warp pad', color: '#c58cff' },
     ],
+    // Objective (#656): the game renders s00e_sa2 with vertex colors OFF
+    // (city_counter_controller's "baked too dark" override) and the authored
+    // sidecar ON — the rig's job is to recreate the bake's style with real
+    // lights. The lab's lit view mirrors that here; the bake view ignores
+    // this flag and always renders COLOR_0 as the reference target.
     vertexColors: false,
-    sceneRig: { ambientColor: [0.9, 0.88, 0.82], ambientEnergy: 1.5, sunEnergy: 0.3 },
+    // sun 0 — interior: the game scene has no directional reach-inside, and
+    // this value re-seeds the draft's sun on every sidecar load, where it
+    // reads as a flat wash on top of the ambient fill.
+    sceneRig: { ambientColor: [0.9, 0.88, 0.82], ambientEnergy: 1.5, sunEnergy: 0.0 },
     lightStageId: 's00e_sa2',
   },
   {

@@ -221,9 +221,11 @@ describe('threePointLightProps', () => {
 });
 
 describe('stage table', () => {
-  it('gives the counter a sidecar id and the market-source a lineage export path', () => {
+  it('gives the counter a sidecar id and mirrors the game vertex-color override; the market-source keeps a lineage export path', () => {
     const counter = STAGES.find((s) => s.id === 'counter');
     expect(counter?.lightStageId).toBe('s00e_sa2');
+    // Lit workbench mirrors the game (vertex colors off, sidecar on); the
+    // bake reference view ignores this flag and always renders COLOR_0.
     expect(counter?.vertexColors).toBe(false);
     const source = STAGES.find((s) => s.id === 'market-source');
     expect(source?.exportPath).toBe('assets/stages/city_e/market/dairon3.glb');

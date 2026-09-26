@@ -85,9 +85,12 @@ function StageModels({ def, gltfs, mode, markedFaces, onPick, onFramePick, onRoo
   }, [def.id, gltfs]);
 
   // Materials per mode: bake (unlit reference) for inspect/triangles,
-  // lit (Lambert) for the lighting workbench.
+  // lit (Lambert) for the lighting workbench. The bake view always renders
+  // the GLB's own COLOR_0 — it is the target image the rig must recreate;
+  // the def's vertexColors flag (the game's per-stage override) governs
+  // only the lit workbench.
   useEffect(() => {
-    applyViewMaterials(root, mode === 'lighting' ? 'lit' : 'bake', def.vertexColors);
+    applyViewMaterials(root, mode === 'lighting' ? 'lit' : 'bake', mode === 'lighting' ? def.vertexColors : true);
     const lit = mode === 'lighting';
     root.traverse((child) => {
       const mesh = child as THREE.Mesh;
@@ -374,6 +377,13 @@ function LightNode({
         <mesh>
           <sphereGeometry args={[0.25, 12, 12]} />
           <meshBasicMaterial color={props.color} toneMapped={false} />
+        </mesh>
+        {/* Fat invisible raycast proxy — the 0.25 core is a few pixels at
+            city scale and impossible to click; this makes selection easy
+            without polluting the preview (fully transparent, still hit). */}
+        <mesh>
+          <sphereGeometry args={[1.5, 8, 8]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         {selected && (
           <mesh raycast={() => null}>

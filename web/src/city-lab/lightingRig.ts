@@ -131,9 +131,12 @@ export function robustStageBox(root: THREE.Object3D): THREE.Box3 {
 
 /**
  * Swap materials on a prepared stage node for the requested view.
- * `bake` is the reference look (what Godot's unlit path renders); `lit`
- * is the authored-lighting workbench. Source material NAME is preserved —
- * the inspector and any name-based lookups key off it.
+ * `bake` is the reference target (COLOR_0 × texture, what the DS shipped —
+ * always renders the GL's own vertex colors regardless of the def flag);
+ * `lit` is the authored-lighting workbench and honors the def's
+ * vertexColors flag, mirroring the game's per-stage override.
+ * Source material NAME is preserved — the inspector and any name-based
+ * lookups key off it.
  */
 export function applyViewMaterials(
   node: THREE.Object3D,
