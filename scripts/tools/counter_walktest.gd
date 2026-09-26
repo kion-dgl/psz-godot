@@ -11,6 +11,10 @@ extends CityAreaBase
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
+##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
+##               modulates albedo, light-immune) + the collision shell as a
+##               shadow-catcher floor (the valley #648 rig): the omnis then
+##               matter only to actors and the catcher
 ##       M       omni shadows toggle (all authored lights at once)
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
@@ -38,6 +42,8 @@ var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
+var _bake_mode := false
+var _catcher: MeshInstance3D
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -69,7 +75,7 @@ func _ready() -> void:
 	lab_player.fall_respawn_y = -25.0
 	_build_status_label()
 	_readout()
-	print("[CWalk] ready — , . ambient · [ ] pools · M shadows · P readout · N next · R reload · ESC quit")
+	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
 
 
 func _process(_delta: float) -> void:
@@ -90,6 +96,8 @@ func _input(event: InputEvent) -> void:
 		KEY_BRACKETRIGHT:
 			_pool_scale += 0.25
 			_apply_pool_scale()
+		KEY_B:
+			_set_bake_mode(not _bake_mode)
 		KEY_M:
 			var shadows := not _authored_lights()[0].shadow_enabled if not _authored_lights().is_empty() else false
 			for light in _authored_lights():
@@ -146,6 +154,41 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
+## The DS architecture A/B (B): the stage keeps its pure baked look —
+## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
+## (the MeshBasic contract; light cannot touch it) — while the collision
+## shell becomes the shadow catcher (the valley #648 rig): a white
+## multiply-blended receiver at walk height. The omnis then matter only to
+## the actors and the catcher: pools and shadows composite onto the bake.
+func _set_bake_mode(on: bool) -> void:
+	_bake_mode = on
+	var map := get_node_or_null("Map")
+	if map:
+		if on:
+			MeshUtils.make_unlit(map, [])
+		else:
+			# Back to the production lit look: per-pixel, vertex colors off.
+			for node in MeshUtils.collect_mesh_instances(map, []):
+				var mi := node as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat: Material = mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+						dup.vertex_color_use_as_albedo = false
+						mi.set_surface_override_material(i, dup)
+	if on and _catcher == null:
+		var floor_root := get_node_or_null("FloorCollision")
+		if floor_root:
+			_catcher = MeshUtils.make_shadow_catcher(floor_root)
+			if _catcher:
+				add_child(_catcher)
+	elif not on and _catcher != null:
+		_catcher.queue_free()
+		_catcher = null
+	_update_status()
+
+
 func _authored_lights() -> Array[OmniLight3D]:
 	var out: Array[OmniLight3D] = []
 	for child in get_children():
@@ -199,6 +242,7 @@ func _build_status_label() -> void:
 
 func _update_status() -> void:
 	var n := _authored_lights().size()
-	_status.text = "%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
-		_stage_id, _env.ambient_light_energy, _pool_scale, n,
+	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
+		_stage_id, " · DS bake" if _bake_mode else "",
+		_env.ambient_light_energy, _pool_scale, n,
 		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]
