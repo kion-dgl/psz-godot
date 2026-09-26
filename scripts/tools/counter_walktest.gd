@@ -65,6 +65,8 @@ uniform sampler2D u_tex5; uniform mat4 u_view5; uniform mat4 u_proj5; uniform fl
 uniform sampler2D u_tex6; uniform mat4 u_view6; uniform mat4 u_proj6; uniform float u_w6;
 uniform sampler2D u_tex7; uniform mat4 u_view7; uniform mat4 u_proj7; uniform float u_w7;
 
+uniform float u_debug;
+
 varying vec3 world_pos;
 
 void vertex() {
@@ -133,6 +135,10 @@ void fragment() {
 		}
 	}
 	ALPHA = a;
+	if (u_debug > 0.5) {
+		ALBEDO = vec3(0.85, 0.1, 0.1);
+		ALPHA = clamp(0.18 + a, 0.0, 0.9);
+	}
 }
 "
 
@@ -179,6 +185,14 @@ func _ready() -> void:
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
 	_player = lab_player
+	# PSZ_WALK_TELEPORT="x,y,z": drop the player elsewhere before the shot —
+	# the between-two-lights smoke.
+	var tp := OS.get_environment("PSZ_WALK_TELEPORT")
+	if not tp.is_empty():
+		var parts := tp.split(",")
+		if parts.size() == 3:
+			_player.global_position = Vector3(
+				parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
 	# The player's meshes join the projector layer: every shadow viewport
 	# camera sees exactly the actors, nothing of the stage.
 	for node in MeshUtils.collect_mesh_instances(_player, []):
@@ -199,6 +213,35 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	_update_projectors()
 	_shot.step(self, "CWalk")
+	# PSZ_WALK_DUMP: after the shot frame, save projector 0's texture — the
+	# debug read for "is the silhouette even captured?"
+	var dump := OS.get_environment("PSZ_WALK_DUMP")
+	if not dump.is_empty() and _dump_frame < 40:
+		_dump_frame += 1
+		if _dump_frame == 40:
+			var img := (_projectors[0]["vp"] as SubViewport).get_texture().get_image()
+			img.save_png(dump)
+			print("[CWalk] projector 0 texture → %s (%dx%d)" % [dump, img.get_width(), img.get_height()])
+			var l := _projectors[0]["light"] as OmniLight3D
+			print("[CWalk] projector 0: light=%s d=%.1f w=%.2f" % [l.name,
+				l.global_position.distance_to(_player.global_position),
+				float(_catcher_mat.get_shader_parameter("u_w0"))])
+			# Projector 2 (the plaza light at spawn): where do the player's
+			# FEET land in its shadow texture? Should be ~center (0.4-0.6).
+			var pr2 := _projectors[2]
+			var cam2 := pr2["cam"] as Camera3D
+			var feet: Vector3 = _player.global_position
+			var view_pt: Vector3 = cam2.global_transform.inverse() * feet
+			var clip: Vector4 = (cam2.get_camera_projection()
+				* Vector4(view_pt.x, view_pt.y, view_pt.z, 1.0))
+			var uv := Vector2(clip.x / clip.w, clip.y / clip.w) * 0.5 + Vector2(0.5, 0.5)
+			print("[CWalk] projector 2: light=%s w=%.2f feet_uv=(%.2f, %.2f) w_clip=%.2f far=%.1f" % [
+				(pr2["light"] as OmniLight3D).name,
+				float(_catcher_mat.get_shader_parameter("u_w2")),
+				uv.x, uv.y, clip.w, cam2.far])
+
+
+var _dump_frame := 0
 
 
 func _input(event: InputEvent) -> void:
@@ -321,6 +364,11 @@ func _set_bake_mode(on: bool) -> void:
 				var sh := Shader.new()
 				sh.code = PROJECTOR_SHADER
 				_catcher_mat.shader = sh
+				# PSZ_WALK_CATCHER_DEBUG=1: the catcher glows faint red where
+				# it covers and strong red where shadow alpha lands — the
+				# unambiguous read for "is it rendering, and where".
+				if OS.get_environment("PSZ_WALK_CATCHER_DEBUG") == "1":
+					_catcher_mat.set_shader_parameter("u_debug", 1.0)
 				mesh.surface_set_material(0, _catcher_mat)
 				_catcher = MeshInstance3D.new()
 				_catcher.name = "ShadowProjector"
@@ -383,7 +431,9 @@ func _update_projectors() -> void:
 		cam.far = d + 3.0
 		var w := 0.0
 		if _shadows_on and d < light.omni_range and l.y > p.y:
-			w = clampf(8.0 * light.light_energy / maxf(d * d, 0.25), 0.0, 1.0) * SHADOW_MAX_ALPHA
+			# 20× energy/d²: an e2 sconce reads a full shadow to ~6 units and
+			# a fading one to its range edge; the e40s carry across the hall.
+			w = clampf(20.0 * light.light_energy / maxf(d * d, 0.25), 0.0, 1.0) * SHADOW_MAX_ALPHA
 		_catcher_mat.set_shader_parameter("u_view%d" % i, cam.global_transform)
 		_catcher_mat.set_shader_parameter("u_proj%d" % i, cam.get_camera_projection())
 		_catcher_mat.set_shader_parameter("u_w%d" % i, w)
