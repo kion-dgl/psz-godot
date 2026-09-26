@@ -10,14 +10,15 @@ extends CityAreaBase
 ##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
+##       PSZ_WALK_SHADOWS=0          boot with omni shadows off (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
 ##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune), omnis culled to actors
-##               only, stage meshes never cast, and a skylight directional
-##               casting the actors' shadows onto the catcher floor (the
-##               valley #648 rig indoors)
-##       M       skylight shadows toggle
+##               modulates albedo, light-immune), stage meshes never cast,
+##               and the shader catcher takes the omnis' shadows alone (lit
+##               reads transparent — no pools; each placed light throws its
+##               own actor shadow from its own position)
+##       M       omni shadows toggle (all authored lights at once)
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
 ##       N       next stage · R reload · ESC quit
@@ -46,8 +47,6 @@ var _pool_scale := 1.0
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
-var _player: Node3D
-var _sky: DirectionalLight3D
 var _catcher: MeshInstance3D
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
@@ -75,7 +74,6 @@ func _ready() -> void:
 	_capture_base_energies()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
-	_player = lab_player
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
@@ -90,8 +88,6 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _sky and _sky.visible and _player:
-		_sky.global_position = _player.global_position + Vector3(0, 8.0, 0)
 	_shot.step(self, "CWalk")
 
 
@@ -112,8 +108,9 @@ func _input(event: InputEvent) -> void:
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
-			if _sky:
-				_sky.shadow_enabled = not _sky.shadow_enabled
+			var shadows := not _authored_lights()[0].shadow_enabled if not _authored_lights().is_empty() else false
+			for light in _authored_lights():
+				light.shadow_enabled = shadows
 		KEY_N:
 			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()]
 			get_tree().reload_current_scene()
@@ -168,16 +165,12 @@ func _load_stage() -> void:
 
 ## The DS architecture A/B (B): the stage keeps its pure baked look —
 ## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
-## (the MeshBasic contract; light cannot touch it) — while the lights split
-## their audience. The omnis are CULLED off the catcher's render layer: they
-## exist for the actors alone (a pool on the floor IS the stage being lit —
-## shadow_to_opacity was the first try and renders nothing on the
-## compatibility renderer, probe 2026-09-26). A skylight directional owns
-## the shadow: uniform like the valley sun (lit catcher clamps to ×1), and
-## the stage meshes stop casting, so ONLY the actors' shadows multiply onto
-## the catcher floor (the valley #648 rig indoors).
-const CATCHER_LAYER := 2  # render layer — omnis are masked off it
-
+## (the MeshBasic contract; light cannot touch it) — while the catcher
+## becomes SHADOW-ONLY (make_shadow_catcher's shadow_to_opacity shader: lit
+## reads transparent, so the omnis cannot pool on the floor; their SHADOW
+## MAPS drive the alpha, so each placed light throws its own actor shadow
+## from its own position). The stage meshes stop casting — only actors
+## shadow (the valley #648 rig's indoor contract, per-light instead of sun).
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
 	var map := get_node_or_null("Map")
@@ -195,9 +188,9 @@ func _set_bake_mode(on: bool) -> void:
 						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 						dup.vertex_color_use_as_albedo = false
 						mi.set_surface_override_material(i, dup)
-		# Indoors the whole room is the valley's "enclosing shell": the stage
-		# never casts, or the skylight would paint the room's own geometry
-		# onto the floor. Actors (the player, NPCs) are the only casters.
+		# The stage never casts — indoors the whole room is the valley's
+		# enclosing shell. Actors (the player, NPCs) are the only casters, so
+		# the omnis' shadows are the actors' shadows and nothing else's.
 		for node in MeshUtils.collect_mesh_instances(map, []):
 			(node as MeshInstance3D).cast_shadow = \
 					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
@@ -207,45 +200,21 @@ func _set_bake_mode(on: bool) -> void:
 		if floor_root:
 			# up-facing only: the city floor GLB wraps the whole room, and its
 			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true)
+			# shadow_only: the shader catcher — lights drive alpha, not color.
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
 			if _catcher:
-				# Render layer 2 — the omnis' cull mask excludes it, so the
-				# catcher sees exactly one light: the skylight.
-				_catcher.layers = CATCHER_LAYER
 				add_child(_catcher)
 	elif not on and _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
-	if _sky == null:
-		# The room's skylight: overhead, uniform, shadow-casting — the valley
-		# sun's indoor stand-in. energy ≥ (1 − ambient) keeps the lit catcher
-		# clamped at ×1 (invisible); the shadowed catcher reads ×ambient —
-		# the ambient share IS the shadow depth, same as the valley.
-		_sky = DirectionalLight3D.new()
-		_sky.name = "Skylight"
-		_sky.rotation_degrees = Vector3(-75, 25, 0)
-		_sky.light_color = Color(1.0, 0.97, 0.92)
-		_sky.light_energy = 0.6
-		# The compatibility renderer anchors the directional shadow frustum
-		# at the light node's position (the valley's place_light_inside_room
-		# lesson) — a static origin drops the player out of the default
-		# 100-unit shadow distance in a hall this long. The skylight rides
-		# above the player instead (direction is rotation; the anchor only
-		# places the frustum), and the tight max distance buys texel density.
-		_sky.directional_shadow_max_distance = 60.0
-		# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake + catcher,
-		# no caster light).
-		_sky.shadow_enabled = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
-		add_child(_sky)
-	_sky.visible = on
-	# The omnis: actors only, both ways. Culled off the catcher in bake
-	# (their pools were "the stage being lit"); shadows off — the skylight
-	# owns the shadow, and 8 dual-paraboloid passes bought nothing the
-	# character could see. Leaving bake restores each sidecar's own state.
+	# The omnis' shadows ARE the rig's shadows now — every authored light
+	# casts (the lantern alone ships with them). Leaving bake restores each
+	# sidecar's own state; M still flips everything live. PSZ_WALK_SHADOWS=0
+	# is the screenshot A/B control (bake + catcher, no casters).
+	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
 	for light in _authored_lights():
-		light.shadow_enabled = false if on \
+		light.shadow_enabled = shadows_on if on \
 				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
-		light.light_cull_mask = 0xFFFFFFFF & ~CATCHER_LAYER if on else 0xFFFFFFFF
 	_update_status()
 
 
@@ -306,4 +275,4 @@ func _update_status() -> void:
 	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
-		"on" if _sky != null and _sky.shadow_enabled else "off"]
+		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]

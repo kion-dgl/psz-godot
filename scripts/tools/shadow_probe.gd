@@ -1,11 +1,21 @@
 extends SceneTree
-## One-shot renderer probe (#656): does shadow_to_opacity actually render an
-## omni's shadow on the compatibility renderer? Deterministic geometry only —
-## a white unlit floor, a shadow_to_opacity plane 0.02 above it, a box caster,
-## one shadow-casting omni, ambient 0.5 to match the counter sidecar. The
-## saved frame answers it: dark quad under the box = yes; uniform grey floor
-## = the flag no-ops into a plain overlay; clean white floor = nothing.
+## One-shot renderer probe (#656): shadow_to_opacity, shader path vs the
+## StandardMaterial3D flag. The flag no-ops on the compatibility renderer
+## (the first probe, 2026-09-26: clean floor, no shadow, no overlay) — the
+## AR community claims the SHADER render_mode behaves differently. Same
+## deterministic rig as before: white unlit floor, catcher plane 0.02 up,
+## box caster, one shadow-casting omni, ambient 0.5 to match the counter
+## sidecar (upstream #62257: opacity multiplies by ambient — if the shadow
+## shows here it shows at half strength in-game, tunable).
 ## Run: godot --path . -s scripts/tools/shadow_probe.gd  (writes /tmp/probe.png)
+
+const CATCHER_SHADER := "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
 
 func _initialize() -> void:
 	_run()
@@ -43,11 +53,10 @@ func _run() -> void:
 	cat.name = "Catcher"
 	var pm2 := PlaneMesh.new()
 	pm2.size = Vector2(8, 8)
-	var cmat := StandardMaterial3D.new()
-	cmat.albedo_color = Color(0, 0, 0, 0.55)
-	cmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cmat.shadow_to_opacity = true
+	var cmat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = CATCHER_SHADER
+	cmat.shader = sh
 	pm2.material = cmat
 	cat.mesh = pm2
 	cat.position = Vector3(0, 0.02, 0)

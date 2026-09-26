@@ -395,28 +395,50 @@ static func collision_face_mesh(root: Node, up_facing_min := -1.0) -> ArrayMesh:
 ## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
 ## would sit exactly coplanar with the stage (the counter's wall z-fight).
 ##
-## The CITY indoor contract (#656) uses the same catcher with different
-## LIGHTS, not a different material: shadow_to_opacity was tried and renders
-## nothing on the compatibility renderer (probe, 2026-09-26) — so the omnis
-## are culled off the catcher's render layer (they light actors only; a pool
-## on the floor IS the stage being lit) and a skylight directional owns the
-## shadow, uniform like the valley sun. See counter_walktest._set_bake_mode.
-static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false) -> MeshInstance3D:
+## The CITY indoor contract (#656) uses the same catcher with a different
+## MATERIAL: lights exist for actors + shadows, so a pool on the floor IS
+## the stage being lit. shadow_to_opacity is exactly that — lit reads
+## transparent, shadowed reads a dark overlay — but the StandardMaterial3D
+## FLAG no-ops on the compatibility renderer (probe, 2026-09-26) while the
+## SHADER render_mode works (second probe, same day: omni shadow, partial
+## alpha, no overlay — upstream #62257 says opacity scales with ambient, so
+## the ambient share tunes shadow depth). The valley keeps the MUL material
+## below; only the city catcher takes the shader.
+const SHADOW_CATCHER_SHADER := "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
+
+static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
+		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
 	if mesh == null:
 		return null
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 1)
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
-	mat.roughness = 1.0
-	mat.specular = 0.0
-	# Draw after the transparent detail planes and the waterfall (priority 1):
-	# the multiply must reach THEM too — a shadow that stops at a decal edge
-	# reads exactly like the harsh-line bug. The MUL blend already sorts in
-	# the transparent queue; priority orders within it.
-	mat.render_priority = 2
+	var mat: Material
+	if shadow_only:
+		var cmat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = SHADOW_CATCHER_SHADER
+		cmat.shader = sh
+		mat = cmat
+	else:
+		var mmat := StandardMaterial3D.new()
+		mmat.albedo_color = Color(1, 1, 1, 1)
+		mmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		mmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mmat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+		mmat.roughness = 1.0
+		mmat.specular = 0.0
+		# Draw after the transparent detail planes and the waterfall
+		# (priority 1): the multiply must reach THEM too — a shadow that
+		# stops at a decal edge reads exactly like the harsh-line bug. The
+		# MUL blend already sorts in the transparent queue; priority orders
+		# within it.
+		mmat.render_priority = 2
+		mat = mmat
 	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()
 	mi.name = "ShadowCatcher"
