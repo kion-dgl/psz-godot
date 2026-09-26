@@ -356,12 +356,14 @@ func _ready() -> void:
 
 
 func _setup_animations() -> void:
-	# Find the skeleton in the model
-	var model_node := $PlayerModel/Model
+	# Find the skeleton in the model. Both lookups are optional: direct scene
+	# boots (no character-creator session) have neither — get_node_or_null
+	# keeps the console clean instead of printing Node-not-found errors.
+	var model_node := get_node_or_null("PlayerModel/Model")
 	skeleton = NodeUtils.first_of_type(model_node, "Skeleton3D") as Skeleton3D
 
 	# Find the AnimationPlayer in the Animations node (scene-baked saber anims)
-	var anims_node := $PlayerModel/Animations
+	var anims_node := get_node_or_null("PlayerModel/Animations")
 	var source_anim_player: AnimationPlayer
 	if anims_node:
 		source_anim_player = NodeUtils.first_of_type(anims_node, "AnimationPlayer") as AnimationPlayer
