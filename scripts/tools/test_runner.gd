@@ -222,6 +222,7 @@ func _run_tests_systems() -> void:
 	test_valley_day_slot()
 	test_valley_lit_surfaces()
 	test_valley_shadow_catcher()
+	test_shadow_catcher_plane()
 	test_valley_shadow_eye()
 	test_valley_sun_enclosure()
 	test_time_manager_clock()
@@ -11054,6 +11055,36 @@ func test_valley_shadow_catcher() -> void:
 		"white albedo — the multiply passes the bake through when lit")
 	assert_true(MeshUtils.make_shadow_catcher(Node3D.new()) == null,
 		"no collision faces → no catcher")
+
+	print("")
+
+
+## The authored catcher plane (#670): where a stage has no collision hull
+## (or the hull's derived top floats — the market's box top at +0.1 read as
+## a gray sheet), the valley-A receiver is a flat plane AT the walk height.
+func test_shadow_catcher_plane() -> void:
+	print("── Shadow Catcher Plane (#670) ──")
+	var catcher := MeshUtils.make_shadow_catcher_plane(
+		Vector2(50, 70), Vector3(0, 0, 40))
+	add_child(catcher)
+	assert_eq(catcher.name, "ShadowCatcherPlane", "the plane names itself")
+	assert_eq(catcher.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		"the catcher never casts (it only receives)")
+	assert_almost_eq(catcher.position.y, 0.03, 0.001,
+		"a hair above y:0 — wins depth over the floor without z-fighting")
+	assert_eq(Vector2(catcher.position.x, catcher.position.z), Vector2(0, 40),
+		"centered on the walkable rectangle (kion's spec)")
+	var pm := catcher.mesh as PlaneMesh
+	assert_eq(pm.size, Vector2(50, 70), "sized to the room")
+	var mat := pm.material as StandardMaterial3D
+	assert_eq(mat.blend_mode, BaseMaterial3D.BLEND_MODE_MUL,
+		"multiply blend: the shadow multiplies onto the stage visuals")
+	assert_eq(mat.shading_mode, BaseMaterial3D.SHADING_MODE_PER_PIXEL,
+		"per-pixel — it must receive the directional shadow")
+	assert_eq(mat.albedo_color, Color(1, 1, 1, 1),
+		"white albedo — saturates to ×1 (invisible) where the sun reaches")
+	assert_eq(mat.render_priority, 2,
+		"draws after the transparent detail planes — the multiply reaches them")
 
 	print("")
 

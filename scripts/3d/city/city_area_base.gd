@@ -650,32 +650,22 @@ func _apply_ds_bake_look(stage_node_name: String, sun := false,
 	var catcher: MeshInstance3D = null
 	var floor_root := get_node_or_null("FloorCollision")
 	if plane_size.x > 0.0:
-		# kion's spec: the catcher plane AT y:0 — a hull-derived face (the
-		# market's box top floats at +0.1) reads as a gray overlay sheet.
-		pass
+		# kion's spec (#670): the catcher plane AT y:0 — a hull-derived face
+		# (the market's box top floats at +0.1) reads as a gray overlay
+		# sheet; the authored plane carries the valley-A material (the sto
+		# shader plane it replaces was the veil dead end: its alpha IS the
+		# colored plane, it cannot read as "shadow only").
+		catcher = MeshUtils.make_shadow_catcher_plane(plane_size, plane_center)
+		# The plane rides the catcher's private render layer so the scene's
+		# POINT lights can be culled off it (the caller's choice): measured
+		# on compat (#670), the transparent pass blends in FLOAT — a lit
+		# value past ×1 BRIGHTENS the floor (the e6 white sheet), and any
+		# point pool pushes the total past 1 inside its falloff. The catcher
+		# wants ONE uniform light — a directional tuned to land just under
+		# ×1 — plus the ambient share as its shadow floor.
+		catcher.layers = CATCHER_LAYER
 	elif floor_root:
 		catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
-	if catcher == null and plane_size.x > 0.0:
-		# No usable collision hull (kion's fallback): a y:0 plane catches
-		# the shadows.
-		var cmat := ShaderMaterial.new()
-		var sh := Shader.new()
-		sh.code = "
-shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
-void fragment() {
-	ALBEDO = vec3(0.0);
-}
-"
-		cmat.shader = sh
-		var pm := PlaneMesh.new()
-		pm.size = plane_size
-		pm.material = cmat
-		catcher = MeshInstance3D.new()
-		catcher.name = "ShadowCatcherPlane"
-		catcher.mesh = pm
-		catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		catcher.position = plane_center + Vector3(0, 0.03, 0)
 	if catcher == null:
 		push_warning("[CityArea] DS bake look: no catcher (no hull, no plane)")
 		return

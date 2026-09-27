@@ -484,6 +484,32 @@ void fragment() {
 	mi.position.y = 0.04
 	return mi
 
+## The valley-A catcher material (#648): white, per-pixel, multiply-blended.
+## The contract (measured #670): the lit value must sit at — never past —
+## ×1 everywhere unshadowed. The compat renderer's transparent pass blends
+## in FLOAT, so there is no clamp: past ×1 BRIGHTENS (the market's e6 sun
+## rendered the catcher as a white sheet over the bake), well under it
+## darkens (a gray veil — the valley's ×0.85 uniform reads invisible).
+## Only the shadow maps, dropping the surface to its ambient share, should
+## ever show. Keep point lights OFF the catcher (cull mask) — their pools
+## push the total past 1 inside the falloff.
+static func _shadow_catcher_material() -> StandardMaterial3D:
+	var mmat := StandardMaterial3D.new()
+	mmat.albedo_color = Color(1, 1, 1, 1)
+	mmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	mmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mmat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	mmat.roughness = 1.0
+	mmat.specular = 0.0
+	# Draw after the transparent detail planes and the waterfall
+	# (priority 1): the multiply must reach THEM too — a shadow that
+	# stops at a decal edge reads exactly like the harsh-line bug. The
+	# MUL blend already sorts in the transparent queue; priority orders
+	# within it.
+	mmat.render_priority = 2
+	return mmat
+
+
 static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
@@ -497,26 +523,33 @@ static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		cmat.shader = sh
 		mat = cmat
 	else:
-		var mmat := StandardMaterial3D.new()
-		mmat.albedo_color = Color(1, 1, 1, 1)
-		mmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-		mmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mmat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
-		mmat.roughness = 1.0
-		mmat.specular = 0.0
-		# Draw after the transparent detail planes and the waterfall
-		# (priority 1): the multiply must reach THEM too — a shadow that
-		# stops at a decal edge reads exactly like the harsh-line bug. The
-		# MUL blend already sorts in the transparent queue; priority orders
-		# within it.
-		mmat.render_priority = 2
-		mat = mmat
+		mat = _shadow_catcher_material()
 	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()
 	mi.name = "ShadowCatcher"
 	mi.mesh = mesh
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.position.y = 0.04
+	return mi
+
+
+## The valley-A catcher on an AUTHORED plane (#670): where there is no
+## collision hull to derive the receiver from — or the hull's derived top
+## floats (the market's box hull rides +0.1 and read as a gray overlay
+## sheet) — the receiver is a flat plane AT the walk height instead, a hair
+## above to win depth without z-fighting. Same material, same contract: ONE
+## uniform directional tuned to land just UNDER ×1 keeps the plane
+## invisible over the stage visuals, its shadow maps multiply down to the
+## ambient share. `center` is the walkable XZ rectangle's center.
+static func make_shadow_catcher_plane(size: Vector2, center: Vector3) -> MeshInstance3D:
+	var pm := PlaneMesh.new()
+	pm.size = size
+	pm.material = _shadow_catcher_material()
+	var mi := MeshInstance3D.new()
+	mi.name = "ShadowCatcherPlane"
+	mi.mesh = pm
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = center + Vector3(0, 0.03, 0)
 	return mi
 
 

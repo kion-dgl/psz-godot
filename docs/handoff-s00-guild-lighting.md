@@ -288,6 +288,37 @@ if spawn should show a shadow that's sidecar work (un-zenith L3 or a low
 sconce), not rig work. Then the Phase-2 port into
 `city_counter_controller` and the web labs.
 
+## MARKET #670 (2026-09-27) — the corrected MUL-catcher contract (measured)
+
+WALKED AND CONFIRMED BY KION in the live window ("perfect, this is
+exactly what i was going for") — the floor shows its bake verbatim with
+only the sun's shadow on top.
+
+The market catcher plane work corrected a settled-fact premise above: the
+compat renderer's transparent pass blends in **FLOAT — there is no ×1
+clamp**. "Uniform directional saturates the catcher to ×1" was wrong;
+valley A works because its total is 0.9·cos60° + ambient 0.4 ≈ **0.85 —
+under 1 everywhere**, so the multiply is a near-invisible uniform ×0.85.
+Measured on the market, in-game (`PSZ_CITY_DUMP`, three boots):
+
+- e6 sun: catcher lit ≈ ×3.4 → **white sheet** over the bake (the shadow
+  still reads through it — the catcher IS receiving the shadow maps).
+- e0.9 + ambient 0.5 + the 7 shop omnis: still ≈ ×1.4 near lights →
+  still white. Point pools always push past 1 inside their falloff.
+- rig off (`PSZ_MARKET_CATCHER=none`): floor shows its bake verbatim,
+  no shadow — the plane was the only whitener; the stage mesh is fine.
+
+The shipping contract (`city_market_controller._apply_market_rig`): stage
+pure bake (unlit), catcher plane at y+0.03 riding CATCHER_LAYER with every
+OmniLight3D culled off it (`light_cull_mask &= ~CATCHER_LAYER`), ambient
+0.5 + ONE uniform sun e0.8 @ −55° ≈ ×0.96 — just under 1, invisible —
+shadowed regions fall to the ambient share (×0.5, valley's depth ratio).
+`MarketSun` also had to move: the compat shadow pass anchors at the LIGHT
+NODE, and the origin is outside the plaza (z 5..75) — no shadow map
+covered the room until `place_light_inside_room` put the eye inside
+(#648's valley lesson, now applied city-side). Floor-lit A/B:
+`PSZ_MARKET_CATCHER=floor_lit`; raw stage: `=none`.
+
 ## The reverted rig's tuning map (c18324ba, current state)
 
 - `,` `.` ambient live (P prints paste-ready sidecar): the shared cap above.
