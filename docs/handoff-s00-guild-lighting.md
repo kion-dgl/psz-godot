@@ -88,6 +88,28 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## The corrected conclusion (same day, evening) — the catcher pattern WORKS with point lights
+
+Kion's call: the pattern repeated across the lighting PRs — visible stage
+baked and light-immune, the COLLISION MESH the invisible shadow receiver.
+The earlier "blend_mul never receives omni shadows on compat" verdict was
+a **saturation artifact**: at ambient 0.5 with full-strength e40s the
+multiply catcher pins to ×1 everywhere and shadows have nothing to
+subtract from. At kion's tuning (ambient 0.1, pools ×0.25 —
+PSZ_WALK_AMBIENT / PSZ_WALK_POOLS boot overrides added) the MUL catcher
+shows the player's shadow, verified 4-for-4 by station shots + the new
+in-boot A/B (PSZ_WALK_AB: same station, shadows flipped in code, one
+settle, second shot — two-boot diffs drown in animation noise).
+
+Also measured: on compat, toggling omni shadow_enabled changes the omni's
+whole contribution to the catcher (the off-state floor reads ~6× darker
+than shadowed-on at the same energies) — the shadow pass is a different
+light path, not just occlusion. Tuning must happen with shadows ARMED.
+
+Launch: `PSZ_WALK_FLOOR_LIT=0 PSZ_WALK_AMBIENT=0.1 PSZ_WALK_POOLS=0.25
+godot --path . scenes/tools/counter_walktest.tscn`. The FLOOR_LIT and
+geom modes remain as alternatives; the catcher rig is kion's pattern.
+
 ## BAKE_FLOOR — the "transparent hull" (kion's close-to-done ask)
 
 True transparency stays the measured dead end (blend_mul never samples

@@ -139,6 +139,16 @@ func _ready() -> void:
 			Vector3(0, 4, -6), Vector3(0, 4, -12), Vector3(0, 4, -18),
 		])
 	_capture_base_energies()
+	# PSZ_WALK_AMBIENT / PSZ_WALK_POOLS: boot-time equivalents of the live
+	# , . and [ ] keys — the calibrated-catcher experiments need them from
+	# the first frame (kion's live tuning: 0.1 / 0.25).
+	var ambient_env := OS.get_environment("PSZ_WALK_AMBIENT")
+	if not ambient_env.is_empty():
+		_env.ambient_light_energy = clampf(ambient_env.to_float(), 0.0, 4.0)
+	var pools_env := OS.get_environment("PSZ_WALK_POOLS")
+	if not pools_env.is_empty():
+		_pool_scale = clampf(pools_env.to_float(), 0.0, 4.0)
+		_apply_pool_scale()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
 	_player = lab_player
@@ -634,6 +644,9 @@ func _step_stations() -> void:
 		print("[CWalk] station 1/%d → %s" % [_stations.size(), _stations[0]])
 		return
 	_station_frame += 1
+	if _ab_pending and _station_frame == 0:
+		_ab_step()
+		return
 	if _station_frame < STATION_SETTLE:
 		return
 	var path := "%s/station_%d_x%.1f_z%.1f.png" % [
@@ -644,6 +657,40 @@ func _step_stations() -> void:
 	_print_light_state("station %d/%d @ (%.1f, %.1f) → %s" % [
 		_station_idx + 1, _stations.size(),
 		_stations[_station_idx].x, _stations[_station_idx].z, path])
+	# PSZ_WALK_AB=1: the in-boot shadow A/B — same station, shadows flipped
+	# off, one settle, a second shot. Two-boot diffs drown in animation
+	# noise; this isolates the shadow maps' contribution exactly.
+	if OS.get_environment("PSZ_WALK_AB") == "1":
+		for light in _authored_lights():
+			light.shadow_enabled = false
+		_station_frame = -25
+		_ab_pending = true
+		_ab_path = path.replace(".png", "_noshadow.png")
+		return
+	_station_idx += 1
+	if _station_idx >= _stations.size():
+		get_tree().quit()
+		return
+	_player.global_position = _stations[_station_idx]
+	_station_frame = 0
+	print("[CWalk] station %d/%d → %s" % [
+		_station_idx + 1, _stations.size(), _stations[_station_idx]])
+
+
+var _ab_pending := false
+var _ab_path := ""
+
+
+## The settle hook for the in-boot shadow A/B (PSZ_WALK_AB): once the
+## off-state settles, take the second shot, arm shadows back, and advance
+## to the next station (the settle counter restarts).
+func _ab_step() -> void:
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(_ab_path)
+	print("[CWalk] A/B shadow-off shot → %s" % _ab_path)
+	for light in _authored_lights():
+		light.shadow_enabled = true
+	_ab_pending = false
 	_station_idx += 1
 	if _station_idx >= _stations.size():
 		get_tree().quit()
