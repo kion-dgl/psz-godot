@@ -616,11 +616,19 @@ void fragment() {
 	# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake + catcher, no
 	# casters).
 	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+	# PSZ_WALK_SHADOW_BIAS: the omni shadow bias. The engine default lets
+	# the floor pixels between the player's feet leak lit (no contact
+	# shadow — the c18324ba catcher hid this, sitting +0.04 closer to the
+	# caster); lower values pull the contact shadow onto the scene floor
+	# directly.
+	var shadow_bias := OS.get_environment("PSZ_WALK_SHADOW_BIAS").to_float()
 	for light in _authored_lights():
 		light.shadow_enabled = shadows_on if on \
 				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
 		if on:
 			light.shadow_blur = 1.0
+			if shadow_bias > 0.0:
+				light.shadow_bias = shadow_bias
 	_update_status()
 
 
