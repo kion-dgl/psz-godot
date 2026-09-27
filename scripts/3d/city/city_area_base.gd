@@ -38,6 +38,7 @@ const SHOP_CAM_H_OFFSET := -1.15
 const SHOP_CAM_TWEEN := 0.35
 
 
+
 func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dictionary) -> CharacterBody3D:
 	player = PLAYER_SCENE.instantiate()
 	add_child(player)
@@ -177,7 +178,38 @@ func _add_interactive_trigger(pos: Vector3, trigger_size: Vector3, target_scene:
 	return trigger
 
 
+var _dump_checked := false
+var _dump_frame := -1
+var _dump_path := ""
+
+
 func _process(_delta: float) -> void:
+	# PSZ_CITY_DUMP=/tmp/x.png: the game's own eyes — after 90 frames,
+	# print every light's live state and save the viewport (the lab boots
+	# kept disagreeing with kion's window; this reports from inside).
+	if not _dump_checked:
+		_dump_checked = true
+		_dump_path = OS.get_environment("PSZ_CITY_DUMP")
+		if "%s" in _dump_path:
+			_dump_path = _dump_path % get_scene_file_path().get_file().get_basename()
+		if not _dump_path.is_empty():
+			_dump_frame = 0
+	if _dump_frame >= 0:
+		_dump_frame += 1
+		if _dump_frame == 90:
+			for child in get_children():
+				if child is OmniLight3D:
+					var l := child as OmniLight3D
+					print("[CityDump] %s e=%.2f shadows=%s pos=%s" % [
+						l.name, l.light_energy, l.shadow_enabled, l.global_position.round()])
+				if child is DirectionalLight3D:
+					var d := child as DirectionalLight3D
+					print("[CityDump] SUN %s e=%.2f shadows=%s" % [
+						d.name, d.light_energy, d.shadow_enabled])
+			var img := get_viewport().get_texture().get_image()
+			img.save_png(_dump_path)
+			print("[CityDump] frame → %s" % _dump_path)
+			_dump_frame = -1
 	if not player or not is_instance_valid(player):
 		return
 	for trigger in _interactive_triggers:
