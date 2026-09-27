@@ -83,6 +83,9 @@ static var _pending_stage := ""
 var _stage_id := "s00e_sa2"
 var _env: Environment
 var _pool_scale := 1.0
+## The catcher's emission base lift (PSZ_WALK_CATCHER_EMISSION, live via
+## - / =): ambient + emission ≈ 1 hides the multiply mesh; pools top it.
+var _catcher_emission := 0.85
 var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
@@ -149,6 +152,9 @@ func _ready() -> void:
 	if not pools_env.is_empty():
 		_pool_scale = clampf(pools_env.to_float(), 0.0, 4.0)
 		_apply_pool_scale()
+	var emis_env := OS.get_environment("PSZ_WALK_CATCHER_EMISSION")
+	if not emis_env.is_empty():
+		_catcher_emission = clampf(emis_env.to_float(), 0.0, 1.5)
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
 	_player = lab_player
@@ -249,6 +255,12 @@ func _input(event: InputEvent) -> void:
 		KEY_BRACKETRIGHT:
 			_pool_scale += 0.25
 			_apply_pool_scale()
+		KEY_MINUS:
+			_catcher_emission = maxf(0.0, _catcher_emission - 0.05)
+			_apply_catcher_emission()
+		KEY_EQUAL:
+			_catcher_emission = minf(1.5, _catcher_emission + 0.05)
+			_apply_catcher_emission()
 		KEY_B:
 			_set_bake_mode(not _bake_mode)
 		KEY_M:
@@ -420,6 +432,19 @@ func _set_bake_mode(on: bool) -> void:
 					_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color("1"))
 				else:
 					_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
+					# PSZ_WALK_CATCHER_EMISSION (default 0.85): the base lift
+					# that breaks the ambient zero-sum — emission is an UNLIT
+					# additive term on the multiply catcher, so it raises the
+					# floor multiplier toward x1 (invisible mesh, no veil, no
+					# seams) without shallowing shadows the way ambient does;
+					# pools then push past x1 and read as light, shadows
+					# remove only the pool term. The valley's uniform sun did
+					# this for free; indoors, emission is the dial.
+					if _catcher:
+						var cmat := _catcher.mesh.surface_get_material(0) as StandardMaterial3D
+						if cmat:
+							cmat.emission_enabled = true
+							cmat.emission = Color(1, 1, 1) * _catcher_emission
 			if _catcher:
 				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
 				# (blend_mul) instead of the StandardMaterial3D MUL — the
@@ -605,6 +630,16 @@ func _apply_pool_scale() -> void:
 		light.light_energy = float(_base_energies.get(light.get_path(), light.light_energy)) * _pool_scale
 
 
+## The emission base lift, applied live (- / =).
+func _apply_catcher_emission() -> void:
+	if _catcher == null:
+		return
+	var cmat := _catcher.mesh.surface_get_material(0) as StandardMaterial3D
+	if cmat:
+		cmat.emission_enabled = true
+		cmat.emission = Color(1, 1, 1) * _catcher_emission
+
+
 ## The read-out prints the live rig as the sidecar JSON it would become —
 ## ambient, then every omni with its scaled energy — paste-ready for
 ## data/stage_configs/city-lights/<stage>.json (the game and the web labs
@@ -623,6 +658,7 @@ func _readout() -> void:
 		})
 	var doc := {
 		"stage": _stage_id,
+		"catcherEmission": _catcher_emission,
 		"ambient": {
 			"color": [_env.ambient_light_color.r, _env.ambient_light_color.g, _env.ambient_light_color.b],
 			"energy": snappedf(_env.ambient_light_energy, 0.01),
@@ -764,7 +800,10 @@ func _update_status() -> void:
 
 func _base_status() -> String:
 	var n := _authored_lights().size()
-	return "%s%s — ambient %.2f (, .)  pools %.2f× ([ ])  shadows %s (M)  bake (B)" % [
+	var base := "%s%s — ambient %.2f (, .)  pools %.2f× ([ ])  shadows %s (M)  bake (B)" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale,
 		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]
+	if _catcher != null and _catcher.name == "ShadowCatcher":
+		base += "  emis %.2f (- =)" % _catcher_emission
+	return base

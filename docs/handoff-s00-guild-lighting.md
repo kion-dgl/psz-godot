@@ -88,6 +88,22 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## CATCHER_EMISSION — the dial that breaks the zero-sum (evening)
+
+Kion's read: the shadow shows where the catcher is visible; make the
+catcher INVISIBLE except the shadow. The blocker was the ambient
+zero-sum (ambient hides the veil AND shallows shadows). The third dial:
+EMISSION on the multiply catcher — an UNLIT additive term, so
+ambient + emission ≈ 1 pins the multiplier at x1 outside pools (no
+veil, no coverage seams) while shadows keep their full pool-depth.
+PSZ_WALK_CATCHER_EMISSION (default 0.85), live via - / =, in the P
+readout as catcherEmission. Station-verified: floor mean 54 (ambient
+0.1, no emission) → 124 (emission 0.85) ≈ bake-natural, pools 157,
+one clear shadow, no visible mesh or seams. Tune trio: , . ambient
+(shadow floor) · [ ] pools (shadow depth) · - = emission (mesh
+invisibility). Tuning must run with shadows ARMED (the compat omni
+path differs otherwise).
+
 ## The corrected conclusion (same day, evening) — the catcher pattern WORKS with point lights
 
 Kion's call: the pattern repeated across the lighting PRs — visible stage
