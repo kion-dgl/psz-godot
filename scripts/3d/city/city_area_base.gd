@@ -38,6 +38,7 @@ const SHOP_CAM_H_OFFSET := -1.15
 const SHOP_CAM_TWEEN := 0.35
 
 
+
 func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dictionary) -> CharacterBody3D:
 	player = PLAYER_SCENE.instantiate()
 	add_child(player)
@@ -177,7 +178,38 @@ func _add_interactive_trigger(pos: Vector3, trigger_size: Vector3, target_scene:
 	return trigger
 
 
+var _dump_checked := false
+var _dump_frame := -1
+var _dump_path := ""
+
+
 func _process(_delta: float) -> void:
+	# PSZ_CITY_DUMP=/tmp/x.png: the game's own eyes — after 90 frames,
+	# print every light's live state and save the viewport (the lab boots
+	# kept disagreeing with kion's window; this reports from inside).
+	if not _dump_checked:
+		_dump_checked = true
+		_dump_path = OS.get_environment("PSZ_CITY_DUMP")
+		if "%s" in _dump_path:
+			_dump_path = _dump_path % get_scene_file_path().get_file().get_basename()
+		if not _dump_path.is_empty():
+			_dump_frame = 0
+	if _dump_frame >= 0:
+		_dump_frame += 1
+		if _dump_frame == 240:
+			for child in get_children():
+				if child is OmniLight3D:
+					var l := child as OmniLight3D
+					print("[CityDump] %s e=%.2f shadows=%s pos=%s" % [
+						l.name, l.light_energy, l.shadow_enabled, l.global_position.round()])
+				if child is DirectionalLight3D:
+					var d := child as DirectionalLight3D
+					print("[CityDump] SUN %s e=%.2f shadows=%s" % [
+						d.name, d.light_energy, d.shadow_enabled])
+			var img := get_viewport().get_texture().get_image()
+			img.save_png(_dump_path)
+			print("[CityDump] frame → %s" % _dump_path)
+			_dump_frame = -1
 	if not player or not is_instance_valid(player):
 		return
 	for trigger in _interactive_triggers:
@@ -540,7 +572,73 @@ static func parse_lights_spec(text: String) -> Dictionary:
 ## the between-feet contact under a light. Call AFTER the authored lights
 ## and the floor collision exist. `stage_node_name` is the scene's stage
 ## root ("Counter" / "Market" in the tscns).
-func _apply_ds_bake_look(stage_node_name: String) -> void:
+
+## The floor-lit receiver (the lab kion confirmed live: "two shadows as
+## expected... this is good"): every stage surface whose triangles are
+## mostly floor-tilted and near walk height flips per-pixel WITH the bake
+## as albedo — the floor shows its own baked textures, the authored omnis
+## pool on it, their shadow maps land on it. No catcher, no veil — the
+## floor cannot read black because it IS the stage's own surface. The geom
+## gate (not material names) covers every floor split. Point lights only.
+func _apply_ds_floor_lit(stage_node_name: String) -> void:
+	var stage := get_node_or_null(stage_node_name)
+	if stage == null:
+		push_warning("[CityArea] DS floor-lit: no stage node '%s'" % stage_node_name)
+		return
+	MeshUtils.make_unlit(stage, [])
+	for node in MeshUtils.collect_mesh_instances(stage, []):
+		(node as MeshInstance3D).cast_shadow = \
+				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var floor_root := get_node_or_null("FloorCollision")
+	var walk_y := MeshUtils.floor_top(floor_root) if floor_root else 0.0
+	for node in MeshUtils.collect_mesh_instances(stage, []):
+		var mi := node as MeshInstance3D
+		var arr_mesh: ArrayMesh = mi.mesh as ArrayMesh
+		for i in range(mi.get_surface_override_material_count()):
+			var mat: Material = mi.get_active_material(i)
+			if not (mat is StandardMaterial3D):
+				continue
+			if not _surface_is_floor(mi, arr_mesh, i, walk_y):
+				continue
+			var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+			dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+			dup.vertex_color_use_as_albedo = MeshUtils.vertex_bake_present(mi, i)
+			mi.set_surface_override_material(i, dup)
+
+
+## The geom gate: a stage surface is FLOOR when ≥ half its triangles tilt
+## within ~53° of horizontal and its centroid sits at walk height ± 1.5 —
+## floor materials come and go, floor SHAPE doesn't.
+func _surface_is_floor(mi: MeshInstance3D, mesh: ArrayMesh, surf: int, walk_y: float) -> bool:
+	if mesh == null or surf >= mesh.get_surface_count():
+		return false
+	var arrays := mesh.surface_get_arrays(surf)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	if verts.size() < 3:
+		return false
+	var ups := 0
+	var total := 0
+	var sum_y := 0.0
+	for t in range(0, verts.size() - 2, 3):
+		var a: Vector3 = mi.global_transform * verts[t]
+		var b: Vector3 = mi.global_transform * verts[t + 1]
+		var c: Vector3 = mi.global_transform * verts[t + 2]
+		var n := (b - a).cross(c - a)
+		sum_y += (a.y + b.y + c.y) / 3.0
+		total += 1
+		if absf(n.y) > 0.6 * n.length():
+			ups += 1
+	return total > 0 and ups >= total / 2 and absf(sum_y / total - walk_y) < 1.5
+
+## The catcher's private render layer: the market's sun lights ONLY the
+## catcher (its uniform energy clears the sto veil and its shadow maps
+## carry the player silhouette — the valley sun contract, indoors), so it
+## rides a layer the stage and actors never see.
+const CATCHER_LAYER := 4
+
+
+func _apply_ds_bake_look(stage_node_name: String, sun := false,
+		plane_size := Vector2.ZERO, plane_center := Vector3.ZERO) -> void:
 	var stage := get_node_or_null(stage_node_name)
 	if stage == null:
 		push_warning("[CityArea] DS bake look: no stage node '%s'" % stage_node_name)
@@ -549,13 +647,57 @@ func _apply_ds_bake_look(stage_node_name: String) -> void:
 	for node in MeshUtils.collect_mesh_instances(stage, []):
 		(node as MeshInstance3D).cast_shadow = \
 				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var catcher: MeshInstance3D = null
 	var floor_root := get_node_or_null("FloorCollision")
-	if floor_root == null:
-		push_warning("[CityArea] DS bake look: no FloorCollision — no catcher")
+	if plane_size.x > 0.0:
+		# kion's spec: the catcher plane AT y:0 — a hull-derived face (the
+		# market's box top floats at +0.1) reads as a gray overlay sheet.
+		pass
+	elif floor_root:
+		catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
+	if catcher == null and plane_size.x > 0.0:
+		# No usable collision hull (kion's fallback): a y:0 plane catches
+		# the shadows.
+		var cmat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
+		cmat.shader = sh
+		var pm := PlaneMesh.new()
+		pm.size = plane_size
+		pm.material = cmat
+		catcher = MeshInstance3D.new()
+		catcher.name = "ShadowCatcherPlane"
+		catcher.mesh = pm
+		catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		catcher.position = plane_center + Vector3(0, 0.03, 0)
+	if catcher == null:
+		push_warning("[CityArea] DS bake look: no catcher (no hull, no plane)")
 		return
-	var catcher := MeshUtils.make_shadow_catcher(floor_root, true, true)
-	if catcher:
-		add_child(catcher)
+	if sun:
+		catcher.layers = CATCHER_LAYER
+		var sun_light := DirectionalLight3D.new()
+		sun_light.name = "CatcherSun"
+		# Saturation is EMPIRICAL: shadow_to_opacity's alpha reaches 0
+		# (catcher invisible, bake verbatim) only past a total the internal
+		# attenuation weights heavily — measured on the market stage:
+		# E1.8 -> floor mean 57 (a ~0.5 veil), E6.0 -> 93 ~= the pure-bake
+		# 96. Weaker suns leave a gray wash; omni-only rigs leave the
+		# ambient-capped black veil.
+		sun_light.light_energy = float(OS.get_environment("PSZ_SUN_E")) if not OS.get_environment("PSZ_SUN_E").is_empty() else 6.0
+		sun_light.rotation_degrees = Vector3(-55, 25, 0)
+		sun_light.shadow_enabled = true
+		sun_light.shadow_blur = 1.0
+		# Only the catcher sees it — the baked stage is unlit regardless,
+		# and the actors keep the authored omni rig as their only lights.
+		sun_light.light_cull_mask = CATCHER_LAYER
+		add_child(sun_light)
+	add_child(catcher)
 
 
 func _add_authored_lights(stage_id: String) -> bool:

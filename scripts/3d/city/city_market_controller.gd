@@ -39,10 +39,19 @@ func _ready() -> void:
 
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
-	# The certified DS bake look (#656): pure-bake stage, actors the only
-	# casters, the sto catcher on the collision shell — dynamic shadows over
-	# the sidecar rig.
-	_apply_ds_bake_look("Market")
+	# The guild's receiver, plus a real sun (valley A): the floor IS the
+	# stage's own surface (geom-gated per-pixel, bake as albedo — nothing
+	# overlays it, so there is no sheet to see), the sun lights it like a
+	# plaza and throws the shadow; the walls stay pure bake (unlit — no
+	# light can touch them), the shop omnis keep their pools.
+	_apply_ds_floor_lit("Market")
+	var market_sun := DirectionalLight3D.new()
+	market_sun.name = "MarketSun"
+	market_sun.light_energy = float(OS.get_environment("PSZ_MSUN_E")) if not OS.get_environment("PSZ_MSUN_E").is_empty() else 6.0
+	market_sun.rotation_degrees = Vector3(-55, 25, 0)
+	market_sun.shadow_enabled = true
+	market_sun.shadow_blur = 1.0
+	add_child(market_sun)
 
 	# The market IS s00e_sa1 — its two authored butterflies (#644), from the
 	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).
