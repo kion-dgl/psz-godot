@@ -53,7 +53,26 @@ func _ready() -> void:
 	# its mid-room spots), hovering ~1m at the south entrance.
 	_add_flair_critters([Vector3(6.6, 0.0, 57.9), Vector3(-4.5, 0.0, 58.5)])
 
-	# NPCs
+	_add_market_npcs()
+
+	# Area triggers
+	_add_area_trigger(
+		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
+		"res://scenes/3d/city/city_counter.tscn", "market-exit"
+	)
+	# Interactive trigger — Enter Underground
+	_add_interactive_trigger(
+		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
+		"res://scenes/3d/city/city_underground.tscn", "market-exit",
+		"Enter Underground"
+	)
+
+	# Wire up player references
+	_connect_player_to_interactables()
+
+
+## The three shop NPCs (extracted from _ready).
+func _add_market_npcs() -> void:
 	# Low-poly PSZ shopkeeper. Reverted from the VRM-derived item_shop.glb
 	# (#535): the VRM model stuck out as the lone high-poly figure next to the
 	# low-poly cast — better to keep the roster consistent until every NPC can
@@ -88,20 +107,6 @@ func _ready() -> void:
 		"res://scenes/2d/shops/tekker.tscn"
 	)
 
-	# Area triggers
-	_add_area_trigger(
-		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
-		"res://scenes/3d/city/city_counter.tscn", "market-exit"
-	)
-	# Interactive trigger — Enter Underground
-	_add_interactive_trigger(
-		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
-		"res://scenes/3d/city/city_underground.tscn", "market-exit",
-		"Enter Underground"
-	)
-
-	# Wire up player references
-	_connect_player_to_interactables()
 
 
 func _get_area_name() -> String:

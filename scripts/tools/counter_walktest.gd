@@ -218,12 +218,9 @@ var _live_frame := 0
 const STATION_SETTLE := 40
 
 
-func _ready() -> void:
-	if not _pending_stage.is_empty():
-		_stage_id = _pending_stage
-		_pending_stage = ""
-	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
-		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
+## The lab's env knobs (extracted from _ready): stations, live reel,
+## ambient/pools/emission boot overrides, fps read.
+func _parse_walk_envs() -> void:
 	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
 	for spec in OS.get_environment("PSZ_WALK_STATIONS").split(";", false):
 		var xyz := spec.split(",")
@@ -242,6 +239,15 @@ func _ready() -> void:
 	if not _stations.is_empty():
 		get_window().always_on_top = true
 	_fps_wanted = OS.get_environment("PSZ_WALK_FPS") == "1"
+
+
+func _ready() -> void:
+	if not _pending_stage.is_empty():
+		_stage_id = _pending_stage
+		_pending_stage = ""
+	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
+		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
+	_parse_walk_envs()
 	_build_environment()
 	_load_stage()
 	# The controller's _ready order verbatim: texture fixes, the SA2 vertex
@@ -269,6 +275,20 @@ func _ready() -> void:
 	if not emis_env.is_empty():
 		_catcher_emission = clampf(emis_env.to_float(), 0.0, 1.5)
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
+	_spawn_lab_player()
+	_build_status_label()
+	_readout()
+	# The DS architecture is the DEFAULT look (the #656 objective). B still
+	# A/Bs live; PSZ_WALK_BAKE=0 boots the pre-bake lit look instead.
+	if OS.get_environment("PSZ_WALK_BAKE") != "0":
+		_set_bake_mode(true)
+	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
+
+var _player: Node3D
+
+
+## The lab player + camera + boot probes (extracted from _ready).
+func _spawn_lab_player() -> void:
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
 	_player = lab_player
 	# PSZ_WALK_CAM_ROT (radians): the follow camera defaults to PI (behind in
@@ -314,15 +334,7 @@ func _ready() -> void:
 				var mat: Material = mi.get_active_material(i)
 				if mat:
 					print("[CWalk] surface %s[%d] material '%s'" % [mi.name, i, mat.resource_name])
-	_build_status_label()
-	_readout()
-	# The DS architecture is the DEFAULT look (the #656 objective). B still
-	# A/Bs live; PSZ_WALK_BAKE=0 boots the pre-bake lit look instead.
-	if OS.get_environment("PSZ_WALK_BAKE") != "0":
-		_set_bake_mode(true)
-	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
 
-var _player: Node3D
 
 
 func _process(_delta: float) -> void:
@@ -437,88 +449,72 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
-## The wetlands-A architecture, indoors (B): the stage keeps its pure baked
-## look (MeshUtils.make_unlit: UNSHADED, COLOR_0 as albedo — no light can
-## touch the city mesh); the authored omnis light the actors exactly as
-## authored; and the omnis CAST (the wetlands lantern exception) so each
-## throws the actors' real dynamic shadow from its own position — stand
-## between two lights and two shadows fall away from each. The catcher is
-## the collision shell with the VALLEY material (white, multiply-blended,
-## up-facing only — the city floor GLB wraps the whole room and its walls
-## sat coplanar with the stage): lit ground multiplies by ~1 (the bake reads
-## verbatim), pools and the omnis' shadow maps multiply down onto it. The
-## catcher cannot "show" — multiply only darkens what is behind it (the
-## black-floor era was the shadow_to_opacity catcher, retired).
-func _set_bake_mode(on: bool) -> void:
-	_bake_mode = on
-	# The floor-lit rig is the default; PSZ_WALK_FLOOR_LIT overrides the
-	# surface list, "0" disables it (the catcher probes come back then).
-	var floor_lit := OS.get_environment("PSZ_WALK_FLOOR_LIT")
-	if floor_lit.is_empty():
-		floor_lit = FLOOR_LIT_DEFAULT
-	var map := get_node_or_null("Map")
-	if map:
-		if on:
-			MeshUtils.make_unlit(map, [])
-			# The ozette contract on the floor surfaces — per-pixel with the
-			# vertex bake as albedo, so the authored omnis pool on them AND
-			# their shadow maps land (opaque receivers take omni shadows on
-			# compat; the MUL catcher measurably doesn't). Walls and props
-			# stay pure bake; no catcher mesh at all — the visual floor IS
-			# the receiver.
-			if floor_lit != "0":
-				# "geom": flip by GEOMETRY, not name — every stage surface
-				# whose triangles are mostly floor-tilted and near walk
-				# height receives the rig. The name lists could never cover
-				# the stage's material splits (kion's mid-floor dead strips,
-				# 2026-09-26); geometry can. The shell is retired entirely:
-				# the collision mesh never renders — the REAL stage floor is
-				# the receiver, showing its own bake, pools, and the omnis'
-				# shadow maps and nothing else.
-				var geom := floor_lit == "geom"
-				var wanted: Dictionary = {}
-				if not geom:
-					for n in floor_lit.split(",", false):
-						wanted[n.strip_edges()] = true
-				var floor_root := get_node_or_null("FloorCollision")
-				var walk_y := MeshUtils.floor_top(floor_root) if floor_root else -10.67
-				for node in MeshUtils.collect_mesh_instances(map, []):
-					var mi := node as MeshInstance3D
-					var arr_mesh: ArrayMesh = (mi.mesh as ArrayMesh) if geom else null
-					for i in range(mi.get_surface_override_material_count()):
-						var mat: Material = mi.get_active_material(i)
-						if not (mat is StandardMaterial3D):
-							continue
-						if geom:
-							if not _surface_is_floor(mi, arr_mesh, i, walk_y):
-								continue
-						elif not wanted.has((mat as StandardMaterial3D).resource_name):
-							continue
-						var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-						dup.vertex_color_use_as_albedo = true
-						mi.set_surface_override_material(i, dup)
-		else:
-			# Back to the production lit look: per-pixel, vertex colors off.
-			for node in MeshUtils.collect_mesh_instances(map, []):
-				var mi := node as MeshInstance3D
-				for i in range(mi.get_surface_override_material_count()):
-					var mat: Material = mi.get_active_material(i)
-					if mat is StandardMaterial3D:
-						var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-						dup.vertex_color_use_as_albedo = false
-						mi.set_surface_override_material(i, dup)
-		# The stage never casts — indoors the whole room is the valley's
-		# enclosing shell. Actors (the player, NPCs) are the only casters, so
-		# the omnis' shadow maps are the actors' shadows and nothing else's,
-		# and the extra shadow passes stay cheap.
+## The blend_mul shader probe (extracted): the asymmetry experiment
+## that measured omni shadow maps missing the multiply receiver.
+func _apply_mul_probe() -> void:
+	# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
+	# (blend_mul) instead of the StandardMaterial3D MUL — the
+	# asymmetry probe showed omni shadow maps don't reach the
+	# standard transparent-MUL receiver on compat (directionals
+	# do), while c18324ba's shader catcher took them fine.
+	if OS.get_environment("PSZ_WALK_MUL_SHADER") == "1" \
+			and _catcher != null and _catcher.name == "ShadowCatcher":
+		var mat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = "
+shader_type spatial;
+render_mode blend_mul, depth_draw_never;
+void fragment() {
+	ALBEDO = vec3(1.0);
+}
+"
+		mat.shader = sh
+		_catcher.mesh.surface_set_material(0, mat)
+
+
+## The floor-lit receiver family (extracted from _set_bake_mode): the
+## name-list / "geom" surface flip — per-pixel, bake as albedo, so the
+## omnis pool on the floor and their shadow maps land on it directly.
+func _apply_floor_lit_rig(map: Node, floor_lit: String) -> void:
+	if floor_lit != "0":
+		# "geom": flip by GEOMETRY, not name — every stage surface
+		# whose triangles are mostly floor-tilted and near walk
+		# height receives the rig. The name lists could never cover
+		# the stage's material splits (kion's mid-floor dead strips,
+		# 2026-09-26); geometry can. The shell is retired entirely:
+		# the collision mesh never renders — the REAL stage floor is
+		# the receiver, showing its own bake, pools, and the omnis'
+		# shadow maps and nothing else.
+		var geom := floor_lit == "geom"
+		var wanted: Dictionary = {}
+		if not geom:
+			for n in floor_lit.split(",", false):
+				wanted[n.strip_edges()] = true
+		var floor_root := get_node_or_null("FloorCollision")
+		var walk_y := MeshUtils.floor_top(floor_root) if floor_root else -10.67
 		for node in MeshUtils.collect_mesh_instances(map, []):
-			(node as MeshInstance3D).cast_shadow = \
-					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
-					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# The catcher probes only run with the floor-lit rig disabled.
-	if on and _catcher == null and floor_lit == "0" \
+			var mi := node as MeshInstance3D
+			var arr_mesh: ArrayMesh = (mi.mesh as ArrayMesh) if geom else null
+			for i in range(mi.get_surface_override_material_count()):
+				var mat: Material = mi.get_active_material(i)
+				if not (mat is StandardMaterial3D):
+					continue
+				if geom:
+					if not _surface_is_floor(mi, arr_mesh, i, walk_y):
+						continue
+				elif not wanted.has((mat as StandardMaterial3D).resource_name):
+					continue
+				var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+				dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+				dup.vertex_color_use_as_albedo = true
+				mi.set_surface_override_material(i, dup)
+
+
+## The catcher receiver family (extracted from _set_bake_mode): the sto
+## baseline, the bake capture, the flat floor, the projector, the MUL
+## probe — every PSZ_WALK_FLOOR_LIT=0 mode builds its receiver here.
+func _build_catcher_rig(floor_lit: String) -> void:
+	if _catcher == null and floor_lit == "0" \
 			and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1":
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
@@ -593,29 +589,65 @@ func _set_bake_mode(on: bool) -> void:
 					if cmat:
 						cmat.emission_enabled = true
 						cmat.emission = Color(1, 1, 1) * _catcher_emission
-			if _catcher:
-				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
-				# (blend_mul) instead of the StandardMaterial3D MUL — the
-				# asymmetry probe showed omni shadow maps don't reach the
-				# standard transparent-MUL receiver on compat (directionals
-				# do), while c18324ba's shader catcher took them fine.
-				if flat.is_empty() and _catcher.name == "ShadowCatcher" \
-						and OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
-					var mat := ShaderMaterial.new()
-					var sh := Shader.new()
-					sh.code = "
-shader_type spatial;
-render_mode blend_mul, depth_draw_never;
-void fragment() {
-	ALBEDO = vec3(1.0);
-}
-"
-					mat.shader = sh
-					_catcher.mesh.surface_set_material(0, mat)
-				add_child(_catcher)
-	elif not on and _catcher != null:
+			_apply_mul_probe()
+
+
+
+## The wetlands-A architecture, indoors (B): the stage keeps its pure baked
+## look (MeshUtils.make_unlit: UNSHADED, COLOR_0 as albedo — no light can
+## touch the city mesh); the authored omnis light the actors exactly as
+## authored; and the omnis CAST (the wetlands lantern exception) so each
+## throws the actors' real dynamic shadow from its own position — stand
+## between two lights and two shadows fall away from each. The catcher is
+## the collision shell with the VALLEY material (white, multiply-blended,
+## up-facing only — the city floor GLB wraps the whole room and its walls
+## sat coplanar with the stage): lit ground multiplies by ~1 (the bake reads
+## verbatim), pools and the omnis' shadow maps multiply down onto it. The
+## catcher cannot "show" — multiply only darkens what is behind it (the
+## black-floor era was the shadow_to_opacity catcher, retired).
+func _set_bake_mode(on: bool) -> void:
+	_bake_mode = on
+	# The floor-lit rig is the default; PSZ_WALK_FLOOR_LIT overrides the
+	# surface list, "0" disables it (the catcher probes come back then).
+	var floor_lit := OS.get_environment("PSZ_WALK_FLOOR_LIT")
+	if floor_lit.is_empty():
+		floor_lit = FLOOR_LIT_DEFAULT
+	var map := get_node_or_null("Map")
+	if map:
+		if on:
+			MeshUtils.make_unlit(map, [])
+			# The ozette contract on the floor surfaces — per-pixel with the
+			# vertex bake as albedo, so the authored omnis pool on them AND
+			# their shadow maps land (opaque receivers take omni shadows on
+			# compat; the MUL catcher measurably doesn't). Walls and props
+			# stay pure bake; no catcher mesh at all — the visual floor IS
+			# the receiver.
+			_apply_floor_lit_rig(map, floor_lit)
+		else:
+			# Back to the production lit look: per-pixel, vertex colors off.
+			for node in MeshUtils.collect_mesh_instances(map, []):
+				var mi := node as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat: Material = mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+						dup.vertex_color_use_as_albedo = false
+						mi.set_surface_override_material(i, dup)
+		# The stage never casts — indoors the whole room is the valley's
+		# enclosing shell. Actors (the player, NPCs) are the only casters, so
+		# the omnis' shadow maps are the actors' shadows and nothing else's,
+		# and the extra shadow passes stay cheap.
+		for node in MeshUtils.collect_mesh_instances(map, []):
+			(node as MeshInstance3D).cast_shadow = \
+					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
+					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if on:
+		_build_catcher_rig(floor_lit)
+	elif _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
+
 	# The omnis ARE the rig — every authored light casts in bake mode (the
 	# wetlands lantern precedent: shadow_enabled + blur 1.0). Leaving bake
 	# restores each sidecar's own state; M still flips everything live.
