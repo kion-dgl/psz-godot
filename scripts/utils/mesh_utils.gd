@@ -528,7 +528,7 @@ static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 ## wildcard keep-list forces nothing unlit. Returns how many surfaces flipped.
 ## Does this surface ship a real COLOR_0 bake? Absent or all-black vertex
 ## colors read as "the bake lives in the textures" — albedo stays pure.
-static func _vertex_bake_present(mi: MeshInstance3D, surf: int) -> bool:
+static func vertex_bake_present(mi: MeshInstance3D, surf: int) -> bool:
 	var mesh := mi.mesh as ArrayMesh
 	if mesh == null or surf >= mesh.get_surface_count():
 		return false
@@ -577,7 +577,7 @@ static func _flip_shading(root: Node, names: Array, listed_per_pixel: bool) -> i
 				# city market's surgery model (psz-asset-viewer pipeline)
 				# bakes into textures with black/absent COLOR_0 — forcing
 				# the flag there multiplied the floor to black (2026-09-27).
-				dup.vertex_color_use_as_albedo = _vertex_bake_present(mi, i)
+				dup.vertex_color_use_as_albedo = vertex_bake_present(mi, i)
 			mi.set_surface_override_material(i, dup)
 			touched += 1
 	return touched

@@ -540,6 +540,60 @@ static func parse_lights_spec(text: String) -> Dictionary:
 ## the between-feet contact under a light. Call AFTER the authored lights
 ## and the floor collision exist. `stage_node_name` is the scene's stage
 ## root ("Counter" / "Market" in the tscns).
+
+## The floor-lit receiver (the lab kion confirmed live: "two shadows as
+## expected... this is good"): every stage surface whose triangles are
+## mostly floor-tilted and near walk height flips per-pixel WITH the bake
+## as albedo — the floor shows its own baked textures, the authored omnis
+## pool on it, their shadow maps land on it. No catcher, no veil — the
+## floor cannot read black because it IS the stage's own surface. The geom
+## gate (not material names) covers every floor split. Point lights only.
+func _apply_ds_floor_lit(stage_node_name: String) -> void:
+	var stage := get_node_or_null(stage_node_name)
+	if stage == null:
+		push_warning("[CityArea] DS floor-lit: no stage node '%s'" % stage_node_name)
+		return
+	var floor_root := get_node_or_null("FloorCollision")
+	var walk_y := MeshUtils.floor_top(floor_root) if floor_root else 0.0
+	for node in MeshUtils.collect_mesh_instances(stage, []):
+		var mi := node as MeshInstance3D
+		var arr_mesh: ArrayMesh = mi.mesh as ArrayMesh
+		for i in range(mi.get_surface_override_material_count()):
+			var mat: Material = mi.get_active_material(i)
+			if not (mat is StandardMaterial3D):
+				continue
+			if not _surface_is_floor(mi, arr_mesh, i, walk_y):
+				continue
+			var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+			dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+			dup.vertex_color_use_as_albedo = MeshUtils.vertex_bake_present(mi, i)
+			mi.set_surface_override_material(i, dup)
+
+
+## The geom gate: a stage surface is FLOOR when ≥ half its triangles tilt
+## within ~53° of horizontal and its centroid sits at walk height ± 1.5 —
+## floor materials come and go, floor SHAPE doesn't.
+func _surface_is_floor(mi: MeshInstance3D, mesh: ArrayMesh, surf: int, walk_y: float) -> bool:
+	if mesh == null or surf >= mesh.get_surface_count():
+		return false
+	var arrays := mesh.surface_get_arrays(surf)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	if verts.size() < 3:
+		return false
+	var ups := 0
+	var total := 0
+	var sum_y := 0.0
+	for t in range(0, verts.size() - 2, 3):
+		var a: Vector3 = mi.global_transform * verts[t]
+		var b: Vector3 = mi.global_transform * verts[t + 1]
+		var c: Vector3 = mi.global_transform * verts[t + 2]
+		var n := (b - a).cross(c - a)
+		sum_y += (a.y + b.y + c.y) / 3.0
+		total += 1
+		if absf(n.y) > 0.6 * n.length():
+			ups += 1
+	return total > 0 and ups >= total / 2 and absf(sum_y / total - walk_y) < 1.5
+
 ## The catcher's private render layer: the market's sun lights ONLY the
 ## catcher (its uniform energy clears the sto veil and its shadow maps
 ## carry the player silhouette — the valley sun contract, indoors), so it
@@ -589,7 +643,14 @@ void fragment() {
 		catcher.layers = CATCHER_LAYER
 		var sun_light := DirectionalLight3D.new()
 		sun_light.name = "CatcherSun"
-		sun_light.light_energy = 0.9
+		# Saturation math: shadow_to_opacity's alpha hits 0 (catcher
+		# invisible, bake verbatim) only where total light >= 1 — the
+		# valley's sun+ambient always summed past it. An oblique -55° sun
+		# contributes energy x cos(55°) ~= 0.57 x energy to the up-facing
+		# catcher, so 1.8 saturates (~1.03); weaker suns leave a gray wash
+		# (the market's first attempt) and omni-only rigs leave the
+		# ambient-capped black veil (the counter's black floor).
+		sun_light.light_energy = 1.8
 		sun_light.rotation_degrees = Vector3(-55, 25, 0)
 		sun_light.shadow_enabled = true
 		sun_light.shadow_blur = 1.0
