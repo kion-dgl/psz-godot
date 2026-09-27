@@ -826,31 +826,6 @@ func _bake_has_content(img: Image) -> bool:
 	return false
 
 
-## The geom gate: a stage surface is FLOOR when ≥ half its triangles tilt
-## within ~53° of horizontal and its centroid sits at walk height ± 1.5 —
-## floor materials come and go, floor SHAPE doesn't.
-func _surface_is_floor(mi: MeshInstance3D, mesh: ArrayMesh, surf: int, walk_y: float) -> bool:
-	if mesh == null or surf >= mesh.get_surface_count():
-		return false
-	var arrays := mesh.surface_get_arrays(surf)
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	if verts.size() < 3:
-		return false
-	var ups := 0
-	var total := 0
-	var sum_y := 0.0
-	for t in range(0, verts.size() - 2, 3):
-		var a: Vector3 = mi.global_transform * verts[t]
-		var b: Vector3 = mi.global_transform * verts[t + 1]
-		var c: Vector3 = mi.global_transform * verts[t + 2]
-		var n := (b - a).cross(c - a)
-		sum_y += (a.y + b.y + c.y) / 3.0
-		total += 1
-		if absf(n.y) > 0.6 * n.length():
-			ups += 1
-	return total > 0 and ups >= total / 2 and absf(sum_y / total - walk_y) < 1.5
-
-
 func _authored_lights() -> Array[OmniLight3D]:
 	var out: Array[OmniLight3D] = []
 	for child in get_children():
