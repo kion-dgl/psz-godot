@@ -42,7 +42,10 @@ func _ready() -> void:
 	# The certified DS bake look (#656): pure-bake stage, actors the only
 	# casters, the sto catcher on the collision shell — dynamic shadows over
 	# the sidecar rig.
-	_apply_ds_bake_look("Market")
+	# Sun mode (kion, 2026-09-27): the sun lights ONLY the catcher — its
+	# uniform energy clears the veil the dim omnis can't, its shadow maps
+	# carry the player silhouette; the plane is the no-hull fallback.
+	_apply_ds_bake_look("Market", true, Vector2(50, 70), Vector3(0, 0, 40))
 
 	# The market IS s00e_sa1 — its two authored butterflies (#644), from the
 	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).

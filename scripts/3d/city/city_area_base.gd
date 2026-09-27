@@ -540,7 +540,15 @@ static func parse_lights_spec(text: String) -> Dictionary:
 ## the between-feet contact under a light. Call AFTER the authored lights
 ## and the floor collision exist. `stage_node_name` is the scene's stage
 ## root ("Counter" / "Market" in the tscns).
-func _apply_ds_bake_look(stage_node_name: String) -> void:
+## The catcher's private render layer: the market's sun lights ONLY the
+## catcher (its uniform energy clears the sto veil and its shadow maps
+## carry the player silhouette — the valley sun contract, indoors), so it
+## rides a layer the stage and actors never see.
+const CATCHER_LAYER := 4
+
+
+func _apply_ds_bake_look(stage_node_name: String, sun := false,
+		plane_size := Vector2.ZERO, plane_center := Vector3.ZERO) -> void:
 	var stage := get_node_or_null(stage_node_name)
 	if stage == null:
 		push_warning("[CityArea] DS bake look: no stage node '%s'" % stage_node_name)
@@ -549,13 +557,47 @@ func _apply_ds_bake_look(stage_node_name: String) -> void:
 	for node in MeshUtils.collect_mesh_instances(stage, []):
 		(node as MeshInstance3D).cast_shadow = \
 				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var catcher: MeshInstance3D = null
 	var floor_root := get_node_or_null("FloorCollision")
-	if floor_root == null:
-		push_warning("[CityArea] DS bake look: no FloorCollision — no catcher")
+	if floor_root:
+		catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
+	if catcher == null and plane_size.x > 0.0:
+		# No usable collision hull (kion's fallback): a y:0 plane catches
+		# the shadows.
+		var cmat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
+		cmat.shader = sh
+		var pm := PlaneMesh.new()
+		pm.size = plane_size
+		pm.material = cmat
+		catcher = MeshInstance3D.new()
+		catcher.name = "ShadowCatcherPlane"
+		catcher.mesh = pm
+		catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		catcher.position = plane_center + Vector3(0, 0.05, 0)
+	if catcher == null:
+		push_warning("[CityArea] DS bake look: no catcher (no hull, no plane)")
 		return
-	var catcher := MeshUtils.make_shadow_catcher(floor_root, true, true)
-	if catcher:
-		add_child(catcher)
+	if sun:
+		catcher.layers = CATCHER_LAYER
+		var sun_light := DirectionalLight3D.new()
+		sun_light.name = "CatcherSun"
+		sun_light.light_energy = 0.9
+		sun_light.rotation_degrees = Vector3(-55, 25, 0)
+		sun_light.shadow_enabled = true
+		sun_light.shadow_blur = 1.0
+		# Only the catcher sees it — the baked stage is unlit regardless,
+		# and the actors keep the authored omni rig as their only lights.
+		sun_light.light_cull_mask = CATCHER_LAYER
+		add_child(sun_light)
+	add_child(catcher)
 
 
 func _add_authored_lights(stage_id: String) -> bool:
