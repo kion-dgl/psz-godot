@@ -196,7 +196,7 @@ func _process(_delta: float) -> void:
 			_dump_frame = 0
 	if _dump_frame >= 0:
 		_dump_frame += 1
-		if _dump_frame == 90:
+		if _dump_frame == 240:
 			for child in get_children():
 				if child is OmniLight3D:
 					var l := child as OmniLight3D
