@@ -77,6 +77,111 @@ const DEFAULT_SPAWN := Vector3(-0.05, -9.0, 121.78)
 ## "no shadow next to the principal's office", 2026-09-26).
 const FLOOR_LIT_DEFAULT := "ground01_COLOR_0,groud01_COLOR_0.001,doorset_COLOR_0,doorset_COLOR_0.001"
 
+
+## The per-light projector rig: one SubViewport per placed light renders the
+## actor's SILHOUETTE from that light's position (camera at the light, aimed
+## at the actor, actors-only cull layer); the catcher is an UNSHADED quad
+## field whose shader projects each silhouette onto the floor through the
+## same camera's matrices and composites them with per-light weights
+## (energy / distance²). Transparent floor by construction (the catcher is
+## unlit — no engine light can touch it, no min formula, no veil), N real
+## per-light shadows, renderer-proof. Every engine-shadow path was measured
+## or derived dead first — see mesh_utils.make_shadow_catcher's doc.
+const PROJECTOR_SHADER := "
+shader_type spatial;
+render_mode blend_mix, unshaded, depth_draw_never;
+
+uniform sampler2D u_tex0; uniform mat4 u_view0; uniform mat4 u_proj0; uniform float u_w0;
+uniform sampler2D u_tex1; uniform mat4 u_view1; uniform mat4 u_proj1; uniform float u_w1;
+uniform sampler2D u_tex2; uniform mat4 u_view2; uniform mat4 u_proj2; uniform float u_w2;
+uniform sampler2D u_tex3; uniform mat4 u_view3; uniform mat4 u_proj3; uniform float u_w3;
+uniform sampler2D u_tex4; uniform mat4 u_view4; uniform mat4 u_proj4; uniform float u_w4;
+uniform sampler2D u_tex5; uniform mat4 u_view5; uniform mat4 u_proj5; uniform float u_w5;
+uniform sampler2D u_tex6; uniform mat4 u_view6; uniform mat4 u_proj6; uniform float u_w6;
+uniform sampler2D u_tex7; uniform mat4 u_view7; uniform mat4 u_proj7; uniform float u_w7;
+
+uniform float u_debug;
+
+varying vec3 world_pos;
+
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+	ALBEDO = vec3(0.0);
+	float a = 0.0;
+	vec4 c;
+	vec2 uv;
+	c = u_proj0 * (u_view0 * vec4(world_pos, 1.0));
+	if (u_w0 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex0, uv).a * u_w0);
+		}
+	}
+	c = u_proj1 * (u_view1 * vec4(world_pos, 1.0));
+	if (u_w1 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex1, uv).a * u_w1);
+		}
+	}
+	c = u_proj2 * (u_view2 * vec4(world_pos, 1.0));
+	if (u_w2 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex2, uv).a * u_w2);
+		}
+	}
+	c = u_proj3 * (u_view3 * vec4(world_pos, 1.0));
+	if (u_w3 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex3, uv).a * u_w3);
+		}
+	}
+	c = u_proj4 * (u_view4 * vec4(world_pos, 1.0));
+	if (u_w4 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex4, uv).a * u_w4);
+		}
+	}
+	c = u_proj5 * (u_view5 * vec4(world_pos, 1.0));
+	if (u_w5 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex5, uv).a * u_w5);
+		}
+	}
+	c = u_proj6 * (u_view6 * vec4(world_pos, 1.0));
+	if (u_w6 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex6, uv).a * u_w6);
+		}
+	}
+	c = u_proj7 * (u_view7 * vec4(world_pos, 1.0));
+	if (u_w7 > 0.001 && c.w > 0.0) {
+		uv = c.xy / c.w * 0.5 + 0.5; uv.y = 1.0 - uv.y;
+		if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+			a = max(a, texture(u_tex7, uv).a * u_w7);
+		}
+	}
+	ALPHA = a;
+	if (u_debug > 0.5) {
+		ALBEDO = vec3(0.85, 0.1, 0.1);
+		ALPHA = clamp(0.18 + a, 0.0, 0.9);
+	}
+}
+"
+
+## The render layer the projector cameras see: actor meshes only.
+const ACTOR_LAYER := 8
+## Shadow strength at the strongest — the max composite alpha.
+const SHADOW_MAX_ALPHA := 0.55
+
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
@@ -90,6 +195,9 @@ var _base_energies: Dictionary = {}  # OmniLight3D path → authored energy
 var _base_shadows: Dictionary = {}   # OmniLight3D path → authored shadow_enabled
 var _bake_mode := false
 var _catcher: MeshInstance3D
+var _catcher_mat: ShaderMaterial
+var _projectors: Array[Dictionary] = []  # {vp, cam, light}
+var _shadows_on := true
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
@@ -128,6 +236,11 @@ func _ready() -> void:
 		_live_dir = OS.get_environment("PSZ_WALK_SHOT_DIR")
 	DirAccess.make_dir_recursive_absolute(_station_dir)
 	DirAccess.make_dir_recursive_absolute(_live_dir)
+	# Station runs must keep compositing: macOS throttles occluded windows
+	# to a standstill and every capture after that returns the same stale
+	# frame (measured 2026-09-26 — stations 4/5 wrote one shared hash).
+	if not _stations.is_empty():
+		get_window().always_on_top = true
 	_fps_wanted = OS.get_environment("PSZ_WALK_FPS") == "1"
 	_build_environment()
 	_load_stage()
@@ -177,6 +290,10 @@ func _ready() -> void:
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
+	# The projector cameras see ACTOR_LAYER only — the player's meshes
+	# join it so the silhouettes render.
+	for node in MeshUtils.collect_mesh_instances(_player, []):
+		(node as GeometryInstance3D).layers |= 8
 	# PSZ_WALK_SUN_PROBE=1: a dim shadow-casting directional (the valley
 	# contract) over the same catcher — the asymmetry probe for "does the
 	# MUL catcher receive directional but not omni shadow maps on compat?"
@@ -209,6 +326,7 @@ var _player: Node3D
 
 
 func _process(_delta: float) -> void:
+	_update_projectors()
 	_update_live_status()
 	_fps_tick(_delta)
 	if not _stations.is_empty():
@@ -430,21 +548,45 @@ func _set_bake_mode(on: bool) -> void:
 					# a failed bake capture degrades to the flat floor — never
 					# ship a black bake
 					_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color("1"))
-				else:
-					_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
-					# PSZ_WALK_CATCHER_EMISSION (default 0.85): the base lift
-					# that breaks the ambient zero-sum — emission is an UNLIT
-					# additive term on the multiply catcher, so it raises the
-					# floor multiplier toward x1 (invisible mesh, no veil, no
-					# seams) without shallowing shadows the way ambient does;
-					# pools then push past x1 and read as light, shadows
-					# remove only the pool term. The valley's uniform sun did
-					# this for free; indoors, emission is the dial.
-					if _catcher:
-						var cmat := _catcher.mesh.surface_get_material(0) as StandardMaterial3D
-						if cmat:
-							cmat.emission_enabled = true
-							cmat.emission = Color(1, 1, 1) * _catcher_emission
+				elif OS.get_environment("PSZ_WALK_PROJECTOR") == "1":
+					# PSZ_WALK_PROJECTOR=1: the UNSHADED catcher + projected
+					# per-light silhouettes (the 8def749b rig, returned to).
+					# No light ever touches the catcher — no ambient veil, no
+					# pools, no multiply: the collision mesh shows ONLY the
+					# player's shadows, painted from each light's own position.
+					# The multiply catcher cannot do this (a lit sheet always
+					# reads: gray below x1, glow above); the projector is the
+					# only rig where "nothing visible but the shadow" is exact.
+					var mesh := MeshUtils.collision_face_mesh(floor_root, 0.6)
+					if mesh != null:
+						_catcher_mat = ShaderMaterial.new()
+						var sh := Shader.new()
+						sh.code = PROJECTOR_SHADER
+						_catcher_mat.shader = sh
+						if OS.get_environment("PSZ_WALK_CATCHER_DEBUG") == "1":
+							_catcher_mat.set_shader_parameter("u_debug", 1.0)
+						mesh.surface_set_material(0, _catcher_mat)
+						_catcher = MeshInstance3D.new()
+						_catcher.name = "ShadowProjector"
+						_catcher.mesh = mesh
+						_catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+						_catcher.position.y = 0.04
+						_build_projectors()
+			else:
+				_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
+				# PSZ_WALK_CATCHER_EMISSION (default 0.85): the base lift
+				# that breaks the ambient zero-sum — emission is an UNLIT
+				# additive term on the multiply catcher, so it raises the
+				# floor multiplier toward x1 (invisible mesh, no veil, no
+				# seams) without shallowing shadows the way ambient does;
+				# pools then push past x1 and read as light, shadows
+				# remove only the pool term. The valley's uniform sun did
+				# this for free; indoors, emission is the dial.
+				if _catcher:
+					var cmat := _catcher.mesh.surface_get_material(0) as StandardMaterial3D
+					if cmat:
+						cmat.emission_enabled = true
+						cmat.emission = Color(1, 1, 1) * _catcher_emission
 			if _catcher:
 				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
 				# (blend_mul) instead of the StandardMaterial3D MUL — the
@@ -480,6 +622,58 @@ void fragment() {
 		if on:
 			light.shadow_blur = 1.0
 	_update_status()
+
+
+## One SubViewport per placed light, its camera sitting AT the light aimed
+## at the actor, seeing only the actor layer (ACTOR_LAYER — the player's
+## meshes join it after spawn). The catcher shader samples these each frame.
+func _build_projectors() -> void:
+	_shadows_on = OS.get_environment("PSZ_WALK_SHADOWS") != "0"
+	var lights := _authored_lights()
+	for i in lights.size():
+		var vp := SubViewport.new()
+		vp.name = "ShadowVP_%d" % i
+		vp.size = Vector2(256, 256)
+		vp.transparent_bg = true
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		var cam := Camera3D.new()
+		cam.cull_mask = ACTOR_LAYER
+		cam.set_orthogonal(2.6, 0.05, 60.0)
+		vp.add_child(cam)
+		add_child(vp)
+		_catcher_mat.set_shader_parameter("u_tex%d" % i, vp.get_texture())
+		_projectors.append({"vp": vp, "cam": cam, "light": lights[i]})
+
+## Per frame: aim every projector camera at the actor and feed the catcher
+## shader each light's view/projection and weight (energy / distance², in
+## range, above the actor). Lights out of range or below the actor's plane
+## throw nothing — walk the hall and the shadows trade off light to light.
+func _update_projectors() -> void:
+	if _catcher_mat == null or _player == null:
+		return
+	var p := _player.global_position + Vector3(0, 0.8, 0)
+	for i in _projectors.size():
+		var pr := _projectors[i]
+		var light := pr["light"] as OmniLight3D
+		var cam := pr["cam"] as Camera3D
+		var l := light.global_position
+		var d := l.distance_to(p)
+		cam.position = l
+		# Dead-under a light the aim is ±Y: look_at's default up is
+		# colinear and the transform FREEZES — aim along a perpendicular up.
+		var dir := (p - l).normalized()
+		var up := Vector3.UP if absf(dir.dot(Vector3.UP)) < 0.999 else Vector3(1, 0, 0)
+		cam.look_at(p, up)
+		cam.far = d + 3.0
+		var w := 0.0
+		if _shadows_on and d < light.omni_range and l.y > p.y:
+			# 20× energy/d²: an e2 sconce reads a full shadow to ~6 units and
+			# a fading one to its range edge; the e40s carry across the hall.
+			w = clampf(20.0 * light.light_energy / maxf(d * d, 0.25), 0.0, 1.0) * SHADOW_MAX_ALPHA
+		_catcher_mat.set_shader_parameter("u_view%d" % i, cam.global_transform)
+		_catcher_mat.set_shader_parameter("u_proj%d" % i, cam.get_camera_projection())
+		_catcher_mat.set_shader_parameter("u_w%d" % i, w)
+
 
 
 ## PSZ_WALK_FLAT_FLOOR color spec: "1" picks the default warm gray; "r,g,b"
