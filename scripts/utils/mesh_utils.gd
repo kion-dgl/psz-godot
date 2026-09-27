@@ -526,18 +526,24 @@ static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 ## A "*" entry is the wildcard (#649 wetlands): every surface matches — the
 ## lit pass flips the WHOLE stage to per-pixel (bake kept as albedo), and a
 ## wildcard keep-list forces nothing unlit. Returns how many surfaces flipped.
-## Does this surface ship a real COLOR_0 bake? Absent or all-black vertex
-## colors read as "the bake lives in the textures" — albedo stays pure.
+## Does COLOR_0 modulate albedo on this surface? Absent colors are a
+## white multiplier (the MeshBasic contract keeps the flag — the parity
+## the detail planes needed); PRESENT-but-black colors would zero the
+## albedo (the market's surgery model bakes into textures with black
+## COLOR_0 — that's the one case that must keep pure albedo).
 static func vertex_bake_present(mi: MeshInstance3D, surf: int) -> bool:
 	var mesh := mi.mesh as ArrayMesh
 	if mesh == null or surf >= mesh.get_surface_count():
-		return false
+		return true
 	var arrays := mesh.surface_get_arrays(surf)
 	if arrays.is_empty():
-		return false
-	var cols: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+		return true
+	var cols_v: Variant = arrays[Mesh.ARRAY_COLOR]
+	if cols_v == null:
+		return true
+	var cols: PackedColorArray = cols_v
 	if cols.is_empty():
-		return false
+		return true
 	for i in range(0, cols.size(), maxi(1, cols.size() / 32)):
 		if cols[i].r > 0.02 or cols[i].g > 0.02 or cols[i].b > 0.02:
 			return true
