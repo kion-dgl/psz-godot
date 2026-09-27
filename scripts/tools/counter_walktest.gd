@@ -386,6 +386,10 @@ func _set_bake_mode(on: bool) -> void:
 				# maps on compat. The stage keeps its bake; the walls keep theirs.
 				if not flat.is_empty():
 					_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color(flat))
+				elif OS.get_environment("PSZ_WALK_BAKE_FLOOR") == "1":
+					# a failed bake capture degrades to the flat floor — never
+					# ship a black bake
+					_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color("1"))
 				else:
 					_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
 			if _catcher:
@@ -439,12 +443,18 @@ func _flat_floor_color(spec: String) -> Color:
 	return DEFAULT_FLAT
 
 
-## The one-shot bake capture (PSZ_WALK_BAKE_FLOOR): a top-down ortho
-## SubViewport over the UNSHADED stage, hung just above the walk height
-## with a short far plane so walls only print their base strip, and the
-## player hidden — what lands in the texture is the pure floor bake,
-## world-XZ aligned (rotation −90°: camera right = +X, so texture u/v map
-## directly onto world x/z from the capture bounds' minimum corner).
+## The one-shot bake capture (PSZ_WALK_BAKE_FLOOR): a temporary top-down
+## ORTHO camera swapped into the MAIN WINDOW, one frame, read via the
+## window texture — the one read path that forces a draw even when macOS
+## throttles an occluded window (SubViewport captures measured boot-flaky
+## black exactly when the window wasn't compositing; every SHOT read from
+## the same shells worked). Hung just above the walk height with a short
+## far plane so walls only print their base strip; player and HUD hidden —
+## what lands in the texture is the pure floor bake, world-XZ aligned
+## (rotation −90°: camera right = +X, so texture u/v map directly onto
+## world x/z from the captured rect's minimum corner). The window's aspect
+## widens the captured rect beyond the shell's X extent — harmless, the
+## declared rect is what the shell shader maps.
 func _capture_floor_bake() -> MeshInstance3D:
 	var floor_root := get_node_or_null("FloorCollision")
 	if floor_root == null:
@@ -463,37 +473,64 @@ func _capture_floor_bake() -> MeshInstance3D:
 			has_aabb = true
 	if not has_aabb:
 		return null
-	var origin := Vector2(aabb.position.x - 1.0, aabb.position.z - 1.0)
-	var size := Vector2(aabb.size.x + 2.0, aabb.size.z + 2.0)
-	var px := mini(2048, int(24.0 * size.x))
-	var py := mini(2048, int(24.0 * size.y))
-	var vp := SubViewport.new()
-	vp.size = Vector2(px, py)
-	vp.transparent_bg = true
-	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var vp := get_viewport()
+	var aspect: float = float(vp.size.x) / maxf(float(vp.size.y), 1.0)
+	var z_size := aabb.size.z + 2.0
+	var x_size: float = z_size * aspect
+	var origin := Vector2(
+		aabb.position.x + aabb.size.x * 0.5 - x_size * 0.5,
+		aabb.position.z - 1.0)
 	var cam := Camera3D.new()
 	cam.rotation_degrees = Vector3(-90, 0, 0)
 	cam.position = Vector3(
-		origin.x + size.x * 0.5,
+		origin.x + x_size * 0.5,
 		MeshUtils.floor_top(floor_root) + 1.2,
-		origin.y + size.y * 0.5)
-	cam.set_orthogonal(size.y, 0.05, 2.5)
-	vp.add_child(cam)
-	add_child(vp)
-	# The player must not print into the bake.
+		origin.y + z_size * 0.5)
+	cam.set_orthogonal(z_size, 0.05, 2.5)
+	add_child(cam)
+	cam.current = true
 	if _player != null:
 		_player.visible = false
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img := vp.get_texture().get_image()
-	vp.queue_free()
+	var hud_hidden := false
+	if _status:
+		hud_hidden = _status.visible
+		_status.visible = false
+	var img: Image = null
+	for attempt in 4:
+		await get_tree().process_frame
+		img = vp.get_texture().get_image()
+		if _bake_has_content(img):
+			break
+		print("[CWalk] bake attempt %d came back black — retrying" % attempt)
+		img = null
+	cam.current = false
+	cam.queue_free()
 	if _player != null:
 		_player.visible = true
+	if _status and hud_hidden:
+		_status.visible = true
+	if img == null:
+		push_error("[CWalk] floor bake never drew content — degrading to the flat floor")
+		return null
+	var dump_path := OS.get_environment("PSZ_WALK_BAKE_DUMP")
+	if not dump_path.is_empty():
+		img.save_png(dump_path)
 	print("[CWalk] floor bake captured %dx%d over x[%.1f..%.1f] z[%.1f..%.1f]" % [
 		img.get_width(), img.get_height(),
-		origin.x, origin.x + size.x, origin.y, origin.y + size.y])
+		origin.x, origin.x + x_size, origin.y, origin.y + z_size])
 	return MeshUtils.make_baked_floor(floor_root, ImageTexture.create_from_image(img),
-		origin, size)
+		origin, Vector2(x_size, z_size))
+
+
+## Sampled-luminance gate for the bake capture: true when the image holds
+## something other than black (a 12×12 grid of pixels, any channel > 0.03).
+func _bake_has_content(img: Image) -> bool:
+	for y in range(0, img.get_height(), maxi(1, img.get_height() / 12)):
+		for x in range(0, img.get_width(), maxi(1, img.get_width() / 12)):
+			var c := img.get_pixel(x, y)
+			if c.r > 0.03 or c.g > 0.03 or c.b > 0.03:
+				return true
+	return false
 
 
 func _authored_lights() -> Array[OmniLight3D]:
