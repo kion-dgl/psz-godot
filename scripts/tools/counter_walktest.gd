@@ -22,6 +22,10 @@ extends CityAreaBase
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
 ##       PSZ_WALK_SHADOWS=0          boot with the omni shadows off (diff control)
+##       PSZ_WALK_FLOOR_LIT=a,b      override the floor-lit surface list (the
+##                               DEFAULT covers ground01/groud01/doorset — an
+##                               unlisted floor neither pools nor shadows);
+##                               "0" disables the rig (catcher probes return)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_STATIONS="x,y,z;…"  station walk — teleport to each station,
 ##                               settle, screenshot + the per-light verdict
@@ -58,6 +62,12 @@ const FLOOR_GLB_FMT := "res://assets/stages/city_e/%s/lndmd/%s-floor.glb"
 
 ## city_counter_controller's own spawn: a touch above the real floor (−10.67).
 const DEFAULT_SPAWN := Vector3(-0.05, -9.0, 121.78)
+
+## The floor surfaces that receive the rig (the ozette wildcard, floored):
+## the two ground materials plus the door strips — the office doorway is
+## doorset, and an unlisted floor can neither pool nor shadow (kion's
+## "no shadow next to the principal's office", 2026-09-26).
+const FLOOR_LIT_DEFAULT := "ground01_COLOR_0,groud01_COLOR_0.001,doorset_COLOR_0,doorset_COLOR_0.001"
 
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
@@ -293,18 +303,22 @@ func _load_stage() -> void:
 ## black-floor era was the shadow_to_opacity catcher, retired).
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
+	# The floor-lit rig is the default; PSZ_WALK_FLOOR_LIT overrides the
+	# surface list, "0" disables it (the catcher probes come back then).
+	var floor_lit := OS.get_environment("PSZ_WALK_FLOOR_LIT")
+	if floor_lit.is_empty():
+		floor_lit = FLOOR_LIT_DEFAULT
 	var map := get_node_or_null("Map")
 	if map:
 		if on:
 			MeshUtils.make_unlit(map, [])
-			# PSZ_WALK_FLOOR_LIT="ground01,groud01": the ozette contract on the
-			# floor surfaces only — per-pixel with the vertex bake as albedo,
-			# so the authored omnis pool on it AND their shadow maps land
-			# (opaque receivers take omni shadows on compat; the MUL catcher
-			# measurably doesn't). Walls and props stay pure bake; no catcher
-			# mesh at all — the visual floor IS the receiver.
-			var floor_lit := OS.get_environment("PSZ_WALK_FLOOR_LIT")
-			if not floor_lit.is_empty():
+			# The ozette contract on the floor surfaces — per-pixel with the
+			# vertex bake as albedo, so the authored omnis pool on them AND
+			# their shadow maps land (opaque receivers take omni shadows on
+			# compat; the MUL catcher measurably doesn't). Walls and props
+			# stay pure bake; no catcher mesh at all — the visual floor IS
+			# the receiver.
+			if floor_lit != "0":
 				var wanted: Dictionary = {}
 				for n in floor_lit.split(",", false):
 					wanted[n.strip_edges()] = true
@@ -337,9 +351,9 @@ func _set_bake_mode(on: bool) -> void:
 			(node as MeshInstance3D).cast_shadow = \
 					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
 					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# The floor-lit mode IS the receiver — no catcher mesh beside it.
-	if on and _catcher == null and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1" \
-			and OS.get_environment("PSZ_WALK_FLOOR_LIT").is_empty():
+	# The catcher probes only run with the floor-lit rig disabled.
+	if on and _catcher == null and floor_lit == "0" \
+			and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1":
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
 			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
@@ -520,7 +534,7 @@ func _update_status() -> void:
 
 func _base_status() -> String:
 	var n := _authored_lights().size()
-	return "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
+	return "%s%s — ambient %.2f (, .)  pools %.2f× ([ ])  shadows %s (M)  bake (B)" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
-		_env.ambient_light_energy, _pool_scale, n,
+		_env.ambient_light_energy, _pool_scale,
 		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]

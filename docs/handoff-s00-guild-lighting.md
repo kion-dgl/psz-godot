@@ -114,6 +114,16 @@ showed omni shadows; shadow_to_opacity's veil was the problem, not
 reception). Opaque per-pixel receivers take them (the wetlands ground, and
 now the city floor). So: omni shadows ⇒ opaque receiver, full stop.
 
+Post-confirm fixes (kion's live walk, same day): the "no shadow next to
+the principal's office" strip was the **doorset_COLOR_0 floor** — an
+unlisted surface can neither pool nor shadow; doorset joined the default
+FLOOR_LIT list (ground01/groud01/doorset, env-overridable, "0" disables)
+and the doorway now shows pools + a medium-dark shadow. The HUD carries
+its own key legend now (", ." ambient, "[ ]" pools, M shadows, B bake) —
+the values update live as pressed. Ambient guidance: don't zero it — the
+wetlands reference is 0.35, and unlit surfaces keep only ambient, so 0
+blacks out exactly the pockets being investigated.
+
 Perf (kion's live walk flagged chop; measured 2026-09-26, PSZ_WALK_FPS):
 the rig holds vsync 120 fps / 0 slow frames with all 8 omnis casting; the
 chop was the SHOT_EVERY capture reel's sync readback (94–95 fps, exactly
