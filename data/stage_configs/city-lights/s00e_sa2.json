@@ -1,0 +1,157 @@
+{
+  "stage": "s00e_sa2",
+  "ambient": {
+    "color": [
+      0.9,
+      0.88,
+      0.82
+    ],
+    "energy": 0.5
+  },
+  "lights": [
+    {
+      "id": "Lmuhx2i94-1",
+      "name": "Light 1",
+      "pos": [
+        16.431,
+        -8.277,
+        110.925
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 0.3,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx2t4b-2",
+      "name": "Light 2",
+      "pos": [
+        10.934,
+        -8.068,
+        105.525
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 0.3,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx396k-3",
+      "name": "Light 3",
+      "pos": [
+        0.1,
+        -4.5,
+        121.941
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 1.25,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx3vze-4",
+      "name": "Light 4",
+      "pos": [
+        -8.68,
+        -7.802,
+        112.894
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 0.3,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx4gmx-5",
+      "name": "Light 5",
+      "pos": [
+        13.723,
+        -9.2,
+        136.544
+      ],
+      "color": [
+        1,
+        0.7,
+        0.3
+      ],
+      "energy": 0.5,
+      "range": 8.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx514w-6",
+      "name": "Light 6",
+      "pos": [
+        0.062,
+        -7.5,
+        98.638
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 0.3,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuhx5owf-8",
+      "name": "Light 8",
+      "pos": [
+        0.057,
+        -7.5,
+        141.009
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 0.3,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    },
+    {
+      "id": "Lmuimbx9n-1",
+      "name": "Light 1",
+      "pos": [
+        0.048,
+        -7.0,
+        60.613
+      ],
+      "color": [
+        1,
+        0.95,
+        0.88
+      ],
+      "energy": 1.25,
+      "range": 12.0,
+      "attenuation": 2.0,
+      "shadows": true
+    }
+  ]
+}

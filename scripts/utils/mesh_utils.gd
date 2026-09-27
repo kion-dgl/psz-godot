@@ -337,18 +337,44 @@ static func collect_mesh_instances(node: Node, out: Array) -> Array:
 ## One ArrayMesh from every collision triangle under `root`, in global space
 ## (flat up normals — the shells are walk decks, not detail work). The mesh
 ## the debug floor-viz and the shadow catcher share; null when `root` carries
-## no concave collision.
-static func collision_face_mesh(root: Node) -> ArrayMesh:
+## no concave collision. `up_facing_min >= 0` keeps only walkable-slope
+## triangles (normalized geometric normal.y at or above it) — the city
+## "floor" GLBs are whole-room shells (walls and all; the counter's spans
+## y −21.5..14.7), and a vertical face has no business multiplying the stage.
+static func collision_face_mesh(root: Node, up_facing_min := -1.0) -> ArrayMesh:
 	var faces := PackedVector3Array()
 	MapCollisionBuilder.collect_collision_faces(root, faces)
 	if faces.is_empty():
 		return null
+	# Winding is whatever the source shell shipped; a shell's faces flip
+	# together, so the majority vertical sign picks which way "up" is before
+	# the filter reads it.
+	var up_sign := 1.0
+	if up_facing_min >= 0.0:
+		var votes := 0
+		for t in range(0, faces.size(), 3):
+			var raw := (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t])
+			if raw.y > 0.001:
+				votes += 1
+			elif raw.y < -0.001:
+				votes -= 1
+		if votes < 0:
+			up_sign = -1.0
+	var kept := PackedVector3Array()
+	for t in range(0, faces.size(), 3):
+		if up_facing_min >= 0.0:
+			var n := (faces[t + 1] - faces[t]).cross(faces[t + 2] - faces[t])
+			if up_sign * n.y / maxf(n.length(), 0.0001) < up_facing_min:
+				continue
+		kept.append(faces[t])
+		kept.append(faces[t + 1])
+		kept.append(faces[t + 2])
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = faces
+	arrays[Mesh.ARRAY_VERTEX] = kept
 	var normals := PackedVector3Array()
-	normals.resize(faces.size())
-	for i in range(faces.size()):
+	normals.resize(kept.size())
+	for i in range(kept.size()):
 		normals[i] = Vector3(0, 1, 0)
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	var mesh := ArrayMesh.new()
@@ -365,23 +391,126 @@ static func collision_face_mesh(root: Node) -> ArrayMesh:
 ## shell, so its intentional baked darkness (the "you can't walk there" read)
 ## survives untouched. Lifted a hair above the walk height to win depth
 ## without z-fighting; never casts. Null when the floor has no collision
-## faces.
-static func make_shadow_catcher(floor_root: Node3D) -> MeshInstance3D:
-	var mesh := collision_face_mesh(floor_root)
+## faces. `up_facing_only` drops the non-walk slopes — the field shells are
+## walk decks, but the city "floor" GLBs wrap whole rooms and their walls
+## would sit exactly coplanar with the stage (the counter's wall z-fight).
+##
+## The CITY indoor contract (#656) uses the same catcher with a different
+## MATERIAL: lights exist for actors + shadows, so a pool on the floor IS
+## the stage being lit. shadow_to_opacity is exactly that — lit reads
+## transparent, shadowed reads a dark overlay — but the StandardMaterial3D
+## FLAG no-ops on the compatibility renderer (probe, 2026-09-26) while the
+## SHADER render_mode works (second probe, same day: omni shadow, partial
+## alpha, no overlay — upstream #62257 says opacity scales with ambient, so
+## the ambient share tunes shadow depth). The valley keeps the MUL material
+## below; only the city catcher takes the shader.
+const SHADOW_CATCHER_SHADER := "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, shadow_to_opacity;
+void fragment() {
+	ALBEDO = vec3(0.0);
+}
+"
+
+## The flat-floor rig (#656, kion's flat-color proposal): the SAME catcher
+## geometry — the collision shell, up-facing only, lifted +0.04, never
+## casts — but an OPAQUE flat-color per-pixel floor instead of any veil or
+## multiply. The shell is the walk surface, so floor coverage is total (no
+## per-material surface list to hunt — the mid-floor strips a stage
+## material split misses are covered), and an opaque lit receiver is what
+## the compat renderer's dual-paraboloid omni shadows actually land on:
+## the flat floor pools under the authored lights and takes the actors'
+## shadows everywhere. The bake survives on the walls and props; the floor
+## reads as the flat color under the light field.
+static func make_flat_floor(floor_root: Node3D, color: Color) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6)
 	if mesh == null:
 		return null
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 1)
+	mat.albedo_color = color
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
 	mat.roughness = 1.0
 	mat.specular = 0.0
-	# Draw after the transparent detail planes and the waterfall (priority 1):
-	# the multiply must reach THEM too — a shadow that stops at a decal edge
-	# reads exactly like the harsh-line bug. The MUL blend already sorts in
-	# the transparent queue; priority orders within it.
-	mat.render_priority = 2
+	mesh.surface_set_material(0, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "FlatFloor"
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position.y = 0.04
+	return mi
+
+## The baked-floor rig (#656, kion's "transparent hull that shows the
+## shadow"): the FLAT_FLOOR receiver with the stage's own bake as its
+## albedo — a top-down ortho capture of the UNSHADED stage floor, mapped
+## by world XZ. True transparency is the measured dead end on compat
+## (blend_mul never samples omni shadows; the shadow_to_opacity alpha is
+## the veil), so the receiver stays OPAQUE — the one kind that takes the
+## omnis' shadow maps — and instead LOOKS transparent: the printed floor
+## is the real bake at the real world position, pools and shadows playing
+## on top of it. `origin`/`size` are the capture's XZ bounds.
+static func make_baked_floor(floor_root: Node3D, bake_tex: Texture2D,
+		origin: Vector2, size: Vector2) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6)
+	if mesh == null:
+		return null
+	var mat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque;
+uniform sampler2D u_bake;
+uniform vec2 u_origin;
+uniform vec2 u_inv_size;
+varying vec3 world_pos;
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+void fragment() {
+	vec2 uv = (world_pos.xz - u_origin) * u_inv_size;
+	ALBEDO = texture(u_bake, uv).rgb;
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
+}
+"
+	mat.shader = sh
+	mat.set_shader_parameter("u_bake", bake_tex)
+	mat.set_shader_parameter("u_origin", origin)
+	mat.set_shader_parameter("u_inv_size", Vector2(1.0 / maxf(size.x, 0.001), 1.0 / maxf(size.y, 0.001)))
+	mesh.surface_set_material(0, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "BakedFloor"
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position.y = 0.04
+	return mi
+
+static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
+		shadow_only := false) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
+	if mesh == null:
+		return null
+	var mat: Material
+	if shadow_only:
+		var cmat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = SHADOW_CATCHER_SHADER
+		cmat.shader = sh
+		mat = cmat
+	else:
+		var mmat := StandardMaterial3D.new()
+		mmat.albedo_color = Color(1, 1, 1, 1)
+		mmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		mmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mmat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+		mmat.roughness = 1.0
+		mmat.specular = 0.0
+		# Draw after the transparent detail planes and the waterfall
+		# (priority 1): the multiply must reach THEM too — a shadow that
+		# stops at a decal edge reads exactly like the harsh-line bug. The
+		# MUL blend already sorts in the transparent queue; priority orders
+		# within it.
+		mmat.render_priority = 2
+		mat = mmat
 	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()
 	mi.name = "ShadowCatcher"

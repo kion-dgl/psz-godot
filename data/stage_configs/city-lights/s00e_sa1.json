@@ -1,0 +1,83 @@
+{
+  "stage": "s00e_sa1",
+  "ambient": {
+    "color": [
+      0.9,
+      0.88,
+      0.82
+    ],
+    "energy": 0.5
+  },
+  "lights": [
+    {
+      "id": "market-item-shop",
+      "name": "Item Shop",
+      "pos": [-10.3, 1.8, 30.2],
+      "color": [1, 0.95, 0.88],
+      "energy": 1.25,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-weapon-shop",
+      "name": "Weapon Shop",
+      "pos": [-6.8, 1.8, 24.2],
+      "color": [1, 0.95, 0.88],
+      "energy": 0.8,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-grind-shop",
+      "name": "Grind Shop",
+      "pos": [6.3, 1.8, 26.0],
+      "color": [1, 0.95, 0.88],
+      "energy": 0.8,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-mid",
+      "name": "Mid Room",
+      "pos": [0.0, 2.2, 44.0],
+      "color": [1, 0.95, 0.88],
+      "energy": 1.25,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-entrance",
+      "name": "South Entrance",
+      "pos": [0.0, 2.2, 60.0],
+      "color": [1, 0.95, 0.88],
+      "energy": 1.25,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-north",
+      "name": "North Wall",
+      "pos": [0.0, 2.2, 20.0],
+      "color": [1, 0.95, 0.88],
+      "energy": 0.8,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    },
+    {
+      "id": "market-underground-door",
+      "name": "Underground Door",
+      "pos": [-13.4, 1.8, 56.0],
+      "color": [1, 0.95, 0.88],
+      "energy": 0.8,
+      "range": 12,
+      "attenuation": 2,
+      "shadows": true
+    }
+  ]
+}

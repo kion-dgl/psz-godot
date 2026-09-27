@@ -144,6 +144,7 @@ func _run_tests_core() -> void:
 	test_teleporter_dressing()
 	test_teleporter_dressing_texture_overrides()
 	test_city_scroll_fixes()
+	test_city_authored_lights()
 	test_area_objects()
 	test_generated_field_doors()
 	test_generated_section_warp_directions()
@@ -2590,6 +2591,51 @@ func test_city_scroll_fixes() -> void:
 		"non-scrolling material is left untouched by the narrow pass")
 
 	area.free()
+	print("")
+
+
+# ── City-lights sidecar parsing (web #/city-lab → _add_authored_lights) ──
+# The #656 transfer path: the tool authors Godot-unit lights and this parse
+# turns the JSON into typed rows the loader spawns verbatim. Pins the
+# happy path, the skip-bad-rows rule, and the malformed-file → legacy-rig
+# fallback. Pack-free.
+func test_city_authored_lights() -> void:
+	print("── city parse_lights_spec (#656 sidecar) ──")
+	var doc := "{\"stage\":\"s00e_sa2\",\"ambient\":{\"color\":[0.9,0.88,0.82],\"energy\":1.5},"
+	doc += "\"lights\":[{\"name\":\"CounterPool\",\"pos\":[-7.86,-8.7,111.39],\"color\":[1.0,0.7,0.3],"
+	doc += "\"energy\":5.0,\"range\":11.0,\"attenuation\":1.0,\"shadows\":true}]}"
+	var spec: Dictionary = CityAreaBase.parse_lights_spec(doc)
+	assert_eq(spec.size(), 2, "sidecar parses to lights + ambient")
+	var lights: Array = spec["lights"]
+	assert_eq(lights.size(), 1, "one light row")
+	var row: Dictionary = lights[0]
+	assert_eq(row["name"], "CounterPool", "light name carries")
+	var pos: Vector3 = row["pos"]
+	assert_almost_eq(pos.x, -7.86, 0.0001, "light pos.x is the authored value")
+	assert_almost_eq(pos.z, 111.39, 0.0001, "light pos.z is the authored value")
+	var col: Color = row["color"]
+	assert_almost_eq(col.g, 0.7, 0.0001, "light color.g is the authored value")
+	assert_almost_eq(float(row["energy"]), 5.0, 0.0001, "energy carries (post-light convention)")
+	assert_almost_eq(float(row["range"]), 11.0, 0.0001, "range carries")
+	assert_almost_eq(float(row["attenuation"]), 1.0, 0.0001, "flattened falloff carries")
+	assert_eq(row["shadows"], true, "shadows carry")
+	var ambient: Dictionary = spec["ambient"]
+	assert_almost_eq(float(ambient["energy"]), 1.5, 0.0001, "ambient energy carries")
+	var amb_col: Color = ambient["color"]
+	assert_almost_eq(amb_col.r, 0.9, 0.0001, "ambient color carries")
+
+	# Malformed input yields {} — the caller keeps its legacy rig.
+	assert_true(CityAreaBase.parse_lights_spec("not json").is_empty(),
+		"garbage text yields {} (legacy rig rides)")
+	assert_true(CityAreaBase.parse_lights_spec("{\"stage\":\"x\"}").is_empty(),
+		"doc without a lights array yields {}")
+	# Rows with bad vectors are skipped, not fatal.
+	var skip_doc := "{\"stage\":\"s00e_sa2\",\"lights\":[{\"name\":\"ok\",\"pos\":[0,0,0],\"color\":[1,1,1]},"
+	skip_doc += "{\"name\":\"bad\",\"pos\":[0,0],\"color\":[1,1,1]}]}"
+	var skip_spec: Dictionary = CityAreaBase.parse_lights_spec(skip_doc)
+	var skip_lights: Array = skip_spec["lights"]
+	assert_eq(skip_lights.size(), 1, "bad row skipped, good row kept")
+	assert_eq(skip_lights[0]["name"], "ok", "the surviving row is the valid one")
 	print("")
 
 

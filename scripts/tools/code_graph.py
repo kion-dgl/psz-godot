@@ -60,6 +60,7 @@ MAX_FANOUT = 15
 # Engine-invoked callbacks: never referenced by name in source, but NOT dead.
 GODOT_VIRTUALS = {
     "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
+    "_initialize",  # MainLoop virtual — the -s tool scripts' entry point
     "_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input",
     "_gui_input", "_draw", "_init", "_notification", "_to_string", "_get",
     "_set", "_get_property_list", "_property_can_revert", "_property_get_revert",

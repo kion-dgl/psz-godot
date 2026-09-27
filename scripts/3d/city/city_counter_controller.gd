@@ -44,16 +44,20 @@ func _ready() -> void:
 	_fix_city_materials()
 	# Override: disable vertex colors for SA2 — they're baked too dark
 	_override_vertex_colors(false)
-	# Interior lights along the hallway (Z runs from ~20 to ~-22, y=2 is floor)
-	_add_interior_lights([
-		Vector3(0, 4, 18),
-		Vector3(0, 4, 12),
-		Vector3(0, 4, 6),
-		Vector3(0, 4, 0),
-		Vector3(0, 4, -6),
-		Vector3(0, 4, -12),
-		Vector3(0, 4, -18),
-	])
+	# Mood lighting (#656): the city-lab sidecar is the source of truth
+	# (authored in web #/city-lab, Godot-unit 1:1). The legacy row — seven
+	# warm omnis strung down the hallway at y=4, roughly 14.7 m above the
+	# real floor (−10.67) — only rides until a sidecar lands.
+	if not _add_authored_lights("s00e_sa2"):
+		_add_interior_lights([
+			Vector3(0, 4, 18),
+			Vector3(0, 4, 12),
+			Vector3(0, 4, 6),
+			Vector3(0, 4, 0),
+			Vector3(0, 4, -6),
+			Vector3(0, 4, -12),
+			Vector3(0, 4, -18),
+		])
 
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)
@@ -74,6 +78,10 @@ func _ready() -> void:
 		"res://assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb",
 		Vector3.ZERO
 	)
+	# The certified DS bake look (#656, locked 2026-09-27): pure-bake stage,
+	# actors the only casters, the sto catcher on the collision shell —
+	# dynamic per-light shadows over the tuned sidecar rig above.
+	_apply_ds_bake_look("Counter")
 
 	# NPCs, exit triggers, and the warp pad — positions probed on the merged mesh.
 	_add_interactables()

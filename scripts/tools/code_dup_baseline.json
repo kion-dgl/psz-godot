@@ -155,24 +155,8 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/tools/s03b_walktest.gd:_build_environment#0||scripts/tools/valley_walktest.gd:_build_environment#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/tools/s03b_walktest.gd:_build_status_label#0||scripts/tools/valley_walktest.gd:_build_status_label#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/tools/s03b_walktest.gd:_process#0||scripts/tools/valley_walktest.gd:_process#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/ui/choice_dialog.gd:_panel_style#0||scripts/ui/confirm_dialog.gd:_panel_style#0",
       "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/tools/s03b_walktest.gd:_load_floor_collision#0||scripts/tools/valley_walktest.gd:_load_floor_collision#0",
-      "jaccard": 0.974
     },
     {
       "sig": "scripts/tools/s03b_walktest.gd:_spawn_authored_effects#0||scripts/tools/valley_walktest.gd:_spawn_authored_effects#0",
@@ -231,10 +215,6 @@
       "jaccard": 0.949
     },
     {
-      "sig": "scripts/tools/s03b_walktest.gd:_ready#0||scripts/tools/valley_walktest.gd:_ready#0",
-      "jaccard": 0.943
-    },
-    {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
       "jaccard": 0.932
     },
@@ -291,24 +271,12 @@
       "jaccard": 0.909
     },
     {
-      "sig": "scripts/tools/s03b_walktest.gd:_load_stage#0||scripts/tools/valley_walktest.gd:_load_stage#0",
-      "jaccard": 0.906
-    },
-    {
       "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
       "jaccard": 0.905
     },
     {
       "sig": "scripts/3d/elements/gate.gd:_apply_state#0||scripts/3d/elements/key_gate.gd:_apply_state#0",
       "jaccard": 0.897
-    },
-    {
-      "sig": "scripts/tools/s03b_walktest.gd:_input#0||scripts/tools/valley_walktest.gd:_input#0",
-      "jaccard": 0.889
-    },
-    {
-      "sig": "scripts/tools/s03b_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
-      "jaccard": 0.889
     },
     {
       "sig": "scripts/2d/guild_counter.gd:_process#0||scripts/2d/shops/tekker.gd:_process#0",
@@ -359,8 +327,8 @@
       "jaccard": 0.873
     },
     {
-      "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
-      "jaccard": 0.872
+      "sig": "scripts/tools/s03b_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
+      "jaccard": 0.871
     },
     {
       "sig": "scripts/3d/elements/bear_trap.gd:_init#0||scripts/3d/elements/enemy_spawn.gd:_init#0",
@@ -407,10 +375,6 @@
       "jaccard": 0.863
     },
     {
-      "sig": "scripts/tools/s03b_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
-      "jaccard": 0.862
-    },
-    {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
       "jaccard": 0.854
     },
@@ -420,6 +384,10 @@
     },
     {
       "sig": "scripts/3d/field/map_collision_builder.gd:collect_mesh_instances#0||scripts/3d/ui/title_backdrop.gd:_walk_recursive#0",
+      "jaccard": 0.852
+    },
+    {
+      "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
       "jaccard": 0.852
     }
   ]

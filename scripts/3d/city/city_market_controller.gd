@@ -23,7 +23,10 @@ func _ready() -> void:
 	# a still texture reads as a painted-on puddle. _apply_scroll_fixes() is
 	# the narrow pass that animates those and touches nothing else.
 	_apply_scroll_fixes()
-	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
+	# The authored sidecar (wetlands envelope, kion's locked tuning from the
+	# counter) with the legacy row only as fallback.
+	if not _add_authored_lights("s00e_sa1"):
+		_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
 	# Heal on city entry
 	_heal_character()
@@ -36,6 +39,10 @@ func _ready() -> void:
 
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
+	# The certified DS bake look (#656): pure-bake stage, actors the only
+	# casters, the sto catcher on the collision shell — dynamic shadows over
+	# the sidecar rig.
+	_apply_ds_bake_look("Market")
 
 	# The market IS s00e_sa1 — its two authored butterflies (#644), from the
 	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).
@@ -46,7 +53,26 @@ func _ready() -> void:
 	# its mid-room spots), hovering ~1m at the south entrance.
 	_add_flair_critters([Vector3(6.6, 0.0, 57.9), Vector3(-4.5, 0.0, 58.5)])
 
-	# NPCs
+	_add_market_npcs()
+
+	# Area triggers
+	_add_area_trigger(
+		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
+		"res://scenes/3d/city/city_counter.tscn", "market-exit"
+	)
+	# Interactive trigger — Enter Underground
+	_add_interactive_trigger(
+		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
+		"res://scenes/3d/city/city_underground.tscn", "market-exit",
+		"Enter Underground"
+	)
+
+	# Wire up player references
+	_connect_player_to_interactables()
+
+
+## The three shop NPCs (extracted from _ready).
+func _add_market_npcs() -> void:
 	# Low-poly PSZ shopkeeper. Reverted from the VRM-derived item_shop.glb
 	# (#535): the VRM model stuck out as the lone high-poly figure next to the
 	# low-poly cast — better to keep the roster consistent until every NPC can
@@ -81,20 +107,6 @@ func _ready() -> void:
 		"res://scenes/2d/shops/tekker.tscn"
 	)
 
-	# Area triggers
-	_add_area_trigger(
-		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
-		"res://scenes/3d/city/city_counter.tscn", "market-exit"
-	)
-	# Interactive trigger — Enter Underground
-	_add_interactive_trigger(
-		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
-		"res://scenes/3d/city/city_underground.tscn", "market-exit",
-		"Enter Underground"
-	)
-
-	# Wire up player references
-	_connect_player_to_interactables()
 
 
 func _get_area_name() -> String:

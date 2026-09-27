@@ -35,11 +35,11 @@
     "scripts/3d/player/player.gd:_load_weapon_animations#0",
     "scripts/autoloads/autopilot.gd:_find_walk_path#0",
     "scripts/tools/test_runner.gd:test_technique_disks#0",
-    "scripts/3d/player/player.gd:_physics_process#0",
     "scripts/3d/player/player.gd:_handle_movement#0",
     "scripts/2d/shops/crafting_shop.gd:_refresh_display#0",
     "scripts/autoloads/combat_manager.gd:use_photon_art#0",
     "scripts/3d/field/start_menu_renderer.gd:_draw_palette#0",
+    "scripts/3d/player/player.gd:_physics_process#0",
     "scripts/2d/equipment_screen.gd:_refresh_stats#0",
     "scripts/2d/equipment_screen.gd:_refresh_display#0",
     "scripts/tools/test_runner.gd:test_combat_simulation#0",
@@ -53,6 +53,7 @@
     "scripts/2d/shops/weapon_shop.gd:_refresh_display#0",
     "scripts/2d/shops/crafting_shop.gd:_show_result_popup#0",
     "scripts/3d/field/grid_generator.gd:generate_tower_field#0",
+    "scripts/tools/shadow_probe.gd:_run#0",
     "scripts/2d/character_create.gd:_update_appearance#0",
     "scripts/tools/test_runner.gd:test_blackjack#0",
     "scripts/tools/test_runner.gd:test_mag_evolution#0",
@@ -64,6 +65,7 @@
     "scripts/2d/character_create.gd:_build_ui#0",
     "scripts/2d/character_create.gd:_show_name_entry#0",
     "scripts/3d/city/city_office_controller.gd:_build_npc_bubble#0",
-    "scripts/3d/elements/companion_npc.gd:_build_speech_bubble#0"
+    "scripts/3d/elements/companion_npc.gd:_build_speech_bubble#0",
+    "scripts/tools/test_runner.gd:_run_tests_core#0"
   ]
 }
