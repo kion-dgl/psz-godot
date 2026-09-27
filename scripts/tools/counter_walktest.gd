@@ -327,19 +327,37 @@ func _set_bake_mode(on: bool) -> void:
 			# stay pure bake; no catcher mesh at all — the visual floor IS
 			# the receiver.
 			if floor_lit != "0":
+				# "geom": flip by GEOMETRY, not name — every stage surface
+				# whose triangles are mostly floor-tilted and near walk
+				# height receives the rig. The name lists could never cover
+				# the stage's material splits (kion's mid-floor dead strips,
+				# 2026-09-26); geometry can. The shell is retired entirely:
+				# the collision mesh never renders — the REAL stage floor is
+				# the receiver, showing its own bake, pools, and the omnis'
+				# shadow maps and nothing else.
+				var geom := floor_lit == "geom"
 				var wanted: Dictionary = {}
-				for n in floor_lit.split(",", false):
-					wanted[n.strip_edges()] = true
+				if not geom:
+					for n in floor_lit.split(",", false):
+						wanted[n.strip_edges()] = true
+				var floor_root := get_node_or_null("FloorCollision")
+				var walk_y := MeshUtils.floor_top(floor_root) if floor_root else -10.67
 				for node in MeshUtils.collect_mesh_instances(map, []):
 					var mi := node as MeshInstance3D
+					var arr_mesh: ArrayMesh = (mi.mesh as ArrayMesh) if geom else null
 					for i in range(mi.get_surface_override_material_count()):
 						var mat: Material = mi.get_active_material(i)
-						if mat is StandardMaterial3D \
-								and wanted.has((mat as StandardMaterial3D).resource_name):
-							var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-							dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-							dup.vertex_color_use_as_albedo = true
-							mi.set_surface_override_material(i, dup)
+						if not (mat is StandardMaterial3D):
+							continue
+						if geom:
+							if not _surface_is_floor(mi, arr_mesh, i, walk_y):
+								continue
+						elif not wanted.has((mat as StandardMaterial3D).resource_name):
+							continue
+						var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+						dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+						dup.vertex_color_use_as_albedo = true
+						mi.set_surface_override_material(i, dup)
 		else:
 			# Back to the production lit look: per-pixel, vertex colors off.
 			for node in MeshUtils.collect_mesh_instances(map, []):
@@ -531,6 +549,31 @@ func _bake_has_content(img: Image) -> bool:
 			if c.r > 0.03 or c.g > 0.03 or c.b > 0.03:
 				return true
 	return false
+
+
+## The geom gate: a stage surface is FLOOR when ≥ half its triangles tilt
+## within ~53° of horizontal and its centroid sits at walk height ± 1.5 —
+## floor materials come and go, floor SHAPE doesn't.
+func _surface_is_floor(mi: MeshInstance3D, mesh: ArrayMesh, surf: int, walk_y: float) -> bool:
+	if mesh == null or surf >= mesh.get_surface_count():
+		return false
+	var arrays := mesh.surface_get_arrays(surf)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	if verts.size() < 3:
+		return false
+	var ups := 0
+	var total := 0
+	var sum_y := 0.0
+	for t in range(0, verts.size() - 2, 3):
+		var a: Vector3 = mi.global_transform * verts[t]
+		var b: Vector3 = mi.global_transform * verts[t + 1]
+		var c: Vector3 = mi.global_transform * verts[t + 2]
+		var n := (b - a).cross(c - a)
+		sum_y += (a.y + b.y + c.y) / 3.0
+		total += 1
+		if absf(n.y) > 0.6 * n.length():
+			ups += 1
+	return total > 0 and ups >= total / 2 and absf(sum_y / total - walk_y) < 1.5
 
 
 func _authored_lights() -> Array[OmniLight3D]:
