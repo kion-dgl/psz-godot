@@ -6,7 +6,7 @@
       0.88,
       0.82
     ],
-    "energy": 0.5
+    "energy": 0.35
   },
   "lights": [
     {
@@ -22,7 +22,7 @@
         0.95,
         0.88
       ],
-      "energy": 0.3,
+      "energy": 1.5,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -40,7 +40,7 @@
         0.95,
         0.88
       ],
-      "energy": 0.3,
+      "energy": 1.5,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -58,7 +58,7 @@
         0.95,
         0.88
       ],
-      "energy": 1.25,
+      "energy": 8.0,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -76,7 +76,7 @@
         0.95,
         0.88
       ],
-      "energy": 0.3,
+      "energy": 1.5,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -94,7 +94,7 @@
         0.7,
         0.3
       ],
-      "energy": 0.5,
+      "energy": 2.5,
       "range": 8.0,
       "attenuation": 2.0,
       "shadows": true
@@ -112,7 +112,7 @@
         0.95,
         0.88
       ],
-      "energy": 0.3,
+      "energy": 1.5,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -130,7 +130,7 @@
         0.95,
         0.88
       ],
-      "energy": 0.3,
+      "energy": 1.5,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true
@@ -148,7 +148,7 @@
         0.95,
         0.88
       ],
-      "energy": 1.25,
+      "energy": 8.0,
       "range": 12.0,
       "attenuation": 2.0,
       "shadows": true

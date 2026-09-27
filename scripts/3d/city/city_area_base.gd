@@ -651,14 +651,13 @@ void fragment() {
 		catcher.layers = CATCHER_LAYER
 		var sun_light := DirectionalLight3D.new()
 		sun_light.name = "CatcherSun"
-		# Saturation math: shadow_to_opacity's alpha hits 0 (catcher
-		# invisible, bake verbatim) only where total light >= 1 — the
-		# valley's sun+ambient always summed past it. An oblique -55° sun
-		# contributes energy x cos(55°) ~= 0.57 x energy to the up-facing
-		# catcher, so 1.8 saturates (~1.03); weaker suns leave a gray wash
-		# (the market's first attempt) and omni-only rigs leave the
-		# ambient-capped black veil (the counter's black floor).
-		sun_light.light_energy = 1.8
+		# Saturation is EMPIRICAL: shadow_to_opacity's alpha reaches 0
+		# (catcher invisible, bake verbatim) only past a total the internal
+		# attenuation weights heavily — measured on the market stage:
+		# E1.8 -> floor mean 57 (a ~0.5 veil), E6.0 -> 93 ~= the pure-bake
+		# 96. Weaker suns leave a gray wash; omni-only rigs leave the
+		# ambient-capped black veil.
+		sun_light.light_energy = float(OS.get_environment("PSZ_SUN_E")) if not OS.get_environment("PSZ_SUN_E").is_empty() else 6.0
 		sun_light.rotation_degrees = Vector3(-55, 25, 0)
 		sun_light.shadow_enabled = true
 		sun_light.shadow_blur = 1.0
