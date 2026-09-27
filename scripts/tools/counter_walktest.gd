@@ -523,6 +523,12 @@ func _set_bake_mode(on: bool) -> void:
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
 			var flat := OS.get_environment("PSZ_WALK_FLAT_FLOOR")
+			# PSZ_WALK_STO=1: the c18324ba rig VERBATIM — the
+			# shadow_to_opacity catcher (up-facing, +0.04) with the
+			# authored omnis casting. The known-good baseline kion's eyes
+			# certified; every other mode bisects from here.
+			if OS.get_environment("PSZ_WALK_STO") == "1":
+				_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
 			# PSZ_WALK_BAKE_FLOOR=1: the FLAT_FLOOR receiver wearing the
 			# stage's own bake — a one-shot top-down ortho capture of the
 			# UNSHADED floor slice, mapped by world XZ (kion's "transparent

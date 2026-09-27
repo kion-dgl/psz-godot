@@ -88,6 +88,24 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## SETTLED (2026-09-27) — the sto rig certified, lights authored
+
+Kion's eyes certified the c18324ba rig reproduced on the current tree
+(PSZ_WALK_STO=1): player reacting to every light, dynamic shadows
+everywhere including the between-feet contact under a light. The
+brightness problem was authoring, not rig: the e40/att1 lights flooded
+the hall and no global scale could fix the ratios. Re-authored to the
+wetlands envelope and TUNED LIVE BY KION (P read-out, final):
+ambient 0.5 · sconces/ceiling e0.3 att2.0 r12 at head height · plaza
+pillar + warp door e1.25 att2.0 r12 LOWERED to y −4.5/−7.0 (high lights
+can't cast readable floor shadows — inverse-square at 6+ units of
+height has nothing to subtract; chest/head-height lights read, the
+wetlands post-lantern convention) · lantern e0.5 above floor. Sidecar
+updated in-tree. Remaining: the catcher/black-floor look is still the
+open aesthetic call (this rig ships it); the scene-direct floor
+receiver variants (FLOOR_LIT/geom, FLAT, BAKE, PROJECTOR modes) all
+remain in the lab as the follow-up options.
+
 ## CATCHER_EMISSION — the dial that breaks the zero-sum (evening)
 
 Kion's read: the shadow shows where the catcher is visible; make the
