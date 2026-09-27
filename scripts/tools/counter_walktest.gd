@@ -26,6 +26,10 @@ extends CityAreaBase
 ##                               DEFAULT covers ground01/groud01/doorset — an
 ##                               unlisted floor neither pools nor shadows);
 ##                               "0" disables the rig (catcher probes return)
+##       PSZ_WALK_FLAT_FLOOR=r,g,b   with FLOOR_LIT=0: the collision shell as
+##                               an opaque flat-color lit floor ("1" = warm
+##                               gray) — total coverage, pools + omni shadows
+##                               everywhere, bake kept on walls/props
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_STATIONS="x,y,z;…"  station walk — teleport to each station,
 ##                               settle, screenshot + the per-light verdict
@@ -356,14 +360,26 @@ func _set_bake_mode(on: bool) -> void:
 			and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1":
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
+			# PSZ_WALK_FLAT_FLOOR="r,g,b" (or "1" for the default warm gray):
+			# kion's proposal — the c18324ba catcher architecture (the whole
+			# collision shell, up-facing, +0.04) but an OPAQUE flat-color
+			# per-pixel floor instead of the black shadow_to_opacity veil.
+			# No surface list to hunt (the shell IS the walk surface — the
+			# mid-floor strips that ground01/doorset miss are covered), and
+			# an opaque lit receiver is exactly what takes the omnis' shadow
+			# maps on compat. The stage keeps its bake; the walls keep theirs.
+			var flat := OS.get_environment("PSZ_WALK_FLAT_FLOOR")
+			if not flat.is_empty():
+				_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color(flat))
+			else:
+				_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
 			if _catcher:
 				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
 				# (blend_mul) instead of the StandardMaterial3D MUL — the
 				# asymmetry probe showed omni shadow maps don't reach the
 				# standard transparent-MUL receiver on compat (directionals
 				# do), while c18324ba's shader catcher took them fine.
-				if OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
+				if flat.is_empty() and OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
 					var mat := ShaderMaterial.new()
 					var sh := Shader.new()
 					sh.code = "
@@ -391,6 +407,20 @@ void fragment() {
 		if on:
 			light.shadow_blur = 1.0
 	_update_status()
+
+
+## PSZ_WALK_FLAT_FLOOR color spec: "1" picks the default warm gray; "r,g,b"
+## (0..1 each) authoring a custom flat tone.
+func _flat_floor_color(spec: String) -> Color:
+	const DEFAULT_FLAT := Color(0.42, 0.39, 0.35)
+	if spec != "1":
+		var rgb := spec.split(",")
+		if rgb.size() == 3:
+			return Color(
+				clampf(rgb[0].to_float(), 0.0, 1.0),
+				clampf(rgb[1].to_float(), 0.0, 1.0),
+				clampf(rgb[2].to_float(), 0.0, 1.0))
+	return DEFAULT_FLAT
 
 
 func _authored_lights() -> Array[OmniLight3D]:

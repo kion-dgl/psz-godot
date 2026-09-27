@@ -88,6 +88,22 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## FLAT_FLOOR — kion's flat-color proposal, verified (latest)
+
+Kion found mid-floor strips the surface list can never cover (the stage's
+floor is split across more materials than ground01/groud01/doorset) and
+proposed the c18324ba architecture with a flat color instead of the black
+veil. `PSZ_WALK_FLOOR_LIT=0 PSZ_WALK_FLAT_FLOOR=1` (or "r,g,b"): the
+collision shell as an OPAQUE flat-color per-pixel floor
+(MeshUtils.make_flat_floor) — total walk-surface coverage by construction,
+pools + the omnis' shadow maps everywhere (opaque receiver = the only kind
+compat omni shadows land on), bake kept on walls/props. Station-verified
+at the dead center strip (now fully responsive, shadow reads), the office
+door, the sconce pair, and spawn (compact zenith shadow, NO hot spot —
+the flat albedo absorbs the e40); 144.9 fps / 0 slow frames with all 8
+omnis casting — the cheapest rig yet. The trade: the floor reads as the
+flat color, not the baked texture — the aesthetic call kion is testing.
+
 ## Resumed 2026-09-26 (later) — the rig that satisfies kion's conditions: FLOOR_LIT
 
 Kion's conditions (verbatim): no sun; lights in the scene; baked lighting on

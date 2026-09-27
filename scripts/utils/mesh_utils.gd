@@ -412,6 +412,33 @@ void fragment() {
 }
 "
 
+## The flat-floor rig (#656, kion's flat-color proposal): the SAME catcher
+## geometry — the collision shell, up-facing only, lifted +0.04, never
+## casts — but an OPAQUE flat-color per-pixel floor instead of any veil or
+## multiply. The shell is the walk surface, so floor coverage is total (no
+## per-material surface list to hunt — the mid-floor strips a stage
+## material split misses are covered), and an opaque lit receiver is what
+## the compat renderer's dual-paraboloid omni shadows actually land on:
+## the flat floor pools under the authored lights and takes the actors'
+## shadows everywhere. The bake survives on the walls and props; the floor
+## reads as the flat color under the light field.
+static func make_flat_floor(floor_root: Node3D, color: Color) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6)
+	if mesh == null:
+		return null
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	mat.roughness = 1.0
+	mat.specular = 0.0
+	mesh.surface_set_material(0, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "FlatFloor"
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position.y = 0.04
+	return mi
+
 static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
