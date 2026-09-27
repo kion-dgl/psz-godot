@@ -439,6 +439,51 @@ static func make_flat_floor(floor_root: Node3D, color: Color) -> MeshInstance3D:
 	mi.position.y = 0.04
 	return mi
 
+## The baked-floor rig (#656, kion's "transparent hull that shows the
+## shadow"): the FLAT_FLOOR receiver with the stage's own bake as its
+## albedo — a top-down ortho capture of the UNSHADED stage floor, mapped
+## by world XZ. True transparency is the measured dead end on compat
+## (blend_mul never samples omni shadows; the shadow_to_opacity alpha is
+## the veil), so the receiver stays OPAQUE — the one kind that takes the
+## omnis' shadow maps — and instead LOOKS transparent: the printed floor
+## is the real bake at the real world position, pools and shadows playing
+## on top of it. `origin`/`size` are the capture's XZ bounds.
+static func make_baked_floor(floor_root: Node3D, bake_tex: Texture2D,
+		origin: Vector2, size: Vector2) -> MeshInstance3D:
+	var mesh := collision_face_mesh(floor_root, 0.6)
+	if mesh == null:
+		return null
+	var mat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = "
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque;
+uniform sampler2D u_bake;
+uniform vec2 u_origin;
+uniform vec2 u_inv_size;
+varying vec3 world_pos;
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+void fragment() {
+	vec2 uv = (world_pos.xz - u_origin) * u_inv_size;
+	ALBEDO = texture(u_bake, uv).rgb;
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
+}
+"
+	mat.shader = sh
+	mat.set_shader_parameter("u_bake", bake_tex)
+	mat.set_shader_parameter("u_origin", origin)
+	mat.set_shader_parameter("u_inv_size", Vector2(1.0 / maxf(size.x, 0.001), 1.0 / maxf(size.y, 0.001)))
+	mesh.surface_set_material(0, mat)
+	var mi := MeshInstance3D.new()
+	mi.name = "BakedFloor"
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position.y = 0.04
+	return mi
+
 static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)

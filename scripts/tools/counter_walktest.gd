@@ -30,6 +30,10 @@ extends CityAreaBase
 ##                               an opaque flat-color lit floor ("1" = warm
 ##                               gray) — total coverage, pools + omni shadows
 ##                               everywhere, bake kept on walls/props
+##       PSZ_WALK_BAKE_FLOOR=1      with FLOOR_LIT=0: the same opaque shell
+##                               receiver wearing a one-shot top-down capture
+##                               of the stage's own bake as its albedo — the
+##                               "transparent hull that shows the shadow"
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_STATIONS="x,y,z;…"  station walk — teleport to each station,
 ##                               settle, screenshot + the per-light verdict
@@ -360,26 +364,38 @@ func _set_bake_mode(on: bool) -> void:
 			and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1":
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
-			# PSZ_WALK_FLAT_FLOOR="r,g,b" (or "1" for the default warm gray):
-			# kion's proposal — the c18324ba catcher architecture (the whole
-			# collision shell, up-facing, +0.04) but an OPAQUE flat-color
-			# per-pixel floor instead of the black shadow_to_opacity veil.
-			# No surface list to hunt (the shell IS the walk surface — the
-			# mid-floor strips that ground01/doorset miss are covered), and
-			# an opaque lit receiver is exactly what takes the omnis' shadow
-			# maps on compat. The stage keeps its bake; the walls keep theirs.
 			var flat := OS.get_environment("PSZ_WALK_FLAT_FLOOR")
-			if not flat.is_empty():
-				_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color(flat))
-			else:
-				_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
+			# PSZ_WALK_BAKE_FLOOR=1: the FLAT_FLOOR receiver wearing the
+			# stage's own bake — a one-shot top-down ortho capture of the
+			# UNSHADED floor slice, mapped by world XZ (kion's "transparent
+			# hull that shows the shadow": the printed floor IS the bake, so
+			# the opaque receiver reads as transparent while taking the
+			# omnis' shadow maps).
+			if OS.get_environment("PSZ_WALK_BAKE_FLOOR") == "1":
+				var bake := await _capture_floor_bake()
+				if bake != null:
+					_catcher = bake
+			if _catcher == null:
+				# PSZ_WALK_FLAT_FLOOR="r,g,b" (or "1" for the default warm gray):
+				# kion's proposal — the c18324ba catcher architecture (the whole
+				# collision shell, up-facing, +0.04) but an OPAQUE flat-color
+				# per-pixel floor instead of the black shadow_to_opacity veil.
+				# No surface list to hunt (the shell IS the walk surface — the
+				# mid-floor strips that ground01/doorset miss are covered), and
+				# an opaque lit receiver is exactly what takes the omnis' shadow
+				# maps on compat. The stage keeps its bake; the walls keep theirs.
+				if not flat.is_empty():
+					_catcher = MeshUtils.make_flat_floor(floor_root, _flat_floor_color(flat))
+				else:
+					_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
 			if _catcher:
 				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
 				# (blend_mul) instead of the StandardMaterial3D MUL — the
 				# asymmetry probe showed omni shadow maps don't reach the
 				# standard transparent-MUL receiver on compat (directionals
 				# do), while c18324ba's shader catcher took them fine.
-				if flat.is_empty() and OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
+				if flat.is_empty() and _catcher.name == "ShadowCatcher" \
+						and OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
 					var mat := ShaderMaterial.new()
 					var sh := Shader.new()
 					sh.code = "
@@ -421,6 +437,63 @@ func _flat_floor_color(spec: String) -> Color:
 				clampf(rgb[1].to_float(), 0.0, 1.0),
 				clampf(rgb[2].to_float(), 0.0, 1.0))
 	return DEFAULT_FLAT
+
+
+## The one-shot bake capture (PSZ_WALK_BAKE_FLOOR): a top-down ortho
+## SubViewport over the UNSHADED stage, hung just above the walk height
+## with a short far plane so walls only print their base strip, and the
+## player hidden — what lands in the texture is the pure floor bake,
+## world-XZ aligned (rotation −90°: camera right = +X, so texture u/v map
+## directly onto world x/z from the capture bounds' minimum corner).
+func _capture_floor_bake() -> MeshInstance3D:
+	var floor_root := get_node_or_null("FloorCollision")
+	if floor_root == null:
+		return null
+	var aabb := AABB()
+	var has_aabb := false
+	for node in MeshUtils.collect_mesh_instances(floor_root, []):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var world_aabb: AABB = mi.global_transform * mi.get_aabb()
+		if has_aabb:
+			aabb = aabb.merge(world_aabb)
+		else:
+			aabb = world_aabb
+			has_aabb = true
+	if not has_aabb:
+		return null
+	var origin := Vector2(aabb.position.x - 1.0, aabb.position.z - 1.0)
+	var size := Vector2(aabb.size.x + 2.0, aabb.size.z + 2.0)
+	var px := mini(2048, int(24.0 * size.x))
+	var py := mini(2048, int(24.0 * size.y))
+	var vp := SubViewport.new()
+	vp.size = Vector2(px, py)
+	vp.transparent_bg = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var cam := Camera3D.new()
+	cam.rotation_degrees = Vector3(-90, 0, 0)
+	cam.position = Vector3(
+		origin.x + size.x * 0.5,
+		MeshUtils.floor_top(floor_root) + 1.2,
+		origin.y + size.y * 0.5)
+	cam.set_orthogonal(size.y, 0.05, 2.5)
+	vp.add_child(cam)
+	add_child(vp)
+	# The player must not print into the bake.
+	if _player != null:
+		_player.visible = false
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var img := vp.get_texture().get_image()
+	vp.queue_free()
+	if _player != null:
+		_player.visible = true
+	print("[CWalk] floor bake captured %dx%d over x[%.1f..%.1f] z[%.1f..%.1f]" % [
+		img.get_width(), img.get_height(),
+		origin.x, origin.x + size.x, origin.y, origin.y + size.y])
+	return MeshUtils.make_baked_floor(floor_root, ImageTexture.create_from_image(img),
+		origin, size)
 
 
 func _authored_lights() -> Array[OmniLight3D]:

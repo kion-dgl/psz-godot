@@ -88,6 +88,21 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## BAKE_FLOOR — the "transparent hull" (kion's close-to-done ask)
+
+True transparency stays the measured dead end (blend_mul never samples
+omni shadows; shadow_to_opacity's alpha is the veil), so the receiver
+stays OPAQUE and instead LOOKS transparent: PSZ_WALK_BAKE_FLOOR=1 (with
+FLOOR_LIT=0) captures the UNSHADED stage floor once — top-down ortho
+SubViewport, thin vertical slice so walls only print their base strip,
+player hidden — and prints it on the collision shell via world-XZ UVs
+(MeshUtils.make_baked_floor). The floor shows the actual baked
+tiles/inlays at the real world positions, pools and the omnis' shadow
+maps playing on top; verified: dead-strip station shows the bake + one
+shadow, the sconce pair shows TWO shadows, no seams/mirroring. Kion's
+tuning read-out from the flat-floor walk (P): ambient 0.1, pools ×0.25
+(sconces 0.5 / plaza 10) — the candidate sidecar values.
+
 ## FLAT_FLOOR — kion's flat-color proposal, verified (latest)
 
 Kion found mid-floor strips the surface list can never cover (the stage's
