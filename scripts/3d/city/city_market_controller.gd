@@ -23,7 +23,10 @@ func _ready() -> void:
 	# a still texture reads as a painted-on puddle. _apply_scroll_fixes() is
 	# the narrow pass that animates those and touches nothing else.
 	_apply_scroll_fixes()
-	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
+	# The authored sidecar (wetlands envelope, kion's locked tuning from the
+	# counter) with the legacy row only as fallback.
+	if not _add_authored_lights("s00e_sa1"):
+		_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
 	# Heal on city entry
 	_heal_character()
@@ -36,6 +39,10 @@ func _ready() -> void:
 
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
+	# The certified DS bake look (#656): pure-bake stage, actors the only
+	# casters, the sto catcher on the collision shell — dynamic shadows over
+	# the sidecar rig.
+	_apply_ds_bake_look("Market")
 
 	# The market IS s00e_sa1 — its two authored butterflies (#644), from the
 	# set-`c` table, standing mid-room (≈ (4.6, 45.2) and (−9.7, 34.8)).

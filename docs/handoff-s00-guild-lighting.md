@@ -88,6 +88,18 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## IN THE GAME (2026-09-27) — counter + market ship the certified rig
+
+CityAreaBase._apply_ds_bake_look(stage_node_name): the locked recipe as a
+production helper — make_unlit stage, stage never casts, the sto catcher
+on FloorCollision. city_counter_controller calls it after its trimesh
+floor ("Counter"); city_market_controller now loads its own sidecar
+(s00e_sa1.json — 7 lights on the wetlands envelope at the shops, mid-room,
+entrance, north wall, underground door; legacy row as fallback) and calls
+it after its box floor ("Market"). Boot-smoked clean; the market light
+positions are first-draft (authored from the NPC/geometry coordinates) —
+tune by report or port the lab's live keys next.
+
 ## SETTLED (2026-09-27) — the sto rig certified, lights authored
 
 Kion's eyes certified the c18324ba rig reproduced on the current tree

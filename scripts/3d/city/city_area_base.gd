@@ -531,6 +531,33 @@ static func parse_lights_spec(text: String) -> Dictionary:
 	return {"lights": out, "ambient": ambient}
 
 
+## The certified DS bake look (#656, locked 2026-09-27 in the walk lab,
+## kion's eyes): the stage goes pure bake (MeshUtils.make_unlit — UNSHADED,
+## COLOR_0 modulates albedo, no light can touch the city mesh), the stage
+## never casts (actors are the only shadow casters), and the collision
+## shell renders as the shadow_to_opacity catcher — the c18324ba rig:
+## the player lit by every light, dynamic per-light shadows everywhere,
+## the between-feet contact under a light. Call AFTER the authored lights
+## and the floor collision exist. `stage_node_name` is the scene's stage
+## root ("Counter" / "Market" in the tscns).
+func _apply_ds_bake_look(stage_node_name: String) -> void:
+	var stage := get_node_or_null(stage_node_name)
+	if stage == null:
+		push_warning("[CityArea] DS bake look: no stage node '%s'" % stage_node_name)
+		return
+	MeshUtils.make_unlit(stage, [])
+	for node in MeshUtils.collect_mesh_instances(stage, []):
+		(node as MeshInstance3D).cast_shadow = \
+				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var floor_root := get_node_or_null("FloorCollision")
+	if floor_root == null:
+		push_warning("[CityArea] DS bake look: no FloorCollision — no catcher")
+		return
+	var catcher := MeshUtils.make_shadow_catcher(floor_root, true, true)
+	if catcher:
+		add_child(catcher)
+
+
 func _add_authored_lights(stage_id: String) -> bool:
 	## Data-driven city lights (#656, #636 direction): load the sidecar the
 	## web #/city-lab tool authors and spawn it — light_energy/omni_range/

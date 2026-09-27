@@ -78,6 +78,10 @@ func _ready() -> void:
 		"res://assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb",
 		Vector3.ZERO
 	)
+	# The certified DS bake look (#656, locked 2026-09-27): pure-bake stage,
+	# actors the only casters, the sto catcher on the collision shell —
+	# dynamic per-light shadows over the tuned sidecar rig above.
+	_apply_ds_bake_look("Counter")
 
 	# NPCs, exit triggers, and the warp pad — positions probed on the merged mesh.
 	_add_interactables()
