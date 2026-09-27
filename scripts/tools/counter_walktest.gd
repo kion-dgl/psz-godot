@@ -8,16 +8,37 @@ extends CityAreaBase
 ## environment (sky ambient 1.5 warm + 0.3 sun) so the sidecar's overrides
 ## land exactly as they do in-game — including the sun going dark.
 ##
+## The DS bake look (B, the default) is the WETLANDS A pattern indoors
+## (kion's conditions, 2026-09-26): no sun; the authored omnis in the scene;
+## the city mesh pure bake (UNSHADED — lights cannot touch it); the actors
+## lit by the omnis; and the actors' dynamic shadows cast BY the omnis (the
+## wetlands lantern precedent — placed omnis CAN cast, dual-paraboloid on
+## compat, only actors cast so the passes stay cheap) onto the MUL catcher:
+## the collision shell rendered white/multiply — lit ground multiplies by
+## ~1 (invisible, the bake reads verbatim), pools and shadows multiply DOWN
+## onto it. The catcher is never "shown": multiply cannot paint, only
+## darken — the black-floor era was the shadow_to_opacity shader catcher.
+##
 ## Env:  PSZ_WALK_STAGE=s00e_sa2    boot stage (must have a city-lights sidecar)
 ##       PSZ_WALK_BAKE=0            boot OUT of the DS bake (the lit A/B look)
-##       PSZ_WALK_SHADOWS=0          boot with omni shadows off (diff control)
+##       PSZ_WALK_SHADOWS=0          boot with the omni shadows off (diff control)
 ##       PSZ_WALK_SHOT=/tmp/o.png   screenshot + quit (smoke; else live keys)
+##       PSZ_WALK_STATIONS="x,y,z;…"  station walk — teleport to each station,
+##                               settle, screenshot + the per-light verdict
+##                               table, quit after the last. THE read for
+##                               "where in the hall does a shadow show?"
+##       PSZ_WALK_STATION_DIR=/tmp/x  where station shots land (default /tmp/cwalk)
+##       PSZ_WALK_CAM_ROT=-1.5708  follow-camera azimuth (default π); turn it
+##                               so wall-side stations frame over open floor
+##       PSZ_WALK_SHOT_EVERY=30     live: save a screenshot every N frames to
+##       PSZ_WALK_SHOT_DIR=/tmp/y   that dir — ground truth for what the live
+##                               window showed, no capture process needed.
+##                               NOTE: the readback stalls the frame it lands
+##                               on — leave it OFF when judging framerate.
+##       PSZ_WALK_FPS=1             print avg fps + slow-frame count every
+##                               120 frames (the perf read)
 ## Keys: , / .  ambient ∓/± 0.05     [ / ]  omni pools ∓/± 0.25× (0.00 kills)
-##       B       DS architecture A/B — stage bake unlit (MeshBasic: COLOR_0
-##               modulates albedo, light-immune), stage meshes never cast,
-##               and the shader catcher takes the omnis' shadows alone (lit
-##               reads transparent — no pools; each placed light throws its
-##               own actor shadow from its own position)
+##       B       DS architecture A/B (the wetlands-pattern rig above)
 ##       M       omni shadows toggle (all authored lights at once)
 ##       P       read-out — the sidecar JSON, paste-ready for
 ##               data/stage_configs/city-lights/<stage>.json
@@ -51,6 +72,22 @@ var _catcher: MeshInstance3D
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
 
+## The station walk (PSZ_WALK_STATIONS): station index, frames since its
+## teleport. Each station teleports, settles ~40 frames (fall, one clean
+## draw), then screenshots + prints the per-light verdict table.
+var _stations: Array[Vector3] = []
+var _station_idx := -1
+var _station_frame := 0
+var _station_dir := "/tmp/cwalk"
+
+## Live periodic capture (PSZ_WALK_SHOT_EVERY): frames between screenshots,
+## 0 = off. Same viewport the window shows, saved straight to disk.
+var _live_every := 0
+var _live_dir := "/tmp/cwalk_live"
+var _live_frame := 0
+
+const STATION_SETTLE := 40
+
 
 func _ready() -> void:
 	if not _pending_stage.is_empty():
@@ -59,6 +96,18 @@ func _ready() -> void:
 	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
 		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
 	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
+	for spec in OS.get_environment("PSZ_WALK_STATIONS").split(";", false):
+		var xyz := spec.split(",")
+		if xyz.size() == 3:
+			_stations.append(Vector3(xyz[0].to_float(), xyz[1].to_float(), xyz[2].to_float()))
+	if not OS.get_environment("PSZ_WALK_STATION_DIR").is_empty():
+		_station_dir = OS.get_environment("PSZ_WALK_STATION_DIR")
+	_live_every = OS.get_environment("PSZ_WALK_SHOT_EVERY").to_int()
+	if not OS.get_environment("PSZ_WALK_SHOT_DIR").is_empty():
+		_live_dir = OS.get_environment("PSZ_WALK_SHOT_DIR")
+	DirAccess.make_dir_recursive_absolute(_station_dir)
+	DirAccess.make_dir_recursive_absolute(_live_dir)
+	_fps_wanted = OS.get_environment("PSZ_WALK_FPS") == "1"
 	_build_environment()
 	_load_stage()
 	# The controller's _ready order verbatim: texture fixes, the SA2 vertex
@@ -74,21 +123,88 @@ func _ready() -> void:
 	_capture_base_energies()
 	_add_trimesh_floor(FLOOR_GLB_FMT % [_stage_id, _stage_id], Vector3.ZERO)
 	var lab_player := FieldLabScript.spawn_player(self, DEFAULT_SPAWN)
+	_player = lab_player
+	# PSZ_WALK_CAM_ROT (radians): the follow camera defaults to PI (behind in
+	# −z); wall-side stations want it turned so the camera sits over open
+	# floor — e.g. −PI/2 frames the east sconces from the hall center.
+	var cam_rot := OS.get_environment("PSZ_WALK_CAM_ROT")
+	if not cam_rot.is_empty():
+		var orbit := get_node_or_null("OrbitCamera")
+		if orbit:
+			orbit.camera_rotation = cam_rot.to_float()
+	# PSZ_WALK_TELEPORT="x,y,z": drop the player elsewhere before the shot —
+	# the between-two-lights smoke.
+	var tp := OS.get_environment("PSZ_WALK_TELEPORT")
+	if not tp.is_empty():
+		var parts := tp.split(",")
+		if parts.size() == 3:
+			_player.global_position = Vector3(
+				parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
 	# Same floor the game guards: the mesh is authored low (−10.67) and the
 	# default −10 fall-respawn would read the floor as a fall.
 	lab_player.fall_respawn_y = -25.0
+	# PSZ_WALK_SUN_PROBE=1: a dim shadow-casting directional (the valley
+	# contract) over the same catcher — the asymmetry probe for "does the
+	# MUL catcher receive directional but not omni shadow maps on compat?"
+	if OS.get_environment("PSZ_WALK_SUN_PROBE") == "1":
+		var probe := DirectionalLight3D.new()
+		probe.name = "SunProbe"
+		probe.light_energy = 0.6
+		probe.shadow_enabled = true
+		probe.rotation_degrees = Vector3(-60, 25, 0)
+		add_child(probe)
+	# PSZ_WALK_DUMP_SURFACES=1: print every stage surface's material names —
+	# the discovery read for PSZ_WALK_FLOOR_LIT (which names are the floor).
+	if OS.get_environment("PSZ_WALK_DUMP_SURFACES") == "1":
+		var map := get_node_or_null("Map")
+		for node in MeshUtils.collect_mesh_instances(map, []):
+			var mi := node as MeshInstance3D
+			for i in range(mi.get_surface_override_material_count()):
+				var mat: Material = mi.get_active_material(i)
+				if mat:
+					print("[CWalk] surface %s[%d] material '%s'" % [mi.name, i, mat.resource_name])
 	_build_status_label()
 	_readout()
-	# The DS architecture is the DEFAULT look (the #656 objective: bake on the
-	# stage, lights for the actors, catcher floor for the shadows). B still
+	# The DS architecture is the DEFAULT look (the #656 objective). B still
 	# A/Bs live; PSZ_WALK_BAKE=0 boots the pre-bake lit look instead.
 	if OS.get_environment("PSZ_WALK_BAKE") != "0":
 		_set_bake_mode(true)
 	print("[CWalk] ready — , . ambient · [ ] pools · B bake+catcher · M shadows · P readout · N next · R reload · ESC quit")
 
+var _player: Node3D
+
 
 func _process(_delta: float) -> void:
+	_update_live_status()
+	_fps_tick(_delta)
+	if not _stations.is_empty():
+		_step_stations()
+		return
 	_shot.step(self, "CWalk")
+	_live_step()
+
+
+var _fps_wanted := false
+var _fps_frames := 0
+var _fps_acc := 0.0
+var _fps_slow := 0
+
+
+## PSZ_WALK_FPS=1: avg frame rate + slow-frame count (>50 ms) per 120 frames
+## — the read for "is the rig itself heavy, or was it the capture reel?"
+func _fps_tick(delta: float) -> void:
+	if not _fps_wanted:
+		return
+	_fps_frames += 1
+	_fps_acc += delta
+	if delta > 0.05:
+		_fps_slow += 1
+	if _fps_frames >= 120:
+		print("[CWalk] fps %.1f avg, %d slow frames (>50ms) over %d" % [
+			_fps_frames / maxf(_fps_acc, 0.0001), _fps_slow, _fps_frames])
+		_fps_frames = 0
+		_fps_acc = 0.0
+		_fps_slow = 0
 
 
 func _input(event: InputEvent) -> void:
@@ -163,20 +279,45 @@ func _load_stage() -> void:
 	add_child(map_root)
 
 
-## The DS architecture A/B (B): the stage keeps its pure baked look —
-## MeshUtils.make_unlit forces every surface UNSHADED with COLOR_0 as albedo
-## (the MeshBasic contract; light cannot touch it) — while the catcher
-## becomes SHADOW-ONLY (make_shadow_catcher's shadow_to_opacity shader: lit
-## reads transparent, so the omnis cannot pool on the floor; their SHADOW
-## MAPS drive the alpha, so each placed light throws its own actor shadow
-## from its own position). The stage meshes stop casting — only actors
-## shadow (the valley #648 rig's indoor contract, per-light instead of sun).
+## The wetlands-A architecture, indoors (B): the stage keeps its pure baked
+## look (MeshUtils.make_unlit: UNSHADED, COLOR_0 as albedo — no light can
+## touch the city mesh); the authored omnis light the actors exactly as
+## authored; and the omnis CAST (the wetlands lantern exception) so each
+## throws the actors' real dynamic shadow from its own position — stand
+## between two lights and two shadows fall away from each. The catcher is
+## the collision shell with the VALLEY material (white, multiply-blended,
+## up-facing only — the city floor GLB wraps the whole room and its walls
+## sat coplanar with the stage): lit ground multiplies by ~1 (the bake reads
+## verbatim), pools and the omnis' shadow maps multiply down onto it. The
+## catcher cannot "show" — multiply only darkens what is behind it (the
+## black-floor era was the shadow_to_opacity catcher, retired).
 func _set_bake_mode(on: bool) -> void:
 	_bake_mode = on
 	var map := get_node_or_null("Map")
 	if map:
 		if on:
 			MeshUtils.make_unlit(map, [])
+			# PSZ_WALK_FLOOR_LIT="ground01,groud01": the ozette contract on the
+			# floor surfaces only — per-pixel with the vertex bake as albedo,
+			# so the authored omnis pool on it AND their shadow maps land
+			# (opaque receivers take omni shadows on compat; the MUL catcher
+			# measurably doesn't). Walls and props stay pure bake; no catcher
+			# mesh at all — the visual floor IS the receiver.
+			var floor_lit := OS.get_environment("PSZ_WALK_FLOOR_LIT")
+			if not floor_lit.is_empty():
+				var wanted: Dictionary = {}
+				for n in floor_lit.split(",", false):
+					wanted[n.strip_edges()] = true
+				for node in MeshUtils.collect_mesh_instances(map, []):
+					var mi := node as MeshInstance3D
+					for i in range(mi.get_surface_override_material_count()):
+						var mat: Material = mi.get_active_material(i)
+						if mat is StandardMaterial3D \
+								and wanted.has((mat as StandardMaterial3D).resource_name):
+							var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+							dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+							dup.vertex_color_use_as_albedo = true
+							mi.set_surface_override_material(i, dup)
 		else:
 			# Back to the production lit look: per-pixel, vertex colors off.
 			for node in MeshUtils.collect_mesh_instances(map, []):
@@ -190,31 +331,51 @@ func _set_bake_mode(on: bool) -> void:
 						mi.set_surface_override_material(i, dup)
 		# The stage never casts — indoors the whole room is the valley's
 		# enclosing shell. Actors (the player, NPCs) are the only casters, so
-		# the omnis' shadows are the actors' shadows and nothing else's.
+		# the omnis' shadow maps are the actors' shadows and nothing else's,
+		# and the extra shadow passes stay cheap.
 		for node in MeshUtils.collect_mesh_instances(map, []):
 			(node as MeshInstance3D).cast_shadow = \
 					GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not on \
 					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	if on and _catcher == null:
+	# The floor-lit mode IS the receiver — no catcher mesh beside it.
+	if on and _catcher == null and OS.get_environment("PSZ_WALK_NO_CATCHER") != "1" \
+			and OS.get_environment("PSZ_WALK_FLOOR_LIT").is_empty():
 		var floor_root := get_node_or_null("FloorCollision")
 		if floor_root:
-			# up-facing only: the city floor GLB wraps the whole room, and its
-			# walls sat exactly coplanar with the stage — the crazy z-fight.
-			# shadow_only: the shader catcher — lights drive alpha, not color.
-			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
+			_catcher = MeshUtils.make_shadow_catcher(floor_root, true, false)
 			if _catcher:
+				# PSZ_WALK_MUL_SHADER=1: the multiply through the SHADER path
+				# (blend_mul) instead of the StandardMaterial3D MUL — the
+				# asymmetry probe showed omni shadow maps don't reach the
+				# standard transparent-MUL receiver on compat (directionals
+				# do), while c18324ba's shader catcher took them fine.
+				if OS.get_environment("PSZ_WALK_MUL_SHADER") == "1":
+					var mat := ShaderMaterial.new()
+					var sh := Shader.new()
+					sh.code = "
+shader_type spatial;
+render_mode blend_mul, depth_draw_never;
+void fragment() {
+	ALBEDO = vec3(1.0);
+}
+"
+					mat.shader = sh
+					_catcher.mesh.surface_set_material(0, mat)
 				add_child(_catcher)
 	elif not on and _catcher != null:
 		_catcher.queue_free()
 		_catcher = null
-	# The omnis' shadows ARE the rig's shadows now — every authored light
-	# casts (the lantern alone ships with them). Leaving bake restores each
-	# sidecar's own state; M still flips everything live. PSZ_WALK_SHADOWS=0
-	# is the screenshot A/B control (bake + catcher, no casters).
+	# The omnis ARE the rig — every authored light casts in bake mode (the
+	# wetlands lantern precedent: shadow_enabled + blur 1.0). Leaving bake
+	# restores each sidecar's own state; M still flips everything live.
+	# PSZ_WALK_SHADOWS=0 is the screenshot A/B control (bake + catcher, no
+	# casters).
 	var shadows_on := OS.get_environment("PSZ_WALK_SHADOWS") != "0"
 	for light in _authored_lights():
 		light.shadow_enabled = shadows_on if on \
 				else bool(_base_shadows.get(light.get_path(), light.shadow_enabled))
+		if on:
+			light.shadow_blur = 1.0
 	_update_status()
 
 
@@ -265,14 +426,101 @@ func _readout() -> void:
 		_stage_id, JSON.stringify(doc, "  ")])
 
 
+## The station walk: teleport, settle, shoot, report. The verdict table
+## printed beside each shot is the reconciliation read — which lights are
+## in range here and casting, next to the screenshot that says what reads.
+func _step_stations() -> void:
+	if _station_idx < 0:
+		_station_idx = 0
+		_player.global_position = _stations[0]
+		_station_frame = 0
+		print("[CWalk] station 1/%d → %s" % [_stations.size(), _stations[0]])
+		return
+	_station_frame += 1
+	if _station_frame < STATION_SETTLE:
+		return
+	var path := "%s/station_%d_x%.1f_z%.1f.png" % [
+		_station_dir, _station_idx + 1,
+		_stations[_station_idx].x, _stations[_station_idx].z]
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(path)
+	_print_light_state("station %d/%d @ (%.1f, %.1f) → %s" % [
+		_station_idx + 1, _stations.size(),
+		_stations[_station_idx].x, _stations[_station_idx].z, path])
+	_station_idx += 1
+	if _station_idx >= _stations.size():
+		get_tree().quit()
+		return
+	_player.global_position = _stations[_station_idx]
+	_station_frame = 0
+	print("[CWalk] station %d/%d → %s" % [
+		_station_idx + 1, _stations.size(), _stations[_station_idx]])
+
+
+## The per-light verdict at the player: distance, range gate, and whether
+## the light is casting. Two lights share the name "Light 1", so each row
+## leads with its index.
+func _print_light_state(tag: String) -> void:
+	var p := _player.global_position + Vector3(0, 0.8, 0)
+	var rows: Array[String] = []
+	var lights := _authored_lights()
+	for i in lights.size():
+		var light := lights[i]
+		var d := light.global_position.distance_to(p)
+		var verdict := "casts" if light.shadow_enabled else "no-cast"
+		if d >= light.omni_range:
+			verdict += "+out-of-range"
+		rows.append("P%d %s(e%.0f d=%.1f %s)" % [i, light.name, light.light_energy, d, verdict])
+	print("[CWalk] %s — %s" % [tag, "  ".join(rows)])
+
+
+## The HUD carries the live position and the strongest in-range light
+## (energy/d²) — where a shadow should be reading right now.
+func _update_live_status() -> void:
+	if _status == null or _player == null:
+		return
+	var top := "-"
+	var top_w := 0.0
+	var p := _player.global_position + Vector3(0, 0.8, 0)
+	for light in _authored_lights():
+		var d := light.global_position.distance_to(p)
+		if d >= light.omni_range or d < 0.01:
+			continue
+		var w := light.light_energy / (d * d)
+		if w > top_w:
+			top_w = w
+			top = "%s d=%.1f" % [light.name, d]
+	var live := " | (%.1f, %.1f) top: %s" % [
+		_player.global_position.x, _player.global_position.z, top]
+	_status.text = _base_status() + live
+
+
+## PSZ_WALK_SHOT_EVERY: the live ground-truth reel — the same framebuffer the
+## window shows, dropped to PSZ_WALK_SHOT_DIR every N frames while walking.
+func _live_step() -> void:
+	if _live_every <= 0:
+		return
+	_live_frame += 1
+	if _live_frame % _live_every != 0:
+		return
+	var img := get_viewport().get_texture().get_image()
+	img.save_png("%s/frame_%04d.png" % [_live_dir, _live_frame])
+	if _live_frame == _live_every:
+		print("[CWalk] live capture → %s every %d frames" % [_live_dir, _live_every])
+
+
 func _build_status_label() -> void:
 	_status = FieldLabScript.make_status_label(self)
 	_update_status()
 
 
 func _update_status() -> void:
+	_status.text = _base_status()
+
+
+func _base_status() -> String:
 	var n := _authored_lights().size()
-	_status.text = "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
+	return "%s%s — ambient %.2f  pools %.2f× (%d)  shadows %s" % [
 		_stage_id, " · DS bake" if _bake_mode else "",
 		_env.ambient_light_energy, _pool_scale, n,
 		"on" if n > 0 and _authored_lights()[0].shadow_enabled else "off"]

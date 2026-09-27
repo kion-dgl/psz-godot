@@ -88,6 +88,97 @@ transparent floor by construction, no engine shadow path at all:
 
 To resurrect: `git show 8def749b:scripts/tools/counter_walktest.gd`.
 
+## Resumed 2026-09-26 (later) — the rig that satisfies kion's conditions: FLOOR_LIT
+
+Kion's conditions (verbatim): no sun; lights in the scene; baked lighting on
+the city; the city mesh must not interact with the lights; the character
+lit by them; the character with dynamic shadows. The c18324ba sto rig had
+the shadow behavior right but SHOWED the catcher as a black floor mesh.
+
+**The answer is the ozette contract on the floor surfaces only**
+(`PSZ_WALK_FLOOR_LIT="ground01_COLOR_0,groud01_COLOR_0.001"` in the lab):
+the stage goes unlit bake as before, then the two floor surfaces flip
+per-pixel WITH the vertex bake as albedo — the authored omnis pool on the
+floor, and their shadow maps land: measured one medium-dark shadow at a
+single sconce, TWO opposite shadows between the sconce pair, a compact one
+under the spawn plaza light, bake visible everywhere, warm pools at the
+lamps, and NO catcher mesh at all (the visual floor IS the receiver —
+nothing to hide).
+
+Engine fact measured along the way (worth keeping): on gl_compatibility,
+**dual-paraboloid omni shadow maps do not reach blend_mul receivers** — the
+valley MUL catcher took a shadow-casting directional (sun probe: clear
+1.5–2-body shadow) but nothing from the casting omnis; a blend_mul shader
+fared the same. blend_mix receivers take them (c18324ba's sto catcher
+showed omni shadows; shadow_to_opacity's veil was the problem, not
+reception). Opaque per-pixel receivers take them (the wetlands ground, and
+now the city floor). So: omni shadows ⇒ opaque receiver, full stop.
+
+Perf (kion's live walk flagged chop; measured 2026-09-26, PSZ_WALK_FPS):
+the rig holds vsync 120 fps / 0 slow frames with all 8 omnis casting; the
+chop was the SHOT_EVERY capture reel's sync readback (94–95 fps, exactly
+2 >50ms hitches per second at EVERY=60) — leave the reel off when judging
+framerate. Kion's live confirmation: two shadows between the sconces,
+positions and behavior correct; the office/spawn stretch reads shadowless
+(zenith plaza light geometry + the intensity/ambient tuning below).
+
+Tuning territory (not rig work): the plaza e40 blows a hot spot on the
+floor-lit surface at spawn (energies were authored for actors; `[ ]`
+scales them live, P prints the tuned sidecar); ambient 0.5 with `,` `.`.
+The lantern L5 still sits below the floor (y −12.6) and throws nothing.
+
+To run: `PSZ_WALK_FLOOR_LIT="ground01_COLOR_0,groud01_COLOR_0.001" godot
+--path . scenes/tools/counter_walktest.tscn` — plus the station walk
+(`PSZ_WALK_STATIONS`), live HUD, and `PSZ_WALK_SHOT_EVERY` reel from the
+morning's instrumentation, all still in place. Everything uncommitted in
+the worktree for review. Next: port the FLOOR_LIT mode into
+`city_counter_controller` (flip the floor surfaces in the DS-bake path,
+arm the omni shadows), mirror in the web labs, then the office/underground/
+market sidecars.
+
+## Resumed 2026-09-26 — reconciled: the rig works, "no shadow" was the read
+
+The projector rig is back in the working tree (from 8def749b) plus
+instrumentation; **uncommitted, review `git diff` first.** Verdict from a
+6-station walk (`PSZ_WALK_STATIONS`, new): the projection, compositing, and
+per-light weights are all correct — visible shadows confirmed by screenshot
++ catcher-debug red at three stations, including the two-shadows case
+between the east sconce pair (≈ x 13.5, z 108: both e2s at w=0.55, shadows
+in opposite diagonals). No live-vs-smoke mechanism exists: the catcher is
+world-space, the shadow viewports are 256px fixed, nothing reads window
+state.
+
+Why live read as "no shadow":
+
+1. **Spawn has no visible shadow by geometry.** The only in-range strong
+   light at spawn is the plaza e40 (L3) — almost exactly overhead, so its
+   full-weight shadow lands directly under the body. The warp e40 is 60+
+   units away, forever out of its r15. The handoff's z=128 smoke was the
+   same story: a ~0.9-unit nub pointing at the camera, occluded by the body.
+2. **The readable shadows live away from spawn**: the east sconce pair
+   (two-shadow spot) and near L6 at z≈99–101 (one character-length shadow).
+   Sconce shadows are e2-driven — faint (w≤0.13) past ~8 units, gone at 15.
+3. **Key trap**: M toggles the projector weights here (in the sto rig it
+   toggled engine shadows) — pressing M "to make sure" blanks the shadows;
+   B drops back to the lit look. The new HUD line ("shadows on | (x, z)
+   top: P2 Light 3 w=0.55 d=10.3") makes both self-diagnosing, and
+   `PSZ_WALK_SHOT_EVERY=30 PSZ_WALK_SHOT_DIR=/tmp/reel` records exactly
+   what the live window showed.
+
+Hardening added while in there: `look_at` colinear guard (walking dead
+under a center-line light — L3/L6/L8 all sit at x≈0.06 — errored and FROZE
+that projector; dead-under-L6 now runs clean at w=0.55);
+`PSZ_WALK_STATIONS` + the per-light verdict table printed per station;
+`PSZ_WALK_CAM_ROT` (the default follow offset lands inside the east wall
+at wall-side stations); the live HUD read; the live capture reel.
+
+Next: kion walks it live with the HUD on (start at the east sconces, not
+spawn). Authoring decisions now quantified — lantern L5 sits below the
+floor (y −12.6, throws nothing); shadow ceiling is SHADOW_MAX_ALPHA 0.55;
+if spawn should show a shadow that's sidecar work (un-zenith L3 or a low
+sconce), not rig work. Then the Phase-2 port into
+`city_counter_controller` and the web labs.
+
 ## The reverted rig's tuning map (c18324ba, current state)
 
 - `,` `.` ambient live (P prints paste-ready sidecar): the shared cap above.
