@@ -553,6 +553,10 @@ func _apply_ds_floor_lit(stage_node_name: String) -> void:
 	if stage == null:
 		push_warning("[CityArea] DS floor-lit: no stage node '%s'" % stage_node_name)
 		return
+	MeshUtils.make_unlit(stage, [])
+	for node in MeshUtils.collect_mesh_instances(stage, []):
+		(node as MeshInstance3D).cast_shadow = \
+				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var floor_root := get_node_or_null("FloorCollision")
 	var walk_y := MeshUtils.floor_top(floor_root) if floor_root else 0.0
 	for node in MeshUtils.collect_mesh_instances(stage, []):
@@ -613,7 +617,11 @@ func _apply_ds_bake_look(stage_node_name: String, sun := false,
 				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var catcher: MeshInstance3D = null
 	var floor_root := get_node_or_null("FloorCollision")
-	if floor_root:
+	if plane_size.x > 0.0:
+		# kion's spec: the catcher plane AT y:0 — a hull-derived face (the
+		# market's box top floats at +0.1) reads as a gray overlay sheet.
+		pass
+	elif floor_root:
 		catcher = MeshUtils.make_shadow_catcher(floor_root, true, true)
 	if catcher == null and plane_size.x > 0.0:
 		# No usable collision hull (kion's fallback): a y:0 plane catches
@@ -635,7 +643,7 @@ void fragment() {
 		catcher.name = "ShadowCatcherPlane"
 		catcher.mesh = pm
 		catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		catcher.position = plane_center + Vector3(0, 0.05, 0)
+		catcher.position = plane_center + Vector3(0, 0.03, 0)
 	if catcher == null:
 		push_warning("[CityArea] DS bake look: no catcher (no hull, no plane)")
 		return
