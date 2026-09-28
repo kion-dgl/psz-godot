@@ -288,6 +288,46 @@ if spawn should show a shadow that's sidecar work (un-zenith L3 or a low
 sconce), not rig work. Then the Phase-2 port into
 `city_counter_controller` and the web labs.
 
+## #669 RESOLVED (2026-09-27, evening) — the game never flipped a single surface
+
+The in-game rig booted pure bake: lights armed (the dump said
+`shadows=true` 8-for-8), floor "flipped" — and nothing landed. The
+boot-path delta the issue suspected was real but mundane:
+
+1. **The geom gate's walk height was garbage on this stage.**
+   `floor_top(FloorCollision)` reads the collision AABB TOP, and the
+   counter's floor GLB is a whole-room shell (walls and all, y −21.5..
+   +14.7 — the kaidan). walk_y = **+14.7** against the −10.7 floor → the
+   ±1.5 centroid gate rejected EVERY surface. Zero flips. The lab never
+   hit this because kion's certified run booted with the NAME list; the
+   geom gate was "the equivalent" nobody A/B'd.
+2. **The certified name list never covered the hall walkway either.** A
+   color-coded station render (each surface a flat unique color, shot
+   from the live game camera pose) showed the floor pixels under the
+   player's feet are `groud01_COLOR_0` — the list had `.001`, a different
+   (northern) surface. The hall floor is a material mosaic (groud01,
+   mizu, Material__80, ...) — kion's live read: "shadows appear and
+   vanish depending on the material", then the call: **"you can just use
+   the full mesh."**
+3. **The city player was unlit.** The player GLB imports UNSHADED; the
+   field's spawn contract (`SmoothNormals.ensure` + `make_lit`, #646)
+   never ran city-side — the omnis lit the floor but not the actor.
+
+The fix (`_apply_ds_floor_lit(stage, surfaces)`): the wetlands
+`lit_surfaces` convention — a per-stage surface list, "*" = the whole
+stage per-pixel with the vertex bake as albedo. The counter passes
+`["*"]`; the geom gate stays as the no-list fallback for flat box floors
+(the market A/B). A boot print (`DS floor-lit on Counter: 28 surface(s)
+by wildcard`) makes zero-flip impossible to miss again. Kion certified
+live, twice, from the running game window.
+
+Probes that settled it (all in CityAreaBase, PSZ_CITY_DUMP companions):
+`PSZ_CITY_SPAWN="x,y,z"` boots the player at a station (the in-game
+PSZ_WALK_TELEPORT), the dump prints the settled player pos + mesh feet,
+the camera pose, and the top underfoot surface HITS with shading mode
+(the raycast that named groud01). macOS throttles occluded windows, so
+a dump boot sets `always_on_top` (the labs' station lesson).
+
 ## MARKET #670 (2026-09-27) — the corrected MUL-catcher contract (measured)
 
 WALKED AND CONFIRMED BY KION in the live window ("perfect, this is

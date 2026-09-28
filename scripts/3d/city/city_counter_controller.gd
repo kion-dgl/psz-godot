@@ -38,6 +38,18 @@ const SPAWN_VARIANTS := {
 	},
 }
 
+## The whole stage mesh receives the rig (kion's 2026-09-27 live call —
+## "you can just use the full mesh"): the wetlands-A `lit_surfaces: "*"`
+## contract, every surface per-pixel with the vertex bake as albedo. The
+## walk lab's certified name list (ground01/groud01/doorset) read as
+## shadows that appear and vanish between floor materials — the hall's
+## walkway is a mosaic (groud01, mizu, Material__80, ...) no list covers.
+## Never geometry-derived: this stage's floor collider spans the kaidan
+## slope, so the geom gate's collision-AABB walk height reads +14.7
+## against the −10.7 floor and rejects every surface (#669 — the game
+## shipped pure bake while the lab, flipping by name, showed the rig).
+const FLOOR_LIT_SURFACES := ["*"]
+
 
 func _ready() -> void:
 	# Apply texture fixes from global config
@@ -80,7 +92,7 @@ func _ready() -> void:
 	)
 	# The floor-lit rig (the lab kion confirmed live — point lights only,
 	# per-light shadows, the floor its own bake: never a veil, never black).
-	_apply_ds_floor_lit("Counter")
+	_apply_ds_floor_lit("Counter", FLOOR_LIT_SURFACES)
 
 	# NPCs, exit triggers, and the warp pad — positions probed on the merged mesh.
 	_add_interactables()

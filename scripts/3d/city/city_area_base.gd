@@ -45,7 +45,16 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 
 	# Determine spawn position
 	var spawn_key: String = CityState.get_spawn_key()
-	if spawn_key in spawn_variants:
+	# PSZ_CITY_SPAWN="x,y,z": station probe — boot the player at a chosen
+	# spot (the in-game counterpart of the labs' PSZ_WALK_TELEPORT). With
+	# PSZ_CITY_DUMP this reads a station from inside the running game.
+	var probe_spawn := OS.get_environment("PSZ_CITY_SPAWN")
+	var probe_xyz := probe_spawn.split(",")
+	if not probe_spawn.is_empty() and probe_xyz.size() == 3:
+		player.global_position = Vector3(
+			probe_xyz[0].to_float(), probe_xyz[1].to_float(), probe_xyz[2].to_float())
+		player.player_rotation = default_rot
+	elif spawn_key in spawn_variants:
 		var variant: Dictionary = spawn_variants[spawn_key]
 		player.global_position = variant.get("position", default_pos)
 		player.player_rotation = variant.get("rotation", default_rot)
@@ -57,6 +66,13 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 		player.player_rotation = default_rot
 
 	player.spawn_position = player.global_position
+	# Player model GLB is unlit + normal-less like the rooms — lit materials
+	# and smoothed normals so lights reach it (#646, the field's spawn
+	# contract). Without this the city omnis light the floor but the actor
+	# stays pure bake (#669: the certified rig has the character lit BY the
+	# placed lights — the walk labs spawn through the same pair).
+	SmoothNormals.ensure(player, 2)
+	SmoothNormals.make_lit(player)
 	if OS.has_environment("PSZ_DIAG"):
 		print("[diag spawn] area=%s key=%s pos=%s" % [_get_area_name(), spawn_key, str(player.global_position)])
 	CityState.set_spawn_key("")
@@ -146,6 +162,45 @@ func _add_area_trigger(pos: Vector3, trigger_size: Vector3, target_scene: String
 var _interactive_triggers: Array[GameElement] = []
 
 
+## PSZ_CITY_DUMP companion: what stage surfaces render underfoot? Raycasts
+## the scene's live world-space triangles from above the player down and
+## prints the top hits with each surface's shading mode — the read that
+## settled #669 (which mesh IS the walkable floor, and is it per-pixel?).
+func _dump_underfoot_hits(feet: Vector3) -> void:
+	var from := feet + Vector3.UP * 8.0
+	var to := feet + Vector3.DOWN * 2.0
+	var hits: Array = []
+	for node in MeshUtils.collect_mesh_instances(self, []):
+		var mi := node as MeshInstance3D
+		if mi.is_inside_tree() and ("FloorCollision" in str(mi.get_path())
+				or "Player" in str(mi.get_path())):
+			continue
+		var mesh := mi.mesh as ArrayMesh
+		if mesh == null:
+			continue
+		for i in range(mesh.get_surface_count()):
+			var arrays := mesh.surface_get_arrays(i)
+			if arrays.is_empty():
+				continue
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var xform := mi.global_transform
+			for t in range(0, verts.size() - 2, 3):
+				var hit: Variant = Geometry3D.ray_intersects_triangle(from, to,
+					xform * verts[t], xform * verts[t + 1], xform * verts[t + 2])
+				if hit != null:
+					var mat: Material = mi.get_active_material(i)
+					var mode := "n/a"
+					if mat is StandardMaterial3D:
+						mode = str((mat as StandardMaterial3D).shading_mode)
+					hits.append([(hit as Vector3).y,
+						"%s[%d]'%s' shaded=%s" % [mi.name, i, mat.resource_name, mode]])
+	hits.sort_custom(func(a, b): return a[0] > b[0])
+	for i in mini(3, hits.size()):
+		print("[CityDump] underfoot hit %d: y=%.2f %s" % [i + 1, hits[i][0], hits[i][1]])
+	if hits.is_empty():
+		print("[CityDump] underfoot hit: NONE (nothing renders under the player)")
+
+
 func _add_interactive_trigger(pos: Vector3, trigger_size: Vector3, target_scene: String, spawn_key: String, prompt_text: String) -> GameElement:
 	var trigger := GameElement.new()
 	trigger.name = "InteractiveTrigger_%s" % spawn_key
@@ -194,9 +249,24 @@ func _process(_delta: float) -> void:
 			_dump_path = _dump_path % get_scene_file_path().get_file().get_basename()
 		if not _dump_path.is_empty():
 			_dump_frame = 0
+			# Probe runs must keep compositing: macOS throttles occluded
+			# windows to a standstill (the labs' station lesson) and the
+			# frame counter never reaches the dump frame.
+			get_window().always_on_top = true
 	if _dump_frame >= 0:
 		_dump_frame += 1
 		if _dump_frame == 240:
+			if player and is_instance_valid(player):
+				var pbox := MeshUtils.global_mesh_aabb(player)
+				print("[CityDump] player pos=%s (settled)  mesh y %s..%s" % [
+					player.global_position.round(),
+					"%.2f" % pbox.position.y if pbox.size != Vector3.ZERO else "?",
+					"%.2f" % pbox.end.y if pbox.size != Vector3.ZERO else "?"])
+				_dump_underfoot_hits(player.global_position)
+			var cam := get_viewport().get_camera_3d()
+			if cam:
+				print("[CityDump] cam pos=%s  xform=%s" % [
+					cam.global_position.round(), cam.global_transform])
 			for child in get_children():
 				if child is OmniLight3D:
 					var l := child as OmniLight3D
@@ -578,9 +648,19 @@ static func parse_lights_spec(text: String) -> Dictionary:
 ## mostly floor-tilted and near walk height flips per-pixel WITH the bake
 ## as albedo — the floor shows its own baked textures, the authored omnis
 ## pool on it, their shadow maps land on it. No catcher, no veil — the
-## floor cannot read black because it IS the stage's own surface. The geom
-## gate (not material names) covers every floor split. Point lights only.
-func _apply_ds_floor_lit(stage_node_name: String) -> void:
+## floor cannot read black because it IS the stage's own surface.
+##
+## `floor_surfaces` is the surface name list (the wetlands `lit_surfaces`
+## convention — authored material names, not geometry guessing); "*" flips
+## the WHOLE stage per-pixel (the wetlands wildcard — kion's 2026-09-27
+## live call: a name list reads as shadows that appear and vanish between
+## floor materials, so the guild hall takes the full mesh). The list path
+## exists for per-surface control; the geom gate remains the default for
+## flat box floors (the market A/B) — but beware it on sloped colliders:
+## floor_top reads the collision AABB TOP (the counter's kaidan shell:
+## +14.7 against the −10.7 floor) and rejects every surface — the #669
+## failure: the sidecar's pools and shadows armed, nothing landing.
+func _apply_ds_floor_lit(stage_node_name: String, floor_surfaces: Array = []) -> void:
 	var stage := get_node_or_null(stage_node_name)
 	if stage == null:
 		push_warning("[CityArea] DS floor-lit: no stage node '%s'" % stage_node_name)
@@ -589,21 +669,36 @@ func _apply_ds_floor_lit(stage_node_name: String) -> void:
 	for node in MeshUtils.collect_mesh_instances(stage, []):
 		(node as MeshInstance3D).cast_shadow = \
 				GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var wanted: Dictionary = {}
+	for surface_name in floor_surfaces:
+		wanted[surface_name] = true
+	var wildcard := wanted.has("*")
+	var by_name := not wanted.is_empty()
 	var floor_root := get_node_or_null("FloorCollision")
 	var walk_y := MeshUtils.floor_top(floor_root) if floor_root else 0.0
+	var flipped := 0
 	for node in MeshUtils.collect_mesh_instances(stage, []):
 		var mi := node as MeshInstance3D
-		var arr_mesh: ArrayMesh = mi.mesh as ArrayMesh
+		var arr_mesh: ArrayMesh = null if by_name else (mi.mesh as ArrayMesh)
 		for i in range(mi.get_surface_override_material_count()):
 			var mat: Material = mi.get_active_material(i)
 			if not (mat is StandardMaterial3D):
 				continue
-			if not _surface_is_floor(mi, arr_mesh, i, walk_y):
+			if by_name:
+				if not wildcard and not wanted.has((mat as StandardMaterial3D).resource_name):
+					continue
+			elif not _surface_is_floor(mi, arr_mesh, i, walk_y):
 				continue
 			var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 			dup.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 			dup.vertex_color_use_as_albedo = MeshUtils.vertex_bake_present(mi, i)
 			mi.set_surface_override_material(i, dup)
+			flipped += 1
+	# 0 flipped = the rig silently degenerated to pure bake (no pools, no
+	# shadows land) — the exact #669 failure, invisible without this count.
+	print("[CityArea] DS floor-lit on %s: %d surface(s) by %s" % [
+		stage_node_name, flipped, "wildcard" if wildcard else \
+		("name list" if by_name else "geom gate")])
 
 
 ## The geom gate: a stage surface is FLOOR when ≥ half its triangles tilt
