@@ -129,7 +129,7 @@ func _boot_room() -> void:
 ## The actor half: the player at the gate spawn, the lit-prop crate, the
 ## optional control pillar / hidden-model A/B knobs.
 func _boot_actors() -> void:
-	var spawn_pos := _boot_spawn()
+	var spawn_pos := FieldLabScript.boot_spawn(_stage_id)
 	_spawn_player(spawn_pos)
 	_spawn_prop_preview(spawn_pos)
 	if OS.get_environment("PSZ_WALK_PILLAR") == "1":
@@ -198,45 +198,6 @@ func _subfolder() -> String:
 
 func _spawn_player(pos: Vector3) -> void:
 	_player = FieldLabScript.spawn_player(self, pos)
-
-
-## The boot spawn: PSZ_WALK_SPAWN=x,z overrides; otherwise the stage
-## config's own spawn-in (defaultSpawn, else the first spawn waypoint —
-## the gate's authored position) so every stage in the cycle lands on
-## walkable ground — the old fixed (0, 1.5, 8) fell through s02b_ga1's
-## boardwalk into the marsh.
-func _boot_spawn() -> Vector3:
-	var raw := OS.get_environment("PSZ_WALK_SPAWN")
-	if not raw.is_empty():
-		var p := raw.split(",")
-		if p.size() >= 2:
-			return Vector3(float(p[0]), 1.5, float(p[1]))
-	var pos = _config_spawn()
-	if pos is Vector3:
-		return Vector3(pos.x, 1.5, pos.z)
-	return Vector3(0, 1.5, 8)
-
-
-## The stage's authored spawn from the unified config (kion: "the gate").
-func _config_spawn():
-	var file := FileAccess.open(UNIFIED_CONFIG, FileAccess.READ)
-	if file == null:
-		return null
-	var json := JSON.new()
-	var ok := json.parse(file.get_as_text()) == OK
-	file.close()
-	if not ok:
-		return null
-	var cfg: Dictionary = (json.data as Dictionary).get(_stage_id, {})
-	var ds: Dictionary = cfg.get("defaultSpawn", {})
-	if ds.has("position"):
-		var arr: Array = ds["position"]
-		return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
-	for w in cfg.get("waypoints", []):
-		if str(w.get("kind", "")) == "spawn":
-			var arr: Array = w["position"]
-			return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
-	return null
 
 
 ## The lit_props preview (#649): the field container on the element receive

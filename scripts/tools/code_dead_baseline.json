@@ -1,8 +1,4 @@
 {
   "_comment": "Accepted dead-code candidates \u2014 functions referenced nowhere else across .gd + .tscn (EPIC #295). Conservative (name-based), so triage before deleting. --check fails on any candidate NOT here; --update-baseline after cleanup.",
-  "accepted_dead": [
-    "scripts/3d/city/city_area_base.gd:_apply_ds_bake_look#0",
-    "scripts/autoloads/save_manager.gd:delete_save#0",
-    "scripts/autoloads/save_manager.gd:has_save#0"
-  ]
+  "accepted_dead": []
 }
