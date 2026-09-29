@@ -22,7 +22,9 @@ const slots = [
   { key: 's02z', area: 'Wetlands Z boss', hour: '10.0 — day', weather: 'rain', note: 'the octopus boss waits in the same dark downpour, lightning strobing (variant row)' },
   { key: 'rioh', area: 'Snowfield (s03)', hour: '22.0 — night', weather: 'snow', note: 'the locked #646 rig (see below); s03a stages only now' },
   { key: 'makara', area: 'Ruins (s04)', hour: '10.0 — day', weather: '—', note: 'interior hours; #650 authors torch-dark' },
-  { key: 'paru', area: 'Forgotten City (s05)', hour: '10.0 — day', weather: '—', note: 'interim; #651 establishes identity' },
+  { key: 'paru', area: 'Forgotten City A+Z (s05)', hour: '10.0 — day', weather: '—', note: 'the ambient-sun ladder (#651, kion 2026-09-28): valley-A cheat rig — bake kept, greenery keep-list (1_reaf1–5 + tuta1/kusa1 candidates), catcher floor; A+Z ambient-led: ambient 0.55 over a faint 0.25 sun @ −60°' },
+  { key: 's05e', area: 'Forgotten City E transition', hour: '10.0 — day', weather: '—', note: 'sun-led: sun 1.00 / ambient 0.25 @ −50°, higher sun (variant row)' },
+  { key: 's05b', area: 'Forgotten City B (s05b_*)', hour: '10.0 — day', weather: '—', note: 'the balanced middle: sun 0.60 / ambient 0.40 @ −55° (variant row)' },
   { key: 'arca', area: 'Moon Facility (s06)', hour: '10.0 — day', weather: '—', note: 'interim; #652 authors fixture lights' },
   { key: 'dark', area: 'Dark Shrine (s07)', hour: '10.0 — day', weather: '—', note: 'interim; #653 authors the dark-interior pin' },
   { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
@@ -125,9 +127,9 @@ const slots = [
   crystals, so the pools are the blue reflective anchors and the red
   mushroom clusters the warm accents, each kinoko cluster dusted by an
   authored pink <code>spores</code> drift. The interim rows (10.0 day)
-  preserve pre-#655 behavior for areas whose identity issues (#650–#654)
-  have not authored a slot yet; each issue replaces its row's values and
-  locks them from a playtest read-out.</p>
+  preserve pre-#655 behavior for areas whose identity issues (#650,
+  #652–#654) have not authored a slot yet; each issue replaces its row's
+  values and locks them from a playtest read-out.</p>
 
   <p>The valley row (#648) is the <strong>cheat rig</strong> — the
   art-direction call from the 2026-09-21 hardware passes: the stage
@@ -260,6 +262,24 @@ const slots = [
   never casting. The wetlands walk lab
   (<code>wetlands_walktest</code>) owns the tuning until locked from a
   read-out.</p>
+
+  <p>The Forgotten City rows (#651, kion 2026-09-28) are the valley-A cheat
+  rig again — the stage keeps its bake, the greenery keep-list
+  (<code>1_reaf1–5</code>, the same leaf class the valley lit, plus the
+  vine <code>1_tuta1</code> and boss-grass <code>1_kusa1</code> as organic
+  walk-lab candidates) receives the sun, and the catcher floor takes the
+  actors' dynamic shadows — with the variants telling one simple story:
+  the ambient↔sun balance. <strong>A</strong> (and <strong>Z</strong>,
+  the boss arena riding the area row) is ambient-led deep-forest shade —
+  ambient 0.55 over a faint 0.25 sun at −60°.
+  <strong>E</strong>, the transition into the area, is sun-led — 1.00 sun
+  over 0.25 ambient at a higher −50°. <strong>B</strong> is the balanced
+  middle — 0.60/0.40 at −55°. No weather yet: the area's signature
+  particles (falling leaves vs. photon motes) are #651's open identity
+  question, and the <code>s05a_sa1</code> spore pools already read under
+  the rig. Starting values pre-lock; the paru walk lab
+  (<code>paru_walktest</code>) owns the numbers until a read-out locks
+  them.</p>
 
   <h2>Weather precedence</h2>
   <ul>

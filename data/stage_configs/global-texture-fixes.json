@@ -418,6 +418,26 @@
     "repeatY": 1,
     "wrapS": "mirror"
   },
+  "s05_1_barr1.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": 0.25,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
+  "s05_2_wave1.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "scrollX": 0,
+    "scrollY": -0.25,
+    "wrapS": "repeat",
+    "wrapT": "repeat"
+  },
   "s06_0_bdoo02.png#1": {
     "offsetX": 0,
     "offsetY": 0,

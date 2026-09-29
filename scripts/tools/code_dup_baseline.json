@@ -215,6 +215,14 @@
       "jaccard": 0.949
     },
     {
+      "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
+      "jaccard": 0.939
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
+      "jaccard": 0.933
+    },
+    {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
       "jaccard": 0.932
     },
@@ -363,6 +371,14 @@
       "jaccard": 0.87
     },
     {
+      "sig": "scripts/tools/paru_walktest.gd:_input#0||scripts/tools/wetlands_walktest.gd:_input#0",
+      "jaccard": 0.867
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_update_status#0||scripts/tools/s03b_walktest.gd:_update_status#0",
+      "jaccard": 0.867
+    },
+    {
       "sig": "scripts/tools/lantern_test.gd:_spawn_effects_from_config#0||scripts/tools/snowfield_mattest.gd:_spawn_lanterns#0",
       "jaccard": 0.865
     },
@@ -373,6 +389,10 @@
     {
       "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
       "jaccard": 0.863
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/wetlands_walktest.gd:_readout#0",
+      "jaccard": 0.861
     },
     {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
