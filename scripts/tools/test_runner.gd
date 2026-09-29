@@ -11810,16 +11810,17 @@ func test_paru_identity_slots() -> void:
 	# The Z arena's animated surfaces (#651 follow-up, kion 2026-09-28): the
 	# wave sheet (s05z_na1_m_14) read as white pixels under the generic
 	# alpha-scissor branch — its additive water art needs the scrolling
-	# waterfall shader — and the barrier scrolls with it. Both at the kion
-	# -0.25 v, the valley waterfall's own pace.
+	# waterfall shader — and the barrier scrolls against it. Wave down at
+	# kion's -0.25 v; barr UP at +0.25 (kion's live read-out correction).
 	var fixes_file := FileAccess.open("res://data/stage_configs/global-texture-fixes.json", FileAccess.READ)
 	assert_true(fixes_file != null, "global-texture-fixes.json is readable (Z-arena scrolls)")
 	var fixes: Dictionary = JSON.parse_string(fixes_file.get_as_text())
 	fixes_file.close()
-	for key in ["s05_2_wave1.png#1", "s05_1_barr1.png#1"]:
+	var scroll_v := {"s05_2_wave1.png#1": -0.25, "s05_1_barr1.png#1": 0.25}
+	for key in scroll_v:
 		assert_true(fixes.has(key), "%s has a fix entry (the scrolling waterfall branch)" % key)
 		var entry: Dictionary = fixes.get(key, {})
-		assert_eq(entry.get("scrollY", 0.0), -0.25, "%s scrolls -0.25 in v (kion)" % key)
+		assert_eq(entry.get("scrollY", 0.0), scroll_v[key], "%s scrolls %+.2f in v (kion)" % [key, scroll_v[key]])
 		assert_eq(entry.get("scrollX", -1.0), 0.0, "%s pins scrollX at 0 (no u crawl)" % key)
 	print("")
 
