@@ -112,7 +112,7 @@ jobs:
         run: python3 scripts/tools/check_glb_textures.py
 
       - name: Verify Valley exit floor supports player probes
-        run: python3 scripts/tools/refield/check_portal_floor_cover.py --stage s01b_tb3
+        run: python3 scripts/tools/refield/check_portal_floor_cover.py --stage s01b_tb3 --stage s01b_lb3
 
       - name: Verify repo layout (no root junk; binary assets under sanctioned trees)
         run: python3 scripts/tools/check_repo_layout.py

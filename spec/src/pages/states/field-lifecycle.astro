@@ -234,10 +234,11 @@ const lifecycle = `flowchart TD
   floor edge is insufficient if those probes prevent the player from reaching
   it. Extend the authored floor when necessary; preserve the doorway's gate,
   spawn, and trigger alignment. The <code>s01b_tb3</code> south and west
-  corridors require floor through z=28 and x=-28 respectively.</p>
+  corridors require floor through z=28 and x=-28 respectively;
+  <code>s01b_lb3</code>'s north corridor requires floor through z=-28.</p>
   <p>A locked gate's nearest navigation waypoint <strong>MUST</strong> be
   reachable from inside the room without crossing the gate. In
-  <code>s01b_tb3</code>, the west gate needs an interior approach waypoint:
+  <code>s01b_tb3</code>, the west and south gates need interior approach waypoints:
   choosing the spawn beyond the closed gate disconnects the route and makes
   the autopilot fall back to a direct walk across the room's floor gap.</p>
   <p>Walking onto an exit trigger transitions to the connected cell (or section, via

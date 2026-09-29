@@ -9166,9 +9166,16 @@
         "position": [-20.0, 0.0, 17.04],
         "kind": "point",
         "label": "west gate approach"
+      },
+      {
+        "id": "wp_south_gate_approach",
+        "position": [17.09, 0.0, 20.0],
+        "kind": "point",
+        "label": "south gate approach"
       }
     ],
     "waypointEdges": [
+      ["wp_1780178417654_y5kk5n", "wp_south_gate_approach"],
       ["wp_1780290281630_q20k8i", "wp_west_gate_approach"],
       [
         "wp_load_0_1780178411304",
