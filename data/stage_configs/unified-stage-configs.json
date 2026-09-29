@@ -9160,9 +9160,16 @@
           17.03282575375186
         ],
         "kind": "point"
+      },
+      {
+        "id": "wp_west_gate_approach",
+        "position": [-20.0, 0.0, 17.04],
+        "kind": "point",
+        "label": "west gate approach"
       }
     ],
     "waypointEdges": [
+      ["wp_1780290281630_q20k8i", "wp_west_gate_approach"],
       [
         "wp_load_0_1780178411304",
         "wp_spawn_0_1780178411304"

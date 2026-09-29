@@ -111,6 +111,9 @@ jobs:
       - name: Verify GLB texture URIs resolve (binary refs check_asset_refs can't see)
         run: python3 scripts/tools/check_glb_textures.py
 
+      - name: Verify Valley exit floor supports player probes
+        run: python3 scripts/tools/refield/check_portal_floor_cover.py --stage s01b_tb3
+
       - name: Verify repo layout (no root junk; binary assets under sanctioned trees)
         run: python3 scripts/tools/check_repo_layout.py
 
