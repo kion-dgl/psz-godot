@@ -8,14 +8,9 @@ const OfficeLibraryRoom := preload("res://scripts/3d/city/office_library_room.gd
 # Update these if the office geometry changes.
 # Principal always stands at PRINCIPAL_POSITION.
 # pos_1 and pos_2 are for quest client NPCs.
-# Coords match the procedural library room (OfficeLibraryRoom, #356): a R=9
-# circular hall centred at origin, floor at y=0, the desk + dais at z=-4.5, the
-# sun window on the back wall (-Z), the entrance/door open at the +Z front.
-# Positions taken from web/src/office-editor DEFAULT_LAYOUT (the approved
-# screenshot-loop layout). Principal stands just behind the desk; the player
-# enters from +Z. Furniture has no collision, so interact positions can sit
-# right at the desk front.
-const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.000, -5.600), "rotation": 0.000 }
+# Rear library landing and Principal share the procedural room's floor height.
+# Entry and quest clients remain on the lower floor. Stairs connect both levels.
+const PRINCIPAL_POSITION := { "position": Vector3(0.000, OfficeLibraryRoom.LANDING_H, -5.600), "rotation": 0.000 }
 const NPC_POSITIONS := {
 	"pos_1": { "position": Vector3(-2.800, 0.000, -2.400), "rotation": 0.000 },
 	"pos_2": { "position": Vector3(-3.900, 0.000, -1.500), "rotation": -0.401 },
