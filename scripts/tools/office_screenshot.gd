@@ -27,15 +27,16 @@ func _ready() -> void:
 	var img: Image = get_viewport().get_texture().get_image()
 	img.save_png("user://office_shot.png")
 	print("[office-shot] saved user://office_shot.png (%dx%d)" % [img.get_width(), img.get_height()])
-	# Second shot from an angle so the desk + Principal aren't occluded by the
-	# player (the default camera sits directly behind them on the -Z axis).
-	var pl: Node3D = get_tree().get_first_node_in_group("player")
-	if pl:
-		pl.global_position = Vector3(5.5, 0, 2.5)
-		pl.rotation.y = -2.4
-		await get_tree().create_timer(1.8).timeout
-		var img2: Image = get_viewport().get_texture().get_image()
-		img2.save_png("user://office_shot_angle.png")
-		print("[office-shot] saved user://office_shot_angle.png")
+	# A dedicated camera keeps the inspection shot inside the room. Moving
+	# the player sideways placed the follow camera inside an entrance column.
+	var inspection_camera := Camera3D.new()
+	office.add_child(inspection_camera)
+	inspection_camera.position = Vector3(4.0, 4.1, 4.8)
+	inspection_camera.look_at(Vector3(0, 3.3, -4.5))
+	inspection_camera.make_current()
+	await get_tree().create_timer(0.5).timeout
+	var img2: Image = get_viewport().get_texture().get_image()
+	img2.save_png("user://office_shot_angle.png")
+	print("[office-shot] saved user://office_shot_angle.png")
 	await get_tree().process_frame
 	get_tree().quit()

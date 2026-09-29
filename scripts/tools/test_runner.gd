@@ -197,6 +197,7 @@ func _run_tests_telepipe_and_roam() -> void:
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
 func _run_tests_systems() -> void:
+	test_valley_locked_gate_approach()
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
 	test_bootstrap_registers_pack_uids()
@@ -740,6 +741,42 @@ func test_generated_section_warp_directions() -> void:
 	assert_eq(b_without_wayback, 0, "every generated b section names its way back")
 	print("  INFO: %d areas x 3 rolls, all sections classified" % areas.size())
 	print("")
+
+
+## The nearest waypoint to a locked gate must be on its interior side,
+## otherwise collision pruning disconnects the goal and navigation goes direct.
+## Runtime coverage: Search and Rescue's B 1,2 and B 3,1 open_gate actions.
+func test_valley_locked_gate_approach() -> void:
+	print("── Valley locked gate approach ──")
+	var configs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/stage_configs/unified-stage-configs.json"))
+	var stage: Dictionary = configs["s01b_tb3"]
+	for direction in ["west", "south"]:
+		var gate := Vector3.ZERO
+		var outward := Vector3.ZERO
+		for portal in stage["portals"]:
+			if portal["direction"] == direction:
+				var gp: Array = portal["gatePosition"]
+				var sp: Array = portal["spawnPosition"]
+				gate = Vector3(gp[0], gp[1], gp[2])
+				outward = (Vector3(sp[0], sp[1], sp[2]) - gate).normalized()
+		var nearest_id := ""
+		var nearest := Vector3.ZERO
+		var distance := INF
+		for wp in stage["waypoints"]:
+			var p: Array = wp["position"]
+			var point := Vector3(p[0], p[1], p[2])
+			if point.distance_to(gate) < distance:
+				distance = point.distance_to(gate)
+				nearest = point
+				nearest_id = wp["id"]
+		assert_true((nearest - gate).dot(outward) < 0.0,
+			"nearest gate waypoint is inside the locked gate")
+		var connected := false
+		for edge in stage["waypointEdges"]:
+			if nearest_id in edge:
+				connected = true
+		assert_true(connected, "gate approach is connected to the authored graph")
 
 
 ## ── Generated free fields: the goal room is the terminal (#641) ───────

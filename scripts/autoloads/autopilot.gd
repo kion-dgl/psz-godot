@@ -677,7 +677,7 @@ func _manifest_index_for_quest(quest_id: String) -> int:
 ##   1. Talk to the Principal — the interaction must work, but MUST NOT
 ##      complete the quest (negative guard). If it does, that's a regression.
 ##   2. Leave the office, go to the counter, report there → quest clears → DONE.
-const PRINCIPAL_INTERACT_POS := Vector3(0.0, 0.5, -3.9)  # desk front, within INTERACTION_RADIUS of Principal at z=-5.6 (#356)
+const PRINCIPAL_INTERACT_POS := Vector3(0.0, 1.1, -3.9)  # desk front, within INTERACTION_RADIUS of Principal at z=-5.6 (#356)
 
 var _report_acted := false           # office Principal-guard fired
 var _principal_guard_done := false   # Principal proven not to complete the quest

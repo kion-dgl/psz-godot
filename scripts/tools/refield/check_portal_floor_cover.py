@@ -20,7 +20,7 @@ L-shaped room's missing corner.
 Output is the full list of doorways needing a floor extension, with how far
 past the edge each one reaches, so they can be authored in one pass.
 """
-import json, math, pathlib, struct, sys
+import argparse, json, math, pathlib, struct, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CONFIGS = ROOT / "data/stage_configs/unified-stage-configs.json"
@@ -118,7 +118,15 @@ def edge_gap(tris, x, z):
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--stage", action="append", help="check only this stage (repeatable)")
+    args = parser.parse_args()
     cfgs = json.loads(CONFIGS.read_text())
+    if args.stage:
+        unknown = set(args.stage) - cfgs.keys()
+        if unknown:
+            parser.error("unknown stage(s): " + ", ".join(sorted(unknown)))
+        cfgs = {sid: cfgs[sid] for sid in args.stage}
     floors = {p.stem[:-6]: p for p in ROOT.glob("assets/stages/*/*/lndmd/*-floor.glb")}
 
     missing_floor, bad, checked = [], [], 0
@@ -174,6 +182,8 @@ def main() -> int:
               % (len(missing_floor), missing_floor[:6]))
 
     if not bad:
+        if missing_floor:
+            return 1
         print("\nevery spawn and trigger lands on floor.")
         return 0
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Principal’s office · Design review</title>
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">PSZ / ENVIRONMENT STUDY</p><h1>Principal’s office</h1><p class="subtitle">Raised library landing · Central stairs · Bookcase ladders</p></div><span class="badge">LOCAL PREVIEW</span></header>
+    <nav aria-label="Preview mode">
+      <button data-mode="model" aria-pressed="true">Explore in 3D</button>
+      <button data-mode="compare" aria-pressed="false">Before & after</button>
+      <button data-mode="angle" aria-pressed="false">In-game detail</button>
+    </nav>
+    <section class="viewer" aria-label="Office preview">
+      <div id="model-view"><div id="canvas"></div><div class="camera-controls" aria-label="Camera presets"><button data-camera="entrance">Entrance</button><button data-camera="desk">Desk & window</button><button data-camera="overview">Overview</button><label><input type="checkbox" id="wireframe" /> Wireframe</label></div></div>
+      <div id="compare-view" hidden><div class="comparison"><img src="./office-preview/before.png" alt="Office before the raised landing and library ladder changes" /><div id="after-layer"><img src="./office-preview/after.png" alt="Office after this modeling pass" /></div><div id="divider"></div><span class="image-label before-label">BEFORE</span><span class="image-label after-label">AFTER</span></div><label class="slider-label">Compare the entrance view <input id="compare-slider" type="range" min="0" max="100" value="50" aria-label="Amount of updated office visible" /></label></div>
+      <div id="angle-view" hidden><img class="angle-image" src="./office-preview/angle.png" alt="Updated office viewed from an angle in Godot" /></div>
+      <p id="status" role="status">Loading the updated room…</p>
+    </section>
+    <div class="caption"><p id="help">Drag to orbit · Scroll to zoom · Right-drag to pan</p><p id="source">Current Godot geometry · Browser lighting approximation</p></div>
+    <section class="changes" aria-label="Changes in this pass">
+      <article><span>01 / ARCHITECTURE</span><h2>A raised library landing</h2><p>A broad rear platform with six central stone steps, timber railings, and carved columns, following the DS reference.</p></article>
+      <article><span>02 / COMPOSITION</span><h2>A working library</h2><p>Tall, closely arranged bookcases with warm leather spines, heavy shelf rails, and four leaning library ladders.</p></article>
+      <article><span>03 / MATERIALS</span><h2>Color with clarity</h2><p>Original guild sun artwork and carved trim, with tighter floor tiling alongside the existing shelf and desk details.</p></article>
+    </section>
+    <section class="references" aria-label="Original game references">
+      <div><p class="eyebrow">SOURCE MATERIAL / ORIGINAL GAME</p><h2>The guild’s own artwork</h2><p>The round turquoise sun uses <code>s00_0_mark02.png</code>. Its circular detail is reconstructed from the mirrored atlas; the octagonal <code>mark03</code> is a different decoration.</p></div>
+      <div class="reference-grid">
+        <a href="./office-preview/reference-game.png" target="_blank" rel="noopener"><img class="reference-game" src="./office-preview/reference-game.png" alt="Original DS screenshot: large top-screen view on the left and a duplicate top-screen view on the right" /><span>Original office · two views of the same room</span></a>
+        <a href="./office-preview/reference-sun.png" target="_blank" rel="noopener"><img src="./office-preview/reference-sun.png" alt="Original half-panel atlas containing the turquoise sun" /><span>mark02 · sun panel atlas</span></a>
+        <a href="./office-preview/reference-trim.png" target="_blank" rel="noopener"><img src="./office-preview/reference-trim.png" alt="Original gold, teal and carved stone guild trim" /><span>waku · cornice trim</span></a>
+        <a href="./office-preview/reference-stone.png" target="_blank" rel="noopener"><img src="./office-preview/reference-stone.png" alt="Original guild stone wall texture" /><span>wpwall03 · wall stone</span></a>
+      </div>
+    </section>
+    <footer>The comparison images are actual Godot captures. The interactive view contains the room geometry; characters are visible in the game captures.</footer>
+  </main>
+  <script type="module" src="/src/office-preview/main.ts"></script>
+</body>
+</html>
