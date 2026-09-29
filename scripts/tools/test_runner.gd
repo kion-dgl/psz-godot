@@ -237,6 +237,7 @@ func _run_tests_systems() -> void:
 	test_wetlands_lightning()
 	test_wetlands_post_lights()
 	test_wetlands_lit_props()
+	test_paru_identity_slots()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -11788,6 +11789,75 @@ func test_wetlands_lit_props() -> void:
 		"under the flag the container loads per-pixel (receives the rig)")
 	GameElement.lit_rig = false
 	el.queue_free()
+	print("")
+
+
+func test_paru_identity_slots() -> void:
+	print("── Forgotten City Identity Slots (#651) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	# ── A + Z (the area row): ambient-led deep-forest shade under a faint
+	# sun — the valley-A cheat rig with the balance inverted (kion 2026-09-28). ──
+	var paru := Slots.slot_for("paru", "s05a_ga1")
+	assert_eq(paru.get("hour"), 10.0, "A pins hour 10 (day)")
+	assert_eq(paru.get("sun_energy"), 0.25, "A: a faint sun — 0.25 under the ambient")
+	assert_eq(paru.get("ambient_energy"), 0.55, "A: ambient-led — 0.55 carries the shade")
+	assert_eq(paru.get("sun_pitch"), -60.0, "A: sun −60° — the valley actor-lighting character")
+	assert_true(not paru.has("moon_energy"), "A: no moon (day)")
+	assert_true(not paru.has("bake_mix"),
+		"valley-A contract: the bake IS the light — no white-strategy pass")
+	assert_eq(paru.get("sun_shadows"), true,
+		"the faint sun still casts — the actors' shadows land")
+	assert_eq(paru.get("shadow_catcher"), true,
+		"the catcher floor — shadows multiply onto the bake")
+	assert_eq(str(paru.get("weather", "")), "",
+		"no weather authored yet (the particle identity is #651's follow-up)")
+	assert_true(not paru.has("lit_props"), "props keep the baked look (the valley contract, not the wetlands')")
+	var lit: Array = paru.get("lit_surfaces", [])
+	assert_true(lit.has("1_reaf1") and lit.has("1_reaf5"),
+		"the leaf class receives the rig (the valley greenery precedent)")
+	assert_true(lit.has("1_tuta1") and lit.has("1_kusa1"),
+		"the organic candidates — B vines, Z grass (walk-lab read-out pending)")
+	assert_true(not lit.has("1_tree1") and not lit.has("1_view1") and not lit.has("1_field"),
+		"trees, panorama and hard ground keep the bake")
+	assert_true(not lit.has("1_wat1"), "water stays baked (special surfaces)")
+	assert_eq(Slots.slot_for("paru", "s05z_na1"), paru,
+		"Z rides the area row verbatim — the boss arena is ambient-led too (kion: A,Z)")
+	# ── E (the transition into the area): less ambient, a stronger sun. ──
+	var e := Slots.slot_for("paru", "s05e_ia1")
+	assert_eq(e.get("sun_energy"), 1.0, "E: the sun leads — 1.0, past the valley's 0.9")
+	assert_eq(e.get("ambient_energy"), 0.25, "E: ambient drops to 0.25")
+	assert_eq(e.get("sun_pitch"), -50.0, "E: a higher sun — −50° (the DAY band parks −45)")
+	assert_true(not e.has("bake_mix"), "E keeps the bake (valley-A contract)")
+	assert_eq(e.get("sun_shadows"), true, "E: sun shadows on")
+	assert_eq(e.get("shadow_catcher"), true, "E: the catcher floor")
+	assert_eq(e.get("lit_surfaces"), lit, "E ships the same keep-list (it carries 1_reaf3)")
+	# ── B: the balanced middle. ──
+	var b := Slots.slot_for("paru", "s05b_ga1")
+	assert_eq(b.get("sun_energy"), 0.6, "B: balanced — sun 0.60")
+	assert_eq(b.get("ambient_energy"), 0.4, "B: balanced — ambient 0.40")
+	assert_eq(b.get("sun_pitch"), -55.0, "B: pitch −55° between the two")
+	assert_true(not b.has("bake_mix"), "B keeps the bake (valley-A contract)")
+	assert_eq(b.get("lit_surfaces"), lit, "the keep-list is one list across the ladder")
+	assert_eq(Slots.slot_for("paru", "s05b_lb1"), b, "B rooms ride the B row")
+	assert_true(paru.get("sun_energy") < b.get("sun_energy") and b.get("sun_energy") < e.get("sun_energy"),
+		"the ladder: A faint sun < B balance < E strong sun")
+	assert_true(e.get("ambient_energy") < b.get("ambient_energy") and b.get("ambient_energy") < paru.get("ambient_energy"),
+		"the ladder: E least ambient < B < A most")
+	# The Z arena's animated surfaces (#651 follow-up, kion 2026-09-28): the
+	# wave sheet (s05z_na1_m_14) read as white pixels under the generic
+	# alpha-scissor branch — its additive water art needs the scrolling
+	# waterfall shader — and the barrier scrolls against it. Wave down at
+	# kion's -0.25 v; barr UP at +0.25 (kion's live read-out correction).
+	var fixes_file := FileAccess.open("res://data/stage_configs/global-texture-fixes.json", FileAccess.READ)
+	assert_true(fixes_file != null, "global-texture-fixes.json is readable (Z-arena scrolls)")
+	var fixes: Dictionary = JSON.parse_string(fixes_file.get_as_text())
+	fixes_file.close()
+	var scroll_v := {"s05_2_wave1.png#1": -0.25, "s05_1_barr1.png#1": 0.25}
+	for key in scroll_v:
+		assert_true(fixes.has(key), "%s has a fix entry (the scrolling waterfall branch)" % key)
+		var entry: Dictionary = fixes.get(key, {})
+		assert_eq(entry.get("scrollY", 0.0), scroll_v[key], "%s scrolls %+.2f in v (kion)" % [key, scroll_v[key]])
+		assert_eq(entry.get("scrollX", -1.0), 0.0, "%s pins scrollX at 0 (no u crawl)" % key)
 	print("")
 
 

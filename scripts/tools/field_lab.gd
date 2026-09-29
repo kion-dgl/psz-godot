@@ -8,6 +8,7 @@ extends RefCounted
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const TEXTURE_FIX_SHADER_UNLIT := preload("res://scripts/3d/field/texture_fix_shader_unlit.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
+const UNIFIED_CONFIG := "res://data/stage_configs/unified-stage-configs.json"
 
 
 ## The field scene's environment: Filmic white-6 tonemap, COLOR ambient, the
@@ -257,6 +258,45 @@ static func spawn_player(root: Node, pos: Vector3) -> CharacterBody3D:
 	orbit_camera.set_target(player)
 	orbit_camera.camera_rotation = PI
 	return player
+
+
+## The stage's authored spawn from the unified config (kion: "the gate") —
+## defaultSpawn, else the first spawn waypoint. Null when the config ships
+## no spawn. (#649: the labs' fixed (0, 1.5, 8) fell through s02b_ga1's
+## boardwalk into the marsh — stages with water need their authored gate.)
+static func stage_config_spawn(stage_id: String) -> Variant:
+	var file := FileAccess.open(UNIFIED_CONFIG, FileAccess.READ)
+	if file == null:
+		return null
+	var json := JSON.new()
+	var ok := json.parse(file.get_as_text()) == OK
+	file.close()
+	if not ok:
+		return null
+	var cfg: Dictionary = (json.data as Dictionary).get(stage_id, {})
+	var ds: Dictionary = cfg.get("defaultSpawn", {})
+	if ds.has("position"):
+		var arr: Array = ds["position"]
+		return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+	for w in cfg.get("waypoints", []):
+		if str(w.get("kind", "")) == "spawn":
+			var arr: Array = w["position"]
+			return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+	return null
+
+
+## The labs' boot spawn: PSZ_WALK_SPAWN=x,z overrides; otherwise the stage
+## config's own spawn-in; else (0, 1.5, 8).
+static func boot_spawn(stage_id: String) -> Vector3:
+	var raw := OS.get_environment("PSZ_WALK_SPAWN")
+	if not raw.is_empty():
+		var p := raw.split(",")
+		if p.size() >= 2:
+			return Vector3(float(p[0]), 1.5, float(p[1]))
+	var pos = stage_config_spawn(stage_id)
+	if pos is Vector3:
+		return Vector3(pos.x, 1.5, pos.z)
+	return Vector3(0, 1.5, 8)
 
 
 ## A lab's screenshot smoke-run state: the env-read shot path plus the frame

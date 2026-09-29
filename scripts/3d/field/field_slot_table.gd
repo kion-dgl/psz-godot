@@ -247,7 +247,56 @@ const SLOTS := {
 		"bake_mix": 0.25,
 	},
 	"makara": {"hour": 10.0},     # interim; #650 authors torch-dark
-	"paru":   {"hour": 10.0},     # interim; #651 establishes the identity
+
+	# ── the Forgotten City ambient↔sun ladder (#651, kion 2026-09-28) ──
+	# Valley-A lineage: the stage KEEPS its authored bake (no bake_mix) and
+	# the rig lights only what the bake could not — actors, the greenery
+	# keep-list, and the player shadow via the catcher. The variants differ
+	# in nothing but the ambient/sun balance: A and Z ambient-led under a
+	# faint sun (deep-forest shade), E the sun-led transition into the area,
+	# B the balanced middle. Keep-list: 1_reaf1–5 — the leaf class across
+	# every variant, the valley greenery precedent verbatim — plus tuta1
+	# (B vines) and kusa1 (Z grass) as the organic walk-lab candidates;
+	# trees, panorama, water/mist and every hard surface keep the bake.
+	# Starting values pre-lock; the walk-lab P read-out owns the numbers.
+	"paru": {
+		"hour": 10.0,
+		"sun_energy": 0.25,
+		"ambient_energy": 0.55,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_surfaces": [
+			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
+			"1_tuta1", "1_kusa1",
+		],
+	},
+	# E — the transition: less ambient, a stronger, higher sun.
+	"s05e": {
+		"hour": 10.0,
+		"sun_energy": 1.0,
+		"ambient_energy": 0.25,
+		"sun_pitch": -50.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_surfaces": [
+			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
+			"1_tuta1", "1_kusa1",
+		],
+	},
+	# B — the balanced middle between the two.
+	"s05b": {
+		"hour": 10.0,
+		"sun_energy": 0.6,
+		"ambient_energy": 0.4,
+		"sun_pitch": -55.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_surfaces": [
+			"1_reaf1", "1_reaf2", "1_reaf3", "1_reaf4", "1_reaf5",
+			"1_tuta1", "1_kusa1",
+		],
+	},
 	"arca":   {"hour": 10.0},     # interim; #652 authors fixture lights
 	"dark":   {"hour": 10.0},     # interim; #653 authors the dark-interior pin
 	"tower":  {"hour": 10.0},     # interim; #654 authors fixed-hour floors
