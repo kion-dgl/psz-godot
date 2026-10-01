@@ -510,6 +510,16 @@ static func _shadow_catcher_material() -> StandardMaterial3D:
 	return mmat
 
 
+## The catcher's private render layer — the FIELD port of the city's
+## CATCHER_LAYER (#656/#670, adopted for #652): a catcher rides a layer the
+## stage and actors never see, so placed point lights (post pools, authored
+## anchor omnis) can be culled OFF it — the MUL catcher tuned to just-under-×1
+## BRIGHTENS inside any omni falloff (the float-blend contract above). Only
+## catchers may ride this layer; the sun/moon keep their default all-layers
+## mask and stay the catcher's one uniform light.
+const SHADOW_CATCHER_LAYER := 4
+
+
 static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)
@@ -768,6 +778,10 @@ static func _spawn_post_pool(root: Node3D, blob: Array, index: int) -> OmniLight
 	# the extra shadow passes stay cheap.
 	light.shadow_enabled = true
 	light.shadow_blur = 1.0
+	# Off the catcher's private layer (#652, the #670 contract): a lantern
+	# pool pushing the MUL receiver past ×1 reads as a bright disc on the
+	# floor, not a light. No-op wherever the row fields no catcher.
+	light.light_cull_mask &= ~SHADOW_CATCHER_LAYER
 	root.add_child(light)
 	light.global_position = Vector3(
 		sum.x / blob.size(), top - 1.2, sum.z / blob.size())

@@ -442,6 +442,11 @@ func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	light.omni_range = float(effect.get("radius", 6.0))
 	light.omni_attenuation = 2.0
 	light.shadow_enabled = false
+	# Off the catcher's private layer (#652, the #670 contract): the authored
+	# pools light ACTORS (an unlit stage can't receive them anyway) without
+	# pushing a MUL catcher floor past ×1 inside their falloff. No-op
+	# wherever the row fields no catcher.
+	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
 	light.position = pos
 	_c._map_root.add_child(light)
 
@@ -461,6 +466,9 @@ func _attach_spore_light(root: Node3D, pos: Vector3, color: Color,
 	# off (#646).
 	light.omni_attenuation = 2.0
 	light.shadow_enabled = false
+	# Same catcher cull as the plain anchors (#652) — bright pools on a MUL
+	# catcher floor read as discs, not lights.
+	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
 	light.position = Vector3(0, 1.5, 0)
 	root.add_child(light)
 	print("[StageEffect] Spore light at %s energy=%.1f range=%.1f" % [pos, light.light_energy, light_radius])

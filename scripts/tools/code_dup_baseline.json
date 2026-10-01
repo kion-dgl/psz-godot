@@ -155,6 +155,18 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/paru_walktest.gd:_readout#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_spawn_authored_effects#0||scripts/tools/paru_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/paru_walktest.gd:_update_status#0",
+      "jaccard": 1.0
+    },
+    {
       "sig": "scripts/ui/choice_dialog.gd:_panel_style#0||scripts/ui/confirm_dialog.gd:_panel_style#0",
       "jaccard": 1.0
     },
@@ -215,8 +227,20 @@
       "jaccard": 0.949
     },
     {
+      "sig": "scripts/tools/arca_walktest.gd:_ready#0||scripts/tools/paru_walktest.gd:_ready#0",
+      "jaccard": 0.947
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
+      "jaccard": 0.939
+    },
+    {
       "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
       "jaccard": 0.939
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
+      "jaccard": 0.933
     },
     {
       "sig": "scripts/tools/paru_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
@@ -225,6 +249,10 @@
     {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
       "jaccard": 0.932
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_input#0||scripts/tools/paru_walktest.gd:_input#0",
+      "jaccard": 0.929
     },
     {
       "sig": "scripts/tools/test_runner.gd:assert_eq#0||scripts/tools/test_runner.gd:assert_gt#0",
@@ -371,6 +399,10 @@
       "jaccard": 0.87
     },
     {
+      "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/s03b_walktest.gd:_update_status#0",
+      "jaccard": 0.867
+    },
+    {
       "sig": "scripts/tools/paru_walktest.gd:_input#0||scripts/tools/wetlands_walktest.gd:_input#0",
       "jaccard": 0.867
     },
@@ -389,6 +421,10 @@
     {
       "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
       "jaccard": 0.863
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/wetlands_walktest.gd:_readout#0",
+      "jaccard": 0.861
     },
     {
       "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/wetlands_walktest.gd:_readout#0",
