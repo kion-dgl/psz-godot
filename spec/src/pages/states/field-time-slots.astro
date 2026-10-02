@@ -25,7 +25,9 @@ const slots = [
   { key: 'paru', area: 'Forgotten City A+Z (s05)', hour: '10.0 — day', weather: '—', note: 'the ambient-sun ladder (#651, kion 2026-09-28): valley-A cheat rig — bake kept, greenery keep-list (1_reaf1–5 + tuta1/kusa1 candidates), catcher floor; A+Z ambient-led: ambient 0.55 over a faint 0.25 sun @ −60°' },
   { key: 's05e', area: 'Forgotten City E transition', hour: '10.0 — day', weather: '—', note: 'sun-led: sun 1.00 / ambient 0.25 @ −50°, higher sun (variant row)' },
   { key: 's05b', area: 'Forgotten City B (s05b_*)', hour: '10.0 — day', weather: '—', note: 'the balanced middle: sun 0.60 / ambient 0.40 @ −55° (variant row)' },
-  { key: 'arca', area: 'Moon Facility (s06)', hour: '10.0 — day', weather: '—', note: 'interim; #652 authors fixture lights' },
+  { key: 's06a', area: 'Moon Facility A (s06a_*)', hour: '10.0 — day', weather: '—', note: 'the pristine lobby (#652, kion 2026-09-30): bake kept verbatim — no bake_mix, no lit_surfaces, so the sun can never light the stage — ambient 0.35 fill under a weak 0.30 shadow-sun @ −60°, catcher floor; the window rooms ride the row' },
+  { key: 's06b', area: 'Moon Facility B (s06b_*)', hour: '10.0 — day', weather: '—', note: 'the industrial dark: barely-sun 0.10 over ambient 0.25 — the composition is the authored colored fixture pools (per-stage effects.json lights, actor-only, the stage being unlit)' },
+  { key: 'arca', area: 'Moon Facility E+Z (s06e/s06z)', hour: '10.0 — day', weather: '—', note: 'the transition and boss arena ride the area row between the two: sun 0.20 / ambient 0.30' },
   { key: 'dark', area: 'Dark Shrine (s07)', hour: '10.0 — day', weather: '—', note: 'interim; #653 authors the dark-interior pin' },
   { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
   { key: 'city', area: 'City field stages (s00)', hour: '10.0 — day', weather: '—', note: 'coliseum debug arena excepts to noon' },
@@ -280,6 +282,30 @@ const slots = [
   the rig. Starting values pre-lock; the paru walk lab
   (<code>paru_walktest</code>) owns the numbers until a read-out locks
   them.</p>
+
+  <p>The Moon Facility rows (#652, kion 2026-09-30) are the valley-A
+  contract with the area's own twist: the facility's bake IS the look —
+  kion's call was to keep it untouched, so the rows carry no
+  <code>bake_mix</code> and no <code>lit_surfaces</code>, and that silence
+  is the contract that the sun can never light the stage — it exists to
+  cast the player's shadow onto the catcher floor and to key the actors.
+  <strong>A</strong>, the pristine lobby, runs a low 0.35 ambient fill
+  under a weak 0.30 sun at −60° ("just enough of a shadow" — kion); the
+  window rooms (<code>ic1/ic3/lc1/lc2/nc2/tc3</code>, the moon through
+  the glass) read right baked and just ride the row. <strong>B</strong>,
+  the industrial dark, runs barely any sun (0.10) over the darkest fill
+  (0.25) — the composition is the authored <strong>colored fixture
+  pools</strong>: per-stage <code>&lt;stage&gt;_effects.json</code>
+  plain lights whose pools reach only the actors, the stage being unlit
+  (first drafts shipped for <code>s06b_ga1/lc1/td1</code>). Placed omnis
+  ride a cull mask off the catcher's private render layer — the #670
+  contract, ported to the field, so a pool never brightens the multiply
+  floor past ×1. E and Z ride the area row between the two (0.20 sun /
+  0.30 ambient). Starting values pre-lock; the arca walk lab
+  (<code>arca_walktest</code>) owns the numbers, and doubles as the
+  accent-authoring loop — <code>K</code> inventories the stage's
+  materials, <code>L</code> prints an effects.json anchor at the player's
+  feet, <code>R</code> reloads the file live.</p>
 
   <h2>Weather precedence</h2>
   <ul>

@@ -297,7 +297,47 @@ const SLOTS := {
 			"1_tuta1", "1_kusa1",
 		],
 	},
-	"arca":   {"hour": 10.0},     # interim; #652 authors fixture lights
+	# ── the Moon Facility variants (#652, kion 2026-09-30) ──
+	# Valley-A lineage with the stage's own twist: the facility is the one
+	# area whose bake IS the look — kion's call was to keep it untouched (no
+	# bake_mix, no lit_surfaces — the row's silence is the contract that the
+	# sun can never light the stage) and let the rig own only what the bake
+	# could not: the actors, and the player's shadow on the catcher floor.
+	# A is the pristine lobby: low ambient fill, a weak sun whose whole job
+	# is the shadow (kion: "just enough of a shadow") — the window rooms
+	# (ic1/ic3/lc1/lc2/nc2/tc3, the moon through the glass) read right
+	# already and just ride the row. B is the industrial dark kion calls his
+	# favorite: barely any sun, and the composition is the COLORED fixture
+	# pools — authored omnis per room (the <stage>_effects.json "light"
+	# channel, #636) that reach only the actors, the stage being unlit.
+	# E (transition) and Z (boss) ride the area row between the two.
+	# FIRST DRAFT values (seeded from the s02e/s02b ladder — sun 0.1 +
+	# ambient 0.3 under the catcher); the walk-lab P read-out owns the
+	# numbers, and the B accents land with their effects files.
+	"s06a": {
+		"hour": 10.0,
+		"sun_energy": 0.3,
+		"ambient_energy": 0.35,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+	},
+	"s06b": {
+		"hour": 10.0,
+		"sun_energy": 0.1,
+		"ambient_energy": 0.25,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+	},
+	"arca": {
+		"hour": 10.0,
+		"sun_energy": 0.2,
+		"ambient_energy": 0.3,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+	},
 	"dark":   {"hour": 10.0},     # interim; #653 authors the dark-interior pin
 	"tower":  {"hour": 10.0},     # interim; #654 authors fixed-hour floors
 	"city":   {"hour": 10.0},     # s00 field stages (city scenes carry no clock)

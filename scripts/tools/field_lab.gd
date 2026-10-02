@@ -175,6 +175,10 @@ static func load_floor_collision(scene_root: Node, floor_path: String,
 	if slot.get("shadow_catcher", false):
 		var catcher := MeshUtils.make_shadow_catcher(floor_root)
 		if catcher:
+			# The private layer, same as the field's catcher block (#652): the
+			# lab must model production exactly — placed omnis culled off the
+			# receiver, the sun its one uniform light.
+			catcher.layers = MeshUtils.SHADOW_CATCHER_LAYER
 			scene_root.add_child(catcher)
 			print("[FieldLab] shadow catcher on the collision shell")
 	return MeshUtils.floor_top(floor_root)

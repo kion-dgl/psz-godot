@@ -238,6 +238,7 @@ func _run_tests_systems() -> void:
 	test_wetlands_post_lights()
 	test_wetlands_lit_props()
 	test_paru_identity_slots()
+	test_arca_identity_slots()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -11859,6 +11860,60 @@ func test_paru_identity_slots() -> void:
 		var entry: Dictionary = fixes.get(key, {})
 		assert_eq(entry.get("scrollY", 0.0), scroll_v[key], "%s scrolls %+.2f in v (kion)" % [key, scroll_v[key]])
 		assert_eq(entry.get("scrollX", -1.0), 0.0, "%s pins scrollX at 0 (no u crawl)" % key)
+	print("")
+
+
+func test_arca_identity_slots() -> void:
+	print("── Moon Facility Identity Slots (#652) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	# ── A — the pristine lobby: the bake IS the look (kion 2026-09-30), a
+	#    weak sun that exists to cast, ambient as the actors' fill. ──
+	var a := Slots.slot_for("arca", "s06a_ga1")
+	assert_eq(a.get("hour"), 10.0, "A pins hour 10 (fixed mood, no cycle)")
+	assert_eq(a.get("sun_energy"), 0.3, "A: a weak sun — just enough shadow (kion)")
+	assert_eq(a.get("ambient_energy"), 0.35, "A: low ambient fill for the actors")
+	assert_eq(a.get("sun_pitch"), -60.0, "A: sun −60° (the valley actor-lighting character)")
+	assert_eq(a.get("sun_shadows"), true, "A: the sun casts — the player's shadow lands")
+	assert_eq(a.get("shadow_catcher"), true, "A: the catcher floor — shadows multiply onto the bake")
+	# The contract that makes the rig sun-proof (kion: the sun must never
+	# affect the stage, only cast onto the floor): no bake_mix, no
+	# lit_surfaces, no lit wildcard — the stage map stays unlit and the sun
+	# physically cannot touch it.
+	assert_true(not a.has("bake_mix") and not a.has("lit_surfaces"),
+		"A: the row's silence keeps the stage unlit — the bake IS the look")
+	assert_true(not a.has("moon_energy") and str(a.get("weather", "")) == "",
+		"A: no moon, no weather (the facility is indoors)")
+	assert_eq(Slots.slot_for("arca", "s06a_ic1"), a,
+		"the window rooms ride the A row (the moon-baked glass reads right already — kion)")
+	# ── B — the industrial dark: barely any sun; the composition is the
+	#    authored colored pools (the effects JSONs), not the rig. ──
+	var b := Slots.slot_for("arca", "s06b_ga1")
+	assert_eq(b.get("sun_energy"), 0.1, "B: barely any sun — the shadow source, nothing more")
+	assert_eq(b.get("ambient_energy"), 0.25, "B: the darkest fill of the three")
+	assert_eq(b.get("sun_shadows"), true, "B: the faint sun still casts")
+	assert_eq(b.get("shadow_catcher"), true, "B: the catcher floor")
+	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
+		"B: same silence — placed omnis reach only the actors (the stage is unlit)")
+	assert_eq(Slots.slot_for("arca", "s06b_lb1"), b, "B rooms ride the B row")
+	# ── E/Z ride the area row: between the lobby and the dark. ──
+	var area := Slots.slot_for("arca", "s06e_ia1")
+	assert_eq(area.get("sun_energy"), 0.2, "E/Z: the area row sits between A and B on the sun")
+	assert_eq(area.get("ambient_energy"), 0.3, "E/Z: the middle fill")
+	assert_eq(Slots.slot_for("arca", "s06z_na1"), area,
+		"the boss arena rides the area row (no exact-stage row)")
+	assert_true(b.get("sun_energy") < area.get("sun_energy")
+		and area.get("sun_energy") < a.get("sun_energy"),
+		"the ladder: B barely-sun < E/Z < A shadow-sun")
+	assert_true(b.get("ambient_energy") < area.get("ambient_energy")
+		and area.get("ambient_energy") < a.get("ambient_energy"),
+		"the ladder: B darkest fill < E/Z < A lobby fill")
+	assert_true(area.get("sun_shadows") and area.get("shadow_catcher"),
+		"E/Z: shadows land here too (the transition and boss read the floor)")
+	# The catcher cull (#652, the #670 contract): placed omnis ride a mask
+	# that excludes the catcher's private layer, so their pools brighten
+	# actors without pushing the MUL floor past ×1.
+	assert_eq(MeshUtils.SHADOW_CATCHER_LAYER, 4,
+		"the catcher's private layer is 4 (the city's CATCHER_LAYER value)")
 	print("")
 
 

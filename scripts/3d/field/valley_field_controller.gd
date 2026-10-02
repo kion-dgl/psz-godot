@@ -353,6 +353,11 @@ func _ready() -> void:
 			if _slot.get("shadow_catcher", false):
 				var catcher := MeshUtils.make_shadow_catcher(floor_root)
 				if catcher:
+					# The catcher's private layer (#652, the city #670 contract
+					# ported to the field): placed omnis are culled off it so
+					# their pools never push the MUL receiver past ×1 — the
+					# sun/moon (default all-layers mask) stay its one light.
+					catcher.layers = MeshUtils.SHADOW_CATCHER_LAYER
 					add_child(catcher)
 		else:
 			MapCollisionBuilder.setup_map_collision(_map_root)
