@@ -50,6 +50,24 @@ func _spawn_weather() -> void:
 	print("[ValleyField] Weather: %s particles attached to player" % weather)
 
 
+func spawn_signature() -> void:
+	## The row's signature effect (#653, the `signature` knob): the area's
+	## ambient life — the Dark Shrine's motes rising from the ground. Rides
+	## the slot row, NOT the weather key: the indoor gate exists for
+	## precipitation ("indoor stages never spawn weather"), and the motes
+	## ARE the shrine's indoor identity. Attached to the player like weather
+	## so the volume follows the walk.
+	var sig: String = str(_c._slot.get("signature", ""))
+	if sig.is_empty():
+		return
+	var node := build_signature_node(sig)
+	if not node:
+		return
+	_c.player.add_child(node)
+	_kick_node(node)
+	print("[ValleyField] Signature: %s attached to player" % sig)
+
+
 ## The fully-configured weather particle node for a key (""-ish keys → null).
 ## Static + shared so the walk labs preview exactly what spawns in-field.
 static func build_weather_node(weather: String) -> GPUParticles3D:
@@ -210,6 +228,99 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 	return rain
 
 
+## The row's signature effect for a key (unknown → null, like weather).
+## Static + shared so the walk labs preview exactly what spawns in-field.
+## Distinct from weather by contract: precipitation skips indoor stages,
+## signatures don't — the shrine's motes are the indoor identity (#653).
+static func build_signature_node(signature: String) -> GPUParticles3D:
+	if signature == "white_motes":
+		return _build_motes_node("SignatureMotesWhite",
+			Color(0.92, 0.92, 0.98, 0.55), Color(0.45, 0.45, 0.55, 0.35), true)
+	if signature == "black_motes":
+		return _build_motes_node("SignatureMotesBlack",
+			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false)
+	return null
+
+
+## The shrine's rising motes (#653): the snowfall inverted — a thin emission
+## slab at ground level, motes drifting slowly UP through the room's air, the
+## dark interior's ambient life. `glow` gives the white flavor a faint
+## additive-emissive read (they read as floating light against the near-black
+## base); the black flavor stays plain translucent (dark motes darken the dim
+## floor behind them). Per-particle tone varies via the initial ramp.
+static func _build_motes_node(node_name: String, tone: Color, deep: Color,
+		glow: bool) -> GPUParticles3D:
+	var motes := GPUParticles3D.new()
+	motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	motes.name = node_name
+	motes.amount = 140
+	motes.lifetime = 9.0
+	motes.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	motes.fixed_fps = 30
+	motes.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 8.0
+	mat.initial_velocity_min = 0.5
+	mat.initial_velocity_max = 1.2
+	# Near-neutral buoyancy with a breath of upward carry — motes rise, they
+	# don't launch.
+	mat.gravity = Vector3(0, 0.05, 0)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(20, 0.3, 20)
+	mat.angle_min = 0.0
+	mat.angle_max = 360.0
+	mat.angular_velocity_min = -20.0
+	mat.angular_velocity_max = 20.0
+	mat.scale_min = 0.5
+	mat.scale_max = 1.0
+	mat.damping_min = 0.05
+	mat.damping_max = 0.15
+	# A slow wander as they rise (the sand haze's turbulence, calmed).
+	mat.turbulence_enabled = true
+	mat.turbulence_noise_strength = 0.3
+	mat.turbulence_noise_scale = 1.5
+	# Per-particle tone: each mote picks a random spot between the deep and
+	# bright ends of the initial ramp.
+	var init := Gradient.new()
+	init.set_color(0, deep)
+	init.set_color(init.get_point_count() - 1, tone)
+	var init_ramp := GradientTexture1D.new()
+	init_ramp.gradient = init
+	mat.color_initial_ramp = init_ramp
+	# Appear at the floor, dissolve mid-air — no pop at either end.
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1, 1, 1, 0.0))
+	ramp.add_point(0.15, Color(1, 1, 1, 1.0))
+	ramp.add_point(0.7, Color(1, 1, 1, 1.0))
+	ramp.set_color(ramp.get_point_count() - 1, Color(1, 1, 1, 0.0))
+	var ramp_tex := GradientTexture1D.new()
+	ramp_tex.gradient = ramp
+	mat.color_ramp = ramp_tex
+	motes.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.06, 0.06)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = tone
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	if glow:
+		quad_mat.emission_enabled = true
+		quad_mat.emission = tone
+		quad_mat.emission_energy_multiplier = 2.0
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	motes.draw_pass_1 = quad
+
+	motes.preprocess = 4.0
+	# Emit from just under the walk plane so the motes rise through it.
+	motes.position.y = -1.0
+	return motes
+
+
 ## The storm's lightning (#649, kion ask): a scene-level cool directional
 ## strobing in random multi-pulse strokes — each flash lights the actors
 ## and every per-pixel surface (on the wildcard-lit dark turn the whole
@@ -285,13 +396,17 @@ static func build_lightning(root: Node) -> LightningStrobe:
 
 
 func _kick_weather() -> void:
+	_kick_node(_c._weather_node)
+
+
+func _kick_node(node: GPUParticles3D) -> void:
 	# Wait a couple frames so the player transform is fully committed, then
 	# restart the particle system. preprocess runs again on restart and the
 	# snow appears already falling.
 	await _c.get_tree().process_frame
 	await _c.get_tree().process_frame
-	if is_instance_valid(_c._weather_node):
-		_c._weather_node.restart()
+	if is_instance_valid(node):
+		node.restart()
 
 
 func _strip_embedded_lights(node: Node) -> void:

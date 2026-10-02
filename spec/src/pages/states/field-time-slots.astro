@@ -28,7 +28,10 @@ const slots = [
   { key: 's06a', area: 'Moon Facility A (s06a_*)', hour: '10.0 — day', weather: '—', note: 'the pristine lobby (#652, kion 2026-09-30): bake kept verbatim — no bake_mix, no lit_surfaces, so the sun can never light the stage — ambient 0.35 fill under a weak 0.30 shadow-sun @ −60°, catcher floor; the window rooms ride the row' },
   { key: 's06b', area: 'Moon Facility B (s06b_*)', hour: '10.0 — day', weather: '—', note: 'the industrial dark: barely-sun 0.10 over ambient 0.25 — the composition is the authored colored fixture pools (per-stage effects.json lights, actor-only, the stage being unlit)' },
   { key: 'arca', area: 'Moon Facility E+Z (s06e/s06z)', hour: '10.0 — day', weather: '—', note: 'the transition and boss arena ride the area row between the two: sun 0.20 / ambient 0.30' },
-  { key: 'dark', area: 'Dark Shrine (s07)', hour: '10.0 — day', weather: '—', note: 'interim; #653 authors the dark-interior pin' },
+  { key: 's07a', area: 'Dark Shrine A (s07a_*)', hour: '22.0 — night', weather: '—', note: 'the dark-interior pin (#653, kion 2026-10-01): bake kept, hour-22 base with the preset moon zeroed, low ambient 0.20 under a super-dim 0.10 pale sun @ −60° (the minimum shadow), catcher floor; signature: white motes rising' },
+  { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'the Falz dark-castle side: ambient 0.15, signature: black motes; candle/urn accents land per-stage as effects lights' },
+  { key: 's07z', area: 'Dark Shrine Z (s07z_na1/na2)', hour: '22.0 — night', weather: '—', note: 'both boss arenas run the B rig with black motes' },
+  { key: 'dark', area: 'Dark Shrine E (s07e_ia1)', hour: '22.0 — night', weather: '—', note: 'the transition rides the area row: the rig without the signature (first draft — may earn its own mood)' },
   { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
   { key: 'city', area: 'City field stages (s00)', hour: '10.0 — day', weather: '—', note: 'coliseum debug arena excepts to noon' },
 ];
@@ -307,6 +310,26 @@ const slots = [
   materials, <code>L</code> prints an effects.json anchor at the player's
   feet, <code>R</code> reloads the file live.</p>
 
+  <p>The Dark Shrine rows (#653, kion 2026-10-01) are the arca contract
+  pinned to the night base: the rows' silence keeps the stage unlit (the
+  bake IS the look), hour 22 gives a near-black sky where any peeks
+  through and the preset's 0.55 moon is <em>zeroed</em> — kion's rig is a
+  low ambient (A 0.20, B 0.15) under a super-dim pale sun whose only job
+  is the minimum floor shadow on the catcher. The area's identity is the
+  <strong>signature motes</strong> rising from the ground — white on A,
+  black on B and in both boss arenas — which ride the row's new
+  <code>signature</code> key, <strong>not</strong> the weather key: the
+  indoor gate exists for precipitation, and the shrine's motes ARE its
+  indoor identity, so they spawn indoors by design (the weather-precedence
+  contract below is unchanged — motes are not weather). Sparse candle/urn
+  accents land per-stage as <code>&lt;stage&gt;_effects.json</code> plain
+  lights (first drafts in <code>s07a_ga1/lc1</code>,
+  <code>s07b_ga1/lb1</code>). The port also fixes the classification bug
+  the issue flagged: <code>s07</code> joined the indoor prefixes (a Dark
+  Shrine no longer tracks the outdoor cycle). Starting values pre-lock;
+  the shrine walk lab (<code>shrine_walktest</code>) owns the numbers and
+  the accent authoring (the arca K/L/R loop).</p>
+
   <h2>Weather precedence</h2>
   <ul>
     <li>A quest-authored <code>weather</code> key (session level)
@@ -315,7 +338,10 @@ const slots = [
     <li>Otherwise the slot row's weather <strong>SHALL</strong> apply (this is
     the #609 unification: per-area weather config, not scattered prefixes).</li>
     <li>Indoor stages <strong>MUST NOT</strong> spawn weather particles
-    regardless of source.</li>
+    regardless of source. Weather means precipitation (snow, sand, rain,
+    drizzle); a row's <code>signature</code> effect — the shrine's rising
+    motes — is ambient life, not weather, and spawns indoors by design
+    (#653).</li>
   </ul>
 
   <h2>Debug preview</h2>

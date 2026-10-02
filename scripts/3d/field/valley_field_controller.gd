@@ -580,6 +580,9 @@ func _ready() -> void:
 
 	_spawn_player(spawn_pos, spawn_rot)
 	_weather._spawn_weather()
+	# The row's signature effect (#653): the shrine's rising motes — spawns
+	# INDOORS by design (it is not precipitation; the weather gate above is).
+	_weather.spawn_signature()
 	# The storm rows' lightning (#649): strobes over the dark turn and the
 	# boss downpour — the settled rows stay calm.
 	if _slot.get("lightning", false):
@@ -967,11 +970,14 @@ static func _is_indoor_stage(stage_id: String) -> bool:
 		return true
 	# Interior areas covered by prefix:
 	# - s06* Arca Plant (a sealed plant/factory interior)
+	# - s07* Dark Shrine (a dark interior; was missing — it tracked the
+	#   outdoor cycle, #653)
 	# - s08* Eternal Tower
 	# - s04* Makara Ruins, minus the two open-air stages:
 	#     s04a_sa1 (entry plaza, outdoors)
 	#     s04e_ia1 (section-E transition, outdoors)
-	if stage_id.begins_with("s06") or stage_id.begins_with("s08"):
+	if stage_id.begins_with("s06") or stage_id.begins_with("s07") \
+			or stage_id.begins_with("s08"):
 		return true
 	if stage_id.begins_with("s04") and stage_id != "s04a_sa1" and stage_id != "s04e_ia1":
 		return true
