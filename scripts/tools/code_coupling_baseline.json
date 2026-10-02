@@ -6,6 +6,7 @@
     "scripts/3d/field/valley_field_controller.gd:_spawn_field_elements#0",
     "scripts/3d/field/cell_object_spawner.gd:_restore_cell_objects#0",
     "scripts/3d/field/start_menu_input.gd:handle_input#0",
-    "scripts/tools/arca_walktest.gd:_ready#0"
+    "scripts/tools/arca_walktest.gd:_ready#0",
+    "scripts/tools/shrine_walktest.gd:_ready#0"
   ]
 }

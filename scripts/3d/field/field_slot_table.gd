@@ -77,6 +77,12 @@ extends RefCounted
 ##   lightning     bool  the storm strobes — a scene-level cool directional
 ##                        flashing random multi-pulse strokes (the wetlands'
 ##                        dark turn + boss downpour, #649)
+##   signature     String the area's ambient-life effect key (the shrine's
+##                        rising motes, #653) — built by the WeatherController's
+##                        signature builders and attached to the player like
+##                        weather, but NOT weather: it spawns indoors by
+##                        design, because the indoor gate exists for
+##                        precipitation, not for the area's identity
 ##
 ## Keys resolve most-specific-first: exact stage_id → variant prefix (first
 ## 4 chars — "s03a"/"s03b", tower floor styles) → area_id → DEFAULT. The
@@ -338,7 +344,68 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 	},
-	"dark":   {"hour": 10.0},     # interim; #653 authors the dark-interior pin
+	# ── the Dark Shrine pin (#653, kion 2026-10-01) ──
+	# The arca contract again — the rows' silence keeps the stage unlit, the
+	# bake IS the look — but pinned to the NIGHT preset's base (a near-black
+	# sky where any peeks through, the preset moon zeroed: kion's rig is a
+	# LOW ambient under a super-dim sun whose only job is the minimum floor
+	# shadow). The area's identity is the SIGNATURE motes rising from the
+	# ground — white on A, black on B (the Falz dark-castle side) — which
+	# ride the `signature` knob, not `weather`, so they spawn indoors by
+	# design. Sparse candle/urn accents land per-room as effects lights.
+	# FIRST DRAFT values (seeded from s06b under the hour-22 base); the
+	# walk-lab P read-out owns the numbers.
+	"s07a": {
+		"hour": 22.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.2,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"signature": "white_motes",
+	},
+	"s07b": {
+		"hour": 22.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.15,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"signature": "black_motes",
+	},
+	# The boss arenas (two — na1 and na2): the B rig's black motes.
+	"s07z": {
+		"hour": 22.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.15,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"signature": "black_motes",
+	},
+	# The area row — s07e_ia1 (the transition) and the fallback: the rig
+	# without the motes first draft (the transition may want its own mood
+	# after it's walked).
+	"dark": {
+		"hour": 22.0,
+		"sun_energy": 0.1,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.2,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+	},
 	"tower":  {"hour": 10.0},     # interim; #654 authors fixed-hour floors
 	"city":   {"hour": 10.0},     # s00 field stages (city scenes carry no clock)
 }

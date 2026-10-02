@@ -239,6 +239,7 @@ func _run_tests_systems() -> void:
 	test_wetlands_lit_props()
 	test_paru_identity_slots()
 	test_arca_identity_slots()
+	test_dark_identity_slots()
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_item_registers_on_contact()
@@ -11914,6 +11915,65 @@ func test_arca_identity_slots() -> void:
 	# actors without pushing the MUL floor past ×1.
 	assert_eq(MeshUtils.SHADOW_CATCHER_LAYER, 4,
 		"the catcher's private layer is 4 (the city's CATCHER_LAYER value)")
+	print("")
+
+
+func test_dark_identity_slots() -> void:
+	print("── Dark Shrine Identity Slots (#653) ──")
+	var Slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	var FieldCtl := preload("res://scripts/3d/field/valley_field_controller.gd")
+	var Weather := preload("res://scripts/3d/field/weather_controller.gd")
+	# ── A: the dark-interior pin — kion's 2026-10-01 direction: LOW ambient
+	#    under a super-dim sun that exists only to cast the minimum shadow,
+	#    white motes rising (the area's identity). ──
+	var a := Slots.slot_for("dark", "s07a_ga1")
+	assert_eq(a.get("hour"), 22.0, "A pins hour 22 — the NIGHT base (near-black sky)")
+	assert_eq(a.get("sun_energy"), 0.1, "A: a super-dim sun — the minimum shadow source (kion)")
+	assert_eq(a.get("ambient_energy"), 0.2, "A: low ambient fill")
+	assert_eq(a.get("moon_energy"), 0.0,
+		"A: the preset's 0.55 hour-22 moon is zeroed — the sun owns the shadow")
+	assert_eq(a.get("sun_shadows"), true, "A: the sun casts the minimum floor shadow")
+	assert_eq(a.get("shadow_catcher"), true, "A: the catcher floor")
+	assert_eq(a.get("signature"), "white_motes", "A: white motes rise (the shrine's identity)")
+	# The arca sun-proof contract, verbatim: no bake_mix, no lit_surfaces —
+	# the stage keeps its bake and the sun physically cannot light it.
+	assert_true(not a.has("bake_mix") and not a.has("lit_surfaces"),
+		"A: the row's silence keeps the stage unlit — the bake IS the look")
+	assert_eq(str(a.get("weather", "")), "", "A: no weather — motes are not precipitation")
+	assert_eq(Slots.slot_for("dark", "s07a_lc1"), a, "A rooms ride the A row")
+	# ── B: the Falz dark-castle side — darker still, BLACK motes. ──
+	var b := Slots.slot_for("dark", "s07b_ga1")
+	assert_eq(b.get("ambient_energy"), 0.15, "B: the darkest fill of the set")
+	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
+	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
+	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
+		"B: same silence — candle pools reach only the actors")
+	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
+	# ── Z: both boss arenas — the B rig's black motes. ──
+	var z := Slots.slot_for("dark", "s07z_na1")
+	assert_eq(z.get("signature"), "black_motes", "Z: the boss arenas run black motes")
+	assert_eq(z.get("ambient_energy"), 0.15, "Z: the boss arenas run the B fill")
+	assert_eq(Slots.slot_for("dark", "s07z_na2"), z, "both arenas ride the s07z row (two stages)")
+	# ── E rides the area row: the rig, no signature first draft. ──
+	var area := Slots.slot_for("dark", "s07e_ia1")
+	assert_eq(area.get("sun_energy"), 0.1, "E: the area row keeps the rig")
+	assert_true(not area.has("signature"),
+		"E: no signature on the transition (first draft — may earn its own mood)")
+	# ── The classification fix (#653): s07 was missing from the indoor
+	#    prefixes — a Dark Shrine tracking the outdoor cycle. ──
+	assert_true(FieldCtl._is_indoor_stage("s07a_ga1"), "s07a_ga1 classifies indoor (the #653 fix)")
+	assert_true(FieldCtl._is_indoor_stage("s07z_na2"), "the boss arenas classify indoor")
+	assert_true(not FieldCtl._is_indoor_stage("s04a_sa1"),
+		"the makara entry plaza stays outdoor (the minus-two precedent)")
+	# ── Signature builders: dispatched, distinct from weather — the indoor
+	#    gate exists for precipitation, and unknown keys stay null. ──
+	assert_true(Weather.build_signature_node("white_motes") != null, "white_motes builds")
+	assert_true(Weather.build_signature_node("black_motes") != null, "black_motes builds")
+	assert_true(Weather.build_signature_node("leaves") == null,
+		"unknown signature keys → null (paru's falling leaves are #651's, not built yet)")
+	assert_true(Weather.build_weather_node("white_motes") == null,
+		"motes are NOT weather keys — the weather dispatch stays strict")
+	assert_true(Weather.build_weather_node("sleet") == null, "unknown weather keys stay null")
 	print("")
 
 

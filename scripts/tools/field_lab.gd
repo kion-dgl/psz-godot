@@ -197,6 +197,19 @@ static func spawn_weather(player: Node, slot: Dictionary) -> void:
 	print("[FieldLab] weather: %s" % str(slot.get("weather", "")))
 
 
+## The row's signature effect, as the field spawns it (#653) — the shrine's
+## motes. Same skip key as weather (clean diffs).
+static func spawn_signature(player: Node, slot: Dictionary) -> void:
+	if OS.get_environment("PSZ_WALK_WEATHER") == "0":
+		return
+	var node := WeatherController.build_signature_node(str(slot.get("signature", "")))
+	if not node:
+		return
+	player.add_child(node)
+	node.restart()
+	print("[FieldLab] signature: %s" % str(slot.get("signature", "")))
+
+
 ## The labs' shared tuning keys — the common rig knobs (ambient, sun,
 ## pitch, shadow toggles/biases). Returns true when handled; the caller
 ## refreshes its status line.
