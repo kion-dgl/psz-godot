@@ -356,11 +356,13 @@ const SLOTS := {
 	# bake IS the look — but pinned to the NIGHT preset's base (a near-black
 	# sky where any peeks through, the preset moon zeroed: kion's rig is a
 	# low sun whose only job is the minimum floor shadow). kion's first walk
-	# read the 0.20 ambient as TOO DARK — the lock read-out landed at 0.90
-	# (s07a_ga1, the ,/. sweep; B scaled to keep the ladder) — and the
-	# follow-up asks: dark edge fog (the far walls dissolve into the dark
-	# instead of ending hard against unmodeled space) and a subtle swirl in
-	# the motes. The area's identity is the SIGNATURE motes rising from the
+	# read the 0.20 ambient as TOO DARK — the lock landed at 0.90 — then the
+	# edge fog dimmed the read a little, and the SECOND lock (s07a_ga1,
+	# 2026-10-02) is 1.30: just light enough to make out the floor
+	# texture's detail, fog at 0.040 untouched (B scaled to keep the
+	# ladder). The follow-up also asked for the dark edge fog (the far
+	# walls dissolve into the dark instead of ending hard against
+	# unmodeled space) and a subtle swirl in the motes. The area's identity is the SIGNATURE motes rising from the
 	# ground — white on A, black on B (the Falz dark-castle side) — which
 	# ride the `signature` knob, not `weather`, so they spawn indoors by
 	# design. Sparse candle/urn accents land per-room as effects lights.
@@ -368,7 +370,7 @@ const SLOTS := {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.9,
+		"ambient_energy": 1.3,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
@@ -382,7 +384,7 @@ const SLOTS := {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.65,
+		"ambient_energy": 0.95,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
@@ -397,7 +399,7 @@ const SLOTS := {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.65,
+		"ambient_energy": 0.95,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
@@ -414,7 +416,7 @@ const SLOTS := {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.9,
+		"ambient_energy": 1.3,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,

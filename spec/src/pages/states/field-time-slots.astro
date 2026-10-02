@@ -28,8 +28,8 @@ const slots = [
   { key: 's06a', area: 'Moon Facility A (s06a_*)', hour: '10.0 — day', weather: '—', note: 'the pristine lobby (#652, kion 2026-09-30): bake kept verbatim — no bake_mix, no lit_surfaces, so the sun can never light the stage — ambient 0.35 fill under a weak 0.30 shadow-sun @ −60°, catcher floor; the window rooms ride the row' },
   { key: 's06b', area: 'Moon Facility B (s06b_*)', hour: '10.0 — day', weather: '—', note: 'the industrial dark: barely-sun 0.10 over ambient 0.25 — the composition is the authored colored fixture pools (per-stage effects.json lights, actor-only, the stage being unlit)' },
   { key: 'arca', area: 'Moon Facility E+Z (s06e/s06z)', hour: '10.0 — day', weather: '—', note: 'the transition and boss arena ride the area row between the two: sun 0.20 / ambient 0.30' },
-  { key: 's07a', area: 'Dark Shrine A (s07a_*)', hour: '22.0 — night', weather: '—', note: 'the dark-interior pin (#653, locked 2026-10-02): bake kept, hour-22 base with the preset moon zeroed, ambient 0.90 (kion\'s walk read-out — 0.20 read too dark) under a super-dim 0.10 pale sun @ −60°, catcher floor, dark edge fog 0.04; signature: white motes rising with a subtle swirl' },
-  { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'the Falz dark-castle side: ambient 0.65, edge fog 0.045, signature: black motes; candle/urn accents land per-stage as effects lights' },
+  { key: 's07a', area: 'Dark Shrine A (s07a_*)', hour: '22.0 — night', weather: '—', note: 'the dark-interior pin (#653, locked 2026-10-02): bake kept, hour-22 base with the preset moon zeroed, ambient 1.30 (kion\'s second walk read-out — just light enough for the floor texture\'s detail under the fog) under a super-dim 0.10 pale sun @ −60°, catcher floor, dark edge fog 0.04; signature: white motes rising with a subtle swirl' },
+  { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'the Falz dark-castle side: ambient 0.95, edge fog 0.045, signature: black motes; candle/urn accents land per-stage as effects lights' },
   { key: 's07z', area: 'Dark Shrine Z (s07z_na1/na2)', hour: '22.0 — night', weather: '—', note: 'both boss arenas run the B rig with black motes' },
   { key: 'dark', area: 'Dark Shrine E (s07e_ia1)', hour: '22.0 — night', weather: '—', note: 'the transition rides the area row: the rig without the signature (first draft — may earn its own mood)' },
   { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
@@ -327,9 +327,10 @@ const slots = [
   row's <code>fog_density</code> / <code>fog_color</code>) dissolves each
   room's far edges into the dark — clouds at the boundary instead of hard
   walls against unmodeled space — with the lab's <code>[</code>/
-  <code>]</code> keys sweeping its density. kion's first walk locked the
-  ambient at 0.90 (A; the 0.20 first draft read too dark) with B scaled to
-  0.65. Sparse candle/urn accents land per-stage as
+  <code>]</code> keys sweeping its density. kion's walks locked the
+  ambient at 1.30 (A — the fog dimmed the first 0.90 lock; 1.30 is just
+  light enough for the floor texture's detail) with B scaled to
+  0.95. Sparse candle/urn accents land per-stage as
   <code>&lt;stage&gt;_effects.json</code> plain lights (first drafts in
   <code>s07a_ga1/lc1</code>,
   <code>s07b_ga1/lb1</code>). The port also fixes the classification bug
