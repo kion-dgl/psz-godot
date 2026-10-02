@@ -853,6 +853,16 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
 		_world_env.environment.tonemap_white = float(_slot["tonemap_white"])
+	if _slot.has("fog_density"):
+		# Edge-haze rows (#653 follow-up, kion 2026-10-02): dark exponential
+		# fog so the room's far edges dissolve into the dark — clouds at the
+		# boundary instead of hard walls against unmodeled space. The albedo
+		# rides near-black: the fog reads as darkness creeping in, not haze.
+		var fog := _world_env.environment
+		fog.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		fog.fog_density = float(_slot["fog_density"])
+		fog.fog_albedo = _slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		fog.fog_aerial_perspective = 0.0
 
 
 ## Debug hour preview (#655): the [/] keys set TimeManager's hour; re-apply the

@@ -88,6 +88,14 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		sky_mat.sky_top_color = slot["sky_top_color"]
 	if slot.has("sky_horizon_color"):
 		sky_mat.sky_horizon_color = slot["sky_horizon_color"]
+	# Edge-haze rows (#653 follow-up) — kept in lockstep with
+	# ValleyFieldController._apply_field_slot (the dup-gate: this must apply
+	# exactly what the field applies).
+	if slot.has("fog_density"):
+		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		env.fog_density = float(slot["fog_density"])
+		env.fog_albedo = slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		env.fog_aerial_perspective = 0.0
 
 
 ## The full lab environment boot: the field environment, the area's REAL
@@ -211,8 +219,8 @@ static func spawn_signature(player: Node, slot: Dictionary) -> void:
 
 
 ## The labs' shared tuning keys — the common rig knobs (ambient, sun,
-## pitch, shadow toggles/biases). Returns true when handled; the caller
-## refreshes its status line.
+## pitch, shadow toggles/biases, and the fog rows' density). Returns true
+## when handled; the caller refreshes its status line.
 static func handle_tune_key(keycode: int, env: Environment,
 		dir_light: DirectionalLight3D) -> bool:
 	match keycode:
@@ -242,6 +250,15 @@ static func handle_tune_key(keycode: int, env: Environment,
 			dir_light.shadow_bias = maxf(0.0, dir_light.shadow_bias - 0.05)
 		KEY_V:
 			dir_light.shadow_bias = minf(1.0, dir_light.shadow_bias + 0.05)
+		KEY_BRACKETLEFT:
+			# Fog rows only (#653 follow-up): the down-sweep clamps at 0 but
+			# never RAISES a 0 density into fog — a non-fog row pressing ]
+			# must not spawn the default white fog out of nowhere.
+			if env.fog_density > 0.0:
+				env.fog_density = maxf(0.0, env.fog_density - 0.005)
+		KEY_BRACKETRIGHT:
+			if env.fog_density > 0.0:
+				env.fog_density += 0.005
 		_:
 			return false
 	return true

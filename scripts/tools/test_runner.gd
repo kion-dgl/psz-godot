@@ -11929,12 +11929,16 @@ func test_dark_identity_slots() -> void:
 	var a := Slots.slot_for("dark", "s07a_ga1")
 	assert_eq(a.get("hour"), 22.0, "A pins hour 22 — the NIGHT base (near-black sky)")
 	assert_eq(a.get("sun_energy"), 0.1, "A: a super-dim sun — the minimum shadow source (kion)")
-	assert_eq(a.get("ambient_energy"), 0.2, "A: low ambient fill")
+	assert_eq(a.get("ambient_energy"), 0.9,
+		"A: ambient 0.90 — kion's lock read-out (0.20 read too dark on the walk)")
 	assert_eq(a.get("moon_energy"), 0.0,
 		"A: the preset's 0.55 hour-22 moon is zeroed — the sun owns the shadow")
 	assert_eq(a.get("sun_shadows"), true, "A: the sun casts the minimum floor shadow")
 	assert_eq(a.get("shadow_catcher"), true, "A: the catcher floor")
 	assert_eq(a.get("signature"), "white_motes", "A: white motes rise (the shrine's identity)")
+	assert_eq(a.get("fog_density"), 0.04,
+		"A: dark edge fog — the far walls dissolve into the dark (kion's follow-up ask)")
+	assert_eq(a.get("fog_color"), Color(0.03, 0.03, 0.06), "A: the fog reads near-black")
 	# The arca sun-proof contract, verbatim: no bake_mix, no lit_surfaces —
 	# the stage keeps its bake and the sun physically cannot light it.
 	assert_true(not a.has("bake_mix") and not a.has("lit_surfaces"),
@@ -11943,16 +11947,18 @@ func test_dark_identity_slots() -> void:
 	assert_eq(Slots.slot_for("dark", "s07a_lc1"), a, "A rooms ride the A row")
 	# ── B: the Falz dark-castle side — darker still, BLACK motes. ──
 	var b := Slots.slot_for("dark", "s07b_ga1")
-	assert_eq(b.get("ambient_energy"), 0.15, "B: the darkest fill of the set")
+	assert_eq(b.get("ambient_energy"), 0.65,
+		"B: the darkest fill of the set (the 0.90 lock scaled to the ladder)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
 	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
+	assert_eq(b.get("fog_density"), 0.045, "B: the edge fog runs a touch thicker than A")
 	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
 		"B: same silence — candle pools reach only the actors")
 	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
 	# ── Z: both boss arenas — the B rig's black motes. ──
 	var z := Slots.slot_for("dark", "s07z_na1")
 	assert_eq(z.get("signature"), "black_motes", "Z: the boss arenas run black motes")
-	assert_eq(z.get("ambient_energy"), 0.15, "Z: the boss arenas run the B fill")
+	assert_eq(z.get("ambient_energy"), 0.65, "Z: the boss arenas run the B fill")
 	assert_eq(Slots.slot_for("dark", "s07z_na2"), z, "both arenas ride the s07z row (two stages)")
 	# ── E rides the area row: the rig, no signature first draft. ──
 	var area := Slots.slot_for("dark", "s07e_ia1")

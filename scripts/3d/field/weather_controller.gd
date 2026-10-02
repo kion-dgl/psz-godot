@@ -277,10 +277,14 @@ static func _build_motes_node(node_name: String, tone: Color, deep: Color,
 	mat.scale_max = 1.0
 	mat.damping_min = 0.05
 	mat.damping_max = 0.15
-	# A slow wander as they rise (the sand haze's turbulence, calmed).
+	# A slow swirl as they rise (kion 2026-10-02): tighter, stronger eddies
+	# than the sand haze plus a gentle orbit around the volume's center —
+	# the motes curl rather than just drift.
 	mat.turbulence_enabled = true
-	mat.turbulence_noise_strength = 0.3
-	mat.turbulence_noise_scale = 1.5
+	mat.turbulence_noise_strength = 0.75
+	mat.turbulence_noise_scale = 0.9
+	mat.orbit_velocity_min = 0.05
+	mat.orbit_velocity_max = 0.2
 	# Per-particle tone: each mote picks a random spot between the deep and
 	# bright ends of the initial ramp.
 	var init := Gradient.new()

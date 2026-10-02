@@ -29,6 +29,7 @@ extends Node3D
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       F / G  shadow normal bias ∓/± 1 · C / V  shadow bias ∓/± 0.05
+##       [ / ]  edge-fog density ∓/± 0.005 (fog rows only)
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       K       material inventory · L      light-anchor snippet at the feet
 ##       N       next room · R reload · ESC quit
@@ -231,17 +232,18 @@ func _print_anchor_snippet() -> void:
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
-	print("[FieldSlot %s] ambient %.2f  sun %.2f  sun_pitch %.0f  sun_shadows %s  bias %.2f  nb %.1f" % [
+	print("[FieldSlot %s] ambient %.2f  sun %.2f  sun_pitch %.0f  sun_shadows %s  bias %.2f  nb %.1f  fog %.3f" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x, str(_dir_light.shadow_enabled).to_lower(),
-		_dir_light.shadow_bias, _dir_light.shadow_normal_bias])
+		_dir_light.shadow_bias, _dir_light.shadow_normal_bias, _env.fog_density])
 	print("[ShrineWalk] room sun: %s" %
 		("open" if _sun_open else "enclosed — %d shell mesh(es) cast-off" % _shells_disarmed))
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  room %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  fog %.3f  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",
+		_env.fog_density,
 		"sun-open" if _sun_open else "shell-cast-off"]
