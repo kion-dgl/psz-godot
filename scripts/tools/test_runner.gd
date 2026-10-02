@@ -11963,7 +11963,7 @@ func test_dark_identity_slots() -> void:
 	#    prefixes — a Dark Shrine tracking the outdoor cycle. ──
 	assert_true(FieldCtl._is_indoor_stage("s07a_ga1"), "s07a_ga1 classifies indoor (the #653 fix)")
 	assert_true(FieldCtl._is_indoor_stage("s07z_na2"), "the boss arenas classify indoor")
-	assert_false(FieldCtl._is_indoor_stage("s04a_sa1"),
+	assert_true(not FieldCtl._is_indoor_stage("s04a_sa1"),
 		"the makara entry plaza stays outdoor (the minus-two precedent)")
 	# ── Signature builders: dispatched, distinct from weather — the indoor
 	#    gate exists for precipitation, and unknown keys stay null. ──
