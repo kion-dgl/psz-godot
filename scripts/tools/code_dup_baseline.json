@@ -155,7 +155,23 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/tools/arca_walktest.gd:_dump_materials#0||scripts/tools/shrine_walktest.gd:_dump_materials#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_input#0||scripts/tools/shrine_walktest.gd:_input#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_print_anchor_snippet#0||scripts/tools/shrine_walktest.gd:_print_anchor_snippet#0",
+      "jaccard": 1.0
+    },
+    {
       "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/paru_walktest.gd:_readout#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/shrine_walktest.gd:_readout#0",
       "jaccard": 1.0
     },
     {
@@ -163,12 +179,36 @@
       "jaccard": 1.0
     },
     {
+      "sig": "scripts/tools/arca_walktest.gd:_spawn_authored_effects#0||scripts/tools/shrine_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 1.0
+    },
+    {
       "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/paru_walktest.gd:_update_status#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/shrine_walktest.gd:_update_status#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/shrine_walktest.gd:_readout#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_spawn_authored_effects#0||scripts/tools/shrine_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_update_status#0||scripts/tools/shrine_walktest.gd:_update_status#0",
       "jaccard": 1.0
     },
     {
       "sig": "scripts/ui/choice_dialog.gd:_panel_style#0||scripts/ui/confirm_dialog.gd:_panel_style#0",
       "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_ready#0||scripts/tools/shrine_walktest.gd:_ready#0",
+      "jaccard": 0.987
     },
     {
       "sig": "scripts/tools/s03b_walktest.gd:_spawn_authored_effects#0||scripts/tools/valley_walktest.gd:_spawn_authored_effects#0",
@@ -239,6 +279,14 @@
       "jaccard": 0.939
     },
     {
+      "sig": "scripts/tools/shrine_walktest.gd:_readout#0||scripts/tools/valley_walktest.gd:_readout#0",
+      "jaccard": 0.939
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_ready#0||scripts/tools/shrine_walktest.gd:_ready#0",
+      "jaccard": 0.935
+    },
+    {
       "sig": "scripts/tools/arca_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
       "jaccard": 0.933
     },
@@ -247,11 +295,19 @@
       "jaccard": 0.933
     },
     {
+      "sig": "scripts/tools/shrine_walktest.gd:_update_status#0||scripts/tools/valley_walktest.gd:_update_status#0",
+      "jaccard": 0.933
+    },
+    {
       "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
       "jaccard": 0.932
     },
     {
       "sig": "scripts/tools/arca_walktest.gd:_input#0||scripts/tools/paru_walktest.gd:_input#0",
+      "jaccard": 0.929
+    },
+    {
+      "sig": "scripts/tools/paru_walktest.gd:_input#0||scripts/tools/shrine_walktest.gd:_input#0",
       "jaccard": 0.929
     },
     {
@@ -343,6 +399,10 @@
       "jaccard": 0.885
     },
     {
+      "sig": "scripts/tools/field_lab.gd:spawn_signature#0||scripts/tools/field_lab.gd:spawn_weather#0",
+      "jaccard": 0.882
+    },
+    {
       "sig": "scripts/tools/lantern_test.gd:_build_snow#0||scripts/tools/snowfield_mattest.gd:_spawn_snow#0",
       "jaccard": 0.88
     },
@@ -411,6 +471,10 @@
       "jaccard": 0.867
     },
     {
+      "sig": "scripts/tools/s03b_walktest.gd:_update_status#0||scripts/tools/shrine_walktest.gd:_update_status#0",
+      "jaccard": 0.867
+    },
+    {
       "sig": "scripts/tools/lantern_test.gd:_spawn_effects_from_config#0||scripts/tools/snowfield_mattest.gd:_spawn_lanterns#0",
       "jaccard": 0.865
     },
@@ -428,6 +492,10 @@
     },
     {
       "sig": "scripts/tools/paru_walktest.gd:_readout#0||scripts/tools/wetlands_walktest.gd:_readout#0",
+      "jaccard": 0.861
+    },
+    {
+      "sig": "scripts/tools/shrine_walktest.gd:_readout#0||scripts/tools/wetlands_walktest.gd:_readout#0",
       "jaccard": 0.861
     },
     {
