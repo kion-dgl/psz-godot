@@ -242,10 +242,13 @@ static func build_signature_node(signature: String) -> Node3D:
 	if signature == "black_motes":
 		var root := Node3D.new()
 		root.name = "SignatureBlackMotes"
+		# kion's 2026-10-02 walk: "a lot more particles" — the B rooms run
+		# roughly double the white flavor's body, with the ember share
+		# scaled up to stay readable in the haze.
 		root.add_child(_build_motes_node("SignatureMotesBlack",
-			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false))
+			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 260))
 		root.add_child(_build_motes_node("SignatureMotesRed",
-			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 24))
+			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 40))
 		return root
 	return null
 

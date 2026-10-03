@@ -397,13 +397,13 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.06,
-		"fog_color": Color(0.03, 0.03, 0.06),
+		"fog_density": 0.11,
+		"fog_color": Color(0.02, 0.02, 0.04),
 		# The ceiling cloud bank (kion 2026-10-02, the white-skybox fix):
 		# negative height density piles the dark fog ABOVE the line —
 		# overhead clouds burying whatever leaks through open roofs.
-		"fog_height": 4.5,
-		"fog_height_density": -0.35,
+		"fog_height": 5.5,
+		"fog_height_density": -0.55,
 	},
 	# The boss arenas (two — na1 and na2): the B rig's black motes.
 	"s07z": {
@@ -417,10 +417,10 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.06,
-		"fog_color": Color(0.03, 0.03, 0.06),
-		"fog_height": 4.5,
-		"fog_height_density": -0.35,
+		"fog_density": 0.11,
+		"fog_color": Color(0.02, 0.02, 0.04),
+		"fog_height": 5.5,
+		"fog_height_density": -0.55,
 	},
 	# The area row — s07e_ia1 (the transition) and the fallback: the rig
 	# without the motes first draft (the transition may want its own mood
