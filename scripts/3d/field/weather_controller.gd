@@ -242,13 +242,13 @@ static func build_signature_node(signature: String) -> Node3D:
 	if signature == "black_motes":
 		var root := Node3D.new()
 		root.name = "SignatureBlackMotes"
-		# kion's 2026-10-02 walk: "a lot more particles" — the B rooms run
-		# roughly double the white flavor's body, with the ember share
-		# scaled up to stay readable in the haze.
+		# kion's 2026-10-03 walkthrough: "like 4x the number of particles" —
+		# the bright open-air s07b courtyards drown in a mote storm; the
+		# ember share scales with it to stay readable through the haze.
 		root.add_child(_build_motes_node("SignatureMotesBlack",
-			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 260))
+			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 1040))
 		root.add_child(_build_motes_node("SignatureMotesRed",
-			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 40))
+			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 160))
 		return root
 	return null
 
@@ -377,7 +377,11 @@ class LightningStrobe extends Node3D:
 	func flash() -> void:
 		_stroke_t = 0.0
 		_pulses = [0.0]
-		var t := 0.12 + randf() * 0.1
+		# The first gap must clear PULSE_DECAY (0.13) or the second pulse
+		# ignites before the first dies — no dark gap between them, and the
+		# stroke reads as one long pop instead of a flicker (the envelope
+		# test counts dark gaps; a 0.12 start flaked it ~5% of runs).
+		var t := 0.14 + randf() * 0.1
 		for i in range(randi_range(1, 2)):
 			_pulses.append(t)
 			t += 0.14 + randf() * 0.12

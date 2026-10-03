@@ -397,13 +397,20 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.11,
+		"fog_density": 0.18,
 		"fog_color": Color(0.02, 0.02, 0.04),
-		# The ceiling cloud bank (kion 2026-10-02, the white-skybox fix):
-		# negative height density piles the dark fog ABOVE the line —
-		# overhead clouds burying whatever leaks through open roofs.
-		"fog_height": 5.5,
-		"fog_height_density": -0.55,
+		# CAMOUFLAGE, not mood (kion 2026-10-03, the s07b_ walkthrough): the
+		# B stages are bright OPEN-AIR courtyards — no ceiling geometry, a
+		# white sky above, low-res edge textures that read fine on the DS
+		# screen and fall apart at Godot scale. The fog is concealment: near-
+		# black clouds drowning the openness (0.18 eats everything past a
+		# few units), the negative height density piling them overhead where
+		# the ceiling should be, and tonemap_white 3.0 dims the too-light
+		# bake (the field default is 6.0) while the 1000-mote storm fills
+		# the air.
+		"fog_height": 5.0,
+		"fog_height_density": -0.7,
+		"tonemap_white": 3.0,
 	},
 	# The boss arenas (two — na1 and na2): the B rig's black motes.
 	"s07z": {
@@ -417,10 +424,11 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.11,
+		"fog_density": 0.18,
 		"fog_color": Color(0.02, 0.02, 0.04),
-		"fog_height": 5.5,
-		"fog_height_density": -0.55,
+		"fog_height": 5.0,
+		"fog_height_density": -0.7,
+		"tonemap_white": 3.0,
 	},
 	# The area row — s07e_ia1 (the transition) and the fallback: the rig
 	# without the motes first draft (the transition may want its own mood

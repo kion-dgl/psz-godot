@@ -99,6 +99,10 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		if slot.has("fog_height"):
 			env.fog_height = float(slot["fog_height"])
 			env.fog_height_density = float(slot.get("fog_height_density", 0.0))
+	# Kept in lockstep with ValleyFieldController._apply_field_slot (the
+	# dup-gate: this must apply exactly what the field applies).
+	if slot.has("tonemap_white"):
+		env.tonemap_white = float(slot["tonemap_white"])
 
 
 ## The full lab environment boot: the field environment, the area's REAL

@@ -11951,12 +11951,14 @@ func test_dark_identity_slots() -> void:
 		"B: the darkest fill of the set (the 1.30 lock scaled to the ladder)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
 	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
-	assert_eq(b.get("fog_density"), 0.11,
-		"B: heavy edge fog — a lot more dark cloud at the boundary (kion's 2026-10-02 walk)")
-	assert_eq(b.get("fog_height"), 5.5,
-		"B: the ceiling cloud bank's height line")
-	assert_eq(b.get("fog_height_density"), -0.55,
-		"B: NEGATIVE height density — deep overhead bank burying the white skybox")
+	assert_eq(b.get("fog_density"), 0.18,
+		"B: 0.18 — concealment fog drowning the open-air courtyards (kion's s07b_ walkthrough)")
+	assert_eq(b.get("fog_height"), 5.0,
+		"B: the overhead cloud bank's height line — where the ceiling should be")
+	assert_eq(b.get("fog_height_density"), -0.7,
+		"B: deep NEGATIVE height bank — overhead clouds hiding the missing ceiling")
+	assert_eq(b.get("tonemap_white"), 3.0,
+		"B: the white point halves (field default 6.0) — the too-light DS bake dims")
 	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
 		"B: same silence — candle pools reach only the actors")
 	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
