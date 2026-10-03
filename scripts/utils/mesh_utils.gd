@@ -520,6 +520,33 @@ static func _shadow_catcher_material() -> StandardMaterial3D:
 const SHADOW_CATCHER_LAYER := 4
 
 
+## The stage's second visual layer — the floor/actor light split (#653,
+## kion 2026-10-03): one light can't serve both the lit floor and the
+## actors — bright enough to pool the floor realistically blows the
+## character out walking under it. Rows that put the stage on the receive
+## path can ALSO join it to this layer; "stage"-targeted placed lights are
+## masked to ONLY it (bright, low, painting the floor) while ordinary
+## lights keep the default mask (dimmer, reaching the actors too). Actors,
+## props and the catcher never ride this layer, so the hot floor lights
+## physically cannot touch them.
+const STAGE_LIGHT_LAYER := 5
+
+
+## Join every mesh instance under `root` to the extra visual layer — the
+## stage KEEPS layer 1 (ordinary lights still reach it); the OR is what
+## lets stage-targeted lights single it out. Returns how many instances
+## were flagged.
+static func add_visual_layer(root: Node, layer: int) -> int:
+	var bit := 1 << (layer - 1)
+	var touched := 0
+	for node in collect_mesh_instances(root, []):
+		var mi := node as MeshInstance3D
+		if mi.layers & bit == 0:
+			mi.layers |= bit
+			touched += 1
+	return touched
+
+
 static func make_shadow_catcher(floor_root: Node3D, up_facing_only := false,
 		shadow_only := false) -> MeshInstance3D:
 	var mesh := collision_face_mesh(floor_root, 0.6 if up_facing_only else -1.0)

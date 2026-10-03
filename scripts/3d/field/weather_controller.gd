@@ -650,6 +650,10 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 ## Inverse-square 2.0 like every placed light; intensity rides the authored
 ## value directly (the ×12 spore multiplier is a punch-through-ambient
 ## correction specific to the bright A-night's lantern pools).
+## `targets: "stage"` (#653, the floor/actor split): the omni is masked to
+## the stage's private layer ONLY — a hot, low floor painter the actors
+## physically cannot see (walking under it never blows the character out);
+## the default targets everything but the catcher.
 func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	var light := OmniLight3D.new()
 	light.name = "AnchorLight"
@@ -663,6 +667,8 @@ func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	# pushing a MUL catcher floor past ×1 inside their falloff. No-op
 	# wherever the row fields no catcher.
 	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
+	if str(effect.get("targets", "all")) == "stage":
+		light.light_cull_mask = 1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)
 	light.position = pos
 	_c._map_root.add_child(light)
 

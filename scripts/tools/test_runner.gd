@@ -11915,6 +11915,18 @@ func test_arca_identity_slots() -> void:
 	# actors without pushing the MUL floor past ×1.
 	assert_eq(MeshUtils.SHADOW_CATCHER_LAYER, 4,
 		"the catcher's private layer is 4 (the city's CATCHER_LAYER value)")
+	# The floor/actor light split (#653): a synthetic stage tree joins the
+	# private layer while KEEPING layer 1 — stage-targeted lights single it
+	# out, ordinary lights still reach it.
+	assert_eq(MeshUtils.STAGE_LIGHT_LAYER, 5, "the stage's private layer is 5")
+	var split_root := Node3D.new()
+	var split_mi := MeshInstance3D.new()
+	split_root.add_child(split_mi)
+	var flagged_n: int = MeshUtils.add_visual_layer(split_root, MeshUtils.STAGE_LIGHT_LAYER)
+	assert_eq(flagged_n, 1, "the layer pass flags the mesh instance")
+	assert_eq(split_mi.layers, (1 << 0) | (1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)),
+		"the stage keeps layer 1 AND gains the private bit — ordinary lights still reach it")
+	split_root.free()
 	print("")
 
 
@@ -11953,6 +11965,8 @@ func test_dark_identity_slots() -> void:
 		"B: little to no sun — a breath, not a light source")
 	assert_eq(b.get("lit_surfaces"), ["*"],
 		"B: THE PIVOT — the whole stage receives the rig so point pools paint the floor (kion: fine for lights to affect the stage here)")
+	assert_eq(b.get("stage_light_layer"), true,
+		"B: the floor/actor split — the stage joins its private layer so hot floor pools never blow out the actors (kion's two-light ask)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
 	assert_eq(b.get("fog_density"), 0.18,
 		"B: 0.18 — concealment fog drowning the open-air courtyards (kion's s07b_ walkthrough)")

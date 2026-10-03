@@ -162,6 +162,12 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		var lit_n: int = MeshUtils.make_lit_surfaces(map_root, slot["lit_surfaces"])
 		var forced: int = MeshUtils.make_unlit(map_root, slot["lit_surfaces"])
 		print("[FieldLab] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
+	# The floor/actor light split, lockstep with the field's load pass
+	# (#653) — the dup-gate: the lab applies exactly what the field applies.
+	if slot.get("stage_light_layer", false):
+		var flagged: int = MeshUtils.add_visual_layer(map_root,
+			MeshUtils.STAGE_LIGHT_LAYER)
+		print("[FieldLab] stage light layer: %d instance(s) flagged" % flagged)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" \
 		% [subfolder, stage_id]
 	if ResourceLoader.exists(skybox_path):

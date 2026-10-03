@@ -73,6 +73,13 @@ extends RefCounted
 ##                        on the ground. Needs no bake_mix; run after the
 ##                        field material pass so special-shader surfaces
 ##                        (waterfalls) are skipped
+##   stage_light_layer bool the lit stage ALSO joins its private visual
+##                        layer (#653, the floor/actor split): "stage"-
+##                        targeted placed lights (<stage>_effects.json
+##                        entries with "targets": "stage") are masked to
+##                        that layer alone — hot low floor pools the
+##                        actors/props/catcher physically cannot see, while
+##                        ordinary lights keep reaching everything
 ##   shadow_catcher bool the collision shell renders as the shadow receiver
 ##                        — white, multiply-blended, at the walk height:
 ##                        the actors' dynamic shadows multiply onto the
@@ -405,6 +412,7 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"lit_surfaces": ["*"],
+		"stage_light_layer": true,
 		"signature": "black_motes",
 		"fog_density": 0.18,
 		"fog_color": Color(0.02, 0.02, 0.04),

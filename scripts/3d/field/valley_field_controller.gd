@@ -302,6 +302,13 @@ func _ready() -> void:
 		# the cheat's contract is that the stage never reacts to light.
 		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
 		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, %d forced unlit, stage keeps its bake" % [lit_n, forced])
+	# The floor/actor light split (#653, kion 2026-10-03): join the lit
+	# stage to its private visual layer so "stage"-targeted placed lights
+	# can paint the floor alone — hot low pools the actors never see.
+	if _slot.get("stage_light_layer", false) and _map_root:
+		var flagged: int = MeshUtils.add_visual_layer(_map_root,
+			MeshUtils.STAGE_LIGHT_LAYER)
+		_fdbg("[ValleyField] stage light layer: %d instance(s) flagged" % flagged)
 	# #657: anchor meshes read as light sources where the stage config
 	# authors it — emissive tint + roughness, matched by material name.
 	_apply_glow_materials()
