@@ -127,6 +127,10 @@ func _ready() -> void:
 		_dump_materials()
 		get_tree().quit()
 		return
+	if OS.get_environment("PSZ_WALK_DUMP") == "instances":
+		_dump_stage_layers()
+		get_tree().quit()
+		return
 	print("[ShrineWalk] ready — N next room, R reload, K materials, L anchor, ESC quit")
 
 
@@ -248,6 +252,30 @@ func _dump_materials() -> void:
 		print("  %-24s  %2d  %6d  y %.1f..%.1f  %s" % [mname,
 			int(st["surfaces"]), int(st["verts"]),
 			float(st["ymin"]), float(st["ymax"]), str(st["tex"])])
+
+
+## The floor/actor split's health check (#653): every map mesh instance
+## should carry the stage's private layer bit — an unflagged instance is
+## invisible to the floor painters (three dark floor regions walked by
+## kion, traced to a 16-surfaces/13-instances flag gap).
+func _dump_stage_layers() -> void:
+	var bit := 1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)
+	var total := 0
+	var flagged := 0
+	var missing: Array = []
+	for node in MeshUtils.collect_mesh_instances(_map_root, []):
+		var mi := node as MeshInstance3D
+		total += 1
+		if mi.layers & bit:
+			flagged += 1
+		else:
+			missing.append("%s (mat %s)" % [mi.name,
+				str(mi.mesh.surface_get_material(0).resource_name)
+				if mi.mesh is ArrayMesh and (mi.mesh as ArrayMesh).surface_get_material(0) != null
+				else "?"])
+	print("[ShrineWalk] stage layer: %d/%d instance(s) flagged" % [flagged, total])
+	for m in missing:
+		print("  UNFLAGGED: %s" % m)
 
 
 ## The authoring loop's print half (#653): L emits an effects.json light

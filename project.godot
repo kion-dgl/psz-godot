@@ -279,5 +279,12 @@ dodge={
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+; The shrine B rooms author 20+ lights per stage (floor painters, casting
+; actor lights, teal accents — #653). The compat defaults (32 renderable,
+; 8 per object) let the strongest lights crowd the painters out of each
+; floor surface's budget — three pools went dark the moment the teal set
+; landed. Raised to fit the authored scenes; web builds carry the cost.
+limits/opengl/max_renderable_lights=64
+limits/opengl/max_lights_per_object=16
 textures/vram_compression/import_s3tc_bptc=true
 textures/vram_compression/import_etc2_astc=true
