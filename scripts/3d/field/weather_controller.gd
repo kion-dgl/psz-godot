@@ -662,6 +662,15 @@ func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	light.omni_range = float(effect.get("radius", 6.0))
 	light.omni_attenuation = 2.0
 	light.shadow_enabled = false
+	# Casting placed lights (#653, kion 2026-10-03: "just the point lights
+	# casting shadows in the scene"): the wetlands lantern precedent — the
+	# compat renderer's dual-paraboloid omni shadows land on per-pixel
+	# ground, and only actors cast, so the extra passes stay cheap. Opt-in
+	# per entry; the floor painters stay shadowless (their mask excludes
+	# the actors anyway — nothing would cast).
+	if effect.get("shadows", false):
+		light.shadow_enabled = true
+		light.shadow_blur = 1.0
 	# Off the catcher's private layer (#652, the #670 contract): the authored
 	# pools light ACTORS (an unlit stage can't receive them anyway) without
 	# pushing a MUL catcher floor past ×1 inside their falloff. No-op

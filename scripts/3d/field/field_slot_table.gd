@@ -395,22 +395,19 @@ const SLOTS := {
 	},
 	"s07b": {
 		"hour": 22.0,
-		# THE PIVOT (kion 2026-10-03): the room looks better with ambient
-		# waaay down (their s07b_ga1 read-out: 0.05) — and instead of the
-		# sun, AUTHORED POINT POOLS own the room. That needs the stage on
-		# the receive path: lit_surfaces "*" puts the whole map per-pixel
-		# with the bake as albedo (the ozette dark-turn pattern), so the
-		# effects-light pools paint the actual floor — here it is FINE, by
-		# design, for the point lights to affect the stage. Composition:
-		# the middle of the room lit, the edges falling into the fog.
-		"sun_energy": 0.05,
-		"sun_color": Color(0.7, 0.75, 0.9),
+		# THE PIVOT (kion 2026-10-03, completed on the fourth walk): ambient
+		# waaay down (their read-out: 0.05), NO sun, NO catcher — the MUL
+		# catcher was crushing the lit floor to its ambient share (the
+		# "barely lit" read). The stage rides the receive path (lit_surfaces
+		# "*") so the pools paint the actual floor; the floor painters hang
+		# at y 0.5 (targets "stage", the actors never see them), one casting
+		# all-objects light at y 2.5 gives the actors their key AND their
+		# real omni shadows on the lit ground. Composition: the middle of
+		# the room lit, the edges falling into the fog.
+		"sun_energy": 0.0,
 		"ambient_energy": 0.05,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
-		"sun_pitch": -60.0,
-		"sun_shadows": true,
-		"shadow_catcher": true,
 		"lit_surfaces": ["*"],
 		"stage_light_layer": true,
 		"signature": "black_motes",

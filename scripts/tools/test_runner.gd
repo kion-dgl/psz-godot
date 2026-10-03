@@ -11961,8 +11961,10 @@ func test_dark_identity_slots() -> void:
 	var b := Slots.slot_for("dark", "s07b_ga1")
 	assert_eq(b.get("ambient_energy"), 0.05,
 		"B: ambient 0.05 — kion's read-out ('waaay down'), the pools own the room now")
-	assert_eq(b.get("sun_energy"), 0.05,
-		"B: little to no sun — a breath, not a light source")
+	assert_eq(b.get("sun_energy"), 0.0,
+		"B: no sun at all — the pools and their own shadows own the room (kion's fourth walk)")
+	assert_true(not b.get("sun_shadows", false) and not b.get("shadow_catcher", false),
+		"B: no catcher either — it was crushing the lit floor to the ambient share")
 	assert_eq(b.get("lit_surfaces"), ["*"],
 		"B: THE PIVOT — the whole stage receives the rig so point pools paint the floor (kion: fine for lights to affect the stage here)")
 	assert_eq(b.get("stage_light_layer"), true,
