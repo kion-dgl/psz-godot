@@ -232,13 +232,21 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 ## Static + shared so the walk labs preview exactly what spawns in-field.
 ## Distinct from weather by contract: precipitation skips indoor stages,
 ## signatures don't — the shrine's motes are the indoor identity (#653).
-static func build_signature_node(signature: String) -> GPUParticles3D:
+## The black flavor returns a CONTAINER: the dark mote body plus a small
+## red-ember emitter riding in it (kion 2026-10-02: dark particles with a
+## small amount of red).
+static func build_signature_node(signature: String) -> Node3D:
 	if signature == "white_motes":
 		return _build_motes_node("SignatureMotesWhite",
 			Color(0.92, 0.92, 0.98, 0.55), Color(0.45, 0.45, 0.55, 0.35), true)
 	if signature == "black_motes":
-		return _build_motes_node("SignatureMotesBlack",
-			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false)
+		var root := Node3D.new()
+		root.name = "SignatureBlackMotes"
+		root.add_child(_build_motes_node("SignatureMotesBlack",
+			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false))
+		root.add_child(_build_motes_node("SignatureMotesRed",
+			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 24))
+		return root
 	return null
 
 
@@ -249,11 +257,11 @@ static func build_signature_node(signature: String) -> GPUParticles3D:
 ## base); the black flavor stays plain translucent (dark motes darken the dim
 ## floor behind them). Per-particle tone varies via the initial ramp.
 static func _build_motes_node(node_name: String, tone: Color, deep: Color,
-		glow: bool) -> GPUParticles3D:
+		glow: bool, amount := 140) -> GPUParticles3D:
 	var motes := GPUParticles3D.new()
 	motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	motes.name = node_name
-	motes.amount = 140
+	motes.amount = amount
 	motes.lifetime = 9.0
 	motes.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	motes.fixed_fps = 30
@@ -403,14 +411,23 @@ func _kick_weather() -> void:
 	_kick_node(_c._weather_node)
 
 
-func _kick_node(node: GPUParticles3D) -> void:
+func _kick_node(node: Node) -> void:
 	# Wait a couple frames so the player transform is fully committed, then
 	# restart the particle system. preprocess runs again on restart and the
-	# snow appears already falling.
+	# snow appears already falling. Handles plain emitters and the signature
+	# containers (the black motes ride with a red-ember emitter).
 	await _c.get_tree().process_frame
 	await _c.get_tree().process_frame
-	if is_instance_valid(node):
-		node.restart()
+	if not is_instance_valid(node):
+		return
+	var emitters: Array[GPUParticles3D] = []
+	if node is GPUParticles3D:
+		emitters.append(node as GPUParticles3D)
+	for child in node.get_children():
+		if child is GPUParticles3D:
+			emitters.append(child as GPUParticles3D)
+	for emitter in emitters:
+		emitter.restart()
 
 
 func _strip_embedded_lights(node: Node) -> void:

@@ -94,8 +94,11 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 	if slot.has("fog_density"):
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 		env.fog_density = float(slot["fog_density"])
-		env.fog_albedo = slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		env.fog_light_color = slot.get("fog_color", Color(0.03, 0.03, 0.06))
 		env.fog_aerial_perspective = 0.0
+		if slot.has("fog_height"):
+			env.fog_height = float(slot["fog_height"])
+			env.fog_height_density = float(slot.get("fog_height_density", 0.0))
 
 
 ## The full lab environment boot: the field environment, the area's REAL
@@ -214,7 +217,13 @@ static func spawn_signature(player: Node, slot: Dictionary) -> void:
 	if not node:
 		return
 	player.add_child(node)
-	node.restart()
+	# The black flavor is a container (dark body + red embers) — restart
+	# every emitter in it.
+	if node is GPUParticles3D:
+		(node as GPUParticles3D).restart()
+	for child in node.get_children():
+		if child is GPUParticles3D:
+			(child as GPUParticles3D).restart()
 	print("[FieldLab] signature: %s" % str(slot.get("signature", "")))
 
 

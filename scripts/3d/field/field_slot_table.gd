@@ -50,6 +50,12 @@ extends RefCounted
 ##                        into the dark — clouds at the boundary instead of
 ##                        hard walls against unmodeled space
 ##   fog_color     Color  the fog's albedo (rides the dark read)
+##   fog_height    float  with fog_height_density: the height fog's y line —
+##                        a NEGATIVE density piles fog above it (the shrine
+##                        B/Z ceiling cloud bank burying a white skybox
+##                        through open roofs), positive pools it below
+##                        (ground fog)
+##   fog_height_density float the height fog's density sign and magnitude
 ##   geometry_casts_shadows bool map geometry casts shadows (default off — the
 ##                        bake is the look); a rig that stands on real moon
 ##                        shadows (s03b, #659) turns it on
@@ -391,8 +397,13 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.045,
+		"fog_density": 0.06,
 		"fog_color": Color(0.03, 0.03, 0.06),
+		# The ceiling cloud bank (kion 2026-10-02, the white-skybox fix):
+		# negative height density piles the dark fog ABOVE the line —
+		# overhead clouds burying whatever leaks through open roofs.
+		"fog_height": 4.5,
+		"fog_height_density": -0.35,
 	},
 	# The boss arenas (two — na1 and na2): the B rig's black motes.
 	"s07z": {
@@ -406,8 +417,10 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
-		"fog_density": 0.045,
+		"fog_density": 0.06,
 		"fog_color": Color(0.03, 0.03, 0.06),
+		"fog_height": 4.5,
+		"fog_height_density": -0.35,
 	},
 	# The area row — s07e_ia1 (the transition) and the fallback: the rig
 	# without the motes first draft (the transition may want its own mood

@@ -858,11 +858,21 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		# fog so the room's far edges dissolve into the dark — clouds at the
 		# boundary instead of hard walls against unmodeled space. The albedo
 		# rides near-black: the fog reads as darkness creeping in, not haze.
+		# fog_height + a NEGATIVE height density pile the fog overhead —
+		# the ceiling cloud bank that buries a white skybox leaking through
+		# open roofs (kion: "a lot of dark fog/clouds on the ceiling and
+		# edges").
 		var fog := _world_env.environment
 		fog.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 		fog.fog_density = float(_slot["fog_density"])
-		fog.fog_albedo = _slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		# fog_light_color is the non-volumetric fog's color (NOT fog_albedo —
+		# that property doesn't exist on Environment in 4.5 and the
+		# assignment dies as a script error).
+		fog.fog_light_color = _slot.get("fog_color", Color(0.03, 0.03, 0.06))
 		fog.fog_aerial_perspective = 0.0
+		if _slot.has("fog_height"):
+			fog.fog_height = float(_slot["fog_height"])
+			fog.fog_height_density = float(_slot.get("fog_height_density", 0.0))
 
 
 ## Debug hour preview (#655): the [/] keys set TimeManager's hour; re-apply the

@@ -11951,7 +11951,12 @@ func test_dark_identity_slots() -> void:
 		"B: the darkest fill of the set (the 1.30 lock scaled to the ladder)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
 	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
-	assert_eq(b.get("fog_density"), 0.045, "B: the edge fog runs a touch thicker than A")
+	assert_eq(b.get("fog_density"), 0.06,
+		"B: heavy edge fog — a lot of dark cloud at the boundary (kion's ask)")
+	assert_eq(b.get("fog_height"), 4.5,
+		"B: the ceiling cloud bank's height line")
+	assert_eq(b.get("fog_height_density"), -0.35,
+		"B: NEGATIVE height density — the fog piles overhead, burying the white skybox")
 	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
 		"B: same silence — candle pools reach only the actors")
 	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
@@ -11974,7 +11979,10 @@ func test_dark_identity_slots() -> void:
 	# ── Signature builders: dispatched, distinct from weather — the indoor
 	#    gate exists for precipitation, and unknown keys stay null. ──
 	assert_true(Weather.build_signature_node("white_motes") != null, "white_motes builds")
-	assert_true(Weather.build_signature_node("black_motes") != null, "black_motes builds")
+	var black := Weather.build_signature_node("black_motes")
+	assert_true(black != null, "black_motes builds")
+	assert_eq(black.get_child_count() if black else -1, 2,
+		"the black flavor carries two emitters — the dark body + the red embers (kion 2026-10-02)")
 	assert_true(Weather.build_signature_node("leaves") == null,
 		"unknown signature keys → null (paru's falling leaves are #651's, not built yet)")
 	assert_true(Weather.build_weather_node("white_motes") == null,
