@@ -12004,8 +12004,8 @@ func test_dark_identity_slots() -> void:
 	assert_true(Weather.build_signature_node("white_motes") != null, "white_motes builds")
 	var black := Weather.build_signature_node("black_motes")
 	assert_true(black != null, "black_motes builds")
-	assert_eq(black.get_child_count() if black else -1, 3,
-		"the black flavor carries three emitters — the storm, the red embers, and the ground spores (kion 2026-10-03)")
+	assert_eq(black.get_child_count() if black else -1, 4,
+		"the black flavor carries four emitters — the storm, the pale share, the red embers, and the ground spores (kion 2026-10-03)")
 	assert_true(Weather.build_signature_node("leaves") == null,
 		"unknown signature keys → null (paru's falling leaves are #651's, not built yet)")
 	assert_true(Weather.build_weather_node("white_motes") == null,

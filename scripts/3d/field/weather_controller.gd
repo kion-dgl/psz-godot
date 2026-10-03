@@ -243,14 +243,18 @@ static func build_signature_node(signature: String) -> Node3D:
 		var root := Node3D.new()
 		root.name = "SignatureBlackMotes"
 		# kion's 2026-10-03 walkthrough: the swirling storm (softened — no
-		# more pixel squares) + the red embers + a SECOND kind, ground
-		# spores lifting off the floor plane.
+		# more pixel squares) + the red embers + the ground spores lifted
+		# off the floor + a PALE share — dark motes in a dark room read as
+		# nothing ("barely noticeable"); the lighter mix keeps the storm
+		# visible against the pools.
 		root.add_child(_build_motes_node("SignatureMotesBlack",
 			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 1040))
+		root.add_child(_build_motes_node("SignatureMotesPale",
+			Color(0.72, 0.72, 0.82, 0.45), Color(0.4, 0.4, 0.52, 0.3), true, 220))
 		root.add_child(_build_motes_node("SignatureMotesRed",
 			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 160))
 		root.add_child(_build_ground_spores_node("SignatureSpores",
-			Color(0.35, 0.3, 0.5, 0.4), Color(0.1, 0.08, 0.18, 0.3)))
+			Color(0.5, 0.45, 0.68, 0.5), Color(0.2, 0.16, 0.3, 0.35)))
 		return root
 	return null
 
@@ -266,7 +270,7 @@ static func _build_ground_spores_node(node_name: String, tone: Color,
 	var spores := GPUParticles3D.new()
 	spores.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	spores.name = node_name
-	spores.amount = 120
+	spores.amount = 280
 	spores.lifetime = 12.0
 	spores.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	spores.fixed_fps = 30
@@ -311,7 +315,7 @@ static func _build_ground_spores_node(node_name: String, tone: Color,
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	quad_mat.emission_enabled = true
 	quad_mat.emission = tone
-	quad_mat.emission_energy_multiplier = 1.2
+	quad_mat.emission_energy_multiplier = 2.5
 	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
