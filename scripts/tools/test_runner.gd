@@ -11947,10 +11947,13 @@ func test_dark_identity_slots() -> void:
 	assert_eq(Slots.slot_for("dark", "s07a_lc1"), a, "A rooms ride the A row")
 	# ── B: the Falz dark-castle side — darker still, BLACK motes. ──
 	var b := Slots.slot_for("dark", "s07b_ga1")
-	assert_eq(b.get("ambient_energy"), 0.95,
-		"B: the darkest fill of the set (the 1.30 lock scaled to the ladder)")
+	assert_eq(b.get("ambient_energy"), 0.05,
+		"B: ambient 0.05 — kion's read-out ('waaay down'), the pools own the room now")
+	assert_eq(b.get("sun_energy"), 0.05,
+		"B: little to no sun — a breath, not a light source")
+	assert_eq(b.get("lit_surfaces"), ["*"],
+		"B: THE PIVOT — the whole stage receives the rig so point pools paint the floor (kion: fine for lights to affect the stage here)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
-	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
 	assert_eq(b.get("fog_density"), 0.18,
 		"B: 0.18 — concealment fog drowning the open-air courtyards (kion's s07b_ walkthrough)")
 	assert_eq(b.get("fog_height"), 5.0,
@@ -11959,13 +11962,15 @@ func test_dark_identity_slots() -> void:
 		"B: deep NEGATIVE height bank — overhead clouds hiding the missing ceiling")
 	assert_eq(b.get("tonemap_white"), 3.0,
 		"B: the white point halves (field default 6.0) — the too-light DS bake dims")
-	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
-		"B: same silence — candle pools reach only the actors")
+	assert_true(not b.has("bake_mix"),
+		"B: no white-strategy pass — the bake rides as albedo under the pools")
 	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
-	# ── Z: both boss arenas — the B rig's black motes. ──
+	# ── Z: both boss arenas — the PRE-PIVOT rig (0.95 ambient, unlit bake);
+	#    they wait for their own walk before inheriting B's pool rig. ──
 	var z := Slots.slot_for("dark", "s07z_na1")
 	assert_eq(z.get("signature"), "black_motes", "Z: the boss arenas run black motes")
-	assert_eq(z.get("ambient_energy"), 0.95, "Z: the boss arenas run the B fill")
+	assert_eq(z.get("ambient_energy"), 0.95,
+		"Z: still the pre-pivot fill — the arenas wait for their own walk (kion scoped the pivot to s07b_)")
 	assert_eq(Slots.slot_for("dark", "s07z_na2"), z, "both arenas ride the s07z row (two stages)")
 	# ── E rides the area row: the rig, no signature first draft. ──
 	var area := Slots.slot_for("dark", "s07e_ia1")
@@ -11983,8 +11988,8 @@ func test_dark_identity_slots() -> void:
 	assert_true(Weather.build_signature_node("white_motes") != null, "white_motes builds")
 	var black := Weather.build_signature_node("black_motes")
 	assert_true(black != null, "black_motes builds")
-	assert_eq(black.get_child_count() if black else -1, 2,
-		"the black flavor carries two emitters — the dark body + the red embers (kion 2026-10-02)")
+	assert_eq(black.get_child_count() if black else -1, 3,
+		"the black flavor carries three emitters — the storm, the red embers, and the ground spores (kion 2026-10-03)")
 	assert_true(Weather.build_signature_node("leaves") == null,
 		"unknown signature keys → null (paru's falling leaves are #651's, not built yet)")
 	assert_true(Weather.build_weather_node("white_motes") == null,

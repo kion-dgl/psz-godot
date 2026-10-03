@@ -242,15 +242,85 @@ static func build_signature_node(signature: String) -> Node3D:
 	if signature == "black_motes":
 		var root := Node3D.new()
 		root.name = "SignatureBlackMotes"
-		# kion's 2026-10-03 walkthrough: "like 4x the number of particles" —
-		# the bright open-air s07b courtyards drown in a mote storm; the
-		# ember share scales with it to stay readable through the haze.
+		# kion's 2026-10-03 walkthrough: the swirling storm (softened — no
+		# more pixel squares) + the red embers + a SECOND kind, ground
+		# spores lifting off the floor plane.
 		root.add_child(_build_motes_node("SignatureMotesBlack",
 			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 1040))
 		root.add_child(_build_motes_node("SignatureMotesRed",
 			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 160))
+		root.add_child(_build_ground_spores_node("SignatureSpores",
+			Color(0.35, 0.3, 0.5, 0.4), Color(0.1, 0.08, 0.18, 0.3)))
 		return root
 	return null
+
+
+## The ground spores (kion 2026-10-03, the second rising kind): sparse,
+## soft motes lifting off the FLOOR plane — a wide thin emission slab at
+## walk height (the player-attached volume hugging the ground, the
+## collision mesh's footprint in practice). Distinct from the swirling
+## storm: bigger soft quads (the glow-dot texture, never a pixel square),
+## a slower straight climb, a long unhurried lifetime.
+static func _build_ground_spores_node(node_name: String, tone: Color,
+		deep: Color) -> GPUParticles3D:
+	var spores := GPUParticles3D.new()
+	spores.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	spores.name = node_name
+	spores.amount = 120
+	spores.lifetime = 12.0
+	spores.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	spores.fixed_fps = 30
+	spores.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 4.0
+	mat.initial_velocity_min = 0.3
+	mat.initial_velocity_max = 0.7
+	mat.gravity = Vector3(0, 0.02, 0)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(22, 0.15, 22)
+	mat.scale_min = 0.7
+	mat.scale_max = 1.5
+	mat.damping_min = 0.02
+	mat.damping_max = 0.08
+	mat.turbulence_enabled = true
+	mat.turbulence_noise_strength = 0.2
+	mat.turbulence_noise_scale = 1.2
+	var init := Gradient.new()
+	init.set_color(0, deep)
+	init.set_color(init.get_point_count() - 1, tone)
+	var init_ramp := GradientTexture1D.new()
+	init_ramp.gradient = init
+	mat.color_initial_ramp = init_ramp
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1, 1, 1, 0.0))
+	ramp.add_point(0.1, Color(1, 1, 1, 1.0))
+	ramp.add_point(0.75, Color(1, 1, 1, 1.0))
+	ramp.set_color(ramp.get_point_count() - 1, Color(1, 1, 1, 0.0))
+	var ramp_tex := GradientTexture1D.new()
+	ramp_tex.gradient = ramp
+	mat.color_ramp = ramp_tex
+	spores.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.14, 0.14)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = tone
+	quad_mat.albedo_texture = create_glow_dot_texture()
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.emission_enabled = true
+	quad_mat.emission = tone
+	quad_mat.emission_energy_multiplier = 1.2
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	spores.draw_pass_1 = quad
+
+	spores.preprocess = 4.0
+	spores.position.y = -1.0
+	return spores
 
 
 ## The shrine's rising motes (#653): the snowfall inverted — a thin emission
@@ -319,6 +389,9 @@ static func _build_motes_node(node_name: String, tone: Color, deep: Color,
 	quad.size = Vector2(0.06, 0.06)
 	var quad_mat := StandardMaterial3D.new()
 	quad_mat.albedo_color = tone
+	# The soft radial dot (kion 2026-10-03: the bare quads read as pixel
+	# squares) — the texture's alpha falloff rounds every mote.
+	quad_mat.albedo_texture = create_glow_dot_texture()
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	if glow:
 		quad_mat.emission_enabled = true
