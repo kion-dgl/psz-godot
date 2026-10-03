@@ -15,7 +15,7 @@ extends Node3D
 ## file through the real WeatherController, so what walks here is what
 ## spawns in-field).
 ##
-## Env:  PSZ_WALK_STAGE=s07a_ga1   boot stage (default: first of STAGES)
+## Env:  PSZ_WALK_STAGE=s07b_ga1   boot stage (default: first of STAGES)
 ##       PSZ_WALK_SHOT=/tmp/o.png  screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_SUN_PITCH=-60    sun elevation override
 ##       PSZ_WALK_SUN_SHADOWS=0    force sun shadows off
@@ -39,12 +39,14 @@ const EFFECTS_JSON_FMT := "res://assets/stages/%s/%s/lndmd/%s_effects.json"
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
-## The variants in walk order (N cycles): A's gate, an lc room and the sa
-## plaza-shaped room; B's gate and an lb room (the black-mote side); the E
-## transition; both boss arenas.
+## The s07b_ cycle only (kion 2026-10-03: the iteration is on B's pool
+## rig) — all eighteen rooms, in id order, so N walks the whole variant
+## and L can author each room's pools.
 const STAGES := [
-	"s07a_ga1", "s07a_lc1", "s07a_sa1", "s07b_ga1", "s07b_lb1",
-	"s07e_ia1", "s07z_na1", "s07z_na2",
+	"s07b_ga1", "s07b_ib1", "s07b_ib2", "s07b_ic1", "s07b_ic3",
+	"s07b_lb1", "s07b_lb3", "s07b_lc1", "s07b_lc2", "s07b_na1",
+	"s07b_nb2", "s07b_nc2", "s07b_sa1", "s07b_tb3", "s07b_tc3",
+	"s07b_td1", "s07b_td2", "s07b_xb2",
 ]
 
 ## The anchor snippet's placeholder accent (#653 first draft): warm candle
@@ -57,7 +59,7 @@ const ANCHOR_RADIUS := 5.0
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
-var _stage_id := "s07a_ga1"
+var _stage_id := "s07b_ga1"
 var _map_root: Node3D
 var _player: CharacterBody3D
 var _env: Environment
@@ -65,6 +67,7 @@ var _dir_light: DirectionalLight3D
 var _slot := {}
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
+var _pos_label: Label
 var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
@@ -108,6 +111,11 @@ func _ready() -> void:
 	FieldLabScript.spawn_weather(_player, _slot)
 	FieldLabScript.spawn_signature(_player, _slot)
 	_status = FieldLabScript.make_status_label(self)
+	# The player's live map coordinates, bottom-left (kion 2026-10-03 — the
+	# pool-authoring aid: read a spot, L it, paste it).
+	_pos_label = FieldLabScript.make_status_label(self)
+	_pos_label.position = Vector2(12,
+		get_viewport().get_visible_rect().size.y - 44.0)
 	_update_status()
 	_readout()
 	if OS.get_environment("PSZ_WALK_DUMP") == "materials":
@@ -119,6 +127,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_shot.step(self, "ShrineWalk")
+	if _pos_label and is_instance_valid(_player):
+		var p := _player.global_position
+		_pos_label.text = "(%.1f, %.1f, %.1f)" % [p.x, p.y, p.z]
 
 
 func _input(event: InputEvent) -> void:
