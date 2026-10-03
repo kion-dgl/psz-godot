@@ -79,6 +79,8 @@ var _anchor_scale := 1.0
 
 
 func _ready() -> void:
+	# R must pick up newly authored lighting recipes.
+	preload("res://scripts/3d/field/shrine_lighting.gd")._recipes.clear()
 	if not _pending_stage.is_empty():
 		_stage_id = _pending_stage
 		_pending_stage = ""
@@ -106,7 +108,14 @@ func _ready() -> void:
 			_dir_light.global_transform.basis.z, _floor_top)
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
-	_player = FieldLabScript.spawn_player(self, FieldLabScript.boot_spawn(_stage_id))
+	var start := FieldLabScript.boot_spawn(_stage_id)
+	_player = FieldLabScript.spawn_player(self, start)
+	# Enter looking into the room; the reference room starts at its center.
+	var orbit := get_node("OrbitCamera")
+	if Vector2(start.x, start.z).length() > 4.0:
+		orbit.camera_rotation = atan2(start.x, start.z)
+	if not OS.get_environment("PSZ_WALK_YAW").is_empty():
+		orbit.camera_rotation = deg_to_rad(float(OS.get_environment("PSZ_WALK_YAW")))
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()
@@ -176,8 +185,8 @@ func _input(event: InputEvent) -> void:
 func _scale_anchors(mult: float) -> void:
 	_anchor_scale *= mult
 	var n := 0
-	for child in _map_root.get_children():
-		if child is OmniLight3D and child.name.begins_with("AnchorLight"):
+	for child in _map_root.find_children("*", "OmniLight3D", true, false):
+		if child.has_meta("authored_light"):
 			(child as OmniLight3D).light_energy *= mult
 			n += 1
 	print("[ShrineWalk] anchor intensity x%.2f over %d light(s)" % [_anchor_scale, n])
@@ -189,6 +198,10 @@ func _scale_anchors(mult: float) -> void:
 ## what walks here is what spawns in-field. (The controller's own path
 ## resolves the folder from the session area, which a lab boot has none of.)
 func _spawn_authored_effects() -> void:
+	var recipe: Dictionary = preload("res://scripts/3d/field/shrine_lighting.gd").recipe(_stage_id)
+	if not recipe.is_empty():
+		WeatherControllerScript.new(self)._apply_stage_effects(recipe, _stage_id)
+		return
 	var path := EFFECTS_JSON_FMT % ["shrine_" + _stage_id.substr(3, 1), _stage_id, _stage_id]
 	if not FileAccess.file_exists(path):
 		return

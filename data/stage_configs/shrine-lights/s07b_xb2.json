@@ -1,0 +1,776 @@
+{
+  "stage_id": "s07b_xb2",
+  "pillar_centers": [],
+  "effects": [
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -28,
+        0.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -28,
+        2.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -14,
+        0.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -14,
+        2.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        0.5,
+        -28
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.2,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        2.5,
+        -28
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        0.5,
+        -14
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.2,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        2.5,
+        -14
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        0.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.2,
+      "radius": 20,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        2.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.5,
+      "radius": 12,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        0.5,
+        14
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.2,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        2.5,
+        14
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        0.5,
+        28
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 1.2,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0,
+        2.5,
+        28
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        14,
+        0.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        14,
+        2.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        28,
+        0.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 10,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        28,
+        2.5,
+        0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.7,
+      "radius": 9,
+      "shadows": true
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.022,
+        2.0,
+        25.0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.022,
+        2.0,
+        29.0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.011,
+        2.0,
+        -25.0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.011,
+        2.0,
+        -29.0
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -25.0,
+        2.0,
+        0.363
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -29.0,
+        2.0,
+        0.363
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        25.0,
+        2.0,
+        -0.13
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        29.0,
+        2.0,
+        -0.13
+      ],
+      "color": [
+        1.0,
+        0.85,
+        0.55
+      ],
+      "intensity": 0.8,
+      "radius": 6,
+      "targets": "stage"
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -37.0,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -37.0,
+        0,
+        6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -30.0,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -30.0,
+        0,
+        6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        -37.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        -30.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        30.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        37.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        -37.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        -30.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        30.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        37.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        30.0,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        30.0,
+        0,
+        6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        37.0,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        37.0,
+        0,
+        6.0
+      ],
+      "color": [
+        0.173,
+        0.682,
+        0.62
+      ],
+      "intensity": 1.4,
+      "radius": 7
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.0,
+        5.532,
+        36.5
+      ],
+      "color": [
+        0.7,
+        0.85,
+        0.8
+      ],
+      "intensity": 2.5,
+      "radius": 11,
+      "targets": "stage",
+      "id": "door_beacon_0"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.0,
+        5.532,
+        -36.5
+      ],
+      "color": [
+        0.7,
+        0.85,
+        0.8
+      ],
+      "intensity": 2.5,
+      "radius": 11,
+      "targets": "stage",
+      "id": "door_beacon_1"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        36.5,
+        5.532,
+        0.0
+      ],
+      "color": [
+        0.7,
+        0.85,
+        0.8
+      ],
+      "intensity": 2.5,
+      "radius": 11,
+      "targets": "stage",
+      "id": "door_beacon_2"
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -36.5,
+        5.532,
+        0.0
+      ],
+      "color": [
+        0.7,
+        0.85,
+        0.8
+      ],
+      "intensity": 2.5,
+      "radius": 11,
+      "targets": "stage",
+      "id": "door_beacon_3"
+    }
+  ]
+}

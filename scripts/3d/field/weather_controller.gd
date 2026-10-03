@@ -10,6 +10,7 @@ extends RefCounted
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
+const ShrineLighting := preload("res://scripts/3d/field/shrine_lighting.gd")
 
 ## Cache for stage effects JSON (keyed by stage_id, null = no file).
 static var _stage_effects_cache: Dictionary = {}
@@ -533,6 +534,12 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 
 
 func _spawn_stage_effects(stage_id: String) -> void:
+	# The tracked B recipe supersedes local/asset-pack drafts, preventing
+	# stale sidecars from doubling the reference room's authored lights.
+	var shrine := ShrineLighting.recipe(stage_id)
+	if not shrine.is_empty():
+		_apply_stage_effects(shrine, stage_id)
+		return
 	# Check cache first
 	if _stage_effects_cache.has(stage_id):
 		var cached: Variant = _stage_effects_cache[stage_id]
@@ -580,6 +587,13 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	var color := Color(float(color_arr[0]), float(color_arr[1]), float(color_arr[2]))
 
 	var effect_type: String = str(effect.get("type", "spores"))
+	if effect_type == "shrine_lantern":
+		var lantern := preload("res://scenes/props/shrine_lantern.tscn").instantiate() as Node3D
+		lantern.position = pos
+		lantern.set("light_energy", float(effect.get("intensity", 1.4)))
+		lantern.set("light_color", color)
+		_c._map_root.add_child(lantern)
+		return
 
 	# Plain light (#636/#657): an omni with no particle footprint — the s03b
 	# cave anchors (water pools, mushroom clusters).
@@ -671,6 +685,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	var light := OmniLight3D.new()
 	light.name = "AnchorLight"
+	light.set_meta("authored_light", true)
 	light.light_color = color
 	light.light_energy = float(effect.get("intensity", 1.0))
 	light.omni_range = float(effect.get("radius", 6.0))

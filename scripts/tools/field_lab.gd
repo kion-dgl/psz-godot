@@ -182,6 +182,9 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		var flagged: int = MeshUtils.add_visual_layer(map_root,
 			MeshUtils.STAGE_LIGHT_LAYER)
 		print("[FieldLab] stage light layer: %d instance(s) flagged" % flagged)
+	var inset_triangles: int = preload("res://scripts/3d/field/shrine_lighting.gd").rebuild_pillars(map_root, stage_id)
+	if inset_triangles > 0:
+		print("[FieldLab] rebuilt %d teal inset triangles" % inset_triangles)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" \
 		% [subfolder, stage_id]
 	if ResourceLoader.exists(skybox_path):

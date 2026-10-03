@@ -1,0 +1,30 @@
+.shrine-lab { height:100%; display:flex; flex-direction:column; background:#111922; color:#dce6ee; font:14px/1.5 system-ui,sans-serif; }
+.shrine-lab * { box-sizing:border-box; }
+.shrine-lab-header { display:flex; align-items:center; gap:28px; padding:18px 24px; border-bottom:1px solid #30404e; }
+.shrine-eyebrow { font-size:10px; letter-spacing:2px; color:#7fd2c8; }
+.shrine-lab h1 { font-size:24px; font-weight:600; margin:2px 0 0; }
+.shrine-lab-header p { color:#98abba; flex:1; }
+.shrine-lab-body { display:flex; flex:1; min-height:0; }
+.shrine-panel { width:270px; flex-shrink:0; padding:22px; overflow:auto; border-right:1px solid #30404e; }
+.shrine-label { display:flex; justify-content:space-between; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#8ba1b3; margin:0 0 10px; }
+.shrine-label:not(:first-child) { margin-top:23px; }
+.shrine-lab button,.shrine-lab select { background:#1c2936; color:#dce6ee; border:1px solid #3c5060; border-radius:6px; padding:8px 12px; font:inherit; cursor:pointer; }
+.shrine-lab button:hover { background:#293d4d; }
+.shrine-lab button[aria-pressed=true] { border-color:#68d4c5; background:#173e3d; color:#a1f1e5; }
+.shrine-modes { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.shrine-modes button { padding:9px 5px; font-size:12px; }
+.shrine-panel select,.shrine-reset { width:100%; }
+.shrine-reset { margin-top:8px; }
+.shrine-check { display:flex; align-items:center; gap:8px; margin:11px 0; font-size:13px; }
+.shrine-lab input { accent-color:#72ded1; }
+.shrine-lab input[type=range] { width:100%; }
+.shrine-note { border-top:1px solid #30404e; margin-top:24px; padding-top:17px; font-size:12px; color:#9eb0c0; }
+.shrine-note strong { color:#dce6ee; font-weight:500; }
+.shrine-stats { display:grid; grid-template-columns:1fr auto; gap:4px; font-size:11px; color:#91a5b7; }
+.shrine-stats dd { margin:0; font-variant-numeric:tabular-nums; }
+.shrine-viewport { flex:1; position:relative; min-width:0; }
+.shrine-view-labels { position:absolute; z-index:1; inset:20px 0 auto; display:flex; justify-content:space-around; pointer-events:none; font-size:10px; letter-spacing:1.5px; color:#c8d9e8; }
+.shrine-view-hint { position:absolute; bottom:18px; width:100%; text-align:center; pointer-events:none; color:#8fa5b7; font-size:12px; }
+.shrine-error { padding:30px; color:#e5c99e; }
+.shrine-error code { display:block; margin-top:20px; font-size:12px; }
+@media(max-width:800px) { .shrine-panel { width:220px; padding:14px; } .shrine-lab-header { padding:12px 16px; } .shrine-lab-header p { display:none; } }
