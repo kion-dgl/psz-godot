@@ -236,6 +236,34 @@ static func apply_mirror_wrap_fixes(node: Node, fixes: Dictionary, fix_shader: S
 		apply_mirror_wrap_fixes(child, fixes, fix_shader)
 
 
+## The teal mask for a glow pass (#653): white where the source texture's
+## texel reads teal (hue 0.42–0.58, saturation > 0.3, value > 0.2 — the
+## bands kion called out in s07_1_blight / s07_0_lined), black everywhere
+## else. Derived at runtime from the IMPORTED albedo so no separate asset
+## needs to exist.
+static func _teal_mask_texture(src: Texture2D) -> ImageTexture:
+	# The IMPORTED texture is VRAM-compressed — the thin teal bands mangle
+	# past any HSV test (measured: 0 of 117 texels survive). The raw PNG
+	# beside the stage art is lossless (dev-mode lndmd asset, like the
+	# effects files), so scan that when the resource path points at one.
+	var img: Image = null
+	if not src.resource_path.is_empty() and src.resource_path.ends_with(".png"):
+		var raw := Image.load_from_file(src.resource_path)
+		if raw != null:
+			img = raw
+	if img == null:
+		var imported := src.get_image()
+		if imported == null:
+			return null
+		img = imported.duplicate()
+	for y in range(img.get_height()):
+		for x in range(img.get_width()):
+			var c := img.get_pixel(x, y)
+			var lit := 0.42 < c.h and c.h < 0.58 and c.s > 0.3 and c.v > 0.2
+			img.set_pixel(x, y, Color.WHITE if lit else Color.BLACK)
+	return ImageTexture.create_from_image(img)
+
+
 ## #657 glow pass: surfaces whose material is named in `passes` (keyed by
 ## material resource name) get an emissive tint + authored roughness so
 ## anchor meshes read as light sources. Materials are duplicated before
@@ -249,25 +277,55 @@ static func apply_glow_materials(node: Node, passes: Dictionary) -> int:
 		var mi := node as MeshInstance3D
 		for i in range(SmoothNormals._surface_count(mi)):
 			var mat := SmoothNormals._active_material(mi, i)
-			if mat is StandardMaterial3D \
-					and passes.has((mat as StandardMaterial3D).resource_name):
-				var std := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-				var glow: Dictionary = passes[std.resource_name]
-				var e: Array = glow.get("emission", [1, 1, 1])
-				std.emission_enabled = true
-				std.emission = Color(float(e[0]), float(e[1]), float(e[2]))
-				std.emission_energy_multiplier = float(glow.get("energy", 0.5))
-				# Masked glow (#653, kion 2026-10-03): an authored MASK texture —
-				# white where the surface should emit, black where it must not —
-				# so only the texture's teal sections glow instead of the whole
-				# wall. The mask is a derived dev-mode asset (like the lndmd
-				# art); a missing file falls back to the solid emission.
-				var mask_path := str(glow.get("texture", ""))
-				if not mask_path.is_empty() and ResourceLoader.exists(mask_path):
-					std.emission_texture = load(mask_path) as Texture2D
-				std.roughness = float(glow.get("roughness", 0.5))
-				mi.set_surface_override_material(i, std)
-				touched += 1
+			# Match by the MESH's own surface material name when it carries
+			# one, else the active override's — the post-light precedent
+			# (#649): the fix pass replaces some overrides with anonymous
+			# duplicates or whole ShaderMaterials (1_line is mirror-wrapped),
+			# while the imported material keeps the GLB name.
+			var own_mat := (mi.mesh as ArrayMesh).surface_get_material(i) \
+					if mi.mesh is ArrayMesh else null
+			var own_name: String = own_mat.resource_name \
+					if own_mat is StandardMaterial3D else ""
+			var active_name: String = (mat as StandardMaterial3D).resource_name \
+					if mat is StandardMaterial3D else ""
+			var glow: Dictionary = {}
+			if not own_name.is_empty() and passes.has(own_name):
+				glow = passes[own_name]
+			elif not active_name.is_empty() and passes.has(active_name):
+				glow = passes[active_name]
+			if glow.is_empty():
+				continue
+			# When the override is a fix-pass ShaderMaterial (mirror wrap),
+			# the glow builds on the IMPORTED material instead.
+			var base := mat as StandardMaterial3D
+			if base == null and own_mat is StandardMaterial3D:
+				base = own_mat as StandardMaterial3D
+			if base == null:
+				continue
+			var std := base.duplicate() as StandardMaterial3D
+			var e: Array = glow.get("emission", [1, 1, 1])
+			std.emission_enabled = true
+			std.emission = Color(float(e[0]), float(e[1]), float(e[2]))
+			std.emission_energy_multiplier = float(glow.get("energy", 0.5))
+			# Masked glow (#653, kion 2026-10-03): "mask": "teal" derives
+			# an emission mask IN CODE from the surface's own albedo —
+			# only the teal texels emit. The mask source is the MESH's
+			# own material (the active override can carry a crossed
+			# albedo — 1_line's override scanned blight's texture), and
+			# it scans the RAW png beside the art, the VRAM-compressed
+			# import mangling the thin bands past any HSV test.
+			if str(glow.get("mask", "")) == "teal":
+				var src_tex: Texture2D = base.albedo_texture
+				if own_mat is StandardMaterial3D \
+						and (own_mat as StandardMaterial3D).albedo_texture != null:
+					src_tex = (own_mat as StandardMaterial3D).albedo_texture
+				if src_tex != null:
+					var mask_tex := _teal_mask_texture(src_tex)
+					if mask_tex:
+						std.emission_texture = mask_tex
+			std.roughness = float(glow.get("roughness", 0.5))
+			mi.set_surface_override_material(i, std)
+			touched += 1
 	for child in node.get_children():
 		touched += apply_glow_materials(child, passes)
 	return touched
