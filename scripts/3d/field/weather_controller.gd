@@ -587,6 +587,13 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		_spawn_plain_light(effect, pos, color)
 		return
 
+	# The lantern (#653, kion 2026-10-03): a spores-style particle column
+	# whose light rides the AUTHORED intensity — no ×12 spore multiplier
+	# (that correction punched through the snowfield's 1.5 ambient; the
+	# shrine runs 0.05 and would blind). Placement per kion's authored
+	# entries: pillar braziers and door lights.
+	var lantern := effect_type == "lantern"
+
 	var count: int = int(effect.get("count", 10))
 	var radius: float = float(effect.get("radius", 1.0))
 	var height: float = float(effect.get("height", 5.0))
@@ -647,7 +654,10 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	particles.draw_pass_1 = quad
 	root.add_child(particles)
 	if light_intensity > 0:
-		_attach_spore_light(root, pos, color, light_intensity, light_radius)
+		if lantern:
+			_attach_lantern_light(root, pos, color, light_intensity, light_radius)
+		else:
+			_attach_spore_light(root, pos, color, light_intensity, light_radius)
 
 
 ## Plain placed light (#636/#657): an omni with no particle footprint.
@@ -684,6 +694,25 @@ func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 		light.light_cull_mask = 1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)
 	light.position = pos
 	_c._map_root.add_child(light)
+
+
+## The lantern's light (#653): the authored intensity, 1:1 — the spore
+## multiplier is ambient-punch correction the shrine doesn't need.
+## Placed-light convention otherwise: inverse-square, never casts, off the
+## catcher's private layer.
+func _attach_lantern_light(root: Node3D, pos: Vector3, color: Color,
+		light_intensity: float, light_radius: float) -> void:
+	var light := OmniLight3D.new()
+	light.name = "LanternLight"
+	light.light_color = color
+	light.light_energy = light_intensity
+	light.omni_range = light_radius
+	light.omni_attenuation = 2.0
+	light.shadow_enabled = false
+	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
+	root.add_child(light)
+	light.global_position = pos + Vector3(0, 1.0, 0)
+	print("[StageEffect] Lantern light at %s energy=%.1f range=%.1f" % [pos, light_intensity, light_radius])
 
 
 func _attach_spore_light(root: Node3D, pos: Vector3, color: Color,

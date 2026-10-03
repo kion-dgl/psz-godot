@@ -61241,10 +61241,6 @@
     ]
   },
   "s07b_ga1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "defaultSpawn": {
       "direction": "south",
       "position": [
@@ -61320,10 +61316,6 @@
     ]
   },
   "s07b_ib1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -61444,10 +61436,6 @@
     ]
   },
   "s07b_ib2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -61581,10 +61569,6 @@
     ]
   },
   "s07b_ic1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -61705,10 +61689,6 @@
     ]
   },
   "s07b_ic3": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -61829,10 +61809,6 @@
     ]
   },
   "s07b_lb1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -61967,10 +61943,6 @@
     ]
   },
   "s07b_lb3": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62130,10 +62102,6 @@
     ]
   },
   "s07b_lc1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62268,10 +62236,6 @@
     ]
   },
   "s07b_lc2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62444,10 +62408,6 @@
     ]
   },
   "s07b_na1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62515,10 +62475,6 @@
     ]
   },
   "s07b_nb2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62586,10 +62542,6 @@
     ]
   },
   "s07b_nc2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62657,10 +62609,6 @@
     ]
   },
   "s07b_sa1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62766,10 +62714,6 @@
     ]
   },
   "s07b_tb3": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -62947,10 +62891,6 @@
     ]
   },
   "s07b_tc3": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -63189,10 +63129,6 @@
     ]
   },
   "s07b_td1": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -63379,10 +63315,6 @@
     ]
   },
   "s07b_td2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
@@ -63560,10 +63492,6 @@
     ]
   },
   "s07b_xb2": {
-    "glowMaterials": [
-      {"material": "1_blight", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"},
-      {"material": "1_line", "emission": [0.3, 0.95, 0.9], "energy": 3.0, "mask": "teal"}
-    ],
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {},
