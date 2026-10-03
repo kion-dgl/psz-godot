@@ -30,6 +30,8 @@ extends Node3D
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       F / G  shadow normal bias ∓/± 1 · C / V  shadow bias ∓/± 0.05
 ##       [ / ]  edge-fog density ∓/± 0.005 (fog rows only)
+##       U / I  anchor-light intensity ∓/± 10% (all placed lights, live —
+##              the multiplier prints; bake it into the JSON values)
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       K       material inventory · L      light-anchor snippet at the feet
 ##       N       next room · R reload · ESC quit
@@ -71,6 +73,9 @@ var _pos_label: Label
 var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
+## The U/I dial's live multiplier over the spawned AnchorLights — tune by
+## eye, read the value, bake it into the effects JSON (R resets it).
+var _anchor_scale := 1.0
 
 
 func _ready() -> void:
@@ -152,9 +157,26 @@ func _input(event: InputEvent) -> void:
 			_dump_materials()
 		KEY_L:
 			_print_anchor_snippet()
+		KEY_U:
+			_scale_anchors(0.9)
+		KEY_I:
+			_scale_anchors(1.1)
 		_:
 			return
 	_update_status()
+
+
+## The anchor dial (kion 2026-10-03): scale every spawned placed light's
+## energy live — tune a room's whole light set by eye, then bake the
+## multiplier into the effects JSON values (R resets it with the reload).
+func _scale_anchors(mult: float) -> void:
+	_anchor_scale *= mult
+	var n := 0
+	for child in _map_root.get_children():
+		if child is OmniLight3D and child.name.begins_with("AnchorLight"):
+			(child as OmniLight3D).light_energy *= mult
+			n += 1
+	print("[ShrineWalk] anchor intensity x%.2f over %d light(s)" % [_anchor_scale, n])
 
 
 ## The stage's authored placed effects (the candle/urn accents) — parsed
@@ -202,11 +224,14 @@ func _dump_materials() -> void:
 		for i in range(mesh.get_surface_count()):
 			var mat := mesh.surface_get_material(i)
 			var mname: String = mat.resource_name if mat != null else "(no material)"
+			var tex: String = ""
+			if mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture != null:
+				tex = (mat as StandardMaterial3D).albedo_texture.resource_path.get_file()
 			var arrays := mesh.surface_get_arrays(i)
 			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX] \
 				if not arrays.is_empty() else PackedVector3Array()
 			var st: Dictionary = stats.get(mname, {
-				"surfaces": 0, "verts": 0, "ymin": INF, "ymax": -INF})
+				"surfaces": 0, "verts": 0, "ymin": INF, "ymax": -INF, "tex": tex})
 			st["surfaces"] = int(st["surfaces"]) + 1
 			st["verts"] = int(st["verts"]) + verts.size()
 			for v in verts:
@@ -216,13 +241,13 @@ func _dump_materials() -> void:
 			stats[mname] = st
 	var names := (stats.keys() as Array).duplicate()
 	names.sort()
-	print("[ShrineWalk] %s — %d material(s): name  surfaces  verts  y-range" %
+	print("[ShrineWalk] %s — %d material(s): name  surfaces  verts  y-range  texture" %
 		[_stage_id, names.size()])
 	for mname in names:
 		var st: Dictionary = stats[mname]
-		print("  %-24s  %2d  %6d  y %.1f..%.1f" % [mname,
+		print("  %-24s  %2d  %6d  y %.1f..%.1f  %s" % [mname,
 			int(st["surfaces"]), int(st["verts"]),
-			float(st["ymin"]), float(st["ymax"])])
+			float(st["ymin"]), float(st["ymax"]), str(st["tex"])])
 
 
 ## The authoring loop's print half (#653): L emits an effects.json light

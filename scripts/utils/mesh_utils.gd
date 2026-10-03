@@ -257,6 +257,14 @@ static func apply_glow_materials(node: Node, passes: Dictionary) -> int:
 				std.emission_enabled = true
 				std.emission = Color(float(e[0]), float(e[1]), float(e[2]))
 				std.emission_energy_multiplier = float(glow.get("energy", 0.5))
+				# Masked glow (#653, kion 2026-10-03): an authored MASK texture —
+				# white where the surface should emit, black where it must not —
+				# so only the texture's teal sections glow instead of the whole
+				# wall. The mask is a derived dev-mode asset (like the lndmd
+				# art); a missing file falls back to the solid emission.
+				var mask_path := str(glow.get("texture", ""))
+				if not mask_path.is_empty() and ResourceLoader.exists(mask_path):
+					std.emission_texture = load(mask_path) as Texture2D
 				std.roughness = float(glow.get("roughness", 0.5))
 				mi.set_surface_override_material(i, std)
 				touched += 1

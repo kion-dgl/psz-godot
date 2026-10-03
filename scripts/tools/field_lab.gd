@@ -162,6 +162,20 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		var lit_n: int = MeshUtils.make_lit_surfaces(map_root, slot["lit_surfaces"])
 		var forced: int = MeshUtils.make_unlit(map_root, slot["lit_surfaces"])
 		print("[FieldLab] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
+	# The stage config's glow anchors (#657 / #653), lockstep with the
+	# field's _apply_glow_materials — the lab renders what the field renders.
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	if cfg_file:
+		var cfg_json := JSON.new()
+		if cfg_json.parse(cfg_file.get_as_text()) == OK:
+			var glow_passes: Dictionary = {}
+			for g in (cfg_json.data as Dictionary).get(stage_id, {}).get("glowMaterials", []):
+				glow_passes[str(g.get("material", ""))] = g
+			if not glow_passes.is_empty():
+				var glowed: int = MeshUtils.apply_glow_materials(map_root, glow_passes)
+				if glowed > 0:
+					print("[FieldLab] glow pass on %d surfaces (%s)" % [glowed, ", ".join(glow_passes.keys())])
+		cfg_file.close()
 	# The floor/actor light split, lockstep with the field's load pass
 	# (#653) — the dup-gate: the lab applies exactly what the field applies.
 	if slot.get("stage_light_layer", false):
