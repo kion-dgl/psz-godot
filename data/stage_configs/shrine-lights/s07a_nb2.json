@@ -1,0 +1,73 @@
+{
+  "stage_id": "s07a_nb2",
+  "effects": [
+    {
+      "id": "lantern_1",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        30.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_2",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -6.0,
+        0,
+        37.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_3",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        30.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_4",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.0,
+        0,
+        37.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    }
+  ]
+}

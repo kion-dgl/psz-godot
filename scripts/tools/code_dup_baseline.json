@@ -513,6 +513,15 @@
     {
       "sig": "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0||scripts/tools/lantern_test.gd:_spawn_placed_effect#0",
       "jaccard": 0.852
+    },
+    {
+      "sig": "scripts/3d/field/weather_controller.gd:_build_ground_spores_node#0||scripts/3d/field/weather_controller.gd:_build_motes_node#0",
+      "jaccard": 0.865
+    },
+    {
+      "sig": "scripts/3d/field/weather_controller.gd:_attach_lantern_light#0||scripts/3d/field/weather_controller.gd:_attach_spore_light#0",
+      "jaccard": 0.863
     }
-  ]
+  ],
+  "_shrine_review": "PR #678: accept the separate ground-spore/mote builders and lantern/spore light variants after visual review. Consolidation belongs to the deferred optimization pass."
 }

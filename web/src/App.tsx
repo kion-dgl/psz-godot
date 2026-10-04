@@ -19,6 +19,7 @@ const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
 const CityLab = lazy(() => import('./city-lab/CityLab'));
+const ShrinePillarLab = lazy(() => import('./shrine-lab/ShrinePillarLab'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const RetargetTunerVrm = lazy(() => import('./retarget/RetargetTunerVrm'));
@@ -87,6 +88,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/office-editor', label: 'Office' },
       { to: '/market-editor', label: 'Market' },
       { to: '/city-lab', label: 'City Lab' },
+      { to: '/shrine-pillar-lab', label: 'Shrine Pillars' },
       { to: '/underground-editor', label: 'Underground' },
     ],
   },
@@ -277,6 +279,7 @@ export default function App() {
             <Route path="/office-editor" element={<OfficeEditor />} />
             <Route path="/market-editor" element={<MarketEditor />} />
             <Route path="/city-lab" element={<CityLab />} />
+            <Route path="/shrine-pillar-lab" element={<ShrinePillarLab />} />
             <Route path="/menu-design" element={<MenuDesign />} />
             <Route path="/settings" element={<SettingsMockup />} />
             <Route path="/retarget" element={<RetargetViewer />} />

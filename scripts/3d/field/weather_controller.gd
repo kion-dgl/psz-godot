@@ -10,6 +10,7 @@ extends RefCounted
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
+const ShrineLighting := preload("res://scripts/3d/field/shrine_lighting.gd")
 
 ## Cache for stage effects JSON (keyed by stage_id, null = no file).
 static var _stage_effects_cache: Dictionary = {}
@@ -232,14 +233,102 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 ## Static + shared so the walk labs preview exactly what spawns in-field.
 ## Distinct from weather by contract: precipitation skips indoor stages,
 ## signatures don't — the shrine's motes are the indoor identity (#653).
-static func build_signature_node(signature: String) -> GPUParticles3D:
+## The black flavor returns a CONTAINER: the dark mote body plus a small
+## red-ember emitter riding in it (kion 2026-10-02: dark particles with a
+## small amount of red).
+static func build_signature_node(signature: String) -> Node3D:
+	if signature == "red_motes":
+		return _build_motes_node("SignatureMotesRed",
+			Color(0.9, 0.23, 0.14, 0.75), Color(0.4, 0.06, 0.04, 0.5), true, 1400)
 	if signature == "white_motes":
 		return _build_motes_node("SignatureMotesWhite",
-			Color(0.92, 0.92, 0.98, 0.55), Color(0.45, 0.45, 0.55, 0.35), true)
+			Color(0.92, 0.92, 0.98, 0.75), Color(0.55, 0.55, 0.65, 0.5), true, 1400)
 	if signature == "black_motes":
-		return _build_motes_node("SignatureMotesBlack",
-			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false)
+		var root := Node3D.new()
+		root.name = "SignatureBlackMotes"
+		# kion's 2026-10-03 walkthrough: the swirling storm (softened — no
+		# more pixel squares) + the red embers + the ground spores lifted
+		# off the floor + a PALE share — dark motes in a dark room read as
+		# nothing ("barely noticeable"); the lighter mix keeps the storm
+		# visible against the pools.
+		root.add_child(_build_motes_node("SignatureMotesBlack",
+			Color(0.16, 0.13, 0.22, 0.6), Color(0.04, 0.04, 0.06, 0.5), false, 1040))
+		root.add_child(_build_motes_node("SignatureMotesPale",
+			Color(0.72, 0.72, 0.82, 0.45), Color(0.4, 0.4, 0.52, 0.3), true, 220))
+		root.add_child(_build_motes_node("SignatureMotesRed",
+			Color(0.6, 0.12, 0.05, 0.7), Color(0.35, 0.06, 0.03, 0.55), true, 160))
+		root.add_child(_build_ground_spores_node("SignatureSpores",
+			Color(0.5, 0.45, 0.68, 0.5), Color(0.2, 0.16, 0.3, 0.35)))
+		return root
 	return null
+
+
+## The ground spores (kion 2026-10-03, the second rising kind): sparse,
+## soft motes lifting off the FLOOR plane — a wide thin emission slab at
+## walk height (the player-attached volume hugging the ground, the
+## collision mesh's footprint in practice). Distinct from the swirling
+## storm: bigger soft quads (the glow-dot texture, never a pixel square),
+## a slower straight climb, a long unhurried lifetime.
+static func _build_ground_spores_node(node_name: String, tone: Color,
+		deep: Color) -> GPUParticles3D:
+	var spores := GPUParticles3D.new()
+	spores.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	spores.name = node_name
+	spores.amount = 280
+	spores.lifetime = 12.0
+	spores.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+	spores.fixed_fps = 30
+	spores.interpolate = false
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 4.0
+	mat.initial_velocity_min = 0.3
+	mat.initial_velocity_max = 0.7
+	mat.gravity = Vector3(0, 0.02, 0)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(22, 0.15, 22)
+	mat.scale_min = 0.7
+	mat.scale_max = 1.5
+	mat.damping_min = 0.02
+	mat.damping_max = 0.08
+	mat.turbulence_enabled = true
+	mat.turbulence_noise_strength = 0.2
+	mat.turbulence_noise_scale = 1.2
+	var init := Gradient.new()
+	init.set_color(0, deep)
+	init.set_color(init.get_point_count() - 1, tone)
+	var init_ramp := GradientTexture1D.new()
+	init_ramp.gradient = init
+	mat.color_initial_ramp = init_ramp
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1, 1, 1, 0.0))
+	ramp.add_point(0.1, Color(1, 1, 1, 1.0))
+	ramp.add_point(0.75, Color(1, 1, 1, 1.0))
+	ramp.set_color(ramp.get_point_count() - 1, Color(1, 1, 1, 0.0))
+	var ramp_tex := GradientTexture1D.new()
+	ramp_tex.gradient = ramp
+	mat.color_ramp = ramp_tex
+	spores.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.14, 0.14)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = tone
+	quad_mat.albedo_texture = create_glow_dot_texture()
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.emission_enabled = true
+	quad_mat.emission = tone
+	quad_mat.emission_energy_multiplier = 2.5
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = quad_mat
+	spores.draw_pass_1 = quad
+
+	spores.preprocess = 4.0
+	spores.position.y = -1.0
+	return spores
 
 
 ## The shrine's rising motes (#653): the snowfall inverted — a thin emission
@@ -249,11 +338,11 @@ static func build_signature_node(signature: String) -> GPUParticles3D:
 ## base); the black flavor stays plain translucent (dark motes darken the dim
 ## floor behind them). Per-particle tone varies via the initial ramp.
 static func _build_motes_node(node_name: String, tone: Color, deep: Color,
-		glow: bool) -> GPUParticles3D:
+		glow: bool, amount := 140) -> GPUParticles3D:
 	var motes := GPUParticles3D.new()
 	motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	motes.name = node_name
-	motes.amount = 140
+	motes.amount = amount
 	motes.lifetime = 9.0
 	motes.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
 	motes.fixed_fps = 30
@@ -277,10 +366,14 @@ static func _build_motes_node(node_name: String, tone: Color, deep: Color,
 	mat.scale_max = 1.0
 	mat.damping_min = 0.05
 	mat.damping_max = 0.15
-	# A slow wander as they rise (the sand haze's turbulence, calmed).
+	# A slow swirl as they rise (kion 2026-10-02): tighter, stronger eddies
+	# than the sand haze plus a gentle orbit around the volume's center —
+	# the motes curl rather than just drift.
 	mat.turbulence_enabled = true
-	mat.turbulence_noise_strength = 0.3
-	mat.turbulence_noise_scale = 1.5
+	mat.turbulence_noise_strength = 0.75
+	mat.turbulence_noise_scale = 0.9
+	mat.orbit_velocity_min = 0.05
+	mat.orbit_velocity_max = 0.2
 	# Per-particle tone: each mote picks a random spot between the deep and
 	# bright ends of the initial ramp.
 	var init := Gradient.new()
@@ -304,6 +397,9 @@ static func _build_motes_node(node_name: String, tone: Color, deep: Color,
 	quad.size = Vector2(0.06, 0.06)
 	var quad_mat := StandardMaterial3D.new()
 	quad_mat.albedo_color = tone
+	# The soft radial dot (kion 2026-10-03: the bare quads read as pixel
+	# squares) — the texture's alpha falloff rounds every mote.
+	quad_mat.albedo_texture = create_glow_dot_texture()
 	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	if glow:
 		quad_mat.emission_enabled = true
@@ -362,7 +458,11 @@ class LightningStrobe extends Node3D:
 	func flash() -> void:
 		_stroke_t = 0.0
 		_pulses = [0.0]
-		var t := 0.12 + randf() * 0.1
+		# The first gap must clear PULSE_DECAY (0.13) or the second pulse
+		# ignites before the first dies — no dark gap between them, and the
+		# stroke reads as one long pop instead of a flicker (the envelope
+		# test counts dark gaps; a 0.12 start flaked it ~5% of runs).
+		var t := 0.14 + randf() * 0.1
 		for i in range(randi_range(1, 2)):
 			_pulses.append(t)
 			t += 0.14 + randf() * 0.12
@@ -399,14 +499,23 @@ func _kick_weather() -> void:
 	_kick_node(_c._weather_node)
 
 
-func _kick_node(node: GPUParticles3D) -> void:
+func _kick_node(node: Node) -> void:
 	# Wait a couple frames so the player transform is fully committed, then
 	# restart the particle system. preprocess runs again on restart and the
-	# snow appears already falling.
+	# snow appears already falling. Handles plain emitters and the signature
+	# containers (the black motes ride with a red-ember emitter).
 	await _c.get_tree().process_frame
 	await _c.get_tree().process_frame
-	if is_instance_valid(node):
-		node.restart()
+	if not is_instance_valid(node):
+		return
+	var emitters: Array[GPUParticles3D] = []
+	if node is GPUParticles3D:
+		emitters.append(node as GPUParticles3D)
+	for child in node.get_children():
+		if child is GPUParticles3D:
+			emitters.append(child as GPUParticles3D)
+	for emitter in emitters:
+		emitter.restart()
 
 
 func _strip_embedded_lights(node: Node) -> void:
@@ -428,6 +537,12 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 
 
 func _spawn_stage_effects(stage_id: String) -> void:
+	# The tracked B recipe supersedes local/asset-pack drafts, preventing
+	# stale sidecars from doubling the reference room's authored lights.
+	var shrine := ShrineLighting.recipe(stage_id)
+	if not shrine.is_empty():
+		_apply_stage_effects(shrine, stage_id)
+		return
 	# Check cache first
 	if _stage_effects_cache.has(stage_id):
 		var cached: Variant = _stage_effects_cache[stage_id]
@@ -475,12 +590,27 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	var color := Color(float(color_arr[0]), float(color_arr[1]), float(color_arr[2]))
 
 	var effect_type: String = str(effect.get("type", "spores"))
+	if effect_type == "shrine_lantern":
+		var lantern := preload("res://scenes/props/shrine_lantern.tscn").instantiate() as Node3D
+		lantern.position = pos
+		lantern.set("light_energy", float(effect.get("intensity", 1.4)))
+		lantern.set("light_color", color)
+		lantern.set("pole_depth", float(effect.get("pole_depth", 0.0)))
+		_c._map_root.add_child(lantern)
+		return
 
 	# Plain light (#636/#657): an omni with no particle footprint — the s03b
 	# cave anchors (water pools, mushroom clusters).
 	if effect_type == "light":
 		_spawn_plain_light(effect, pos, color)
 		return
+
+	# The lantern (#653, kion 2026-10-03): a spores-style particle column
+	# whose light rides the AUTHORED intensity — no ×12 spore multiplier
+	# (that correction punched through the snowfield's 1.5 ambient; the
+	# shrine runs 0.05 and would blind). Placement per kion's authored
+	# entries: pillar braziers and door lights.
+	var lantern := effect_type == "lantern"
 
 	var count: int = int(effect.get("count", 10))
 	var radius: float = float(effect.get("radius", 1.0))
@@ -542,28 +672,66 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	particles.draw_pass_1 = quad
 	root.add_child(particles)
 	if light_intensity > 0:
-		_attach_spore_light(root, pos, color, light_intensity, light_radius)
+		if lantern:
+			_attach_lantern_light(root, pos, color, light_intensity, light_radius)
+		else:
+			_attach_spore_light(root, pos, color, light_intensity, light_radius)
 
 
 ## Plain placed light (#636/#657): an omni with no particle footprint.
 ## Inverse-square 2.0 like every placed light; intensity rides the authored
 ## value directly (the ×12 spore multiplier is a punch-through-ambient
 ## correction specific to the bright A-night's lantern pools).
+## `targets: "stage"` (#653, the floor/actor split): the omni is masked to
+## the stage's private layer ONLY — a hot, low floor painter the actors
+## physically cannot see (walking under it never blows the character out);
+## the default targets everything but the catcher.
 func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	var light := OmniLight3D.new()
 	light.name = "AnchorLight"
+	light.set_meta("authored_light", true)
 	light.light_color = color
 	light.light_energy = float(effect.get("intensity", 1.0))
 	light.omni_range = float(effect.get("radius", 6.0))
-	light.omni_attenuation = 2.0
+	light.omni_attenuation = float(effect.get("attenuation", 2.0))
 	light.shadow_enabled = false
+	# Casting placed lights (#653, kion 2026-10-03: "just the point lights
+	# casting shadows in the scene"): the wetlands lantern precedent — the
+	# compat renderer's dual-paraboloid omni shadows land on per-pixel
+	# ground, and only actors cast, so the extra passes stay cheap. Opt-in
+	# per entry; the floor painters stay shadowless (their mask excludes
+	# the actors anyway — nothing would cast).
+	if effect.get("shadows", false):
+		light.shadow_enabled = true
+		light.shadow_blur = 1.0
 	# Off the catcher's private layer (#652, the #670 contract): the authored
 	# pools light ACTORS (an unlit stage can't receive them anyway) without
 	# pushing a MUL catcher floor past ×1 inside their falloff. No-op
 	# wherever the row fields no catcher.
 	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
+	if str(effect.get("targets", "all")) == "stage":
+		light.light_cull_mask = 1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)
 	light.position = pos
 	_c._map_root.add_child(light)
+
+
+## The lantern's light (#653): the authored intensity, 1:1 — the spore
+## multiplier is ambient-punch correction the shrine doesn't need.
+## Placed-light convention otherwise: inverse-square, never casts, off the
+## catcher's private layer.
+func _attach_lantern_light(root: Node3D, pos: Vector3, color: Color,
+		light_intensity: float, light_radius: float) -> void:
+	var light := OmniLight3D.new()
+	light.name = "LanternLight"
+	light.light_color = color
+	light.light_energy = light_intensity
+	light.omni_range = light_radius
+	light.omni_attenuation = 2.0
+	light.shadow_enabled = false
+	light.light_cull_mask &= ~MeshUtils.SHADOW_CATCHER_LAYER
+	root.add_child(light)
+	light.global_position = pos + Vector3(0, 1.0, 0)
+	print("[StageEffect] Lantern light at %s energy=%.1f range=%.1f" % [pos, light_intensity, light_radius])
 
 
 func _attach_spore_light(root: Node3D, pos: Vector3, color: Color,

@@ -15,7 +15,7 @@ extends Node3D
 ## file through the real WeatherController, so what walks here is what
 ## spawns in-field).
 ##
-## Env:  PSZ_WALK_STAGE=s07a_ga1   boot stage (default: first of STAGES)
+## Env:  PSZ_WALK_STAGE=s07b_ga1   boot stage (default: first of STAGES)
 ##       PSZ_WALK_SHOT=/tmp/o.png  screenshot + quit (smoke; else live keys)
 ##       PSZ_WALK_SUN_PITCH=-60    sun elevation override
 ##       PSZ_WALK_SUN_SHADOWS=0    force sun shadows off
@@ -29,6 +29,9 @@ extends Node3D
 ## Keys: , / .  ambient ∓/± 0.05      9 / 0  sun ∓/± 0.05
 ##       7 / 8  sun lower / steeper (pitch ∓/± 5°)
 ##       F / G  shadow normal bias ∓/± 1 · C / V  shadow bias ∓/± 0.05
+##       [ / ]  edge-fog density ∓/± 0.005 (fog rows only)
+##       U / I  anchor-light intensity ∓/± 10% (all placed lights, live —
+##              the multiplier prints; bake it into the JSON values)
 ##       P       read-out (field format)     M      sun shadows toggle
 ##       K       material inventory · L      light-anchor snippet at the feet
 ##       N       next room · R reload · ESC quit
@@ -38,12 +41,13 @@ const EFFECTS_JSON_FMT := "res://assets/stages/%s/%s/lndmd/%s_effects.json"
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
-## The variants in walk order (N cycles): A's gate, an lc room and the sa
-## plaza-shaped room; B's gate and an lb room (the black-mote side); the E
-## transition; both boss arenas.
+## The B reference cycle. A has the same eighteen room suffixes; booting
+## PSZ_WALK_STAGE=s07a_ga1 selects the A cycle without changing B lighting.
 const STAGES := [
-	"s07a_ga1", "s07a_lc1", "s07a_sa1", "s07b_ga1", "s07b_lb1",
-	"s07e_ia1", "s07z_na1", "s07z_na2",
+	"s07b_ga1", "s07b_ib1", "s07b_ib2", "s07b_ic1", "s07b_ic3",
+	"s07b_lb1", "s07b_lb3", "s07b_lc1", "s07b_lc2", "s07b_na1",
+	"s07b_nb2", "s07b_nc2", "s07b_sa1", "s07b_tb3", "s07b_tc3",
+	"s07b_td1", "s07b_td2", "s07b_xb2",
 ]
 
 ## The anchor snippet's placeholder accent (#653 first draft): warm candle
@@ -56,7 +60,10 @@ const ANCHOR_RADIUS := 5.0
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
-var _stage_id := "s07a_ga1"
+@export var boot_stage := "s07b_ga1"
+
+var _stage_id := "s07b_ga1"
+var _stage_cycle: Array = STAGES
 var _map_root: Node3D
 var _player: CharacterBody3D
 var _env: Environment
@@ -64,17 +71,28 @@ var _dir_light: DirectionalLight3D
 var _slot := {}
 var _shot := FieldLabScript.ShotRun.new()
 var _status: Label
+var _pos_label: Label
 var _sun_open := false
 var _shells_disarmed := 0
 var _floor_top := NAN
+## The U/I dial's live multiplier over the spawned AnchorLights — tune by
+## eye, read the value, bake it into the effects JSON (R resets it).
+var _anchor_scale := 1.0
 
 
 func _ready() -> void:
+	_stage_id = boot_stage
+	# R must pick up newly authored lighting recipes.
+	preload("res://scripts/3d/field/shrine_lighting.gd")._recipes.clear()
 	if not _pending_stage.is_empty():
 		_stage_id = _pending_stage
 		_pending_stage = ""
 	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
 		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
+	if _stage_id.begins_with("s07a_"):
+		_stage_cycle = STAGES.map(func(stage): return stage.replace("s07b_", "s07a_"))
+	elif _stage_id.begins_with("s07e_"):
+		_stage_cycle = [_stage_id]
 	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
 	# The variant subfolder (shrine_a/b/e/z — the variant char at index 3,
 	# same rule as the controller's _get_stage_subfolder).
@@ -97,7 +115,14 @@ func _ready() -> void:
 			_dir_light.global_transform.basis.z, _floor_top)
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
-	_player = FieldLabScript.spawn_player(self, FieldLabScript.boot_spawn(_stage_id))
+	var start := FieldLabScript.boot_spawn(_stage_id)
+	_player = FieldLabScript.spawn_player(self, start)
+	# Enter looking into the room; the reference room starts at its center.
+	var orbit := get_node("OrbitCamera")
+	if Vector2(start.x, start.z).length() > 4.0:
+		orbit.camera_rotation = atan2(start.x, start.z)
+	if not OS.get_environment("PSZ_WALK_YAW").is_empty():
+		orbit.camera_rotation = deg_to_rad(float(OS.get_environment("PSZ_WALK_YAW")))
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()
@@ -107,10 +132,19 @@ func _ready() -> void:
 	FieldLabScript.spawn_weather(_player, _slot)
 	FieldLabScript.spawn_signature(_player, _slot)
 	_status = FieldLabScript.make_status_label(self)
+	# The player's live map coordinates, bottom-left (kion 2026-10-03 — the
+	# pool-authoring aid: read a spot, L it, paste it).
+	_pos_label = FieldLabScript.make_status_label(self)
+	_pos_label.position = Vector2(12,
+		get_viewport().get_visible_rect().size.y - 44.0)
 	_update_status()
 	_readout()
 	if OS.get_environment("PSZ_WALK_DUMP") == "materials":
 		_dump_materials()
+		get_tree().quit()
+		return
+	if OS.get_environment("PSZ_WALK_DUMP") == "instances":
+		_dump_stage_layers()
 		get_tree().quit()
 		return
 	print("[ShrineWalk] ready — N next room, R reload, K materials, L anchor, ESC quit")
@@ -118,6 +152,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_shot.step(self, "ShrineWalk")
+	if _pos_label and is_instance_valid(_player):
+		var p := _player.global_position
+		_pos_label.text = "(%.1f, %.1f, %.1f)" % [p.x, p.y, p.z]
 
 
 func _input(event: InputEvent) -> void:
@@ -129,10 +166,11 @@ func _input(event: InputEvent) -> void:
 		return
 	match keycode:
 		KEY_N:
-			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()] \
-				if _stage_id in STAGES else STAGES[0]
+			_pending_stage = _stage_cycle[(_stage_cycle.find(_stage_id) + 1) % _stage_cycle.size()] \
+				if _stage_id in _stage_cycle else _stage_cycle[0]
 			get_tree().reload_current_scene()
 		KEY_R:
+			_pending_stage = _stage_id
 			get_tree().reload_current_scene()
 		KEY_P:
 			_readout()
@@ -140,9 +178,26 @@ func _input(event: InputEvent) -> void:
 			_dump_materials()
 		KEY_L:
 			_print_anchor_snippet()
+		KEY_U:
+			_scale_anchors(0.9)
+		KEY_I:
+			_scale_anchors(1.1)
 		_:
 			return
 	_update_status()
+
+
+## The anchor dial (kion 2026-10-03): scale every spawned placed light's
+## energy live — tune a room's whole light set by eye, then bake the
+## multiplier into the effects JSON values (R resets it with the reload).
+func _scale_anchors(mult: float) -> void:
+	_anchor_scale *= mult
+	var n := 0
+	for child in _map_root.find_children("*", "OmniLight3D", true, false):
+		if child.has_meta("authored_light"):
+			(child as OmniLight3D).light_energy *= mult
+			n += 1
+	print("[ShrineWalk] anchor intensity x%.2f over %d light(s)" % [_anchor_scale, n])
 
 
 ## The stage's authored placed effects (the candle/urn accents) — parsed
@@ -151,6 +206,10 @@ func _input(event: InputEvent) -> void:
 ## what walks here is what spawns in-field. (The controller's own path
 ## resolves the folder from the session area, which a lab boot has none of.)
 func _spawn_authored_effects() -> void:
+	var recipe: Dictionary = preload("res://scripts/3d/field/shrine_lighting.gd").recipe(_stage_id)
+	if not recipe.is_empty():
+		WeatherControllerScript.new(self)._apply_stage_effects(recipe, _stage_id)
+		return
 	var path := EFFECTS_JSON_FMT % ["shrine_" + _stage_id.substr(3, 1), _stage_id, _stage_id]
 	if not FileAccess.file_exists(path):
 		return
@@ -184,17 +243,20 @@ func _dump_materials() -> void:
 	for node in MeshUtils.collect_mesh_instances(_map_root, []):
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh as ArrayMesh
-		if mesh == null:
+		if mi.is_queued_for_deletion() or mesh == null:
 			continue
 		var xform := mi.global_transform
 		for i in range(mesh.get_surface_count()):
 			var mat := mesh.surface_get_material(i)
 			var mname: String = mat.resource_name if mat != null else "(no material)"
+			var tex: String = ""
+			if mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture != null:
+				tex = (mat as StandardMaterial3D).albedo_texture.resource_path.get_file()
 			var arrays := mesh.surface_get_arrays(i)
 			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX] \
 				if not arrays.is_empty() else PackedVector3Array()
 			var st: Dictionary = stats.get(mname, {
-				"surfaces": 0, "verts": 0, "ymin": INF, "ymax": -INF})
+				"surfaces": 0, "verts": 0, "ymin": INF, "ymax": -INF, "tex": tex})
 			st["surfaces"] = int(st["surfaces"]) + 1
 			st["verts"] = int(st["verts"]) + verts.size()
 			for v in verts:
@@ -204,13 +266,37 @@ func _dump_materials() -> void:
 			stats[mname] = st
 	var names := (stats.keys() as Array).duplicate()
 	names.sort()
-	print("[ShrineWalk] %s — %d material(s): name  surfaces  verts  y-range" %
+	print("[ShrineWalk] %s — %d material(s): name  surfaces  verts  y-range  texture" %
 		[_stage_id, names.size()])
 	for mname in names:
 		var st: Dictionary = stats[mname]
-		print("  %-24s  %2d  %6d  y %.1f..%.1f" % [mname,
+		print("  %-24s  %2d  %6d  y %.1f..%.1f  %s" % [mname,
 			int(st["surfaces"]), int(st["verts"]),
-			float(st["ymin"]), float(st["ymax"])])
+			float(st["ymin"]), float(st["ymax"]), str(st["tex"])])
+
+
+## The floor/actor split's health check (#653): every map mesh instance
+## should carry the stage's private layer bit — an unflagged instance is
+## invisible to the floor painters (three dark floor regions walked by
+## kion, traced to a 16-surfaces/13-instances flag gap).
+func _dump_stage_layers() -> void:
+	var bit := 1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)
+	var total := 0
+	var flagged := 0
+	var missing: Array = []
+	for node in MeshUtils.collect_mesh_instances(_map_root, []):
+		var mi := node as MeshInstance3D
+		total += 1
+		if mi.layers & bit:
+			flagged += 1
+		else:
+			missing.append("%s (mat %s)" % [mi.name,
+				str(mi.mesh.surface_get_material(0).resource_name)
+				if mi.mesh is ArrayMesh and (mi.mesh as ArrayMesh).surface_get_material(0) != null
+				else "?"])
+	print("[ShrineWalk] stage layer: %d/%d instance(s) flagged" % [flagged, total])
+	for m in missing:
+		print("  UNFLAGGED: %s" % m)
 
 
 ## The authoring loop's print half (#653): L emits an effects.json light
@@ -231,17 +317,18 @@ func _print_anchor_snippet() -> void:
 ## The read-out prints in the field's [FieldSlot] shape so a tuned set is
 ## copied into the FieldSlotTable row without translation.
 func _readout() -> void:
-	print("[FieldSlot %s] ambient %.2f  sun %.2f  sun_pitch %.0f  sun_shadows %s  bias %.2f  nb %.1f" % [
+	print("[FieldSlot %s] ambient %.2f  sun %.2f  sun_pitch %.0f  sun_shadows %s  bias %.2f  nb %.1f  fog %.3f" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x, str(_dir_light.shadow_enabled).to_lower(),
-		_dir_light.shadow_bias, _dir_light.shadow_normal_bias])
+		_dir_light.shadow_bias, _dir_light.shadow_normal_bias, _env.fog_density])
 	print("[ShrineWalk] room sun: %s" %
 		("open" if _sun_open else "enclosed — %d shell mesh(es) cast-off" % _shells_disarmed))
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  room %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  sun shadows %s  fog %.3f  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",
+		_env.fog_density,
 		"sun-open" if _sun_open else "shell-cast-off"]

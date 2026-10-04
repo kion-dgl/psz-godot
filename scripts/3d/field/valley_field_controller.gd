@@ -302,9 +302,17 @@ func _ready() -> void:
 		# the cheat's contract is that the stage never reacts to light.
 		var forced: int = MeshUtils.make_unlit(_map_root, _slot["lit_surfaces"])
 		_fdbg("[ValleyField] cheat rig: %d surface(s) lit, %d forced unlit, stage keeps its bake" % [lit_n, forced])
+	# The floor/actor light split (#653, kion 2026-10-03): join the lit
+	# stage to its private visual layer so "stage"-targeted placed lights
+	# can paint the floor alone — hot low pools the actors never see.
+	if _slot.get("stage_light_layer", false) and _map_root:
+		var flagged: int = MeshUtils.add_visual_layer(_map_root,
+			MeshUtils.STAGE_LIGHT_LAYER)
+		_fdbg("[ValleyField] stage light layer: %d instance(s) flagged" % flagged)
 	# #657: anchor meshes read as light sources where the stage config
 	# authors it — emissive tint + roughness, matched by material name.
 	_apply_glow_materials()
+	preload("res://scripts/3d/field/shrine_lighting.gd").rebuild_pillars(_map_root, stage_id)
 
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]
@@ -316,6 +324,7 @@ func _ready() -> void:
 			_map_root.add_child(skybox_root)
 			_fix_materials(skybox_root)
 			_fdbg("[ValleyField] Loaded skybox: %s" % skybox_path)
+	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(_map_root, stage_id)
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
@@ -853,6 +862,26 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
 		_world_env.environment.tonemap_white = float(_slot["tonemap_white"])
+	if _slot.has("fog_density"):
+		# Edge-haze rows (#653 follow-up, kion 2026-10-02): dark exponential
+		# fog so the room's far edges dissolve into the dark — clouds at the
+		# boundary instead of hard walls against unmodeled space. The albedo
+		# rides near-black: the fog reads as darkness creeping in, not haze.
+		# fog_height + a NEGATIVE height density pile the fog overhead —
+		# the ceiling cloud bank that buries a white skybox leaking through
+		# open roofs (kion: "a lot of dark fog/clouds on the ceiling and
+		# edges").
+		var fog := _world_env.environment
+		fog.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		fog.fog_density = float(_slot["fog_density"])
+		# fog_light_color is the non-volumetric fog's color (NOT fog_albedo —
+		# that property doesn't exist on Environment in 4.5 and the
+		# assignment dies as a script error).
+		fog.fog_light_color = _slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		fog.fog_aerial_perspective = 0.0
+		if _slot.has("fog_height"):
+			fog.fog_height = float(_slot["fog_height"])
+			fog.fog_height_density = float(_slot.get("fog_height_density", 0.0))
 
 
 ## Debug hour preview (#655): the [/] keys set TimeManager's hour; re-apply the

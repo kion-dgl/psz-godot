@@ -44,6 +44,18 @@ extends RefCounted
 ##   bake_mix      float COLOR_0 → white blend (0..1); presence implies the
 ##                        white-strategy material pass (neutralize + per-pixel)
 ##   tonemap_white float  tonemap white point override
+##   fog_density   float  dark edge-haze rows (#653 follow-up): exponential
+##                        fog whose near-black albedo (fog_color, default
+##                        0.03,0.03,0.06) dissolves the room's far edges
+##                        into the dark — clouds at the boundary instead of
+##                        hard walls against unmodeled space
+##   fog_color     Color  the fog's albedo (rides the dark read)
+##   fog_height    float  with fog_height_density: the height fog's y line —
+##                        a NEGATIVE density piles fog above it (the shrine
+##                        B/Z ceiling cloud bank burying a white skybox
+##                        through open roofs), positive pools it below
+##                        (ground fog)
+##   fog_height_density float the height fog's density sign and magnitude
 ##   geometry_casts_shadows bool map geometry casts shadows (default off — the
 ##                        bake is the look); a rig that stands on real moon
 ##                        shadows (s03b, #659) turns it on
@@ -61,6 +73,13 @@ extends RefCounted
 ##                        on the ground. Needs no bake_mix; run after the
 ##                        field material pass so special-shader surfaces
 ##                        (waterfalls) are skipped
+##   stage_light_layer bool the lit stage ALSO joins its private visual
+##                        layer (#653, the floor/actor split): "stage"-
+##                        targeted placed lights (<stage>_effects.json
+##                        entries with "targets": "stage") are masked to
+##                        that layer alone — hot low floor pools the
+##                        actors/props/catcher physically cannot see, while
+##                        ordinary lights keep reaching everything
 ##   shadow_catcher bool the collision shell renders as the shadow receiver
 ##                        — white, multiply-blended, at the walk height:
 ##                        the actors' dynamic shadows multiply onto the
@@ -344,53 +363,113 @@ const SLOTS := {
 		"sun_shadows": true,
 		"shadow_catcher": true,
 	},
-	# ── the Dark Shrine pin (#653, kion 2026-10-01) ──
+	# ── the Dark Shrine pin (#653, kion 2026-10-01; locked + fogged
+	#    2026-10-02) ──
 	# The arca contract again — the rows' silence keeps the stage unlit, the
 	# bake IS the look — but pinned to the NIGHT preset's base (a near-black
 	# sky where any peeks through, the preset moon zeroed: kion's rig is a
-	# LOW ambient under a super-dim sun whose only job is the minimum floor
-	# shadow). The area's identity is the SIGNATURE motes rising from the
+	# low sun whose only job is the minimum floor shadow). kion's first walk
+	# read the 0.20 ambient as TOO DARK — the lock landed at 0.90 — then the
+	# edge fog dimmed the read a little, and the SECOND lock (s07a_ga1,
+	# 2026-10-02) is 1.30: just light enough to make out the floor
+	# texture's detail, fog at 0.040 untouched (B scaled to keep the
+	# ladder). The follow-up also asked for the dark edge fog (the far
+	# walls dissolve into the dark instead of ending hard against
+	# unmodeled space) and a subtle swirl in the motes. The area's identity is the SIGNATURE motes rising from the
 	# ground — white on A, black on B (the Falz dark-castle side) — which
 	# ride the `signature` knob, not `weather`, so they spawn indoors by
 	# design. Sparse candle/urn accents land per-room as effects lights.
-	# FIRST DRAFT values (seeded from s06b under the hour-22 base); the
-	# walk-lab P read-out owns the numbers.
+	# Reference-room prototype: preserve the floor bake, light actors overhead.
+	"s07e_ia1": {
+		"hour": 22.0,
+		"sun_energy": 0.0,
+		"moon_energy": 0.0,
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.55, 0.5, 0.6),
+		"lit_surfaces": ["1_ayuka2", "1_ayukas", "1_kaidan"],
+		"signature": "red_motes",
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.02, 0.04),
+	},
+	"s07a_ga1": {
+		"hour": 22.0,
+		"sun_energy": 0.0,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -85.0,
+		"sun_shadows": false,
+		"shadow_catcher": false,
+		"lit_surfaces": ["1_ayuka2", "1_ayukas", "1_kaidan", "1_kage"],
+		"signature": "white_motes",
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.03, 0.06),
+	},
 	"s07a": {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.2,
+		"ambient_energy": 1.3,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "white_motes",
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.03, 0.06),
 	},
 	"s07b": {
 		"hour": 22.0,
-		"sun_energy": 0.1,
-		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.15,
+		# THE PIVOT (kion 2026-10-03, completed on the fourth walk): ambient
+		# waaay down (their read-out: 0.05), NO sun, NO catcher — the MUL
+		# catcher was crushing the lit floor to its ambient share (the
+		# "barely lit" read). The stage rides the receive path (lit_surfaces
+		# "*") so the pools paint the actual floor; the floor painters hang
+		# at y 0.5 (targets "stage", the actors never see them), one casting
+		# all-objects light at y 2.5 gives the actors their key AND their
+		# real omni shadows on the lit ground. Composition: the middle of
+		# the room lit, the edges falling into the fog.
+		"sun_energy": 0.0,
+		"ambient_energy": 0.05,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
-		"sun_pitch": -60.0,
-		"sun_shadows": true,
-		"shadow_catcher": true,
+		"lit_surfaces": ["*"],
+		"stage_light_layer": true,
 		"signature": "black_motes",
+		"fog_density": 0.18,
+		"fog_color": Color(0.02, 0.02, 0.04),
+		# CAMOUFLAGE, not mood (kion 2026-10-03, the s07b_ walkthrough): the
+		# B stages are bright OPEN-AIR courtyards — no ceiling geometry, a
+		# white sky above, low-res edge textures that read fine on the DS
+		# screen and fall apart at Godot scale. The fog is concealment: near-
+		# black clouds drowning the openness (0.18 eats everything past a
+		# few units), the negative height density piling them overhead where
+		# the ceiling should be, and tonemap_white 3.0 dims the too-light
+		# bake (the field default is 6.0) while the 1000-mote storm fills
+		# the air.
+		"fog_height": 5.0,
+		"fog_height_density": -0.7,
+		"tonemap_white": 3.0,
 	},
 	# The boss arenas (two — na1 and na2): the B rig's black motes.
 	"s07z": {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.15,
+		"ambient_energy": 0.95,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
 		"sun_shadows": true,
 		"shadow_catcher": true,
 		"signature": "black_motes",
+		"fog_density": 0.18,
+		"fog_color": Color(0.02, 0.02, 0.04),
+		"fog_height": 5.0,
+		"fog_height_density": -0.7,
+		"tonemap_white": 3.0,
 	},
 	# The area row — s07e_ia1 (the transition) and the fallback: the rig
 	# without the motes first draft (the transition may want its own mood
@@ -399,12 +478,14 @@ const SLOTS := {
 		"hour": 22.0,
 		"sun_energy": 0.1,
 		"sun_color": Color(0.7, 0.75, 0.9),
-		"ambient_energy": 0.2,
+		"ambient_energy": 1.3,
 		"ambient_color": Color(0.55, 0.55, 0.65),
 		"moon_energy": 0.0,
 		"sun_pitch": -60.0,
 		"sun_shadows": true,
 		"shadow_catcher": true,
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.03, 0.06),
 	},
 	"tower":  {"hour": 10.0},     # interim; #654 authors fixed-hour floors
 	"city":   {"hour": 10.0},     # s00 field stages (city scenes carry no clock)

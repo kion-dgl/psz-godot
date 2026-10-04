@@ -78,3 +78,29 @@ Game assets (stage models, textures, music) derived from Phantasy Star titles re
 ---
 
 > This is an unofficial fan project. Phantasy Star, Phantasy Star Online, and Phantasy Star Zero are trademarks of SEGA. No affiliation with or endorsement by SEGA is implied.
+
+## Shrine lighting review tools
+
+With the local stage asset pack installed, launch the Shrine E transition
+walk lab directly. Use `R` to reload and `Esc` to quit:
+
+```sh
+godot --path . res://scenes/tools/shrine_e_walktest.tscn
+```
+
+The shared A/B lab starts in B; set `PSZ_WALK_STAGE=s07a_ga1` for A and use
+`N` to cycle rooms. Its material and lighting paths match gameplay.
+
+```sh
+PSZ_WALK_STAGE=s07a_ga1 godot --path . res://scenes/tools/shrine_walktest.tscn
+godot --headless --path . res://scripts/tools/shrine_lighting_check.tscn
+```
+
+The targeted check requires local stage assets and validates all 36 A/B
+rooms. These exporters regenerate the local Three.js preview assets; their
+outputs are development artifacts, not dependencies of the shipped game:
+
+```sh
+godot --headless --path . --script res://scripts/tools/export_shrine_pillar_preview.gd
+godot --headless --path . --script res://scripts/tools/export_shrine_lantern.gd
+```

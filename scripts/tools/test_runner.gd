@@ -11915,6 +11915,18 @@ func test_arca_identity_slots() -> void:
 	# actors without pushing the MUL floor past ×1.
 	assert_eq(MeshUtils.SHADOW_CATCHER_LAYER, 4,
 		"the catcher's private layer is 4 (the city's CATCHER_LAYER value)")
+	# The floor/actor light split (#653): a synthetic stage tree joins the
+	# private layer while KEEPING layer 1 — stage-targeted lights single it
+	# out, ordinary lights still reach it.
+	assert_eq(MeshUtils.STAGE_LIGHT_LAYER, 5, "the stage's private layer is 5")
+	var split_root := Node3D.new()
+	var split_mi := MeshInstance3D.new()
+	split_root.add_child(split_mi)
+	var flagged_n: int = MeshUtils.add_visual_layer(split_root, MeshUtils.STAGE_LIGHT_LAYER)
+	assert_eq(flagged_n, 1, "the layer pass flags the mesh instance")
+	assert_eq(split_mi.layers, (1 << 0) | (1 << (MeshUtils.STAGE_LIGHT_LAYER - 1)),
+		"the stage keeps layer 1 AND gains the private bit — ordinary lights still reach it")
+	split_root.free()
 	print("")
 
 
@@ -11926,39 +11938,64 @@ func test_dark_identity_slots() -> void:
 	# ── A: the dark-interior pin — kion's 2026-10-01 direction: LOW ambient
 	#    under a super-dim sun that exists only to cast the minimum shadow,
 	#    white motes rising (the area's identity). ──
-	var a := Slots.slot_for("dark", "s07a_ga1")
+	var a := Slots.slot_for("dark", "s07a_ib1")
 	assert_eq(a.get("hour"), 22.0, "A pins hour 22 — the NIGHT base (near-black sky)")
 	assert_eq(a.get("sun_energy"), 0.1, "A: a super-dim sun — the minimum shadow source (kion)")
-	assert_eq(a.get("ambient_energy"), 0.2, "A: low ambient fill")
+	assert_eq(a.get("ambient_energy"), 1.3,
+		"A: ambient 1.30 — kion's second lock (fog dimmed the read; just light enough for floor detail)")
 	assert_eq(a.get("moon_energy"), 0.0,
 		"A: the preset's 0.55 hour-22 moon is zeroed — the sun owns the shadow")
 	assert_eq(a.get("sun_shadows"), true, "A: the sun casts the minimum floor shadow")
 	assert_eq(a.get("shadow_catcher"), true, "A: the catcher floor")
 	assert_eq(a.get("signature"), "white_motes", "A: white motes rise (the shrine's identity)")
+	assert_eq(a.get("fog_density"), 0.04,
+		"A: dark edge fog — the far walls dissolve into the dark (kion's follow-up ask)")
+	assert_eq(a.get("fog_color"), Color(0.03, 0.03, 0.06), "A: the fog reads near-black")
 	# The arca sun-proof contract, verbatim: no bake_mix, no lit_surfaces —
 	# the stage keeps its bake and the sun physically cannot light it.
 	assert_true(not a.has("bake_mix") and not a.has("lit_surfaces"),
 		"A: the row's silence keeps the stage unlit — the bake IS the look")
 	assert_eq(str(a.get("weather", "")), "", "A: no weather — motes are not precipitation")
 	assert_eq(Slots.slot_for("dark", "s07a_lc1"), a, "A rooms ride the A row")
+	var reference := Slots.slot_for("dark", "s07a_ga1")
+	assert_eq(reference.get("sun_energy"), 0.0, "A reference: point lights replace sun")
+	assert_eq(reference.get("ambient_energy"), 0.35, "A reference: reduced ambient")
+	assert_true(reference.has("lit_surfaces"), "A reference: floors receive point shadows")
 	# ── B: the Falz dark-castle side — darker still, BLACK motes. ──
 	var b := Slots.slot_for("dark", "s07b_ga1")
-	assert_eq(b.get("ambient_energy"), 0.15, "B: the darkest fill of the set")
+	assert_eq(b.get("ambient_energy"), 0.05,
+		"B: ambient 0.05 — kion's read-out ('waaay down'), the pools own the room now")
+	assert_eq(b.get("sun_energy"), 0.0,
+		"B: no sun at all — the pools and their own shadows own the room (kion's fourth walk)")
+	assert_true(not b.get("sun_shadows", false) and not b.get("shadow_catcher", false),
+		"B: no catcher either — it was crushing the lit floor to the ambient share")
+	assert_eq(b.get("lit_surfaces"), ["*"],
+		"B: THE PIVOT — the whole stage receives the rig so point pools paint the floor (kion: fine for lights to affect the stage here)")
+	assert_eq(b.get("stage_light_layer"), true,
+		"B: the floor/actor split — the stage joins its private layer so hot floor pools never blow out the actors (kion's two-light ask)")
 	assert_eq(b.get("signature"), "black_motes", "B: black motes (the dark-castle side)")
-	assert_eq(b.get("sun_energy"), a.get("sun_energy"), "B: the same minimum shadow source")
-	assert_true(not b.has("bake_mix") and not b.has("lit_surfaces"),
-		"B: same silence — candle pools reach only the actors")
+	assert_eq(b.get("fog_density"), 0.18,
+		"B: 0.18 — concealment fog drowning the open-air courtyards (kion's s07b_ walkthrough)")
+	assert_eq(b.get("fog_height"), 5.0,
+		"B: the overhead cloud bank's height line — where the ceiling should be")
+	assert_eq(b.get("fog_height_density"), -0.7,
+		"B: deep NEGATIVE height bank — overhead clouds hiding the missing ceiling")
+	assert_eq(b.get("tonemap_white"), 3.0,
+		"B: the white point halves (field default 6.0) — the too-light DS bake dims")
+	assert_true(not b.has("bake_mix"),
+		"B: no white-strategy pass — the bake rides as albedo under the pools")
 	assert_eq(Slots.slot_for("dark", "s07b_lb1"), b, "B rooms ride the B row")
-	# ── Z: both boss arenas — the B rig's black motes. ──
+	# ── Z: both boss arenas — the PRE-PIVOT rig (0.95 ambient, unlit bake);
+	#    they wait for their own walk before inheriting B's pool rig. ──
 	var z := Slots.slot_for("dark", "s07z_na1")
 	assert_eq(z.get("signature"), "black_motes", "Z: the boss arenas run black motes")
-	assert_eq(z.get("ambient_energy"), 0.15, "Z: the boss arenas run the B fill")
+	assert_eq(z.get("ambient_energy"), 0.95,
+		"Z: still the pre-pivot fill — the arenas wait for their own walk (kion scoped the pivot to s07b_)")
 	assert_eq(Slots.slot_for("dark", "s07z_na2"), z, "both arenas ride the s07z row (two stages)")
 	# ── E rides the area row: the rig, no signature first draft. ──
 	var area := Slots.slot_for("dark", "s07e_ia1")
-	assert_eq(area.get("sun_energy"), 0.1, "E: the area row keeps the rig")
-	assert_true(not area.has("signature"),
-		"E: no signature on the transition (first draft — may earn its own mood)")
+	assert_eq(area.get("sun_energy"), 0.0, "E: localized point lights replace the sun")
+	assert_eq(area.get("signature"), "red_motes", "E: red transition motes")
 	# ── The classification fix (#653): s07 was missing from the indoor
 	#    prefixes — a Dark Shrine tracking the outdoor cycle. ──
 	assert_true(FieldCtl._is_indoor_stage("s07a_ga1"), "s07a_ga1 classifies indoor (the #653 fix)")
@@ -11968,7 +12005,10 @@ func test_dark_identity_slots() -> void:
 	# ── Signature builders: dispatched, distinct from weather — the indoor
 	#    gate exists for precipitation, and unknown keys stay null. ──
 	assert_true(Weather.build_signature_node("white_motes") != null, "white_motes builds")
-	assert_true(Weather.build_signature_node("black_motes") != null, "black_motes builds")
+	var black := Weather.build_signature_node("black_motes")
+	assert_true(black != null, "black_motes builds")
+	assert_eq(black.get_child_count() if black else -1, 4,
+		"the black flavor carries four emitters — the storm, the pale share, the red embers, and the ground spores (kion 2026-10-03)")
 	assert_true(Weather.build_signature_node("leaves") == null,
 		"unknown signature keys → null (paru's falling leaves are #651's, not built yet)")
 	assert_true(Weather.build_weather_node("white_motes") == null,

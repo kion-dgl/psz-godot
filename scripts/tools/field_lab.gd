@@ -88,6 +88,21 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 		sky_mat.sky_top_color = slot["sky_top_color"]
 	if slot.has("sky_horizon_color"):
 		sky_mat.sky_horizon_color = slot["sky_horizon_color"]
+	# Edge-haze rows (#653 follow-up) — kept in lockstep with
+	# ValleyFieldController._apply_field_slot (the dup-gate: this must apply
+	# exactly what the field applies).
+	if slot.has("fog_density"):
+		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		env.fog_density = float(slot["fog_density"])
+		env.fog_light_color = slot.get("fog_color", Color(0.03, 0.03, 0.06))
+		env.fog_aerial_perspective = 0.0
+		if slot.has("fog_height"):
+			env.fog_height = float(slot["fog_height"])
+			env.fog_height_density = float(slot.get("fog_height_density", 0.0))
+	# Kept in lockstep with ValleyFieldController._apply_field_slot (the
+	# dup-gate: this must apply exactly what the field applies).
+	if slot.has("tonemap_white"):
+		env.tonemap_white = float(slot["tonemap_white"])
 
 
 ## The full lab environment boot: the field environment, the area's REAL
@@ -147,6 +162,29 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		var lit_n: int = MeshUtils.make_lit_surfaces(map_root, slot["lit_surfaces"])
 		var forced: int = MeshUtils.make_unlit(map_root, slot["lit_surfaces"])
 		print("[FieldLab] cheat rig: %d lit, %d forced unlit" % [lit_n, forced])
+	# The stage config's glow anchors (#657 / #653), lockstep with the
+	# field's _apply_glow_materials — the lab renders what the field renders.
+	var cfg_file := FileAccess.open("res://data/stage_configs/unified-stage-configs.json", FileAccess.READ)
+	if cfg_file:
+		var cfg_json := JSON.new()
+		if cfg_json.parse(cfg_file.get_as_text()) == OK:
+			var glow_passes: Dictionary = {}
+			for g in (cfg_json.data as Dictionary).get(stage_id, {}).get("glowMaterials", []):
+				glow_passes[str(g.get("material", ""))] = g
+			if not glow_passes.is_empty():
+				var glowed: int = MeshUtils.apply_glow_materials(map_root, glow_passes)
+				if glowed > 0:
+					print("[FieldLab] glow pass on %d surfaces (%s)" % [glowed, ", ".join(glow_passes.keys())])
+		cfg_file.close()
+	# The floor/actor light split, lockstep with the field's load pass
+	# (#653) — the dup-gate: the lab applies exactly what the field applies.
+	if slot.get("stage_light_layer", false):
+		var flagged: int = MeshUtils.add_visual_layer(map_root,
+			MeshUtils.STAGE_LIGHT_LAYER)
+		print("[FieldLab] stage light layer: %d instance(s) flagged" % flagged)
+	var inset_triangles: int = preload("res://scripts/3d/field/shrine_lighting.gd").rebuild_pillars(map_root, stage_id)
+	if inset_triangles > 0:
+		print("[FieldLab] rebuilt %d teal inset triangles" % inset_triangles)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" \
 		% [subfolder, stage_id]
 	if ResourceLoader.exists(skybox_path):
@@ -156,6 +194,7 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		MeshUtils.apply_field_materials(skybox, TEXTURE_FIX_SHADER,
 			WATERFALL_SHADER, false, cheat,
 			TEXTURE_FIX_SHADER_UNLIT, slot.get("lit_surfaces", []))
+	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(map_root, stage_id)
 	return map_root
 
 
@@ -206,13 +245,19 @@ static func spawn_signature(player: Node, slot: Dictionary) -> void:
 	if not node:
 		return
 	player.add_child(node)
-	node.restart()
+	# The black flavor is a container (dark body + red embers) — restart
+	# every emitter in it.
+	if node is GPUParticles3D:
+		(node as GPUParticles3D).restart()
+	for child in node.get_children():
+		if child is GPUParticles3D:
+			(child as GPUParticles3D).restart()
 	print("[FieldLab] signature: %s" % str(slot.get("signature", "")))
 
 
 ## The labs' shared tuning keys — the common rig knobs (ambient, sun,
-## pitch, shadow toggles/biases). Returns true when handled; the caller
-## refreshes its status line.
+## pitch, shadow toggles/biases, and the fog rows' density). Returns true
+## when handled; the caller refreshes its status line.
 static func handle_tune_key(keycode: int, env: Environment,
 		dir_light: DirectionalLight3D) -> bool:
 	match keycode:
@@ -242,6 +287,15 @@ static func handle_tune_key(keycode: int, env: Environment,
 			dir_light.shadow_bias = maxf(0.0, dir_light.shadow_bias - 0.05)
 		KEY_V:
 			dir_light.shadow_bias = minf(1.0, dir_light.shadow_bias + 0.05)
+		KEY_BRACKETLEFT:
+			# Fog rows only (#653 follow-up): the down-sweep clamps at 0 but
+			# never RAISES a 0 density into fog — a non-fog row pressing ]
+			# must not spawn the default white fog out of nowhere.
+			if env.fog_density > 0.0:
+				env.fog_density = maxf(0.0, env.fog_density - 0.005)
+		KEY_BRACKETRIGHT:
+			if env.fog_density > 0.0:
+				env.fog_density += 0.005
 		_:
 			return false
 	return true

@@ -28,10 +28,11 @@ const slots = [
   { key: 's06a', area: 'Moon Facility A (s06a_*)', hour: '10.0 — day', weather: '—', note: 'the pristine lobby (#652, kion 2026-09-30): bake kept verbatim — no bake_mix, no lit_surfaces, so the sun can never light the stage — ambient 0.35 fill under a weak 0.30 shadow-sun @ −60°, catcher floor; the window rooms ride the row' },
   { key: 's06b', area: 'Moon Facility B (s06b_*)', hour: '10.0 — day', weather: '—', note: 'the industrial dark: barely-sun 0.10 over ambient 0.25 — the composition is the authored colored fixture pools (per-stage effects.json lights, actor-only, the stage being unlit)' },
   { key: 'arca', area: 'Moon Facility E+Z (s06e/s06z)', hour: '10.0 — day', weather: '—', note: 'the transition and boss arena ride the area row between the two: sun 0.20 / ambient 0.30' },
-  { key: 's07a', area: 'Dark Shrine A (s07a_*)', hour: '22.0 — night', weather: '—', note: 'the dark-interior pin (#653, kion 2026-10-01): bake kept, hour-22 base with the preset moon zeroed, low ambient 0.20 under a super-dim 0.10 pale sun @ −60° (the minimum shadow), catcher floor; signature: white motes rising' },
-  { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'the Falz dark-castle side: ambient 0.15, signature: black motes; candle/urn accents land per-stage as effects lights' },
-  { key: 's07z', area: 'Dark Shrine Z (s07z_na1/na2)', hour: '22.0 — night', weather: '—', note: 'both boss arenas run the B rig with black motes' },
-  { key: 'dark', area: 'Dark Shrine E (s07e_ia1)', hour: '22.0 — night', weather: '—', note: 'the transition rides the area row: the rig without the signature (first draft — may earn its own mood)' },
+  { key: 's07a', area: 'Dark Shrine A (s07a_*)', hour: '22.0 — night', weather: '—', note: 'the dark-interior pin (#653, locked 2026-10-02): bake kept, hour-22 base with the preset moon zeroed, ambient 1.30 (kion\'s second walk read-out — just light enough for the floor texture\'s detail under the fog) under a super-dim 0.10 pale sun @ −60°, catcher floor, dark edge fog 0.04; signature: white motes rising with a subtle swirl' },
+  { key: 's07a_ga1', area: 'Dark Shrine A reference', hour: '22.0 — night', weather: '—', note: 'Point lights above the baked floor pools; no sun or catcher, ambient 0.35, lit floor receivers. Other A rooms retain their existing sun. All A rooms have 3D teal lanterns and denser white motes.' },
+  { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'Ambient 0.05, no sun or catcher. Lit stage receives room-specific floor pools; stage-only lights preserve actor exposure. Fog 0.18 with overhead bank, tonemap white 3.0, swirling motes, embers and spores. Teal pillar insets and solid lanterns mark the room.' },
+  { key: 's07z', area: 'Dark Shrine Z', hour: '22.0 — night', weather: '—', note: 'Boss arenas retain the pre-pivot rig: ambient 0.95 and unlit bake, awaiting their own review.' },
+  { key: 's07e_ia1', area: 'Dark Shrine E transition', hour: '22.0 — night', weather: '—', note: 'No sun; ambient 0.35, two localized red point lights over baked highlights, red motes, and eight teal lanterns on 15-unit support poles.' },
   { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
   { key: 'city', area: 'City field stages (s00)', hour: '10.0 — day', weather: '—', note: 'coliseum debug arena excepts to noon' },
 ];
@@ -321,13 +322,33 @@ const slots = [
   <code>signature</code> key, <strong>not</strong> the weather key: the
   indoor gate exists for precipitation, and the shrine's motes ARE its
   indoor identity, so they spawn indoors by design (the weather-precedence
-  contract below is unchanged — motes are not weather). Sparse candle/urn
-  accents land per-stage as <code>&lt;stage&gt;_effects.json</code> plain
-  lights (first drafts in <code>s07a_ga1/lc1</code>,
+  contract below is unchanged — motes are not weather), and they
+  <em>swirl</em> as they rise (tighter turbulence eddies plus a gentle
+  orbit — kion's follow-up ask). The B/Z black flavor runs a ~1000-mote
+  storm (kion 2026-10-03: "like 4x the particles") with a second emitter
+  of <em>red embers</em> riding with the dark body, and on B/Z the fog is
+  <strong>concealment, not mood</strong> — the bright open-air courtyards
+  ship no ceiling and their edge textures fall apart at Godot scale
+  (0.18 density, <code>fog_height</code> 5.0 / −0.7, tonemap_white 3.0
+  dimming the too-light bake). The
+  <strong>dark edge fog</strong> (the
+  row's <code>fog_density</code> / <code>fog_color</code>) dissolves each
+  room's far edges into the dark — clouds at the boundary instead of hard
+  walls against unmodeled space — and on B/Z it runs as concealment
+  (<code>fog_density</code> 0.18) under a <strong>ceiling cloud
+  bank</strong>: <code>fog_height</code> 5.0 with a negative
+  <code>fog_height_density</code> (−0.7) piling the dark fog overhead,
+  burying the white skybox that leaks through open roofs. The lab's
+  <code>[</code>/<code>]</code> keys sweep the density. kion's walks locked
+  the ambient at 1.30 (A — the fog dimmed the first 0.90 lock; 1.30 is just
+  light enough for the floor texture's detail) with B scaled to
+  0.95. Sparse candle/urn accents land per-stage as
+  <code>&lt;stage&gt;_effects.json</code> plain lights (first drafts in
+  <code>s07a_ga1/lc1</code>,
   <code>s07b_ga1/lb1</code>). The port also fixes the classification bug
   the issue flagged: <code>s07</code> joined the indoor prefixes (a Dark
-  Shrine no longer tracks the outdoor cycle). Starting values pre-lock;
-  the shrine walk lab (<code>shrine_walktest</code>) owns the numbers and
+  Shrine no longer tracks the outdoor cycle). The shrine walk lab
+  (<code>shrine_walktest</code>) owns the numbers and
   the accent authoring (the arca K/L/R loop).</p>
 
   <h2>Weather precedence</h2>
