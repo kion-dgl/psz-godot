@@ -1125,7 +1125,7 @@ static func split_mesh_surfaces(root: Node3D) -> int:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh as ArrayMesh
-		if mesh == null or mesh.get_surface_count() <= 1:
+		if mi.is_queued_for_deletion() or mesh == null or mesh.get_surface_count() <= 1:
 			continue
 		var parent := mi.get_parent()
 		for s in range(mesh.get_surface_count()):

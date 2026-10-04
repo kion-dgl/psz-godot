@@ -1,0 +1,189 @@
+{
+  "effects": [
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.0,
+        1.4,
+        0.0
+      ],
+      "color": [
+        1.0,
+        0.7,
+        0.35
+      ],
+      "intensity": 1.2,
+      "radius": 5.0
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        12.0,
+        1.3,
+        0.0
+      ],
+      "color": [
+        1.0,
+        0.55,
+        0.25
+      ],
+      "intensity": 1.0,
+      "radius": 4.5
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        0.0,
+        1.3,
+        -15.0
+      ],
+      "color": [
+        1.0,
+        0.7,
+        0.35
+      ],
+      "intensity": 1.2,
+      "radius": 5.0
+    },
+    {
+      "id": "lantern_1",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -5.571,
+        0,
+        -37.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_2",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -5.571,
+        0,
+        -30.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_3",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.429,
+        0,
+        -37.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_4",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        6.429,
+        0,
+        -30.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_5",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        30.429,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_6",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        30.429,
+        0,
+        6.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_7",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        37.429,
+        0,
+        -6.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    },
+    {
+      "id": "lantern_8",
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        37.429,
+        0,
+        6.0
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7
+    }
+  ],
+  "stage_id": "s07a_lc1"
+}

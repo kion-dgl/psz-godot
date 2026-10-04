@@ -379,6 +379,33 @@ const SLOTS := {
 	# ground — white on A, black on B (the Falz dark-castle side) — which
 	# ride the `signature` knob, not `weather`, so they spawn indoors by
 	# design. Sparse candle/urn accents land per-room as effects lights.
+	# Reference-room prototype: preserve the floor bake, light actors overhead.
+	"s07e_ia1": {
+		"hour": 22.0,
+		"sun_energy": 0.0,
+		"moon_energy": 0.0,
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.55, 0.5, 0.6),
+		"lit_surfaces": ["1_ayuka2", "1_ayukas", "1_kaidan"],
+		"signature": "red_motes",
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.02, 0.04),
+	},
+	"s07a_ga1": {
+		"hour": 22.0,
+		"sun_energy": 0.0,
+		"sun_color": Color(0.7, 0.75, 0.9),
+		"ambient_energy": 0.35,
+		"ambient_color": Color(0.55, 0.55, 0.65),
+		"moon_energy": 0.0,
+		"sun_pitch": -85.0,
+		"sun_shadows": false,
+		"shadow_catcher": false,
+		"lit_surfaces": ["1_ayuka2", "1_ayukas", "1_kaidan", "1_kage"],
+		"signature": "white_motes",
+		"fog_density": 0.04,
+		"fog_color": Color(0.03, 0.03, 0.06),
+	},
 	"s07a": {
 		"hour": 22.0,
 		"sun_energy": 0.1,

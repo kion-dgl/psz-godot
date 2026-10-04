@@ -12,6 +12,7 @@ extends Node3D
 		light_color = value
 		if is_instance_valid(_light):
 			_light.light_color = value
+@export_range(0.0, 30.0, 0.1) var pole_depth := 0.0
 var _light: OmniLight3D
 
 
@@ -28,6 +29,8 @@ func _ready() -> void:
 	bronze.roughness = 0.83
 	bronze.emission_enabled = true
 	bronze.emission = Color(0.025, 0.023, 0.019)
+	if pole_depth > 0.0:
+		_profile(body, "SupportPole", [Vector2(.095, -pole_depth), Vector2(.095, .06)], bronze)
 	# Turned foot, slender stem, collar, bowl, and the tiered pointed roof.
 	_profile(body, "FootAndStem", [Vector2(.19,0), Vector2(.19,.06), Vector2(.11,.12),
 		Vector2(.065,.18), Vector2(.045,1.02), Vector2(.13,1.06), Vector2(.13,1.12),
@@ -57,7 +60,7 @@ func _ready() -> void:
 	glow.resource_name = "LanternInnerTeal"
 	glow.albedo_color = Color("194b42")
 	glow.emission_enabled = true
-	glow.emission = Color("2cae9e")
+	glow.emission = light_color
 	glow.emission_energy_multiplier = 2.4
 	glow.roughness = .65
 	sphere.material = glow

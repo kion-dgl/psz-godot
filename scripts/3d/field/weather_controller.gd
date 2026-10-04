@@ -237,9 +237,12 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 ## red-ember emitter riding in it (kion 2026-10-02: dark particles with a
 ## small amount of red).
 static func build_signature_node(signature: String) -> Node3D:
+	if signature == "red_motes":
+		return _build_motes_node("SignatureMotesRed",
+			Color(0.9, 0.23, 0.14, 0.75), Color(0.4, 0.06, 0.04, 0.5), true, 1400)
 	if signature == "white_motes":
 		return _build_motes_node("SignatureMotesWhite",
-			Color(0.92, 0.92, 0.98, 0.55), Color(0.45, 0.45, 0.55, 0.35), true)
+			Color(0.92, 0.92, 0.98, 0.75), Color(0.55, 0.55, 0.65, 0.5), true, 1400)
 	if signature == "black_motes":
 		var root := Node3D.new()
 		root.name = "SignatureBlackMotes"
@@ -592,6 +595,7 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		lantern.position = pos
 		lantern.set("light_energy", float(effect.get("intensity", 1.4)))
 		lantern.set("light_color", color)
+		lantern.set("pole_depth", float(effect.get("pole_depth", 0.0)))
 		_c._map_root.add_child(lantern)
 		return
 
@@ -689,7 +693,7 @@ func _spawn_plain_light(effect: Dictionary, pos: Vector3, color: Color) -> void:
 	light.light_color = color
 	light.light_energy = float(effect.get("intensity", 1.0))
 	light.omni_range = float(effect.get("radius", 6.0))
-	light.omni_attenuation = 2.0
+	light.omni_attenuation = float(effect.get("attenuation", 2.0))
 	light.shadow_enabled = false
 	# Casting placed lights (#653, kion 2026-10-03: "just the point lights
 	# casting shadows in the scene"): the wetlands lantern precedent — the

@@ -194,6 +194,7 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 		MeshUtils.apply_field_materials(skybox, TEXTURE_FIX_SHADER,
 			WATERFALL_SHADER, false, cheat,
 			TEXTURE_FIX_SHADER_UNLIT, slot.get("lit_surfaces", []))
+	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(map_root, stage_id)
 	return map_root
 
 

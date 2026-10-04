@@ -41,9 +41,8 @@ const EFFECTS_JSON_FMT := "res://assets/stages/%s/%s/lndmd/%s_effects.json"
 const WeatherControllerScript := preload("res://scripts/3d/field/weather_controller.gd")
 const FieldLabScript := preload("res://scripts/tools/field_lab.gd")
 
-## The s07b_ cycle only (kion 2026-10-03: the iteration is on B's pool
-## rig) — all eighteen rooms, in id order, so N walks the whole variant
-## and L can author each room's pools.
+## The B reference cycle. A has the same eighteen room suffixes; booting
+## PSZ_WALK_STAGE=s07a_ga1 selects the A cycle without changing B lighting.
 const STAGES := [
 	"s07b_ga1", "s07b_ib1", "s07b_ib2", "s07b_ic1", "s07b_ic3",
 	"s07b_lb1", "s07b_lb3", "s07b_lc1", "s07b_lc2", "s07b_na1",
@@ -61,7 +60,10 @@ const ANCHOR_RADIUS := 5.0
 ## N's selection survives the scene reload that swaps the room.
 static var _pending_stage := ""
 
+@export var boot_stage := "s07b_ga1"
+
 var _stage_id := "s07b_ga1"
+var _stage_cycle: Array = STAGES
 var _map_root: Node3D
 var _player: CharacterBody3D
 var _env: Environment
@@ -79,6 +81,7 @@ var _anchor_scale := 1.0
 
 
 func _ready() -> void:
+	_stage_id = boot_stage
 	# R must pick up newly authored lighting recipes.
 	preload("res://scripts/3d/field/shrine_lighting.gd")._recipes.clear()
 	if not _pending_stage.is_empty():
@@ -86,6 +89,10 @@ func _ready() -> void:
 		_pending_stage = ""
 	elif not OS.get_environment("PSZ_WALK_STAGE").is_empty():
 		_stage_id = OS.get_environment("PSZ_WALK_STAGE")
+	if _stage_id.begins_with("s07a_"):
+		_stage_cycle = STAGES.map(func(stage): return stage.replace("s07b_", "s07a_"))
+	elif _stage_id.begins_with("s07e_"):
+		_stage_cycle = [_stage_id]
 	_shot.path = OS.get_environment("PSZ_WALK_SHOT")
 	# The variant subfolder (shrine_a/b/e/z — the variant char at index 3,
 	# same rule as the controller's _get_stage_subfolder).
@@ -159,10 +166,11 @@ func _input(event: InputEvent) -> void:
 		return
 	match keycode:
 		KEY_N:
-			_pending_stage = STAGES[(STAGES.find(_stage_id) + 1) % STAGES.size()] \
-				if _stage_id in STAGES else STAGES[0]
+			_pending_stage = _stage_cycle[(_stage_cycle.find(_stage_id) + 1) % _stage_cycle.size()] \
+				if _stage_id in _stage_cycle else _stage_cycle[0]
 			get_tree().reload_current_scene()
 		KEY_R:
+			_pending_stage = _stage_id
 			get_tree().reload_current_scene()
 		KEY_P:
 			_readout()
@@ -235,7 +243,7 @@ func _dump_materials() -> void:
 	for node in MeshUtils.collect_mesh_instances(_map_root, []):
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh as ArrayMesh
-		if mesh == null:
+		if mi.is_queued_for_deletion() or mesh == null:
 			continue
 		var xform := mi.global_transform
 		for i in range(mesh.get_surface_count()):
@@ -318,7 +326,7 @@ func _readout() -> void:
 
 
 func _update_status() -> void:
-	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  shadows %s  fog %.3f  room %s" % [
+	_status.text = "%s — ambient %.2f  sun %.2f  pitch %.0f°  sun shadows %s  fog %.3f  room %s" % [
 		_stage_id, _env.ambient_light_energy, _dir_light.light_energy,
 		_dir_light.rotation_degrees.x,
 		"on" if _dir_light.shadow_enabled else "off",

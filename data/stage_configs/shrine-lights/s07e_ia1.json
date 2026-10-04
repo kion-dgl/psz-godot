@@ -1,0 +1,177 @@
+{
+  "stage_id": "s07e_ia1",
+  "effects": [
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        -8.9,
+        4.0,
+        9.8
+      ],
+      "color": [
+        1.0,
+        0.25,
+        0.18
+      ],
+      "intensity": 5.0,
+      "radius": 8.0,
+      "shadows": true,
+      "attenuation": 2.0
+    },
+    {
+      "type": "light",
+      "category": "placed",
+      "position": [
+        7.9,
+        4.0,
+        -6.8
+      ],
+      "color": [
+        1.0,
+        0.25,
+        0.18
+      ],
+      "intensity": 5.0,
+      "radius": 8.0,
+      "shadows": true,
+      "attenuation": 2.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -31.857,
+        0.572,
+        27.277
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -34.305,
+        0.111,
+        30.148
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -29.168,
+        0.111,
+        34.852
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        -26.613,
+        0.572,
+        32.516
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        4.033,
+        1.248,
+        -27.949
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        4.027,
+        -0.096,
+        -33.352
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        11.67,
+        1.248,
+        -27.949
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    },
+    {
+      "type": "shrine_lantern",
+      "category": "placed",
+      "position": [
+        11.666,
+        -0.096,
+        -33.352
+      ],
+      "color": [
+        0.35,
+        0.85,
+        0.82
+      ],
+      "intensity": 3.0,
+      "radius": 7,
+      "pole_depth": 15.0
+    }
+  ]
+}

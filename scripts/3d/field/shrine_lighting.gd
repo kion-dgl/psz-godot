@@ -9,7 +9,7 @@ static var _recipes: Dictionary = {}
 
 
 static func recipe(stage_id: String) -> Dictionary:
-	if not stage_id.begins_with("s07b_"):
+	if not (stage_id.begins_with("s07a_") or stage_id.begins_with("s07b_") or stage_id.begins_with("s07e_")):
 		return {}
 	if not _recipes.has(stage_id):
 		var path := ROOT + stage_id + ".json"
@@ -22,15 +22,21 @@ static func recipe(stage_id: String) -> Dictionary:
 static func rebuild_pillars(root: Node3D, stage_id: String) -> int:
 	if stage_id.begins_with("s07b_") and stage_id != "s07b_ga1":
 		_split_floor_receivers(root)
-	# Remove only the lamp cards, not unrelated scenery sharing 1_blight.
+	# Remove only the lamp cards, not unrelated scenery sharing their material.
+	var lantern_material := "1_light3" if stage_id.begins_with("s07a_") else "1_blight"
+	if stage_id.begins_with("s07e_"):
+		lantern_material = "1_lighte"
 	var lamps: Array = recipe(stage_id).get("effects", []).filter(func(e): return e.get("type") == "shrine_lantern")
 	if not lamps.is_empty():
+		# A rooms without a lighting override still have multi-surface meshes.
+		if stage_id.begins_with("s07a_") or stage_id.begins_with("s07e_"):
+			MeshUtils.split_mesh_surfaces(root)
 		for node in root.find_children("*", "MeshInstance3D", true, false):
 			var mesh := node.mesh as ArrayMesh
 			if node.is_queued_for_deletion() or node.has_meta("lantern_cards_removed") or mesh == null or mesh.get_surface_count() != 1:
 				continue
 			var mat := mesh.surface_get_material(0)
-			if mat == null or mat.resource_name != "1_blight":
+			if mat == null or mat.resource_name != lantern_material:
 				continue
 			var arrays := mesh.surface_get_arrays(0)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -249,3 +255,40 @@ static func _clip_position(poly: Array, axis: int, boundary: float, greater: boo
 		prev = current
 		prev_d = d
 	return result
+
+
+## Imported stage resources remain immutable; only the instance overrides change.
+static func make_double_sided(root: Node3D, stage_id: String) -> void:
+	if not (stage_id.begins_with("s07a_") or stage_id.begins_with("s07b_") or stage_id.begins_with("s07e_")):
+		return
+	var materials: Dictionary = {}
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		if node.is_queued_for_deletion() or node.mesh == null:
+			continue
+		if node.material_override:
+			node.material_override = _double_sided_material(node.material_override, materials)
+		else:
+			for surface in node.mesh.get_surface_count():
+				var material: Material = node.get_active_material(surface)
+				if material:
+					node.set_surface_override_material(surface, _double_sided_material(material, materials))
+
+
+static func _double_sided_material(source: Material, cache: Dictionary) -> Material:
+	if cache.has(source):
+		return cache[source]
+	var material := source.duplicate() as Material
+	cache[source] = material
+	if material is BaseMaterial3D:
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	elif material is ShaderMaterial and material.shader and not material.shader.code.contains("cull_disabled"):
+		var shader := Shader.new()
+		var code: String = material.shader.code
+		code = code.replace("cull_back", "cull_disabled").replace("cull_front", "cull_disabled")
+		if not code.contains("cull_disabled"):
+			code = code.replace("shader_type spatial;", "shader_type spatial;\nrender_mode cull_disabled;")
+		shader.code = code
+		material.shader = shader
+	if source.next_pass:
+		material.next_pass = _double_sided_material(source.next_pass, cache)
+	return material

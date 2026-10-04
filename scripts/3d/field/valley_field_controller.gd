@@ -324,6 +324,7 @@ func _ready() -> void:
 			_map_root.add_child(skybox_root)
 			_fix_materials(skybox_root)
 			_fdbg("[ValleyField] Loaded skybox: %s" % skybox_path)
+	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(_map_root, stage_id)
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
