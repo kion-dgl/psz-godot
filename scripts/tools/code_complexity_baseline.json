@@ -9,6 +9,7 @@
     "scripts/3d/field/smooth_normals.gd:_fix_mesh#0",
     "scripts/tools/test_runner.gd:test_drop_tables#0",
     "scripts/3d/field/cell_object_spawner.gd:_restore_cell_objects#0",
+    "scripts/3d/field/shrine_lighting.gd:rebuild_pillars#0",
     "scripts/autoloads/autopilot.gd:_path_via_authored_waypoints#0",
     "scripts/3d/field/grid_generator.gd:_try_generate#0",
     "scripts/3d/enemies/enemy_base.gd:_setup_model#0",
@@ -19,6 +20,7 @@
     "scripts/2d/storage.gd:_render_items_panel#0",
     "scripts/autoloads/combat_manager.gd:generate_drops#0",
     "scripts/3d/player/player.gd:_update_combat_targets#0",
+    "scripts/3d/field/shrine_lighting.gd:_split_floor_receivers#0",
     "scripts/3d/field/start_menu_renderer.gd:_draw_mags#0",
     "scripts/tools/test_runner.gd:test_damage_formulas#0",
     "scripts/2d/shops/item_shop.gd:_refresh_display#0",
@@ -30,10 +32,13 @@
     "scripts/3d/field/start_menu_renderer.gd:_draw_equip#0",
     "scripts/3d/field/start_menu_renderer.gd:_draw_info_panel#0",
     "scripts/3d/elements/quest_item_pickup.gd:_show_remaining_dialog#0",
+    "scripts/tools/export_shrine_pillar_preview.gd:_capture#0",
     "scripts/tools/test_runner.gd:test_ranger_playthrough#0",
     "scripts/3d/field/start_menu_renderer.gd:_draw_items#0",
+    "scripts/3d/field/valley_field_controller.gd:_apply_field_slot#0",
     "scripts/3d/player/player.gd:_load_weapon_animations#0",
     "scripts/autoloads/autopilot.gd:_find_walk_path#0",
+    "scripts/utils/mesh_utils.gd:apply_glow_materials#0",
     "scripts/tools/test_runner.gd:test_technique_disks#0",
     "scripts/3d/player/player.gd:_handle_movement#0",
     "scripts/2d/shops/crafting_shop.gd:_refresh_display#0",
@@ -56,8 +61,10 @@
     "scripts/2d/character_create.gd:_update_appearance#0",
     "scripts/tools/test_runner.gd:test_blackjack#0",
     "scripts/tools/test_runner.gd:test_mag_evolution#0",
+    "scripts/3d/field/weather_controller.gd:_spawn_placed_effect#0",
     "scripts/3d/city/city_counter_controller.gd:_show_npc_speech_bubble#0",
     "scripts/2d/character_create.gd:_make_slat_pack#0",
+    "scripts/tools/test_runner.gd:test_dark_identity_slots#0",
     "scripts/tools/test_runner.gd:test_quest_lifecycle#0",
     "scripts/2d/blackjack/blackjack_table.gd:_build_ui#0",
     "scripts/2d/character_create.gd:_build_preview_scene#0",
@@ -66,5 +73,6 @@
     "scripts/3d/city/city_office_controller.gd:_build_npc_bubble#0",
     "scripts/3d/elements/companion_npc.gd:_build_speech_bubble#0",
     "scripts/tools/test_runner.gd:_run_tests_core#0"
-  ]
+  ],
+  "_shrine_review": "PR #678: accept reviewed shrine mesh clipping, effect dispatch, slot application, glow pass, preview export and identity checks. No thresholds changed; structural optimization deferred."
 }

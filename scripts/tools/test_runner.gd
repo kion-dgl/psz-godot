@@ -11938,7 +11938,7 @@ func test_dark_identity_slots() -> void:
 	# ── A: the dark-interior pin — kion's 2026-10-01 direction: LOW ambient
 	#    under a super-dim sun that exists only to cast the minimum shadow,
 	#    white motes rising (the area's identity). ──
-	var a := Slots.slot_for("dark", "s07a_ga1")
+	var a := Slots.slot_for("dark", "s07a_ib1")
 	assert_eq(a.get("hour"), 22.0, "A pins hour 22 — the NIGHT base (near-black sky)")
 	assert_eq(a.get("sun_energy"), 0.1, "A: a super-dim sun — the minimum shadow source (kion)")
 	assert_eq(a.get("ambient_energy"), 1.3,
@@ -11957,6 +11957,10 @@ func test_dark_identity_slots() -> void:
 		"A: the row's silence keeps the stage unlit — the bake IS the look")
 	assert_eq(str(a.get("weather", "")), "", "A: no weather — motes are not precipitation")
 	assert_eq(Slots.slot_for("dark", "s07a_lc1"), a, "A rooms ride the A row")
+	var reference := Slots.slot_for("dark", "s07a_ga1")
+	assert_eq(reference.get("sun_energy"), 0.0, "A reference: point lights replace sun")
+	assert_eq(reference.get("ambient_energy"), 0.35, "A reference: reduced ambient")
+	assert_true(reference.has("lit_surfaces"), "A reference: floors receive point shadows")
 	# ── B: the Falz dark-castle side — darker still, BLACK motes. ──
 	var b := Slots.slot_for("dark", "s07b_ga1")
 	assert_eq(b.get("ambient_energy"), 0.05,
@@ -11990,9 +11994,8 @@ func test_dark_identity_slots() -> void:
 	assert_eq(Slots.slot_for("dark", "s07z_na2"), z, "both arenas ride the s07z row (two stages)")
 	# ── E rides the area row: the rig, no signature first draft. ──
 	var area := Slots.slot_for("dark", "s07e_ia1")
-	assert_eq(area.get("sun_energy"), 0.1, "E: the area row keeps the rig")
-	assert_true(not area.has("signature"),
-		"E: no signature on the transition (first draft — may earn its own mood)")
+	assert_eq(area.get("sun_energy"), 0.0, "E: localized point lights replace the sun")
+	assert_eq(area.get("signature"), "red_motes", "E: red transition motes")
 	# ── The classification fix (#653): s07 was missing from the indoor
 	#    prefixes — a Dark Shrine tracking the outdoor cycle. ──
 	assert_true(FieldCtl._is_indoor_stage("s07a_ga1"), "s07a_ga1 classifies indoor (the #653 fix)")

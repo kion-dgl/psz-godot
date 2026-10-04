@@ -3,3 +3,7 @@
 # Prefer fixing the reference over adding entries here. This file exists so a
 # new CI check can be introduced without having to resolve every latent issue
 # in the repo first.
+
+# Generated OUTPUTS of the local Three.js preview exporters, not runtime inputs.
+assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_pillar_preview.json
+assets/stages/shrine_b/s07b_ga1/lndmd/shrine_lantern_preview.glb
