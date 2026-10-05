@@ -1035,5 +1035,21 @@
     "scrollY": 0,
     "wrapS": "repeat",
     "wrapT": "repeat"
+  },
+  "s04_0_yuka0.png#1": {
+    "offsetX": 0,
+    "offsetY": 1,
+    "repeatX": 2,
+    "repeatY": 2,
+    "wrapS": "mirror",
+    "wrapT": "mirror"
+  },
+  "s04_0_etce.png#1": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "repeatX": 1,
+    "repeatY": 1,
+    "wrapS": "mirror",
+    "wrapT": "mirror"
   }
 }

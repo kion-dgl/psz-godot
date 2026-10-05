@@ -10,6 +10,7 @@ extends RefCounted
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const FieldSlotTableScript := preload("res://scripts/3d/field/field_slot_table.gd")
+const MakaraParticles := preload("res://scripts/3d/field/makara_particles.gd")
 const ShrineLighting := preload("res://scripts/3d/field/shrine_lighting.gd")
 
 ## Cache for stage effects JSON (keyed by stage_id, null = no file).
@@ -72,6 +73,8 @@ func spawn_signature() -> void:
 ## The fully-configured weather particle node for a key (""-ish keys → null).
 ## Static + shared so the walk labs preview exactly what spawns in-field.
 static func build_weather_node(weather: String) -> GPUParticles3D:
+	if weather == "makara_rain":
+		return _build_rain_node(140, 8.0, 10.0, 0.45, 0.32)
 	if weather == "snow":
 		return _build_snow_node()
 	if weather == "sand":
@@ -237,6 +240,8 @@ static func _build_rain_node(amount: int, speed_min: float, speed_max: float,
 ## red-ember emitter riding in it (kion 2026-10-02: dark particles with a
 ## small amount of red).
 static func build_signature_node(signature: String) -> Node3D:
+	if signature == "makara_leaves":
+		return MakaraParticles.falling()
 	if signature == "red_motes":
 		return _build_motes_node("SignatureMotesRed",
 			Color(0.9, 0.23, 0.14, 0.75), Color(0.4, 0.06, 0.04, 0.5), true, 1400)
@@ -537,6 +542,8 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 
 
 func _spawn_stage_effects(stage_id: String) -> void:
+	MakaraParticles.spawn_floor(_c._map_root, stage_id)
+	preload("res://scripts/3d/field/makara_lighting.gd").spawn_crystals(_c._map_root, stage_id)
 	# The tracked B recipe supersedes local/asset-pack drafts, preventing
 	# stale sidecars from doubling the reference room's authored lights.
 	var shrine := ShrineLighting.recipe(stage_id)

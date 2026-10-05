@@ -521,6 +521,66 @@
     {
       "sig": "scripts/3d/field/weather_controller.gd:_attach_lantern_light#0||scripts/3d/field/weather_controller.gd:_attach_spore_light#0",
       "jaccard": 0.863
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_print_anchor_snippet#0||scripts/tools/makara_walktest.gd:_print_anchor_snippet#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_dump_materials#0||scripts/tools/shrine_walktest.gd:_dump_materials#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_dump_stage_layers#0||scripts/tools/shrine_walktest.gd:_dump_stage_layers#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_print_anchor_snippet#0||scripts/tools/shrine_walktest.gd:_print_anchor_snippet#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_scale_anchors#0||scripts/tools/shrine_walktest.gd:_scale_anchors#0",
+      "jaccard": 1.0
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_ready#0||scripts/tools/shrine_walktest.gd:_ready#0",
+      "jaccard": 0.954
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_process#0||scripts/tools/shrine_walktest.gd:_process#0",
+      "jaccard": 0.941
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_spawn_authored_effects#0||scripts/tools/makara_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 0.934
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_spawn_authored_effects#0||scripts/tools/paru_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 0.934
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_spawn_authored_effects#0||scripts/tools/shrine_walktest.gd:_spawn_authored_effects#0",
+      "jaccard": 0.906
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_readout#0||scripts/tools/shrine_walktest.gd:_readout#0",
+      "jaccard": 0.889
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_dump_materials#0||scripts/tools/makara_walktest.gd:_dump_materials#0",
+      "jaccard": 0.884
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_update_status#0||scripts/tools/shrine_walktest.gd:_update_status#0",
+      "jaccard": 0.879
+    },
+    {
+      "sig": "scripts/tools/arca_walktest.gd:_readout#0||scripts/tools/makara_walktest.gd:_readout#0",
+      "jaccard": 0.861
+    },
+    {
+      "sig": "scripts/tools/makara_walktest.gd:_readout#0||scripts/tools/paru_walktest.gd:_readout#0",
+      "jaccard": 0.861
     }
   ],
   "_shrine_review": "PR #678: accept the separate ground-spore/mote builders and lantern/spore light variants after visual review. Consolidation belongs to the deferred optimization pass."
