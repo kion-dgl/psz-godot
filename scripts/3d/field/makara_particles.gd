@@ -22,7 +22,7 @@ static func falling() -> GPUParticles3D:
 
 
 static func spawn_floor(root: Node3D, stage_id: String) -> void:
-	if not stage_id.begins_with("s04a_"):
+	if not stage_id.begins_with("s04a_") and not stage_id.begins_with("s04b_"):
 		return
 	var path := ROOT + stage_id + ".json"
 	if not FileAccess.file_exists(path):

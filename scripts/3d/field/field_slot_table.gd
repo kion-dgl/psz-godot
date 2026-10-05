@@ -275,6 +275,23 @@ const SLOTS := {
 	# #650: sparse red leaf fall indoors; entrance retains its separate baseline.
 	"s04a": {"hour": 10.0, "signature": "makara_leaves", "lit_surfaces": []},
 	"s04a_sa1": {"hour": 10.0},
+	# All B rooms retain baked scenery and mirrored stairs, with actor shadows
+	# and sparse falling petals. Rising petals use room-local flower geometry.
+	"s04b": {
+		"hour": 10.0,
+		"sun_origin": [-18.0, 35.0, -12.0],
+		"sun_pitch": -60.0,
+		"sun_energy": 0.18,
+		"sun_color": Color(0.86, 0.9, 1.0),
+		"ambient_energy": 0.05,
+		"ambient_color": Color(0.78, 0.84, 0.95),
+		"moon_energy": 0.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"signature": "makara_leaves",
+		"lit_surfaces": [],
+	},
+	"s04e_ia1": {"hour": 10.0, "sky_style": "makara_clouds", "signature": "makara_leaves"},
 	# Freestanding pillar rooms, directions read from each room's baked shadows.
 	# Explicit empty lit_surfaces also selects the unlit mirror-wrap shader
 	# for exit stairs (otherwise global illumination paints them gray).
@@ -748,6 +765,9 @@ const SLOTS := {
 ## exists so the unit test can exercise the ladder with synthetic rows.
 static func slot_for(area_id: String, stage_id: String, table: Dictionary = SLOTS) -> Dictionary:
 	if table.has(stage_id):
+		if stage_id == "s04e_ia1" and table[stage_id].get("sky_style", "") == "makara_clouds":
+			return (table[stage_id] as Dictionary).merged(
+				preload("res://scripts/3d/field/makara_e_presets.gd").resolve(), true)
 		return (table[stage_id] as Dictionary).duplicate()
 	if stage_id.length() >= 4 and table.has(stage_id.substr(0, 4)):
 		return (table[stage_id.substr(0, 4)] as Dictionary).duplicate()

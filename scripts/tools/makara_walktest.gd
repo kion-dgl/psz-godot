@@ -20,6 +20,7 @@ const ANCHOR_INTENSITY := 1.2
 const ANCHOR_RADIUS := 5.0
 
 static var _pending_stage := ""
+static var _preset_view := {}
 
 @export var boot_stage := "s04a_ic3"
 
@@ -69,12 +70,20 @@ func _ready() -> void:
 		MeshUtils.place_light_inside_room(_dir_light, _map_root, _floor_top)
 		MeshUtils.apply_sun_eye_pull(_dir_light, _map_root, _slot)
 	var start := FieldLabScript.boot_spawn(_stage_id)
+	if not _preset_view.is_empty():
+		start = _preset_view["position"]
 	_player = FieldLabScript.spawn_player(self, start)
 	var orbit := get_node("OrbitCamera")
 	if Vector2(start.x, start.z).length() > 4.0:
 		orbit.camera_rotation = atan2(start.x, start.z)
 	if not OS.get_environment("PSZ_WALK_YAW").is_empty():
 		orbit.camera_rotation = deg_to_rad(float(OS.get_environment("PSZ_WALK_YAW")))
+	if not OS.get_environment("PSZ_WALK_PITCH").is_empty():
+		orbit.camera_pitch = deg_to_rad(float(OS.get_environment("PSZ_WALK_PITCH")))
+	if not _preset_view.is_empty():
+		orbit.camera_rotation = _preset_view["yaw"]
+		orbit.camera_pitch = _preset_view["pitch"]
+		_preset_view.clear()
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
 	_spawn_authored_effects()
@@ -108,7 +117,15 @@ func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var keycode: int = (event as InputEventKey).keycode
+	if _stage_id == "s04e_ia1" and keycode >= KEY_1 and keycode <= KEY_5:
+		var orbit := get_node("OrbitCamera")
+		_preset_view = {"position": _player.global_position, "yaw": orbit.camera_rotation, "pitch": orbit.camera_pitch}
+		preload("res://scripts/3d/field/makara_e_presets.gd").selected = keycode - KEY_1
+		_pending_stage = _stage_id
+		get_tree().reload_current_scene()
+		return
 	if FieldLabScript.handle_tune_key(keycode, _env, _dir_light):
+		preload("res://scripts/3d/field/makara_lighting.gd").refresh_ambient(_map_root, _env)
 		_update_status()
 		return
 	match keycode:
@@ -253,3 +270,6 @@ func _update_status() -> void:
 		"on" if _dir_light.shadow_enabled else "off",
 		_env.fog_density,
 		"sun-open" if _sun_open else ("actor shadows" if _slot.get("sun_shadows", false) else "baseline")]
+
+	if _stage_id == "s04e_ia1":
+		_status.text += "\n%s · 1 Day · 2 Twilight · 3 Night · 4 Rain day · 5 Rain night" % _slot.get("preset_name", "Day")

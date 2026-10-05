@@ -73,6 +73,8 @@ func spawn_signature() -> void:
 ## The fully-configured weather particle node for a key (""-ish keys → null).
 ## Static + shared so the walk labs preview exactly what spawns in-field.
 static func build_weather_node(weather: String) -> GPUParticles3D:
+	if weather == "makara_rain":
+		return _build_rain_node(140, 8.0, 10.0, 0.45, 0.32)
 	if weather == "snow":
 		return _build_snow_node()
 	if weather == "sand":

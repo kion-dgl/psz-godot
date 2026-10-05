@@ -130,6 +130,8 @@ static func boot_environment(lab: Node, area_id: String, stage_id: String) -> Di
 	if not OS.get_environment("PSZ_WALK_AMBIENT").is_empty():
 		built["env"].ambient_light_energy = \
 			float(OS.get_environment("PSZ_WALK_AMBIENT"))
+	preload("res://scripts/3d/field/makara_sky.gd").apply(
+		built["env"], built["sky_mat"], built["dir_light"], slot)
 	built["slot"] = slot
 	return built
 
@@ -195,6 +197,7 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 			WATERFALL_SHADER, false, cheat,
 			TEXTURE_FIX_SHADER_UNLIT, slot.get("lit_surfaces", []))
 	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(map_root, stage_id)
+	preload("res://scripts/3d/field/makara_lighting.gd").prepare_stage(map_root, stage_id, slot)
 	return map_root
 
 

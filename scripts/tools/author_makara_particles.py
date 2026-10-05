@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sample Makara A's lower hana2 triangles for a single room-local emitter."""
+"""Sample Makara A/B rooms' lower hana2 triangles for a single room-local emitter."""
 import json
 import math
 import random
@@ -12,7 +12,9 @@ OUT = ROOT / 'data/stage_configs/makara-particles'
 
 def author():
     OUT.mkdir(parents=True, exist_ok=True)
-    for folder in sorted((ROOT / 'assets/stages/makara_a').glob('s04a_*')):
+    folders = sorted((ROOT / 'assets/stages/makara_a').glob('s04a_*'))
+    folders.extend(sorted((ROOT / 'assets/stages/makara_b').glob('s04b_*')))
+    for folder in folders:
         triangles = [t for name, ts in primitives(folder / 'lndmd' / f'{folder.name}_m.glb')
                      if name == '1_hana2' for t in ts if max(v[1] for v in t) < 0]
         if not triangles:
