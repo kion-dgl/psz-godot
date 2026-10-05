@@ -12,6 +12,9 @@
     "scenes/tools/snowfield_mattest.tscn",
     "scenes/tools/valley_field_confirm.tscn",
     "scenes/tools/valley_walktest.tscn",
-    "scenes/tools/wetlands_walktest.tscn"
+    "scenes/tools/wetlands_walktest.tscn",
+    "scenes/tools/makara_walktest.tscn",
+    "scenes/tools/makara_b_walktest.tscn",
+    "scenes/tools/makara_e_walktest.tscn"
   ]
 }
