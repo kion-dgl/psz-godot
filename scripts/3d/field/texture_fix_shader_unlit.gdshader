@@ -12,6 +12,7 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_en
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec3 uv_scale = vec3(1.0, 1.0, 1.0);
 uniform vec3 uv_offset = vec3(0.0, 0.0, 0.0);
+uniform float surface_offset = 0.0;
 // Wrap mode per axis: 0 = repeat, 1 = mirror, 2 = clamp
 uniform int wrap_s = 0;
 uniform int wrap_t = 0;
@@ -36,6 +37,10 @@ float apply_wrap(float coord, int mode, float half_texel) {
 	}
 	// Repeat (default)
 	return fract(coord);
+}
+
+void vertex() {
+	VERTEX += NORMAL * surface_offset;
 }
 
 void fragment() {

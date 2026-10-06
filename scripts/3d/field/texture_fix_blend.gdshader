@@ -6,6 +6,7 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_en
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec3 uv_scale = vec3(1.0);
 uniform vec3 uv_offset = vec3(0.0);
+uniform vec2 uv_scroll = vec2(0.0);
 uniform int wrap_s = 0;
 uniform int wrap_t = 0;
 uniform bool use_vertex_color = true;
@@ -20,7 +21,7 @@ float wrap_coord(float coord, int mode, float half_texel) {
 }
 
 void fragment() {
-	vec2 continuous_uv = UV * uv_scale.xy + uv_offset.xy;
+	vec2 continuous_uv = UV * uv_scale.xy + uv_offset.xy + uv_scroll * TIME;
 	vec2 half_texel = 0.5 / vec2(textureSize(albedo_texture, 0));
 	vec2 uv = vec2(wrap_coord(continuous_uv.x, wrap_s, half_texel.x),
 		wrap_coord(continuous_uv.y, wrap_t, half_texel.y));

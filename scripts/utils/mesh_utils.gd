@@ -130,7 +130,7 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 			var has_scroll := fix.has("scrollX") or fix.has("scrollY")
 			var is_waterfall := has_scroll \
 					or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
-			if is_waterfall and waterfall_shader:
+			if is_waterfall and waterfall_shader and not fix.get("bakedBlend", false):
 				# Waterfall / scrolling texture: additive blend + scrolling UV
 				var shader_mat := ShaderMaterial.new()
 				shader_mat.shader = waterfall_shader
@@ -151,25 +151,35 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				mi.set_surface_override_material(i, _mirror_material(std_mat, fix,
 					fix_shader, unlit_stage, unlit_fix_shader, keep_lit))
 			else:
-				var new_mat := std_mat.duplicate() as StandardMaterial3D
-				new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-				new_mat.vertex_color_use_as_albedo = true
-				new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				new_mat.alpha_scissor_threshold = 0.1
-				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
-				new_mat.texture_repeat = true
-				if not fix.is_empty():
-					new_mat.uv1_scale = Vector3(
-						float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0)
-					new_mat.uv1_offset = Vector3(
-						float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0)
-					if str(fix.get("wrapS", "repeat")) == "clamp" \
-							or str(fix.get("wrapT", "repeat")) == "clamp":
-						new_mat.texture_repeat = false
-				mi.set_surface_override_material(i, new_mat)
+				mi.set_surface_override_material(i, _field_standard_material(std_mat, fix))
 	for child in node.get_children():
 		apply_field_materials(child, fix_shader, waterfall_shader, cast_shadows,
 			unlit_stage, unlit_fix_shader, keep_lit)
+
+
+## Ordinary field materials retain the established cutout and UV path.
+static func _field_standard_material(std_mat: StandardMaterial3D, fix: Dictionary) -> StandardMaterial3D:
+	var new_mat := std_mat.duplicate() as StandardMaterial3D
+	new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+	new_mat.vertex_color_use_as_albedo = true
+	new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	new_mat.alpha_scissor_threshold = 0.1
+	new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	new_mat.texture_repeat = true
+	# Coplanar sign overlays need a small normal offset to clear walls.
+	# Material grow preserves the source mesh and collision geometry.
+	if fix.has("surfaceOffset"):
+		new_mat.grow = true
+		new_mat.grow_amount = float(fix["surfaceOffset"])
+	if not fix.is_empty():
+		new_mat.uv1_scale = Vector3(
+			float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0)
+		new_mat.uv1_offset = Vector3(
+			float(fix.get("offsetX", 0.0)), float(fix.get("offsetY", 0.0)), 0.0)
+		if str(fix.get("wrapS", "repeat")) == "clamp" \
+				or str(fix.get("wrapT", "repeat")) == "clamp":
+			new_mat.texture_repeat = false
+	return new_mat
 
 
 ## The mirror-wrap surface treatment: the custom wrap shader — swapped to
@@ -191,6 +201,13 @@ static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 		shader = preload("res://scripts/3d/field/texture_fix_blend.gdshader")
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = shader
+	# Glass overlays draw after the room's other transparent surfaces,
+	# avoiding camera-dependent sorting against the dark inset beneath.
+	shader_mat.render_priority = int(fix.get("renderPriority", 0))
+	shader_mat.set_shader_parameter("surface_offset", float(fix.get("surfaceOffset", 0.0)))
+	if fix.get("bakedBlend", false):
+		shader_mat.set_shader_parameter("uv_scroll", Vector2(
+			float(fix.get("scrollX", 0.0)), float(fix.get("scrollY", 0.0))))
 	if std_mat.albedo_texture:
 		shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 	var tint := std_mat.albedo_color

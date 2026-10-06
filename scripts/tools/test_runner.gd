@@ -220,6 +220,7 @@ func _run_tests_systems() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_field_time_slots()
+	test_tower_interior_lights()
 	test_valley_day_slot()
 	test_valley_lit_surfaces()
 	test_valley_shadow_catcher()
@@ -13391,3 +13392,28 @@ class _AmbienceStubController extends RefCounted:
 	var _current_cell: Dictionary = {}
 	var _current_wave: int = 1
 	var _max_wave: int = 1
+
+
+func test_tower_interior_lights() -> void:
+	print("── Tower interior lights ──")
+	var lighting := preload("res://scripts/3d/field/tower_lighting.gd")
+	var slots := preload("res://scripts/3d/field/field_slot_table.gd")
+	for stage in lighting.ROOMS:
+		var root := Node3D.new()
+		lighting.spawn(root, stage)
+		lighting.spawn(root, stage)
+		assert_eq(root.get_child_count(), 1, stage + ": light rig is idempotent")
+		var rig := root.get_node("TowerInteriorLights")
+		assert_true(rig.get_child_count() >= 3, stage + ": colored accents exist")
+		for light in rig.get_children():
+			assert_eq(light.light_cull_mask & MeshUtils.SHADOW_CATCHER_LAYER, 0,
+				stage + ": accents cannot brighten the catcher")
+		var slot := slots.slot_for("tower", stage)
+		assert_eq(slot.get("lit_surfaces"), [], stage + ": room keeps baked lighting")
+		assert_true(slot.get("lit_props", false), stage + ": props receive accents")
+		assert_eq(slot.get("sun_energy"), 0.0, stage + ": interior has no sun")
+		root.free()
+	var outside := Node3D.new()
+	lighting.spawn(outside, "s082_ga1")
+	assert_eq(outside.get_child_count(), 0, "Tower accents stay on floor 1")
+	outside.free()

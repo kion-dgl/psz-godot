@@ -33,7 +33,11 @@ const slots = [
   { key: 's07b', area: 'Dark Shrine B (s07b_*)', hour: '22.0 — night', weather: '—', note: 'Ambient 0.05, no sun or catcher. Lit stage receives room-specific floor pools; stage-only lights preserve actor exposure. Fog 0.18 with overhead bank, tonemap white 3.0, swirling motes, embers and spores. Teal pillar insets and solid lanterns mark the room.' },
   { key: 's07z', area: 'Dark Shrine Z', hour: '22.0 — night', weather: '—', note: 'Boss arenas retain the pre-pivot rig: ambient 0.95 and unlit bake, awaiting their own review.' },
   { key: 's07e_ia1', area: 'Dark Shrine E transition', hour: '22.0 — night', weather: '—', note: 'No sun; ambient 0.35, two localized red point lights over baked highlights, red motes, and eight teal lanterns on 15-unit support poles.' },
-  { key: 'tower', area: 'Eternal Tower (s08)', hour: '10.0 — day', weather: '—', note: 'interim; #654 authors fixed-hour floors' },
+  { key: 's080_sa0', area: 'Tower entrance', hour: '10.0', weather: '—', note: 'Baked scenery; dynamic sun shadows on the collision-floor catcher.' },
+  { key: 's081', area: 'Tower floor 1', hour: '10.0', weather: '—', note: 'Interior: sun off, ambient 0.15, blue stair and green panel lights for actors and props only.' },
+  { key: 's082 / s083 / s084 / s085', area: 'Tower floors 2–5', hour: '10 / 13 / 15 / 17', weather: '—', note: 'Morning above ground, early afternoon at height, clouds at 3 pm, warm 5 pm above Earth. Dynamic actor shadows; unlit baked scenery.' },
+  { key: 's086 / s087', area: 'Tower high atmosphere / low orbit boss', hour: '18 / 19 (provisional)', weather: '—', note: 'Dark sky, direct neutral sunlight, reduced ambient fill. Altitude rather than moonlit night.' },
+  { key: 's08e_ib1', area: 'Tower pre-boss interior', hour: '18.0', weather: '—', note: 'Ambient only; no sun or moon.' },
   { key: 'city', area: 'City field stages (s00)', hour: '10.0 — day', weather: '—', note: 'coliseum debug arena excepts to noon' },
 ];
 ---
@@ -384,4 +388,16 @@ const slots = [
     A→B progression. This only becomes a real question once variations exist.</li>
   </ul>
   <p>Supersedes the always-day ask in #605 (day becomes Valley's one slot).</p>
+  <h2>Eternal Tower material and lighting contract</h2>
+  <p>Tower scenery MUST retain its baked lighting, including mirrored materials.
+  Dynamic lighting MUST affect actors and lit props without relighting the room.
+  Outdoor actor shadows MUST use the collision-floor catcher. Floor-1 accents
+  MUST be shared by the game and preview, spawn once per room, and exclude the catcher.</p>
+  <p>Colored glass, cloud cards, and force fields MUST preserve smooth alpha and
+  authored color. Matching texture aliases MUST share scrolling and wrapping.
+  Floor glass MUST draw after the underlying transparent inset. Coplanar orange
+  sign overlays retain a small surface offset and their authored vertical mirror.</p>
+  <p>This is an accepted first pass (2026-10-06), not a final art lock. A future
+  Tower pass should revisit light placement and balance, glass sorting while
+  walking, the opaque floor-1 fence variant, and the provisional orbital hours.</p>
 </Concept>
