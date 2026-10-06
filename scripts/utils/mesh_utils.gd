@@ -118,6 +118,15 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				continue
 			var std_mat := mat as StandardMaterial3D
 			var fix := fix_for_material(std_mat)
+			if fix.get("hidden", false):
+				# Suppress an authored effect surface without hiding the other
+				# surfaces in its mesh or changing the source geometry.
+				var hidden_mat := StandardMaterial3D.new()
+				hidden_mat.albedo_color = Color(0, 0, 0, 0)
+				hidden_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				hidden_mat.alpha_scissor_threshold = 0.5
+				mi.set_surface_override_material(i, hidden_mat)
+				continue
 			var has_scroll := fix.has("scrollX") or fix.has("scrollY")
 			var is_waterfall := has_scroll \
 					or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
@@ -137,7 +146,7 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
 				shader_mat.render_priority = 1
 				mi.set_surface_override_material(i, shader_mat)
-			elif str(fix.get("wrapS", "repeat")) == "mirror" \
+			elif fix.get("bakedBlend", false) or str(fix.get("wrapS", "repeat")) == "mirror" \
 					or str(fix.get("wrapT", "repeat")) == "mirror":
 				mi.set_surface_override_material(i, _mirror_material(std_mat, fix,
 					fix_shader, unlit_stage, unlit_fix_shader, keep_lit))
@@ -175,11 +184,18 @@ static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 	if unlit_stage and unlit_fix_shader \
 			and not (keep_lit.has("*") or keep_lit.has(std_mat.resource_name)):
 		shader = unlit_fix_shader
+	# Baked glass and light rays need blending, including GLBs marked MASK.
+	# A separate shader omits ALPHA_SCISSOR_THRESHOLD entirely so the
+	# renderer cannot select its cutout pipeline for these faint panes.
+	if fix.get("bakedBlend", false):
+		shader = preload("res://scripts/3d/field/texture_fix_blend.gdshader")
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = shader
 	if std_mat.albedo_texture:
 		shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
-	shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+	var tint := std_mat.albedo_color
+	tint.a *= clampf(float(fix.get("opacity", 1.0)), 0.0, 1.0)
+	shader_mat.set_shader_parameter("albedo_color", tint)
 	shader_mat.set_shader_parameter("uv_scale", Vector3(
 		float(fix.get("repeatX", 1.0)), float(fix.get("repeatY", 1.0)), 1.0))
 	shader_mat.set_shader_parameter("uv_offset", Vector3(
