@@ -542,6 +542,7 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 
 
 func _spawn_stage_effects(stage_id: String) -> void:
+	preload("res://scripts/3d/field/tower_lighting.gd").spawn(_c._map_root, stage_id)
 	MakaraParticles.spawn_floor(_c._map_root, stage_id)
 	preload("res://scripts/3d/field/makara_lighting.gd").spawn_crystals(_c._map_root, stage_id)
 	# The tracked B recipe supersedes local/asset-pack drafts, preventing

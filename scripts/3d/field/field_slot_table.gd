@@ -755,7 +755,122 @@ const SLOTS := {
 		"fog_density": 0.04,
 		"fog_color": Color(0.03, 0.03, 0.06),
 	},
-	"tower":  {"hour": 10.0},     # interim; #654 authors fixed-hour floors
+	# Eternal Tower ascent (#654). Preserve each room's baked scenery; the
+	# outdoor rig lights actors and casts onto the collision-floor catcher.
+	# An empty lit_surfaces list keeps every stage surface, including mirrored
+	# stairs, on the unlit baked path. Actors and the catcher still see the sun.
+	# Energies and angles are a first pass, pending an in-game visual review.
+	"s080_sa0": {
+		"hour": 10.0,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 1: enclosed, dim ambient fill, no outdoor directional light.
+	"s081": {
+		"hour": 10.0,
+		"sun_energy": 0.0,
+		"moon_energy": 0.0,
+		"ambient_energy": 0.15,
+		"ambient_color": Color(0.65, 0.70, 0.80),
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 2: just above ground, still morning.
+	"s082": {
+		"hour": 10.0,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
+		"sun_pitch": -60.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 3: high above ground at 1 pm, short shadows.
+	"s083": {
+		"hour": 13.0,
+		"sun_energy": 0.9,
+		"ambient_energy": 0.4,
+		"sun_pitch": -75.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 4: within the clouds at 3 pm, softer contrast.
+	"s084": {
+		"hour": 15.0,
+		"sun_energy": 0.7,
+		"ambient_energy": 0.5,
+		"sun_pitch": -50.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 5: 5 pm over the clouds and Earth. Explicit warmth because
+	# the time preset's sunset interpolation starts at unchanged DAY at 17.
+	"s085": {
+		"hour": 17.0,
+		"sun_energy": 0.9,
+		"sun_color": Color(1.0, 0.82, 0.62),
+		"ambient_energy": 0.4,
+		"ambient_color": Color(0.75, 0.78, 0.88),
+		"sun_pitch": -30.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 6: high atmosphere. Dark sky is altitude, not moonlit night.
+	# 18/19 are provisional clock pins for the last two outdoor floors.
+	"s086": {
+		"hour": 18.0,
+		"sun_energy": 1.0,
+		"sun_color": Color(1.0, 0.97, 0.92),
+		"ambient_energy": 0.25,
+		"ambient_color": Color(0.55, 0.65, 0.85),
+		"moon_energy": 0.0,
+		"sky_top_color": Color(0.008, 0.012, 0.035),
+		"sky_horizon_color": Color(0.08, 0.16, 0.30),
+		"sun_pitch": -45.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Final interior immediately before the boss: ambient only.
+	"s08e_ib1": {
+		"hour": 18.0,
+		"sun_energy": 0.0,
+		"moon_energy": 0.0,
+		"ambient_energy": 0.3,
+		"ambient_color": Color(0.60, 0.66, 0.80),
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	# Floor 7: low orbit, neutral direct sunlight with faint Earth fill.
+	"s087": {
+		"hour": 19.0,
+		"sun_energy": 1.1,
+		"sun_color": Color(1.0, 0.98, 0.95),
+		"ambient_energy": 0.2,
+		"ambient_color": Color(0.45, 0.58, 0.80),
+		"moon_energy": 0.0,
+		"sky_top_color": Color(0.002, 0.003, 0.008),
+		"sky_horizon_color": Color(0.015, 0.025, 0.06),
+		"sun_pitch": -50.0,
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"lit_props": true,
+		"lit_surfaces": [],
+	},
+	"tower": {"hour": 10.0, "lit_surfaces": []},     # fallback for unclassified Tower stages
 	"city":   {"hour": 10.0},     # s00 field stages (city scenes carry no clock)
 }
 

@@ -198,6 +198,7 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 			TEXTURE_FIX_SHADER_UNLIT, slot.get("lit_surfaces", []))
 	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(map_root, stage_id)
 	preload("res://scripts/3d/field/makara_lighting.gd").prepare_stage(map_root, stage_id, slot)
+	preload("res://scripts/3d/field/tower_lighting.gd").spawn(map_root, stage_id)
 	return map_root
 
 
