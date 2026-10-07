@@ -332,18 +332,37 @@
       },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
+          "id": "dash",
+          "clip": "run",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "atk",
+            "lp": "run",
+            "ed": "atk_mi"
+          },
+          "overshoot": 1.0,
+          "stop_on_hit": true,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
           "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
+          "hit_reach": 0.55,
           "damage_mult": 1.0,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 4.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "stt": "Emerges from the dirt once at reveal; stationary, no damage (Kion playtest).",
+        "wat": "Idle breathing.",
+        "wlk": "Walk approach; no contact damage.",
+        "run": "Running/dash cycle; used only after atk preparation during attack travel.",
+        "atk": "Stationary crouching dash preparation, NOT a damaging melee swing (Kion playtest; rendered clip inspection).",
+        "atk_mi": "Short upward recovery; used as non-damaging dash recovery. Original miss-selection semantics unverified.",
+        "atk_hi": "Long airborne tumble; unused until original selection semantics are verified. NOT a confirmed high swing.",
+        "dam": "Damage reaction.",
+        "ded": "Death."
+      }
     },
     "bullbatt": {
       "archetype": "simple_melee",
@@ -946,18 +965,37 @@
       },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
+          "id": "dash",
+          "clip": "run",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "atk",
+            "lp": "run",
+            "ed": "atk_mi"
+          },
+          "overshoot": 1.0,
+          "stop_on_hit": true,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
           "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
+          "hit_reach": 0.55,
           "damage_mult": 1.0,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 4.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "stt": "Emerges from the dirt once at reveal; stationary, no damage (Kion playtest).",
+        "wat": "Idle breathing.",
+        "wlk": "Walk approach; no contact damage.",
+        "run": "Running/dash cycle; used only after atk preparation during attack travel.",
+        "atk": "Stationary crouching dash preparation, NOT a damaging melee swing (Kion playtest; rendered clip inspection).",
+        "atk_mi": "Short upward recovery; used as non-damaging dash recovery. Original miss-selection semantics unverified.",
+        "atk_hi": "Long airborne tumble; unused until original selection semantics are verified. NOT a confirmed high swing.",
+        "dam": "Damage reaction.",
+        "ded": "Death."
+      }
     },
     "goldix": {
       "archetype": "box_mimic",

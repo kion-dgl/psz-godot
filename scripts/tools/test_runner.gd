@@ -3687,7 +3687,9 @@ func test_enemy_charge_roll_through() -> void:
 		"charge_segments": {"st": "trf1", "lp": "wat3", "ed": "trf2"},
 		"stop_on_hit": false, "overshoot": 3.0, "knockdown": true,
 		"recovery_vulnerable_mult": 2.0}, dummy)
-	assert_true(r._charge["rotate_model"], "explicit segments mean an engine-rolled loop clip")
+	r._archetype = "roller"
+	r._start_charge(3.0)
+	assert_true(r._charge["rotate_model"], "roller archetype uses an engine-rolled loop clip")
 	assert_eq(float(r._charge["travel_target"]), 6.0, "overshoot: travel = start dist 3 + 3, capped by max_range")
 	for _i in range(20):
 		r._process_attacking(dt)

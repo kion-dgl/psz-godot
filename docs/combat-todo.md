@@ -94,3 +94,25 @@ missing entrance clips, repeated reveal, and archetype-specific telegraphs.
 - [ ] Sound effects
 - [ ] Photon blasts (mag trigger)
 - [ ] Traps (Cast classes)
+
+
+### Booma follow-up: preparation was misclassified as a strike
+
+The first entrance fix did not verify the attack clip's visual meaning. Kion's
+next playtest exposed `run` approach followed by damaging `atk` preparation.
+Rendered samples of all nine source clips confirm `atk` crouches for the dash;
+it is not a melee swing. Both variants now walk into range, prepare on `atk`,
+dash on `run` with one contact resolution, then recover harmlessly on `atk_mi`.
+Only roller archetypes receive engine-driven body rotation during a charge.
+
+Evidence recovered from [notes intake #492](https://github.com/kion-dgl/psz-godot/issues/492)
+and Git history: the earlier per-clip observations survive in
+`data/enemy_attacks.json` (`clip_notes`). Booma had no authored notes/table;
+“height swings” came from the vocabulary inventory in commit `170a7717`, not
+confirmed visual semantics. Preserve observations and uncertainty in clip_notes.
+The original outcome selection between `atk_hi` and `atk_mi` is still unknown;
+using the short recovery for both hit and miss is an explicit gameplay choice.
+
+The Coliseum probe now requires two complete `atk → run → atk_mi` cycles and
+checks that preparation is stationary and causes no damage. Unit tests also put
+the target inside contact range during preparation and test dash contact/dodge.

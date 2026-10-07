@@ -927,3 +927,31 @@ describe('projectile swept contacts', () => {
     }
   });
 });
+
+
+describe('Booma prepared dash', () => {
+  const dash = atk({ id: 'dash', clip: 'run', kind: 'charge',
+    charge_segments: { st: 'atk', lp: 'run', ed: 'atk_mi' },
+    max_range: 4, hit_reach: 0.55, overshoot: 1 });
+  for (const invincible of [false, true]) {
+    it(`prepares without damage, then dashes and recovers (dodge=${invincible})`, () => {
+      const c = config([dash]);
+      c.enemies.dummy.archetype = 'bruiser';
+      const entry = resolveEntry(c, 'dummy');
+      const sim = makeSim({ x: 0, z: 0 });
+      const input = makeInput({ playerPos: { x: 0, z: 2.5 }, playerInvincible: invincible,
+        clipDurationFor: (name) => ({ atk: 0.8167, run: 0.3333, atk_mi: 0.2333 } as Record<string, number>)[name] ?? null });
+      stepEnemy(sim, entry, input);
+      stepEnemy(sim, entry, input);
+      expect(sim.anim).toBe('atk');
+      const preparation = run(sim, entry, input, 0.7);
+      expect(preparation.some(e => e.type === 'hit')).toBe(false);
+      expect(sim.pos.z).toBe(0);
+      const events = run(sim, entry, input, 2);
+      expect(events.filter(e => e.type === 'hit')).toHaveLength(invincible ? 0 : 1);
+      expect(events.filter(e => e.type === 'hit_dodged')).toHaveLength(invincible ? 1 : 0);
+      expect(sim.pos.z).toBeGreaterThan(0);
+      expect(sim.state).toBe('loafing');
+    });
+  }
+});

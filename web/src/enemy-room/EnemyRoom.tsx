@@ -627,7 +627,7 @@ export default function EnemyRoom() {
       s.enemyGroup.visible = !sim.exploded; // kamikaze self-destruct
       // Roller ball travel: the curled clip has no motion of its own — the
       // engine rotates it (spec §roller). Forward tumble while lp plays.
-      if (atkNow?.charge?.phase === 'lp' && atkNow.def.charge_segments) {
+      if (atkNow?.charge?.phase === 'lp' && e.archetype === 'roller') {
         s.enemyGroup.rotation.x += clock.dt * 8;
       } else {
         s.enemyGroup.rotation.x = 0;

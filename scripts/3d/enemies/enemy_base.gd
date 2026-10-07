@@ -802,7 +802,7 @@ func _chase_flyer(dist: float, radial: Vector3) -> void:
 ## beyond the charge ring, run inside it, nav-pathing around obstacles. The revealed
 ## box mimic shares this but walks wlk1 (its rig has no plain wlk/run).
 func _chase_baseline(dist: float, attack_range: float) -> void:
-	var is_charging := dist <= attack_range * CHARGE_RANGE_MULT
+	var is_charging := _archetype != "bruiser" and dist <= attack_range * CHARGE_RANGE_MULT
 	var clip := "run" if is_charging else "wlk"
 	if _archetype == "box_mimic":
 		clip = "wlk1"
@@ -1349,9 +1349,9 @@ func _start_charge(dist: float) -> void:
 		"tokens": tokens,
 		"traveled": 0.0,
 		"travel_target": travel_target,
-		# Explicit segments (roller) mean transform clips — the loop piece is a
-		# motionless ball the engine must roll.
-		"rotate_model": not (_attack_def.get("charge_segments", {}) as Dictionary).is_empty(),
+		# Only rollers need engine rotation; explicit segments also describe
+		# Booma's upright preparation/run/recovery chain.
+		"rotate_model": _archetype == "roller",
 	}
 	_attack_anim = ""          # the phase machine ends the attack, never the clip
 	_attack_fallback_timer = 1.0e9

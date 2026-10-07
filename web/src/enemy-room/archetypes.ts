@@ -41,8 +41,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'bruiser',
     label: 'Bruiser',
-    blurb: 'Booma family: stt emerges from the dirt once at room reveal, then wat idle, wlk/run pursuit, and the authored atk strike.',
-    simNote: 'Room sim starts after emergence. stt is never an attack prelude; atk_hi/atk_mi selection remains unvalidated (spec /states/enemies).',
+    blurb: 'Booma family: stt emerges from the dirt once at room reveal, then wat idle, wlk approach, atk preparation, run dash, and atk_mi recovery.',
+    simNote: 'Room sim starts after emergence. Only dash contact deals damage. Original atk_hi/atk_mi outcome selection remains unverified (spec /states/enemies).',
   },
   {
     id: 'bigrig_combo',

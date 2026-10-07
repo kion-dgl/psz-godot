@@ -24,6 +24,7 @@ static func run(runner: Node) -> void:
 		runner.assert_eq(enemy._spawn_lock, remaining, "reveal cannot replay an active entrance")
 		enemy.free()
 	_test_telegraphs(runner)
+	_test_dash(runner)
 	var absent: EnemyBase = runner._make_rig_enemy({"wat": 0.5})
 	absent._fsm = {"spawn_clip": "missing"}
 	absent.dormant = true
@@ -46,3 +47,43 @@ static func _test_telegraphs(runner: Node) -> void:
 		runner.assert_true(enemy.current_anim not in ["stt", "wat2"], archetype + " uses its own ready pose")
 		enemy.free()
 	target.free()
+
+
+class ContactTarget extends Node3D:
+	var hits := 0
+	var invincible := false
+	func take_damage(_amount: int, _knockback: Vector3 = Vector3.ZERO, _knockdown: bool = false) -> void:
+		hits += 1
+	func is_dodge_iframed() -> bool:
+		return invincible
+
+
+static func _test_dash(runner: Node) -> void:
+	for dodging in [false, true]:
+		var target := ContactTarget.new()
+		runner.add_child(target)
+		target.position = Vector3(0, 0, 2.5)
+		target.invincible = dodging
+		var definition: Dictionary = EnemyAttackRegistry.get_attacks("booma_origin")[0]
+		var enemy: EnemyBase = runner._make_charge_enemy({"atk": 0.8167, "run": 0.3333, "atk_mi": 0.2333}, definition, target)
+		enemy._archetype = "bruiser"
+		target.position.z = 0.5  # inside contact range throughout preparation
+		runner.assert_true(not enemy._charge["rotate_model"], "explicit Booma segments do not spin its body")
+		for i in range(45):
+			enemy._process_attacking(1.0 / 60.0)
+		runner.assert_eq(target.hits, 0, "dash preparation cannot damage")
+		runner.assert_eq(enemy.current_anim, "atk", "preparation plays before dash")
+		runner.assert_eq(enemy.velocity, Vector3.ZERO, "preparation stays stationary")
+		target.position.z = 2.5
+		var saw_run := false
+		var saw_recovery := false
+		for i in range(160):
+			enemy._process_attacking(1.0 / 60.0)
+			enemy.position += enemy.velocity / 60.0
+			saw_run = saw_run or enemy.current_anim == "run"
+			saw_recovery = saw_recovery or enemy.current_anim == "atk_mi"
+		runner.assert_true(saw_run and saw_recovery, "dash and recovery follow preparation")
+		runner.assert_eq(target.hits, 0 if dodging else 1, "dash contact respects dodge and one-hit budget")
+		runner.assert_true(not enemy.is_attacking, "charge recovers even after a dodge")
+		enemy.free()
+		target.free()
