@@ -41,8 +41,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'bruiser',
     label: 'Bruiser',
-    blurb: 'atk / atk_hi / atk_mi height-variant swings: Booma family.',
-    simNote: 'Baseline sim covers it — author the three swings as an attack table.',
+    blurb: 'Booma family: stt emerges from the dirt once at room reveal, then wat idle, wlk/run pursuit, and the authored atk strike.',
+    simNote: 'Room sim starts after emergence. stt is never an attack prelude; atk_hi/atk_mi selection remains unvalidated (spec /states/enemies).',
   },
   {
     id: 'bigrig_combo',

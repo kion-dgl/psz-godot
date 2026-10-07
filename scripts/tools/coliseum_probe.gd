@@ -23,14 +23,17 @@ func _ready() -> void:
 	CharacterManager.create_character(0, "humar", "ProbeHero")
 	CharacterManager.set_active_slot(0)
 
+	var selected := OS.get_environment("PSZ_COLISEUM_ENEMY")
+	if selected.is_empty():
+		selected = ENEMY_ID
 	SessionManager.enter_quest("debug_coliseum", "normal")
-	SessionManager.set_field_sections(ColiseumRoster.make_sections(ENEMY_ID))
+	SessionManager.set_field_sections(ColiseumRoster.make_sections(selected))
 	print("[coliseum] warping: sections=%d cell=%s objects=%d" % [
 		SessionManager.get_field_sections().size(),
 		str(SessionManager.get_field_sections()[0]["cells"][0].get("stage_id", "?")),
 		(SessionManager.get_field_sections()[0]["cells"][0].get("objects", []) as Array).size()])
 	var watcher := Watch.new()
-	watcher.enemy_id = ENEMY_ID
+	watcher.enemy_id = selected
 	# Deferred: the root is mid-setup during this scene's _ready, so a direct
 	# add_child is rejected; the deferred attach still lands before the swap.
 	get_tree().root.add_child.call_deferred(watcher)
@@ -68,9 +71,6 @@ class Watch extends Node:
 
 		if not weapons_checked:
 			if enemy == null:
-				return
-			if enemy.dormant:
-				enemy.reveal()
 				return
 			if not weapons_started:
 				weapons_started = true
@@ -114,6 +114,14 @@ class Watch extends Node:
 			get_tree().quit(0)
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
+		if enemy._archetype == "bruiser":
+			var entrance_ok: bool = await preload("res://scripts/tools/coliseum_entrance_check.gd").run(player, enemy)
+			if not entrance_ok:
+				_fail("bruiser entrance/attack sequence failed")
+				return
+		elif enemy.dormant:
+			enemy.reveal()
+			await get_tree().physics_frame
 		var ok: bool = await preload("res://scripts/tools/coliseum_combat_check.gd").run(player, enemy)
 		if not ok:
 			_fail("weapon contact verification failed")

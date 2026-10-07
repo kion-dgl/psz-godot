@@ -51,6 +51,8 @@ export interface EnemyStats {
 }
 
 export interface FsmParams {
+  /** Runtime room entrance; the enemy-room sim begins after reveal. Never an attack prelude. */
+  spawn_clip?: string;
   walk_speed_mult: number;
   charge_range_mult: number;
   charge_speed_mult: number;

@@ -50,6 +50,20 @@ handgun at 8 m, rifle at 10 m, off-axis mechgun bursts, and slicer contact again
 the real arena enemy before testing enemy damage and the room-clear return warp.
 Manual playtesting uses the existing Coliseum Master picker in the city.
 
+### Coliseum pass: Booma Origin emergence
+
+Booma Origin and Gigobooma Origin now author `fsm.spawn_clip: stt` and stay
+stationary for the full entrance clip. The generic pre-strike telegraph was
+replaying `stt` after pursuit; only stance risers now use that rise transition.
+Other archetypes hold their own ready pose. Existing archetype definitions remain
+in `/states/enemies`; the Bruiser entrance contract is now explicit there too.
+
+Run the same disposable-project Coliseum probe with
+`PSZ_COLISEUM_ENEMY=booma_origin` or `PSZ_COLISEUM_ENEMY=gigobooma_origin`.
+Both real rigs passed a stationary 1.00-second entrance, pursuit, and two attacks
+with exactly one emergence. Regression tests also cover slower playback,
+missing entrance clips, repeated reveal, and archetype-specific telegraphs.
+
 ## Phase 1 — Previous pass
 
 - [x] Add missing weapon types to shop (spear, claw, double saber, slicer)

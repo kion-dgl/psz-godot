@@ -23,7 +23,7 @@ var is_alive: bool = true
 ## the tree (the spawner does), so _ready() can hide it during setup.
 var dormant := false
 
-## Seconds after reveal the enemy holds still while the start animation plays.
+## Remaining entrance hold, measured from the resolved clip at reveal.
 var _spawn_lock := 0.0
 const SPAWN_LOCK_SEC := 0.8
 
@@ -472,7 +472,7 @@ func _early_process_returns(delta: float) -> bool:
 	# Fresh reveal: hold position (gravity still settles) while the start
 	# animation plays, so the spawn reads as an entrance and not a pop-in.
 	if _spawn_lock > 0.0:
-		_spawn_lock -= delta
+		_spawn_lock = maxf(_spawn_lock - delta, 0.0)
 		velocity.x = 0
 		velocity.z = 0
 		if not is_on_floor():
@@ -1196,7 +1196,7 @@ func _begin_telegraph() -> void:
 		_start_attack()
 		return
 	_telegraphing = true
-	var rise := _play_animation("stt", true)
+	var rise := _play_animation("stt", true) if _archetype == "stance_riser" else ""
 	if not rise.is_empty():
 		_telegraph_rising = true
 		var a := animation_player.get_animation(rise)
@@ -1222,11 +1222,17 @@ func _process_telegraph(delta: float) -> void:
 		_start_attack()
 
 
-## Play the held attack-ready pose: the raised stance (wat2) if the rig has one, else
-## its idle (wat). Looped so it holds through the telegraph beat.
+## Hold the archetype's attack-ready pose, falling back to its idle.
+## Only stance risers use wat2 here; other rigs give that token other meanings.
 func _play_telegraph_hold() -> void:
-	var held := _play_animation("wat2", true)
-	if held.is_empty():
+	var token := _rooted_idle_clip()
+	match _archetype:
+		"stance_riser": token = "wat2"
+		"roller": token = "wat1"
+		"box_mimic": token = "tk1"
+		"flyer_combo": token = "tk"
+	var held := _play_animation(token, true)
+	if held.is_empty() and token != "wat":
 		held = _play_animation("wat", true)
 	if not held.is_empty():
 		var a := animation_player.get_animation(held)
@@ -1711,7 +1717,7 @@ const ANIM_ALIASES := {
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
 	"dmg": ["dam"],       # five rigs name the damage clip dam (booma/swordman/tank/orangutan/shrimp)
-	"spawn": ["app", "appearance", "stt"],  # spawn-in → appearance clip; stt is a stand-from-wait that reads as one
+	"spawn": ["app", "appearance"],  # stt semantics are per archetype, never a generic entrance
 }
 
 func _find_animation(short_name: String) -> String:
@@ -1800,7 +1806,7 @@ func _play_sfx(key: String) -> void:
 
 
 ## Bring a dormant enemy in: show it, play the spawn effect and a start
-## animation, and hold it still for SPAWN_LOCK_SEC so the entrance reads.
+## animation, holding position for that clip (bounded fallback if absent).
 ## `delay` staggers multi-enemy reveals so a wave arrives as a ripple rather
 ## than one simultaneous pop.
 func reveal(delay: float = 0.0) -> void:
@@ -1816,10 +1822,15 @@ func reveal(delay: float = 0.0) -> void:
 		hurtbox.set_deferred("monitorable", true)
 	_spawn_lock = SPAWN_LOCK_SEC
 	_play_spawn_effect()
-	# Start animation if the rig has one, else settle into idle. Short names
-	# the rigs use for it: "app"/"appearance"/"spawn"; none is guaranteed.
-	if _play_animation("spawn", true).is_empty():
-		_play_animation("wat", true)
+	# Explicit per-enemy semantics: Booma stt is emergence; most other stt
+	# clips are aggro displays, dashes, or stance changes and do not belong here.
+	var entrance := _play_animation(str(_fsm.get("spawn_clip", "spawn")), true)
+	if entrance.is_empty():
+		_play_animation(_rooted_idle_clip(), true)
+	else:
+		var clip := animation_player.get_animation(entrance)
+		clip.loop_mode = Animation.LOOP_NONE
+		_spawn_lock = clip.length / maxf(absf(animation_player.speed_scale), 0.001)
 
 
 ## The spawn-in burst: a one-shot puff of additive glow dots, in the shape the

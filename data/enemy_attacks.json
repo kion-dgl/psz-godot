@@ -327,7 +327,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "spawn_clip": "stt"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -939,7 +941,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "spawn_clip": "stt"
+      },
       "attacks": [
         {
           "id": "basic",

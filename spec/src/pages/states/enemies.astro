@@ -78,6 +78,18 @@ const fsm = `stateDiagram-v2
   </ul>
   <p>What happens <em>inside</em> ATTACKING — attack selection, the windup → damaging-window timeline, and the arc hit shape — is defined in <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>.</p>
 
+  <h3>Archetype: Bruiser (Booma family) — normative</h3>
+  <p>Applies to <code>archetype: bruiser</code> (Booma Origin and Gigobooma Origin). Coliseum validation: <code>stt</code> is the emergence from the dirt, not an attack-ready stance.</p>
+  <ul>
+    <li>On room reveal, the bruiser MUST play its authored <code>fsm.spawn_clip: stt</code> once, in place. The uninterrupted entrance MUST finish before wandering, chasing, or attacking; the hold MUST follow the resolved clip duration and playback speed, not a fixed 0.8 seconds.</li>
+    <li>After emergence it uses <code>wat</code> for idle/attack-ready hold, <code>wlk</code>/<code>run</code> for pursuit, and the authored attack table for strikes. It MUST NOT dig out again before each attack or after losing/reacquiring the target.</li>
+    <li>The source rig also has <code>atk_hi</code>/<code>atk_mi</code>. Their selection semantics remain unvalidated; this fix preserves the authored <code>atk</code> strike rather than inventing height-selection rules.</li>
+  </ul>
+  <p>Across archetypes, <code>stt</code> MUST NOT be a universal spawn or pre-attack alias. Emergence is selected through <code>fsm.spawn_clip</code>; absent that field, only explicit <code>spawn</code>/<code>app</code>/<code>appearance</code> clips are spawn candidates. A missing entrance clip uses the bounded spawn-effect hold and idle fallback. Gorillas, flyers, rollers, apes, mimics, and quadrupeds retain their separately defined meanings of <code>stt</code>.</p>
+
+  <h3>Archetype: Stance riser (Garapython family) — normative</h3>
+  <p>Only <code>archetype: stance_riser</code> uses <code>stt</code> as the pre-strike rise into <code>wat2</code>. It then holds that raised pose for the telegraph beat before the authored strike; neither rise nor hold deals damage. Other archetypes MUST use their own engaged idle during a generic telegraph, without borrowing <code>stt</code> or <code>wat2</code> merely because those clips exist.</p>
+
   <h3>Archetype: Quadruped circler (normative)</h3>
   <p>Applies to enemies with <code>archetype: quadruped</code> (wolf, hyena, deer, tiger rigs — Reyhound, Grimble, Tormatible, Stagg, Kapantha). Their <code>wlk_l</code> / <code>wlk_r</code> clips have the <strong>head turned</strong> to that side, so straight-ahead walking reads visibly wrong:</p>
   <ul>
