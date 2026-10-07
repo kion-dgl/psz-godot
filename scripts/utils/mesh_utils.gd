@@ -146,7 +146,7 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 				shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
 				shader_mat.render_priority = 1
 				mi.set_surface_override_material(i, shader_mat)
-			elif fix.get("bakedBlend", false) or str(fix.get("wrapS", "repeat")) == "mirror" \
+			elif int(fix.get("framesY", 1)) > 1 or fix.get("bakedBlend", false) or str(fix.get("wrapS", "repeat")) == "mirror" \
 					or str(fix.get("wrapT", "repeat")) == "mirror":
 				mi.set_surface_override_material(i, _mirror_material(std_mat, fix,
 					fix_shader, unlit_stage, unlit_fix_shader, keep_lit))
@@ -205,6 +205,8 @@ static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 	# avoiding camera-dependent sorting against the dark inset beneath.
 	shader_mat.render_priority = int(fix.get("renderPriority", 0))
 	shader_mat.set_shader_parameter("surface_offset", float(fix.get("surfaceOffset", 0.0)))
+	shader_mat.set_shader_parameter("frames_y", maxi(int(fix.get("framesY", 1)), 1))
+	shader_mat.set_shader_parameter("animation_fps", maxf(float(fix.get("fps", 8.0)), 0.0))
 	if fix.get("bakedBlend", false):
 		shader_mat.set_shader_parameter("uv_scroll", Vector2(
 			float(fix.get("scrollX", 0.0)), float(fix.get("scrollY", 0.0))))

@@ -38,4 +38,6 @@ import Concept from '../layouts/Concept.astro';
     <li><code>scripts/tools/autoplay/merge_gate.sh</code> — blocks merges without a green sanity run for the exact HEAD.</li>
     <li><code>scripts/tools/autoplay/run_regression_matrix.sh</code> — the full post-build layer (dev-box, before combat merges).</li>
   </ul>
+  <h2>Stage texture strips</h2>
+  <p>Texture-fix rows MAY specify <code>framesY</code> and <code>fps</code> for a vertical strip. The field MUST sample one frame at a time, advance top-to-bottom, and loop. UV repeat and wrapping apply within each frame; filtering MUST NOT bleed into adjacent rows. The Coliseum's <code>s00_1_set3</code> uses eight frames at 8 fps.</p>
 </Concept>
