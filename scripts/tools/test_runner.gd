@@ -52,6 +52,7 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
 	preload("res://scripts/tools/enemy_entrance_tests.gd").run(self)
+	preload("res://scripts/tools/enemy_runtime_regression_tests.gd").run(self)
 	test_enemy_locomotion()
 	test_enemy_ranged_delivery()
 	preload("res://scripts/tools/combat_fidelity_tests.gd").run(self)

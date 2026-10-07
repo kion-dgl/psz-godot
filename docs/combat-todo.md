@@ -116,3 +116,23 @@ using the short recovery for both hit and miss is an explicit gameplay choice.
 The Coliseum probe now requires two complete `atk → run → atk_mi` cycles and
 checks that preparation is stationary and causes no damage. Unit tests also put
 the target inside contact range during preparation and test dash contact/dodge.
+
+### Remaining enemy review: six runtime repairs
+
+- Poison Lily uses shared cooldown/status/entry gates and attacks repeatedly.
+- Snake, roller, revealed mimic, and airborne flyer select their authored idle
+  poses; the generic `wat → stt` transition fallback is removed.
+- Roller restores its model orientation on recovery, interruption, and death.
+  Nonlethal hits preserve the full vulnerable recovery window.
+- Snake holds `wt2w` to completion before recovery locomotion.
+- Hypao Barta and Vespao Gibarta use shared ice delivery profiles: ground ice
+  and a three-wave fan, with swept contact, one hit per cast, dodge protection,
+  and freeze that expires or breaks on subsequent damage. The 20% freeze chance
+  is explicit gameplay tuning, not a recovered DS constant.
+
+`enemy_runtime_regression_tests.gd` covers these contracts. Enable real-rig
+checks with `PSZ_ENEMY_RUNTIME_CHECK=1` and `PSZ_COLISEUM_ENEMY` set to
+`poison_lily`, `garapython`, `rohjade`, `hypao`, or `vespao` when running
+`coliseum_probe.tscn` in the disposable project. All five passed the runtime,
+weapon contact, enemy damage, and room-clear checks. These are automated
+behavior checks; visual feel and balance still need human playtesting.

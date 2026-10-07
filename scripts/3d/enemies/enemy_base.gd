@@ -25,6 +25,9 @@ var dormant := false
 
 ## Remaining entrance hold, measured from the resolved clip at reveal.
 var _spawn_lock := 0.0
+var _lower_timer := 0.0
+var _charge_model_basis := Basis.IDENTITY
+var _model_rolling := false
 const SPAWN_LOCK_SEC := 0.8
 
 ## Target to chase (usually the player)
@@ -157,7 +160,13 @@ var _idle_clip := ""
 
 
 func _rooted_idle_clip() -> String:
-	return _idle_clip if not _idle_clip.is_empty() else "wat"
+	if not _idle_clip.is_empty():
+		return _idle_clip
+	match _archetype:
+		"stance_riser", "roller": return "wat1"
+		"box_mimic": return "tk1"
+		"flyer_combo": return "tk" if _flying else ""
+	return "wat"
 
 ## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
 ## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
@@ -488,13 +497,26 @@ func _early_process_returns(delta: float) -> bool:
 	return false
 
 
+func _tick_combat_timers(delta: float) -> void:
+	_process_status_effects(delta)
+	attack_cooldown_timer = maxf(attack_cooldown_timer - delta, 0.0)
+
+
+func _restore_charge_model() -> void:
+	if _model_rolling and is_instance_valid(model):
+		model.basis = _charge_model_basis
+	_model_rolling = false
+
+
 func _physics_process(delta: float) -> void:
 	if _early_process_returns(delta):
 		return
 
 	# Process status effects
 	FrameProfiler.mark("enemy_status")
-	_process_status_effects(delta)
+	_tick_combat_timers(delta)
+	if not is_alive:
+		return
 
 	# Tick walk variant timer only for enemies that use the wlk_l/wlk_r fallback
 	if _uses_walk_variants:
@@ -536,10 +558,6 @@ func _physics_process(delta: float) -> void:
 			_process_loafing(delta)
 		EnemyState.HURT:
 			_process_hurt(delta)
-
-	# Update cooldowns
-	if attack_cooldown_timer > 0:
-		attack_cooldown_timer -= delta
 
 	FrameProfiler.mark("enemy_move_slide")
 	var pos_before := global_position
@@ -997,16 +1015,7 @@ func _process_attack_window() -> void:
 	# flight endpoints at the same instant.
 	if not _window_opened and _attack_pos >= window_start:
 		_window_opened = true
-		if _attack_kind == "projectile":
-			_attack_hit_resolved = true
-			_fire_projectile()
-		elif _attack_kind == "lob":
-			_attack_hit_resolved = true
-			_fire_lob()
-		elif _attack_kind == "leap":
-			_leap_from = global_position
-			var tp := target.global_position if target and is_instance_valid(target) else global_position
-			_leap_to = Vector3(tp.x, global_position.y, tp.z)
+		_open_attack_window()
 
 	# Leap flight: the enemy itself travels from → target during the window.
 	if _attack_kind == "leap" and _window_opened and not _window_closed and window_end > window_start:
@@ -1027,6 +1036,22 @@ func _process_attack_window() -> void:
 		_window_closed = true
 		if _attack_kind == "leap" and not _attack_hit_resolved:
 			_leap_land()
+
+
+func _open_attack_window() -> void:
+	if not str(_attack_def.get("tech", "")).is_empty():
+		_attack_hit_resolved = true
+		_fire_technique()
+	elif _attack_kind == "projectile":
+		_attack_hit_resolved = true
+		_fire_projectile()
+	elif _attack_kind == "lob":
+		_attack_hit_resolved = true
+		_fire_lob()
+	elif _attack_kind == "leap":
+		_leap_from = global_position
+		var tp := target.global_position if target and is_instance_valid(target) else global_position
+		_leap_to = Vector3(tp.x, global_position.y, tp.z)
 
 
 ## windup_clips prelude ticker (fsm.ts windup): advance through the telegraph clips
@@ -1087,6 +1112,7 @@ func _process_charge(delta: float) -> void:
 			if float(c["traveled"]) >= float(c["travel_target"]) or float(c["phase_t"]) > CHARGE_MAX_LP_TIME:
 				end_charge = true
 			if end_charge:
+				_restore_charge_model()
 				c["phase"] = "ed"
 				c["phase_t"] = 0.0
 				velocity.x = 0
@@ -1106,6 +1132,11 @@ func _process_charge(delta: float) -> void:
 
 
 func _process_loafing(delta: float) -> void:
+	if _lower_timer > 0.0:
+		_lower_timer = maxf(_lower_timer - delta, 0.0)
+		velocity.x = 0
+		velocity.z = 0
+		return
 	loaf_timer -= delta
 
 	# When loaf time is up, go back to chasing
@@ -1148,7 +1179,12 @@ func _start_loafing() -> void:
 	_telegraphing = false
 	_vulnerable_mult = 1.0  # the recovery (and its punish window) is over
 	# Stance risers lower back down (wt2w) as they peel off; other rigs just loaf.
-	_play_animation("wt2w", true)
+	_lower_timer = 0.0
+	if _archetype == "stance_riser":
+		var lower := _play_animation("wt2w", true)
+		if not lower.is_empty():
+			animation_player.get_animation(lower).loop_mode = Animation.LOOP_NONE
+			_lower_timer = _clip_duration("wt2w") / maxf(absf(animation_player.speed_scale), 0.001)
 	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
 
 	# Start moving perpendicular to player (left or right randomly)
@@ -1330,6 +1366,10 @@ func _setup_windup() -> void:
 ## The travel target rolls overshoot meters PAST where the target stood at start
 ## (spec §roller), capped by max_range.
 func _start_charge(dist: float) -> void:
+	_restore_charge_model()
+	if _archetype == "roller" and model:
+		_charge_model_basis = model.basis
+		_model_rolling = true
 	var clip := String(_attack_def.get("clip", "atk"))
 	var tokens: Dictionary = _attack_def.get("charge_segments", {})
 	if tokens.is_empty():
@@ -1436,10 +1476,26 @@ func _attack_damage(def: Dictionary) -> int:
 	return int(round(float(base_attack) * float(def.get("damage_mult", 1.0))))
 
 
+
+## Enemy techniques use the same ice profiles as the player's casts.
+func _fire_technique() -> void:
+	var tech := str(_attack_def.get("tech", ""))
+	var delivery = preload("res://scripts/3d/combat/ice_technique.gd").new()
+	if delivery.profile(tech).is_empty():
+		delivery.free()
+		return
+	delivery.technique_id = tech
+	delivery.direction = _attack_facing
+	delivery.target = target
+	delivery.damage = _attack_damage(_attack_def)
+	delivery.max_range = float(_attack_def.get("hit_reach", 10.0))
+	get_parent().add_child(delivery)
+	delivery.global_position = global_position + _attack_facing * 0.3 + Vector3(0, 0.3, 0)
+
+
 ## Release a straight projectile (kind projectile) at window open — Godot port of the
 ## fsm.ts delivery. Travel is along the facing locked at attack start; hit_reach is the
-## flight range. Tech casts fire recolored for now; routing through the real technique
-## system (element, status procs, tech visuals) stays owed to the `tech` contract.
+## flight range. Named techniques use _fire_technique instead.
 func _fire_projectile() -> void:
 	if not is_inside_tree():
 		return
@@ -1451,8 +1507,6 @@ func _fire_projectile() -> void:
 	p.knockdown = bool(_attack_def.get("knockdown", false))
 	p.target = target
 	p.on_hit = _projectile_on_hit()
-	if str(_attack_def.get("tech", "")) != "":
-		p.color = Color(0.5, 0.8, 1.0)
 	get_parent().add_child(p)
 	p.global_position = global_position + _attack_facing * 0.8 + Vector3(0, 1.2, 0)
 
@@ -1600,6 +1654,11 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		if not hit_element.is_empty() and hit_element_level > 0:
 			_try_apply_status(hit_element, hit_element_level)
 
+		# The roller's authored punish window survives nonlethal hits.
+		if _charge.get("phase", "") == "ed" and _vulnerable_mult > 1.0:
+			return
+		_restore_charge_model()
+		_lower_timer = 0.0
 		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
 		_telegraphing = false  # a hit during the wind-up cancels the telegraph too
@@ -1615,6 +1674,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 
 func _die() -> void:
+	_restore_charge_model()
 	is_alive = false
 	is_attacking = false
 	_vulnerable_mult = 1.0
@@ -1678,6 +1738,10 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 ## Play an animation by name (short name like "atk" will match "s_001_atk").
 ## Returns the resolved full animation name, or "" if nothing played.
 func _play_animation(anim_name: String, force: bool = false) -> String:
+	if anim_name == "wat":
+		anim_name = _rooted_idle_clip()
+	if anim_name.is_empty():
+		return ""
 	if not animation_player:
 		return ""
 
@@ -1701,7 +1765,7 @@ func _play_animation(anim_name: String, force: bool = false) -> String:
 
 	# Ensure looping animations actually loop
 	var anim := animation_player.get_animation(full_name)
-	if anim and anim_name in ["run", "wlk", "wat"]:
+	if anim and anim_name in ["run", "wlk", "wat", "wat1", "wat2", "tk", "tk1", "wlk1", "fly"]:
 		anim.loop_mode = Animation.LOOP_LINEAR
 
 	animation_player.play(full_name)
@@ -1712,7 +1776,6 @@ func _play_animation(anim_name: String, force: bool = false) -> String:
 ## Find animation by short name (e.g., "atk" matches "s_001_atk")
 ## Animation name aliases — some enemies use different suffixes for the same action
 const ANIM_ALIASES := {
-	"wat": ["stt"],       # wait/idle → standing
 	"wlk": ["fly"],       # walk → fly (for airborne enemies)
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait

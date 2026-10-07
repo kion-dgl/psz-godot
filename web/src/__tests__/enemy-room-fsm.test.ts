@@ -955,3 +955,35 @@ describe('Booma prepared dash', () => {
     });
   }
 });
+
+
+describe('authored recovery is preserved', () => {
+  it('punishing a roller does not cancel its recovery window', () => {
+    const c = config([atk({ kind: 'charge', clip: 'wat3', max_range: 2,
+      charge_segments: { st: 'trf1', lp: 'wat3', ed: 'trf2' }, recovery_vulnerable_mult: 2 })]);
+    c.enemies.dummy.archetype = 'roller';
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.3 });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    for (let i = 0; i < 100 && sim.currentAttack?.charge?.phase !== 'ed'; i++) stepEnemy(sim, entry, input);
+    expect(sim.currentAttack?.charge?.phase).toBe('ed');
+    const attack = sim.currentAttack;
+    applyHurt(sim, entry);
+    expect(sim.currentAttack).toBe(attack);
+    expect(sim.state).toBe('attacking');
+  });
+  it('snake lowering holds before recovery locomotion', () => {
+    const c = config([atk()]);
+    c.enemies.dummy.archetype = 'stance_riser';
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    for (let i = 0; i < 200 && sim.state !== 'loafing'; i++) stepEnemy(sim, entry, input);
+    expect(sim.lowerTimer).toBeGreaterThan(0);
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wt2w');
+    expect(sim.velocity).toEqual({ x: 0, z: 0 });
+  });
+});

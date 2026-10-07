@@ -94,7 +94,7 @@ const fsm = `stateDiagram-v2
   <p>Applies to enemies with <code>archetype: quadruped</code> (wolf, hyena, deer, tiger rigs — Reyhound, Grimble, Tormatible, Stagg, Kapantha). Their <code>wlk_l</code> / <code>wlk_r</code> clips have the <strong>head turned</strong> to that side, so straight-ahead walking reads visibly wrong:</p>
   <ul>
     <li>While CHASING outside the charge ring, a quadruped <strong>MUST NOT</strong> walk straight toward its target. It <strong>MUST</strong> approach on an arc (circling / spiraling in), and the walk clip <strong>MUST</strong> match the geometry: <code>wlk_l</code> when the target is on the enemy's left, <code>wlk_r</code> when on its right — the turned head faces the target.</li>
-    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — the generic <code>wat → stt</code> alias never fires here since these rigs have a real <code>wat</code>.)</li>
+    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — these rigs use their real <code>wat</code> for idle.)</li>
     <li>The arc side MAY change over time (re-picked on wander-like timers); a dash that loses its target (distance grows past ~1.5× the charge ring) SHOULD fall back to arcing.</li>
   </ul>
   <p><em>Current Godot runtime diverges</em>: it walks straight and fakes circling by alternating <code>wlk_l</code>/<code>wlk_r</code> on a timer (<code>_walk_variant_timer</code>) — that hack is retired when this contract is implemented (the enemy-attacks runtime PR). The #/enemy-room quadruped room implements this contract as the reference. Per-enemy quirks (Kapantha SHOULD prefer attacking from behind) and rare-as-leader pack behavior are open design — see the pack-behavior issue.</p>
@@ -190,6 +190,14 @@ const fsm = `stateDiagram-v2
 	<li>The #/enemy-room sim renders scale + stationary facing + both attacks; the sleep/wake cycle itself is <em>not</em> simulated there (it lives in the implementation and this contract).</li>
 </ul>
 
+  <h3>Shared runtime guarantees</h3>
+  <ul>
+    <li>Every enemy controller, including Poison Lily, MUST tick cooldowns and status durations while active and honor spawn and immobilization gates.</li>
+    <li>Idle requests MUST resolve to an archetype's idle pose, never to a transition through a generic <code>wat → stt</code> alias. Snake low idle is <code>wat1</code>, roller standing idle <code>wat1</code>, revealed mimic idle <code>tk1</code>, and airborne flyer idle <code>tk</code>.</li>
+    <li>The snake's <code>wt2w</code> lowering MUST finish before recovery locomotion.</li>
+    <li>Roller visual rotation MUST return to its pre-charge basis on recovery, interruption, or death. Hits during <code>trf2</code> MUST preserve the remaining recovery and vulnerability; lethal hits still kill normally.</li>
+    <li>Enemy Barta and Gibarta MUST use the shared ice-technique delivery profiles: ground-level Barta bolt, three Gibarta fan waves. A cast resolves damage at most once per target, with ice identity and a 20% freeze chance on a successful contact. Freeze lasts two seconds, blocks actions/movement, breaks on a later damaging hit, and cannot be applied through dodge i-frames. These proc/budget choices are gameplay tuning, not claims about DS values.</li>
+  </ul>
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>

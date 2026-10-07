@@ -114,6 +114,10 @@ class Watch extends Node:
 			get_tree().quit(0)
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
+		if OS.get_environment("PSZ_ENEMY_RUNTIME_CHECK") == "1":
+			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
+				_fail("enemy runtime regression failed")
+				return
 		if enemy._archetype == "bruiser":
 			var entrance_ok: bool = await preload("res://scripts/tools/coliseum_entrance_check.gd").run(player, enemy)
 			if not entrance_ok:

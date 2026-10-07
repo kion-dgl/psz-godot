@@ -22,6 +22,9 @@ var color := Color(1.0, 0.5, 0.1)  # warm default; techs/attacks may recolor
 var target: Node3D              # the player — distance-tested each step
 var on_hit: Callable = Callable()  # optional extra effect (e.g. the lily's poison DoT)
 
+var technique_id := ""
+var hit_budget: Dictionary = {}
+
 var _traveled := 0.0
 var _hit := false
 
@@ -37,7 +40,13 @@ func _ready() -> void:
 	mat.emission = color
 	mat.emission_energy_multiplier = 3.0
 	sm.material = mat
-	mi.mesh = sm
+	if not technique_id.is_empty():
+		var shard := PrismMesh.new()
+		shard.size = Vector3(0.45, 0.65, 1.0)
+		shard.material = mat
+		mi.mesh = shard
+	else:
+		mi.mesh = sm
 	add_child(mi)
 
 
@@ -52,15 +61,25 @@ func _physics_process(delta: float) -> void:
 		if fraction >= 0.0:
 			global_position += motion * fraction
 			_hit = true
-			var dodged: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
-			if not dodged:
-				if target.has_method("take_damage"):
-					target.take_damage(damage, Vector3.ZERO, knockdown)
-				if on_hit.is_valid() and is_instance_valid(target):
-					on_hit.call(target)
+			_resolve_contact()
 			queue_free()
 			return
 	global_position += motion
 	_traveled += step
 	if _traveled >= max_range:
 		queue_free()
+
+
+func _resolve_contact() -> void:
+	var key := target.get_instance_id()
+	if hit_budget.has(key):
+		return
+	hit_budget[key] = true
+	if target.has_method("is_dodge_iframed") and target.is_dodge_iframed():
+		return
+	if not technique_id.is_empty() and target.has_method("take_technique_hit"):
+		target.take_technique_hit(damage, technique_id)
+	elif target.has_method("take_damage"):
+		target.take_damage(damage, Vector3.ZERO, knockdown)
+	if on_hit.is_valid() and is_instance_valid(target):
+		on_hit.call(target)

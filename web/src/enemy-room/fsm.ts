@@ -64,6 +64,7 @@ export interface EnemySim {
   wanderTimer: number;
   wanderDir: Vec2 | null; // null = paused
   loafTimer: number;
+  lowerTimer: number;
   loafDir: Vec2;
   loafCurveRate: number;
   currentAttack: CurrentAttack | null;
@@ -162,6 +163,7 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     wanderTimer: 0,
     wanderDir: null,
     loafTimer: 0,
+    lowerTimer: 0,
     loafDir: { x: 0, z: 1 },
     loafCurveRate: LOAF_CURVE_RATE,
     currentAttack: null,
@@ -275,6 +277,7 @@ export function applyBerserk(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 /** External hurt (the sandbox "Hit enemy" button) — mirrors _on_hit_received's stagger path. */
 export function applyHurt(sim: EnemySim, entry: ResolvedEntry): SimEvent[] {
   const events: SimEvent[] = [];
+  if (sim.currentAttack?.charge?.phase === 'ed' && (sim.currentAttack.def.recovery_vulnerable_mult ?? 1) > 1) return events;
   if (sim.state === 'attacking' && sim.currentAttack) {
     events.push({ type: 'attack_end', attack: sim.currentAttack.def });
   }
@@ -284,6 +287,16 @@ export function applyHurt(sim: EnemySim, entry: ResolvedEntry): SimEvent[] {
   sim.velocity = { x: 0, z: 0 };
   sim.anim = 'dmg';
   return events;
+}
+
+function idleClip(entry: ResolvedEntry): string {
+  if (entry.idle_clip) return entry.idle_clip;
+  switch (entry.archetype) {
+    case 'roller': case 'stance_riser': return 'wat1';
+    case 'box_mimic': return 'tk1';
+    case 'flyer_combo': return 'tk';
+    default: return 'wat';
+  }
 }
 
 function changeState(sim: EnemySim, to: EnemyStateName, events: SimEvent[]): void {
@@ -345,7 +358,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         // Rooted: no wander out of combat either (sleep/wake cycle is spec-
         // documented but not simulated — see §poison-lily).
         sim.velocity = { x: 0, z: 0 };
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         if (dist <= entry.stats.detection_range) changeState(sim, 'chasing', events);
         break;
       }
@@ -387,7 +400,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         sim.velocity = { x: 0, z: 0 };
         // Roller rigs have wat1 (standing) / wat2 (lying) instead of a
         // plain wat — a bare 'wat' would mis-alias to stt (become active).
-        sim.anim = entry.archetype === 'roller' ? 'wat1' : 'wat';
+        sim.anim = idleClip(entry);
       }
       break;
     }
@@ -454,7 +467,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       if (entry.fsm.stationary) {
         sim.velocity = { x: 0, z: 0 };
         sim.facing = norm(sub(playerPos, sim.pos));
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         break;
       }
       if (entry.archetype === 'quad_machine') {
@@ -493,7 +506,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       const atk = sim.currentAttack;
       if (!atk) {
         // Shouldn't happen; recover like the #477 contract — never wedge.
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
         break;
       }
       // Segmented charge (bigrig shoulder slam): its own phase machine —
@@ -599,12 +612,18 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         }
       }
       if (atk.t >= atk.duration) {
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
       }
       break;
     }
 
     case 'loafing': {
+      if (sim.lowerTimer > 0) {
+        sim.lowerTimer = Math.max(0, sim.lowerTimer - dt);
+        sim.velocity = { x: 0, z: 0 };
+        sim.anim = 'wt2w';
+        break;
+      }
       sim.loafTimer -= dt;
       if (sim.loafTimer <= 0) {
         changeState(sim, 'chasing', events);
@@ -612,7 +631,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       if (entry.fsm.stationary) {
         sim.velocity = { x: 0, z: 0 };
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         break;
       }
       sim.loafDir = rot(sim.loafDir, sim.loafCurveRate * dt);
@@ -1024,7 +1043,7 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
       sim.velocity = { x: 0, z: 0 };
       sim.anim = c.tokens.ed;
       if (c.phaseT >= c.edDur) {
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
       }
       break;
     }
@@ -1032,7 +1051,7 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 }
 
 
-function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng: () => number): void {
+function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng: () => number, input: SimInput): void {
   if (sim.currentAttack) {
     events.push({ type: 'attack_end', attack: sim.currentAttack.def });
   }
@@ -1045,5 +1064,7 @@ function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng:
   const away = rot(sim.facing, Math.PI);
   sim.loafDir = rot(away, (side * Math.PI) / 2);
   sim.loafCurveRate = -side * LOAF_CURVE_RATE;
-  sim.anim = 'wlk';
+  sim.lowerTimer = entry.archetype === 'stance_riser' ? (input.clipDurationFor('wt2w') ?? 0) : 0;
+  sim.anim = sim.lowerTimer > 0 ? 'wt2w' : 'wlk';
+  sim.velocity = { x: 0, z: 0 };
 }

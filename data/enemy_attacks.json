@@ -2313,7 +2313,7 @@
         {
           "id": "cast_gibarta",
           "clip": "atk2",
-          "kind": "melee_arc",
+          "kind": "projectile",
           "tech": "gibarta",
           "weight": 1.5,
           "min_range": 1.5,

@@ -11,7 +11,6 @@ export interface NamedClip {
 
 /** enemy_base.gd ANIM_ALIASES — keep in sync. */
 export const ANIM_ALIASES: Record<string, string[]> = {
-  wat: ['stt'], // wait/idle → standing
   wlk: ['fly', 'wlk_l'], // walk → fly (airborne) / left-variant (Godot alternates wlk_l/wlk_r)
   run: ['fly', 'wlk_l'],
   atk: ['atk1', 'atckwat'], // attack → variant 1 / orangutan's misspelled clip (#477)
