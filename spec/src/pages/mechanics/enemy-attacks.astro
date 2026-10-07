@@ -68,6 +68,8 @@ const timeline = `stateDiagram-v2
   <h2>Dodge interaction</h2>
   <p>A target that is invincible (dodge i-frames — the first 0.2&nbsp;s of a dodge, <a href="/mechanics/dodge">/mechanics/dodge</a>) at its first arc-test pass is <em>dodged</em>: the attack consumes its one resolution on it and MUST NOT re-test that target for the rest of the window. I-frame timing beats the window by design — a well-timed dodge through the arc is safe even if the dodge ends inside the window.</p>
 
+  <p>Straight projectiles MUST sweep their planar contact radius across the full physics step, clamped to their remaining range. First contact consumes the shot exactly once. A contact during dodge i-frames MUST suppress both direct damage and on-hit effects (including poison); dodging MUST NOT merely defer damage into a later status tick. This swept test supersedes endpoint-only checks in both the runtime and web simulator.</p>
+
   <h2>Recovery &amp; missing clips (#477 layering)</h2>
   <p>The attack-recovery MUSTs in <a href="/states/enemies">/states/enemies</a> apply unchanged: attack end is keyed on the resolved clip (or the fallback timer), never on a damage event. Layered on top:</p>
   <ul>

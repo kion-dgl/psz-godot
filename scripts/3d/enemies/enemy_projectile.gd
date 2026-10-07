@@ -42,21 +42,25 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var step := speed * delta
-	global_position += dir * step
-	_traveled += step
-
-	if target and is_instance_valid(target) and not _hit:
-		var to := target.global_position - global_position
-		to.y = 0.0
-		if to.length() <= TARGET_RADIUS + PROJECTILE_RADIUS:
+	if _hit or is_queued_for_deletion():
+		return
+	var step := minf(maxf(speed * delta, 0.0), maxf(max_range - _traveled, 0.0))
+	var motion := dir.normalized() * step
+	if is_instance_valid(target):
+		var fraction := ProjectileSweep.planar_fraction(global_position, motion,
+			target.global_position, TARGET_RADIUS + PROJECTILE_RADIUS)
+		if fraction >= 0.0:
+			global_position += motion * fraction
 			_hit = true
-			if target.has_method("take_damage"):
-				target.take_damage(damage, Vector3.ZERO, knockdown)
-			if on_hit.is_valid():
-				on_hit.call(target)
+			var dodged: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
+			if not dodged:
+				if target.has_method("take_damage"):
+					target.take_damage(damage, Vector3.ZERO, knockdown)
+				if on_hit.is_valid() and is_instance_valid(target):
+					on_hit.call(target)
 			queue_free()
 			return
-
+	global_position += motion
+	_traveled += step
 	if _traveled >= max_range:
 		queue_free()

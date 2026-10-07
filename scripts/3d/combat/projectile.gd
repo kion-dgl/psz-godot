@@ -19,6 +19,9 @@ var max_hits: int = 1  # Cap on enemies hit. Default 1 = single-target (handgun/
 var element: String = ""  # Element type for status effect procs
 var element_level: int = 0  # Element level (higher = more likely to proc)
 
+const COLLISION_RADIUS := 0.15
+var _spent := false
+
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
 var _hit_targets: Array = []
@@ -27,10 +30,8 @@ var _hit_targets: Array = []
 func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 32  # Hit hurtboxes (layer 5)
-	monitoring = true
+	monitoring = false  # Swept queries own contact; no delayed overlap callbacks.
 	monitorable = false
-
-	area_entered.connect(_on_area_entered)
 
 	# Visual: small glowing sphere
 	_mesh = MeshInstance3D.new()
@@ -52,58 +53,54 @@ func _ready() -> void:
 	# Collision shape
 	var col := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
-	shape.radius = 0.15
+	shape.radius = COLLISION_RADIUS
 	col.shape = shape
 	add_child(col)
 
 
 func _physics_process(delta: float) -> void:
-	# Spiral: rotate direction around Y axis each frame
+	if _spent or is_queued_for_deletion():
+		return
 	if spiral_rate != 0.0:
 		direction = direction.rotated(Vector3.UP, spiral_rate * delta)
-
-	var move := direction * speed * delta
-	global_position += move
-	_distance_traveled += move.length()
-
+	var distance := minf(maxf(speed * delta, 0.0), maxf(max_range - _distance_traveled, 0.0))
+	var motion := direction.normalized() * distance
+	var start := global_position
+	for hit in ProjectileSweep.contacts(get_world_3d().direct_space_state, start, motion, COLLISION_RADIUS):
+		global_position = start + motion * float(hit.fraction)
+		_on_area_entered(hit.hurtbox)
+		if _spent:
+			return
+	global_position = start + motion
+	_distance_traveled += distance
 	if _distance_traveled >= max_range:
+		_spent = true
 		queue_free()
 
 
 func _on_area_entered(area: Area3D) -> void:
-	if area is Hurtbox:
-		var hurtbox := area as Hurtbox
-		if hurtbox.owner_node == owner_node:
-			return
-		if hurtbox.owner_node in _hit_targets:
-			return
-		if max_hits > 0 and _hit_targets.size() >= max_hits:
-			return
-		_hit_targets.append(hurtbox.owner_node)
-
-		# Stop monitoring BEFORE we apply the hit. queue_free is deferred to
-		# end-of-frame, but Godot can dispatch area_entered for additional
-		# overlapping hurtboxes in the same physics step before that defer
-		# fires — and the size-based gate above only catches them if our
-		# handlers run strictly sequentially. Killing monitoring is
-		# immediate, so no further area_entered signals fire even if more
-		# hurtboxes were already overlapping when we entered. Caps the
-		# damage at exactly max_hits regardless of dispatch order.
-		# (Skipped for pierce/multi-hit projectiles, which need more hits.)
-		if not pierce and (max_hits == 0 or _hit_targets.size() >= max_hits):
-			monitoring = false
-
-		hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
-
-		# Bounce: damage nearby unhit enemies within radius
-		if bounce_radius > 0.0:
-			_bounce_to_nearby(hurtbox.owner_node.global_position)
-
-		# Stop projectile when done
-		if max_hits > 0 and _hit_targets.size() >= max_hits:
-			queue_free()
-		elif not pierce:
-			queue_free()
+	if _spent or is_queued_for_deletion() or not area is Hurtbox or not area.monitorable:
+		return
+	var hurtbox := area as Hurtbox
+	if not is_instance_valid(hurtbox.owner_node) or hurtbox.owner_node == owner_node:
+		return
+	if hurtbox.owner_node.get("is_alive") == false:
+		return
+	if hurtbox.owner_node in _hit_targets:
+		return
+	if max_hits > 0 and _hit_targets.size() >= max_hits:
+		return
+	_hit_targets.append(hurtbox.owner_node)
+	# Latch before damage: death callbacks and additional parts can re-enter.
+	_spent = not pierce or (max_hits > 0 and _hit_targets.size() >= max_hits)
+	var hit_pos := hurtbox.owner_node.global_position
+	hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
+	if bounce_radius > 0.0:
+		_bounce_to_nearby(hit_pos)
+	if max_hits > 0 and _hit_targets.size() >= max_hits:
+		_spent = true
+	if _spent:
+		queue_free()
 
 
 func _bounce_to_nearby(hit_pos: Vector3) -> void:

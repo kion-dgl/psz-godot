@@ -46,6 +46,8 @@ class Watch extends Node:
 	var killed := false
 	var warp_checked := false
 	var facing_checked := false
+	var weapons_started := false
+	var weapons_checked := false
 
 	func _process(delta: float) -> void:
 		elapsed += delta
@@ -63,6 +65,17 @@ class Watch extends Node:
 			print("[coliseum] field up: player in place (hp=%d)" % hp0)
 		if not _check_arrival(player):
 			return  # an arrival checkpoint failed or is still pending
+
+		if not weapons_checked:
+			if enemy == null:
+				return
+			if enemy.dormant:
+				enemy.reveal()
+				return
+			if not weapons_started:
+				weapons_started = true
+				_check_weapons.call_deferred(player, enemy)
+			return
 
 		if not damaged:
 			if enemy == null:
@@ -99,6 +112,15 @@ class Watch extends Node:
 			print("[coliseum] room-clear telepipe spawned after the kill")
 			print("[coliseum] DONE ok")
 			get_tree().quit(0)
+
+	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
+		var ok: bool = await preload("res://scripts/tools/coliseum_combat_check.gd").run(player, enemy)
+		if not ok:
+			_fail("weapon contact verification failed")
+			return
+		weapons_checked = true
+		hp0 = GameState.hp
+
 
 	## Arrival checkpoints, in order: the return warp lands beside the spawn
 	## (0, 15) — it spawns a frame or two after the player, so allow a grace

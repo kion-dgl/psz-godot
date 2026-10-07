@@ -2722,52 +2722,42 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 
 
 func _fire_projectile(atk: Dictionary) -> void:
-	var config: Dictionary = CombatManager.get_weapon_type_config(int(atk.get("weapon_type", 0)))
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
-	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
-	var hits: int = int(atk.get("hits", 1))
+	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
+	var candidates := _enemies_in_hit_cone(config)
+	if not candidates.is_empty():
+		var enemy: Node3D = candidates[0]
+		var height := 1.5
+		var data = enemy.get("enemy_data")
+		if data != null:
+			height = float(data.collision_height)
+		height = maxf(height, float(enemy.get("target_height") or 0.0))
+		var aim := enemy.global_position + Vector3(0, height * 0.5, 0) - spawn_pos
+		if not aim.is_zero_approx():
+			forward = aim.normalized()
 
-	var weapon_type: int = int(atk.get("weapon_type", 0))
-
-	for i in range(hits):
+	for _i in range(int(atk.get("hits", 1))):
 		var proj := Projectile.new()
 		proj.damage = int(atk.get("damage", 10))
 		proj.knockback = float(atk.get("knockback", 3.0))
 		proj.accuracy = int(atk.get("accuracy", 100))
 		proj.direction = forward
-		proj.max_range = max_range
+		proj.max_range = float(config.get("hit_h_dist", 8.0))
 		proj.owner_node = self
 		proj.speed = 25.0
-		proj.max_hits = int(config.get("max_targets", 1))
-
-		# Slicer: throwing blade aimed at target, bounces to nearby enemies
+		proj.max_hits = int(atk.get("max_targets", config.get("max_targets", 1)))
+		if _is_special_attack:
+			_apply_element_to_proj(proj)
 		if weapon_type == WeaponData.WeaponType.SLICER:
 			proj.pierce = true
 			proj.bounce_radius = 3.0
-			proj.max_hits = 4
 			proj.speed = 20.0
 			proj.color = Color(0.7, 0.9, 1.0)
-			# Semi-homing: aim at the targeted enemy instead of straight forward
-			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
-				var to_target: Vector3 = _targeted_enemies[0].global_position - spawn_pos
-				to_target.y = 0  # Keep horizontal
-				if to_target.length() > 0.5:
-					proj.direction = to_target.normalized()
-			# Spawn at enemy height so it doesn't fly over short targets
-			spawn_pos.y = global_position.y + 0.6
-
-		# Slight spread for multi-shot (mechgun)
-		if hits > 1:
-			var spread := randf_range(-0.05, 0.05)
-			proj.direction = Vector3(forward.x + spread, 0, forward.z + spread).normalized()
-
 		get_tree().current_scene.add_child(proj)
 		proj.global_position = spawn_pos
-
-		# Stagger multi-shot slightly
-		if hits > 1 and i < hits - 1:
-			spawn_pos += forward * 0.1
 
 
 func _deactivate_attack_hitbox() -> void:

@@ -53,6 +53,7 @@ func _run_tests_combat() -> void:
 	test_enemy_telegraph()
 	test_enemy_locomotion()
 	test_enemy_ranged_delivery()
+	preload("res://scripts/tools/combat_fidelity_tests.gd").run(self)
 	test_enemy_leap_delivery()
 	test_enemy_charge_stop_on_hit()
 	test_enemy_charge_roll_through()

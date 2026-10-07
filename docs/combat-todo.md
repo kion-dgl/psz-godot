@@ -1,6 +1,56 @@
 # Combat System TODO
 
-## Phase 1 — Current Branch
+## Combat fidelity pass — October 2026
+
+Gameplay reliability takes priority over exact DS behavior. This first slice
+covers ranged contact, aiming, range, and dodge resolution; combo timings,
+melee hit frames, damage balance, and boss part rigs still need hands-on review.
+
+- [x] Sweep player projectiles through actual hurtbox shapes, ordered by impact;
+      cover point-blank contact, unique-owner piercing caps, and range expiry.
+- [x] Match weapon shot range and release aim to the weapon's targeting cone.
+      Handgun now reaches its 9 m targeting range; rifle reaches 12 m.
+- [x] Carry strong-attack elements on ranged shots without leaking them into normals.
+- [x] Sweep enemy projectiles; dodging consumes direct damage and on-hit poison.
+- [x] Keep the enemy-room web simulator consistent with swept contact/range rules.
+- [x] Add physics regression coverage and actual weapon-release checks to the coliseum probe.
+- [ ] Human coliseum feel pass: saber/sword/daggers → handgun/rifle/mechgun →
+      mobile melee enemy → ranged/poison enemy → boss. Check rhythm, visual
+      impact timing, attack recovery, and dodge readability before tuning numbers.
+
+### Reference evidence and deliberate choices
+
+Reviewed [psz-re at a84b8fd](https://psp2i.dev/kion/psz-re/src/commit/a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93).
+Its [player animation events](https://psp2i.dev/kion/psz-re/src/commit/a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93/data/player_combo_windows.json)
+provide weapon-specific hit frames and chain windows in animation frames at
+rate 1.0. The source explicitly warns that a rate-2 cheat halved early measurements,
+and that the slicer's windows extend beyond its clips and remain unexplained.
+Keep our animation-relative timing until each equipped animation is compared;
+do not use one sampled ranged weapon's frame counts as a universal combat rule.
+The [enemy part findings](https://psp2i.dev/kion/psz-re/src/commit/a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93/nodes/sys.enemy-part-joints.json)
+distinguish bone-attached parts from shared collision shapes. Our runtime keeps
+one projectile damage budget per enemy across its hurtboxes; that is our
+playability rule, not a proven DS boss multi-hit rule.
+Swept collision and release-time aim are playability choices, not claimed DS algorithms.
+
+### Repeatable checks
+
+Use a disposable Godot user-data directory/project for probes and test_runner:
+they create test characters and the full runner exercises save/load.
+With local game assets imported:
+
+```sh
+godot --headless --path . res://scripts/tools/test_runner.tscn
+godot --headless --path . res://scripts/tools/combat_fidelity_probe.tscn
+godot --headless --path . res://scripts/tools/coliseum_probe.tscn
+```
+
+The asset-independent physics probe also runs in CI. The coliseum probe checks
+handgun at 8 m, rifle at 10 m, off-axis mechgun bursts, and slicer contact against
+the real arena enemy before testing enemy damage and the room-clear return warp.
+Manual playtesting uses the existing Coliseum Master picker in the city.
+
+## Phase 1 — Previous pass
 
 - [x] Add missing weapon types to shop (spear, claw, double saber, slicer)
 - [x] Handgun hold orientation tuning

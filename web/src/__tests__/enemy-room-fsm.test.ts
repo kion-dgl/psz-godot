@@ -891,3 +891,39 @@ describe('enemy-room FSM — arc hit shape', () => {
     expect(arcHitTest(origin, facing, origin, 0.4, 10, 2)).toBe(true);
   });
 });
+
+
+describe('projectile swept contacts', () => {
+  it.each([1 / 60, 1 / 15, 0.5])('does not tunnel at dt=%s', (dt) => {
+    const attack = atk({ kind: 'projectile', hit_reach: 8 });
+    const entry = resolveEntry(config([attack]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'idle';
+    sim.projectiles.push({ pos: { x: 0, z: 0 }, dir: { x: 0, z: 1 }, traveled: 0, maxRange: 8, attack });
+    const events: SimEvent[] = [];
+    for (let t = 0; t < 60 && sim.projectiles.length; t++) {
+      events.push(...stepEnemy(sim, entry, {
+        dt, playerPos: { x: 0, z: 2 }, playerRadius: 0.5,
+        playerInvincible: false, clipDurationFor: () => null, rng: mulberry32(629),
+      }));
+    }
+    expect(events.filter(e => e.type === 'hit')).toHaveLength(1);
+    expect(sim.projectiles).toHaveLength(0);
+  });
+
+  it('clamps the sweep to remaining range and consumes a dodge', () => {
+    const attack = atk({ kind: 'projectile' });
+    const entry = resolveEntry(config([attack]), 'dummy');
+    for (const [range, invincible, expected] of [[1, false, null], [8, true, 'hit_dodged']] as const) {
+      const sim = makeSim({ x: 0, z: 0 });
+      sim.projectiles.push({ pos: { x: 0, z: 0 }, dir: { x: 0, z: 1 }, traveled: 0, maxRange: range, attack });
+      const events = stepEnemy(sim, entry, {
+        dt: 0.5, playerPos: { x: 0, z: 3 }, playerRadius: 0.5,
+        playerInvincible: invincible, clipDurationFor: () => null, rng: mulberry32(629),
+      });
+      expect(events.filter(e => e.type === 'hit' || e.type === 'hit_dodged').map(e => e.type))
+        .toEqual(expected ? [expected] : []);
+      expect(sim.projectiles).toHaveLength(0);
+    }
+  });
+});

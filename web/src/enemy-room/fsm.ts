@@ -646,11 +646,17 @@ function stepDeliveries(sim: EnemySim, entry: ResolvedEntry, input: SimInput, ev
   const { dt, playerPos, playerRadius, playerInvincible } = input;
 
   sim.projectiles = sim.projectiles.filter((p) => {
-    p.pos.x += p.dir.x * PROJECTILE_SPEED * dt;
-    p.pos.z += p.dir.z * PROJECTILE_SPEED * dt;
-    p.traveled += PROJECTILE_SPEED * dt;
+    const distance = Math.min(Math.max(PROJECTILE_SPEED * dt, 0), Math.max(p.maxRange - p.traveled, 0));
+    const dx = p.dir.x * distance, dz = p.dir.z * distance;
+    const ox = playerPos.x - p.pos.x, oz = playerPos.z - p.pos.z;
+    const lengthSq = dx * dx + dz * dz;
+    const t = lengthSq > 0 ? Math.max(0, Math.min(1, (ox * dx + oz * dz) / lengthSq)) : 0;
     const hitDist = playerRadius + PROJECTILE_RADIUS;
-    if (len(sub(playerPos, p.pos)) <= hitDist) {
+    const contact = Math.hypot(ox - dx * t, oz - dz * t) <= hitDist;
+    p.pos.x += dx;
+    p.pos.z += dz;
+    p.traveled += distance;
+    if (contact) {
       if (playerInvincible) {
         events.push({ type: 'hit_dodged', attack: p.attack });
       } else {
