@@ -137,13 +137,13 @@ function LanternModel() {
 export default function ShrinePillarLab() {
   const [data, setData] = useState<Preview | null>(null);
   const [error, setError] = useState('');
-  const [view, setView] = useState<View>(() => window.location.hash.includes('view=lantern') ? 'lantern' : 'compare');
-  const [focus, setFocus] = useState<Focus>(() => window.location.hash.includes('view=lantern') ? 'lantern' : 'lower');
+  const [view, setView] = useState<View>(() => new URLSearchParams(window.location.search).get('view') === 'lantern' ? 'lantern' : 'compare');
+  const [focus, setFocus] = useState<Focus>(() => new URLSearchParams(window.location.search).get('view') === 'lantern' ? 'lantern' : 'lower');
   const [wireframe, setWireframe] = useState(false);
   const [emission, setEmission] = useState(.36);
   const [baked, setBaked] = useState(true);
   const [pool, setPool] = useState(true);
-  const [dark, setDark] = useState(() => !window.location.hash.includes('view=lantern'));
+  const [dark, setDark] = useState(() => new URLSearchParams(window.location.search).get('view') !== 'lantern');
   const [bandHeight, setBandHeight] = useState(.95);
   const [bandWidth, setBandWidth] = useState(.22);
   const [reset, setReset] = useState(0);

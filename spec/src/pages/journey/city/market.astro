@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../../utils/site';
 import Definition from '../../../layouts/Definition.astro';
 import Mermaid from '../../../components/Mermaid.astro';
 import StagePreview from '../../../components/screens/StagePreview';
@@ -25,8 +26,8 @@ import StagePreview from '../../../components/screens/StagePreview';
 
   <h2>Exits</h2>
   <ul>
-    <li>North → <a href="/journey/city/counter">Guild Counter</a></li>
-    <li>Stairs down → <a href="/journey/city/underground">Underground</a></li>
+    <li>North → <a href={siteUrl('/journey/city/counter')}>Guild Counter</a></li>
+    <li>Stairs down → <a href={siteUrl('/journey/city/underground')}>Underground</a></li>
   </ul>
 
   <Mermaid chart={`flowchart LR

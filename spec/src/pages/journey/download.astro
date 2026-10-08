@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
 import AssetLoader from '../../components/screens/AssetLoader';
@@ -34,8 +35,8 @@ import AssetLoader from '../../components/screens/AssetLoader';
   <p>The manifest lists multiple gateway URLs. Bootstrap tries each in order — if one fails, it falls through to the next. Total failure shows a fatal message. Hash mismatch after download is also fatal (no silent fallback).</p>
 
   <h2>Previous</h2>
-  <p><a href="/journey/splash">← Splash Screen</a></p>
+  <p><a href={siteUrl('/journey/splash')}>← Splash Screen</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/controls">Controls Setup →</a> (first run only)</p>
-  <p><a href="/journey/title">Title Screen →</a> (subsequent launches)</p>
+  <p><a href={siteUrl('/journey/controls')}>Controls Setup →</a> (first run only)</p>
+  <p><a href={siteUrl('/journey/title')}>Title Screen →</a> (subsequent launches)</p>
 </Definition>

@@ -1,18 +1,19 @@
 ---
+import { siteUrl } from '../utils/site';
 import Concept from '../layouts/Concept.astro';
 ---
 
 <Concept title="Engineering Policy (Beta)" section="Spec">
-  <p>Current review baselines: <a href="/fidelity">fidelity and quality grades</a> · <a href="/states/combat-roster">combat roster identity and coverage</a>.</p>
+  <p>Current review baselines: <a href={siteUrl('/fidelity')}>fidelity and quality grades</a> · <a href={siteUrl('/states/combat-roster')}>combat roster identity and coverage</a>.</p>
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. These are the working rules for all Beta implementation work; they exist so the Alpha cleanup cost (#215's 50-item audit) doesn't repeat.</p>
 
   <h2>Class hierarchies: behavior in bases, leaves earn their existence</h2>
   <p>Shared behavior <strong>MUST</strong> live in a base class with a clear interface — <code>Enemy</code> owns AI dispatch, status handling, damage intake; <code>WolfEnemy</code> / <code>SmallEnemy</code>-style subclasses exist only where <em>behavior</em> genuinely diverges (a different FSM, a different movement model). This applies to enemies, player classes, weapons, and shops alike.</p>
   <ul>
-    <li><strong>Data variation is not behavior.</strong> Stats, models, elements, spawn tables stay in resources (<code>EnemyData</code>, <code>WeaponData</code>) — a new enemy that only differs in numbers <strong>MUST</strong> be a new resource, not a new script (per <a href="/states/enemies">/states/enemies</a>).</li>
+    <li><strong>Data variation is not behavior.</strong> Stats, models, elements, spawn tables stay in resources (<code>EnemyData</code>, <code>WeaponData</code>) — a new enemy that only differs in numbers <strong>MUST</strong> be a new resource, not a new script (per <a href={siteUrl('/states/enemies')}>/states/enemies</a>).</li>
     <li><strong>Leaf classes are one-offs that earn it.</strong> A PR adding a leaf class <strong>MUST</strong> state why the behavior can't be expressed in the base (a hook, a parameter, a resource field). "It was faster" is the answer we're guarding against.</li>
     <li><strong>When the second similar thing appears, extract the base first.</strong> Don't ship sibling copies and dedup later — that was Alpha's pattern and it cost a milestone to undo.</li>
-    <li><strong>Every hierarchy gets a spec page.</strong> Expected behavior of the base contract (which methods subclasses override, which invariants hold) lives under <a href="/hierarchies">/hierarchies</a> — <a href="/hierarchies/enemy">Enemy</a>, <a href="/hierarchies/weapon">Weapon</a>, and the <a href="/hierarchies/shop-screen">shop-screen composition contract</a> are defined; new hierarchies add a page before/with implementation.</li>
+    <li><strong>Every hierarchy gets a spec page.</strong> Expected behavior of the base contract (which methods subclasses override, which invariants hold) lives under <a href={siteUrl('/hierarchies')}>/hierarchies</a> — <a href={siteUrl('/hierarchies/enemy')}>Enemy</a>, <a href={siteUrl('/hierarchies/weapon')}>Weapon</a>, and the <a href={siteUrl('/hierarchies/shop-screen')}>shop-screen composition contract</a> are defined; new hierarchies add a page before/with implementation.</li>
     <li><strong>Known exception — shop screens.</strong> Lazily-loaded 2D screens <strong>MUST NOT</strong> use cross-script <code>class_name</code> inheritance: it breaks the Android export (<code>Could not resolve class "ShopBase"</code> — see <code>docs/shop-dedup.md</code>). Screens reuse via preloaded static helpers (<code>ShopNav</code>, <code>ShopUI</code>) — same grouping goal, composition mechanism.</li>
   </ul>
 
@@ -41,13 +42,8 @@ import Concept from '../layouts/Concept.astro';
   </ul>
   <h2>Stage texture strips</h2>
   <p>Texture-fix rows MAY specify <code>framesY</code> and <code>fps</code> for a vertical strip. The field MUST sample one frame at a time, advance top-to-bottom, and loop. The mesh MUST already address the first row (V = 0–1/framesY). Playback MUST preserve that UV span and add frame/framesY, rather than scaling V again; filtering MUST NOT bleed into adjacent rows. The Coliseum's <code>s00_1_set3</code> uses eight frames at 8 fps.</p>
-  <h2>Proposed web consolidation — October 8</h2>
-  <p>The preferred direction is one Astro application hosting the existing React tools as client-rendered components, with shared navigation and data. This is a migration proposal, not a completed change. The gradecard now uses <code>data/fidelity_grades.json</code> in both the GitHub Pages homepage and the spec.</p>
-  <ul>
-    <li>Inventory and preserve all <code>web/src/App.tsx</code> tool routes and existing hash links. Move a representative editor and combat room first; verify navigation and WebGL mounting before migrating the remaining routes.</li>
-    <li>Carry the four editor Vite plugins into Astro’s existing Vite configuration. Keep file-writing endpoints development-only and test save/export/reset using disposable files.</li>
-    <li>Reconcile React/Three.js dependencies (web currently declares Three 0.172; spec declares 0.184), asset/CDN helpers, public files and <code>/web</code> links. Avoid an incidental Three.js upgrade during the first hosting move.</li>
-    <li>Retain two deployment targets from the shared application: static output under <code>/psz-godot/</code> for GitHub Pages, and the Node deployment for <code>psz.onl</code>. The latter owns <code>/api/report</code>; GitHub Pages cannot run that endpoint. Preserve existing spec URLs and the separate Godot game deployment.</li>
-    <li>Before retiring the separate app, verify both production builds, deep links, asset requests, editor persistence and representative 3D tools, then run the existing web tests. Archive superseded files under the repository policy.</li>
-  </ul>
+  <h2>Unified static site — October 8</h2>
+  <p>The repository root owns one Astro application, package manifest and lockfile. Run npm install, npm run dev, npm test and npm run build from the root. Existing React tools live under web/src and are hosted by the Astro homepage; spec/src contains the document routes. Folder names no longer describe separate applications.</p>
+  <p>GitHub Pages serves dist/site under /psz-godot/. Tools have ordinary /tools/ URLs with prerendered deep-link pages. Old hash URLs redirect from the homepage. Spec navigation uses the same base. All resource URLs use the shared asset helper; local editor save/export plugins run only under astro dev. Development file access is limited to assets/.</p>
+  <p>The site has no report endpoint, report viewer, telemetry capture or Node server. DigitalOcean mirrors static assets and the Godot Web export at https://psz.onl/game/. Existing stored reports are not deleted by this migration. Retiring the old live Node service and redirecting legacy document URLs is a separate operational cutover after this static build is reviewed.</p>
 </Concept>

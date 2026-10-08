@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Enemy Hierarchy" section="Hierarchies">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>Today every enemy is one class — <code>EnemyBase</code> (<code>scripts/3d/enemies/enemy_base.gd</code>) — driven by an <code>EnemyData</code> resource (<a href="/states/enemies">/states/enemies</a>). Beta keeps that as the default and adds <em>justified</em> behavior subclasses. This page is the contract both sides honor.</p>
+  <p>Today every enemy is one class — <code>EnemyBase</code> (<code>scripts/3d/enemies/enemy_base.gd</code>) — driven by an <code>EnemyData</code> resource (<a href={siteUrl('/states/enemies')}>/states/enemies</a>). Beta keeps that as the default and adds <em>justified</em> behavior subclasses. This page is the contract both sides honor.</p>
 
   <h2>What the base owns (subclasses inherit, MUST NOT reimplement)</h2>
   <table>
@@ -30,10 +31,10 @@ import Concept from '../../layouts/Concept.astro';
   <ul>
     <li>Exactly one <code>EnemyState</code> active; transitions go through the base's transition path so signals/animation stay coherent.</li>
     <li><code>take_damage</code> is the only damage door — bosses MAY scale or gate it (armor phases) by overriding a hook, never by bypassing it.</li>
-    <li>Status non-stacking and the element→status routing (<a href="/states/enemies">spec table</a>) hold for every enemy; a leaf MAY declare status <em>immunities</em> as data, not by reimplementing application.</li>
+    <li>Status non-stacking and the element→status routing (<a href={siteUrl('/states/enemies')}>spec table</a>) hold for every enemy; a leaf MAY declare status <em>immunities</em> as data, not by reimplementing application.</li>
     <li>Death always reaches the base's reward path — a boss that skips drops/EXP is a bug, not a feature flag.</li>
   </ul>
 
-  <h2>Testing (two layers, per <a href="/engineering">/engineering</a>)</h2>
+  <h2>Testing (two layers, per <a href={siteUrl('/engineering')}>/engineering</a>)</h2>
   <p>Each new subclass ships a seeded unit test of its divergent handlers (state-transition table, the <code>test_player_states</code> pattern) and a post-build probe (a matrix phase or kill_all room exercising it under autopilot).</p>
 </Concept>

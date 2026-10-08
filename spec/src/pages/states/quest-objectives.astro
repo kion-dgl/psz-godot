@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -21,7 +22,7 @@ const flow = `flowchart TD
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
 
-  <p>Objectives are the win condition of a quest. They are authored in the quest JSON and tracked at runtime by <code>SessionManager</code>; meeting them flips the quest to <em>Completed</em>, which is what unlocks the <strong>report</strong> action at the guild counter (see <a href="/states/story-progression">Story Progression</a>).</p>
+  <p>Objectives are the win condition of a quest. They are authored in the quest JSON and tracked at runtime by <code>SessionManager</code>; meeting them flips the quest to <em>Completed</em>, which is what unlocks the <strong>report</strong> action at the guild counter (see <a href={siteUrl('/states/story-progression')}>Story Progression</a>).</p>
 
   <h2>Schema</h2>
   <p>A quest's <code>objectives</code> is an array of objects, each with <code>item_id</code>, <code>label</code>, and <code>target</code>:</p>
@@ -31,7 +32,7 @@ const flow = `flowchart TD
     <tr><td><code>label</code></td><td>display text for the HUD / log</td></tr>
     <tr><td><code>target</code></td><td>how many are needed (defaults to 1)</td></tr>
   </table>
-  <p>A quest <strong>MAY</strong> declare multiple objectives; the quest is complete only when <strong>every</strong> objective's count reaches its <code>target</code>. Free-roam field quests carry no <code>objectives</code> key (see <a href="/states/quest-vs-field">Quest vs Field</a>) and therefore never enter the Completed state.</p>
+  <p>A quest <strong>MAY</strong> declare multiple objectives; the quest is complete only when <strong>every</strong> objective's count reaches its <code>target</code>. Free-roam field quests carry no <code>objectives</code> key (see <a href={siteUrl('/states/quest-vs-field')}>Quest vs Field</a>) and therefore never enter the Completed state.</p>
 
   <h2>Runtime tracking</h2>
   <p>When the quest session starts (<code>SessionManager.enter_quest</code>, not at accept time), it loads the objective array and seeds a per-<code>item_id</code> count at zero. <code>collect_quest_item(item_id)</code> is the single increment path: it bumps the count, emits <code>quest_item_collected</code> (for the HUD), and — when <code>are_objectives_complete()</code> first returns true — calls <code>mark_quest_complete()</code>, which records the completion and emits the <code>quest_completed</code> signal.</p>
@@ -53,5 +54,5 @@ const flow = `flowchart TD
     <li><code>scripts/autoloads/quest_loader.gd</code> (QuestLoader) — <code>load_quest()</code> parses the quest JSON whose <code>objectives</code> array SessionManager reads into <code>_quest_objectives</code>.</li>
   </ul>
 
-  <p><a href="/states">← States</a></p>
+  <p><a href={siteUrl('/states')}>← States</a></p>
 </Concept>

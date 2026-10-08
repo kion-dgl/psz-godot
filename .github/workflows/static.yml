@@ -29,26 +29,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install web deps
-        run: cd web && npm ci
+      - name: Install site dependencies
+        run: npm ci
 
-      - name: Build web app
+      - name: Build unified Astro site
         # Every /assets/* path is routed through
         # VITE_ASSETS_BASE at build time (see web/src/utils/assets.ts),
         # so no raw asset bytes need to ship in the Pages artifact.
         env:
           VITE_ASSETS_BASE: https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev
-        run: cd web && npm run build
-
-      - name: Copy data/ into build output
-        # Quest JSON + stage configs are still in-repo and need to ride
-        # along with the Pages artifact. rsync so we merge with any
-        # dist/data/ that vite already created via the public symlink.
-        run: |
-          mkdir -p web/dist/data
-          rsync -a --delete data/ web/dist/data/
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -56,7 +48,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist
+          path: dist/site
 
       - name: Deploy to GitHub Pages
         id: deployment

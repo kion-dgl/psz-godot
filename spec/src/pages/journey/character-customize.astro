@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
 import CharacterCustomize from '../../components/screens/CharacterCustomize';
@@ -102,7 +103,7 @@ import CharacterCustomize from '../../components/screens/CharacterCustomize';
   <p>Character is saved, active slot set, and the game transitions to the city office (<code>city_office.tscn</code>) with the "intro" spawn key.</p>
 
   <h2>Previous</h2>
-  <p><a href="/journey/create-character">← Create Character (Class Select)</a></p>
+  <p><a href={siteUrl('/journey/create-character')}>← Create Character (Class Select)</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/city">City →</a></p>
+  <p><a href={siteUrl('/journey/city/office/')}>City →</a></p>
 </Definition>

@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -26,7 +27,7 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Placement</h2>
 
   <ul>
-    <li>Critters <strong>MUST</strong> spawn at their authored positions, selected by the same layout-mask draw as every authored kind (<a href="/mechanics/key-placement">key placement</a> documents the shared draw). Valley swarms sit in group 0 — always eligible for a safe room's group table — with group-4 duplicates that never build, exactly as the mask rule intends.</li>
+    <li>Critters <strong>MUST</strong> spawn at their authored positions, selected by the same layout-mask draw as every authored kind (<a href={siteUrl('/mechanics/key-placement')}>key placement</a> documents the shared draw). Valley swarms sit in group 0 — always eligible for a safe room's group table — with group-4 duplicates that never build, exactly as the mask rule intends.</li>
     <li>A start room <strong>MUST</strong> build authored ambience and <strong>MUST NOT</strong> build any other authored kind: no wave, no loot, no traps in the room the player spawns into.</li>
     <li>The start room's layout draw comes from a dedicated side stream seeded with the field, so a seed's field <strong>MUST</strong> populate byte-identically to before ambience existed — adding ambience <strong>MUST NOT</strong> reshuffle every later cell's rolls.</li>
     <li>A room whose table exists only <em>outside</em> the deploy set still gets its authored fauna: the <strong>city start room</strong> (<code>s00e_sa1</code>) authors its two butterflies under set <code>c</code> and has no <code>d</code> row at all, so it resolves through a cross-set fallback that builds flat, at the authored spots, and draws nothing from the field's streams. The set's other kinds stay unimported — the deploy roll never reads them. The city market is a hand-built scene, not a field cell, so its controller spawns the room's authored ambience directly.</li>

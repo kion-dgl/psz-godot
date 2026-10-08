@@ -1,6 +1,7 @@
 ---
+import { siteUrl } from '../utils/site';
 import Concept from '../layouts/Concept.astro';
-import baseline from '../../../data/fidelity_grades.json';
+import baseline from '../data/fidelity-grades.json';
 const grades = baseline.areas;
 ---
 
@@ -16,7 +17,7 @@ const grades = baseline.areas;
   <p>A grade increase SHOULD cite a dated user playtest, the revision, the scenario and the observed improvement. Automated passes MUST NOT independently promote a grade. Better-than-original presentation is a deliberate design choice and SHOULD be distinguished from original-game fidelity.</p>
   <h2>Combat evidence, tracked separately</h2>
   <ol>
-    <li><strong>Identity:</strong> reconcile runtime ID, display name, model, animation rig and source identity. <a href="/states/combat-roster">Current crosswalk and unresolved mappings</a>.</li>
+    <li><strong>Identity:</strong> reconcile runtime ID, display name, model, animation rig and source identity. <a href={siteUrl('/states/combat-roster')}>Current crosswalk and unresolved mappings</a>.</li>
     <li><strong>Reference:</strong> cite original observation or decoded function/data, including revision and confidence. Clip names alone do not prove behavior.</li>
     <li><strong>Definition:</strong> align attack eligibility, phases, movement and forbidden behavior with the normative spec.</li>
     <li><strong>Verification:</strong> seeded tests plus real-rig probes, including misses, dodges, interruptions, walls and recovery.</li>
@@ -25,7 +26,7 @@ const grades = baseline.areas;
   <p>The existing suites provide substantial mechanics coverage. They do not establish every original attack, visual alignment or combat feel. Existing user approval of the gameplay foundation remains valid; family-level unknowns remain open.</p>
   <h2>Current work order</h2>
   <p>Start with <a href="https://github.com/kion-dgl/psz-godot/issues/683">#683: roster identity and coverage</a>. Continue with <a href="https://github.com/kion-dgl/psz-godot/issues/684">Booma #684</a> and <a href="https://github.com/kion-dgl/psz-godot/issues/685">Helion #685</a>, then bats and Finjers before identity-sensitive tank, swordman and Mother work. The <a href="https://github.com/kion-dgl/psz-godot/issues/682">combat roadmap #682</a> sequences mixed encounters, damage and statuses after individual families.</p>
-  <p>Lock-on is a separate combat gap: <a href="/mechanics/movement-lockon">its current page is still a placeholder</a>. Family validation does not complete it. Wetlands stuck routes are a separate free-roam reliability priority.</p>
+  <p>Lock-on is a separate combat gap: <a href={siteUrl('/mechanics/movement-lockon')}>its current page is still a placeholder</a>. Family validation does not complete it. Wetlands stuck routes are a separate free-roam reliability priority.</p>
 </Concept>
 
 <style>td { vertical-align: top; } table { width: 100%; } td:first-child { min-width: 110px; }</style>

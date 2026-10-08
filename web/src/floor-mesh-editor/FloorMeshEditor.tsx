@@ -1,3 +1,4 @@
+import { devApiUrl } from '../utils/devApi';
 // FloorMeshEditor — click-to-pick vertex editor for a stage's -floor.glb.
 //
 // Use case: seal hairline cracks in the floor mesh that the runtime collision
@@ -386,7 +387,7 @@ export default function FloorMeshEditor() {
     if (!stageId) return;
     if (!confirm(`Restore ${stageId}-floor.glb to git HEAD? All unstaged edits will be lost.`)) return;
     try {
-      const res = await fetch('/api/floor-mesh/reset', {
+      const res = await fetch(devApiUrl('/api/floor-mesh/reset'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ stageId }),
@@ -416,7 +417,7 @@ export default function FloorMeshEditor() {
     if (isNaN(nx) || isNaN(nz)) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/floor-mesh/patch-vertex', {
+      const res = await fetch(devApiUrl('/api/floor-mesh/patch-vertex'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

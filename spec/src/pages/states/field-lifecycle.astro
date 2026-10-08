@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 // Field stage lifecycle — the runtime BEHAVIOR of a field session (what the
 // field controller and its modules do, and where). Companion to the per-stage
 // geometry viewer (the Field Stages index). Keep this in sync with the
@@ -30,7 +31,7 @@ const lifecycle = `flowchart TD
 
   <p>This page documents the <em>runtime behavior</em> of a field session — what
   happens, in what order, and which module owns it. The
-  <a href="/journey/field">Field Stages</a> viewer shows the per-stage geometry
+  <a href={siteUrl('/journey/field')}>Field Stages</a> viewer shows the per-stage geometry
   (floor mesh, grid, waypoints); this is the contract for the logic that drives
   the player through them. The key words <strong>MUST</strong>,
   <strong>MUST NOT</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
@@ -82,7 +83,7 @@ const lifecycle = `flowchart TD
   </table>
   <p>Each object type has its own reference page — a live 3D model viewer,
   config schema, persisted state, and interactions: see
-  <a href="/states/objects">Cell Objects</a>.</p>
+  <a href={siteUrl('/states/objects')}>Cell Objects</a>.</p>
 
   <h2>Plan actions (<code>do[]</code>)</h2>
   <p>Observed in the autopilot as <code>action i/n: &lt;name&gt;</code>. A cell's
@@ -247,7 +248,7 @@ const lifecycle = `flowchart TD
   end-cell exit, which telepipes the player back to the city for the quest report.</p>
   <p>That is the <em>success</em> exit. A field session also has a
   <strong>failure</strong> exit: if the player's HP reaches 0 the run ends in
-  <a href="/states/player-death">Defeat</a> — a red overlay + "You were defeated"
+  <a href={siteUrl('/states/player-death')}>Defeat</a> — a red overlay + "You were defeated"
   prompt that returns the player to the city (full-HP revive, a 50% carried-meseta
   penalty, session ended). Defeat and the end-cell telepipe are the only two ways a
   field session ends from inside the field.</p>
@@ -338,7 +339,7 @@ const lifecycle = `flowchart TD
     <tr><td>Player spawn + orbit camera</td><td>⏳ controller</td></tr>
     <tr><td>Floor / map collision</td><td>⏳ controller → <code>MapCollisionBuilder</code></td></tr>
     <tr><td>Portals, gate triggers + labels</td><td>⏳ controller → <code>PortalGateManager</code></td></tr>
-    <tr><td>Weather, sky, lights, stage effects</td><td>⏳ controller → <code>WeatherController</code> (time-of-day via <a href="/states/field-time-slots"><code>FieldSlotTable</code></a>)</td></tr>
+    <tr><td>Weather, sky, lights, stage effects</td><td>⏳ controller → <code>WeatherController</code> (time-of-day via <a href={siteUrl('/states/field-time-slots')}><code>FieldSlotTable</code></a>)</td></tr>
     <tr><td>Telepipe, companion, combat waves</td><td>⏳ controller</td></tr>
   </table>
 
@@ -353,7 +354,7 @@ const lifecycle = `flowchart TD
     <tr><td><code>walk to exit '&lt;dir&gt;' via N waypoint(s)</code> / <code>waypoint i/n reached</code></td><td>navigating to the exit</td></tr>
     <tr><td><code>stuck-walk diagnostic …</code> / <code>FAIL: walk stuck …</code></td><td>pathfinding failed — the stage needs authored waypoints</td></tr>
     <tr><td><code>checkpoint: hud-stats-held id=… scene=…</code></td><td>the persistent HP/PP/Lv panel survived a scene transition as the same instance (#444; <code>FAIL:</code> if it was rebuilt or freed)</td></tr>
-    <tr><td><code>checkpoint: defeat-screen-shown</code></td><td>HP hit 0 → the <a href="/states/player-death">defeat</a> prompt is up</td></tr>
+    <tr><td><code>checkpoint: defeat-screen-shown</code></td><td>HP hit 0 → the <a href={siteUrl('/states/player-death')}>defeat</a> prompt is up</td></tr>
     <tr><td><code>checkpoint: defeat-return-to-city meseta &lt;before&gt; -&gt; &lt;after&gt;</code></td><td>chose "Yes" → revived, penalty applied, session ended</td></tr>
     <tr><td><code>DONE ok</code></td><td>quest cleared end-to-end (success oracle)</td></tr>
   </table>

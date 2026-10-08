@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -39,5 +40,5 @@ import Concept from '../../layouts/Concept.astro';
     <li><code>project.godot</code> — the <code>area_map</code> input action; <code>scripts/config/debug_config.gd</code> — <code>reveal_map</code>.</li>
   </ul>
 
-  <p><a href="/states">← States</a></p>
+  <p><a href={siteUrl('/states')}>← States</a></p>
 </Concept>

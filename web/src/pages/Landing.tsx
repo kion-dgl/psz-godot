@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { siteUrl } from '../../../spec/src/utils/site';
 import FidelityGrades from './FidelityGrades';
 
 export default function Landing() {
@@ -21,7 +21,7 @@ export default function Landing() {
         and downloadable game client.
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
-        <Link to="/quest-editor" style={{
+        <a href={siteUrl('/tools/quest-editor/')} style={{
           padding: '10px 24px',
           background: '#2a2a5a',
           color: '#88aaff',
@@ -31,8 +31,8 @@ export default function Landing() {
           border: '1px solid #3a3a6a',
         }}>
           Quest Editor
-        </Link>
-        <Link to="/storybook" style={{
+        </a>
+        <a href={siteUrl('/tools/storybook/')} style={{
           padding: '10px 24px',
           background: '#2a2a5a',
           color: '#88aaff',
@@ -42,7 +42,7 @@ export default function Landing() {
           border: '1px solid #3a3a6a',
         }}>
           Storybook
-        </Link>
+        </a>
       </div>
       <FidelityGrades />
     </div>

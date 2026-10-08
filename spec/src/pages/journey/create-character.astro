@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
 import CharacterCreate from '../../components/screens/CharacterSelect';
@@ -14,13 +15,13 @@ import CharacterCreate from '../../components/screens/CharacterSelect';
   <p>PSZ slats theme — vertical strips per class, grouped by type (Hunter → Ranger → Force). Clicking a slat expands it to show the character art, name, tagline, and traits.</p>
 
   <h2>Behavior</h2>
-  <p>Left/right navigates between classes. Confirm proceeds to name entry. Cancel returns to <a href="/journey/character-select">Character Select</a>.</p>
+  <p>Left/right navigates between classes. Confirm proceeds to name entry. Cancel returns to <a href={siteUrl('/journey/character-select')}>Character Select</a>.</p>
 
   <h2>Theme</h2>
   <p>PSZ palette: sky-blue gradient background, dark navy header/info panels, steel-blue borders, gold confirm button. Scanline overlay for DS texture feel.</p>
 
   <h2>Previous</h2>
-  <p><a href="/journey/character-select">← Character Select</a></p>
+  <p><a href={siteUrl('/journey/character-select')}>← Character Select</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/character-customize">Customize Character →</a></p>
+  <p><a href={siteUrl('/journey/character-customize')}>Customize Character →</a></p>
 </Definition>

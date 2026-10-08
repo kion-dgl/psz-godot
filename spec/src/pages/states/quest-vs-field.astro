@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -30,7 +31,7 @@ const chart = `stateDiagram-v2
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
-  <p>Under the target <a href="/states/session-model">Session Model</a>, the distinction below is just whether a <strong>Quest State</strong> is layered on top of the <strong>Field Context</strong> — a free field is a field with no quest attached, not a separate session <em>type</em>. The macro-states here describe the resulting flow.</p>
+  <p>Under the target <a href={siteUrl('/states/session-model')}>Session Model</a>, the distinction below is just whether a <strong>Quest State</strong> is layered on top of the <strong>Field Context</strong> — a free field is a field with no quest attached, not a separate session <em>type</em>. The macro-states here describe the resulting flow.</p>
 
   <p>The player reaches the field in one of two ways, and the game is always in exactly one of two top-level modes: <strong>Free Roam</strong> or <strong>On Quest</strong>.</p>
   <ul>
@@ -59,7 +60,7 @@ const chart = `stateDiagram-v2
   <ul>
     <li>Accepting a quest <strong>MUST</strong> clear all retained free-field run-state (including reached warp points) and close any open telepipe.</li>
     <li>While on a quest, the teleporter <strong>MUST</strong> only offer the quest's content; free fields <strong>MUST NOT</strong> be selectable.</li>
-    <li><strong>Completion vs. exit.</strong> Meeting a quest's objectives marks it <em>complete</em> but does <strong>NOT</strong> leave the quest — the player stays in the quest field and <strong>MAY</strong> keep exploring and round-tripping through a telepipe. The quest is left only by <strong>reporting</strong> it at the guild (rewards claimed) or <strong>cancelling</strong> it; either returns the game to Free Roam and closes any open telepipe (see <a href="/states/telepipe">Telepipe</a> and the <a href="/states/session-model">Session Model</a>).</li>
+    <li><strong>Completion vs. exit.</strong> Meeting a quest's objectives marks it <em>complete</em> but does <strong>NOT</strong> leave the quest — the player stays in the quest field and <strong>MAY</strong> keep exploring and round-tripping through a telepipe. The quest is left only by <strong>reporting</strong> it at the guild (rewards claimed) or <strong>cancelling</strong> it; either returns the game to Free Roam and closes any open telepipe (see <a href={siteUrl('/states/telepipe')}>Telepipe</a> and the <a href={siteUrl('/states/session-model')}>Session Model</a>).</li>
     <li>On returning to Free Roam, the free fields <strong>MUST</strong> be reset to their initial state — every enemy and object restored and every field back to area "1" — so the player starts from the beginning again.</li>
   </ul>
 
@@ -89,7 +90,7 @@ const chart = `stateDiagram-v2
   </ol>
 
   <h2>Why the distinction matters</h2>
-  <p>Because free fields and quests share the same format, the guild counter and session bookkeeping <strong>MUST</strong> key off the Free-Roam / On-Quest mode rather than the presence of a loaded quest structure. Treating a free field as a quest (e.g. offering "Cancel Quest" while the player is merely free-roaming) is out of spec and is the root of the telepipe / quest-counter stranding behavior — see <a href="/states/telepipe">Telepipe</a>.</p>
+  <p>Because free fields and quests share the same format, the guild counter and session bookkeeping <strong>MUST</strong> key off the Free-Roam / On-Quest mode rather than the presence of a loaded quest structure. Treating a free field as a quest (e.g. offering "Cancel Quest" while the player is merely free-roaming) is out of spec and is the root of the telepipe / quest-counter stranding behavior — see <a href={siteUrl('/states/telepipe')}>Telepipe</a>.</p>
 
   <h2>Implemented by</h2>
   <ul>

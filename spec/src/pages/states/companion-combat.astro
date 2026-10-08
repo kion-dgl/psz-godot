@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -35,7 +36,7 @@ const chart = `stateDiagram-v2
   <p>A combat FSM (<code>FOLLOW</code> / <code>ENGAGE</code> / <code>ATTACK</code> / <code>REGROUP</code>) sits alongside the existing follow behavior:</p>
 
   <ul>
-    <li><strong>FOLLOW</strong> — the trail-replay behavior defined in <a href="/states/companion">Companion Locomotion</a>, unchanged. Every <code>COMBAT_SCAN_INTERVAL</code> (0.25&nbsp;s) the companion scans for a target; acquiring one transitions to <code>ENGAGE</code>.</li>
+    <li><strong>FOLLOW</strong> — the trail-replay behavior defined in <a href={siteUrl('/states/companion')}>Companion Locomotion</a>, unchanged. Every <code>COMBAT_SCAN_INTERVAL</code> (0.25&nbsp;s) the companion scans for a target; acquiring one transitions to <code>ENGAGE</code>.</li>
     <li><strong>ENGAGE</strong> — steer directly toward the target at <code>FOLLOW_SPEED</code>. When the target is within reach (<code>ENGAGE_REACH_FRAC</code>&nbsp;(0.8) × the weapon's <code>hit_h_dist</code>), transition to <code>ATTACK</code>.</li>
     <li><strong>ATTACK</strong> — face the target, root in place, swing once (see "Attack resolution"), then wait <code>ATTACK_COOLDOWN</code> (1.2&nbsp;s ÷ the weapon's <code>speed_mult</code>). After the cooldown: target still valid and in reach → swing again; valid but out of reach → <code>ENGAGE</code>; invalid → <code>REGROUP</code>.</li>
     <li><strong>REGROUP</strong> — steer back toward the player. Within <code>START_DISTANCE</code> (3.0) of the player, transition to <code>FOLLOW</code> (re-seeding the resume-blend so the handoff back to trail-replay is smooth). <code>REGROUP</code> always completes to <code>FOLLOW</code>; re-engagement happens from <code>FOLLOW</code>'s next scan tick.</li>
@@ -73,7 +74,7 @@ const chart = `stateDiagram-v2
   <h2>Animation contract (reconciles /states/companion)</h2>
 
   <ul>
-    <li>Each behavior state sets the frame's <strong>movement intent</strong>: <code>ENGAGE</code> and <code>REGROUP</code> are steering, so <code>intent_moving = true</code>; a frozen <code>FOLLOW</code> and the <code>ATTACK</code> post-swing cooldown are rooted, so <code>intent_moving = false</code>. The locomotion clip then follows the <a href="/states/companion">Companion Locomotion</a> contract verbatim — <code>locomotion_clip(intent_moving, measured planar speed)</code>, resolved centrally each frame. Because the companion genuinely moves in <code>ENGAGE</code>/<code>REGROUP</code>, <code>walk</code>/<code>run</code> select naturally; because intent flips to steering the same frame the state starts driving the body, the switch out of <code>wait</code> is immediate and the companion <strong>MUST NOT</strong> slide across a state transition.</li>
+    <li>Each behavior state sets the frame's <strong>movement intent</strong>: <code>ENGAGE</code> and <code>REGROUP</code> are steering, so <code>intent_moving = true</code>; a frozen <code>FOLLOW</code> and the <code>ATTACK</code> post-swing cooldown are rooted, so <code>intent_moving = false</code>. The locomotion clip then follows the <a href={siteUrl('/states/companion')}>Companion Locomotion</a> contract verbatim — <code>locomotion_clip(intent_moving, measured planar speed)</code>, resolved centrally each frame. Because the companion genuinely moves in <code>ENGAGE</code>/<code>REGROUP</code>, <code>walk</code>/<code>run</code> select naturally; because intent flips to steering the same frame the state starts driving the body, the switch out of <code>wait</code> is immediate and the companion <strong>MUST NOT</strong> slide across a state transition.</li>
     <li>In <code>ATTACK</code> the companion is rooted and plays the non-looping <code>atk1</code> clip from the same animation pack its locomotion clips come from; the central locomotion update is <strong>suspended</strong> for the duration of the swing (it defers whenever a swing is in flight). Zero displacement while a <em>locomotion</em> clip plays is still a violation (#420's tripwire watches only <code>walk</code>/<code>run</code>, so a rooted <code>atk1</code> never trips it). A rig with no resolvable <code>atk1</code> <strong>MUST</strong> still resolve the swing on a fixed 0.5&nbsp;s timer — damage never depends on the clip existing.</li>
   </ul>
 

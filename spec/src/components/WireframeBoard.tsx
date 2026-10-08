@@ -1,3 +1,4 @@
+import { siteUrl } from '../utils/site';
 import { useEffect, useRef, useState } from 'react';
 import { AUTOPILOT_STEPS } from '../autopilot';
 
@@ -554,7 +555,7 @@ export default function WireframeBoard() {
         {NODES.map(n => (
           <a
             key={n.id}
-            href={n.href}
+            href={siteUrl(n.href)}
             style={{
               position: 'absolute',
               left: n.x,

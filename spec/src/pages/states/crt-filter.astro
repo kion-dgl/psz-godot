@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -66,8 +67,8 @@ const chart = `stateDiagram-v2
   <ul>
     <li><code>scripts/autoloads/crt_filter.gd</code> — the <code>CrtFilter</code> autoload: mode enum, the preset table, persistence, and the overlay <code>CanvasLayer</code>.</li>
     <li><code>scripts/shaders/crt.gdshader</code> — the single canvas-item shader. Every mode is a set of uniform values in <code>CrtFilter.PRESETS</code>; a new look is a preset entry, <strong>not</strong> a second shader.</li>
-    <li><code>scripts/3d/field/pso_start_menu.gd</code> / <code>start_menu_input.gd</code> — the <em>CRT Filter</em> row in <a href="/states/start-menu">Options</a>.</li>
+    <li><code>scripts/3d/field/pso_start_menu.gd</code> / <code>start_menu_input.gd</code> — the <em>CRT Filter</em> row in <a href={siteUrl('/states/start-menu')}>Options</a>.</li>
   </ul>
 
-  <p>The shader file <strong>MUST</strong> stay under <code>res://scripts/</code>. It is reachable from an autoload, and autoloads must compile before the asset pack mounts — see the compile contract in <a href="/states/field-lifecycle">Field Stage Lifecycle</a>.</p>
+  <p>The shader file <strong>MUST</strong> stay under <code>res://scripts/</code>. It is reachable from an autoload, and autoloads must compile before the asset pack mounts — see the compile contract in <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a>.</p>
 </Concept>

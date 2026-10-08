@@ -1,3 +1,5 @@
+import { assetUrl } from '../../utils/assets';
+import { siteUrl } from '../../utils/site';
 // StageSpecExplorer — parent wrapper for the per-area page. Owns the
 // "active stage" state (synced to the URL ?stage param) and renders the
 // stage picker, the slim editor, and the spec panel.
@@ -43,14 +45,9 @@ export default function StageSpecExplorer({ stages, specs, floorBase }: Props) {
   }, [activeStage]);
 
   const spec = specs[activeStage];
-  const floorUrl = `/${floorBase}/${activeStage}/lndmd/${activeStage}-floor.glb`;
-  const visualUrl = `/${floorBase}/${activeStage}/lndmd/${activeStage}_m.glb`;
-  // Deep-link to the Vite editor for waypoint authoring. Use the IP form
-  // so the link works from a phone over Tailscale, not just localhost.
-  const editorOrigin = typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}:5173`
-    : '';
-  const editorUrl = `${editorOrigin}/psz-godot/#/stage-editor?stage=${activeStage}`;
+  const floorUrl = assetUrl(`${floorBase}/${activeStage}/lndmd/${activeStage}-floor.glb`);
+  const visualUrl = assetUrl(`${floorBase}/${activeStage}/lndmd/${activeStage}_m.glb`);
+  const editorUrl = siteUrl(`/tools/stage-editor/?stage=${activeStage}`);
 
   return (
     <div className="explorer-layout">

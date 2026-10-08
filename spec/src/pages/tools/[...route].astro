@@ -1,0 +1,16 @@
+---
+import SiteTools from '../../../../web/src/SiteTools';
+import { toolRoutes } from '../../../../scripts/site/routes';
+export function getStaticPaths() {
+  return toolRoutes().map(route => ({ params: { route: route === '/' ? undefined : route.slice(1) } }));
+}
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>PSZ Tools</title></head>
+  <body><SiteTools client:only="react" /></body>
+</html>
+<style is:global>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a1a; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+</style>

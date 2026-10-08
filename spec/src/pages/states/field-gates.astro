@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 // Field Gate Economy — the normative contract for how a generated free field
 // locks itself and hands the player the keys to unlock it.
 //
@@ -93,7 +94,7 @@ const economy = `flowchart LR
 
   <h2>Relationship to /states/free-field</h2>
   <p>
-    <a href="/states/free-field">/states/free-field</a> already carries a "Gates and
+    <a href={siteUrl('/states/free-field')}>/states/free-field</a> already carries a "Gates and
     keys" table listing these same four attribute values, and the working agreement
     requires a new definition to be reconciled with an existing one rather than left to
     drift. The split is: <strong>this page is normative for the RULE</strong> — how a
@@ -225,7 +226,7 @@ const economy = `flowchart LR
   </p>
   <p>
     Keys stay <strong>section-scoped and fungible</strong>, as
-    <a href="/states/field-lifecycle">Field Stage Lifecycle</a> already defines them:
+    <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a> already defines them:
     any key opens any key gate in the same section. That reconciles with the measured
     rule rather than contradicting it — the original's invariant is over
     <em>counts</em> (required vs available), not identities. The original does store
@@ -279,7 +280,7 @@ const economy = `flowchart LR
     preference above, and the pickup/consume path against a gate. Keys spawn with
     the generator's own data rather than waiting on the authored key object in
     #594; <em>when</em> they appear — on room clear — is
-    <a href="/mechanics/key-placement">Key Placement</a>'s contract. <em>(done;
+    <a href={siteUrl('/mechanics/key-placement')}>Key Placement</a>'s contract. <em>(done;
     the dead-end preference and drop-on-clear are #639.)</em></li>
   </ol>
 

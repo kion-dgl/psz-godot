@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -17,7 +18,7 @@ import Concept from '../../layouts/Concept.astro';
   <ul>
     <li><strong>Tap</strong> (released before <code>TECH_CHARGE_THRESHOLD</code>) casts the <strong>base</strong> technique.</li>
     <li><strong>Hold</strong> past the threshold casts the <strong>charged</strong> variant, resolved through <code>TechniqueManager.CHARGE_MAP</code> (e.g. <code>foie → rafoie</code>). The charged variant <strong>MUST</strong> be reachable only this way.</li>
-    <li>A mid-charge technique <strong>MUST</strong> be cancelled if the avatar is hit (see <a href="/states/player-state">Player State</a>).</li>
+    <li>A mid-charge technique <strong>MUST</strong> be cancelled if the avatar is hit (see <a href={siteUrl('/states/player-state')}>Player State</a>).</li>
   </ul>
 
   <h2 id="ui-listing">UI listing (normative)</h2>
@@ -32,7 +33,7 @@ import Concept from '../../layouts/Concept.astro';
     <li><code>scripts/3d/player/player.gd</code> (Player) — the hold-to-charge lifecycle (<code>_on_palette_pressed</code> / <code>_on_palette_released</code>, the per-frame charge timer in <code>_physics_process</code> crossing <code>TECH_CHARGE_THRESHOLD</code>); <code>_cast_technique</code> checks learned level + PP cost, deducts PP, and enters the cast; <code>_spawn_technique_effect</code> dispatches to the per-spell spawners (<code>_spawn_foie</code>, <code>_spawn_gifoie</code>, <code>_spawn_rafoie</code>, <code>_spawn_barta</code>, <code>_spawn_gibarta</code>, <code>_spawn_rabarta</code>, <code>_spawn_zonde</code>, <code>_spawn_gizonde</code>, <code>_spawn_razonde</code>).</li>
     <li><code>scripts/autoloads/technique_manager.gd</code> (TechniqueManager) — the technique table (<code>TECHNIQUES</code>), learned-level lookup (<code>get_technique_level</code>), and the tap-vs-charged mapping (<code>get_charged_technique</code> / <code>get_base_technique</code>) plus disk learning used by the shop.</li>
   </ul>
-  <p>A technique cast runs as the ATTACKING state of the <a href="/states/player-state">Player State Machine</a>; a mid-charge technique is cancelled if the avatar is hit.</p>
+  <p>A technique cast runs as the ATTACKING state of the <a href={siteUrl('/states/player-state')}>Player State Machine</a>; a mid-charge technique is cancelled if the avatar is hit.</p>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

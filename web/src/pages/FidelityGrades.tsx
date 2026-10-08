@@ -1,4 +1,5 @@
-import baseline from '../../../data/fidelity_grades.json';
+import { siteUrl } from '../../../spec/src/utils/site';
+import baseline from '../../../spec/src/data/fidelity-grades.json';
 import './FidelityGrades.css';
 
 export default function FidelityGrades() {
@@ -33,7 +34,7 @@ export default function FidelityGrades() {
       </div>
       <footer>
         <a href="https://github.com/kion-dgl/psz-godot/issues/682">Combat fidelity roadmap ↗</a>
-        <a href="https://psz.onl/fidelity/">Grading criteria & evidence ↗</a>
+        <a href={siteUrl('/fidelity/')}>Grading criteria & evidence ↗</a>
       </footer>
     </section>
   );

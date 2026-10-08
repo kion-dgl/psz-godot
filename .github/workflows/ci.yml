@@ -205,69 +205,26 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: python3 scripts/site/check_links.py
 
-      - name: Install dependencies
-        run: cd web && npm ci
-
-      - name: Type check
-        run: cd web && npx tsc --noEmit
-
-      - name: Test
-        run: cd web && npm run test
-
-      - name: Build
-        # Asset GLBs / textures / audio aren't in the repo; the built site
-        # points at Cloudflare R2 for everything under /assets/ via the
-        # VITE_ASSETS_BASE env (consumed by web/src/utils/assets.ts).
-        env:
-          VITE_ASSETS_BASE: https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev
-        run: cd web && npm run build
-
-      - name: Copy data/ into build output
-        # Quest JSON + stage configs still live in the repo and need to be
-        # published alongside the bundle for GitHub Pages. Vite may already
-        # have copied them via the web/public/data symlink, so use rsync so
-        # we merge into any existing dist/data/ rather than nesting to
-        # dist/data/data/ (`cp -r` does the wrong thing when the target
-        # directory exists).
-        run: |
-          mkdir -p web/dist/data
-          rsync -a --delete data/ web/dist/data/
-
+  # Retain the existing check name for branch protection; one build owns both.
   spec:
-    # Build the Astro spec/docs site so a broken page fails the PR. astro build
-    # compiles every page, which catches the common breakages — a stray `{`/`}`
-    # in markup parsed as a JS expression, a bad import, a malformed component —
-    # that an HTTP 200 + grep check on the dev server would miss.
+    needs: web
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: spec/package-lock.json
-
-      - name: Install dependencies
-        run: cd spec && npm ci
-
-      - name: Build
-        # Asset URLs resolve to a relative /cdn/ path at runtime, so no
-        # assets-base env is needed at build time.
-        run: cd spec && npm run build
+      - run: echo "Spec and tools verified by the unified Astro build."
 
   build:
     runs-on: ubuntu-latest

@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../../../utils/site';
 // Dynamic per-area + per-variant field viewer. One Astro page per
 // (area, variant) pair derived from unified-stage-configs.json — every
 // stage that has a config gets a viewable URL under
@@ -53,14 +54,14 @@ for (const [path, spec] of Object.entries(specs)) {
   }
 }
 
-const floorBase = `cdn/assets/stages/${meta.folder}_${variant}`;
+const floorBase = `assets/stages/${meta.folder}_${variant}`;
 const title = `${meta.display} / ${variant.toUpperCase()}`;
 ---
 
 <Base title={`${title} — Field Stages`}>
   <div class="page">
     <header>
-      <a href="/" class="back">← spec</a>
+      <a href={siteUrl('/')} class="back">← spec</a>
       <h1>{title}</h1>
       <span class="count">{stages.length} stages</span>
     </header>

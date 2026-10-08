@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Key Placement" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>This page governs <em>where in its room a key pickup stands</em> and <em>when it appears</em>. It does not govern <em>which rooms hold keys or how many</em> — that is the gate economy's scatter rule (<a href="/states/field-gates">Field Gate Economy</a>): BFS depth &lt; 2 from the gated room, at most 2 per room, dead ends first. The three compose: the economy picks the room and the count, this page picks the spot and the moment.</p>
+  <p>This page governs <em>where in its room a key pickup stands</em> and <em>when it appears</em>. It does not govern <em>which rooms hold keys or how many</em> — that is the gate economy's scatter rule (<a href={siteUrl('/states/field-gates')}>Field Gate Economy</a>): BFS depth &lt; 2 from the gated room, at most 2 per room, dead ends first. The three compose: the economy picks the room and the count, this page picks the spot and the moment.</p>
 
   <h2>The rule</h2>
 
@@ -61,7 +62,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <ul>
     <li>The <strong>positions</strong> are consumed (mask-filtered, seeded selection), and cost nothing against the room cap.</li>
-    <li>The key <strong>object</strong> still does not spawn through the room-object table — <code>o0c_key</code> stays under <code>not_imported_yet</code>. Which rooms hold keys, and how many, remains the gate economy's own rule (<a href="/states/field-gates">Field Gate Economy</a>), not the reference table's.</li>
+    <li>The key <strong>object</strong> still does not spawn through the room-object table — <code>o0c_key</code> stays under <code>not_imported_yet</code>. Which rooms hold keys, and how many, remains the gate economy's own rule (<a href={siteUrl('/states/field-gates')}>Field Gate Economy</a>), not the reference table's.</li>
   </ul>
 
   <h2>Coordinates and height</h2>
@@ -74,5 +75,5 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>What this page does not settle</h2>
 
-  <p>Which slot the original picks for a given room instance is <strong>not known</strong> — the same undecoded per-room seed and placement weights as <a href="/mechanics/enemy-placement">Enemy Placement</a>'s subset note. The <em>positions</em> are authored data and are exact; the <em>selection among them</em> is ours. Which rooms hold keys is likewise ours-by-measurement (the economy's scatter rule), not the reference table's.</p>
+  <p>Which slot the original picks for a given room instance is <strong>not known</strong> — the same undecoded per-room seed and placement weights as <a href={siteUrl('/mechanics/enemy-placement')}>Enemy Placement</a>'s subset note. The <em>positions</em> are authored data and are exact; the <em>selection among them</em> is ours. Which rooms hold keys is likewise ours-by-measurement (the economy's scatter rule), not the reference table's.</p>
 </Concept>

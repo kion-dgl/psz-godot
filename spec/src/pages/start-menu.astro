@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../utils/site';
 import Definition from '../layouts/Definition.astro';
 import Mermaid from '../components/Mermaid.astro';
 import StartMenu from '../components/screens/StartMenu';
@@ -14,7 +15,7 @@ import StartMenu from '../components/screens/StartMenu';
   <h2>Purpose</h2>
   <p>In-game menu opened during gameplay (city or field). Manage equipment, techniques, action palette, mags, and view quest/status. One option, "Return to Title", exits to the title screen.</p>
 
-  <p>This page is a high-level, player-facing overview. For the full runtime behavior — the <code>Mode</code> state machine, every view and sub-mode, and the modules that implement it (<code>StartMenuRenderer</code> / <code>StartMenuInput</code>) — see <a href="/states/start-menu">Start Menu (behavior spec)</a>, the authoritative reference.</p>
+  <p>This page is a high-level, player-facing overview. For the full runtime behavior — the <code>Mode</code> state machine, every view and sub-mode, and the modules that implement it (<code>StartMenuRenderer</code> / <code>StartMenuInput</code>) — see <a href={siteUrl('/states/start-menu')}>Start Menu (behavior spec)</a>, the authoritative reference.</p>
 
   <h2>Sections</h2>
   <ul>
@@ -27,7 +28,7 @@ import StartMenu from '../components/screens/StartMenu';
   </ul>
 
   <h2>Return to Title</h2>
-  <p>Selecting "Return to Title" saves the game, drops the active field session, and routes back to the <a href="/journey/title">Title Screen</a>. The end credits use this same save-and-return path, with one twist: the final quest is marked complete and cleared as the credits begin, so it shows as cleared at the guild counter without a report — see <a href="/states/story-progression">Story Progression</a>.</p>
+  <p>Selecting "Return to Title" saves the game, drops the active field session, and routes back to the <a href={siteUrl('/journey/title')}>Title Screen</a>. The end credits use this same save-and-return path, with one twist: the final quest is marked complete and cleared as the credits begin, so it shows as cleared at the guild counter without a report — see <a href={siteUrl('/states/story-progression')}>Story Progression</a>.</p>
 
   <Mermaid chart={`flowchart LR
     A[Gameplay] -->|open menu| B[Start Menu]

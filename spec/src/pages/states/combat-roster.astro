@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import roster from '../../../../data/combat_roster.json';
 const issue = (n: number) => `https://github.com/kion-dgl/psz-godot/issues/${n}`;
 ---
 
 <Concept title="Combat roster and identity evidence">
-  <p>October 8, 2026 · <a href={issue(683)}>Identity audit #683</a> · <a href="/fidelity">Fidelity grades</a></p>
+  <p>October 8, 2026 · <a href={issue(683)}>Identity audit #683</a> · <a href={siteUrl('/fidelity')}>Fidelity grades</a></p>
   <p>This crosswalk records current assignments, not certified original-game identities. Runtime IDs MUST remain stable until a migration accounts for saved data, quests, drops, spawners, attack tables and boss encounters. Display names and filenames alone MUST NOT establish behavior.</p>
   <h2>Coverage contract</h2>
   <ul>

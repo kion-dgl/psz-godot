@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
 import CharSelectScreen from '../../components/screens/CharSelectScreen';
@@ -14,7 +15,7 @@ import CharSelectScreen from '../../components/screens/CharSelectScreen';
   <p>Gold banner across the top. Character list on the left (scrollable, 20 slots). 3D model preview on the right with class description below. Start/Create button bottom-right.</p>
 
   <h2>Slots</h2>
-  <p>20-slot floor. Filled slots show name, class, level, and playtime. Empty slots show "(Empty Slot)" — selecting one routes to <a href="/journey/create-character">Create Character</a>.</p>
+  <p>20-slot floor. Filled slots show name, class, level, and playtime. Empty slots show "(Empty Slot)" — selecting one routes to <a href={siteUrl('/journey/create-character')}>Create Character</a>.</p>
 
   <Mermaid chart={`flowchart TD
     A[Character Select] -->|Filled slot + Confirm| B[City]
@@ -26,7 +27,7 @@ import CharSelectScreen from '../../components/screens/CharSelectScreen';
   <p>Loads the selected class's GLB model with pixel-filtered texture from R2. Camera at y=1.1 z=3.4 looking at torso height. Empty slots show a placeholder message.</p>
 
   <h2>Previous</h2>
-  <p><a href="/journey/title">← Title Screen</a></p>
+  <p><a href={siteUrl('/journey/title')}>← Title Screen</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/create-character">Create Character →</a> or <a href="/journey/city">City →</a></p>
+  <p><a href={siteUrl('/journey/create-character')}>Create Character →</a> or <a href={siteUrl('/journey/city/office/')}>City →</a></p>
 </Definition>

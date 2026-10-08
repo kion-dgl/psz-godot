@@ -165,6 +165,9 @@ web/public/assets/weapons
 # Local-only quarantine for orphan / superseded files. Moved here instead of
 # `rm`-ing so they can be inspected before permanent deletion. Never tracked.
 /archive/
+/.site-public/
+/node_modules/
+/.astro/
 
 # bun deps for the quest solver
 scripts/tools/quest_solver/node_modules/

@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -47,7 +48,7 @@ import Concept from '../../layouts/Concept.astro';
     <li>The bottom-left HUD slot shows the <strong>primary target's info</strong>: an enemy → name + HP bar (live <code>current_hp</code> / max); a ground item → the item's display name.</li>
     <li><strong>Precedence</strong> (PSO's split-reticle model): an enemy in the weapon cone always wins; an item is primary only when <em>no enemy is targetable</em> and the item is within <code>ITEM_INFO_RANGE</code> (2&nbsp;m) inside the cone.</li>
     <li><strong>Nothing to show → the panel MUST NOT render.</strong> No empty frame, no placeholder.</li>
-    <li><strong>The Quick Weapon Menu owns the corner:</strong> while it is open the target panel MUST NOT render (see <a href="/states/quick-weapon-menu">Quick Weapon Menu</a> — its behavior contract is unchanged; only its visual style is shared with this panel).</li>
+    <li><strong>The Quick Weapon Menu owns the corner:</strong> while it is open the target panel MUST NOT render (see <a href={siteUrl('/states/quick-weapon-menu')}>Quick Weapon Menu</a> — its behavior contract is unchanged; only its visual style is shared with this panel).</li>
     <li>The panel hides with the rest of the HUD for scene overlays / Start Menu (existing <code>hide_for_menu</code> behavior).</li>
   </ul>
 
@@ -63,5 +64,5 @@ import Concept from '../../layouts/Concept.astro';
     <li><code>scripts/3d/elements/drop_base.gd</code> — drops join the <code>drops</code> group for the HUD scan.</li>
   </ul>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

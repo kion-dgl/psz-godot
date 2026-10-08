@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -41,7 +42,7 @@ const chart = `stateDiagram-v2
   <p><strong>Status: DRAFT.</strong> The <em>shared contract</em> below (schema, timeline reuse, anchor semantics) is normative now — it is what the tooling and data are built against. The <em>per-boss tables</em> are first drafts read off the rig clip vocabularies (<code>#/boss-room</code>, #493) and <strong>MUST</strong> be verified by observation — in the boss rooms and against original-game capture — before any Godot implementation starts. Unverified clip readings are marked in the data's <code>clip_notes</code> / <code>note</code> fields. Godot work on a boss <strong>MUST NOT</strong> begin while its table still carries unresolved readings for the attacks being implemented.</p>
 
   <h2>Why bosses are not enemy-room archetypes</h2>
-  <p>Per <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>, bosses are out of scope for the flat enemy sandbox: each of the five vocabularies is unique, and the behavior is <strong>arena-bound</strong> — fly passes, surfacing pools, relocation spots are positions in the boss's own stage. The observation tool is <a href="https://kion-dgl.github.io/psz-godot/#/boss-room">#/boss-room</a> (one room per boss, loaded inside its arena); the data is <code>data/boss_arenas.json</code> (<code>schema_version: 2</code>).</p>
+  <p>Per <a href={siteUrl('/mechanics/enemy-attacks')}>/mechanics/enemy-attacks</a>, bosses are out of scope for the flat enemy sandbox: each of the five vocabularies is unique, and the behavior is <strong>arena-bound</strong> — fly passes, surfacing pools, relocation spots are positions in the boss's own stage. The observation tool is <a href="https://kion-dgl.github.io/psz-godot/#/boss-room">#/boss-room</a> (one room per boss, loaded inside its arena); the data is <code>data/boss_arenas.json</code> (<code>schema_version: 2</code>).</p>
 
   <h2>Shared contract</h2>
 
@@ -49,7 +50,7 @@ const chart = `stateDiagram-v2
   <table>
     <tr><th>Field</th><th>Semantics</th></tr>
     <tr><td><code>phases[]</code></td><td>Ordered; the first phase is the opener. <code>hp_frac</code> on a phase means it is entered when the boss's HP fraction drops to that value; a phase without <code>hp_frac</code> has a per-boss trigger (documented in its <code>note</code> — timer, attack-string completion, break threshold). A phase MAY be a <em>modifier overlay</em> rather than a moveset switch: <code>speed_mult</code> / <code>cooldown_mult</code> apply from entry onward (Reyburn's enrage).</td></tr>
-    <tr><td><code>attacks[]</code></td><td>Reuses the <a href="/mechanics/enemy-attacks">enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random). Boss-only attack fields: <code>knockback</code> (a hit also shoves the player that many units along the boss's facing — Reyburn's wing flap), <code>lp_loops</code> (repeat count for <code>lp</code> chain tokens; for <code>projectile</code> attacks one shot fires per rep — the fireball volley), <code>split</code> (a <code>lob</code> payload splits into this many impact points around the target).</td></tr>
+    <tr><td><code>attacks[]</code></td><td>Reuses the <a href={siteUrl('/mechanics/enemy-attacks')}>enemy attack model</a>: unset numeric fields (<code>weight</code>, ranges, window fractions, hit shape, <code>damage_mult</code>) default per that spec's <code>defaults</code>. <code>phases</code> gates availability (omitted = all phases); selection within a phase follows the enemy rules (range bands, weighted random). Boss-only attack fields: <code>knockback</code> (a hit also shoves the player that many units along the boss's facing — Reyburn's wing flap), <code>lp_loops</code> (repeat count for <code>lp</code> chain tokens; for <code>projectile</code> attacks one shot fires per rep — the fireball volley), <code>split</code> (a <code>lob</code> payload splits into this many impact points around the target).</td></tr>
     <tr><td><code>attacks[].chain</code></td><td>Explicit clip-token sequence — the generalization of the enemy model's <code>windup_clips</code>. Tokens resolve per the enemy clip-resolution order (exact, then <code>*_&lt;token&gt;</code> suffix); tokens ending in <code>lp</code> loop. Every clip before the last is <strong>pure telegraph</strong>; the timeline fractions (<code>windup_frac</code> / <code>damage_end_frac</code>) apply to the <strong>final</strong> clip of the chain.</td></tr>
     <tr><td><code>anchors[]</code></td><td>Named positions in the boss's <strong>default arena frame</strong> (meaningless elsewhere), authored with the room's click tool and round-tripped via its config export. Relocation targets and anchor-bound attacks (<code>attacks[].anchor</code>) reference them by name.</td></tr>
     <tr><td><code>spawn_pos</code></td><td>Authored boss position in the default arena frame — trusted verbatim including y, because the spot may be <em>off</em> the walkable collider (Humilias stands at the broken stage edge and attacks into the field). Authored in the room: <em>move boss</em> click → the config export captures the current position. Omitted = the room settles the boss at the collider center.</td></tr>
@@ -189,5 +190,5 @@ const chart = `stateDiagram-v2
     <li><code>data/boss_arenas.json</code> (v2) — the tables; validated by <code>web/src/__tests__/boss-arenas-data.test.ts</code>.</li>
   </ul>
 
-  <p><a href="/states">← States</a></p>
+  <p><a href={siteUrl('/states')}>← States</a></p>
 </Concept>

@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Inventory" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
 
-  <p>The <code>Inventory</code> autoload holds the active character's carried items as an ordered <code>item_id → quantity</code> map. Insertion order is pickup order; the player <strong>MAY</strong> re-sort by category (one-shot, or auto on every pickup). The bank (<code>GameState.shared_storage</code>) is shared across characters — see <a href="/shop/storage">Storage</a>.</p>
+  <p>The <code>Inventory</code> autoload holds the active character's carried items as an ordered <code>item_id → quantity</code> map. Insertion order is pickup order; the player <strong>MAY</strong> re-sort by category (one-shot, or auto on every pickup). The bank (<code>GameState.shared_storage</code>) is shared across characters — see <a href={siteUrl('/shop/storage')}>Storage</a>.</p>
 
   <h2>Slots &amp; capacity</h2>
   <ul>
@@ -22,10 +23,10 @@ import Concept from '../../layouts/Concept.astro';
     <li>The displayed <code>Teaches &lt;tech&gt; Lv.&lt;n&gt;</code> line <strong>MUST NOT</strong> contain the <code>#</code>-suffix (it reads <code>Lv.3</code>, never <code>Lv.3#2</code>).</li>
     <li>Consuming a disk <strong>MUST</strong> remove the exact instance the player selected (<code>remove_item</code> keeps the full instance id), not an arbitrary base-id copy.</li>
   </ul>
-  <p>This generalizes the same <code>get_base_id</code> rule already required for category sorting and the unlearnable-disk <code>✕</code> marker (see <a href="/mechanics/equip-legality">equip-legality</a>) to the use/parse path; it does not contradict the per-slot instance-id text above.</p>
+  <p>This generalizes the same <code>get_base_id</code> rule already required for category sorting and the unlearnable-disk <code>✕</code> marker (see <a href={siteUrl('/mechanics/equip-legality')}>equip-legality</a>) to the use/parse path; it does not contradict the per-slot instance-id text above.</p>
 
   <h2>Equipping gear</h2>
-  <p>Gear is equipped from the <a href="/start-menu">equipment screen</a>; each equip slot (weapon, armor <code>frame</code>, one <code>unit</code> slot per the equipped frame instance's own <strong>unit-slot count</strong>, mag) holds at most one item, referenced by its <strong>instance id</strong>.</p>
+  <p>Gear is equipped from the <a href={siteUrl('/start-menu')}>equipment screen</a>; each equip slot (weapon, armor <code>frame</code>, one <code>unit</code> slot per the equipped frame instance's own <strong>unit-slot count</strong>, mag) holds at most one item, referenced by its <strong>instance id</strong>.</p>
   <ul>
     <li><strong>Every frame is its own item.</strong> Two frames of the same base type are two different frames, each with its own instance id (<code>frame</code>, <code>frame#2</code>, …), and each <strong>MUST</strong> behave as a full, equal item — same DEF/EVA, same base type. The player <strong>MAY</strong> equip <em>any</em> of them — equipping is by the item's own id, never by stat profile or base type. Buy three frames of the same type and the player <strong>MUST</strong> be able to equip whichever they choose, interchangeably. (This already holds for weapons; it <strong>MUST</strong> hold equally for armor, units, and mags.)</li>
     <li><strong>Unit slots are a per-instance property.</strong> Each armor instance has its own unit-slot count, rolled <strong>0–4</strong> (universal cap 4) when the instance is created and fixed thereafter — so two frames of the same base type <strong>MAY</strong> differ in how many units they hold. The count is recorded per instance id (in <code>armor_slots</code>); the armor resource's <code>max_slots</code> is only the generator/cap and the fallback for instances with no recorded roll (starter gear, legacy saves). Every display and equip surface <strong>MUST</strong> read the instance's own count, never the resource's <code>max_slots</code> as a fixed value. The weapon shop deliberately skews toward low-slot rolls (weighted 0→35%, 1→30%, 2→10%, 3→20%, 4→5%): high-slot armor is <strong>rare</strong> by design, steering players to field drops and crafting for the best gear.</li>
@@ -50,11 +51,11 @@ import Concept from '../../layouts/Concept.astro';
     <tr><td>monofluid / difluid / trifluid</td><td>restore 30% / 60% / 100% of max PP</td></tr>
     <tr><td>sol / moon / star atomizer</td><td>restore full HP <em>(PSO revive / cure / party-heal roles are still to be specified)</em></td></tr>
     <tr><td>technique disk <code>disk_&lt;tech&gt;_&lt;level&gt;</code></td><td>learn or upgrade a tech, then consume the disk on success</td></tr>
-    <tr><td>telepipe</td><td>field-only; drops a placed pipe at the player — see <a href="/states/telepipe">Telepipe</a></td></tr>
+    <tr><td>telepipe</td><td>field-only; drops a placed pipe at the player — see <a href={siteUrl('/states/telepipe')}>Telepipe</a></td></tr>
   </table>
 
   <h2>Bank / storage</h2>
-  <p>Deposit moves items from the 40-slot inventory into the shared bank; withdraw moves them back, clamped by stack room. The bank is presently <strong>uncapped</strong> (PSO's 200-item bank is the canonical target, to be decided). Full deposit/withdraw flow lives in <a href="/shop/storage">Storage</a>.</p>
+  <p>Deposit moves items from the 40-slot inventory into the shared bank; withdraw moves them back, clamped by stack room. The bank is presently <strong>uncapped</strong> (PSO's 200-item bank is the canonical target, to be decided). Full deposit/withdraw flow lives in <a href={siteUrl('/shop/storage')}>Storage</a>.</p>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>
