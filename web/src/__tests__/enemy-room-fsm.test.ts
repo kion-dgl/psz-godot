@@ -1014,3 +1014,33 @@ describe('single-clip spin lunge', () => {
     });
   }
 });
+
+describe('authored end-clip recovery', () => {
+  it('finishes the main hit window before harmless stationary recovery', () => {
+    const c = config([atk({ recovery_clip: 'end' })]);
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 0.6);
+    expect(events.filter(e => e.type === 'hit')).toHaveLength(1);
+    expect(sim.state).toBe('attacking');
+    expect(sim.anim).toBe('end');
+    expect(sim.velocity).toEqual({ x: 0, z: 0 });
+    const endEvents = run(sim, entry, input, 0.5);
+    expect(endEvents.filter(e => e.type === 'hit')).toHaveLength(0);
+    expect(sim.state).toBe('loafing');
+  });
+  it('hurt cancels the end clip and cannot restart the old attack', () => {
+    const entry = resolveEntry(config([atk({ recovery_clip: 'end' })]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    stepEnemy(sim, entry, input);
+    run(sim, entry, input, 0.6);
+    applyHurt(sim, entry);
+    expect(sim.state).toBe('hurt');
+    expect(sim.currentAttack).toBeNull();
+  });
+});

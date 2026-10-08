@@ -37,6 +37,8 @@ static func _one_cell_section(stage_id: String, area_variant: String, area_id: S
 
 ## The 1:1 coliseum cell: one chosen enemy + a telepipe home on room clear.
 static func make_sections(enemy_id: String) -> Array:
+	if MIXED_GROUPS.has(enemy_id):
+		return make_group_sections(enemy_id)
 	return _one_cell_section("s00a_nr2", "a", "city", [
 		{"type": "enemy", "enemy_id": enemy_id, "position": [0.0, 0.0, 6.0]},
 		{"type": "telepipe", "spawn_condition": "room_clear", "position": [0.0, 0.0, -7.0]},
@@ -201,3 +203,36 @@ static func _area_rank(areas: Array) -> int:
 		if idx >= 0:
 			best = mini(best, idx)
 	return best
+
+
+## Authored mixed pressure tests; positions are separated by at least four metres.
+const MIXED_GROUPS := {
+	"mixed_bats": {"name":"Bats + Helion", "enemies":["batt", "bullbatt", "helion"]},
+	"mixed_finjers": {"name":"Finjer Trio", "enemies":["finjer_r", "finjer_b", "finjer_g"]},
+	"mixed_machines": {"name":"Tanks + Swordmen", "enemies":["phobos", "arkzein", "zaphobos"]},
+	"mixed_mothers": {"name":"Mother Trio", "enemies":["blade_mother", "shot_mother", "force_mother"]},
+	"mixed_pressure": {"name":"Combined Pressure", "enemies":["batt", "finjer_r", "phobos", "arkzein", "force_mother"]},
+}
+const GROUP_POSITIONS := [[-5.0,0.0,4.0], [5.0,0.0,4.0], [0.0,0.0,0.0], [-5.0,0.0,-4.0], [5.0,0.0,-4.0]]
+
+static func make_group_sections(group_id: String) -> Array:
+	var objects: Array = []
+	var ids: Array = MIXED_GROUPS[group_id].enemies
+	for i in ids.size():
+		objects.append({"type":"enemy", "enemy_id":ids[i], "position":GROUP_POSITIONS[i].duplicate()})
+	objects.append({"type":"telepipe", "spawn_condition":"room_clear", "position":[0.0,0.0,-7.0]})
+	return _one_cell_section("s00a_nr2", "a", "city", objects, false)
+
+static func mixed_roster() -> Array:
+	var rows: Array = []
+	for id in MIXED_GROUPS:
+		var names: Array = []
+		var hp := 0
+		for enemy_id in MIXED_GROUPS[id].enemies:
+			var enemy = EnemyRegistry.get_enemy(enemy_id)
+			names.append(enemy.name)
+			hp += enemy.hp_base
+		rows.append({"id":id, "name":MIXED_GROUPS[id].name, "is_rare":false,
+			"element":"%d enemies" % names.size(), "hp":hp, "areas":names,
+			"archetype":"mixed group", "kinds":["melee", "ranged", "room clear"]})
+	return [{"archetype":"Mixed Groups", "area_rank":0, "rows":rows}]

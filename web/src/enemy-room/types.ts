@@ -20,6 +20,10 @@ export interface AttackDef {
   tech?: string;
   /** Clip tokens played sequentially BEFORE the attack clip as pure telegraph (ape gunner's charged punch: atckstt → atckwat → atckswg). */
   windup_clips?: string[];
+  /** Harmless stationary end clip, before loafing. */
+  recovery_clip?: string;
+  projectile_visual?: string;
+  projectile_color?: string;
   /** kind: charge — explicit segment clip tokens when the rig doesn't use _st/_lp/_ed suffixes (roller: trf1/wat3/trf2). */
   charge_segments?: { st: string; lp: string; ed: string };
   /** kind: charge — travel target = start distance + overshoot (capped by max_range) instead of always max_range. */
@@ -55,6 +59,7 @@ export interface EnemyStats {
 export interface FsmParams {
   /** Runtime room entrance; the enemy-room sim begins after reveal. Never an attack prelude. */
   spawn_clip?: string;
+  move_clip?: string;
   walk_speed_mult: number;
   charge_range_mult: number;
   charge_speed_mult: number;

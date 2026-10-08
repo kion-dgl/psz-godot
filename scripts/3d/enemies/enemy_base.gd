@@ -128,6 +128,8 @@ var _lunge = preload("res://scripts/3d/enemies/enemy_lunge.gd").new()
 var _leap_from := Vector3.ZERO              # kind leap: enemy travels during the window
 var _leap_to := Vector3.ZERO
 var _charge: Dictionary = {}                # kind charge: phase machine (see _start_charge)
+var _recovery_timer := 0.0
+var _recovery_started := false
 var _vulnerable_mult := 1.0                 # recovery punish window (recovery_vulnerable_mult)
 
 ## Berserk kamikaze (spec /states/enemies §shooter): `apply_berserk()` (leader loss —
@@ -943,7 +945,19 @@ func _tick_arc_side(base: float, span: float, flip_chance: float) -> void:
 			_arc_side = -_arc_side
 
 
+func _tick_attack_recovery(delta: float) -> bool:
+	if not _recovery_started: return false
+	velocity.x = 0
+	velocity.z = 0
+	_recovery_timer -= delta
+	if _recovery_timer <= 0.0:
+		is_attacking = false
+		_start_loafing()
+	return true
+
+
 func _process_attacking(delta: float) -> void:
+	if _tick_attack_recovery(delta): return
 	# Telegraph sub-phase: hold the attack-ready pose (facing the player) before the
 	# strike so the wind-up is readable and dodgeable. No damage here.
 	if _telegraphing:
@@ -992,10 +1006,9 @@ func _process_attacking(delta: float) -> void:
 		if _attack_anim.is_empty():
 			_attack_fallback_timer -= delta
 			if _attack_fallback_timer <= 0.0:
-				is_attacking = false
+				_finish_main_clip()
 		elif animation_player and not animation_player.is_playing():
-			is_attacking = false
-			_attack_anim = ""
+			_finish_main_clip()
 
 	if not is_attacking:
 		_start_loafing()
@@ -1179,6 +1192,7 @@ func _process_loafing(delta: float) -> void:
 
 
 func _start_loafing() -> void:
+	_recovery_started = false
 	current_state = EnemyState.LOAFING
 	_telegraphing = false
 	_vulnerable_mult = 1.0  # the recovery (and its punish window) is over
@@ -1224,6 +1238,7 @@ func _process_hurt(delta: float) -> void:
 ## segments — skip the generic hold: their clips are the readable beat (spec
 ## /mechanics/enemy-attacks "windup_clips" / "kind").
 func _begin_telegraph() -> void:
+	_recovery_started = false
 	if not target or not is_instance_valid(target):
 		return
 	is_attacking = true
@@ -1281,6 +1296,8 @@ func _play_telegraph_hold() -> void:
 
 
 func _start_attack() -> void:
+	_recovery_started = false
+	_recovery_timer = 0.0
 	if not target or not is_instance_valid(target):
 		return
 
@@ -1330,6 +1347,21 @@ func _start_attack() -> void:
 	attack_cooldown_timer = cooldown * _aggro_cadence
 
 
+## Hold an authored end clip without reopening the attack window.
+func _finish_main_clip() -> void:
+	_attack_anim = ""
+	var token := str(_attack_def.get("recovery_clip", ""))
+	if token.is_empty():
+		is_attacking = false
+		return
+	_recovery_started = true
+	var duration := _clip_duration(token)
+	_recovery_timer = duration if duration > 0.0 else CHARGE_SEGMENT_FALLBACK
+	var full := _play_animation(token, true)
+	if not full.is_empty():
+		animation_player.get_animation(full).loop_mode = Animation.LOOP_NONE
+
+
 ## Resolve + play the attack clip proper and arm its timeline/fallback end.
 func _begin_main_clip() -> void:
 	var token := String(_attack_def.get("clip", "atk"))
@@ -1343,6 +1375,7 @@ func _begin_main_clip() -> void:
 		_attack_clip_len = ATTACK_FALLBACK_DURATION
 	else:
 		var anim := animation_player.get_animation(_attack_anim)
+		anim.loop_mode = Animation.LOOP_NONE
 		_attack_clip_len = anim.length if anim else ATTACK_FALLBACK_DURATION
 	_attack_pos = 0.0
 
@@ -1515,6 +1548,8 @@ func _fire_projectile() -> void:
 	p.damage = _attack_damage(_attack_def)
 	p.knockdown = bool(_attack_def.get("knockdown", false))
 	p.target = target
+	p.visual = str(_attack_def.get("projectile_visual", "orb"))
+	p.color = Color(str(_attack_def.get("projectile_color", "ff8000")))
 	p.on_hit = _projectile_on_hit()
 	get_parent().add_child(p)
 	p.global_position = global_position + _attack_facing * 0.8 + Vector3(0, 1.2, 0)
@@ -1747,6 +1782,8 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 ## Play an animation by name (short name like "atk" will match "s_001_atk").
 ## Returns the resolved full animation name, or "" if nothing played.
 func _play_animation(anim_name: String, force: bool = false) -> String:
+	if anim_name in ["wlk", "run"]:
+		anim_name = str(_fsm.get("move_clip", anim_name))
 	if anim_name == "wat":
 		anim_name = _rooted_idle_clip()
 	if anim_name.is_empty():
@@ -1774,7 +1811,7 @@ func _play_animation(anim_name: String, force: bool = false) -> String:
 
 	# Ensure looping animations actually loop
 	var anim := animation_player.get_animation(full_name)
-	if anim and anim_name in ["run", "wlk", "wat", "wat1", "wat2", "tk", "tk1", "wlk1", "fly"]:
+	if anim and anim_name in ["run", "wlk", "wat", "wat1", "wat2", "tk", "tk1", "wlk1", "fly", "run_lp"]:
 		anim.loop_mode = Animation.LOOP_LINEAR
 
 	animation_player.play(full_name)
@@ -1853,9 +1890,8 @@ func _find_attack_clip_fallback() -> String:
 func _on_animation_finished(anim_name: String) -> void:
 	# Attack end is matched against the resolved name that _start_attack
 	# actually played — suffix parsing wedged atk1/atckwat rigs (#477).
-	if anim_name == _attack_anim:
-		is_attacking = false
-		_attack_anim = ""
+	if anim_name == _attack_anim and is_attacking:
+		_finish_main_clip()
 		return
 
 	# Extract short name (e.g., "s_001_tht" -> "tht")

@@ -195,6 +195,18 @@ const fsm = `stateDiagram-v2
   <p>Initial gameplay tuning: claws at 0–2.5 m with contact at 30–60% of the clip; spin-lunge beyond 2.5 through 7 m with travel/contact at 15–70%. The lunge MUST lock facing and travel budget at attack start, retain stationary preparation and recovery, and resolve at most one hit or dodge. Walls/floor edges MUST stop travel; hurt/death MUST cancel it. These ranges and timings require playtesting and are not recovered DS constants.</p>
   <p>The lunge MUST remove only <code>Point_Spine01</code> planar translation from an instance-local animation copy, preserving vertical motion and rotation. Collision-driven travel keeps the rendered body with its hurtbox and prevents snapping back after the clip.</p>
 
+  <h2>Remaining families: provisional gameplay contracts</h2>
+  <p>This pass replaces generic attacks with explicit imported clip tokens. Ranges, hit windows, weights and delivery shapes below are gameplay tuning, not recovered DS constants. Existing roster/model identities are preserved. Bat confusion, Finjer elemental ailments, Mother warp destination rules, and original mine persistence are unverified; none are inferred from effect filenames.</p>
+  <ul>
+    <li>Batt/Bullbatt: close bite (0–2 m), traveling sonic shot (beyond 2–9 m), both use the sole atk clip. The sonic MUST be visibly distinct and dodgeable; confusion is not applied.</li>
+    <li>Finjer R/B/G: segmented spin at 0–4 m (atk_sp_st → atk_sp_lp → atk_sp_ed); shot beyond 4–11 m (atk_sh). Preparation and recovery MUST be stationary and harmless. Movement uses run_lp. Variant shot colors do not imply statuses.</li>
+    <li>Tank rigs (current Phobos IDs): close explosive lob (atk_mi, 0–3 m), shot (atk_sh, beyond 3–7 m), bazooka (atk_bz, beyond 7–12 m). The lob targets the release position and explodes once; it is a provisional mine approximation. Movement uses run_lp.</li>
+    <li>Swordman rigs (current Arkzein/Zaphobos IDs): close punch (atk_pu, 0–2 m), sword sweep (atk_sw, beyond 2–4 m), thrown sword (atk_th_st, beyond 4–10 m) released at the end of the throw preparation, followed by harmless atk_th_ed recovery. The local GLBs omit the viewer's atk_th_sw clip; runtime MUST NOT silently substitute an unrelated attack.</li>
+    <li>Mother rigs: Blade uses the two sword clips up close and a gun at distance; Shot uses a close sweep and a prepared gun shot; Force uses a close area cast and a prepared traveling cast; the combined Mother rig uses swords, gun and cast. Gun/cast sequences MUST play start → one loop → end, with no extra hits in end recovery. Spell delivery is provisional neutral damage, not an invented named technique. Idle floating pose supplies locomotion until warp rules are verified.</li>
+    <li>Coliseum Mixed Groups MUST expose named presets for bats with Helion, all Finjers, tanks with swordmen, the three Mothers, and a combined pressure encounter. Enemies spawn apart; room-clear return MUST wait for every enemy, including dormant ones.</li>
+  </ul>
+  <p>Optional attack recovery_clip plays once after the main clip and before loafing. It MUST block movement and new attacks, deal no new damage, and cancel on hurt/death. Optional fsm.move_clip overrides walk/run requests only; it MUST NOT replace attack clips.</p>
+
   <h3>Shared runtime guarantees</h3>
   <ul>
     <li>Every enemy controller, including Poison Lily, MUST tick cooldowns and status durations while active and honor spawn and immobilization gates.</li>

@@ -53,6 +53,7 @@ export interface CurrentAttack {
   lunge?: { distance: number; progress: number };
   /** windup_clips prelude: cumulative end-times per clip; pure telegraph before the attack clip. */
   windup?: { clips: string[]; ends: number[]; total: number };
+  recoveryDuration?: number;
 }
 
 export interface EnemySim {
@@ -396,7 +397,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         const speed = entry.stats.move_speed * WANDER_SPEED_MULT;
         sim.velocity = { x: sim.wanderDir.x * speed, z: sim.wanderDir.z * speed };
         sim.facing = { ...sim.wanderDir };
-        sim.anim = 'wlk';
+        sim.anim = entry.fsm.move_clip ?? 'wlk';
       } else {
         sim.velocity = { x: 0, z: 0 };
         // Roller rigs have wat1 (standing) / wat2 (lying) instead of a
@@ -499,7 +500,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       sim.velocity = { x: dir.x * speed, z: dir.z * speed };
       sim.facing = dir;
       // Revealed mimic walks on wlk1 (its rig has no plain wlk/run).
-      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : charging ? 'run' : 'wlk';
+      sim.anim = entry.fsm.move_clip ?? (entry.archetype === 'box_mimic' ? 'wlk1' : charging ? 'run' : 'wlk');
       break;
     }
 
@@ -527,7 +528,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       } else if (atk.windup) {
         sim.anim = atk.def.clip;
       }
-      const mainDur = atk.duration - windupTotal;
+      const mainDur = atk.duration - windupTotal - (atk.recoveryDuration ?? 0);
       const windowStart = windupTotal + atk.def.windup_frac * mainDur;
       const windowEnd = windupTotal + atk.def.damage_end_frac * mainDur;
       if (!atk.windowOpened && atk.t >= windowStart) {
@@ -615,6 +616,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           }
         }
       }
+      if (atk.recoveryDuration && atk.t >= windupTotal + mainDur) sim.anim = atk.def.recovery_clip!;
       if (atk.t >= atk.duration) {
         endAttack(sim, entry, events, rng, input);
       }
@@ -642,7 +644,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       const speed = entry.stats.move_speed * LOAF_SPEED_MULT;
       sim.velocity = { x: sim.loafDir.x * speed, z: sim.loafDir.z * speed };
       sim.facing = { ...sim.loafDir };
-      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : 'wlk';
+      sim.anim = entry.fsm.move_clip ?? (entry.archetype === 'box_mimic' ? 'wlk1' : 'wlk');
       break;
     }
 
@@ -861,10 +863,12 @@ function startAttack(
     }
     windup = { clips: [...def.windup_clips], ends, total: acc };
   }
+  const recoveryDuration = def.recovery_clip ? (input.clipDurationFor(def.recovery_clip) ?? 0.4) : 0;
   sim.anim = windup ? windup.clips[0] : def.clip;
   sim.currentAttack = {
     def,
-    duration: (windup?.total ?? 0) + mainDuration,
+    duration: (windup?.total ?? 0) + mainDuration + recoveryDuration,
+    recoveryDuration,
     resolvedClip: clipDuration !== null ? def.clip : '',
     t: 0,
     facing,
@@ -1070,7 +1074,7 @@ function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng:
   sim.loafDir = rot(away, (side * Math.PI) / 2);
   sim.loafCurveRate = -side * LOAF_CURVE_RATE;
   sim.lowerTimer = entry.archetype === 'stance_riser' ? (input.clipDurationFor('wt2w') ?? 0) : 0;
-  sim.anim = sim.lowerTimer > 0 ? 'wt2w' : 'wlk';
+  sim.anim = sim.lowerTimer > 0 ? 'wt2w' : (entry.fsm.move_clip ?? 'wlk');
   sim.velocity = { x: 0, z: 0 };
 }
 

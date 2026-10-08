@@ -22,6 +22,7 @@ var color := Color(1.0, 0.5, 0.1)  # warm default; techs/attacks may recolor
 var target: Node3D              # the player — distance-tested each step
 var on_hit: Callable = Callable()  # optional extra effect (e.g. the lily's poison DoT)
 
+var visual := "orb"
 var technique_id := ""
 var hit_budget: Dictionary = {}
 
@@ -45,6 +46,13 @@ func _ready() -> void:
 		shard.size = Vector3(0.45, 0.65, 1.0)
 		shard.material = mat
 		mi.mesh = shard
+	elif visual == "sonic":
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.2
+		ring.outer_radius = 0.35
+		ring.material = mat
+		mi.mesh = ring
+		mi.rotation.x = PI / 2.0
 	else:
 		mi.mesh = sm
 	add_child(mi)

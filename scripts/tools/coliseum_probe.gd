@@ -69,6 +69,9 @@ class Watch extends Node:
 		if not _check_arrival(player):
 			return  # an arrival checkpoint failed or is still pending
 
+		if _check_mixed(player):
+			return
+
 		if not weapons_checked:
 			if enemy == null:
 				return
@@ -112,6 +115,21 @@ class Watch extends Node:
 			print("[coliseum] room-clear telepipe spawned after the kill")
 			print("[coliseum] DONE ok")
 			get_tree().quit(0)
+
+	func _check_mixed(player: Node3D) -> bool:
+		if not ColiseumRoster.MIXED_GROUPS.has(enemy_id): return false
+		if not weapons_started:
+			weapons_started = true
+			_run_mixed.call_deferred(player)
+		return true
+
+	func _run_mixed(player: Node3D) -> void:
+		var ok: bool = await preload("res://scripts/tools/coliseum_group_check.gd").run(player, enemy_id)
+		if ok:
+			print("[coliseum] DONE ok")
+			get_tree().quit(0)
+		else:
+			_fail("mixed group verification failed")
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
 		if OS.get_environment("PSZ_COMBAT_SCENARIOS") == "1":

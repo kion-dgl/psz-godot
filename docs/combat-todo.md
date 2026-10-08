@@ -17,8 +17,55 @@ mapping in `clip_notes`; do not infer damage or statuses from filenames alone.
 6. **Mixed groups:** spacing, simultaneous telegraphs, target changes and fair
    recovery windows, after the individual family passes are stable.
 
-Automated completion is not visual approval. Stop at a clear user playtest
-checkpoint for each new family; preserve subsequent phases as pending work.
+Automated completion is not visual approval. Per the latest user request, implement
+the whole remaining batch before the joint user playtest checkpoint.
+
+## Remaining family batch — implemented, joint feel test pending
+
+All 15 mapped enemies now have explicit kits: Batt/Bullbatt, all three Finjers,
+Phobos/Dyna (tank rigs), Arkzein/R and Zaphobos/Dyna (swordman rigs), and the
+four Mother entries. Existing roster identities are preserved; model filenames
+alone are not evidence to rename or swap them. The schema now supports harmless
+end clips and explicit locomotion tokens, so the shot/cast/throw sequences no
+longer depend on a generic attack fallback.
+
+Open **Coliseum Master → Mixed Groups** for:
+
+- **Bats + Helion** — close pressure alongside sonic shots.
+- **Finjer Trio** — spin preparation/travel/recovery and colored shots.
+- **Tanks + Swordmen** — explosives, ranged shots, close sweeps and throws.
+- **Mother Trio** — Blade, Shot and Force together.
+- **Combined Pressure** — Batt, Finjer R, Phobos, Arkzein and Force Mother.
+
+The original Enemies/Bosses tabs still provide individual tests. No change to
+regular quest encounters or save data is required to use these presets.
+
+Validation on Godot 4.5.1: 192 live ordinary-AI decision cases, 78 real-rig attack
+execution cases (each attack with damage and sustained dodge), all 15 existing
+weapon/room-clear probes, and all five simultaneous-group/final-kill probes pass.
+Mixed tests require every member to attack and keep the exit closed with a dormant
+last survivor. Results and input hashes: `docs/combat-family-results.json`.
+Full suites: 6,829 Godot checks; 873 web checks (4 skipped). TypeScript, Astro,
+code-graph and orphan checks pass. Headless probes verify mechanics, not visual feel.
+
+Reproduce in a **disposable save project**, never against the player's save:
+`PSZ_COLISEUM_ENEMY=finjer_r PSZ_COMBAT_SCENARIOS=1 PSZ_ENEMY_RUNTIME_CHECK=1 godot --headless --fixed-fps 60 --path <isolated-project> res://scripts/tools/coliseum_probe.tscn`.
+For groups use `mixed_bats`, `mixed_finjers`, `mixed_machines`, `mixed_mothers`,
+or `mixed_pressure` as the enemy argument. Passing requires `[coliseum] DONE ok`,
+no `SCRIPT ERROR`, and no `PASS=false`.
+
+Deliberate provisional choices to assess in the joint playtest:
+
+- Bat bite and sonic share the sole imported attack clip. Sonic is a traveling
+  ring; confusion remains unconfirmed and is not applied.
+- Finjer projectile colors are presentation, not inferred elemental ailments.
+- Tank `atk_mi` uses a close explosive lob; persistent mine triggers are unverified.
+- Local swordman GLBs omit the viewer's `atk_th_sw`. Throw releases near the end
+  of `atk_th_st`, then plays `atk_th_ed`; no unrelated fallback animation.
+- Mother spells use neutral projectile/area delivery. Named techniques and warp
+  rules remain unverified; Mothers currently approach using their floating pose.
+- Windows, ranges, knockdown and damage multipliers are tuning values. Prioritize
+  readable timing, body/hitbox alignment and fair simultaneous pressure during review.
 
 ## Combat fidelity pass — October 2026
 
