@@ -112,21 +112,59 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "punch",
+          "clip": "atk_pu",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sword_sweep",
+          "clip": "atk_sw",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 100,
+          "hit_reach": 4,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 4
+        },
+        {
+          "id": "sword_throw",
+          "clip": "atk_th_st",
+          "kind": "projectile",
+          "windup_frac": 0.85,
+          "damage_end_frac": 0.95,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 13,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 10,
+          "recovery_clip": "atk_th_ed",
+          "projectile_color": "d6b0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_pu": "Close punch, provisional active window 40\u201365%.",
+        "atk_sw": "Broad sword attack, provisional reach 4 m.",
+        "atk_th_st": "Throw preparation; local GLB has no atk_th_sw (viewer inventory does). Release once near end, no generic atk fallback.",
+        "atk_th_ed": "Harmless throw recovery.",
+        "identity": "Preserve existing Arkzein/Zaphobos \u2192 swordman mappings."
+      }
     },
     "arkzein_r": {
       "archetype": "shade",
@@ -137,21 +175,59 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "punch",
+          "clip": "atk_pu",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sword_sweep",
+          "clip": "atk_sw",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 100,
+          "hit_reach": 4,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 4
+        },
+        {
+          "id": "sword_throw",
+          "clip": "atk_th_st",
+          "kind": "projectile",
+          "windup_frac": 0.85,
+          "damage_end_frac": 0.95,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 13,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 10,
+          "recovery_clip": "atk_th_ed",
+          "projectile_color": "d6b0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_pu": "Close punch, provisional active window 40\u201365%.",
+        "atk_sw": "Broad sword attack, provisional reach 4 m.",
+        "atk_th_st": "Throw preparation; local GLB has no atk_th_sw (viewer inventory does). Release once near end, no generic atk fallback.",
+        "atk_th_ed": "Harmless throw recovery.",
+        "identity": "Preserve existing Arkzein/Zaphobos \u2192 swordman mappings."
+      }
     },
     "azherowa_b2": {
       "archetype": "quad_machine",
@@ -214,21 +290,44 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "bite",
           "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sonic",
+          "clip": "atk",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 12,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 9,
+          "projectile_visual": "sonic",
+          "projectile_color": "b9a0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "One imported attack clip. Provisional close bite or ranged sonic per user recollection and sonic effect inventory. Confusion unverified; not applied.",
+        "wlk": "Wing locomotion; run requests use this clip.",
+        "stt": "Display semantics unverified; not a damage clip."
+      }
     },
     "blade_mother": {
       "archetype": "mother_caster",
@@ -239,24 +338,72 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wat"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "sword_a",
+          "clip": "atk_sa_s",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80,
+          "hit_reach": 3,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "sword_b",
+          "clip": "atk_sb_s",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 150,
+          "hit_reach": 3,
+          "damage_mult": 1.15,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "gun",
+          "clip": "atk_gu_a_lp",
+          "kind": "projectile",
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 12,
+          "windup_clips": [
+            "atk_gu_a_st"
+          ],
+          "recovery_clip": "atk_gu_a_ed",
+          "projectile_color": "ffd778"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sa_s": "First close sword attack; exact reach/window provisional.",
+        "atk_sb_s": "Second close sword attack; broader sweep is provisional.",
+        "atk_gu_a_st": "Gun preparation, harmless.",
+        "atk_gu_a_lp": "Single gun cycle; emits one projectile.",
+        "atk_gu_a_ed": "Gun recovery, harmless.",
+        "tec_a": "Provisional close area cast, release-position lob explosion. No invented elemental ailment.",
+        "tec_t_st": "Cast preparation, harmless.",
+        "tec_t_lp": "One traveling neutral magic projectile; original technique identity unverified.",
+        "tec_t_ed": "Cast recovery, harmless.",
+        "warp_st": "Warp rules unverified; unused in this first combat kit.",
+        "warp_ed": "Warp reappearance unverified; unused.",
+        "wat": "Floating idle used during approach/recovery until warp locomotion is verified."
+      }
     },
     "blaze_helion": {
-      "archetype": "simple_melee",
+      "archetype": "lunging_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -264,21 +411,49 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "loaf_duration_min": 0.35,
+        "loaf_duration_max": 0.65
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "claws",
           "clip": "atk",
-          "windup_frac": 0.35,
+          "kind": "melee_arc",
+          "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2.5,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2.5
+        },
+        {
+          "id": "spin_lunge",
+          "clip": "atkb",
+          "kind": "lunge",
+          "motion_bone": "Point_Spine01",
+          "windup_frac": 0.15,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180,
+          "hit_reach": 0.9,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.501,
+          "max_range": 7
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
+        "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
+        "stt": "Stationary harmless display on target acquisition (October 8 playtest tuning); original DS trigger unverified.",
+        "run": "Active pursuit at all distances, including beyond lunge range and during cooldown; never damages.",
+        "wat": "Idle.",
+        "wlk": "Walking locomotion.",
+        "dmg": "Hit reaction.",
+        "ded": "Death."
+      }
     },
     "bolix": {
       "archetype": "box_mimic",
@@ -327,21 +502,42 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "spawn_clip": "stt"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
+          "id": "dash",
+          "clip": "run",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "atk",
+            "lp": "run",
+            "ed": "atk_mi"
+          },
+          "overshoot": 1.0,
+          "stop_on_hit": true,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
           "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
+          "hit_reach": 0.55,
           "damage_mult": 1.0,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 4.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "stt": "Emerges from the dirt once at reveal; stationary, no damage (Kion playtest).",
+        "wat": "Idle breathing.",
+        "wlk": "Walk approach; no contact damage.",
+        "run": "Running/dash cycle; used only after atk preparation during attack travel.",
+        "atk": "Stationary crouching dash preparation, NOT a damaging melee swing (Kion playtest; rendered clip inspection).",
+        "atk_mi": "Short upward recovery; used as non-damaging dash recovery. Original miss-selection semantics unverified.",
+        "atk_hi": "Long airborne tumble; unused until original selection semantics are verified. NOT a confirmed high swing.",
+        "dam": "Damage reaction.",
+        "ded": "Death."
+      }
     },
     "bullbatt": {
       "archetype": "simple_melee",
@@ -352,21 +548,44 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "bite",
           "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sonic",
+          "clip": "atk",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 12,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 9,
+          "projectile_visual": "sonic",
+          "projectile_color": "b9a0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "One imported attack clip. Provisional close bite or ranged sonic per user recollection and sonic effect inventory. Confusion unverified; not applied.",
+        "wlk": "Wing locomotion; run requests use this clip.",
+        "stt": "Display semantics unverified; not a damage clip."
+      }
     },
     "chaos_mobius": {
       "archetype": "boss",
@@ -580,21 +799,52 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run_lp"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "spin",
+          "clip": "atk_sp",
+          "kind": "charge",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 0.75,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 4,
+          "charge_segments": {
+            "st": "atk_sp_st",
+            "lp": "atk_sp_lp",
+            "ed": "atk_sp_ed"
+          },
+          "overshoot": 0.75,
+          "stop_on_hit": false
+        },
+        {
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 14,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 11,
+          "projectile_color": "64c8ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "Shot; release at 40% is provisional tuning. Variant colors follow fbul/cbul/pbul evidence, not confirmed elemental status.",
+        "atk_sp_st": "Spin preparation, stationary and harmless.",
+        "atk_sp_lp": "Spin travel, one contact resolution.",
+        "atk_sp_ed": "Spin recovery, stationary and harmless.",
+        "run_lp": "Imported locomotion hold between run_st/run_ed; no contact damage."
+      }
     },
     "finjer_g": {
       "archetype": "boarder",
@@ -605,21 +855,52 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run_lp"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "spin",
+          "clip": "atk_sp",
+          "kind": "charge",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 0.75,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 4,
+          "charge_segments": {
+            "st": "atk_sp_st",
+            "lp": "atk_sp_lp",
+            "ed": "atk_sp_ed"
+          },
+          "overshoot": 0.75,
+          "stop_on_hit": false
+        },
+        {
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 14,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 11,
+          "projectile_color": "83e57a"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "Shot; release at 40% is provisional tuning. Variant colors follow fbul/cbul/pbul evidence, not confirmed elemental status.",
+        "atk_sp_st": "Spin preparation, stationary and harmless.",
+        "atk_sp_lp": "Spin travel, one contact resolution.",
+        "atk_sp_ed": "Spin recovery, stationary and harmless.",
+        "run_lp": "Imported locomotion hold between run_st/run_ed; no contact damage."
+      }
     },
     "finjer_r": {
       "archetype": "boarder",
@@ -630,21 +911,52 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run_lp"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "spin",
+          "clip": "atk_sp",
+          "kind": "charge",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 0.75,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 4,
+          "charge_segments": {
+            "st": "atk_sp_st",
+            "lp": "atk_sp_lp",
+            "ed": "atk_sp_ed"
+          },
+          "overshoot": 0.75,
+          "stop_on_hit": false
+        },
+        {
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 14,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 11,
+          "projectile_color": "ff694d"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sh": "Shot; release at 40% is provisional tuning. Variant colors follow fbul/cbul/pbul evidence, not confirmed elemental status.",
+        "atk_sp_st": "Spin preparation, stationary and harmless.",
+        "atk_sp_lp": "Spin travel, one contact resolution.",
+        "atk_sp_ed": "Spin recovery, stationary and harmless.",
+        "run_lp": "Imported locomotion hold between run_st/run_ed; no contact damage."
+      }
     },
     "force_mother": {
       "archetype": "mother_caster",
@@ -655,21 +967,57 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wat"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "area_cast",
+          "clip": "tec_a",
+          "kind": "lob",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2.5,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3,
+          "projectile_color": "a59bff"
+        },
+        {
+          "id": "cast",
+          "clip": "tec_t_lp",
+          "kind": "projectile",
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 12,
+          "windup_clips": [
+            "tec_t_st"
+          ],
+          "recovery_clip": "tec_t_ed",
+          "projectile_color": "a59bff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sa_s": "First close sword attack; exact reach/window provisional.",
+        "atk_sb_s": "Second close sword attack; broader sweep is provisional.",
+        "atk_gu_g_st": "Gun preparation, harmless.",
+        "atk_gu_g_lp": "Single gun cycle; emits one projectile.",
+        "atk_gu_g_ed": "Gun recovery, harmless.",
+        "tec_a": "Provisional close area cast, release-position lob explosion. No invented elemental ailment.",
+        "tec_t_st": "Cast preparation, harmless.",
+        "tec_t_lp": "One traveling neutral magic projectile; original technique identity unverified.",
+        "tec_t_ed": "Cast recovery, harmless.",
+        "warp_st": "Warp rules unverified; unused in this first combat kit.",
+        "warp_ed": "Warp reappearance unverified; unused.",
+        "wat": "Floating idle used during approach/recovery until warp locomotion is verified."
+      }
     },
     "froutang": {
       "archetype": "ape_gunner",
@@ -939,21 +1287,42 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "spawn_clip": "stt"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
+          "id": "dash",
+          "clip": "run",
+          "kind": "charge",
+          "charge_segments": {
+            "st": "atk",
+            "lp": "run",
+            "ed": "atk_mi"
+          },
+          "overshoot": 1.0,
+          "stop_on_hit": true,
+          "windup_frac": 0.0,
+          "damage_end_frac": 1.0,
           "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
+          "hit_reach": 0.55,
           "damage_mult": 1.0,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 4.0
         }
-      ]
+      ],
+      "clip_notes": {
+        "stt": "Emerges from the dirt once at reveal; stationary, no damage (Kion playtest).",
+        "wat": "Idle breathing.",
+        "wlk": "Walk approach; no contact damage.",
+        "run": "Running/dash cycle; used only after atk preparation during attack travel.",
+        "atk": "Stationary crouching dash preparation, NOT a damaging melee swing (Kion playtest; rendered clip inspection).",
+        "atk_mi": "Short upward recovery; used as non-damaging dash recovery. Original miss-selection semantics unverified.",
+        "atk_hi": "Long airborne tumble; unused until original selection semantics are verified. NOT a confirmed high swing.",
+        "dam": "Damage reaction.",
+        "ded": "Death."
+      }
     },
     "goldix": {
       "archetype": "box_mimic",
@@ -1028,7 +1397,7 @@
       }
     },
     "helion": {
-      "archetype": "simple_melee",
+      "archetype": "lunging_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1036,21 +1405,49 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "loaf_duration_min": 0.35,
+        "loaf_duration_max": 0.65
+      },
       "attacks": [
         {
-          "id": "basic",
+          "id": "claws",
           "clip": "atk",
-          "windup_frac": 0.35,
+          "kind": "melee_arc",
+          "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2.5,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2.5
+        },
+        {
+          "id": "spin_lunge",
+          "clip": "atkb",
+          "kind": "lunge",
+          "motion_bone": "Point_Spine01",
+          "windup_frac": 0.15,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180,
+          "hit_reach": 0.9,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.501,
+          "max_range": 7
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
+        "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
+        "stt": "Stationary harmless display on target acquisition (October 8 playtest tuning); original DS trigger unverified.",
+        "run": "Active pursuit at all distances, including beyond lunge range and during cooldown; never damages.",
+        "wat": "Idle.",
+        "wlk": "Walking locomotion.",
+        "dmg": "Hit reaction.",
+        "ded": "Death."
+      }
     },
     "hildegao": {
       "archetype": "bigrig_combo",
@@ -1465,21 +1862,87 @@
         "detection_range": 15.0,
         "attack_base": 25
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wat"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "sword_a",
+          "clip": "atk_sa_a",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 80,
+          "hit_reach": 3,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "sword_b",
+          "clip": "atk_sb_a",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 150,
+          "hit_reach": 3,
+          "damage_mult": 1.15,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "gun",
+          "clip": "atk_gu_a_lp",
+          "kind": "projectile",
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 12,
+          "windup_clips": [
+            "atk_gu_a_st"
+          ],
+          "recovery_clip": "atk_gu_a_ed",
+          "projectile_color": "ffd778"
+        },
+        {
+          "id": "cast",
+          "clip": "tec_t_lp",
+          "kind": "projectile",
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 12,
+          "windup_clips": [
+            "tec_t_st"
+          ],
+          "recovery_clip": "tec_t_ed",
+          "projectile_color": "a59bff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sa_a": "First close sword attack; exact reach/window provisional.",
+        "atk_sb_a": "Second close sword attack; broader sweep is provisional.",
+        "atk_gu_a_st": "Gun preparation, harmless.",
+        "atk_gu_a_lp": "Single gun cycle; emits one projectile.",
+        "atk_gu_a_ed": "Gun recovery, harmless.",
+        "tec_a": "Provisional close area cast, release-position lob explosion. No invented elemental ailment.",
+        "tec_t_st": "Cast preparation, harmless.",
+        "tec_t_lp": "One traveling neutral magic projectile; original technique identity unverified.",
+        "tec_t_ed": "Cast recovery, harmless.",
+        "warp_st": "Warp rules unverified; unused in this first combat kit.",
+        "warp_ed": "Warp reappearance unverified; unused.",
+        "wat": "Floating idle used during approach/recovery until warp locomotion is verified."
+      }
     },
     "octo_diablo": {
       "archetype": "boss",
@@ -1645,21 +2108,58 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run_lp"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "close_explosive",
+          "clip": "atk_mi",
+          "kind": "lob",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1.15,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 10,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 7
+        },
+        {
+          "id": "bazooka",
+          "clip": "atk_bz",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1.3,
+          "weight": 1,
+          "min_range": 7.001,
+          "max_range": 12,
+          "knockdown": true
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_mi": "Mine effect evidence. Provisional close lob to release-time target with one landing explosion; persistent mine trigger rules unverified.",
+        "atk_sh": "Short/midrange shot, provisional 40% release.",
+        "atk_bz": "Longrange bazooka, provisional knockdown.",
+        "run_lp": "Locomotion hold; run_st/run_ed transitions remain unverified.",
+        "identity": "Preserve existing Phobos \u2192 tank mapping; roster names are not reidentified by this pass."
+      }
     },
     "phobos_dyna": {
       "archetype": "missile_tank",
@@ -1670,21 +2170,58 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run_lp"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "close_explosive",
+          "clip": "atk_mi",
+          "kind": "lob",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1.15,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "shot",
+          "clip": "atk_sh",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 10,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 7
+        },
+        {
+          "id": "bazooka",
+          "clip": "atk_bz",
+          "kind": "projectile",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1.3,
+          "weight": 1,
+          "min_range": 7.001,
+          "max_range": 12,
+          "knockdown": true
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_mi": "Mine effect evidence. Provisional close lob to release-time target with one landing explosion; persistent mine trigger rules unverified.",
+        "atk_sh": "Short/midrange shot, provisional 40% release.",
+        "atk_bz": "Longrange bazooka, provisional knockdown.",
+        "run_lp": "Locomotion hold; run_st/run_ed transitions remain unverified.",
+        "identity": "Preserve existing Phobos \u2192 tank mapping; roster names are not reidentified by this pass."
+      }
     },
     "pobomma": {
       "archetype": "hopper",
@@ -2110,21 +2647,56 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wat"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "sword_b",
+          "clip": "atk_sb_s",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 150,
+          "hit_reach": 3,
+          "damage_mult": 1.15,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 3
+        },
+        {
+          "id": "gun",
+          "clip": "atk_gu_g_lp",
+          "kind": "projectile",
+          "windup_frac": 0.2,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 15,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 3.001,
+          "max_range": 12,
+          "windup_clips": [
+            "atk_gu_g_st"
+          ],
+          "recovery_clip": "atk_gu_g_ed",
+          "projectile_color": "ffd778"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_sa_s": "First close sword attack; exact reach/window provisional.",
+        "atk_sb_s": "Second close sword attack; broader sweep is provisional.",
+        "atk_gu_g_st": "Gun preparation, harmless.",
+        "atk_gu_g_lp": "Single gun cycle; emits one projectile.",
+        "atk_gu_g_ed": "Gun recovery, harmless.",
+        "tec_a": "Provisional close area cast, release-position lob explosion. No invented elemental ailment.",
+        "tec_t_st": "Cast preparation, harmless.",
+        "tec_t_lp": "One traveling neutral magic projectile; original technique identity unverified.",
+        "tec_t_ed": "Cast recovery, harmless.",
+        "warp_st": "Warp rules unverified; unused in this first combat kit.",
+        "warp_ed": "Warp reappearance unverified; unused.",
+        "wat": "Floating idle used during approach/recovery until warp locomotion is verified."
+      }
     },
     "stagg": {
       "archetype": "quadruped",
@@ -2271,7 +2843,7 @@
         {
           "id": "cast_gibarta",
           "clip": "atk2",
-          "kind": "melee_arc",
+          "kind": "projectile",
           "tech": "gibarta",
           "weight": 1.5,
           "min_range": 1.5,
@@ -2327,21 +2899,59 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "punch",
+          "clip": "atk_pu",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sword_sweep",
+          "clip": "atk_sw",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 100,
+          "hit_reach": 4,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 4
+        },
+        {
+          "id": "sword_throw",
+          "clip": "atk_th_st",
+          "kind": "projectile",
+          "windup_frac": 0.85,
+          "damage_end_frac": 0.95,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 13,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 10,
+          "recovery_clip": "atk_th_ed",
+          "projectile_color": "d6b0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_pu": "Close punch, provisional active window 40\u201365%.",
+        "atk_sw": "Broad sword attack, provisional reach 4 m.",
+        "atk_th_st": "Throw preparation; local GLB has no atk_th_sw (viewer inventory does). Release once near end, no generic atk fallback.",
+        "atk_th_ed": "Harmless throw recovery.",
+        "identity": "Preserve existing Arkzein/Zaphobos \u2192 swordman mappings."
+      }
     },
     "zaphobos_dyna": {
       "archetype": "shade",
@@ -2352,21 +2962,59 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
-          "id": "basic",
-          "clip": "atk",
-          "windup_frac": 0.35,
-          "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "id": "punch",
+          "clip": "atk_pu",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2
+        },
+        {
+          "id": "sword_sweep",
+          "clip": "atk_sw",
+          "kind": "melee_arc",
+          "windup_frac": 0.4,
+          "damage_end_frac": 0.65,
+          "hit_half_angle_deg": 100,
+          "hit_reach": 4,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.001,
+          "max_range": 4
+        },
+        {
+          "id": "sword_throw",
+          "clip": "atk_th_st",
+          "kind": "projectile",
+          "windup_frac": 0.85,
+          "damage_end_frac": 0.95,
+          "hit_half_angle_deg": 65,
+          "hit_reach": 13,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 4.001,
+          "max_range": 10,
+          "recovery_clip": "atk_th_ed",
+          "projectile_color": "d6b0ff"
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk_pu": "Close punch, provisional active window 40\u201365%.",
+        "atk_sw": "Broad sword attack, provisional reach 4 m.",
+        "atk_th_st": "Throw preparation; local GLB has no atk_th_sw (viewer inventory does). Release once near end, no generic atk fallback.",
+        "atk_th_ed": "Harmless throw recovery.",
+        "identity": "Preserve existing Arkzein/Zaphobos \u2192 swordman mappings."
+      }
     },
     "zerreo": {
       "archetype": "shade",

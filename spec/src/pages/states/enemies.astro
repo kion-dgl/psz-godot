@@ -78,11 +78,23 @@ const fsm = `stateDiagram-v2
   </ul>
   <p>What happens <em>inside</em> ATTACKING — attack selection, the windup → damaging-window timeline, and the arc hit shape — is defined in <a href="/mechanics/enemy-attacks">/mechanics/enemy-attacks</a>.</p>
 
+  <h3>Archetype: Bruiser (Booma family) — normative</h3>
+  <p>Applies to <code>archetype: bruiser</code> (Booma Origin and Gigobooma Origin). Coliseum validation: <code>stt</code> is the emergence from the dirt, not an attack-ready stance.</p>
+  <ul>
+    <li>On room reveal, the bruiser MUST play its authored <code>fsm.spawn_clip: stt</code> once, in place. The uninterrupted entrance MUST finish before wandering, chasing, or attacking; the hold MUST follow the resolved clip duration and playback speed, not a fixed 0.8 seconds.</li>
+    <li>After emergence it uses <code>wat</code> for idle and <code>wlk</code> for approach. Its attack MUST play stationary <code>atk</code> preparation before <code>run</code> charge travel; only charge contact can deal damage. Facing locks before preparation, so sidestepping or dodging can avoid the dash. It MUST NOT dig out again before each attack or after losing/reacquiring the target.</li>
+    <li>Rendered clip inspection shows <code>atk_mi</code> is a short upward recovery and <code>atk_hi</code> a longer airborne tumble. This implementation uses <code>atk_mi</code> as non-damaging recovery after the dash; original hit/miss selection is unverified, so <code>atk_hi</code> remains unused. The old “height swings” classification was inferred from names and MUST NOT be used as evidence.</li>
+  </ul>
+  <p>Across archetypes, <code>stt</code> MUST NOT be a universal spawn or pre-attack alias. Emergence is selected through <code>fsm.spawn_clip</code>; absent that field, only explicit <code>spawn</code>/<code>app</code>/<code>appearance</code> clips are spawn candidates. A missing entrance clip uses the bounded spawn-effect hold and idle fallback. Gorillas, flyers, rollers, apes, mimics, and quadrupeds retain their separately defined meanings of <code>stt</code>.</p>
+
+  <h3>Archetype: Stance riser (Garapython family) — normative</h3>
+  <p>Only <code>archetype: stance_riser</code> uses <code>stt</code> as the pre-strike rise into <code>wat2</code>. It then holds that raised pose for the telegraph beat before the authored strike; neither rise nor hold deals damage. Other archetypes MUST use their own engaged idle during a generic telegraph, without borrowing <code>stt</code> or <code>wat2</code> merely because those clips exist.</p>
+
   <h3>Archetype: Quadruped circler (normative)</h3>
   <p>Applies to enemies with <code>archetype: quadruped</code> (wolf, hyena, deer, tiger rigs — Reyhound, Grimble, Tormatible, Stagg, Kapantha). Their <code>wlk_l</code> / <code>wlk_r</code> clips have the <strong>head turned</strong> to that side, so straight-ahead walking reads visibly wrong:</p>
   <ul>
     <li>While CHASING outside the charge ring, a quadruped <strong>MUST NOT</strong> walk straight toward its target. It <strong>MUST</strong> approach on an arc (circling / spiraling in), and the walk clip <strong>MUST</strong> match the geometry: <code>wlk_l</code> when the target is on the enemy's left, <code>wlk_r</code> when on its right — the turned head faces the target.</li>
-    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — the generic <code>wat → stt</code> alias never fires here since these rigs have a real <code>wat</code>.)</li>
+    <li>The straight-line approach is the <strong><code>stt</code> dash-charge</strong>: inside the charge ring (attack range × charge mult) with the attack off cooldown, the enemy MAY dash straight at the target playing <code>stt</code>, then attack on arrival. <code>stt</code> is the ONLY clip that moves a quadruped straight forward. (For this family <code>stt</code> is <em>not</em> a stand/idle clip — these rigs use their real <code>wat</code> for idle.)</li>
     <li>The arc side MAY change over time (re-picked on wander-like timers); a dash that loses its target (distance grows past ~1.5× the charge ring) SHOULD fall back to arcing.</li>
   </ul>
   <p><em>Current Godot runtime diverges</em>: it walks straight and fakes circling by alternating <code>wlk_l</code>/<code>wlk_r</code> on a timer (<code>_walk_variant_timer</code>) — that hack is retired when this contract is implemented (the enemy-attacks runtime PR). The #/enemy-room quadruped room implements this contract as the reference. Per-enemy quirks (Kapantha SHOULD prefer attacking from behind) and rare-as-leader pack behavior are open design — see the pack-behavior issue.</p>
@@ -177,6 +189,37 @@ const fsm = `stateDiagram-v2
 	<li><strong>Clip map</strong> (custom names, no rig prefix): <code>waitc</code> sleep · <code>wake</code> wake · <code>waito</code> awake idle · <code>attack</code> · <code>damege</code> (sic) damage · <code>die</code>.</li>
 	<li>The #/enemy-room sim renders scale + stationary facing + both attacks; the sleep/wake cycle itself is <em>not</em> simulated there (it lives in the implementation and this contract).</li>
 </ul>
+
+  <h2>Helion: close claws and spin-lunge</h2>
+  <p><code>archetype: lunging_melee</code> applies to Helion and the shared Blaze Helion rig. Inspected clips: <code>atk</code> close claws (1.317 s), <code>atkb</code> traveling spin-lunge (0.900 s), <code>run</code> locomotion, <code>stt</code> rising display. Locomotion/display MUST NOT damage. Variant elemental behavior is unverified.</p>
+  <p>Initial gameplay tuning: claws at 0–2.5 m with contact at 30–60% of the clip; spin-lunge beyond 2.5 through 7 m with travel/contact at 15–70%. The lunge MUST lock facing and travel budget at attack start, retain stationary preparation and recovery, and resolve at most one hit or dodge. Walls/floor edges MUST stop travel; hurt/death MUST cancel it. These ranges and timings require playtesting and are not recovered DS constants.</p>
+  <p>The lunge MUST remove only <code>Point_Spine01</code> planar translation from an instance-local animation copy, preserving vertical motion and rotation. Collision-driven travel keeps the rendered body with its hurtbox and prevents snapping back after the clip.</p>
+
+  <p>Helion pursuit tuning (October 8 playtest): on acquiring a target it MUST play stt once as a stationary, harmless aggro display. Its original trigger remains unverified. Active pursuit MUST run, including beyond the 7 m lunge band and while an attack cools down. After an attack it MUST recover for 0.35–0.65 s before pursuing again; cooldown still applies. Retreating players entering the 2.501–7 m band SHOULD provoke repeated committed atkb attacks through ordinary range selection, without reading healing inputs. Close claws and the existing dodge/wall/interruption guarantees remain unchanged. Blaze shares this tuning.</p>
+
+  <h2>Remaining families: provisional gameplay contracts</h2>
+  <p>This pass replaces generic attacks with explicit imported clip tokens. Ranges, hit windows, weights and delivery shapes below are gameplay tuning, not recovered DS constants. Existing roster/model identities are preserved. Bat confusion, Finjer elemental ailments, Mother warp destination rules, and original mine persistence are unverified; none are inferred from effect filenames.</p>
+  <ul>
+    <li>Batt/Bullbatt: close bite (0–2 m), traveling sonic shot (beyond 2–9 m), both use the sole atk clip. The sonic MUST be visibly distinct and dodgeable; confusion is not applied.</li>
+    <li>Finjer R/B/G: segmented spin at 0–4 m (atk_sp_st → atk_sp_lp → atk_sp_ed); shot beyond 4–11 m (atk_sh). Preparation and recovery MUST be stationary and harmless. Movement uses run_lp. Variant shot colors do not imply statuses.</li>
+    <li>Tank rigs (current Phobos IDs): close explosive lob (atk_mi, 0–3 m), shot (atk_sh, beyond 3–7 m), bazooka (atk_bz, beyond 7–12 m). The lob targets the release position and explodes once; it is a provisional mine approximation. Movement uses run_lp.</li>
+    <li>Swordman rigs (current Arkzein/Zaphobos IDs): close punch (atk_pu, 0–2 m), sword sweep (atk_sw, beyond 2–4 m), thrown sword (atk_th_st, beyond 4–10 m) released at the end of the throw preparation, followed by harmless atk_th_ed recovery. The local GLBs omit the viewer's atk_th_sw clip; runtime MUST NOT silently substitute an unrelated attack.</li>
+    <li>Mother rigs: Blade uses the two sword clips up close and a gun at distance; Shot uses a close sweep and a prepared gun shot; Force uses a close area cast and a prepared traveling cast; the combined Mother rig uses swords, gun and cast. Gun/cast sequences MUST play start → one loop → end, with no extra hits in end recovery. Spell delivery is provisional neutral damage, not an invented named technique. Idle floating pose supplies locomotion until warp rules are verified.</li>
+    <li>Coliseum Mixed Groups MUST expose named presets for bats with Helion, all Finjers, tanks with swordmen, the three Mothers, and a combined pressure encounter. Enemies spawn apart; room-clear return MUST wait for every enemy, including dormant ones.</li>
+  </ul>
+  <p>Optional attack recovery_clip plays once after the main clip and before loafing. It MUST block movement and new attacks, deal no new damage, and cancel on hurt/death. Optional fsm.move_clip overrides walk/run requests only; it MUST NOT replace attack clips.</p>
+
+  <h3>Shared runtime guarantees</h3>
+  <ul>
+    <li>Every enemy controller, including Poison Lily, MUST tick cooldowns and status durations while active and honor spawn and immobilization gates.</li>
+    <li>Idle requests MUST resolve to an archetype's idle pose, never to a transition through a generic <code>wat → stt</code> alias. Snake low idle is <code>wat1</code>, roller standing idle <code>wat1</code>, revealed mimic idle <code>tk1</code>, and airborne flyer idle <code>tk</code>.</li>
+    <li>The snake's <code>wt2w</code> lowering MUST finish before recovery locomotion.</li>
+    <li>Roller visual rotation MUST return to its pre-charge basis on recovery, interruption, or death. Hits during <code>trf2</code> MUST preserve the remaining recovery and vulnerability; lethal hits still kill normally.</li>
+    <li>Enemy Barta and Gibarta MUST use the shared ice-technique delivery profiles: ground-level Barta bolt, three Gibarta fan waves. A cast resolves damage at most once per target, with ice identity and a 20% freeze chance on a successful contact. Freeze lasts two seconds, blocks actions/movement, breaks on a later damaging hit, and cannot be applied through dodge i-frames. These proc/budget choices are gameplay tuning, not claims about DS values.</li>
+  </ul>
+  <h2>Automated combat decision scenarios</h2>
+  <p><code>data/combat_scenarios.json</code> defines explicit enemy, distance, condition, and allowed-attack expectations independently of the attack table. The harness MUST enter pursuit and let the ordinary AI select its action; it MUST NOT preselect an attack or force ATTACKING. Empty allowed sets mean no attack may begin within the bounded observation period. Overlapping weighted bands use allowed sets and deterministic seeds, not a hardcoded winner.</p>
+  <p>The enemy-room simulation and Godot unit runner MUST consume the same applicable cases. Freeze, dormancy, entrance and stun gates are Godot-only because the web simulation does not model them. The live Coliseum probe MUST also exercise these cases against imported rigs. Passing these cases confirms the authored conditions, not original-game authenticity or subjective feel; placeholder families remain unvalidated.</p>
 
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>

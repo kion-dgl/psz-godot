@@ -12,6 +12,8 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_en
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec3 uv_scale = vec3(1.0, 1.0, 1.0);
 uniform vec3 uv_offset = vec3(0.0, 0.0, 0.0);
+uniform int frames_y = 1;
+uniform float animation_fps = 8.0;
 uniform float surface_offset = 0.0;
 // Wrap mode per axis: 0 = repeat, 1 = mirror, 2 = clamp
 uniform int wrap_s = 0;
@@ -48,7 +50,18 @@ void fragment() {
 	vec2 half_texel = 0.5 / vec2(textureSize(albedo_texture, 0));
 	uv.x = apply_wrap(uv.x, wrap_s, half_texel.x);
 	uv.y = apply_wrap(uv.y, wrap_t, half_texel.y);
-	vec4 tex = texture(albedo_texture, uv);
+	// Strip meshes already address the first row (V = 0..1/frames_y).
+	// Preserve that span; advance by exactly one row per animation tick.
+	vec4 tex;
+	if (frames_y > 1) {
+		float rows = float(frames_y);
+		float frame = mod(floor(TIME * animation_fps), rows);
+		uv.y = clamp(uv.y, half_texel.y, 1.0 / rows - half_texel.y) + frame / rows;
+		// Base level avoids mipmaps blending neighboring animation frames.
+		tex = textureLod(albedo_texture, uv, 0.0);
+	} else {
+		tex = texture(albedo_texture, uv);
+	}
 	// Use vertex color for RGB tint only — Three.js ignores vertex alpha for
 	// transparency, and GLB meshes often have COLOR.a=0 which would hide geometry.
 	vec3 tint = use_vertex_color ? COLOR.rgb : vec3(1.0);

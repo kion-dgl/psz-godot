@@ -43,7 +43,10 @@ func _play_lily_anim(key: String, looping: bool = false) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not is_alive or current_state == EnemyState.DEAD:
+	if _early_process_returns(delta):
+		return
+	_tick_combat_timers(delta)
+	if not is_alive or _is_immobilized:
 		return
 
 	# Override EnemyBase locomotion — Poison Lily never moves.
@@ -82,7 +85,7 @@ func _physics_process(delta: float) -> void:
 			if dist > det_range:
 				_lily_state = LilyState.SLEEPING
 				_play_lily_anim("sleep", true)
-			elif attack_cooldown_timer <= 0 and _has_attack_in_band(dist, enemy_data.attack_range):
+			elif not _stun_no_attack and attack_cooldown_timer <= 0 and _has_attack_in_band(dist, enemy_data.attack_range):
 				# Commit to a swing from the authored table: bite up close, spit at
 				# range. Waking was the telegraph — no generic hold.
 				_lily_state = LilyState.IDLE_AWAKE  # stays; base states drive the swing

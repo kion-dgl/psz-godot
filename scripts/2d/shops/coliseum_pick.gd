@@ -10,8 +10,8 @@ extends Control
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 const FIELD_SCENE := "res://scenes/3d/field/valley_field.tscn"
 const SHELL_QUEST_ID := "debug_coliseum"
-const TAB_NAMES := ["Enemies", "Bosses"]
-const TAB_COUNT := 2
+const TAB_NAMES := ["Enemies", "Bosses", "Mixed Groups"]
+const TAB_COUNT := 3
 
 var _selected_index: int = 0
 var _tab: int = 0
@@ -93,7 +93,7 @@ func _start_battle(row: Dictionary) -> void:
 func _load_tab(tab: int) -> void:
 	_tab = wrapi(tab, 0, TAB_COUNT)
 	_selected_index = 0
-	_groups = ColiseumRoster.grouped_roster(_tab == 1)
+	_groups = ColiseumRoster.mixed_roster() if _tab == 2 else ColiseumRoster.grouped_roster(_tab == 1)
 	_rows = []
 	for g in _groups:
 		_rows.append_array(g["rows"])
@@ -186,7 +186,7 @@ func _refresh_detail() -> void:
 	vbox.add_child(PszStyle.detail_label(str(row["name"]), PszStyle.TITLE_BG))
 	vbox.add_child(PszStyle.detail_label("Element: %s" % str(row["element"])))
 	vbox.add_child(PszStyle.detail_label("HP: %d" % int(row["hp"])))
-	vbox.add_child(PszStyle.detail_label("Found in: %s" % ", ".join(PackedStringArray(areas))))
+	vbox.add_child(PszStyle.detail_label(("Enemies: %s" if _tab == 2 else "Found in: %s") % ", ".join(PackedStringArray(areas))))
 	vbox.add_child(PszStyle.detail_label("Archetype: %s" % str(row["archetype"])))
 	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)),
 		PszStyle.TEXT_HIGHLIGHT))

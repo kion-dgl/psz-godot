@@ -51,8 +51,14 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_arc()
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
+	preload("res://scripts/tools/enemy_entrance_tests.gd").run(self)
+	preload("res://scripts/tools/enemy_runtime_regression_tests.gd").run(self)
+	preload("res://scripts/tools/helion_regression_tests.gd").run(self)
+	preload("res://scripts/tools/enemy_decision_scenarios.gd").run(self)
+	preload("res://scripts/tools/enemy_family_tests.gd").run(self)
 	test_enemy_locomotion()
 	test_enemy_ranged_delivery()
+	preload("res://scripts/tools/combat_fidelity_tests.gd").run(self)
 	test_enemy_leap_delivery()
 	test_enemy_charge_stop_on_hit()
 	test_enemy_charge_roll_through()
@@ -3437,6 +3443,7 @@ func test_enemy_telegraph() -> void:
 
 	# Stance riser: rig has stt (rise) + wat2 (hold) + atk.
 	var e := _make_recovery_enemy(["m_003_stt", "m_003_wat2", "m_003_atk1"], 0.3)
+	e._archetype = "stance_riser"
 	e.enemy_data.attack_base = 10
 	e.target = dummy
 	e.current_state = EnemyBase.EnemyState.ATTACKING
@@ -3684,7 +3691,9 @@ func test_enemy_charge_roll_through() -> void:
 		"charge_segments": {"st": "trf1", "lp": "wat3", "ed": "trf2"},
 		"stop_on_hit": false, "overshoot": 3.0, "knockdown": true,
 		"recovery_vulnerable_mult": 2.0}, dummy)
-	assert_true(r._charge["rotate_model"], "explicit segments mean an engine-rolled loop clip")
+	r._archetype = "roller"
+	r._start_charge(3.0)
+	assert_true(r._charge["rotate_model"], "roller archetype uses an engine-rolled loop clip")
 	assert_eq(float(r._charge["travel_target"]), 6.0, "overshoot: travel = start dist 3 + 3, capped by max_range")
 	for _i in range(20):
 		r._process_attacking(dt)

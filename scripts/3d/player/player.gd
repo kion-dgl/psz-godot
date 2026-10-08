@@ -179,6 +179,7 @@ var walk_timer: float = 0.0
 # field Player still lives on for the transition frames. Cleared implicitly
 # by the city spawning a fresh Player (this flag defaults false).
 var _is_defeated: bool = false
+var _freeze = preload("res://scripts/3d/player/player_freeze.gd").new()
 
 # Combo system — two-tier timing (#461, spec /mechanics/combos). `just_start`
 # is a FRACTION of the current swing's animation (per-weapon WeaponComboConfig
@@ -984,6 +985,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y -= GRAVITY * delta
 
+	if _freeze.tick(self, delta):
+		move_and_slide()
+		return
+
 	# Handle state-specific logic
 	match current_state:
 		PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING:
@@ -1107,7 +1112,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		ActionPalette.show_front()
 		_tech_targeting_dirty = true
 
-	if current_state == PlayerState.CUTSCENE:
+	if current_state == PlayerState.CUTSCENE or _freeze.remaining > 0.0:
 		return
 
 	# Don't process gameplay input while any menu/dialog/overlay is active.
@@ -1378,6 +1383,8 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
+	if _freeze.remaining > 0.0:
+		return
 	# Action commitment (spec /states/player-state, #377): a swing must fully
 	# execute — dodge cannot cancel it — and a roll cannot restart itself.
 	# Damage-initiated exits (take_damage → DAMAGED/DOWN) bypass this by
@@ -1454,6 +1461,8 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
+	if _freeze.remaining > 0.0:
+		return
 	# Action commitment (spec /states/player-state, #377): a roll must fully
 	# execute — attack cannot cancel it (mirrors _start_strong_attack's gate).
 	if current_state == PlayerState.DODGING:
@@ -1691,17 +1700,18 @@ func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -
 
 
 func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	var profile: Dictionary = preload("res://scripts/3d/combat/ice_technique.gd").profile("barta")
 	var proj := Projectile.new()
 	proj.damage = damage
 	proj.knockback = kb
 	proj.accuracy = 100
 	proj.direction = forward
-	proj.max_range = 15.0
+	proj.max_range = profile.range
 	proj.owner_node = self
-	proj.speed = 20.0
+	proj.speed = profile.speed
 	proj.pierce = true
 	proj.max_hits = 0  # Unlimited — Barta runs the full length of the cone
-	proj.color = Color(0.3, 0.7, 1.0)
+	proj.color = profile.color
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 	_apply_element_to_proj(proj)
 	get_tree().current_scene.add_child(proj)
@@ -1840,31 +1850,32 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 
 
 func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
-	# Ice flamethrower — 3 waves of 3 fan projectiles (pierce)
+	# Ice flamethrower — shared profile, player projectile targeting.
+	var profile: Dictionary = preload("res://scripts/3d/combat/ice_technique.gd").profile("gibarta")
 	_spawn_gibarta_wave(spawn_pos, damage, kb)
 	var tw := create_tween()
-	tw.tween_interval(0.15)
+	tw.tween_interval(profile.interval)
 	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
-	tw.tween_interval(0.15)
+	tw.tween_interval(profile.interval)
 	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
 
 
 func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
-	for i in range(3):
-		var angle_offset: float = (i - 1) * 0.12
-		var rot := player_rotation + angle_offset
+	var profile: Dictionary = preload("res://scripts/3d/combat/ice_technique.gd").profile("gibarta")
+	for angle_offset in profile.angles:
+		var rot: float = player_rotation + float(angle_offset)
 		var dir := Vector3(sin(rot), 0, cos(rot))
 		var proj := Projectile.new()
 		proj.damage = damage
 		proj.knockback = kb
 		proj.accuracy = 100
 		proj.direction = dir
-		proj.max_range = 10.0
+		proj.max_range = profile.range
 		proj.owner_node = self
-		proj.speed = 18.0
+		proj.speed = profile.speed
 		proj.pierce = true
 		proj.max_hits = 0  # Unlimited — Gibarta wave traverses the full cone
-		proj.color = Color(0.3, 0.7, 1.0)
+		proj.color = profile.color
 		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 		_apply_element_to_proj(proj)
 		get_tree().current_scene.add_child(proj)
@@ -2044,6 +2055,8 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
+	if _freeze.remaining > 0.0:
+		return
 	if current_state == PlayerState.DODGING:
 		return
 
@@ -2561,6 +2574,17 @@ func is_dodge_iframed() -> bool:
 
 # Public API for external systems. `force_knockdown` maps an attack's knockdown flag
 # (spec /mechanics/enemy-attacks) to the knock-down reaction regardless of damage tier.
+## Enemy technique contact: dodge/defeat guards cover both damage and status.
+func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1.0) -> void:
+	if _is_defeated or GameState.hp <= 0 or is_dodge_iframed():
+		return
+	take_damage(damage)
+	var definition: Dictionary = TechniqueManager.get_technique(technique_id)
+	var roll := randf() if proc_roll < 0.0 else proc_roll
+	if GameState.hp > 0 and definition.get("element", "") == "ice" and roll < 0.2:
+		_freeze.apply(self, float(CombatManager.STATUS_EFFECTS["freeze"]["duration"]))
+
+
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false) -> void:
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
@@ -2581,6 +2605,8 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 	if is_dodge_iframed():
 		return
 
+	if damage > 0:
+		_freeze.clear(self)
 	GameState.set_hp(GameState.hp - damage)
 
 	# Player hit SFX
@@ -2722,52 +2748,42 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 
 
 func _fire_projectile(atk: Dictionary) -> void:
-	var config: Dictionary = CombatManager.get_weapon_type_config(int(atk.get("weapon_type", 0)))
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
-	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
-	var hits: int = int(atk.get("hits", 1))
+	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
+	var candidates := _enemies_in_hit_cone(config)
+	if not candidates.is_empty():
+		var enemy: Node3D = candidates[0]
+		var height := 1.5
+		var data = enemy.get("enemy_data")
+		if data != null:
+			height = float(data.collision_height)
+		height = maxf(height, float(enemy.get("target_height") or 0.0))
+		var aim := enemy.global_position + Vector3(0, height * 0.5, 0) - spawn_pos
+		if not aim.is_zero_approx():
+			forward = aim.normalized()
 
-	var weapon_type: int = int(atk.get("weapon_type", 0))
-
-	for i in range(hits):
+	for _i in range(int(atk.get("hits", 1))):
 		var proj := Projectile.new()
 		proj.damage = int(atk.get("damage", 10))
 		proj.knockback = float(atk.get("knockback", 3.0))
 		proj.accuracy = int(atk.get("accuracy", 100))
 		proj.direction = forward
-		proj.max_range = max_range
+		proj.max_range = float(config.get("hit_h_dist", 8.0))
 		proj.owner_node = self
 		proj.speed = 25.0
-		proj.max_hits = int(config.get("max_targets", 1))
-
-		# Slicer: throwing blade aimed at target, bounces to nearby enemies
+		proj.max_hits = int(atk.get("max_targets", config.get("max_targets", 1)))
+		if _is_special_attack:
+			_apply_element_to_proj(proj)
 		if weapon_type == WeaponData.WeaponType.SLICER:
 			proj.pierce = true
 			proj.bounce_radius = 3.0
-			proj.max_hits = 4
 			proj.speed = 20.0
 			proj.color = Color(0.7, 0.9, 1.0)
-			# Semi-homing: aim at the targeted enemy instead of straight forward
-			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
-				var to_target: Vector3 = _targeted_enemies[0].global_position - spawn_pos
-				to_target.y = 0  # Keep horizontal
-				if to_target.length() > 0.5:
-					proj.direction = to_target.normalized()
-			# Spawn at enemy height so it doesn't fly over short targets
-			spawn_pos.y = global_position.y + 0.6
-
-		# Slight spread for multi-shot (mechgun)
-		if hits > 1:
-			var spread := randf_range(-0.05, 0.05)
-			proj.direction = Vector3(forward.x + spread, 0, forward.z + spread).normalized()
-
 		get_tree().current_scene.add_child(proj)
 		proj.global_position = spawn_pos
-
-		# Stagger multi-shot slightly
-		if hits > 1 and i < hits - 1:
-			spawn_pos += forward * 0.1
 
 
 func _deactivate_attack_hitbox() -> void:

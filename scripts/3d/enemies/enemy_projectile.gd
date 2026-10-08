@@ -22,6 +22,10 @@ var color := Color(1.0, 0.5, 0.1)  # warm default; techs/attacks may recolor
 var target: Node3D              # the player — distance-tested each step
 var on_hit: Callable = Callable()  # optional extra effect (e.g. the lily's poison DoT)
 
+var visual := "orb"
+var technique_id := ""
+var hit_budget: Dictionary = {}
+
 var _traveled := 0.0
 var _hit := false
 
@@ -37,26 +41,53 @@ func _ready() -> void:
 	mat.emission = color
 	mat.emission_energy_multiplier = 3.0
 	sm.material = mat
-	mi.mesh = sm
+	if not technique_id.is_empty():
+		var shard := PrismMesh.new()
+		shard.size = Vector3(0.45, 0.65, 1.0)
+		shard.material = mat
+		mi.mesh = shard
+	elif visual == "sonic":
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.2
+		ring.outer_radius = 0.35
+		ring.material = mat
+		mi.mesh = ring
+		mi.rotation.x = PI / 2.0
+	else:
+		mi.mesh = sm
 	add_child(mi)
 
 
 func _physics_process(delta: float) -> void:
-	var step := speed * delta
-	global_position += dir * step
-	_traveled += step
-
-	if target and is_instance_valid(target) and not _hit:
-		var to := target.global_position - global_position
-		to.y = 0.0
-		if to.length() <= TARGET_RADIUS + PROJECTILE_RADIUS:
+	if _hit or is_queued_for_deletion():
+		return
+	var step := minf(maxf(speed * delta, 0.0), maxf(max_range - _traveled, 0.0))
+	var motion := dir.normalized() * step
+	if is_instance_valid(target):
+		var fraction := ProjectileSweep.planar_fraction(global_position, motion,
+			target.global_position, TARGET_RADIUS + PROJECTILE_RADIUS)
+		if fraction >= 0.0:
+			global_position += motion * fraction
 			_hit = true
-			if target.has_method("take_damage"):
-				target.take_damage(damage, Vector3.ZERO, knockdown)
-			if on_hit.is_valid():
-				on_hit.call(target)
+			_resolve_contact()
 			queue_free()
 			return
-
+	global_position += motion
+	_traveled += step
 	if _traveled >= max_range:
 		queue_free()
+
+
+func _resolve_contact() -> void:
+	var key := target.get_instance_id()
+	if hit_budget.has(key):
+		return
+	hit_budget[key] = true
+	if target.has_method("is_dodge_iframed") and target.is_dodge_iframed():
+		return
+	if not technique_id.is_empty() and target.has_method("take_technique_hit"):
+		target.take_technique_hit(damage, technique_id)
+	elif target.has_method("take_damage"):
+		target.take_damage(damage, Vector3.ZERO, knockdown)
+	if on_hit.is_valid() and is_instance_valid(target):
+		on_hit.call(target)

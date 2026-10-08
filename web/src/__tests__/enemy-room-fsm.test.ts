@@ -891,3 +891,181 @@ describe('enemy-room FSM — arc hit shape', () => {
     expect(arcHitTest(origin, facing, origin, 0.4, 10, 2)).toBe(true);
   });
 });
+
+
+describe('projectile swept contacts', () => {
+  it.each([1 / 60, 1 / 15, 0.5])('does not tunnel at dt=%s', (dt) => {
+    const attack = atk({ kind: 'projectile', hit_reach: 8 });
+    const entry = resolveEntry(config([attack]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'idle';
+    sim.projectiles.push({ pos: { x: 0, z: 0 }, dir: { x: 0, z: 1 }, traveled: 0, maxRange: 8, attack });
+    const events: SimEvent[] = [];
+    for (let t = 0; t < 60 && sim.projectiles.length; t++) {
+      events.push(...stepEnemy(sim, entry, {
+        dt, playerPos: { x: 0, z: 2 }, playerRadius: 0.5,
+        playerInvincible: false, clipDurationFor: () => null, rng: mulberry32(629),
+      }));
+    }
+    expect(events.filter(e => e.type === 'hit')).toHaveLength(1);
+    expect(sim.projectiles).toHaveLength(0);
+  });
+
+  it('clamps the sweep to remaining range and consumes a dodge', () => {
+    const attack = atk({ kind: 'projectile' });
+    const entry = resolveEntry(config([attack]), 'dummy');
+    for (const [range, invincible, expected] of [[1, false, null], [8, true, 'hit_dodged']] as const) {
+      const sim = makeSim({ x: 0, z: 0 });
+      sim.projectiles.push({ pos: { x: 0, z: 0 }, dir: { x: 0, z: 1 }, traveled: 0, maxRange: range, attack });
+      const events = stepEnemy(sim, entry, {
+        dt: 0.5, playerPos: { x: 0, z: 3 }, playerRadius: 0.5,
+        playerInvincible: invincible, clipDurationFor: () => null, rng: mulberry32(629),
+      });
+      expect(events.filter(e => e.type === 'hit' || e.type === 'hit_dodged').map(e => e.type))
+        .toEqual(expected ? [expected] : []);
+      expect(sim.projectiles).toHaveLength(0);
+    }
+  });
+});
+
+
+describe('Booma prepared dash', () => {
+  const dash = atk({ id: 'dash', clip: 'run', kind: 'charge',
+    charge_segments: { st: 'atk', lp: 'run', ed: 'atk_mi' },
+    max_range: 4, hit_reach: 0.55, overshoot: 1 });
+  for (const invincible of [false, true]) {
+    it(`prepares without damage, then dashes and recovers (dodge=${invincible})`, () => {
+      const c = config([dash]);
+      c.enemies.dummy.archetype = 'bruiser';
+      const entry = resolveEntry(c, 'dummy');
+      const sim = makeSim({ x: 0, z: 0 });
+      const input = makeInput({ playerPos: { x: 0, z: 2.5 }, playerInvincible: invincible,
+        clipDurationFor: (name) => ({ atk: 0.8167, run: 0.3333, atk_mi: 0.2333 } as Record<string, number>)[name] ?? null });
+      stepEnemy(sim, entry, input);
+      stepEnemy(sim, entry, input);
+      expect(sim.anim).toBe('atk');
+      const preparation = run(sim, entry, input, 0.7);
+      expect(preparation.some(e => e.type === 'hit')).toBe(false);
+      expect(sim.pos.z).toBe(0);
+      const events = run(sim, entry, input, 2);
+      expect(events.filter(e => e.type === 'hit')).toHaveLength(invincible ? 0 : 1);
+      expect(events.filter(e => e.type === 'hit_dodged')).toHaveLength(invincible ? 1 : 0);
+      expect(sim.pos.z).toBeGreaterThan(0);
+      expect(sim.state).toBe('loafing');
+    });
+  }
+});
+
+
+describe('authored recovery is preserved', () => {
+  it('punishing a roller does not cancel its recovery window', () => {
+    const c = config([atk({ kind: 'charge', clip: 'wat3', max_range: 2,
+      charge_segments: { st: 'trf1', lp: 'wat3', ed: 'trf2' }, recovery_vulnerable_mult: 2 })]);
+    c.enemies.dummy.archetype = 'roller';
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.3 });
+    stepEnemy(sim, entry, input);
+    sim.threatTimer = 0;
+    for (let i = 0; i < 100 && sim.currentAttack?.charge?.phase !== 'ed'; i++) stepEnemy(sim, entry, input);
+    expect(sim.currentAttack?.charge?.phase).toBe('ed');
+    const attack = sim.currentAttack;
+    applyHurt(sim, entry);
+    expect(sim.currentAttack).toBe(attack);
+    expect(sim.state).toBe('attacking');
+  });
+  it('snake lowering holds before recovery locomotion', () => {
+    const c = config([atk()]);
+    c.enemies.dummy.archetype = 'stance_riser';
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    for (let i = 0; i < 200 && sim.state !== 'loafing'; i++) stepEnemy(sim, entry, input);
+    expect(sim.lowerTimer).toBeGreaterThan(0);
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('wt2w');
+    expect(sim.velocity).toEqual({ x: 0, z: 0 });
+  });
+});
+
+
+describe('single-clip spin lunge', () => {
+  for (const dodging of [false, true]) {
+    it(`holds preparation/recovery and resolves one ${dodging ? 'dodge' : 'hit'}`, () => {
+      const c = config([atk({ id: 'spin_lunge', kind: 'lunge', clip: 'atkb',
+        min_range: 2.501, max_range: 7, hit_reach: 0.9, windup_frac: 0.15, damage_end_frac: 0.7 })]);
+      c.enemies.dummy.archetype = 'lunging_melee';
+      const entry = resolveEntry(c, 'dummy');
+      const sim = makeSim({ x: 0, z: 0 });
+      sim.state = 'chasing'; // This test starts after the separately tested aggro display.
+      const input = makeInput({ playerPos: { x: 0, z: 4 }, playerInvincible: dodging, clipDurationFor: () => 0.9 });
+      stepEnemy(sim, entry, input); stepEnemy(sim, entry, input);
+      expect(sim.currentAttack?.def.id).toBe('spin_lunge');
+      const prep = run(sim, entry, input, 0.1);
+      expect(sim.pos.z).toBe(0);
+      expect(prep.filter(e => e.type === 'hit')).toHaveLength(0);
+      const events = run(sim, entry, input, 0.62);
+      expect(events.filter(e => e.type === (dodging ? 'hit_dodged' : 'hit'))).toHaveLength(1);
+      const end = { ...sim.pos };
+      input.playerInvincible = false;
+      const recovery = run(sim, entry, input, 0.08);
+      expect(sim.pos).toEqual(end);
+      expect(recovery.filter(e => e.type === 'hit')).toHaveLength(0);
+      expect(sim.pos.z).toBeCloseTo(4.5);
+    });
+  }
+});
+
+describe('authored end-clip recovery', () => {
+  it('finishes the main hit window before harmless stationary recovery', () => {
+    const c = config([atk({ recovery_clip: 'end' })]);
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    stepEnemy(sim, entry, input);
+    const events = run(sim, entry, input, 0.6);
+    expect(events.filter(e => e.type === 'hit')).toHaveLength(1);
+    expect(sim.state).toBe('attacking');
+    expect(sim.anim).toBe('end');
+    expect(sim.velocity).toEqual({ x: 0, z: 0 });
+    const endEvents = run(sim, entry, input, 0.5);
+    expect(endEvents.filter(e => e.type === 'hit')).toHaveLength(0);
+    expect(sim.state).toBe('loafing');
+  });
+  it('hurt cancels the end clip and cannot restart the old attack', () => {
+    const entry = resolveEntry(config([atk({ recovery_clip: 'end' })]), 'dummy');
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    const input = makeInput({ playerPos: { x: 0, z: 1 }, clipDurationFor: () => 0.5 });
+    stepEnemy(sim, entry, input);
+    run(sim, entry, input, 0.6);
+    applyHurt(sim, entry);
+    expect(sim.state).toBe('hurt');
+    expect(sim.currentAttack).toBeNull();
+  });
+});
+
+
+describe('Helion aggressive pursuit', () => {
+  it('holds an opening display, runs at distance, and uses short recovery', () => {
+    const c = config([atk({ id:'spin_lunge', kind:'lunge', min_range:2.501, max_range:7, hit_reach:0.9 })]);
+    c.enemies.dummy.archetype = 'lunging_melee';
+    c.enemies.dummy.fsm = { loaf_duration_min:0.35, loaf_duration_max:0.65 };
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({x:0,z:0});
+    const input = makeInput({playerPos:{x:0,z:10}, clipDurationFor:()=>0.5});
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('stt');
+    expect(run(sim, entry, input, 0.3).filter(e=>e.type==='attack_start')).toHaveLength(0);
+    expect(sim.pos).toEqual({x:0,z:0});
+    run(sim, entry, input, 0.3);
+    expect(sim.anim).toBe('run');
+    expect(sim.velocity.z).toBeGreaterThan(entry.stats.move_speed);
+    input.playerPos = {x:0,z:sim.pos.z+5};
+    for(let i=0;i<120 && sim.state!=='loafing';i++) stepEnemy(sim, entry, input);
+    expect(sim.state).toBe('loafing');
+    expect(sim.loafTimer).toBeGreaterThanOrEqual(0.35);
+    expect(sim.loafTimer).toBeLessThanOrEqual(0.65);
+  });
+});

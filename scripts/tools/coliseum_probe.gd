@@ -23,14 +23,17 @@ func _ready() -> void:
 	CharacterManager.create_character(0, "humar", "ProbeHero")
 	CharacterManager.set_active_slot(0)
 
+	var selected := OS.get_environment("PSZ_COLISEUM_ENEMY")
+	if selected.is_empty():
+		selected = ENEMY_ID
 	SessionManager.enter_quest("debug_coliseum", "normal")
-	SessionManager.set_field_sections(ColiseumRoster.make_sections(ENEMY_ID))
+	SessionManager.set_field_sections(ColiseumRoster.make_sections(selected))
 	print("[coliseum] warping: sections=%d cell=%s objects=%d" % [
 		SessionManager.get_field_sections().size(),
 		str(SessionManager.get_field_sections()[0]["cells"][0].get("stage_id", "?")),
 		(SessionManager.get_field_sections()[0]["cells"][0].get("objects", []) as Array).size()])
 	var watcher := Watch.new()
-	watcher.enemy_id = ENEMY_ID
+	watcher.enemy_id = selected
 	# Deferred: the root is mid-setup during this scene's _ready, so a direct
 	# add_child is rejected; the deferred attach still lands before the swap.
 	get_tree().root.add_child.call_deferred(watcher)
@@ -46,6 +49,8 @@ class Watch extends Node:
 	var killed := false
 	var warp_checked := false
 	var facing_checked := false
+	var weapons_started := false
+	var weapons_checked := false
 
 	func _process(delta: float) -> void:
 		elapsed += delta
@@ -63,6 +68,17 @@ class Watch extends Node:
 			print("[coliseum] field up: player in place (hp=%d)" % hp0)
 		if not _check_arrival(player):
 			return  # an arrival checkpoint failed or is still pending
+
+		if _check_mixed(player):
+			return
+
+		if not weapons_checked:
+			if enemy == null:
+				return
+			if not weapons_started:
+				weapons_started = true
+				_check_weapons.call_deferred(player, enemy)
+			return
 
 		if not damaged:
 			if enemy == null:
@@ -99,6 +115,46 @@ class Watch extends Node:
 			print("[coliseum] room-clear telepipe spawned after the kill")
 			print("[coliseum] DONE ok")
 			get_tree().quit(0)
+
+	func _check_mixed(player: Node3D) -> bool:
+		if not ColiseumRoster.MIXED_GROUPS.has(enemy_id): return false
+		if not weapons_started:
+			weapons_started = true
+			_run_mixed.call_deferred(player)
+		return true
+
+	func _run_mixed(player: Node3D) -> void:
+		var ok: bool = await preload("res://scripts/tools/coliseum_group_check.gd").run(player, enemy_id)
+		if ok:
+			print("[coliseum] DONE ok")
+			get_tree().quit(0)
+		else:
+			_fail("mixed group verification failed")
+
+	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
+		if OS.get_environment("PSZ_COMBAT_SCENARIOS") == "1":
+			if not await preload("res://scripts/tools/enemy_decision_scenarios.gd").run_live(player, enemy):
+				_fail("enemy decision scenarios failed")
+				return
+		if OS.get_environment("PSZ_ENEMY_RUNTIME_CHECK") == "1":
+			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
+				_fail("enemy runtime regression failed")
+				return
+		if enemy._archetype == "bruiser":
+			var entrance_ok: bool = await preload("res://scripts/tools/coliseum_entrance_check.gd").run(player, enemy)
+			if not entrance_ok:
+				_fail("bruiser entrance/attack sequence failed")
+				return
+		elif enemy.dormant:
+			enemy.reveal()
+			await get_tree().physics_frame
+		var ok: bool = await preload("res://scripts/tools/coliseum_combat_check.gd").run(player, enemy)
+		if not ok:
+			_fail("weapon contact verification failed")
+			return
+		weapons_checked = true
+		hp0 = GameState.hp
+
 
 	## Arrival checkpoints, in order: the return warp lands beside the spawn
 	## (0, 15) — it spawns a frame or two after the player, so allow a grace

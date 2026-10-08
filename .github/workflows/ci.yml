@@ -53,6 +53,12 @@ jobs:
           fi
           exit $rc
 
+      - name: Combat swept-contact probe
+        run: |
+          godot --headless --path . --quit-after 600 res://scripts/tools/combat_fidelity_probe.tscn 2>&1 | tee /tmp/combat-probe.log
+          grep -q '\[combat-fidelity\] DONE ok' /tmp/combat-probe.log
+          ! grep -q 'SCRIPT ERROR' /tmp/combat-probe.log
+
       - name: Free-field layout tests
         # Invariant check for the RE-measured Valley free field + Reyburn data
         # (issues #562/#563, spec /states/free-field): trees, door/rotation

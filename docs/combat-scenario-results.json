@@ -1,0 +1,436 @@
+{
+  "checked": "2026-10-07",
+  "godot": "4.5.1",
+  "seed": 7007,
+  "observation_frames": 6,
+  "scenario_sha256": "9955128228d1bda02b8877101be9b116c51182ad4db888558990864b21e49339",
+  "attack_definitions_sha256": "060e7de7eae029a9705dc42eba247eae44dc7055a7c5e01c10323c89c33ae602",
+  "method": "Live Godot Coliseum with imported rigs and ordinary physics AI from pursuit. No attack preselection or forced attack state. Bounded no-attack checks; not a confirmation of visual fidelity or original-game authenticity. Disposable save directory.",
+  "results": [
+    {
+      "enemy": "akorse",
+      "decisions": [
+        {
+          "case": "shooter_close",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "shooter_distant",
+          "expected": [
+            "shot"
+          ],
+          "observed": "shot",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "blaze_helion",
+      "decisions": [
+        {
+          "case": "helion_close",
+          "expected": [
+            "claws"
+          ],
+          "observed": "claws",
+          "pass": true
+        },
+        {
+          "case": "helion_below_split",
+          "expected": [
+            "claws"
+          ],
+          "observed": "claws",
+          "pass": true
+        },
+        {
+          "case": "helion_above_split",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_distant",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_inside_max",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_outside_max",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_cooldown",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_hurt",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_recovery",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_freeze",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_dormant",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_entrance",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_stun_no_attack",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "froutang",
+      "decisions": [
+        {
+          "case": "ape_close",
+          "expected": [
+            "charged_punch"
+          ],
+          "observed": "charged_punch",
+          "pass": true
+        },
+        {
+          "case": "ape_middle",
+          "expected": [
+            "pistol_shot",
+            "pistol_shot_alt"
+          ],
+          "observed": "pistol_shot",
+          "pass": true
+        },
+        {
+          "case": "ape_far",
+          "expected": [
+            "pistol_shot"
+          ],
+          "observed": "pistol_shot",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "frunaked",
+      "decisions": [
+        {
+          "case": "ape_close",
+          "expected": [
+            "charged_punch"
+          ],
+          "observed": "charged_punch",
+          "pass": true
+        },
+        {
+          "case": "ape_middle",
+          "expected": [
+            "pistol_shot",
+            "pistol_shot_alt"
+          ],
+          "observed": "pistol_shot",
+          "pass": true
+        },
+        {
+          "case": "ape_far",
+          "expected": [
+            "pistol_shot"
+          ],
+          "observed": "pistol_shot",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "garahadan",
+      "decisions": [
+        {
+          "case": "snake_close",
+          "expected": [
+            "normal",
+            "strong"
+          ],
+          "observed": "normal",
+          "pass": true
+        },
+        {
+          "case": "snake_distant",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "garapython",
+      "decisions": [
+        {
+          "case": "snake_close",
+          "expected": [
+            "normal",
+            "strong"
+          ],
+          "observed": "normal",
+          "pass": true
+        },
+        {
+          "case": "snake_distant",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "helion",
+      "decisions": [
+        {
+          "case": "helion_close",
+          "expected": [
+            "claws"
+          ],
+          "observed": "claws",
+          "pass": true
+        },
+        {
+          "case": "helion_below_split",
+          "expected": [
+            "claws"
+          ],
+          "observed": "claws",
+          "pass": true
+        },
+        {
+          "case": "helion_above_split",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_distant",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_inside_max",
+          "expected": [
+            "spin_lunge"
+          ],
+          "observed": "spin_lunge",
+          "pass": true
+        },
+        {
+          "case": "helion_outside_max",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_cooldown",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_hurt",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_recovery",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_freeze",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_dormant",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_entrance",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "helion_stun_no_attack",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "hypao",
+      "decisions": [
+        {
+          "case": "hypao_close",
+          "expected": [
+            "tail_swipe"
+          ],
+          "observed": "tail_swipe",
+          "pass": true
+        },
+        {
+          "case": "hypao_distant",
+          "expected": [
+            "cast_barta"
+          ],
+          "observed": "cast_barta",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "korse",
+      "decisions": [
+        {
+          "case": "shooter_close",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "shooter_distant",
+          "expected": [
+            "shot"
+          ],
+          "observed": "shot",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "rohcrysta",
+      "decisions": [
+        {
+          "case": "roller_close",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "roller_distant",
+          "expected": [
+            "roll"
+          ],
+          "observed": "roll",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "rohjade",
+      "decisions": [
+        {
+          "case": "roller_close",
+          "expected": [],
+          "observed": null,
+          "pass": true
+        },
+        {
+          "case": "roller_distant",
+          "expected": [
+            "roll"
+          ],
+          "observed": "roll",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    },
+    {
+      "enemy": "vespao",
+      "decisions": [
+        {
+          "case": "vespao_close",
+          "expected": [
+            "tail_swipe"
+          ],
+          "observed": "tail_swipe",
+          "pass": true
+        },
+        {
+          "case": "vespao_overlap",
+          "expected": [
+            "tail_swipe",
+            "cast_gibarta"
+          ],
+          "observed": "tail_swipe",
+          "pass": true
+        },
+        {
+          "case": "vespao_distant",
+          "expected": [
+            "cast_gibarta"
+          ],
+          "observed": "cast_gibarta",
+          "pass": true
+        }
+      ],
+      "weapon_contact_enemy_damage_room_clear": "pass"
+    }
+  ]
+}

@@ -20,10 +20,13 @@ export interface ArchetypeDef {
 }
 
 export const ARCHETYPES: ArchetypeDef[] = [
+  { id: 'lunging_melee', label: 'Lunging melee',
+    blurb: 'Helion family: close claws (atk), committed distant spin-lunge (atkb).',
+    simNote: 'Single-clip lunge with stationary preparation/recovery and one swept contact; timing is initial playtest tuning.' },
   {
     id: 'simple_melee',
     label: 'Simple melee',
-    blurb: 'atk, ded, dmg, stt, wat, wlk (+run/tht/atkb variants) — the basic chase-and-bite loop: bat, circle, vulture, lizard, rabbit, lion.',
+    blurb: 'atk, ded, dmg, stt, wat, wlk (+run/tht/atkb variants) — the basic chase-and-bite loop: bat, circle, vulture, lizard, rabbit.',
     simNote: 'Native: the baseline sim IS this archetype.',
   },
   {
@@ -41,8 +44,8 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: 'bruiser',
     label: 'Bruiser',
-    blurb: 'atk / atk_hi / atk_mi height-variant swings: Booma family.',
-    simNote: 'Baseline sim covers it — author the three swings as an attack table.',
+    blurb: 'Booma family: stt emerges from the dirt once at room reveal, then wat idle, wlk approach, atk preparation, run dash, and atk_mi recovery.',
+    simNote: 'Room sim starts after emergence. Only dash contact deals damage. Original atk_hi/atk_mi outcome selection remains unverified (spec /states/enemies).',
   },
   {
     id: 'bigrig_combo',

@@ -33,6 +33,15 @@ import Concept from '../../layouts/Concept.astro';
     <li><em>Replaced model:</em> the old always-on Area3D box (active from swing start to step end) is retired for melee; the box config keys remain only for legacy consumers until they migrate.</li>
   </ul>
 
+  <h2>Ranged contact reliability (combat fidelity pass)</h2>
+  <ul>
+    <li>Weapon shots MUST use <code>hit_h_dist</code> for travel range, not the retired melee-box dimensions. At release, shots MUST aim at the nearest living target in the weapon's own cone, at its collision center; technique-expanded reticles MUST NOT steer weapon shots. With no target they fire along the player's facing. Aim locks at release, so moving targets can evade.</li>
+    <li>A projectile MUST sweep its collision sphere over the entire physics step, including initial overlaps, and resolve contacts in travel order. A frame that crosses a target MUST NOT tunnel through it. Travel MUST be clamped to the remaining range before checking contacts.</li>
+    <li>A non-piercing projectile MUST stop after the first eligible target, regardless of its configured target cap. Piercing shots MUST respect their unique-owner cap; multiple hurtboxes on one enemy MUST NOT multiply damage. Consumed shots MUST ignore further contacts in the same frame. Non-monitorable hurtboxes and dead owners MUST NOT consume shots.</li>
+    <li>Strong weapon shots MUST carry their attack element and level through the same Hurtbox path as melee attacks.</li>
+  </ul>
+  <p>This is a playability contract, not a claim about the DS collision algorithm. The <a href="https://psp2i.dev/kion/psz-re/src/branch/main/data/player_combo_windows.json">PSZ reference's animation events</a> establish weapon-specific chain and hit frames, with explicit unmeasured cases. Existing tuned combo timing and damage values remain in force; source frame counts MUST NOT be copied onto differently timed animation clips without validation.</p>
+
   <h2>Target-info HUD (bottom-left)</h2>
   <ul>
     <li>The bottom-left HUD slot shows the <strong>primary target's info</strong>: an enemy → name + HP bar (live <code>current_hp</code> / max); a ground item → the item's display name.</li>

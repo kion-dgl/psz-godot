@@ -1,0 +1,443 @@
+{
+  "checked": "2026-10-07",
+  "godot": "4.5.1",
+  "seed": 7007,
+  "fixed_fps": 60,
+  "methods": {
+    "decisions": "Ordinary live physics AI from pursuit, six-frame observation, no forced attack choice. Includes status/cooldown gates and range boundaries.",
+    "execution": "Each attack explicitly selected on its imported rig. Checks clip order, stationary harmless preparation, stationary recovery, eventual completion, damage and sustained dodge. Followed by existing player-weapon contact and room-clear probe.",
+    "groups": "Ordinary simultaneous AI for 900 physics frames. Every member must attack. No exit before final kill, including a dormant last survivor.",
+    "limits": "Not visual approval or original-game authenticity. Ranges/windows and neutral cast/lob approximations need user playtesting. Bounded gate observations; not exhaustive AI state coverage."
+  },
+  "source_sha256": {
+    "data/enemy_attacks.json": "586d81fd72e33bf7d06dfe1e25a297a678d2590371021acbe85d75f82c197054",
+    "data/combat_scenarios.json": "3ee2998df2035bf8f3ff5d081067d2c6e4eff7d0f2968e420749e9b4be03a6a4",
+    "scripts/3d/enemies/enemy_base.gd": "cdaf42595517ead94ec5aa0cdbf3efcec9573eafad11742e8d88641ae93e1db1",
+    "scripts/3d/enemies/enemy_projectile.gd": "dbcca45e95462f648e47d10248307ec73f0daebdbd780a5214138200ac2c3902",
+    "scripts/2d/shops/coliseum_roster.gd": "a2a0bc98d5a06224a6d820397b21db0abef7ef0829060fa856e42b76a82125e0",
+    "scripts/tools/coliseum_family_check.gd": "755760b8d7c8ee68654d3d921b6260fa74544b6b4f02d5f2eaa38e8ad373c4fe",
+    "scripts/tools/coliseum_group_check.gd": "326999c3057c821abb6b7258712f3d0610e4a99cab8262305a79295b2e085ea3"
+  },
+  "results": [
+    {
+      "enemy": "batt",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] batt/family_range_0 expected=[\"bite\"] observed=bite PASS=true",
+        "[combat-scenario] batt/family_range_2 expected=[\"bite\"] observed=bite PASS=true",
+        "[combat-scenario] batt/family_range_2.01 expected=[\"sonic\"] observed=sonic PASS=true",
+        "[combat-scenario] batt/family_range_9 expected=[\"sonic\"] observed=sonic PASS=true",
+        "[combat-scenario] batt/family_range_10 expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] batt/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] batt/bite dodge=false clips=[\"s_033_atk\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] batt/bite dodge=true clips=[\"s_033_atk\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] batt/sonic dodge=false clips=[\"s_033_atk\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] batt/sonic dodge=true clips=[\"s_033_atk\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "bullbatt",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] bullbatt/family_range_0 expected=[\"bite\"] observed=bite PASS=true",
+        "[combat-scenario] bullbatt/family_range_2 expected=[\"bite\"] observed=bite PASS=true",
+        "[combat-scenario] bullbatt/family_range_2.01 expected=[\"sonic\"] observed=sonic PASS=true",
+        "[combat-scenario] bullbatt/family_range_9 expected=[\"sonic\"] observed=sonic PASS=true",
+        "[combat-scenario] bullbatt/family_range_10 expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] bullbatt/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] bullbatt/bite dodge=false clips=[\"s_033_atk\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] bullbatt/bite dodge=true clips=[\"s_033_atk\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] bullbatt/sonic dodge=false clips=[\"s_033_atk\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] bullbatt/sonic dodge=true clips=[\"s_033_atk\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "finjer_r",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] finjer_r/family_range_1.5 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_r/family_range_4 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_r/family_range_4.01 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_r/family_range_11 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_r/family_range_12 expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_r/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] finjer_r/spin dodge=false clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_r/spin dodge=true clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] finjer_r/shot dodge=false clips=[\"m051_atk_sh\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_r/shot dodge=true clips=[\"m051_atk_sh\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "finjer_b",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] finjer_b/family_range_1.5 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_b/family_range_4 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_b/family_range_4.01 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_b/family_range_11 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_b/family_range_12 expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_b/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] finjer_b/spin dodge=false clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_b/spin dodge=true clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] finjer_b/shot dodge=false clips=[\"m051_atk_sh\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_b/shot dodge=true clips=[\"m051_atk_sh\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "finjer_g",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] finjer_g/family_range_1.5 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_g/family_range_4 expected=[\"spin\"] observed=spin PASS=true",
+        "[combat-scenario] finjer_g/family_range_4.01 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_g/family_range_11 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] finjer_g/family_range_12 expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] finjer_g/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] finjer_g/spin dodge=false clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_g/spin dodge=true clips=[\"m051_atk_sp_st\", \"m051_atk_sp_lp\", \"m051_atk_sp_ed\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] finjer_g/shot dodge=false clips=[\"m051_atk_sh\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] finjer_g/shot dodge=true clips=[\"m051_atk_sh\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "phobos",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] phobos/family_range_1.5 expected=[\"close_explosive\"] observed=close_explosive PASS=true",
+        "[combat-scenario] phobos/family_range_3 expected=[\"close_explosive\"] observed=close_explosive PASS=true",
+        "[combat-scenario] phobos/family_range_3.01 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] phobos/family_range_7 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] phobos/family_range_7.01 expected=[\"bazooka\"] observed=bazooka PASS=true",
+        "[combat-scenario] phobos/family_range_12 expected=[\"bazooka\"] observed=bazooka PASS=true",
+        "[combat-scenario] phobos/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] phobos/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] phobos/close_explosive dodge=false clips=[\"b052_atk_mi\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos/close_explosive dodge=true clips=[\"b052_atk_mi\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] phobos/shot dodge=false clips=[\"b052_atk_sh\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos/shot dodge=true clips=[\"b052_atk_sh\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] phobos/bazooka dodge=false clips=[\"b052_atk_bz\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos/bazooka dodge=true clips=[\"b052_atk_bz\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "phobos_dyna",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] phobos_dyna/family_range_1.5 expected=[\"close_explosive\"] observed=close_explosive PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_3 expected=[\"close_explosive\"] observed=close_explosive PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_3.01 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_7 expected=[\"shot\"] observed=shot PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_7.01 expected=[\"bazooka\"] observed=bazooka PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_12 expected=[\"bazooka\"] observed=bazooka PASS=true",
+        "[combat-scenario] phobos_dyna/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] phobos_dyna/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] phobos_dyna/close_explosive dodge=false clips=[\"b052_atk_mi\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos_dyna/close_explosive dodge=true clips=[\"b052_atk_mi\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] phobos_dyna/shot dodge=false clips=[\"b052_atk_sh\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos_dyna/shot dodge=true clips=[\"b052_atk_sh\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] phobos_dyna/bazooka dodge=false clips=[\"b052_atk_bz\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] phobos_dyna/bazooka dodge=true clips=[\"b052_atk_bz\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "arkzein",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] arkzein/family_range_1.5 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] arkzein/family_range_2 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] arkzein/family_range_2.01 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] arkzein/family_range_4 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] arkzein/family_range_4.01 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] arkzein/family_range_10 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] arkzein/family_range_11 expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] arkzein/punch dodge=false clips=[\"b062_atk_pu\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein/punch dodge=true clips=[\"b062_atk_pu\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] arkzein/sword_sweep dodge=false clips=[\"b062_atk_sw\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein/sword_sweep dodge=true clips=[\"b062_atk_sw\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] arkzein/sword_throw dodge=false clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein/sword_throw dodge=true clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "arkzein_r",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] arkzein_r/family_range_1.5 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] arkzein_r/family_range_2 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] arkzein_r/family_range_2.01 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] arkzein_r/family_range_4 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] arkzein_r/family_range_4.01 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] arkzein_r/family_range_10 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] arkzein_r/family_range_11 expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] arkzein_r/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] arkzein_r/punch dodge=false clips=[\"b062_atk_pu\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein_r/punch dodge=true clips=[\"b062_atk_pu\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] arkzein_r/sword_sweep dodge=false clips=[\"b062_atk_sw\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein_r/sword_sweep dodge=true clips=[\"b062_atk_sw\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] arkzein_r/sword_throw dodge=false clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] arkzein_r/sword_throw dodge=true clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "zaphobos",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] zaphobos/family_range_1.5 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] zaphobos/family_range_2 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] zaphobos/family_range_2.01 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] zaphobos/family_range_4 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] zaphobos/family_range_4.01 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] zaphobos/family_range_10 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] zaphobos/family_range_11 expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] zaphobos/punch dodge=false clips=[\"b062_atk_pu\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos/punch dodge=true clips=[\"b062_atk_pu\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] zaphobos/sword_sweep dodge=false clips=[\"b062_atk_sw\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos/sword_sweep dodge=true clips=[\"b062_atk_sw\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] zaphobos/sword_throw dodge=false clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos/sword_throw dodge=true clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "zaphobos_dyna",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] zaphobos_dyna/family_range_1.5 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_2 expected=[\"punch\"] observed=punch PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_2.01 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_4 expected=[\"sword_sweep\"] observed=sword_sweep PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_4.01 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_10 expected=[\"sword_throw\"] observed=sword_throw PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_range_11 expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] zaphobos_dyna/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] zaphobos_dyna/punch dodge=false clips=[\"b062_atk_pu\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos_dyna/punch dodge=true clips=[\"b062_atk_pu\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] zaphobos_dyna/sword_sweep dodge=false clips=[\"b062_atk_sw\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos_dyna/sword_sweep dodge=true clips=[\"b062_atk_sw\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] zaphobos_dyna/sword_throw dodge=false clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] zaphobos_dyna/sword_throw dodge=true clips=[\"b062_atk_th_st\", \"b062_atk_th_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "blade_mother",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] blade_mother/family_range_1.5 expected=[\"sword_a\", \"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] blade_mother/family_range_3 expected=[\"sword_a\", \"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] blade_mother/family_range_3.01 expected=[\"gun\"] observed=gun PASS=true",
+        "[combat-scenario] blade_mother/family_range_12 expected=[\"gun\"] observed=gun PASS=true",
+        "[combat-scenario] blade_mother/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] blade_mother/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] blade_mother/sword_a dodge=false clips=[\"b072_atk_sa_s\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] blade_mother/sword_a dodge=true clips=[\"b072_atk_sa_s\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] blade_mother/sword_b dodge=false clips=[\"b072_atk_sb_s\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] blade_mother/sword_b dodge=true clips=[\"b072_atk_sb_s\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] blade_mother/gun dodge=false clips=[\"b072_atk_gu_a_st\", \"b072_atk_gu_a_lp\", \"b072_atk_gu_a_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] blade_mother/gun dodge=true clips=[\"b072_atk_gu_a_st\", \"b072_atk_gu_a_lp\", \"b072_atk_gu_a_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "shot_mother",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] shot_mother/family_range_1.5 expected=[\"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] shot_mother/family_range_3 expected=[\"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] shot_mother/family_range_3.01 expected=[\"gun\"] observed=gun PASS=true",
+        "[combat-scenario] shot_mother/family_range_12 expected=[\"gun\"] observed=gun PASS=true",
+        "[combat-scenario] shot_mother/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] shot_mother/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] shot_mother/sword_b dodge=false clips=[\"b072_atk_sb_s\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] shot_mother/sword_b dodge=true clips=[\"b072_atk_sb_s\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] shot_mother/gun dodge=false clips=[\"b072_atk_gu_g_st\", \"b072_atk_gu_g_lp\", \"b072_atk_gu_g_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] shot_mother/gun dodge=true clips=[\"b072_atk_gu_g_st\", \"b072_atk_gu_g_lp\", \"b072_atk_gu_g_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "force_mother",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] force_mother/family_range_1.5 expected=[\"area_cast\"] observed=area_cast PASS=true",
+        "[combat-scenario] force_mother/family_range_3 expected=[\"area_cast\"] observed=area_cast PASS=true",
+        "[combat-scenario] force_mother/family_range_3.01 expected=[\"cast\"] observed=cast PASS=true",
+        "[combat-scenario] force_mother/family_range_12 expected=[\"cast\"] observed=cast PASS=true",
+        "[combat-scenario] force_mother/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] force_mother/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] force_mother/area_cast dodge=false clips=[\"b072_tec_a\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] force_mother/area_cast dodge=true clips=[\"b072_tec_a\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] force_mother/cast dodge=false clips=[\"b072_tec_t_st\", \"b072_tec_t_lp\", \"b072_tec_t_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] force_mother/cast dodge=true clips=[\"b072_tec_t_st\", \"b072_tec_t_lp\", \"b072_tec_t_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mother_trinity",
+      "passed": true,
+      "checks": [
+        "[combat-scenario] mother_trinity/family_range_1.5 expected=[\"sword_a\", \"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] mother_trinity/family_range_3 expected=[\"sword_a\", \"sword_b\"] observed=sword_b PASS=true",
+        "[combat-scenario] mother_trinity/family_range_3.01 expected=[\"gun\", \"cast\"] observed=cast PASS=true",
+        "[combat-scenario] mother_trinity/family_range_12 expected=[\"gun\", \"cast\"] observed=cast PASS=true",
+        "[combat-scenario] mother_trinity/family_range_13 expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_cooldown expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_hurt expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_recovery expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_freeze expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_dormant expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_entrance expected=[] observed= PASS=true",
+        "[combat-scenario] mother_trinity/family_gate_stun_no_attack expected=[] observed= PASS=true",
+        "[family-execution] mother_trinity/sword_a dodge=false clips=[\"b072_atk_sa_a\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] mother_trinity/sword_a dodge=true clips=[\"b072_atk_sa_a\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] mother_trinity/sword_b dodge=false clips=[\"b072_atk_sb_a\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] mother_trinity/sword_b dodge=true clips=[\"b072_atk_sb_a\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] mother_trinity/gun dodge=false clips=[\"b072_atk_gu_a_st\", \"b072_atk_gu_a_lp\", \"b072_atk_gu_a_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] mother_trinity/gun dodge=true clips=[\"b072_atk_gu_a_st\", \"b072_atk_gu_a_lp\", \"b072_atk_gu_a_ed\"] safe=true finished=true hit=false PASS=true",
+        "[family-execution] mother_trinity/cast dodge=false clips=[\"b072_tec_t_st\", \"b072_tec_t_lp\", \"b072_tec_t_ed\"] safe=true finished=true hit=true PASS=true",
+        "[family-execution] mother_trinity/cast dodge=true clips=[\"b072_tec_t_st\", \"b072_tec_t_lp\", \"b072_tec_t_ed\"] safe=true finished=true hit=false PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mixed_bats",
+      "passed": true,
+      "checks": [
+        "[mixed] mixed_bats ordinary attacks={ \"batt\": \"sonic\", \"bullbatt\": \"sonic\", \"helion\": \"spin_lunge\" } all participated=true",
+        "[mixed] mixed_bats last-kill return PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mixed_finjers",
+      "passed": true,
+      "checks": [
+        "[mixed] mixed_finjers ordinary attacks={ \"finjer_r\": \"shot\", \"finjer_b\": \"shot\", \"finjer_g\": \"shot\" } all participated=true",
+        "[mixed] mixed_finjers last-kill return PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mixed_machines",
+      "passed": true,
+      "checks": [
+        "[mixed] mixed_machines ordinary attacks={ \"phobos\": \"bazooka\", \"arkzein\": \"sword_throw\", \"zaphobos\": \"sword_throw\" } all participated=true",
+        "[mixed] mixed_machines last-kill return PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mixed_mothers",
+      "passed": true,
+      "checks": [
+        "[mixed] mixed_mothers ordinary attacks={ \"blade_mother\": \"gun\", \"shot_mother\": \"gun\", \"force_mother\": \"cast\" } all participated=true",
+        "[mixed] mixed_mothers last-kill return PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    },
+    {
+      "enemy": "mixed_pressure",
+      "passed": true,
+      "checks": [
+        "[mixed] mixed_pressure ordinary attacks={ \"batt\": \"sonic\", \"finjer_r\": \"shot\", \"phobos\": \"bazooka\", \"force_mother\": \"cast\", \"arkzein\": \"sword_throw\" } all participated=true",
+        "[mixed] mixed_pressure last-kill return PASS=true",
+        "[coliseum] DONE ok"
+      ]
+    }
+  ]
+}

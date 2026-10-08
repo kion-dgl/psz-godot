@@ -50,8 +50,10 @@ export interface CurrentAttack {
   };
   /** kind: 'leap' — travel from → target during the damaging window, AoE at landing. */
   leap?: { from: Vec2; target: Vec2 };
+  lunge?: { distance: number; progress: number };
   /** windup_clips prelude: cumulative end-times per clip; pure telegraph before the attack clip. */
   windup?: { clips: string[]; ends: number[]; total: number };
+  recoveryDuration?: number;
 }
 
 export interface EnemySim {
@@ -64,6 +66,7 @@ export interface EnemySim {
   wanderTimer: number;
   wanderDir: Vec2 | null; // null = paused
   loafTimer: number;
+  lowerTimer: number;
   loafDir: Vec2;
   loafCurveRate: number;
   currentAttack: CurrentAttack | null;
@@ -162,6 +165,7 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     wanderTimer: 0,
     wanderDir: null,
     loafTimer: 0,
+    lowerTimer: 0,
     loafDir: { x: 0, z: 1 },
     loafCurveRate: LOAF_CURVE_RATE,
     currentAttack: null,
@@ -275,6 +279,7 @@ export function applyBerserk(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 /** External hurt (the sandbox "Hit enemy" button) — mirrors _on_hit_received's stagger path. */
 export function applyHurt(sim: EnemySim, entry: ResolvedEntry): SimEvent[] {
   const events: SimEvent[] = [];
+  if (sim.currentAttack?.charge?.phase === 'ed' && (sim.currentAttack.def.recovery_vulnerable_mult ?? 1) > 1) return events;
   if (sim.state === 'attacking' && sim.currentAttack) {
     events.push({ type: 'attack_end', attack: sim.currentAttack.def });
   }
@@ -284,6 +289,16 @@ export function applyHurt(sim: EnemySim, entry: ResolvedEntry): SimEvent[] {
   sim.velocity = { x: 0, z: 0 };
   sim.anim = 'dmg';
   return events;
+}
+
+function idleClip(entry: ResolvedEntry): string {
+  if (entry.idle_clip) return entry.idle_clip;
+  switch (entry.archetype) {
+    case 'roller': case 'stance_riser': return 'wat1';
+    case 'box_mimic': return 'tk1';
+    case 'flyer_combo': return 'tk';
+    default: return 'wat';
+  }
 }
 
 function changeState(sim: EnemySim, to: EnemyStateName, events: SimEvent[]): void {
@@ -345,7 +360,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         // Rooted: no wander out of combat either (sleep/wake cycle is spec-
         // documented but not simulated — see §poison-lily).
         sim.velocity = { x: 0, z: 0 };
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         if (dist <= entry.stats.detection_range) changeState(sim, 'chasing', events);
         break;
       }
@@ -355,7 +370,8 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           entry.archetype === 'bigrig_combo' ||
           entry.archetype === 'flyer_combo' ||
           entry.archetype === 'roller' ||
-          entry.archetype === 'ape_gunner'
+          entry.archetype === 'ape_gunner' ||
+          entry.archetype === 'lunging_melee'
         ) {
           // Aggro display, held before pursuit: bigrig beats its chest, the
           // flyer TAKES OFF, the roller becomes active — each is its rig's
@@ -382,12 +398,12 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         const speed = entry.stats.move_speed * WANDER_SPEED_MULT;
         sim.velocity = { x: sim.wanderDir.x * speed, z: sim.wanderDir.z * speed };
         sim.facing = { ...sim.wanderDir };
-        sim.anim = 'wlk';
+        sim.anim = entry.fsm.move_clip ?? 'wlk';
       } else {
         sim.velocity = { x: 0, z: 0 };
         // Roller rigs have wat1 (standing) / wat2 (lying) instead of a
         // plain wat — a bare 'wat' would mis-alias to stt (become active).
-        sim.anim = entry.archetype === 'roller' ? 'wat1' : 'wat';
+        sim.anim = idleClip(entry);
       }
       break;
     }
@@ -454,7 +470,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       if (entry.fsm.stationary) {
         sim.velocity = { x: 0, z: 0 };
         sim.facing = norm(sub(playerPos, sim.pos));
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         break;
       }
       if (entry.archetype === 'quad_machine') {
@@ -478,14 +494,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         break;
       }
       const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
-      const charging = dist <= chargeRange;
+      const charging = entry.archetype === 'lunging_melee' || (entry.archetype !== 'bruiser' && dist <= chargeRange);
       const speed =
         entry.stats.move_speed * (charging ? entry.fsm.charge_speed_mult : entry.fsm.walk_speed_mult);
       const dir = norm(sub(playerPos, sim.pos));
       sim.velocity = { x: dir.x * speed, z: dir.z * speed };
       sim.facing = dir;
       // Revealed mimic walks on wlk1 (its rig has no plain wlk/run).
-      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : charging ? 'run' : 'wlk';
+      sim.anim = entry.fsm.move_clip ?? (entry.archetype === 'box_mimic' ? 'wlk1' : charging ? 'run' : 'wlk');
       break;
     }
 
@@ -493,7 +509,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       const atk = sim.currentAttack;
       if (!atk) {
         // Shouldn't happen; recover like the #477 contract — never wedge.
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
         break;
       }
       // Segmented charge (bigrig shoulder slam): its own phase machine —
@@ -513,7 +529,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       } else if (atk.windup) {
         sim.anim = atk.def.clip;
       }
-      const mainDur = atk.duration - windupTotal;
+      const mainDur = atk.duration - windupTotal - (atk.recoveryDuration ?? 0);
       const windowStart = windupTotal + atk.def.windup_frac * mainDur;
       const windowEnd = windupTotal + atk.def.damage_end_frac * mainDur;
       if (!atk.windowOpened && atk.t >= windowStart) {
@@ -548,6 +564,9 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           // at window close for AoE (spec §big-rig).
           atk.leap = { from: { ...sim.pos }, target: { ...playerPos } };
         }
+      }
+      if (atk.lunge && atk.windowOpened && !atk.windowClosed) {
+        processLunge(sim, entry, input, events, windowStart, windowEnd);
       }
       // Leap flight: the enemy itself travels during the window.
       if (atk.leap && atk.windowOpened && !atk.windowClosed) {
@@ -598,13 +617,20 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           }
         }
       }
+      if (atk.recoveryDuration && atk.t >= windupTotal + mainDur) sim.anim = atk.def.recovery_clip!;
       if (atk.t >= atk.duration) {
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
       }
       break;
     }
 
     case 'loafing': {
+      if (sim.lowerTimer > 0) {
+        sim.lowerTimer = Math.max(0, sim.lowerTimer - dt);
+        sim.velocity = { x: 0, z: 0 };
+        sim.anim = 'wt2w';
+        break;
+      }
       sim.loafTimer -= dt;
       if (sim.loafTimer <= 0) {
         changeState(sim, 'chasing', events);
@@ -612,14 +638,14 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
       }
       if (entry.fsm.stationary) {
         sim.velocity = { x: 0, z: 0 };
-        sim.anim = entry.idle_clip ?? 'wat';
+        sim.anim = idleClip(entry);
         break;
       }
       sim.loafDir = rot(sim.loafDir, sim.loafCurveRate * dt);
       const speed = entry.stats.move_speed * LOAF_SPEED_MULT;
       sim.velocity = { x: sim.loafDir.x * speed, z: sim.loafDir.z * speed };
       sim.facing = { ...sim.loafDir };
-      sim.anim = entry.archetype === 'box_mimic' ? 'wlk1' : 'wlk';
+      sim.anim = entry.fsm.move_clip ?? (entry.archetype === 'box_mimic' ? 'wlk1' : 'wlk');
       break;
     }
 
@@ -646,11 +672,17 @@ function stepDeliveries(sim: EnemySim, entry: ResolvedEntry, input: SimInput, ev
   const { dt, playerPos, playerRadius, playerInvincible } = input;
 
   sim.projectiles = sim.projectiles.filter((p) => {
-    p.pos.x += p.dir.x * PROJECTILE_SPEED * dt;
-    p.pos.z += p.dir.z * PROJECTILE_SPEED * dt;
-    p.traveled += PROJECTILE_SPEED * dt;
+    const distance = Math.min(Math.max(PROJECTILE_SPEED * dt, 0), Math.max(p.maxRange - p.traveled, 0));
+    const dx = p.dir.x * distance, dz = p.dir.z * distance;
+    const ox = playerPos.x - p.pos.x, oz = playerPos.z - p.pos.z;
+    const lengthSq = dx * dx + dz * dz;
+    const t = lengthSq > 0 ? Math.max(0, Math.min(1, (ox * dx + oz * dz) / lengthSq)) : 0;
     const hitDist = playerRadius + PROJECTILE_RADIUS;
-    if (len(sub(playerPos, p.pos)) <= hitDist) {
+    const contact = Math.hypot(ox - dx * t, oz - dz * t) <= hitDist;
+    p.pos.x += dx;
+    p.pos.z += dz;
+    p.traveled += distance;
+    if (contact) {
       if (playerInvincible) {
         events.push({ type: 'hit_dodged', attack: p.attack });
       } else {
@@ -832,10 +864,12 @@ function startAttack(
     }
     windup = { clips: [...def.windup_clips], ends, total: acc };
   }
+  const recoveryDuration = def.recovery_clip ? (input.clipDurationFor(def.recovery_clip) ?? 0.4) : 0;
   sim.anim = windup ? windup.clips[0] : def.clip;
   sim.currentAttack = {
     def,
-    duration: (windup?.total ?? 0) + mainDuration,
+    duration: (windup?.total ?? 0) + mainDuration + recoveryDuration,
+    recoveryDuration,
     resolvedClip: clipDuration !== null ? def.clip : '',
     t: 0,
     facing,
@@ -843,6 +877,7 @@ function startAttack(
     windowOpened: false,
     windowClosed: false,
     windup,
+    lunge: kind === 'lunge' ? { distance: Math.min(dist + 0.5, def.max_range), progress: 0 } : undefined,
   };
   sim.attackCooldown = entry.stats.attack_cooldown;
   events.push({
@@ -1018,7 +1053,7 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
       sim.velocity = { x: 0, z: 0 };
       sim.anim = c.tokens.ed;
       if (c.phaseT >= c.edDur) {
-        endAttack(sim, entry, events, rng);
+        endAttack(sim, entry, events, rng, input);
       }
       break;
     }
@@ -1026,7 +1061,7 @@ function processAttackCharge(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 }
 
 
-function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng: () => number): void {
+function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng: () => number, input: SimInput): void {
   if (sim.currentAttack) {
     events.push({ type: 'attack_end', attack: sim.currentAttack.def });
   }
@@ -1039,5 +1074,26 @@ function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng:
   const away = rot(sim.facing, Math.PI);
   sim.loafDir = rot(away, (side * Math.PI) / 2);
   sim.loafCurveRate = -side * LOAF_CURVE_RATE;
-  sim.anim = 'wlk';
+  sim.lowerTimer = entry.archetype === 'stance_riser' ? (input.clipDurationFor('wt2w') ?? 0) : 0;
+  sim.anim = sim.lowerTimer > 0 ? 'wt2w' : (entry.fsm.move_clip ?? 'wlk');
+  sim.velocity = { x: 0, z: 0 };
+}
+
+/** Flat-arena counterpart of EnemyLunge: single swept contact on committed travel. */
+function processLunge(sim: EnemySim, entry: ResolvedEntry, input: SimInput, events: SimEvent[], start: number, end: number): void {
+  const atk = sim.currentAttack!;
+  const lunge = atk.lunge!;
+  const progress = Math.max(0, Math.min(1, (atk.t - start) / (end - start)));
+  const travel = lunge.distance * Math.max(0, progress - lunge.progress);
+  lunge.progress = progress;
+  const dx = atk.facing.x * travel, dz = atk.facing.z * travel;
+  const ox = input.playerPos.x - sim.pos.x, oz = input.playerPos.z - sim.pos.z;
+  const lengthSq = dx * dx + dz * dz;
+  const t = lengthSq > 0 ? Math.max(0, Math.min(1, (ox * dx + oz * dz) / lengthSq)) : 0;
+  sim.pos.x += dx; sim.pos.z += dz;
+  if (!atk.resolved && Math.hypot(ox - dx * t, oz - dz * t) <= atk.def.hit_reach + input.playerRadius) {
+    atk.resolved = true;
+    events.push(input.playerInvincible ? { type: 'hit_dodged', attack: atk.def }
+      : { type: 'hit', attack: atk.def, damage: Math.round(entry.stats.attack_base * atk.def.damage_mult) });
+  }
 }

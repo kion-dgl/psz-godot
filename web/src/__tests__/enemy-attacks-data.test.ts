@@ -173,7 +173,7 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
   });
 
   it('attack kind, when present, is a known delivery', () => {
-    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap']);
+    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap', 'lunge']);
     const bad: string[] = [];
     for (const [id, e] of entries) {
       for (const a of e.attacks) {
@@ -194,5 +194,19 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
       }
     }
     expect(bad, bad.join(', ')).toHaveLength(0);
+  });
+});
+
+
+describe('Booma authored clip semantics', () => {
+  it('both variants prepare before their dash instead of damaging during atk', () => {
+    for (const id of ['booma_origin', 'gigobooma_origin']) {
+      const entry = config.enemies[id];
+      expect(entry.fsm.spawn_clip).toBe('stt');
+      expect(entry.attacks).toHaveLength(1);
+      expect(entry.attacks[0].kind).toBe('charge');
+      expect(entry.attacks[0].charge_segments).toEqual({ st: 'atk', lp: 'run', ed: 'atk_mi' });
+      expect(entry.clip_notes.atk).toContain('NOT a damaging melee swing');
+    }
   });
 });

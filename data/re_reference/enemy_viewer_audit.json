@@ -1,0 +1,7010 @@
+{
+  "checked": "2026-10-07",
+  "source_index": "https://dashgl.github.io/psz-asset-viewer/enemies/",
+  "method": "Enumerated every linked model and fetched the info/animations/effects/parts JSON used by EnemyViewer.CYQ2z2Fd.js; joined local EnemyData model_id and animation_model_id to attack definitions. Reyburn uses its dedicated boss kit. Attack-named unused clips are review candidates, not proven missing attacks. Generic atk may resolve through aliases/alphabetical fallback. No frame-by-frame visual validation of all clips was performed.",
+  "models": [
+    {
+      "model": "armadillo",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/armadillo/",
+      "info": {
+        "name": "armadillo",
+        "modelBaseName": "b_035",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "ded",
+          "file": "b_035_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b_035_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b_035_stt.nsbca"
+        },
+        {
+          "name": "trf1",
+          "file": "b_035_trf1.nsbca"
+        },
+        {
+          "name": "trf2",
+          "file": "b_035_trf2.nsbca"
+        },
+        {
+          "name": "wat1",
+          "file": "b_035_wat1.nsbca"
+        },
+        {
+          "name": "wat2",
+          "file": "b_035_wat2.nsbca"
+        },
+        {
+          "name": "wat3",
+          "file": "b_035_wat3.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b_035_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_smk",
+          "file": "ef_e_c_smk.nsbmd"
+        },
+        {
+          "name": "ef_e_c_spin",
+          "file": "ef_e_c_spin.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "rohjade",
+          "name": "Rohjade",
+          "animation_model": "armadillo",
+          "archetype": "roller",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "roll",
+              "clip": "wat3",
+              "kind": "charge",
+              "charge_segments": {
+                "st": "trf1",
+                "lp": "wat3",
+                "ed": "trf2"
+              },
+              "stop_on_hit": false,
+              "overshoot": 3.0,
+              "knockdown": true,
+              "recovery_vulnerable_mult": 2.0,
+              "weight": 1.0,
+              "min_range": 3.0,
+              "max_range": 12.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 35.0,
+              "hit_reach": 1.3,
+              "damage_mult": 1.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "armadillo_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/armadillo_rare/",
+      "info": {
+        "name": "armadillo_rare",
+        "modelBaseName": "b_135",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_smk",
+          "file": "ef_e_c_smk.nsbmd"
+        },
+        {
+          "name": "ef_e_c_spin",
+          "file": "ef_e_c_spin.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "rohcrysta",
+          "name": "Rohcrysta",
+          "animation_model": "armadillo",
+          "archetype": "roller",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "roll",
+              "clip": "wat3",
+              "kind": "charge",
+              "charge_segments": {
+                "st": "trf1",
+                "lp": "wat3",
+                "ed": "trf2"
+              },
+              "stop_on_hit": false,
+              "overshoot": 3.0,
+              "knockdown": true,
+              "recovery_vulnerable_mult": 2.0,
+              "weight": 1.0,
+              "min_range": 3.0,
+              "max_range": 12.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 35.0,
+              "hit_reach": 1.3,
+              "damage_mult": 1.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "bat",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/bat/",
+      "info": {
+        "name": "bat",
+        "modelBaseName": "s_033",
+        "animationCount": 6,
+        "mainAnimationCount": 6,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_033_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_033_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_033_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s_033_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_033_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s_033_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sonic",
+          "file": "ef_e_c_sonic.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "batt",
+          "name": "Batt",
+          "animation_model": "bat",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "bat_blue",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/bat_blue/",
+      "info": {
+        "name": "bat_blue",
+        "modelBaseName": "s_133",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sonic2",
+          "file": "ef_e_c_sonic2.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "bullbatt",
+          "name": "Bullbatt",
+          "animation_model": "bat",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "board",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/board/",
+      "info": {
+        "name": "board",
+        "modelBaseName": "m_051",
+        "animationCount": 11,
+        "mainAnimationCount": 11,
+        "effectCount": 6,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_sh",
+          "file": "m051_atk_sh.nsbca"
+        },
+        {
+          "name": "atk_sp_ed",
+          "file": "m051_atk_sp_ed.nsbca"
+        },
+        {
+          "name": "atk_sp_lp",
+          "file": "m051_atk_sp_lp.nsbca"
+        },
+        {
+          "name": "atk_sp_st",
+          "file": "m051_atk_sp_st.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m051_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m051_dmg.nsbca"
+        },
+        {
+          "name": "run_ed",
+          "file": "m051_run_ed.nsbca"
+        },
+        {
+          "name": "run_lp",
+          "file": "m051_run_lp.nsbca"
+        },
+        {
+          "name": "run_st",
+          "file": "m051_run_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m051_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m051_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_arbd",
+          "file": "ef_e_l_arbd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_fbul",
+          "file": "ef_e_l_fbul.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "finjer_r",
+          "name": "Finjer R",
+          "animation_model": "board",
+          "archetype": "boarder",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_sh",
+            "atk_sp_ed",
+            "atk_sp_lp",
+            "atk_sp_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "board_blue",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/board_blue/",
+      "info": {
+        "name": "board_blue",
+        "modelBaseName": "m_251",
+        "animationCount": 11,
+        "mainAnimationCount": 11,
+        "effectCount": 6,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_sh",
+          "file": "m051_atk_sh.nsbca"
+        },
+        {
+          "name": "atk_sp_ed",
+          "file": "m051_atk_sp_ed.nsbca"
+        },
+        {
+          "name": "atk_sp_lp",
+          "file": "m051_atk_sp_lp.nsbca"
+        },
+        {
+          "name": "atk_sp_st",
+          "file": "m051_atk_sp_st.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m051_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m051_dmg.nsbca"
+        },
+        {
+          "name": "run_ed",
+          "file": "m051_run_ed.nsbca"
+        },
+        {
+          "name": "run_lp",
+          "file": "m051_run_lp.nsbca"
+        },
+        {
+          "name": "run_st",
+          "file": "m051_run_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m051_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m051_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_arbd",
+          "file": "ef_e_l_arbd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_cbul",
+          "file": "ef_e_l_cbul.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "finjer_b",
+          "name": "Finjer B",
+          "animation_model": "board_blue",
+          "archetype": "boarder",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_sh",
+            "atk_sp_ed",
+            "atk_sp_lp",
+            "atk_sp_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "board_green",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/board_green/",
+      "info": {
+        "name": "board_green",
+        "modelBaseName": "m_151",
+        "animationCount": 11,
+        "mainAnimationCount": 11,
+        "effectCount": 6,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_sh",
+          "file": "m051_atk_sh.nsbca"
+        },
+        {
+          "name": "atk_sp_ed",
+          "file": "m051_atk_sp_ed.nsbca"
+        },
+        {
+          "name": "atk_sp_lp",
+          "file": "m051_atk_sp_lp.nsbca"
+        },
+        {
+          "name": "atk_sp_st",
+          "file": "m051_atk_sp_st.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m051_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m051_dmg.nsbca"
+        },
+        {
+          "name": "run_ed",
+          "file": "m051_run_ed.nsbca"
+        },
+        {
+          "name": "run_lp",
+          "file": "m051_run_lp.nsbca"
+        },
+        {
+          "name": "run_st",
+          "file": "m051_run_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m051_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m051_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_arbd",
+          "file": "ef_e_l_arbd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_pbul",
+          "file": "ef_e_l_pbul.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "finjer_g",
+          "name": "Finjer G",
+          "animation_model": "board_green",
+          "archetype": "boarder",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_sh",
+            "atk_sp_ed",
+            "atk_sp_lp",
+            "atk_sp_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "booma",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/booma/",
+      "info": {
+        "name": "booma",
+        "modelBaseName": "s_071",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s071_atk.nsbca"
+        },
+        {
+          "name": "atk_hi",
+          "file": "s071_atk_hi.nsbca"
+        },
+        {
+          "name": "atk_mi",
+          "file": "s071_atk_mi.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "s071_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s071_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s071_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s071_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s071_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s071_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_rstt",
+          "file": "ef_e_c_rstt.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "booma_origin",
+          "name": "Booma Origin",
+          "animation_model": "booma",
+          "archetype": "bruiser",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "dash",
+              "clip": "run",
+              "kind": "charge",
+              "charge_segments": {
+                "st": "atk",
+                "lp": "run",
+                "ed": "atk_mi"
+              },
+              "overshoot": 1.0,
+              "stop_on_hit": true,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 0.55,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 4.0
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_hi"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "boss_darkfalz",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_darkfalz/",
+      "info": {
+        "name": "boss_darkfalz",
+        "modelBaseName": "z_005",
+        "animationCount": 25,
+        "mainAnimationCount": 25,
+        "effectCount": 17,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "bhsht",
+          "file": "z_005_bhsht.nsbca"
+        },
+        {
+          "name": "dam1",
+          "file": "z_005_dam1.nsbca"
+        },
+        {
+          "name": "dam2",
+          "file": "z_005_dam2.nsbca"
+        },
+        {
+          "name": "dam3",
+          "file": "z_005_dam3.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "z_005_ded.nsbca"
+        },
+        {
+          "name": "diffusn",
+          "file": "z_005_diffusn.nsbca"
+        },
+        {
+          "name": "diflp",
+          "file": "z_005_diflp.nsbca"
+        },
+        {
+          "name": "difst",
+          "file": "z_005_difst.nsbca"
+        },
+        {
+          "name": "down",
+          "file": "z_005_down.nsbca"
+        },
+        {
+          "name": "nagi",
+          "file": "z_005_nagi.nsbca"
+        },
+        {
+          "name": "orca",
+          "file": "z_005_orca.nsbca"
+        },
+        {
+          "name": "rad2wat",
+          "file": "z_005_rad2wat.nsbca"
+        },
+        {
+          "name": "radiate",
+          "file": "z_005_radiate.nsbca"
+        },
+        {
+          "name": "radlp",
+          "file": "z_005_radlp.nsbca"
+        },
+        {
+          "name": "radst",
+          "file": "z_005_radst.nsbca"
+        },
+        {
+          "name": "radwat",
+          "file": "z_005_radwat.nsbca"
+        },
+        {
+          "name": "swm",
+          "file": "z_005_swm.nsbca"
+        },
+        {
+          "name": "swm2wat",
+          "file": "z_005_swm2wat.nsbca"
+        },
+        {
+          "name": "thr2wat",
+          "file": "z_005_thr2wat.nsbca"
+        },
+        {
+          "name": "thrlp",
+          "file": "z_005_thrlp.nsbca"
+        },
+        {
+          "name": "thrst",
+          "file": "z_005_thrst.nsbca"
+        },
+        {
+          "name": "up",
+          "file": "z_005_up.nsbca"
+        },
+        {
+          "name": "walk",
+          "file": "z_005_walk.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "z_005_wat.nsbca"
+        },
+        {
+          "name": "wat2swm",
+          "file": "z_005_wat2swm.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_dktnt",
+          "file": "ef_dktnt.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bhole",
+          "file": "ef_e_d_bhole.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bit",
+          "file": "ef_e_d_bit.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bsdw1",
+          "file": "ef_e_d_bsdw1.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bsdw2",
+          "file": "ef_e_d_bsdw2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bsdw3",
+          "file": "ef_e_d_bsdw3.nsbmd"
+        },
+        {
+          "name": "ef_e_d_bsdw4",
+          "file": "ef_e_d_bsdw4.nsbmd"
+        },
+        {
+          "name": "ef_e_d_dark",
+          "file": "ef_e_d_dark.nsbmd"
+        },
+        {
+          "name": "ef_e_d_emit",
+          "file": "ef_e_d_emit.nsbmd"
+        },
+        {
+          "name": "ef_e_d_emit2",
+          "file": "ef_e_d_emit2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_emmz",
+          "file": "ef_e_d_emmz.nsbmd"
+        },
+        {
+          "name": "ef_e_d_sdw",
+          "file": "ef_e_d_sdw.nsbmd"
+        },
+        {
+          "name": "ef_e_d_sphit",
+          "file": "ef_e_d_sphit.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spr_st",
+          "file": "ef_e_d_spr_st.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spread",
+          "file": "ef_e_d_spread.nsbmd"
+        },
+        {
+          "name": "ef_e_d_tame",
+          "file": "ef_e_d_tame.nsbmd"
+        },
+        {
+          "name": "ef_e_d_tsdw",
+          "file": "ef_e_d_tsdw.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "dark_falz",
+          "name": "Dark Falz",
+          "animation_model": "boss_darkfalz",
+          "archetype": "boss",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "boss_dragon",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_dragon/",
+      "info": {
+        "name": "boss_dragon",
+        "modelBaseName": "z_001",
+        "animationCount": 26,
+        "mainAnimationCount": 26,
+        "effectCount": 11,
+        "partsCount": 2
+      },
+      "animations": [
+        {
+          "name": "atkh1",
+          "file": "z_001_atkh1.nsbca"
+        },
+        {
+          "name": "atkh2",
+          "file": "z_001_atkh2.nsbca"
+        },
+        {
+          "name": "atkrl",
+          "file": "z_001_atkrl.nsbca"
+        },
+        {
+          "name": "atkrr",
+          "file": "z_001_atkrr.nsbca"
+        },
+        {
+          "name": "atkwg",
+          "file": "z_001_atkwg.nsbca"
+        },
+        {
+          "name": "brs1",
+          "file": "z_001_brs1.nsbca"
+        },
+        {
+          "name": "brs2",
+          "file": "z_001_brs2.nsbca"
+        },
+        {
+          "name": "brslp",
+          "file": "z_001_brslp.nsbca"
+        },
+        {
+          "name": "brsst",
+          "file": "z_001_brsst.nsbca"
+        },
+        {
+          "name": "claw",
+          "file": "z_001_claw.nsbca"
+        },
+        {
+          "name": "claw2wat",
+          "file": "z_001_claw2wat.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "z_001_ded.nsbca"
+        },
+        {
+          "name": "dmg1",
+          "file": "z_001_dmg1.nsbca"
+        },
+        {
+          "name": "dmg2",
+          "file": "z_001_dmg2.nsbca"
+        },
+        {
+          "name": "flst",
+          "file": "z_001_flst.nsbca"
+        },
+        {
+          "name": "fly",
+          "file": "z_001_fly.nsbca"
+        },
+        {
+          "name": "gl2tr",
+          "file": "z_001_gl2tr.nsbca"
+        },
+        {
+          "name": "gld2claw",
+          "file": "z_001_gld2claw.nsbca"
+        },
+        {
+          "name": "rdg",
+          "file": "z_001_rdg.nsbca"
+        },
+        {
+          "name": "rdst",
+          "file": "z_001_rdst.nsbca"
+        },
+        {
+          "name": "tht",
+          "file": "z_001_tht.nsbca"
+        },
+        {
+          "name": "tr2gl",
+          "file": "z_001_tr2gl.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "z_001_wat.nsbca"
+        },
+        {
+          "name": "wat2atkwg",
+          "file": "z_001_wat2atkwg.nsbca"
+        },
+        {
+          "name": "wlk1",
+          "file": "z_001_wlk1.nsbca"
+        },
+        {
+          "name": "wlk2",
+          "file": "z_001_wlk2.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_m_br",
+          "file": "ef_e_m_br.nsbmd"
+        },
+        {
+          "name": "ef_e_m_br_s",
+          "file": "ef_e_m_br_s.nsbmd"
+        },
+        {
+          "name": "ef_e_m_brhit",
+          "file": "ef_e_m_brhit.nsbmd"
+        },
+        {
+          "name": "ef_e_m_cry",
+          "file": "ef_e_m_cry.nsbmd"
+        },
+        {
+          "name": "ef_e_m_fogc",
+          "file": "ef_e_m_fogc.nsbmd"
+        },
+        {
+          "name": "ef_e_m_kaze",
+          "file": "ef_e_m_kaze.nsbmd"
+        },
+        {
+          "name": "ef_e_m_lfire",
+          "file": "ef_e_m_lfire.nsbmd"
+        },
+        {
+          "name": "ef_e_m_mbr",
+          "file": "ef_e_m_mbr.nsbmd"
+        },
+        {
+          "name": "ef_e_m_spin",
+          "file": "ef_e_m_spin.nsbmd"
+        },
+        {
+          "name": "ef_e_m_taill",
+          "file": "ef_e_m_taill.nsbmd"
+        },
+        {
+          "name": "ef_en_m_dfog",
+          "file": "ef_en_m_dfog.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "o0b_dradmg",
+          "file": "o0b_dradmg.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_001_horn",
+          "file": "z_001_horn.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "reyburn",
+          "name": "Reyburn",
+          "animation_model": "boss_dragon",
+          "archetype": "boss",
+          "runtime_definition_source": "data/boss_arenas.json + ReyburnBoss",
+          "attacks": [
+            {
+              "id": "bite",
+              "clip": "atkh1",
+              "kind": "melee_arc",
+              "phases": [
+                "ground"
+              ],
+              "max_range": 4,
+              "note": "walk and bite (atkh1 quick bite)"
+            },
+            {
+              "id": "rush_bite",
+              "clip": "atkh2",
+              "chain": [
+                "wlk2",
+                "atkh2"
+              ],
+              "kind": "charge",
+              "phases": [
+                "ground"
+              ],
+              "min_range": 4,
+              "max_range": 12,
+              "damage_mult": 1.5,
+              "note": "runs toward the player (wlk2) and bites (atkh2 heavy bite)"
+            },
+            {
+              "id": "tail_swipe_l",
+              "clip": "atkrl",
+              "kind": "melee_arc",
+              "phases": [
+                "ground"
+              ],
+              "hit_half_angle_deg": 100,
+              "max_range": 6,
+              "weight": 0.5,
+              "note": "walk and tail swipe (left)"
+            },
+            {
+              "id": "tail_swipe_r",
+              "clip": "atkrr",
+              "kind": "melee_arc",
+              "phases": [
+                "ground"
+              ],
+              "hit_half_angle_deg": 100,
+              "max_range": 6,
+              "weight": 0.5,
+              "note": "walk and tail swipe (right)"
+            },
+            {
+              "id": "wing_flap",
+              "clip": "atkwg",
+              "chain": [
+                "wat2atkwg",
+                "atkwg"
+              ],
+              "kind": "melee_arc",
+              "phases": [
+                "ground"
+              ],
+              "hit_half_angle_deg": 90,
+              "max_range": 6,
+              "knockback": 8,
+              "note": "wing flap blows the player away along the facing and deals damage"
+            },
+            {
+              "id": "war_cry",
+              "clip": "tht",
+              "kind": "aoe_burst",
+              "phases": [
+                "ground"
+              ],
+              "hit_half_angle_deg": 180,
+              "hit_reach": 6,
+              "max_range": 5,
+              "weight": 0.7,
+              "note": "war cry with a blast radius in a circle around the dragon"
+            },
+            {
+              "id": "fireball_volley",
+              "clip": "brs2",
+              "chain": [
+                "brsst",
+                "brslp",
+                "brs2"
+              ],
+              "kind": "projectile",
+              "phases": [
+                "ground"
+              ],
+              "min_range": 5,
+              "max_range": 18,
+              "lp_loops": 3,
+              "note": "fires three fireballs while standing — one per brslp rep; brs1 (0.5s) likely the single-shot variant"
+            },
+            {
+              "id": "land_slam",
+              "clip": "gld2claw",
+              "kind": "aoe_burst",
+              "phases": [
+                "flight"
+              ],
+              "hit_half_angle_deg": 180,
+              "hit_reach": 6,
+              "damage_mult": 1.5,
+              "note": "flies away, then deals damage in a circle where it lands"
+            },
+            {
+              "id": "sky_fireball",
+              "clip": "brs2",
+              "kind": "lob",
+              "phases": [
+                "flight"
+              ],
+              "split": 3,
+              "hit_reach": 2.5,
+              "note": "from the air: a fireball at the ground that splits into 3 parts"
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "boss_mother",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_mother/",
+      "info": {
+        "name": "boss_mother",
+        "modelBaseName": "z_004",
+        "animationCount": 24,
+        "mainAnimationCount": 24,
+        "effectCount": 7,
+        "partsCount": 2
+      },
+      "animations": [
+        {
+          "name": "cmbend",
+          "file": "z_004_cmbend.nsbca"
+        },
+        {
+          "name": "cmblp",
+          "file": "z_004_cmblp.nsbca"
+        },
+        {
+          "name": "cmbst",
+          "file": "z_004_cmbst.nsbca"
+        },
+        {
+          "name": "dam1",
+          "file": "z_004_dam1.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "z_004_ded.nsbca"
+        },
+        {
+          "name": "fall",
+          "file": "z_004_fall.nsbca"
+        },
+        {
+          "name": "fallwat",
+          "file": "z_004_fallwat.nsbca"
+        },
+        {
+          "name": "hedb",
+          "file": "z_004_hedb.nsbca"
+        },
+        {
+          "name": "hedb2lp",
+          "file": "z_004_hedb2lp.nsbca"
+        },
+        {
+          "name": "hedb2wt2",
+          "file": "z_004_hedb2wt2.nsbca"
+        },
+        {
+          "name": "hedbhitlp",
+          "file": "z_004_hedbhitlp.nsbca"
+        },
+        {
+          "name": "hedblp",
+          "file": "z_004_hedblp.nsbca"
+        },
+        {
+          "name": "hedbst",
+          "file": "z_004_hedbst.nsbca"
+        },
+        {
+          "name": "hit",
+          "file": "z_004_hit.nsbca"
+        },
+        {
+          "name": "laser",
+          "file": "z_004_laser.nsbca"
+        },
+        {
+          "name": "laserlp",
+          "file": "z_004_laserlp.nsbca"
+        },
+        {
+          "name": "laserst",
+          "file": "z_004_laserst.nsbca"
+        },
+        {
+          "name": "move",
+          "file": "z_004_move.nsbca"
+        },
+        {
+          "name": "stdup",
+          "file": "z_004_stdup.nsbca"
+        },
+        {
+          "name": "swing",
+          "file": "z_004_swing.nsbca"
+        },
+        {
+          "name": "swinglp",
+          "file": "z_004_swinglp.nsbca"
+        },
+        {
+          "name": "swingst",
+          "file": "z_004_swingst.nsbca"
+        },
+        {
+          "name": "wat1",
+          "file": "z_004_wat1.nsbca"
+        },
+        {
+          "name": "wat2",
+          "file": "z_004_wat2.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_cmb",
+          "file": "ef_e_d_cmb.nsbmd"
+        },
+        {
+          "name": "ef_e_d_fog",
+          "file": "ef_e_d_fog.nsbmd"
+        },
+        {
+          "name": "ef_e_d_head",
+          "file": "ef_e_d_head.nsbmd"
+        },
+        {
+          "name": "ef_e_d_lsr",
+          "file": "ef_e_d_lsr.nsbmd"
+        },
+        {
+          "name": "ef_e_d_lsrex",
+          "file": "ef_e_d_lsrex.nsbmd"
+        },
+        {
+          "name": "ef_e_d_piece",
+          "file": "ef_e_d_piece.nsbmd"
+        },
+        {
+          "name": "ef_e_d_pnt",
+          "file": "ef_e_d_pnt.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "z_004_kao_a",
+          "file": "z_004_kao_a.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_004_kao_b",
+          "file": "z_004_kao_b.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "humilias",
+          "name": "Humilias",
+          "animation_model": "boss_mother",
+          "archetype": "boss",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "boss_mother_piece",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_mother_piece/",
+      "info": {
+        "name": "boss_mother_piece",
+        "modelBaseName": "z_004_koma_a",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 6,
+        "partsCount": 5
+      },
+      "animations": [
+        {
+          "name": "kmatkcs",
+          "file": "z_004_kmatkcs.nsbca"
+        },
+        {
+          "name": "kmatkhm1",
+          "file": "z_004_kmatkhm1.nsbca"
+        },
+        {
+          "name": "kmatkhm2",
+          "file": "z_004_kmatkhm2.nsbca"
+        },
+        {
+          "name": "kmatst",
+          "file": "z_004_kmatst.nsbca"
+        },
+        {
+          "name": "kmdam1",
+          "file": "z_004_kmdam1.nsbca"
+        },
+        {
+          "name": "kmdam2",
+          "file": "z_004_kmdam2.nsbca"
+        },
+        {
+          "name": "kmend",
+          "file": "z_004_kmend.nsbca"
+        },
+        {
+          "name": "kmstt",
+          "file": "z_004_kmstt.nsbca"
+        },
+        {
+          "name": "kmvb",
+          "file": "z_004_kmvb.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_arnd",
+          "file": "ef_e_d_arnd.nsbmd"
+        },
+        {
+          "name": "ef_e_d_pzm",
+          "file": "ef_e_d_pzm.nsbmd"
+        },
+        {
+          "name": "ef_e_d_reso",
+          "file": "ef_e_d_reso.nsbmd"
+        },
+        {
+          "name": "ef_e_d_stg",
+          "file": "ef_e_d_stg.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swrd",
+          "file": "ef_e_d_swrd.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swrd_front",
+          "file": "ef_e_d_swrd_front.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "z_004_koma_aa",
+          "file": "z_004_koma_aa.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_004_koma_b",
+          "file": "z_004_koma_b.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_004_koma_bb",
+          "file": "z_004_koma_bb.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_004_koma_c",
+          "file": "z_004_koma_c.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_004_koma_cc",
+          "file": "z_004_koma_cc.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": []
+    },
+    {
+      "model": "boss_octopus",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_octopus/",
+      "info": {
+        "name": "boss_octopus",
+        "modelBaseName": "z_002",
+        "animationCount": 57,
+        "mainAnimationCount": 20,
+        "effectCount": 14,
+        "partsCount": 3
+      },
+      "animations": [
+        {
+          "name": "abs2eat",
+          "file": "z_002_abs2eat.nsbca"
+        },
+        {
+          "name": "abs2vmwt",
+          "file": "z_002_abs2vmwt.nsbca"
+        },
+        {
+          "name": "abscnc",
+          "file": "z_002_abscnc.nsbca"
+        },
+        {
+          "name": "absorb",
+          "file": "z_002_absorb.nsbca"
+        },
+        {
+          "name": "collisn",
+          "file": "z_002_collisn.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "z_002_dmg.nsbca"
+        },
+        {
+          "name": "eat",
+          "file": "z_002_eat.nsbca"
+        },
+        {
+          "name": "eatcnc",
+          "file": "z_002_eatcnc.nsbca"
+        },
+        {
+          "name": "float",
+          "file": "z_002_float.nsbca"
+        },
+        {
+          "name": "sp2wat",
+          "file": "z_002_sp2wat.nsbca"
+        },
+        {
+          "name": "spout",
+          "file": "z_002_spout.nsbca"
+        },
+        {
+          "name": "spwat",
+          "file": "z_002_spwat.nsbca"
+        },
+        {
+          "name": "stapp",
+          "file": "z_002_stapp.nsbca"
+        },
+        {
+          "name": "stcatchl",
+          "file": "z_002_stcatchl.nsbca"
+        },
+        {
+          "name": "stcatchr",
+          "file": "z_002_stcatchr.nsbca"
+        },
+        {
+          "name": "stcth2wtl",
+          "file": "z_002_stcth2wtl.nsbca"
+        },
+        {
+          "name": "stcth2wtr",
+          "file": "z_002_stcth2wtr.nsbca"
+        },
+        {
+          "name": "stcthllp",
+          "file": "z_002_stcthllp.nsbca"
+        },
+        {
+          "name": "stcthrlp",
+          "file": "z_002_stcthrlp.nsbca"
+        },
+        {
+          "name": "stdmg1",
+          "file": "z_002_stdmg1.nsbca"
+        },
+        {
+          "name": "stdmg2",
+          "file": "z_002_stdmg2.nsbca"
+        },
+        {
+          "name": "stdmg3",
+          "file": "z_002_stdmg3.nsbca"
+        },
+        {
+          "name": "stfreq",
+          "file": "z_002_stfreq.nsbca"
+        },
+        {
+          "name": "sthide",
+          "file": "z_002_sthide.nsbca"
+        },
+        {
+          "name": "stscrew",
+          "file": "z_002_stscrew.nsbca"
+        },
+        {
+          "name": "stsweepl",
+          "file": "z_002_stsweepl.nsbca"
+        },
+        {
+          "name": "stsweepr",
+          "file": "z_002_stsweepr.nsbca"
+        },
+        {
+          "name": "stwat",
+          "file": "z_002_stwat.nsbca"
+        },
+        {
+          "name": "ttpull",
+          "file": "z_002_ttpull.nsbca"
+        },
+        {
+          "name": "ttretrn",
+          "file": "z_002_ttretrn.nsbca"
+        },
+        {
+          "name": "ttrrdl",
+          "file": "z_002_ttrrdl.nsbca"
+        },
+        {
+          "name": "ttrrdr",
+          "file": "z_002_ttrrdr.nsbca"
+        },
+        {
+          "name": "ttsh2sn",
+          "file": "z_002_ttsh2sn.nsbca"
+        },
+        {
+          "name": "ttshoot",
+          "file": "z_002_ttshoot.nsbca"
+        },
+        {
+          "name": "ttshtlp",
+          "file": "z_002_ttshtlp.nsbca"
+        },
+        {
+          "name": "ttshtlp2wt",
+          "file": "z_002_ttshtlp2wt.nsbca"
+        },
+        {
+          "name": "ttsnipe",
+          "file": "z_002_ttsnipe.nsbca"
+        },
+        {
+          "name": "ttstg2hd",
+          "file": "z_002_ttstg2hd.nsbca"
+        },
+        {
+          "name": "ttsting",
+          "file": "z_002_ttsting.nsbca"
+        },
+        {
+          "name": "ttstp",
+          "file": "z_002_ttstp.nsbca"
+        },
+        {
+          "name": "ttstpwt",
+          "file": "z_002_ttstpwt.nsbca"
+        },
+        {
+          "name": "tttear",
+          "file": "z_002_tttear.nsbca"
+        },
+        {
+          "name": "ttwat",
+          "file": "z_002_ttwat.nsbca"
+        },
+        {
+          "name": "ttwat2wts",
+          "file": "z_002_ttwat2wts.nsbca"
+        },
+        {
+          "name": "ttwt2stp",
+          "file": "z_002_ttwt2stp.nsbca"
+        },
+        {
+          "name": "ttwts",
+          "file": "z_002_ttwts.nsbca"
+        },
+        {
+          "name": "ttwts2wat",
+          "file": "z_002_ttwts2wat.nsbca"
+        },
+        {
+          "name": "ttwtsapp",
+          "file": "z_002_ttwtsapp.nsbca"
+        },
+        {
+          "name": "ttwtshide",
+          "file": "z_002_ttwtshide.nsbca"
+        },
+        {
+          "name": "vmply",
+          "file": "z_002_vmply.nsbca"
+        },
+        {
+          "name": "vmwat",
+          "file": "z_002_vmwat.nsbca"
+        },
+        {
+          "name": "vomit",
+          "file": "z_002_vomit.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "z_002_wat.nsbca"
+        },
+        {
+          "name": "wattir",
+          "file": "z_002_wattir.nsbca"
+        },
+        {
+          "name": "wt2abs",
+          "file": "z_002_wt2abs.nsbca"
+        },
+        {
+          "name": "wt2spwt",
+          "file": "z_002_wt2spwt.nsbca"
+        },
+        {
+          "name": "wttr2wt",
+          "file": "z_002_wttr2wt.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_w_canon",
+          "file": "ef_e_w_canon.nsbmd"
+        },
+        {
+          "name": "ef_e_w_ded",
+          "file": "ef_e_w_ded.nsbmd"
+        },
+        {
+          "name": "ef_e_w_gero",
+          "file": "ef_e_w_gero.nsbmd"
+        },
+        {
+          "name": "ef_e_w_hmn",
+          "file": "ef_e_w_hmn.nsbmd"
+        },
+        {
+          "name": "ef_e_w_ihl",
+          "file": "ef_e_w_ihl.nsbmd"
+        },
+        {
+          "name": "ef_e_w_psumi",
+          "file": "ef_e_w_psumi.nsbmd"
+        },
+        {
+          "name": "ef_e_w_scrw",
+          "file": "ef_e_w_scrw.nsbmd"
+        },
+        {
+          "name": "ef_e_w_shibuki",
+          "file": "ef_e_w_shibuki.nsbmd"
+        },
+        {
+          "name": "ef_e_w_shit",
+          "file": "ef_e_w_shit.nsbmd"
+        },
+        {
+          "name": "ef_e_w_spin",
+          "file": "ef_e_w_spin.nsbmd"
+        },
+        {
+          "name": "ef_e_w_stage",
+          "file": "ef_e_w_stage.nsbmd"
+        },
+        {
+          "name": "ef_e_w_stage1",
+          "file": "ef_e_w_stage1.nsbmd"
+        },
+        {
+          "name": "ef_e_w_yuka",
+          "file": "ef_e_w_yuka.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "o0b_kaeru",
+          "file": "o0b_kaeru.nsbmd",
+          "animationCount": 0
+        },
+        {
+          "name": "z_002_st",
+          "file": "z_002_st.nsbmd",
+          "animationCount": 16
+        },
+        {
+          "name": "z_002_tt",
+          "file": "z_002_tt.nsbmd",
+          "animationCount": 21
+        }
+      ],
+      "roster": [
+        {
+          "id": "octo_diablo",
+          "name": "Octo Diablo",
+          "animation_model": "boss_octopus",
+          "archetype": "boss",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "boss_robot",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_robot/",
+      "info": {
+        "name": "boss_robot",
+        "modelBaseName": "z_003",
+        "animationCount": 10,
+        "mainAnimationCount": 1,
+        "effectCount": 10,
+        "partsCount": 3
+      },
+      "animations": [
+        {
+          "name": "atk_dl_lp",
+          "file": "z003_atk_dl_lp.nsbca"
+        },
+        {
+          "name": "dummy",
+          "file": "z003_dummy.nsbca"
+        },
+        {
+          "name": "ve_ded_a_n",
+          "file": "z003_ve_ded_a_n.nsbca"
+        },
+        {
+          "name": "ve_ded_a_u",
+          "file": "z003_ve_ded_a_u.nsbca"
+        },
+        {
+          "name": "ve_ded_b_n",
+          "file": "z003_ve_ded_b_n.nsbca"
+        },
+        {
+          "name": "ve_ded_b_u",
+          "file": "z003_ve_ded_b_u.nsbca"
+        },
+        {
+          "name": "ve_stt_n",
+          "file": "z003_ve_stt_n.nsbca"
+        },
+        {
+          "name": "ve_stt_u",
+          "file": "z003_ve_stt_u.nsbca"
+        },
+        {
+          "name": "ve_wat_n",
+          "file": "z003_ve_wat_n.nsbca"
+        },
+        {
+          "name": "ve_wat_u",
+          "file": "z003_ve_wat_u.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_bl_s",
+          "file": "ef_e_l_bl_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_drill1",
+          "file": "ef_e_l_drill1.nsbmd"
+        },
+        {
+          "name": "ef_e_l_drill2",
+          "file": "ef_e_l_drill2.nsbmd"
+        },
+        {
+          "name": "ef_e_l_dummy",
+          "file": "ef_e_l_dummy.nsbmd"
+        },
+        {
+          "name": "ef_e_l_hit_s",
+          "file": "ef_e_l_hit_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_hov",
+          "file": "ef_e_l_hov.nsbmd"
+        },
+        {
+          "name": "ef_e_l_mz_s",
+          "file": "ef_e_l_mz_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_wave1",
+          "file": "ef_e_l_wave1.nsbmd"
+        },
+        {
+          "name": "ef_e_l_wave2",
+          "file": "ef_e_l_wave2.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "o0c_bsef01",
+          "file": "o0c_bsef01.nsbmd",
+          "animationCount": 1
+        },
+        {
+          "name": "z_003n",
+          "file": "z_003n.nsbmd",
+          "animationCount": 4
+        },
+        {
+          "name": "z_003u",
+          "file": "z_003u.nsbmd",
+          "animationCount": 4
+        }
+      ],
+      "roster": [
+        {
+          "id": "chaos_mobius",
+          "name": "Chaos & Mobius",
+          "animation_model": "boss_robot",
+          "archetype": "boss",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_dl_lp"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "boss_robot_cmb",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_robot_cmb/",
+      "info": {
+        "name": "boss_robot_cmb",
+        "modelBaseName": "z_003",
+        "animationCount": 37,
+        "mainAnimationCount": 26,
+        "effectCount": 18,
+        "partsCount": 2
+      },
+      "animations": [
+        {
+          "name": "atk_dl_at",
+          "file": "z003_atk_dl_at.nsbca"
+        },
+        {
+          "name": "atk_dl_ed",
+          "file": "z003_atk_dl_ed.nsbca"
+        },
+        {
+          "name": "atk_dl_lp",
+          "file": "z003_atk_dl_lp.nsbca"
+        },
+        {
+          "name": "atk_dl_st",
+          "file": "z003_atk_dl_st.nsbca"
+        },
+        {
+          "name": "atk_dr_at",
+          "file": "z003_atk_dr_at.nsbca"
+        },
+        {
+          "name": "atk_dr_ed",
+          "file": "z003_atk_dr_ed.nsbca"
+        },
+        {
+          "name": "atk_dr_lp",
+          "file": "z003_atk_dr_lp.nsbca"
+        },
+        {
+          "name": "atk_dr_st",
+          "file": "z003_atk_dr_st.nsbca"
+        },
+        {
+          "name": "atk_gl_at",
+          "file": "z003_atk_gl_at.nsbca"
+        },
+        {
+          "name": "atk_gl_ed",
+          "file": "z003_atk_gl_ed.nsbca"
+        },
+        {
+          "name": "atk_gl_st",
+          "file": "z003_atk_gl_st.nsbca"
+        },
+        {
+          "name": "atk_gr_at",
+          "file": "z003_atk_gr_at.nsbca"
+        },
+        {
+          "name": "atk_gr_ed",
+          "file": "z003_atk_gr_ed.nsbca"
+        },
+        {
+          "name": "atk_gr_st",
+          "file": "z003_atk_gr_st.nsbca"
+        },
+        {
+          "name": "atk_sw_at",
+          "file": "z003_atk_sw_at.nsbca"
+        },
+        {
+          "name": "atk_sw_ed",
+          "file": "z003_atk_sw_ed.nsbca"
+        },
+        {
+          "name": "atk_sw_lp",
+          "file": "z003_atk_sw_lp.nsbca"
+        },
+        {
+          "name": "atk_sw_st",
+          "file": "z003_atk_sw_st.nsbca"
+        },
+        {
+          "name": "ch_in_n",
+          "file": "z003_ch_in_n.nsbca"
+        },
+        {
+          "name": "ch_in_u",
+          "file": "z003_ch_in_u.nsbca"
+        },
+        {
+          "name": "ch_out_n",
+          "file": "z003_ch_out_n.nsbca"
+        },
+        {
+          "name": "ch_out_u",
+          "file": "z003_ch_out_u.nsbca"
+        },
+        {
+          "name": "ded_n",
+          "file": "z003_ded_n.nsbca"
+        },
+        {
+          "name": "ded_u",
+          "file": "z003_ded_u.nsbca"
+        },
+        {
+          "name": "dummy",
+          "file": "z003_dummy.nsbca"
+        },
+        {
+          "name": "dwn_ed",
+          "file": "z003_dwn_ed.nsbca"
+        },
+        {
+          "name": "dwn_lp",
+          "file": "z003_dwn_lp.nsbca"
+        },
+        {
+          "name": "dwn_st",
+          "file": "z003_dwn_st.nsbca"
+        },
+        {
+          "name": "mov_ed",
+          "file": "z003_mov_ed.nsbca"
+        },
+        {
+          "name": "mov_lp",
+          "file": "z003_mov_lp.nsbca"
+        },
+        {
+          "name": "mov_st",
+          "file": "z003_mov_st.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "z003_stp.nsbca"
+        },
+        {
+          "name": "stt_n",
+          "file": "z003_stt_n.nsbca"
+        },
+        {
+          "name": "stt_u",
+          "file": "z003_stt_u.nsbca"
+        },
+        {
+          "name": "ve_wat_n",
+          "file": "z003_ve_wat_n.nsbca"
+        },
+        {
+          "name": "ve_wat_u",
+          "file": "z003_ve_wat_u.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "z003_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_l_air",
+          "file": "ef_e_l_air.nsbmd"
+        },
+        {
+          "name": "ef_e_l_bl_f",
+          "file": "ef_e_l_bl_f.nsbmd"
+        },
+        {
+          "name": "ef_e_l_bl_s",
+          "file": "ef_e_l_bl_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_bom",
+          "file": "ef_e_l_bom.nsbmd"
+        },
+        {
+          "name": "ef_e_l_dead",
+          "file": "ef_e_l_dead.nsbmd"
+        },
+        {
+          "name": "ef_e_l_dummy",
+          "file": "ef_e_l_dummy.nsbmd"
+        },
+        {
+          "name": "ef_e_l_finish",
+          "file": "ef_e_l_finish.nsbmd"
+        },
+        {
+          "name": "ef_e_l_flash",
+          "file": "ef_e_l_flash.nsbmd"
+        },
+        {
+          "name": "ef_e_l_hit_f",
+          "file": "ef_e_l_hit_f.nsbmd"
+        },
+        {
+          "name": "ef_e_l_hit_s",
+          "file": "ef_e_l_hit_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_hov",
+          "file": "ef_e_l_hov.nsbmd"
+        },
+        {
+          "name": "ef_e_l_mz_f",
+          "file": "ef_e_l_mz_f.nsbmd"
+        },
+        {
+          "name": "ef_e_l_mz_s",
+          "file": "ef_e_l_mz_s.nsbmd"
+        },
+        {
+          "name": "ef_e_l_slash",
+          "file": "ef_e_l_slash.nsbmd"
+        },
+        {
+          "name": "ef_e_l_tsuki",
+          "file": "ef_e_l_tsuki.nsbmd"
+        },
+        {
+          "name": "ef_e_l_union",
+          "file": "ef_e_l_union.nsbmd"
+        },
+        {
+          "name": "ef_e_l_warp",
+          "file": "ef_e_l_warp.nsbmd"
+        },
+        {
+          "name": "ef_e_l_warp1",
+          "file": "ef_e_l_warp1.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "z_003n",
+          "file": "z_003n.nsbmd",
+          "animationCount": 5
+        },
+        {
+          "name": "z_103u",
+          "file": "z_103u.nsbmd",
+          "animationCount": 5
+        }
+      ],
+      "roster": []
+    },
+    {
+      "model": "circle",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/circle/",
+      "info": {
+        "name": "circle",
+        "modelBaseName": "s_060",
+        "animationCount": 6,
+        "mainAnimationCount": 6,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_060_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_060_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_060_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s_060_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_060_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s_060_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "eulada",
+          "name": "Eulada",
+          "animation_model": "circle",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "circle_black",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/circle_black/",
+      "info": {
+        "name": "circle_black",
+        "modelBaseName": "s_160",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "euladaveil",
+          "name": "Euladaveil",
+          "animation_model": "circle",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "deer",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/deer/",
+      "info": {
+        "name": "deer",
+        "modelBaseName": "m_011",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m011_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m011_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m011_dmg.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "m011_stp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m011_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m011_wat.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m011_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m011_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "stagg",
+          "name": "Stagg",
+          "animation_model": "deer",
+          "archetype": "quadruped",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "frog",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/frog/",
+      "info": {
+        "name": "frog",
+        "modelBaseName": "s_020",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_020_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_020_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_020_dmg.nsbca"
+        },
+        {
+          "name": "jmp",
+          "file": "s_020_jmp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s_020_stt.nsbca"
+        },
+        {
+          "name": "tur",
+          "file": "s_020_tur.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_020_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s_020_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_c_stt_w",
+          "file": "ef_c_stt_w.nsbmd"
+        },
+        {
+          "name": "ef_e_c_phit",
+          "file": "ef_e_c_phit.nsbmd"
+        },
+        {
+          "name": "ef_e_c_poisn",
+          "file": "ef_e_c_poisn.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "porel",
+          "name": "Porel",
+          "animation_model": "frog",
+          "archetype": "hopper",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "bubble",
+              "clip": "atk",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 2.0,
+              "max_range": 6.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 6.0,
+              "damage_mult": 1.0
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "frog_bomb",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/frog_bomb/",
+      "info": {
+        "name": "frog_bomb",
+        "modelBaseName": "s_041",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_r_stt",
+          "file": "ef_e_r_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_w_bomb",
+          "file": "ef_e_w_bomb.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "pobomma",
+          "name": "Pobomma",
+          "animation_model": "frog",
+          "archetype": "hopper",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "bubble",
+              "clip": "atk",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 2.0,
+              "max_range": 6.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 6.0,
+              "damage_mult": 1.0
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "frog_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/frog_rare/",
+      "info": {
+        "name": "frog_rare",
+        "modelBaseName": "s_120",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_c_stt_w",
+          "file": "ef_c_stt_w.nsbmd"
+        },
+        {
+          "name": "ef_e_c_phit2",
+          "file": "ef_e_c_phit2.nsbmd"
+        },
+        {
+          "name": "ef_e_c_poison2",
+          "file": "ef_e_c_poison2.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "pomarr",
+          "name": "Pomarr",
+          "animation_model": "frog",
+          "archetype": "hopper",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "bubble",
+              "clip": "atk",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 2.0,
+              "max_range": 6.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 6.0,
+              "damage_mult": 1.0
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "gorilla",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/gorilla/",
+      "info": {
+        "name": "gorilla",
+        "modelBaseName": "b_014",
+        "animationCount": 10,
+        "mainAnimationCount": 10,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk1",
+          "file": "b_014_atk1.nsbca"
+        },
+        {
+          "name": "atk2_ed",
+          "file": "b_014_atk2_ed.nsbca"
+        },
+        {
+          "name": "atk2_lp",
+          "file": "b_014_atk2_lp.nsbca"
+        },
+        {
+          "name": "atk2_st",
+          "file": "b_014_atk2_st.nsbca"
+        },
+        {
+          "name": "atk3",
+          "file": "b_014_atk3.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b_014_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b_014_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b_014_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b_014_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b_014_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_down",
+          "file": "ef_e_s_down.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "hildegao",
+          "name": "Hildegao",
+          "animation_model": "gorilla",
+          "archetype": "bigrig_combo",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "punch_combo",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 50.0,
+              "hit_reach": 2.2,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "shoulder_slam",
+              "clip": "atk2",
+              "kind": "charge",
+              "weight": 2.0,
+              "min_range": 3.0,
+              "max_range": 9.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 40.0,
+              "hit_reach": 1.4,
+              "damage_mult": 1.4
+            },
+            {
+              "id": "belly_flop",
+              "clip": "atk3",
+              "kind": "leap",
+              "weight": 1.0,
+              "min_range": 2.5,
+              "max_range": 7.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.75,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.8
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk2_ed",
+            "atk2_lp",
+            "atk2_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "gorilla_female",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/gorilla_female/",
+      "info": {
+        "name": "gorilla_female",
+        "modelBaseName": "b_214",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_down",
+          "file": "ef_e_s_down.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "hildeghana",
+          "name": "Hildeghana",
+          "animation_model": "gorilla",
+          "archetype": "bigrig_combo",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "punch_combo",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 50.0,
+              "hit_reach": 2.2,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "shoulder_slam",
+              "clip": "atk2",
+              "kind": "charge",
+              "weight": 2.0,
+              "min_range": 3.0,
+              "max_range": 9.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 40.0,
+              "hit_reach": 1.4,
+              "damage_mult": 1.4
+            },
+            {
+              "id": "belly_flop",
+              "clip": "atk3",
+              "kind": "leap",
+              "weight": 1.0,
+              "min_range": 2.5,
+              "max_range": 7.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.75,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.8
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk2_ed",
+            "atk2_lp",
+            "atk2_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "gorilla_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/gorilla_rare/",
+      "info": {
+        "name": "gorilla_rare",
+        "modelBaseName": "b_114",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 4,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_down",
+          "file": "ef_e_s_down.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "hildegigas",
+          "name": "Hildegigas",
+          "animation_model": "gorilla",
+          "archetype": "bigrig_combo",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "punch_combo",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 50.0,
+              "hit_reach": 2.2,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "shoulder_slam",
+              "clip": "atk2",
+              "kind": "charge",
+              "weight": 2.0,
+              "min_range": 3.0,
+              "max_range": 9.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 40.0,
+              "hit_reach": 1.4,
+              "damage_mult": 1.4
+            },
+            {
+              "id": "belly_flop",
+              "clip": "atk3",
+              "kind": "leap",
+              "weight": 1.0,
+              "min_range": 2.5,
+              "max_range": 7.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.75,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.8
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk2_ed",
+            "atk2_lp",
+            "atk2_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "hyena",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/hyena/",
+      "info": {
+        "name": "hyena",
+        "modelBaseName": "m_005",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m005_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m005_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m005_dmg.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "m005_stp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m005_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m005_wat.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m005_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m005_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "grimble",
+          "name": "Grimble",
+          "animation_model": "hyena",
+          "archetype": "quadruped",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "hyena_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/hyena_rare/",
+      "info": {
+        "name": "hyena_rare",
+        "modelBaseName": "m_105",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m005_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m005_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m005_dmg.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "m005_stp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m005_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m005_wat.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m005_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m005_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "tormatible",
+          "name": "Tormatible",
+          "animation_model": "hyena",
+          "archetype": "quadruped",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "jigobooma",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/jigobooma/",
+      "info": {
+        "name": "jigobooma",
+        "modelBaseName": "s_171",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s071_atk.nsbca"
+        },
+        {
+          "name": "atk_hi",
+          "file": "s071_atk_hi.nsbca"
+        },
+        {
+          "name": "atk_mi",
+          "file": "s071_atk_mi.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "s071_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s071_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s071_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s071_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s071_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s071_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_rstt",
+          "file": "ef_e_c_rstt.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "gigobooma_origin",
+          "name": "Gigobooma Origin",
+          "animation_model": "jigobooma",
+          "archetype": "bruiser",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "dash",
+              "clip": "run",
+              "kind": "charge",
+              "charge_segments": {
+                "st": "atk",
+                "lp": "run",
+                "ed": "atk_mi"
+              },
+              "overshoot": 1.0,
+              "stop_on_hit": true,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 0.55,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 4.0
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_hi"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "leg",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/leg/",
+      "info": {
+        "name": "leg",
+        "modelBaseName": "m_061",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_a",
+          "file": "m061_atk_a.nsbca"
+        },
+        {
+          "name": "atk_b",
+          "file": "m061_atk_b.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "m061_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m061_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "m061_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m061_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m061_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m061_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "derreo",
+          "name": "Derreo",
+          "animation_model": "leg",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_a",
+            "atk_b"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "leg_black",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/leg_black/",
+      "info": {
+        "name": "leg_black",
+        "modelBaseName": "m_161",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_a",
+          "file": "m061_atk_a.nsbca"
+        },
+        {
+          "name": "atk_b",
+          "file": "m061_atk_b.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "m061_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m061_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "m061_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m061_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m061_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m061_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "zerreo",
+          "name": "Zerreo",
+          "animation_model": "leg_black",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_a",
+            "atk_b"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "lion",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/lion/",
+      "info": {
+        "name": "lion",
+        "modelBaseName": "b_004",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "b_004_atk.nsbca"
+        },
+        {
+          "name": "atkb",
+          "file": "b_004_atkb.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b_004_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b_004_dmg.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "b_004_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b_004_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b_004_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b_004_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_jmp",
+          "file": "ef_e_m_jmp.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "helion",
+          "name": "Helion",
+          "animation_model": "lion",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atkb"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "lion_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/lion_rare/",
+      "info": {
+        "name": "lion_rare",
+        "modelBaseName": "b_104",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_jmp",
+          "file": "ef_e_m_jmp.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "blaze_helion",
+          "name": "Blaze Helion",
+          "animation_model": "lion",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atkb"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "lizard",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/lizard/",
+      "info": {
+        "name": "lizard",
+        "modelBaseName": "s_001",
+        "animationCount": 7,
+        "mainAnimationCount": 7,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_001_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_001_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_001_dmg.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s_001_run.nsbca"
+        },
+        {
+          "name": "tht",
+          "file": "s_001_tht.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_001_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s_001_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "ghowl",
+          "name": "Ghowl",
+          "animation_model": "lizard",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "lower",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/lower/",
+      "info": {
+        "name": "lower",
+        "modelBaseName": "m_261",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_a",
+          "file": "m061_atk_a.nsbca"
+        },
+        {
+          "name": "atk_b",
+          "file": "m061_atk_b.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "m061_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m061_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "m061_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m061_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m061_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m061_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "eulid",
+          "name": "Eulid",
+          "animation_model": "lower",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_a",
+            "atk_b"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "lower_black",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/lower_black/",
+      "info": {
+        "name": "lower_black",
+        "modelBaseName": "m_361",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_a",
+          "file": "m061_atk_a.nsbca"
+        },
+        {
+          "name": "atk_b",
+          "file": "m061_atk_b.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "m061_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m061_ded.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "m061_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m061_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m061_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m061_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "eulidveil",
+          "name": "Eulidveil",
+          "animation_model": "lower_black",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_a",
+            "atk_b"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "mole",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/mole/",
+      "info": {
+        "name": "mole",
+        "modelBaseName": "m_032",
+        "animationCount": 11,
+        "mainAnimationCount": 11,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m_032_atk.nsbca"
+        },
+        {
+          "name": "atkb",
+          "file": "m_032_atkb.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m_032_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m_032_dmg.nsbca"
+        },
+        {
+          "name": "grd01",
+          "file": "m_032_grd01.nsbca"
+        },
+        {
+          "name": "grd02",
+          "file": "m_032_grd02.nsbca"
+        },
+        {
+          "name": "grd03",
+          "file": "m_032_grd03.nsbca"
+        },
+        {
+          "name": "nos",
+          "file": "m_032_nos.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m_032_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m_032_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m_032_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_mud",
+          "file": "ef_e_c_mud.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_stt_c",
+          "file": "ef_e_c_stt_c.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "rumole",
+          "name": "Rumole",
+          "animation_model": "mole",
+          "archetype": "unique",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atkb"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "mother",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/mother/",
+      "info": {
+        "name": "mother",
+        "modelBaseName": "b_072",
+        "animationCount": 15,
+        "mainAnimationCount": 15,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_gu_a_ed",
+          "file": "b072_atk_gu_a_ed.nsbca"
+        },
+        {
+          "name": "atk_gu_a_lp",
+          "file": "b072_atk_gu_a_lp.nsbca"
+        },
+        {
+          "name": "atk_gu_a_st",
+          "file": "b072_atk_gu_a_st.nsbca"
+        },
+        {
+          "name": "atk_sa_a",
+          "file": "b072_atk_sa_a.nsbca"
+        },
+        {
+          "name": "atk_sb_a",
+          "file": "b072_atk_sb_a.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b072_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b072_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b072_stt.nsbca"
+        },
+        {
+          "name": "tec_a",
+          "file": "b072_tec_a.nsbca"
+        },
+        {
+          "name": "tec_t_ed",
+          "file": "b072_tec_t_ed.nsbca"
+        },
+        {
+          "name": "tec_t_lp",
+          "file": "b072_tec_t_lp.nsbca"
+        },
+        {
+          "name": "tec_t_st",
+          "file": "b072_tec_t_st.nsbca"
+        },
+        {
+          "name": "warp_ed",
+          "file": "b072_warp_ed.nsbca"
+        },
+        {
+          "name": "warp_st",
+          "file": "b072_warp_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b072_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_granz",
+          "file": "ef_e_c_granz.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_t_blt",
+          "file": "ef_e_t_blt.nsbmd"
+        },
+        {
+          "name": "ef_e_t_mzl",
+          "file": "ef_e_t_mzl.nsbmd"
+        },
+        {
+          "name": "ef_e_t_tsuki",
+          "file": "ef_e_t_tsuki.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "mother_trinity",
+          "name": "Mother Trinity",
+          "animation_model": "mother",
+          "archetype": "mother_caster",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_gu_a_ed",
+            "atk_gu_a_lp",
+            "atk_gu_a_st",
+            "atk_sa_a",
+            "atk_sb_a",
+            "tec_a",
+            "tec_t_ed",
+            "tec_t_lp",
+            "tec_t_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "mother_gun",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/mother_gun/",
+      "info": {
+        "name": "mother_gun",
+        "modelBaseName": "b_272",
+        "animationCount": 15,
+        "mainAnimationCount": 15,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_gu_g_ed",
+          "file": "b072_atk_gu_g_ed.nsbca"
+        },
+        {
+          "name": "atk_gu_g_lp",
+          "file": "b072_atk_gu_g_lp.nsbca"
+        },
+        {
+          "name": "atk_gu_g_st",
+          "file": "b072_atk_gu_g_st.nsbca"
+        },
+        {
+          "name": "atk_sa_s",
+          "file": "b072_atk_sa_s.nsbca"
+        },
+        {
+          "name": "atk_sb_s",
+          "file": "b072_atk_sb_s.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b072_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b072_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b072_stt.nsbca"
+        },
+        {
+          "name": "tec_a",
+          "file": "b072_tec_a.nsbca"
+        },
+        {
+          "name": "tec_t_ed",
+          "file": "b072_tec_t_ed.nsbca"
+        },
+        {
+          "name": "tec_t_lp",
+          "file": "b072_tec_t_lp.nsbca"
+        },
+        {
+          "name": "tec_t_st",
+          "file": "b072_tec_t_st.nsbca"
+        },
+        {
+          "name": "warp_ed",
+          "file": "b072_warp_ed.nsbca"
+        },
+        {
+          "name": "warp_st",
+          "file": "b072_warp_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b072_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_granz",
+          "file": "ef_e_c_granz.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_t_blt",
+          "file": "ef_e_t_blt.nsbmd"
+        },
+        {
+          "name": "ef_e_t_mzl",
+          "file": "ef_e_t_mzl.nsbmd"
+        },
+        {
+          "name": "ef_e_t_tsuki",
+          "file": "ef_e_t_tsuki.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "shot_mother",
+          "name": "Shot Mother",
+          "animation_model": "mother_gun",
+          "archetype": "mother_caster",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_gu_g_ed",
+            "atk_gu_g_lp",
+            "atk_gu_g_st",
+            "atk_sa_s",
+            "atk_sb_s",
+            "tec_a",
+            "tec_t_ed",
+            "tec_t_lp",
+            "tec_t_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "mother_sword",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/mother_sword/",
+      "info": {
+        "name": "mother_sword",
+        "modelBaseName": "b_172",
+        "animationCount": 15,
+        "mainAnimationCount": 15,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_gu_a_ed",
+          "file": "b072_atk_gu_a_ed.nsbca"
+        },
+        {
+          "name": "atk_gu_a_lp",
+          "file": "b072_atk_gu_a_lp.nsbca"
+        },
+        {
+          "name": "atk_gu_a_st",
+          "file": "b072_atk_gu_a_st.nsbca"
+        },
+        {
+          "name": "atk_sa_s",
+          "file": "b072_atk_sa_s.nsbca"
+        },
+        {
+          "name": "atk_sb_s",
+          "file": "b072_atk_sb_s.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b072_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b072_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b072_stt.nsbca"
+        },
+        {
+          "name": "tec_a",
+          "file": "b072_tec_a.nsbca"
+        },
+        {
+          "name": "tec_t_ed",
+          "file": "b072_tec_t_ed.nsbca"
+        },
+        {
+          "name": "tec_t_lp",
+          "file": "b072_tec_t_lp.nsbca"
+        },
+        {
+          "name": "tec_t_st",
+          "file": "b072_tec_t_st.nsbca"
+        },
+        {
+          "name": "warp_ed",
+          "file": "b072_warp_ed.nsbca"
+        },
+        {
+          "name": "warp_st",
+          "file": "b072_warp_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b072_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_granz",
+          "file": "ef_e_c_granz.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_t_blt",
+          "file": "ef_e_t_blt.nsbmd"
+        },
+        {
+          "name": "ef_e_t_mzl",
+          "file": "ef_e_t_mzl.nsbmd"
+        },
+        {
+          "name": "ef_e_t_tsuki",
+          "file": "ef_e_t_tsuki.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "blade_mother",
+          "name": "Blade Mother",
+          "animation_model": "mother_sword",
+          "archetype": "mother_caster",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_gu_a_ed",
+            "atk_gu_a_lp",
+            "atk_gu_a_st",
+            "atk_sa_s",
+            "atk_sb_s",
+            "tec_a",
+            "tec_t_ed",
+            "tec_t_lp",
+            "tec_t_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "mother_tech",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/mother_tech/",
+      "info": {
+        "name": "mother_tech",
+        "modelBaseName": "b_372",
+        "animationCount": 15,
+        "mainAnimationCount": 15,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_gu_g_ed",
+          "file": "b072_atk_gu_g_ed.nsbca"
+        },
+        {
+          "name": "atk_gu_g_lp",
+          "file": "b072_atk_gu_g_lp.nsbca"
+        },
+        {
+          "name": "atk_gu_g_st",
+          "file": "b072_atk_gu_g_st.nsbca"
+        },
+        {
+          "name": "atk_sa_s",
+          "file": "b072_atk_sa_s.nsbca"
+        },
+        {
+          "name": "atk_sb_s",
+          "file": "b072_atk_sb_s.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b072_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b072_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b072_stt.nsbca"
+        },
+        {
+          "name": "tec_a",
+          "file": "b072_tec_a.nsbca"
+        },
+        {
+          "name": "tec_t_ed",
+          "file": "b072_tec_t_ed.nsbca"
+        },
+        {
+          "name": "tec_t_lp",
+          "file": "b072_tec_t_lp.nsbca"
+        },
+        {
+          "name": "tec_t_st",
+          "file": "b072_tec_t_st.nsbca"
+        },
+        {
+          "name": "warp_ed",
+          "file": "b072_warp_ed.nsbca"
+        },
+        {
+          "name": "warp_st",
+          "file": "b072_warp_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b072_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_granz",
+          "file": "ef_e_c_granz.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_t_blt",
+          "file": "ef_e_t_blt.nsbmd"
+        },
+        {
+          "name": "ef_e_t_mzl",
+          "file": "ef_e_t_mzl.nsbmd"
+        },
+        {
+          "name": "ef_e_t_tsuki",
+          "file": "ef_e_t_tsuki.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "force_mother",
+          "name": "Force Mother",
+          "animation_model": "mother_tech",
+          "archetype": "mother_caster",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_gu_g_ed",
+            "atk_gu_g_lp",
+            "atk_gu_g_st",
+            "atk_sa_s",
+            "atk_sb_s",
+            "tec_a",
+            "tec_t_ed",
+            "tec_t_lp",
+            "tec_t_st"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "orangutan",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/orangutan/",
+      "info": {
+        "name": "orangutan",
+        "modelBaseName": "b_044",
+        "animationCount": 11,
+        "mainAnimationCount": 11,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atcksht",
+          "file": "b_044_atcksht.nsbca"
+        },
+        {
+          "name": "atckstt",
+          "file": "b_044_atckstt.nsbca"
+        },
+        {
+          "name": "atckswg",
+          "file": "b_044_atckswg.nsbca"
+        },
+        {
+          "name": "atcktuki",
+          "file": "b_044_atcktuki.nsbca"
+        },
+        {
+          "name": "atckwat",
+          "file": "b_044_atckwat.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b_044_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b_044_ded.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b_044_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b_044_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b_044_wlk.nsbca"
+        },
+        {
+          "name": "wtclp",
+          "file": "b_044_wtclp.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_r_gun",
+          "file": "ef_e_r_gun.nsbmd"
+        },
+        {
+          "name": "ef_e_r_stt",
+          "file": "ef_e_r_stt.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_044_gun",
+          "file": "b_044_gun.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "froutang",
+          "name": "Froutang",
+          "animation_model": "orangutan",
+          "archetype": "ape_gunner",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "pistol_shot",
+              "clip": "atcksht",
+              "kind": "projectile",
+              "weight": 2.0,
+              "min_range": 3.0,
+              "max_range": 9.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 9.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "pistol_shot_alt",
+              "clip": "atcktuki",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 2.0,
+              "max_range": 7.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 7.0,
+              "damage_mult": 1.1
+            },
+            {
+              "id": "charged_punch",
+              "clip": "atckswg",
+              "kind": "melee_arc",
+              "windup_clips": [
+                "atckstt",
+                "atckwat"
+              ],
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.4,
+              "windup_frac": 0.2,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 55.0,
+              "hit_reach": 2.4,
+              "damage_mult": 1.6
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "orangutan_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/orangutan_rare/",
+      "info": {
+        "name": "orangutan_rare",
+        "modelBaseName": "b_144",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_r_gun",
+          "file": "ef_e_r_gun.nsbmd"
+        },
+        {
+          "name": "ef_e_r_stt",
+          "file": "ef_e_r_stt.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_144_gun",
+          "file": "b_144_gun.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "frunaked",
+          "name": "Frunaked",
+          "animation_model": "orangutan",
+          "archetype": "ape_gunner",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "pistol_shot",
+              "clip": "atcksht",
+              "kind": "projectile",
+              "weight": 2.0,
+              "min_range": 3.0,
+              "max_range": 9.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 9.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "pistol_shot_alt",
+              "clip": "atcktuki",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 2.0,
+              "max_range": 7.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 7.0,
+              "damage_mult": 1.1
+            },
+            {
+              "id": "charged_punch",
+              "clip": "atckswg",
+              "kind": "melee_arc",
+              "windup_clips": [
+                "atckstt",
+                "atckwat"
+              ],
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.4,
+              "windup_frac": 0.2,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 55.0,
+              "hit_reach": 2.4,
+              "damage_mult": 1.6
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "quad",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/quad/",
+      "info": {
+        "name": "quad",
+        "modelBaseName": "m_042",
+        "animationCount": 10,
+        "mainAnimationCount": 10,
+        "effectCount": 7,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m_042_atk.nsbca"
+        },
+        {
+          "name": "atkb",
+          "file": "m_042_atkb.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m_042_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m_042_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m_042_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m_042_wat.nsbca"
+        },
+        {
+          "name": "wlk_b",
+          "file": "m_042_wlk_b.nsbca"
+        },
+        {
+          "name": "wlk_f",
+          "file": "m_042_wlk_f.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m_042_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m_042_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_r_flsh",
+          "file": "ef_e_r_flsh.nsbmd"
+        },
+        {
+          "name": "ef_e_r_flshb",
+          "file": "ef_e_r_flshb.nsbmd"
+        },
+        {
+          "name": "ef_e_r_stt",
+          "file": "ef_e_r_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "izhirak_s6",
+          "name": "Izhirak-S6",
+          "animation_model": "quad",
+          "archetype": "quad_machine",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "shot",
+              "clip": "atk",
+              "kind": "projectile",
+              "weight": 3.0,
+              "min_range": 3.0,
+              "max_range": 10.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 10.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "grenade",
+              "clip": "atkb",
+              "kind": "lob",
+              "weight": 1.0,
+              "min_range": 4.0,
+              "max_range": 12.0,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 1.6,
+              "damage_mult": 1.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "quad_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/quad_rare/",
+      "info": {
+        "name": "quad_rare",
+        "modelBaseName": "m_142",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 7,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_r_flsh",
+          "file": "ef_e_r_flsh.nsbmd"
+        },
+        {
+          "name": "ef_e_r_flshb",
+          "file": "ef_e_r_flshb.nsbmd"
+        },
+        {
+          "name": "ef_e_r_stt",
+          "file": "ef_e_r_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "azherowa_b2",
+          "name": "Azherowa-B2",
+          "animation_model": "quad",
+          "archetype": "quad_machine",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "shot",
+              "clip": "atk",
+              "kind": "projectile",
+              "weight": 3.0,
+              "min_range": 3.0,
+              "max_range": 10.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 10.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "grenade",
+              "clip": "atkb",
+              "kind": "lob",
+              "weight": 1.0,
+              "min_range": 4.0,
+              "max_range": 12.0,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 1.6,
+              "damage_mult": 1.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "rabbit",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/rabbit/",
+      "info": {
+        "name": "rabbit",
+        "modelBaseName": "s_010",
+        "animationCount": 6,
+        "mainAnimationCount": 6,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_010_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_010_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_010_dmg.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s_010_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s_010_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_010_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "usanny",
+          "name": "Usanny",
+          "animation_model": "rabbit",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "rabbit_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/rabbit_rare/",
+      "info": {
+        "name": "rabbit_rare",
+        "modelBaseName": "s_110",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "usanimere",
+          "name": "Usanimere",
+          "animation_model": "rabbit",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "rappy",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/rappy/",
+      "info": {
+        "name": "rappy",
+        "modelBaseName": "s_070",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_070_atk.nsbca"
+        },
+        {
+          "name": "ded1",
+          "file": "s_070_ded1.nsbca"
+        },
+        {
+          "name": "ded2",
+          "file": "s_070_ded2.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s_070_dmg.nsbca"
+        },
+        {
+          "name": "stt1",
+          "file": "s_070_stt1.nsbca"
+        },
+        {
+          "name": "stt2",
+          "file": "s_070_stt2.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s_070_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s_070_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_rstt",
+          "file": "ef_e_c_rstt.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "rappy",
+          "name": "Rappy",
+          "animation_model": "rappy",
+          "archetype": "rappy",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "rappy_blue",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/rappy_blue/",
+      "info": {
+        "name": "rappy_blue",
+        "modelBaseName": "s_170",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_rstt",
+          "file": "ef_e_c_rstt.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "ar_rappy",
+          "name": "Ar Rappy",
+          "animation_model": "rappy",
+          "archetype": "rappy",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "rappy_red",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/rappy_red/",
+      "info": {
+        "name": "rappy_red",
+        "modelBaseName": "s_270",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_rstt",
+          "file": "ef_e_c_rstt.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "rab_rappy",
+          "name": "Rab Rappy",
+          "animation_model": "rappy",
+          "archetype": "rappy",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "roc",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/roc/",
+      "info": {
+        "name": "roc",
+        "modelBaseName": "b_022",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk1",
+          "file": "b_022_atk1.nsbca"
+        },
+        {
+          "name": "atk2",
+          "file": "b_022_atk2.nsbca"
+        },
+        {
+          "name": "atk3",
+          "file": "b_022_atk3.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b_022_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "b_022_dmg.nsbca"
+        },
+        {
+          "name": "fly",
+          "file": "b_022_fly.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b_022_stt.nsbca"
+        },
+        {
+          "name": "tk",
+          "file": "b_022_tk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_w_bspin",
+          "file": "ef_e_w_bspin.nsbmd"
+        },
+        {
+          "name": "ef_enm_b_snc",
+          "file": "ef_enm_b_snc.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "pelcatraz",
+          "name": "Pelcatraz",
+          "animation_model": "roc",
+          "archetype": "flyer_combo",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "beak",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 35.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "gust",
+              "clip": "atk2",
+              "kind": "melee_arc",
+              "weight": 1.0,
+              "min_range": 1.5,
+              "max_range": 4.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 60.0,
+              "hit_reach": 3.5,
+              "damage_mult": 0.8
+            },
+            {
+              "id": "wing_swipe",
+              "clip": "atk3",
+              "kind": "melee_arc",
+              "weight": 2.0,
+              "min_range": 0.0,
+              "max_range": 2.5,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 80.0,
+              "hit_reach": 2.4,
+              "damage_mult": 1.2
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "roc_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/roc_rare/",
+      "info": {
+        "name": "roc_rare",
+        "modelBaseName": "b_122",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_w_bspin",
+          "file": "ef_e_w_bspin.nsbmd"
+        },
+        {
+          "name": "ef_enm_b_snc",
+          "file": "ef_enm_b_snc.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "pelcatobur",
+          "name": "Pelcatobur",
+          "animation_model": "roc",
+          "archetype": "flyer_combo",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "beak",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 35.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "gust",
+              "clip": "atk2",
+              "kind": "melee_arc",
+              "weight": 1.0,
+              "min_range": 1.5,
+              "max_range": 4.0,
+              "windup_frac": 0.4,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 60.0,
+              "hit_reach": 3.5,
+              "damage_mult": 0.8
+            },
+            {
+              "id": "wing_swipe",
+              "clip": "atk3",
+              "kind": "melee_arc",
+              "weight": 2.0,
+              "min_range": 0.0,
+              "max_range": 2.5,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.65,
+              "hit_half_angle_deg": 80.0,
+              "hit_reach": 2.4,
+              "damage_mult": 1.2
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "seal",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/seal/",
+      "info": {
+        "name": "seal",
+        "modelBaseName": "m_021",
+        "animationCount": 7,
+        "mainAnimationCount": 7,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk1",
+          "file": "m_021_atk1.nsbca"
+        },
+        {
+          "name": "atk2",
+          "file": "m_021_atk2.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m_021_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m_021_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m_021_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m_021_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m_021_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_c_stt_w",
+          "file": "ef_c_stt_w.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_w_ele",
+          "file": "ef_e_w_ele.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "hypao",
+          "name": "Hypao",
+          "animation_model": "seal",
+          "archetype": "two_attack",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "tail_swipe",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 70.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "cast_barta",
+              "clip": "atk2",
+              "kind": "projectile",
+              "tech": "barta",
+              "weight": 1.5,
+              "min_range": 2.5,
+              "max_range": 8.0,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 8.0,
+              "damage_mult": 1.2
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "seal_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/seal_rare/",
+      "info": {
+        "name": "seal_rare",
+        "modelBaseName": "m_121",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_c_stt_w",
+          "file": "ef_c_stt_w.nsbmd"
+        },
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_w_ele",
+          "file": "ef_e_w_ele.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "vespao",
+          "name": "Vespao",
+          "animation_model": "seal",
+          "archetype": "two_attack",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "tail_swipe",
+              "clip": "atk1",
+              "kind": "melee_arc",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.2,
+              "windup_frac": 0.3,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 70.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "cast_gibarta",
+              "clip": "atk2",
+              "kind": "projectile",
+              "tech": "gibarta",
+              "weight": 1.5,
+              "min_range": 1.5,
+              "max_range": 5.5,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 55.0,
+              "hit_reach": 5.5,
+              "damage_mult": 1.4
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "shooter",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/shooter/",
+      "info": {
+        "name": "shooter",
+        "modelBaseName": "s_050",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_an",
+          "file": "s050_atk_an.nsbca"
+        },
+        {
+          "name": "atk_ji",
+          "file": "s050_atk_ji.nsbca"
+        },
+        {
+          "name": "atk_sh",
+          "file": "s050_atk_sh.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s050_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s050_dmg.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s050_run.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s050_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s050_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "korse",
+          "name": "Korse",
+          "animation_model": "shooter",
+          "archetype": "shooter",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "shot",
+              "clip": "atk_sh",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 3.0,
+              "max_range": 10.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 10.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "kamikaze",
+              "clip": "atk_ji",
+              "kind": "melee_arc",
+              "berserk_only": true,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 0.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 1.5,
+              "damage_mult": 2.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "shooter_leader",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/shooter_leader/",
+      "info": {
+        "name": "shooter_leader",
+        "modelBaseName": "s_150",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 5,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk_an",
+          "file": "s050_atk_an.nsbca"
+        },
+        {
+          "name": "atk_ji",
+          "file": "s050_atk_ji.nsbca"
+        },
+        {
+          "name": "atk_sh",
+          "file": "s050_atk_sh.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s050_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s050_dmg.nsbca"
+        },
+        {
+          "name": "run",
+          "file": "s050_run.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s050_wat.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s150_stt.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_ebul",
+          "file": "ef_e_l_ebul.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "akorse",
+          "name": "Akorse",
+          "animation_model": "shooter_leader",
+          "archetype": "shooter",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "shot",
+              "clip": "atk_sh",
+              "kind": "projectile",
+              "weight": 1.0,
+              "min_range": 3.0,
+              "max_range": 10.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 8.0,
+              "hit_reach": 10.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "kamikaze",
+              "clip": "atk_ji",
+              "kind": "melee_arc",
+              "berserk_only": true,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 0.0,
+              "windup_frac": 0.0,
+              "damage_end_frac": 1.0,
+              "hit_half_angle_deg": 180.0,
+              "hit_reach": 1.5,
+              "damage_mult": 2.5
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "shrimp",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/shrimp/",
+      "info": {
+        "name": "shrimp",
+        "modelBaseName": "s_040",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s_040_atk.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "s_040_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s_040_ded.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s_040_stt.nsbca"
+        },
+        {
+          "name": "tk1",
+          "file": "s_040_tk1.nsbca"
+        },
+        {
+          "name": "tk2",
+          "file": "s_040_tk2.nsbca"
+        },
+        {
+          "name": "wlk1",
+          "file": "s_040_wlk1.nsbca"
+        },
+        {
+          "name": "wlk2",
+          "file": "s_040_wlk2.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "bolix",
+          "name": "Bolix",
+          "animation_model": "shrimp",
+          "archetype": "box_mimic",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "strike",
+              "clip": "atk",
+              "kind": "melee_arc",
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.2
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "shrimp_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/shrimp_rare/",
+      "info": {
+        "name": "shrimp_rare",
+        "modelBaseName": "s_140",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 1,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "goldix",
+          "name": "Goldix",
+          "animation_model": "shrimp",
+          "archetype": "box_mimic",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "strike",
+              "clip": "atk",
+              "kind": "melee_arc",
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.2
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "snake",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/snake/",
+      "info": {
+        "name": "snake",
+        "modelBaseName": "m_003",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk1",
+          "file": "m_003_atk1.nsbca"
+        },
+        {
+          "name": "atk2",
+          "file": "m_003_atk2.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m_003_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m_003_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m_003_stt.nsbca"
+        },
+        {
+          "name": "wat1",
+          "file": "m_003_wat1.nsbca"
+        },
+        {
+          "name": "wat2",
+          "file": "m_003_wat2.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "m_003_wlk.nsbca"
+        },
+        {
+          "name": "wt2w",
+          "file": "m_003_wt2w.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "garapython",
+          "name": "Garapython",
+          "animation_model": "snake",
+          "archetype": "stance_riser",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "normal",
+              "clip": "atk1",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "strong",
+              "clip": "atk2",
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.2,
+              "damage_mult": 1.6
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "snake_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/snake_rare/",
+      "info": {
+        "name": "snake_rare",
+        "modelBaseName": "m_103",
+        "animationCount": 0,
+        "mainAnimationCount": 0,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "garahadan",
+          "name": "Garahadan",
+          "animation_model": "snake",
+          "archetype": "stance_riser",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "normal",
+              "clip": "atk1",
+              "weight": 3.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0
+            },
+            {
+              "id": "strong",
+              "clip": "atk2",
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0,
+              "windup_frac": 0.45,
+              "damage_end_frac": 0.7,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.2,
+              "damage_mult": 1.6
+            }
+          ],
+          "generic_basic_placeholder": false,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "swordman",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/swordman/",
+      "info": {
+        "name": "swordman",
+        "modelBaseName": "b_062",
+        "animationCount": 13,
+        "mainAnimationCount": 12,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_pu",
+          "file": "b062_atk_pu.nsbca"
+        },
+        {
+          "name": "atk_sw",
+          "file": "b062_atk_sw.nsbca"
+        },
+        {
+          "name": "atk_th_ed",
+          "file": "b062_atk_th_ed.nsbca"
+        },
+        {
+          "name": "atk_th_st",
+          "file": "b062_atk_th_st.nsbca"
+        },
+        {
+          "name": "atk_th_sw",
+          "file": "b062_atk_th_sw.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b062_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b062_ded.nsbca"
+        },
+        {
+          "name": "stp_ed",
+          "file": "b062_stp_ed.nsbca"
+        },
+        {
+          "name": "stp_lp",
+          "file": "b062_stp_lp.nsbca"
+        },
+        {
+          "name": "stp_st",
+          "file": "b062_stp_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b062_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b062_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b062_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_spin1",
+          "file": "ef_e_d_spin1.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spin2",
+          "file": "ef_e_d_spin2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swd",
+          "file": "ef_e_d_swd.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_062_sw",
+          "file": "b_062_sw.nsbmd",
+          "animationCount": 1
+        }
+      ],
+      "roster": [
+        {
+          "id": "arkzein",
+          "name": "Arkzein",
+          "animation_model": "swordman",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_pu",
+            "atk_sw",
+            "atk_th_ed",
+            "atk_th_st",
+            "atk_th_sw"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "swordman_b",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/swordman_b/",
+      "info": {
+        "name": "swordman_b",
+        "modelBaseName": "b_162",
+        "animationCount": 13,
+        "mainAnimationCount": 12,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_pu",
+          "file": "b062_atk_pu.nsbca"
+        },
+        {
+          "name": "atk_sw",
+          "file": "b062_atk_sw.nsbca"
+        },
+        {
+          "name": "atk_th_ed",
+          "file": "b062_atk_th_ed.nsbca"
+        },
+        {
+          "name": "atk_th_st",
+          "file": "b062_atk_th_st.nsbca"
+        },
+        {
+          "name": "atk_th_sw",
+          "file": "b062_atk_th_sw.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b062_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b062_ded.nsbca"
+        },
+        {
+          "name": "stp_ed",
+          "file": "b062_stp_ed.nsbca"
+        },
+        {
+          "name": "stp_lp",
+          "file": "b062_stp_lp.nsbca"
+        },
+        {
+          "name": "stp_st",
+          "file": "b062_stp_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b062_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b062_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b062_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_spin1",
+          "file": "ef_e_d_spin1.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spin2",
+          "file": "ef_e_d_spin2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swd",
+          "file": "ef_e_d_swd.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_162_sw",
+          "file": "b_162_sw.nsbmd",
+          "animationCount": 1
+        }
+      ],
+      "roster": [
+        {
+          "id": "zaphobos",
+          "name": "Zaphobos",
+          "animation_model": "swordman_b",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_pu",
+            "atk_sw",
+            "atk_th_ed",
+            "atk_th_st",
+            "atk_th_sw"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "swordman_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/swordman_rare/",
+      "info": {
+        "name": "swordman_rare",
+        "modelBaseName": "b_262",
+        "animationCount": 13,
+        "mainAnimationCount": 12,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_pu",
+          "file": "b062_atk_pu.nsbca"
+        },
+        {
+          "name": "atk_sw",
+          "file": "b062_atk_sw.nsbca"
+        },
+        {
+          "name": "atk_th_ed",
+          "file": "b062_atk_th_ed.nsbca"
+        },
+        {
+          "name": "atk_th_st",
+          "file": "b062_atk_th_st.nsbca"
+        },
+        {
+          "name": "atk_th_sw",
+          "file": "b062_atk_th_sw.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b062_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b062_ded.nsbca"
+        },
+        {
+          "name": "stp_ed",
+          "file": "b062_stp_ed.nsbca"
+        },
+        {
+          "name": "stp_lp",
+          "file": "b062_stp_lp.nsbca"
+        },
+        {
+          "name": "stp_st",
+          "file": "b062_stp_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b062_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b062_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b062_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_spin1",
+          "file": "ef_e_d_spin1.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spin2",
+          "file": "ef_e_d_spin2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swd",
+          "file": "ef_e_d_swd.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_262_sw",
+          "file": "b_262_sw.nsbmd",
+          "animationCount": 1
+        }
+      ],
+      "roster": [
+        {
+          "id": "arkzein_r",
+          "name": "Arkzein R",
+          "animation_model": "swordman_rare",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_pu",
+            "atk_sw",
+            "atk_th_ed",
+            "atk_th_st",
+            "atk_th_sw"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "swordman_rare_b",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/swordman_rare_b/",
+      "info": {
+        "name": "swordman_rare_b",
+        "modelBaseName": "b_362",
+        "animationCount": 13,
+        "mainAnimationCount": 12,
+        "effectCount": 4,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_pu",
+          "file": "b062_atk_pu.nsbca"
+        },
+        {
+          "name": "atk_sw",
+          "file": "b062_atk_sw.nsbca"
+        },
+        {
+          "name": "atk_th_ed",
+          "file": "b062_atk_th_ed.nsbca"
+        },
+        {
+          "name": "atk_th_st",
+          "file": "b062_atk_th_st.nsbca"
+        },
+        {
+          "name": "atk_th_sw",
+          "file": "b062_atk_th_sw.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b062_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b062_ded.nsbca"
+        },
+        {
+          "name": "stp_ed",
+          "file": "b062_stp_ed.nsbca"
+        },
+        {
+          "name": "stp_lp",
+          "file": "b062_stp_lp.nsbca"
+        },
+        {
+          "name": "stp_st",
+          "file": "b062_stp_st.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "b062_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b062_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "b062_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_d_spin1",
+          "file": "ef_e_d_spin1.nsbmd"
+        },
+        {
+          "name": "ef_e_d_spin2",
+          "file": "ef_e_d_spin2.nsbmd"
+        },
+        {
+          "name": "ef_e_d_stt",
+          "file": "ef_e_d_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_d_swd",
+          "file": "ef_e_d_swd.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_362_sw",
+          "file": "b_362_sw.nsbmd",
+          "animationCount": 1
+        }
+      ],
+      "roster": [
+        {
+          "id": "zaphobos_dyna",
+          "name": "Zaphobos Dyna",
+          "animation_model": "swordman_rare_b",
+          "archetype": "shade",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_pu",
+            "atk_sw",
+            "atk_th_ed",
+            "atk_th_st",
+            "atk_th_sw"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "tank",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/tank/",
+      "info": {
+        "name": "tank",
+        "modelBaseName": "b_052",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 7,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_bz",
+          "file": "b052_atk_bz.nsbca"
+        },
+        {
+          "name": "atk_mi",
+          "file": "b052_atk_mi.nsbca"
+        },
+        {
+          "name": "atk_sh",
+          "file": "b052_atk_sh.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b052_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b052_ded.nsbca"
+        },
+        {
+          "name": "run_ed",
+          "file": "b052_run_ed.nsbca"
+        },
+        {
+          "name": "run_lp",
+          "file": "b052_run_lp.nsbca"
+        },
+        {
+          "name": "run_st",
+          "file": "b052_run_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b052_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_arbd",
+          "file": "ef_e_l_arbd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_mine",
+          "file": "ef_e_l_mine.nsbmd"
+        },
+        {
+          "name": "ef_e_l_sgun",
+          "file": "ef_e_l_sgun.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_052m",
+          "file": "b_052m.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "phobos",
+          "name": "Phobos",
+          "animation_model": "tank",
+          "archetype": "missile_tank",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_bz",
+            "atk_mi",
+            "atk_sh"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "tank_rare",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/tank_rare/",
+      "info": {
+        "name": "tank_rare",
+        "modelBaseName": "b_152",
+        "animationCount": 9,
+        "mainAnimationCount": 9,
+        "effectCount": 7,
+        "partsCount": 1
+      },
+      "animations": [
+        {
+          "name": "atk_bz",
+          "file": "b052_atk_bz.nsbca"
+        },
+        {
+          "name": "atk_mi",
+          "file": "b052_atk_mi.nsbca"
+        },
+        {
+          "name": "atk_sh",
+          "file": "b052_atk_sh.nsbca"
+        },
+        {
+          "name": "dam",
+          "file": "b052_dam.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "b052_ded.nsbca"
+        },
+        {
+          "name": "run_ed",
+          "file": "b052_run_ed.nsbca"
+        },
+        {
+          "name": "run_lp",
+          "file": "b052_run_lp.nsbca"
+        },
+        {
+          "name": "run_st",
+          "file": "b052_run_st.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "b052_wat.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_com_exp02",
+          "file": "ef_com_exp02.nsbmd"
+        },
+        {
+          "name": "ef_com_explosion",
+          "file": "ef_com_explosion.nsbmd"
+        },
+        {
+          "name": "ef_e_c_mdd",
+          "file": "ef_e_c_mdd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_arbd",
+          "file": "ef_e_l_arbd.nsbmd"
+        },
+        {
+          "name": "ef_e_l_mine",
+          "file": "ef_e_l_mine.nsbmd"
+        },
+        {
+          "name": "ef_e_l_sgun",
+          "file": "ef_e_l_sgun.nsbmd"
+        },
+        {
+          "name": "ef_e_l_stt",
+          "file": "ef_e_l_stt.nsbmd"
+        }
+      ],
+      "parts": [
+        {
+          "name": "b_152m",
+          "file": "b_152m.nsbmd",
+          "animationCount": 0
+        }
+      ],
+      "roster": [
+        {
+          "id": "phobos_dyna",
+          "name": "Phobos Dyna",
+          "animation_model": "tank_rare",
+          "archetype": "missile_tank",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": [
+            "atk_bz",
+            "atk_mi",
+            "atk_sh"
+          ]
+        }
+      ]
+    },
+    {
+      "model": "tiger",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/tiger/",
+      "info": {
+        "name": "tiger",
+        "modelBaseName": "m_034",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m034_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m034_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m034_dmg.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "m034_stp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m034_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m034_wat.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m034_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m034_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_c_stt_c",
+          "file": "ef_e_c_stt_c.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "kapantha",
+          "name": "Kapantha",
+          "animation_model": "tiger",
+          "archetype": "quadruped",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "vulture",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/vulture/",
+      "info": {
+        "name": "vulture",
+        "modelBaseName": "s_002",
+        "animationCount": 6,
+        "mainAnimationCount": 6,
+        "effectCount": 2,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "s002_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "s002_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "s002_dmg.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "s002_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "s002_wat.nsbca"
+        },
+        {
+          "name": "wlk",
+          "file": "s002_wlk.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_m_stt",
+          "file": "ef_e_m_stt.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "vulkure",
+          "name": "Vulkure",
+          "animation_model": "vulture",
+          "archetype": "simple_melee",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    },
+    {
+      "model": "wolf",
+      "url": "https://dashgl.github.io/psz-asset-viewer/enemies/wolf/",
+      "info": {
+        "name": "wolf",
+        "modelBaseName": "m_012",
+        "animationCount": 8,
+        "mainAnimationCount": 8,
+        "effectCount": 3,
+        "partsCount": 0
+      },
+      "animations": [
+        {
+          "name": "atk",
+          "file": "m_012_atk.nsbca"
+        },
+        {
+          "name": "ded",
+          "file": "m_012_ded.nsbca"
+        },
+        {
+          "name": "dmg",
+          "file": "m_012_dmg.nsbca"
+        },
+        {
+          "name": "stp",
+          "file": "m_012_stp.nsbca"
+        },
+        {
+          "name": "stt",
+          "file": "m_012_stt.nsbca"
+        },
+        {
+          "name": "wat",
+          "file": "m_012_wat.nsbca"
+        },
+        {
+          "name": "wlk_l",
+          "file": "m_012_wlk_l.nsbca"
+        },
+        {
+          "name": "wlk_r",
+          "file": "m_012_wlk_r.nsbca"
+        }
+      ],
+      "effects": [
+        {
+          "name": "ef_e_c_sdd",
+          "file": "ef_e_c_sdd.nsbmd"
+        },
+        {
+          "name": "ef_e_s_stt",
+          "file": "ef_e_s_stt.nsbmd"
+        },
+        {
+          "name": "ef_e_s_wbr",
+          "file": "ef_e_s_wbr.nsbmd"
+        }
+      ],
+      "parts": [],
+      "roster": [
+        {
+          "id": "reyhound",
+          "name": "Reyhound",
+          "animation_model": "wolf",
+          "archetype": "quadruped",
+          "runtime_definition_source": "data/enemy_attacks.json + EnemyBase",
+          "attacks": [
+            {
+              "id": "basic",
+              "clip": "atk",
+              "windup_frac": 0.35,
+              "damage_end_frac": 0.6,
+              "hit_half_angle_deg": 45.0,
+              "hit_reach": 2.0,
+              "damage_mult": 1.0,
+              "weight": 1.0,
+              "min_range": 0.0,
+              "max_range": 2.0
+            }
+          ],
+          "generic_basic_placeholder": true,
+          "attack_named_clips_without_explicit_definition_reference": []
+        }
+      ]
+    }
+  ],
+  "roster_without_viewer_model": [
+    {
+      "id": "chaos_sorcerer",
+      "name": "Chaos Sorcerer",
+      "model_id": "chaos_sorcerer"
+    },
+    {
+      "id": "poison_lily",
+      "name": "Poison Lily",
+      "model_id": "poison_lily"
+    },
+    {
+      "id": "shinowa",
+      "name": "Sinow Beat",
+      "model_id": "shinowa"
+    },
+    {
+      "id": "sinow_beat",
+      "name": "Sinow Beat",
+      "model_id": "sinow_beat"
+    },
+    {
+      "id": "sinow_gold",
+      "name": "Sinow Gold",
+      "model_id": "sinow_gold"
+    }
+  ]
+}
