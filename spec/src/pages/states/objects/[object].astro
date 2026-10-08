@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../../utils/site';
 // Dynamic per-object documentation page. ONE template generates every
 // /states/objects/<slug> page from the cell-objects data module. Each page
 // shows a live 3D model viewer, the stage-JSON config schema, and prose for
@@ -38,8 +39,8 @@ function fmt(s: string): string {
   <p>
     Field cell-object reference. Type tag: <code>{spec.type}</code>. The key words
     <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> are
-    used as in RFC 2119. See the <a href="/states/objects">Cell Objects index</a>
-    and the <a href="/states/field-lifecycle">Field Stage Lifecycle</a> for how
+    used as in RFC 2119. See the <a href={siteUrl('/states/objects')}>Cell Objects index</a>
+    and the <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a> for how
     objects are spawned and persisted.
   </p>
 
@@ -69,7 +70,7 @@ function fmt(s: string): string {
   {spec.notes && <h2>Notes</h2>}
   {spec.notes && <p set:html={fmt(spec.notes)} />}
 
-  <p><a href="/states/objects">← Cell Objects</a></p>
+  <p><a href={siteUrl('/states/objects')}>← Cell Objects</a></p>
 </Concept>
 
 <style>

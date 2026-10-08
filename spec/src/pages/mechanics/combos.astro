@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Combat Combos" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by <strong>two-tier timing</strong> (#461) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. A single boundary, <code>just_start</code>, splits the swing: a press <em>before</em> it fumbles, a press <em>at or after</em> it <strong>queues</strong> the next step, which fires when the current swing completes. This preserves action commitment (#377 — a swing always fully executes, see <a href="/states/player-state">Player State Machine</a>).</p>
+  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by <strong>two-tier timing</strong> (#461) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. A single boundary, <code>just_start</code>, splits the swing: a press <em>before</em> it fumbles, a press <em>at or after</em> it <strong>queues</strong> the next step, which fires when the current swing completes. This preserves action commitment (#377 — a swing always fully executes, see <a href={siteUrl('/states/player-state')}>Player State Machine</a>).</p>
 
   <p>There is <strong>no just-attack tier</strong>. An earlier draft (#155/PR #459) added a third, "just-attack" window granting a damage bonus for precise timing; Rozalin's #459 playtest found this both inaccurate to PSZ and counterintuitive (#461). <strong>Crit and damage bonuses come from character stats and equipment, not combo timing.</strong> Players use the accept window to decide <em>when</em> to advance the combo (reposition / stagger), not to farm a per-hit bonus.</p>
 
@@ -54,7 +55,7 @@ import Concept from '../../layouts/Concept.astro';
   </ul>
   <p>Status: <strong>implemented (#461)</strong> — <code>test_combo_two_tier</code> pins the accept boundary, queue semantics, and finisher; <code>test_combo_miss_early_fumble</code> pins the fumble lockout; <code>test_mechgun_final_step_no_root</code> pins the safety net; the <code>PSZ_AUTOPILOT_COMBO=1</code> probe drives a live fumble + normal-chain end-to-end.</p>
 
-  <p>These attacks are the ATTACKING state of the <a href="/states/player-state">Player State Machine</a>.</p>
+  <p>These attacks are the ATTACKING state of the <a href={siteUrl('/states/player-state')}>Player State Machine</a>.</p>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

@@ -1,3 +1,4 @@
+import { devApiUrl } from '../utils/devApi';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GLTFExporter } from 'three-stdlib';
 import * as THREE from 'three';
@@ -411,7 +412,7 @@ export default function CityLab() {
         exporter.parse(root, (r) => resolve(r as ArrayBuffer), reject, { binary: true, onlyVisible: true });
       });
       try {
-        const res = await fetch(`/api/city-lab/export-glb?path=${encodeURIComponent(def.exportPath)}`, {
+        const res = await fetch(devApiUrl(`/api/city-lab/export-glb?path=${encodeURIComponent(def.exportPath)}`), {
           method: 'POST',
           headers: { 'content-type': 'model/gltf-binary' },
           body: buf,
@@ -436,7 +437,7 @@ export default function CityLab() {
     if (!def.lightStageId) return;
     const doc = toLightsDoc(def.lightStageId, draft.lights, draft.ambient);
     try {
-      const res = await fetch('/api/city-lab/save-lights', {
+      const res = await fetch(devApiUrl('/api/city-lab/save-lights'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ stageId: def.lightStageId, json: doc }),

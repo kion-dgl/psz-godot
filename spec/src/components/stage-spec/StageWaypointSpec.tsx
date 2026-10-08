@@ -1,3 +1,4 @@
+import { siteUrl } from '../../utils/site';
 // StageWaypointSpec — read-only viewer for a stage's floor + visual mesh +
 // Manhattan grid + hand-authored waypoints. Waypoints are authored in the
 // Vite editor (http://.../web/#/stage-editor) and stored in
@@ -288,7 +289,7 @@ export default function StageWaypointSpec({
   // /web proxy → editor's /psz-godot/data/... endpoint.
   useEffect(() => {
     let cancelled = false;
-    fetch('/web/data/stage_configs/unified-stage-configs.json')
+    fetch(siteUrl('/data/stage_configs/unified-stage-configs.json'))
       .then((r) => r.json())
       .then((cfg) => {
         if (cancelled) return;

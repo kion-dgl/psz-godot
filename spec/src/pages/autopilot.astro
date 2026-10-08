@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../utils/site';
 import Concept from '../layouts/Concept.astro';
 import { AUTOPILOT_STEPS } from '../autopilot';
 import fs from 'node:fs';
@@ -80,7 +81,7 @@ function parseTimestamp(ts: string): Date | null {
 }
 
 let clips: Clip[] = [];
-const recordingsDir = path.resolve('public/recordings');
+const recordingsDir = path.resolve('spec/public/recordings');
 try {
   const files = fs.readdirSync(recordingsDir);
   for (const f of files) {
@@ -148,7 +149,7 @@ const formatDuration = (sec?: number) =>
 ---
 
 <Concept title="Autopilot" section="Autopilot">
-  <p>The autopilot walks the game as an ordered playthrough, driven by synthetic input, and asserts each step from the logs. It runs on the dev box via <code>npm run sanity-check</code> (see <a href="/journey/splash">the user journey</a> for each screen). Covered: {doneCount}/{steps.length}.</p>
+  <p>The autopilot walks the game as an ordered playthrough, driven by synthetic input, and asserts each step from the logs. It runs on the dev box via <code>npm run sanity-check</code> (see <a href={siteUrl('/journey/splash')}>the user journey</a> for each screen). Covered: {doneCount}/{steps.length}.</p>
 
   <h2>Steps</h2>
   <table>
@@ -156,7 +157,7 @@ const formatDuration = (sec?: number) =>
     {steps.map((s) => (
       <tr>
         <td>{s.n}</td>
-        <td><a href={s.href}>{s.label}</a></td>
+        <td><a href={siteUrl(s.href)}>{s.label}</a></td>
         <td>{s.persona}</td>
         <td><span class={`badge ${s.status}`}>{s.status === 'done' ? '✓ covered' : 'planned'}</span></td>
         <td>{s.note}</td>
@@ -194,7 +195,7 @@ const formatDuration = (sec?: number) =>
                   <button
                     type="button"
                     class="open-clip"
-                    data-src={`/recordings/${c.filename}`}
+                    data-src={siteUrl(`/recordings/${c.filename}`)}
                     data-title={`Run #${run.num} · ${p.label} · ${c.ts}`}
                     data-status={c.status}
                     data-duration={formatDuration(c.durationSec)}

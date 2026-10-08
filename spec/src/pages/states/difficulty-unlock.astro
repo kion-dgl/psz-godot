@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -18,7 +19,7 @@ import Concept from '../../layouts/Concept.astro';
     gone for now.
   </aside>
 
-  <p>PSZ's replay structure: clearing the story raises the ceiling. Three tiers — <strong>Normal</strong>, <strong>Hard</strong>, <strong>Super-Hard</strong> — gate behind story completion, per character. The per-difficulty enemy scaling, rewards (<a href="/states/story-progression">#318</a> tiers), and technique levels already exist; this is the loop that gates access to them.</p>
+  <p>PSZ's replay structure: clearing the story raises the ceiling. Three tiers — <strong>Normal</strong>, <strong>Hard</strong>, <strong>Super-Hard</strong> — gate behind story completion, per character. The per-difficulty enemy scaling, rewards (<a href={siteUrl('/states/story-progression')}>#318</a> tiers), and technique levels already exist; this is the loop that gates access to them.</p>
 
   <h2>The rule</h2>
   <ul>

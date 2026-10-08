@@ -1,3 +1,4 @@
+import { devApiUrl } from '../utils/devApi';
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import * as THREE from 'three';
@@ -1365,7 +1366,7 @@ export default function UnifiedStageEditor() {
               if (!config) return;
               if (!confirm(`Overwrite data/stage_configs/unified-stage-configs.json[${selectedMapId}] with the current local edits?`)) return;
               try {
-                const res = await fetch('/api/stage-config/save-stage', {
+                const res = await fetch(devApiUrl('/api/stage-config/save-stage'), {
                   method: 'POST',
                   headers: { 'content-type': 'application/json' },
                   body: JSON.stringify({ stageId: selectedMapId, config }),

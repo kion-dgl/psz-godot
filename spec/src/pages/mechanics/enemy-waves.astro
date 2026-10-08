@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Enemy Waves" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>This page governs <em>how many</em> waves a room runs and <em>when</em> each arrives. It does not govern <em>which</em> enemies a wave contains (the wave-template roll — see <a href="/psz-godot/states/free-field">Free Field</a>) nor <em>where</em> they stand (the slot placement — see <a href="/psz-godot/mechanics/enemy-placement">Enemy Placement</a>). Those three are independent: a room picks a count of waves here, draws a template for each on the Free Field page, and places each template's enemies on the Enemy Placement page.</p>
+  <p>This page governs <em>how many</em> waves a room runs and <em>when</em> each arrives. It does not govern <em>which</em> enemies a wave contains (the wave-template roll — see <a href={siteUrl('/psz-godot/states/free-field')}>Free Field</a>) nor <em>where</em> they stand (the slot placement — see <a href={siteUrl('/psz-godot/mechanics/enemy-placement')}>Enemy Placement</a>). Those three are independent: a room picks a count of waves here, draws a template for each on the Free Field page, and places each template's enemies on the Enemy Placement page.</p>
 
   <h2>A room runs several waves, not one</h2>
 
@@ -29,7 +30,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Rooms with no waves</h2>
 
-  <p>The <strong>start and goal rooms carry no waves</strong> (their assignment is empty; equivalently <code>w4 = 0</code>) and <strong>MUST</strong> spawn nothing — consistent with <a href="/psz-godot/states/free-field">Free Field</a>. A room whose assignment is empty is not a bug to fill in; it is authored to be quiet.</p>
+  <p>The <strong>start and goal rooms carry no waves</strong> (their assignment is empty; equivalently <code>w4 = 0</code>) and <strong>MUST</strong> spawn nothing — consistent with <a href={siteUrl('/psz-godot/states/free-field')}>Free Field</a>. A room whose assignment is empty is not a bug to fill in; it is authored to be quiet.</p>
 
   <h2>What the port owes</h2>
 

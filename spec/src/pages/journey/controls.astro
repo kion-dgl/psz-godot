@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
 ---
@@ -40,7 +41,7 @@ import Mermaid from '../../components/Mermaid.astro';
   <p>880×540 modal panel, slides in from top (0.35s ease-out), slides back up on finish (0.22s ease-in). Dark navy background on first-run; overlay dim when accessed from settings.</p>
 
   <h2>Previous</h2>
-  <p><a href="/journey/download">← Download Content</a></p>
+  <p><a href={siteUrl('/journey/download')}>← Download Content</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/title">Title Screen →</a></p>
+  <p><a href={siteUrl('/journey/title')}>Title Screen →</a></p>
 </Definition>

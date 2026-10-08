@@ -83,7 +83,7 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset, autoRotate 
 
     // Absolute paths (e.g. the /local working-tree middleware or /cdn) pass
     // through untouched; bare "assets/..." paths resolve via the R2 helper.
-    const url = glb.startsWith('/') ? glb : assetUrl(glb);
+    const url = assetUrl(glb);
     new GLTFLoader().load(
       url,
       (gltf) => {

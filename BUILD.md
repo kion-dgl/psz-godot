@@ -40,15 +40,16 @@ godot --headless --path . --export-release "Android" build/android/psz-godot.apk
 
 Exports are minimal (~30 MB) — the binary only contains bootstrap code + scenes. At runtime, the bootstrap scene pulls the 667 MB asset pack from R2 (or Arweave if R2 is unreachable), verifies sha256, and mounts it via `ProjectSettings.load_resource_pack()`.
 
-## Web editor / quest tools
+## Unified static site, spec and tools
 
 ```bash
-cd web
 npm install
 npm run dev
 ```
 
-The web app reads assets through the same R2 CDN. If `/assets/` is populated locally the dev server also works offline via the public symlinks.
+Run from the repository root. Astro serves the homepage, spec and React tools at `/psz-godot/`; tools use normal `/psz-godot/tools/.../` URLs. `npm run build` emits one static `dist/site` artifact for GitHub Pages. `npm test`, `npm run typecheck` and `python3 scripts/site/check_links.py` validate the source and built routes.
+
+Assets use the configured CDN. Local extracted assets are available under `/local/assets/...` in development; save/export endpoints are development-only. DigitalOcean hosts static assets and the Godot Web export, not an Astro server. The dynamic report feature has been retired.
 
 ## Asset pipeline (for maintainers)
 

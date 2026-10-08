@@ -1,11 +1,12 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Dodge" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>A forward roll in the facing direction at the moment the dodge starts. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>animation commitment</em> plus a short invincibility window: a poorly-timed roll is a punish (see <a href="/states/player-state">Player State Machine → Action commitment</a>).</p>
+  <p>A forward roll in the facing direction at the moment the dodge starts. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>animation commitment</em> plus a short invincibility window: a poorly-timed roll is a punish (see <a href={siteUrl('/states/player-state')}>Player State Machine → Action commitment</a>).</p>
 
   <h2>Phases and timing</h2>
   <table>
@@ -33,5 +34,5 @@ import Concept from '../../layouts/Concept.astro';
   </ul>
   <p>Status: <strong>implemented (#273, tightened by #377)</strong> — <code>test_player_states</code> pins both sides of the 0.2&nbsp;s window; <code>test_action_commitment</code> pins the no-cancel rules.</p>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

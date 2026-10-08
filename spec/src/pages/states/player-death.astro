@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 // Player death / defeat — what happens when the player's HP reaches 0 in the
 // field. The normative contract the Godot implementation is tested against.
 import Concept from '../../layouts/Concept.astro';
@@ -24,7 +25,7 @@ const chart = `stateDiagram-v2
   <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in
   RFC 2119.</p>
 
-  <p>Defeat is the failure exit of a <a href="/states/field-lifecycle">field
+  <p>Defeat is the failure exit of a <a href={siteUrl('/states/field-lifecycle')}>field
   session</a>. It is the mirror of the success exit (clear the objectives,
   ride the end telepipe home): the player goes down, and the run ends with a
   cost instead of a reward. There is <strong>no permadeath</strong> — defeat
@@ -37,7 +38,7 @@ const chart = `stateDiagram-v2
     field). HP only ever reaches 0 in the field — the city has no combat — so
     Defeat is field-only.</li>
     <li>The death knockdown itself (the lying-down animation) is the
-    <code>DOWN</code> branch of the <a href="/states/player-state">Player
+    <code>DOWN</code> branch of the <a href={siteUrl('/states/player-state')}>Player
     State</a> contract; this page governs what happens <em>around</em> that
     animation.</li>
   </ul>
@@ -93,7 +94,7 @@ const chart = `stateDiagram-v2
     field session exactly like the <code>return_to_city</code> exit — the
     expedition is over and is <strong>NOT</strong> resumable. To retry a quest
     the player <strong>MUST</strong> re-accept it at the guild counter. Any
-    active <a href="/states/telepipe">telepipe</a> is cleared (a session end
+    active <a href={siteUrl('/states/telepipe')}>telepipe</a> is cleared (a session end
     cancels it).</li>
     <li><strong>Meseta penalty.</strong> The player <strong>MUST</strong> lose
     <strong>50%</strong> of the meseta they are <em>carrying</em>, rounded down

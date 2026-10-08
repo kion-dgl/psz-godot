@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../../utils/site';
 // Landing for the per-stage viewer — lists every (area, variant) pair
 // that has stages, grouped by area.
 
@@ -22,7 +23,7 @@ const orderedAreas = Object.keys(AREA_META).filter((a) => buckets[a]);
 <Base title="Field Stages">
   <div class="page">
     <header>
-      <a href="/" class="back">← spec</a>
+      <a href={siteUrl('/')} class="back">← spec</a>
       <h1>Field Stages</h1>
     </header>
     <div class="content">
@@ -34,7 +35,7 @@ const orderedAreas = Object.keys(AREA_META).filter((a) => buckets[a]);
       <p class="lede">
         For the <em>runtime behavior</em> — cell load/restore, object spawning, plan
         actions, persistence, gates, and which module owns what — see the
-        <a href="/states/field-lifecycle"><strong>Field Stage Lifecycle</strong></a>.
+        <a href={siteUrl('/states/field-lifecycle')}><strong>Field Stage Lifecycle</strong></a>.
       </p>
       <ul class="area-list">
         {orderedAreas.map((area) => {
@@ -46,7 +47,7 @@ const orderedAreas = Object.keys(AREA_META).filter((a) => buckets[a]);
               <span class="area-slug">{area}</span>
               <div class="variants">
                 {variants.map(([v, n]) => (
-                  <a class="variant-link" href={`/journey/field/${area}/${v}`}>
+                  <a class="variant-link" href={siteUrl(`/journey/field/${area}/${v}`)}>
                     <span class="variant-letter">{v.toUpperCase()}</span>
                     <span class="variant-count">{n}</span>
                   </a>

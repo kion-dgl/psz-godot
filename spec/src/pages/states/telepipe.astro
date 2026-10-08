@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -21,7 +22,7 @@ const chart = `stateDiagram-v2
 
   <p>A telepipe is a portable shortcut between the field and the city. Distinguish two things: the <strong>Telepipe item</strong> (a stackable consumable in the inventory) and the <strong>placed telepipe</strong> (the open portal in the world).</p>
 
-  <p>The telepipe is a pure <strong>movement primitive</strong> that binds to the <a href="/states/session-model">Field Context</a>, not to quest state — completing a quest does not cancel it. See <a href="/states/session-model">Session Model</a> for that contract and why the coupling caused crashes.</p>
+  <p>The telepipe is a pure <strong>movement primitive</strong> that binds to the <a href={siteUrl('/states/session-model')}>Field Context</a>, not to quest state — completing a quest does not cancel it. See <a href={siteUrl('/states/session-model')}>Session Model</a> for that contract and why the coupling caused crashes.</p>
 
   <h2>Items vs the placed pipe</h2>
   <ul>
@@ -48,7 +49,7 @@ const chart = `stateDiagram-v2
   </ul>
   <p>Switching free fields does <strong>NOT</strong> close the pipe. A pipe dropped in Valley 2 stays open and keeps routing back to Valley 2 even after the player starts Wetlands 1 — it persists for the whole Free-Roam period until one of the events above occurs.</p>
 
-  <p><strong>Completing a quest's objectives does NOT close the pipe.</strong> Meeting the last objective marks the quest <em>complete</em> (rewards now claimable) but leaves the player in a live quest field — they <strong>MAY</strong> keep exploring and round-tripping through the pipe. The pipe (and the field) close only when the player <strong>reports</strong> the quest to the guild or <strong>cancels</strong> it. See the <a href="/states/session-model">Session Model</a> for why "complete" (in-field) and "report / cancel" (the exit) are distinct.</p>
+  <p><strong>Completing a quest's objectives does NOT close the pipe.</strong> Meeting the last objective marks the quest <em>complete</em> (rewards now claimable) but leaves the player in a live quest field — they <strong>MAY</strong> keep exploring and round-tripping through the pipe. The pipe (and the field) close only when the player <strong>reports</strong> the quest to the guild or <strong>cancels</strong> it. See the <a href={siteUrl('/states/session-model')}>Session Model</a> for why "complete" (in-field) and "report / cancel" (the exit) are distinct.</p>
 
   <h2>End-of-quest telepipe</h2>
   <p>A quest <strong>MAY</strong> open a telepipe at its end as a quick ride back to the city. Because exactly one pipe may exist, this story pipe <strong>MUST</strong> close any pipe the player had already placed. The player <strong>MAY</strong> instead ignore it and use their own item; doing so closes the story pipe in turn. Whichever was opened most recently is the one that remains.</p>

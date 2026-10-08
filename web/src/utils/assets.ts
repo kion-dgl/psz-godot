@@ -22,10 +22,13 @@ const CDN_PREFIXES = ['assets/'];
 const LOCAL_ONLY_PREFIXES = [
   'assets/kenney_input-prompts/',
   'assets/kenney_nature-pack/',
+  'assets/ui/',
+  'assets/cc0_textures/',
   'assets/fonts/', // JetBrains Mono (OFL) — vendored in-repo, ships in the binary, never on R2 (#450)
 ];
 
 export function assetUrl(path: string): string {
+  if (/^(?:https?:|blob:|data:)/.test(path)) return path;
   const base = import.meta.env.BASE_URL || '/';
   const cdn = (import.meta.env.VITE_ASSETS_BASE || '').replace(/\/$/, '');
   const clean = path.startsWith('/') ? path.slice(1) : path;
@@ -33,7 +36,12 @@ export function assetUrl(path: string): string {
     return `${base}${clean}`;
   }
   if (cdn && CDN_PREFIXES.some((p) => clean.startsWith(p))) {
+    // The published origin is allowed by the CDN; arbitrary local ports are not.
+    if (import.meta.env.DEV) return `${base}cdn/${clean}`;
     return `${cdn}/${clean}`;
+  }
+  if (import.meta.env.DEV && CDN_PREFIXES.some((p) => clean.startsWith(p))) {
+    return `${base}local/${clean}`;
   }
   return `${base}${clean}`;
 }

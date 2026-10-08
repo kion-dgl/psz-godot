@@ -1,0 +1,41 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+import roster from '../../../../data/combat_roster.json';
+const issue = (n: number) => `https://github.com/kion-dgl/psz-godot/issues/${n}`;
+---
+
+<Concept title="Combat roster and identity evidence">
+  <p>October 8, 2026 · <a href={issue(683)}>Identity audit #683</a> · <a href={siteUrl('/fidelity')}>Fidelity grades</a></p>
+  <p>This crosswalk records current assignments, not certified original-game identities. Runtime IDs MUST remain stable until a migration accounts for saved data, quests, drops, spawners, attack tables and boss encounters. Display names and filenames alone MUST NOT establish behavior.</p>
+  <h2>Coverage contract</h2>
+  <ul>
+    <li>Every EnemyData resource MUST have one crosswalk entry and a family validation issue. Its ID, display name, model, effective animation rig and boss flag MUST match the recorded assignment.</li>
+    <li>Every resource MUST have attack data. Attack-only entries MUST be reported with a specific reason and follow-up issue; new or stale exceptions MUST fail the check.</li>
+    <li>Every source ID MUST resolve to a resource model or an explicit exclusion/alias. Imported or unidentified rigs MUST be marked separately from source-ID matches.</li>
+    <li>Boss definitions MUST have encounter coverage, including encounters without a standalone EnemyData resource. Differences between encounter and resource rigs MUST be explicit.</li>
+    <li>Identity evidence MUST distinguish local assignments, source-table matches, bestiary claims, hypotheses and unknowns. A source-table match proves the internal model name, not a display name, attack kit or visual fidelity.</li>
+    <li>Run <code>python3 scripts/tools/check_combat_roster.py</code>. Passing means known coverage is accounted for; it MUST NOT close a family issue or raise its playtest grade.</li>
+  </ul>
+  <h2>Evidence and unresolved identities</h2>
+  {roster.findings.map(f => <section><h3>{f.title}</h3><p>{f.evidence}</p><p><strong>Next:</strong> {f.next} <a href={issue(f.issue)}>#{f.issue}</a></p></section>)}
+  <p>Local PSZ Mini checkout inspected at <code>a3836afc1780ee8a41078d4f1299141252a8f91b</code>. No function-to-retail-family identity proof was established in this audit. Retained Mini behavior remains valid evidence when traced to matching code; this audit does not infer missing gameplay from the demo label.</p>
+  <h2>Resource crosswalk</h2>
+  <p>Source numbers come from the vendored psz-re table at 0x020F9E6C. Blank source IDs mean no match in that table, not proof of a missing enemy. Animation shows the effective rig after the resource's fallback.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Runtime ID / display</th><th>Model / animation</th><th>Source ID</th><th>Evidence</th><th>Ticket</th></tr></thead>
+    <tbody>{roster.enemies.map(e => <tr><td><code>{e.id}</code><br />{e.name}{e.is_boss ? ' (boss)' : ''}</td><td><code>{e.model_id}</code><br /><code>{e.animation_model_id}</code></td><td>{e.source_id ?? '—'}</td><td>{e.identity_status}</td><td><a href={issue(e.issue)}>#{e.issue}</a></td></tr>)}</tbody>
+  </table></div>
+  <h2>Boss encounters</h2>
+  <table><thead><tr><th>ID</th><th>Model</th><th>Disposition</th><th>Ticket</th></tr></thead><tbody>{roster.encounters.map(e => <tr><td>{e.id}</td><td>{e.model_id}</td><td>{e.note}</td><td><a href={issue(e.issue)}>#{e.issue}</a></td></tr>)}</tbody></table>
+  <h2>Attack-only entries</h2>
+  {roster.attack_exceptions.map(e => <p><code>{e.id}</code>: {e.reason} <a href={issue(e.issue)}>#{e.issue}</a></p>)}
+  <h2>Catalog discrepancies</h2>
+  {roster.metadata_exceptions.map(e => <p><code>{e.key}</code>: {e.reason} <a href={issue(e.issue)}>#{e.issue}</a></p>)}
+  <h2>Source slots without standalone resources</h2>
+  {roster.source_exceptions.map(e => <p>#{e.source_id} <code>{e.model_id || '(empty)'}</code>: {e.reason} <a href={issue(e.issue)}>#{e.issue}</a></p>)}
+  <h2>Reproducible evidence</h2>
+  <p>The machine-readable crosswalk is <code>data/combat_roster.json</code>. It cites <code>data/re_reference/enemy_ids.json</code>, <code>boss_roster.json</code>, the October 7 <code>enemy_viewer_audit.json</code>, current <code>data/enemies/*.tres</code>, <code>data/enemies.json</code> and <code>data/boss_arenas.json</code>. These are repository snapshots, not a claim to have fetched newer upstream evidence.</p>
+</Concept>
+
+<style>.scroll { overflow-x: auto; } .scroll table { max-width: none; } td { vertical-align: top; } h3 { margin-top: 1.4rem; }</style>

@@ -1,3 +1,4 @@
+import { devApiUrl } from '../utils/devApi';
 // FloorColliderBuilder — build a stage's -floor.glb collision mesh by selecting
 // triangles from the visual model, by material and/or one triangle at a time.
 //
@@ -685,7 +686,7 @@ export default function FloorColliderBuilder() {
     try {
       const glb = await exportGlb();
       if (!glb) return;
-      const res = await fetch(`/api/collider/export?path=${encodeURIComponent(outPath)}`, {
+      const res = await fetch(devApiUrl(`/api/collider/export?path=${encodeURIComponent(outPath)}`), {
         method: 'POST',
         headers: { 'content-type': 'model/gltf-binary' },
         body: glb,
@@ -721,7 +722,7 @@ export default function FloorColliderBuilder() {
     if (!outPath) return;
     if (!confirm(`Restore ${outPath} to git HEAD (or delete if new)?`)) return;
     try {
-      const res = await fetch('/api/collider/reset', {
+      const res = await fetch(devApiUrl('/api/collider/reset'), {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ path: outPath }),
       });

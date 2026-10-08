@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../../utils/site';
 // Cell Objects index — lists every field cell-object type with a link to its
 // per-object reference page. Generated from the cell-objects data module.
 import Concept from '../../../layouts/Concept.astro';
@@ -9,7 +10,7 @@ import { cellObjects } from '../../../data/cell-objects';
   <p>Every object a field cell can contain has its own reference page: a live
   3D model viewer, the stage-JSON config schema, and prose for its spawn
   behavior, persisted state, and interactions. These complement the
-  <a href="/states/field-lifecycle">Field Stage Lifecycle</a> overview, which
+  <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a> overview, which
   covers the cell load / restore contract that spawns and persists them.</p>
 
   <p>All cell objects are created by <code>CellObjectSpawner</code> from the
@@ -21,12 +22,12 @@ import { cellObjects } from '../../../data/cell-objects';
     <tr><th>Object</th><th>Type tag</th><th>Model</th></tr>
     {cellObjects.map((o) => (
       <tr>
-        <td><a href={`/states/objects/${o.slug}`}>{o.title}</a></td>
+        <td><a href={siteUrl(`/states/objects/${o.slug}`)}>{o.title}</a></td>
         <td><code>{o.type}</code></td>
         <td>{o.glb ? <span>3D viewer</span> : <span>varies at runtime</span>}</td>
       </tr>
     ))}
   </table>
 
-  <p><a href="/states">← States</a></p>
+  <p><a href={siteUrl('/states')}>← States</a></p>
 </Concept>

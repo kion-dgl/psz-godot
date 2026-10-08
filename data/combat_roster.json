@@ -1,0 +1,844 @@
+{
+  "schema_version": 1,
+  "checked": "2026-10-08",
+  "baseline_commit": "6f2ce7bf",
+  "findings": [
+    {
+      "title": "Tank and swordman assignments conflict",
+      "issue": 683,
+      "evidence": "data/re_reference/enemy_ids.json bestiary explicitly identifies tank as Arkzein (source slot 40). Current phobos/phobos_dyna use tank/tank_rare (40/41); arkzein/arkzein_r use swordman/swordman_rare (48/50); zaphobos/zaphobos_dyna use swordman_b/swordman_rare_b (49/51). The saved reference proves the base tank naming conflict but does not establish every swordman or rare display name.",
+      "next": "Recover variant bestiary labels before proposing a complete display-name/ID migration. Use rigs, not current names, for #688/#689 comparisons."
+    },
+    {
+      "title": "Mother family and shrine boss are distinct",
+      "issue": 683,
+      "evidence": "mother_trinity uses source mother (57), while humilias uses boss_mother (66). The boss roster identifies boss_mother as the z_004 Mother with face parts; humilias boss definition places it in the shrine arena s07z_na1. mother_sword/gun/tech occupy 58–60. These are different source identities; current display names are not a reliable reference key.",
+      "next": "Validate regular mother identity in #690 and the shrine boss in #718 before renaming. Heaven’s Mother is an authored composite encounter, not an additional source-table identity."
+    },
+    {
+      "title": "Robot encounter and orphan attack data",
+      "issue": 716,
+      "evidence": "chaos_mobius resource and boss definition both use boss_robot, but the encounter is in Arca s06z_na1 while the resource lists Paru. FieldPopulation aliases boss_robot_cmb (65) to boss_robot (63). Boss notes describe a combined Arca rig and refer to chaos_mobius_paru; that ID exists only in the attack table, not as a resource or boss definition. Paru’s arena currently documents a Sinow stand-in.",
+      "next": "Resolve split/combined identity and arena routing together. Do not count chaos_mobius_paru as a playable validated variant or silently delete its recorded kit."
+    },
+    {
+      "title": "Shinowa and Sinow encounter collision",
+      "issue": 713,
+      "evidence": "shinowa resource displays Sinow Beat, but sinow_beat has its own resource and rig. The boss encounter keyed sinow_beat loads shinowa. Neither rig occurs in the vendored retail source-ID table; the October 7 viewer inventory also lacks these models. A missing model-table entry does not establish which game supplied shinowa.",
+      "next": "Trace imported asset provenance and intended arena identity across #713/#720 before sharing or swapping their behavior."
+    },
+    {
+      "title": "Source coverage and additions",
+      "issue": 683,
+      "evidence": "All nonempty retail source names except sample, boss_robot_cmb and boss_mother_piece have a resource model match. sample and the empty slot are not playable; combined robot is aliased; Mother pieces lack standalone resources. Four PSO additions (Poison Lily, Chaos Sorcerer, Sinow Beat/Gold) and unresolved shinowa sit outside this source table. This is table coverage, not proof that every original encounter or boss part is implemented.",
+      "next": "Keep source exclusions visible. #718 must verify whether Mother parts are actually implemented; a FieldPopulation comment saying they are boss-owned is not runtime proof."
+    }
+  ],
+  "enemies": [
+    {
+      "id": "akorse",
+      "name": "Akorse",
+      "model_id": "shooter_leader",
+      "animation_model_id": "shooter_leader",
+      "is_boss": false,
+      "source_id": 36,
+      "issue": 704,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "ar_rappy",
+      "name": "Ar Rappy",
+      "model_id": "rappy_blue",
+      "animation_model_id": "rappy",
+      "is_boss": false,
+      "source_id": 53,
+      "issue": 691,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "arkzein",
+      "name": "Arkzein",
+      "model_id": "swordman",
+      "animation_model_id": "swordman",
+      "is_boss": false,
+      "source_id": 48,
+      "issue": 689,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "arkzein_r",
+      "name": "Arkzein R",
+      "model_id": "swordman_rare",
+      "animation_model_id": "swordman_rare",
+      "is_boss": false,
+      "source_id": 50,
+      "issue": 689,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "azherowa_b2",
+      "name": "Azherowa-B2",
+      "model_id": "quad_rare",
+      "animation_model_id": "quad",
+      "is_boss": false,
+      "source_id": 32,
+      "issue": 705,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "batt",
+      "name": "Batt",
+      "model_id": "bat",
+      "animation_model_id": "bat",
+      "is_boss": false,
+      "source_id": 23,
+      "issue": 686,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "blade_mother",
+      "name": "Blade Mother",
+      "model_id": "mother_sword",
+      "animation_model_id": "mother_sword",
+      "is_boss": false,
+      "source_id": 58,
+      "issue": 690,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "blaze_helion",
+      "name": "Blaze Helion",
+      "model_id": "lion_rare",
+      "animation_model_id": "lion",
+      "is_boss": false,
+      "source_id": 6,
+      "issue": 685,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "bolix",
+      "name": "Bolix",
+      "model_id": "shrimp",
+      "animation_model_id": "shrimp",
+      "is_boss": false,
+      "source_id": 28,
+      "issue": 702,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "booma_origin",
+      "name": "Booma Origin",
+      "model_id": "booma",
+      "animation_model_id": "booma",
+      "is_boss": false,
+      "source_id": 55,
+      "issue": 684,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "bullbatt",
+      "name": "Bullbatt",
+      "model_id": "bat_blue",
+      "animation_model_id": "bat",
+      "is_boss": false,
+      "source_id": 24,
+      "issue": 686,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "chaos_mobius",
+      "name": "Chaos & Mobius",
+      "model_id": "boss_robot",
+      "animation_model_id": "boss_robot",
+      "is_boss": true,
+      "source_id": 63,
+      "issue": 716,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "chaos_sorcerer",
+      "name": "Chaos Sorcerer",
+      "model_id": "chaos_sorcerer",
+      "animation_model_id": "chaos_sorcerer",
+      "is_boss": true,
+      "source_id": null,
+      "issue": 721,
+      "identity_status": "PSO addition; source-game validation pending"
+    },
+    {
+      "id": "dark_falz",
+      "name": "Dark Falz",
+      "model_id": "boss_darkfalz",
+      "animation_model_id": "boss_darkfalz",
+      "is_boss": true,
+      "source_id": 68,
+      "issue": 717,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "derreo",
+      "name": "Derreo",
+      "model_id": "leg",
+      "animation_model_id": "leg",
+      "is_boss": false,
+      "source_id": 44,
+      "issue": 706,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "eulada",
+      "name": "Eulada",
+      "model_id": "circle",
+      "animation_model_id": "circle",
+      "is_boss": false,
+      "source_id": 42,
+      "issue": 708,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "euladaveil",
+      "name": "Euladaveil",
+      "model_id": "circle_black",
+      "animation_model_id": "circle",
+      "is_boss": false,
+      "source_id": 43,
+      "issue": 708,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "eulid",
+      "name": "Eulid",
+      "model_id": "lower",
+      "animation_model_id": "lower",
+      "is_boss": false,
+      "source_id": 46,
+      "issue": 707,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "eulidveil",
+      "name": "Eulidveil",
+      "model_id": "lower_black",
+      "animation_model_id": "lower_black",
+      "is_boss": false,
+      "source_id": 47,
+      "issue": 707,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "finjer_b",
+      "name": "Finjer B",
+      "model_id": "board_blue",
+      "animation_model_id": "board_blue",
+      "is_boss": false,
+      "source_id": 39,
+      "issue": 687,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "finjer_g",
+      "name": "Finjer G",
+      "model_id": "board_green",
+      "animation_model_id": "board_green",
+      "is_boss": false,
+      "source_id": 38,
+      "issue": 687,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "finjer_r",
+      "name": "Finjer R",
+      "model_id": "board",
+      "animation_model_id": "board",
+      "is_boss": false,
+      "source_id": 37,
+      "issue": 687,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "force_mother",
+      "name": "Force Mother",
+      "model_id": "mother_tech",
+      "animation_model_id": "mother_tech",
+      "is_boss": false,
+      "source_id": 60,
+      "issue": 690,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "froutang",
+      "name": "Froutang",
+      "model_id": "orangutan",
+      "animation_model_id": "orangutan",
+      "is_boss": false,
+      "source_id": 33,
+      "issue": 700,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "frunaked",
+      "name": "Frunaked",
+      "model_id": "orangutan_rare",
+      "animation_model_id": "orangutan",
+      "is_boss": false,
+      "source_id": 34,
+      "issue": 700,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "garahadan",
+      "name": "Garahadan",
+      "model_id": "snake_rare",
+      "animation_model_id": "snake",
+      "is_boss": false,
+      "source_id": 4,
+      "issue": 692,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "garapython",
+      "name": "Garapython",
+      "model_id": "snake",
+      "animation_model_id": "snake",
+      "is_boss": false,
+      "source_id": 3,
+      "issue": 692,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "ghowl",
+      "name": "Ghowl",
+      "model_id": "lizard",
+      "animation_model_id": "lizard",
+      "is_boss": false,
+      "source_id": 1,
+      "issue": 709,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "gigobooma_origin",
+      "name": "Gigobooma Origin",
+      "model_id": "jigobooma",
+      "animation_model_id": "jigobooma",
+      "is_boss": false,
+      "source_id": 56,
+      "issue": 684,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "goldix",
+      "name": "Goldix",
+      "model_id": "shrimp_rare",
+      "animation_model_id": "shrimp",
+      "is_boss": false,
+      "source_id": 29,
+      "issue": 702,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "grimble",
+      "name": "Grimble",
+      "model_id": "hyena",
+      "animation_model_id": "hyena",
+      "is_boss": false,
+      "source_id": 7,
+      "issue": 693,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "helion",
+      "name": "Helion",
+      "model_id": "lion",
+      "animation_model_id": "lion",
+      "is_boss": false,
+      "source_id": 5,
+      "issue": 685,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "hildegao",
+      "name": "Hildegao",
+      "model_id": "gorilla",
+      "animation_model_id": "gorilla",
+      "is_boss": false,
+      "source_id": 19,
+      "issue": 699,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "hildeghana",
+      "name": "Hildeghana",
+      "model_id": "gorilla_female",
+      "animation_model_id": "gorilla",
+      "is_boss": false,
+      "source_id": 21,
+      "issue": 699,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "hildegigas",
+      "name": "Hildegigas",
+      "model_id": "gorilla_rare",
+      "animation_model_id": "gorilla",
+      "is_boss": false,
+      "source_id": 20,
+      "issue": 699,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "humilias",
+      "name": "Humilias",
+      "model_id": "boss_mother",
+      "animation_model_id": "boss_mother",
+      "is_boss": true,
+      "source_id": 66,
+      "issue": 718,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "hypao",
+      "name": "Hypao",
+      "model_id": "seal",
+      "animation_model_id": "seal",
+      "is_boss": false,
+      "source_id": 11,
+      "issue": 697,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "izhirak_s6",
+      "name": "Izhirak-S6",
+      "model_id": "quad",
+      "animation_model_id": "quad",
+      "is_boss": false,
+      "source_id": 31,
+      "issue": 705,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "kapantha",
+      "name": "Kapantha",
+      "model_id": "tiger",
+      "animation_model_id": "tiger",
+      "is_boss": false,
+      "source_id": 25,
+      "issue": 694,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "korse",
+      "name": "Korse",
+      "model_id": "shooter",
+      "animation_model_id": "shooter",
+      "is_boss": false,
+      "source_id": 35,
+      "issue": 704,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "mother_trinity",
+      "name": "Mother Trinity",
+      "model_id": "mother",
+      "animation_model_id": "mother",
+      "is_boss": true,
+      "source_id": 57,
+      "issue": 690,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "octo_diablo",
+      "name": "Octo Diablo",
+      "model_id": "boss_octopus",
+      "animation_model_id": "boss_octopus",
+      "is_boss": true,
+      "source_id": 62,
+      "issue": 715,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "pelcatobur",
+      "name": "Pelcatobur",
+      "model_id": "roc_rare",
+      "animation_model_id": "roc",
+      "is_boss": false,
+      "source_id": 14,
+      "issue": 698,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "pelcatraz",
+      "name": "Pelcatraz",
+      "model_id": "roc",
+      "animation_model_id": "roc",
+      "is_boss": false,
+      "source_id": 13,
+      "issue": 698,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "phobos",
+      "name": "Phobos",
+      "model_id": "tank",
+      "animation_model_id": "tank",
+      "is_boss": false,
+      "source_id": 40,
+      "issue": 688,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "phobos_dyna",
+      "name": "Phobos Dyna",
+      "model_id": "tank_rare",
+      "animation_model_id": "tank_rare",
+      "is_boss": false,
+      "source_id": 41,
+      "issue": 688,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "pobomma",
+      "name": "Pobomma",
+      "model_id": "frog_bomb",
+      "animation_model_id": "frog",
+      "is_boss": false,
+      "source_id": 30,
+      "issue": 703,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "poison_lily",
+      "name": "Poison Lily",
+      "model_id": "poison_lily",
+      "animation_model_id": "poison_lily",
+      "is_boss": false,
+      "source_id": null,
+      "issue": 719,
+      "identity_status": "PSO addition; source-game validation pending"
+    },
+    {
+      "id": "pomarr",
+      "name": "Pomarr",
+      "model_id": "frog_rare",
+      "animation_model_id": "frog",
+      "is_boss": false,
+      "source_id": 10,
+      "issue": 703,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "porel",
+      "name": "Porel",
+      "model_id": "frog",
+      "animation_model_id": "frog",
+      "is_boss": false,
+      "source_id": 9,
+      "issue": 703,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "rab_rappy",
+      "name": "Rab Rappy",
+      "model_id": "rappy_red",
+      "animation_model_id": "rappy",
+      "is_boss": false,
+      "source_id": 54,
+      "issue": 691,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "rappy",
+      "name": "Rappy",
+      "model_id": "rappy",
+      "animation_model_id": "rappy",
+      "is_boss": false,
+      "source_id": 52,
+      "issue": 691,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "reyburn",
+      "name": "Reyburn",
+      "model_id": "boss_dragon",
+      "animation_model_id": "boss_dragon",
+      "is_boss": true,
+      "source_id": 61,
+      "issue": 714,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "reyhound",
+      "name": "Reyhound",
+      "model_id": "wolf",
+      "animation_model_id": "wolf",
+      "is_boss": false,
+      "source_id": 18,
+      "issue": 695,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "rohcrysta",
+      "name": "Rohcrysta",
+      "model_id": "armadillo_rare",
+      "animation_model_id": "armadillo",
+      "is_boss": false,
+      "source_id": 27,
+      "issue": 701,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "rohjade",
+      "name": "Rohjade",
+      "model_id": "armadillo",
+      "animation_model_id": "armadillo",
+      "is_boss": false,
+      "source_id": 26,
+      "issue": 701,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "rumole",
+      "name": "Rumole",
+      "model_id": "mole",
+      "animation_model_id": "mole",
+      "is_boss": false,
+      "source_id": 22,
+      "issue": 712,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "shinowa",
+      "name": "Sinow Beat",
+      "model_id": "shinowa",
+      "animation_model_id": "shinowa",
+      "is_boss": false,
+      "source_id": null,
+      "issue": 713,
+      "identity_status": "unresolved; display duplicates Sinow Beat"
+    },
+    {
+      "id": "shot_mother",
+      "name": "Shot Mother",
+      "model_id": "mother_gun",
+      "animation_model_id": "mother_gun",
+      "is_boss": false,
+      "source_id": 59,
+      "issue": 690,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "sinow_beat",
+      "name": "Sinow Beat",
+      "model_id": "sinow_beat",
+      "animation_model_id": "sinow_beat",
+      "is_boss": true,
+      "source_id": null,
+      "issue": 720,
+      "identity_status": "PSO addition; source-game validation pending"
+    },
+    {
+      "id": "sinow_gold",
+      "name": "Sinow Gold",
+      "model_id": "sinow_gold",
+      "animation_model_id": "sinow_gold",
+      "is_boss": true,
+      "source_id": null,
+      "issue": 720,
+      "identity_status": "PSO addition; source-game validation pending"
+    },
+    {
+      "id": "stagg",
+      "name": "Stagg",
+      "model_id": "deer",
+      "animation_model_id": "deer",
+      "is_boss": false,
+      "source_id": 17,
+      "issue": 696,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "tormatible",
+      "name": "Tormatible",
+      "model_id": "hyena_rare",
+      "animation_model_id": "hyena",
+      "is_boss": false,
+      "source_id": 8,
+      "issue": 693,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "usanimere",
+      "name": "Usanimere",
+      "model_id": "rabbit_rare",
+      "animation_model_id": "rabbit",
+      "is_boss": false,
+      "source_id": 16,
+      "issue": 710,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "usanny",
+      "name": "Usanny",
+      "model_id": "rabbit",
+      "animation_model_id": "rabbit",
+      "is_boss": false,
+      "source_id": 15,
+      "issue": 710,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "vespao",
+      "name": "Vespao",
+      "model_id": "seal_rare",
+      "animation_model_id": "seal",
+      "is_boss": false,
+      "source_id": 12,
+      "issue": 697,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "vulkure",
+      "name": "Vulkure",
+      "model_id": "vulture",
+      "animation_model_id": "vulture",
+      "is_boss": false,
+      "source_id": 2,
+      "issue": 711,
+      "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "zaphobos",
+      "name": "Zaphobos",
+      "model_id": "swordman_b",
+      "animation_model_id": "swordman_b",
+      "is_boss": false,
+      "source_id": 49,
+      "issue": 689,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "zaphobos_dyna",
+      "name": "Zaphobos Dyna",
+      "model_id": "swordman_rare_b",
+      "animation_model_id": "swordman_rare_b",
+      "is_boss": false,
+      "source_id": 51,
+      "issue": 689,
+      "identity_status": "identity conflict / variant unresolved"
+    },
+    {
+      "id": "zerreo",
+      "name": "Zerreo",
+      "model_id": "leg_black",
+      "animation_model_id": "leg_black",
+      "is_boss": false,
+      "source_id": 45,
+      "issue": 706,
+      "identity_status": "source-table model match; display unverified"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "reyburn",
+      "model_id": "boss_dragon",
+      "arena": "s01z_na1",
+      "issue": 714,
+      "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "octo_diablo",
+      "model_id": "boss_octopus",
+      "arena": "s02z_na1",
+      "issue": 715,
+      "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "humilias",
+      "model_id": "boss_mother",
+      "arena": "s07z_na1",
+      "issue": 718,
+      "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "chaos_mobius",
+      "model_id": "boss_robot",
+      "arena": "s06z_na1",
+      "issue": 716,
+      "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "chaos_sorcerer",
+      "model_id": "chaos_sorcerer",
+      "arena": "s04z_na1",
+      "issue": 721,
+      "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "sinow_beat",
+      "model_id": "shinowa",
+      "arena": "s05z_na1",
+      "issue": 713,
+      "note": "Encounter uses shinowa, not the sinow_beat resource rig; identity unresolved."
+    },
+    {
+      "id": "heavens_mother",
+      "model_id": "mother_sword",
+      "arena": "s087_na1",
+      "issue": 690,
+      "note": "Composite of blade/force/shot_mother; no standalone resource."
+    },
+    {
+      "id": "dark_falz",
+      "model_id": "boss_darkfalz",
+      "arena": "s07z_na2",
+      "issue": 717,
+      "note": "Matches resource model; original behavior pending."
+    }
+  ],
+  "attack_exceptions": [
+    {
+      "id": "chaos_mobius_paru",
+      "issue": 716,
+      "reason": "Known orphan: attack table only; no resource or boss definition. References in boss notes do not make this playable."
+    }
+  ],
+  "source_exceptions": [
+    {
+      "source_id": 0,
+      "model_id": "sample",
+      "issue": 683,
+      "reason": "Sample slot; no matching source NARC."
+    },
+    {
+      "source_id": 64,
+      "model_id": "",
+      "issue": 683,
+      "reason": "Empty source slot."
+    },
+    {
+      "source_id": 65,
+      "model_id": "boss_robot_cmb",
+      "issue": 716,
+      "reason": "FieldPopulation alias to boss_robot; no distinct resource. Combined encounter identity still needs validation."
+    },
+    {
+      "source_id": 67,
+      "model_id": "boss_mother_piece",
+      "issue": 718,
+      "reason": "Boss component, intentionally excluded from room population. Actual part spawning/behavior remains unverified."
+    }
+  ],
+  "metadata_exceptions": [
+    {
+      "key": "shinowa.presence",
+      "value": "resource-only",
+      "issue": 713,
+      "reason": "EnemyData exists but data/enemies.json omits shinowa; source identity needs reconciliation."
+    },
+    {
+      "key": "sinow_beat.model_id",
+      "value": "shinowa",
+      "issue": 720,
+      "reason": "JSON metadata and boss encounter use shinowa, while EnemyData uses sinow_beat. Resolve provenance before changing consumers."
+    }
+  ]
+}

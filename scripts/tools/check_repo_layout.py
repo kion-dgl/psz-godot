@@ -27,7 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 ROOT_ALLOWLIST = {
     ".editorconfig", ".env.example", ".gitattributes", ".gitignore",
     "BUILD.md", "CLAUDE.md", "LICENSE", "README.md",
-    "VERSION", "package.json", "project.godot", "export_presets.cfg",
+    "VERSION", "package.json", "package-lock.json", "astro.config.mjs", "vitest.config.ts", "project.godot", "export_presets.cfg",
     "assets_manifest.json", "assets_manifest.example.json", "asset_tree.txt",
     # App icon / splash + their Godot .import sidecars.
     "icon.svg", "icon.svg.import",

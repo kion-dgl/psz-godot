@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 // Free-Field Generation (RE-measured) — the normative contract for how a PSZ
 // free field is laid out, gated, and populated, reproduced from the original
 // game rather than invented. Ground truth is the psz-re project's savestate
@@ -116,12 +117,12 @@ const tree = `flowchart TD
     <em>"Rooms are rotated, and the rotation is derived"</em>). In this engine the
     room's authored <strong>config portal directions</strong> are the door set, and
     <code>StageRotation.rotate_dir</code> is a <em>logical</em> label remap (never a
-    mesh rotation — see <a href="/states/field-lifecycle">Field Stage Lifecycle</a> and issue #218).
+    mesh rotation — see <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a> and issue #218).
   </p>
 
   <h2>Gates and keys</h2>
   <p>
-    <strong><a href="/states/field-gates">/states/field-gates</a> is normative for the
+    <strong><a href={siteUrl('/states/field-gates')}>/states/field-gates</a> is normative for the
     gate rule</strong> — the four attribute values, the key-gate budget, how one key
     versus two is chosen, the per-room enemy-defeat roll, where keys are scattered, and
     the solvability invariant. What follows here is the <em>captured Valley layout</em>:
@@ -145,7 +146,7 @@ const tree = `flowchart TD
     normative page: generated fields offer the scatter pool's <strong>dead-end rooms
     first</strong> (#639), and a key <strong>drops when its room is cleared</strong>
     rather than standing on the ground at load — the authored slots still decide
-    where it stands (<a href="/mechanics/key-placement">Key Placement</a>).
+    where it stands (<a href={siteUrl('/mechanics/key-placement')}>Key Placement</a>).
     In the captured Valley above the keys sit on <code>B2</code> the moment the room
     draws; in a generated field they appear when <code>B2</code>'s last enemy dies.
   </p>
@@ -162,7 +163,7 @@ const tree = `flowchart TD
     fights, occasional rare" texture rather than making every instance identical.
     A room runs <strong>1–3 waves</strong>, each an independent draw from this pool;
     the wave count and its trigger timing are governed by
-    <a href="/psz-godot/mechanics/enemy-waves">Enemy Waves</a>.
+    <a href={siteUrl('/psz-godot/mechanics/enemy-waves')}>Enemy Waves</a>.
   </p>
   <p>
     psz-re internal enemy names map to this engine's ids: snake→<code>garapython</code>,
@@ -277,7 +278,7 @@ const tree = `flowchart TD
     The <code>z</code> section is a single arena. Valley's is <code>s01z_na1</code>, and
     the assignment table's sole <code>s01z</code> entry is <code>boss_dragon</code> — so
     Valley's boss is <strong>Reyburn</strong>. See
-    <a href="/states/bosses">Boss Behavior</a>. Clearing the boss spawns the
+    <a href={siteUrl('/states/bosses')}>Boss Behavior</a>. Clearing the boss spawns the
     return-to-city warp (the existing <code>type: "boss"</code> section handling).
   </p>
 

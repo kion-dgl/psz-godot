@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
@@ -35,14 +36,14 @@ const chart = `stateDiagram-v2
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
-  <p>A companion NPC (<code>CompanionNpc</code>, a <code>CharacterBody3D</code>) follows the player through field exploration. It steers toward a delayed copy of the player's recorded path — a <em>trail</em> sampled every physics frame, read <code>TRAIL_DELAY</code> (0.3&nbsp;s) behind — using an <strong>arrival controller</strong>: it holds roughly <code>FOLLOW_DISTANCE</code> behind the player and moves at a speed that ramps <em>continuously</em> with how far outside that follow-ring it is. This page defines the contract for which locomotion animation the companion plays while following. The trail-follow behavior defined here is the <code>FOLLOW</code> state of the combat FSM — see <a href="/states/companion-combat">Companion Combat</a> for the <code>ENGAGE</code>/<code>ATTACK</code>/<code>REGROUP</code> states layered on top; this page's animation invariants hold in every state where a locomotion clip plays.</p>
+  <p>A companion NPC (<code>CompanionNpc</code>, a <code>CharacterBody3D</code>) follows the player through field exploration. It steers toward a delayed copy of the player's recorded path — a <em>trail</em> sampled every physics frame, read <code>TRAIL_DELAY</code> (0.3&nbsp;s) behind — using an <strong>arrival controller</strong>: it holds roughly <code>FOLLOW_DISTANCE</code> behind the player and moves at a speed that ramps <em>continuously</em> with how far outside that follow-ring it is. This page defines the contract for which locomotion animation the companion plays while following. The trail-follow behavior defined here is the <code>FOLLOW</code> state of the combat FSM — see <a href={siteUrl('/states/companion-combat')}>Companion Combat</a> for the <code>ENGAGE</code>/<code>ATTACK</code>/<code>REGROUP</code> states layered on top; this page's animation invariants hold in every state where a locomotion clip plays.</p>
 
   <h2>The position / animation split</h2>
 
   <p>There are two separate decisions every follow frame:</p>
 
   <ul>
-    <li><strong>Where the companion moves</strong> (the follow-position decision) is an arrival controller: it heads toward the delayed trail point at a <em>commanded speed</em> <code>follow_speed(distance_to_player, FOLLOW_DISTANCE, FOLLOW_SLOW_RADIUS, FOLLOW_MAX_SPEED)</code> that is <strong>0 at or inside the follow-ring</strong> and ramps up over <code>FOLLOW_SLOW_RADIUS</code> to <code>FOLLOW_MAX_SPEED</code>. There is <strong>no</strong> per-state freeze: a delayed player in any non-locomotion state (<code>IDLE</code>, <code>ATTACKING</code>, <code>DAMAGED</code>, <code>DOWN</code>, …) simply stops advancing the trail, so the companion arrives at the ring and its commanded speed falls to 0. (See <a href="/states/player-state">Player State Machine</a> for the enum.)</li>
+    <li><strong>Where the companion moves</strong> (the follow-position decision) is an arrival controller: it heads toward the delayed trail point at a <em>commanded speed</em> <code>follow_speed(distance_to_player, FOLLOW_DISTANCE, FOLLOW_SLOW_RADIUS, FOLLOW_MAX_SPEED)</code> that is <strong>0 at or inside the follow-ring</strong> and ramps up over <code>FOLLOW_SLOW_RADIUS</code> to <code>FOLLOW_MAX_SPEED</code>. There is <strong>no</strong> per-state freeze: a delayed player in any non-locomotion state (<code>IDLE</code>, <code>ATTACKING</code>, <code>DAMAGED</code>, <code>DOWN</code>, …) simply stops advancing the trail, so the companion arrives at the ring and its commanded speed falls to 0. (See <a href={siteUrl('/states/player-state')}>Player State Machine</a> for the enum.)</li>
     <li><strong>Which clip the companion plays</strong> (the animation decision) is a function of the companion's own <strong>speed</strong>, never a <code>PlayerState</code> read. In <code>FOLLOW</code> that speed is the <em>commanded arrival speed</em> above; in the combat states it is the companion's own <em>measured planar displacement</em>. Both are fed through the one pure classifier <code>CompanionCombat.locomotion_clip</code>.</li>
   </ul>
 

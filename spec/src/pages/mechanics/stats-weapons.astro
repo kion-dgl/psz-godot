@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 
@@ -8,5 +9,5 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Scope</h2>
   <p>Will define class base stats and level scaling (HP, PP, ATP, ATA, EVP, MST, …), and the equippable weapon types per class with their attack/accuracy, element slots, grind caps, and level requirements.</p>
 
-  <p><a href="/mechanics">← Mechanics</a></p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

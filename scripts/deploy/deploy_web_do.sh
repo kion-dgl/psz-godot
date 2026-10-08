@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Build the Godot Web export and deploy it to psz.onl/play — a standalone static
-# mount at /srv/play on the droplet, independent of the spec site deploy. Run
+# Build the Godot Web export and mirror it at psz.onl/game — a standalone static
+# mount at /srv/game on the droplet. The Astro site lives on GitHub Pages. Run
 # this after a game change; the spec app never needs rebuilding for it.
 #
 # Builds in a throwaway git worktree of the CURRENT branch's committed HEAD, so
@@ -34,4 +34,4 @@ godot --headless --path "$WT" --export-release "$PRESET" "$WT/build/web/index.ht
 echo "→ rsync game build → $SSH:$GAME_DIR…"
 rsync -az --delete "$WT/build/web/" "$SSH:$GAME_DIR/"
 
-echo "✓ deployed → https://psz.onl/play"
+echo "✓ deployed → https://psz.onl/game/"

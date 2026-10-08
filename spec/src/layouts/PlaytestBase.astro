@@ -1,10 +1,11 @@
 ---
+import { siteUrl } from '../utils/site';
 // Shared shell for the public playtest pages (/ and /play): dark theme, the
 // shared SiteNav, and common button styles. Keeps the pages themselves small.
 import SiteNav from '../components/SiteNav.astro';
 interface Props {
   title: string;
-  active?: 'play' | 'downloads' | 'report';
+  active?: 'play' | 'downloads';
 }
 const { title, active } = Astro.props;
 ---
@@ -14,7 +15,7 @@ const { title, active } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <link rel="icon" href="/favicon.svg" />
+    <link rel="icon" href={siteUrl('/favicon.svg')} />
     <style is:global>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
