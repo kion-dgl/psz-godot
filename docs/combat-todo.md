@@ -373,3 +373,33 @@ project's user-data directory as `combat-scenarios-<enemy>.json`. Add
 `PSZ_ENEMY_RUNTIME_CHECK=1` to also run the existing supported family execution
 check. Each newly implemented family should add scenarios before a user feel pass;
 placeholder families are not silently treated as validated.
+
+
+### Helion pursuit correction — October 8
+
+User playtest: stt/run were absent or hard to see; Helion should aggressively
+punish backing away to heal with repeated atkb attacks. Both Helion variants now
+play the stationary harmless stt display on target acquisition, run during active
+pursuit at all ranges (including beyond 7 m and while cooling down), and use
+0.35–0.65 s post-attack recovery. The existing 1.5 s cooldown still gates attacks;
+claw/lunge bands, committed facing, hit windows, dodge and wall checks are unchanged.
+No healing-input detection was added. These are explicit gameplay choices; stt's
+original DS trigger remains unverified.
+
+The Godot runtime now honors authored fsm.loaf_duration_min/max, matching the web
+sim. Only Helion/Blaze currently override these fields; other enemies keep their
+2.5–4 s default. Tests cover display hold, run at far/near distances during cooldown,
+eight seeded recovery samples per variant, and ordinary live AI displaying, running,
+then starting two lunges as the target retreats. Both imported rigs also pass the
+existing claws/lunge/dodge/wall, weapon-contact and room-clear checks.
+
+Validation: 6,855 Godot checks and 874 web tests pass (4 skipped), TypeScript and
+Astro builds, code-graph and orphan checks. The Bats + Helion mixed encounter also
+passes participation and last-kill exit checks.
+
+Reference follow-up: psz-re's current checkout was up to date. Its lion identity,
+animation-event structure and effect attachments provide clues but do not establish
+Helion's attack-selection rules. The supplied https://psp2i.dev/rozalin/pszm-decomp
+returned HTTP 404 on both the repository page and Gitea API on October 8; HTTPS
+clone requested credentials. No claims about that project's AI coverage can be
+made until an accessible URL or checkout is available.

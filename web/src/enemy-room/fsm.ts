@@ -370,7 +370,8 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           entry.archetype === 'bigrig_combo' ||
           entry.archetype === 'flyer_combo' ||
           entry.archetype === 'roller' ||
-          entry.archetype === 'ape_gunner'
+          entry.archetype === 'ape_gunner' ||
+          entry.archetype === 'lunging_melee'
         ) {
           // Aggro display, held before pursuit: bigrig beats its chest, the
           // flyer TAKES OFF, the roller becomes active — each is its rig's
@@ -493,7 +494,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         break;
       }
       const chargeRange = entry.stats.attack_range * entry.fsm.charge_range_mult;
-      const charging = entry.archetype !== 'bruiser' && dist <= chargeRange;
+      const charging = entry.archetype === 'lunging_melee' || (entry.archetype !== 'bruiser' && dist <= chargeRange);
       const speed =
         entry.stats.move_speed * (charging ? entry.fsm.charge_speed_mult : entry.fsm.walk_speed_mult);
       const dir = norm(sub(playerPos, sim.pos));

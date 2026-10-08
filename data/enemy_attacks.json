@@ -411,7 +411,10 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "loaf_duration_min": 0.35,
+        "loaf_duration_max": 0.65
+      },
       "attacks": [
         {
           "id": "claws",
@@ -444,8 +447,8 @@
       "clip_notes": {
         "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
         "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
-        "stt": "Inspected rising display; not a damaging attack. Exact original trigger unverified.",
-        "run": "Running locomotion, never damages.",
+        "stt": "Stationary harmless display on target acquisition (October 8 playtest tuning); original DS trigger unverified.",
+        "run": "Active pursuit at all distances, including beyond lunge range and during cooldown; never damages.",
         "wat": "Idle.",
         "wlk": "Walking locomotion.",
         "dmg": "Hit reaction.",
@@ -1402,7 +1405,10 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "loaf_duration_min": 0.35,
+        "loaf_duration_max": 0.65
+      },
       "attacks": [
         {
           "id": "claws",
@@ -1435,8 +1441,8 @@
       "clip_notes": {
         "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
         "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
-        "stt": "Inspected rising display; not a damaging attack. Exact original trigger unverified.",
-        "run": "Running locomotion, never damages.",
+        "stt": "Stationary harmless display on target acquisition (October 8 playtest tuning); original DS trigger unverified.",
+        "run": "Active pursuit at all distances, including beyond lunge range and during cooldown; never damages.",
         "wat": "Idle.",
         "wlk": "Walking locomotion.",
         "dmg": "Hit reaction.",

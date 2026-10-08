@@ -17,6 +17,7 @@ static func run(r: Node) -> void:
 		var attacks := EnemyAttackRegistry.get_attacks(id, 2.0)
 		r.assert_eq(EnemyAttackLogic.select_attack(attacks, 1.5, rng).id, "claws", id + " claws selected close")
 		r.assert_eq(EnemyAttackLogic.select_attack(attacks, 5.0, rng).id, "spin_lunge", id + " distant lunge selected")
+	_test_pursuit(r)
 	_test_motion(r, false)
 	_test_motion(r, true)
 	_test_interrupt(r)
@@ -96,3 +97,35 @@ static func _test_interrupt(r: Node) -> void:
 	e._physics_process(0.05)
 	r.assert_almost_eq(e.position.z, interrupted.z, 0.001, "dead enemy cannot continue lunge travel")
 	e.free()
+
+static func _test_pursuit(r: Node) -> void:
+	for id in ["helion", "blaze_helion"]:
+		var enemy: EnemyBase = r._make_rig_enemy({"wat":0.5, "stt":1.4, "run":0.25, "wlk":0.5})
+		enemy.set_physics_process(false)
+		enemy.enemy_data = EnemyRegistry.get_enemy(id)
+		enemy._archetype = "lunging_melee"
+		enemy._fsm = EnemyAttackRegistry.get_fsm(id)
+		var player := Node3D.new()
+		r.add_child(player)
+		player.position.z = 10.0
+		enemy.target = player
+		enemy.current_state = EnemyBase.EnemyState.IDLE
+		enemy._process_idle(0.01)
+		r.assert_eq(enemy.current_anim, "stt", id + " starts with aggro display")
+		enemy._process_chasing(0.1)
+		r.assert_true(enemy._threat_timer > 0.0 and not enemy.is_attacking, id + " display blocks attacks")
+		r.assert_eq(enemy.velocity.x, 0.0, id + " display holds x")
+		r.assert_eq(enemy.velocity.z, 0.0, id + " display holds z")
+		enemy._threat_timer = 0.0
+		enemy.attack_cooldown_timer = 1.0
+		enemy._process_chasing(0.1)
+		r.assert_eq(enemy.current_anim, "run", id + " runs beyond lunge band during cooldown")
+		player.position.z = 3.0
+		enemy._process_chasing(0.1)
+		r.assert_eq(enemy.current_anim, "run", id + " runs at close pursuit distance too")
+		for seed_value in range(8):
+			enemy._rng.seed = seed_value
+			enemy._start_loafing()
+			r.assert_true(enemy.loaf_timer >= 0.35 and enemy.loaf_timer <= 0.65, id + " short bounded recovery")
+		enemy.free()
+		player.free()

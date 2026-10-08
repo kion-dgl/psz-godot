@@ -3,7 +3,7 @@ extends RefCounted
 static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	enemy.set_physics_process(false)
 	var origin := enemy.global_position
-	var ok := true
+	var ok := await _pursuit(player, enemy, origin)
 	for scenario in ["claws", "lunge", "dodge", "wall"]:
 		var passed := await _scenario(player, enemy, origin, scenario)
 		ok = ok and passed
@@ -57,3 +57,38 @@ static func _scenario(player: Node3D, enemy: EnemyBase, origin: Vector3, scenari
 	passed = passed and correct_clip
 	if wall: wall.queue_free()
 	return passed
+
+## Ordinary AI through initial display, far pursuit and two retreat-triggered lunges.
+static func _pursuit(player: Node3D, enemy: EnemyBase, origin: Vector3) -> bool:
+	enemy.global_position = origin
+	player.global_position = origin + Vector3(0,0,10)
+	enemy.current_state = EnemyBase.EnemyState.IDLE
+	enemy.is_attacking = false
+	enemy._attack_def = {}
+	enemy._threat_timer = 0.0
+	enemy.attack_cooldown_timer = 0.0
+	enemy.set_physics_process(true)
+	var saw_display := false
+	var saw_run := false
+	var lunges := 0
+	var was_attacking := false
+	var safe := true
+	for frame in range(480):
+		GameState.set_hp(82)
+		await player.get_tree().physics_frame
+		if enemy._threat_timer > 0.0:
+			saw_display = saw_display or enemy.current_anim == "stt"
+			safe = safe and not enemy.is_attacking and enemy.global_position.distance_to(origin) < 0.05
+		if enemy.current_anim == "run": saw_run = true
+		if enemy.is_attacking and not was_attacking and enemy._attack_def.get("id", "") == "spin_lunge":
+			lunges += 1
+		if not enemy.is_attacking and was_attacking:
+			# Player backs off after the committed lunge, seeking healing space.
+			player.global_position = enemy.global_position + Vector3(0,0,5)
+		was_attacking = enemy.is_attacking
+		if lunges >= 2: break
+	enemy.set_physics_process(false)
+	enemy._threat_timer = 0.0
+	var ok := saw_display and saw_run and lunges >= 2 and safe
+	print("[coliseum] Helion pursuit display=", saw_display, " run=", saw_run, " lunges=", lunges, " safe=", safe, " PASS=", ok)
+	return ok

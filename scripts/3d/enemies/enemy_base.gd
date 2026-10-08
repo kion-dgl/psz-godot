@@ -140,7 +140,7 @@ var _kamikaze_def: Dictionary = {}
 
 ## Aggro display hold (fsm.ts threatTimer): bigrig chest-beat / flyer takeoff / roller
 ## activate / ape-gunner stand — each its rig's stt, held for the clip before pursuit.
-const THREAT_DISPLAY_ARCHETYPES := ["bigrig_combo", "flyer_combo", "roller", "ape_gunner"]
+const THREAT_DISPLAY_ARCHETYPES := ["bigrig_combo", "flyer_combo", "roller", "ape_gunner", "lunging_melee"]
 var _threat_timer := 0.0
 var _threat_total := 0.0
 
@@ -823,7 +823,7 @@ func _chase_flyer(dist: float, radial: Vector3) -> void:
 ## beyond the charge ring, run inside it, nav-pathing around obstacles. The revealed
 ## box mimic shares this but walks wlk1 (its rig has no plain wlk/run).
 func _chase_baseline(dist: float, attack_range: float) -> void:
-	var is_charging := _archetype != "bruiser" and dist <= attack_range * CHARGE_RANGE_MULT
+	var is_charging := _archetype == "lunging_melee" or (_archetype != "bruiser" and dist <= attack_range * CHARGE_RANGE_MULT)
 	var clip := "run" if is_charging else "wlk"
 	if _archetype == "box_mimic":
 		clip = "wlk1"
@@ -1203,7 +1203,8 @@ func _start_loafing() -> void:
 		if not lower.is_empty():
 			animation_player.get_animation(lower).loop_mode = Animation.LOOP_NONE
 			_lower_timer = _clip_duration("wt2w") / maxf(absf(animation_player.speed_scale), 0.001)
-	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
+	loaf_timer = _rng.randf_range(float(_fsm.get("loaf_duration_min", LOAF_DURATION_MIN)),
+		float(_fsm.get("loaf_duration_max", LOAF_DURATION_MAX)))
 
 	# Start moving perpendicular to player (left or right randomly)
 	if target and is_instance_valid(target):

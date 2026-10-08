@@ -997,6 +997,7 @@ describe('single-clip spin lunge', () => {
       c.enemies.dummy.archetype = 'lunging_melee';
       const entry = resolveEntry(c, 'dummy');
       const sim = makeSim({ x: 0, z: 0 });
+      sim.state = 'chasing'; // This test starts after the separately tested aggro display.
       const input = makeInput({ playerPos: { x: 0, z: 4 }, playerInvincible: dodging, clipDurationFor: () => 0.9 });
       stepEnemy(sim, entry, input); stepEnemy(sim, entry, input);
       expect(sim.currentAttack?.def.id).toBe('spin_lunge');
@@ -1042,5 +1043,29 @@ describe('authored end-clip recovery', () => {
     applyHurt(sim, entry);
     expect(sim.state).toBe('hurt');
     expect(sim.currentAttack).toBeNull();
+  });
+});
+
+
+describe('Helion aggressive pursuit', () => {
+  it('holds an opening display, runs at distance, and uses short recovery', () => {
+    const c = config([atk({ id:'spin_lunge', kind:'lunge', min_range:2.501, max_range:7, hit_reach:0.9 })]);
+    c.enemies.dummy.archetype = 'lunging_melee';
+    c.enemies.dummy.fsm = { loaf_duration_min:0.35, loaf_duration_max:0.65 };
+    const entry = resolveEntry(c, 'dummy');
+    const sim = makeSim({x:0,z:0});
+    const input = makeInput({playerPos:{x:0,z:10}, clipDurationFor:()=>0.5});
+    stepEnemy(sim, entry, input);
+    expect(sim.anim).toBe('stt');
+    expect(run(sim, entry, input, 0.3).filter(e=>e.type==='attack_start')).toHaveLength(0);
+    expect(sim.pos).toEqual({x:0,z:0});
+    run(sim, entry, input, 0.3);
+    expect(sim.anim).toBe('run');
+    expect(sim.velocity.z).toBeGreaterThan(entry.stats.move_speed);
+    input.playerPos = {x:0,z:sim.pos.z+5};
+    for(let i=0;i<120 && sim.state!=='loafing';i++) stepEnemy(sim, entry, input);
+    expect(sim.state).toBe('loafing');
+    expect(sim.loafTimer).toBeGreaterThanOrEqual(0.35);
+    expect(sim.loafTimer).toBeLessThanOrEqual(0.65);
   });
 });
