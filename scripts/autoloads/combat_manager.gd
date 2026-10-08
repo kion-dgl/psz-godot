@@ -104,6 +104,7 @@ const AREA_DROP_NAMES := {
 ## damaging_frac: fraction of each step's swing clip where the hit resolves
 const WEAPON_TYPE_CONFIGS := {
 	0: {  # SABER — reliable single hits, moderate speed
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [1.0, 1.0, 1.3],
@@ -120,6 +121,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	1: {  # SWORD — slow heavy hits, big knockback
+		"turn_limit_deg": [60, 60],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [1.2, 1.2, 1.8],
@@ -136,6 +138,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 3,
 	},
 	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
+		"turn_limit_deg": [120, 120],
 		"combo_steps": 3,
 		"hits_per_step": [2, 2, 3],
 		"damage_mult": [0.5, 0.5, 0.4],
@@ -152,6 +155,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	3: {  # CLAW — very fast, close range
+		"turn_limit_deg": [120, 120],
 		"combo_steps": 3,
 		"hits_per_step": [2, 2, 2],
 		"damage_mult": [0.6, 0.6, 0.8],
@@ -168,6 +172,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
+		"turn_limit_deg": [180, 180],
 		"combo_steps": 3,
 		"hits_per_step": [1, 2, 1],
 		"damage_mult": [1.0, 0.6, 1.5],
@@ -184,6 +189,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 3,
 	},
 	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
+		"turn_limit_deg": [75, 75],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [1.0, 1.1, 1.4],
@@ -201,6 +207,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets_per_step": [1, 1, 3],
 	},
 	6: {  # SLICER — thrown blade, narrow long range (pistol-like targeting)
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [0.9, 0.9, 1.2],
@@ -217,6 +224,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 4,
 	},
 	9: {  # HANDGUN — single shots
+		"turn_limit_deg": [180, 180],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [0.8, 0.8, 1.0],
@@ -233,6 +241,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	10: {  # MECH_GUN — rapid fire spray
+		"turn_limit_deg": [180, 180],
 		"combo_steps": 3,
 		"hits_per_step": [3, 3, 4],
 		"damage_mult": [0.3, 0.3, 0.25],
@@ -249,6 +258,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 3,
 	},
 	11: {  # RIFLE — slow precision shots; deliberate 3-shot combo (pmar_atk1..3)
+		"turn_limit_deg": [45, 45],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [1.2, 1.2, 1.6],
@@ -265,6 +275,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 2,
 		"hits_per_step": [1, 1],
 		"damage_mult": [1.5, 2.0],
@@ -281,6 +292,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 5,
 	},
 	13: {  # LASER_CANNON — single heavy beam (l_cannon source has only atk1)
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 1,
 		"hits_per_step": [1],
 		"damage_mult": [2.2],
@@ -297,6 +309,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 5,
 	},
 	14: {  # ROD — melee swing, tech amplifier
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [0.7, 0.7, 0.9],
@@ -313,6 +326,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 	},
 	15: {  # WAND — melee swing, support amplifier
+		"turn_limit_deg": [90, 90],
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [0.6, 0.6, 0.8],
@@ -1403,6 +1417,17 @@ func _check_wave_cleared() -> void:
 ## Get weapon type config, falling back to saber defaults
 func get_weapon_type_config(weapon_type: int) -> Dictionary:
 	return WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])
+
+
+## Heading sampled on the accepted press; applied before the next committed swing.
+func get_combo_turn_yaw(weapon_type: int, entering_step: int, facing: float, desired_yaw: Variant) -> float:
+	if desired_yaw == null:
+		return facing
+	if entering_step <= 1:
+		return float(desired_yaw)
+	var limits: Array = get_weapon_type_config(weapon_type).get("turn_limit_deg", [90.0, 90.0])
+	var limit: float = deg_to_rad(float(limits[mini(entering_step - 2, limits.size() - 1)]))
+	return facing + clampf(wrapf(float(desired_yaw) - facing, -PI, PI), -limit, limit)
 
 
 # ── Two-tier combo timing (#461, spec /mechanics/combos) ───────────────────

@@ -38,6 +38,28 @@ import Concept from '../../layouts/Concept.astro';
     <li>Strong (special) attacks share the same boundary: a strong-attack press queues a special step (<code>_queued_combo_special</code>), which keeps its wind-up delay and element on fire.</li>
   </ul>
 
+  <h2>Facing between swings (#560)</h2>
+  <p>A swing <strong>MUST</strong> keep its facing until it finishes. An accepted chain press <strong>MUST</strong> capture the held movement direction in world space using the current camera orientation. The queued step applies that heading instantaneously at swing end, before its animation or strong-attack windup begins. This adapts the combo-debug prototype's press-time sampling to the runtime's committed, queued swings; it MUST NOT rotate the outgoing swing or add a grace window.</p>
+  <ul>
+    <li>Entering step 1 uses the held direction freely. With no direction held, facing stays unchanged; enemies are never used to choose this heading.</li>
+    <li>Entering steps 2 and 3 clamps the shortest signed yaw delta to the weapon's <code>turn_limit_deg</code> entry (indexed by entering step minus 2).</li>
+    <li>No direction on the accepted press means no turn, even if movement is pressed later. Changing direction, releasing it, moving the camera, or pressing attack again MUST NOT replace the queued heading.</li>
+    <li>Miss-early/fumbled presses and finisher presses MUST NOT turn. Strong-attack windup ignores chain input entirely, without fumbling the upcoming swing.</li>
+    <li>Every exit from ATTACKING MUST discard the queued heading together with the queued attack.</li>
+  </ul>
+  <table>
+    <thead><tr><th>Weapon</th><th>Maximum turn entering steps 2 / 3</th></tr></thead>
+    <tbody>
+      <tr><td>Saber, Slicer, Rod, Wand</td><td>±90° / ±90°</td></tr>
+      <tr><td>Sword</td><td>±60° / ±60°</td></tr>
+      <tr><td>Daggers, Claw</td><td>±120° / ±120°</td></tr>
+      <tr><td>Double Saber, Handgun, Mechgun</td><td>±180° / ±180°</td></tr>
+      <tr><td>Spear</td><td>±75° / ±75°</td></tr>
+      <tr><td>Rifle</td><td>±45° / ±45°</td></tr>
+    </tbody>
+  </table>
+  <p>These are the combo-debug tuning defaults, not recovered DS constants. Unimplemented weapon types use ±90°. Combo accept fractions and damage timing remain independent of turn limits.</p>
+
   <h2>PSO:BB reference frames</h2>
   <p>The boundary is runtime-computed from the animation fraction — PSO:BB's motion files carry no timing events (see <a href="https://github.com/kion-dgl/psobb-re">psobb-re</a>, combo-timing investigation). Motion frame counts from <code>plymotion-profile.tsv</code> inform per-weapon tuning (e.g. Saber A1 = 19 frames → earlier accept; finishers A3 = 59–80 frames → no window). The in-repo starting values are feel-tuning defaults, expected to move via playtest.</p>
 

@@ -72,7 +72,8 @@ const tune = (
 });
 
 // combo_window defaults come from CombatManager.WEAPON_TYPE_CONFIGS; the
-// turn limits are proposals (the game has no turn clamp yet).
+// turn limits match the runtime defaults (#560). The runtime samples at the
+// accepted press and applies the turn when the committed outgoing swing ends.
 const WEAPONS: WeaponDef[] = [
   { id: 'saber',   label: 'Saber',        glbBase: 'saver',      weaponType: 0,  defaults: tune(0.5,  [90, 90]) },
   { id: 'sword',   label: 'Sword',        glbBase: 'sword',      weaponType: 1,  defaults: tune(0.6,  [60, 60]) },
