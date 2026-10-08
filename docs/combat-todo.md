@@ -18,6 +18,13 @@ unverified here. The arena run reports missing local audio imports but no script
 errors. Human feel approval is still pending, especially Sword/Rifle limits and
 strong-attack steering.
 
+The October 8 source cross-check is recorded in `/mechanics/combos`: psz-re
+`a84b8fd` and pszm-decomp `a3836af` do not establish the proposed turn limits
+or input-sampling instant. Recovered target-cone angles and camera turn caps
+must not be treated as player steering limits. The web tool can tune angles,
+but its immediate chains/world-axis input differ from Godot's committed queue
+and camera-relative input; its UI now states those limits explicitly.
+
 ## Fidelity baseline and identity audit — October 8
 
 The current owner grades and promotion criteria live in the spec at `/fidelity`;
