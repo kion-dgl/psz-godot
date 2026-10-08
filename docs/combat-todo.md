@@ -293,3 +293,36 @@ Repeat with `PSZ_ENEMY_RUNTIME_CHECK=1 PSZ_COLISEUM_ENEMY=helion` (or
 
 Next user checkpoint: Helion's close claw readability, distant spin alignment,
 dodge opportunity and recovery duration. After feedback/tuning, proceed to bats.
+
+### Automated first-pass decisions — October 7
+
+The web combat room tests player weapons against dummies. Its enemy-room sibling
+and the Godot Coliseum now share explicit conditional scenarios in
+`data/combat_scenarios.json`. Expectations are authored independently of the
+attack table. Tests enter pursuit and observe ordinary AI; they do not select an
+attack or force ATTACKING. Overlapping bands allow the appropriate weighted set.
+
+- 27 scenario templates expand to 49 enemy cases across Helion/Blaze Helion,
+  Hypao/Vespao, Rohjade/Rohcrysta, Garapython/Garahadan, Korse/Akorse and
+  Froutang/Frunaked. All 49 passed with actual rigs in the Coliseum.
+- The Godot unit runner repeats every case over eight seeds (392 checks). The
+  web enemy-room FSM repeats its 41 applicable cases over eight seeds; freeze,
+  dormancy, entrance and stun gates are explicitly Godot-only.
+- Helion cases cover close/distant choice, either side of the claw/lunge split,
+  maximum range, cooldown, hurt, recovery, freeze, dormancy, entrance and stun's
+  no-attack phase. No-attack checks observe six physics frames; they do not imply
+  the enemy can never attack after moving closer or its gate expires.
+- Existing execution probes separately check timing, damage, dodge, wall contact,
+  weapon hits and room clear. Decision tests do not verify every clip or effect.
+
+Full suites: 5,235 Godot checks and 739 web tests passed (4 web skips), with
+TypeScript, spec build, code-health and orphan checks passing. Saved live results:
+[`combat-scenario-results.json`](combat-scenario-results.json).
+
+Run an individual live decision pass in a disposable project with
+`PSZ_COMBAT_SCENARIOS=1 PSZ_COLISEUM_ENEMY=helion` and
+`res://scripts/tools/coliseum_probe.tscn`. Per-run JSON is written to that test
+project's user-data directory as `combat-scenarios-<enemy>.json`. Add
+`PSZ_ENEMY_RUNTIME_CHECK=1` to also run the existing supported family execution
+check. Each newly implemented family should add scenarios before a user feel pass;
+placeholder families are not silently treated as validated.

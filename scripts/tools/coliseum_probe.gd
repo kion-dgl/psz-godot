@@ -114,6 +114,10 @@ class Watch extends Node:
 			get_tree().quit(0)
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
+		if OS.get_environment("PSZ_COMBAT_SCENARIOS") == "1":
+			if not await preload("res://scripts/tools/enemy_decision_scenarios.gd").run_live(player, enemy):
+				_fail("enemy decision scenarios failed")
+				return
 		if OS.get_environment("PSZ_ENEMY_RUNTIME_CHECK") == "1":
 			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
 				_fail("enemy runtime regression failed")

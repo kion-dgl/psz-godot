@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "seed": 7007,
+  "observation_frames": 6,
+  "cases": [
+    {
+      "id": "helion_close",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 1.5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "claws"
+      ],
+      "web": true
+    },
+    {
+      "id": "helion_below_split",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 2.49,
+      "condition": "ready",
+      "allowed_attacks": [
+        "claws"
+      ],
+      "web": true
+    },
+    {
+      "id": "helion_above_split",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 2.51,
+      "condition": "ready",
+      "allowed_attacks": [
+        "spin_lunge"
+      ],
+      "web": true
+    },
+    {
+      "id": "helion_distant",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "spin_lunge"
+      ],
+      "web": true
+    },
+    {
+      "id": "helion_inside_max",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 6.99,
+      "condition": "ready",
+      "allowed_attacks": [
+        "spin_lunge"
+      ],
+      "web": true
+    },
+    {
+      "id": "helion_outside_max",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 8,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "helion_cooldown",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "cooldown",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "helion_hurt",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "hurt",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "helion_recovery",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "recovery",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "helion_freeze",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "freeze",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "helion_dormant",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "dormant",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "helion_entrance",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "entrance",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "helion_stun_no_attack",
+      "enemies": [
+        "helion",
+        "blaze_helion"
+      ],
+      "distance": 5,
+      "condition": "stun_no_attack",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "hypao_close",
+      "enemies": [
+        "hypao"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [
+        "tail_swipe"
+      ],
+      "web": true
+    },
+    {
+      "id": "hypao_distant",
+      "enemies": [
+        "hypao"
+      ],
+      "distance": 5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "cast_barta"
+      ],
+      "web": true
+    },
+    {
+      "id": "vespao_close",
+      "enemies": [
+        "vespao"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [
+        "tail_swipe"
+      ],
+      "web": true
+    },
+    {
+      "id": "vespao_overlap",
+      "enemies": [
+        "vespao"
+      ],
+      "distance": 2,
+      "condition": "ready",
+      "allowed_attacks": [
+        "tail_swipe",
+        "cast_gibarta"
+      ],
+      "web": true
+    },
+    {
+      "id": "vespao_distant",
+      "enemies": [
+        "vespao"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [
+        "cast_gibarta"
+      ],
+      "web": true
+    },
+    {
+      "id": "roller_close",
+      "enemies": [
+        "rohjade",
+        "rohcrysta"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "roller_distant",
+      "enemies": [
+        "rohjade",
+        "rohcrysta"
+      ],
+      "distance": 6,
+      "condition": "ready",
+      "allowed_attacks": [
+        "roll"
+      ],
+      "web": true
+    },
+    {
+      "id": "snake_close",
+      "enemies": [
+        "garapython",
+        "garahadan"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [
+        "normal",
+        "strong"
+      ],
+      "web": true
+    },
+    {
+      "id": "snake_distant",
+      "enemies": [
+        "garapython",
+        "garahadan"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "shooter_close",
+      "enemies": [
+        "korse",
+        "akorse"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "shooter_distant",
+      "enemies": [
+        "korse",
+        "akorse"
+      ],
+      "distance": 5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "shot"
+      ],
+      "web": true
+    },
+    {
+      "id": "ape_close",
+      "enemies": [
+        "froutang",
+        "frunaked"
+      ],
+      "distance": 1,
+      "condition": "ready",
+      "allowed_attacks": [
+        "charged_punch"
+      ],
+      "web": true
+    },
+    {
+      "id": "ape_middle",
+      "enemies": [
+        "froutang",
+        "frunaked"
+      ],
+      "distance": 5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "pistol_shot",
+        "pistol_shot_alt"
+      ],
+      "web": true
+    },
+    {
+      "id": "ape_far",
+      "enemies": [
+        "froutang",
+        "frunaked"
+      ],
+      "distance": 8,
+      "condition": "ready",
+      "allowed_attacks": [
+        "pistol_shot"
+      ],
+      "web": true
+    }
+  ]
+}

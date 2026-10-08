@@ -203,6 +203,10 @@ const fsm = `stateDiagram-v2
     <li>Roller visual rotation MUST return to its pre-charge basis on recovery, interruption, or death. Hits during <code>trf2</code> MUST preserve the remaining recovery and vulnerability; lethal hits still kill normally.</li>
     <li>Enemy Barta and Gibarta MUST use the shared ice-technique delivery profiles: ground-level Barta bolt, three Gibarta fan waves. A cast resolves damage at most once per target, with ice identity and a 20% freeze chance on a successful contact. Freeze lasts two seconds, blocks actions/movement, breaks on a later damaging hit, and cannot be applied through dodge i-frames. These proc/budget choices are gameplay tuning, not claims about DS values.</li>
   </ul>
+  <h2>Automated combat decision scenarios</h2>
+  <p><code>data/combat_scenarios.json</code> defines explicit enemy, distance, condition, and allowed-attack expectations independently of the attack table. The harness MUST enter pursuit and let the ordinary AI select its action; it MUST NOT preselect an attack or force ATTACKING. Empty allowed sets mean no attack may begin within the bounded observation period. Overlapping weighted bands use allowed sets and deterministic seeds, not a hardcoded winner.</p>
+  <p>The enemy-room simulation and Godot unit runner MUST consume the same applicable cases. Freeze, dormancy, entrance and stun gates are Godot-only because the web simulation does not model them. The live Coliseum probe MUST also exercise these cases against imported rigs. Passing these cases confirms the authored conditions, not original-game authenticity or subjective feel; placeholder families remain unvalidated.</p>
+
   <h2>Status effects &amp; elements</h2>
   <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
   <table>
