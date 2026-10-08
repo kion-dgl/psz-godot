@@ -2,6 +2,21 @@
 
 ## Combat fidelity pass — October 2026
 
+### Coliseum playtest observations — October 7
+
+- Helion is incorrectly covered by the `simple_melee` placeholder. User-observed
+  behavior: lunge/spin attacks from a distance and claw attacks up close. Recover
+  the clip mapping and implement distance-dependent selection before treating
+  this enemy as validated. Blaze Helion also has the same placeholder definition;
+  verify its variant behavior separately.
+- Batt/Bullbatt currently have only a generic close-range `atk` entry. The user
+  recalls a projectile attack. The [bat asset viewer](https://dashgl.github.io/psz-asset-viewer/enemies/bat/)
+  lists six clips (`s_033_atk`, `ded`, `dmg`, `stt`, `wat`, `wlk`) and effects
+  `ef_e_c_sdd` and `ef_e_c_sonic`. The sonic effect supports a sonic ranged attack
+  interpretation; the viewer alone does not establish delivery shape, range,
+  release timing, or whether the attack is a traveling projectile versus an area
+  pulse. Recover those details before replacing the generic melee definition.
+
 Gameplay reliability takes priority over exact DS behavior. This first slice
 covers ranged contact, aiming, range, and dodge resolution; combo timings,
 melee hit frames, damage balance, and boss part rigs still need hands-on review.
@@ -136,3 +151,100 @@ checks with `PSZ_ENEMY_RUNTIME_CHECK=1` and `PSZ_COLISEUM_ENEMY` set to
 `coliseum_probe.tscn` in the disposable project. All five passed the runtime,
 weapon contact, enemy damage, and room-clear checks. These are automated
 behavior checks; visual feel and balance still need human playtesting.
+
+### Asset viewer inventory audit — October 7
+
+Compared every one of the **67 model pages** in the [enemy asset viewer](https://dashgl.github.io/psz-asset-viewer/enemies/) against local model IDs, shared animation rigs, and attack definitions. These map to 65 local enemy entries; 40 still use generic basic attack definitions (Reyburn’s dedicated kit is excluded from that count). Full clip/effect/part inventories and per-enemy comparisons are saved in [`data/re_reference/enemy_viewer_audit.json`](../data/re_reference/enemy_viewer_audit.json). This is an asset/definition audit, not a visual validation of every animation or proof of original attack mechanics.
+
+Variant pages with zero animations are resolved through `animation_model_id`; their own effects remain separate. Generic `atk` can resolve via the runtime fallback, so a missing exact `atk` is not automatically a broken animation. It still does not supply the missing attack selection, delivery, or phase behavior. Reyburn is evaluated against its dedicated boss kit rather than its generic registry placeholder.
+
+**Priority findings:**
+
+- Helion/Blaze Helion: generic melee only despite `atk`, `atkb`, and jump-effect evidence. User-observed distant lunge/spin and close claws remain the behavior requirement; clip-to-action mapping needs confirmation.
+- Batt/Bullbatt: generic melee only; effects differ (`sonic` versus `sonic2`). Bite plus sonic attack and sonic-induced confusion are user hypotheses, not established by the asset names.
+- Finjer R/B/G: `atk_sh` and a segmented `atk_sp_st/lp/ed` set, with distinct `fbul/cbul/pbul` effects; all three still have one generic close melee definition. Elements/status meanings must be verified.
+- Local `missile_tank` roster (currently Phobos/Phobos Dyna): `atk_bz`, `atk_mi`, `atk_sh`, mine and gun effects, but only generic melee. Verify roster/model identity as well as the kit.
+- Local shade roster: `leg/lower` have `atk_a/atk_b`; swordman models have punch/swing/segmented attack clips and sword/spin effects. Generic fallback picks one clip without defining the full kit.
+- Mother-family models: gun, sword, technique and warp sequences exist; all four local mother-caster definitions are generic melee. Verify the local Mother Trinity/boss model assignments before authoring behavior.
+- Rumole: unused `atkb` and `grd01/02/03`/`nos` clips warrant a burrow/alternate-attack review; names alone do not establish their mechanics.
+- Frog variants: the existing bubble projectile is authored, but poison/poison2 effects and Pobomma’s bomb/explosion assets warrant variant-specific delivery/status review. The generic projectile hook does not apply poison or bomb behavior.
+- Pelcatraz/Pelcatobur: all three attack clips are represented, but provisional `atk2` is a melee arc. `bspin` and `b_snc` effects are useful evidence for revisiting the gust’s delivery.
+- Non-Reyburn bosses remain generic in the spawn path despite large attack/part inventories. `boss_robot_cmb` and `boss_mother_piece` are separate viewer pages without direct roster entries; do not omit them when implementing their parent fights.
+
+The enemy runtime has no direct references to these named `ef_*` viewer assets. Procedural projectile/lob/spawn/death effects already exist, so this is an asset-fidelity gap, not proof that all visual effects are absent. Shared death/spawn effects must not be counted as extra attacks.
+
+**Complete model coverage:** `candidate clips` means attack/technique-named clips without explicit references in that enemy’s active authored definition (including segmented windup/charge references). Candidates can be transitions, unused variants, or fallback-selected clips. “Authored” does not mean visually validated.
+
+| Viewer model | Local roster / animation source | Current coverage | Candidate clips | Effects |
+|---|---|---|---|---|
+| [armadillo](https://dashgl.github.io/psz-asset-viewer/enemies/armadillo/) | rohjade | Authored 1 attacks | — | ef_e_c_sdd, ef_e_c_smk, ef_e_c_spin |
+| [armadillo_rare](https://dashgl.github.io/psz-asset-viewer/enemies/armadillo_rare/) | rohcrysta (rig armadillo) | Authored 1 attacks | — | ef_e_c_sdd, ef_e_c_smk, ef_e_c_spin |
+| [bat](https://dashgl.github.io/psz-asset-viewer/enemies/bat/) | batt | Generic basic placeholder | — | ef_e_c_sdd, ef_e_c_sonic |
+| [bat_blue](https://dashgl.github.io/psz-asset-viewer/enemies/bat_blue/) | bullbatt (rig bat) | Generic basic placeholder | — | ef_e_c_sdd, ef_e_c_sonic2 |
+| [board](https://dashgl.github.io/psz-asset-viewer/enemies/board/) | finjer_r | Generic basic placeholder | atk_sh, atk_sp_ed, atk_sp_lp, atk_sp_st | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_arbd, ef_e_l_fbul, ef_e_l_stt |
+| [board_blue](https://dashgl.github.io/psz-asset-viewer/enemies/board_blue/) | finjer_b | Generic basic placeholder | atk_sh, atk_sp_ed, atk_sp_lp, atk_sp_st | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_arbd, ef_e_l_cbul, ef_e_l_stt |
+| [board_green](https://dashgl.github.io/psz-asset-viewer/enemies/board_green/) | finjer_g | Generic basic placeholder | atk_sh, atk_sp_ed, atk_sp_lp, atk_sp_st | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_arbd, ef_e_l_pbul, ef_e_l_stt |
+| [booma](https://dashgl.github.io/psz-asset-viewer/enemies/booma/) | booma_origin | Authored 1 attacks | atk_hi | ef_e_c_rstt, ef_e_c_sdd |
+| [boss_darkfalz](https://dashgl.github.io/psz-asset-viewer/enemies/boss_darkfalz/) | dark_falz | Generic basic placeholder | — | ef_dktnt, ef_e_d_bhole, ef_e_d_bit, ef_e_d_bsdw1, ef_e_d_bsdw2, ef_e_d_bsdw3, ef_e_d_bsdw4, ef_e_d_dark, ef_e_d_emit, ef_e_d_emit2, ef_e_d_emmz, ef_e_d_sdw, ef_e_d_sphit, ef_e_d_spr_st, ef_e_d_spread, ef_e_d_tame, ef_e_d_tsdw |
+| [boss_dragon](https://dashgl.github.io/psz-asset-viewer/enemies/boss_dragon/) | reyburn | Dedicated Reyburn kit | — | ef_e_m_br, ef_e_m_br_s, ef_e_m_brhit, ef_e_m_cry, ef_e_m_fogc, ef_e_m_kaze, ef_e_m_lfire, ef_e_m_mbr, ef_e_m_spin, ef_e_m_taill, ef_en_m_dfog |
+| [boss_mother](https://dashgl.github.io/psz-asset-viewer/enemies/boss_mother/) | humilias | Generic basic placeholder | — | ef_e_d_cmb, ef_e_d_fog, ef_e_d_head, ef_e_d_lsr, ef_e_d_lsrex, ef_e_d_piece, ef_e_d_pnt |
+| [boss_mother_piece](https://dashgl.github.io/psz-asset-viewer/enemies/boss_mother_piece/) | No direct roster entry; part/alternate model | Review with parent boss | — | ef_e_d_arnd, ef_e_d_pzm, ef_e_d_reso, ef_e_d_stg, ef_e_d_swrd, ef_e_d_swrd_front |
+| [boss_octopus](https://dashgl.github.io/psz-asset-viewer/enemies/boss_octopus/) | octo_diablo | Generic basic placeholder | — | ef_e_l_ebul, ef_e_w_canon, ef_e_w_ded, ef_e_w_gero, ef_e_w_hmn, ef_e_w_ihl, ef_e_w_psumi, ef_e_w_scrw, ef_e_w_shibuki, ef_e_w_shit, ef_e_w_spin, ef_e_w_stage, ef_e_w_stage1, ef_e_w_yuka |
+| [boss_robot](https://dashgl.github.io/psz-asset-viewer/enemies/boss_robot/) | chaos_mobius | Generic basic placeholder | atk_dl_lp | ef_e_c_mdd, ef_e_l_bl_s, ef_e_l_drill1, ef_e_l_drill2, ef_e_l_dummy, ef_e_l_hit_s, ef_e_l_hov, ef_e_l_mz_s, ef_e_l_wave1, ef_e_l_wave2 |
+| [boss_robot_cmb](https://dashgl.github.io/psz-asset-viewer/enemies/boss_robot_cmb/) | No direct roster entry; part/alternate model | Review with parent boss | — | ef_e_l_air, ef_e_l_bl_f, ef_e_l_bl_s, ef_e_l_bom, ef_e_l_dead, ef_e_l_dummy, ef_e_l_finish, ef_e_l_flash, ef_e_l_hit_f, ef_e_l_hit_s, ef_e_l_hov, ef_e_l_mz_f, ef_e_l_mz_s, ef_e_l_slash, ef_e_l_tsuki, ef_e_l_union, ef_e_l_warp, ef_e_l_warp1 |
+| [circle](https://dashgl.github.io/psz-asset-viewer/enemies/circle/) | eulada | Generic basic placeholder | — | ef_e_d_stt |
+| [circle_black](https://dashgl.github.io/psz-asset-viewer/enemies/circle_black/) | euladaveil (rig circle) | Generic basic placeholder | — | ef_e_d_stt |
+| [deer](https://dashgl.github.io/psz-asset-viewer/enemies/deer/) | stagg | Generic basic placeholder | — | ef_e_c_sdd, ef_e_s_stt, ef_e_s_wbr |
+| [frog](https://dashgl.github.io/psz-asset-viewer/enemies/frog/) | porel | Authored 1 attacks | — | ef_c_stt_w, ef_e_c_phit, ef_e_c_poisn, ef_e_c_sdd |
+| [frog_bomb](https://dashgl.github.io/psz-asset-viewer/enemies/frog_bomb/) | pobomma (rig frog) | Authored 1 attacks | — | ef_com_explosion, ef_e_c_sdd, ef_e_r_stt, ef_e_w_bomb |
+| [frog_rare](https://dashgl.github.io/psz-asset-viewer/enemies/frog_rare/) | pomarr (rig frog) | Authored 1 attacks | — | ef_c_stt_w, ef_e_c_phit2, ef_e_c_poison2, ef_e_c_sdd |
+| [gorilla](https://dashgl.github.io/psz-asset-viewer/enemies/gorilla/) | hildegao | Authored 3 attacks | atk2_ed, atk2_lp, atk2_st | ef_e_c_sdd, ef_e_s_down, ef_e_s_stt, ef_e_s_wbr |
+| [gorilla_female](https://dashgl.github.io/psz-asset-viewer/enemies/gorilla_female/) | hildeghana (rig gorilla) | Authored 3 attacks | atk2_ed, atk2_lp, atk2_st | ef_e_c_sdd, ef_e_s_down, ef_e_s_stt, ef_e_s_wbr |
+| [gorilla_rare](https://dashgl.github.io/psz-asset-viewer/enemies/gorilla_rare/) | hildegigas (rig gorilla) | Authored 3 attacks | atk2_ed, atk2_lp, atk2_st | ef_e_c_sdd, ef_e_s_down, ef_e_s_stt, ef_e_s_wbr |
+| [hyena](https://dashgl.github.io/psz-asset-viewer/enemies/hyena/) | grimble | Generic basic placeholder | — | ef_e_c_sdd, ef_e_m_stt |
+| [hyena_rare](https://dashgl.github.io/psz-asset-viewer/enemies/hyena_rare/) | tormatible (rig hyena) | Generic basic placeholder | — | ef_e_c_sdd, ef_e_m_stt |
+| [jigobooma](https://dashgl.github.io/psz-asset-viewer/enemies/jigobooma/) | gigobooma_origin | Authored 1 attacks | atk_hi | ef_e_c_rstt, ef_e_c_sdd |
+| [leg](https://dashgl.github.io/psz-asset-viewer/enemies/leg/) | derreo | Generic basic placeholder | atk_a, atk_b | ef_e_d_stt |
+| [leg_black](https://dashgl.github.io/psz-asset-viewer/enemies/leg_black/) | zerreo | Generic basic placeholder | atk_a, atk_b | ef_e_d_stt |
+| [lion](https://dashgl.github.io/psz-asset-viewer/enemies/lion/) | helion | Generic basic placeholder | atkb | ef_e_c_sdd, ef_e_m_jmp, ef_e_m_stt |
+| [lion_rare](https://dashgl.github.io/psz-asset-viewer/enemies/lion_rare/) | blaze_helion (rig lion) | Generic basic placeholder | atkb | ef_e_c_sdd, ef_e_m_jmp, ef_e_m_stt |
+| [lizard](https://dashgl.github.io/psz-asset-viewer/enemies/lizard/) | ghowl | Generic basic placeholder | — | ef_e_c_sdd, ef_e_m_stt |
+| [lower](https://dashgl.github.io/psz-asset-viewer/enemies/lower/) | eulid | Generic basic placeholder | atk_a, atk_b | ef_e_d_stt |
+| [lower_black](https://dashgl.github.io/psz-asset-viewer/enemies/lower_black/) | eulidveil | Generic basic placeholder | atk_a, atk_b | ef_e_d_stt |
+| [mole](https://dashgl.github.io/psz-asset-viewer/enemies/mole/) | rumole | Generic basic placeholder | atkb | ef_e_c_mud, ef_e_c_sdd, ef_e_c_stt_c |
+| [mother](https://dashgl.github.io/psz-asset-viewer/enemies/mother/) | mother_trinity | Generic basic placeholder | atk_gu_a_ed, atk_gu_a_lp, atk_gu_a_st, atk_sa_a, atk_sb_a, tec_a, tec_t_ed, tec_t_lp, tec_t_st | ef_e_c_granz, ef_e_c_sdd, ef_e_t_blt, ef_e_t_mzl, ef_e_t_tsuki |
+| [mother_gun](https://dashgl.github.io/psz-asset-viewer/enemies/mother_gun/) | shot_mother | Generic basic placeholder | atk_gu_g_ed, atk_gu_g_lp, atk_gu_g_st, atk_sa_s, atk_sb_s, tec_a, tec_t_ed, tec_t_lp, tec_t_st | ef_e_c_granz, ef_e_c_sdd, ef_e_t_blt, ef_e_t_mzl, ef_e_t_tsuki |
+| [mother_sword](https://dashgl.github.io/psz-asset-viewer/enemies/mother_sword/) | blade_mother | Generic basic placeholder | atk_gu_a_ed, atk_gu_a_lp, atk_gu_a_st, atk_sa_s, atk_sb_s, tec_a, tec_t_ed, tec_t_lp, tec_t_st | ef_e_c_granz, ef_e_c_sdd, ef_e_t_blt, ef_e_t_mzl, ef_e_t_tsuki |
+| [mother_tech](https://dashgl.github.io/psz-asset-viewer/enemies/mother_tech/) | force_mother | Generic basic placeholder | atk_gu_g_ed, atk_gu_g_lp, atk_gu_g_st, atk_sa_s, atk_sb_s, tec_a, tec_t_ed, tec_t_lp, tec_t_st | ef_e_c_granz, ef_e_c_sdd, ef_e_t_blt, ef_e_t_mzl, ef_e_t_tsuki |
+| [orangutan](https://dashgl.github.io/psz-asset-viewer/enemies/orangutan/) | froutang | Authored 3 attacks | — | ef_e_c_sdd, ef_e_l_ebul, ef_e_r_gun, ef_e_r_stt |
+| [orangutan_rare](https://dashgl.github.io/psz-asset-viewer/enemies/orangutan_rare/) | frunaked (rig orangutan) | Authored 3 attacks | — | ef_e_c_sdd, ef_e_l_ebul, ef_e_r_gun, ef_e_r_stt |
+| [quad](https://dashgl.github.io/psz-asset-viewer/enemies/quad/) | izhirak_s6 | Authored 2 attacks | — | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_ebul, ef_e_r_flsh, ef_e_r_flshb, ef_e_r_stt |
+| [quad_rare](https://dashgl.github.io/psz-asset-viewer/enemies/quad_rare/) | azherowa_b2 (rig quad) | Authored 2 attacks | — | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_ebul, ef_e_r_flsh, ef_e_r_flshb, ef_e_r_stt |
+| [rabbit](https://dashgl.github.io/psz-asset-viewer/enemies/rabbit/) | usanny | Generic basic placeholder | — | ef_e_c_sdd, ef_e_s_stt, ef_e_s_wbr |
+| [rabbit_rare](https://dashgl.github.io/psz-asset-viewer/enemies/rabbit_rare/) | usanimere (rig rabbit) | Generic basic placeholder | — | ef_e_c_sdd, ef_e_s_stt, ef_e_s_wbr |
+| [rappy](https://dashgl.github.io/psz-asset-viewer/enemies/rappy/) | rappy | Generic basic placeholder | — | ef_e_c_rstt, ef_e_c_sdd |
+| [rappy_blue](https://dashgl.github.io/psz-asset-viewer/enemies/rappy_blue/) | ar_rappy (rig rappy) | Generic basic placeholder | — | ef_e_c_rstt, ef_e_c_sdd |
+| [rappy_red](https://dashgl.github.io/psz-asset-viewer/enemies/rappy_red/) | rab_rappy (rig rappy) | Generic basic placeholder | — | ef_e_c_rstt, ef_e_c_sdd |
+| [roc](https://dashgl.github.io/psz-asset-viewer/enemies/roc/) | pelcatraz | Authored 3 attacks | — | ef_e_c_sdd, ef_e_w_bspin, ef_enm_b_snc |
+| [roc_rare](https://dashgl.github.io/psz-asset-viewer/enemies/roc_rare/) | pelcatobur (rig roc) | Authored 3 attacks | — | ef_e_c_sdd, ef_e_w_bspin, ef_enm_b_snc |
+| [seal](https://dashgl.github.io/psz-asset-viewer/enemies/seal/) | hypao | Authored 2 attacks | — | ef_c_stt_w, ef_e_c_sdd, ef_e_w_ele |
+| [seal_rare](https://dashgl.github.io/psz-asset-viewer/enemies/seal_rare/) | vespao (rig seal) | Authored 2 attacks | — | ef_c_stt_w, ef_e_c_sdd, ef_e_w_ele |
+| [shooter](https://dashgl.github.io/psz-asset-viewer/enemies/shooter/) | korse | Authored 2 attacks | — | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_ebul, ef_e_l_stt |
+| [shooter_leader](https://dashgl.github.io/psz-asset-viewer/enemies/shooter_leader/) | akorse | Authored 2 attacks | — | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_ebul, ef_e_l_stt |
+| [shrimp](https://dashgl.github.io/psz-asset-viewer/enemies/shrimp/) | bolix | Authored 1 attacks | — | ef_e_c_sdd |
+| [shrimp_rare](https://dashgl.github.io/psz-asset-viewer/enemies/shrimp_rare/) | goldix (rig shrimp) | Authored 1 attacks | — | ef_e_c_sdd |
+| [snake](https://dashgl.github.io/psz-asset-viewer/enemies/snake/) | garapython | Authored 2 attacks | — | ef_e_c_sdd, ef_e_m_stt |
+| [snake_rare](https://dashgl.github.io/psz-asset-viewer/enemies/snake_rare/) | garahadan (rig snake) | Authored 2 attacks | — | ef_e_c_sdd, ef_e_m_stt |
+| [swordman](https://dashgl.github.io/psz-asset-viewer/enemies/swordman/) | arkzein | Generic basic placeholder | atk_pu, atk_sw, atk_th_ed, atk_th_st, atk_th_sw | ef_e_d_spin1, ef_e_d_spin2, ef_e_d_stt, ef_e_d_swd |
+| [swordman_b](https://dashgl.github.io/psz-asset-viewer/enemies/swordman_b/) | zaphobos | Generic basic placeholder | atk_pu, atk_sw, atk_th_ed, atk_th_st, atk_th_sw | ef_e_d_spin1, ef_e_d_spin2, ef_e_d_stt, ef_e_d_swd |
+| [swordman_rare](https://dashgl.github.io/psz-asset-viewer/enemies/swordman_rare/) | arkzein_r | Generic basic placeholder | atk_pu, atk_sw, atk_th_ed, atk_th_st, atk_th_sw | ef_e_d_spin1, ef_e_d_spin2, ef_e_d_stt, ef_e_d_swd |
+| [swordman_rare_b](https://dashgl.github.io/psz-asset-viewer/enemies/swordman_rare_b/) | zaphobos_dyna | Generic basic placeholder | atk_pu, atk_sw, atk_th_ed, atk_th_st, atk_th_sw | ef_e_d_spin1, ef_e_d_spin2, ef_e_d_stt, ef_e_d_swd |
+| [tank](https://dashgl.github.io/psz-asset-viewer/enemies/tank/) | phobos | Generic basic placeholder | atk_bz, atk_mi, atk_sh | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_arbd, ef_e_l_mine, ef_e_l_sgun, ef_e_l_stt |
+| [tank_rare](https://dashgl.github.io/psz-asset-viewer/enemies/tank_rare/) | phobos_dyna | Generic basic placeholder | atk_bz, atk_mi, atk_sh | ef_com_exp02, ef_com_explosion, ef_e_c_mdd, ef_e_l_arbd, ef_e_l_mine, ef_e_l_sgun, ef_e_l_stt |
+| [tiger](https://dashgl.github.io/psz-asset-viewer/enemies/tiger/) | kapantha | Generic basic placeholder | — | ef_e_c_sdd, ef_e_c_stt_c |
+| [vulture](https://dashgl.github.io/psz-asset-viewer/enemies/vulture/) | vulkure | Generic basic placeholder | — | ef_e_c_sdd, ef_e_m_stt |
+| [wolf](https://dashgl.github.io/psz-asset-viewer/enemies/wolf/) | reyhound | Generic basic placeholder | — | ef_e_c_sdd, ef_e_s_stt, ef_e_s_wbr |
+
+**Not covered by this viewer:** local `chaos_sorcerer`, `poison_lily`, `shinowa`, `sinow_beat`, and `sinow_gold` have no matching model page. They require their own asset/reference audit.
+
+**Coverage limits:** Model inventories are not attack event tables. Range, release frames, hit volumes, status probabilities, invulnerability and exact clip meanings still need recorded gameplay, saved user observations, or decoded behavior evidence. No runtime definitions were changed by this audit.
