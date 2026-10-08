@@ -1,0 +1,23 @@
+.fidelity-grades { width: 100%; max-width: 1100px; text-align: left; }
+.fidelity-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.fidelity-eyebrow { color: #a9b8da; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; }
+.fidelity-header h2 { margin: 8px 0; font-size: 26px; font-weight: 500; }
+.fidelity-header p, .fidelity-note { color: #aab0c4; line-height: 1.6; }
+.fidelity-overall { flex-shrink: 0; display: flex; flex-direction: column; text-align: center; gap: 6px; }
+.fidelity-overall strong { color: #f3cf91; font-size: 44px; font-weight: 500; }
+.fidelity-overall span { color: #aab0c4; font-size: 12px; }
+.fidelity-note { font-size: 12px; max-width: 760px; margin: 16px 0 24px; }
+.fidelity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 14px; }
+.fidelity-card { background: #17172b; border: 1px solid #33334d; border-radius: 10px; padding: 18px; }
+.fidelity-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fidelity-card h3 { margin: 0; font-size: 16px; font-weight: 500; }
+.fidelity-grade { font-size: 24px; color: #f3cf91; }
+.fidelity-grade[data-grade="A"] { color: #98e1b7; }
+.fidelity-grade[data-grade="B"] { color: #a2c6ff; }
+.fidelity-grade[data-grade="D"] { color: #f3a7a7; }
+.fidelity-card p { color: #b9bfd0; font-size: 13px; line-height: 1.65; margin-bottom: 0; }
+.fidelity-card details { margin-top: 16px; }
+.fidelity-card summary { color: #a2c6ff; font-size: 12px; cursor: pointer; }
+.fidelity-grades footer { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 24px; }
+.fidelity-grades a { color: #a2c6ff; font-size: 13px; }
+@media (max-width: 480px) { .fidelity-header { align-items: flex-start; gap: 12px; } .fidelity-header h2 { font-size: 22px; } .fidelity-overall span { max-width: 90px; } }

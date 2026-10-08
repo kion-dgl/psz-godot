@@ -41,4 +41,13 @@ import Concept from '../layouts/Concept.astro';
   </ul>
   <h2>Stage texture strips</h2>
   <p>Texture-fix rows MAY specify <code>framesY</code> and <code>fps</code> for a vertical strip. The field MUST sample one frame at a time, advance top-to-bottom, and loop. The mesh MUST already address the first row (V = 0–1/framesY). Playback MUST preserve that UV span and add frame/framesY, rather than scaling V again; filtering MUST NOT bleed into adjacent rows. The Coliseum's <code>s00_1_set3</code> uses eight frames at 8 fps.</p>
+  <h2>Proposed web consolidation — October 8</h2>
+  <p>The preferred direction is one Astro application hosting the existing React tools as client-rendered components, with shared navigation and data. This is a migration proposal, not a completed change. The gradecard now uses <code>data/fidelity_grades.json</code> in both the GitHub Pages homepage and the spec.</p>
+  <ul>
+    <li>Inventory and preserve all <code>web/src/App.tsx</code> tool routes and existing hash links. Move a representative editor and combat room first; verify navigation and WebGL mounting before migrating the remaining routes.</li>
+    <li>Carry the four editor Vite plugins into Astro’s existing Vite configuration. Keep file-writing endpoints development-only and test save/export/reset using disposable files.</li>
+    <li>Reconcile React/Three.js dependencies (web currently declares Three 0.172; spec declares 0.184), asset/CDN helpers, public files and <code>/web</code> links. Avoid an incidental Three.js upgrade during the first hosting move.</li>
+    <li>Retain two deployment targets from the shared application: static output under <code>/psz-godot/</code> for GitHub Pages, and the Node deployment for <code>psz.onl</code>. The latter owns <code>/api/report</code>; GitHub Pages cannot run that endpoint. Preserve existing spec URLs and the separate Godot game deployment.</li>
+    <li>Before retiring the separate app, verify both production builds, deep links, asset requests, editor persistence and representative 3D tools, then run the existing web tests. Archive superseded files under the repository policy.</li>
+  </ul>
 </Concept>

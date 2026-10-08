@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import FidelityGrades from './FidelityGrades';
 
 export default function Landing() {
   return (
@@ -6,10 +7,11 @@ export default function Landing() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
       height: '100%',
-      gap: 32,
-      padding: 32,
+      overflowY: 'auto',
+      boxSizing: 'border-box',
+      gap: 16,
+      padding: '32px 24px 64px',
     }}>
       <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: 2 }}>
         Phantasy Star Zero
@@ -18,7 +20,7 @@ export default function Landing() {
         Fan-made recreation of Phantasy Star Zero. Quest editor, element storybook,
         and downloadable game client.
       </p>
-      <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <Link to="/quest-editor" style={{
           padding: '10px 24px',
           background: '#2a2a5a',
@@ -42,6 +44,7 @@ export default function Landing() {
           Storybook
         </Link>
       </div>
+      <FidelityGrades />
     </div>
   );
 }
