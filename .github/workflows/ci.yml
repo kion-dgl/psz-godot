@@ -105,6 +105,11 @@ jobs:
       - name: Validate quest JSON schema
         run: python3 scripts/tools/validate_quests.py
 
+      - name: Check combat roster coverage and regression cases
+        run: |
+          python3 scripts/tools/test_combat_roster.py
+          python3 scripts/tools/check_combat_roster.py
+
   check-asset-refs:
     runs-on: ubuntu-latest
     timeout-minutes: 2

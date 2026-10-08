@@ -1,5 +1,22 @@
 # Combat System TODO
 
+## Fidelity baseline and identity audit — October 8
+
+The current owner grades and promotion criteria live in the spec at `/fidelity`;
+combat remains **C**, bosses/traps/systems **D**. Automated passes do not raise
+these playtest grades. `/states/combat-roster` renders the checked crosswalk in
+`data/combat_roster.json` for #683, including tank/swordman and Mother conflicts,
+the `chaos_mobius_paru` orphan, and Shinowa/Sinow catalog/encounter differences.
+No runtime IDs or rigs were changed by this audit. Identity migrations and
+source-name confirmation remain open; this is progress on #683, not closure.
+
+Run `python3 scripts/tools/check_combat_roster.py` and
+`python3 scripts/tools/test_combat_roster.py`. CI checks resource/attack/source
+coverage, family tickets, boss encounters and explicit catalog exceptions.
+Known gaps print on every pass; new discrepancies and stale exceptions fail.
+Continue with #684/#685 real-rig/reference review, then #686/#687; use confirmed
+rigs rather than current display names for identity-sensitive family work.
+
 ## Enemy family execution plan — October 7
 
 Each family passes through: recover saved notes and reference assets → inspect

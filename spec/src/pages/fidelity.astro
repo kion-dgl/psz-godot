@@ -1,0 +1,43 @@
+---
+import Concept from '../layouts/Concept.astro';
+const grades = [
+  ['Splash', 'D', 'A low-effort PNG placeholder.', 'Replace with an intentional splash composition and verify startup presentation.'],
+  ['Asset sync', 'B', 'The style works; the already-up-to-date case does not.', 'Make current assets a clear, quick success path; verify fresh download, cached assets and recovery.'],
+  ['Title screen', 'B', 'Liked overall, but pixelated compared with the original Three.js mock.', 'Compare the same framing at target resolutions and fix the source of pixelation.'],
+  ['Character select + create', 'A', 'Faithful to the game and good overall; a few small improvements remain.', 'Preserve the current quality while addressing specific playtest observations.'],
+  ['City', 'B', 'Presentation exceeds the original in places, but some angles break down. Principal’s office needs a final pass.', 'Inspect multiple camera angles and finish the principal’s office.'],
+  ['HUD', 'B', 'Better than the original overall, but pixelated and still improvable.', 'Verify crisp rendering, readability and layout at supported resolutions.'],
+  ['Quests', 'C+', 'Playable from start to finish; much of the early effort went here, but a return pass is needed.', 'Replay the story, recording progression, routing, encounter and presentation defects.'],
+  ['Free roam', 'B', 'Close to the original’s feature set; needs substantial playtesting and object-placement polish. Wetlands floors/routing can trap the player.', 'Fix Wetlands stuck routes, then test traps, objects and traversal across room variations.'],
+  ['Traps', 'D', 'Present, but not cleanly implemented yet.', 'Define and verify placement, visibility, trigger timing, dodge/counterplay and status behavior.'],
+  ['Bosses', 'D', 'Present, mostly as placeholders.', 'Resolve identity and arena assignments, then validate full encounters, phases and parts.'],
+  ['Combat', 'C', 'Basic mechanics exist; lock-on and better enemy behavior are still needed.', 'Specify lock-on, validate enemy families and review attack rhythm, hit alignment and recovery in play.'],
+  ['Systems', 'D', 'Grinding, attributes and weapon damage polish have been deferred.', 'Validate damage and progression rules against evidence, with controlled fixtures and user review.'],
+];
+---
+
+<Concept title="Fidelity and quality baseline" section="Spec">
+  <p><strong>October 8, 2026 · Owner playtest assessment.</strong> These grades preserve Kion’s current judgment. They mix authenticity, presentation and completeness; they are not measured percentages of original-game fidelity.</p>
+  <p><strong>Provisional overall assessment: C+.</strong> This is an editorial summary, not an owner-assigned grade or a calculated average. Character flow and much of the presentation are strong; combat is C, while bosses, traps and systems remain D. Those core gaps matter more than a screen-count average.</p>
+  <table>
+    <thead><tr><th>Area</th><th>Grade</th><th>Owner assessment</th><th>Next review target</th></tr></thead>
+    <tbody>{grades.map(([area, grade, assessment, next]) => <tr><td>{area}</td><td><strong>{grade}</strong></td><td>{assessment}</td><td>{next}</td></tr>)}</tbody>
+  </table>
+  <h2>How grades change</h2>
+  <p>A means convincing, faithful where intended, and polished with minor issues. B means good with visible gaps. C means the main loop works but important behavior or feel is incomplete. D means placeholder or rough implementation. Plus/minus refines the assessment; an unreviewed area stays ungraded.</p>
+  <p>A grade increase SHOULD cite a dated user playtest, the revision, the scenario and the observed improvement. Automated passes MUST NOT independently promote a grade. Better-than-original presentation is a deliberate design choice and SHOULD be distinguished from original-game fidelity.</p>
+  <h2>Combat evidence, tracked separately</h2>
+  <ol>
+    <li><strong>Identity:</strong> reconcile runtime ID, display name, model, animation rig and source identity. <a href="/states/combat-roster">Current crosswalk and unresolved mappings</a>.</li>
+    <li><strong>Reference:</strong> cite original observation or decoded function/data, including revision and confidence. Clip names alone do not prove behavior.</li>
+    <li><strong>Definition:</strong> align attack eligibility, phases, movement and forbidden behavior with the normative spec.</li>
+    <li><strong>Verification:</strong> seeded tests plus real-rig probes, including misses, dodges, interruptions, walls and recovery.</li>
+    <li><strong>Feel:</strong> focused user comparison before claiming a family is validated.</li>
+  </ol>
+  <p>The existing suites provide substantial mechanics coverage. They do not establish every original attack, visual alignment or combat feel. Existing user approval of the gameplay foundation remains valid; family-level unknowns remain open.</p>
+  <h2>Current work order</h2>
+  <p>Start with <a href="https://github.com/kion-dgl/psz-godot/issues/683">#683: roster identity and coverage</a>. Continue with <a href="https://github.com/kion-dgl/psz-godot/issues/684">Booma #684</a> and <a href="https://github.com/kion-dgl/psz-godot/issues/685">Helion #685</a>, then bats and Finjers before identity-sensitive tank, swordman and Mother work. The <a href="https://github.com/kion-dgl/psz-godot/issues/682">combat roadmap #682</a> sequences mixed encounters, damage and statuses after individual families.</p>
+  <p>Lock-on is a separate combat gap: <a href="/mechanics/movement-lockon">its current page is still a placeholder</a>. Family validation does not complete it. Wetlands stuck routes are a separate free-roam reliability priority.</p>
+</Concept>
+
+<style>td { vertical-align: top; } table { width: 100%; } td:first-child { min-width: 110px; }</style>
