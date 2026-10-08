@@ -6,10 +6,12 @@
  * scripts/tools/gen_enemy_attacks.py.
  */
 
-export type AttackKind = 'melee_arc' | 'projectile' | 'lob' | 'charge' | 'leap';
+export type AttackKind = 'melee_arc' | 'projectile' | 'lob' | 'charge' | 'leap' | 'lunge';
 
 export interface AttackDef {
   id: string;
+  /** Rig bone whose planar motion is supplied by collision-driven lunge travel. */
+  motion_bone?: string;
   /** Animation-name token as Godot's resolver consumes it (atk, atk2, atk_hi…) — NOT a full clip name. */
   clip: string;
   /** Hit delivery (spec /mechanics/enemy-attacks): melee arc test (default), straight projectile, or grenade lob. */

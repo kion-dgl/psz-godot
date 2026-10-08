@@ -190,6 +190,11 @@ const fsm = `stateDiagram-v2
 	<li>The #/enemy-room sim renders scale + stationary facing + both attacks; the sleep/wake cycle itself is <em>not</em> simulated there (it lives in the implementation and this contract).</li>
 </ul>
 
+  <h2>Helion: close claws and spin-lunge</h2>
+  <p><code>archetype: lunging_melee</code> applies to Helion and the shared Blaze Helion rig. Inspected clips: <code>atk</code> close claws (1.317 s), <code>atkb</code> traveling spin-lunge (0.900 s), <code>run</code> locomotion, <code>stt</code> rising display. Locomotion/display MUST NOT damage. Variant elemental behavior is unverified.</p>
+  <p>Initial gameplay tuning: claws at 0–2.5 m with contact at 30–60% of the clip; spin-lunge beyond 2.5 through 7 m with travel/contact at 15–70%. The lunge MUST lock facing and travel budget at attack start, retain stationary preparation and recovery, and resolve at most one hit or dodge. Walls/floor edges MUST stop travel; hurt/death MUST cancel it. These ranges and timings require playtesting and are not recovered DS constants.</p>
+  <p>The lunge MUST remove only <code>Point_Spine01</code> planar translation from an instance-local animation copy, preserving vertical motion and rotation. Collision-driven travel keeps the rendered body with its hurtbox and prevents snapping back after the clip.</p>
+
   <h3>Shared runtime guarantees</h3>
   <ul>
     <li>Every enemy controller, including Poison Lily, MUST tick cooldowns and status durations while active and honor spawn and immobilization gates.</li>

@@ -987,3 +987,30 @@ describe('authored recovery is preserved', () => {
     expect(sim.velocity).toEqual({ x: 0, z: 0 });
   });
 });
+
+
+describe('single-clip spin lunge', () => {
+  for (const dodging of [false, true]) {
+    it(`holds preparation/recovery and resolves one ${dodging ? 'dodge' : 'hit'}`, () => {
+      const c = config([atk({ id: 'spin_lunge', kind: 'lunge', clip: 'atkb',
+        min_range: 2.501, max_range: 7, hit_reach: 0.9, windup_frac: 0.15, damage_end_frac: 0.7 })]);
+      c.enemies.dummy.archetype = 'lunging_melee';
+      const entry = resolveEntry(c, 'dummy');
+      const sim = makeSim({ x: 0, z: 0 });
+      const input = makeInput({ playerPos: { x: 0, z: 4 }, playerInvincible: dodging, clipDurationFor: () => 0.9 });
+      stepEnemy(sim, entry, input); stepEnemy(sim, entry, input);
+      expect(sim.currentAttack?.def.id).toBe('spin_lunge');
+      const prep = run(sim, entry, input, 0.1);
+      expect(sim.pos.z).toBe(0);
+      expect(prep.filter(e => e.type === 'hit')).toHaveLength(0);
+      const events = run(sim, entry, input, 0.62);
+      expect(events.filter(e => e.type === (dodging ? 'hit_dodged' : 'hit'))).toHaveLength(1);
+      const end = { ...sim.pos };
+      input.playerInvincible = false;
+      const recovery = run(sim, entry, input, 0.08);
+      expect(sim.pos).toEqual(end);
+      expect(recovery.filter(e => e.type === 'hit')).toHaveLength(0);
+      expect(sim.pos.z).toBeCloseTo(4.5);
+    });
+  }
+});

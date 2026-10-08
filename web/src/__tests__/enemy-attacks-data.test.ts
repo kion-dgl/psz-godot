@@ -173,7 +173,7 @@ describe('enemy_attacks.json — per-enemy invariants', () => {
   });
 
   it('attack kind, when present, is a known delivery', () => {
-    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap']);
+    const known = new Set(['melee_arc', 'projectile', 'lob', 'charge', 'leap', 'lunge']);
     const bad: string[] = [];
     for (const [id, e] of entries) {
       for (const a of e.attacks) {

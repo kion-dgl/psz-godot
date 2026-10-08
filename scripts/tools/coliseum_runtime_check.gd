@@ -9,6 +9,7 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	player.global_position = enemy.global_position + Vector3(0, 0, -2.0)
 	var ok := false
 	match enemy._archetype:
+		"lunging_melee": ok = await preload("res://scripts/tools/coliseum_helion_check.gd").run(player, enemy)
 		"roller": ok = await _roller(player, enemy)
 		"stance_riser": ok = await _snake(player, enemy)
 		"two_attack": ok = await _ice(player, enemy)

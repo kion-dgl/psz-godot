@@ -124,6 +124,7 @@ var _windup_total := 0.0                    # their resolved total duration
 var _windup_elapsed := 0.0
 var _windup_idx := -1                       # prelude clip currently playing
 var _windup_done := true                    # false only while the prelude plays
+var _lunge = preload("res://scripts/3d/enemies/enemy_lunge.gd").new()
 var _leap_from := Vector3.ZERO              # kind leap: enemy travels during the window
 var _leap_to := Vector3.ZERO
 var _charge: Dictionary = {}                # kind charge: phase machine (see _start_charge)
@@ -1023,6 +1024,9 @@ func _process_attack_window() -> void:
 		global_position.x = lerpf(_leap_from.x, _leap_to.x, f)
 		global_position.z = lerpf(_leap_from.z, _leap_to.z, f)
 
+	if _attack_kind == "lunge" and _window_opened and not _window_closed and window_end > window_start:
+		_lunge.step(self, (_attack_pos - window_start) / (window_end - window_start))
+
 	# Frame-tied damage window, melee only: the arc test runs each frame; the
 	# first frame the target passes resolves the hit. One resolution (hit or
 	# dodge) per attack (#509). Ranged/leap kinds resolve at impact/landing.
@@ -1289,6 +1293,8 @@ func _start_attack() -> void:
 	if _attack_def.is_empty():
 		_attack_def = _select_attack_for(dist)
 	_attack_kind = String(_attack_def.get("kind", "melee_arc"))
+	if _attack_kind == "lunge":
+		_lunge.begin(self, dist)
 	_attack_hit_resolved = false
 	_window_opened = false
 	_window_closed = false
@@ -1326,7 +1332,10 @@ func _start_attack() -> void:
 
 ## Resolve + play the attack clip proper and arm its timeline/fallback end.
 func _begin_main_clip() -> void:
-	_attack_anim = _play_animation(String(_attack_def.get("clip", "atk")), true)
+	var token := String(_attack_def.get("clip", "atk"))
+	if _attack_kind == "lunge" and animation_player:
+		_lunge.prepare_clip(animation_player, _find_animation(token), str(_attack_def.get("motion_bone", "")))
+	_attack_anim = _play_animation(token, true)
 	if _attack_anim.is_empty():
 		# Rig has no resolvable attack clip — timeline fractions apply to the
 		# fixed fallback duration; end the attack on that same timer.

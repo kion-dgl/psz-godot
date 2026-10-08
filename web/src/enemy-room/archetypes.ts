@@ -20,10 +20,13 @@ export interface ArchetypeDef {
 }
 
 export const ARCHETYPES: ArchetypeDef[] = [
+  { id: 'lunging_melee', label: 'Lunging melee',
+    blurb: 'Helion family: close claws (atk), committed distant spin-lunge (atkb).',
+    simNote: 'Single-clip lunge with stationary preparation/recovery and one swept contact; timing is initial playtest tuning.' },
   {
     id: 'simple_melee',
     label: 'Simple melee',
-    blurb: 'atk, ded, dmg, stt, wat, wlk (+run/tht/atkb variants) — the basic chase-and-bite loop: bat, circle, vulture, lizard, rabbit, lion.',
+    blurb: 'atk, ded, dmg, stt, wat, wlk (+run/tht/atkb variants) — the basic chase-and-bite loop: bat, circle, vulture, lizard, rabbit.',
     simNote: 'Native: the baseline sim IS this archetype.',
   },
   {

@@ -385,7 +385,20 @@ export default function EnemyRoom() {
         const sc = sceneRef.current;
         sc.enemyGroup.add(model.scene);
         sc.mixer = new THREE.AnimationMixer(model.scene);
-        sc.clips = animations;
+        sc.clips = animations.map((source) => {
+          const clip = source.clone();
+          // Helion's planar body translation is supplied by the simulation.
+          if ((modelId === 'lion' || modelId === 'lion_rare') && clip.name.endsWith('_atkb')) {
+            for (const track of clip.tracks) {
+              if (track.name !== 'Point_Spine01.position') continue;
+              for (let i = 0; i < track.values.length; i += 3) {
+                track.values[i] = track.values[0];
+                track.values[i + 2] = track.values[2];
+              }
+            }
+          }
+          return clip;
+        });
         setClipNames(animations.map((a) => a.name));
         // Reset sims on enemy swap
         simRef.current = makeSim({ x: 0, z: -4 });
@@ -1016,6 +1029,7 @@ export default function EnemyRoom() {
                   <option value="projectile">projectile</option>
                   <option value="lob">lob (grenade AoE)</option>
                   <option value="charge">charge (st/lp/ed, moves)</option>
+                  <option value="lunge">lunge (swept contact)</option>
                   <option value="leap">leap (AoE on landing)</option>
                 </select>
               </div>

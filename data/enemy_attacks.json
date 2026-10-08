@@ -256,7 +256,7 @@
       ]
     },
     "blaze_helion": {
-      "archetype": "simple_melee",
+      "archetype": "lunging_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -267,18 +267,43 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "claws",
           "clip": "atk",
-          "windup_frac": 0.35,
+          "kind": "melee_arc",
+          "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2.5,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2.5
+        },
+        {
+          "id": "spin_lunge",
+          "clip": "atkb",
+          "kind": "lunge",
+          "motion_bone": "Point_Spine01",
+          "windup_frac": 0.15,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180,
+          "hit_reach": 0.9,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.501,
+          "max_range": 7
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
+        "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
+        "stt": "Inspected rising display; not a damaging attack. Exact original trigger unverified.",
+        "run": "Running locomotion, never damages.",
+        "wat": "Idle.",
+        "wlk": "Walking locomotion.",
+        "dmg": "Hit reaction.",
+        "ded": "Death."
+      }
     },
     "bolix": {
       "archetype": "box_mimic",
@@ -1070,7 +1095,7 @@
       }
     },
     "helion": {
-      "archetype": "simple_melee",
+      "archetype": "lunging_melee",
       "stats": {
         "move_speed": 3.0,
         "attack_range": 2.0,
@@ -1081,18 +1106,43 @@
       "fsm": {},
       "attacks": [
         {
-          "id": "basic",
+          "id": "claws",
           "clip": "atk",
-          "windup_frac": 0.35,
+          "kind": "melee_arc",
+          "windup_frac": 0.3,
           "damage_end_frac": 0.6,
-          "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
-          "damage_mult": 1.0,
-          "weight": 1.0,
-          "min_range": 0.0,
-          "max_range": 2.0
+          "hit_half_angle_deg": 65,
+          "hit_reach": 2.5,
+          "damage_mult": 1,
+          "weight": 1,
+          "min_range": 0,
+          "max_range": 2.5
+        },
+        {
+          "id": "spin_lunge",
+          "clip": "atkb",
+          "kind": "lunge",
+          "motion_bone": "Point_Spine01",
+          "windup_frac": 0.15,
+          "damage_end_frac": 0.7,
+          "hit_half_angle_deg": 180,
+          "hit_reach": 0.9,
+          "damage_mult": 1.2,
+          "weight": 1,
+          "min_range": 2.501,
+          "max_range": 7
         }
-      ]
+      ],
+      "clip_notes": {
+        "atk": "Inspected 2026-10-07: close claw attack, 1.3167 s. Initial active window 30\u201360%, pending user feel approval.",
+        "atkb": "Inspected 2026-10-07: forward aerial spin-lunge, 0.9000 s. Point_Spine01 travels about 16 source units; strip planar translation per instance and move the collision body instead. Initial window 15\u201370%, one swept contact; recovery stationary.",
+        "stt": "Inspected rising display; not a damaging attack. Exact original trigger unverified.",
+        "run": "Running locomotion, never damages.",
+        "wat": "Idle.",
+        "wlk": "Walking locomotion.",
+        "dmg": "Hit reaction.",
+        "ded": "Death."
+      }
     },
     "hildegao": {
       "archetype": "bigrig_combo",

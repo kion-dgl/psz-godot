@@ -68,8 +68,9 @@ TRES_STAT_DEFAULTS = {
 MODEL_ARCHETYPES = {
     'simple_melee': [
         'bat', 'bat_blue', 'circle', 'circle_black', 'vulture', 'lizard',
-        'rabbit', 'rabbit_rare', 'lion', 'lion_rare',
+        'rabbit', 'rabbit_rare',
     ],
+    'lunging_melee': ['lion', 'lion_rare'],
     'quadruped': ['wolf', 'hyena', 'hyena_rare', 'deer', 'tiger'],
     'quad_machine': ['quad', 'quad_rare'],
     'bruiser': ['booma', 'jigobooma'],

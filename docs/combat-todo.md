@@ -1,5 +1,25 @@
 # Combat System TODO
 
+## Enemy family execution plan — October 7
+
+Each family passes through: recover saved notes and reference assets → inspect
+clips/effects → write explicit behavior and uncertainty → seeded tests → runtime
+implementation → real-rig Coliseum probe → user feel checkpoint. Preserve the
+mapping in `clip_notes`; do not infer damage or statuses from filenames alone.
+
+1. **Helion / Blaze Helion (implemented; user feel check pending):** close claws and committed distant
+   spin-lunge; align the animated body and collision, telegraph, dodge and recovery.
+   Blaze initially shares the verified rig behavior; elemental differences remain open.
+2. **Batt / Bullbatt:** distinguish bite/sonic delivery and investigate confusion.
+3. **Finjer R/B/G:** shooting versus segmented spin and variant effects.
+4. **Tank / swordman families:** verify roster/model identities, then distinct kits.
+5. **Mother variants:** verify identities and weapon/technique/warp sequences.
+6. **Mixed groups:** spacing, simultaneous telegraphs, target changes and fair
+   recovery windows, after the individual family passes are stable.
+
+Automated completion is not visual approval. Stop at a clear user playtest
+checkpoint for each new family; preserve subsequent phases as pending work.
+
 ## Combat fidelity pass — October 2026
 
 ### Coliseum playtest observations — October 7
@@ -248,3 +268,28 @@ The enemy runtime has no direct references to these named `ef_*` viewer assets. 
 **Not covered by this viewer:** local `chaos_sorcerer`, `poison_lily`, `shinowa`, `sinow_beat`, and `sinow_gold` have no matching model page. They require their own asset/reference audit.
 
 **Coverage limits:** Model inventories are not attack event tables. Range, release frames, hit volumes, status probabilities, invulnerability and exact clip meanings still need recorded gameplay, saved user observations, or decoded behavior evidence. No runtime definitions were changed by this audit.
+
+### Helion implementation checkpoint
+
+The October 7 viewer audit above is a pre-implementation snapshot. Helion and
+Blaze Helion now use `lunging_melee`, with `atk` close claws and `atkb` distant
+spin-lunge. Imported durations are 1.3167 s and 0.9000 s. Inspecting all eight
+poses per clip confirmed that `atkb` embeds about 16 source units of forward
+`Point_Spine01` translation; its instance-local animation now preserves height
+and rotation while collision-driven movement supplies planar travel.
+
+Initial tuning: claws through 2.5 m, lunge to 7 m, active windows 30–60% and
+15–70% respectively. The lunge commits direction/range, sweeps one contact, stops
+at walls/floor edges, and cannot damage during preparation or recovery.
+Blaze shares this verified rig mapping; elemental differences remain unverified.
+
+Validation: 4,843 Godot checks and 698 web tests passed (4 web skips), plus
+TypeScript, spec build, code-graph and orphan checks. Both real-rig Coliseum
+probes passed claws, lunge, dodge at impact, wall blocking, weapon contact,
+enemy damage, and room clear using disposable saves. The pure tests also cover
+interruption/death, slow-frame sweep, floor gating, and shared-animation safety.
+Repeat with `PSZ_ENEMY_RUNTIME_CHECK=1 PSZ_COLISEUM_ENEMY=helion` (or
+`blaze_helion`) and the existing Coliseum probe in a disposable project.
+
+Next user checkpoint: Helion's close claw readability, distant spin alignment,
+dodge opportunity and recovery duration. After feedback/tuning, proceed to bats.

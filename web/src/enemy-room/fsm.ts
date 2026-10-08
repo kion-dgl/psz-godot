@@ -50,6 +50,7 @@ export interface CurrentAttack {
   };
   /** kind: 'leap' — travel from → target during the damaging window, AoE at landing. */
   leap?: { from: Vec2; target: Vec2 };
+  lunge?: { distance: number; progress: number };
   /** windup_clips prelude: cumulative end-times per clip; pure telegraph before the attack clip. */
   windup?: { clips: string[]; ends: number[]; total: number };
 }
@@ -562,6 +563,9 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           atk.leap = { from: { ...sim.pos }, target: { ...playerPos } };
         }
       }
+      if (atk.lunge && atk.windowOpened && !atk.windowClosed) {
+        processLunge(sim, entry, input, events, windowStart, windowEnd);
+      }
       // Leap flight: the enemy itself travels during the window.
       if (atk.leap && atk.windowOpened && !atk.windowClosed) {
         const f = Math.min(Math.max((atk.t - windowStart) / (windowEnd - windowStart), 0), 1);
@@ -868,6 +872,7 @@ function startAttack(
     windowOpened: false,
     windowClosed: false,
     windup,
+    lunge: kind === 'lunge' ? { distance: Math.min(dist + 0.5, def.max_range), progress: 0 } : undefined,
   };
   sim.attackCooldown = entry.stats.attack_cooldown;
   events.push({
@@ -1067,4 +1072,23 @@ function endAttack(sim: EnemySim, entry: ResolvedEntry, events: SimEvent[], rng:
   sim.lowerTimer = entry.archetype === 'stance_riser' ? (input.clipDurationFor('wt2w') ?? 0) : 0;
   sim.anim = sim.lowerTimer > 0 ? 'wt2w' : 'wlk';
   sim.velocity = { x: 0, z: 0 };
+}
+
+/** Flat-arena counterpart of EnemyLunge: single swept contact on committed travel. */
+function processLunge(sim: EnemySim, entry: ResolvedEntry, input: SimInput, events: SimEvent[], start: number, end: number): void {
+  const atk = sim.currentAttack!;
+  const lunge = atk.lunge!;
+  const progress = Math.max(0, Math.min(1, (atk.t - start) / (end - start)));
+  const travel = lunge.distance * Math.max(0, progress - lunge.progress);
+  lunge.progress = progress;
+  const dx = atk.facing.x * travel, dz = atk.facing.z * travel;
+  const ox = input.playerPos.x - sim.pos.x, oz = input.playerPos.z - sim.pos.z;
+  const lengthSq = dx * dx + dz * dz;
+  const t = lengthSq > 0 ? Math.max(0, Math.min(1, (ox * dx + oz * dz) / lengthSq)) : 0;
+  sim.pos.x += dx; sim.pos.z += dz;
+  if (!atk.resolved && Math.hypot(ox - dx * t, oz - dz * t) <= atk.def.hit_reach + input.playerRadius) {
+    atk.resolved = true;
+    events.push(input.playerInvincible ? { type: 'hit_dodged', attack: atk.def }
+      : { type: 'hit', attack: atk.def, damage: Math.round(entry.stats.attack_base * atk.def.damage_mult) });
+  }
 }
