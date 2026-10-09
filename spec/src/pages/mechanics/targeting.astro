@@ -26,13 +26,20 @@ import Concept from '../../layouts/Concept.astro';
     <li><strong>Destructibles (boxes)</strong> ride the <code>enemies</code> group so they can be targeted, reticled, and smashed — but they carry no <code>enemy_data</code>, and when one is the primary target the info panel <strong>MUST NOT render</strong> (PSO shows no details for containers).</li>
   </ul>
 
-  <h2>Hit resolution — the damaging frame</h2>
+  <h2>Hit resolution — melee active window (#554)</h2>
   <ul>
-    <li>A swing resolves its hits <strong>once</strong>, when the animation crosses the step's <strong>damaging frame</strong> (<code>damaging_frac</code>, a per-step fraction of the swing clip — data, per weapon type). Before that frame the swing MUST NOT damage anything; after it, later arrivals into the cone MUST NOT be hit by the same swing.</li>
-    <li>At the damaging frame, melee hits the <strong>nearest <code>max_targets</code> enemies in the cone</strong>, applying the step's damage/knockback/element per the existing damage dict (<code>hits_per_step</code> hits each via <code>Hurtbox.take_hit</code>). Ranged weapon types fire their projectiles at the damaging frame instead.</li>
-    <li>A damage interrupt <em>before</em> the damaging frame means the swing lands nothing — an interrupted swing does no damage (consistent with #377 commitment and the #428 lifetime invariant: exits from ATTACKING clear all pending offense).</li>
-    <li><em>Replaced model:</em> the old always-on Area3D box (active from swing start to step end) is retired for melee; the box config keys remain only for legacy consumers until they migrate.</li>
+    <li>Player melee MUST scan each physics tick from the step's <code>damaging_frac</code> (inclusive) to <code>damage_end_frac</code> (exclusive). Empty scans MUST NOT consume the swing. Initial tuning ends the window 0.15 clip fractions after its existing opening; these are playability values, not recovered DS timings.</li>
+    <li>Across the entire swing, at most <code>max_targets</code> distinct enemies receive one hit bundle each, nearest eligible first on each scan. A bundle preserves the existing <code>hits_per_step</code> count (including dagger/claw multi-hits). Previously contacted enemies MUST NOT receive another bundle or block later eligible targets. Contact consumes the target slot even if evasion or immunity rejects damage.</li>
+    <li>Each scan uses the current player position and committed swing facing with the existing cone dimensions. This change does not increase spatial reach or allow mid-swing steering. A physics step that skips the entire window MUST sample contact once; this is a current-position fallback, not a swept melee volume. Once the window closes, later arrivals MUST NOT be hit.</li>
+    <li>Ranged attacks MUST still launch exactly one projectile volley when crossing <code>damaging_frac</code>. Technique casts use their own delivery and MUST NOT perform weapon scans.</li>
+    <li>Every exit from ATTACKING MUST cancel pending contact. A new swing MUST reset its target budget, including combo follow-ups and strong attacks.</li>
+    <li>The old always-on Area3D box remains inactive for melee. Companion timing retains its separately specified single-frame behavior.</li>
   </ul>
+
+  <h3>Reference cross-check and automated confirmation (#554)</h3>
+  <p>The pinned evidence is <code>data/re_reference/melee_contact_evidence.json</code>. At psz-re <code>a84b8fd</code>, <code>tools/plyevents.py</code> interprets DSIF bytes +0x08…+0x0c as discrete hit events; the male saber records have frames 9 / 10 / 15 and dagger records have [7,15] / [11] / [11,22,31]. These are not contact-window end frames. Godot's dagger bundles remain 2 / 2 / 3, a known difference from the retail 2 / 1 / 3 events.</p>
+  <p>At pszm-decomp <code>a3836af</code>, <code>FUN_02072774</code> is a <strong>nonmatching draft</strong> with recorded bounded synthetic tests. It suppresses remembered record keys, supports optional aging and configurable dispatch modes. Matched helpers <code>FUN_02072bac</code> and <code>FUN_02072b0c</code> support flag/teardown operations; they do not establish player swing lifetime. Neither inspected reference confirms Godot's 0.15 window, simultaneous bundles, or per-swing owner cap. Player activation/deactivation callsites and any Mini-specific overrides remain unestablished.</p>
+  <p>Automated Godot confirmation MUST include equipped saber, sword and daggers on their imported clips, normal physics ticks and real Hurtbox signals. No synthetic clip lengths or direct attack-timer advancement are allowed in this live layer. Test early-only targets, active-window entry, post-close entry, interruption and all three queued combo steps. Record actual clip names/lengths, contact fractions and counts; missing clips MUST fail. Seeded unit tests remain the boundary and target-budget layer. Passing either layer confirms the documented Godot contract, not DS parity.</p>
 
   <h2>Ranged contact reliability (combat fidelity pass)</h2>
   <ul>
@@ -58,8 +65,8 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Implemented by</h2>
   <ul>
     <li><code>scripts/3d/combat/cone_targeting.gd</code> (ConeTargeting) — the pure cone test (unit-tested directly).</li>
-    <li><code>scripts/autoloads/combat_manager.gd</code> — <code>hit_h_dist</code> / <code>hit_v_dist</code> / <code>hit_h_angle_deg</code> / <code>damaging_frac</code> per weapon type.</li>
-    <li><code>scripts/3d/player/player.gd</code> — <code>_update_combat_targets</code> (cone scan, primary + <code>_primary_target_info</code>), <code>_handle_attack_state</code> (damaging-frame trigger), <code>_execute_attack_hit</code> (melee cone hits / ranged projectiles).</li>
+    <li><code>scripts/autoloads/combat_manager.gd</code> — <code>hit_h_dist</code> / <code>hit_v_dist</code> / <code>hit_h_angle_deg</code> / <code>damaging_frac</code> / <code>damage_end_frac</code> per weapon type.</li>
+    <li><code>scripts/3d/player/player.gd</code> — <code>_update_combat_targets</code> (cone scan, primary + <code>_primary_target_info</code>), <code>_handle_attack_state</code> (melee window / ranged release), <code>_execute_attack_hit</code> (melee cone hits / ranged projectiles).</li>
     <li><code>scripts/3d/field/field_hud.gd</code> — <code>_TargetInfoPanel</code> + the restyled <code>_QuickWeaponMenu</code>; <code>scripts/ui/psz_panel.gd</code> (PszPanel).</li>
     <li><code>scripts/3d/elements/drop_base.gd</code> — drops join the <code>drops</code> group for the HUD scan.</li>
   </ul>

@@ -1,0 +1,800 @@
+{
+  "revision": "3fe28100199184f9da83a04ed4d1d70afa98688e",
+  "scope": "Godot behavior contract, not original-game parity",
+  "seed": 554,
+  "godot_version": "4.5.1.stable.official.f62fdbde1",
+  "fixed_fps": 60,
+  "input_sha256": {
+    "scripts/3d/player/player.gd": "03ac5dc1318ce2b6b7ce6a21aa595c61f3b80f06944b69692cbcc0d2698abf7a",
+    "scripts/autoloads/combat_manager.gd": "3774bf6533237ab51d579ea15b5a3b7ea7657b15a890eb3781366ed579255e25",
+    "scripts/tools/melee_live_check.gd": "ca39e139afab00cd603c15bbb3b709d253323fe8e4380b66ae15a84876dee501",
+    "scripts/tools/melee_window_tests.gd": "f1569f6ab5b4fcc91c73bd294c42a4ad019ad6971c312c4448406412ae720b71",
+    "scripts/tools/verify_melee_contact.py": "e1bb7447b7cf9b96804369bdb667ed35dff107d7eb1c74f0b8afc1f3cae8e0ad",
+    "data/re_reference/melee_contact_evidence.json": "4e511555418422ff0e30d52e39d8ed21b8073f958498cd24dfcd78a3850f97e7"
+  },
+  "references": {
+    "psz_re": {
+      "checked": true,
+      "revision": "a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93",
+      "passed": true
+    },
+    "pszm_decomp": {
+      "checked": true,
+      "revision": "a3836afc1780ee8a41078d4f1299141252a8f91b",
+      "passed": true
+    }
+  },
+  "checks": {
+    "unit": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "timed_out": false,
+      "log": "unit.log",
+      "cases": [],
+      "summary": {
+        "passed": 7374,
+        "failed": 0
+      }
+    },
+    "live": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "timed_out": false,
+      "log": "live.log",
+      "cases": [
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "early_only",
+          "passed": true,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            1,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsa_atk1",
+              "animation_position": 0.233333333333333,
+              "fraction": 0.470588189095366,
+              "step": 1
+            }
+          ],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": true,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "after_close",
+          "passed": true,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "interrupt",
+          "passed": true,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            1,
+            1,
+            1
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            },
+            "2": {
+              "length": 0.583333373069763,
+              "name": "pmsa_atk2"
+            },
+            "3": {
+              "length": 0.533333361148834,
+              "name": "pmsa_atk3"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsa_atk1",
+              "animation_position": 0.233333333333333,
+              "fraction": 0.470588189095366,
+              "step": 1
+            },
+            {
+              "animation": "pmsa_atk2",
+              "animation_position": 0.25,
+              "fraction": 0.457142826002473,
+              "step": 2
+            },
+            {
+              "animation": "pmsa_atk3",
+              "animation_position": 0.25,
+              "fraction": 0.531249972293155,
+              "step": 3
+            }
+          ],
+          "expected": [
+            1,
+            1,
+            1
+          ],
+          "finished": true,
+          "mode": "combo",
+          "passed": true,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "early_only",
+          "passed": true,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            1,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.316666666666667,
+              "fraction": 0.456521713102699,
+              "step": 1
+            }
+          ],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": true,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "after_close",
+          "passed": true,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "interrupt",
+          "passed": true,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            1,
+            1,
+            1
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            },
+            "2": {
+              "length": 0.750000059604645,
+              "name": "pmsw_atk2"
+            },
+            "3": {
+              "length": 0.816666722297668,
+              "name": "pmsw_atk3"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.316666666666667,
+              "fraction": 0.456521713102699,
+              "step": 1
+            },
+            {
+              "animation": "pmsw_atk2",
+              "animation_position": 0.333333333333333,
+              "fraction": 0.466666629579335,
+              "step": 2
+            },
+            {
+              "animation": "pmsw_atk3",
+              "animation_position": 0.383333333333333,
+              "fraction": 0.51020404687776,
+              "step": 3
+            }
+          ],
+          "expected": [
+            1,
+            1,
+            1
+          ],
+          "finished": true,
+          "mode": "combo",
+          "passed": true,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "early_only",
+          "passed": true,
+          "weapon": "daggers"
+        },
+        {
+          "actual": [
+            2,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            }
+          ],
+          "expected": [
+            2,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": true,
+          "weapon": "daggers"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "after_close",
+          "passed": true,
+          "weapon": "daggers"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "interrupt",
+          "passed": true,
+          "weapon": "daggers"
+        },
+        {
+          "actual": [
+            2,
+            2,
+            3
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            },
+            "2": {
+              "length": 0.616666674613953,
+              "name": "pmda_atk2"
+            },
+            "3": {
+              "length": 0.866666734218597,
+              "name": "pmda_atk3"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk2",
+              "animation_position": 0.233333333333333,
+              "fraction": 0.405405400180747,
+              "step": 2
+            },
+            {
+              "animation": "pmda_atk2",
+              "animation_position": 0.233333333333333,
+              "fraction": 0.405405400180747,
+              "step": 2
+            },
+            {
+              "animation": "pmda_atk3",
+              "animation_position": 0.366666666666667,
+              "fraction": 0.461538425564063,
+              "step": 3
+            },
+            {
+              "animation": "pmda_atk3",
+              "animation_position": 0.366666666666667,
+              "fraction": 0.461538425564063,
+              "step": 3
+            },
+            {
+              "animation": "pmda_atk3",
+              "animation_position": 0.366666666666667,
+              "fraction": 0.461538425564063,
+              "step": 3
+            }
+          ],
+          "expected": [
+            2,
+            2,
+            3
+          ],
+          "finished": true,
+          "mode": "combo",
+          "passed": true,
+          "weapon": "daggers"
+        }
+      ]
+    },
+    "single_sample": {
+      "passed": false,
+      "exit_code": 1,
+      "script_errors": false,
+      "timed_out": false,
+      "log": "single_sample.log",
+      "cases": [
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [],
+          "expected": [
+            2,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "daggers"
+        }
+      ],
+      "rejected": true,
+      "case_count": 15
+    },
+    "duplicate_contacts": {
+      "passed": false,
+      "exit_code": 1,
+      "script_errors": false,
+      "timed_out": false,
+      "log": "duplicate_contacts.log",
+      "cases": [
+        {
+          "actual": [
+            3,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.566666722297668,
+              "name": "pmsa_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsa_atk1",
+              "animation_position": 0.233333333333333,
+              "fraction": 0.470588189095366,
+              "step": 1
+            },
+            {
+              "animation": "pmsa_atk1",
+              "animation_position": 0.25,
+              "fraction": 0.499999950913827,
+              "step": 1
+            },
+            {
+              "animation": "pmsa_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.529411712732287,
+              "step": 1
+            }
+          ],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "saber"
+        },
+        {
+          "actual": [
+            5,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.76666671037674,
+              "name": "pmsw_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.316666666666667,
+              "fraction": 0.456521713102699,
+              "step": 1
+            },
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.333333333333333,
+              "fraction": 0.478260842298066,
+              "step": 1
+            },
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.35,
+              "fraction": 0.499999971493432,
+              "step": 1
+            },
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.366666666666667,
+              "fraction": 0.521739100688799,
+              "step": 1
+            },
+            {
+              "animation": "pmsw_atk1",
+              "animation_position": 0.383333333333333,
+              "fraction": 0.543478229884166,
+              "step": 1
+            }
+          ],
+          "expected": [
+            1,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "sword"
+        },
+        {
+          "actual": [
+            10,
+            0,
+            0
+          ],
+          "clips": {
+            "1": {
+              "length": 0.733333349227905,
+              "name": "pmda_atk1"
+            }
+          },
+          "contacts": [
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.266666666666667,
+              "fraction": 0.409090900224103,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.283333333333333,
+              "fraction": 0.431818172458775,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.283333333333333,
+              "fraction": 0.431818172458775,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.3,
+              "fraction": 0.454545444693447,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.3,
+              "fraction": 0.454545444693447,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.316666666666667,
+              "fraction": 0.47727271692812,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.316666666666667,
+              "fraction": 0.47727271692812,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.333333333333333,
+              "fraction": 0.499999989162792,
+              "step": 1
+            },
+            {
+              "animation": "pmda_atk1",
+              "animation_position": 0.333333333333333,
+              "fraction": 0.499999989162792,
+              "step": 1
+            }
+          ],
+          "expected": [
+            2,
+            0,
+            0
+          ],
+          "finished": true,
+          "mode": "late_entry",
+          "passed": false,
+          "weapon": "daggers"
+        }
+      ],
+      "rejected": true,
+      "case_count": 15
+    }
+  },
+  "passed": true,
+  "log_note": "Full logs and all mutation cases are generated by verify_melee_contact.py in the selected output directory. This snapshot retains all passing cases and the mutation failure signatures."
+}

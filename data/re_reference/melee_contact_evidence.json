@@ -1,0 +1,142 @@
+{
+  "issue": 554,
+  "sources": {
+    "psz_re": {
+      "revision": "a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93",
+      "files": {
+        "data/player_combo_windows.json": "b61c8d3c7e1e16b35827d20d36e2d467e3097721821e6b8d93216584a8edc9a3",
+        "tools/plyevents.py": "9f0a707eca3b4174395fbd46f202f635d95ae6cf7fc70004016a934ce9f764fb",
+        "nodes/sys.player-animation-timings.json": "e6fe5eefe29d20df6c4e2cfc7f57f5bf51c37a8d44e5fc7bd0793e3a55d2dce6"
+      }
+    },
+    "pszm_decomp": {
+      "revision": "a3836afc1780ee8a41078d4f1299141252a8f91b",
+      "files": {
+        "drafts/near/arm9/FUN_02072774.c": "9928a2fcd6d5fd1331526910f91ca016dd63ea87f2f8d0a1dccbe642c798c85a",
+        "notes/sessions/session-live-hot5-2026-09-16.md": "28e49c44ec4dd60ce805baae7e412ad923f50b36d05269923db3233234aa3283",
+        "src/arm9/FUN_02072bac.c": "13a6ce9f3d9bfcc6ebe3c5e93fe4c9d7c5898d67dd9fde35eadf50875af60d8d",
+        "src/arm9/FUN_02072b0c.c": "e5b15fbec5dbcdfbdd2520f9271e9eea99cf686eb01557f10f69b4cc74c205a5"
+      }
+    }
+  },
+  "conclusion": "Neither inspected source establishes a player melee collision lifetime of 0.15 clip fractions. Keep this as provisional Godot tuning.",
+  "retail_examples": [
+    {
+      "archive": "01_saver_m",
+      "weapon_type": 1,
+      "file_name": "saver",
+      "build": "m",
+      "animation_key": "sa",
+      "attacks": {
+        "atk1": {
+          "length": 35,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "02_sword_m",
+      "weapon_type": 2,
+      "file_name": "sword",
+      "build": "m",
+      "animation_key": "sw",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 18,
+          "chain_closes": 30,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 22,
+          "chain_closes": 34,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk3": {
+          "length": 50,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "03_dagger_m",
+      "weapon_type": 3,
+      "file_name": "dagger",
+      "build": "m",
+      "animation_key": "da",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 18,
+          "chain_closes": 28,
+          "hit_frames": [
+            7,
+            15
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 53,
+          "hit_frames": [
+            11,
+            22,
+            31
+          ]
+        }
+      }
+    }
+  ],
+  "mini_scanner": {
+    "function": "FUN_02072774",
+    "status": "nonmatching draft; reported 128/128 bounded synthetic differential cases, not rerun here",
+    "observations": [
+      "Records keyed by record+0x38 are remembered in 15 entries at state+0x50.",
+      "Existing keys skip dispatch; unseen keys are stored before FUN_02044f2c.",
+      "Nonzero state+0x8c enables remembered-entry aging; this is not proof of once-per-player-swing lifetime.",
+      "The dispatch mode, target flags, and teardown behavior are configurable."
+    ],
+    "unknowns": [
+      "Player melee caller and record lifetime",
+      "Event-to-collision activation/deactivation mapping",
+      "Whether any inspected behavior has a Mini-specific override"
+    ]
+  },
+  "godot_differences": [
+    "A single active window with configured simultaneous multi-hit bundles rather than separately timed retail events.",
+    "Daggers currently use 2/2/3 contacts; retail male dagger records contain 2/1/3 hit events.",
+    "Unique-owner cap for the whole Godot swing is a playability contract; Mini remembers record keys and can age them."
+  ],
+  "validation_scope": "Godot tests verify the explicit port contract; they do not establish original-game parity."
+}

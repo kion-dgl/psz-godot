@@ -60,6 +60,8 @@ const chart = `stateDiagram-v2
   <h3>ATTACKING</h3>
   <p>Active during a melee swing, projectile shot, or technique cast. Entering ATTACKING from a non-attacking state swaps the weapon hold orientation to <em>attack</em> (<code>_set_weapon_hold("attack")</code>); leaving ATTACKING for any other state swaps it back to <em>idle</em>. Horizontal velocity is held at zero for the whole state (<code>_handle_attack_state</code>). The avatar leaves ATTACKING when the attack/technique animation finishes, when the combo window is missed, or when the final combo step completes — all routing to IDLE. See <a href={siteUrl('/mechanics/combos')}>Combat Combos</a> and <a href={siteUrl('/mechanics/techs')}>Techniques</a>.</p>
 
+  <p>During a player melee swing, ATTACKING MUST rescan the hit cone throughout the active <code>damaging_frac</code> → <code>damage_end_frac</code> window. Each enemy receives at most one configured hit bundle per swing, with a shared per-swing target cap. Exiting ATTACKING cancels remaining contact; each new combo step resets this budget. Ranged release and technique delivery retain their own timing. See <a href={siteUrl('/mechanics/targeting')}>Hit resolution</a> for boundaries and slow-frame behavior (#554).</p>
+
   <h3>DODGING</h3>
   <p>A forward roll in the avatar's facing direction at the moment the dodge started. The avatar stays in DODGING for the full clip; the move phase applies velocity, the recovery phase zeroes it. DODGING <strong>MUST</strong> end in IDLE — either when the dodge animation finishes (<code>_on_animation_finished</code>) or, as a backstop, when <code>DODGE_DURATION</code> (0.8&nbsp;s) elapses in <code>_handle_dodge</code>. See <a href={siteUrl('/mechanics/dodge')}>Dodge</a>.</p>
 

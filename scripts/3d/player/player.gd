@@ -195,7 +195,9 @@ var _combo_fumbled: bool = false  # Miss-early press locked out this swing's cha
 var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
-var _attack_hit_done: bool = false  # This swing's damaging frame already resolved (spec /mechanics/targeting)
+var _attack_hit_done: bool = false  # Window closed, target cap consumed, or volley released.
+var _attack_hit_targets: Dictionary = {}  # Enemy instance IDs consumed across this swing.
+var _attack_damage_snapshot: Dictionary = {}  # One damage roll per swing, independent of scan rate.
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
 # Combo timing visual
 var _combo_ring: MeshInstance3D = null
@@ -2131,21 +2133,9 @@ func _spawn_heal_number(heal_type: String, amount: int) -> void:
 
 
 func _handle_attack_state(delta: float) -> void:
-	# Track animation elapsed for the fraction-based combo windows (#155)
+	var previous_elapsed := _attack_anim_elapsed
 	_attack_anim_elapsed += delta
-
-	# Damaging frame (spec /mechanics/targeting): the swing's hits resolve
-	# exactly once, when the animation crosses the step's damaging_frac.
-	# Before it the swing has landed nothing (a damage interrupt cancels the
-	# offense entirely); after it, enemies entering the cone later are not
-	# hit by this swing. combo_state == 0 means a technique cast — techniques
-	# spawn their own effects and never go through the weapon hit.
-	if not _attack_hit_done and combo_state > 0 and _attack_anim_length > 0:
-		var dmg_fracs: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("damaging_frac", [0.4, 0.4, 0.45])
-		var frac_idx: int = clampi(combo_state - 1, 0, dmg_fracs.size() - 1)
-		if _attack_frac() >= float(dmg_fracs[frac_idx]):
-			_attack_hit_done = true
-			_execute_attack_hit()
+	_update_attack_contact(previous_elapsed)
 
 	# Step-end safety net, generalized to EVERY step (was final-step-only —
 	# Rozalin's mechgun root bug: a looping attack animation never emits
@@ -2166,6 +2156,30 @@ func _handle_attack_state(delta: float) -> void:
 	# Stop horizontal movement during attacks
 	velocity.x = 0
 	velocity.z = 0
+
+
+## Melee retries until close/cap; ranged keeps one release. A skipped window
+## gets one current-position scan so slow frames do not erase the whole swing.
+func _update_attack_contact(previous_elapsed: float) -> void:
+	if current_state != PlayerState.ATTACKING or _attack_hit_done or combo_state <= 0 or _attack_anim_length <= 0:
+		return
+	var weapon_type := _get_equipped_weapon_type()
+	var config := CombatManager.get_weapon_type_config(weapon_type)
+	var openings: Array = config.get("damaging_frac", [0.4, 0.4, 0.45])
+	var index := clampi(combo_state - 1, 0, openings.size() - 1)
+	var opening := float(openings[index]) * _attack_anim_length
+	if _attack_anim_elapsed < opening:
+		return
+	if weapon_type in RANGED_WEAPON_TYPES:
+		_attack_hit_done = true
+		_execute_attack_hit()
+		return
+	var endings: Array = config.get("damage_end_frac", [0.55, 0.55, 0.60])
+	var closing := float(endings[clampi(combo_state - 1, 0, endings.size() - 1)]) * _attack_anim_length
+	if _attack_anim_elapsed < closing or previous_elapsed < opening:
+		_execute_attack_hit()
+	if _attack_anim_elapsed >= closing:
+		_attack_hit_done = true
 
 
 func _handle_damaged(_delta: float) -> void:
@@ -2257,9 +2271,10 @@ func _arm_attack_step(anim_name: String) -> void:
 func _play_and_track_attack(anim_name: String) -> void:
 	play_animation(anim_name, false)
 	_arm_attack_step(anim_name)
-	# Hits resolve at the step's damaging frame (_handle_attack_state), not
-	# at swing start — spec /mechanics/targeting.
+	# Each new swing owns a fresh window and target budget.
 	_attack_hit_done = false
+	_attack_hit_targets.clear()
+	_attack_damage_snapshot.clear()
 	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
 	# Barehanded is discriminated here by the empty weapon_id (NOT by the weapon
 	# type, which falls back to 0 == SABER): map it to BAREHANDED_SFX (common46)
@@ -2710,13 +2725,15 @@ func _is_barehanded() -> bool:
 const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RIFLE, BAZOOKA
 
 
-## Fired once per swing, at the damaging frame (spec /mechanics/targeting).
-## Ranged types launch their projectiles; melee hits the nearest max_targets
+## Called during the active window (spec /mechanics/targeting).
+## Ranged types launch once; melee consumes the nearest remaining max_targets
 ## enemies in the weapon's hit cone — the same geometry targeting and the
 ## reticles use, applied directly through each enemy's Hurtbox (the old
 ## whole-swing Area3D box is retired for melee).
 func _execute_attack_hit() -> void:
-	var atk: Dictionary = _get_attack_damage()
+	if _attack_damage_snapshot.is_empty():
+		_attack_damage_snapshot = _get_attack_damage()
+	var atk: Dictionary = _attack_damage_snapshot
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
 	if weapon_type in RANGED_WEAPON_TYPES:
@@ -2727,17 +2744,26 @@ func _execute_attack_hit() -> void:
 	var in_cone: Array = _enemies_in_hit_cone(config)
 	var element: String = _current_attack_element if _is_special_attack else ""
 	var element_level: int = _current_attack_element_level if _is_special_attack else 0
-	for i in range(mini(int(atk.get("max_targets", 1)), in_cone.size())):
-		var enemy = in_cone[i]
+	var target_cap := int(atk.get("max_targets", 1))
+	for enemy in in_cone:
+		if _attack_hit_targets.size() >= target_cap:
+			break
+		var target_id: int = enemy.get_instance_id()
+		if _attack_hit_targets.has(target_id):
+			continue
 		var hb = enemy.get("hurtbox")
 		if hb == null or not is_instance_valid(hb):
 			continue
+		# Consume contact before callbacks: evasion/immunity cannot re-roll.
+		_attack_hit_targets[target_id] = true
 		var knock_dir: Vector3 = enemy.global_position - global_position
 		knock_dir.y = 0
 		knock_dir = knock_dir.normalized()
 		# hits_per_step hits each, mirroring the retired Hitbox semantics
 		for _h in range(int(atk.get("hits", 1))):
 			hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level)
+	if _attack_hit_targets.size() >= target_cap:
+		_attack_hit_done = true
 
 
 ## Alive enemies passing the weapon's hit cone, sorted nearest-first.
@@ -2796,6 +2822,9 @@ func _fire_projectile(atk: Dictionary) -> void:
 
 
 func _deactivate_attack_hitbox() -> void:
+	_attack_hit_done = true
+	_attack_hit_targets.clear()
+	_attack_damage_snapshot.clear()
 	if attack_hitbox:
 		attack_hitbox.deactivate()
 

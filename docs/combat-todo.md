@@ -1,5 +1,83 @@
 # Combat System TODO
 
+## Melee active contact window — #554
+
+Player melee now retries the existing cone during an active window from each
+step's `damaging_frac` through an exclusive `damage_end_frac`. Initial close
+values are opening + 0.15 clip fractions, a playability choice awaiting feel
+review. Each swing consumes at most its configured target cap, with one existing
+multi-hit bundle per enemy; evasion cannot earn a new attempt on the next tick.
+Damage variance is sampled once per swing. Ranged release, cone reach and
+committed facing keep their existing behavior. A skipped window samples once at
+the current positions; this is not swept melee collision.
+
+The state and targeting specs define cancellation, boundaries and budgets.
+Seed-554 tests reproduced 65 failures before implementation. The final Godot
+suite passes 7,374 checks, including all melee config steps, late arrivals,
+closure, slow frames, interruption, multi-target deduplication, strong elements
+and ranged release. The real-rig Helion Coliseum probe passes late-entry/dedup,
+after-close exclusion, four projectile checks, enemy damage and room clear.
+Local missing audio imports/minimap warnings remain; there are no script errors.
+
+Reproduce using a disposable save project (the runner creates test characters):
+`godot --headless --path <isolated-project> res://scripts/tools/test_runner.tscn`
+and
+`PSZ_COLISEUM_ENEMY=helion godot --headless --fixed-fps 60 --path <isolated-project> res://scripts/tools/coliseum_probe.tscn`.
+Require `RESULTS: 7374 passed, 0 failed`, `[coliseum] DONE ok`, and no script
+errors. Human checkpoint: moving targets with saber, sword and daggers; assess
+whether the added 15% active duration feels reliable without lingering contact.
+#554 remains open pending that check. Companion timing and inactive legacy
+player hitbox cleanup remain outside this change.
+
+### Source cross-check and live animation automation
+
+Reviewed psz-re `a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93` and
+pszm-decomp `a3836afc1780ee8a41078d4f1299141252a8f91b`. The extracted retail
+hit-event examples, source-file SHA-256 hashes, confidence and differences are
+in `data/re_reference/melee_contact_evidence.json`.
+
+- psz-re `tools/plyevents.py` / `data/player_combo_windows.json` describe
+  discrete DSIF hit-event frames, not collision-window ends. Male saber events:
+  9 / 10 / 15; sword: 15 / 15 / 22; daggers: [7,15] / [11] / [11,22,31].
+  Godot's dagger 2/2/3 simultaneous bundles differ from those 2/1/3 events.
+- Mini `drafts/near/arm9/FUN_02072774.c` remembers record keys before dispatch,
+  suppresses duplicates, and supports optional aging. It is NOT byte-matched;
+  its session note reports 128 bounded synthetic comparisons with stubbed
+  callees, not original-game replacement proof. Matched `FUN_02072bac` and
+  `FUN_02072b0c` cover flags/teardown, not the player attack lifetime.
+- Neither source establishes our 15% active duration, simultaneous bundles,
+  or per-swing owner cap. No Mini-specific override was identified in this
+  inspected path; the player activation/deactivation mapping remains unknown.
+
+The new live layer uses equipped saber/sword/daggers, actual imported clips,
+normal player physics, `_start_attack()` and real enemy Hurtbox signals. It
+never sets attack elapsed/length, forces combo steps or invokes the hit handler.
+Fifteen cases cover early-only targets, late entry, after-close entry,
+interruption and three-step queued combos. Contact records include clip names,
+lengths, animation positions and fractions. Missing clips or incomplete case
+sets fail. These confirm the explicit Godot contract, not DS parity.
+
+Run the complete unit/live check with isolated saves and JSON/log output:
+
+```sh
+python3 scripts/tools/verify_melee_contact.py --godot /path/to/godot \
+  --output /tmp/psz-melee-results \
+  --psz-re /path/to/psz-re --pszm-decomp /path/to/pszm-decomp --calibrate
+```
+
+Reference paths are optional; when supplied their revisions AND file hashes
+must match the pinned evidence. `--calibrate` runs two disposable mutated
+copies and requires all three weapons to expose the reintroduced single-sample
+bug and repeated-contact bug. A parse error or timeout cannot count as a
+successful rejection. Project scripts and saves are isolated; imported assets
+are reused. The existing CI runner includes seeded unit tests; local live
+verification requires the imported player/enemy/stage assets.
+
+Recorded results: 7,374 Godot checks pass; all 15 live cases pass; each mutation
+runs 15 cases and is rejected with the expected late-entry failure signature.
+See `docs/melee-contact-results.json` for inputs and measured contacts. The
+reference evidence and test logs do not substitute for a visual feel check.
+
 ## Inter-swing steering — #560
 
 The accepted chain press now captures camera-relative movement input; the next
