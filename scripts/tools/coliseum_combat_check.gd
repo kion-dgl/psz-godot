@@ -36,6 +36,28 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 		print("[coliseum] weapon %d at %.1fm: %d/%d contacts — %s" % [
 			test.type, test.offset.length(), contacts.size(), test.hits, "PASS" if passed else "FAIL"])
 		ok = ok and passed
+	# #554: the imported player and enemy use the real timing/cone/Hurtbox path.
+	var cfg: Dictionary = CombatManager.get_weapon_type_config(player._get_equipped_weapon_type())
+	var opening := float(cfg.damaging_frac[0])
+	var closing := float(cfg.damage_end_frac[0])
+	var expected := int(cfg.hits_per_step[0])
+	for late in [false, true]:
+		contacts.clear()
+		enemy.current_hp = maxi(enemy_hp, 1000)
+		enemy.global_position = player_pos + Vector3(0, 0, -20)
+		player.combo_state = 1
+		player.current_state = player.PlayerState.ATTACKING
+		player._play_and_track_attack(player._anim_prefix + "_atk1")
+		player._attack_anim_length = 1.0 # Controlled normalized timing on the real rig.
+		player._handle_attack_state(closing if late else opening)
+		enemy.global_position = player_pos + Vector3(0, 0, -1.5)
+		player._handle_attack_state(0.02)
+		player._handle_attack_state(0.02)
+		var passed: bool = contacts.size() == (0 if late else expected)
+		print("[coliseum] melee %s: %d contacts — %s" % [
+			"after-close" if late else "late-entry/dedup", contacts.size(), "PASS" if passed else "FAIL"])
+		ok = ok and passed
+	player.transition_to(player.PlayerState.IDLE)
 	enemy.hurtbox.hit_received.disconnect(capture)
 	enemy.current_hp = enemy_hp
 	enemy.global_position = enemy_pos

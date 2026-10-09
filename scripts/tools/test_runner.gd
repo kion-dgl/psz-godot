@@ -42,6 +42,7 @@ func _run_tests_combat() -> void:
 	preload("res://scripts/tools/combo_turn_tests.gd").run(self)
 	test_cone_targeting()
 	test_damaging_frame()
+	preload("res://scripts/tools/melee_window_tests.gd").run(self)
 	test_target_info_panel()
 	test_area_map_overlay()
 	test_area_map_room_shapes()
@@ -9150,8 +9151,7 @@ func test_cone_targeting() -> void:
 	print("")
 
 
-# Damaging frame (spec /mechanics/targeting): hits resolve exactly once, when
-# the swing crosses the step's damaging_frac — never before. Also pins the
+# Hit timing (spec /mechanics/targeting): melee retries during its window. Pins the
 # per-weapon hit-cone data every config entry must carry.
 func test_damaging_frame() -> void:
 	print("── Damaging frame + hit-cone data ──")
@@ -9177,7 +9177,9 @@ func test_damaging_frame() -> void:
 	pl._handle_attack_state(0.2)  # elapsed 0.2 < saber damaging_frac[0] 0.40
 	assert_true(not bool(pl.get("_attack_hit_done")), "no hit before the damaging frame")
 	pl._handle_attack_state(0.25)  # elapsed 0.45 ≥ 0.40 → resolves (off-tree: empty cone)
-	assert_true(bool(pl.get("_attack_hit_done")), "hit resolves once the damaging frame is crossed")
+	assert_true(not bool(pl.get("_attack_hit_done")), "empty melee scan keeps the window open")
+	pl._handle_attack_state(0.15)
+	assert_true(bool(pl.get("_attack_hit_done")), "empty window closes after its end")
 	pl._play_and_track_attack("no_such_anim")
 	assert_true(not bool(pl.get("_attack_hit_done")), "a new swing starts with its damaging frame pending")
 	pl.free()

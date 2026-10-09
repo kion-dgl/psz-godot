@@ -1,5 +1,34 @@
 # Combat System TODO
 
+## Melee active contact window — #554
+
+Player melee now retries the existing cone during an active window from each
+step's `damaging_frac` through an exclusive `damage_end_frac`. Initial close
+values are opening + 0.15 clip fractions, a playability choice awaiting feel
+review. Each swing consumes at most its configured target cap, with one existing
+multi-hit bundle per enemy; evasion cannot earn a new attempt on the next tick.
+Damage variance is sampled once per swing. Ranged release, cone reach and
+committed facing keep their existing behavior. A skipped window samples once at
+the current positions; this is not swept melee collision.
+
+The state and targeting specs define cancellation, boundaries and budgets.
+Seed-554 tests reproduced 65 failures before implementation. The final Godot
+suite passes 7,374 checks, including all melee config steps, late arrivals,
+closure, slow frames, interruption, multi-target deduplication, strong elements
+and ranged release. The real-rig Helion Coliseum probe passes late-entry/dedup,
+after-close exclusion, four projectile checks, enemy damage and room clear.
+Local missing audio imports/minimap warnings remain; there are no script errors.
+
+Reproduce using a disposable save project (the runner creates test characters):
+`godot --headless --path <isolated-project> res://scripts/tools/test_runner.tscn`
+and
+`PSZ_COLISEUM_ENEMY=helion godot --headless --fixed-fps 60 --path <isolated-project> res://scripts/tools/coliseum_probe.tscn`.
+Require `RESULTS: 7374 passed, 0 failed`, `[coliseum] DONE ok`, and no script
+errors. Human checkpoint: moving targets with saber, sword and daggers; assess
+whether the added 15% active duration feels reliable without lingering contact.
+#554 remains open pending that check. Companion timing and inactive legacy
+player hitbox cleanup remain outside this change.
+
 ## Inter-swing steering — #560
 
 The accepted chain press now captures camera-relative movement input; the next

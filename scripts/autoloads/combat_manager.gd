@@ -101,7 +101,8 @@ const AREA_DROP_NAMES := {
 ## hit_v_angle_deg: vertical half-angle bounding the slope from the apex
 ##   (90 = unbounded, PSO's launchers).
 ##   Tuned in the #/combat-room web tool.
-## damaging_frac: fraction of each step's swing clip where the hit resolves
+## damaging_frac: melee window opening / ranged release fraction per step.
+## damage_end_frac: exclusive melee close; initial #554 tuning, not DS timing.
 const WEAPON_TYPE_CONFIGS := {
 	0: {  # SABER — reliable single hits, moderate speed
 		"turn_limit_deg": [90, 90],
@@ -118,6 +119,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 30.0,
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 1,
 	},
 	1: {  # SWORD — slow heavy hits, big knockback
@@ -135,6 +137,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 45.0,
 		"hit_v_angle_deg": 45.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 3,
 	},
 	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
@@ -152,6 +155,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 22.0,
 		"hit_v_angle_deg": 35.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
+		"damage_end_frac": [0.50, 0.50, 0.55],
 		"max_targets": 1,
 	},
 	3: {  # CLAW — very fast, close range
@@ -169,6 +173,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 20.0,
 		"hit_v_angle_deg": 35.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
+		"damage_end_frac": [0.50, 0.50, 0.55],
 		"max_targets": 1,
 	},
 	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
@@ -186,6 +191,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 60.0,
 		"hit_v_angle_deg": 45.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 3,
 	},
 	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
@@ -203,6 +209,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 40.0,
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 1,
 		"max_targets_per_step": [1, 1, 3],
 	},
@@ -221,6 +228,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 15.0,
 		"hit_v_angle_deg": 30.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 4,
 	},
 	9: {  # HANDGUN — single shots
@@ -238,6 +246,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 10.0,
 		"hit_v_angle_deg": 15.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
+		"damage_end_frac": [0.50, 0.50, 0.55],
 		"max_targets": 1,
 	},
 	10: {  # MECH_GUN — rapid fire spray
@@ -255,6 +264,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 35.0,
 		"hit_v_angle_deg": 20.0,
 		"damaging_frac": [0.30, 0.30, 0.35],
+		"damage_end_frac": [0.45, 0.45, 0.50],
 		"max_targets": 3,
 	},
 	11: {  # RIFLE — slow precision shots; deliberate 3-shot combo (pmar_atk1..3)
@@ -272,6 +282,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 6.0,
 		"hit_v_angle_deg": 10.0,
 		"damaging_frac": [0.35, 0.35, 0.40],
+		"damage_end_frac": [0.50, 0.50, 0.55],
 		"max_targets": 1,
 	},
 	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
@@ -289,6 +300,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 25.0,
 		"hit_v_angle_deg": 90.0,
 		"damaging_frac": [0.40, 0.45],
+		"damage_end_frac": [0.55, 0.60],
 		"max_targets": 5,
 	},
 	13: {  # LASER_CANNON — single heavy beam (l_cannon source has only atk1)
@@ -306,6 +318,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 12.0,
 		"hit_v_angle_deg": 20.0,
 		"damaging_frac": [0.50],
+		"damage_end_frac": [0.65],
 		"max_targets": 5,
 	},
 	14: {  # ROD — melee swing, tech amplifier
@@ -323,6 +336,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 30.0,
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 1,
 	},
 	15: {  # WAND — melee swing, support amplifier
@@ -340,6 +354,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hit_h_angle_deg": 30.0,
 		"hit_v_angle_deg": 40.0,
 		"damaging_frac": [0.40, 0.40, 0.45],
+		"damage_end_frac": [0.55, 0.55, 0.60],
 		"max_targets": 1,
 	},
 }
