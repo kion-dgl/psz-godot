@@ -36,6 +36,11 @@ import Concept from '../../layouts/Concept.astro';
     <li>The old always-on Area3D box remains inactive for melee. Companion timing retains its separately specified single-frame behavior.</li>
   </ul>
 
+  <h3>Reference cross-check and automated confirmation (#554)</h3>
+  <p>The pinned evidence is <code>data/re_reference/melee_contact_evidence.json</code>. At psz-re <code>a84b8fd</code>, <code>tools/plyevents.py</code> interprets DSIF bytes +0x08…+0x0c as discrete hit events; the male saber records have frames 9 / 10 / 15 and dagger records have [7,15] / [11] / [11,22,31]. These are not contact-window end frames. Godot's dagger bundles remain 2 / 2 / 3, a known difference from the retail 2 / 1 / 3 events.</p>
+  <p>At pszm-decomp <code>a3836af</code>, <code>FUN_02072774</code> is a <strong>nonmatching draft</strong> with recorded bounded synthetic tests. It suppresses remembered record keys, supports optional aging and configurable dispatch modes. Matched helpers <code>FUN_02072bac</code> and <code>FUN_02072b0c</code> support flag/teardown operations; they do not establish player swing lifetime. Neither inspected reference confirms Godot's 0.15 window, simultaneous bundles, or per-swing owner cap. Player activation/deactivation callsites and any Mini-specific overrides remain unestablished.</p>
+  <p>Automated Godot confirmation MUST include equipped saber, sword and daggers on their imported clips, normal physics ticks and real Hurtbox signals. No synthetic clip lengths or direct attack-timer advancement are allowed in this live layer. Test early-only targets, active-window entry, post-close entry, interruption and all three queued combo steps. Record actual clip names/lengths, contact fractions and counts; missing clips MUST fail. Seeded unit tests remain the boundary and target-budget layer. Passing either layer confirms the documented Godot contract, not DS parity.</p>
+
   <h2>Ranged contact reliability (combat fidelity pass)</h2>
   <ul>
     <li>Weapon shots MUST use <code>hit_h_dist</code> for travel range, not the retired melee-box dimensions. At release, shots MUST aim at the nearest living target in the weapon's own cone, at its collision center; technique-expanded reticles MUST NOT steer weapon shots. With no target they fire along the player's facing. Aim locks at release, so moving targets can evade.</li>

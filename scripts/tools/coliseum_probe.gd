@@ -161,6 +161,10 @@ class Watch extends Node:
 		elif enemy.dormant:
 			enemy.reveal()
 			await get_tree().physics_frame
+		if OS.get_environment("PSZ_MELEE_LIVE_CHECK") == "1":
+			if not await preload("res://scripts/tools/melee_live_check.gd").run(player, enemy):
+				_fail("live melee animation checks failed")
+				return
 		var ok: bool = await preload("res://scripts/tools/coliseum_combat_check.gd").run(player, enemy)
 		if not ok:
 			_fail("weapon contact verification failed")
