@@ -29,7 +29,7 @@ import { config as loadEnv } from "dotenv";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, "../..");
-loadEnv({ path: resolve(__dirname, ".env") });
+loadEnv({ path: resolve(REPO_ROOT, ".env") });
 
 const MANIFEST_OUT = resolve(REPO_ROOT, "assets_manifest.json");
 const ASSET_TREE_OUT = resolve(REPO_ROOT, "asset_tree.txt");

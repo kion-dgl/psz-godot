@@ -135,6 +135,15 @@ assets/enemies/poison_lily/poison_lily_1.png
 assets/enemies/pso/Poison Lily.glb
 assets/enemies/pso/Poison Lily_0.png
 assets/enemies/pso/Poison Lily_1.png
+assets/enemies/pso_booma/pso_booma.glb
+assets/enemies/pso_booma/pso_booma_0.png
+assets/enemies/pso_booma/pso_booma_1.png
+assets/enemies/pso_gigobooma/pso_gigobooma.glb
+assets/enemies/pso_gigobooma/pso_gigobooma_0.png
+assets/enemies/pso_gigobooma/pso_gigobooma_1.png
+assets/enemies/pso_gobooma/pso_gobooma.glb
+assets/enemies/pso_gobooma/pso_gobooma_0.png
+assets/enemies/pso_gobooma/pso_gobooma_1.png
 assets/enemies/quad/m_042.png
 assets/enemies/quad/quad.glb
 assets/enemies/quad_rare/m_142.png

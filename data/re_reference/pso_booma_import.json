@@ -1,0 +1,92 @@
+{
+  "scale": 0.089,
+  "storage": "R2 raw models/textures and psz.onl dev asset pack",
+  "models": {
+    "pso_booma": {
+      "archive": "ene_booma.zip",
+      "archive_sha256": "00b4ab0f7898333ce884cc69f24df455dbdb606ef08f91b5d412d100b5affbc5",
+      "source_glb_sha256": "b40d38643bc89d770dfff15a522711dd6ff7df9f63a1eefd6eca33eba560d515",
+      "output": "assets/enemies/pso_booma/pso_booma.glb",
+      "output_sha256": "38f548452c192ff36ee1be766a66034d10969ace918804e1df0ae81aa9ed7b98",
+      "animation_names": {
+        "appear_bm1_s_wala_body": "spawn",
+        "atackl_bm1_s_wala_body": "atk_l",
+        "atackr_bm1_s_wala_body": "atk_r",
+        "damage_bm1_s_wala_body": "dam",
+        "dead_bm1_s_wala_body": "ded",
+        "deadb_bm1_s_wala_body": "ded_b",
+        "leader_bm1_s_wala_body": "leader",
+        "mihari_bm1_s_wala_body": "mihari",
+        "run_bm1_s_wala_body": "run",
+        "stund_bm1_s_wala_body": "stun",
+        "wakeup_bm1_s_wala_body": "wakeup",
+        "walk_bm1_s_wala_body": "wlk"
+      }
+    },
+    "pso_gobooma": {
+      "archive": "ene_gobooma.zip",
+      "archive_sha256": "dd13d48e3d6e63552f09d4efa0413657bcef7114711a29c3f628b2cb1c3921f5",
+      "source_glb_sha256": "0b350266b6bab7e71ecb7d55693f3002961e022ee96f03b298563db0774f114a",
+      "output": "assets/enemies/pso_gobooma/pso_gobooma.glb",
+      "output_sha256": "dc55fca77e48d44ca5e4184429f04b19335a5ffd5ab1a1f4e9dd53d99dc9bc08",
+      "animation_names": {
+        "appear_bm1_s_wala_body": "spawn",
+        "atackl_bm1_s_wala_body": "atk_l",
+        "atackr_bm1_s_wala_body": "atk_r",
+        "damage_bm1_s_wala_body": "dam",
+        "dead_bm1_s_wala_body": "ded",
+        "deadb_bm1_s_wala_body": "ded_b",
+        "leader_bm1_s_wala_body": "leader",
+        "mihari_bm1_s_wala_body": "mihari",
+        "run_bm1_s_wala_body": "run",
+        "stund_bm1_s_wala_body": "stun",
+        "wakeup_bm1_s_wala_body": "wakeup",
+        "walk_bm1_s_wala_body": "wlk"
+      }
+    },
+    "pso_gigobooma": {
+      "archive": "ene_gigabooma.zip",
+      "archive_sha256": "9f5efa060637f2c98d1c8311123503cfb18800dd3edc9f7a72afec84ff5badf5",
+      "source_glb_sha256": "f59f57380d3f6611d98043630180e18f11c4270596c01dc95a7c0f3f8b44689d",
+      "output": "assets/enemies/pso_gigobooma/pso_gigobooma.glb",
+      "output_sha256": "f025115044c2f75a6817b52f4674a47251b283fd7b28afbcdd8c45bab5a25710",
+      "animation_names": {
+        "appear_bm1_s_wala_body": "spawn",
+        "atackl_bm1_s_wala_body": "atk_l",
+        "atackr_bm1_s_wala_body": "atk_r",
+        "damage_bm1_s_wala_body": "dam",
+        "dead_bm1_s_wala_body": "ded",
+        "deadb_bm1_s_wala_body": "ded_b",
+        "leader_bm1_s_wala_body": "leader",
+        "mihari_bm1_s_wala_body": "mihari",
+        "run_bm1_s_wala_body": "run",
+        "stund_bm1_s_wala_body": "stun",
+        "wakeup_bm1_s_wala_body": "wakeup",
+        "walk_bm1_s_wala_body": "wlk"
+      }
+    }
+  },
+  "publication": {
+    "r2_base_url": "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev",
+    "pack": {
+      "sha256": "cf2e4d5db9775d07e596deb3e34c0afeacc9276cd10f1fe7ca751fb35de0c280",
+      "size": 334929524,
+      "urls": [
+        "https://pck.psz.onl/cf2e4d5db9775d07e596deb3e34c0afeacc9276cd10f1fe7ca751fb35de0c280.pck"
+      ]
+    },
+    "sidecar": {
+      "urls": [
+        "https://pck.psz.onl/cf2e4d5db9775d07e596deb3e34c0afeacc9276cd10f1fe7ca751fb35de0c280.sidecar.json"
+      ]
+    },
+    "base_pack_sha256": "33898501d818b47a4f0f9f7b4d354ccffdcdf151179598ef18cc189d7e903c1e",
+    "build_method": "Godot PCKPacker: preserve all baseline resources, add 18 imported PSO model/texture resources, merge assets/uid_map.json",
+    "checks": [
+      "all baseline pack entries retained; existing resource bytes unchanged except UID map",
+      "all new pack entry checksums verified",
+      "clean Godot process loads all three models, textures, mihari and swipe clips",
+      "R2 public downloads match local files; preexisting R2 inventory records unchanged"
+    ]
+  }
+}
