@@ -190,6 +190,7 @@ var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
 var _is_special_attack: bool = false  # True when current attack carries weapon element
 var _queued_combo: int = ComboQueue.NONE  # Next-step queue (one slot, no re-roll)
 var _queued_combo_special: bool = false  # Queued step is a strong attack
+var _queued_combo_yaw: Variant = null  # World heading sampled at the accepted press
 var _combo_fumbled: bool = false  # Miss-early press locked out this swing's chain
 var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
@@ -1171,8 +1172,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				_on_palette_released(slot_idx)
 
 
-func _handle_movement(delta: float) -> void:
-	# Get input direction
+## Shared by walking and attack presses so steering stays camera-relative.
+## Null means no held direction; sample only when a new swing is accepted.
+func _held_movement_yaw() -> Variant:
 	var input_dir := Vector2.ZERO
 	if Input.is_action_pressed("move_forward"):
 		input_dir.y -= 1
@@ -1182,25 +1184,20 @@ func _handle_movement(delta: float) -> void:
 		input_dir.x -= 1
 	if Input.is_action_pressed("move_right"):
 		input_dir.x += 1
+	if input_dir.is_zero_approx():
+		return null
+	var move_3d := Vector3(input_dir.x, 0, input_dir.y)
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam:
+		move_3d = cam.global_transform.basis * move_3d
+	return atan2(move_3d.x, move_3d.z)
 
-	var is_moving := input_dir.length_squared() > 0
 
+func _handle_movement(delta: float) -> void:
+	var desired_yaw: Variant = _held_movement_yaw()
+	var is_moving := desired_yaw != null
 	if is_moving:
-		# Normalize input
-		input_dir = input_dir.normalized()
-
-		# Camera-relative movement: transform input by camera orientation
-		# so W always moves "into the screen" regardless of camera angle.
-		var target_rotation: float
-		var cam := get_viewport().get_camera_3d()
-		if cam:
-			var cam_basis := cam.get_global_transform().basis
-			var move_3d := cam_basis * Vector3(input_dir.x, 0, input_dir.y)
-			move_3d.y = 0
-			move_3d = move_3d.normalized()
-			target_rotation = atan2(move_3d.x, move_3d.z)
-		else:
-			target_rotation = atan2(input_dir.x, input_dir.y)
+		var target_rotation := float(desired_yaw)
 
 		# Smoothly rotate toward target
 		var rot_diff := target_rotation - player_rotation
@@ -1472,8 +1469,10 @@ func _start_attack() -> void:
 		return
 
 	# Start fresh attack combo
+	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _held_movement_yaw())
 	combo_state = 1
 	_queued_combo = ComboQueue.NONE
+	_queued_combo_yaw = null
 	_queued_combo_special = false
 	_is_special_attack = false
 	transition_to(PlayerState.ATTACKING)
@@ -1495,6 +1494,8 @@ func _attack_frac() -> float:
 ## The queued step fires at swing end (_attack_step_finished) — never mid-swing
 ## (#377 commitment).
 func _try_queue_combo(special: bool) -> void:
+	if _attack_anim_length <= 0.0:
+		return  # Strong windup: committed, neither buffer nor fumble.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if combo_state <= 0 or combo_state >= max_combo:
 		return  # technique cast or finisher — nothing to chain
@@ -1509,6 +1510,7 @@ func _try_queue_combo(special: bool) -> void:
 	if frac >= float(t.just_start):
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
+		_queued_combo_yaw = _held_movement_yaw()
 		_combo_ring_flash(Color(1.0, 0.8, 0.2) if special else Color(0.2, 1.0, 0.4))
 	else:
 		# Miss-early — the press fumbles the REST of this swing: nothing is
@@ -1530,8 +1532,10 @@ func _attack_step_finished() -> void:
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if _queued_combo != ComboQueue.NONE and combo_state < max_combo:
 		combo_state += 1
+		player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), combo_state, player_rotation, _queued_combo_yaw)
 		_is_special_attack = _queued_combo_special
 		_queued_combo = ComboQueue.NONE
+		_queued_combo_yaw = null
 		_queued_combo_special = false
 		_play_attack_animation(combo_state)
 		return
@@ -1630,6 +1634,7 @@ func _cast_technique(technique_id: String) -> void:
 	transition_to(PlayerState.ATTACKING)
 	combo_state = 0
 	_queued_combo = ComboQueue.NONE
+	_queued_combo_yaw = null
 	_queued_combo_special = false
 	play_animation(_anim_prefix + "_tec", false)
 
@@ -2050,6 +2055,7 @@ func _debug_kill_all() -> void:
 	if current_state == PlayerState.ATTACKING:
 		combo_state = 0
 		_queued_combo = ComboQueue.NONE
+		_queued_combo_yaw = null
 		_deactivate_attack_hitbox()
 		transition_to(PlayerState.IDLE)
 
@@ -2074,8 +2080,10 @@ func _start_strong_attack() -> void:
 		return
 
 	# Start fresh combo step 1 as special
+	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _held_movement_yaw())
 	combo_state = 1
 	_queued_combo = ComboQueue.NONE
+	_queued_combo_yaw = null
 	_queued_combo_special = false
 	_is_special_attack = true
 	transition_to(PlayerState.ATTACKING)
@@ -2493,6 +2501,7 @@ func transition_to(new_state: PlayerState) -> void:
 		# Combo queue dies with the swing (#155): an interrupted attack must
 		# never fire its queued follow-up after the DAMAGED/DOWN recovery.
 		_queued_combo = ComboQueue.NONE
+		_queued_combo_yaw = null
 		_queued_combo_special = false
 		_combo_fumbled = false
 

@@ -69,7 +69,7 @@ class Watch extends Node:
 		if not _check_arrival(player):
 			return  # an arrival checkpoint failed or is still pending
 
-		if _check_mixed(player):
+		if _check_optional_probe(player):
 			return
 
 		if not weapons_checked:
@@ -116,7 +116,20 @@ class Watch extends Node:
 			print("[coliseum] DONE ok")
 			get_tree().quit(0)
 
-	func _check_mixed(player: Node3D) -> bool:
+	## Run the real-animation steering probe without the story stage pack.
+	func _check_combo(player: Node3D) -> bool:
+		if not OS.has_environment("PSZ_AUTOPILOT_COMBO"):
+			return false
+		set_process(false)
+		for member in get_tree().get_nodes_in_group("enemies"):
+			member.set_physics_process(false)
+			member.set_process(false)
+		Autopilot._combo_probe_run(player)
+		return true
+
+
+	func _check_optional_probe(player: Node3D) -> bool:
+		if _check_combo(player): return true
 		if not ColiseumRoster.MIXED_GROUPS.has(enemy_id): return false
 		if not weapons_started:
 			weapons_started = true

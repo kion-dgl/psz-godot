@@ -1,5 +1,30 @@
 # Combat System TODO
 
+## Inter-swing steering — #560
+
+The accepted chain press now captures camera-relative movement input; the next
+swing applies the weapon-specific turn clamp after the current swing finishes.
+The first swing aims freely. No input preserves facing, duplicate presses cannot
+replace steering, and strong windup ignores input without fumbling. Normative
+limits and queue semantics live in `/mechanics/combos`.
+
+Validation: 7,186 unit checks passed, including seed-560 steering cases. The
+live autopilot combo probe passed in the real Coliseum with press-time heading
+capture, clamping, release-before-fire and outgoing-swing commitment. Run with
+`PSZ_AUTOPILOT_COMBO=1 godot --headless --fixed-fps 60 --path <isolated-project> res://scripts/tools/coliseum_probe.tscn`.
+Use a disposable save project. The local story-route probe could not spawn a
+player because the Valley start map is missing; the full quest matrix remains
+unverified here. The arena run reports missing local audio imports but no script
+errors. Human feel approval is still pending, especially Sword/Rifle limits and
+strong-attack steering.
+
+The October 8 source cross-check is recorded in `/mechanics/combos`: psz-re
+`a84b8fd` and pszm-decomp `a3836af` do not establish the proposed turn limits
+or input-sampling instant. Recovered target-cone angles and camera turn caps
+must not be treated as player steering limits. The web tool can tune angles,
+but its immediate chains/world-axis input differ from Godot's committed queue
+and camera-relative input; its UI now states those limits explicitly.
+
 ## Fidelity baseline and identity audit — October 8
 
 The current owner grades and promotion criteria live in the spec at `/fidelity`;

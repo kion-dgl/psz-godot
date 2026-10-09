@@ -2634,7 +2634,21 @@ func _combo_probe_chain_phase(p, states: Dictionary, accept_mid: float) -> void:
 		print("[sanity] FAIL: combo probe — clean swing ended before the accept window was reached")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
+	# #560: choose a camera-relative request 150 degrees from the swing's
+	# facing, then release it before the queued step fires.
+	Input.action_press("move_right")
+	var cam: Camera3D = p.get_viewport().get_camera_3d()
+	var right := cam.global_basis.x if cam else Vector3.RIGHT
+	var requested := atan2(right.x, right.z)
+	p.player_rotation = requested - deg_to_rad(150.0)
+	var outgoing: float = p.player_rotation
+	var limits: Array = CombatManager.get_weapon_type_config(p._get_equipped_weapon_type()).get("turn_limit_deg", [90.0, 90.0])
+	var expected := outgoing + deg_to_rad(minf(150.0, float(limits[0])))
 	p._start_attack()
+	Input.action_release("move_right")
+	if not is_equal_approx(p.player_rotation, outgoing):
+		_fail_and_quit("combo probe — chain press rotated outgoing swing")
+		return
 	if p._queued_combo != p.ComboQueue.NORMAL:
 		print("[sanity] FAIL: combo probe — press at frac %.2f did not queue a NORMAL chain (#461)" % p._attack_frac())
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
@@ -2645,7 +2659,10 @@ func _combo_probe_chain_phase(p, states: Dictionary, accept_mid: float) -> void:
 		print("[sanity] FAIL: combo probe — queued chain did not fire step 2")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 		return
-	print("[sanity] checkpoint: combo probe — step 2 fired (#461)")
+	if absf(wrapf(p.player_rotation - expected, -PI, PI)) > 0.001:
+		_fail_and_quit("combo probe — step 2 lost camera-relative press-time turn")
+		return
+	print("[sanity] checkpoint: combo probe — step 2 fired with captured clamped turn (#560)")
 
 	# Case 3: no further press — swing 2 ending un-queued breaks to IDLE.
 	var broke := await _combo_await(func() -> bool: return p.get_state() == states["IDLE"])

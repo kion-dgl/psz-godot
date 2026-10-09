@@ -39,6 +39,7 @@ func _run_tests_combat() -> void:
 	test_combo_two_tier()
 	test_combo_chain_lifecycle()
 	test_combo_miss_early_fumble()
+	preload("res://scripts/tools/combo_turn_tests.gd").run(self)
 	test_cone_targeting()
 	test_damaging_frame()
 	test_target_info_panel()

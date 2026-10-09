@@ -72,7 +72,8 @@ const tune = (
 });
 
 // combo_window defaults come from CombatManager.WEAPON_TYPE_CONFIGS; the
-// turn limits are proposals (the game has no turn clamp yet).
+// turn limits match the runtime defaults (#560). The runtime samples at the
+// accepted press and applies the turn when the committed outgoing swing ends.
 const WEAPONS: WeaponDef[] = [
   { id: 'saber',   label: 'Saber',        glbBase: 'saver',      weaponType: 0,  defaults: tune(0.5,  [90, 90]) },
   { id: 'sword',   label: 'Sword',        glbBase: 'sword',      weaponType: 1,  defaults: tune(0.6,  [60, 60]) },
@@ -679,7 +680,7 @@ export default function ComboDebug() {
         if (sim.windowOpen) {
           sim.windowTimer += delta;
           if (sim.windowTimer >= t.windowDuration) {
-            // Missed the rhythm — combo resets (matches player.gd timeout).
+            // Prototype timeout; runtime waits for the committed swing to finish.
             sim.windowOpen = false;
             sim.missCount += 1;
             sim.ringFlash = { color: new THREE.Color(0xff3333), ttl: 0.35 };
@@ -1183,11 +1184,10 @@ export default function ComboDebug() {
             {sliderRow('Special wind-up', tuning.specialWindup, 0, 1.0, 0.05,
               (v) => setTuning({ specialWindup: v }), (v) => `${v.toFixed(2)}s`)}
             <div style={{ fontSize: 10, color: '#666' }}>
-              In-game today: opens at 55% (COMBO_WINDOW_OPEN_PCT), 0.35s duration
-              (COMBO_WINDOW_DURATION), 0.4s special delay — player.gd. Two-tier
-              timing (#461): press before the window opens FUMBLES the swing;
-              press inside it queues a normal chain. There is no just-attack
-              damage tier — crit/damage come from stats + equipment.
+              Prototype timing: accepted presses start the next swing immediately;
+              early presses are ignored. Godot instead fumbles early presses and
+              queues accepted chains until swing end, using per-weapon just_start
+              fractions. These timing controls are not a runtime replay.
             </div>
           </div>
 
@@ -1204,6 +1204,11 @@ export default function ComboDebug() {
               Facing locks when a swing starts. Hold a direction during the swing —
               on chain, the yaw snaps toward it, clamped to this limit (green fan).
               Clamped turns flash a red ghost arrow. First attack from idle aims freely.
+              Limits are project tuning, not confirmed DS constants. This prototype
+              uses world-axis steering and turns on the press; Godot captures
+              camera-relative direction on the press and turns at swing end.
+              Sliders save only in this browser. Export turn_limit_deg to transfer
+              angle tuning; the other export fields are prototype settings.
             </div>
           </div>
 
