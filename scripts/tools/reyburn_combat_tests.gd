@@ -53,7 +53,15 @@ static func run(t: Node) -> void:
 	b.animation_player.advance(0.3)
 	b._walk_toward(v.position + Vector3(0, 0, 5), 0.1)
 	t.assert_true(b.animation_player.current_animation_position > 0.2, "walk does not restart")
+	b._cur = {"clip": "strike", "kind": "charge"}
+	b.rotation.y = 0
 	b._execute_attack()
+	b._tick_attack(0.05)
+	t.assert_true(b.velocity.z > 0.0, "charge advances toward model front")
+	var locked_yaw: float = b.rotation.y
+	v.position = b.position + Vector3(3, 0, 0)
+	b._tick_attack(0.05)
+	t.assert_eq(b.rotation.y, locked_yaw, "strike facing stays locked when player sidesteps")
 	b._enter_enrage()
 	t.assert_eq(b.animation_player.current_animation, "strike", "enrage preserves active clip")
 	b.free()

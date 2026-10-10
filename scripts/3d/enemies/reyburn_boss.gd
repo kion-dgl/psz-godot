@@ -11,7 +11,7 @@ class_name ReyburnBoss extends EnemyBase
 ##     / a three-shot fireball volley. Opens with the tht roar.
 ##   * flight phase — periodically takes off, repositions, and drops a land-slam
 ##     AoE where it comes down.
-##   * enrage — below 35% HP it speeds up, its cooldowns shorten, it growls, and
+##   * enrage — below 35% HP it speeds up, its cooldowns shorten, and
 ##     a red glow marks the shift (a modifier overlay, not a separate moveset).
 ##
 ## HP (1650), the arena and the model come from data/enemies/reyburn.tres. This
