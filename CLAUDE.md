@@ -114,6 +114,20 @@ just burns ~3 min of autopilot and can flake on a loaded box. (The
 merge regardless — pointless for a non-Godot diff; relaxing it to skip
 diffs with no `.gd`/scene/quest changes is a reasonable follow-up.)
 
+## Scorecard review on every PR
+
+Use `spec/src/pages/fidelity.astro` and `spec/src/data/fidelity-grades.json`
+when choosing and reporting work. In each PR, identify affected scorecard
+areas and their GitHub label filters, or explain why there is no scorecard
+impact. Review their assessment and next target; update stale wording or
+explicitly record that a playtest is pending. Issue membership lives in
+GitHub labels, never a maintained array of issue numbers in the site.
+
+Grades require Kion's assessment with a dated playtest, revision, scenario
+and observations. Passing tests, merging, or closing issues alone must not
+raise grades or refresh the assessment date. Identify the specific areas
+reviewed when an assessment is partial. See the PR template and `/fidelity/`.
+
 ## Orphan / superseded files → `/archive/`, not `rm`
 
 When working files turn up that look orphaned (untracked, no references

@@ -1,21 +1,18 @@
 ---
 import { siteUrl } from '../utils/site';
 import Concept from '../layouts/Concept.astro';
-import baseline from '../data/fidelity-grades.json';
-import { scorecardIssuesUrl } from '../utils/scorecard';
-const grades = baseline.areas;
+import FidelityGrades from '../../../web/src/pages/FidelityGrades';
 ---
 
 <Concept title="Fidelity and quality baseline" section="Spec">
-  <p><strong>October 8, 2026 · Owner playtest assessment.</strong> These grades preserve Kion’s current judgment. They mix authenticity, presentation and completeness; they are not measured percentages of original-game fidelity.</p>
-  <p><strong>Provisional overall assessment: C+.</strong> This is an editorial summary, not an owner-assigned grade or a calculated average. Character flow and much of the presentation are strong; combat is C, while bosses, traps and systems remain D. Those core gaps matter more than a screen-count average.</p>
-  <table>
-    <thead><tr><th>Area</th><th>Grade</th><th>Owner assessment</th><th>Next review target</th><th>Issues</th></tr></thead>
-    <tbody>{grades.map(({area, grade, assessment, next, label}) => <tr><td>{area}</td><td><strong>{grade}</strong></td><td>{assessment}</td><td>{next}</td><td><a href={scorecardIssuesUrl(label)} aria-label={`Open issues for ${area}`}>Open issues ↗</a></td></tr>)}</tbody>
-  </table>
+  <FidelityGrades showCriteriaLink={false} />
   <h2>How grades change</h2>
   <p>A means convincing, faithful where intended, and polished with minor issues. B means good with visible gaps. C means the main loop works but important behavior or feel is incomplete. D means placeholder or rough implementation. Plus/minus refines the assessment; an unreviewed area stays ungraded.</p>
   <p>A grade increase SHOULD cite a dated user playtest, the revision, the scenario and the observed improvement. Automated passes MUST NOT independently promote a grade. Better-than-original presentation is a deliberate design choice and SHOULD be distinguished from original-game fidelity.</p>
+  <h2>Review the scorecard with each PR</h2>
+  <p>Every PR SHOULD identify affected scorecard areas and link their issue filters, or state “No scorecard impact” with a short reason. Apply the relevant area labels to concrete GitHub issues; maintain membership there, not in a source-code list.</p>
+  <p>For affected areas, review the assessment and next review target in <code>spec/src/data/fidelity-grades.json</code>. Update stale wording when the change resolves a target or reveals a new gap. If implementation is complete but a playtest is pending, say so and retain the grade.</p>
+  <p>Change a grade only with Kion’s assessment backed by a dated playtest, tested revision, scenario and observations. Record that evidence in the PR and the affected area’s assessment; update the assessment date only when an assessment actually occurs. A merge, passing test or closed issue alone does not change a grade. Partial reviews MUST identify the reviewed areas rather than imply every score was reassessed.</p>
   <h2>Combat evidence, tracked separately</h2>
   <ol>
     <li><strong>Identity:</strong> reconcile runtime ID, display name, model, animation rig and source identity. <a href={siteUrl('/states/combat-roster')}>Current crosswalk and unresolved mappings</a>.</li>
@@ -29,5 +26,3 @@ const grades = baseline.areas;
   <p>Each area links directly to open issues with its <code>score:*</code> label. An issue may improve several areas and carry several score labels. The scorecard owns the assessment and review targets; issues describe concrete defects, investigations or improvements with a clear completion condition.</p>
   <p>Use these filters to choose work without an umbrella issue or milestone per grade. Empty filters mean no open issues have been associated yet, not that the area is complete. Kion’s playtest observations can refine each review target independently of the issue list.</p>
 </Concept>
-
-<style>td { vertical-align: top; } table { width: 100%; } td:first-child { min-width: 110px; }</style>
