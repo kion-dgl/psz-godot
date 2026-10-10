@@ -18,6 +18,7 @@ static func run(t: Node) -> void:
 	t.assert_true(b._arc_hit(4, 60, 1), "Reyburn +Z front hits")
 	v.position.z = -3
 	t.assert_true(not b._arc_hit(4, 60, 1), "Reyburn rear cannot take frontal bite")
+	t.assert_true(b._arc_hit(4, 180, 1), "full-circle arc includes exact rear boundary")
 	v.position = Vector3(0, 0, 4.01)
 	t.assert_true(not b._arc_hit(4, 60, 1), "retreat outside reach avoids bite")
 	v.position = Vector3(3, 0, 0)

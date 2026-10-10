@@ -393,11 +393,9 @@ func _begin_flight() -> void:
 # ---- damage helpers ---------------------------------------------------------
 func _arc_hit(reach: float, half_angle_deg: float, dmg: int) -> bool:
 	if not target or not is_instance_valid(target): return false
-	var to := target.global_position - global_position
-	to.y = 0
-	if to.length() > reach: return false
 	var facing := Vector3(sin(rotation.y), 0, cos(rotation.y))
-	if to.length() > 0.01 and rad_to_deg(facing.angle_to(to.normalized())) > half_angle_deg:
+	if not EnemyAttackLogic.arc_hit_test(global_position, facing, target.global_position,
+			0.0, half_angle_deg, reach):
 		return false
 	if target.has_method("take_damage"):
 		target.take_damage(dmg)
