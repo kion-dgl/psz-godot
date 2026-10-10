@@ -73,6 +73,7 @@ const ATTACK_FALLBACK_DURATION: float = 0.8
 ## test and deal attack_base × damage_mult once.
 var _attacks: Array = []                    # resolved attack defs for this enemy (cached)
 var _attack_def: Dictionary = {}            # the attack chosen for the swing in flight
+var _finjer_spin_cooldown: float = 0.0
 var _attack_facing: Vector3 = Vector3.FORWARD  # facing locked at attack start
 var _attack_hit_resolved: bool = false      # one resolution (hit or dodge) per attack
 var _attack_clip_len: float = ATTACK_FALLBACK_DURATION  # resolved clip length (or fallback)
@@ -124,6 +125,7 @@ var _windup_total := 0.0                    # their resolved total duration
 var _windup_elapsed := 0.0
 var _windup_idx := -1                       # prelude clip currently playing
 var _windup_done := true                    # false only while the prelude plays
+var _tank = preload("res://scripts/3d/enemies/tank_behavior.gd").new()
 var _lunge = preload("res://scripts/3d/enemies/enemy_lunge.gd").new()
 var _leap_from := Vector3.ZERO              # kind leap: enemy travels during the window
 var _leap_to := Vector3.ZERO
@@ -503,6 +505,8 @@ func _early_process_returns(delta: float) -> bool:
 
 func _tick_combat_timers(delta: float) -> void:
 	_process_status_effects(delta)
+	_tank.tick(self, delta)
+	_finjer_spin_cooldown = maxf(_finjer_spin_cooldown - delta, 0.0)
 	attack_cooldown_timer = maxf(attack_cooldown_timer - delta, 0.0)
 
 
@@ -733,6 +737,23 @@ func _pick_new_wander_behavior() -> void:
 		wander_direction = Vector3(sin(angle), 0, cos(angle))
 
 
+func _chase_berserk(dist: float) -> bool:
+	# Berserk kamikaze (spec §shooter): loop the berserk_only clip straight at the
+	# player and self-destruct on contact — regardless of i-frames (the blast
+	# happens; i-frames dodge the damage, not the explosion).
+	if _berserk and not _kamikaze_def.is_empty():
+		var radial_k := _radial_to_target()
+		var speed_k := _base_move_speed() * float(_fsm.get("charge_speed_mult", CHARGE_SPEED_MULT)) * 1.2
+		velocity.x = radial_k.x * speed_k
+		velocity.z = radial_k.z * speed_k
+		_face_direction(radial_k)
+		_play_animation(String(_kamikaze_def.get("clip", "atk_ji")))
+		if dist <= float(_kamikaze_def.get("hit_reach", 1.5)) + PLAYER_HIT_RADIUS:
+			_explode_kamikaze()
+		return true
+	return false
+
+
 func _process_chasing(delta: float) -> void:
 	if not target or not is_instance_valid(target):
 		current_state = EnemyState.IDLE
@@ -762,18 +783,13 @@ func _process_chasing(delta: float) -> void:
 			_play_animation("tk2", true)
 		return
 
-	# Berserk kamikaze (spec §shooter): loop the berserk_only clip straight at the
-	# player and self-destruct on contact — regardless of i-frames (the blast
-	# happens; i-frames dodge the damage, not the explosion).
-	if _berserk and not _kamikaze_def.is_empty():
-		var radial_k := _radial_to_target()
-		var speed_k := _base_move_speed() * float(_fsm.get("charge_speed_mult", CHARGE_SPEED_MULT)) * 1.2
-		velocity.x = radial_k.x * speed_k
-		velocity.z = radial_k.z * speed_k
-		_face_direction(radial_k)
-		_play_animation(String(_kamikaze_def.get("clip", "atk_ji")))
-		if dist <= float(_kamikaze_def.get("hit_reach", 1.5)) + PLAYER_HIT_RADIUS:
-			_explode_kamikaze()
+	if _chase_berserk(dist): return
+
+	if _tank.enabled(self):
+		_tank.chase(self, delta, dist)
+		return
+	if _archetype in ["shooter", "boarder"]:
+		preload("res://scripts/3d/enemies/shooter_behavior.gd").chase(self, dist)
 		return
 
 	var attack_range := 2.0
@@ -966,8 +982,19 @@ func _tick_attack_recovery(delta: float) -> bool:
 	return true
 
 
-func _process_attacking(delta: float) -> void:
-	if _tick_attack_recovery(delta): return
+func _cancel_lost_ranged_target() -> bool:
+	if not is_instance_valid(target) and _attack_def.get("kind", _attack_kind) in ["projectile", "lob"]:
+		is_attacking = false
+		_attack_anim = ""
+		_charge = {}
+		_restore_charge_model()
+		velocity = Vector3.ZERO
+		_start_loafing()
+		return true
+	return false
+
+
+func _tick_attack_telegraph(delta: float) -> bool:
 	# Telegraph sub-phase: hold the attack-ready pose (facing the player) before the
 	# strike so the wind-up is readable and dodgeable. No damage here.
 	if _telegraphing:
@@ -979,7 +1006,14 @@ func _process_attacking(delta: float) -> void:
 			if d.length() > 0.1:
 				_face_direction(d.normalized())
 		_process_telegraph(delta)
-		return
+		return true
+	return false
+
+
+func _process_attacking(delta: float) -> void:
+	if _cancel_lost_ranged_target(): return
+	if _tick_attack_recovery(delta): return
+	if _tick_attack_telegraph(delta): return
 
 	# Segmented charge (kind charge): its own phase machine — the st/lp/ed segments
 	# ARE the timeline (spec §big-rig). It moves during lp, so it owns its velocity.
@@ -991,6 +1025,8 @@ func _process_attacking(delta: float) -> void:
 
 	velocity.x = 0
 	velocity.z = 0
+
+	preload("res://scripts/3d/enemies/finjer_behavior.gd").shooting_move(self)
 
 	# windup_clips prelude (fsm.ts windup): sequential pure-telegraph clips before
 	# the attack clip; the swing's window cannot start until the prelude finishes.
@@ -1007,6 +1043,7 @@ func _process_attacking(delta: float) -> void:
 		_attack_pos += delta
 
 	if is_attacking and not _attack_def.is_empty():
+		_tank.fire_waves(self)
 		_process_attack_window()
 
 	# Attack end: the resolved animation finished (signal path or the
@@ -1074,7 +1111,7 @@ func _open_attack_window() -> void:
 		_fire_projectile()
 	elif _attack_kind == "lob":
 		_attack_hit_resolved = true
-		_fire_lob()
+		if not _attack_def.get("missile_waves", false): _fire_lob()
 	elif _attack_kind == "leap":
 		_leap_from = global_position
 		var tp := target.global_position if target and is_instance_valid(target) else global_position
@@ -1204,6 +1241,15 @@ func _process_loafing(delta: float) -> void:
 		current_state = EnemyState.CHASING
 		return
 
+	if _tank.enabled(self):
+		velocity.x = 0
+		velocity.z = 0
+		_play_animation("wat")
+		return
+	if _archetype in ["shooter", "boarder"] and is_instance_valid(target):
+		preload("res://scripts/3d/enemies/shooter_behavior.gd").move(self, global_position.distance_to(target.global_position))
+		return
+
 	# Rooted enemies never move — stand at the idle clip through the loaf.
 	if _fsm.get("stationary", false):
 		velocity.x = 0
@@ -1290,7 +1336,7 @@ func _begin_telegraph() -> void:
 	_attack_def = _select_attack_for(dist)
 	_attack_kind = String(_attack_def.get("kind", "melee_arc"))
 	var windup: Array = _attack_def.get("windup_clips", [])
-	if _attack_kind == "charge" or not windup.is_empty():
+	if _attack_kind == "charge" or _archetype == "boarder" or not windup.is_empty():
 		_telegraphing = false
 		_start_attack()
 		return
@@ -1354,6 +1400,7 @@ func _start_attack() -> void:
 	if _attack_def.is_empty():
 		_attack_def = _select_attack_for(dist)
 	_attack_kind = String(_attack_def.get("kind", "melee_arc"))
+	_tank.begin(self)
 	if _attack_kind == "lunge":
 		_lunge.begin(self, dist)
 	_attack_hit_resolved = false
@@ -1370,6 +1417,7 @@ func _start_attack() -> void:
 	# before the attack clip and gate its window; everything else resolves the main clip.
 	var windup: Array = _attack_def.get("windup_clips", [])
 	if _attack_kind == "charge":
+		if _archetype == "boarder": _finjer_spin_cooldown = 6.0
 		_start_charge(dist)
 	elif windup.size() > 0:
 		_setup_windup()
@@ -1412,6 +1460,7 @@ func _begin_main_clip() -> void:
 	if _attack_kind == "lunge" and animation_player:
 		_lunge.prepare_clip(animation_player, _find_animation(token), str(_attack_def.get("motion_bone", "")))
 	_attack_anim = _play_animation(token, true)
+	if animation_player and _tank.enabled(self): animation_player.speed_scale = float(_attack_def.get("animation_speed", 1.0))
 	if _attack_anim.is_empty():
 		# Rig has no resolvable attack clip — timeline fractions apply to the
 		# fixed fallback duration; end the attack on that same timer.
@@ -1511,7 +1560,7 @@ func _has_attack_in_band(dist: float, attack_range: float) -> bool:
 	if _attacks.is_empty():
 		return dist <= attack_range
 	for a in _attacks:
-		if a.get("berserk_only", false):
+		if a.get("berserk_only", false) or not _tank.available(a):
 			continue
 		if dist >= float(a.get("min_range", 0.0)) and dist <= float(a.get("max_range", 999.0)):
 			return true
@@ -1522,7 +1571,7 @@ func _has_attack_in_band(dist: float, attack_range: float) -> bool:
 func _select_attack_for(dist: float) -> Dictionary:
 	var pool: Array = []
 	for a in _attacks:
-		if not a.get("berserk_only", false):
+		if not a.get("berserk_only", false) and _tank.available(a) and not (_archetype == "boarder" and a.get("kind") == "charge" and _finjer_spin_cooldown > 0.0):
 			pool.append(a)
 	var chosen := EnemyAttackLogic.select_attack(pool, dist, _rng)
 	if chosen.is_empty():
@@ -1575,8 +1624,9 @@ func _fire_technique() -> void:
 	delivery.target = target
 	delivery.damage = _attack_damage(_attack_def)
 	delivery.max_range = float(_attack_def.get("hit_reach", 10.0))
+	delivery.muzzle_offset = _attack_facing * 0.3
 	get_parent().add_child(delivery)
-	delivery.global_position = global_position + _attack_facing * 0.3 + Vector3(0, 0.3, 0)
+	delivery.global_position = global_position + Vector3(0, 0.3, 0)
 
 
 ## Release a straight projectile (kind projectile) at window open — Godot port of the
@@ -1587,7 +1637,8 @@ func _fire_projectile() -> void:
 		return
 	var p := EnemyProjectile.new()
 	p.dir = _attack_facing
-	p.speed = EnemyProjectile.PROJECTILE_SPEED
+	p.speed = float(_attack_def.get("projectile_speed", EnemyProjectile.PROJECTILE_SPEED))
+	p.radius = float(_attack_def.get("projectile_radius", EnemyProjectile.PROJECTILE_RADIUS))
 	p.max_range = maxf(float(_attack_def.get("hit_reach", 2.0)), 1.0)
 	p.damage = _attack_damage(_attack_def)
 	p.knockdown = bool(_attack_def.get("knockdown", false))
@@ -1596,7 +1647,7 @@ func _fire_projectile() -> void:
 	p.color = Color(str(_attack_def.get("projectile_color", "ff8000")))
 	p.on_hit = _projectile_on_hit()
 	get_parent().add_child(p)
-	p.global_position = global_position + _attack_facing * 0.8 + Vector3(0, 1.2, 0)
+	p.place_at_muzzle(global_position + Vector3(0, 1.2, 0), _attack_facing * 0.8)
 
 
 ## Subclass hook: an extra on-hit effect for projectiles (the lily's poison DoT).
@@ -1842,6 +1893,7 @@ func _play_idle_pose() -> String:
 ## Play an animation by name (short name like "atk" will match "s_001_atk").
 ## Returns the resolved full animation name, or "" if nothing played.
 func _play_animation(anim_name: String, force: bool = false, locomotion: bool = false) -> String:
+	_tank.reset_animation(self)
 	if anim_name == "wat":
 		var pose := _play_idle_pose()
 		if not pose.is_empty():

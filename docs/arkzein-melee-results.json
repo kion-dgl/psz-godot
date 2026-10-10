@@ -1,0 +1,109 @@
+{
+  "scope": "Individual Godot behavior; original-game fidelity and human feel remain open",
+  "seed": 7240,
+  "decision_seed": 7007,
+  "fixed_fps": 60,
+  "revision": "360099ad553fcfff14ed60f34bf30240b9fc1bb2",
+  "godot_version": "4.5.1.stable.official.f62fdbde1",
+  "checks": {
+    "unit": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/unit.log",
+      "cases": [],
+      "decision_cases": 0,
+      "attack_execution_cases": 0,
+      "finjer_behavior_cases": 0
+    },
+    "physics": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/physics.log",
+      "cases": [],
+      "decision_cases": 0,
+      "attack_execution_cases": 0,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein-normal": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein-normal.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein-hard.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein-super-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein-super-hard.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein_r-normal": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein_r-normal.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein_r-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein_r-hard.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    },
+    "arkzein_r-super-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/arkzein-melee/arkzein_r-super-hard.log",
+      "cases": [],
+      "decision_cases": 21,
+      "attack_execution_cases": 4,
+      "finjer_behavior_cases": 0
+    }
+  },
+  "input_sha256": {
+    "data/enemy_attacks.json": "6ab46d8e2c13e472410e48d0c2f358c4f31640d2fd5dcddaa45faeb0bf81c70a",
+    "data/combat_scenarios.json": "8bac8745edf55c43eb40d3235da9e9401c6eaab4b63669bad4f418422ef3565a",
+    "scripts/3d/enemies/enemy_base.gd": "80445928d745d04225cef2ec365ffeda905c44a9fc7121cd4ed212f3f20e59de",
+    "scripts/3d/enemies/enemy_projectile.gd": "0e3899d3d88fad5d044247962fc7fbd28c0baba56e05e8e06bd2a4d719d3f8ee",
+    "scripts/3d/enemies/finjer_behavior.gd": "5e491c7469780339feb548aa249f9e21bf3da5fb888d55e8a1d038aec2c65fe0",
+    "scripts/3d/enemies/shooter_behavior.gd": "e6c612def1b166a13b141eff213d4f2389e30010df6b4b587eb1288fa8a96647",
+    "scripts/tools/finjer_behavior_check.gd": "3dd3a859e5c3490ae3da3a916f01a74d869506fa9a4ddcfdfdb355b27e9f7619",
+    "scripts/3d/enemies/enemy_lob.gd": "7ffcc988148ca7a149a77ca8c2b7102316328deea257157dc6dff0e23e31505a",
+    "scripts/3d/combat/projectile_sweep.gd": "3e13620d67a63fed6f304f140f926a5e3f04d0fdd1cab8803205badeb93e92e3",
+    "scripts/3d/combat/ice_technique.gd": "f414cf29b89a2e1bce96e7b3cfb50c42441abc57b539b22b198ea1d882d50e60",
+    "scripts/tools/coliseum_projectile_check.gd": "f6c2979d4245bf6f02fb390f2303bdfe8892c0a761da1f2bfc9a6a2e91a5d8db",
+    "scripts/tools/coliseum_family_check.gd": "065a3ccf38439c3e296ca35fef6b0507e2a37a3bc5172bcc6cd7100236892b8c",
+    "scripts/tools/coliseum_runtime_check.gd": "fb6cf06b48f5ad8a6249da2b1c85670c02e5be9872f1c7be9429e4d7bb0e3df4",
+    "scripts/tools/combat_fidelity_probe.gd": "eb5d1ade3f6d2604bfbe2d0c142a41e062d32c65d3f973d9c3af8f6c4f6b1cde",
+    "scripts/tools/coliseum_probe.gd": "ca139719a2318cad5bd45720dc206e7016372e031dd1c03216f6f21526aaafa5",
+    "scripts/tools/verify_projectile_batch.py": "7d77c1a1b6e7f4feb93841377bf341dc9e146b2a72ac1adbfc92851701c763f9"
+  },
+  "passed": true
+}

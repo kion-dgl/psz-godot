@@ -13,6 +13,7 @@
  * Zero three.js imports — unit-testable with a seeded rng.
  */
 
+import { tankChase, tankWaves } from './tank-behavior';
 import type { AttackDef, ResolvedEntry } from './types';
 
 export interface Vec2 {
@@ -54,6 +55,7 @@ export interface CurrentAttack {
   /** windup_clips prelude: cumulative end-times per clip; pure telegraph before the attack clip. */
   windup?: { clips: string[]; ends: number[]; total: number };
   recoveryDuration?: number;
+  waves?: number;
 }
 
 export interface EnemySim {
@@ -62,6 +64,9 @@ export interface EnemySim {
   facing: Vec2;
   velocity: Vec2;
   attackCooldown: number;
+  attackCooldowns: Record<string, number>;
+  tankTravel: { phase: string; t: number; cooldown: number };
+  finjerSpinCooldown: number;
   hurtTimer: number;
   wanderTimer: number;
   wanderDir: Vec2 | null; // null = paused
@@ -161,6 +166,9 @@ export function makeSim(pos: Vec2 = { x: 0, z: 0 }): EnemySim {
     facing: { x: 0, z: 1 },
     velocity: { x: 0, z: 0 },
     attackCooldown: 0,
+    attackCooldowns: {},
+    tankTravel: { phase: '', t: 0, cooldown: 0 },
+    finjerSpinCooldown: 0,
     hurtTimer: 0,
     wanderTimer: 0,
     wanderDir: null,
@@ -318,6 +326,10 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
   }
   const dist = len(sub(playerPos, sim.pos));
 
+  for (const key of Object.keys(sim.attackCooldowns)) sim.attackCooldowns[key] = Math.max(0, sim.attackCooldowns[key] - dt);
+  sim.tankTravel.cooldown = Math.max(0, sim.tankTravel.cooldown - dt);
+  if (sim.state !== 'chasing') sim.tankTravel.phase = '';
+  sim.finjerSpinCooldown = Math.max(0, sim.finjerSpinCooldown - dt);
   if (sim.attackCooldown > 0) sim.attackCooldown -= dt;
 
   switch (sim.state) {
@@ -455,12 +467,13 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
           break;
         }
       }
+      if (entry.fsm.tank_kit && tankChase(sim, entry, input, dist)) break;
       // Trigger (spec /mechanics/enemy-attacks §selection): cooldown ready AND
       // some non-berserk attack's band contains the distance. Identical to
       // the old melee gate for all-melee tables.
       if (
         sim.attackCooldown <= 0 &&
-        entry.attacks.some((a) => !a.berserk_only && dist >= a.min_range && dist <= a.max_range)
+        entry.attacks.some((a) => !a.berserk_only && !(sim.attackCooldowns[a.id] > 0) && dist >= a.min_range && dist <= a.max_range)
       ) {
         startAttack(sim, entry, input, dist, events);
         break;
@@ -477,7 +490,8 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         processChasingQuadMachine(sim, entry, input, dist);
         break;
       }
-      if (entry.archetype === 'shooter') {
+      if (entry.fsm.tank_kit) { sim.velocity = { x: 0, z: 0 }; sim.anim = 'wat'; break; }
+      if ((entry.archetype === 'shooter' || entry.archetype === 'boarder')) {
         processChasingShooter(sim, entry, input, dist);
         break;
       }
@@ -519,6 +533,11 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         break;
       }
       sim.velocity = { x: 0, z: 0 };
+      if (entry.archetype === 'boarder' && atk.def.kind === 'projectile') {
+        processChasingShooter(sim, entry, input, dist);
+        sim.anim = atk.def.clip;
+        if (!atk.windowOpened) atk.facing = { ...sim.facing };
+      }
       atk.t += dt;
       // windup_clips prelude: advance through the telegraph clips; the
       // timeline fractions apply to the attack clip itself, offset past it.
@@ -530,6 +549,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         sim.anim = atk.def.clip;
       }
       const mainDur = atk.duration - windupTotal - (atk.recoveryDuration ?? 0);
+      tankWaves(sim, input, events);
       const windowStart = windupTotal + atk.def.windup_frac * mainDur;
       const windowEnd = windupTotal + atk.def.damage_end_frac * mainDur;
       if (!atk.windowOpened && atk.t >= windowStart) {
@@ -548,7 +568,7 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
             attack: atk.def,
           });
           events.push({ type: 'projectile_fired', attack: atk.def });
-        } else if (kind === 'lob') {
+        } else if (kind === 'lob' && !atk.def.missile_waves) {
           atk.resolved = true;
           const target = { ...playerPos };
           sim.lobs.push({
@@ -641,6 +661,11 @@ export function stepEnemy(sim: EnemySim, entry: ResolvedEntry, input: SimInput):
         sim.anim = idleClip(entry);
         break;
       }
+      if (entry.fsm.tank_kit) { sim.velocity = { x: 0, z: 0 }; sim.anim = 'wat'; break; }
+      if ((entry.archetype === 'shooter' || entry.archetype === 'boarder')) {
+        processChasingShooter(sim, entry, input, dist);
+        break;
+      }
       sim.loafDir = rot(sim.loafDir, sim.loafCurveRate * dt);
       const speed = entry.stats.move_speed * LOAF_SPEED_MULT;
       sim.velocity = { x: sim.loafDir.x * speed, z: sim.loafDir.z * speed };
@@ -672,12 +697,12 @@ function stepDeliveries(sim: EnemySim, entry: ResolvedEntry, input: SimInput, ev
   const { dt, playerPos, playerRadius, playerInvincible } = input;
 
   sim.projectiles = sim.projectiles.filter((p) => {
-    const distance = Math.min(Math.max(PROJECTILE_SPEED * dt, 0), Math.max(p.maxRange - p.traveled, 0));
+    const distance = Math.min(Math.max((p.attack.projectile_speed ?? PROJECTILE_SPEED) * dt, 0), Math.max(p.maxRange - p.traveled, 0));
     const dx = p.dir.x * distance, dz = p.dir.z * distance;
     const ox = playerPos.x - p.pos.x, oz = playerPos.z - p.pos.z;
     const lengthSq = dx * dx + dz * dz;
     const t = lengthSq > 0 ? Math.max(0, Math.min(1, (ox * dx + oz * dz) / lengthSq)) : 0;
-    const hitDist = playerRadius + PROJECTILE_RADIUS;
+    const hitDist = playerRadius + (p.attack.projectile_radius ?? PROJECTILE_RADIUS);
     const contact = Math.hypot(ox - dx * t, oz - dz * t) <= hitDist;
     p.pos.x += dx;
     p.pos.z += dz;
@@ -695,6 +720,12 @@ function stepDeliveries(sim: EnemySim, entry: ResolvedEntry, input: SimInput, ev
   });
 
   sim.lobs = sim.lobs.filter((l) => {
+    if (l.attack.missile_waves && l.timer > l.flightTime * 0.5) {
+      const delta = sub(playerPos, l.target);
+      const travel = Math.min(len(delta), 5 * Math.min(dt, l.timer - l.flightTime * 0.5));
+      const direction = norm(delta);
+      l.target = { x: l.target.x + direction.x * travel, z: l.target.z + direction.z * travel };
+    }
     l.timer -= dt;
     if (l.timer > 0) return true;
     events.push({ type: 'lob_landed', attack: l.attack, at: l.target });
@@ -806,8 +837,12 @@ function startAttack(
   dist: number,
   events: SimEvent[],
 ): void {
-  const def = selectAttack(entry.attacks, dist, input.rng);
+  const pool = entry.archetype === 'boarder' && sim.finjerSpinCooldown > 0
+    ? entry.attacks.filter(a => a.kind !== 'charge') : entry.attacks;
+  const def = selectAttack(pool.filter(a => !(sim.attackCooldowns[a.id] > 0)), dist, input.rng);
   if (!def) return; // resolveEntry guarantees ≥1 attack; guard anyway
+  if (entry.archetype === 'boarder' && def.kind === 'charge') sim.finjerSpinCooldown = 6;
+  if (def.cooldown) sim.attackCooldowns[def.id] = def.cooldown;
   const facing = norm(sub(input.playerPos, sim.pos));
   const kind = def.kind ?? 'melee_arc';
   changeState(sim, 'attacking', events);
@@ -851,7 +886,7 @@ function startAttack(
   const clipDuration = input.clipDurationFor(def.clip);
   // No resolvable clip → the timeline fractions apply to the fallback
   // duration (extends the #477 attack-recovery contract).
-  const mainDuration = clipDuration ?? entry.fsm.attack_fallback_duration;
+  const mainDuration = (clipDuration ?? entry.fsm.attack_fallback_duration) / (def.animation_speed ?? 1);
   // windup_clips prelude: pure telegraph played before the attack clip;
   // the timeline fractions apply to the attack clip, offset past it.
   let windup: CurrentAttack['windup'];
@@ -923,30 +958,25 @@ function processChasingFlyer(sim: EnemySim, entry: ResolvedEntry, input: SimInpu
 
 /**
  * Shooter chase (spec /states/enemies §shooter, normative): hovers at
- * standoff, holding position (wat) and adjusting with run, firing atk_sh
- * from its band via the gate. Single locomotion clip — no strafe variants.
+ * standoff, sidestepping away under pressure and shuffling between shots.
+ * Firing commits position and aim; world cover checks live in Godot.
  */
 function processChasingShooter(sim: EnemySim, entry: ResolvedEntry, input: SimInput, dist: number): void {
-  const { playerPos } = input;
-  const radial = norm(sub(playerPos, sim.pos));
-  sim.facing = radial; // hovering shooter tracks the target
-  const standoff = entry.fsm.standoff_range;
-
-  if (dist < standoff * 0.8) {
-    const speed = entry.stats.move_speed * entry.fsm.charge_speed_mult;
-    sim.velocity = { x: -radial.x * speed, z: -radial.z * speed };
-    sim.anim = 'run';
-    return;
+  const radial = norm(sub(input.playerPos, sim.pos));
+  sim.facing = radial;
+  sim.arcTimer -= input.dt;
+  if (sim.arcTimer <= 0) {
+    sim.arcTimer = 1.5 + input.rng() * 2.5;
+    if (input.rng() < 0.4) sim.arcSide = sim.arcSide === 1 ? -1 : 1;
   }
-  if (dist > standoff * 1.2) {
-    const speed = entry.stats.move_speed * entry.fsm.walk_speed_mult;
-    sim.velocity = { x: radial.x * speed, z: radial.z * speed };
-    sim.anim = 'run';
-    return;
-  }
-  // In the band: hold position and shoot from here.
-  sim.velocity = { x: 0, z: 0 };
-  sim.anim = 'wat';
+  const tangent = { x: -radial.z * sim.arcSide, z: radial.x * sim.arcSide };
+  const close = dist < entry.fsm.standoff_range * 0.8;
+  const far = dist > entry.fsm.standoff_range * 1.2;
+  const direction = close ? norm({ x: tangent.x - radial.x * 0.8, z: tangent.z - radial.z * 0.8 })
+    : far ? norm({ x: radial.x + tangent.x * 0.35, z: radial.z + tangent.z * 0.35 }) : tangent;
+  const speed = entry.stats.move_speed * (close ? (entry.fsm.evade_speed_mult ?? 1) : (entry.fsm.strafe_speed_mult ?? 0.7));
+  sim.velocity = { x: direction.x * speed, z: direction.z * speed };
+  sim.anim = entry.fsm.move_clip ?? 'run';
 }
 
 

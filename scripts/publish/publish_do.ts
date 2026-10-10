@@ -42,6 +42,7 @@ const PRESET_NAME = "Asset Pack";
 // Kept in sync with publish_assets.ts (the Arweave flow).
 // Keep in sync with publish_assets.ts's copy of this list — see the note there.
 const ASSET_DIRS = [
+  "assets/easter_eggs",
   "assets/effects",
   "assets/enemies", "assets/fonts", "assets/hud", "assets/icons", "assets/images",
   "assets/mags", "assets/music", "assets/npcs", "assets/objects", "assets/player",

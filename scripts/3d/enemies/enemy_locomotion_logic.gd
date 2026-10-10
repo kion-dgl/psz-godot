@@ -46,3 +46,13 @@ static func flyer_move(dist: float, orbit: float, radial: Vector3, arc_side: flo
 		return {"mode": "approach", "dir": radial}
 	var tangent := Vector3(-radial.z * arc_side, 0.0, radial.x * arc_side)
 	return {"mode": "orbit", "dir": tangent}
+
+
+## Diagonal evasion close up; tangential shuffling at standoff; angled approach.
+static func shooter_move(dist: float, standoff: float, radial: Vector3, side: float) -> Vector3:
+	var tangent := Vector3(-radial.z * side, 0.0, radial.x * side)
+	if dist < standoff * 0.8:
+		return (tangent - radial * 0.8).normalized()
+	if dist > standoff * 1.2:
+		return (radial + tangent * 0.35).normalized()
+	return tangent

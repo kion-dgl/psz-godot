@@ -23,6 +23,10 @@ static func prepare(enemy: EnemyBase, player: Node3D, row: Dictionary, origin: V
 	enemy._update_immobilized()
 	enemy.dormant = false
 	enemy._spawn_lock = 0.0
+	enemy._tank.cooldowns.clear()
+	enemy._tank.phase = ""
+	enemy._tank.travel_cooldown = 0.0
+	enemy._finjer_spin_cooldown = 0.0
 	enemy.attack_cooldown_timer = 0.0
 	enemy._rng.seed = seed_value
 	enemy._play_animation("wat", true)

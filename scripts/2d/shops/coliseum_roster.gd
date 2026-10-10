@@ -211,7 +211,7 @@ const MIXED_GROUPS := {
 	"mixed_finjers": {"name":"Finjer Trio", "enemies":["finjer_r", "finjer_b", "finjer_g"]},
 	"mixed_machines": {"name":"Tanks + Swordmen", "enemies":["phobos", "arkzein", "zaphobos"]},
 	"mixed_mothers": {"name":"Mother Trio", "enemies":["blade_mother", "shot_mother", "force_mother"]},
-	"mixed_pressure": {"name":"Combined Pressure", "enemies":["batt", "finjer_r", "phobos", "arkzein", "force_mother"]},
+	"mixed_pressure": {"name":"Combined Pressure", "enemies":["batt", "finjer_r", "zaphobos", "arkzein", "force_mother"]},
 }
 const GROUP_POSITIONS := [[-5.0,0.0,4.0], [5.0,0.0,4.0], [0.0,0.0,0.0], [-5.0,0.0,-4.0], [5.0,0.0,-4.0]]
 

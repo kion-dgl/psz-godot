@@ -402,9 +402,7 @@
       ],
       "distance": 1.5,
       "condition": "ready",
-      "allowed_attacks": [
-        "spin"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
@@ -417,7 +415,8 @@
       "distance": 4,
       "condition": "ready",
       "allowed_attacks": [
-        "spin"
+        "spin",
+        "shot"
       ],
       "web": true
     },
@@ -431,6 +430,7 @@
       "distance": 4.01,
       "condition": "ready",
       "allowed_attacks": [
+        "spin",
         "shot"
       ],
       "web": true
@@ -462,7 +462,7 @@
       "web": true
     },
     {
-      "id": "family_range_1.5",
+      "id": "phobos_melee_1.5",
       "enemies": [
         "phobos",
         "phobos_dyna"
@@ -470,77 +470,68 @@
       "distance": 1.5,
       "condition": "ready",
       "allowed_attacks": [
-        "close_explosive"
+        "punch",
+        "heavy_strike"
       ],
       "web": true
     },
     {
-      "id": "family_range_3",
+      "id": "phobos_melee_3",
       "enemies": [
         "phobos",
         "phobos_dyna"
       ],
       "distance": 3,
       "condition": "ready",
-      "allowed_attacks": [
-        "close_explosive"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
-      "id": "family_range_3.01",
+      "id": "phobos_melee_3.01",
       "enemies": [
         "phobos",
         "phobos_dyna"
       ],
       "distance": 3.01,
       "condition": "ready",
-      "allowed_attacks": [
-        "shot"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
-      "id": "family_range_7",
+      "id": "phobos_melee_7",
       "enemies": [
         "phobos",
         "phobos_dyna"
       ],
       "distance": 7,
       "condition": "ready",
-      "allowed_attacks": [
-        "shot"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
-      "id": "family_range_7.01",
+      "id": "phobos_melee_7.01",
       "enemies": [
         "phobos",
         "phobos_dyna"
       ],
       "distance": 7.01,
       "condition": "ready",
-      "allowed_attacks": [
-        "bazooka"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
-      "id": "family_range_12",
+      "id": "phobos_melee_12",
       "enemies": [
         "phobos",
         "phobos_dyna"
       ],
       "distance": 12,
       "condition": "ready",
-      "allowed_attacks": [
-        "bazooka"
-      ],
+      "allowed_attacks": [],
       "web": true
     },
     {
-      "id": "family_range_13",
+      "id": "phobos_melee_13",
       "enemies": [
         "phobos",
         "phobos_dyna"
@@ -551,106 +542,182 @@
       "web": true
     },
     {
-      "id": "family_range_1.5",
+      "id": "arkzein_melee_1.5",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 1.5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "punch",
+        "heavy_strike"
+      ],
+      "web": true
+    },
+    {
+      "id": "tank_range_1.5",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 1.5,
       "condition": "ready",
       "allowed_attacks": [
-        "punch"
+        "blitz"
       ],
       "web": true
     },
     {
-      "id": "family_range_2",
+      "id": "arkzein_melee_2",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 2,
+      "condition": "ready",
+      "allowed_attacks": [
+        "punch",
+        "heavy_strike"
+      ],
+      "web": true
+    },
+    {
+      "id": "tank_range_2",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 2,
       "condition": "ready",
       "allowed_attacks": [
-        "punch"
+        "blitz"
       ],
       "web": true
     },
     {
-      "id": "family_range_2.01",
+      "id": "arkzein_melee_2.01",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 2.01,
+      "condition": "ready",
+      "allowed_attacks": [
+        "heavy_strike"
+      ],
+      "web": true
+    },
+    {
+      "id": "tank_range_2.01",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 2.01,
       "condition": "ready",
       "allowed_attacks": [
-        "sword_sweep"
+        "blitz"
       ],
       "web": true
     },
     {
-      "id": "family_range_4",
+      "id": "arkzein_melee_4",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "tank_range_4",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 4,
       "condition": "ready",
       "allowed_attacks": [
-        "sword_sweep"
+        "blitz",
+        "shot"
       ],
       "web": true
     },
     {
-      "id": "family_range_4.01",
+      "id": "arkzein_melee_4.01",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 4.01,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "tank_range_4.01",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 4.01,
       "condition": "ready",
       "allowed_attacks": [
-        "sword_throw"
+        "blitz",
+        "shot"
       ],
       "web": true
     },
     {
-      "id": "family_range_10",
+      "id": "arkzein_melee_10",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 10,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "tank_range_10",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 10,
       "condition": "ready",
       "allowed_attacks": [
-        "sword_throw"
+        "shot",
+        "missiles"
       ],
       "web": true
     },
     {
-      "id": "family_range_11",
+      "id": "arkzein_melee_11",
       "enemies": [
         "arkzein",
-        "arkzein_r",
+        "arkzein_r"
+      ],
+      "distance": 11,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "tank_range_11",
+      "enemies": [
         "zaphobos",
         "zaphobos_dyna"
       ],
       "distance": 11,
       "condition": "ready",
-      "allowed_attacks": [],
+      "allowed_attacks": [
+        "missiles"
+      ],
       "web": true
     },
     {
@@ -1198,6 +1265,346 @@
       "condition": "stun_no_attack",
       "allowed_attacks": [],
       "web": false
+    },
+    {
+      "id": "projectile_gate_cooldown",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "cooldown",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_gate_hurt",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "hurt",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_gate_recovery",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "recovery",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_gate_freeze",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "freeze",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "projectile_gate_dormant",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "dormant",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "projectile_gate_entrance",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "entrance",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "projectile_gate_stun_no_attack",
+      "enemies": [
+        "batt",
+        "bullbatt",
+        "korse",
+        "akorse",
+        "finjer_r",
+        "finjer_b",
+        "finjer_g",
+        "phobos",
+        "phobos_dyna",
+        "arkzein",
+        "arkzein_r",
+        "zaphobos",
+        "zaphobos_dyna",
+        "blade_mother",
+        "shot_mother",
+        "force_mother",
+        "mother_trinity",
+        "hypao",
+        "vespao"
+      ],
+      "distance": 5,
+      "condition": "stun_no_attack",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "projectile_boundary_korse_3",
+      "enemies": [
+        "korse"
+      ],
+      "distance": 3,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_akorse_3",
+      "enemies": [
+        "akorse"
+      ],
+      "distance": 3,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_korse_10",
+      "enemies": [
+        "korse"
+      ],
+      "distance": 10,
+      "condition": "ready",
+      "allowed_attacks": [
+        "shot"
+      ],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_akorse_10",
+      "enemies": [
+        "akorse"
+      ],
+      "distance": 10,
+      "condition": "ready",
+      "allowed_attacks": [
+        "shot"
+      ],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_korse_11",
+      "enemies": [
+        "korse"
+      ],
+      "distance": 11,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_akorse_11",
+      "enemies": [
+        "akorse"
+      ],
+      "distance": 11,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_hypao_2.5",
+      "enemies": [
+        "hypao"
+      ],
+      "distance": 2.5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "cast_barta"
+      ],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_hypao_8",
+      "enemies": [
+        "hypao"
+      ],
+      "distance": 8,
+      "condition": "ready",
+      "allowed_attacks": [
+        "cast_barta"
+      ],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_hypao_9",
+      "enemies": [
+        "hypao"
+      ],
+      "distance": 9,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_vespao_5.5",
+      "enemies": [
+        "vespao"
+      ],
+      "distance": 5.5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "cast_gibarta"
+      ],
+      "web": true
+    },
+    {
+      "id": "projectile_boundary_vespao_6.5",
+      "enemies": [
+        "vespao"
+      ],
+      "distance": 6.5,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "shooter_laser_boundary_korse",
+      "enemies": [
+        "korse"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [
+        "shot"
+      ],
+      "web": true
+    },
+    {
+      "id": "shooter_laser_boundary_akorse",
+      "enemies": [
+        "akorse"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [
+        "shot"
+      ],
+      "web": true
     }
   ]
 }

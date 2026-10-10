@@ -52,6 +52,7 @@ const PRESET_NAME = "Asset Pack";
 // and the exclude_filter inverse on the "Asset Pack" preset. Kenney CC0 packs
 // live in-repo and ride along in the main exe, so they're excluded here.
 const ASSET_DIRS = [
+  "assets/easter_eggs",
   // Keep in sync with publish_do.ts's copy of this list. A directory missing
   // here is invisible to asset_tree.txt, so check-asset-refs cannot tell that
   // its files were never published — the pack still gets them (the export

@@ -16,6 +16,14 @@ class Target extends Node3D:
 		elements.append(element)
 
 
+class EnemyTarget extends Node3D:
+	var hits := 0
+	var invincible := false
+	func is_dodge_iframed() -> bool: return invincible
+	func take_damage(_damage: int, _knockback: Vector3, _knockdown: bool) -> void:
+		hits += 1
+
+
 func _ready() -> void:
 	_run.call_deferred()
 
@@ -23,6 +31,7 @@ func _ready() -> void:
 func _run() -> void:
 	await _check_order_and_pierce()
 	await _check_point_blank_and_exclusions()
+	await _check_enemy_deliveries()
 
 	print("[combat-fidelity] DONE %s" % ("ok" if _fail == 0 else "FAIL"))
 	get_tree().quit(0 if _fail == 0 else 1)
@@ -170,3 +179,75 @@ func _check(ok: bool, label: String) -> void:
 		return
 	_fail += 1
 	push_error("[combat-fidelity] FAIL: " + label)
+
+
+func _check_enemy_deliveries() -> void:
+	for dt in [1.0 / 60.0, 0.5]:
+		for mode in ["wall", "overlap", "muzzle", "before_wall", "clear", "dodge"]:
+			var victim := EnemyTarget.new()
+			add_child(victim)
+			_fixtures.append(victim)
+			victim.position = Vector3(0, 0, 4)
+			victim.invincible = mode == "dodge"
+			if mode in ["wall", "overlap", "muzzle", "before_wall"]:
+				var z := 2.0
+				if mode == "overlap": z = 0.0
+				if mode == "muzzle": z = 0.4
+				if mode == "before_wall": z = 6.0
+				_box(Vector3(0, 1, z), Vector3(8, 4, 0.05))
+			var shot := EnemyProjectile.new()
+			shot.target = victim
+			shot.dir = Vector3.BACK
+			shot.max_range = 8.0
+			add_child(shot)
+			_fixtures.append(shot)
+			shot.set_physics_process(false)
+			shot.position = Vector3(0, 1.2, 0)
+			await _sync_physics()
+			if mode == "muzzle": shot.place_at_muzzle(shot.position, Vector3.BACK * 0.8)
+			for tick in range(120):
+				shot._physics_process(dt)
+				if shot.is_queued_for_deletion(): break
+			var expected := 1 if mode in ["clear", "before_wall"] else 0
+			_check(victim.hits == expected and shot.is_queued_for_deletion(), "enemy shot %s dt=%s" % [mode, dt])
+			shot._physics_process(dt)
+			_check(victim.hits == expected, "enemy shot consumed once")
+			_clear()
+	for mode in ["hit", "dodge", "wall", "cover", "sidestep"]:
+		var victim := EnemyTarget.new()
+		add_child(victim)
+		_fixtures.append(victim)
+		victim.position = Vector3(0, 0, 4)
+		victim.invincible = mode == "dodge"
+		_box(Vector3(0,-0.5,0), Vector3(30,1,30))
+		if mode == "wall": _box(Vector3(0,2,2), Vector3(8,8,0.05))
+		if mode == "cover":
+			victim.position.x = 1.0
+			_box(Vector3(0.5,0.5,4), Vector3(0.05,1,2))
+		if mode == "sidestep": victim.position.x = 5.0
+		var lob := EnemyLob.new()
+		lob.from = Vector3(0,1.2,0)
+		lob.to = Vector3(0,0,4)
+		lob.target = victim
+		add_child(lob)
+		_fixtures.append(lob)
+		lob.set_physics_process(false)
+		await _sync_physics()
+		lob._physics_process(1.5)
+		var expected := 1 if mode == "hit" else 0
+		_check(victim.hits == expected and lob._spent, "enemy lob %s slow frame" % mode)
+		lob._physics_process(1.5)
+		_check(victim.hits == expected, "lob landing consumed once")
+		_clear()
+
+
+func _box(pos: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	collision.shape = shape
+	body.add_child(collision)
+	add_child(body)
+	body.position = pos
+	_fixtures.append(body)

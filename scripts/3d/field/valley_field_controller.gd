@@ -314,6 +314,8 @@ func _ready() -> void:
 	_apply_glow_materials()
 	preload("res://scripts/3d/field/shrine_lighting.gd").rebuild_pillars(_map_root, stage_id)
 
+	preload("res://scripts/3d/field/coliseum_spectator.gd").add_to_stage(_map_root, stage_id)
+
 	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
 	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]
 	if ResourceLoader.exists(skybox_path):

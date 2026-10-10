@@ -6,7 +6,7 @@
     {
       "title": "Tank and swordman assignments conflict",
       "issue": 683,
-      "evidence": "data/re_reference/enemy_ids.json bestiary explicitly identifies tank as Arkzein (source slot 40). Current phobos/phobos_dyna use tank/tank_rare (40/41); arkzein/arkzein_r use swordman/swordman_rare (48/50); zaphobos/zaphobos_dyna use swordman_b/swordman_rare_b (49/51). The saved reference proves the base tank naming conflict but does not establish every swordman or rare display name.",
+      "evidence": "data/re_reference/enemy_ids.json bestiary explicitly identifies tank as Arkzein (source slot 40). Current phobos/phobos_dyna use tank/tank_rare (40/41); arkzein/arkzein_r use swordman/swordman_rare (48/50); zaphobos/zaphobos_dyna use swordman_b/swordman_rare_b (49/51). The saved reference proves the base tank naming conflict but does not establish every swordman or rare display name. User direction on 2026-10-10 remaps Zaphobos/Dyna to tank/tank_rare; this is an explicit game mapping, not a new bestiary identification. Follow-up correction: Phobos/Dyna now use swordman_b/swordman_rare_b as the melee pair.",
       "next": "Recover variant bestiary labels before proposing a complete display-name/ID migration. Use rigs, not current names, for #688/#689 comparisons."
     },
     {
@@ -478,22 +478,22 @@
     {
       "id": "phobos",
       "name": "Phobos",
-      "model_id": "tank",
-      "animation_model_id": "tank",
+      "model_id": "swordman_b",
+      "animation_model_id": "swordman_b",
       "is_boss": false,
-      "source_id": 40,
+      "source_id": 49,
       "issue": 688,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "user-directed melee mapping (2026-10-10)"
     },
     {
       "id": "phobos_dyna",
       "name": "Phobos Dyna",
-      "model_id": "tank_rare",
-      "animation_model_id": "tank_rare",
+      "model_id": "swordman_rare_b",
+      "animation_model_id": "swordman_rare_b",
       "is_boss": false,
-      "source_id": 41,
+      "source_id": 51,
       "issue": 688,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "user-directed melee mapping (2026-10-10)"
     },
     {
       "id": "pobomma",
@@ -708,22 +708,22 @@
     {
       "id": "zaphobos",
       "name": "Zaphobos",
-      "model_id": "swordman_b",
-      "animation_model_id": "swordman_b",
+      "model_id": "tank",
+      "animation_model_id": "tank",
       "is_boss": false,
-      "source_id": 49,
+      "source_id": 40,
       "issue": 689,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "user-directed tank mapping (2026-10-10); display-name source conflicts remain unresolved"
     },
     {
       "id": "zaphobos_dyna",
       "name": "Zaphobos Dyna",
-      "model_id": "swordman_rare_b",
-      "animation_model_id": "swordman_rare_b",
+      "model_id": "tank_rare",
+      "animation_model_id": "tank_rare",
       "is_boss": false,
-      "source_id": 51,
+      "source_id": 41,
       "issue": 689,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "user-directed tank mapping (2026-10-10); display-name source conflicts remain unresolved"
     },
     {
       "id": "zerreo",

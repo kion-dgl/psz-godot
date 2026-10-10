@@ -50,7 +50,8 @@ def prepare_project(project):
         if child.name in {".git", "scripts", "project.godot", "node_modules"}:
             continue
         (project / child.name).symlink_to(child, target_is_directory=child.is_dir())
-    shutil.copytree(ROOT / "scripts", project / "scripts")
+    shutil.copytree(ROOT / "scripts", project / "scripts",
+                    ignore=shutil.ignore_patterns("node_modules", "__pycache__"))
     config = (ROOT / "project.godot").read_text()
     # Godot can use an absolute custom user directory; it is removed with the project.
     config = re.sub(r'^config/(?:use_custom_user_dir|custom_user_dir)=.*\n', '', config, flags=re.M)
