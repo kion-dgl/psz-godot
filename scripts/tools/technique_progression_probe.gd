@@ -1,4 +1,5 @@
 extends Node
+## Entry point: godot --headless --path . res://scripts/tools/technique_progression_probe.tscn
 ## Fresh-save progression integration. Run in an isolated XDG_DATA_HOME.
 var _ok := true
 
