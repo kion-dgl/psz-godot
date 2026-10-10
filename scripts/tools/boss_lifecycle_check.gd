@@ -48,15 +48,16 @@ func _check(condition: bool, message: String) -> void:
 	_ok = condition and _ok
 
 func _damage_guards(player: Node3D, boss: ReyburnBoss) -> void:
+	# Isolate immunity from facing; directional contact is covered by PR #750.
 	GameState.set_hp(GameState.max_hp)
 	player.current_state = player.PlayerState.DODGING
 	player.dodge_timer = 0.0
-	_check(not boss._arc_hit(6, 90, 10) and GameState.hp == GameState.max_hp, "dodged wing contact cannot request pushback")
+	_check(not boss._arc_hit(6, 180, 10) and GameState.hp == GameState.max_hp, "dodged wing contact cannot request pushback")
 	player.current_state = player.PlayerState.IDLE
 	player._recovery_left = 1.0
-	_check(not boss._arc_hit(6, 90, 10), "recovery rejects boss contact")
+	_check(not boss._arc_hit(6, 180, 10), "recovery rejects boss contact")
 	player._recovery_left = 0.0
-	_check(boss._arc_hit(6, 90, 10) and GameState.hp == GameState.max_hp - 10, "unprotected boss contact damages once")
+	_check(boss._arc_hit(6, 180, 10) and GameState.hp == GameState.max_hp - 10, "unprotected boss contact damages once")
 	await get_tree().physics_frame
 
 func _finish_encounter(player: Node3D, boss: ReyburnBoss, field: Node) -> void:
