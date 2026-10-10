@@ -1,0 +1,69 @@
+{
+  "issue": 684,
+  "sources": {
+    "psz_re": {
+      "revision": "a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93",
+      "files": {
+        "data/enemy_vtable_species.json": "0e0e34762e26a1b3efe21733f618f484ac4bd0ec32df451557ef974f3aeff980",
+        "data/enemy_ids.json": "b54d3f8cb454d048184fb165e64c65e8fab83376ff4a4d3ba79f747124ad16bd",
+        "data/enemy_descriptors.json": "40d4f4015c0c891d379e3143778b1068124f60eef4c03373ee2403da3771c43c"
+      }
+    },
+    "pszm_decomp": {
+      "revision": "a3836afc1780ee8a41078d4f1299141252a8f91b",
+      "files": {
+        "drafts/near/arm9/FUN_02072774.c": "9928a2fcd6d5fd1331526910f91ca016dd63ea87f2f8d0a1dccbe642c798c85a",
+        "notes/sessions/session-live-hot5-2026-09-16.md": "28e49c44ec4dd60ce805baae7e412ad923f50b36d05269923db3233234aa3283",
+        "src/arm9/FUN_02072bac.c": "13a6ce9f3d9bfcc6ebe3c5e93fe4c9d7c5898d67dd9fde35eadf50875af60d8d",
+        "src/arm9/FUN_02072b0c.c": "e5b15fbec5dbcdfbdd2520f9271e9eea99cf686eb01557f10f69b4cc74c205a5"
+      }
+    },
+    "viewer_audit": {
+      "path": "data/re_reference/enemy_viewer_audit.json",
+      "sha256": "e9588120c43ee76c001c4816dd08bf84f271a93769be2dc6ef02972704c44347",
+      "captured": "2026-10-07",
+      "urls": [
+        "https://dashgl.github.io/psz-asset-viewer/enemies/booma/",
+        "https://dashgl.github.io/psz-asset-viewer/enemies/jigobooma/"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "claim": "booma and jigobooma are a descriptor fingerprint candidate pair; retail enemy IDs 55/56 map to these archive names.",
+      "basis": "psz_re extracted data",
+      "confidence": "high for archive identity, not behavior"
+    },
+    {
+      "claim": "Both viewer entries list atk, atk_hi, atk_mi, dam, ded, run, stt, wat, wlk and the same s071 animation filenames.",
+      "basis": "saved viewer audit",
+      "confidence": "high for clip inventory; does not establish identical gameplay"
+    },
+    {
+      "claim": "stt emerges from dirt once; atk prepares a dash; run travels; atk_mi is short upward recovery; atk_hi is a longer tumble.",
+      "basis": "retained user playtest and rendered inspection documented by PR #681 and data/enemy_attacks.json clip_notes; no new original-game recording",
+      "confidence": "retained observation, with atk_hi selection unresolved"
+    },
+    {
+      "claim": "Mini FUN_02072774 remembers hit records and supports aging; FUN_02072bac/FUN_02072b0c concern flags/teardown.",
+      "basis": "nonmatching draft (161 differing words, 128 synthetic stubbed comparisons) and matched helpers; not a mapped Booma AI routine",
+      "confidence": "insufficient to derive Booma timing/range/recovery selection"
+    },
+    {
+      "claim": "No inspected source establishes a Booma-specific Mini override or proves the current dash numbers.",
+      "basis": "limited source review, not proof that no override exists",
+      "confidence": "unknown"
+    }
+  ],
+  "intentional_choices": [
+    "Both runtime variants share the current kit and stat values; variant differences remain unverified.",
+    "Inclusive 0\u20134 m dash eligibility, 1 m overshoot capped at 4 m, 0.55 m reach plus player radius, 1.5 s base cooldown are provisional.",
+    "atk_mi recovers both hits and misses; atk_hi remains unused pending selection evidence.",
+    "Stop before walls/unsupported floor and reject occluded contacts for reliable gameplay; not asserted DS parity."
+  ],
+  "remaining": [
+    "Original hit/miss recovery branch and atk_hi trigger",
+    "Original variant stats and difficulty timing",
+    "Focused visual check of body/hitbox alignment and recovery feel"
+  ]
+}

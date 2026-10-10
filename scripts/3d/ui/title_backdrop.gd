@@ -98,7 +98,7 @@ func _build_environment(config: Dictionary) -> void:
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color(0.02, 0.02, 0.1)
+	e.background_color = Color("05051a")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = _color(config["ambient"]["color"])
 	e.ambient_light_energy = config["ambient"]["intensity"]
@@ -133,8 +133,7 @@ func _populate_group(parent: Node3D, keep_names: Array, priority: int, config: D
 		mi.visible = keep
 		if not keep:
 			continue
-		if priority != -1:
-			_set_render_priority(mi, priority)
+		_prepare_layer_material(mi, priority)
 		_register_scroll(mi, scrolls)
 
 
@@ -172,9 +171,19 @@ func _split_merged_surfaces(root: Node) -> void:
 	source.queue_free()
 
 
-func _set_render_priority(mi: MeshInstance3D, priority: int) -> void:
-	var mat: Material = _ensure_override_material(mi)
-	if mat != null:
+func _prepare_layer_material(mi: MeshInstance3D, priority: int) -> void:
+	var mat := _ensure_override_material(mi) as BaseMaterial3D
+	if mat == null:
+		return
+	# Match the mock's MeshBasicMaterial instead of the imported cutout/dither.
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.vertex_color_use_as_albedo = true
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	mat.texture_repeat = true
+	if priority != -1:
 		mat.render_priority = priority
 
 
@@ -213,7 +222,9 @@ func _build_nebulae(config: Dictionary) -> void:
 	for n in config["nebulae"]:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_texture = tex
-		mat.albedo_color = _color(n["color"]) * float(n["opacity"]) * 2.0
+		mat.albedo_color = _color(n["color"])
+		mat.albedo_color.a = float(n["opacity"])
+		mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -238,22 +249,18 @@ func _build_stars(config: Dictionary) -> void:
 	for p in cfg["palette"]:
 		palette.append(_color(p))
 
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.vertex_color_use_as_albedo = true
-	mat.disable_receive_shadows = true
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://scripts/3d/shaders/title_stars.gdshader")
 	mat.render_priority = -20
 
 	var star_mesh := QuadMesh.new()
-	star_mesh.size = Vector2(0.6, 0.6)
+	star_mesh.size = Vector2.ONE
 	star_mesh.material = mat
 
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
+	mm.use_custom_data = true
 	mm.mesh = star_mesh
 	mm.instance_count = total
 
@@ -270,7 +277,14 @@ func _build_stars(config: Dictionary) -> void:
 			rng.randf_range(y_lo, y_hi),
 			rng.randf_range(z_lo, z_hi),
 		)
-		var inst_scale := rng.randf_range(0.6, 2.0)
+		# Convert the mock's point sizes to world units at its 720px reference view.
+		var is_sparkle := i >= int(cfg["staticCount"])
+		var roll := rng.randf()
+		var pixels := rng.randf_range(1.0, 1.8) if roll < 0.7 else rng.randf_range(2.0, 3.0)
+		if roll >= 0.95: pixels = rng.randf_range(3.5, 5.0)
+		if is_sparkle: pixels = 4.0
+		var inst_scale := pixels * 0.2071
+		mm.set_instance_custom_data(i, Color(1.0 if is_sparkle else 0.0, rng.randf(), 0, 0))
 		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * inst_scale), pos))
 		mm.set_instance_color(i, palette[rng.randi() % palette.size()])
 

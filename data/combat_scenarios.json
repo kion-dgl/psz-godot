@@ -1058,6 +1058,146 @@
       "condition": "stun_no_attack",
       "allowed_attacks": [],
       "web": false
+    },
+    {
+      "id": "booma_close",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 0.5,
+      "condition": "ready",
+      "allowed_attacks": [
+        "dash"
+      ],
+      "web": true
+    },
+    {
+      "id": "booma_mid",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "ready",
+      "allowed_attacks": [
+        "dash"
+      ],
+      "web": true
+    },
+    {
+      "id": "booma_inside_max",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 3.99,
+      "condition": "ready",
+      "allowed_attacks": [
+        "dash"
+      ],
+      "web": true
+    },
+    {
+      "id": "booma_at_max",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 4,
+      "condition": "ready",
+      "allowed_attacks": [
+        "dash"
+      ],
+      "web": true
+    },
+    {
+      "id": "booma_far",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 5,
+      "condition": "ready",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "booma_cooldown",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "cooldown",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "booma_hurt",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "hurt",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "booma_recovery",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "recovery",
+      "allowed_attacks": [],
+      "web": true
+    },
+    {
+      "id": "booma_dormant",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "dormant",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "booma_entrance",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "entrance",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "booma_freeze",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "freeze",
+      "allowed_attacks": [],
+      "web": false
+    },
+    {
+      "id": "booma_stun_no_attack",
+      "enemies": [
+        "booma_origin",
+        "gigobooma_origin"
+      ],
+      "distance": 2,
+      "condition": "stun_no_attack",
+      "allowed_attacks": [],
+      "web": false
     }
   ]
 }

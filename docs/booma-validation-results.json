@@ -1,0 +1,1536 @@
+{
+  "issue": 684,
+  "seed": 684,
+  "decision_seed": 7007,
+  "fixed_fps": 60,
+  "scope": "Godot contract; original-game parity and visual feel remain unverified",
+  "revision": "db25bf50dcdf4e8b51d20383c5a8f28c6b6f69b5",
+  "godot_version": "4.5.1.stable.official.f62fdbde1",
+  "input_sha256": {
+    "scripts/3d/enemies/enemy_base.gd": "5916d3a27dca467b1dc0bb39bcae720486b3b2e1d33d5d29a93bdac18362c5f9",
+    "scripts/tools/booma_validation_tests.gd": "2d6db81b2325117d65b45b775e24011afeb545554ccd4d9473af923e38ad4926",
+    "scripts/tools/coliseum_booma_check.gd": "553590e78319858d614a92359e311875acd775af818f28971fd5082b7f40981f",
+    "scripts/tools/enemy_decision_scenarios.gd": "8e8ae0afdc2eb12b15c0dfe7fcf8b9d55524485134106fb18b433889f4a61348",
+    "scripts/tools/coliseum_entrance_check.gd": "6f65e2982f10864371ce9fbb66fc311c9c921f88fa1d318488eab535bd9da7bd",
+    "scripts/tools/coliseum_probe.gd": "6f58e5aba859cefb53d6d3ea7cd69b8166b07e3cea783485254f1ff6268f7254",
+    "scripts/tools/test_runner.gd": "d1a20dd1420f91b7a188f6d2b0d8fabc6338ecf0e8ee456286d1bc693b29f5b4",
+    "scripts/tools/verify_booma.py": "af0c7d7dd3a2515f7e18372cb47a25156b476276e2b288af54795c400f5706b2",
+    "data/combat_scenarios.json": "7520cc89c32d3917db094359e6d8d39bb8f8f8a1acebc8d024616c78d22a06ca",
+    "data/enemy_attacks.json": "e717e3dd5212ef1ab842345f3f462801c331e463fe0e09beef92f3a23af16d4a",
+    "data/re_reference/booma_evidence.json": "cee1409b9c09fde0a41763b12140aa5c1b9bb55251b6d107519c402bf9ac0078"
+  },
+  "checks": {
+    "unit": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/unit.log",
+      "cases": [],
+      "rigs": []
+    },
+    "booma_origin-normal": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/booma_origin-normal.log",
+      "cases": [
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499675750732
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980220794678
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501659393311
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501659393311
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.299999237060547
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980220794678
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "booma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "booma_origin",
+          "model": "booma"
+        }
+      ]
+    },
+    "booma_origin-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/booma_origin-hard.log",
+      "cases": [
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499580383301
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980125427246
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501564025879
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501564025879
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.299999237060547
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980125427246
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "booma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "booma_origin",
+          "model": "booma"
+        }
+      ]
+    },
+    "booma_origin-super-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/booma_origin-super-hard.log",
+      "cases": [
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499008178711
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14979553222656
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501373291016
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501373291016
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14979553222656
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "booma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "booma_origin",
+          "model": "booma"
+        }
+      ]
+    },
+    "gigobooma_origin-normal": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/gigobooma_origin-normal.log",
+      "cases": [
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499485015869
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980030059814
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501468658447
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501468658447
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149999618530273
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980030059814
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "normal",
+          "enemy": "gigobooma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "gigobooma_origin",
+          "model": "jigobooma"
+        }
+      ]
+    },
+    "gigobooma_origin-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/gigobooma_origin-hard.log",
+      "cases": [
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499485015869
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980030059814
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501468658447
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501468658447
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.299999237060547
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980030059814
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "hard",
+          "enemy": "gigobooma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "gigobooma_origin",
+          "model": "jigobooma"
+        }
+      ]
+    },
+    "gigobooma_origin-super-hard": {
+      "passed": true,
+      "exit_code": 0,
+      "script_errors": false,
+      "log": "/private/tmp/psz-pr-booma-final/gigobooma_origin-super-hard.log",
+      "cases": [
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 1,
+          "mode": "hit",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.02499580383301
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "dodge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980125427246
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "sidestep",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501564025879
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "retreat",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 3.97501564025879
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.824997901916504
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "thin_wall",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.149871826171875
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "edge",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt",
+          "passed": true,
+          "preparation_seconds": 0.0166666666666667,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "hurt_travel",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": false,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 0.0
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "finished": true,
+          "hits": 0,
+          "mode": "lost",
+          "passed": true,
+          "preparation_seconds": 0.833333333333334,
+          "recovery": true,
+          "safe": true,
+          "seed": 684,
+          "started": true,
+          "travel": 2.14980125427246
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "mode": "death_st",
+          "passed": true,
+          "seed": 684
+        },
+        {
+          "difficulty": "super-hard",
+          "enemy": "gigobooma_origin",
+          "mode": "death_lp",
+          "passed": true,
+          "seed": 684
+        }
+      ],
+      "rigs": [
+        {
+          "clips": {
+            "atk": {
+              "name": "s071_atk",
+              "seconds": 0.816666722297668
+            },
+            "atk_hi": {
+              "name": "s071_atk_hi",
+              "seconds": 0.583333373069763
+            },
+            "atk_mi": {
+              "name": "s071_atk_mi",
+              "seconds": 0.233333349227905
+            },
+            "dam": {
+              "name": "s071_dam",
+              "seconds": 0.25
+            },
+            "ded": {
+              "name": "s071_ded",
+              "seconds": 0.366666674613953
+            },
+            "run": {
+              "name": "s071_run",
+              "seconds": 0.333333343267441
+            },
+            "stt": {
+              "name": "s071_stt",
+              "seconds": 1.0
+            },
+            "wat": {
+              "name": "s071_wat",
+              "seconds": 0.916666686534882
+            },
+            "wlk": {
+              "name": "s071_wlk",
+              "seconds": 0.333333343267441
+            }
+          },
+          "collision_height": 1.5,
+          "collision_radius": 0.5,
+          "complete": true,
+          "enemy": "gigobooma_origin",
+          "model": "jigobooma"
+        }
+      ]
+    }
+  },
+  "calibration": {
+    "passed": false,
+    "exit_code": 1,
+    "script_errors": false,
+    "log": "/private/tmp/psz-pr-booma-final/unsafe-charge-mutant.log",
+    "cases": [
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 1,
+        "mode": "hit",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 2.02499580383301
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "dodge",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 2.14980125427246
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "sidestep",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 3.97501945495605
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "retreat",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 3.97501945495605
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "wall",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 0.850485801696777
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 1,
+        "mode": "thin_wall",
+        "passed": false,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 0.0
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 1,
+        "mode": "edge",
+        "passed": false,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 1.95152854919434
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "hurt",
+        "passed": true,
+        "preparation_seconds": 0.0166666666666667,
+        "recovery": false,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 0.0
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "hurt_travel",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": false,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 0.0
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "finished": true,
+        "hits": 0,
+        "mode": "lost",
+        "passed": true,
+        "preparation_seconds": 0.833333333333334,
+        "recovery": true,
+        "safe": true,
+        "seed": 684,
+        "started": true,
+        "travel": 2.14980125427246
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "mode": "death_st",
+        "passed": true,
+        "seed": 684
+      },
+      {
+        "difficulty": "normal",
+        "enemy": "booma_origin",
+        "mode": "death_lp",
+        "passed": true,
+        "seed": 684
+      }
+    ],
+    "rigs": [
+      {
+        "clips": {
+          "atk": {
+            "name": "s071_atk",
+            "seconds": 0.816666722297668
+          },
+          "atk_hi": {
+            "name": "s071_atk_hi",
+            "seconds": 0.583333373069763
+          },
+          "atk_mi": {
+            "name": "s071_atk_mi",
+            "seconds": 0.233333349227905
+          },
+          "dam": {
+            "name": "s071_dam",
+            "seconds": 0.25
+          },
+          "ded": {
+            "name": "s071_ded",
+            "seconds": 0.366666674613953
+          },
+          "run": {
+            "name": "s071_run",
+            "seconds": 0.333333343267441
+          },
+          "stt": {
+            "name": "s071_stt",
+            "seconds": 1.0
+          },
+          "wat": {
+            "name": "s071_wat",
+            "seconds": 0.916666686534882
+          },
+          "wlk": {
+            "name": "s071_wlk",
+            "seconds": 0.333333343267441
+          }
+        },
+        "collision_height": 1.5,
+        "collision_radius": 0.5,
+        "complete": true,
+        "enemy": "booma_origin",
+        "model": "booma"
+      }
+    ],
+    "rejected_as_expected": true
+  },
+  "passed": true,
+  "shared_charge_regressions": {
+    "hildegigas": {
+      "passed": true,
+      "log": "/tmp/psz-684-hildegigas.log"
+    },
+    "rohjade": {
+      "passed": true,
+      "log": "/tmp/psz-684-rohjade.log"
+    },
+    "finjer_r": {
+      "passed": true,
+      "log": "/tmp/psz-684-finjer_r.log"
+    }
+  },
+  "other_validation": {
+    "web": {
+      "passed": 898,
+      "skipped": 4
+    },
+    "typescript": "pass",
+    "site_build": "209 pages",
+    "code_graph": "pass",
+    "orphans": "no new",
+    "roster": "pass"
+  },
+  "pso_search_live_checks": {
+    "pso_booma": {
+      "passed": true,
+      "log": "/tmp/psz-pr-pso_booma.log"
+    },
+    "pso_gobooma": {
+      "passed": true,
+      "log": "/tmp/psz-pr-pso_gobooma.log"
+    },
+    "pso_gigobooma": {
+      "passed": true,
+      "log": "/tmp/psz-pr-pso_gigobooma.log"
+    }
+  }
+}
