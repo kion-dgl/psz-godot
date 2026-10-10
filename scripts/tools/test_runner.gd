@@ -50,6 +50,7 @@ func _run_tests_combat() -> void:
 	test_element_status()
 	test_enemy_attack_recovery()
 	test_enemy_attack_clip_resolution()
+	preload("res://scripts/tools/reyburn_combat_tests.gd").run(self)
 	test_enemy_attack_selection()
 	test_enemy_attack_arc()
 	test_enemy_attack_timeline()

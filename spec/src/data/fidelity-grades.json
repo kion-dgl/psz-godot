@@ -76,7 +76,7 @@
       "area": "Bosses",
       "grade": "D",
       "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
-      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation.",
+      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation. Playtest Reyburn facing, charge direction, complete windup chains and uninterrupted walking/strikes. Original phase counters, staggered breath events and other boss kits remain open. Grade unchanged; Mac playtest pending.",
       "label": "score:bosses",
       "reviewed_on": "2026-10-10"
     },
