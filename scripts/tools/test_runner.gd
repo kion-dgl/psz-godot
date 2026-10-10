@@ -129,6 +129,7 @@ func _run_tests_core() -> void:
 	test_scene_manager_transition_settles()
 	test_hud_stats_persistent_panel()
 	test_ranger_playthrough()
+	preload("res://scripts/tools/technique_progression_tests.gd").run(self)
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
@@ -9662,6 +9663,11 @@ func test_charge_drop_paths() -> void:
 	print("── Charge cancel: _drop_charge clears + different-slot drop (#352) ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 	var pl = PlayerScript.new()
+	var character = CharacterManager.get_active_character()
+	var saved_class: String = character.class_id
+	var saved_techniques: Dictionary = character.techniques.duplicate(true)
+	character.class_id = "fomar"
+	character.techniques = {"foie": 1, "barta": 1}
 
 	# Core: _drop_charge clears the charge and emits tech_charge_released once.
 	var released: Array = []
@@ -9709,6 +9715,8 @@ func test_charge_drop_paths() -> void:
 
 	ActionPalette.set_action(page, 0, saved0)
 	ActionPalette.set_action(page, 1, saved1)
+	character.class_id = saved_class
+	character.techniques = saved_techniques
 	pl.free()
 	print("")
 
