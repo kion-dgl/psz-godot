@@ -13,6 +13,7 @@ import FidelityGrades from '../../../web/src/pages/FidelityGrades';
   <p>Every PR SHOULD identify affected scorecard areas and link their issue filters, or state “No scorecard impact” with a short reason. Apply the relevant area labels to concrete GitHub issues; maintain membership there, not in a source-code list.</p>
   <p>For affected areas, review the assessment and next review target in <code>spec/src/data/fidelity-grades.json</code>. Update stale wording when the change resolves a target or reveals a new gap. If implementation is complete but a playtest is pending, say so and retain the grade.</p>
   <p>Change a grade only with Kion’s assessment backed by a dated playtest, tested revision, scenario and observations. Record that evidence in the PR and the affected area’s assessment; update the assessment date only when an assessment actually occurs. A merge, passing test or closed issue alone does not change a grade. Partial reviews MUST identify the reviewed areas rather than imply every score was reassessed.</p>
+  <p>Playtest base-disk availability, class restrictions, charged upgrades and fresh Force save/reload. Original timing, overall Force balance, enemy levels and economy remain open. This batch awaits owner playtest and does not change the systems grade.</p>
   <h2>Combat evidence, tracked separately</h2>
   <ol>
     <li><strong>Identity:</strong> reconcile runtime ID, display name, model, animation rig and source identity. <a href={siteUrl('/states/combat-roster')}>Current crosswalk and unresolved mappings</a>.</li>
@@ -22,7 +23,6 @@ import FidelityGrades from '../../../web/src/pages/FidelityGrades';
     <li><strong>Feel:</strong> focused user comparison before claiming a family is validated.</li>
   </ol>
   <p>The existing suites provide substantial mechanics coverage. They do not establish every original attack, visual alignment or combat feel. Existing user approval of the gameplay foundation remains valid; family-level unknowns remain open.</p>
-  <p>Playtest base-disk availability, class restrictions, charged upgrades and fresh Force save/reload. Original timing, overall Force balance, enemy levels and economy remain open. This batch awaits owner playtest and does not change the systems grade.</p>
   <h2>Finding the next improvement</h2>
   <p>Each area links directly to open issues with its <code>score:*</code> label. An issue may improve several areas and carry several score labels. The scorecard owns the assessment and review targets; issues describe concrete defects, investigations or improvements with a clear completion condition.</p>
   <p>Use these filters to choose work without an umbrella issue or milestone per grade. Empty filters mean no open issues have been associated yet, not that the area is complete. Kion’s playtest observations can refine each review target independently of the issue list.</p>
