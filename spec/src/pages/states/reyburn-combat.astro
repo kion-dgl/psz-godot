@@ -1,0 +1,26 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Reyburn combat delivery" section="States">
+<p>Implementation contract for #563 and #714, extending /states/bosses. This is
+remake reliability work: original attack-selection probabilities, damage-budget
+phase transitions and event-frame mapping remain unresolved.</p>
+<ul>
+<li>The model, charge, melee arc and knockback MUST share local +Z facing.
+Turning MUST respect the authored degrees-per-second limit. Attack facing MUST
+lock when the final striking clip starts.</li>
+<li>Selection MUST respect inclusive minimum/maximum range and ignore zero or
+negative weights. A retreat beyond impact reach MUST avoid melee damage.</li>
+<li>Every chain clip preceding the strike MUST play for its resolved duration
+without damage. Loop preludes MUST run the authored lp_loops count, default one.
+Missing clips MUST use a bounded 0.35 second prelude / 0.8 second strike fallback.
+The final clip MUST release once at windup_frac (default 0.55) of its duration.
+The existing projectile volley releases together at that point; staggered
+original breath events remain a separate fidelity task.</li>
+<li>Walking MUST advance its animation rather than restart each physics tick.
+Enrage MUST NOT replace an in-progress attack clip. Its speed/cooldown modifiers
+remain existing remake tuning, as do the 35% enrage and 50% flight gates.</li>
+</ul>
+<p>Validation: reyburn_combat_tests.gd seeds geometry and timeline boundaries;
+reyburn_combat_probe.tscn repeats them with the real z_001 rig in s01z_na1.</p>
+</Concept>

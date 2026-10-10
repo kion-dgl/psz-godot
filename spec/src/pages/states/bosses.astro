@@ -59,6 +59,8 @@ const chart = `stateDiagram-v2
     <tr><td><code>stats</code> / <code>fsm</code></td><td>Draft sim tuning (hp, move/turn speed, attack cooldown, flight cadence, punish break/multiplier) driving the room's <em>behavior sim</em> — <code>web/src/boss-room/sim.ts</code>, the runnable form of these tables (attack selection and the melee arc are imported from the enemy room's normative <code>fsm.ts</code>). Sim numbers are tuning draft, not observed truth; they harden through the same workflow below.</td></tr>
   </table>
 
+  <p>Reyburn's current Godot delivery follows <a href={siteUrl('/states/reyburn-combat')}>Reyburn combat delivery</a>: imported prelude durations, shared +Z facing and a single final-clip release. These reliability fixes do not establish original attack-selection or phase parity.</p>
+
   <h3>Attack kinds</h3>
   <p>Boss attacks reuse the enemy kinds (<code>melee_arc</code>, <code>projectile</code>, <code>lob</code>, <code>charge</code>, <code>leap</code>) and add the boss-only kinds below. The additions extend — and MUST NOT alter — the enemy set:</p>
   <table>

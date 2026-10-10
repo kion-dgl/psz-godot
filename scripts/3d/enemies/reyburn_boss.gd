@@ -20,7 +20,7 @@ class_name ReyburnBoss extends EnemyBase
 
 const KIT_PATH := "res://data/boss_arenas.json"
 const ENRAGE_FRAC := 0.35
-const FLIGHT_HP_FRAC := 0.5  # Reyburn only takes to the air below half HP (psz-re B2: grounded at high HP)
+const FLIGHT_HP_FRAC := 0.5  # Remake tuning; original damage-budget gates remain unresolved.
 
 enum S { INTRO, GROUND, TELEGRAPH, ATTACK, LOAF, FLIGHT_OUT, FLIGHT_HOVER, FLIGHT_SLAM, DEAD }
 
@@ -50,6 +50,8 @@ var _cur: Dictionary = {}           # attack currently telegraphing/executing
 var _attack_done := false           # damage already applied this swing
 var _fly_target: Vector3 = Vector3.ZERO
 var _glow: OmniLight3D = null
+var _prelude: Array = []
+var _prelude_index := 0
 
 
 func _ready() -> void:
@@ -204,16 +206,20 @@ func _tick_telegraph(delta: float) -> void:
 	_apply_gravity(delta)
 	move_and_slide()
 	_t -= delta
-	if _t <= 0.0:
-		_execute_attack()
+	if _t <= 0.000001:
+		_prelude_index += 1
+		if _prelude_index < _prelude.size():
+			_start_prelude()
+		else:
+			_execute_attack()
 
 
 func _tick_attack(delta: float) -> void:
 	_apply_gravity(delta)
 	# charge attacks keep lunging forward during the swing
 	if _cur.get("kind") == "charge" and not _attack_done:
-		velocity.x = -sin(rotation.y) * _move_speed * _speed_mult() * 1.8
-		velocity.z = -cos(rotation.y) * _move_speed * _speed_mult() * 1.8
+		velocity.x = sin(rotation.y) * _move_speed * _speed_mult() * 1.8
+		velocity.z = cos(rotation.y) * _move_speed * _speed_mult() * 1.8
 	else:
 		velocity.x = 0; velocity.z = 0
 	move_and_slide()
@@ -285,7 +291,8 @@ func _pick_ground_attack(dist: float) -> bool:
 		var hi := float(a.get("max_range", 6.0))
 		if dist >= lo and dist <= hi:
 			var w := float(a.get("weight", 1.0))
-			choices.append([a, w])
+			if w > 0.0:
+				choices.append([a, w])
 	if choices.is_empty():
 		return false
 	var total := 0.0
@@ -303,26 +310,46 @@ func _pick_ground_attack(dist: float) -> bool:
 func _begin_attack(a: Dictionary) -> void:
 	_cur = a.duplicate(true)
 	_s = S.TELEGRAPH
-	# telegraph is a short wind-up before the clip's damage frame
-	_t = 0.35
 	_attack_done = false
-	# play the first clip of the chain (or the attack clip)
-	var chain: Array = a.get("chain", [])
-	_play(chain[0] if chain.size() > 0 else a.get("clip", "atkh1"))
+	_prelude = a.get("chain", []).duplicate()
+	if not _prelude.is_empty() and _prelude.back() == a.get("clip", "atkh1"):
+		_prelude.pop_back()
+	_prelude_index = 0
+	if _prelude.is_empty():
+		_t = 0.35
+		_play("wat")
+	else:
+		_start_prelude()
+
+
+func _boss_clip_duration(clip: String, fallback: float) -> float:
+	if animation_player:
+		var full := _find_animation(clip)
+		if not full.is_empty():
+			return maxf(0.01, animation_player.get_animation(full).length)
+	return fallback
+
+
+func _start_prelude() -> void:
+	var clip := str(_prelude[_prelude_index])
+	_play(clip)
+	_t = _boss_clip_duration(clip, 0.35)
+	if clip.ends_with("lp"):
+		_t *= maxi(1, int(_cur.get("lp_loops", 1)))
+		if animation_player:
+			var full := _find_animation(clip)
+			if not full.is_empty():
+				animation_player.get_animation(full).loop_mode = Animation.LOOP_LINEAR
 
 
 func _execute_attack() -> void:
 	# start the swing proper: play the striking clip and set its length
 	var clip: String = _cur.get("clip", "atkh1")
 	_play(clip, true)
-	var length := 0.8
-	if animation_player:
-		var full := _find_animation(clip)
-		if full != "" and animation_player.has_animation(full):
-			length = maxf(0.4, animation_player.get_animation(full).length)
+	var length := _boss_clip_duration(clip, 0.8)
 	_s = S.ATTACK
 	_t = length
-	_cur["_hit_at"] = length * 0.45         # apply damage ~55% through the clip
+	_cur["_hit_at"] = length * (1.0 - clampf(float(_cur.get("windup_frac", 0.55)), 0.0, 1.0))
 	_attack_done = false
 
 
@@ -369,7 +396,7 @@ func _arc_hit(reach: float, half_angle_deg: float, dmg: int) -> bool:
 	var to := target.global_position - global_position
 	to.y = 0
 	if to.length() > reach: return false
-	var facing := Vector3(-sin(rotation.y), 0, -cos(rotation.y))
+	var facing := Vector3(sin(rotation.y), 0, cos(rotation.y))
 	if to.length() > 0.01 and rad_to_deg(facing.angle_to(to.normalized())) > half_angle_deg:
 		return false
 	if target.has_method("take_damage"):
@@ -392,7 +419,7 @@ func _aoe_burst(radius: float, half_angle_deg: float, dmg: int) -> void:
 
 func _knockback_player(strength: float) -> void:
 	if not target or not is_instance_valid(target): return
-	var dir := Vector3(-sin(rotation.y), 0, -cos(rotation.y))
+	var dir := Vector3(sin(rotation.y), 0, cos(rotation.y))
 	if target.has_method("apply_knockback"):
 		target.apply_knockback(dir * strength)
 	elif "velocity" in target:
@@ -446,7 +473,7 @@ func _spawn_shockwave(radius: float) -> void:
 # ---- phase / movement helpers ----------------------------------------------
 func _enter_enrage() -> void:
 	_enraged = true
-	_play("tht")                                # growl
+	# The low-HP modifier must not interrupt the clip owning a pending release.
 	_glow = OmniLight3D.new()
 	_glow.light_color = Color(1.0, 0.2, 0.1)
 	_glow.light_energy = 2.5
@@ -468,7 +495,7 @@ func _walk_toward(pos: Vector3, _delta: float) -> void:
 	var v := to.normalized() * _move_speed * _speed_mult()
 	velocity.x = v.x
 	velocity.z = v.z
-	_play("wlk1")
+	_play("wlk1", false)
 
 
 func _face(pos: Vector3, delta: float) -> void:
