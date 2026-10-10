@@ -1619,13 +1619,13 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String) -> void:
-	if _is_defeated or GameState.hp <= 0 or current_state in [PlayerState.DAMAGED, PlayerState.DOWN]:
-		return
 	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
 
 	var character = CharacterManager.get_active_character()
 	if character == null:
+		return
+	if _is_defeated or GameState.hp <= 0 or current_state in [PlayerState.DAMAGED, PlayerState.DOWN]:
 		return
 	if TechniqueManager.get_technique_level(character, technique_id) <= 0:
 		print("[Player] Technique %s not learned" % technique_id)
