@@ -8,7 +8,9 @@ func _ready() -> void:
 
 func _run() -> void:
 	for attempt in 2:
+		TrapBall.grant_vision()
 		SessionManager.enter_quest("debug_boss_reyburn", "normal")
+		_check(not TrapBall.vision_active(), "fresh arena session resets old Trap Vision")
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": "0,0", "spawn_edge": "", "keys_collected": {}})
 		var boss: ReyburnBoss

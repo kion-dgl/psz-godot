@@ -71,6 +71,7 @@ func set_link_activated(link_id: String) -> void:
 
 ## Enter a field area
 func enter_field(area_id: String, difficulty: String) -> Dictionary:
+	TrapBall.vision_until_msec = 0
 	# A fresh expedition starts here, so any in-flight telepipe is no longer
 	# reachable. (Same-area "go back to where I dropped my telepipe" is
 	# routed through resume_session() in warp_teleporter._warp_to_field —
@@ -177,6 +178,7 @@ func clear_free_roam_state() -> void:
 
 ## Enter a quest (hand-authored fixed layout)
 func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
+	TrapBall.vision_until_msec = 0
 	TelepipeManager.cancel("enter_quest")
 	clear_section_states()
 	var quest := QuestLoader.load_quest(quest_id)
