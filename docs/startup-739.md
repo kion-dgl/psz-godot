@@ -74,3 +74,11 @@ expose Retry, and HTTP requests have a 30-second timeout.
 - Owner/device review remains required for actual exported launcher icons,
   cold engine startup, slow network behavior and transitions to the title.
   Automated success does not change scorecard grades.
+
+## Owner assessment
+
+On 2026-10-10, Kion subjectively rated the launch experience **A** after
+reviewing the updates at revision `30700f02`. He identified a startup movie
+as an optional path toward S and explicitly said that polish is not urgent.
+This is a partial scorecard assessment of Splash only, not evidence of a
+completed exported-device playtest. Other area grades remain unchanged.

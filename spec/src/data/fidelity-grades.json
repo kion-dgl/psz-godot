@@ -8,9 +8,9 @@
   "areas": [
     {
       "area": "Splash",
-      "grade": "D",
-      "assessment": "A small placeholder image made to show while the game loads.",
-      "next": "Playtest the shared Rappy icons, minimal boot notice, and launch-to-title transitions across exported platforms; implementation pending owner verification.",
+      "grade": "A",
+      "assessment": "Kion’s subjective assessment of the launch-experience updates on 2026-10-10 (revision 30700f02): the shared Rappy icon, minimal fan-remake notice and quieter cached startup bring the experience to A. This records the owner’s review of the updates, not a completed exported-device playtest.",
+      "next": "Maintain the current presentation and finish exported-device verification. A startup movie is an optional path toward S; Kion is not prioritizing that level of polish.",
       "label": "score:splash",
       "reviewed_on": "2026-10-10"
     },
