@@ -1,6 +1,7 @@
 import { siteUrl } from '../../../spec/src/utils/site';
 import baseline from '../../../spec/src/data/fidelity-grades.json';
 import './FidelityGrades.css';
+import { scorecardIssuesUrl } from '../../../spec/src/utils/scorecard';
 
 export default function FidelityGrades() {
   return (
@@ -18,7 +19,7 @@ export default function FidelityGrades() {
       </header>
       <p className="fidelity-note">Overall is an editorial assessment, not an average or a measured fidelity percentage. Grades improve through playtesting; passing automated checks alone does not raise them.</p>
       <div className="fidelity-grid">
-        {baseline.areas.map(({ area, grade, assessment, next }) => (
+        {baseline.areas.map(({ area, grade, assessment, next, label }) => (
           <article className="fidelity-card" key={area}>
             <div className="fidelity-card-heading">
               <h3>{area}</h3>
@@ -29,11 +30,11 @@ export default function FidelityGrades() {
               <summary>Next review target</summary>
               <p>{next}</p>
             </details>
+            <p><a href={scorecardIssuesUrl(label)} aria-label={`Open issues for ${area}`}>Open issues ↗</a></p>
           </article>
         ))}
       </div>
       <footer>
-        <a href="https://github.com/kion-dgl/psz-godot/issues/682">Combat fidelity roadmap ↗</a>
         <a href={siteUrl('/fidelity/')}>Grading criteria & evidence ↗</a>
       </footer>
     </section>
