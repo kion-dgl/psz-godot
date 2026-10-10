@@ -18,8 +18,7 @@ const INVULN_TIME := 2.0
 ## a hook for per-kind art without a leaf class per trap.
 @export var trap_kind: String = "needle_trap"
 
-var _spike_material: StandardMaterial3D = null
-var _base_material: StandardMaterial3D = null
+var _spike_materials: Array[ShaderMaterial] = []
 var _damage_area: Area3D
 var _invuln_timer: float = 0.0
 var _hit_bodies: Dictionary = {}
@@ -41,10 +40,7 @@ func _ready() -> void:
 
 
 func _setup_materials() -> void:
-	var mats := _setup_split_materials(SPIKE_TEX_NAME)
-	_spike_material = mats["feature"]
-	_base_material = mats["base"]
-
+	_spike_materials = _setup_split_materials(SPIKE_TEX_NAME, Vector4(2.0, 1.0, -0.17, -0.18))
 
 func _setup_damage_area() -> void:
 	_damage_area = Area3D.new()
@@ -85,16 +81,8 @@ func _update_animation(delta: float) -> void:
 
 
 func _apply_state() -> void:
-	if _spike_material:
-		match element_state:
-			"on":
-				_spike_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_spike_material.albedo_color.a = 1.0
-				_spike_material.alpha_scissor_threshold = 0.5
-			"off":
-				_spike_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_spike_material.albedo_color.a = 0.0
-				_spike_material.alpha_scissor_threshold = 1.0
+	for material in _spike_materials:
+		material.set_shader_parameter("visibility_alpha", 1.0 if element_state == "on" else 0.0)
 
 	if _damage_area:
 		_damage_area.set_deferred("monitoring", element_state == "on")

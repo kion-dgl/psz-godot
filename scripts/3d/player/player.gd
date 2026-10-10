@@ -179,6 +179,8 @@ var walk_timer: float = 0.0
 # field Player still lives on for the transition frames. Cleared implicitly
 # by the city spawning a fresh Player (this flag defaults false).
 var _is_defeated: bool = false
+var _recovery_left := 0.0
+var _ailments = preload("res://scripts/3d/player/player_ailments.gd").new()
 var _freeze = preload("res://scripts/3d/player/player_freeze.gd").new()
 
 # Combo system — two-tier timing (#461, spec /mechanics/combos). `just_start`
@@ -970,6 +972,10 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
+	if _recovery_left > 0.0:
+		_recovery_left = maxf(0.0, _recovery_left - delta)
+		if _recovery_left <= 0.0 and current_state == PlayerState.DAMAGED:
+			transition_to(PlayerState.IDLE) # Missing stand-up clips cannot strand recovery.
 	# Check for fall and respawn
 	if global_position.y < fall_respawn_y:
 		_respawn()
@@ -988,7 +994,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y -= GRAVITY * delta
 
-	if _freeze.tick(self, delta):
+	var status_holds: bool = _ailments.tick(self, delta)
+	if _freeze.tick(self, delta) or status_holds:
+		velocity.x = 0.0
+		velocity.z = 0.0
 		move_and_slide()
 		return
 
@@ -1382,7 +1391,7 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
-	if _freeze.remaining > 0.0:
+	if _freeze.remaining > 0.0 or _ailments.blocks_movement() or _is_defeated or _recovery_left > 0.0:
 		return
 	# Action commitment (spec /states/player-state, #377): a swing must fully
 	# execute — dodge cannot cancel it — and a roll cannot restart itself.
@@ -1460,7 +1469,7 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
-	if _freeze.remaining > 0.0:
+	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
 		return
 	# Action commitment (spec /states/player-state, #377): a roll must fully
 	# execute — attack cannot cancel it (mirrors _start_strong_attack's gate).
@@ -1612,6 +1621,14 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String) -> void:
+	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
+		return
+	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
+		return
+	if technique_id in ["reverser", "shifta", "deband", "jellen", "zalure"]:
+		# No 3D recipient/buff resolver yet: never turn support into a fireball.
+		_ailments.feedback(self, "No valid support target")
+		return
 	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
 
@@ -1663,6 +1680,15 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 		_current_attack_element_level = TechniqueManager.get_technique_level(character, technique_id)
 
 	match technique_id:
+		"resta":
+			var power := float(TechniqueManager.get_technique("resta").get("power", 0))
+			var amount := int(power * (1.0 + float(_current_attack_element_level) / 10.0))
+			var previous := GameState.hp
+			GameState.set_hp(GameState.hp + amount)
+			_spawn_heal_number("hp", GameState.hp - previous)
+		"anti":
+			clear_status_effects()
+			_ailments.feedback(self, "Cured")
 		"foie":
 			_spawn_foie(spawn_pos, forward, damage, kb)
 		"gifoie":
@@ -2063,7 +2089,7 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
-	if _freeze.remaining > 0.0:
+	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
 		return
 	if current_state == PlayerState.DODGING:
 		return
@@ -2600,16 +2626,18 @@ func is_dodge_iframed() -> bool:
 # (spec /mechanics/enemy-attacks) to the knock-down reaction regardless of damage tier.
 ## Enemy technique contact: dodge/defeat guards cover both damage and status.
 func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1.0) -> void:
-	if _is_defeated or GameState.hp <= 0 or is_dodge_iframed():
+	if not can_take_hit():
 		return
 	take_damage(damage)
 	var definition: Dictionary = TechniqueManager.get_technique(technique_id)
 	var roll := randf() if proc_roll < 0.0 else proc_roll
 	if GameState.hp > 0 and definition.get("element", "") == "ice" and roll < 0.2:
-		_freeze.apply(self, float(CombatManager.STATUS_EFFECTS["freeze"]["duration"]))
+		apply_status_effect("freeze")
 
 
-func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false) -> void:
+func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
+	if _recovery_left > 0.0:
+		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
 	# revive the defeat transaction applies on "Yes"; the field Player stays
@@ -2626,12 +2654,16 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 	# DODGE_IFRAME_DURATION of the roll is invincible (#377 tightened this
 	# from the whole move phase); a hit after the window damages AND
 	# interrupts the roll like any other hit.
-	if is_dodge_iframed():
+	if is_dodge_iframed() and not status_tick:
 		return
 
-	if damage > 0:
+	if damage > 0 and not status_tick:
 		_freeze.clear(self)
 	GameState.set_hp(GameState.hp - damage)
+
+	# Damage over time has no physical impact reaction.
+	if status_tick and GameState.hp > 0:
+		return
 
 	# Player hit SFX
 	if damage > 10:
@@ -2643,6 +2675,10 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 	velocity = Vector3.ZERO
 
 	if GameState.hp <= 0:
+		if _try_auto_revive():
+			return
+		clear_status_effects()
+		TrapBall.vision_until_msec = 0
 		# Death: knockdown into lying-down loop, then raise the defeat screen.
 		# Latch the defeat flag so the immune-window guard at the top of
 		# take_damage() makes death fire exactly once AND stays a no-op through
@@ -2779,7 +2815,9 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 	widened["hit_h_dist"] = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
 	widened["hit_h_angle_deg"] = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
-	return ConeTargeting.scan_enemies(get_tree().get_nodes_in_group("enemies"), origin, player_rotation, widened)
+	var candidates: Array = get_tree().get_nodes_in_group("enemies")
+	candidates.append_array(get_tree().get_nodes_in_group("targetable_traps"))
+	return ConeTargeting.scan_enemies(candidates, origin, player_rotation, widened)
 
 
 func _fire_projectile(atk: Dictionary) -> void:
@@ -3104,3 +3142,35 @@ func _try_interact() -> void:
 		interacted_with.emit(target)
 		if is_instance_valid(target):
 			print("[Player] Interacted with: ", target.name)
+
+
+## One guard for hostile contact, ailments and recovery.
+func can_take_hit() -> bool:
+	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not is_dodge_iframed()
+
+func apply_status_effect(kind: String) -> void:
+	_ailments.apply(self, kind)
+
+func clear_status_effects() -> void:
+	_ailments.clear(self)
+
+## Intercept death before the defeat signal; never end or reward the session.
+func _try_auto_revive() -> bool:
+	if GameState.hp > 0:
+		return false
+	if not Inventory.remove_item("scape_doll", 1):
+		return false
+	_recovery_left = 2.0
+	_ailments.feedback(self, "Scape Doll")
+	_is_defeated = false
+	clear_status_effects()
+	TrapBall.vision_until_msec = 0
+	GameState.set_hp(GameState.max_hp)
+	var character = CharacterManager.get_active_character()
+	if character != null:
+		character["hp"] = GameState.hp
+	_drop_charge()
+	velocity = Vector3.ZERO
+	transition_to(PlayerState.DAMAGED)
+	play_animation(_anim_prefix + "_dam_d_wa", false)
+	return true

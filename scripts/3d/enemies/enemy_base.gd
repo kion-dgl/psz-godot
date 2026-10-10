@@ -1802,6 +1802,8 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 
 func _die() -> void:
+	if not is_alive:
+		return
 	_restore_charge_model()
 	is_alive = false
 	is_attacking = false

@@ -239,13 +239,15 @@ const tree = `flowchart TD
   </p>
   <p>An authored elemental trap MUST:</p>
   <ul>
-    <li>be <strong>invisible while dormant</strong> — the original's factory table gives
-      it no model at all;</li>
-    <li><strong>arm when a player comes within 4.0 units</strong>, then rise 2.5 units out
+    <li>be <strong>invisible while dormant</strong> unless the viewer is a CAST or has
+      Trap Vision; revealed hostile balls MUST be attackable and disarm on a hit;</li>
+    <li><strong>arm when a living player comes within the configured trigger radius</strong>
+      (currently 4.0 units, remake tuning; only the original heal scan radius is confirmed), then rise 2.5 units out
       of the ground and become visible;</li>
     <li>run a <strong>fuse</strong> of 45 / 30 / 15 frames on normal / hard / v_hard —
       the original gets <em>faster</em>, not stronger, with difficulty — and detonate on
-      whoever is still inside;</li>
+      whoever is still inside the separately configured blast radius. The 60 Hz
+      conversion remains unverified;</li>
     <li>apply its element: heat → burn, ice → freeze, light → confusion (stunned stands
       in), <strong>heal → restore 50% of max HP</strong>. About 10% of the original's
       authored elemental traps are heal traps, so not every field trap is hostile.</li>
@@ -269,8 +271,9 @@ const tree = `flowchart TD
   </ul>
   <p>
     Trap Vision's duration is <strong>not measured</strong> — psz-re found no such timer
-    anywhere in the trap class, which also means the reveal is a renderer-side concern
-    in the original and carries no gameplay coupling.
+    anywhere in the trap class. That absence does not establish its original scope
+    or targeting rules. The remake lifecycle and disarming contract is specified in
+    <a href={siteUrl("/states/gameplay-recovery-traps")}>Trap counterplay and recovery</a>.
   </p>
 
   <h2>The boss room</h2>

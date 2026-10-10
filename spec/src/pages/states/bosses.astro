@@ -46,6 +46,15 @@ const chart = `stateDiagram-v2
 
   <h2>Shared contract</h2>
 
+  <h3>Encounter safety (implemented contract)</h3>
+  <p>The initial Reyburn spawn MUST bind its HP bar after the field HUD exists;
+  death MUST hide it and a fresh arena entry MUST bind the new actor.
+  Damage and pushback MUST respect player dodge, defeat and Scape Doll recovery.
+  A dead boss MUST NOT release a queued attack or keep its owned projectiles active.
+  Death MUST emit rewards/room completion once even if multiple contacts or clear
+  callbacks arrive in the same frame. Repeated completion MUST retain one return
+  warp. These runtime safety fixes do not validate the draft attack/phase tables.</p>
+
   <h3>Data model (boss_arenas.json v2)</h3>
   <table>
     <tr><th>Field</th><th>Semantics</th></tr>

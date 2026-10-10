@@ -31,10 +31,17 @@ const chart = `stateDiagram-v2
   cost instead of a reward. There is <strong>no permadeath</strong> — defeat
   is a setback, not a game-over.</p>
 
+  <h2>Scape Doll interception</h2>
+  <p>Before entering Defeat, a lethal field hit MUST try one held Scape Doll.
+  A successful auto-revive restores full HP, clears ailments and grants two seconds
+  of recovery immunity without emitting <code>died</code>, ending the session or
+  charging meseta. See <a href={siteUrl("/states/gameplay-recovery-traps")}>trap counterplay and recovery</a>.
+  The defeat rules below apply when no doll is available.</p>
+
   <h2>Trigger</h2>
   <ul>
-    <li>The player enters <strong>Defeat</strong> the moment their HP reaches
-    <strong>0</strong> while in a field (a quest field <em>or</em> a free-roam
+    <li>The player enters <strong>Defeat</strong> when their HP reaches
+    <strong>0</strong> and no Scape Doll is available while in a field (a quest field <em>or</em> a free-roam
     field). HP only ever reaches 0 in the field — the city has no combat — so
     Defeat is field-only.</li>
     <li>The death knockdown itself (the lying-down animation) is the

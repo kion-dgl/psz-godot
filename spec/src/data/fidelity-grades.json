@@ -67,7 +67,7 @@
       "area": "Traps",
       "grade": "D",
       "assessment": "Partially implemented: bear/needle and placeable trap textures render incorrectly; player and field traps need timing, radius and status validation. Free-roam layouts and trap visibility also remain incomplete.",
-      "next": "Fix materials; validate arming, timing, radius and status payloads for player/field traps; verify authored layout placement. Ensure CAST trap visibility and a usable Trap Vision item that lets non-CASTs see and target traps.",
+      "next": "Fix materials; validate arming, timing, radius and status payloads for player/field traps; verify authored layout placement. Ensure CAST trap visibility and a usable Trap Vision item that lets non-CASTs see and target traps. Playtest the material, reveal/disarm and status-delivery batch; exact fuse timing, hostile radii, confusion and authored placements remain open. Grade and owner assessment unchanged; Mac playtest pending.",
       "label": "score:traps",
       "reviewed_on": "2026-10-10"
     },
@@ -75,7 +75,7 @@
       "area": "Bosses",
       "grade": "D",
       "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
-      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation.",
+      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation. Playtest Reyburn HUD, dodge/pushback, recovery, projectile cleanup and return/retry handling; original attack/phase fidelity and the other boss assignments remain open. Grade and owner assessment unchanged; Mac playtest pending.",
       "label": "score:bosses",
       "reviewed_on": "2026-10-10"
     },
@@ -90,7 +90,7 @@
       "area": "Systems",
       "grade": "D",
       "assessment": "Very weak in current play: Kion reports level-1 hits around 100 damage and routine one-shots, with no meaningful player or enemy-level progression. Damage, statuses, weapon specials and grinding have been deferred.",
-      "next": "Establish a meaningful level-1 baseline, player growth and quest/free-roam enemy levels. Design a western-punk weapon economy around crafted iron weapons and restored ancient photon weapons; then validate damage, grinding and special/status effects.",
+      "next": "Establish a meaningful level-1 baseline, player growth and quest/free-roam enemy levels. Design a western-punk weapon economy around crafted iron weapons and restored ancient photon weapons; then validate damage, grinding and special/status effects. Playtest Scape Doll recovery, Resta/Anti and inventory order after a hard restart alongside the existing progression/economy work. Grade and owner assessment unchanged; Mac playtest pending.",
       "label": "score:systems",
       "reviewed_on": "2026-10-10"
     }
