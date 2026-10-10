@@ -11,7 +11,7 @@ func _run() -> void:
 		TrapBall.grant_vision()
 		SessionManager.enter_quest("debug_boss_reyburn", "normal")
 		_check(not TrapBall.vision_active(), "fresh arena session resets old Trap Vision")
-		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+		await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": "0,0", "spawn_edge": "", "keys_collected": {}})
 		var boss: ReyburnBoss
 		for frame in 600:
@@ -38,8 +38,7 @@ func _run() -> void:
 		if not _ok: break
 		# Explicit fresh session follows the same arena-entry path as the picker.
 		SessionManager.return_to_city()
-		SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
-		await get_tree().create_timer(0.3).timeout
+		await SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 	print("[boss-lifecycle] DONE " + ("ok" if _ok else "FAIL"))
 	get_tree().quit(0 if _ok else 1)
 
