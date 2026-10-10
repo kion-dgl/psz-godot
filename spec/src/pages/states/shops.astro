@@ -328,4 +328,11 @@ import Concept from '../../layouts/Concept.astro';
     <li><code>scripts/2d/storage.gd</code> (Storage) — the bank counter, same skeleton, backed by <code>GameState.stored_meseta</code> and <code>GameState.shared_storage</code>.</li>
     <li><code>scripts/2d/guild_counter.gd</code> (GuildCounter) — the quest board; same skeleton, distinct row semantics (not the shop row contract).</li>
   </ul>
+  <h2 id="coliseum-roster">Coliseum roster</h2>
+  <p>The Coliseum picker <strong>MUST</strong> group each enemy once under its
+    earliest area in progression order, with PSO imports in their own group.
+    Enemy and boss tabs remain separate. Rows <strong>MUST</strong> show enemy
+    name, model ID, attribute, and behavior type in aligned columns. The wider
+    roster keeps selected-enemy details below the list. Area aliases, including
+    Oblivion City Paru and Ozette Wetland(s), <strong>MUST</strong> normalize.</p>
 </Concept>

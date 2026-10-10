@@ -2,8 +2,8 @@ extends Control
 ## Coliseum Master — debug enemy lab (kion): pick any enemy from the roster and
 ## warp alone with it into the coliseum arena (stage s00a_nr2) for 1:1 combat
 ## testing, the in-game counterpart of the #/enemy-room web tool. Normal enemies
-## and bosses sit on separate tabs; within a tab rows group by behavior type and
-## order by the areas they appear in (kion playtest). The shell quest
+## and bosses sit on separate tabs; within a tab rows group by area and
+## show model, attribute, and behavior (kion playtest). The shell quest
 ## (`debug_coliseum`) provides the session/report frame; ColiseumRoster builds
 ## the synthesized 1:1 field sections (one enemy + a room-clear telepipe home).
 
@@ -35,7 +35,12 @@ var _tab_row: HBoxContainer
 func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Coliseum Master"
-	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, "")
+	# The debug roster needs the full width for four readable columns.
+	_detail_panel = PanelContainer.new()
+	PszStyle.apply_detail_panel_style(_detail_panel)
+	var body := title_label.get_parent()
+	body.add_child(_detail_panel)
+	body.move_child(_detail_panel, hint_label.get_index())
 	hint_label.text = "Up/Down: Select  ←/→: Tab  Enter: Battle  Esc: Leave"
 	_load_tab(0)
 
@@ -115,6 +120,10 @@ func _refresh_display() -> void:
 	for child in content_panel.get_children():
 		child.queue_free()
 
+	var list := VBoxContainer.new()
+	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.add_child(_column_row(["Enemy", "Model", "Attribute", "Behavior type"] if _tab != 2
+		else ["Encounter", "Members", "Count", "Behavior type"], true))
 	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -135,7 +144,8 @@ func _refresh_display() -> void:
 			row_idx += 1
 
 	scroll.add_child(vbox)
-	content_panel.add_child(scroll)
+	list.add_child(scroll)
+	content_panel.add_child(list)
 	if selected_pill != null:
 		PszStyle.scroll_selected_into_view(selected_pill)
 	elif _rows.is_empty():
@@ -146,27 +156,44 @@ func _refresh_display() -> void:
 	_refresh_detail()
 
 
-## A group's header: just the type name ("Bruiser", "Rappy") — the area list
-## lived here briefly and made the label (and the panel's minimum width) far
-## too long (kion playtest). The detail card carries each enemy's areas.
+## Area sections remain outside the selectable row index.
 func _group_header(group: Dictionary) -> Control:
 	var label := Label.new()
-	label.text = str(group["archetype"]).capitalize()
+	label.text = "%s  ·  %d" % [str(group["name"]), group["rows"].size()]
 	label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
 	label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	label.clip_text = true
 	return label
 
 
+func _column_row(values: Array, heading: bool = false) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var cells := HBoxContainer.new()
+	cells.add_theme_constant_override("separation", 12)
+	var weights := [3.0, 3.0, 1.5, 3.0]
+	for i in values.size():
+		var label := Label.new()
+		label.text = str(values[i])
+		label.tooltip_text = label.text
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.size_flags_stretch_ratio = weights[i]
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB if heading else PszStyle.FONT_ITEM)
+		label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT if heading else PszStyle.TEXT)
+		cells.add_child(label)
+	panel.add_child(cells)
+	return panel
+
+
 func _row_pill(row: Dictionary, selected: bool) -> PanelContainer:
-	var badges: Array = []
-	if bool(row["is_rare"]):
-		badges.append("Rare")
-	var right: String = " · ".join(badges) if not badges.is_empty() else str(row["element"])
-	return PszStyle.shop_row(str(row["name"]), right, {"selected": selected})
+	var values := [str(row["name"]), str(row.get("model", "—")),
+		str(row["element"]).capitalize(), str(row["archetype"])]
+	if _tab == 2:
+		values[1] = ", ".join(PackedStringArray(row["areas"]))
+	var pill := _column_row(values)
+	pill.add_theme_stylebox_override("panel", PszStyle.pill_style(selected))
+	return pill
 
 
 ## The selected enemy's detail card — element, HP, areas, archetype, and its
@@ -183,13 +210,10 @@ func _refresh_detail() -> void:
 	var areas: Array = row["areas"]
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(PszStyle.detail_label(str(row["name"]), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("Element: %s" % str(row["element"])))
-	vbox.add_child(PszStyle.detail_label("HP: %d" % int(row["hp"])))
+	vbox.add_child(PszStyle.detail_label("%s%s  ·  HP: %d  ·  %s" % [str(row["name"]),
+		" (Rare)" if bool(row["is_rare"]) else "", int(row["hp"]), str(row["archetype"])], PszStyle.TITLE_BG))
 	vbox.add_child(PszStyle.detail_label(("Enemies: %s" if _tab == 2 else "Found in: %s") % ", ".join(PackedStringArray(areas))))
-	vbox.add_child(PszStyle.detail_label("Archetype: %s" % str(row["archetype"])))
-	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)),
-		PszStyle.TEXT_HIGHLIGHT))
+	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)), PszStyle.TEXT_HIGHLIGHT))
 	_detail_panel.add_child(vbox)
 
 

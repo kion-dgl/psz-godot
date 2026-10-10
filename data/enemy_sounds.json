@@ -1,0 +1,4339 @@
+{
+  "source": "data/re_reference/enemy_sound_events.json",
+  "timing": "ROM clip-local frames / 60, matching the imported GLB timebase; not original AI parity.",
+  "volume": "Rendered WAVs already include sequence volume. Do not apply entry_volume again.",
+  "loop_policy": "Looping WAVs are owned by the enemy and stop on clip change, pause, dormancy, or removal.",
+  "sounds": {
+    "SE_PLAYER_DOWN_MIDDLE": {
+      "path": "res://assets/sfx/se/001_SEQARC_PLAYER/033_SE_PLAYER_DOWN_MIDDLE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_PLAYER_DOWN_LARGE": {
+      "path": "res://assets/sfx/se/001_SEQARC_PLAYER/034_SE_PLAYER_DOWN_LARGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_TECHNIC_ZONDE": {
+      "path": "res://assets/sfx/se/003_SEQARC_TECHNIC/007_SE_TECHNIC_ZONDE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DRAGONKID_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/000_SEQARC_ENEMY_DRAGONKID/000_SE_ENEMY_DRAGONKID_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DRAGONKID_WALK": {
+      "path": "res://assets/sfx/se_enemy/000_SEQARC_ENEMY_DRAGONKID/001_SE_ENEMY_DRAGONKID_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DRAGONKID_DOWN": {
+      "path": "res://assets/sfx/se_enemy/000_SEQARC_ENEMY_DRAGONKID/002_SE_ENEMY_DRAGONKID_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DRAGONKID_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/000_SEQARC_ENEMY_DRAGONKID/003_SE_ENEMY_DRAGONKID_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DRAGONKID_DEAD": {
+      "path": "res://assets/sfx/se_enemy/000_SEQARC_ENEMY_DRAGONKID/004_SE_ENEMY_DRAGONKID_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_SNAKE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/001_SEQARC_ENEMY_SNAKE/000_SE_ENEMY_SNAKE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_SNAKE_WALK": {
+      "path": "res://assets/sfx/se_enemy/001_SEQARC_ENEMY_SNAKE/001_SE_ENEMY_SNAKE_WALK.wav",
+      "loop_begin": 497,
+      "loop_end": 4540,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_SNAKE_DOWN": {
+      "path": "res://assets/sfx/se_enemy/001_SEQARC_ENEMY_SNAKE/002_SE_ENEMY_SNAKE_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_SNAKE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/001_SEQARC_ENEMY_SNAKE/003_SE_ENEMY_SNAKE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_SNAKE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/001_SEQARC_ENEMY_SNAKE/004_SE_ENEMY_SNAKE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/000_SE_ENEMY_LION_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_WALK": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/001_SE_ENEMY_LION_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_DOWN": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/002_SE_ENEMY_LION_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/003_SE_ENEMY_LION_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/004_SE_ENEMY_LION_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_LION_DEAD": {
+      "path": "res://assets/sfx/se_enemy/002_SEQARC_ENEMY_LION/005_SE_ENEMY_LION_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FROG_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/003_SEQARC_ENEMY_FROG/000_SE_ENEMY_FROG_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FROG_WALK": {
+      "path": "res://assets/sfx/se_enemy/003_SEQARC_ENEMY_FROG/001_SE_ENEMY_FROG_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FROG_DOWN": {
+      "path": "res://assets/sfx/se_enemy/003_SEQARC_ENEMY_FROG/002_SE_ENEMY_FROG_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FROG_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/003_SEQARC_ENEMY_FROG/003_SE_ENEMY_FROG_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FROG_DEAD": {
+      "path": "res://assets/sfx/se_enemy/003_SEQARC_ENEMY_FROG/004_SE_ENEMY_FROG_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FURSEAL_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/004_SEQARC_ENEMY_FURSEAL/000_SE_ENEMY_FURSEAL_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FURSEAL_WALK": {
+      "path": "res://assets/sfx/se_enemy/004_SEQARC_ENEMY_FURSEAL/001_SE_ENEMY_FURSEAL_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FURSEAL_DOWN": {
+      "path": "res://assets/sfx/se_enemy/004_SEQARC_ENEMY_FURSEAL/002_SE_ENEMY_FURSEAL_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FURSEAL_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/004_SEQARC_ENEMY_FURSEAL/003_SE_ENEMY_FURSEAL_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_FURSEAL_DEAD": {
+      "path": "res://assets/sfx/se_enemy/004_SEQARC_ENEMY_FURSEAL/004_SE_ENEMY_FURSEAL_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/000_SE_ENEMY_PELICAN_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_WALK": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/001_SE_ENEMY_PELICAN_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_DOWN": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/002_SE_ENEMY_PELICAN_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/003_SE_ENEMY_PELICAN_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/004_SE_ENEMY_PELICAN_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_PELICAN_DEAD": {
+      "path": "res://assets/sfx/se_enemy/005_SEQARC_ENEMY_PELICAN/005_SE_ENEMY_PELICAN_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/000_SE_ENEMY_BAT_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_WALK": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/001_SE_ENEMY_BAT_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_DOWN": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/002_SE_ENEMY_BAT_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/003_SE_ENEMY_BAT_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_SONICWAVE": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/004_SE_ENEMY_BAT_SONICWAVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BAT_DEAD": {
+      "path": "res://assets/sfx/se_enemy/006_SEQARC_ENEMY_BAT/005_SE_ENEMY_BAT_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/000_SE_ENEMY_MOLE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_WALK": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/001_SE_ENEMY_MOLE_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_DOWN": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/002_SE_ENEMY_MOLE_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/003_SE_ENEMY_MOLE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_WAVE": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/004_SE_ENEMY_MOLE_WAVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MOLE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/007_SEQARC_ENEMY_MOLE/005_SE_ENEMY_MOLE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/000_SE_ENEMY_ARMADILLO_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_WALK": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/001_SE_ENEMY_ARMADILLO_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_DOWN": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/002_SE_ENEMY_ARMADILLO_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/003_SE_ENEMY_ARMADILLO_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_SPATTACK": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/004_SE_ENEMY_ARMADILLO_SPATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ARMADILLO_DEAD": {
+      "path": "res://assets/sfx/se_enemy/008_SEQARC_ENEMY_ARMADILLO/005_SE_ENEMY_ARMADILLO_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RABBIT_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/009_SEQARC_ENEMY_RABBIT/000_SE_ENEMY_RABBIT_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RABBIT_WALK": {
+      "path": "res://assets/sfx/se_enemy/009_SEQARC_ENEMY_RABBIT/001_SE_ENEMY_RABBIT_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RABBIT_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/009_SEQARC_ENEMY_RABBIT/002_SE_ENEMY_RABBIT_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RABBIT_DEAD": {
+      "path": "res://assets/sfx/se_enemy/009_SEQARC_ENEMY_RABBIT/003_SE_ENEMY_RABBIT_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_WOLF_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/010_SEQARC_ENEMY_WOLF/000_SE_ENEMY_WOLF_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_WOLF_WALK": {
+      "path": "res://assets/sfx/se_enemy/010_SEQARC_ENEMY_WOLF/001_SE_ENEMY_WOLF_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_WOLF_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/010_SEQARC_ENEMY_WOLF/002_SE_ENEMY_WOLF_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_WOLF_DEAD": {
+      "path": "res://assets/sfx/se_enemy/010_SEQARC_ENEMY_WOLF/003_SE_ENEMY_WOLF_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_GORILLA_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/011_SEQARC_ENEMY_GORILLA/000_SE_ENEMY_GORILLA_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_GORILLA_WALK": {
+      "path": "res://assets/sfx/se_enemy/011_SEQARC_ENEMY_GORILLA/001_SE_ENEMY_GORILLA_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_GORILLA_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/011_SEQARC_ENEMY_GORILLA/002_SE_ENEMY_GORILLA_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_GORILLA_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/011_SEQARC_ENEMY_GORILLA/003_SE_ENEMY_GORILLA_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_GORILLA_DEAD": {
+      "path": "res://assets/sfx/se_enemy/011_SEQARC_ENEMY_GORILLA/004_SE_ENEMY_GORILLA_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MIMIC_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/012_SEQARC_ENEMY_MIMIC/000_SE_ENEMY_MIMIC_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MIMIC_WALK": {
+      "path": "res://assets/sfx/se_enemy/012_SEQARC_ENEMY_MIMIC/001_SE_ENEMY_MIMIC_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MIMIC_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/012_SEQARC_ENEMY_MIMIC/002_SE_ENEMY_MIMIC_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MIMIC_DEAD": {
+      "path": "res://assets/sfx/se_enemy/012_SEQARC_ENEMY_MIMIC/003_SE_ENEMY_MIMIC_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_SMALL_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/013_SEQARC_ENEMY_MACHINE_SMALL/000_SE_ENEMY_MACHINE_SMALL_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_SMALL_WALK": {
+      "path": "res://assets/sfx/se_enemy/013_SEQARC_ENEMY_MACHINE_SMALL/001_SE_ENEMY_MACHINE_SMALL_WALK.wav",
+      "loop_begin": 2545,
+      "loop_end": 10552,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_SMALL_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/013_SEQARC_ENEMY_MACHINE_SMALL/002_SE_ENEMY_MACHINE_SMALL_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_SMALL_GUN": {
+      "path": "res://assets/sfx/se_enemy/013_SEQARC_ENEMY_MACHINE_SMALL/003_SE_ENEMY_MACHINE_SMALL_GUN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_SMALL_DEAD": {
+      "path": "res://assets/sfx/se_enemy/013_SEQARC_ENEMY_MACHINE_SMALL/004_SE_ENEMY_MACHINE_SMALL_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_MIDDLE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/014_SEQARC_ENEMY_MACHINE_MIDDLE/000_SE_ENEMY_MACHINE_MIDDLE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_MIDDLE_WALK": {
+      "path": "res://assets/sfx/se_enemy/014_SEQARC_ENEMY_MACHINE_MIDDLE/001_SE_ENEMY_MACHINE_MIDDLE_WALK.wav",
+      "loop_begin": 3457,
+      "loop_end": 9107,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_MIDDLE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/014_SEQARC_ENEMY_MACHINE_MIDDLE/002_SE_ENEMY_MACHINE_MIDDLE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_MIDDLE_GUN": {
+      "path": "res://assets/sfx/se_enemy/014_SEQARC_ENEMY_MACHINE_MIDDLE/003_SE_ENEMY_MACHINE_MIDDLE_GUN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_MIDDLE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/014_SEQARC_ENEMY_MACHINE_MIDDLE/004_SE_ENEMY_MACHINE_MIDDLE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/000_SE_ENEMY_MACHINE_LARGE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_WALK": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/001_SE_ENEMY_MACHINE_LARGE_WALK.wav",
+      "loop_begin": 3499,
+      "loop_end": 12308,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/002_SE_ENEMY_MACHINE_LARGE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/003_SE_ENEMY_MACHINE_LARGE_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_GUN": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/004_SE_ENEMY_MACHINE_LARGE_GUN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_MACHINE_LARGE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/015_SEQARC_ENEMY_MACHINE_LARGE/005_SE_ENEMY_MACHINE_LARGE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/000_SE_ENEMY_ORANGUTAN_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_WALK": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/001_SE_ENEMY_ORANGUTAN_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/002_SE_ENEMY_ORANGUTAN_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_ATTACK_VOICE": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/003_SE_ENEMY_ORANGUTAN_ATTACK_VOICE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/004_SE_ENEMY_ORANGUTAN_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_ORANGUTAN_DEAD": {
+      "path": "res://assets/sfx/se_enemy/016_SEQARC_ENEMY_ORANGUTAN/005_SE_ENEMY_ORANGUTAN_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_SMALL_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/017_SEQARC_ENEMY_DARK_SMALL/000_SE_ENEMY_DARK_SMALL_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_SMALL_WALK": {
+      "path": "res://assets/sfx/se_enemy/017_SEQARC_ENEMY_DARK_SMALL/001_SE_ENEMY_DARK_SMALL_WALK.wav",
+      "loop_begin": 497,
+      "loop_end": 3566,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_SMALL_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/017_SEQARC_ENEMY_DARK_SMALL/002_SE_ENEMY_DARK_SMALL_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_SMALL_DEAD": {
+      "path": "res://assets/sfx/se_enemy/017_SEQARC_ENEMY_DARK_SMALL/003_SE_ENEMY_DARK_SMALL_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_MIDDLE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/018_SEQARC_ENEMY_DARK_MIDDLE/000_SE_ENEMY_DARK_MIDDLE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_MIDDLE_WALK": {
+      "path": "res://assets/sfx/se_enemy/018_SEQARC_ENEMY_DARK_MIDDLE/001_SE_ENEMY_DARK_MIDDLE_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_MIDDLE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/018_SEQARC_ENEMY_DARK_MIDDLE/002_SE_ENEMY_DARK_MIDDLE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_MIDDLE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/018_SEQARC_ENEMY_DARK_MIDDLE/003_SE_ENEMY_DARK_MIDDLE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_LARGE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/019_SEQARC_ENEMY_DARK_LARGE/000_SE_ENEMY_DARK_LARGE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_LARGE_WALK": {
+      "path": "res://assets/sfx/se_enemy/019_SEQARC_ENEMY_DARK_LARGE/001_SE_ENEMY_DARK_LARGE_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_LARGE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/019_SEQARC_ENEMY_DARK_LARGE/002_SE_ENEMY_DARK_LARGE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_LARGE_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/019_SEQARC_ENEMY_DARK_LARGE/003_SE_ENEMY_DARK_LARGE_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DARK_LARGE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/019_SEQARC_ENEMY_DARK_LARGE/004_SE_ENEMY_DARK_LARGE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/000_SE_ENEMY_RAPPY_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_WALK": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/001_SE_ENEMY_RAPPY_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_DOWN": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/002_SE_ENEMY_RAPPY_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/003_SE_ENEMY_RAPPY_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/004_SE_ENEMY_RAPPY_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_RAPPY_DEAD": {
+      "path": "res://assets/sfx/se_enemy/020_SEQARC_ENEMY_RAPPY/005_SE_ENEMY_RAPPY_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BOOMA_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/021_SEQARC_ENEMY_BOOMA/000_SE_ENEMY_BOOMA_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BOOMA_WALK": {
+      "path": "res://assets/sfx/se_enemy/021_SEQARC_ENEMY_BOOMA/001_SE_ENEMY_BOOMA_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BOOMA_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/021_SEQARC_ENEMY_BOOMA/002_SE_ENEMY_BOOMA_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_BOOMA_DEAD": {
+      "path": "res://assets/sfx/se_enemy/021_SEQARC_ENEMY_BOOMA/003_SE_ENEMY_BOOMA_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DEER_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/022_SEQARC_ENEMY_DEER/000_SE_ENEMY_DEER_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DEER_WALK": {
+      "path": "res://assets/sfx/se_enemy/022_SEQARC_ENEMY_DEER/001_SE_ENEMY_DEER_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DEER_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/022_SEQARC_ENEMY_DEER/002_SE_ENEMY_DEER_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_DEER_DEAD": {
+      "path": "res://assets/sfx/se_enemy/022_SEQARC_ENEMY_DEER/003_SE_ENEMY_DEER_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_VALTURE_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/023_SEQARC_ENEMY_VALTURE/000_SE_ENEMY_VALTURE_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_VALTURE_WALK": {
+      "path": "res://assets/sfx/se_enemy/023_SEQARC_ENEMY_VALTURE/001_SE_ENEMY_VALTURE_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_VALTURE_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/023_SEQARC_ENEMY_VALTURE/002_SE_ENEMY_VALTURE_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_VALTURE_DEAD": {
+      "path": "res://assets/sfx/se_enemy/023_SEQARC_ENEMY_VALTURE/003_SE_ENEMY_VALTURE_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_TINY_MOTHER_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/024_SEQARC_ENEMY_TINY_MOTHER/000_SE_ENEMY_TINY_MOTHER_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_TINY_MOTHER_WALK": {
+      "path": "res://assets/sfx/se_enemy/024_SEQARC_ENEMY_TINY_MOTHER/001_SE_ENEMY_TINY_MOTHER_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_TINY_MOTHER_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/024_SEQARC_ENEMY_TINY_MOTHER/002_SE_ENEMY_TINY_MOTHER_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_TINY_MOTHER_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/024_SEQARC_ENEMY_TINY_MOTHER/003_SE_ENEMY_TINY_MOTHER_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_ENEMY_TINY_MOTHER_DEAD": {
+      "path": "res://assets/sfx/se_enemy/024_SEQARC_ENEMY_TINY_MOTHER/004_SE_ENEMY_TINY_MOTHER_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/000_SE_BOSS_DRAGON_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_WALK": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/001_SE_BOSS_DRAGON_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_SWINGTIE": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/002_SE_BOSS_DRAGON_SWINGTIE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_CIRCLE": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/003_SE_BOSS_DRAGON_CIRCLE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FLAP": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/004_SE_BOSS_DRAGON_FLAP.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_GLIDE": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/005_SE_BOSS_DRAGON_GLIDE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_REVOLVE": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/006_SE_BOSS_DRAGON_REVOLVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_LANDING": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/007_SE_BOSS_DRAGON_LANDING.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FALL": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/008_SE_BOSS_DRAGON_FALL.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FIREBREATH": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/009_SE_BOSS_DRAGON_FIREBREATH.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FIREBREATH_HIT": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/010_SE_BOSS_DRAGON_FIREBREATH_HIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FIREPILLAR": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/011_SE_BOSS_DRAGON_FIREPILLAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_FIREPILLAR_HIT": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/012_SE_BOSS_DRAGON_FIREPILLAR_HIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_HOWL": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/013_SE_BOSS_DRAGON_HOWL.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DRAGON_DEAD": {
+      "path": "res://assets/sfx/se_enemy/025_SEQARC_BOSS_DRAGON/014_SE_BOSS_DRAGON_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/000_SE_BOSS_OCTOPUS_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_SPIN": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/001_SE_BOSS_OCTOPUS_SPIN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_ARM_UP": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/002_SE_BOSS_OCTOPUS_ARM_UP.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_ARM_DOWN": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/003_SE_BOSS_OCTOPUS_ARM_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_BIGCANON": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/004_SE_BOSS_OCTOPUS_BIGCANON.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_ARM_LEFT": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/005_SE_BOSS_OCTOPUS_ARM_LEFT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_ARM_BACK": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/006_SE_BOSS_OCTOPUS_ARM_BACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_ARM_STRETCH": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/007_SE_BOSS_OCTOPUS_ARM_STRETCH.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_FROG": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/008_SE_BOSS_OCTOPUS_FROG.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_CLOWS": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/009_SE_BOSS_OCTOPUS_CLOWS.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_SWING": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/010_SE_BOSS_OCTOPUS_SWING.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_DRAIN": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/011_SE_BOSS_OCTOPUS_DRAIN.wav",
+      "loop_begin": 48,
+      "loop_end": 8727,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_SHOT": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/012_SE_BOSS_OCTOPUS_SHOT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_TURN": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/013_SE_BOSS_OCTOPUS_TURN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_HIT": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/014_SE_BOSS_OCTOPUS_HIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_EAT": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/015_SE_BOSS_OCTOPUS_EAT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_DAMAGE_LARGE": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/016_SE_BOSS_OCTOPUS_DAMAGE_LARGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_DEAD": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/017_SE_BOSS_OCTOPUS_DEAD.wav",
+      "loop_begin": 198338,
+      "loop_end": 209540,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_THROWUP": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/018_SE_BOSS_OCTOPUS_THROWUP.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_VOMIT": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/019_SE_BOSS_OCTOPUS_VOMIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_OCTOPUS_SUCKER": {
+      "path": "res://assets/sfx/se_enemy/026_SEQARC_BOSS_OCTOPUS/020_SE_BOSS_OCTOPUS_SUCKER.wav",
+      "loop_begin": 239,
+      "loop_end": 23974,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_HOVERING": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/000_SE_BOSS_ROBOT_HOVERING.wav",
+      "loop_begin": 6382,
+      "loop_end": 13104,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_HIT": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/001_SE_BOSS_ROBOT_HIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_FLYING": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/002_SE_BOSS_ROBOT_FLYING.wav",
+      "loop_begin": 2089,
+      "loop_end": 8945,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_DRILL": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/003_SE_BOSS_ROBOT_DRILL.wav",
+      "loop_begin": 24825,
+      "loop_end": 26566,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_FIRE": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/004_SE_BOSS_ROBOT_FIRE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_WARP": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/005_SE_BOSS_ROBOT_WARP.wav",
+      "loop_begin": 12216,
+      "loop_end": 14279,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_CONTACT": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/006_SE_BOSS_ROBOT_CONTACT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_PHOTON": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/007_SE_BOSS_ROBOT_PHOTON.wav",
+      "loop_begin": 88,
+      "loop_end": 5010,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_LASER": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/008_SE_BOSS_ROBOT_LASER.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/009_SE_BOSS_ROBOT_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_UNION": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/010_SE_BOSS_ROBOT_UNION.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_MOVE": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/011_SE_BOSS_ROBOT_MOVE.wav",
+      "loop_begin": 6078,
+      "loop_end": 38684,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_BACK_START": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/012_SE_BOSS_ROBOT_BACK_START.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_DAGGER_SWING": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/013_SE_BOSS_ROBOT_DAGGER_SWING.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_SHOCK_WAVE": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/014_SE_BOSS_ROBOT_SHOCK_WAVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_SWORD_APPEAR": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/015_SE_BOSS_ROBOT_SWORD_APPEAR.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_DASH": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/016_SE_BOSS_ROBOT_DASH.wav",
+      "loop_begin": 24829,
+      "loop_end": 30077,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_SLASH": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/017_SE_BOSS_ROBOT_SLASH.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_SEPARATE": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/018_SE_BOSS_ROBOT_SEPARATE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/019_SE_BOSS_ROBOT_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_DOWN": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/020_SE_BOSS_ROBOT_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_SWITCH_ON": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/021_SE_BOSS_ROBOT_SWITCH_ON.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_HAPPY": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/022_SE_BOSS_ROBOT_HAPPY.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_ROBOT_WARNING": {
+      "path": "res://assets/sfx/se_enemy/027_SEQARC_BOSS_ROBOT/023_SE_BOSS_ROBOT_WARNING.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_HUMAN_MOVE": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/001_SE_BOSS_DF1_PIECE_HUMAN_MOVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_NEWMAN_MOVE": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/004_SE_BOSS_DF1_PIECE_NEWMAN_MOVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_CAST_MOVE": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/007_SE_BOSS_DF1_PIECE_CAST_MOVE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_HUMAN_ATK": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/015_SE_BOSS_DF1_PIECE_HUMAN_ATK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_NEWMAN_ATK": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/016_SE_BOSS_DF1_PIECE_NEWMAN_ATK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_CAST_ATK": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/017_SE_BOSS_DF1_PIECE_CAST_ATK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_HUMAN": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/018_SE_BOSS_DF1_PIECE_HUMAN.wav",
+      "loop_begin": 5328,
+      "loop_end": 13766,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_NEWMAN": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/019_SE_BOSS_DF1_PIECE_NEWMAN.wav",
+      "loop_begin": 5317,
+      "loop_end": 11637,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_CAST": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/020_SE_BOSS_DF1_PIECE_CAST.wav",
+      "loop_begin": 5314,
+      "loop_end": 10944,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_COMBO_START": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/021_SE_BOSS_DF1_COMBO_START.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_LOST": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/022_SE_BOSS_DF1_PIECE_LOST.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_HEAD_START": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/023_SE_BOSS_DF1_HEAD_START.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_HEAD_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/024_SE_BOSS_DF1_HEAD_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_HEAD_HIT": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/025_SE_BOSS_DF1_HEAD_HIT.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_ARM_START": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/026_SE_BOSS_DF1_ARM_START.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_ARM_ATTACK": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/027_SE_BOSS_DF1_ARM_ATTACK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_TARGET": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/028_SE_BOSS_DF1_TARGET.wav",
+      "loop_begin": 12417,
+      "loop_end": 13882,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_LASER": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/029_SE_BOSS_DF1_LASER.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_PIECE_DOWN": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/030_SE_BOSS_DF1_PIECE_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_DOWN": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/031_SE_BOSS_DF1_DOWN.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_UP": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/032_SE_BOSS_DF1_UP.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF1_DEAD": {
+      "path": "res://assets/sfx/se_enemy/028_SEQARC_BOSS_DF1/033_SE_BOSS_DF1_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_HOWL": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/000_SE_BOSS_DF2_HOWL.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_UP": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/001_SE_BOSS_DF2_UP.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_LASER_CHARGE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/002_SE_BOSS_DF2_LASER_CHARGE.wav",
+      "loop_begin": 50920,
+      "loop_end": 54760,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_LASER": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/003_SE_BOSS_DF2_LASER.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_LASER_SMALL": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/004_SE_BOSS_DF2_LASER_SMALL.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_DIFFUSION_CHARGE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/005_SE_BOSS_DF2_DIFFUSION_CHARGE.wav",
+      "loop_begin": 16595,
+      "loop_end": 22300,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_DIFFUSION": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/006_SE_BOSS_DF2_DIFFUSION.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_BLACKHOLE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/007_SE_BOSS_DF2_BLACKHOLE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_SHADOW_START": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/008_SE_BOSS_DF2_SHADOW_START.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_SHADOW_ATK1": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/009_SE_BOSS_DF2_SHADOW_ATK1.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_SHADOW_ATK2": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/010_SE_BOSS_DF2_SHADOW_ATK2.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_WALK": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/011_SE_BOSS_DF2_WALK.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_MINI_DIVE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/012_SE_BOSS_DF2_MINI_DIVE.wav",
+      "loop_begin": 1192,
+      "loop_end": 8639,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_MINI_MOVE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/013_SE_BOSS_DF2_MINI_MOVE.wav",
+      "loop_begin": 10875,
+      "loop_end": 13183,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_MINI_CATCH": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/014_SE_BOSS_DF2_MINI_CATCH.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_MINI_DEAD": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/015_SE_BOSS_DF2_MINI_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_DAMAGE": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/016_SE_BOSS_DF2_DAMAGE.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_DEAD": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/017_SE_BOSS_DF2_DEAD.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_REBOUND": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/018_SE_BOSS_DF2_REBOUND.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    },
+    "SE_BOSS_DF2_DIVING": {
+      "path": "res://assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/019_SE_BOSS_DF2_DIVING.wav",
+      "loop_begin": -1,
+      "loop_end": -1,
+      "mix_rate": 44100
+    }
+  },
+  "models": {
+    "armadillo": {
+      "b_035_stt": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_ARMADILLO_APPEAR"
+        }
+      ],
+      "b_035_wlk": [
+        {
+          "frame": 29,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        },
+        {
+          "frame": 58,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        }
+      ],
+      "b_035_dmg": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_ARMADILLO_DAMAGE"
+        }
+      ],
+      "b_035_ded": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_ARMADILLO_DEAD"
+        },
+        {
+          "frame": 50,
+          "sound": "SE_ENEMY_ARMADILLO_DOWN"
+        }
+      ],
+      "b_035_trf1": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_ARMADILLO_APPEAR"
+        }
+      ],
+      "b_035_trf2": [
+        {
+          "frame": 12,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        },
+        {
+          "frame": 120,
+          "sound": "SE_ENEMY_ARMADILLO_DOWN"
+        }
+      ]
+    },
+    "armadillo_rare": {
+      "b_035_stt": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_ARMADILLO_APPEAR"
+        }
+      ],
+      "b_035_wlk": [
+        {
+          "frame": 29,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        },
+        {
+          "frame": 58,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        }
+      ],
+      "b_035_dmg": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_ARMADILLO_DAMAGE"
+        }
+      ],
+      "b_035_ded": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_ARMADILLO_DEAD"
+        },
+        {
+          "frame": 50,
+          "sound": "SE_ENEMY_ARMADILLO_DOWN"
+        }
+      ],
+      "b_035_trf1": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_ARMADILLO_APPEAR"
+        }
+      ],
+      "b_035_trf2": [
+        {
+          "frame": 12,
+          "sound": "SE_ENEMY_ARMADILLO_WALK"
+        },
+        {
+          "frame": 120,
+          "sound": "SE_ENEMY_ARMADILLO_DOWN"
+        }
+      ]
+    },
+    "bat": {
+      "s_033_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_APPEAR"
+        }
+      ],
+      "s_033_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_WALK"
+        }
+      ],
+      "s_033_atk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BAT_APPEAR"
+        },
+        {
+          "frame": 30,
+          "sound": "SE_ENEMY_BAT_SONICWAVE"
+        }
+      ],
+      "s_033_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_DAMAGE"
+        }
+      ],
+      "s_033_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_DEAD"
+        }
+      ]
+    },
+    "bat_blue": {
+      "s_033_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_APPEAR"
+        }
+      ],
+      "s_033_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_WALK"
+        }
+      ],
+      "s_033_atk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BAT_APPEAR"
+        },
+        {
+          "frame": 30,
+          "sound": "SE_ENEMY_BAT_SONICWAVE"
+        }
+      ],
+      "s_033_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_DAMAGE"
+        }
+      ],
+      "s_033_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BAT_DEAD"
+        }
+      ]
+    },
+    "board": {
+      "m051_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_APPEAR"
+        }
+      ],
+      "m051_atk_sh": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        },
+        {
+          "frame": 19,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m051_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE"
+        }
+      ],
+      "m051_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "board_blue": {
+      "m051_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_APPEAR"
+        }
+      ],
+      "m051_atk_sh": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        },
+        {
+          "frame": 19,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m051_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE"
+        }
+      ],
+      "m051_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "board_green": {
+      "m051_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_APPEAR"
+        }
+      ],
+      "m051_atk_sh": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        },
+        {
+          "frame": 19,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m051_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE"
+        }
+      ],
+      "m051_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "booma": {
+      "s071_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BOOMA_APPEAR"
+        }
+      ],
+      "s071_run": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_WALK"
+        }
+      ],
+      "s071_dam": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_DAMAGE"
+        }
+      ],
+      "s071_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_DEAD"
+        }
+      ],
+      "s071_atk": [
+        {
+          "frame": 40,
+          "sound": "SE_ENEMY_BOOMA_APPEAR"
+        }
+      ]
+    },
+    "boss_darkfalz": {
+      "z_005_dam2": [
+        {
+          "frame": 15,
+          "sound": "SE_BOSS_DF2_HOWL"
+        }
+      ],
+      "z_005_walk": [
+        {
+          "frame": 15,
+          "sound": "SE_BOSS_DF2_WALK"
+        },
+        {
+          "frame": 40,
+          "sound": "SE_BOSS_DF2_WALK"
+        }
+      ],
+      "z_005_down": [
+        {
+          "frame": 30,
+          "sound": "SE_BOSS_DF2_UP"
+        }
+      ],
+      "z_005_orca": [
+        {
+          "frame": 5,
+          "sound": "SE_BOSS_DF2_UP"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DF2_DIVING"
+        }
+      ],
+      "z_005_dam3": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF2_HOWL"
+        }
+      ],
+      "z_005_radiate": [
+        {
+          "frame": 13,
+          "sound": "SE_BOSS_DF2_LASER_SMALL"
+        }
+      ],
+      "z_005_nagi": [
+        {
+          "frame": 15,
+          "sound": "SE_BOSS_DF2_LASER"
+        }
+      ],
+      "z_005_diffusn": [
+        {
+          "frame": 24,
+          "sound": "SE_BOSS_DF2_DIFFUSION"
+        }
+      ],
+      "z_005_thrst": [
+        {
+          "frame": 38,
+          "sound": "SE_BOSS_DF2_SHADOW_START"
+        }
+      ],
+      "z_005_thr2wat": [
+        {
+          "frame": 6,
+          "sound": "SE_BOSS_DF2_SHADOW_START"
+        }
+      ],
+      "z_005_bhsht": [
+        {
+          "frame": 30,
+          "sound": "SE_BOSS_DF2_BLACKHOLE"
+        },
+        {
+          "frame": 48,
+          "sound": "SE_BOSS_DF2_BLACKHOLE"
+        }
+      ],
+      "z_005_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF2_DEAD"
+        }
+      ]
+    },
+    "boss_dragon": {
+      "z_001_tht": [
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 63,
+          "sound": "SE_BOSS_DRAGON_HOWL"
+        }
+      ],
+      "z_001_dmg2": [
+        {
+          "frame": 10,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 65,
+          "sound": "SE_BOSS_DRAGON_HOWL"
+        }
+      ],
+      "z_001_dmg1": [
+        {
+          "frame": 15,
+          "sound": "SE_BOSS_DRAGON_HOWL"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        },
+        {
+          "frame": 55,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 63,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 73,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 85,
+          "sound": "SE_BOSS_DRAGON_HOWL"
+        }
+      ],
+      "z_001_wlk1": [
+        {
+          "frame": 30,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        },
+        {
+          "frame": 60,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        }
+      ],
+      "z_001_wlk2": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        },
+        {
+          "frame": 20,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        }
+      ],
+      "z_001_flst": [
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        }
+      ],
+      "z_001_rdg": [
+        {
+          "frame": 20,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 43,
+          "sound": "SE_BOSS_DRAGON_LANDING"
+        }
+      ],
+      "z_001_ded": [
+        {
+          "frame": 7,
+          "sound": "SE_BOSS_DRAGON_WALK"
+        },
+        {
+          "frame": 42,
+          "sound": "SE_BOSS_DRAGON_DEAD"
+        },
+        {
+          "frame": 135,
+          "sound": "SE_BOSS_DRAGON_FALL"
+        }
+      ],
+      "z_001_brsst": [
+        {
+          "frame": 8,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        }
+      ],
+      "z_001_brs1": [
+        {
+          "frame": 5,
+          "sound": "SE_BOSS_DRAGON_FIREBREATH"
+        }
+      ],
+      "z_001_atkwg": [
+        {
+          "frame": 8,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        }
+      ],
+      "z_001_atkrr": [
+        {
+          "frame": 10,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 43,
+          "sound": "SE_BOSS_DRAGON_CIRCLE"
+        }
+      ],
+      "z_001_atkrl": [
+        {
+          "frame": 10,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        },
+        {
+          "frame": 43,
+          "sound": "SE_BOSS_DRAGON_CIRCLE"
+        }
+      ],
+      "z_001_atkh2": [
+        {
+          "frame": 18,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        }
+      ],
+      "z_001_brs2": [
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DRAGON_FIREBREATH"
+        },
+        {
+          "frame": 64,
+          "sound": "SE_BOSS_DRAGON_FLAP"
+        }
+      ]
+    },
+    "boss_mother": {
+      "z_004_hit": [
+        {
+          "frame": 1,
+          "sound": "SE_BOSS_DF1_HEAD_HIT"
+        }
+      ],
+      "z_004_fall": [
+        {
+          "frame": 60,
+          "sound": "SE_BOSS_DF1_DOWN"
+        }
+      ],
+      "z_004_stdup": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF1_UP"
+        }
+      ],
+      "z_004_ded": [
+        {
+          "frame": 8,
+          "sound": "SE_BOSS_DF1_DEAD"
+        }
+      ],
+      "z_004_swingst": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF1_ARM_START"
+        }
+      ],
+      "z_004_swing": [
+        {
+          "frame": 10,
+          "sound": "SE_BOSS_DF1_ARM_ATTACK"
+        }
+      ],
+      "z_004_hedblp": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF1_HEAD_START"
+        }
+      ],
+      "z_004_hedb": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF1_HEAD_ATTACK"
+        },
+        {
+          "frame": 5,
+          "sound": "SE_BOSS_DF1_HEAD_HIT"
+        }
+      ]
+    },
+    "boss_mother_piece": {
+      "z_004_kmatkhm1": [
+        {
+          "frame": 0,
+          "sound": "SE_BOSS_DF1_PIECE_HUMAN_ATK"
+        }
+      ],
+      "z_004_kmatkhm2": [
+        {
+          "frame": 6,
+          "sound": "SE_BOSS_DF1_PIECE_HUMAN_ATK"
+        }
+      ],
+      "z_004_kmatkcs": [
+        {
+          "frame": 25,
+          "sound": "SE_BOSS_DF1_PIECE_CAST_ATK"
+        }
+      ]
+    },
+    "boss_octopus": {
+      "z_002_float": [
+        {
+          "frame": 3,
+          "sound": "SE_BOSS_OCTOPUS_APPEAR"
+        }
+      ]
+    },
+    "circle": {
+      "s_060_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_APPEAR"
+        }
+      ],
+      "s_060_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_DAMAGE"
+        }
+      ],
+      "s_060_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_DEAD"
+        }
+      ]
+    },
+    "circle_black": {
+      "s_060_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_APPEAR"
+        }
+      ],
+      "s_060_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_DAMAGE"
+        }
+      ],
+      "s_060_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_SMALL_DEAD"
+        }
+      ]
+    },
+    "deer": {
+      "m011_stt": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_DEER_APPEAR"
+        }
+      ],
+      "m011_stp": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_DEER_WALK"
+        }
+      ],
+      "m011_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DEER_DAMAGE"
+        }
+      ],
+      "m011_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DEER_DEAD"
+        }
+      ]
+    },
+    "frog": {
+      "s_020_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_tur": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_atk": [
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_dmg": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DAMAGE"
+        }
+      ],
+      "s_020_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DEAD"
+        }
+      ]
+    },
+    "frog_bomb": {
+      "s_020_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_tur": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_atk": [
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_dmg": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DAMAGE"
+        }
+      ],
+      "s_020_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DEAD"
+        }
+      ]
+    },
+    "frog_rare": {
+      "s_020_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_atk": [
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_FROG_APPEAR"
+        }
+      ],
+      "s_020_dmg": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DAMAGE"
+        }
+      ],
+      "s_020_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_FROG_DEAD"
+        }
+      ]
+    },
+    "gorilla": {
+      "b_014_stt": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_GORILLA_APPEAR"
+        }
+      ],
+      "b_014_wlk": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        },
+        {
+          "frame": 55,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        }
+      ],
+      "b_014_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk2_st": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk3": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_DAMAGE"
+        }
+      ],
+      "b_014_ded": [
+        {
+          "frame": 17,
+          "sound": "SE_ENEMY_GORILLA_DEAD"
+        },
+        {
+          "frame": 58,
+          "sound": "SE_PLAYER_DOWN_LARGE"
+        }
+      ]
+    },
+    "gorilla_female": {
+      "b_014_fmstt": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_GORILLA_APPEAR"
+        }
+      ],
+      "b_014_wlk": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        },
+        {
+          "frame": 55,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        }
+      ],
+      "b_014_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk2_st": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk3": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_DAMAGE"
+        }
+      ],
+      "b_014_ded": [
+        {
+          "frame": 17,
+          "sound": "SE_ENEMY_GORILLA_DEAD"
+        },
+        {
+          "frame": 58,
+          "sound": "SE_PLAYER_DOWN_LARGE"
+        }
+      ]
+    },
+    "gorilla_rare": {
+      "b_014_stt": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_GORILLA_APPEAR"
+        }
+      ],
+      "b_014_wlk": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        },
+        {
+          "frame": 55,
+          "sound": "SE_ENEMY_GORILLA_WALK"
+        }
+      ],
+      "b_014_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk2_st": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_atk3": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_ATTACK"
+        }
+      ],
+      "b_014_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_GORILLA_DAMAGE"
+        }
+      ],
+      "b_014_ded": [
+        {
+          "frame": 17,
+          "sound": "SE_ENEMY_GORILLA_DEAD"
+        },
+        {
+          "frame": 58,
+          "sound": "SE_PLAYER_DOWN_LARGE"
+        }
+      ]
+    },
+    "hyena": {
+      "m005_stt": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m005_stp": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_WALK"
+        }
+      ],
+      "m005_atk": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m005_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_DAMAGE"
+        }
+      ],
+      "m005_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_DEAD"
+        }
+      ]
+    },
+    "hyena_rare": {
+      "m005_stt": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m005_stp": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_WALK"
+        }
+      ],
+      "m005_atk": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m005_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_DAMAGE"
+        }
+      ],
+      "m005_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_DEAD"
+        }
+      ]
+    },
+    "jigobooma": {
+      "s071_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_BOOMA_APPEAR"
+        }
+      ],
+      "s071_run": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_WALK"
+        }
+      ],
+      "s071_dam": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_DAMAGE"
+        }
+      ],
+      "s071_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_BOOMA_DEAD"
+        }
+      ],
+      "s071_atk": [
+        {
+          "frame": 40,
+          "sound": "SE_ENEMY_BOOMA_APPEAR"
+        }
+      ]
+    },
+    "leg": {
+      "m061_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_APPEAR"
+        },
+        {
+          "frame": 13,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 56,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wat": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 59,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wlk": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_run": [
+        {
+          "frame": 16,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 46,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_a": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 44,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_b": [
+        {
+          "frame": 11,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 42,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 54,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DAMAGE"
+        }
+      ],
+      "m061_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "leg_black": {
+      "m061_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_APPEAR"
+        },
+        {
+          "frame": 13,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 56,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wat": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 59,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wlk": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_run": [
+        {
+          "frame": 16,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 46,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_a": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 44,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_b": [
+        {
+          "frame": 11,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 42,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 54,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DAMAGE"
+        }
+      ],
+      "m061_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "lion": {
+      "b_004_stt": [
+        {
+          "frame": 1,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 14,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 27,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_LION_APPEAR"
+        },
+        {
+          "frame": 73,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 40,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_run": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_atk": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_LION_ATTACK"
+        },
+        {
+          "frame": 45,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ],
+      "b_004_atkb": [
+        {
+          "frame": 8,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ],
+      "b_004_dmg": [
+        {
+          "frame": 2,
+          "sound": "SE_ENEMY_LION_DAMAGE"
+        }
+      ],
+      "b_004_ded": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_LION_DEAD"
+        },
+        {
+          "frame": 9,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 17,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 45,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ]
+    },
+    "lion_rare": {
+      "b_004_stt": [
+        {
+          "frame": 1,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 14,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 27,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_LION_APPEAR"
+        },
+        {
+          "frame": 73,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 40,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_run": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_LION_WALK"
+        }
+      ],
+      "b_004_atk": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_LION_ATTACK"
+        },
+        {
+          "frame": 45,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ],
+      "b_004_atkb": [
+        {
+          "frame": 8,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ],
+      "b_004_dmg": [
+        {
+          "frame": 2,
+          "sound": "SE_ENEMY_LION_DAMAGE"
+        }
+      ],
+      "b_004_ded": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_LION_DEAD"
+        },
+        {
+          "frame": 9,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 17,
+          "sound": "SE_ENEMY_LION_WALK"
+        },
+        {
+          "frame": 45,
+          "sound": "SE_ENEMY_LION_DOWN"
+        }
+      ]
+    },
+    "lizard": {
+      "s_001_tht": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DRAGONKID_APPEAR"
+        }
+      ],
+      "s_001_atk": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_DRAGONKID_APPEAR"
+        }
+      ],
+      "s_001_dmg": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DRAGONKID_DAMAGE"
+        }
+      ],
+      "s_001_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DRAGONKID_DEAD"
+        }
+      ]
+    },
+    "lower": {
+      "m061_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_APPEAR"
+        },
+        {
+          "frame": 13,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 56,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wat": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 59,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wlk": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_run": [
+        {
+          "frame": 16,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 46,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_a": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 44,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_b": [
+        {
+          "frame": 11,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 42,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 54,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DAMAGE"
+        }
+      ],
+      "m061_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "lower_black": {
+      "m061_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_APPEAR"
+        },
+        {
+          "frame": 13,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 56,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wat": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 59,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_wlk": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 35,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_run": [
+        {
+          "frame": 16,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 46,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_a": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 44,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_atk_b": [
+        {
+          "frame": 11,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 42,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        },
+        {
+          "frame": 54,
+          "sound": "SE_ENEMY_DARK_MIDDLE_WALK"
+        }
+      ],
+      "m061_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DAMAGE"
+        }
+      ],
+      "m061_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "mole": {
+      "m_032_stt": [
+        {
+          "frame": 13,
+          "sound": "SE_ENEMY_MOLE_APPEAR"
+        }
+      ],
+      "m_032_atk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_MOLE_APPEAR"
+        }
+      ],
+      "m_032_atkb": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_MOLE_WAVE"
+        }
+      ],
+      "m_032_dmg": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_MOLE_DAMAGE"
+        }
+      ],
+      "m_032_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_MOLE_DEAD"
+        }
+      ]
+    },
+    "mother": {
+      "b072_stt": [
+        {
+          "frame": 60,
+          "sound": "SE_ENEMY_TINY_MOTHER_APPEAR"
+        }
+      ],
+      "b072_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DAMAGE"
+        }
+      ],
+      "b072_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DEAD"
+        }
+      ],
+      "b072_atk_sa_a": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ],
+      "b072_atk_sb_a": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ]
+    },
+    "mother_gun": {
+      "b072_stt": [
+        {
+          "frame": 60,
+          "sound": "SE_ENEMY_TINY_MOTHER_APPEAR"
+        }
+      ],
+      "b072_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DAMAGE"
+        }
+      ],
+      "b072_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DEAD"
+        }
+      ],
+      "b072_atk_sa_s": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ],
+      "b072_atk_sb_s": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ]
+    },
+    "mother_sword": {
+      "b072_stt": [
+        {
+          "frame": 60,
+          "sound": "SE_ENEMY_TINY_MOTHER_APPEAR"
+        }
+      ],
+      "b072_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DAMAGE"
+        }
+      ],
+      "b072_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DEAD"
+        }
+      ],
+      "b072_atk_sa_s": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ],
+      "b072_atk_sb_s": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ]
+    },
+    "mother_tech": {
+      "b072_stt": [
+        {
+          "frame": 60,
+          "sound": "SE_ENEMY_TINY_MOTHER_APPEAR"
+        }
+      ],
+      "b072_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DAMAGE"
+        }
+      ],
+      "b072_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_TINY_MOTHER_DEAD"
+        }
+      ],
+      "b072_atk_sa_s": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ],
+      "b072_atk_sb_s": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        },
+        {
+          "frame": 34,
+          "sound": "SE_ENEMY_TINY_MOTHER_ATTACK"
+        }
+      ]
+    },
+    "orangutan": {
+      "b_044_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_APPEAR"
+        }
+      ],
+      "b_044_wlk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_ORANGUTAN_WALK"
+        }
+      ],
+      "b_044_atckstt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_APPEAR"
+        }
+      ],
+      "b_044_atcktuki": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK_VOICE"
+        }
+      ],
+      "b_044_atckswg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK_VOICE"
+        }
+      ],
+      "b_044_atcksht": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        },
+        {
+          "frame": 33,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        },
+        {
+          "frame": 57,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        }
+      ],
+      "b_044_dam": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_DAMAGE"
+        }
+      ],
+      "b_044_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_DEAD"
+        },
+        {
+          "frame": 75,
+          "sound": "SE_PLAYER_DOWN_MIDDLE"
+        }
+      ]
+    },
+    "orangutan_rare": {
+      "b_044_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_APPEAR"
+        }
+      ],
+      "b_044_wlk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_ORANGUTAN_WALK"
+        }
+      ],
+      "b_044_atckstt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_APPEAR"
+        }
+      ],
+      "b_044_atckswg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK_VOICE"
+        }
+      ],
+      "b_044_atcksht": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        },
+        {
+          "frame": 33,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        },
+        {
+          "frame": 57,
+          "sound": "SE_ENEMY_ORANGUTAN_ATTACK"
+        }
+      ],
+      "b_044_dam": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_DAMAGE"
+        }
+      ],
+      "b_044_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_ORANGUTAN_DEAD"
+        },
+        {
+          "frame": 75,
+          "sound": "SE_PLAYER_DOWN_MIDDLE"
+        }
+      ]
+    },
+    "quad": {
+      "m_042_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_APPEAR"
+        }
+      ],
+      "m_042_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m_042_atkb": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m_042_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE"
+        }
+      ],
+      "m_042_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "quad_rare": {
+      "m_042_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_APPEAR"
+        }
+      ],
+      "m_042_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m_042_atkb": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_GUN"
+        }
+      ],
+      "m_042_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE"
+        }
+      ],
+      "m_042_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_MIDDLE_DEAD"
+        }
+      ]
+    },
+    "rabbit": {
+      "s_010_stt": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_RABBIT_APPEAR"
+        }
+      ],
+      "s_010_run": [
+        {
+          "frame": 1,
+          "sound": "SE_ENEMY_RABBIT_WALK"
+        }
+      ],
+      "s_010_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RABBIT_DAMAGE"
+        }
+      ],
+      "s_010_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RABBIT_DEAD"
+        }
+      ]
+    },
+    "rabbit_rare": {
+      "s_010_stt": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_RABBIT_APPEAR"
+        }
+      ],
+      "s_010_run": [
+        {
+          "frame": 1,
+          "sound": "SE_ENEMY_RABBIT_WALK"
+        }
+      ],
+      "s_010_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RABBIT_DAMAGE"
+        }
+      ],
+      "s_010_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RABBIT_DEAD"
+        }
+      ]
+    },
+    "rappy": {
+      "s_070_stt2": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_wlk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_atk": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_RAPPY_ATTACK"
+        }
+      ],
+      "s_070_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DAMAGE"
+        }
+      ],
+      "s_070_ded1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DEAD"
+        },
+        {
+          "frame": 53,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_ded2": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        }
+      ]
+    },
+    "rappy_blue": {
+      "s_070_stt2": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_wlk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_atk": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_RAPPY_ATTACK"
+        }
+      ],
+      "s_070_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DAMAGE"
+        }
+      ],
+      "s_070_ded1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DEAD"
+        },
+        {
+          "frame": 53,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_ded2": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        }
+      ]
+    },
+    "rappy_red": {
+      "s_070_stt2": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        },
+        {
+          "frame": 37,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_wlk": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_atk": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_RAPPY_ATTACK"
+        }
+      ],
+      "s_070_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DAMAGE"
+        }
+      ],
+      "s_070_ded1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_RAPPY_DEAD"
+        },
+        {
+          "frame": 53,
+          "sound": "SE_ENEMY_RAPPY_WALK"
+        }
+      ],
+      "s_070_ded2": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_RAPPY_APPEAR"
+        }
+      ]
+    },
+    "roc": {
+      "b_022_stt": [
+        {
+          "frame": 30,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        },
+        {
+          "frame": 39,
+          "sound": "SE_ENEMY_PELICAN_APPEAR"
+        },
+        {
+          "frame": 50,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        },
+        {
+          "frame": 70,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        }
+      ],
+      "b_022_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_APPEAR"
+        }
+      ],
+      "b_022_atk3": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_ATTACK"
+        },
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        }
+      ],
+      "b_022_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_DAMAGE"
+        }
+      ],
+      "b_022_ded": [
+        {
+          "frame": 2,
+          "sound": "SE_ENEMY_PELICAN_DEAD"
+        },
+        {
+          "frame": 28,
+          "sound": "SE_ENEMY_PELICAN_DOWN"
+        }
+      ]
+    },
+    "roc_rare": {
+      "b_022_stt": [
+        {
+          "frame": 30,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        },
+        {
+          "frame": 39,
+          "sound": "SE_ENEMY_PELICAN_APPEAR"
+        },
+        {
+          "frame": 50,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        },
+        {
+          "frame": 70,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        }
+      ],
+      "b_022_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_APPEAR"
+        }
+      ],
+      "b_022_atk3": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_ATTACK"
+        },
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_PELICAN_WALK"
+        }
+      ],
+      "b_022_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_PELICAN_DAMAGE"
+        }
+      ],
+      "b_022_ded": [
+        {
+          "frame": 2,
+          "sound": "SE_ENEMY_PELICAN_DEAD"
+        },
+        {
+          "frame": 28,
+          "sound": "SE_ENEMY_PELICAN_DOWN"
+        }
+      ]
+    },
+    "seal": {
+      "m_021_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_APPEAR"
+        }
+      ],
+      "m_021_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_APPEAR"
+        }
+      ],
+      "m_021_atk2": [
+        {
+          "frame": 25,
+          "sound": "SE_TECHNIC_ZONDE"
+        }
+      ],
+      "m_021_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_DAMAGE"
+        }
+      ],
+      "m_021_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_DEAD"
+        }
+      ]
+    },
+    "seal_rare": {
+      "m_021_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_APPEAR"
+        }
+      ],
+      "m_021_atk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_APPEAR"
+        }
+      ],
+      "m_021_atk2": [
+        {
+          "frame": 25,
+          "sound": "SE_TECHNIC_ZONDE"
+        }
+      ],
+      "m_021_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_DAMAGE"
+        }
+      ],
+      "m_021_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_FURSEAL_DEAD"
+        }
+      ]
+    },
+    "shooter": {
+      "s050_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_APPEAR"
+        }
+      ],
+      "s050_atk_sh": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_GUN"
+        }
+      ],
+      "s050_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_DAMAGE"
+        }
+      ]
+    },
+    "shooter_leader": {
+      "s150_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_APPEAR"
+        }
+      ],
+      "s050_atk_sh": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_GUN"
+        }
+      ],
+      "s050_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_SMALL_DAMAGE"
+        }
+      ]
+    },
+    "shrimp": {
+      "s_040_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_APPEAR"
+        }
+      ],
+      "s_040_wlk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_WALK"
+        }
+      ],
+      "s_040_wlk2": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_WALK"
+        }
+      ],
+      "s_040_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_APPEAR"
+        }
+      ],
+      "s_040_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_DAMAGE"
+        }
+      ],
+      "s_040_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_DEAD"
+        }
+      ]
+    },
+    "shrimp_rare": {
+      "s_040_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_APPEAR"
+        }
+      ],
+      "s_040_wlk1": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_WALK"
+        }
+      ],
+      "s_040_wlk2": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_WALK"
+        }
+      ],
+      "s_040_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_APPEAR"
+        }
+      ],
+      "s_040_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_DAMAGE"
+        }
+      ],
+      "s_040_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MIMIC_DEAD"
+        }
+      ]
+    },
+    "snake": {
+      "m_003_atk1": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_SNAKE_APPEAR"
+        }
+      ],
+      "m_003_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_SNAKE_DAMAGE"
+        }
+      ],
+      "m_003_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_SNAKE_DEAD"
+        }
+      ]
+    },
+    "snake_rare": {
+      "m_003_atk1": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_SNAKE_APPEAR"
+        }
+      ],
+      "m_003_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_SNAKE_DAMAGE"
+        }
+      ],
+      "m_003_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_SNAKE_DEAD"
+        }
+      ]
+    },
+    "swordman": {
+      "b062_stt": [
+        {
+          "frame": 7,
+          "sound": "SE_ENEMY_DARK_LARGE_APPEAR"
+        }
+      ],
+      "b062_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        }
+      ],
+      "b062_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DAMAGE"
+        }
+      ],
+      "b062_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DEAD"
+        }
+      ],
+      "b062_atk_sw": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_pu": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_th_st": [
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ]
+    },
+    "swordman_b": {
+      "b062_stt": [
+        {
+          "frame": 7,
+          "sound": "SE_ENEMY_DARK_LARGE_APPEAR"
+        }
+      ],
+      "b062_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        }
+      ],
+      "b062_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DAMAGE"
+        }
+      ],
+      "b062_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DEAD"
+        }
+      ],
+      "b062_atk_sw": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_pu": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_th_st": [
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ]
+    },
+    "swordman_rare": {
+      "b062_stt": [
+        {
+          "frame": 7,
+          "sound": "SE_ENEMY_DARK_LARGE_APPEAR"
+        }
+      ],
+      "b062_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        }
+      ],
+      "b062_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DAMAGE"
+        }
+      ],
+      "b062_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DEAD"
+        }
+      ],
+      "b062_atk_sw": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_pu": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_th_st": [
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ]
+    },
+    "swordman_rare_b": {
+      "b062_stt": [
+        {
+          "frame": 7,
+          "sound": "SE_ENEMY_DARK_LARGE_APPEAR"
+        }
+      ],
+      "b062_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        },
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_DARK_LARGE_WALK"
+        }
+      ],
+      "b062_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DAMAGE"
+        }
+      ],
+      "b062_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_DARK_LARGE_DEAD"
+        }
+      ],
+      "b062_atk_sw": [
+        {
+          "frame": 18,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_pu": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ],
+      "b062_atk_th_st": [
+        {
+          "frame": 22,
+          "sound": "SE_ENEMY_DARK_LARGE_ATTACK"
+        }
+      ]
+    },
+    "tank": {
+      "b052_run_st": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_MACHINE_LARGE_APPEAR"
+        }
+      ],
+      "b052_atk_sh": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_MACHINE_LARGE_ATTACK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_MACHINE_LARGE_GUN"
+        }
+      ],
+      "b052_atk_bz": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_MACHINE_LARGE_GUN"
+        }
+      ],
+      "b052_atk_mi": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_MACHINE_LARGE_ATTACK"
+        }
+      ],
+      "b052_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_LARGE_DAMAGE"
+        }
+      ],
+      "b052_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_LARGE_DEAD"
+        }
+      ]
+    },
+    "tank_rare": {
+      "b052_run_st": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_MACHINE_LARGE_APPEAR"
+        }
+      ],
+      "b052_atk_sh": [
+        {
+          "frame": 6,
+          "sound": "SE_ENEMY_MACHINE_LARGE_ATTACK"
+        },
+        {
+          "frame": 32,
+          "sound": "SE_ENEMY_MACHINE_LARGE_GUN"
+        }
+      ],
+      "b052_atk_bz": [
+        {
+          "frame": 20,
+          "sound": "SE_ENEMY_MACHINE_LARGE_GUN"
+        }
+      ],
+      "b052_atk_mi": [
+        {
+          "frame": 5,
+          "sound": "SE_ENEMY_MACHINE_LARGE_ATTACK"
+        }
+      ],
+      "b052_dam": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_LARGE_DAMAGE"
+        }
+      ],
+      "b052_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_MACHINE_LARGE_DEAD"
+        }
+      ]
+    },
+    "tiger": {
+      "m034_stt": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m034_stp": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_WALK"
+        }
+      ],
+      "m034_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m034_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_DAMAGE"
+        }
+      ],
+      "m034_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_DEAD"
+        }
+      ]
+    },
+    "vulture": {
+      "s002_stt": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_VALTURE_APPEAR"
+        }
+      ],
+      "s002_wlk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_VALTURE_WALK"
+        }
+      ],
+      "s002_atk": [
+        {
+          "frame": 25,
+          "sound": "SE_ENEMY_VALTURE_APPEAR"
+        }
+      ],
+      "s002_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_VALTURE_DAMAGE"
+        }
+      ],
+      "s002_ded": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_VALTURE_DEAD"
+        }
+      ]
+    },
+    "wolf": {
+      "m_012_stt": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m_012_stp": [
+        {
+          "frame": 15,
+          "sound": "SE_ENEMY_WOLF_WALK"
+        }
+      ],
+      "m_012_atk": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_APPEAR"
+        }
+      ],
+      "m_012_dmg": [
+        {
+          "frame": 0,
+          "sound": "SE_ENEMY_WOLF_DAMAGE"
+        }
+      ],
+      "m_012_ded": [
+        {
+          "frame": 10,
+          "sound": "SE_ENEMY_WOLF_DEAD"
+        }
+      ]
+    }
+  },
+  "skipped": [
+    {
+      "model": "boss_darkfalz",
+      "clip": "z_005_up",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "boss_dragon",
+      "clip": "z_001_fly",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "boss_mother_piece",
+      "clip": "z_004_kmvb",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "boss_mother_piece",
+      "clip": "z_004_kmdam2",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "deer",
+      "clip": "m011_atk",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "roc",
+      "clip": "b_022_tk",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "roc_rare",
+      "clip": "b_022_tk",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "shooter",
+      "clip": "s050_ded",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "shooter_leader",
+      "clip": "s050_ded",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "snake",
+      "clip": "m_003_wat1",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "snake",
+      "clip": "m_003_atk2",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "snake_rare",
+      "clip": "m_003_wat1",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "snake_rare",
+      "clip": "m_003_atk2",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "tank",
+      "clip": "b052_run_ed",
+      "reason": "action-dependent cues"
+    },
+    {
+      "model": "tank_rare",
+      "clip": "b052_run_ed",
+      "reason": "action-dependent cues"
+    }
+  ]
+}

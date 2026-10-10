@@ -15,6 +15,10 @@ const TIMEOUT_SEC := 240.0
 
 
 func _ready() -> void:
+	if OS.get_environment("PSZ_SOUND_PROBE") == "1":
+		var ok: bool = await preload("res://scripts/tools/enemy_sound_probe.gd").run(self)
+		get_tree().quit(0 if ok else 1)
+		return
 	DebugConfig.verbose_field = true  # [RoomClear]/[CellObjects] traces for the probe log
 	# Minimal session (the seeded-test recipe): a character so the player spawns
 	# with a model and stats, then the picker's warp chain verbatim.

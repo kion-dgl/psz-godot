@@ -5,9 +5,10 @@ class_name ColiseumRoster
 ## can pin it directly without pulling the shop UI into its compile chain.
 
 ## Game-area progression order — roster groups are ordered by the earliest area
-## their enemies appear in (matched on the first token: location strings vary,
-## e.g. "Ozette Wetlands" vs "Ozette Wetland").
+## their enemies appear in (location aliases normalize to these area names).
 const AREA_ORDER := ["Gurhacia", "Ozette", "Rioh", "Makara", "Paru", "Arca", "Dark", "Eternal"]
+const AREA_NAMES := ["Gurhacia Valley", "Ozette Wetlands", "Rioh Snowfield", "Makara Ruins",
+	"Oblivion City Paru", "Arca Plant", "Dark Shrine", "Eternal Tower"]
 
 ## The player's coliseum spawn (local to the stage): the warp-in lands here, a
 ## clear run-up north to the enemy at (0, 6). Kion playtest.
@@ -68,7 +69,7 @@ static func warp_data() -> Dictionary:
 	}
 
 
-## One picker row per roster enemy: display name, element, HP, behavior archetype,
+## One picker row per roster enemy: display/model names, attribute, HP, behavior archetype,
 ## delivery kinds, and the areas it appears in (what you're about to fight).
 static func roster_rows() -> Array:
 	var rows: Array = []
@@ -82,6 +83,7 @@ static func roster_rows() -> Array:
 		rows.append({
 			"id": str(id),
 			"name": str(e.name),
+			"model": str(e.model_id),
 			"element": String(EnemyData.Element.keys()[e.element]).to_lower(),
 			"hp": int(e.hp_base),
 			"archetype": EnemyAttackRegistry.get_archetype(str(id)),
@@ -100,38 +102,36 @@ static func roster_rows() -> Array:
 	return rows
 
 
-## Grouped listing for one tab (kion playtest: grouped by type, ordered by the
-## areas they appear in; normal enemies and bosses live on separate tabs).
-## Returns [{archetype, area_rank, rows}] — groups sorted by earliest area then
-## archetype name; rows within a group by (area rank, name).
+## Each enemy appears once, under its earliest area. Imported PSO models have
+## their own section, independent of any area metadata.
 static func grouped_roster(is_boss: bool) -> Array:
-	var by_archetype := {}
+	var by_area := {}
 	for row in roster_rows():
 		if bool(row["boss_tab"]) != is_boss:
 			continue
-		var arch: String = str(row["archetype"])
-		if not by_archetype.has(arch):
-			by_archetype[arch] = []
-		by_archetype[arch].append(row)
-	var groups: Array = []
-	for arch in by_archetype:
-		var rows: Array = by_archetype[arch]
-		var rank: int = 99
-		for r in rows:
-			rank = mini(rank, int(r["area_rank"]))
-		rows.sort_custom(_area_then_name)
-		groups.append({"archetype": str(arch), "area_rank": rank, "rows": rows})
+		var rank := int(row["area_rank"])
+		var area := str(AREA_NAMES[rank]) if rank < AREA_NAMES.size() else "Other"
+		if str(row["id"]).begins_with("pso_") or str(row["model"]).begins_with("pso_") or "PSO Coliseum" in row["areas"]:
+			area = "PSO Enemies"
+			rank = AREA_NAMES.size()
+		if not by_area.has(area):
+			by_area[area] = {"name": area, "area_rank": rank, "rows": []}
+		by_area[area]["rows"].append(row)
+	var groups: Array = by_area.values()
+	for group in groups:
+		group["rows"].sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return str(a["name"]).naturalnocasecmp_to(str(b["name"])) < 0)
 	groups.sort_custom(_area_then_name)
 	return groups
 
 
 ## Shared ordering: area rank first, then the entry's display name (rows use
-## "name"; groups fall back to their archetype).
+## "name", as do area groups).
 static func _area_then_name(a: Dictionary, b: Dictionary) -> bool:
 	if int(a["area_rank"]) != int(b["area_rank"]):
 		return int(a["area_rank"]) < int(b["area_rank"])
-	var an := str(a.get("name", a.get("archetype", ""))).to_lower()
-	var bn := str(b.get("name", b.get("archetype", ""))).to_lower()
+	var an := str(a.get("name", "")).to_lower()
+	var bn := str(b.get("name", "")).to_lower()
 	return an < bn
 
 
@@ -198,7 +198,7 @@ static func _scan_boss_quests() -> Dictionary:
 static func _area_rank(areas: Array) -> int:
 	var best := 99
 	for area in areas:
-		var token: String = String(area).split(" ")[0]
+		var token: String = "Paru" if "Paru" in String(area) else String(area).split(" ")[0]
 		var idx: int = AREA_ORDER.find(token)
 		if idx >= 0:
 			best = mini(best, idx)
@@ -235,4 +235,4 @@ static func mixed_roster() -> Array:
 		rows.append({"id":id, "name":MIXED_GROUPS[id].name, "is_rare":false,
 			"element":"%d enemies" % names.size(), "hp":hp, "areas":names,
 			"archetype":"mixed group", "kinds":["melee", "ranged", "room clear"]})
-	return [{"archetype":"Mixed Groups", "area_rank":0, "rows":rows}]
+	return [{"name":"Mixed Groups", "area_rank":0, "rows":rows}]

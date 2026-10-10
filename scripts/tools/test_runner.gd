@@ -31,6 +31,7 @@ func _ready() -> void:
 # Player state machine + combat: states, commitment, combos, damage math,
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
+	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	test_player_states()
 	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
@@ -4038,7 +4039,7 @@ func test_coliseum_master_picker() -> void:
 
 
 # ── Coliseum roster grouping (kion playtest): tabs by boss flag, groups by
-# ── archetype ordered by earliest area.
+# ── area ordered by progression, with PSO in its own group.
 
 func test_coliseum_roster_grouping() -> void:
 	print("── Coliseum roster grouping (#629) ──")
@@ -4072,9 +4073,20 @@ func test_coliseum_roster_grouping() -> void:
 			if str(row["id"]) == "hildegigas":
 				saw_hildegigas = true
 	assert_true(saw_hildegigas, "hildegigas is on the enemy tab")
+	var seen := {}
+	for group in enemies + bosses:
+		for row in group["rows"]:
+			assert_true(not seen.has(row["id"]), "each enemy appears once")
+			seen[row["id"]] = true
+			assert_eq(row["model"], EnemyRegistry.get_enemy(row["id"]).model_id, "row carries model name")
+			if str(row["id"]).begins_with("pso_"):
+				assert_eq(group["name"], "PSO Enemies", "PSO models have a separate group")
+			if row["id"] == "froutang":
+				assert_eq(group["name"], "Oblivion City Paru", "Paru location resolves before Tower")
+
 
 	# Groups order by earliest area (Gurhacia before Eternal Tower), rows within
-	# a group by (area rank, name).
+	# a group alphabetically.
 	var ranks: Array = []
 	for g in enemies:
 		ranks.append(int(g["area_rank"]))
@@ -4086,7 +4098,7 @@ func test_coliseum_roster_grouping() -> void:
 		for row in g["rows"]:
 			if str(row["id"]) == "hildegigas":
 				hg_group = g
-	assert_eq(str(hg_group["archetype"]), "bigrig_combo", "hildegigas groups under its archetype")
+	assert_eq(str(hg_group["name"]), "Rioh Snowfield", "hildegigas groups under its area")
 	assert_true(int(hg_group["area_rank"]) == 2, "hildegigas group ranks by Rioh (Snowfield)")
 	assert_true(("charge" in _picker_row(hg_group, "hildegigas")["kinds"]),
 		"rows carry the authored delivery kinds")

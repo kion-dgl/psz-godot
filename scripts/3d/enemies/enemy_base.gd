@@ -253,34 +253,24 @@ const FLOOR_CHECK_DISTANCE: float = 1.0  # How far ahead to check
 const FLOOR_CHECK_SIDE: float = 0.5  # Side offset for corner checks
 const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 
-## Enemy SFX keyed by model_id → {damage, death, attack, idle}
-const ENEMY_SFX := {
-	"wolf": {
-		"damage": "res://assets/sfx/forest/forest_020.wav",
-		"death": "res://assets/sfx/forest/forest_021.wav",
-		"attack": "res://assets/sfx/forest/forest_023.wav",
-		"idle": "res://assets/sfx/forest/forest_018.wav",
-	},
-}
-
 ## Signals
 signal died(enemy: EnemyBase)
 signal damaged(enemy: EnemyBase, amount: int)
 
 
-var _sfx: Dictionary = {}
+var _sound_playback: EnemySoundPlayback
 
 func _ready() -> void:
 	add_to_group("enemies")
 	set_collision_mask_value(2, true)  # Enable player layer collision (preserve other mask bits)
 	_setup_from_data()
 	_setup_model()
+	_setup_sound_playback()
 	_setup_hurtbox()
 	_setup_navigation()
 	_find_target()
 
 	if enemy_data:
-		_sfx = ENEMY_SFX.get(enemy_data.model_id, {})
 		_attacks = EnemyAttackRegistry.get_attacks(enemy_data.id, enemy_data.attack_range)
 		_archetype = EnemyAttackRegistry.get_archetype(enemy_data.id)
 		_fsm = EnemyAttackRegistry.get_fsm(enemy_data.id)
@@ -1423,7 +1413,6 @@ func _start_attack() -> void:
 		_setup_windup()
 	else:
 		_begin_main_clip()
-	_play_sfx("attack")
 
 	# Lock facing at attack start — the arc does not track during the swing.
 	var dir_to_target := target.global_position - global_position
@@ -1810,7 +1799,6 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		velocity = Vector3.ZERO  # Stop movement during stagger
 
 		_play_animation("dmg", true)  # Force play damage animation
-		_play_sfx("damage")
 
 
 func _die() -> void:
@@ -1825,15 +1813,14 @@ func _die() -> void:
 	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " died!")
 
 	# Play death animation
-	_play_animation("ded", true)
-	_play_sfx("death")
+	var death_clip := _play_animation("ded", true)
 
 	# Drops are handled by the field controller via the died signal
 
 	# Remove after death animation (or delay if no animation)
 	var delay := 1.5  # Default delay
-	if animation_player and animation_player.has_animation("ded"):
-		delay = animation_player.get_animation("ded").length + 0.3
+	if animation_player and not death_clip.is_empty():
+		delay = animation_player.get_animation(death_clip).length / maxf(absf(animation_player.get_playing_speed()), 0.001) + 0.3
 	var tween := create_tween()
 	tween.tween_interval(delay)
 	tween.tween_callback(queue_free)
@@ -2029,10 +2016,13 @@ func _on_animation_finished(anim_name: String) -> void:
 				_play_animation("wlk", false, true)
 
 
-func _play_sfx(key: String) -> void:
-	var path: String = _sfx.get(key, "")
-	if not path.is_empty():
-		SfxManager.play_at(path, global_position)
+func _setup_sound_playback() -> void:
+	if not enemy_data or not animation_player:
+		return
+	_sound_playback = EnemySoundPlayback.new()
+	_sound_playback.name = "EnemySoundPlayback"
+	add_child(_sound_playback)
+	_sound_playback.bind(self, animation_player, enemy_data.model_id)
 
 
 ## Bring a dormant enemy in: show it, play the spawn effect and a start
