@@ -268,6 +268,23 @@ const fsm = `stateDiagram-v2
   </table>
   <p>The marker set <strong>MUST</strong> stay in sync with the live roster via the death signals (<code>died</code> / <code>defeated</code>) — no stale dots after a kill.</p>
 
+  <h2 id="sound-events">Animation sound events</h2>
+  <p>Enemy audio <strong>MUST</strong> use the original sound-event IDs and clip-local
+    frames retained in <code>data/re_reference/enemy_sound_events.json</code>.
+    The generated <code>data/enemy_sounds.json</code> maps model IDs to clip cues.
+    Source frames <strong>MUST</strong> follow the imported animation timebase
+    (60 frames per second), including playback-speed changes and loop crossings.</p>
+  <p>Callbacks <strong>MUST NOT</strong> play for dormant or immobilized enemies,
+    or after their clip is interrupted. Animation resources <strong>MUST</strong>
+    be private to each enemy. Sustained sounds <strong>MUST</strong> use exact
+    exported sample loop bounds and stop on clip change, pause, or enemy removal.
+    This lifetime policy is a Godot approximation; the original stop policy is unresolved.
+    Rendered sequence volume <strong>MUST NOT</strong> be applied twice.</p>
+  <p>Clips with action-dependent cues <strong>MUST</strong> remain excluded until
+    the runtime identifies the original action and stage. Unmapped models
+    <strong>MUST NOT</strong> inherit unrelated sounds. Validation lives in
+    <code>enemy_sound_tests.gd</code> and the packed sound playback probe.</p>
+
   <h2>Implemented by</h2>
   <ul>
     <li><code>scripts/autoloads/enemy_registry.gd</code> (EnemyRegistry) — loads every <code>data/enemies/*.tres</code> <code>EnemyData</code> at boot and serves the roster keyed by <code>id</code>.</li>

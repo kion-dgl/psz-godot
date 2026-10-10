@@ -1,0 +1,6332 @@
+{
+  "schema": "psz-re/enemy-sounds/1",
+  "source": "sound/sound_data_se_enemy.sdat",
+  "sha256": "cd4a2032699d1291ad05558655fad2cb60380d52b6f34f15db1eb7d256989aba",
+  "parser": "ndspy 4.2.0",
+  "parser_documentation": "https://ndspy.readthedocs.io/en/latest/api/soundArchive.html",
+  "confidence": "confirmed",
+  "oracle": "byte-identical SDAT round-trip; all SSARs parsed; bank/wave references bounded",
+  "limits": [
+    "Archive and sequence IDs are scoped to this SDAT, not global game sound IDs.",
+    "A sequence may use multiple notes, instruments, random pitch and loops. Raw sample export is not faithful sequence rendering.",
+    "Labels describe assets. Animation-event sound commands are linked in the implementation reference; other AI sound producers still need tracing.",
+    "Shared sequence symbols are included to resolve the seven class-2 events selecting the default SDAT. Other sound archives remain outside this catalogue."
+  ],
+  "archives": [
+    {
+      "archive_id": 0,
+      "symbol": "SEQARC_ENEMY_DRAGONKID",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_DRAGONKID_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 0,
+          "bank_symbol": "BANK_ENEMY_DRAGONKID",
+          "wave_archive_ids": [
+            0
+          ],
+          "volume": 55,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_DRAGONKID_WALK",
+          "entry_offset": 61,
+          "bank_id": 0,
+          "bank_symbol": "BANK_ENEMY_DRAGONKID",
+          "wave_archive_ids": [
+            0
+          ],
+          "volume": 55,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_DRAGONKID_DOWN",
+          "entry_offset": 93,
+          "bank_id": 0,
+          "bank_symbol": "BANK_ENEMY_DRAGONKID",
+          "wave_archive_ids": [
+            0
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_DRAGONKID_DAMAGE",
+          "entry_offset": 125,
+          "bank_id": 0,
+          "bank_symbol": "BANK_ENEMY_DRAGONKID",
+          "wave_archive_ids": [
+            0
+          ],
+          "volume": 55,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_DRAGONKID_DEAD",
+          "entry_offset": 230,
+          "bank_id": 0,
+          "bank_symbol": "BANK_ENEMY_DRAGONKID",
+          "wave_archive_ids": [
+            0
+          ],
+          "volume": 65,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 145
+    },
+    {
+      "archive_id": 1,
+      "symbol": "SEQARC_ENEMY_SNAKE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_SNAKE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 1,
+          "bank_symbol": "BANK_ENEMY_SNAKE",
+          "wave_archive_ids": [
+            1
+          ],
+          "volume": 123,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_SNAKE_WALK",
+          "entry_offset": 75,
+          "bank_id": 1,
+          "bank_symbol": "BANK_ENEMY_SNAKE",
+          "wave_archive_ids": [
+            1
+          ],
+          "volume": 92,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_SNAKE_DOWN",
+          "entry_offset": 112,
+          "bank_id": 1,
+          "bank_symbol": "BANK_ENEMY_SNAKE",
+          "wave_archive_ids": [
+            1
+          ],
+          "volume": 119,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_SNAKE_DAMAGE",
+          "entry_offset": 144,
+          "bank_id": 1,
+          "bank_symbol": "BANK_ENEMY_SNAKE",
+          "wave_archive_ids": [
+            1
+          ],
+          "volume": 123,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_SNAKE_DEAD",
+          "entry_offset": 229,
+          "bank_id": 1,
+          "bank_symbol": "BANK_ENEMY_SNAKE",
+          "wave_archive_ids": [
+            1
+          ],
+          "volume": 123,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 182
+    },
+    {
+      "archive_id": 2,
+      "symbol": "SEQARC_ENEMY_LION",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_LION_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 120,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_LION_WALK",
+          "entry_offset": 98,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 120,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_LION_DOWN",
+          "entry_offset": 130,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_LION_DAMAGE",
+          "entry_offset": 162,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_LION_ATTACK",
+          "entry_offset": 421,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_LION_DEAD",
+          "entry_offset": 271,
+          "bank_id": 2,
+          "bank_symbol": "BANK_ENEMY_LION",
+          "wave_archive_ids": [
+            2
+          ],
+          "volume": 120,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 210
+    },
+    {
+      "archive_id": 3,
+      "symbol": "SEQARC_ENEMY_FROG",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_FROG_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 3,
+          "bank_symbol": "BANK_ENEMY_FROG",
+          "wave_archive_ids": [
+            3
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_FROG_WALK",
+          "entry_offset": 90,
+          "bank_id": 3,
+          "bank_symbol": "BANK_ENEMY_FROG",
+          "wave_archive_ids": [
+            3
+          ],
+          "volume": 55,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_FROG_DOWN",
+          "entry_offset": 122,
+          "bank_id": 3,
+          "bank_symbol": "BANK_ENEMY_FROG",
+          "wave_archive_ids": [
+            3
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_FROG_DAMAGE",
+          "entry_offset": 154,
+          "bank_id": 3,
+          "bank_symbol": "BANK_ENEMY_FROG",
+          "wave_archive_ids": [
+            3
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_FROG_DEAD",
+          "entry_offset": 249,
+          "bank_id": 3,
+          "bank_symbol": "BANK_ENEMY_FROG",
+          "wave_archive_ids": [
+            3
+          ],
+          "volume": 100,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 119
+    },
+    {
+      "archive_id": 4,
+      "symbol": "SEQARC_ENEMY_FURSEAL",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_FURSEAL_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 4,
+          "bank_symbol": "BANK_ENEMY_FURSEAL",
+          "wave_archive_ids": [
+            4
+          ],
+          "volume": 122,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_FURSEAL_WALK",
+          "entry_offset": 96,
+          "bank_id": 4,
+          "bank_symbol": "BANK_ENEMY_FURSEAL",
+          "wave_archive_ids": [
+            4
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_FURSEAL_DOWN",
+          "entry_offset": 128,
+          "bank_id": 4,
+          "bank_symbol": "BANK_ENEMY_FURSEAL",
+          "wave_archive_ids": [
+            4
+          ],
+          "volume": 122,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_FURSEAL_DAMAGE",
+          "entry_offset": 160,
+          "bank_id": 4,
+          "bank_symbol": "BANK_ENEMY_FURSEAL",
+          "wave_archive_ids": [
+            4
+          ],
+          "volume": 107,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_FURSEAL_DEAD",
+          "entry_offset": 222,
+          "bank_id": 4,
+          "bank_symbol": "BANK_ENEMY_FURSEAL",
+          "wave_archive_ids": [
+            4
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 189
+    },
+    {
+      "archive_id": 5,
+      "symbol": "SEQARC_ENEMY_PELICAN",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_PELICAN_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_PELICAN_WALK",
+          "entry_offset": 81,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 97,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_PELICAN_DOWN",
+          "entry_offset": 113,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_PELICAN_DAMAGE",
+          "entry_offset": 145,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 85,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_PELICAN_ATTACK",
+          "entry_offset": 401,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 85,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_PELICAN_DEAD",
+          "entry_offset": 265,
+          "bank_id": 5,
+          "bank_symbol": "BANK_ENEMY_PELICAN",
+          "wave_archive_ids": [
+            5
+          ],
+          "volume": 85,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 206
+    },
+    {
+      "archive_id": 6,
+      "symbol": "SEQARC_ENEMY_BAT",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_BAT_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_BAT_WALK",
+          "entry_offset": 85,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_BAT_DOWN",
+          "entry_offset": 117,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_BAT_DAMAGE",
+          "entry_offset": 149,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 112,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_BAT_SONICWAVE",
+          "entry_offset": 339,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 95,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_BAT_DEAD",
+          "entry_offset": 239,
+          "bank_id": 6,
+          "bank_symbol": "BANK_ENEMY_BAT",
+          "wave_archive_ids": [
+            6
+          ],
+          "volume": 112,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 155
+    },
+    {
+      "archive_id": 7,
+      "symbol": "SEQARC_ENEMY_MOLE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_MOLE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_MOLE_WALK",
+          "entry_offset": 110,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_MOLE_DOWN",
+          "entry_offset": 142,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_MOLE_DAMAGE",
+          "entry_offset": 174,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_MOLE_WAVE",
+          "entry_offset": 429,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_MOLE_DEAD",
+          "entry_offset": 271,
+          "bank_id": 7,
+          "bank_symbol": "BANK_ENEMY_MOLE",
+          "wave_archive_ids": [
+            7
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 235
+    },
+    {
+      "archive_id": 8,
+      "symbol": "SEQARC_ENEMY_ARMADILLO",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_ARMADILLO_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 103,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_ARMADILLO_WALK",
+          "entry_offset": 219,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_ARMADILLO_DOWN",
+          "entry_offset": 251,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_ARMADILLO_DAMAGE",
+          "entry_offset": 283,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 105,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_ARMADILLO_SPATTACK",
+          "entry_offset": 567,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 120,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_ARMADILLO_DEAD",
+          "entry_offset": 376,
+          "bank_id": 8,
+          "bank_symbol": "BANK_ENEMY_ARMADILLO",
+          "wave_archive_ids": [
+            8
+          ],
+          "volume": 118,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 273
+    },
+    {
+      "archive_id": 9,
+      "symbol": "SEQARC_ENEMY_RABBIT",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_RABBIT_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 9,
+          "bank_symbol": "BANK_ENEMY_RABBIT",
+          "wave_archive_ids": [
+            9
+          ],
+          "volume": 20,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_RABBIT_WALK",
+          "entry_offset": 50,
+          "bank_id": 9,
+          "bank_symbol": "BANK_ENEMY_RABBIT",
+          "wave_archive_ids": [
+            9
+          ],
+          "volume": 60,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_RABBIT_DAMAGE",
+          "entry_offset": 82,
+          "bank_id": 9,
+          "bank_symbol": "BANK_ENEMY_RABBIT",
+          "wave_archive_ids": [
+            9
+          ],
+          "volume": 30,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_RABBIT_DEAD",
+          "entry_offset": 219,
+          "bank_id": 9,
+          "bank_symbol": "BANK_ENEMY_RABBIT",
+          "wave_archive_ids": [
+            9
+          ],
+          "volume": 50,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 155
+    },
+    {
+      "archive_id": 10,
+      "symbol": "SEQARC_ENEMY_WOLF",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_WOLF_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 10,
+          "bank_symbol": "BANK_ENEMY_WOLF",
+          "wave_archive_ids": [
+            10
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_WOLF_WALK",
+          "entry_offset": 141,
+          "bank_id": 10,
+          "bank_symbol": "BANK_ENEMY_WOLF",
+          "wave_archive_ids": [
+            10
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_WOLF_DAMAGE",
+          "entry_offset": 173,
+          "bank_id": 10,
+          "bank_symbol": "BANK_ENEMY_WOLF",
+          "wave_archive_ids": [
+            10
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_WOLF_DEAD",
+          "entry_offset": 347,
+          "bank_id": 10,
+          "bank_symbol": "BANK_ENEMY_WOLF",
+          "wave_archive_ids": [
+            10
+          ],
+          "volume": 117,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 206
+    },
+    {
+      "archive_id": 11,
+      "symbol": "SEQARC_ENEMY_GORILLA",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_GORILLA_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 11,
+          "bank_symbol": "BANK_ENEMY_GORILLA",
+          "wave_archive_ids": [
+            11
+          ],
+          "volume": 75,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_GORILLA_WALK",
+          "entry_offset": 100,
+          "bank_id": 11,
+          "bank_symbol": "BANK_ENEMY_GORILLA",
+          "wave_archive_ids": [
+            11
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_GORILLA_DAMAGE",
+          "entry_offset": 173,
+          "bank_id": 11,
+          "bank_symbol": "BANK_ENEMY_GORILLA",
+          "wave_archive_ids": [
+            11
+          ],
+          "volume": 70,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_GORILLA_ATTACK",
+          "entry_offset": 380,
+          "bank_id": 11,
+          "bank_symbol": "BANK_ENEMY_GORILLA",
+          "wave_archive_ids": [
+            11
+          ],
+          "volume": 75,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_GORILLA_DEAD",
+          "entry_offset": 437,
+          "bank_id": 11,
+          "bank_symbol": "BANK_ENEMY_GORILLA",
+          "wave_archive_ids": [
+            11
+          ],
+          "volume": 75,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 280
+    },
+    {
+      "archive_id": 12,
+      "symbol": "SEQARC_ENEMY_MIMIC",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_MIMIC_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 12,
+          "bank_symbol": "BANK_ENEMY_MIMIC",
+          "wave_archive_ids": [
+            12
+          ],
+          "volume": 102,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_MIMIC_WALK",
+          "entry_offset": 90,
+          "bank_id": 12,
+          "bank_symbol": "BANK_ENEMY_MIMIC",
+          "wave_archive_ids": [
+            12
+          ],
+          "volume": 109,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_MIMIC_DAMAGE",
+          "entry_offset": 250,
+          "bank_id": 12,
+          "bank_symbol": "BANK_ENEMY_MIMIC",
+          "wave_archive_ids": [
+            12
+          ],
+          "volume": 97,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_MIMIC_DEAD",
+          "entry_offset": 353,
+          "bank_id": 12,
+          "bank_symbol": "BANK_ENEMY_MIMIC",
+          "wave_archive_ids": [
+            12
+          ],
+          "volume": 90,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 238
+    },
+    {
+      "archive_id": 13,
+      "symbol": "SEQARC_ENEMY_MACHINE_SMALL",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_MACHINE_SMALL_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 13,
+          "bank_symbol": "BANK_ENEMY_MACHINE_SMALL",
+          "wave_archive_ids": [
+            13
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_MACHINE_SMALL_WALK",
+          "entry_offset": 130,
+          "bank_id": 13,
+          "bank_symbol": "BANK_ENEMY_MACHINE_SMALL",
+          "wave_archive_ids": [
+            13
+          ],
+          "volume": 40,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_MACHINE_SMALL_DAMAGE",
+          "entry_offset": 176,
+          "bank_id": 13,
+          "bank_symbol": "BANK_ENEMY_MACHINE_SMALL",
+          "wave_archive_ids": [
+            13
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_MACHINE_SMALL_GUN",
+          "entry_offset": 341,
+          "bank_id": 13,
+          "bank_symbol": "BANK_ENEMY_MACHINE_SMALL",
+          "wave_archive_ids": [
+            13
+          ],
+          "volume": 122,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_MACHINE_SMALL_DEAD",
+          "entry_offset": 373,
+          "bank_id": 13,
+          "bank_symbol": "BANK_ENEMY_MACHINE_SMALL",
+          "wave_archive_ids": [
+            13
+          ],
+          "volume": 110,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 247
+    },
+    {
+      "archive_id": 14,
+      "symbol": "SEQARC_ENEMY_MACHINE_MIDDLE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_MACHINE_MIDDLE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 14,
+          "bank_symbol": "BANK_ENEMY_MACHINE_MIDDLE",
+          "wave_archive_ids": [
+            14
+          ],
+          "volume": 85,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_MACHINE_MIDDLE_WALK",
+          "entry_offset": 130,
+          "bank_id": 14,
+          "bank_symbol": "BANK_ENEMY_MACHINE_MIDDLE",
+          "wave_archive_ids": [
+            14
+          ],
+          "volume": 40,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_MACHINE_MIDDLE_DAMAGE",
+          "entry_offset": 261,
+          "bank_id": 14,
+          "bank_symbol": "BANK_ENEMY_MACHINE_MIDDLE",
+          "wave_archive_ids": [
+            14
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_MACHINE_MIDDLE_GUN",
+          "entry_offset": 214,
+          "bank_id": 14,
+          "bank_symbol": "BANK_ENEMY_MACHINE_MIDDLE",
+          "wave_archive_ids": [
+            14
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_MACHINE_MIDDLE_DEAD",
+          "entry_offset": 424,
+          "bank_id": 14,
+          "bank_symbol": "BANK_ENEMY_MACHINE_MIDDLE",
+          "wave_archive_ids": [
+            14
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 272
+    },
+    {
+      "archive_id": 15,
+      "symbol": "SEQARC_ENEMY_MACHINE_LARGE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_WALK",
+          "entry_offset": 172,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 75,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_DAMAGE",
+          "entry_offset": 258,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_ATTACK",
+          "entry_offset": 441,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_GUN",
+          "entry_offset": 801,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_MACHINE_LARGE_DEAD",
+          "entry_offset": 634,
+          "bank_id": 15,
+          "bank_symbol": "BANK_ENEMY_MACHINE_LARGE",
+          "wave_archive_ids": [
+            15
+          ],
+          "volume": 90,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 424
+    },
+    {
+      "archive_id": 16,
+      "symbol": "SEQARC_ENEMY_ORANGUTAN",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_ORANGUTAN_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_ORANGUTAN_WALK",
+          "entry_offset": 262,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_ORANGUTAN_DAMAGE",
+          "entry_offset": 335,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_ORANGUTAN_ATTACK_VOICE",
+          "entry_offset": 449,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_ORANGUTAN_ATTACK",
+          "entry_offset": 805,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_ORANGUTAN_DEAD",
+          "entry_offset": 596,
+          "bank_id": 16,
+          "bank_symbol": "BANK_ENEMY_ORANGUTAN",
+          "wave_archive_ids": [
+            16
+          ],
+          "volume": 90,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 420
+    },
+    {
+      "archive_id": 17,
+      "symbol": "SEQARC_ENEMY_DARK_SMALL",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_DARK_SMALL_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 17,
+          "bank_symbol": "BANK_ENEMY_DARK_SMALL",
+          "wave_archive_ids": [
+            17
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_DARK_SMALL_WALK",
+          "entry_offset": 111,
+          "bank_id": 17,
+          "bank_symbol": "BANK_ENEMY_DARK_SMALL",
+          "wave_archive_ids": [
+            17
+          ],
+          "volume": 35,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_DARK_SMALL_DAMAGE",
+          "entry_offset": 154,
+          "bank_id": 17,
+          "bank_symbol": "BANK_ENEMY_DARK_SMALL",
+          "wave_archive_ids": [
+            17
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_DARK_SMALL_DEAD",
+          "entry_offset": 274,
+          "bank_id": 17,
+          "bank_symbol": "BANK_ENEMY_DARK_SMALL",
+          "wave_archive_ids": [
+            17
+          ],
+          "volume": 100,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 232
+    },
+    {
+      "archive_id": 18,
+      "symbol": "SEQARC_ENEMY_DARK_MIDDLE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_DARK_MIDDLE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 18,
+          "bank_symbol": "BANK_ENEMY_DARK_MIDDLE",
+          "wave_archive_ids": [
+            18
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_DARK_MIDDLE_WALK",
+          "entry_offset": 111,
+          "bank_id": 18,
+          "bank_symbol": "BANK_ENEMY_DARK_MIDDLE",
+          "wave_archive_ids": [
+            18
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_DARK_MIDDLE_DAMAGE",
+          "entry_offset": 152,
+          "bank_id": 18,
+          "bank_symbol": "BANK_ENEMY_DARK_MIDDLE",
+          "wave_archive_ids": [
+            18
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_DARK_MIDDLE_DEAD",
+          "entry_offset": 251,
+          "bank_id": 18,
+          "bank_symbol": "BANK_ENEMY_DARK_MIDDLE",
+          "wave_archive_ids": [
+            18
+          ],
+          "volume": 117,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 236
+    },
+    {
+      "archive_id": 19,
+      "symbol": "SEQARC_ENEMY_DARK_LARGE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_DARK_LARGE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 19,
+          "bank_symbol": "BANK_ENEMY_DARK_LARGE",
+          "wave_archive_ids": [
+            19
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_DARK_LARGE_WALK",
+          "entry_offset": 111,
+          "bank_id": 19,
+          "bank_symbol": "BANK_ENEMY_DARK_LARGE",
+          "wave_archive_ids": [
+            19
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_DARK_LARGE_DAMAGE",
+          "entry_offset": 214,
+          "bank_id": 19,
+          "bank_symbol": "BANK_ENEMY_DARK_LARGE",
+          "wave_archive_ids": [
+            19
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_DARK_LARGE_ATTACK",
+          "entry_offset": 313,
+          "bank_id": 19,
+          "bank_symbol": "BANK_ENEMY_DARK_LARGE",
+          "wave_archive_ids": [
+            19
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_DARK_LARGE_DEAD",
+          "entry_offset": 464,
+          "bank_id": 19,
+          "bank_symbol": "BANK_ENEMY_DARK_LARGE",
+          "wave_archive_ids": [
+            19
+          ],
+          "volume": 80,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 337
+    },
+    {
+      "archive_id": 20,
+      "symbol": "SEQARC_ENEMY_RAPPY",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_RAPPY_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_RAPPY_WALK",
+          "entry_offset": 57,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 70,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_RAPPY_DOWN",
+          "entry_offset": 89,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_RAPPY_DAMAGE",
+          "entry_offset": 121,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_RAPPY_ATTACK",
+          "entry_offset": 258,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_ENEMY_RAPPY_DEAD",
+          "entry_offset": 398,
+          "bank_id": 20,
+          "bank_symbol": "BANK_ENEMY_RAPPY",
+          "wave_archive_ids": [
+            20
+          ],
+          "volume": 100,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 272
+    },
+    {
+      "archive_id": 21,
+      "symbol": "SEQARC_ENEMY_BOOMA",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_BOOMA_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 21,
+          "bank_symbol": "BANK_ENEMY_BOOMA",
+          "wave_archive_ids": [
+            21
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_BOOMA_WALK",
+          "entry_offset": 223,
+          "bank_id": 21,
+          "bank_symbol": "BANK_ENEMY_BOOMA",
+          "wave_archive_ids": [
+            21
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_BOOMA_DAMAGE",
+          "entry_offset": 255,
+          "bank_id": 21,
+          "bank_symbol": "BANK_ENEMY_BOOMA",
+          "wave_archive_ids": [
+            21
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_BOOMA_DEAD",
+          "entry_offset": 357,
+          "bank_id": 21,
+          "bank_symbol": "BANK_ENEMY_BOOMA",
+          "wave_archive_ids": [
+            21
+          ],
+          "volume": 117,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 247
+    },
+    {
+      "archive_id": 22,
+      "symbol": "SEQARC_ENEMY_DEER",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_DEER_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 22,
+          "bank_symbol": "BANK_ENEMY_DEER",
+          "wave_archive_ids": [
+            22
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_DEER_WALK",
+          "entry_offset": 93,
+          "bank_id": 22,
+          "bank_symbol": "BANK_ENEMY_DEER",
+          "wave_archive_ids": [
+            22
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_DEER_DAMAGE",
+          "entry_offset": 125,
+          "bank_id": 22,
+          "bank_symbol": "BANK_ENEMY_DEER",
+          "wave_archive_ids": [
+            22
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_DEER_DEAD",
+          "entry_offset": 285,
+          "bank_id": 22,
+          "bank_symbol": "BANK_ENEMY_DEER",
+          "wave_archive_ids": [
+            22
+          ],
+          "volume": 121,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 175
+    },
+    {
+      "archive_id": 23,
+      "symbol": "SEQARC_ENEMY_VALTURE",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_VALTURE_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 23,
+          "bank_symbol": "BANK_ENEMY_VALTURE",
+          "wave_archive_ids": [
+            23
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_VALTURE_WALK",
+          "entry_offset": 95,
+          "bank_id": 23,
+          "bank_symbol": "BANK_ENEMY_VALTURE",
+          "wave_archive_ids": [
+            23
+          ],
+          "volume": 97,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_VALTURE_DAMAGE",
+          "entry_offset": 127,
+          "bank_id": 23,
+          "bank_symbol": "BANK_ENEMY_VALTURE",
+          "wave_archive_ids": [
+            23
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_VALTURE_DEAD",
+          "entry_offset": 288,
+          "bank_id": 23,
+          "bank_symbol": "BANK_ENEMY_VALTURE",
+          "wave_archive_ids": [
+            23
+          ],
+          "volume": 90,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 168
+    },
+    {
+      "archive_id": 24,
+      "symbol": "SEQARC_ENEMY_TINY_MOTHER",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_ENEMY_TINY_MOTHER_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 24,
+          "bank_symbol": "BANK_ENEMY_TINY_MOTHER",
+          "wave_archive_ids": [
+            24
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_ENEMY_TINY_MOTHER_WALK",
+          "entry_offset": 100,
+          "bank_id": 24,
+          "bank_symbol": "BANK_ENEMY_TINY_MOTHER",
+          "wave_archive_ids": [
+            24
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_ENEMY_TINY_MOTHER_DAMAGE",
+          "entry_offset": 132,
+          "bank_id": 24,
+          "bank_symbol": "BANK_ENEMY_TINY_MOTHER",
+          "wave_archive_ids": [
+            24
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_ENEMY_TINY_MOTHER_ATTACK",
+          "entry_offset": 229,
+          "bank_id": 24,
+          "bank_symbol": "BANK_ENEMY_TINY_MOTHER",
+          "wave_archive_ids": [
+            24
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_ENEMY_TINY_MOTHER_DEAD",
+          "entry_offset": 355,
+          "bank_id": 24,
+          "bank_symbol": "BANK_ENEMY_TINY_MOTHER",
+          "wave_archive_ids": [
+            24
+          ],
+          "volume": 117,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 206
+    },
+    {
+      "archive_id": 25,
+      "symbol": "SEQARC_BOSS_DRAGON",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_BOSS_DRAGON_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_BOSS_DRAGON_WALK",
+          "entry_offset": 335,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_BOSS_DRAGON_SWINGTIE",
+          "entry_offset": 380,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_BOSS_DRAGON_CIRCLE",
+          "entry_offset": 456,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_BOSS_DRAGON_FLAP",
+          "entry_offset": 664,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_BOSS_DRAGON_GLIDE",
+          "entry_offset": 753,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 6,
+          "symbol": "SE_BOSS_DRAGON_REVOLVE",
+          "entry_offset": 927,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 7,
+          "symbol": "SE_BOSS_DRAGON_LANDING",
+          "entry_offset": 1095,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 8,
+          "symbol": "SE_BOSS_DRAGON_FALL",
+          "entry_offset": 1220,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 9,
+          "symbol": "SE_BOSS_DRAGON_FIREBREATH",
+          "entry_offset": 1309,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 10,
+          "symbol": "SE_BOSS_DRAGON_FIREBREATH_HIT",
+          "entry_offset": 1432,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 11,
+          "symbol": "SE_BOSS_DRAGON_FIREPILLAR",
+          "entry_offset": 1482,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 12,
+          "symbol": "SE_BOSS_DRAGON_FIREPILLAR_HIT",
+          "entry_offset": 1605,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 13,
+          "symbol": "SE_BOSS_DRAGON_HOWL",
+          "entry_offset": 1658,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 14,
+          "symbol": "SE_BOSS_DRAGON_DEAD",
+          "entry_offset": 2002,
+          "bank_id": 25,
+          "bank_symbol": "BANK_BOSS_DRAGON",
+          "wave_archive_ids": [
+            25
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 1266
+    },
+    {
+      "archive_id": 26,
+      "symbol": "SEQARC_BOSS_OCTOPUS",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_BOSS_OCTOPUS_APPEAR",
+          "entry_offset": 0,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_BOSS_OCTOPUS_SPIN",
+          "entry_offset": 168,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_BOSS_OCTOPUS_ARM_UP",
+          "entry_offset": 249,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_BOSS_OCTOPUS_ARM_DOWN",
+          "entry_offset": 310,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_BOSS_OCTOPUS_BIGCANON",
+          "entry_offset": 387,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_BOSS_OCTOPUS_ARM_LEFT",
+          "entry_offset": 440,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 6,
+          "symbol": "SE_BOSS_OCTOPUS_ARM_BACK",
+          "entry_offset": 478,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 7,
+          "symbol": "SE_BOSS_OCTOPUS_ARM_STRETCH",
+          "entry_offset": 559,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 8,
+          "symbol": "SE_BOSS_OCTOPUS_FROG",
+          "entry_offset": 613,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 9,
+          "symbol": "SE_BOSS_OCTOPUS_CLOWS",
+          "entry_offset": 702,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 10,
+          "symbol": "SE_BOSS_OCTOPUS_SWING",
+          "entry_offset": 750,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 11,
+          "symbol": "SE_BOSS_OCTOPUS_DRAIN",
+          "entry_offset": 856,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 12,
+          "symbol": "SE_BOSS_OCTOPUS_SHOT",
+          "entry_offset": 885,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 13,
+          "symbol": "SE_BOSS_OCTOPUS_TURN",
+          "entry_offset": 1012,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 14,
+          "symbol": "SE_BOSS_OCTOPUS_HIT",
+          "entry_offset": 1109,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 15,
+          "symbol": "SE_BOSS_OCTOPUS_EAT",
+          "entry_offset": 1238,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 16,
+          "symbol": "SE_BOSS_OCTOPUS_DAMAGE_LARGE",
+          "entry_offset": 1387,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 17,
+          "symbol": "SE_BOSS_OCTOPUS_DEAD",
+          "entry_offset": 1674,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 18,
+          "symbol": "SE_BOSS_OCTOPUS_THROWUP",
+          "entry_offset": 2621,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 19,
+          "symbol": "SE_BOSS_OCTOPUS_VOMIT",
+          "entry_offset": 2650,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 20,
+          "symbol": "SE_BOSS_OCTOPUS_SUCKER",
+          "entry_offset": 2679,
+          "bank_id": 26,
+          "bank_symbol": "BANK_BOSS_OCTOPUS",
+          "wave_archive_ids": [
+            26
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 1321
+    },
+    {
+      "archive_id": 27,
+      "symbol": "SEQARC_BOSS_ROBOT",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_BOSS_ROBOT_HOVERING",
+          "entry_offset": 0,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 85,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_BOSS_ROBOT_HIT",
+          "entry_offset": 94,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_BOSS_ROBOT_FLYING",
+          "entry_offset": 186,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_BOSS_ROBOT_DRILL",
+          "entry_offset": 224,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 97,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_BOSS_ROBOT_FIRE",
+          "entry_offset": 404,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_BOSS_ROBOT_WARP",
+          "entry_offset": 545,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 6,
+          "symbol": "SE_BOSS_ROBOT_CONTACT",
+          "entry_offset": 627,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 7,
+          "symbol": "SE_BOSS_ROBOT_PHOTON",
+          "entry_offset": 706,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 95,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 8,
+          "symbol": "SE_BOSS_ROBOT_LASER",
+          "entry_offset": 735,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 9,
+          "symbol": "SE_BOSS_ROBOT_APPEAR",
+          "entry_offset": 903,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 10,
+          "symbol": "SE_BOSS_ROBOT_UNION",
+          "entry_offset": 1099,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 11,
+          "symbol": "SE_BOSS_ROBOT_MOVE",
+          "entry_offset": 1151,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 12,
+          "symbol": "SE_BOSS_ROBOT_BACK_START",
+          "entry_offset": 1231,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 13,
+          "symbol": "SE_BOSS_ROBOT_DAGGER_SWING",
+          "entry_offset": 1294,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 14,
+          "symbol": "SE_BOSS_ROBOT_SHOCK_WAVE",
+          "entry_offset": 1449,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 15,
+          "symbol": "SE_BOSS_ROBOT_SWORD_APPEAR",
+          "entry_offset": 1734,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 16,
+          "symbol": "SE_BOSS_ROBOT_DASH",
+          "entry_offset": 1865,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 17,
+          "symbol": "SE_BOSS_ROBOT_SLASH",
+          "entry_offset": 2045,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 18,
+          "symbol": "SE_BOSS_ROBOT_SEPARATE",
+          "entry_offset": 2226,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 19,
+          "symbol": "SE_BOSS_ROBOT_DAMAGE",
+          "entry_offset": 2385,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 20,
+          "symbol": "SE_BOSS_ROBOT_DOWN",
+          "entry_offset": 2428,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 21,
+          "symbol": "SE_BOSS_ROBOT_SWITCH_ON",
+          "entry_offset": 2482,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 107,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 22,
+          "symbol": "SE_BOSS_ROBOT_HAPPY",
+          "entry_offset": 2526,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 107,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 23,
+          "symbol": "SE_BOSS_ROBOT_WARNING",
+          "entry_offset": 2640,
+          "bank_id": 27,
+          "bank_symbol": "BANK_BOSS_ROBOT",
+          "wave_archive_ids": [
+            27
+          ],
+          "volume": 85,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 1451
+    },
+    {
+      "archive_id": 28,
+      "symbol": "SEQARC_BOSS_DF1",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_MOVE_START",
+          "entry_offset": 0,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_MOVE",
+          "entry_offset": 20,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_MOVE_END",
+          "entry_offset": 60,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_MOVE_START",
+          "entry_offset": 80,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_MOVE",
+          "entry_offset": 100,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_MOVE_END",
+          "entry_offset": 140,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 6,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_MOVE_START",
+          "entry_offset": 160,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 7,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_MOVE",
+          "entry_offset": 180,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 8,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_MOVE_END",
+          "entry_offset": 220,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 9,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_TURN",
+          "entry_offset": 240,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 10,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_TURN",
+          "entry_offset": 260,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 11,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_TURN",
+          "entry_offset": 280,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 12,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_DOWN",
+          "entry_offset": 300,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 13,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_DOWN",
+          "entry_offset": 320,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 14,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_DOWN",
+          "entry_offset": 340,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 15,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN_ATK",
+          "entry_offset": 360,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 16,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN_ATK",
+          "entry_offset": 436,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 17,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST_ATK",
+          "entry_offset": 573,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 18,
+          "symbol": "SE_BOSS_DF1_PIECE_HUMAN",
+          "entry_offset": 660,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 19,
+          "symbol": "SE_BOSS_DF1_PIECE_NEWMAN",
+          "entry_offset": 738,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 20,
+          "symbol": "SE_BOSS_DF1_PIECE_CAST",
+          "entry_offset": 816,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 21,
+          "symbol": "SE_BOSS_DF1_COMBO_START",
+          "entry_offset": 894,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 105,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 22,
+          "symbol": "SE_BOSS_DF1_PIECE_LOST",
+          "entry_offset": 999,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 23,
+          "symbol": "SE_BOSS_DF1_HEAD_START",
+          "entry_offset": 1166,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 24,
+          "symbol": "SE_BOSS_DF1_HEAD_ATTACK",
+          "entry_offset": 1353,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 25,
+          "symbol": "SE_BOSS_DF1_HEAD_HIT",
+          "entry_offset": 1547,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 26,
+          "symbol": "SE_BOSS_DF1_ARM_START",
+          "entry_offset": 1780,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 27,
+          "symbol": "SE_BOSS_DF1_ARM_ATTACK",
+          "entry_offset": 1835,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 28,
+          "symbol": "SE_BOSS_DF1_TARGET",
+          "entry_offset": 1889,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 29,
+          "symbol": "SE_BOSS_DF1_LASER",
+          "entry_offset": 1980,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 30,
+          "symbol": "SE_BOSS_DF1_PIECE_DOWN",
+          "entry_offset": 2021,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 31,
+          "symbol": "SE_BOSS_DF1_DOWN",
+          "entry_offset": 2052,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 32,
+          "symbol": "SE_BOSS_DF1_UP",
+          "entry_offset": 2086,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 33,
+          "symbol": "SE_BOSS_DF1_DEAD",
+          "entry_offset": 2210,
+          "bank_id": 28,
+          "bank_symbol": "BANK_BOSS_DF1",
+          "wave_archive_ids": [
+            28
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 1155
+    },
+    {
+      "archive_id": 29,
+      "symbol": "SEQARC_BOSS_DF2",
+      "sequences": [
+        {
+          "sequence_id": 0,
+          "symbol": "SE_BOSS_DF2_HOWL",
+          "entry_offset": 0,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 110,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 1,
+          "symbol": "SE_BOSS_DF2_UP",
+          "entry_offset": 401,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 2,
+          "symbol": "SE_BOSS_DF2_LASER_CHARGE",
+          "entry_offset": 794,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 3,
+          "symbol": "SE_BOSS_DF2_LASER",
+          "entry_offset": 929,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 4,
+          "symbol": "SE_BOSS_DF2_LASER_SMALL",
+          "entry_offset": 970,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 5,
+          "symbol": "SE_BOSS_DF2_DIFFUSION_CHARGE",
+          "entry_offset": 1118,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 110,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 6,
+          "symbol": "SE_BOSS_DF2_DIFFUSION",
+          "entry_offset": 1226,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 107,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 7,
+          "symbol": "SE_BOSS_DF2_BLACKHOLE",
+          "entry_offset": 1290,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 8,
+          "symbol": "SE_BOSS_DF2_SHADOW_START",
+          "entry_offset": 1359,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 9,
+          "symbol": "SE_BOSS_DF2_SHADOW_ATK1",
+          "entry_offset": 1407,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 117,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 10,
+          "symbol": "SE_BOSS_DF2_SHADOW_ATK2",
+          "entry_offset": 1501,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 11,
+          "symbol": "SE_BOSS_DF2_WALK",
+          "entry_offset": 1565,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 12,
+          "symbol": "SE_BOSS_DF2_MINI_DIVE",
+          "entry_offset": 1629,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 13,
+          "symbol": "SE_BOSS_DF2_MINI_MOVE",
+          "entry_offset": 1665,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 14,
+          "symbol": "SE_BOSS_DF2_MINI_CATCH",
+          "entry_offset": 1703,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 15,
+          "symbol": "SE_BOSS_DF2_MINI_DEAD",
+          "entry_offset": 1919,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 80,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 16,
+          "symbol": "SE_BOSS_DF2_DAMAGE",
+          "entry_offset": 2130,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 17,
+          "symbol": "SE_BOSS_DF2_DEAD",
+          "entry_offset": 3077,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 90,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 18,
+          "symbol": "SE_BOSS_DF2_REBOUND",
+          "entry_offset": 4568,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 100,
+          "player_id": 9
+        },
+        {
+          "sequence_id": 19,
+          "symbol": "SE_BOSS_DF2_DIVING",
+          "entry_offset": 4661,
+          "bank_id": 29,
+          "bank_symbol": "BANK_BOSS_DF2",
+          "wave_archive_ids": [
+            29
+          ],
+          "volume": 127,
+          "player_id": 9
+        }
+      ],
+      "parsed_event_count": 2152
+    }
+  ],
+  "wave_archives": [
+    {
+      "wave_archive_id": 0,
+      "symbol": "WAVE_DRAGONKID",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1500
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22066,
+          "looped": true,
+          "encoded_bytes": 1352
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3628
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1004
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 1,
+      "symbol": "WAVE_SNAKE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 1628
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 2748
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 2612
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1240
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 2,
+      "symbol": "WAVE_LION",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22056,
+          "looped": true,
+          "encoded_bytes": 1808
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22056,
+          "looped": true,
+          "encoded_bytes": 3484
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3304
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3696
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 3,
+      "symbol": "WAVE_FROG",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 696
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1488
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3628
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1004
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 4,
+      "symbol": "WAVE_FURSEAL",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22058,
+          "looped": true,
+          "encoded_bytes": 2744
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22069,
+          "looped": true,
+          "encoded_bytes": 2244
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3720
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 2088
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 5,
+      "symbol": "WAVE_PELICAN",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22120,
+          "looped": true,
+          "encoded_bytes": 952
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22074,
+          "looped": true,
+          "encoded_bytes": 2220
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 4904
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 4380
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 6,
+      "symbol": "WAVE_BAT",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22068,
+          "looped": true,
+          "encoded_bytes": 1212
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22060,
+          "looped": true,
+          "encoded_bytes": 3136
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1996
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 2272
+        },
+        {
+          "sample_id": 4,
+          "encoding": "PCM16",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 96
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 7,
+      "symbol": "WAVE_MOLE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 2028
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22072,
+          "looped": true,
+          "encoded_bytes": 1472
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3720
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1732
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 8,
+      "symbol": "WAVE_ARMADILLO",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22113,
+          "looped": true,
+          "encoded_bytes": 1236
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22087,
+          "looped": true,
+          "encoded_bytes": 1800
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3304
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3696
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 9,
+      "symbol": "WAVE_RABBIT",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1048
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22072,
+          "looped": true,
+          "encoded_bytes": 1236
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22070,
+          "looped": true,
+          "encoded_bytes": 2360
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 772
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 10,
+      "symbol": "WAVE_WOLF",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1348
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22070,
+          "looped": true,
+          "encoded_bytes": 1100
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 4812
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1684
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 11,
+      "symbol": "WAVE_GORILLA",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 692
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22057,
+          "looped": true,
+          "encoded_bytes": 1424
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 44111,
+          "looped": true,
+          "encoded_bytes": 2000
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 4056
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 12,
+      "symbol": "WAVE_MIMIC",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 852
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22131,
+          "looped": true,
+          "encoded_bytes": 824
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22122,
+          "looped": true,
+          "encoded_bytes": 1964
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 13,
+      "symbol": "WAVE_MACHINE_SMALL",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22077,
+          "looped": true,
+          "encoded_bytes": 424
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22150,
+          "looped": true,
+          "encoded_bytes": 2392
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22102,
+          "looped": true,
+          "encoded_bytes": 856
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22066,
+          "looped": true,
+          "encoded_bytes": 1376
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22102,
+          "looped": true,
+          "encoded_bytes": 852
+        },
+        {
+          "sample_id": 5,
+          "encoding": "ADPCM",
+          "sample_rate": 22177,
+          "looped": true,
+          "encoded_bytes": 1660
+        },
+        {
+          "sample_id": 6,
+          "encoding": "ADPCM",
+          "sample_rate": 22076,
+          "looped": true,
+          "encoded_bytes": 844
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 14,
+      "symbol": "WAVE_MACHINE_MIDDLE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22116,
+          "looped": true,
+          "encoded_bytes": 1180
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22106,
+          "looped": true,
+          "encoded_bytes": 788
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1816
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22162,
+          "looped": true,
+          "encoded_bytes": 2376
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 2032
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 15,
+      "symbol": "WAVE_MACHINE_LARGE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22113,
+          "looped": true,
+          "encoded_bytes": 872
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22145,
+          "looped": true,
+          "encoded_bytes": 472
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22162,
+          "looped": true,
+          "encoded_bytes": 2376
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 924
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 46353,
+          "looped": true,
+          "encoded_bytes": 80
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 16,
+      "symbol": "WAVE_ORANGUTAN",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22064,
+          "looped": true,
+          "encoded_bytes": 2328
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22107,
+          "looped": true,
+          "encoded_bytes": 1520
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22122,
+          "looped": true,
+          "encoded_bytes": 1708
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22066,
+          "looped": true,
+          "encoded_bytes": 3228
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22091,
+          "looped": true,
+          "encoded_bytes": 2888
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 17,
+      "symbol": "WAVE_DARK_SMALL",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 1136
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 2420
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22159,
+          "looped": true,
+          "encoded_bytes": 720
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 18,
+      "symbol": "WAVE_DARK_MIDDLE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 1136
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22085,
+          "looped": true,
+          "encoded_bytes": 2204
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22086,
+          "looped": true,
+          "encoded_bytes": 2668
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 19,
+      "symbol": "WAVE_DARK_LARGE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 1136
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22105,
+          "looped": true,
+          "encoded_bytes": 1760
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22091,
+          "looped": true,
+          "encoded_bytes": 1076
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22073,
+          "looped": true,
+          "encoded_bytes": 3008
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22138,
+          "looped": true,
+          "encoded_bytes": 2504
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 20,
+      "symbol": "WAVE_RAPPY",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22074,
+          "looped": true,
+          "encoded_bytes": 464
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22074,
+          "looped": true,
+          "encoded_bytes": 904
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 416
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 3156
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 784
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 21,
+      "symbol": "WAVE_BOOMA",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22081,
+          "looped": true,
+          "encoded_bytes": 1404
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22110,
+          "looped": true,
+          "encoded_bytes": 1104
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22058,
+          "looped": true,
+          "encoded_bytes": 1340
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1572
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 22,
+      "symbol": "WAVE_DEER",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22058,
+          "looped": true,
+          "encoded_bytes": 3448
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22092,
+          "looped": true,
+          "encoded_bytes": 1840
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1684
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 23,
+      "symbol": "WAVE_VALTURE",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 1024
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22055,
+          "looped": true,
+          "encoded_bytes": 1860
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22141,
+          "looped": true,
+          "encoded_bytes": 852
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22096,
+          "looped": true,
+          "encoded_bytes": 960
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 2272
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 24,
+      "symbol": "WAVE_TINY_MOTHER",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22084,
+          "looped": true,
+          "encoded_bytes": 1616
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22112,
+          "looped": true,
+          "encoded_bytes": 1068
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22110,
+          "looped": true,
+          "encoded_bytes": 944
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22056,
+          "looped": true,
+          "encoded_bytes": 1844
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22054,
+          "looped": true,
+          "encoded_bytes": 5128
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 25,
+      "symbol": "WAVE_BOSS_DRAGON01",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22063,
+          "looped": true,
+          "encoded_bytes": 4520
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22060,
+          "looped": true,
+          "encoded_bytes": 4412
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 26,
+      "symbol": "WAVE_BOSS_OCTOPUS",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22089,
+          "looped": true,
+          "encoded_bytes": 4040
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 796
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22135,
+          "looped": true,
+          "encoded_bytes": 2280
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22109,
+          "looped": true,
+          "encoded_bytes": 1200
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 2672
+        },
+        {
+          "sample_id": 5,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 2024
+        },
+        {
+          "sample_id": 6,
+          "encoding": "ADPCM",
+          "sample_rate": 22063,
+          "looped": true,
+          "encoded_bytes": 3360
+        },
+        {
+          "sample_id": 7,
+          "encoding": "ADPCM",
+          "sample_rate": 16055,
+          "looped": true,
+          "encoded_bytes": 1012
+        },
+        {
+          "sample_id": 8,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 696
+        },
+        {
+          "sample_id": 9,
+          "encoding": "ADPCM",
+          "sample_rate": 22101,
+          "looped": true,
+          "encoded_bytes": 2908
+        },
+        {
+          "sample_id": 10,
+          "encoding": "ADPCM",
+          "sample_rate": 16000,
+          "looped": false,
+          "encoded_bytes": 3588
+        },
+        {
+          "sample_id": 11,
+          "encoding": "ADPCM",
+          "sample_rate": 16000,
+          "looped": false,
+          "encoded_bytes": 2676
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 27,
+      "symbol": "WAVE_BOSS_ROBOT",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 316
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 16027,
+          "looped": true,
+          "encoded_bytes": 1488
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22199,
+          "looped": true,
+          "encoded_bytes": 376
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 23520,
+          "looped": true,
+          "encoded_bytes": 16
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22065,
+          "looped": true,
+          "encoded_bytes": 1456
+        },
+        {
+          "sample_id": 5,
+          "encoding": "ADPCM",
+          "sample_rate": 22151,
+          "looped": true,
+          "encoded_bytes": 772
+        },
+        {
+          "sample_id": 6,
+          "encoding": "ADPCM",
+          "sample_rate": 22169,
+          "looped": true,
+          "encoded_bytes": 2852
+        },
+        {
+          "sample_id": 7,
+          "encoding": "ADPCM",
+          "sample_rate": 22088,
+          "looped": true,
+          "encoded_bytes": 1144
+        },
+        {
+          "sample_id": 8,
+          "encoding": "ADPCM",
+          "sample_rate": 22092,
+          "looped": true,
+          "encoded_bytes": 8488
+        },
+        {
+          "sample_id": 9,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1724
+        },
+        {
+          "sample_id": 10,
+          "encoding": "ADPCM",
+          "sample_rate": 22059,
+          "looped": true,
+          "encoded_bytes": 2656
+        },
+        {
+          "sample_id": 11,
+          "encoding": "ADPCM",
+          "sample_rate": 22076,
+          "looped": true,
+          "encoded_bytes": 3252
+        },
+        {
+          "sample_id": 12,
+          "encoding": "ADPCM",
+          "sample_rate": 22127,
+          "looped": true,
+          "encoded_bytes": 2960
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 28,
+      "symbol": "WAVE_BOSS_DF1",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 316
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 16027,
+          "looped": true,
+          "encoded_bytes": 1488
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22064,
+          "looped": true,
+          "encoded_bytes": 3888
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22158,
+          "looped": true,
+          "encoded_bytes": 716
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22146,
+          "looped": true,
+          "encoded_bytes": 2696
+        },
+        {
+          "sample_id": 5,
+          "encoding": "ADPCM",
+          "sample_rate": 22103,
+          "looped": true,
+          "encoded_bytes": 1444
+        },
+        {
+          "sample_id": 6,
+          "encoding": "ADPCM",
+          "sample_rate": 22057,
+          "looped": true,
+          "encoded_bytes": 1508
+        },
+        {
+          "sample_id": 7,
+          "encoding": "ADPCM",
+          "sample_rate": 22065,
+          "looped": true,
+          "encoded_bytes": 2084
+        },
+        {
+          "sample_id": 8,
+          "encoding": "ADPCM",
+          "sample_rate": 22079,
+          "looped": true,
+          "encoded_bytes": 2984
+        },
+        {
+          "sample_id": 9,
+          "encoding": "ADPCM",
+          "sample_rate": 22155,
+          "looped": true,
+          "encoded_bytes": 744
+        },
+        {
+          "sample_id": 10,
+          "encoding": "ADPCM",
+          "sample_rate": 22087,
+          "looped": true,
+          "encoded_bytes": 1764
+        },
+        {
+          "sample_id": 11,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1700
+        },
+        {
+          "sample_id": 12,
+          "encoding": "ADPCM",
+          "sample_rate": 22111,
+          "looped": true,
+          "encoded_bytes": 2484
+        },
+        {
+          "sample_id": 13,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": false,
+          "encoded_bytes": 1128
+        },
+        {
+          "sample_id": 14,
+          "encoding": "ADPCM",
+          "sample_rate": 22329,
+          "looped": true,
+          "encoded_bytes": 248
+        },
+        {
+          "sample_id": 15,
+          "encoding": "ADPCM",
+          "sample_rate": 22078,
+          "looped": true,
+          "encoded_bytes": 4580
+        },
+        {
+          "sample_id": 16,
+          "encoding": "ADPCM",
+          "sample_rate": 22070,
+          "looped": true,
+          "encoded_bytes": 1064
+        },
+        {
+          "sample_id": 17,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 2868
+        }
+      ]
+    },
+    {
+      "wave_archive_id": 29,
+      "symbol": "WAVE_BOSS_DF2",
+      "samples": [
+        {
+          "sample_id": 0,
+          "encoding": "ADPCM",
+          "sample_rate": 22089,
+          "looped": true,
+          "encoded_bytes": 1420
+        },
+        {
+          "sample_id": 1,
+          "encoding": "ADPCM",
+          "sample_rate": 22073,
+          "looped": true,
+          "encoded_bytes": 940
+        },
+        {
+          "sample_id": 2,
+          "encoding": "ADPCM",
+          "sample_rate": 22091,
+          "looped": true,
+          "encoded_bytes": 3416
+        },
+        {
+          "sample_id": 3,
+          "encoding": "ADPCM",
+          "sample_rate": 22164,
+          "looped": true,
+          "encoded_bytes": 1684
+        },
+        {
+          "sample_id": 4,
+          "encoding": "ADPCM",
+          "sample_rate": 22104,
+          "looped": true,
+          "encoded_bytes": 3780
+        },
+        {
+          "sample_id": 5,
+          "encoding": "ADPCM",
+          "sample_rate": 22072,
+          "looped": true,
+          "encoded_bytes": 2316
+        },
+        {
+          "sample_id": 6,
+          "encoding": "ADPCM",
+          "sample_rate": 22074,
+          "looped": true,
+          "encoded_bytes": 1556
+        },
+        {
+          "sample_id": 7,
+          "encoding": "ADPCM",
+          "sample_rate": 22082,
+          "looped": true,
+          "encoded_bytes": 1024
+        },
+        {
+          "sample_id": 8,
+          "encoding": "ADPCM",
+          "sample_rate": 22098,
+          "looped": true,
+          "encoded_bytes": 1828
+        },
+        {
+          "sample_id": 9,
+          "encoding": "ADPCM",
+          "sample_rate": 22126,
+          "looped": true,
+          "encoded_bytes": 3500
+        },
+        {
+          "sample_id": 10,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 1240
+        },
+        {
+          "sample_id": 11,
+          "encoding": "ADPCM",
+          "sample_rate": 22050,
+          "looped": true,
+          "encoded_bytes": 316
+        },
+        {
+          "sample_id": 12,
+          "encoding": "ADPCM",
+          "sample_rate": 16027,
+          "looped": true,
+          "encoded_bytes": 1488
+        }
+      ]
+    }
+  ],
+  "shared": {
+    "source": "sound/sound_data_se.sdat",
+    "sha256": "d3b99e61ad7c1019aeb000ae8c580706dadac514551eacaae96e390aab28f5ba",
+    "oracle": "byte-identical SDAT round-trip",
+    "archives": [
+      {
+        "archive_id": 0,
+        "symbol": "SEQARC_SYSTEM",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_SYSTEM_DECIDE",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_SYSTEM_CANCEL",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_SYSTEM_CURSOR",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_SYSTEM_DECIDE_TITLE",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_SYSTEM_WINDOW_OPEN",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_SYSTEM_ERROR",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_SYSTEM_APPEAR_KEY",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_SYSTEM_LOCKON",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_SYSTEM_GATE_OPEN",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 9,
+            "symbol": "SE_SYSTEM_TREASURE_APPEAR",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 10,
+            "symbol": "SE_SYSTEM_LEVELUP",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 11,
+            "symbol": "SE_SYSTEM_FRIEND_ADD",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 12,
+            "symbol": "SE_SYSTEM_DRAW_START",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 13,
+            "symbol": "SE_SYSTEM_DRAW",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 14,
+            "symbol": "SE_SYSTEM_ERASE_START",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 15,
+            "symbol": "SE_SYSTEM_ERASE",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 16,
+            "symbol": "SE_SYSTEM_ERASE_ALL",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 17,
+            "symbol": "SE_SYSTEM_TOUCH1",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 18,
+            "symbol": "SE_SYSTEM_FRIEND_IN",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 19,
+            "symbol": "SE_SYSTEM_PB_START",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 20,
+            "symbol": "SE_SYSTEM_PB_CHAIN",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 21,
+            "symbol": "SE_SYSTEM_PB_COMBO",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 22,
+            "symbol": "SE_SYSTEM_SUPPORT",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 23,
+            "symbol": "SE_SYSTEM_MAG_LVUP",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 24,
+            "symbol": "SE_SYSTEM_MESSAGE",
+            "bank_id": 0
+          }
+        ]
+      },
+      {
+        "archive_id": 1,
+        "symbol": "SEQARC_PLAYER",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_PLAYER_STEP_HUMAN",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_PLAYER_STEP_CAST",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_PLAYER_ESCAPE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_PLAYER_BURN",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_PLAYER_FROSTBITE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_PLAYER_PARALYSIS",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_PLAYER_CONFUSION",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_PLAYER_POISON",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_PLAYER_SLOW",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 9,
+            "symbol": "SE_PLAYER_OFFENCE_UP",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 10,
+            "symbol": "SE_PLAYER_DEFENCE_UP",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 11,
+            "symbol": "SE_PLAYER_OFFENCE_DOWN",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 12,
+            "symbol": "SE_PLAYER_DEFENCE_DOWN",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 13,
+            "symbol": "SE_PLAYER_CHAT_COMMENT1",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 14,
+            "symbol": "SE_PLAYER_CHAT_COMMENT2",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 15,
+            "symbol": "SE_PLAYER_CHAT_COMMENT3",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 16,
+            "symbol": "SE_PLAYER_DAMAGE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 17,
+            "symbol": "SE_PLAYER_CURE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 18,
+            "symbol": "SE_PLAYER_HIT_CRITICAL",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 19,
+            "symbol": "SE_PLAYER_ARM_CHANGE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 20,
+            "symbol": "SE_PLAYER_USE_ITEM",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 21,
+            "symbol": "SE_PLAYER_CHANT",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 22,
+            "symbol": "SE_PLAYER_PICKUP",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 23,
+            "symbol": "SE_PLAYER_DOWN",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 24,
+            "symbol": "SE_PLAYER_CHARGE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 25,
+            "symbol": "SE_PLAYER_CHARGE2",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 26,
+            "symbol": "SE_PLAYER_SUPPORT",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 27,
+            "symbol": "SE_PLAYER_STEP_CAST2",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 28,
+            "symbol": "SE_PLAYER_CONSUMPTION",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 29,
+            "symbol": "SE_PLAYER_ALARM",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 30,
+            "symbol": "SE_PLAYER_MUTEKI",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 31,
+            "symbol": "SE_PLAYER_MUTEKI_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 32,
+            "symbol": "SE_PLAYER_DOWN_SMALL",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 33,
+            "symbol": "SE_PLAYER_DOWN_MIDDLE",
+            "bank_id": 1
+          },
+          {
+            "sequence_id": 34,
+            "symbol": "SE_PLAYER_DOWN_LARGE",
+            "bank_id": 1
+          }
+        ]
+      },
+      {
+        "archive_id": 2,
+        "symbol": "SEQARC_HIT",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_HIT_PROTIST_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_HIT_PROTIST_FAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_HIT_PROTIST_AGITO_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_HIT_PROTIST_AGITO_FAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_HIT_MACHINE_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_HIT_MACHINE_FAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_HIT_MACHINE_AGITO_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_HIT_MACHINE_AGITO_FAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_HIT_DARKNESS_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 9,
+            "symbol": "SE_HIT_DARKNESS_FAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 10,
+            "symbol": "SE_HIT_DARKNESS_AGITO_NEAR",
+            "bank_id": 3
+          },
+          {
+            "sequence_id": 11,
+            "symbol": "SE_HIT_DARKNESS_AGITO_FAR",
+            "bank_id": 3
+          }
+        ]
+      },
+      {
+        "archive_id": 3,
+        "symbol": "SEQARC_TECHNIC",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_TECHNIC_FOIE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_TECHNIC_CHARGEFOIE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_TECHNIC_FOIE_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_TECHNIC_FOIE_EXPLOSION",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_TECHNIC_BERTA",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_TECHNIC_CHARGEBERTA",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_TECHNIC_BERTA_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_TECHNIC_ZONDE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_TECHNIC_CHARGEZONDE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 9,
+            "symbol": "SE_TECHNIC_ZONDE_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 10,
+            "symbol": "SE_TECHNIC_RESTA_DUMMY",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 11,
+            "symbol": "SE_TECHNIC_RESTA_HIT_DUMMY",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 12,
+            "symbol": "SE_TECHNIC_SHIFTA",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 13,
+            "symbol": "SE_TECHNIC_GELN",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 14,
+            "symbol": "SE_TECHNIC_GRANTS",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 15,
+            "symbol": "SE_TECHNIC_CHARGEGRANTS",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 16,
+            "symbol": "SE_TECHNIC_GRANTS_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 17,
+            "symbol": "SE_TECHNIC_MEGIDE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 18,
+            "symbol": "SE_TECHNIC_CHARGEMEGIDE",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 19,
+            "symbol": "SE_TECHNIC_MEGIDE_HIT_DUMMY",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 20,
+            "symbol": "SE_TECHNIC_ANTY",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 21,
+            "symbol": "SE_TECHNIC_ANTY_HIT",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 22,
+            "symbol": "SE_TECHNIC_REVERSER_DUMMY",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 23,
+            "symbol": "SE_TECHNIC_ANTY2",
+            "bank_id": 2
+          },
+          {
+            "sequence_id": 24,
+            "symbol": "SE_TECHNIC_DEATH",
+            "bank_id": 2
+          }
+        ]
+      },
+      {
+        "archive_id": 4,
+        "symbol": "SEQARC_OBJECT",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_OBJECT_BREAK",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_OBJECT_FORWARD",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_OBJECT_SWITCh1",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_OBJECT_SWITCh2",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_OBJECT_SWITCh3",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_OBJECT_SWITCh4",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_OBJECT_TRAP_SET",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_OBJECT_TRAP_START",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_OBJECT_TRAP_EXPLOSION",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 9,
+            "symbol": "SE_OBJECT_TRAP_FALL",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 10,
+            "symbol": "SE_OBJECT_LASER",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 11,
+            "symbol": "SE_OBJECT_NEEDLE",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 12,
+            "symbol": "SE_OBJECT_ALARM",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 13,
+            "symbol": "SE_OBJECT_CATCH",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 14,
+            "symbol": "SE_OBJECT_SHOT",
+            "bank_id": 4
+          },
+          {
+            "sequence_id": 15,
+            "symbol": "SE_OBJECT_CHARGE",
+            "bank_id": 4
+          }
+        ]
+      },
+      {
+        "archive_id": 5,
+        "symbol": "SEQARC_COUNTER",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COUNTER_QUEST_ADD_dummy",
+            "bank_id": 6
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COUNTER_QUEST_CLEAR_dummy",
+            "bank_id": 6
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COUNTER_WARP_DECIDE_dummy",
+            "bank_id": 0
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COUNTER_MONEY",
+            "bank_id": 6
+          }
+        ]
+      },
+      {
+        "archive_id": 6,
+        "symbol": "SEQARC_CITY_OBJECT",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COUNTER_ROTATE",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_CAT_NORMAL",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_CAT_ANGLY",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_CAT_DOUBT",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_CAT_EXCITE",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_CAT_SLEEP",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 6,
+            "symbol": "SE_COUNTER_QUEST_ADD",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 7,
+            "symbol": "SE_COUNTER_QUEST_CLEAR",
+            "bank_id": 7
+          },
+          {
+            "sequence_id": 8,
+            "symbol": "SE_COUNTER_WARP_DECIDE",
+            "bank_id": 0
+          }
+        ]
+      },
+      {
+        "archive_id": 7,
+        "symbol": "SEQARC_CITY",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_CITY_AMBIENT",
+            "bank_id": 8
+          }
+        ]
+      },
+      {
+        "archive_id": 8,
+        "symbol": "SEQARC_STAGE1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE1_AMBIENT",
+            "bank_id": 9
+          }
+        ]
+      },
+      {
+        "archive_id": 9,
+        "symbol": "SEQARC_STAGE1_2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE1_FALLS",
+            "bank_id": 10
+          }
+        ]
+      },
+      {
+        "archive_id": 10,
+        "symbol": "SEQARC_STAGE2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE2_AMBIENT",
+            "bank_id": 11
+          }
+        ]
+      },
+      {
+        "archive_id": 11,
+        "symbol": "SEQARC_STAGE3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE3_AMBIENT",
+            "bank_id": 12
+          }
+        ]
+      },
+      {
+        "archive_id": 12,
+        "symbol": "SEQARC_STAGE4",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE4_AMBIENT",
+            "bank_id": 13
+          }
+        ]
+      },
+      {
+        "archive_id": 13,
+        "symbol": "SEQARC_STAGE4_BOSS",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE4_BOSS_AMBIENT1",
+            "bank_id": 14
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_STAGE4_BOSS_AMBIENT2",
+            "bank_id": 14
+          }
+        ]
+      },
+      {
+        "archive_id": 14,
+        "symbol": "SEQARC_STAGE5",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE5_AMBIENT",
+            "bank_id": 15
+          }
+        ]
+      },
+      {
+        "archive_id": 15,
+        "symbol": "SEQARC_STAGE6",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE6_AMBIENT",
+            "bank_id": 16
+          }
+        ]
+      },
+      {
+        "archive_id": 16,
+        "symbol": "SEQARC_STAGE7",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE7_AMBIENT",
+            "bank_id": 17
+          }
+        ]
+      },
+      {
+        "archive_id": 17,
+        "symbol": "SEQARC_STAGE8",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_STAGE8_AMBIENT",
+            "bank_id": 18
+          }
+        ]
+      },
+      {
+        "archive_id": 18,
+        "symbol": "SEQARC_VOICE_M1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M1_1",
+            "bank_id": 19
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M1_2",
+            "bank_id": 19
+          }
+        ]
+      },
+      {
+        "archive_id": 19,
+        "symbol": "SEQARC_VOICE_M2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M2_1",
+            "bank_id": 20
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M2_2",
+            "bank_id": 20
+          }
+        ]
+      },
+      {
+        "archive_id": 20,
+        "symbol": "SEQARC_VOICE_M3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M3_1",
+            "bank_id": 21
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M3_2",
+            "bank_id": 21
+          }
+        ]
+      },
+      {
+        "archive_id": 21,
+        "symbol": "SEQARC_VOICE_M4",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M4_1",
+            "bank_id": 22
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M4_2",
+            "bank_id": 22
+          }
+        ]
+      },
+      {
+        "archive_id": 22,
+        "symbol": "SEQARC_VOICE_M5",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M5_1",
+            "bank_id": 23
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M5_2",
+            "bank_id": 23
+          }
+        ]
+      },
+      {
+        "archive_id": 23,
+        "symbol": "SEQARC_VOICE_M6",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M6_1",
+            "bank_id": 24
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M6_2",
+            "bank_id": 24
+          }
+        ]
+      },
+      {
+        "archive_id": 24,
+        "symbol": "SEQARC_VOICE_M7",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M7_1",
+            "bank_id": 25
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M7_2",
+            "bank_id": 25
+          }
+        ]
+      },
+      {
+        "archive_id": 25,
+        "symbol": "SEQARC_VOICE_M8",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M8_1",
+            "bank_id": 26
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M8_2",
+            "bank_id": 26
+          }
+        ]
+      },
+      {
+        "archive_id": 26,
+        "symbol": "SEQARC_VOICE_F1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F1_1",
+            "bank_id": 34
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F1_2",
+            "bank_id": 34
+          }
+        ]
+      },
+      {
+        "archive_id": 27,
+        "symbol": "SEQARC_VOICE_F2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F2_1",
+            "bank_id": 35
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F2_2",
+            "bank_id": 35
+          }
+        ]
+      },
+      {
+        "archive_id": 28,
+        "symbol": "SEQARC_VOICE_F3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F3_1",
+            "bank_id": 36
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F3_2",
+            "bank_id": 36
+          }
+        ]
+      },
+      {
+        "archive_id": 29,
+        "symbol": "SEQARC_VOICE_F4",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F4_1",
+            "bank_id": 37
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F4_2",
+            "bank_id": 37
+          }
+        ]
+      },
+      {
+        "archive_id": 30,
+        "symbol": "SEQARC_VOICE_F5",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F5_1",
+            "bank_id": 38
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F5_2",
+            "bank_id": 38
+          }
+        ]
+      },
+      {
+        "archive_id": 31,
+        "symbol": "SEQARC_VOICE_F6",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F6_1",
+            "bank_id": 39
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F6_2",
+            "bank_id": 39
+          }
+        ]
+      },
+      {
+        "archive_id": 32,
+        "symbol": "SEQARC_VOICE_F7",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F7_1",
+            "bank_id": 40
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F7_2",
+            "bank_id": 40
+          }
+        ]
+      },
+      {
+        "archive_id": 33,
+        "symbol": "SEQARC_VOICE_F8",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F8_1",
+            "bank_id": 41
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F8_2",
+            "bank_id": 41
+          }
+        ]
+      },
+      {
+        "archive_id": 34,
+        "symbol": "SEQARC_VOICE_SARISA",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_SARISA_1",
+            "bank_id": 49
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_SARISA_2",
+            "bank_id": 49
+          }
+        ]
+      },
+      {
+        "archive_id": 35,
+        "symbol": "SEQARC_VOICE_KAY",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_KAY_1",
+            "bank_id": 50
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_KAY_2",
+            "bank_id": 50
+          }
+        ]
+      },
+      {
+        "archive_id": 36,
+        "symbol": "SEQARC_VOICE_LERVE",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_LERVE_1",
+            "bank_id": 51
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_LERVE_2",
+            "bank_id": 51
+          }
+        ]
+      },
+      {
+        "archive_id": 37,
+        "symbol": "SEQARC_VOICE_OGI",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_OGI_1",
+            "bank_id": 52
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_OGI_2",
+            "bank_id": 52
+          }
+        ]
+      },
+      {
+        "archive_id": 38,
+        "symbol": "SEQARC_HUMAN1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_HUMAN1_NOISE",
+            "bank_id": 53
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_HUMAN1_RUN_STEP",
+            "bank_id": 53
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_HUMAN1_RUN_FAR",
+            "bank_id": 53
+          }
+        ]
+      },
+      {
+        "archive_id": 39,
+        "symbol": "SEQARC_HUMAN2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_HUMAN2_NOISE",
+            "bank_id": 54
+          }
+        ]
+      },
+      {
+        "archive_id": 40,
+        "symbol": "SEQARC_HUMAN3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_HUMAN3_RUN_APPROACH",
+            "bank_id": 55
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_HUMAN3_BREAK_BOARD",
+            "bank_id": 55
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_HUMAN3_HIT_SLASH",
+            "bank_id": 55
+          }
+        ]
+      },
+      {
+        "archive_id": 41,
+        "symbol": "SEQARC_NEWMAN1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_NEWMAN1_RUN_FAR_SNOW",
+            "bank_id": 56
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_NEWMAN1_NOISE",
+            "bank_id": 56
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_NEWMAN1_WALK_FAR",
+            "bank_id": 56
+          }
+        ]
+      },
+      {
+        "archive_id": 42,
+        "symbol": "SEQARC_NEWMAN2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_NEWMAN2_NOISE",
+            "bank_id": 57
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_NEWMAN2_RUN_STEP",
+            "bank_id": 57
+          }
+        ]
+      },
+      {
+        "archive_id": 43,
+        "symbol": "SEQARC_NEWMAN3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_NEWMAN3_RUN_APPROACH",
+            "bank_id": 58
+          }
+        ]
+      },
+      {
+        "archive_id": 44,
+        "symbol": "SEQARC_CAST1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_CAST1_WALK_FAR_SNOW",
+            "bank_id": 59
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_CAST1_NOISE",
+            "bank_id": 59
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_CAST1_WALK_APPROACH_SNOW",
+            "bank_id": 59
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_CAST1_RUN_FAR_SNOW",
+            "bank_id": 59
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_CAST1_HIT_PUSH",
+            "bank_id": 59
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_CAST1_RUN_APPROACH_SNOW",
+            "bank_id": 59
+          }
+        ]
+      },
+      {
+        "archive_id": 45,
+        "symbol": "SEQARC_CAST2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_CAST2_NOISE",
+            "bank_id": 60
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_CAST2_WALK_FAR",
+            "bank_id": 60
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_CAST2_WALK_APPROACH",
+            "bank_id": 60
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_CAST2_BREAK_BOARD",
+            "bank_id": 60
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_CAST2_RUN_APPROACH",
+            "bank_id": 60
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_CAST2_HIT_SLASH",
+            "bank_id": 60
+          }
+        ]
+      },
+      {
+        "archive_id": 46,
+        "symbol": "SEQARC_CAST3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_CAST3_WALK_APPROACH",
+            "bank_id": 61
+          }
+        ]
+      },
+      {
+        "archive_id": 47,
+        "symbol": "SEQARC_COMMON4_1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON4_1_WALK_APPROACH",
+            "bank_id": 62
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON4_1_HIT_PUNCH",
+            "bank_id": 62
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON4_1_OUT_DEBRIS",
+            "bank_id": 62
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON4_1_HEAD_REMOVE",
+            "bank_id": 62
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON4_1_HEAD_CHANGE",
+            "bank_id": 62
+          }
+        ]
+      },
+      {
+        "archive_id": 48,
+        "symbol": "SEQARC_COMMON4_2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON4_2_POJECTOR_START",
+            "bank_id": 63
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON4_2_POJECTOR_TROUBLE",
+            "bank_id": 63
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON4_2_EARTHSHAKE",
+            "bank_id": 63
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON4_2_RUMBLE",
+            "bank_id": 63
+          }
+        ]
+      },
+      {
+        "archive_id": 49,
+        "symbol": "SEQARC_COMMON5",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON5_WALK_APPROACH",
+            "bank_id": 64
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON5_WALK_FAR",
+            "bank_id": 64
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON5_RUN_FAR",
+            "bank_id": 64
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON5_RUMBLE",
+            "bank_id": 64
+          }
+        ]
+      },
+      {
+        "archive_id": 50,
+        "symbol": "SEQARC_COMMON6_1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON6_1_WALK_FAR",
+            "bank_id": 65
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON6_1_UNIT_APPEAR",
+            "bank_id": 65
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON6_1_RUMBLE",
+            "bank_id": 65
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON6_1_RUN_FAR",
+            "bank_id": 65
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON6_1_COMMUNICATE_CALL",
+            "bank_id": 65
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_COMMON6_1_DRAG_CAST",
+            "bank_id": 65
+          }
+        ]
+      },
+      {
+        "archive_id": 51,
+        "symbol": "SEQARC_COMMON6_2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON6_2_COMMUNICATE_NOISE",
+            "bank_id": 66
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON6_2_CONSOLE_STOP",
+            "bank_id": 66
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON6_2_TEAR",
+            "bank_id": 66
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON6_2_BUST",
+            "bank_id": 66
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON6_2_WALK_FAR",
+            "bank_id": 66
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_COMMON6_2_RUN_FAR",
+            "bank_id": 66
+          }
+        ]
+      },
+      {
+        "archive_id": 52,
+        "symbol": "SEQARC_COMMON7_HUM_1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_HUM_1_WALK_APPROACH",
+            "bank_id": 67
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_HUM_1_POSE_ARMS",
+            "bank_id": 67
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_HUM_1_COMMUNICATE_CALL",
+            "bank_id": 67
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_HUM_1_COMMUNICATE_RECEIVE",
+            "bank_id": 67
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON7_HUM_1_COMMUNICATE_CUT",
+            "bank_id": 67
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_COMMON7_HUM_1_COMMUNICATE_NOISE",
+            "bank_id": 67
+          }
+        ]
+      },
+      {
+        "archive_id": 53,
+        "symbol": "SEQARC_COMMON7_HUM_2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_HUM_2_FOTON_SHRINK",
+            "bank_id": 68
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_HUM_2_FOTON_LOST",
+            "bank_id": 68
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_HUM_2_ALARM",
+            "bank_id": 68
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_HUM_2_COMMUNICATE_CALL",
+            "bank_id": 68
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON7_HUM_2_COMMUNICATE_RECEIVE",
+            "bank_id": 68
+          }
+        ]
+      },
+      {
+        "archive_id": 54,
+        "symbol": "SEQARC_COMMON7_HUM_3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_HUM_3_MACHINE_FALL",
+            "bank_id": 69
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_HUM_3_MOTHERBLAIN_CHANGE",
+            "bank_id": 69
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_HUM_3_BUST",
+            "bank_id": 69
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_HUM_3_HIT_PUNCH",
+            "bank_id": 69
+          }
+        ]
+      },
+      {
+        "archive_id": 55,
+        "symbol": "SEQARC_COMMON7_OTH_1",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_OTH_1_WALK_APPROACH",
+            "bank_id": 70
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_OTH_1_POSE_ARMS",
+            "bank_id": 70
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_OTH_1_COMMUNICATE_CALL",
+            "bank_id": 70
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_OTH_1_COMMUNICATE_CUT",
+            "bank_id": 70
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON7_OTH_1_COMMUNICATE_RECEIVE",
+            "bank_id": 70
+          },
+          {
+            "sequence_id": 5,
+            "symbol": "SE_COMMON7_OTH_1_COMMUNICATE_NOISE",
+            "bank_id": 70
+          }
+        ]
+      },
+      {
+        "archive_id": 56,
+        "symbol": "SEQARC_COMMON7_OTH_2",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_OTH_2_FOTON_SHRINK",
+            "bank_id": 71
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_OTH_2_FOTON_LOST",
+            "bank_id": 71
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_OTH_2_ALARM",
+            "bank_id": 71
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_OTH_2_COMMUNICATE_CALL",
+            "bank_id": 71
+          },
+          {
+            "sequence_id": 4,
+            "symbol": "SE_COMMON7_OTH_2_COMMUNICATE_RECEIVE",
+            "bank_id": 71
+          }
+        ]
+      },
+      {
+        "archive_id": 57,
+        "symbol": "SEQARC_COMMON7_OTH_3",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_COMMON7_OTH_3_MACHINE_FALL",
+            "bank_id": 72
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_COMMON7_OTH_3_MOTHERBLAIN_CHANGE",
+            "bank_id": 72
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_COMMON7_OTH_3_BUST",
+            "bank_id": 72
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_COMMON7_OTH_3_HIT_PUNCH",
+            "bank_id": 72
+          }
+        ]
+      },
+      {
+        "archive_id": 58,
+        "symbol": "SEQARC_VOICE_M9",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M9_1",
+            "bank_id": 27
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M9_2",
+            "bank_id": 27
+          }
+        ]
+      },
+      {
+        "archive_id": 59,
+        "symbol": "SEQARC_VOICE_M10",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M10_1",
+            "bank_id": 28
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M10_2",
+            "bank_id": 28
+          }
+        ]
+      },
+      {
+        "archive_id": 60,
+        "symbol": "SEQARC_VOICE_M11",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M11_1",
+            "bank_id": 29
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M11_2",
+            "bank_id": 29
+          }
+        ]
+      },
+      {
+        "archive_id": 61,
+        "symbol": "SEQARC_VOICE_M12",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M12_1",
+            "bank_id": 30
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M12_2",
+            "bank_id": 30
+          }
+        ]
+      },
+      {
+        "archive_id": 62,
+        "symbol": "SEQARC_VOICE_M13",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M13_1",
+            "bank_id": 31
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M13_2",
+            "bank_id": 31
+          }
+        ]
+      },
+      {
+        "archive_id": 63,
+        "symbol": "SEQARC_VOICE_M14",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M14_1",
+            "bank_id": 32
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M14_2",
+            "bank_id": 32
+          }
+        ]
+      },
+      {
+        "archive_id": 64,
+        "symbol": "SEQARC_VOICE_M15",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_M15_1",
+            "bank_id": 33
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_M15_2",
+            "bank_id": 33
+          }
+        ]
+      },
+      {
+        "archive_id": 65,
+        "symbol": "SEQARC_VOICE_F9",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F9_1",
+            "bank_id": 42
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F9_2",
+            "bank_id": 42
+          }
+        ]
+      },
+      {
+        "archive_id": 66,
+        "symbol": "SEQARC_VOICE_F10",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F10_1",
+            "bank_id": 43
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F10_2",
+            "bank_id": 43
+          }
+        ]
+      },
+      {
+        "archive_id": 67,
+        "symbol": "SEQARC_VOICE_F11",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F11_1",
+            "bank_id": 44
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F11_2",
+            "bank_id": 44
+          }
+        ]
+      },
+      {
+        "archive_id": 68,
+        "symbol": "SEQARC_VOICE_F12",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F12_1",
+            "bank_id": 45
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F12_2",
+            "bank_id": 45
+          }
+        ]
+      },
+      {
+        "archive_id": 69,
+        "symbol": "SEQARC_VOICE_F13",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F13_1",
+            "bank_id": 46
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F13_2",
+            "bank_id": 46
+          }
+        ]
+      },
+      {
+        "archive_id": 70,
+        "symbol": "SEQARC_VOICE_F14",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F14_1",
+            "bank_id": 47
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F14_2",
+            "bank_id": 47
+          }
+        ]
+      },
+      {
+        "archive_id": 71,
+        "symbol": "SEQARC_VOICE_F15",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_VOICE_F15_1",
+            "bank_id": 48
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_VOICE_F15_2",
+            "bank_id": 48
+          }
+        ]
+      },
+      {
+        "archive_id": 72,
+        "symbol": "SEQARC_TECHNIC_RESTA",
+        "sequences": [
+          {
+            "sequence_id": 0,
+            "symbol": "SE_TECHNIC_RESTA",
+            "bank_id": 73
+          },
+          {
+            "sequence_id": 1,
+            "symbol": "SE_TECHNIC_RESTA_HIT",
+            "bank_id": 73
+          },
+          {
+            "sequence_id": 2,
+            "symbol": "SE_TECHNIC_REVERSER",
+            "bank_id": 73
+          },
+          {
+            "sequence_id": 3,
+            "symbol": "SE_TECHNIC_MEGIDE_HIT",
+            "bank_id": 73
+          }
+        ]
+      }
+    ]
+  }
+}

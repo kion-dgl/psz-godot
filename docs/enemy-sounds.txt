@@ -1,0 +1,65 @@
+Enemy sound playback
+====================
+
+EnemyBase attaches EnemySoundPlayback after loading the model. The controller
+adds method tracks to private animation copies; it does not modify the imported
+GLBs. Cues follow animation time, speed changes, loop wraps and interruptions.
+The old wolf-only forest SFX mapping has been removed.
+
+Lookup tables
+-------------
+data/re_reference/enemy_sound_events.json is a sound-only snapshot of psz-re's
+USA retail enemy_implementation_reference.json. It retains original archive
+hashes, animation slots, action stages, sound IDs, trigger frames and provenance.
+Action indexes are NOT animation-slot indexes: follow animation_stages and the
+event's start_stage. Sound IDs are scoped to their SDAT.
+
+data/re_reference/enemy_sound_catalogue.json maps archive/sequence IDs to names.
+data/re_reference/enemy_sound_export.json maps those names/IDs to rendered WAVs,
+SHA-256 hashes and exact loop sample bounds, including three shared effects.
+data/enemy_sounds.json is the runtime model -> clip -> frame/sound lookup.
+
+Regenerate the runtime lookup with:
+  python3 scripts/tools/gen_enemy_sounds.py
+
+Timing and coverage
+-------------------
+Frames are divided by 60 to match this project's imported GLB timebase. The 269
+sound-bearing clips present directly in the local model GLBs were checked against
+(frame_count - 1) / 60; all matched within one source frame. Rare variants can
+also obtain their animations through EnemyData.animation_model_id.
+
+The generated lookup contains 363 clips across 65 source models. It covers 64
+current roster entries. Model IDs select sounds, preserving existing model/name
+assignments. This is not a change to enemy identities or AI action selection.
+
+Fifteen clips reuse an animation across original actions/stages with different
+sound cues. These are listed in enemy_sounds.json's skipped array and excluded
+until the Godot FSM exposes the corresponding original action/stage context.
+No sounds are invented for unmatched PSO/custom models. The original boss_robot
+and boss_robot_cmb descriptors contain no class-2 sound events; additional
+runtime producers still need research.
+
+Fidelity limits
+---------------
+The event tables contain authored frames and explicit sound IDs. Runtime tracing
+corroborated three Reyburn dispatches, not every enemy or original AI timing.
+The WAVs are offline sequence renders, not in-game recordings. Native sequence
+volume is already rendered, so it is not multiplied again; SFX bus volume and
+positional attenuation still apply. Randomized sequence commands are represented
+by the renderer's chosen realization.
+
+Loop bounds use exact export sample positions, with exclusive ends. Looping
+voices follow the enemy and stop on clip change, pause, dormancy, immobilization
+or removal. That lifetime rule is a Godot policy, not a recovered original-game
+stop policy. One-shot tails use the existing pooled positional SFX players.
+
+The WAVs are under assets/sfx/se_enemy plus three files under assets/sfx/se.
+These asset trees follow the repository's existing ignored/external asset policy;
+the developer mirror and content-addressed asset pack carry these files.
+CSV manifests use Godot's Keep import mode; they are not translation tables.
+
+Packed-asset smoke matrix (does not create character saves):
+  PSZ_SOUND_PROBE=1 PSZ_SOUND_PACK=/absolute/path/dist/assets.pck godot \
+    --headless --path . res://scripts/tools/coliseum_probe.tscn
+This loads all 230 sound resources and exercises five real animation rigs.
