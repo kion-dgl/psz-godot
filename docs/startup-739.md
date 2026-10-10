@@ -12,8 +12,8 @@ PSZ's story and gameplay. The normative startup contract is
 
 The shared opaque 1024×1024 master is `bootstrap/icons/rappy.png`. Project
 (Linux/window/Web), Windows and macOS icon settings use this master. Android
-uses the 192px derivative and a 432px adaptive layer with a 288px central
-composition to compensate for launcher-mask cropping. There is no iOS export
+uses full-edge 192px and 432px derivatives with no inset border. Godot generates
+the smaller launcher density variants from these sources during export. There is no iOS export
 preset yet; the square opaque master is available for a future iOS export.
 OS masks are applied by the launcher, not baked into the master.
 

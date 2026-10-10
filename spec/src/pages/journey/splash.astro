@@ -12,7 +12,7 @@ import Definition from '../../layouts/Definition.astro';
 
   <h2>Scope and identity</h2>
   <p>Splash covers the entire player experience from launching the application to reaching the title: OS icon and name, engine splash, asset preparation, first-run controls, and transitions. Owner direction, 2026-10-10: a fan adaptation bringing PSZ's gameplay and story closer to PSO's style, rather than only a one-to-one engine port.</p>
-  <p>The player-facing application name remains <strong>PSZ Godot</strong> for now. Every exported platform MUST use the same Rappy identity, with suitable launcher masks and sizes. Android package and macOS bundle identifiers MUST remain stable.</p>
+  <p>The player-facing application name remains <strong>PSZ Godot</strong> for now. Every exported platform MUST use the same Rappy identity, with suitable launcher masks and sizes. Both Android source icons (192px legacy and 432px adaptive foreground) MUST use the full-edge Rappy composition without an inset border. Android package and macOS bundle identifiers MUST remain stable.</p>
 
   <h2>Boot notice</h2>
   <p>The native engine splash MUST be black with centered white text using the wording shown above. It MUST preserve aspect ratio, fit smaller and wider displays, and have no anniversary logo, animation, acknowledgement button, or minimum display time. The bootstrap MUST retain the same image while preparing a cached pack so the patch screen does not flash on repeat launches.</p>
