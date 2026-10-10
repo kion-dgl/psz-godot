@@ -210,6 +210,8 @@ func _run_tests_telepipe_and_roam() -> void:
 func _run_tests_systems() -> void:
 	test_valley_locked_gate_approach()
 	test_build_info_sentinel()
+	preload("res://scripts/tools/startup_cache_tests.gd").run(self)
+	preload("res://scripts/tools/spectator_frame_tests.gd").run(self)
 	test_bootstrap_pack_magic_guard()
 	test_bootstrap_registers_pack_uids()
 	test_warp_teleporter_section_label()

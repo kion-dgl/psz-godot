@@ -1,0 +1,35 @@
+extends RefCounted
+## Receipt contract: /journey/splash and /journey/download.
+
+static func run(r: Node) -> void:
+	print("── Startup verified-cache receipts (#739) ──")
+	var cache = load("res://scripts/2d/bootstrap_cache.gd")
+	var path := "user://startup_receipt_test.pck"
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("GDPC deterministic cache fixture")
+	f.close()
+	var sha := FileAccess.get_sha256(path)
+	var size := FileAccess.get_file_as_bytes(path).size()
+	r.assert_true(not cache.matches(path, sha, size), "unreceipted pack requires verification")
+	r.assert_true(cache.record(path, sha), "verified pack receipt can be saved")
+	r.assert_true(cache.matches(path, sha, size), "unchanged verified pack can skip hashing")
+	r.assert_true(not cache.matches(path, "new-manifest-hash", size), "new manifest invalidates receipt")
+	r.assert_true(not cache.matches(path, sha, size + 1), "manifest size invalidates receipt")
+	var receipt: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path + cache.SUFFIX))
+	receipt["modified"] = int(receipt["modified"]) - 1
+	f = FileAccess.open(path + cache.SUFFIX, FileAccess.WRITE)
+	f.store_string(JSON.stringify(receipt))
+	f.close()
+	r.assert_true(not cache.matches(path, sha, size), "changed file timestamp invalidates receipt")
+	cache.record(path, sha)
+	f = FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("partial")
+	f.close()
+	r.assert_true(not cache.matches(path, sha, size), "truncated pack invalidates receipt")
+	f = FileAccess.open(path + cache.SUFFIX, FileAccess.WRITE)
+	f.store_string("{invalid")
+	f.close()
+	r.assert_true(not cache.matches(path, sha, size), "malformed receipt is safe to ignore")
+	DirAccess.remove_absolute(path)
+	r.assert_true(not cache.matches(path, sha, size), "missing pack cannot use a receipt")
+	DirAccess.remove_absolute(path + cache.SUFFIX)

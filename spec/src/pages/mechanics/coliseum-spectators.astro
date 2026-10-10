@@ -1,0 +1,10 @@
+---
+import Definition from '../../layouts/Definition.astro';
+---
+<Definition title="Coliseum Spectators" section="Mechanics">
+  <h2>Background animation contract</h2>
+  <p>Kion and Rosaline MUST remain quiet decorative spectators in the <code>s00a_nr2</code> gallery. They MUST retain their existing pixel-art designs, subdued tint, inward-facing orientation and positions. They MUST NOT gain collision, interaction, labels, combat registration or camera-facing rotation.</p>
+  <p>Each spectator uses a four-frame idle sheet: resting, slight breath, brief blink, return to rest. Animation MUST loop with most time spent resting. The two spectators MUST start at different phases without consuming gameplay RNG.</p>
+  <p>All frames MUST share a fixed virtual canvas and bottom baseline. Transparent padding MUST NOT change the visible world height or make the feet slide. Kion remains 3.3 m high and Rosaline 2.64 m; feet remain at y=4. Nearest filtering and alpha cutout preserve pixel edges.</p>
+  <p>When an idle sheet is absent, the existing single-frame sprite MUST remain a valid fallback. Sheet assets ship through the normal asset pack and raw-asset mirror. Unit tests cover atlas layout and timing; a runtime probe verifies frame advancement and stable anchors.</p>
+</Definition>

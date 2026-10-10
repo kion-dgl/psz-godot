@@ -1,31 +1,37 @@
 ---
 import { siteUrl } from '../../utils/site';
 import Definition from '../../layouts/Definition.astro';
-import Mermaid from '../../components/Mermaid.astro';
 ---
 
-<Definition title="Splash Screen" section="Journey">
-  <img slot="preview" src={siteUrl('/splash_screen.png')} alt="PSZ Splash Screen" style="width:960px;height:540px;object-fit:contain;background:#000;" />
+<Definition title="Launch to Title" section="Journey">
+  <div slot="preview" class="notice">
+    <p>Phantasy Star Zero fan remake</p>
+    <p>Unofficial. Not affiliated with or endorsed by SEGA.<br />Phantasy Star Zero and its original content © SEGA.</p>
+    <p>Follow @wagieweeb on X for updates.</p>
+  </div>
 
-  <h2>Purpose</h2>
-  <p>Godot's native boot splash. Displays the game logo on a black background while the engine initializes. This is rendered by the engine before any GDScript runs.</p>
+  <h2>Scope and identity</h2>
+  <p>Splash covers the entire player experience from launching the application to reaching the title: OS icon and name, engine splash, asset preparation, first-run controls, and transitions. Owner direction, 2026-10-10: a fan adaptation bringing PSZ's gameplay and story closer to PSO's style, rather than only a one-to-one engine port.</p>
+  <p>The player-facing application name remains <strong>PSZ Godot</strong> for now. Every exported platform MUST use the same Rappy identity, with suitable launcher masks and sizes. Both Android source icons (192px legacy and 432px adaptive foreground) MUST use the full-edge Rappy composition without an inset border. Android package and macOS bundle identifiers MUST remain stable.</p>
 
-  <h2>Behavior</h2>
-  <p>Shown automatically by Godot on launch. Once the engine finishes initialization, it loads the main scene (<code>bootstrap.tscn</code>) which takes over with the <a href={siteUrl('/journey/download')}>Download Content</a> screen. The player always sees this transition — there is no skip path.</p>
+  <h2>Boot notice</h2>
+  <p>The native engine splash MUST be black with centered white text using the wording shown above. It MUST preserve aspect ratio, fit smaller and wider displays, and have no anniversary logo, animation, acknowledgement button, or minimum display time. The bootstrap MUST retain the same image while preparing a cached pack so the patch screen does not flash on repeat launches.</p>
 
-  <Mermaid chart={`flowchart TD
-    A[App Launch] --> B[Engine Boot Splash]
-    B --> C[bootstrap.tscn loads]
-    C --> D[Download Content screen]
-  `} />
-
-  <h2>Configuration</h2>
-  <p>Set in <code>project.godot</code>:</p>
+  <h2>Startup paths</h2>
   <ul>
-    <li><code>boot_splash/image</code> = <code>res://splash_screen.png</code></li>
-    <li><code>boot_splash/bg_color</code> = black</li>
+    <li><strong>Verified, unchanged pack:</strong> validate its local receipt and mount immediately. No HTTP client initialization, network request, full hash scan, download UI, or artificial hold.</li>
+    <li><strong>Existing pack without a valid receipt:</strong> verify once, then save a receipt after a successful mount. Verification MUST yield on a time budget, not once per MiB, so frame rate does not dictate startup duration.</li>
+    <li><strong>Missing, changed, or corrupt required pack:</strong> show the <a href={siteUrl('/journey/download')}>asset download screen</a>, verify the full hash, and mount before proceeding.</li>
+    <li><strong>Controls:</strong> show setup only when no saved input configuration exists; otherwise enter the title directly.</li>
   </ul>
+  <p>The title depends on resources inside the required pack. This iteration does not load an old pack with a new executable or add a remote update service. A small bottom-right title indicator is reserved for real future background work; no idle or simulated loader is shown.</p>
 
-  <h2>Next</h2>
-  <p><a href={siteUrl('/journey/download')}>Download Content →</a></p>
+  <h2>Acceptance and evidence</h2>
+  <p>Unit tests MUST cover receipt invalidation (hash, size, modification time, missing or malformed receipt) and verification failure. A runtime startup probe MUST cover first download, repeat cached launch, migration from an unreceipted cache, and corrupt-cache recovery. Visual review MUST cover 640×360, 1280×720, 1920×1080, 4:3 and ultrawide, plus launcher icons on exported platforms. Passing automated checks does not substitute for owner playtesting or raise scorecard grades.</p>
 </Definition>
+
+<style>
+  .notice { width: 100%; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.5rem; background: #000; color: #fff; text-align: center; padding: 8%; box-sizing: border-box; font-family: Arial, sans-serif; }
+  .notice p { margin: 0; font-size: clamp(12px, 1.6vw, 24px); line-height: 1.6; }
+  .notice p:first-child { font-size: clamp(16px, 2.2vw, 32px); }
+</style>

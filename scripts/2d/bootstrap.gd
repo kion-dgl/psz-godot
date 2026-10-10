@@ -24,6 +24,7 @@ const MANIFEST_PATH := "res://assets_manifest.json"
 const CACHE_DIR := "user://packs"
 const UID_MAP_PATH := "res://assets/uid_map.json"
 const HASH_CHUNK := 1 << 20  # 1 MiB
+const CacheReceipt = preload("res://scripts/2d/bootstrap_cache.gd")
 const ONE_MB := 1048576.0
 
 # Retry policy: Arweave uploads via Turbo take several minutes to propagate
@@ -31,10 +32,6 @@ const ONE_MB := 1048576.0
 # budget. Per-URL attempts; the outer loop rotates through all mirrors first.
 const HTTP_MAX_ATTEMPTS := 4
 const HTTP_RETRY_DELAYS := [5.0, 15.0, 30.0, 60.0]  # seconds between attempts
-
-# Artificial hold so the connecting beat is legible before the first request
-# fires. Matches the React mockup at /asset-loader.
-const CONNECTING_HOLD_SEC := 1.2
 
 enum Phase { CONNECTING, LOADING, DONE, ERROR }
 
@@ -57,6 +54,10 @@ var _total_bytes: int = 0
 # continue to work, so bootstrap still completes.
 var _bad_hosts: Dictionary = {}
 
+var _notice: TextureRect
+var _retry: Button
+var _download_visible := false
+
 var _phase: int = Phase.CONNECTING
 var _pulse_time: float = 0.0
 var _last_speed_bytes: int = 0
@@ -71,17 +72,7 @@ func _ready() -> void:
 	])
 	_client_line.text = "CLIENT: v%s_patch" % version
 
-	_http = HTTPRequest.new()
-	_http.use_threads = true
-	# Skip TLS cert verification for pack downloads. Content is public, URLs
-	# are content-addressed (sha256 in filename), and the pack is sha256-
-	# verified post-download — so a MITM can at worst substitute bytes that
-	# fail the integrity check. Without this, Godot's bundled mbedTLS can
-	# reject legitimate R2 certs on Windows (MBEDTLS_ERR_X509_CERT_VERIFY_FAILED
-	# / -9984) where Schannel/curl succeed.
-	_http.set_tls_options(TLSOptions.client_unsafe())
-	add_child(_http)
-
+	_setup_startup_ui()
 	_set_phase(Phase.CONNECTING)
 	_set_progress(0.0)
 	set_process(true)
@@ -153,9 +144,6 @@ func _set_progress(percent: float) -> void:
 
 
 func _run() -> void:
-	# Hold the CONNECTING beat briefly so the UI reads.
-	await get_tree().create_timer(CONNECTING_HOLD_SEC).timeout
-
 	var manifest: Dictionary = _read_manifest()
 	if manifest.is_empty():
 		print("[bootstrap] no manifest — using in-tree /assets/ (dev mode)")
@@ -184,15 +172,15 @@ func _run() -> void:
 	_total_bytes = pack_size
 
 	var cache_path: String = "%s/assets-%s.pck" % [CACHE_DIR, sha.substr(0, 12)]
-	_cleanup_stale(cache_path)
-
-	_set_phase(Phase.LOADING)
-	_file_ticker.text = "checking cached pack…"
-	await _yield_frame()
-
-	var cached_ok: bool = FileAccess.file_exists(cache_path) \
-		and await _verify_hash(cache_path, sha)
+	var receipt_ok: bool = CacheReceipt.matches(cache_path, sha, pack_size)
+	var cached_ok: bool = receipt_ok
+	if cached_ok:
+		print("[bootstrap] verified cache hit — skipping download screen")
+	elif FileAccess.file_exists(cache_path):
+		cached_ok = await _verify_hash(cache_path, sha)
 	if not cached_ok:
+		_show_download_ui()
+		_set_phase(Phase.LOADING)
 		_file_ticker.text = "fetching pack…"
 		var ok: bool = await _download_first_available(urls, cache_path)
 		if not ok:
@@ -210,6 +198,9 @@ func _run() -> void:
 	if not ProjectSettings.load_resource_pack(cache_path, false):
 		_fatal("Failed to mount assets pack.")
 		return
+	if not receipt_ok and not CacheReceipt.record(cache_path, sha):
+		push_warning("[bootstrap] could not save cache receipt; next launch will verify again")
+	_cleanup_stale(cache_path)
 	print("[bootstrap] mounted %s" % cache_path)
 	_register_pack_uids()
 
@@ -270,6 +261,8 @@ func _cleanup_stale(keep_path: String) -> void:
 			var abs_entry: String = abs_dir.path_join(pck_name)
 			if abs_entry != abs_keep:
 				DirAccess.remove_absolute(abs_entry)
+				if FileAccess.file_exists(abs_entry + CacheReceipt.SUFFIX):
+					DirAccess.remove_absolute(abs_entry + CacheReceipt.SUFFIX)
 				print("[bootstrap] cleaned stale pack: %s" % pck_name)
 		pck_name = d.get_next()
 	d.list_dir_end()
@@ -386,6 +379,7 @@ func _http_download(url: String, cache_path: String) -> bool:
 ## Godot pack magic; sets `_last_code` to the HTTP status (0 = no reply). The
 ## caller (_http_download) owns the fallback + blacklist policy.
 func _http_get(url: String, cache_path: String) -> bool:
+	_ensure_http()
 	var dest_abs: String = ProjectSettings.globalize_path(cache_path)
 	_http.download_file = dest_abs
 	# Capture completion via a dictionary (shared by reference inside the
@@ -466,9 +460,12 @@ func _verify_hash(path: String, expected_hex: String) -> bool:
 	var file_size: int = f.get_length()
 	var ctx := HashingContext.new()
 	ctx.start(HashingContext.HASH_SHA256)
+	var yield_started := Time.get_ticks_msec()
 	while f.get_position() < file_size:
 		ctx.update(f.get_buffer(HASH_CHUNK))
-		await _yield_frame()
+		if Time.get_ticks_msec() - yield_started >= 4:
+			await _yield_frame()
+			yield_started = Time.get_ticks_msec()
 	f.close()
 	var digest: PackedByteArray = ctx.finish()
 	var hex: String = ""
@@ -501,6 +498,9 @@ func _fatal(msg: String) -> void:
 	# future check (e.g. retry button) that the load failed. Hiding the cloud
 	# icon stops its pulse animation; the footer dot keeps pulsing as a "still
 	# alive, just stuck" indicator.
+	_show_download_ui()
+	_retry.show()
+	_retry.grab_focus()
 	_phase = Phase.ERROR
 	_cloud_icon.visible = false
 	_status.text = "ERROR"
@@ -508,3 +508,60 @@ func _fatal(msg: String) -> void:
 	_file_ticker.text = msg
 	_connected_status.text = "● ERROR"
 	push_error("[bootstrap] %s" % msg)
+
+
+func _setup_startup_ui() -> void:
+	# Same composition as the engine splash; cover patch UI until a download
+	# is actually necessary. The notice has no timer and cannot consume input.
+	_notice = TextureRect.new()
+	_notice.texture = preload("res://splash_screen.png")
+	_notice.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_notice.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var black := ColorRect.new()
+	black.color = Color.BLACK
+	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(black)
+	black.add_child(_notice)
+	_notice.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_retry = Button.new()
+	_retry.text = "Retry"
+	_retry.pressed.connect(_retry_startup)
+	$LoaderColumn.add_child(_retry)
+	_retry.hide()
+
+
+func _show_download_ui() -> void:
+	if not _download_visible:
+		_download_visible = true
+		_notice.get_parent().hide()
+		print("[bootstrap] download screen shown")
+
+
+func _retry_startup() -> void:
+	_retry.hide()
+	_bad_hosts.clear()
+	_speed_samples.clear()
+	_last_speed_bytes = 0
+	_set_phase(Phase.CONNECTING)
+	_set_progress(0.0)
+	_run()
+
+
+func _ensure_http() -> void:
+	# Cached and local-pack boots do not need networking. Create request
+	# machinery only when there is a URL to download.
+	if _http != null:
+		return
+	_http = HTTPRequest.new()
+	_http.use_threads = true
+	_http.timeout = 30.0
+	# Skip TLS cert verification for pack downloads. Content is public, URLs
+	# are content-addressed (sha256 in filename), and the pack is sha256-
+	# verified post-download — so a MITM can at worst substitute bytes that
+	# fail the integrity check. Without this, Godot's bundled mbedTLS can
+	# reject legitimate R2 certs on Windows (MBEDTLS_ERR_X509_CERT_VERIFY_FAILED
+	# / -9984) where Schannel/curl succeed.
+	_http.set_tls_options(TLSOptions.client_unsafe())
+	add_child(_http)

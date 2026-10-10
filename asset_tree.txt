@@ -1,5 +1,7 @@
 assets/easter_eggs/README.md
+assets/easter_eggs/kion_idle.png
 assets/easter_eggs/kion_spectator.png
+assets/easter_eggs/rosaline_idle.png
 assets/easter_eggs/rosaline_spectator.png
 assets/effects/ef_com_quest/ef_com_quest.glb
 assets/effects/ef_com_quest/ff_com_quest.png
