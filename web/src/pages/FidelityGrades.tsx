@@ -19,7 +19,7 @@ export default function FidelityGrades({ showCriteriaLink = true }: { showCriter
       </header>
       <p className="fidelity-note">Overall is an editorial assessment, not an average or a measured fidelity percentage. Grades improve through playtesting; passing automated checks alone does not raise them. Bars show the letter-grade scale, not percent complete.</p>
       <div className="fidelity-grid">
-        {[...baseline.areas].sort((a, b) => gradeRank(b.grade) - gradeRank(a.grade)).map(({ area, grade, assessment, next, label }) => (
+        {[...baseline.areas].sort((a, b) => gradeRank(b.grade) - gradeRank(a.grade)).map(({ area, grade, assessment, next, label, reviewed_on }) => (
           <article className="fidelity-card" key={area}>
             <div className="fidelity-card-heading">
               <h3><a href={scorecardIssuesUrl(label)} aria-label={`Open issues for ${area}`}>{area} ↗</a></h3>
@@ -27,6 +27,7 @@ export default function FidelityGrades({ showCriteriaLink = true }: { showCriter
             </div>
             <div className="fidelity-bar" aria-hidden="true"><span data-grade={grade[0]} style={{ width: `${gradeBarWidth(grade)}%` }} /></div>
             <p>{assessment}</p>
+            {reviewed_on && <p className="fidelity-note">Notes reviewed {reviewed_on}; grade unchanged.</p>}
             <details>
               <summary>Next review target</summary>
               <p>{next}</p>

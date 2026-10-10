@@ -9,9 +9,10 @@
     {
       "area": "Splash",
       "grade": "D",
-      "assessment": "A low-effort PNG placeholder.",
-      "next": "Replace with an intentional splash composition and verify startup presentation.",
-      "label": "score:splash"
+      "assessment": "A small placeholder image made to show while the game loads.",
+      "next": "Choose and implement an intentional logo, a short fan-game disclaimer, or a combination; verify readability and startup presentation.",
+      "label": "score:splash",
+      "reviewed_on": "2026-10-10"
     },
     {
       "area": "Asset sync",
@@ -65,16 +66,18 @@
     {
       "area": "Traps",
       "grade": "D",
-      "assessment": "Present, but not cleanly implemented yet.",
-      "next": "Define and verify placement, visibility, trigger timing, dodge/counterplay and status behavior.",
-      "label": "score:traps"
+      "assessment": "Partially implemented: bear/needle and placeable trap textures render incorrectly; player and field traps need timing, radius and status validation. Free-roam layouts and trap visibility also remain incomplete.",
+      "next": "Fix materials; validate arming, timing, radius and status payloads for player/field traps; verify authored layout placement. Ensure CAST trap visibility and a usable Trap Vision item that lets non-CASTs see and target traps.",
+      "label": "score:traps",
+      "reviewed_on": "2026-10-10"
     },
     {
       "area": "Bosses",
       "grade": "D",
-      "assessment": "Present, mostly as placeholders.",
-      "next": "Resolve identity and arena assignments, then validate full encounters, phases and parts.",
-      "label": "score:bosses"
+      "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
+      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation.",
+      "label": "score:bosses",
+      "reviewed_on": "2026-10-10"
     },
     {
       "area": "Combat",
@@ -86,9 +89,10 @@
     {
       "area": "Systems",
       "grade": "D",
-      "assessment": "Grinding, attributes and weapon damage polish have been deferred.",
-      "next": "Validate damage and progression rules against evidence, with controlled fixtures and user review.",
-      "label": "score:systems"
+      "assessment": "Very weak in current play: Kion reports level-1 hits around 100 damage and routine one-shots, with no meaningful player or enemy-level progression. Damage, statuses, weapon specials and grinding have been deferred.",
+      "next": "Establish a meaningful level-1 baseline, player growth and quest/free-roam enemy levels. Design a western-punk weapon economy around crafted iron weapons and restored ancient photon weapons; then validate damage, grinding and special/status effects.",
+      "label": "score:systems",
+      "reviewed_on": "2026-10-10"
     }
   ]
 }
