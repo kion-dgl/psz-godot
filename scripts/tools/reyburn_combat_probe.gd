@@ -1,4 +1,5 @@
 extends Node
+## Entry point: godot --headless --path . res://scripts/tools/reyburn_combat_probe.tscn
 ## Actual arena/rig delivery probe. Uses isolated XDG_DATA_HOME, PSZ_PROBE_PACK.
 var _ok := true
 
