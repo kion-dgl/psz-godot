@@ -15,6 +15,11 @@ const TIMEOUT_SEC := 240.0
 
 
 func _ready() -> void:
+	var pack := OS.get_environment("PSZ_PROBE_PACK")
+	if not pack.is_empty() and not ProjectSettings.load_resource_pack(pack, false):
+		push_error("Could not mount probe asset pack: " + pack)
+		get_tree().quit(1)
+		return
 	if OS.get_environment("PSZ_SOUND_PROBE") == "1":
 		var ok: bool = await preload("res://scripts/tools/enemy_sound_probe.gd").run(self)
 		get_tree().quit(0 if ok else 1)
@@ -26,6 +31,9 @@ func _ready() -> void:
 	CharacterManager._active_slot = -1
 	CharacterManager.create_character(0, "humar", "ProbeHero")
 	CharacterManager.set_active_slot(0)
+	if OS.get_environment("PSZ_BOSS_LIFECYCLE_CHECK") == "1":
+		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/boss_lifecycle_check.gd").new())
+		return
 
 	var selected := OS.get_environment("PSZ_COLISEUM_ENEMY")
 	if selected.is_empty():
@@ -117,9 +125,14 @@ class Watch extends Node:
 			killed = true
 			return
 		if _find_telepipe_under(get_tree().current_scene) != null:
-			print("[coliseum] room-clear telepipe spawned after the kill")
-			print("[coliseum] DONE ok")
-			get_tree().quit(0)
+			_finish_probe()
+
+	func _finish_probe() -> void:
+		if not _check_repeat_exit():
+			return
+		print("[coliseum] room-clear telepipe spawned after the kill")
+		print("[coliseum] DONE ok")
+		get_tree().quit(0)
 
 	## Run the real-animation steering probe without the story stage pack.
 	func _check_combo(player: Node3D) -> bool:
@@ -140,6 +153,20 @@ class Watch extends Node:
 			weapons_started = true
 			_run_mixed.call_deferred(player)
 		return true
+
+	func _check_repeat_exit() -> bool:
+		if OS.get_environment("PSZ_GAMEPLAY_RECOVERY_CHECK") != "1":
+			return true
+		var field = get_tree().current_scene
+		var exit_node = _find_telepipe_under(field)
+		field._spawn_telepipe()
+		field._spawn_telepipe()
+		if field._map_root.get_children().filter(func(n): return n is Telepipe).size() != 1 or _find_telepipe_under(field) != exit_node:
+			_fail("repeated completion duplicated the exit")
+			return false
+		print("[gameplay] repeat room-clear exit is idempotent — PASS")
+		return true
+
 
 	func _run_mixed(player: Node3D) -> void:
 		var ok: bool = await preload("res://scripts/tools/coliseum_group_check.gd").run(player, enemy_id)
@@ -181,6 +208,10 @@ class Watch extends Node:
 		if OS.get_environment("PSZ_MELEE_LIVE_CHECK") == "1":
 			if not await preload("res://scripts/tools/melee_live_check.gd").run(player, enemy):
 				_fail("live melee animation checks failed")
+				return
+		if OS.get_environment("PSZ_GAMEPLAY_RECOVERY_CHECK") == "1":
+			if not await preload("res://scripts/tools/gameplay_recovery_check.gd").run(player, enemy):
+				_fail("gameplay recovery/trap checks failed")
 				return
 		var ok: bool = await preload("res://scripts/tools/coliseum_combat_check.gd").run(player, enemy)
 		if not ok:

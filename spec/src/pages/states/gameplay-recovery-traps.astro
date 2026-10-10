@@ -1,0 +1,74 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Trap counterplay and recovery" section="States">
+  <p>This contract covers issues #94, #738, #724, #737, #592, #341,
+  #345, #473 and the repeat-completion portion of #62. It defines the remake
+  behavior exercised by this batch; it does not claim complete original parity.</p>
+  <h2>Inventory and recovery</h2>
+  <ul>
+    <li>Each character MUST save inventory order as an explicit ordered list of
+    item IDs alongside quantities. JSON key sorting MUST NOT change manual order.
+    Unknown/duplicate order entries MUST be ignored; unlisted items MUST be retained.
+    Legacy saves without a list MUST retain their available dictionary order.</li>
+    <li>On a lethal field hit, one held Scape Doll MUST be consumed before defeat
+    is emitted. HP MUST become full; harmful statuses MUST clear; the current
+    encounter and meseta MUST remain unchanged. Recovery grants two seconds of
+    damage/status immunity (remake tuning), with the existing stand-up animation.
+    Without a doll the existing defeat transaction MUST run exactly once.</li>
+  </ul>
+  <h2>Trap counterplay</h2>
+  <ul>
+    <li>Dormant field balls MUST be visible and attackable to CASTs and to characters
+    with Trap Vision. Arming MUST reveal the ball to everybody. Hidden balls MUST
+    NOT steal targeting or projectile hits. Revealed hostile balls MUST disarm on
+    a damaging weapon contact, without detonating or awarding enemy EXP/drops.</li>
+    <li>Player traps MUST NOT be treated as enemies. Only one player trap may be live:
+    replacing it MUST expire the previous one without a blast. Placement MUST be
+    refused without consumption outside a field, by non-CASTs, or while defeated.</li>
+    <li>Trap Vision retains the existing 60-second wall-clock duration and refreshes
+    to the later expiry; it MUST survive room changes but MUST reset when changing
+    characters, starting a fresh expedition, ending/resetting a session, or dying. City/dead use MUST NOT consume it.
+    These duration/scope choices are remake rules, not recovered PSZ measurements.</li>
+    <li>A hostile trap contact MUST resolve damage and status under the same dodge,
+    recovery and defeat guards. Healing MUST NOT revive a defeated player.
+    A spent/disarmed trap MUST NOT trigger or apply its payload twice.</li>
+    <li>Trigger range and blast range MUST be represented separately. This batch
+    does not claim that the existing 4-unit hostile radius or 60 Hz fuse divisor
+    matches the original. Exact timing/radii and Light Trap confusion remain #607/#724
+    research work; the existing stun substitute MUST remain labelled as such.</li>
+  </ul>
+  <h2>Status delivery and support</h2>
+  <p>The 3D player MUST accept the currently supported trap payloads: freeze,
+  burn and the temporary stun substitute. Existing project duration/potency values
+  are used, not newly asserted original-game numbers. Duplicate effects MUST NOT
+  stack or refresh. Burn ticks MUST use elapsed gameplay time and stop on cure,
+  death or expiry. Once inflicted, burn MUST NOT be dodged and MUST NOT interrupt
+  movement or break freeze. Anti MUST clear player ailments; Resta MUST heal the living
+  player, using the learned level and the existing support power table. CAST
+  characters MUST NOT cast through stale palette entries. Neither support cast may emit the offensive fallback fire projectile.
+  Reverser and the still-unimplemented 3D buffs/debuffs (Shifta, Deband, Jellen,
+  Zalure) MUST reject the cast without spending PP and show feedback. They remain
+  follow-up work in #345.</p>
+  <p>Sol Atomizer MUST cure the living field player's active ailments and consume
+  one item only when there is an ailment to cure. It MUST NOT restore HP. A Moon
+  Atomizer without a supported downed teammate MUST be rejected without consumption;
+  it MUST NOT act as a full self-heal. Companion revival remains follow-up work.</p>
+  <h2>Rendering and boss completion</h2>
+  <p>Bear and needle traps MUST use instance-owned materials with the storybook's
+  per-surface UV transforms and repeat/mirror axes. Off states MUST hide only their
+  active surfaces. Armed bear prongs MUST scroll; releasing a caught player MUST NOT
+  overwrite damage, defeat or revival state. Room teardown MUST release a surviving
+  hold. This is project visual parity, not a claim that storybook tuning
+  reproduces the DS material. Trap-ball overrides MUST preserve source tint/alpha.</p>
+  <p>Repeated room-clear checks MUST NOT create multiple boss return warps. Objective
+  updates after the fight MUST still be able to unlock a deferred exit.</p>
+  <p>Dialog boxes MUST own a copy of their page array; closing a dialog MUST NOT
+  clear the caller's constant/read-only data. This regression was observed during
+  the field-entry matrix and is covered by the seeded test.</p>
+  <h2>Verification</h2>
+  <p>Seeded test-runner cases cover save reconstruction, recovery guards and trap
+  state boundaries. The gameplay batch probe exercises real actors/materials,
+  hurtbox contacts and support delivery. Human playtesting covers visual quality,
+  trap readability and full boss runs; passing logic checks does not close those gaps.</p>
+</Concept>

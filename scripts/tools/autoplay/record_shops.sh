@@ -20,7 +20,7 @@ set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 GODOT="${GODOT:-$(command -v godot || echo /home/kion/.local/bin/godot)}"
-USERDIR="$HOME/.local/share/godot/app_userdata/PSZ Godot"
+USERDIR="${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/PSZ Godot"
 MANIFEST="$REPO/assets_manifest.json"
 PACK="$REPO/dist/assets.pck"
 OUTDIR="${OUTDIR:-$REPO/spec/public/recordings}"

@@ -20,7 +20,7 @@ class_name ReyburnBoss extends EnemyBase
 
 const KIT_PATH := "res://data/boss_arenas.json"
 const ENRAGE_FRAC := 0.35
-const FLIGHT_HP_FRAC := 0.5  # Reyburn only takes to the air below half HP (psz-re B2: grounded at high HP)
+const FLIGHT_HP_FRAC := 0.5 # Remake threshold; original entry condition is unresolved.
 
 enum S { INTRO, GROUND, TELEGRAPH, ATTACK, LOAF, FLIGHT_OUT, FLIGHT_HOVER, FLIGHT_SLAM, DEAD }
 
@@ -50,6 +50,7 @@ var _cur: Dictionary = {}           # attack currently telegraphing/executing
 var _attack_done := false           # damage already applied this swing
 var _fly_target: Vector3 = Vector3.ZERO
 var _glow: OmniLight3D = null
+var _projectiles: Array[Area3D] = []
 
 
 func _ready() -> void:
@@ -327,6 +328,8 @@ func _execute_attack() -> void:
 
 
 func _apply_attack_effect() -> void:
+	if not is_alive or _attack_done:
+		return
 	_attack_done = true
 	var kind: String = _cur.get("kind", "melee_arc")
 	var dmg := int(_attack_base * float(_cur.get("damage_mult", 1.0)))
@@ -365,7 +368,8 @@ func _begin_flight() -> void:
 
 # ---- damage helpers ---------------------------------------------------------
 func _arc_hit(reach: float, half_angle_deg: float, dmg: int) -> bool:
-	if not target or not is_instance_valid(target): return false
+	if not is_alive or not target or not is_instance_valid(target): return false
+	if target.has_method("can_take_hit") and not target.can_take_hit(): return false
 	var to := target.global_position - global_position
 	to.y = 0
 	if to.length() > reach: return false
@@ -400,6 +404,7 @@ func _knockback_player(strength: float) -> void:
 
 
 func _spawn_fireball(dmg: int) -> void:
+	if not is_alive: return
 	if not target or not is_instance_valid(target): return
 	var proj := Area3D.new()
 	proj.collision_layer = 0
@@ -421,11 +426,13 @@ func _spawn_fireball(dmg: int) -> void:
 	proj.add_child(mesh)
 	proj.set_meta("hit", false)
 	proj.body_entered.connect(func(body: Node3D) -> void:
-		if proj.get_meta("hit"): return
+		if not is_alive or proj.get_meta("hit"): return
 		if body.is_in_group("player") and body.has_method("take_damage"):
 			proj.set_meta("hit", true)
 			body.take_damage(dmg)
 			proj.queue_free())
+	_projectiles = _projectiles.filter(is_instance_valid)
+	_projectiles.append(proj)
 	get_parent().add_child(proj)
 	var start := global_position + Vector3(0, 1.6, 0)
 	proj.global_position = start
@@ -512,6 +519,11 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, 
 
 
 func _die() -> void:
+	if not is_alive:
+		return
+	for projectile in _projectiles:
+		if is_instance_valid(projectile): projectile.queue_free()
+	_projectiles.clear()
 	_s = S.DEAD
 	if _glow and is_instance_valid(_glow):
 		_glow.queue_free()

@@ -17,13 +17,15 @@ uniform vec2 uv_offset = vec2(0.0, 0.0);
 uniform bool mirror_x = true;
 uniform bool mirror_y = true;
 uniform float alpha_scissor = 0.5;
+uniform vec4 albedo_tint : source_color = vec4(1.0);
+uniform float visibility_alpha = 1.0;
 
 void fragment() {
 	vec2 uv = UV * uv_scale + uv_offset;
 	vec2 half_texel = 0.5 / vec2(textureSize(albedo_texture, 0));
 	uv = mirror_uv(uv, half_texel, mirror_x, mirror_y);
 	vec4 tex = texture(albedo_texture, uv);
-	ALBEDO = tex.rgb;
-	ALPHA = tex.a;
+	ALBEDO = tex.rgb * albedo_tint.rgb;
+	ALPHA = tex.a * albedo_tint.a * visibility_alpha;
 	ALPHA_SCISSOR_THRESHOLD = alpha_scissor;
 }

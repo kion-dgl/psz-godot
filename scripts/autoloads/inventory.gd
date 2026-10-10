@@ -378,8 +378,6 @@ const CONSUMABLE_EFFECTS := {
 	"monofluid": {"type": "pp", "percent": 0.30},
 	"difluid": {"type": "pp", "percent": 0.60},
 	"trifluid": {"type": "pp", "percent": 1.00},
-	"sol_atomizer": {"type": "hp", "percent": 1.00},
-	"moon_atomizer": {"type": "hp", "percent": 1.00},
 	"star_atomizer": {"type": "hp", "percent": 1.00},
 }
 
@@ -389,6 +387,11 @@ const CONSUMABLE_EFFECTS := {
 func use_item(item_id: String) -> bool:
 	if not has_item(item_id):
 		return false
+
+	if item_id == "sol_atomizer":
+		return _use_status_cure(item_id)
+	if item_id == "moon_atomizer":
+		return false # No downed-companion recipient yet; never fake a self-heal.
 
 	# Technique disks: parse disk_<tech>_<level> and route to TechniqueManager
 	if item_id.begins_with("disk_"):
@@ -405,15 +408,17 @@ func use_item(item_id: String) -> bool:
 	if TrapBall.TRAP_MODELS.has(item_id):
 		return _use_trap(item_id)
 
-	# Trap Vision — "Temporarily allows any non-Cast race to see traps." A CAST
-	# already sees them, so using one is allowed but wasteful, and the item says
-	# nothing about stacking, so a second one extends rather than adds.
+	# Vision is a field action; invalid use must preserve the item.
 	if item_id == "trap_vision":
+		if SessionManager.get_location() != "field" or GameState.hp <= 0:
+			return false
+		var viewer = get_tree().get_first_node_in_group("player")
+		if viewer == null or viewer.get("_is_defeated") == true:
+			return false
 		TrapBall.grant_vision()
 		remove_item(item_id, 1)
 		_last_use_type = "trap_vision"
 		_last_use_amount = int(TrapBall.TRAP_VISION_SECONDS)
-		print("[Inventory] Trap Vision active for %ds" % _last_use_amount)
 		return true
 
 	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
@@ -495,7 +500,7 @@ func _use_telepipe() -> bool:
 ## It is enforced here as well as in the shop and palette because this is the
 ## only chokepoint every use path goes through.
 func _use_trap(item_id: String) -> bool:
-	if SessionManager.get_location() != "field":
+	if SessionManager.get_location() != "field" or GameState.hp <= 0:
 		_last_use_type = "trap_fail"
 		_last_use_amount = 0
 		print("[Inventory] Trap rejected: not in a field (location=%s)"
@@ -512,11 +517,16 @@ func _use_trap(item_id: String) -> bool:
 		_last_use_amount = 0
 		print("[Inventory] Trap rejected: no player in scene")
 		return false
+	if player.get("_is_defeated") == true:
+		return false
 	var trap := TrapBall.build(item_id)
 	if trap == null:
 		_last_use_type = "trap_fail"
 		_last_use_amount = 0
 		return false
+	for previous in get_tree().get_nodes_in_group("player_traps"):
+		if previous is TrapBall and not previous.field_placed:
+			previous._expire()
 	player.get_parent().add_child(trap)
 	trap.global_position = player.global_position
 	remove_item(item_id, 1)
@@ -530,7 +540,9 @@ func _use_trap(item_id: String) -> bool:
 ## techniques: pso_start_menu._can_use_techs() returns false for Cast, and this
 ## returns true only for Cast.
 func can_use_traps() -> bool:
-	var character: Dictionary = CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
 	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	return class_data != null and class_data.race == "Cast"
 
@@ -745,3 +757,27 @@ func _photon_display_name(photon_id: String) -> String:
 		"shock_photon": return "Shock"
 		"devil_photon": return "Devil"
 	return ""
+
+
+## JSON objects may sort keys; the separate order array owns the saved row order.
+func restore_items(items: Dictionary, order: Array) -> void:
+	_items = {}
+	for id in order:
+		if items.has(id) and not _items.has(id):
+			_items[id] = int(items[id])
+	for id in items:
+		if not _items.has(id):
+			_items[id] = int(items[id])
+
+
+func _use_status_cure(item_id: String) -> bool:
+	if SessionManager.get_location() != "field" or GameState.hp <= 0:
+		return false
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_method("has_status_effects") or not player.has_status_effects():
+		return false
+	player.clear_status_effects()
+	remove_item(item_id, 1)
+	_last_use_type = "cure"
+	_last_use_amount = 0
+	return true

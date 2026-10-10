@@ -30,19 +30,8 @@ class_name TrapBall
 
 ## Ball model per trap element.
 ##
-## MAPPING IS PROVISIONAL. There are four balls and four trap items, but nothing
-## states which is which. Decoding the textures gives burst01 green (128,224,192),
-## burst02 gold (224,192,64), burst03 magenta (224,128,192), burst04 pale cyan
-## (192,224,224), so the colours are read as Heal / Heat / Light / Ice. The
-## tempting index reading (01 -> Heat, matching item order) disagrees: it would
-## make Heat green and Ice magenta.
-##
-## SECOND WITNESS, from psz-re §8.1: the object-side element ladder decoded out
-## of the constructor's cmp chain runs `0 Heal, 1 Heat, 2 Light, 3 Ice` — the
-## same order, arrived at from the instruction stream with no reference to any
-## texture. Colour and code now agree, so this table is no longer resting on one
-## reading. A savestate with a known trap on the ground would still settle it
-## outright.
+## Constructor element ladder and burst texture colors agree on this mapping.
+## See psz-re docs/godot-field-parity.md §8.1.
 const TRAP_MODELS := {
 	"heal_trap": "o0c_burst01",
 	"heat_trap": "o0c_burst02",
@@ -87,7 +76,7 @@ const FIELD_TRAP_DAMAGE := 15
 ## instead, and gets FASTER as the difficulty rises — 45 / 30 / 15.
 const PLAYER_FUSE_FRAMES := {0: 150, "else": 75}
 const FIELD_FUSE_FRAMES := [45, 30, 15]
-const FUSE_FPS := 60.0
+const FUSE_FPS := 60.0 # Remake conversion; original timer timebase is unresolved.
 
 ## The one radius psz-re publishes: the Heal element scans the four players and
 ## acts inside 0x4000 = 4.0 units.
@@ -150,6 +139,49 @@ var _fuse_left := 0.0
 var _rise := 0.0
 var _model: Node3D
 var _area: Area3D
+var _blast_area: Area3D
+var hurtbox: Hurtbox
+var _reticle: Node3D
+@export var trigger_radius: float = TRIGGER_RADIUS
+@export var blast_radius: float = TRIGGER_RADIUS
+var is_alive: bool:
+	get: return can_be_targeted()
+var target_radius: float = 0.75
+var target_height: float:
+	get: return 2.0 * (_rest_height() + FIELD_RISE_HEIGHT * _rise)
+
+func can_be_targeted() -> bool:
+	return field_placed and trap_id != "heal_trap" and not _spent and not disarmed and (_armed or traps_are_visible())
+
+func take_damage(amount: int, _knockback := Vector3.ZERO, _accuracy: int = 100) -> void:
+	if amount <= 0 or not can_be_targeted():
+		return
+	disarmed = true
+	_spent = true
+	_finish()
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = can_be_targeted()
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.hide()
+
+func _build_hurtbox() -> void:
+	if not field_placed:
+		return
+	add_to_group("targetable_traps")
+	hurtbox = Hurtbox.new()
+	hurtbox.owner_node = self
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = target_radius
+	shape.shape = sphere
+	hurtbox.add_child(shape)
+	add_child(hurtbox)
+	_reticle = TargetReticle.build(0.0)
+	add_child(_reticle)
 
 
 ## Grant Trap Vision to the party. Static so the consumable can call it without
@@ -210,6 +242,7 @@ func _ready() -> void:
 		add_to_group("field_traps")
 	_load_ball()
 	_build_area()
+	_build_hurtbox()
 	_apply_visibility()
 
 
@@ -265,6 +298,7 @@ func _apply_mirror_wrap(node: Node) -> void:
 				var mat := ShaderMaterial.new()
 				mat.shader = MIRROR_SHADER
 				mat.set_shader_parameter("albedo_texture", src.albedo_texture)
+				mat.set_shader_parameter("albedo_tint", src.albedo_color)
 				mat.set_shader_parameter("mirror_x", true)
 				mat.set_shader_parameter("mirror_y", true)
 				mat.set_shader_parameter("alpha_scissor", src.alpha_scissor_threshold)
@@ -282,16 +316,29 @@ func _build_area() -> void:
 	_area.collision_mask = 2 | 8
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
-	sphere.radius = TRIGGER_RADIUS
+	sphere.radius = trigger_radius
 	shape.shape = sphere
 	shape.position.y = _rest_height()
 	_area.add_child(shape)
 	add_child(_area)
+	_blast_area = _area.duplicate() as Area3D
+	_blast_area.name = "TrapBlast"
+	var blast_shape := (_blast_area.get_child(0) as CollisionShape3D)
+	blast_shape.shape = sphere.duplicate()
+	(blast_shape.shape as SphereShape3D).radius = blast_radius
+	add_child(_blast_area)
 
 
 ## A dormant field trap is not drawn unless the viewer can see traps. A player's
 ## own trap is always drawn — they placed it.
 func _apply_visibility() -> void:
+	if hurtbox:
+		hurtbox.set_deferred("monitorable", can_be_targeted())
+		hurtbox.position.y = target_height * 0.5
+	if _reticle:
+		_reticle.position.y = target_height * 0.5
+		if not can_be_targeted():
+			_reticle.hide()
 	if not _model:
 		return
 	_model.visible = (not field_placed) or _armed or traps_are_visible()
@@ -328,6 +375,7 @@ func _process(delta: float) -> void:
 	if field_placed and _rise < 1.0:
 		_rise = minf(1.0, _rise + delta / FIELD_RISE_SECONDS)
 	_armed_motion()
+	_apply_visibility()
 	_fuse_left -= delta
 	if _fuse_left <= 0.0:
 		_detonate()
@@ -339,7 +387,7 @@ func _should_arm() -> bool:
 		return false
 	if not field_placed:
 		return _age >= ARM_DELAY
-	return _has_player_in_range()
+	return _check_targets()
 
 
 func _arm() -> void:
@@ -353,6 +401,8 @@ func _arm() -> void:
 
 
 func _trigger() -> void:
+	if _spent or disarmed or _triggered:
+		return
 	_triggered = true
 	_fuse_left = fuse_seconds()
 
@@ -374,15 +424,6 @@ func _armed_motion() -> void:
 	_model.rotation.y = _age
 
 
-func _has_player_in_range() -> bool:
-	if not _area:
-		return false
-	for body in _area.get_overlapping_bodies():
-		if body.is_in_group("player"):
-			return true
-	return false
-
-
 ## Poll rather than react to body_entered: a trap arms a second after landing,
 ## and anything already standing inside it should set it off the moment it arms
 ## — an entered signal fired before arming would be lost.
@@ -397,10 +438,10 @@ func _check_targets() -> bool:
 
 func _is_valid_target(body: Node) -> bool:
 	if field_placed:
-		return body.is_in_group("player")
+		return body.is_in_group("player") and GameState.hp > 0 and body.get("_is_defeated") != true
 	var target: String = str(TRAP_EFFECTS.get(trap_id, {}).get("target", "enemies"))
 	if target == "allies":
-		return body.is_in_group("player")
+		return body.is_in_group("player") and GameState.hp > 0 and body.get("_is_defeated") != true
 	return body.is_in_group("enemies") and _is_alive(body)
 
 
@@ -415,13 +456,15 @@ func _is_alive(body: Node) -> bool:
 
 
 func _detonate() -> void:
+	if _spent or disarmed:
+		return
 	_spent = true
 	var effect: Dictionary = TRAP_EFFECTS.get(trap_id, {})
 	var status: String = str(effect.get("status", ""))
 	var heal_percent: float = float(effect.get("heal_percent", 0.0))
 	var hits := 0
 
-	for body in _area.get_overlapping_bodies():
+	for body in _blast_area.get_overlapping_bodies():
 		if not _is_valid_target(body):
 			continue
 		hits += 1
@@ -441,8 +484,12 @@ func _detonate() -> void:
 ## A field trap fires at the party. The Heal element still heals — psz-re's
 ## corpus has 287 authored Heal traps, so ~10% of what a field places helps you.
 func _hit_player(body: Node, status: String, heal_percent: float) -> void:
+	if GameState.hp <= 0 or body.get("_is_defeated") == true:
+		return
 	if heal_percent > 0.0:
 		_heal(heal_percent)
+		return
+	if body.has_method("can_take_hit") and not body.can_take_hit():
 		return
 	if body.has_method("take_damage"):
 		body.take_damage(FIELD_TRAP_DAMAGE)

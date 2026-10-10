@@ -51,15 +51,15 @@
 #
 set -u
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-LOG=/tmp/regression_matrix.log
-SCRATCH=/tmp/quest_matrix_scratch
+LOG="${PSZ_MATRIX_LOG:-/tmp/regression_matrix.log}"
+SCRATCH="${PSZ_MATRIX_SCRATCH:-/tmp/quest_matrix_scratch}"
 REPORT="$SCRATCH/regression_report.json"
 MATRIX_FAIL=0  # post-build state assertions (e.g. #344) flip this; exit reflects it
 PROBE_EXTRA_ENV=""  # extra env injected into a single run_godot call (dialogue-bug probe); empty otherwise
 GODOT="/home/kion/.local/bin/godot"
-OUTDIR="$REPO/spec/public/recordings"
+OUTDIR="${OUTDIR:-$REPO/spec/public/recordings}"
 PACK="$REPO/dist/assets.pck"
-GODOT_DEFAULT_USERDIR="$HOME/.local/share/godot/app_userdata/PSZ Godot"
+GODOT_DEFAULT_USERDIR="${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/PSZ Godot"
 
 # PER-QUEST WALL-CLOCK BUDGET, and it is deliberately tight.
 #
@@ -81,7 +81,7 @@ GODOT_DEFAULT_USERDIR="$HOME/.local/share/godot/app_userdata/PSZ Godot"
 # quest and would let this come back down.
 QUEST_TIMEOUT=${QUEST_TIMEOUT:-600}
 
-mkdir -p "$SCRATCH"
+mkdir -p "$SCRATCH" "$OUTDIR"
 
 PACK_SHA="$(sha256sum "$PACK" | awk '{print $1}')"
 PACK_SIZE="$(stat -c %s "$PACK")"

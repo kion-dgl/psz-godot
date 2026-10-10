@@ -82,7 +82,7 @@ func show_dialog(pages: Array) -> void:
 	if pages.is_empty():
 		return
 
-	_pages = pages
+	_pages = pages.duplicate(true)
 	_current_page = 0
 	if not _active:
 		GameState.push_modal()
