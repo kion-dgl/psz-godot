@@ -6,6 +6,7 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	var origin := enemy.global_position
 	var ok := true
 	for definition in enemy._attacks:
+		if definition.get("berserk_only", false): continue
 		for dodge in [false, true]:
 			ok = await _attack(player, enemy, origin, definition, dodge) and ok
 	player.current_state = player.PlayerState.IDLE
@@ -81,5 +82,5 @@ static func _clips_match(enemy: EnemyBase, definition: Dictionary, clips: Array[
 
 static func _clear_deliveries(enemy: EnemyBase) -> void:
 	for node in enemy.get_parent().get_children():
-		if node is EnemyProjectile or node is EnemyLob:
+		if node is EnemyProjectile or node is EnemyLob or node is IceTechnique:
 			node.queue_free()

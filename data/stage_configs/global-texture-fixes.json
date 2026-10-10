@@ -1207,7 +1207,7 @@
   "s00_1_set2.png#1": {
     "offsetX": 0,
     "offsetY": 0,
-    "repeatX": 1,
+    "repeatX": 2,
     "repeatY": 1,
     "wrapS": "mirror",
     "wrapT": "mirror"

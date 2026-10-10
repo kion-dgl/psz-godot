@@ -610,12 +610,12 @@ export default function EnemyRoom() {
             s.currentAction.time = 0;
             s.mixer.update(0);
           } else {
-            s.mixer.update(clock.dt);
+            s.mixer.update(clock.dt * (sim.state === 'attacking' ? (sim.currentAttack?.def.animation_speed ?? 1) : 1));
           }
         }
       } else if (s.mixer && sim.state === 'attacking' && sim.currentAttack && s.currentAction) {
         // Paused scrub: keep action time in sync with the sim's attack t.
-        s.currentAction.time = Math.min(sim.currentAttack.t, s.currentAction.getClip().duration);
+        s.currentAction.time = Math.min(sim.currentAttack.t * (sim.currentAttack.def.animation_speed ?? 1), s.currentAction.getClip().duration);
         s.mixer.update(0);
       }
 

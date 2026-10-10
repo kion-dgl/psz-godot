@@ -522,7 +522,7 @@
  {
   "id": "phobos",
   "name": "Phobos",
-  "model_id": "tank",
+  "model_id": "swordman_b",
   "element": "Dark",
   "locations": [
    "shrine",
@@ -534,7 +534,7 @@
  {
   "id": "phobos_dyna",
   "name": "Phobos Dyna",
-  "model_id": "tank_rare",
+  "model_id": "swordman_rare_b",
   "element": "Dark",
   "locations": [
    "shrine",
@@ -762,7 +762,7 @@
  {
   "id": "zaphobos",
   "name": "Zaphobos",
-  "model_id": "swordman_b",
+  "model_id": "tank",
   "element": "Dark",
   "locations": [
    "shrine",
@@ -774,7 +774,7 @@
  {
   "id": "zaphobos_dyna",
   "name": "Zaphobos Dyna",
-  "model_id": "swordman_rare_b",
+  "model_id": "tank_rare",
   "element": "Dark",
   "locations": [
    "shrine",

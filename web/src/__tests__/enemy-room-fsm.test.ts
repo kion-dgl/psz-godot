@@ -795,12 +795,30 @@ describe('enemy-room FSM — shooter berserk (spec /states/enemies §shooter)', 
     return { entry, sim, input };
   };
 
-  it('normal mode holds standoff (wat) and fires the shot; the kamikaze never fires from the gate', () => {
+  it('normal mode fires the ranged shot; the kamikaze never fires from the gate', () => {
     const { entry, sim, input } = setup(5);
     const events = run(sim, entry, input, 3.0);
     expect(events.filter((e) => e.type === 'projectile_fired').length).toBeGreaterThan(0);
     const fired = events.filter((e) => e.type === 'attack_start').map((e) => e.type === 'attack_start' && e.attack.id);
     expect(fired).not.toContain('kamikaze');
+  });
+
+  it('sidesteps away under close pressure and shuffles during cooldown and recovery', () => {
+    for (const state of ['chasing', 'loafing'] as const) {
+      for (const distance of [2, 5, 8]) {
+        const { entry, sim, input } = setup(distance);
+        sim.state = state;
+        sim.attackCooldown = sim.loafTimer = 5;
+        sim.arcSide = 1;
+        sim.arcTimer = 10;
+        stepEnemy(sim, entry, input);
+        expect(Math.abs(sim.velocity.x)).toBeGreaterThan(0.1);
+        expect(sim.anim).toBe('run');
+        expect(sim.facing.z).toBeGreaterThan(0.99);
+        if (distance === 2) expect(sim.velocity.z).toBeLessThan(0);
+        if (distance === 8) expect(sim.velocity.z).toBeGreaterThan(0);
+      }
+    }
   });
 
   it('berserk: atk_an display, then atk_ji dive at the player, contact explosion kills the shooter', () => {
@@ -1067,5 +1085,79 @@ describe('Helion aggressive pursuit', () => {
     expect(sim.state).toBe('loafing');
     expect(sim.loafTimer).toBeGreaterThanOrEqual(0.35);
     expect(sim.loafTimer).toBeLessThanOrEqual(0.65);
+  });
+});
+
+describe('Finjer moving fire and spin cadence', () => {
+  const entryFor = () => {
+    const c = config([
+      atk({ id: 'spin', kind: 'charge', min_range: 2, max_range: 8, charge_segments: { st: 'atk_sp_st', lp: 'atk_sp_lp', ed: 'atk_sp_ed' } }),
+      atk({ id: 'shot', clip: 'atk_sh', kind: 'projectile', min_range: 2, max_range: 11, weight: 4, hit_reach: 14 }),
+    ]);
+    c.enemies.dummy.archetype = 'boarder';
+    c.enemies.dummy.fsm = { standoff_range: 7, move_clip: 'run_lp', evade_speed_mult: 1.4, strafe_speed_mult: 1.1 };
+    return resolveEntry(c, 'dummy');
+  };
+
+  it('retreats under close pressure while facing the player', () => {
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    stepEnemy(sim, entryFor(), makeInput({ playerPos: { x: 0, z: 1.5 } }));
+    expect(sim.state).toBe('chasing');
+    expect(sim.velocity.z).toBeLessThan(0);
+    expect(Math.abs(sim.velocity.x)).toBeGreaterThan(0);
+    expect(sim.facing.z).toBe(1);
+  });
+
+  it('strafes through the shot, tracks until release and does not steer a released laser', () => {
+    const sim = makeSim({ x: 0, z: 0 });
+    const entry = entryFor();
+    const input = makeInput({ playerPos: { x: 0, z: 7 }, rng: () => 0.99 });
+    sim.state = 'chasing';
+    stepEnemy(sim, entry, input);
+    input.playerPos = { x: 2, z: 7 };
+    for (let i = 0; i < 30 && sim.projectiles.length === 0; i++) stepEnemy(sim, entry, input);
+    expect(Math.abs(sim.pos.x)).toBeGreaterThan(0.2);
+    expect(sim.anim).toBe('atk_sh');
+    expect(sim.projectiles).toHaveLength(1);
+    const direction = { ...sim.projectiles[0].dir };
+    expect(direction.x).toBeGreaterThan(0);
+    input.playerPos = { x: -5, z: 7 };
+    stepEnemy(sim, entry, input);
+    expect(sim.projectiles[0].dir).toEqual(direction);
+  });
+
+  it('excludes spin during cooldown and makes it available again afterward', () => {
+    const sim = makeSim({ x: 0, z: 0 });
+    const input = makeInput({ playerPos: { x: 0, z: 7 }, rng: () => 0 });
+    sim.state = 'chasing';
+    sim.finjerSpinCooldown = 6;
+    stepEnemy(sim, entryFor(), input);
+    expect(sim.currentAttack?.def.id).toBe('shot');
+    sim.state = 'chasing';
+    sim.currentAttack = null;
+    sim.attackCooldown = 0;
+    sim.finjerSpinCooldown = 0;
+    stepEnemy(sim, entryFor(), input);
+    expect(sim.currentAttack?.def.id).toBe('spin');
+    expect(sim.finjerSpinCooldown).toBe(6);
+  });
+});
+
+describe('Arkzein melee-only correction', () => {
+  it.each(['arkzein', 'arkzein_r', 'phobos', 'phobos_dyna'])('%s pursues from range and only selects contact attacks', async (id) => {
+    const data = (await import('../../../data/enemy_attacks.json')).default;
+    const entry = resolveEntry(data as EnemyAttackConfig, id);
+    expect(entry.attacks.every(a => a.kind === 'melee_arc' && a.hit_reach <= 2.5)).toBe(true);
+    const sim = makeSim({ x: 0, z: 0 });
+    sim.state = 'chasing';
+    const input = makeInput({ playerPos: { x: 0, z: 7 } });
+    const first = stepEnemy(sim, entry, input);
+    expect(sim.velocity.z).toBeGreaterThan(0);
+    expect(first.some(e => e.type === 'attack_start')).toBe(false);
+    const events = run(sim, entry, input, 8);
+    expect(events.some(e => e.type === 'attack_start')).toBe(true);
+    expect(events.some(e => e.type === 'projectile_fired')).toBe(false);
+    expect(sim.projectiles).toHaveLength(0);
   });
 });

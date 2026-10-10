@@ -166,6 +166,10 @@ class Watch extends Node:
 			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
 				_fail("enemy runtime regression failed")
 				return
+		if OS.get_environment("PSZ_PROJECTILE_CHECK") == "1":
+			if not await preload("res://scripts/tools/coliseum_projectile_check.gd").run(player, enemy):
+				_fail("individual projectile validation failed")
+				return
 		if OS.get_environment("PSZ_BOOMA_CHECK") == "1":
 			if not await preload("res://scripts/tools/coliseum_booma_check.gd").run(player, enemy):
 				_fail("Booma validation failed")

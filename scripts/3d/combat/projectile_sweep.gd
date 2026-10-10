@@ -72,3 +72,24 @@ static func planar_fraction(start: Vector3, motion: Vector3, center: Vector3, ra
 		return -1.0
 	var t := (-b - sqrt(discriminant)) / a
 	return t if t >= 0.0 and t <= 1.0 else -1.0
+
+
+## First environment contact for a delivery sphere; -1 means clear. Layer 1 is
+## world geometry. Check overlap explicitly because cast_motion ignores it.
+static func environment_fraction(space: PhysicsDirectSpaceState3D, start: Vector3,
+		motion: Vector3, radius: float) -> float:
+	var shape := SphereShape3D.new()
+	shape.radius = radius
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.transform = Transform3D(Basis.IDENTITY, start)
+	query.collision_mask = 1
+	query.collide_with_areas = false
+	query.margin = 0.0
+	if not space.intersect_shape(query, 1).is_empty():
+		return 0.0
+	if motion.is_zero_approx():
+		return -1.0
+	query.motion = motion
+	var fractions := space.cast_motion(query)
+	return fractions[0] if fractions[0] < 1.0 else -1.0

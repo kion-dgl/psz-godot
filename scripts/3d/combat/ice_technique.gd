@@ -14,6 +14,7 @@ var direction := Vector3.FORWARD
 var target: Node3D
 var damage := 1
 var max_range := 10.0
+var muzzle_offset := Vector3.ZERO
 var _elapsed := 0.0
 var _waves := 0
 var _budget := {}
@@ -42,4 +43,4 @@ func _emit_wave(p: Dictionary) -> void:
 		bolt.technique_id = technique_id
 		bolt.hit_budget = _budget
 		get_parent().add_child(bolt)
-		bolt.global_position = global_position
+		bolt.place_at_muzzle(global_position, muzzle_offset)

@@ -24,6 +24,11 @@ export interface AttackDef {
   recovery_clip?: string;
   projectile_visual?: string;
   projectile_color?: string;
+  cooldown?: number;
+  missile_waves?: boolean;
+  animation_speed?: number;
+  projectile_speed?: number;
+  projectile_radius?: number;
   /** kind: charge — explicit segment clip tokens when the rig doesn't use _st/_lp/_ed suffixes (roller: trf1/wat3/trf2). */
   charge_segments?: { st: string; lp: string; ed: string };
   /** kind: charge — travel target = start distance + overshoot (capped by max_range) instead of always max_range. */
@@ -57,6 +62,7 @@ export interface EnemyStats {
 }
 
 export interface FsmParams {
+  tank_kit?: boolean;
   /** Runtime room entrance; the enemy-room sim begins after reveal. Never an attack prelude. */
   spawn_clip?: string;
   move_clip?: string;
@@ -69,6 +75,8 @@ export interface FsmParams {
   attack_fallback_duration: number;
   /** Kiter archetypes (quad_machine): preferred distance from the target. Flyers reuse it as the orbit radius. */
   standoff_range: number;
+  evade_speed_mult?: number;
+  strafe_speed_mult?: number;
   /** Flyer archetypes: airborne height while engaged (0 = grounded). */
   hover_height: number;
   /** Box mimic: disguise-break distance — replaces detection_range entirely while dormant. */

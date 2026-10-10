@@ -1,5 +1,113 @@
 # Combat System TODO
 
+## Korse ranged skirmisher feedback — October 9
+
+Korse and Akorse normal mode now use a thin traveling laser (18 m/s, 0.04 m
+contact radius) instead of the generic orb. They evade diagonally inside 4 m,
+shuffle laterally around their preferred 5 m distance, and approach obliquely
+beyond 6 m. Movement continues through their 0.65–1 s recovery; firing commits
+both position and aim so the player can track them down and punish the shot.
+They require a clear laser path to fire, look for a clear nearby lateral vantage,
+and reverse their preferred side around blocked paths. Walls and floor edges
+constrain movement. No other enemies need to be present to exercise this behavior.
+The existing special leader-loss mode remains separate from this normal kit.
+
+This implements the user's playtest design, not a recovered original AI rule.
+The web schematic matches unobstructed movement, speed and radius; world cover
+selection is Godot-only. Group composition/coordination remains deferred.
+
+Validation: Korse and Akorse pass Normal/Hard/Super Hard individually, including
+42 ordinary-AI movement/cover/commitment cases and 66 projectile cases. All 9,103
+Godot unit checks, the physics delivery probe, 969 web tests (4 skipped), TypeScript
+and code-health checks pass. Logs: `/tmp/psz-korse-final/`; snapshot:
+[`korse-behavior-results.json`](korse-behavior-results.json). Human checkpoint:
+laser readability, tracking the sidestep, closing distance, and punishing the firing
+window without the shooter feeling impossible to catch.
+
+## Batt sonic visual feedback — October 9
+
+Batt and Bullbatt now emit two thin, flat, concentric purple rings. The ring
+plane is perpendicular to the locked world-space travel direction, including
+under rotated parents. Unlit, double-sided geometry keeps the purple readable
+without the previous thick torus or fixed-axis tilt. Collision radius, speed,
+release timing and damage are unchanged. Both individual Batt/Bullbatt live
+checks pass; a rendered three-angle preview confirms the appearance and facing.
+Logs and preview: `/tmp/psz-sonic-check/`, `/tmp/psz-sonic-preview.png`.
+The earlier batch snapshot predates this visual-only change.
+
+## Individual projectile batch — October 9
+
+The approved seven-family batch covers **19 individual enemies**: Batt/Bullbatt,
+Korse/Akorse, Finjer R/B/G, Phobos/Dyna (tank rigs), Blade/Shot/Force/Trinity
+Mothers, Hypao/Vespao, and Arkzein/R plus Zaphobos/Dyna (swordman rigs).
+Their existing explicit kits are retained. This pass hardens delivery and verifies
+all variants individually; group behavior and group playtests remain deferred.
+
+Straight shots (including sonic and ice) now sweep environment geometry before
+player contact, including their muzzle offset and initial overlap, so they cannot
+spawn beyond a thin wall. Lobs sweep their arc in bounded segments, stop harmlessly
+on environment contact, and check cover and dodge at landing. A landing or contact
+cannot resolve twice. Losing the target cancels an unreleased ranged attack;
+released shots/lobs/ice fans remain independent of hurt or caster death and expire
+normally. Charge target-loss recovery is preserved. These are gameplay safeguards,
+not recovered original-game wall/cancellation rules. Existing planar player-contact
+geometry, attack stats, colors, timings and status payloads are unchanged.
+
+Selection checks use ordinary AI and shared seeded scenarios; additional ranged
+status/cooldown gates cover all 19 entries. Imported-rig execution checks exercise
+all ordinary attacks with/without dodge, including shooter and seal kits. Each of
+25 projectile/lob attacks also has individual cases for hit, dodge, wall, muzzle
+wall, sidestep, hurt, death, target loss, caster death after release, aim commitment,
+and retreat. These use a deterministic target to count deliveries/hits; the usual
+real-player weapon/contact/room-clear probes run separately in the same arena.
+No mixed encounter is run in the live matrix. Shooter leader-loss behavior retains its
+existing unit coverage; leader/follower encounter intent awaits the group phase.
+
+Reproduce with imported assets; the runner creates and removes private save projects:
+
+```sh
+python3 scripts/tools/verify_projectile_batch.py --godot /path/to/godot \
+  --output /tmp/psz-projectiles --tiers normal hard super-hard --calibrate
+```
+
+Validation on Godot 4.5.1: **57 live runs** (all 19 enemies × Normal/Hard/Super
+Hard), **825 projectile cases**, **270 ordinary attack execution cases**, and
+**1,035 ordinary-AI decisions** pass. All 9,087 Godot unit checks, the real physics
+probe, 966 web tests (4 skipped), TypeScript, the 209-page Astro build, roster tests,
+code-health and orphan checks pass. Collision-disabled calibration fails both
+required wall cases as expected. Snapshot with source hashes:
+[`projectile-batch-results.json`](projectile-batch-results.json); logs:
+`/tmp/psz-projectile-verified/`. Existing missing-audio/resource-at-exit warnings
+remain; no script errors occur. Automated results do not establish visual feel or
+original-game fidelity.
+
+The calibration disables environment collisions in a disposable script copy and
+must reproduce damage through both the wall and the muzzle wall. A parse error,
+timeout or unrelated failure does not count as detection.
+
+Individual feel checklist in **Coliseum Master → Enemies** (use the current roster
+names; identity corrections are tracked separately):
+
+| Family | Test each | Focus / remaining uncertainty |
+| --- | --- | --- |
+| Bats | Batt, Bullbatt | Bite up close, readable sonic ring at range; release height and shared attack clip. Confusion unverified. |
+| Shooters | Korse, Akorse | Hold firing distance, retreat when crowded, stop to shoot; projectile origin and cadence. Leader interactions deferred. |
+| Finjers | R, B, G | Close spin preparation/travel/recovery versus distant shots; colors do not establish ailments. |
+| Tanks | Phobos, Phobos Dyna | Close explosive, midrange shot, distant bazooka; dodge/escape and cover. Persistent mines remain unverified. |
+| Mothers | Blade, Shot, Force, Trinity | Distinct close and ranged kits; gun/cast preparation, one release, harmless recovery. Named spells and warps remain unverified. |
+| Seals | Hypao, Vespao | Tail swipe versus ground ice/fan, one resolution per fan, walls, sidestep and dodge. |
+| Swordmen | Arkzein, Arkzein R, Zaphobos, Zaphobos Dyna | Punch/sweep/throw distance changes and visible throw release/recovery; local rigs still lack atk_th_sw. |
+
+All individual human feel checks remain open. Release positions use the existing
+1.2 m shot origin / 0.3 m ice origin, not recovered per-rig socket positions; inspect
+visual alignment during playtesting before calling any family fidelity-complete.
+
+Remaining-projectile audit: the current attack table also contains ranged delivery
+for **Izhirak-S6/Azherowa-B2, Froutang/Frunaked, Pobomma/Pomarr/Porel, and Poison
+Lily**. Schedule those as the next individual batch. This is an attack-table audit,
+not proof that all original projectile attacks or boss-specific scripts are covered;
+continue the roster-wide individual review before designing intended groups.
+
 ## PSO Booma comparison models — October 9
 
 Coliseum Master → Enemies → Simple Melee now includes **PSO Booma**,
@@ -254,13 +362,30 @@ mapping in `clip_notes`; do not infer damage or statuses from filenames alone.
 3. **Finjer R/B/G:** shooting versus segmented spin and variant effects.
 4. **Tank / swordman families:** verify roster/model identities, then distinct kits.
 5. **Mother variants:** verify identities and weapon/technique/warp sequences.
-6. **Mixed groups:** spacing, simultaneous telegraphs, target changes and fair
-   recovery windows, after the individual family passes are stable.
+6. **Remaining individual enemies:** cover every type and variant in the playable
+   roster, including bosses in their arenas and imported PSO additions. An explicit
+   kit or a shared family rig does not establish an individual behavior pass.
+7. **Intended group encounters:** only after every enemy type has had an individual
+   pass, define specific compositions and their intended interactions before testing.
 
-Automated completion is not visual approval. Per the latest user request, implement
-the whole remaining batch before the joint user playtest checkpoint.
+### Current review order — October 9
 
-## Remaining family batch — implemented, joint feel test pending
+Implementation can proceed in batches, but validation and user feedback must remain
+attributable to each enemy individually. For each type, record clip/action mapping,
+close/mid/far attack selection, approach and retreat response, windup/contact/recovery,
+interruption and target loss, real-rig checks, and unresolved behavior. Record variants
+explicitly rather than assuming the base enemy's pass covers them. Automated completion
+is not visual approval; keep implementation, automated evidence and user feel status
+distinct. Use the Enemies/Bosses tabs for this pass.
+
+Defer group playtesting until that roster-wide individual pass is complete. Each later
+group fixture needs a named composition, each member's role, intended spacing and
+attack interactions, expected player counterplay, and observable pass/fail conditions.
+Choose groups to exercise those behaviors; generic combined pressure or participation
+and room-clear checks alone do not validate encounter intent. Existing mixed presets
+remain available as fixtures, not the next review checkpoint.
+
+## Remaining family batch — implemented, individual feel tests pending
 
 All 15 mapped enemies now have explicit kits: Batt/Bullbatt, all three Finjers,
 Phobos/Dyna (tank rigs), Arkzein/R and Zaphobos/Dyna (swordman rigs), and the
@@ -269,7 +394,7 @@ alone are not evidence to rename or swap them. The schema now supports harmless
 end clips and explicit locomotion tokens, so the shot/cast/throw sequences no
 longer depend on a generic attack fallback.
 
-Open **Coliseum Master → Mixed Groups** for:
+Existing **Coliseum Master → Mixed Groups** fixtures (deferred for later review):
 
 - **Bats + Helion** — close pressure alongside sonic shots.
 - **Finjer Trio** — spin preparation/travel/recovery and colored shots.
@@ -294,7 +419,7 @@ For groups use `mixed_bats`, `mixed_finjers`, `mixed_machines`, `mixed_mothers`,
 or `mixed_pressure` as the enemy argument. Passing requires `[coliseum] DONE ok`,
 no `SCRIPT ERROR`, and no `PASS=false`.
 
-Deliberate provisional choices to assess in the joint playtest:
+Deliberate provisional choices to assess in individual playtests:
 
 - Bat bite and sonic share the sole imported attack clip. Sonic is a traveling
   ring; confusion remains unconfirmed and is not applied.
@@ -305,7 +430,7 @@ Deliberate provisional choices to assess in the joint playtest:
 - Mother spells use neutral projectile/area delivery. Named techniques and warp
   rules remain unverified; Mothers currently approach using their floating pose.
 - Windows, ranges, knockdown and damage multipliers are tuning values. Prioritize
-  readable timing, body/hitbox alignment and fair simultaneous pressure during review.
+  readable timing, body/hitbox alignment and recovery during individual review.
 
 ## Combat fidelity pass — October 2026
 
@@ -643,3 +768,27 @@ Helion's attack-selection rules. The supplied https://psp2i.dev/rozalin/pszm-dec
 returned HTTP 404 on both the repository page and Gitea API on October 8; HTTPS
 clone requested credentials. No claims about that project's AI coverage can be
 made until an accessible URL or checkout is available.
+
+### Finjer follow-up (2026-10-09)
+
+All three Finjer variants now face the player while evading and strafing, including during their shot animation. Shots use narrow, straight lasers in each variant's existing color. Aim tracks until release. The segmented spin can start from 2–8 metres with one-fifth selection weight against the shot and a six-second cooldown; direction commits at windup, with stationary preparation and recovery. Below two metres they retreat instead of chaining point-blank attacks.
+
+Compared psz-re's three board archives and descriptor/vtable candidates with Mini's generic combat scanner notes and C implementations. The archives confirm separate shot and segmented spin clips; no identified Finjer AI routine establishes original selection or movement timing. Speeds, bands, weights and cooldown are gameplay tuning, not a recovered match. Source hashes and limits: `data/re_reference/finjer_evidence.json`. Individual variants still need human feel testing before authored groups.
+
+### Arkzein melee correction (2026-10-10)
+
+Per user feedback, Arkzein and Arkzein R are melee-only: close punch and heavier telegraphed strike, with maximum reach 2.5 m. Removed sword throw and its ranged recovery from their kits. Existing baseline pursuit closes distance; Zaphobos kits are unchanged. Earlier projectile-batch results describe the superseded Arkzein kit.
+
+### Zaphobos tank correction (2026-10-10)
+
+User explicitly assigns Zaphobos to tank and Zaphobos Dyna to tank_rare. Both resources and runtime/editor roster exports now agree. Arkzein remains melee-only; Phobos is unchanged. This corrects the requested game mapping without claiming to resolve the historical bestiary-name conflict.
+
+New kit: atk_bz committed knockdown lunge; atk_sh front shot; atk_mi three paired missiles with actual b_052m/b_152m parts from the linked viewer. Missiles track at a bounded rate during the first half of their 1.5 s arc and commit during descent. Cooldowns are 7/4/10 s respectively. Missile animation runs at 0.3 speed to space waves roughly half a second apart. Travel uses stationary run_st, fast non-attacking run_lp, stationary run_ed. Damage interrupts unreleased waves and travel. Slow tank stance and 1.5–2 s stationary post-attack recovery provide counterattack openings. Values are gameplay tuning.
+
+### Coliseum gallery cameos (2026-10-10)
+
+Kion uses a muted pixel-art replacement; Rosaline uses a transparent standing sprite prepared from the supplied sheet. Cameos should be widely spaced around the gallery, small and subdued behind the railings, and statically face the arena. Avoid grouping them or adding labels, glow, or attention-seeking animation. Current placement is Kion northwest and Rosaline southeast, each 2.2 m high with a muted tint. Source assets and generation prompts are saved under `assets/easter_eggs/`.
+
+### Phobos grouping correction (2026-10-10)
+
+The Zaphobos remap left Phobos on the old tank kit. Corrected Phobos/Dyna to swordman_b/swordman_rare_b with melee punch and heavy strike (shade group). Zaphobos/Dyna remain tank/tank_rare with the new tank kit. Both resource and editor roster mappings agree; historical verification reports for the superseded Phobos tank kit no longer describe current behavior.

@@ -9,13 +9,19 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	player.global_position = enemy.global_position + Vector3(0, 0, -2.0)
 	var ok := false
 	match enemy._archetype:
-		"boarder", "missile_tank", "shade", "mother_caster": ok = await preload("res://scripts/tools/coliseum_family_check.gd").run(player, enemy)
+		"boarder", "missile_tank", "shade", "mother_caster", "shooter": ok = await preload("res://scripts/tools/coliseum_family_check.gd").run(player, enemy)
 		"simple_melee": ok = await preload("res://scripts/tools/coliseum_family_check.gd").run(player, enemy)
 		"lunging_melee": ok = await preload("res://scripts/tools/coliseum_helion_check.gd").run(player, enemy)
 		"roller": ok = await _roller(player, enemy)
 		"stance_riser": ok = await _snake(player, enemy)
-		"two_attack": ok = await _ice(player, enemy)
+		"two_attack": ok = await preload("res://scripts/tools/coliseum_family_check.gd").run(player, enemy)
 		_: ok = await _lily(player, enemy)
+	if enemy._archetype == "shooter":
+		ok = await preload("res://scripts/tools/shooter_behavior_check.gd").run(player, enemy) and ok
+	if enemy._archetype == "boarder":
+		ok = await preload("res://scripts/tools/finjer_behavior_check.gd").run(player, enemy) and ok
+	if enemy._tank.enabled(enemy):
+		ok = await preload("res://scripts/tools/tank_behavior_check.gd").run(player, enemy) and ok
 	GameState.set_hp(hp)
 	player._freeze.clear(player)
 	player.set_physics_process(true)
@@ -54,21 +60,3 @@ static func _roller(player: Node3D, enemy: EnemyBase) -> bool:
 			enemy._on_hit_received(1, Vector3.ZERO, 10000)
 			return enemy.model.basis.is_equal_approx(basis) and enemy._vulnerable_mult > 1.0 and is_equal_approx(remaining, enemy._charge.ed_dur - enemy._charge.phase_t)
 	return false
-
-static func _ice(player: Node3D, enemy: EnemyBase) -> bool:
-	# Pin the authored cast to ensure weighted melee selection cannot hide it.
-	enemy.set_physics_process(false)
-	for definition in enemy._attacks:
-		if not str(definition.get("tech", "")).is_empty(): enemy._attack_def = definition
-	enemy._start_attack()
-	var saw_bolt := false
-	var hp: int = GameState.hp
-	for i in range(240):
-		await player.get_tree().physics_frame
-		enemy._process_attacking(1.0 / 60.0)
-		for node in enemy.get_parent().get_children():
-			if node is EnemyProjectile and node.technique_id == enemy._attack_def.get("tech", ""): saw_bolt = true
-	var hit := GameState.hp < hp
-	enemy.set_physics_process(true)
-	print("[coliseum] named ice projectile=", saw_bolt, " contact damage=", hit)
-	return saw_bolt and hit

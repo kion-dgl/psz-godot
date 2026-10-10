@@ -4,8 +4,9 @@ class_name EnemyLob extends Node3D
 ## target's position AT RELEASE (leading it is the player's problem); after
 ## LOB_FLIGHT_TIME it lands for area damage — `hit_reach` is the blast radius,
 ## tested planar against the target at landing ("i-frames at landing", spec
-## /mechanics/enemy-attacks "kind"). The parabolic visual arc is presentation
-## only; the sim model is the 2D landing point. #629.
+## /mechanics/enemy-attacks "kind"). The parabolic arc is
+## swept against world geometry; a blocked lob is consumed without a blast.
+## The web schematic has no world collision. #629.
 
 const LOB_FLIGHT_TIME := 0.9  # fsm.ts LOB_FLIGHT_TIME
 const TARGET_RADIUS := 0.5    # enemy_base.gd PLAYER_HIT_RADIUS
@@ -19,6 +20,7 @@ var knockdown := false
 var target: Node3D             # distance-tested at landing
 
 var _t := 0.0
+var _spent := false
 
 
 func _ready() -> void:
@@ -37,22 +39,49 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_t += delta
-	var f := clampf(_t / flight_time, 0.0, 1.0)
-	global_position = from.lerp(to, f)
-	global_position.y += sin(f * PI) * 2.5  # presentation-only arc
+	if _spent or is_queued_for_deletion():
+		return
+	var duration := maxf(flight_time, 0.001)
+	var end := minf(_t + maxf(delta, 0.0), duration)
+	# Bounded arc segments avoid slow-frame chords cutting through the ground.
+	while _t < end:
+		var next := minf(_t + 0.025, end)
+		var start := _arc_position(_t / duration)
+		var finish := _arc_position(next / duration)
+		var wall := ProjectileSweep.environment_fraction(get_world_3d().direct_space_state,
+			start, finish - start, 0.22)
+		if wall >= 0.0:
+			global_position = start.lerp(finish, wall)
+			_spent = true
+			queue_free()
+			return
+		global_position = finish
+		_t = next
 
-	if _t < flight_time:
+	if _t < duration:
 		return
 
 	# Landed — AoE around the landing point; hit_reach is the blast radius.
+	_spent = true
 	EnemyLob.spawn_ring(get_parent(), to, blast_radius)
-	if target and is_instance_valid(target):
+	if is_instance_valid(target):
 		var to_target := target.global_position - to
 		to_target.y = 0.0
-		if to_target.length() <= blast_radius + TARGET_RADIUS and target.has_method("take_damage"):
+		var cover := PhysicsRayQueryParameters3D.create(to + Vector3.UP * 0.3,
+			target.global_position + Vector3.UP * 0.5, 1)
+		var dodging: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
+		if to_target.length() <= blast_radius + TARGET_RADIUS and not dodging \
+				and get_world_3d().direct_space_state.intersect_ray(cover).is_empty() \
+				and target.has_method("take_damage"):
 			target.take_damage(damage, Vector3.ZERO, knockdown)
 	queue_free()
+
+
+func _arc_position(fraction: float) -> Vector3:
+	# Keep the grenade center above the floor at landing.
+	var pos := from.lerp(to + Vector3.UP * 0.25, fraction)
+	pos.y += sin(fraction * PI) * 2.5
+	return pos
 
 
 ## Shared expanding ground ring marking an AoE (the lob's landing blast, the leap's

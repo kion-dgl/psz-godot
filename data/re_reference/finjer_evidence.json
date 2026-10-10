@@ -1,0 +1,61 @@
+{
+  "psz_re_revision": "a84b8fdd9d0589ef2e4f1af25b66e8e6f080fb93",
+  "pszm_decomp_local_revision": "a3836afc1780ee8a41078d4f1299141252a8f91b",
+  "sources": [
+    {
+      "path": "/tmp/psz-re-combat-reference/data/narc_index.json",
+      "sha256": "bdf6ca206137de71275e03a5a04ddb7346e48000fc86c821ab49213c09ee456f"
+    },
+    {
+      "path": "/tmp/psz-re-combat-reference/data/enemy_descriptors.json",
+      "sha256": "40d4f4015c0c891d379e3143778b1068124f60eef4c03373ee2403da3771c43c"
+    },
+    {
+      "path": "/tmp/psz-re-combat-reference/data/enemy_vtable_species.json",
+      "sha256": "0e0e34762e26a1b3efe21733f618f484ac4bd0ec32df451557ef974f3aeff980"
+    },
+    {
+      "path": "/Users/kion/Projects/pszm-decomp/notes/sessions/session-live-0921-combat-ai.md",
+      "sha256": "80648aa221c15b8589c75932698b6cb18857f8708d5c464999dd8866e97227c2"
+    },
+    {
+      "path": "/Users/kion/Projects/pszm-decomp/src/arm9/FUN_02085420.c",
+      "sha256": "414d685d10ddb276b6246839ef05cd6f242e364db1232688869b0908b17e9932"
+    },
+    {
+      "path": "/Users/kion/Projects/pszm-decomp/drafts/near/arm9/FUN_02072774.c",
+      "sha256": "9928a2fcd6d5fd1331526910f91ca016dd63ea87f2f8d0a1dccbe642c798c85a"
+    }
+  ],
+  "confirmed": [
+    "board, board_blue and board_green archives each have m051_atk_sh and m051_atk_sp_st/lp/ed clips.",
+    "Finjer candidates appear in descriptor fingerprint groups; no resolved species-to-AI mapping found in the inspected sources."
+  ],
+  "limits": [
+    "Animation assets establish available actions, not selection rules or original cadence.",
+    "Mini FUN_02085420 is a generic candidate-validity predicate; FUN_02072774 is an unmatched combat-scanner draft, not identified Finjer movement AI.",
+    "No Finjer-specific AI routine identified in either checkout. Mini comparison pins the local revision."
+  ],
+  "player_observations": [
+    "Evasive movement requiring pursuit, facing the player while strafing and shooting, focused lasers."
+  ],
+  "design_tuning": {
+    "standoff_metres": 7,
+    "close_speed_multiplier": 1.4,
+    "strafe_speed_multiplier": 1.1,
+    "laser_speed": 18,
+    "laser_collision_radius": 0.04,
+    "spin_range": [
+      2,
+      8
+    ],
+    "shot_range": [
+      2,
+      11
+    ],
+    "spin_to_shot_weight": "1:4 where both are available",
+    "spin_cooldown_seconds": 6,
+    "aim": "Track until shot release; laser then travels straight. Spin direction commits at start.",
+    "counterplay": "Spin preparation and recovery are stationary; pursuit pressures close-range retreat."
+  }
+}
