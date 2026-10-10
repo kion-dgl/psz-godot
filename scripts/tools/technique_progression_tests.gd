@@ -27,3 +27,12 @@ static func run(t: Node) -> void:
 	t.assert_eq(TechniqueManager.get_technique_level(force, "rafoie"), 5, "old charged entry cannot shadow base upgrade")
 	t.assert_eq(TechniqueManager.get_technique_level(force, "gifoie"), 2, "legacy non-charge entry preserved")
 	t.assert_eq(TechniqueManager.get_technique_level({"class_id": "missing", "techniques": {"foie": 5}}, "foie"), 0, "unknown class fails closed")
+
+	for difficulty in ["normal", "hard", "super-hard"]:
+		for draw in 20:
+			var disk := TechniqueManager.generate_random_disk(difficulty, "dark", true, true)
+			var someone_can_learn := false
+			for cd in ClassRegistry.get_all_classes():
+				someone_can_learn = someone_can_learn or TechniqueManager.class_can_learn({"class_id": cd.id}, disk.technique_id, disk.level)
+			t.assert_true(someone_can_learn, "difficulty/rare/boss bonuses never exceed all class caps")
+	t.assert_true(TechniqueManager.create_disk("foie", 16).is_empty(), "no new disk beyond current roster's level-15 cap")

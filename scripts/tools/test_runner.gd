@@ -9710,6 +9710,17 @@ func test_charge_drop_paths() -> void:
 		pl.set("_charging_tech_id", "barta")
 		pl._on_palette_pressed(1)
 		assert_eq(released, [], "re-pressing the same charging slot does not drop (no release emit)")
+		pl.set("_tech_charge_timer", 0.7)
+		pl._on_palette_pressed(1)
+		assert_eq(pl.get("_tech_charge_timer"), 0.7, "repeat press preserves elapsed charge")
+		pl._drop_charge()
+		pl.current_state = PlayerScript.PlayerState.ATTACKING
+		pl._on_palette_pressed(1)
+		assert_eq(pl.get("_charging_slot"), -1, "active cast cannot start another charge")
+		pl.current_state = PlayerScript.PlayerState.IDLE
+		character.class_id = "racast"
+		pl._on_palette_pressed(1)
+		assert_eq(pl.get("_charging_slot"), -1, "CAST stale palette cannot start charge")
 	else:
 		print("  (skipped palette-driven drop: page has <2 slots)")
 
