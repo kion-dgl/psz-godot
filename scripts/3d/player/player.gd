@@ -1548,6 +1548,8 @@ func _attack_step_finished() -> void:
 
 
 func _on_palette_pressed(slot: int) -> void:
+	if slot == _charging_slot:
+		return # Repeated button events must not restart an active charge.
 	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
 		return
 	# #352: a DIFFERENT palette input mid-charge drops the current charge first.
@@ -1559,6 +1561,11 @@ func _on_palette_pressed(slot: int) -> void:
 		_drop_charge()
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
 	if TechniqueManager.TECHNIQUES.has(action_id):
+		var character = CharacterManager.get_active_character()
+		if character == null or TechniqueManager.get_technique_level(character, action_id) <= 0:
+			return
+		if current_state in [PlayerState.ATTACKING, PlayerState.DODGING]:
+			return
 		_charging_slot = slot
 		_charging_tech_id = action_id
 		_tech_charge_timer = 0.0
@@ -1617,6 +1624,8 @@ func _cast_technique(technique_id: String) -> void:
 
 	var character = CharacterManager.get_active_character()
 	if character == null:
+		return
+	if _is_defeated or GameState.hp <= 0 or current_state in [PlayerState.DAMAGED, PlayerState.DOWN]:
 		return
 	if TechniqueManager.get_technique_level(character, technique_id) <= 0:
 		print("[Player] Technique %s not learned" % technique_id)

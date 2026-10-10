@@ -44,8 +44,8 @@ const DISK_LEVEL_RANGES := {
 const BOSS_LEVEL_BONUS := 5
 const RARE_LEVEL_BONUS := 3
 
-## Techniques available in the shop (exclude advanced tier — field drops only)
-const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "grants", "megid", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
+## Base-tier shop disks; advanced catalogue entries are not new inventory.
+const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
 
 ## Base technique → charged variant (hold-to-charge).
 ## Support techs map to themselves — charge may boost potency later.
@@ -101,7 +101,7 @@ func generate_shop_inventory(_char_level: int) -> Array:
 
 ## Create a disk dictionary for a given technique and level
 func create_disk(technique_id: String, level: int) -> Dictionary:
-	if not TECHNIQUES.has(technique_id):
+	if not is_disk_technique(technique_id) or level < 1 or level > get_max_disk_level(technique_id):
 		return {}
 	var tech: Dictionary = TECHNIQUES[technique_id]
 	var disk_id := "disk_%s_%d" % [technique_id, level]
@@ -116,10 +116,28 @@ func create_disk(technique_id: String, level: int) -> Dictionary:
 	}
 
 
+## Only base techniques enter new inventory; advanced saved entries remain readable.
+func is_disk_technique(technique_id: String) -> bool:
+	return TECHNIQUES.has(technique_id) and TECHNIQUES[technique_id].tier == "basic"
+
+
+## New drops must be usable by at least one class in the current roster.
+func get_max_disk_level(technique_id: String) -> int:
+	if not is_disk_technique(technique_id):
+		return 0
+	var cap := 0
+	var group: String = TECHNIQUES[technique_id].group
+	for class_data in ClassRegistry.get_all_classes():
+		cap = maxi(cap, int(class_data.technique_limits.get(group, 0)))
+	return mini(30, cap)
+
+
 ## Check if a character can learn a technique at a given level
 func can_learn(character: Dictionary, technique_id: String, level: int) -> Dictionary:
-	if not TECHNIQUES.has(technique_id):
-		return {"allowed": false, "reason": "Unknown technique"}
+	if not is_disk_technique(technique_id):
+		return {"allowed": false, "reason": "Only base techniques can be learned from disks"}
+	if level < 1 or level > 30:
+		return {"allowed": false, "reason": "Invalid disk level"}
 
 	var class_id: String = str(character.get("class_id", ""))
 	var class_data = ClassRegistry.get_class_data(class_id)
@@ -167,7 +185,7 @@ func can_learn(character: Dictionary, technique_id: String, level: int) -> Dicti
 ## all return false. The item shop uses this to mark a disk with the ✕ "can never
 ## use" marker (vs a plain grey for a merely-temporary block). Spec /states/shops.
 func class_can_learn(character: Dictionary, technique_id: String, level: int) -> bool:
-	if not TECHNIQUES.has(technique_id):
+	if not is_disk_technique(technique_id) or level < 1 or level > 30:
 		return false
 	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	if class_data == null:
@@ -211,18 +229,26 @@ func use_disk(character: Dictionary, disk: Dictionary) -> Dictionary:
 
 ## Get current technique level for a character (0 if not learned)
 func get_technique_level(character: Dictionary, technique_id: String) -> int:
+	if not TECHNIQUES.has(technique_id):
+		return 0
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	if class_data == null:
+		return 0
+	var group: String = TECHNIQUES[technique_id].group
+	var cap := int(class_data.technique_limits.get(group, 0))
 	var techniques: Dictionary = character.get("techniques", {})
-	var level: int = int(techniques.get(technique_id, 0))
-	if level <= 0:
-		var base_id: String = get_base_technique(technique_id)
-		if base_id != technique_id:
-			level = int(techniques.get(base_id, 0))
-	return level
+	var level := int(techniques.get(technique_id, 0))
+	var base_id := get_base_technique(technique_id)
+	level = maxi(level, int(techniques.get(base_id, 0)))
+	return clampi(level, 0, maxi(0, cap))
 
 
 ## Generate a random disk based on difficulty, area, boss/rare flags
 func generate_random_disk(difficulty: String, area_id: String, is_boss: bool, is_rare: bool) -> Dictionary:
 	var pool: Array = AREA_TECHNIQUE_POOLS.get(area_id, ["foie", "barta", "zonde", "resta"])
+	pool = pool.filter(is_disk_technique)
+	if pool.is_empty():
+		return {}
 	var technique_id: String = pool[randi() % pool.size()]
 
 	var range_data: Dictionary = DISK_LEVEL_RANGES.get(difficulty, DISK_LEVEL_RANGES["normal"])
@@ -234,8 +260,11 @@ func generate_random_disk(difficulty: String, area_id: String, is_boss: bool, is
 	if is_rare:
 		max_level += RARE_LEVEL_BONUS
 
-	# Cap at 30 (max technique level)
-	max_level = mini(max_level, 30)
+	# Difficulty bonuses cannot mint disks beyond every class's capability.
+	max_level = mini(max_level, get_max_disk_level(technique_id))
+	if max_level < 1:
+		return {}
+	min_level = mini(min_level, max_level)
 
 	var level := randi_range(min_level, max_level)
 	return create_disk(technique_id, level)
