@@ -10,7 +10,7 @@
       "area": "Splash",
       "grade": "D",
       "assessment": "A small placeholder image made to show while the game loads.",
-      "next": "Choose and implement an intentional logo, a short fan-game disclaimer, or a combination; verify readability and startup presentation.",
+      "next": "Playtest the shared Rappy icons, minimal boot notice, and launch-to-title transitions across exported platforms; implementation pending owner verification.",
       "label": "score:splash",
       "reviewed_on": "2026-10-10"
     },
@@ -18,7 +18,7 @@
       "area": "Asset sync",
       "grade": "B",
       "assessment": "The style works; the already-up-to-date case does not.",
-      "next": "Make current assets a clear, quick success path; verify fresh download, cached assets and recovery.",
+      "next": "Playtest the verified-cache fast path, first download and retry recovery on real devices; confirm repeat launches do not flash the patch screen.",
       "label": "score:asset-sync"
     },
     {

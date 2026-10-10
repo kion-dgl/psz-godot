@@ -16,7 +16,9 @@ run/main_scene="res://scenes/2d/bootstrap.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/image="res://splash_screen.png"
-config/icon="res://icon.svg"
+boot_splash/fullsize=true
+boot_splash/use_filter=true
+config/icon="res://bootstrap/icons/rappy.png"
 
 [debug]
 

@@ -9,15 +9,16 @@ import AssetLoader from '../../components/screens/AssetLoader';
   <AssetLoader slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Downloads the asset pack (~264 MB) on first launch or when the pack version changes. Shows a progress bar while fetching from Arweave gateways.</p>
+  <p>Downloads the asset pack (size supplied by the bundled manifest) on first launch or when the pack version changes. Shows a progress bar only when the required pack needs downloading. An unchanged verified cache skips this screen.</p>
 
   <h2>Verification</h2>
   <p>The in-app <code>assets_manifest.json</code> (bundled at build time) is the source of truth. It carries the pack's <code>sha256</code>, <code>size</code>, and <code>urls</code>.</p>
-  <p>The cache path encodes the hash: <code>user://packs/assets-&lt;sha12&gt;.pck</code>. If a file at that path exists, bootstrap streams a full sha256 verification against the manifest hash. No separate metadata download is needed — the manifest is baked into the binary.</p>
+  <p>The cache path encodes the hash: <code>user://packs/assets-&lt;sha12&gt;.pck</code>. A successful verification and mount records a local receipt containing the full expected hash, byte size and file modification time. If the receipt still matches the file and manifest, bootstrap mounts without rescanning. A missing, malformed or mismatched receipt requires full SHA-256 verification. This is a local cache optimization, not protection against deliberate tampering that preserves file metadata. No separate metadata download is needed — the manifest is baked into the binary.</p>
 
   <Mermaid chart={`flowchart TD
     A[Bootstrap] --> B{Pack cached?}
-    B -->|File exists| C[Stream sha256 verify]
+    B -->|Receipt matches| G
+    B -->|No valid receipt| C[Stream sha256 verify]
     C -->|Match| G[Mount pack]
     C -->|Mismatch| D[Delete stale, download]
     B -->|No file| D[Download from Arweave]
@@ -29,13 +30,13 @@ import AssetLoader from '../../components/screens/AssetLoader';
   `} />
 
   <h2>Cache cleanup</h2>
-  <p>On launch, any <code>*.pck</code> under <code>user://packs/</code> that doesn't match the current sha is deleted. Only one pack version lives on disk at a time.</p>
+  <p>After a successful mount, any <code>*.pck</code> under <code>user://packs/</code> that doesn't match the current sha is deleted. Obsolete verification receipts are removed with their packs. The previous pack remains on disk until its replacement mounts successfully.</p>
 
   <h2>Error handling</h2>
-  <p>The manifest lists multiple gateway URLs. Bootstrap tries each in order — if one fails, it falls through to the next. Total failure shows a fatal message. Hash mismatch after download is also fatal (no silent fallback).</p>
+  <p>The manifest lists multiple gateway URLs. Bootstrap tries each in order — if one fails, it falls through to the next. Total failure shows a message with a Retry action. Hash mismatch after download is also an error (no silent fallback). Retry clears the failed-host list and restarts preparation.</p>
 
   <h2>Previous</h2>
-  <p><a href={siteUrl('/journey/splash')}>← Splash Screen</a></p>
+  <p><a href={siteUrl('/journey/splash')}>← Launch to Title</a></p>
   <h2>Next</h2>
   <p><a href={siteUrl('/journey/controls')}>Controls Setup →</a> (first run only)</p>
   <p><a href={siteUrl('/journey/title')}>Title Screen →</a> (subsequent launches)</p>
