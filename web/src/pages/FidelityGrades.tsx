@@ -1,8 +1,9 @@
 import { siteUrl } from '../../../spec/src/utils/site';
 import baseline from '../../../spec/src/data/fidelity-grades.json';
 import './FidelityGrades.css';
+import { scorecardIssuesUrl, gradeRank, gradeBarWidth } from '../../../spec/src/utils/scorecard';
 
-export default function FidelityGrades() {
+export default function FidelityGrades({ showCriteriaLink = true }: { showCriteriaLink?: boolean }) {
   return (
     <section className="fidelity-grades" aria-labelledby="fidelity-heading">
       <header className="fidelity-header">
@@ -16,14 +17,15 @@ export default function FidelityGrades() {
           <span>Provisional overall</span>
         </div>
       </header>
-      <p className="fidelity-note">Overall is an editorial assessment, not an average or a measured fidelity percentage. Grades improve through playtesting; passing automated checks alone does not raise them.</p>
+      <p className="fidelity-note">Overall is an editorial assessment, not an average or a measured fidelity percentage. Grades improve through playtesting; passing automated checks alone does not raise them. Bars show the letter-grade scale, not percent complete.</p>
       <div className="fidelity-grid">
-        {baseline.areas.map(({ area, grade, assessment, next }) => (
+        {[...baseline.areas].sort((a, b) => gradeRank(b.grade) - gradeRank(a.grade)).map(({ area, grade, assessment, next, label }) => (
           <article className="fidelity-card" key={area}>
             <div className="fidelity-card-heading">
-              <h3>{area}</h3>
+              <h3><a href={scorecardIssuesUrl(label)} aria-label={`Open issues for ${area}`}>{area} ↗</a></h3>
               <strong className="fidelity-grade" data-grade={grade[0]} aria-label={`Grade ${grade}`}>{grade}</strong>
             </div>
+            <div className="fidelity-bar" aria-hidden="true"><span data-grade={grade[0]} style={{ width: `${gradeBarWidth(grade)}%` }} /></div>
             <p>{assessment}</p>
             <details>
               <summary>Next review target</summary>
@@ -32,10 +34,9 @@ export default function FidelityGrades() {
           </article>
         ))}
       </div>
-      <footer>
-        <a href="https://github.com/kion-dgl/psz-godot/issues/682">Combat fidelity roadmap ↗</a>
+      {showCriteriaLink && <footer>
         <a href={siteUrl('/fidelity/')}>Grading criteria & evidence ↗</a>
-      </footer>
+      </footer>}
     </section>
   );
 }
