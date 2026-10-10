@@ -20,7 +20,7 @@ class_name ReyburnBoss extends EnemyBase
 
 const KIT_PATH := "res://data/boss_arenas.json"
 const ENRAGE_FRAC := 0.35
-const FLIGHT_HP_FRAC := 0.5  # Remake tuning; original damage-budget gates remain unresolved.
+const FLIGHT_HP_FRAC := 0.5 # Remake threshold; original entry condition is unresolved.
 
 enum S { INTRO, GROUND, TELEGRAPH, ATTACK, LOAF, FLIGHT_OUT, FLIGHT_HOVER, FLIGHT_SLAM, DEAD }
 
@@ -44,14 +44,14 @@ var _loaf_max := 4.5
 var _enrage_speed_mult := 1.3
 var _enrage_cd_mult := 0.6
 
+var _prelude: Array = []
+var _prelude_index := 0
 var _ground_attacks: Array = []
 var _flight_attacks: Array = []
 var _cur: Dictionary = {}           # attack currently telegraphing/executing
 var _attack_done := false           # damage already applied this swing
 var _fly_target: Vector3 = Vector3.ZERO
 var _glow: OmniLight3D = null
-var _prelude: Array = []
-var _prelude_index := 0
 
 
 func _ready() -> void:
