@@ -28,6 +28,7 @@ mouse_filter = 2
 [node name="SubViewport" type="SubViewport" parent="BG"]
 handle_input_locally = false
 size = Vector2i(1280, 720)
+msaa_3d = 2
 render_target_update_mode = 4
 
 [node name="TitleBackdrop" parent="BG/SubViewport" instance=ExtResource("3_backdrop")]
@@ -38,14 +39,14 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -336.0
-offset_top = 40.0
+offset_top = 29.0
 offset_right = 336.0
-offset_bottom = 320.0
+offset_bottom = 309.0
 grow_horizontal = 2
 texture = ExtResource("4_logo")
 expand_mode = 1
 stretch_mode = 5
-texture_filter = 1
+texture_filter = 2
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -53,7 +54,8 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -140.0
+offset_top = -125.0
+offset_bottom = -53.0
 grow_horizontal = 2
 grow_vertical = 0
 alignment = 1

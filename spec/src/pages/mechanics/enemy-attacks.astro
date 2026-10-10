@@ -81,7 +81,7 @@ const timeline = `stateDiagram-v2
   </ul>
 
   <h2>Difficulty scaling — aggression &amp; timing (#522)</h2>
-  <p>Enemies scale their <em>aggression and timing</em> by the session difficulty (<code>SessionManager.get_session().difficulty</code>, one of <code>normal</code> / <code>hard</code> / <code>super-hard</code>). <strong>Normal is the identity baseline</strong> — the current passive feel is preserved exactly. Higher tiers widen aggro and tighten cadence/telegraph; this is deliberately the <em>only</em> knob difficulty turns here — HP and damage scaling stay with <a href={siteUrl('/mechanics/enemy-attacks')}>damage math (#157)</a> / the attack model, not this section.</p>
+  <p>Enemies scale their <em>aggression and timing</em> by the session difficulty (<code>SessionManager.get_session().difficulty</code>, one of <code>normal</code> / <code>hard</code> / <code>super-hard</code>). <strong>Normal keeps baseline aggression.</strong> Higher tiers widen aggro and tighten cadence/telegraph; locomotion playback also scales as described below — HP and damage scaling stay with <a href={siteUrl('/mechanics/enemy-attacks')}>damage math (#157)</a> / the attack model, not this section.</p>
   <ul>
     <li><code>detection</code> — multiplies <code>detection_range</code> (the IDLE → CHASING aggro radius). Higher = spotted from farther.</li>
     <li><code>cadence</code> — multiplies <code>attack_cooldown</code>. Lower = attacks more often.</li>
@@ -93,7 +93,9 @@ const timeline = `stateDiagram-v2
     <tr><td><code>hard</code></td><td>1.25</td><td>0.80</td><td>0.85</td></tr>
     <tr><td><code>super-hard</code></td><td>1.5</td><td>0.65</td><td>0.70</td></tr>
   </table>
-  <p>The table is SHOULD-level starting calibration (<code>EnemyBase.AGGRO_SCALING</code>) — tuned by play-test, not normative to the decimal. What is normative: Normal MUST be identity, higher tiers MUST NOT <em>reduce</em> aggro/cadence pressure, and the scaling MUST apply to aggro/timing only (never HP/damage from this path).</p>
+  <p>The table is SHOULD-level starting calibration (<code>EnemyBase.AGGRO_SCALING</code>) — tuned by play-test, not normative to the decimal. What is normative: Normal MUST retain identity aggression multipliers, higher tiers MUST NOT <em>reduce</em> aggro/cadence pressure, and the scaling MUST apply to aggro/timing and locomotion playback only (never HP/damage from this path).</p>
+
+  <p>Godot locomotion playback (#555) MUST use 0.8× on Normal, 1.0× on Hard and 1.15× on Super Hard (unknown difficulty defaults to Normal). This applies to wandering, pursuit, strafing, retreat and moving recovery, including movement aliases and authored pose overrides. Movement speed in world units is unchanged. Stationary poses, displays, attacks (including charge segments), damage and death MUST play at 1×; switching intent MUST restore the rate even when the clip is reused. These are playtest tuning values, not measured original-game rates. The web schematic has no skeletal playback to scale.</p>
 
   <h2>Pre-strike telegraph &amp; stance model (#491)</h2>
   <p><strong>Resolved (playtest #491):</strong> striking straight from locomotion read as "walk up, freeze, cheap hit" — no anticipation, unreadable. So ATTACKING MUST open with a <strong>telegraph sub-phase</strong> before the damage window: the enemy holds a readable attack-ready pose, facing the target, long enough to react (run, evade, or commit). The telegraph deals <strong>no</strong> damage; it is <em>not</em> a 7th FSM state — it is the head of ATTACKING (the six states in <a href={siteUrl('/states/enemies')}>/states/enemies</a> stand).</p>

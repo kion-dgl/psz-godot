@@ -54,6 +54,8 @@ func _run_tests_combat() -> void:
 	test_enemy_attack_timeline()
 	test_enemy_telegraph()
 	preload("res://scripts/tools/enemy_entrance_tests.gd").run(self)
+	preload("res://scripts/tools/booma_validation_tests.gd").run(self)
+	test_pso_booma_coliseum()
 	preload("res://scripts/tools/enemy_runtime_regression_tests.gd").run(self)
 	preload("res://scripts/tools/helion_regression_tests.gd").run(self)
 	preload("res://scripts/tools/enemy_decision_scenarios.gd").run(self)
@@ -3405,6 +3407,32 @@ func test_enemy_difficulty_scaling() -> void:
 	assert_true(abs(eh._detection_range - exp_det) < 0.001, "hard widens detection range")
 	assert_eq(eh._aggro_cadence, EnemyBase.AGGRO_SCALING["hard"]["cadence"], "hard sets cadence mult")
 	eh.queue_free()
+	# Seeded movement/action transitions, including shared pose tokens and aliases.
+	seed(555)
+	for difficulty in ["normal", "hard", "super-hard", "unknown"]:
+		SessionManager.enter_field("gurhacia-valley", difficulty)
+		var mover := _make_recovery_enemy(["wlk", "run", "fly", "wat", "atk", "dmg", "ded"], 1.0)
+		var expected: float = {"normal": 0.8, "hard": 1.0, "super-hard": 1.15}.get(difficulty, 0.8)
+		for iteration in range(8):
+			var movement: String = ["wlk", "run", "fly"][randi() % 3]
+			mover._play_animation(movement, true, true)
+			assert_true(is_equal_approx(mover.animation_player.get_playing_speed(), expected), "%s movement speed" % difficulty)
+			mover.animation_player.advance(0.2)
+			var position_before := mover.animation_player.current_animation_position
+			mover._play_animation(movement)  # same clip, now a timed action
+			assert_eq(mover.animation_player.current_animation_position, position_before, "same-clip rate change preserves position")
+			assert_eq(mover.animation_player.get_playing_speed(), 1.0, "same-clip action restores 1x")
+			mover._fsm = {"move_clip": "wat"}
+			mover._play_animation("wlk", true, true)
+			assert_true(is_equal_approx(mover.animation_player.get_playing_speed(), expected), "movement pose override scales")
+			mover._play_animation("wat")
+			assert_eq(mover.animation_player.get_playing_speed(), 1.0, "stationary pose restores 1x")
+			mover._fsm = {}
+			for action in ["atk", "dmg", "ded"]:
+				mover._play_animation(movement, true, true)
+				mover._play_animation(action, true)
+				assert_eq(mover.animation_player.get_playing_speed(), 1.0, "%s remains at 1x" % action)
+		mover.queue_free()
 	SessionManager.enter_field("gurhacia-valley", prev_diff if prev_diff != "" else "normal")
 	print("")
 
@@ -3487,8 +3515,8 @@ func test_enemy_telegraph() -> void:
 
 ## Rig builder with per-clip lengths (the shared _make_recovery_enemy forces one
 ## length on every clip; preludes and segments need their own timings).
-func _make_rig_enemy(clip_lengths: Dictionary) -> EnemyBase:
-	var e := EnemyBase.new()
+func _make_rig_enemy(clip_lengths: Dictionary, instance: EnemyBase = null) -> EnemyBase:
+	var e := instance if instance != null else EnemyBase.new()
 	e.enemy_data = EnemyData.new()
 	add_child(e)
 	var ap := AnimationPlayer.new()
@@ -3625,8 +3653,14 @@ func test_enemy_leap_delivery() -> void:
 
 
 ## Shared charge-test setup: rig + injected charge def + committed attack.
+class FlatChargeFixture extends EnemyBase:
+	# Synchronous unit fixtures have no physics world floor. Geometry is exercised
+	# with actual imported bodies and static obstacles by the live #684 suite.
+	func _charge_path_blocked(_motion: Vector3) -> bool:
+		return false
+
 func _make_charge_enemy(rig: Dictionary, def_extras: Dictionary, dummy: Node3D) -> EnemyBase:
-	var e := _make_rig_enemy(rig)
+	var e := _make_rig_enemy(rig, FlatChargeFixture.new())
 	e.enemy_data.attack_base = 10
 	e.enemy_data.move_speed = 4.0
 	e.target = dummy
@@ -4101,7 +4135,7 @@ func test_enemy_authored_table_charge_cycle() -> void:
 	add_child(dummy)
 	dummy.global_position = Vector3(0, 0, 8.5)
 	var hg := _make_rig_enemy({"b070_stt": 0.3, "b070_wat": 0.5, "b070_wlk": 0.5,
-		"b070_atk1": 0.5, "b070_atk2_st": 0.3, "b070_atk2_lp": 0.3, "b070_atk2_ed": 0.3})
+		"b070_atk1": 0.5, "b070_atk2_st": 0.3, "b070_atk2_lp": 0.3, "b070_atk2_ed": 0.3}, FlatChargeFixture.new())
 	hg._attacks = EnemyAttackRegistry.get_attacks("hildegigas", 2.2)  # real table
 	hg.enemy_data.attack_base = 10
 	hg.target = dummy
@@ -13429,3 +13463,31 @@ func test_tower_interior_lights() -> void:
 	lighting.spawn(outside, "s082_ga1")
 	assert_eq(outside.get_child_count(), 0, "Tower accents stay on floor 1")
 	outside.free()
+
+
+func test_pso_booma_coliseum() -> void:
+	var rows := ColiseumRoster.roster_rows()
+	for id in ["pso_booma", "pso_gobooma", "pso_gigobooma"]:
+		var data: EnemyData = EnemyRegistry.get_enemy(id)
+		assert_true(data != null, id + " resource loads")
+		assert_eq(data.model_id, id, id + " has separate PSO rig")
+		assert_eq(EnemyAttackRegistry.get_model_scale(id), 1.0, id + " scale baked in GLB")
+		assert_eq(EnemyAttackRegistry.get_attacks(id).size(), 2, id + " two swipes")
+		var e := _make_recovery_enemy(["mihari", "atk_l", "atk_r"], 2.0)
+		e._fsm = EnemyAttackRegistry.get_fsm(id)
+		e.target = null
+		e._process_idle(0.1)
+		assert_eq(e.current_anim, "mihari", id + " searches without a target")
+		assert_true(e.animation_player.is_playing(), id + " search looks around")
+		e.animation_player.advance(0.5)
+		e._play_telegraph_hold()
+		assert_true(not e.animation_player.is_playing(), id + " telegraph does not look around")
+		assert_eq(e.animation_player.current_animation_position, 0.0, id + " combat holds neutral pose")
+		e._play_animation("atk_l", true)
+		assert_true(e.animation_player.is_playing(), id + " swipe resumes animation")
+		e._process_idle(0.1)
+		assert_eq(e.current_anim, "mihari", id + " resumes searching after target loss")
+		assert_true(e.animation_player.is_playing(), id + " search resumes from combat hold")
+		e.queue_free()
+		assert_true(rows.any(func(row): return row.id == id and not row.boss_tab), id + " available in enemy picker")
+		assert_eq(ColiseumRoster.make_sections(id)[0].cells[0].objects[0].enemy_id, id, id + " spawns selected variant")

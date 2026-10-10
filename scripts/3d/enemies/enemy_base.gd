@@ -172,16 +172,17 @@ func _rooted_idle_clip() -> String:
 	return "wat"
 
 ## Difficulty scaling of aggression + timing (#522, spec /mechanics/enemy-attacks).
-## Normal = identity (current passive baseline); higher tiers widen aggro and tighten
+## Normal keeps baseline aggression; higher tiers widen aggro and tighten
 ## cadence/telegraph. cadence/reaction < 1 = faster attacks / shorter windup.
 ## ponytail: starting calibration table — tune the three rows by play-test.
 const AGGRO_SCALING := {
-	"normal":     {"detection": 1.0,  "cadence": 1.0,  "reaction": 1.0},
-	"hard":       {"detection": 1.25, "cadence": 0.80, "reaction": 0.85},
-	"super-hard": {"detection": 1.5,  "cadence": 0.65, "reaction": 0.70},
+	"normal":     {"detection": 1.0,  "cadence": 1.0,  "reaction": 1.0, "anim": 0.8},
+	"hard":       {"detection": 1.25, "cadence": 0.80, "reaction": 0.85, "anim": 1.0},
+	"super-hard": {"detection": 1.5,  "cadence": 0.65, "reaction": 0.70, "anim": 1.15},
 }
 var _aggro_cadence: float = 1.0
 var _aggro_reaction: float = 1.0
+var _locomotion_anim_speed: float = 0.8
 var _detection_range: float = 15.0
 
 ## Stuck detection — try perpendicular direction when blocked
@@ -610,6 +611,15 @@ func _process_idle(delta: float) -> void:
 				_play_animation("tht", true)  # Threat/war cry when becoming active
 			return
 
+	# Authored target-search motion is separate from the engaged idle pose.
+	var search_clip := String(_fsm.get("search_clip", ""))
+	if not search_clip.is_empty():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		is_wandering = false
+		_play_animation(search_clip)
+		return
+
 	# Wandering behavior
 	wander_timer -= delta
 	if wander_timer <= 0:
@@ -617,7 +627,7 @@ func _process_idle(delta: float) -> void:
 
 	if is_wandering and wander_direction.length() > 0.1:
 		# Walking in wander direction
-		_play_animation("wlk")
+		_play_animation("wlk", false, true)
 
 		var speed := 3.0
 		if enemy_data:
@@ -827,7 +837,7 @@ func _chase_baseline(dist: float, attack_range: float) -> void:
 	var clip := "run" if is_charging else "wlk"
 	if _archetype == "box_mimic":
 		clip = "wlk1"
-	_play_animation(clip)
+	_play_animation(clip, false, true)
 
 	var to_target := target.global_position - global_position
 	var horizontal_dir := Vector3(to_target.x, 0, to_target.z)
@@ -923,7 +933,7 @@ func _apply_move(dir: Vector3, speed: float, face_dir: Vector3, clip: String) ->
 	if face_dir.length() > 0.1:
 		_face_direction(face_dir)
 	if not clip.is_empty():
-		_play_animation(clip)
+		_play_animation(clip, false, true)
 
 
 func _radial_to_target() -> Vector3:
@@ -1112,12 +1122,13 @@ func _process_charge(delta: float) -> void:
 			# their own — the model must rotate while it travels (spec §roller).
 			if c.get("rotate_model", false) and model:
 				model.rotate_x(-deg_to_rad(720.0) * delta)
-			var end_charge := false
-			if not _attack_hit_resolved and target and is_instance_valid(target):
+			var end_charge := _charge_path_blocked(_attack_facing * speed * delta)
+			c["blocked"] = end_charge
+			if not end_charge and not _attack_hit_resolved and target and is_instance_valid(target):
 				var reach := float(_attack_def.get("hit_reach", 2.0))
 				var half := float(_attack_def.get("hit_half_angle_deg", 45.0))
 				if EnemyAttackLogic.arc_hit_test(global_position, _attack_facing,
-						target.global_position, PLAYER_HIT_RADIUS, half, reach):
+						target.global_position, PLAYER_HIT_RADIUS, half, reach) and _charge_contact_clear():
 					_attack_hit_resolved = true
 					var dodged: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
 					if not dodged:
@@ -1146,6 +1157,38 @@ func _process_charge(delta: float) -> void:
 				is_attacking = false
 				_charge = {}
 				_vulnerable_mult = 1.0
+
+
+## Charge movement must reject unsupported ground and environment contact before
+## damage is evaluated (#684). Player bodies are not environment obstacles here:
+## their contact is resolved by the attack/dodge rules, then normal body physics.
+func _charge_path_blocked(motion: Vector3) -> bool:
+	var distance := maxf(motion.length(), FLOOR_CHECK_DISTANCE)
+	var side := Vector3(-_attack_facing.z, 0, _attack_facing.x) * FLOOR_CHECK_SIDE
+	var samples := maxi(1, ceili(distance / 0.5))
+	for i in range(1, samples + 1):
+		var point := global_position + _attack_facing * distance * float(i) / samples
+		if not _has_floor_at(point) or not _has_floor_at(point + side) or not _has_floor_at(point - side):
+			return true
+	for child in get_children():
+		if child is CollisionShape3D and not child.disabled and child.shape:
+			var query := PhysicsShapeQueryParameters3D.new()
+			query.shape = child.shape
+			query.transform = child.global_transform
+			query.motion = motion
+			query.collision_mask = 1
+			query.exclude = [get_rid()]
+			var fractions := get_world_3d().direct_space_state.cast_motion(query)
+			if not fractions.is_empty() and fractions[0] < 1.0:
+				return true
+	return false
+
+
+## A thin wall can separate overlapping contact radii, even before body movement.
+func _charge_contact_clear() -> bool:
+	var query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 0.5,
+		target.global_position + Vector3.UP * 0.5, 1, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _process_loafing(delta: float) -> void:
@@ -1182,7 +1225,7 @@ func _process_loafing(delta: float) -> void:
 		velocity.x = loaf_direction.x * speed
 		velocity.z = loaf_direction.z * speed
 		_face_direction(loaf_direction)  # Face movement direction (away from player)
-		_play_animation("wlk1" if _archetype == "box_mimic" else "wlk")
+		_play_animation("wlk1" if _archetype == "box_mimic" else "wlk", false, true)
 	else:
 		# Can't move that way, try reversing curve direction
 		loaf_curve_rate = -loaf_curve_rate
@@ -1657,6 +1700,7 @@ func _apply_difficulty() -> void:
 	var s: Dictionary = AGGRO_SCALING.get(diff, AGGRO_SCALING["normal"])
 	_aggro_cadence = float(s["cadence"])
 	_aggro_reaction = float(s["reaction"])
+	_locomotion_anim_speed = float(s["anim"])
 	var base_det: float = enemy_data.detection_range if enemy_data else 15.0
 	_detection_range = base_det * float(s["detection"])
 
@@ -1780,9 +1824,28 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 	return not result.is_empty()
 
 
+## Some rigs only have a searching idle; hold its neutral first frame in combat.
+func _play_idle_pose() -> String:
+	var clip := String(_fsm.get("idle_pose_clip", ""))
+	if clip.is_empty() or not animation_player:
+		return ""
+	var pose := _find_animation(clip)
+	if pose.is_empty():
+		return ""
+	animation_player.play(pose)
+	animation_player.seek(0.0, true)
+	animation_player.pause()
+	current_anim = "wat"
+	return pose
+
+
 ## Play an animation by name (short name like "atk" will match "s_001_atk").
 ## Returns the resolved full animation name, or "" if nothing played.
-func _play_animation(anim_name: String, force: bool = false) -> String:
+func _play_animation(anim_name: String, force: bool = false, locomotion: bool = false) -> String:
+	if anim_name == "wat":
+		var pose := _play_idle_pose()
+		if not pose.is_empty():
+			return pose
 	if anim_name in ["wlk", "run"]:
 		anim_name = str(_fsm.get("move_clip", anim_name))
 	if anim_name == "wat":
@@ -1792,8 +1855,14 @@ func _play_animation(anim_name: String, force: bool = false) -> String:
 	if not animation_player:
 		return ""
 
+	# Intent, not clip name: movement can reuse a pose or attack token (#555).
+	# Restore 1x even when the next action reuses the currently playing clip.
+	var playback_speed := _locomotion_anim_speed if locomotion else 1.0
+
 	# Don't interrupt same animation unless forced
 	if not force and current_anim == anim_name:
+		if not animation_player.current_animation.is_empty():
+			animation_player.play(animation_player.current_animation, -1.0, playback_speed)
 		return ""
 
 	# Try to find the animation - GLB animations are named like "s_001_atk"
@@ -1812,10 +1881,10 @@ func _play_animation(anim_name: String, force: bool = false) -> String:
 
 	# Ensure looping animations actually loop
 	var anim := animation_player.get_animation(full_name)
-	if anim and anim_name in ["run", "wlk", "wat", "wat1", "wat2", "tk", "tk1", "wlk1", "fly", "run_lp"]:
+	if anim and (anim_name == String(_fsm.get("search_clip", "")) or anim_name in ["run", "wlk", "wat", "wat1", "wat2", "tk", "tk1", "wlk1", "fly", "run_lp"]):
 		anim.loop_mode = Animation.LOOP_LINEAR
 
-	animation_player.play(full_name)
+	animation_player.play(full_name, -1.0, playback_speed)
 	current_anim = anim_name
 	return full_name
 
@@ -1905,7 +1974,7 @@ func _on_animation_finished(anim_name: String) -> void:
 		"tht":
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:
-				_play_animation("wlk")
+				_play_animation("wlk", false, true)
 
 
 func _play_sfx(key: String) -> void:

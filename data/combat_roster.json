@@ -734,6 +734,36 @@
       "source_id": 45,
       "issue": 706,
       "identity_status": "source-table model match; display unverified"
+    },
+    {
+      "id": "pso_booma",
+      "name": "PSO Booma",
+      "model_id": "pso_booma",
+      "animation_model_id": "pso_booma",
+      "is_boss": false,
+      "source_id": null,
+      "issue": 684,
+      "identity_status": "PSO comparison addition from user archive; local asset only, original behavior unvalidated"
+    },
+    {
+      "id": "pso_gobooma",
+      "name": "PSO Gobooma",
+      "model_id": "pso_gobooma",
+      "animation_model_id": "pso_gobooma",
+      "is_boss": false,
+      "source_id": null,
+      "issue": 684,
+      "identity_status": "PSO comparison addition from user archive; local asset only, original behavior unvalidated"
+    },
+    {
+      "id": "pso_gigobooma",
+      "name": "PSO Gigobooma",
+      "model_id": "pso_gigobooma",
+      "animation_model_id": "pso_gigobooma",
+      "is_boss": false,
+      "source_id": null,
+      "issue": 684,
+      "identity_status": "PSO comparison addition from user archive; local asset only, original behavior unvalidated"
     }
   ],
   "encounters": [

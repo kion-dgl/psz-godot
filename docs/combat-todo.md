@@ -1,5 +1,125 @@
 # Combat System TODO
 
+## PSO Booma comparison models — October 9
+
+Coliseum Master → Enemies → Simple Melee now includes **PSO Booma**,
+**PSO Gobooma** and **PSO Gigobooma**, with IDs `pso_booma`, `pso_gobooma`
+and `pso_gigobooma`. They are separate from the PSZ Origin variants and use
+`PSO Coliseum` locations, so no normal field roster is extended.
+
+User-provided `ene_booma.zip`, `ene_gobooma.zip` and `ene_gigabooma.zip` supply
+embedded-texture GLBs and 12 animations per variant. Scale **0.089** is baked
+into mesh positions, skeleton/node translations, animation translations and
+inverse-bind matrix translations; model instances stay at **1.0**. Reference
+mesh heights are approximately 1.89, 2.11 and 2.33 m. Import provenance, source
+hashes, output hashes and the reversible clip-name map are recorded in
+`data/re_reference/pso_booma_import.json`.
+
+Reimport locally:
+
+```sh
+python3 scripts/tools/import_pso_boomas.py --archives /path/to/zip-directory
+```
+
+Assets live in ignored `assets/enemies/pso_booma`, `pso_gobooma` and
+`pso_gigobooma` directories. The three GLBs and six extracted textures are
+published to R2 and included in its developer-fetch inventory. The dev pack
+on `pck.psz.onl` preserves the previous pack and adds these imported models,
+textures and UID mappings. `assets_manifest.json` selects the new pack;
+`data/re_reference/pso_booma_import.json` records publication provenance.
+
+`mihari` retains its own clip name and plays while searching for a target.
+Per user clarification, it is not an attack preparation animation. Engaged
+idle and telegraph holds use its neutral first frame without playing the
+look-around motion. This applies to all three PSO variants.
+
+The initial comparison kit uses emergence, searching, walking/running, weighted
+left/right swipes, damage and death. All three use equal provisional combat
+stats; swipe active fractions/range are gameplay tuning, not recovered PSO
+AI/damage values. Alternate death, leader, stun and wakeup clips are retained
+but not given speculative behavior. Rendered idle and attack poses were checked
+for intact skinning/textures. All three real-rig Coliseum probes pass both
+swipes with/without dodge, weapon contact and room clear; 7,935 Godot tests,
+898 web tests (4 skipped), importer tests and roster/code-health checks pass.
+All three PSO rigs also pass the live search → neutral telegraph → swipe →
+search check. The interruption probes pin the global damage RNG as well as
+the AI RNG so capped hit chance cannot randomly turn an interruption into a miss.
+
+
+## Booma family validation — #684
+
+Both `booma_origin` and `gigobooma_origin` retain the #681 clip meanings:
+`stt` emerges once, `wat` idles, `wlk` approaches, `atk` prepares in place,
+`run` carries charge contact, `atk_mi` recovers harmlessly, `dam` reacts and
+`ded` dies. `atk_hi` remains unused: its original selection rule is unknown.
+`data/re_reference/booma_evidence.json` pins the saved viewer inventory and
+inspected psz-re/Mini source revisions/hashes. Shared descriptor fingerprints
+and clip names establish neither variant parity nor attack payloads. Mini's
+nonmatching combat-record scanner is identified as such, with no claim that it
+recovers Booma AI or establishes a demo override.
+
+The new real-rig tests reproduced damage through a thin wall and a dash off a
+raised platform. Shared charge handling now checks the environment body sweep,
+sampled floor support and contact line of sight before delivering damage;
+blocked charges enter their existing harmless recovery. Both Boomas keep the
+current range/overshoot/recovery tuning. This is a deliberate gameplay safety
+choice, not a claim about original-game wall behavior. The web schematic has no
+world geometry; its shared decision cases cover range and AI gates only.
+
+Validation: 7,935 Godot checks; 898 web checks (4 skipped); 72 real-rig execution
+cases (12 per variant/difficulty) and 72 live decision cases. Execution covers
+hits, sustained dodge, sidestep, retreat, wall/occluded contact, unsupported
+floor, preparation/travel interruption, target loss, and death during preparation
+and travel. Existing emergence/two-cycle sequencing, player weapon contact and
+room-clear probes run in every matrix cell. Rig records include all nine clip
+names/durations. Hildegigas, Rohjade and Finjer R shared-charge probes also pass.
+Reintroducing unsafe charge handling is rejected specifically for thin-wall and
+edge damage, not accepted as a parse error or timeout. TypeScript, site build,
+code-graph, roster and orphan checks pass.
+
+Reproduce using imported local assets and isolated saves:
+
+```sh
+python3 scripts/tools/verify_booma.py --godot /path/to/godot \
+  --output /tmp/psz-684-results --calibrate
+```
+
+The runner creates/removes its own disposable project and user-data directory.
+Require every check and calibration in `results.json` to pass. Snapshot:
+`docs/booma-validation-results.json`; latest full local logs: `/tmp/psz-pr-booma-final/`.
+The existing missing-audio imports remain warnings, with no script errors.
+
+#684 remains open for original hit/miss recovery selection (`atk_hi`), variant
+and difficulty differences, and the focused human feel checkpoint. In Coliseum
+Master, test Booma Origin and Gigobooma Origin: check emergence, body/contact
+alignment, sidestep/dodge timing and the recovery after a missed rush. Automated
+passes do not raise the combat fidelity grade or replace this review.
+
+
+## Difficulty-scaled locomotion — #555
+
+Godot movement clips now use Normal 0.8×, Hard 1.0× and Super Hard 1.15×.
+Wandering, pursuit, strafing, retreat and moving recovery opt in explicitly, so
+aliases and authored movement poses work without classifying an attack by its
+filename. Stationary displays, attack preludes/segments, hurt and death retain
+1× custom playback; external AnimationPlayer speed overrides are preserved.
+World movement speed and existing reaction/window calculations are unchanged.
+These are the issue's proposed playtest values, not measured DS timing.
+
+Validation uses seed 555 and an isolated user-data directory. The Godot unit
+suite passes, including all tiers, unknown-tier fallback, shared-pose transitions,
+clip-position continuity and existing damage-window/spawn-duration checks. The
+real-rig Normal Helion Coliseum probe passes scenarios, runtime claw/lunge/dodge/
+wall checks, player weapon contact and room clear with no script errors. Logs:
+`/tmp/psz-555-unit.log` and `/tmp/psz-555-live.log`.
+
+The full quest autopilot matrix remains unverified: its harness hardcodes Linux
+paths and requires `dist/assets.pck`, which is absent here. Local audio import
+warnings persist. #555 stays open for the matrix and a visual comparison of
+Normal locomotion; extending scaling to attack clips is a separate timing pass
+if locomotion alone does not improve the feel enough.
+
+
 ## Melee active contact window — #554
 
 Player melee now retries the existing cone during an active window from each

@@ -39,16 +39,29 @@ func _ready() -> void:
 			build_suffix += str(BuildInfo.LOCAL_BUILD)
 	version_label.text = "PSZ Godot v%s%s" % [app_version, build_suffix]
 
+	# Match the Three.js title mock typography at the 1280×720 reference size.
+	var title_font := SystemFont.new()
+	title_font.font_names = PackedStringArray(["Arial", "Helvetica", "sans-serif"])
+	title_font.font_weight = 600
+	var spaced_font := FontVariation.new()
+	spaced_font.base_font = title_font
+	spaced_font.spacing_glyph = 2
 	# Add text shadows for readability over the background image
 	var prompt_settings := LabelSettings.new()
-	prompt_settings.font_color = ThemeColors.HEADER_TEXT
+	prompt_settings.font_color = Color("ffcc00")
+	prompt_settings.font = spaced_font
+	prompt_settings.font_size = 27
 	prompt_settings.shadow_color = Color(0, 0, 0, 0.8)
 	prompt_settings.shadow_offset = Vector2(2, 2)
 	prompt_settings.shadow_size = 3
 	prompt_label.label_settings = prompt_settings
 
 	var version_settings := LabelSettings.new()
-	version_settings.font_color = ThemeColors.HINT_TEXT
+	version_settings.font_color = Color(0.706, 0.706, 0.706, 0.7)
+	var version_font := SystemFont.new()
+	version_font.font_names = PackedStringArray(["Menlo", "Consolas", "monospace"])
+	version_settings.font = version_font
+	version_settings.font_size = 15
 	version_settings.shadow_color = Color(0, 0, 0, 0.8)
 	version_settings.shadow_offset = Vector2(2, 2)
 	version_settings.shadow_size = 3
@@ -63,7 +76,7 @@ func _process(delta: float) -> void:
 		_blink_timer = 0.0
 		_prompt_visible = not _prompt_visible
 		if prompt_label.label_settings:
-			prompt_label.label_settings.font_color = ThemeColors.TEXT_HIGHLIGHT if _prompt_visible else ThemeColors.HEADER_TEXT
+			prompt_label.label_settings.font_color = Color("ffcc00") if _prompt_visible else Color("e6edf3")
 
 
 func _open_input_debug() -> void:

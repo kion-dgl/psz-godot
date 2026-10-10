@@ -827,5 +827,38 @@
   ],
   "is_rare": false,
   "is_boss": true
+ },
+ {
+  "id": "pso_booma",
+  "name": "PSO Booma",
+  "model_id": "pso_booma",
+  "element": "Native",
+  "locations": [
+   "PSO Coliseum"
+  ],
+  "is_rare": false,
+  "is_boss": false
+ },
+ {
+  "id": "pso_gobooma",
+  "name": "PSO Gobooma",
+  "model_id": "pso_gobooma",
+  "element": "Native",
+  "locations": [
+   "PSO Coliseum"
+  ],
+  "is_rare": false,
+  "is_boss": false
+ },
+ {
+  "id": "pso_gigobooma",
+  "name": "PSO Gigobooma",
+  "model_id": "pso_gigobooma",
+  "element": "Native",
+  "locations": [
+   "PSO Coliseum"
+  ],
+  "is_rare": false,
+  "is_boss": false
  }
 ]

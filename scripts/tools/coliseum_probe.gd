@@ -26,7 +26,8 @@ func _ready() -> void:
 	var selected := OS.get_environment("PSZ_COLISEUM_ENEMY")
 	if selected.is_empty():
 		selected = ENEMY_ID
-	SessionManager.enter_quest("debug_coliseum", "normal")
+	var difficulty := OS.get_environment("PSZ_COLISEUM_DIFFICULTY")
+	SessionManager.enter_quest("debug_coliseum", difficulty if not difficulty.is_empty() else "normal")
 	SessionManager.set_field_sections(ColiseumRoster.make_sections(selected))
 	print("[coliseum] warping: sections=%d cell=%s objects=%d" % [
 		SessionManager.get_field_sections().size(),
@@ -145,14 +146,6 @@ class Watch extends Node:
 			_fail("mixed group verification failed")
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
-		if OS.get_environment("PSZ_COMBAT_SCENARIOS") == "1":
-			if not await preload("res://scripts/tools/enemy_decision_scenarios.gd").run_live(player, enemy):
-				_fail("enemy decision scenarios failed")
-				return
-		if OS.get_environment("PSZ_ENEMY_RUNTIME_CHECK") == "1":
-			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
-				_fail("enemy runtime regression failed")
-				return
 		if enemy._archetype == "bruiser":
 			var entrance_ok: bool = await preload("res://scripts/tools/coliseum_entrance_check.gd").run(player, enemy)
 			if not entrance_ok:
@@ -161,6 +154,22 @@ class Watch extends Node:
 		elif enemy.dormant:
 			enemy.reveal()
 			await get_tree().physics_frame
+		if enemy_id in ["pso_booma", "pso_gobooma", "pso_gigobooma"]:
+			if not await preload("res://scripts/tools/coliseum_booma_check.gd").run_search(player, enemy):
+				_fail("PSO search animation timing failed")
+				return
+		if OS.get_environment("PSZ_COMBAT_SCENARIOS") == "1":
+			if not await preload("res://scripts/tools/enemy_decision_scenarios.gd").run_live(player, enemy):
+				_fail("enemy decision scenarios failed")
+				return
+		if OS.get_environment("PSZ_ENEMY_RUNTIME_CHECK") == "1":
+			if not await preload("res://scripts/tools/coliseum_runtime_check.gd").run(player, enemy):
+				_fail("enemy runtime regression failed")
+				return
+		if OS.get_environment("PSZ_BOOMA_CHECK") == "1":
+			if not await preload("res://scripts/tools/coliseum_booma_check.gd").run(player, enemy):
+				_fail("Booma validation failed")
+				return
 		if OS.get_environment("PSZ_MELEE_LIVE_CHECK") == "1":
 			if not await preload("res://scripts/tools/melee_live_check.gd").run(player, enemy):
 				_fail("live melee animation checks failed")
