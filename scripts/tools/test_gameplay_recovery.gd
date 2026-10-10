@@ -10,6 +10,7 @@ static func run(t: Node) -> void:
 	_dialog_ownership(t)
 	_death_once(t)
 	_vision_lifecycle(t)
+	_cure_items(t)
 
 static func _inventory_roundtrip(t: Node) -> void:
 	var saved: Dictionary = Inventory._items.duplicate()
@@ -170,3 +171,16 @@ static func _vision_lifecycle(t: Node) -> void:
 	if slot >= 0: CharacterManager._sync_to_game_state()
 	Inventory._items = inventory
 	TrapBall.vision_until_msec = expiry
+
+
+static func _cure_items(t: Node) -> void:
+	var saved: Dictionary = Inventory._items.duplicate()
+	var hp := GameState.hp
+	Inventory._items = {"sol_atomizer": 1, "moon_atomizer": 1}
+	GameState.set_hp(1)
+	t.assert_true(not Inventory.use_item("sol_atomizer"), "Sol without field recipient is rejected")
+	t.assert_true(not Inventory.use_item("moon_atomizer"), "Moon without teammate is rejected")
+	t.assert_eq(GameState.hp, 1, "status/revival items cannot self-heal")
+	t.assert_eq(Inventory.get_item_count("sol_atomizer"), 1, "invalid Sol preserves inventory")
+	Inventory._items = saved
+	GameState.set_hp(hp)

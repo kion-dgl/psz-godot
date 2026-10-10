@@ -50,6 +50,10 @@ import Concept from '../../layouts/Concept.astro';
   Reverser and the still-unimplemented 3D buffs/debuffs (Shifta, Deband, Jellen,
   Zalure) MUST reject the cast without spending PP and show feedback. They remain
   follow-up work in #345.</p>
+  <p>Sol Atomizer MUST cure the living field player's active ailments and consume
+  one item only when there is an ailment to cure. It MUST NOT restore HP. A Moon
+  Atomizer without a supported downed teammate MUST be rejected without consumption;
+  it MUST NOT act as a full self-heal. Companion revival remains follow-up work.</p>
   <h2>Rendering and boss completion</h2>
   <p>Bear and needle traps MUST use instance-owned materials with the storybook's
   per-surface UV transforms and repeat/mirror axes. Off states MUST hide only their

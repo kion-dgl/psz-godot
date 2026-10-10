@@ -378,8 +378,6 @@ const CONSUMABLE_EFFECTS := {
 	"monofluid": {"type": "pp", "percent": 0.30},
 	"difluid": {"type": "pp", "percent": 0.60},
 	"trifluid": {"type": "pp", "percent": 1.00},
-	"sol_atomizer": {"type": "hp", "percent": 1.00},
-	"moon_atomizer": {"type": "hp", "percent": 1.00},
 	"star_atomizer": {"type": "hp", "percent": 1.00},
 }
 
@@ -389,6 +387,11 @@ const CONSUMABLE_EFFECTS := {
 func use_item(item_id: String) -> bool:
 	if not has_item(item_id):
 		return false
+
+	if item_id == "sol_atomizer":
+		return _use_status_cure(item_id)
+	if item_id == "moon_atomizer":
+		return false # No downed-companion recipient yet; never fake a self-heal.
 
 	# Technique disks: parse disk_<tech>_<level> and route to TechniqueManager
 	if item_id.begins_with("disk_"):
@@ -765,3 +768,16 @@ func restore_items(items: Dictionary, order: Array) -> void:
 	for id in items:
 		if not _items.has(id):
 			_items[id] = int(items[id])
+
+
+func _use_status_cure(item_id: String) -> bool:
+	if SessionManager.get_location() != "field" or GameState.hp <= 0:
+		return false
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_method("has_status_effects") or not player.has_status_effects():
+		return false
+	player.clear_status_effects()
+	remove_item(item_id, 1)
+	_last_use_type = "cure"
+	_last_use_amount = 0
+	return true

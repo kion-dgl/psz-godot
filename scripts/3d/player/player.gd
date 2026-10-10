@@ -2130,6 +2130,8 @@ func _use_consumable(item_id: String) -> void:
 		# so without this a placed trap read "+1 PP" and a telepipe "+0 PP".
 		if use_type == "hp" or use_type == "pp":
 			_spawn_heal_number(use_type, amount)
+		elif use_type == "cure":
+			_ailments.feedback(self, "Cured")
 	else:
 		print("[Player] Cannot use %s" % item_id)
 
@@ -3150,6 +3152,9 @@ func can_take_hit() -> bool:
 
 func apply_status_effect(kind: String) -> void:
 	_ailments.apply(self, kind)
+
+func has_status_effects() -> bool:
+	return _freeze.remaining > 0.0 or not _ailments.effects.is_empty()
 
 func clear_status_effects() -> void:
 	_ailments.clear(self)

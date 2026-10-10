@@ -178,7 +178,20 @@ static func _recovery_and_support(player: Node3D, character: Dictionary) -> bool
 	GameState.set_mp(GameState.max_mp)
 	player._cast_technique("anti")
 	ok = _check(player._ailments.effects.is_empty(), "live Anti cast cures burn") and ok
+	ok = _cure_items(player) and ok
 	player.died.disconnect(capture)
+	return ok
+
+
+static func _cure_items(player: Node3D) -> bool:
+	var ok := true
+	player.transition_to(player.PlayerState.IDLE)
+	Inventory._items = {"sol_atomizer": 2, "moon_atomizer": 2}
+	GameState.set_hp(GameState.max_hp - 10)
+	player.apply_status_effect("burn")
+	ok = _check(Inventory.use_item("sol_atomizer") and player._ailments.effects.is_empty() and GameState.hp == GameState.max_hp - 10, "Sol cures actual player without healing") and ok
+	ok = _check(not Inventory.use_item("sol_atomizer") and Inventory.get_item_count("sol_atomizer") == 1, "healthy Sol use preserves item") and ok
+	ok = _check(not Inventory.use_item("moon_atomizer") and GameState.hp == GameState.max_hp - 10 and Inventory.get_item_count("moon_atomizer") == 2, "Moon without downed teammate cannot self-heal or consume") and ok
 	return ok
 
 
