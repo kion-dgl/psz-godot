@@ -121,15 +121,13 @@ func get_active_character():
 func set_active_slot(slot: int) -> void:
 	if slot < 0 or slot >= MAX_SLOTS or _characters[slot] == null:
 		return
-	# Save outgoing character's data
-	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
-		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
-		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
-		_characters[_active_slot]["unlocked_difficulties"] = GameState.unlocked_difficulties.duplicate()
-		_characters[_active_slot]["meseta"] = GameState.meseta
+	# Preserve outgoing order and palette before changing characters.
+	sync_inventory_to_active()
+	TrapBall.vision_until_msec = 0
 	_active_slot = slot
 	# Load incoming character's data
-	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
+	Inventory.restore_items(_characters[slot].get("inventory", {}),
+		_characters[slot].get("inventory_order", []))
 	GameState.completed_missions = _characters[slot].get("completed_missions", []).duplicate()
 	GameState.unlocked_difficulties = _characters[slot].get("unlocked_difficulties", ["normal"]).duplicate()
 	ActionPalette.load_from_character(_characters[slot])
@@ -225,6 +223,7 @@ func get_save_data() -> Array:
 func sync_inventory_to_active() -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
+		_characters[_active_slot]["inventory_order"] = Inventory._items.keys()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
 		_characters[_active_slot]["unlocked_difficulties"] = GameState.unlocked_difficulties.duplicate()
 		_characters[_active_slot]["meseta"] = GameState.meseta

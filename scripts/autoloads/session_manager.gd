@@ -71,6 +71,7 @@ func set_link_activated(link_id: String) -> void:
 
 ## Enter a field area
 func enter_field(area_id: String, difficulty: String) -> Dictionary:
+	TrapBall.vision_until_msec = 0
 	# A fresh expedition starts here, so any in-flight telepipe is no longer
 	# reachable. (Same-area "go back to where I dropped my telepipe" is
 	# routed through resume_session() in warp_teleporter._warp_to_field —
@@ -177,6 +178,7 @@ func clear_free_roam_state() -> void:
 
 ## Enter a quest (hand-authored fixed layout)
 func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
+	TrapBall.vision_until_msec = 0
 	TelepipeManager.cancel("enter_quest")
 	clear_section_states()
 	var quest := QuestLoader.load_quest(quest_id)
@@ -241,6 +243,7 @@ func add_rewards(exp_amount: int, meseta: int) -> void:
 
 ## Return to city and end session
 func return_to_city() -> Dictionary:
+	TrapBall.vision_until_msec = 0
 	# Full session end → no longer reachable via the in-flight telepipe.
 	# Covers StartWarp, boss-clear, complete_quest, and any explicit "I'm
 	# done with this expedition" path. Telepipe-style suspends use
@@ -461,6 +464,7 @@ func clear_section_states() -> void:
 ## yet doesn't have the guild counter still showing the report option after
 ## the title round-trip. Reported as a bug by Rozalin.
 func reset_all_state() -> void:
+	TrapBall.vision_until_msec = 0
 	# Title-screen path lands here. Telepipes are session-only by spec
 	# (app close, title return, quest accept/end all wipe), so cancel.
 	TelepipeManager.cancel("reset_all_state")

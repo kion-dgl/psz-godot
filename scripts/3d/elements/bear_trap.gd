@@ -9,8 +9,7 @@ const DAMAGE_AMOUNT := 20
 const HOLD_DURATION := 2.5
 const SCROLL_SPEED := 0.5
 
-var _prong_material: StandardMaterial3D = null
-var _base_material: StandardMaterial3D = null
+var _prong_materials: Array[ShaderMaterial] = []
 var _caught_body: Node3D = null
 var _hold_timer: float = 0.0
 var _is_holding: bool = false
@@ -32,10 +31,7 @@ func _ready() -> void:
 
 
 func _setup_materials() -> void:
-	var mats := _setup_split_materials(PRONG_TEX_NAME)
-	_prong_material = mats["feature"]
-	_base_material = mats["base"]
-
+	_prong_materials = _setup_split_materials(PRONG_TEX_NAME, Vector4(1.0, 1.0, 0.0, -2.31), false)
 
 func _setup_trigger_area() -> void:
 	var area := Area3D.new()
@@ -56,7 +52,9 @@ func _setup_trigger_area() -> void:
 
 
 func _on_body_stepped(body: Node3D) -> void:
-	if element_state != "on":
+	if element_state != "on" or not body.is_in_group("player"):
+		return
+	if body.has_method("can_take_hit") and not body.can_take_hit():
 		return
 	if _is_holding:
 		return
@@ -69,12 +67,15 @@ func _on_body_stepped(body: Node3D) -> void:
 
 
 func _update_animation(delta: float) -> void:
+	if element_state != "on":
+		return
+	for material in _prong_materials:
+		var offset: Vector2 = material.get_shader_parameter("uv_offset")
+		offset.y -= SCROLL_SPEED * delta
+		material.set_shader_parameter("uv_offset", offset)
+
 	if not _is_holding:
 		return
-
-	if _prong_material:
-		_prong_material.uv1_offset.y -= SCROLL_SPEED * delta
-
 	_hold_timer += delta
 	if _hold_timer >= HOLD_DURATION:
 		_release()
@@ -85,30 +86,28 @@ func _release() -> void:
 	if is_instance_valid(_caught_body):
 		if _caught_body.has_method("take_damage"):
 			_caught_body.take_damage(DAMAGE_AMOUNT)
-		if _caught_body.has_method("transition_to") and _caught_body.get("PlayerState"):
-			var has_input: bool = Input.is_action_pressed("move_forward") or Input.is_action_pressed("move_backward") or Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right")
-			if has_input:
-				_caught_body.transition_to(_caught_body.PlayerState.RUNNING)
-			else:
-				_caught_body.transition_to(_caught_body.PlayerState.IDLE)
+		# Damage owns the resulting stagger, defeat or doll-recovery state.
+		_release_hold()
 	_caught_body = null
 	set_state("off")
 	print("[BearTrap] Released player, trap disabled")
 
 
 func _apply_state() -> void:
-	if _prong_material:
-		match element_state:
-			"on":
-				_prong_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_prong_material.albedo_color.a = 1.0
-				_prong_material.alpha_scissor_threshold = 0.5
-			"off":
-				_prong_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_prong_material.albedo_color.a = 0.0
-				_prong_material.alpha_scissor_threshold = 1.0
+	for material in _prong_materials:
+		material.set_shader_parameter("visibility_alpha", 1.0 if element_state == "on" else 0.0)
 
 	if interaction_area:
 		var armed: bool = element_state == "on"
 		interaction_area.set_deferred("monitoring", armed)
 		interaction_area.set_deferred("monitorable", armed)
+
+
+func _release_hold() -> void:
+	if is_instance_valid(_caught_body) and _caught_body.get("current_state") == _caught_body.PlayerState.CUTSCENE:
+		_caught_body.transition_to(_caught_body.PlayerState.IDLE)
+
+
+func _exit_tree() -> void:
+	# Room teardown must not strand a surviving player in the trap's hold.
+	_release_hold()
