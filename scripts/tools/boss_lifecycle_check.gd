@@ -1,4 +1,5 @@
 extends Node
+const Checks = preload("res://scripts/tools/probe_checks.gd")
 ## Actual s01z arena, entry → dodge/recovery → death → exit → fresh retry.
 ## PSZ_BOSS_LIFECYCLE_CHECK=1 PSZ_PROBE_PACK=... coliseum_probe.tscn
 var _ok := true
@@ -43,8 +44,7 @@ func _run() -> void:
 	get_tree().quit(0 if _ok else 1)
 
 func _check(condition: bool, message: String) -> void:
-	print("[boss-lifecycle] %s — %s" % [message, "PASS" if condition else "FAIL"])
-	_ok = condition and _ok
+	_ok = Checks.check(condition, message, _ok, "boss-lifecycle")
 
 func _damage_guards(player: Node3D, boss: ReyburnBoss) -> void:
 	# Isolate immunity from facing; directional contact is covered by PR #750.

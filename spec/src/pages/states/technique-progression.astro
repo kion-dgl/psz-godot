@@ -1,0 +1,32 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Technique progression integrity" section="States">
+<p>Completes integration portions of #343/#747 and eligibility in #745. Existing
+class resource caps, character-level disk gates, power and PP formulas remain
+remake tuning; this work does not claim original stat/formula parity.</p>
+<ul>
+<li>New shop/drop disks MUST belong to the basic tier, matching /mechanics/techs.
+Advanced catalogue entries without a learnable base (including Grants/Megid)
+MUST NOT be sold or dropped as invisible progression dead ends.</li>
+<li>Disk levels MUST be positive and no greater than 30. New disks MUST also fit
+the highest supported class cap for their group (currently 15); difficulty and
+boss/rare bonuses MUST NOT mint disks that no class can learn. Class/group caps and
+character-level requirements MUST apply before consumption. Duplicate or lower
+levels MUST fail without consuming an inventory copy.</li>
+<li>Old saved advanced learned entries MAY remain usable for compatibility, but
+MUST obey class/group caps. A charged variant MUST use at least its learned base
+level, even when an older variant entry is present. CASTs and unknown classes
+MUST resolve level zero, including stale imported saves and palette entries.</li>
+<li>Successful disk use MUST consume only the selected copy. Save/reload MUST
+preserve the upgrade and consumed inventory. Power and PP cost MUST use the same
+resolved level as projectile status level.</li>
+<li>A charge MUST NOT start for an unlearned/class-forbidden technique or while
+already attacking/dodging. Direct cast requests while hurt, down or defeated
+MUST NOT spend PP. Existing immediate release timing is retained; event-frame
+release and full Force balance/pacing remain open for #745/#747.</li>
+</ul>
+<p>Tests: technique_progression_tests.gd and technique_progression_probe.tscn.
+The live probe uses a fresh FOmar, earned EXP to reach a disk gate, inventory
+learning, real Barta projectiles, PP spending, and a persisted reload.</p>
+</Concept>
