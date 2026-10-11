@@ -208,10 +208,7 @@ func _process(delta: float) -> void:
 
 ## The active character's meseta (0 if no active character).
 func _get_meseta() -> int:
-	var character = CharacterManager.get_active_character()
-	if character:
-		return int(character.get("meseta", 0))
-	return 0
+	return GameState.meseta
 
 
 ## NavRepeat callback: re-emit a held nav action as a synthetic input event

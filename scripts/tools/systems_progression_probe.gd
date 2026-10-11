@@ -2,7 +2,6 @@ extends "res://scripts/tools/probe_checks.gd"
 ## Run: godot --headless --path . res://scripts/tools/systems_progression_probe.tscn
 ## Isolated live route for the combined five-issue PR; uses actual imported rigs.
 const Growth := preload("res://scripts/utils/enemy_progression.gd")
-const Grind := preload("res://scripts/utils/weapon_grinding.gd")
 var _failures: Array[String] = []
 
 func _run() -> void:
@@ -81,18 +80,7 @@ func _combat(player: Node3D, enemy: EnemyBase, ch: Dictionary) -> void:
 		await get_tree().process_frame
 	_verify(ch.level == 2 and ch.max_hp > old_max_hp, "seven real kills reach level two and increase HP")
 	_verify(int(SessionManager.get_session().total_exp) == int(ch.experience), "session report and persistent kill EXP agree")
-	# Real shop transaction, instance distinction and persistence.
-	var other := Inventory.add_weapon("saber")
-	Inventory.add_item("monogrinder", 5)
-	GameState.meseta = 10000
-	seed(734)
-	var unground := CombatManager.calculate_attack_damage(1)
-	for i in 5:
-		_verify(Grind.apply("saber").success, "grind transaction %d succeeds" % i)
-	seed(734)
-	var ground := CombatManager.calculate_attack_damage(1)
-	_verify(int(ground.damage) > int(unground.damage), "grind changes live attack inputs")
-	_verify(int(ch.weapon_grinds.get(other, 0)) == 0, "second weapon instance remains unground")
+	await _grinding(ch)
 	await _blasts(player, ch)
 	SaveManager.save_game()
 	var saved_exp: int = ch.experience
@@ -177,3 +165,25 @@ func _verify(condition: bool, label: String) -> void:
 	print("[systems] %s: %s" % ["PASS" if condition else "FAIL", label])
 	if not condition:
 		_failures.append(label)
+
+func _grinding(ch: Dictionary) -> void:
+	# Real shop transaction, instance distinction and persistence.
+	var other := Inventory.add_weapon("saber")
+	Inventory.add_item("monogrinder", 5)
+	GameState.meseta = 10000
+	ch.meseta = 0
+	var shop = load("res://scenes/2d/shops/tekker.tscn").instantiate()
+	get_tree().root.add_child(shop)
+	_verify(shop._get_meseta() == 10000, "shop displays carried wallet instead of stale save snapshot")
+	seed(734)
+	var unground := CombatManager.calculate_attack_damage(1)
+	for i in 5:
+		shop._selected_index = shop._grindable_weapons.find_custom(func(w): return w.id == "saber")
+		shop._grind_selected()
+		_verify(int(ch.weapon_grinds.get("saber", 0)) == i + 1, "Tekker accept action grinds once: %d" % i)
+	seed(734)
+	var ground := CombatManager.calculate_attack_damage(1)
+	_verify(int(ground.damage) > int(unground.damage), "grind changes live attack inputs")
+	_verify(int(ch.weapon_grinds.get(other, 0)) == 0, "second weapon instance remains unground")
+	shop.queue_free()
+	await get_tree().process_frame
