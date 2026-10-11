@@ -205,27 +205,28 @@ func _apply_materials_recursive(node: Node, callback: Callable) -> void:
 		_apply_materials_recursive(child, callback)
 
 
-## Duplicate every StandardMaterial3D as a per-instance override with
-## nearest filtering, split into {"feature": …, "base": …} by whether the
-## albedo texture path contains `feature_tex`. Shared by the trap elements
-## (bear prongs / needle spikes, #215-C2); last non-matching surface wins
-## the "base" slot, matching the original per-trap behavior.
-func _setup_split_materials(feature_tex: String) -> Dictionary:
-	var result := {"feature": null, "base": null}
+## Per-instance floor-trap surfaces. Godot 4 textures have no mirrored-repeat
+## flag; the shared shader implements the axes without mutating imported assets.
+func _setup_split_materials(feature_tex: String, feature_uv: Vector4, feature_mirror_y: bool = true) -> Array[ShaderMaterial]:
+	var features: Array[ShaderMaterial] = []
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
-		if mat is StandardMaterial3D:
-			var std_mat := mat as StandardMaterial3D
-			var dup := std_mat.duplicate() as StandardMaterial3D
-			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			if std_mat.albedo_texture:
-				std_mat.albedo_texture.flags_mirrored_repeat = true
-			mesh.set_surface_override_material(surface, dup)
-			if std_mat.albedo_texture and feature_tex in std_mat.albedo_texture.resource_path:
-				result["feature"] = dup
-			else:
-				result["base"] = dup
+		var source := mat as StandardMaterial3D
+		if source == null or source.albedo_texture == null:
+			return
+		var feature := feature_tex in source.albedo_texture.resource_path
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://scripts/3d/shaders/mirror_repeat_effect.gdshader")
+		material.set_shader_parameter("albedo_texture", source.albedo_texture)
+		material.set_shader_parameter("albedo_tint", source.albedo_color)
+		material.set_shader_parameter("alpha_scissor", source.alpha_scissor_threshold)
+		material.set_shader_parameter("mirror_y", feature_mirror_y if feature else true)
+		if feature:
+			material.set_shader_parameter("uv_scale", Vector2(feature_uv.x, feature_uv.y))
+			material.set_shader_parameter("uv_offset", Vector2(feature_uv.z, feature_uv.w))
+			features.append(material)
+		mesh.set_surface_override_material(surface, material)
 	)
-	return result
+	return features
 
 
 ## Build the glowing translucent warp cylinder (telepipe / warp point —

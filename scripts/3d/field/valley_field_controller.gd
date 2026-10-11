@@ -675,6 +675,10 @@ func _ready() -> void:
 	# panel is NOT rebuilt here — it persists on the HudStats autoload (#444).
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
+	# Initial actors spawn before the HUD exists; late spawns bind in the spawner.
+	for room_enemy in _room_enemies:
+		if room_enemy is ReyburnBoss and room_enemy.is_alive:
+			_field_hud.show_boss_bar(room_enemy)
 
 	# Debug info overlay — quest ID / mission ID, section, cell position
 	var debug_session: Dictionary = SessionManager.get_session()
@@ -1775,6 +1779,10 @@ func _create_goal_pad_trigger(pos: Vector3, callback: Callable, open: bool,
 
 
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
+	# Clear callbacks can run again after a late quest-item pickup. The exit
+	# belongs to this room instance; revisiting a rebuilt room gets a new one.
+	if _map_root.has_node("Telepipe"):
+		return
 	_fdbg("[FieldElements] Spawning telepipe at %s" % pos)
 	# Per spec: when a quest-completion telepipe spawns, any player-dropped
 	# telepipe is closed. The quest one takes the slot conceptually — the

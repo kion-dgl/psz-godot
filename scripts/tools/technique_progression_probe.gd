@@ -1,4 +1,5 @@
 extends Node
+const Checks = preload("res://scripts/tools/probe_checks.gd")
 ## Entry point: godot --headless --path . res://scripts/tools/technique_progression_probe.tscn
 ## Fresh-save progression integration. Run in an isolated XDG_DATA_HOME.
 var _ok := true
@@ -100,5 +101,4 @@ func _cast(player: Node3D, expected_level: int) -> Dictionary:
 	return expected
 
 func _check(condition: bool, message: String) -> void:
-	_ok = condition and _ok
-	print("[technique-progression] %s: %s" % ["PASS" if condition else "FAIL", message])
+	_ok = Checks.check(condition, message, _ok, "technique-progression")
