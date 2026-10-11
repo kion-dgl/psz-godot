@@ -19,6 +19,7 @@ boot_splash/image="res://splash_screen.png"
 boot_splash/fullsize=true
 boot_splash/use_filter=true
 config/icon="res://bootstrap/icons/rappy.png"
+config/macos_native_icon="res://bootstrap/icons/rappy_macos.icns"
 
 [debug]
 
