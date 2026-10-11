@@ -11,6 +11,7 @@ static func run(t: Node) -> void:
 	_death_once(t)
 	_vision_lifecycle(t)
 	_cure_items(t)
+	_inventory_use_menu(t)
 
 static func _inventory_roundtrip(t: Node) -> void:
 	var saved: Dictionary = Inventory._items.duplicate()
@@ -199,3 +200,29 @@ static func _cure_items(t: Node) -> void:
 	t.assert_eq(Inventory.get_item_count("sol_atomizer"), 1, "invalid Sol preserves inventory")
 	Inventory._items = saved
 	GameState.set_hp(hp)
+
+
+static func _inventory_use_menu(t: Node) -> void:
+	var saved: Dictionary = Inventory._items.duplicate()
+	var saved_characters: Dictionary = t._isolate_character_state()
+	CharacterManager.create_character(0, "humar", "MenuUse")
+	CharacterManager.set_active_slot(0)
+	var character: Dictionary = CharacterManager.get_active_character()
+	var class_id: String = character.class_id
+	var location: String = SessionManager._location
+	var message: String = PsoStartMenu._action_message
+	Inventory._items = {"trap_vision": 2, "heat_trap": 2, "sol_atomizer": 2, "scape_doll": 2, "moon_atomizer": 2}
+	for race_class in ["humar", "hucast"]:
+		character.class_id = race_class
+		for row in PsoStartMenu._get_inventory():
+			var expected: bool = row.id in ["trap_vision", "sol_atomizer"] or (row.id == "heat_trap" and race_class == "hucast")
+			t.assert_eq(row.usable, expected, "%s inventory Use availability for %s" % [race_class, row.id])
+	SessionManager._location = "city"
+	PsoStartMenu._execute_use_item("trap_vision", "Trap Vision")
+	t.assert_eq(Inventory.get_item_count("trap_vision"), 2, "city menu attempt preserves Trap Vision")
+	t.assert_eq(PsoStartMenu._action_message, "Trap Vision only works in the field", "city menu explains field restriction")
+	character.class_id = class_id
+	t._restore_character_state(saved_characters)
+	Inventory._items = saved
+	SessionManager._location = location
+	PsoStartMenu._action_message = message

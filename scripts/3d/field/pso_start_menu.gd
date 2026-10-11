@@ -743,6 +743,7 @@ func _execute_use_item(item_id: String, item_name: String) -> void:
 		match t:
 			"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
 			"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
+			"trap_vision": _action_message = "Trap Vision active for %d seconds" % int(info.get("amount", 0))
 			"tech": _action_message = "Learned %s!" % item_name
 			"telepipe": _action_message = "Telepipe placed — step into it to warp"
 			_: _action_message = "Used %s" % item_name
@@ -751,7 +752,9 @@ func _execute_use_item(item_id: String, item_name: String) -> void:
 		# outside a field (e.g. opened the start menu while in city).
 		# Give a clearer hint rather than the generic "Couldn't use".
 		var fail_info: Dictionary = Inventory.get_last_use_info()
-		if str(fail_info.get("type", "")) == "telepipe_fail":
+		if item_id == "trap_vision" and SessionManager.get_location() != "field":
+			_action_message = "Trap Vision only works in the field"
+		elif str(fail_info.get("type", "")) == "telepipe_fail":
 			_action_message = "Telepipe only works in the field"
 		else:
 			_action_message = "Couldn't use %s" % item_name
@@ -827,7 +830,8 @@ func _get_inventory() -> Array:
 		item["usable"] = (
 			Inventory.CONSUMABLE_EFFECTS.has(item_id)
 			or disk_usable
-			or item_id == "telepipe"
+			or item_id in ["telepipe", "trap_vision", "sol_atomizer"]
+			or (TrapBall.TRAP_MODELS.has(item_id) and Inventory.can_use_traps())
 		)
 	return items
 

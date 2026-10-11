@@ -138,7 +138,11 @@ static func _vision_use() -> bool:
 	SessionManager._location = "city"
 	ok = _check(not Inventory.use_item("trap_vision") and not Inventory.use_item("heat_trap"), "city rejects vision and placement") and ok
 	SessionManager._location = location
-	ok = _check(Inventory.use_item("trap_vision") and TrapBall.vision_active(), "living field vision consumes and grants reveal") and ok
+	var vision_rows: Array = PsoStartMenu._get_inventory().filter(func(row): return row.id == "trap_vision" and row.usable)
+	ok = _check(vision_rows.size() == 1, "inventory offers Trap Vision Use") and ok
+	PsoStartMenu._execute_use_item("trap_vision", "Trap Vision")
+	ok = _check(TrapBall.vision_active() and Inventory.get_item_count("trap_vision") == 2, "inventory menu consumes Trap Vision and grants reveal") and ok
+	ok = _check(PsoStartMenu._action_message == "Trap Vision active for 60 seconds", "menu explains vision duration") and ok
 	var expiry := TrapBall.vision_until_msec
 	TrapBall.grant_vision(0.1)
 	ok = _check(TrapBall.vision_until_msec == expiry, "shorter vision grant cannot shorten expiry") and ok
