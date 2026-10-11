@@ -115,17 +115,17 @@ static func _placement(player: Node3D, character: Dictionary) -> bool:
 	var first: TrapBall
 	for node in player.get_tree().get_nodes_in_group("player_traps"):
 		if not node.field_placed: first = node
-	ok = _check(Inventory.use_item("ice_trap") and is_instance_valid(first) and first._spent, "replacement expires previous player trap") and ok
+	ok = _check(Inventory.use_item("ice_trap") and is_instance_valid(first) and not first._spent, "second placement preserves first player trap") and ok
 	await player.get_tree().process_frame
 	var active := 0
 	for node in player.get_tree().get_nodes_in_group("player_traps"):
 		if not node.field_placed:
 			active += 1
 			node.queue_free()
-	ok = _check(is_instance_valid(field_trap) and not field_trap._spent, "replacement preserves authored field traps") and ok
+	ok = _check(is_instance_valid(field_trap) and not field_trap._spent, "placement preserves authored field traps") and ok
 	field_trap.queue_free()
 	ok = _vision_use() and ok
-	ok = _check(active == 1, "only one player trap survives replacement") and ok
+	ok = _check(active == 2, "multiple player traps remain live") and ok
 	character.class_id = "humar"
 	return ok
 
@@ -153,15 +153,42 @@ static func _recovery_and_support(player: Node3D, character: Dictionary) -> bool
 	player.died.connect(capture)
 	player.apply_status_effect("burn")
 	player.take_damage(99999)
-	var ok := _check(GameState.hp == GameState.max_hp and Inventory.get_item_count("scape_doll") == 1 and deaths.is_empty() and player._ailments.effects.is_empty(), "lethal hit consumes one doll, clears burn, suppresses defeat")
+	var ok := _check(GameState.hp == 0 and player._is_defeated and player.current_state == player.PlayerState.DOWN and Inventory.get_item_count("scape_doll") == 1 and deaths.is_empty() and player._ailments.effects.is_empty(), "lethal hit consumes one doll and falls at zero HP without return prompt")
 	var trap := TrapBall.build_field("ice_trap")
 	trap._hit_player(player, "freeze", 0.0)
-	ok = _check(GameState.hp == GameState.max_hp and player._freeze.remaining == 0.0, "recovery rejects both trap damage and freeze") and ok
+	ok = _check(GameState.hp == 0 and player._freeze.remaining == 0.0, "recovery rejects both trap damage and freeze") and ok
 	trap.free()
+	ok = await _revival_presentation(player) and ok
+	player.died.disconnect(capture)
+	return _support(player, character) and ok
+
+
+static func _revival_presentation(player: Node3D) -> bool:
 	player.set_physics_process(true)
-	await player.get_tree().create_timer(2.2).timeout
+	var ok := _check(is_instance_valid(player._revival.wash), "death shows red screen wash")
+	await _wait_revival_phase(player, player._revival.down_seconds * 0.7)
+	await _capture_revival(player, "death")
+	await _wait_revival_phase(player, player._revival.down_seconds + 0.25)
+	ok = _check(GameState.hp == 0 and is_instance_valid(player._revival.particles), "revival particles play before HP restoration") and ok
+	await _capture_revival(player, "particles")
+	await _wait_revival_phase(player, player._revival.down_seconds + player._revival.PARTICLE_SECONDS)
+	ok = _check(GameState.hp == GameState.max_hp and not player._is_defeated and player._recovery_left > 0.0, "particles finish before full-HP stand-up") and ok
+	await _capture_revival(player, "standup")
+	for _frame in range(600):
+		if player._recovery_left <= 0.0: break
+		await player.get_tree().physics_frame
 	player.set_physics_process(false)
-	ok = _check(player._recovery_left == 0.0 and player.current_state != player.PlayerState.DAMAGED, "real stand-up recovers to playable state") and ok
+	return _check(player._recovery_left == 0.0 and player.current_state != player.PlayerState.DAMAGED, "real stand-up recovers to playable state") and ok
+
+
+static func _wait_revival_phase(player: Node3D, target: float) -> void:
+	for _frame in range(600):
+		if player._revival.elapsed >= target: return
+		await player.get_tree().physics_frame
+
+
+static func _support(player: Node3D, character: Dictionary) -> bool:
+	var ok := true
 	character["techniques"] = {"resta": 1, "anti": 1}
 	GameState.set_hp(1)
 	GameState.set_mp(GameState.max_mp)
@@ -179,7 +206,6 @@ static func _recovery_and_support(player: Node3D, character: Dictionary) -> bool
 	player._cast_technique("anti")
 	ok = _check(player._ailments.effects.is_empty(), "live Anti cast cures burn") and ok
 	ok = _cure_items(player) and ok
-	player.died.disconnect(capture)
 	return ok
 
 
@@ -245,3 +271,10 @@ static func _blast_boundaries(player: Node3D) -> bool:
 		player.clear_status_effects()
 		await player.get_tree().process_frame
 	return ok
+
+
+static func _capture_revival(player: Node3D, phase: String) -> void:
+	var destination := OS.get_environment("PSZ_GAMEPLAY_CAPTURE_DIR")
+	if destination.is_empty(): return
+	await player.get_tree().process_frame
+	player.get_viewport().get_texture().get_image().save_png(destination.path_join("revival_" + phase + ".png"))

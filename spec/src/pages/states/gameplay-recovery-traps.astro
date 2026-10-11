@@ -12,9 +12,12 @@ import Concept from '../../layouts/Concept.astro';
     Unknown/duplicate order entries MUST be ignored; unlisted items MUST be retained.
     Legacy saves without a list MUST retain their available dictionary order.</li>
     <li>On a lethal field hit, one held Scape Doll MUST be consumed before defeat
-    is emitted. HP MUST become full; harmful statuses MUST clear; the current
-    encounter and meseta MUST remain unchanged. Recovery grants two seconds of
-    damage/status immunity (remake tuning), with the existing stand-up animation.
+    is emitted. The player MUST reach zero HP, fall down and remain down under a
+    red screen wash before revival particles play. Only after the particle phase
+    MUST HP become full and the stand-up animation begin. Harmful statuses MUST
+    clear; the encounter and meseta MUST remain unchanged. Input and damage MUST
+    remain blocked throughout, with two seconds of recovery immunity from stand-up
+    (remake tuning). The return-to-city prompt MUST NOT appear.
     Without a doll the existing defeat transaction MUST run exactly once.</li>
   </ul>
   <h2>Trap counterplay</h2>
@@ -23,8 +26,8 @@ import Concept from '../../layouts/Concept.astro';
     with Trap Vision. Arming MUST reveal the ball to everybody. Hidden balls MUST
     NOT steal targeting or projectile hits. Revealed hostile balls MUST disarm on
     a damaging weapon contact, without detonating or awarding enemy EXP/drops.</li>
-    <li>Player traps MUST NOT be treated as enemies. Only one player trap may be live:
-    replacing it MUST expire the previous one without a blast. Placement MUST be
+    <li>Player traps MUST NOT be treated as enemies. Multiple player traps MAY be live simultaneously:
+    placing another MUST NOT expire or detonate previously placed traps. Placement MUST be
     refused without consumption outside a field, by non-CASTs, or while defeated.</li>
     <li>Trap Vision retains the existing 60-second wall-clock duration and refreshes
     to the later expiry; it MUST survive room changes but MUST reset when changing
@@ -71,4 +74,32 @@ import Concept from '../../layouts/Concept.astro';
   state boundaries. The gameplay batch probe exercises real actors/materials,
   hurtbox contacts and support delivery. Human playtesting covers visual quality,
   trap readability and full boss runs; passing logic checks does not close those gaps.</p>
+  <h2>Manual confirmation: multiple traps and Scape Doll revival</h2>
+  <p>Use a CAST with at least two trap items, and a non-CAST with Trap Vision.
+  Carry two Scape Dolls for the revival checks. Run these checks in a field.</p>
+  <ol>
+    <li><strong>Multiple traps:</strong> place one trap away from enemies, move a
+    few steps, then place another. Both MUST remain present. Lure enemies into
+    each and confirm each trap can trigger independently. Each placement consumes
+    one item; placing the second MUST NOT detonate or remove the first.</li>
+    <li><strong>Timed Trap Vision:</strong> as a non-CAST, use Trap Vision near a
+    hidden, dormant trap. It MUST become visible and targetable. Move to another
+    room before 60 seconds elapse: reveal MUST carry over, but room entry MUST NOT
+    restart the timer. After 60 seconds from use, dormant traps MUST be hidden
+    and untargetable again. CAST visibility remains available without the item.</li>
+    <li><strong>Visible death:</strong> with two dolls held, take a lethal hit.
+    HP MUST show zero, the player MUST fall and lie down, and the play area MUST
+    turn red while the HUD remains readable. There MUST be no return-to-city prompt.</li>
+    <li><strong>Revival:</strong> gold particles MUST rise around the fallen player
+    before HP refills. The player MUST then stand up, the red wash MUST fade, and
+    movement/attacks MUST resume after recovery. Exactly one doll is consumed;
+    active ailments clear, meseta remains unchanged, and the encounter continues.</li>
+    <li><strong>Repeated hits:</strong> repeat while surrounded by enemies. Hits
+    during the fall, particle phase and two-second stand-up recovery MUST NOT
+    interrupt revival or consume the second doll. Controls MUST NOT bypass recovery.</li>
+    <li><strong>Without a doll:</strong> remove remaining dolls and take a lethal
+    hit. Normal defeat and the return-to-city prompt MUST still work.</li>
+  </ol>
+  <p>Record any failure with the character class, room, item counts before/after,
+  and a short clip if animation order, screen tint or controls feel wrong.</p>
 </Concept>

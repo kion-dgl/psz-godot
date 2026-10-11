@@ -176,10 +176,11 @@ var walk_timer: float = 0.0
 # transition back to the city. Decoupled from HP on purpose: the defeat
 # transaction revives to full HP synchronously on Yes-press (SessionManager
 # .defeat_return_to_city), so an HP-coupled guard stops firing while the
-# field Player still lives on for the transition frames. Cleared implicitly
-# by the city spawning a fresh Player (this flag defaults false).
+# field Player still lives on for the transition frames. Scape Doll recovery
+# clears it after the particle phase; city arrival spawns a fresh Player.
 var _is_defeated: bool = false
 var _recovery_left := 0.0
+var _revival = preload("res://scripts/3d/player/player_revival.gd").new()
 var _ailments = preload("res://scripts/3d/player/player_ailments.gd").new()
 var _freeze = preload("res://scripts/3d/player/player_freeze.gd").new()
 
@@ -976,6 +977,7 @@ func _physics_process(delta: float) -> void:
 		_recovery_left = maxf(0.0, _recovery_left - delta)
 		if _recovery_left <= 0.0 and current_state == PlayerState.DAMAGED:
 			transition_to(PlayerState.IDLE) # Missing stand-up clips cannot strand recovery.
+	_revival.tick(self, delta)
 	# Check for fall and respawn
 	if global_position.y < fall_respawn_y:
 		_respawn()
@@ -3159,23 +3161,19 @@ func has_status_effects() -> bool:
 func clear_status_effects() -> void:
 	_ailments.clear(self)
 
-## Intercept death before the defeat signal; never end or reward the session.
+## Reserve one doll, then present death before restoring HP. The field's died
+## signal is reserved for the return-to-city defeat flow.
 func _try_auto_revive() -> bool:
-	if GameState.hp > 0:
+	if GameState.hp > 0 or _is_defeated or _revival.active:
 		return false
 	if not Inventory.remove_item("scape_doll", 1):
 		return false
-	_recovery_left = 2.0
-	_ailments.feedback(self, "Scape Doll")
-	_is_defeated = false
+	_is_defeated = true
 	clear_status_effects()
 	TrapBall.vision_until_msec = 0
-	GameState.set_hp(GameState.max_hp)
-	var character = CharacterManager.get_active_character()
-	if character != null:
-		character["hp"] = GameState.hp
 	_drop_charge()
 	velocity = Vector3.ZERO
-	transition_to(PlayerState.DAMAGED)
-	play_animation(_anim_prefix + "_dam_d_wa", false)
+	transition_to(PlayerState.DOWN)
+	play_animation(_anim_prefix + "_dam_d", false)
+	_revival.begin(self)
 	return true

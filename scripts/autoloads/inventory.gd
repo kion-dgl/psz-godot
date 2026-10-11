@@ -524,9 +524,6 @@ func _use_trap(item_id: String) -> bool:
 		_last_use_type = "trap_fail"
 		_last_use_amount = 0
 		return false
-	for previous in get_tree().get_nodes_in_group("player_traps"):
-		if previous is TrapBall and not previous.field_placed:
-			previous._expire()
 	player.get_parent().add_child(trap)
 	trap.global_position = player.global_position
 	remove_item(item_id, 1)

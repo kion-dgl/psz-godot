@@ -33,8 +33,9 @@ const chart = `stateDiagram-v2
 
   <h2>Scape Doll interception</h2>
   <p>Before entering Defeat, a lethal field hit MUST try one held Scape Doll.
-  A successful auto-revive restores full HP, clears ailments and grants two seconds
-  of recovery immunity without emitting <code>died</code>, ending the session or
+  The player MUST first fall at zero HP with a red screen wash, then show revival
+  particles before restoring full HP and standing up. Ailments clear and two seconds
+  of recovery immunity start with stand-up without emitting <code>died</code>, ending the session or
   charging meseta. See <a href={siteUrl("/states/gameplay-recovery-traps")}>trap counterplay and recovery</a>.
   The defeat rules below apply when no doll is available.</p>
 
