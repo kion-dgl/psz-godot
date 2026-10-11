@@ -16,10 +16,11 @@
     },
     {
       "area": "Asset sync",
-      "grade": "B",
-      "assessment": "The style works; the already-up-to-date case does not.",
+      "grade": "A",
+      "assessment": "Kion rates asset sync A following the launch and verified-cache improvements in PR #744 (merged revision d170622d). This records the owner’s assessment; exported-device verification remains a follow-up.",
       "next": "Playtest the verified-cache fast path, first download and retry recovery on real devices; confirm repeat launches do not flash the patch screen.",
-      "label": "score:asset-sync"
+      "label": "score:asset-sync",
+      "reviewed_on": "2026-10-10"
     },
     {
       "area": "Title screen",

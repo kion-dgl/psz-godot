@@ -27,7 +27,7 @@ export default function FidelityGrades({ showCriteriaLink = true }: { showCriter
             </div>
             <div className="fidelity-bar" aria-hidden="true"><span data-grade={grade[0]} style={{ width: `${gradeBarWidth(grade)}%` }} /></div>
             <p>{assessment}</p>
-            {reviewed_on && <p className="fidelity-note">Notes reviewed {reviewed_on}; grade unchanged.</p>}
+            {reviewed_on && <p className="fidelity-note">Reviewed {reviewed_on}.</p>}
             <details>
               <summary>Next review target</summary>
               <p>{next}</p>
