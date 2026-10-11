@@ -33,6 +33,9 @@ static func _numeric_fixtures(t: Node) -> void:
 	t.assert_eq(Math.damage(24, 25), 0, "defense can reduce damage to zero")
 	t.assert_eq(Math.damage(100, 25, true), 22, "critical adds truncated half")
 	t.assert_eq(Math.damage(100, 25, false, 100), 0, "full resistance is immunity")
+	for i in 20:
+		t.assert_true(not CombatManager.apply_damage_to_enemy(100, 0, 9999, 0).hit, "zero physical hit chance always misses")
+		t.assert_true(CombatManager.apply_damage_to_enemy(100, 0, 0, 1000).hit, "full physical hit chance always lands")
 	for kind in ["technique", "blast"]:
 		for i in 20:
 			t.assert_true(CombatManager.apply_damage_to_enemy(100, 0, 9999, 0, kind).hit, "nonphysical attacks bypass accuracy: " + kind)

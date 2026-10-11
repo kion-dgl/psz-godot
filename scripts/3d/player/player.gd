@@ -3179,7 +3179,7 @@ func _try_interact() -> void:
 
 ## One guard for hostile contact, ailments and recovery.
 func can_take_hit() -> bool:
-	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not is_dodge_iframed()
+	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not is_dodge_iframed() and not PhotonBlast.is_presenting(self)
 
 func apply_status_effect(kind: String) -> void:
 	_ailments.apply(self, kind)

@@ -135,6 +135,9 @@ func _blasts(player: Node3D, ch: Dictionary) -> void:
 		var blast := PhotonBlast.equipped_blast()
 		_verify(PhotonBlast.activate(player), "%s activates" % blast)
 		_verify(not PhotonBlast.activate(player) and PhotonBlast.gauge == 0, "repeat activation cannot spend/fire again")
+		var player_hp := GameState.hp
+		player.take_technique_hit(10, "barta", 0.0)
+		_verify(GameState.hp == player_hp and not player.has_status_effects(), "blast presentation blocks damage and technique ailments")
 		await get_tree().create_timer(1.7).timeout
 		if blast in ["Granir", "Pacifal"]:
 			_verify(target.current_hp < hp and PhotonBlast.gauge == 0, "%s damages without self-charging" % blast)

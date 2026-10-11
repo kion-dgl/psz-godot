@@ -591,7 +591,7 @@ func calculate_attack_damage(combo_step: int = 1, strong: bool = false) -> Dicti
 ## Apply damage to an enemy, accounting for defense and evasion.
 ## Returns: {hit: bool, damage: int, is_critical: bool}
 func apply_damage_to_enemy(raw_damage: int, enemy_defense: int, enemy_evasion: int, player_accuracy: int, attack_kind: String = "physical") -> Dictionary:
-	var chance := clampi(Math.hit_percent(player_accuracy, enemy_evasion), 1, 99)
+	var chance := clampi(Math.hit_percent(player_accuracy, enemy_evasion), 0, 100)
 	if attack_kind == "physical" and randi_range(0, 99) >= chance:
 		return {"hit": false, "damage": 0, "is_critical": false}
 	var critical := randf() < CRITICAL_BASE_CHANCE
