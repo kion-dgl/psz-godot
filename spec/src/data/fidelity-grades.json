@@ -91,7 +91,7 @@
       "area": "Systems",
       "grade": "D",
       "assessment": "Very weak in current play: Kion reports level-1 hits around 100 damage and routine one-shots, with no meaningful player or enemy-level progression. Damage, statuses, weapon specials and grinding have been deferred.",
-      "next": "Establish a meaningful level-1 baseline, player growth and quest/free-roam enemy levels. Design a western-punk weapon economy around crafted iron weapons and restored ancient photon weapons; then validate damage, grinding and special/status effects. Playtest Scape Doll recovery, Resta/Anti and inventory order after a hard restart alongside the existing progression/economy work. Grade and owner assessment unchanged; Mac playtest pending.",
+      "next": "Playtest the combined systems pass: fresh-character damage and growth, enemy levels, grinding, Photon Blasts, base-disk restrictions and charged upgrades. Also verify Scape Doll recovery and Resta/Anti after a hard restart. Weapon economy and full combat/status fidelity remain open. Grade and owner assessment unchanged; Mac playtest pending.",
       "label": "score:systems",
       "reviewed_on": "2026-10-10"
     }

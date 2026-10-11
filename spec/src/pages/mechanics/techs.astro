@@ -10,20 +10,22 @@ import Concept from '../../layouts/Concept.astro';
   <p>Every technique has a <strong>tier</strong> (<code>TechniqueManager.TECHNIQUES[id].tier</code>):</p>
   <ul>
     <li><strong>basic</strong> — Foie, Barta, Zonde, Resta, Anti, Shifta, Deband, Jellen, Zalure. These are the <em>only</em> techniques that are learnable, assignable to the action palette, and listed in menus.</li>
-    <li><strong>mid</strong> / <strong>advanced</strong> — the gi-/ra- family (Gifoie, Rafoie, Gibarta, Rabarta, Gizonde, Razonde, …) plus Grants/Megid. These are <strong>charge-only</strong>: there is no disk to learn them and they are <strong>NOT</strong> separate entries anywhere in the UI.</li>
+    <li><strong>mid</strong> / <strong>advanced</strong> — the gi-/ra- family (Gifoie, Rafoie, Gibarta, Rabarta, Gizonde, Razonde, …) plus Grants/Megid. These have no new disks and are <strong>NOT</strong> separate selectable entries. The ra- variants are reached through the charge map; Grants/Megid have no learnable base yet and remain unavailable to fresh characters. Legacy learned advanced entries are preserved subject to class caps.</li>
   </ul>
 
   <h2>Charge model</h2>
   <p>A palette technique is cast by tap or hold:</p>
   <ul>
     <li><strong>Tap</strong> (released before <code>TECH_CHARGE_THRESHOLD</code>) casts the <strong>base</strong> technique.</li>
-    <li><strong>Hold</strong> past the threshold casts the <strong>charged</strong> variant, resolved through <code>TechniqueManager.CHARGE_MAP</code> (e.g. <code>foie → rafoie</code>). The charged variant <strong>MUST</strong> be reachable only this way.</li>
+    <li><strong>Hold</strong> past the threshold casts the <strong>charged</strong> variant, resolved through <code>TechniqueManager.CHARGE_MAP</code> (e.g. <code>foie → rafoie</code>). For fresh characters the charged variant <strong>MUST</strong> be reached this way.</li>
     <li>A mid-charge technique <strong>MUST</strong> be cancelled if the avatar is hit (see <a href={siteUrl('/states/player-state')}>Player State</a>).</li>
   </ul>
 
   <h2 id="ui-listing">UI listing (normative)</h2>
   <p>The action palette picker and the Start-menu <em>Techniques</em> screen <strong>MUST</strong> list <strong>only</strong> <code>tier == "basic"</code> techniques. The gi-/ra- variants <strong>MUST NOT</strong> appear as their own rows — they are an effect of charging a base tech, not a thing you select or learn. A screen that wants to surface the charge relationship <strong>MAY</strong> show it as a base → charged pairing in the <em>detail</em> view (PSO's original Techniques screen drew the base tech, a charge arrow, then the charged result), but the selectable list stays base-only.</p>
   <p><em>This is the contract behind hiding gi-/ra- from the Start menu: the list was looping all of <code>TECHNIQUES</code> unfiltered; it now filters to base tier, matching the palette.</em></p>
+
+  <p>Disk availability, class caps and saved-level compatibility follow <a href={siteUrl('/states/technique-progression')}>Technique progression integrity</a>.</p>
 
   <h2>Scope</h2>
   <p>PP costs, elements and status procs, and level scaling per learned disk. Disks learned from the item shop unlock <em>basic</em> techniques only.</p>

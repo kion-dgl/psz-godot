@@ -617,6 +617,7 @@ func calculate_technique_damage(technique_id: String) -> Dictionary:
 		"element": str(tech.get("element", "none")),
 		"target": str(tech.get("target", "single")),
 		"technique_id": technique_id,
+		"technique_level": tech_level,
 		"knockback": 3.0,
 	}
 
