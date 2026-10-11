@@ -505,11 +505,11 @@ func _play(short: String, force: bool = true) -> void:
 
 
 # ---- base overrides ---------------------------------------------------------
-func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
 	# Take damage/HP via the base, but never let it drop us into the base HURT
 	# state machine — the boss drives its own states. Re-assert our state after.
 	var prev := _s
-	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level)
+	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level, attack_kind)
 	if is_alive and _s != S.DEAD:
 		# base may have set current_state = HURT; ignore it, keep the boss FSM
 		if prev in [S.INTRO]:

@@ -1,12 +1,10 @@
-extends Node
+extends "res://scripts/tools/probe_checks.gd"
 ## Actual s01z arena, entry → dodge/recovery → death → exit → fresh retry.
 ## PSZ_BOSS_LIFECYCLE_CHECK=1 PSZ_PROBE_PACK=... coliseum_probe.tscn
-var _ok := true
 
-func _ready() -> void:
-	_run.call_deferred()
 
 func _run() -> void:
+	probe_label = "boss-lifecycle"
 	for attempt in 2:
 		TrapBall.grant_vision()
 		SessionManager.enter_quest("debug_boss_reyburn", "normal")
@@ -41,10 +39,6 @@ func _run() -> void:
 		await SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 	print("[boss-lifecycle] DONE " + ("ok" if _ok else "FAIL"))
 	get_tree().quit(0 if _ok else 1)
-
-func _check(condition: bool, message: String) -> void:
-	print("[boss-lifecycle] %s — %s" % [message, "PASS" if condition else "FAIL"])
-	_ok = condition and _ok
 
 func _damage_guards(player: Node3D, boss: ReyburnBoss) -> void:
 	# Isolate immunity from facing; directional contact is covered by PR #750.

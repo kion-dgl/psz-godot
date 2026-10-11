@@ -1,16 +1,10 @@
-extends Node
+extends "res://scripts/tools/probe_checks.gd"
 ## Entry point: godot --headless --path . res://scripts/tools/technique_progression_probe.tscn
 ## Fresh-save progression integration. Run in an isolated XDG_DATA_HOME.
-var _ok := true
 
-func _ready() -> void:
-	var pack := OS.get_environment("PSZ_PROBE_PACK")
-	if not pack.is_empty() and not ProjectSettings.load_resource_pack(pack, false):
-		get_tree().quit(1)
-		return
-	_run.call_deferred()
 
 func _run() -> void:
+	probe_label = "technique-progression"
 	get_tree().current_scene = null
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
@@ -98,7 +92,3 @@ func _cast(player: Node3D, expected_level: int) -> Dictionary:
 	player._handle_attack_state(2.0)
 	_check(player.current_state == player.PlayerState.IDLE, "cast recovers to idle")
 	return expected
-
-func _check(condition: bool, message: String) -> void:
-	_ok = condition and _ok
-	print("[technique-progression] %s: %s" % ["PASS" if condition else "FAIL", message])

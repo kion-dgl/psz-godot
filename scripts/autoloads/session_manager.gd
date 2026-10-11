@@ -187,6 +187,7 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 	_session = {
 		"type": "quest",
 		"quest_id": quest_id,
+		"enemy_level": int(quest.get("enemy_level", 0)),
 		"area_id": quest.get("area_id", "gurhacia"),
 		"difficulty": difficulty,
 		"stage": 1,
@@ -518,6 +519,7 @@ func accept_quest(quest_id: String, difficulty: String) -> Dictionary:
 	clear_free_roam_state()
 	_accepted_quest = {
 		"quest_id": quest_id,
+		"enemy_level": int(quest.get("enemy_level", 0)),
 		"area_id": quest.get("area_id", "gurhacia"),
 		"difficulty": difficulty,
 		"name": quest.get("name", quest_id),

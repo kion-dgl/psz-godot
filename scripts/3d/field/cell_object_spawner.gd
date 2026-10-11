@@ -884,7 +884,9 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScript,
 		dormant: bool = false) -> EnemyBase:
 	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
-	enemy.enemy_data = edata
+	var growth = preload("res://scripts/utils/enemy_progression.gd")
+	enemy.enemy_level = growth.level_for(SessionManager.get_session(), int(_c._current_cell.get("enemy_level", 0)))
+	enemy.enemy_data = growth.scaled(edata, enemy.enemy_level, str(SessionManager.get_session().get("difficulty", "normal")))
 	# Before add_child, so _ready() hides the body during setup (see EnemyBase).
 	enemy.dormant = dormant
 	var col_shape := CollisionShape3D.new()
@@ -902,7 +904,7 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 	_track_on_minimap(enemy)
 	var spawn_id := enemy_id
 	enemy.died.connect(func(e: EnemyBase) -> void:
-		_spawn_enemy_drops(e.global_position, spawn_id)
+		_spawn_enemy_drops(e.global_position, spawn_id, e.enemy_data)
 		_c._check_room_clear())
 	return enemy
 
@@ -964,8 +966,8 @@ func _spawn_switch(pos: Vector3, link_id: String) -> void:
 
 
 ## Spawn drops when an enemy is defeated.
-func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
-	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
+func _spawn_enemy_drops(pos: Vector3, enemy_id: String, scaled_data: EnemyData = null) -> void:
+	var enemy_data = scaled_data if scaled_data else EnemyRegistry.get_enemy(enemy_id)
 	var meseta_min: int = 5
 	var meseta_max: int = 20
 	var enemy_name: String = enemy_id.capitalize()
@@ -978,6 +980,7 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 	var exp_amount: int = int(enemy_data.exp_reward) if enemy_data else 0
 	if exp_amount > 0:
 		var result := CharacterManager.add_experience(exp_amount)
+		SessionManager.add_rewards(exp_amount, 0)
 		print("[EnemyDrop] +%d EXP for %s" % [exp_amount, enemy_name])
 		if result.leveled_up:
 			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)

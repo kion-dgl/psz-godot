@@ -1471,6 +1471,8 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
+	if PhotonBlast.is_presenting(self):
+		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
 		return
 	# Action commitment (spec /states/player-state, #377): a roll must fully
@@ -1605,6 +1607,8 @@ func _on_palette_released(slot: int) -> void:
 
 
 func _execute_palette_action(slot: int) -> void:
+	if PhotonBlast.is_presenting(self):
+		return
 	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
 		return
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
@@ -1615,6 +1619,8 @@ func _execute_palette_action(slot: int) -> void:
 			_start_strong_attack()
 		"dodge":
 			_start_dodge()
+		"photon_blast":
+			PhotonBlast.activate(self)
 		"kill_all":
 			_debug_kill_all()
 		_:
@@ -1630,6 +1636,8 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String) -> void:
+	if PhotonBlast.is_presenting(self):
+		return
 	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
@@ -1651,7 +1659,7 @@ func _cast_technique(technique_id: String) -> void:
 		return
 
 	var tech_data: Dictionary = CombatManager.calculate_technique_damage(technique_id)
-	var pp_cost: int = int(tech_data.get("pp_cost", 5))
+	var pp_cost: int = 0 if PhotonBlast.flozir_left > 0.0 else int(tech_data.get("pp_cost", 5))
 
 	if GameState.mp < pp_cost:
 		print("[Player] Not enough PP for %s (need %d, have %d)" % [technique_id, pp_cost, GameState.mp])
@@ -1723,7 +1731,8 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 			_spawn_foie(spawn_pos, forward, damage, kb)
 
 
-func _apply_element_to_proj(proj: Projectile) -> void:
+func _apply_element_to_proj(proj: Projectile, kind: String = "technique") -> void:
+	proj.attack_kind = kind
 	proj.element = _current_attack_element
 	proj.element_level = _current_attack_element_level
 
@@ -1860,7 +1869,7 @@ class _GifoieSpiral extends Area3D:
 				return
 			_hit_targets.append(hurtbox.owner_node)
 			var hit_dir: Vector3 = (hurtbox.owner_node.global_position - caster.global_position).normalized()
-			hurtbox.take_hit(damage, hit_dir * knockback, accuracy, element, element_level)
+			hurtbox.take_hit(damage, hit_dir * knockback, accuracy, element, element_level, true, "technique")
 
 
 func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -1877,7 +1886,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 	# Full damage to primary target
 	if target_enemy.hurtbox:
 		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
-		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level)
+		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 
 	# Reduced damage to nearby enemies
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -1888,7 +1897,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 		var dist: float = enemy.global_position.distance_to(explosion_pos)
 		if dist <= explosion_radius and enemy.hurtbox:
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
-			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level)
+			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 
 	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
 
@@ -1957,7 +1966,7 @@ func _spawn_zonde(damage: int, kb: float) -> void:
 		return
 	if target_enemy.hurtbox:
 		var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		target_enemy.hurtbox.take_hit(damage, forward * kb, 100, _current_attack_element, _current_attack_element_level)
+		target_enemy.hurtbox.take_hit(damage, forward * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 	_spawn_zonde_visual(target_enemy.global_position)
 
 
@@ -2003,7 +2012,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 	# Hit primary target
 	if primary.hurtbox:
 		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		primary.hurtbox.take_hit(damage, fwd * kb, 100, _current_attack_element, _current_attack_element_level)
+		primary.hurtbox.take_hit(damage, fwd * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 	_spawn_zonde_visual(primary.global_position)
 
 	# Chain from the last hit enemy to the nearest unhit enemy
@@ -2026,7 +2035,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 		if best_enemy == null:
 			break
 		var chain_dir: Vector3 = (best_enemy.global_position - last_hit.global_position).normalized()
-		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100, _current_attack_element, _current_attack_element_level)
+		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 		_spawn_zonde_visual(best_enemy.global_position)
 		hit_enemies.append(best_enemy)
 		last_hit = best_enemy
@@ -2038,7 +2047,7 @@ func _spawn_razonde(damage: int, kb: float) -> void:
 	for enemy in nearby:
 		if enemy.hurtbox:
 			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level)
+			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
 		_spawn_zonde_visual(enemy.global_position)
 	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
 
@@ -2100,6 +2109,8 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
+	if PhotonBlast.is_presenting(self):
+		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
 		return
 	if current_state == PlayerState.DODGING:
@@ -2108,10 +2119,9 @@ func _start_strong_attack() -> void:
 	# Set weapon element for the special attack
 	var character = CharacterManager.get_active_character()
 	if character:
-		var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
-		var ws: Dictionary = character.get("weapon_stats", {}).get(weapon_id, {})
-		_current_attack_element = str(ws.get("element", ""))
-		_current_attack_element_level = int(ws.get("element_level", 0))
+		var special := CombatManager.get_weapon_special(character)
+		_current_attack_element = special.element
+		_current_attack_element_level = special.level
 
 	if current_state == PlayerState.ATTACKING:
 		# Chain like a normal attack, but the queued step is flagged special
@@ -2649,7 +2659,7 @@ func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1
 
 
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
-	if _recovery_left > 0.0:
+	if _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
 		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
@@ -2672,6 +2682,7 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 
 	if damage > 0 and not status_tick:
 		_freeze.clear(self)
+	PhotonBlast.gain_damage(mini(maxi(damage, 0), GameState.hp), GameState.max_hp, true)
 	GameState.set_hp(GameState.hp - damage)
 
 	# Damage over time has no physical impact reaction.
@@ -2745,7 +2756,7 @@ func _setup_attack_hitbox() -> void:
 func _get_attack_damage() -> Dictionary:
 	# Combo timing no longer scales damage (#461): crit and damage bonuses come
 	# from character stats + equipment, not from the chain-accept window.
-	return CombatManager.calculate_attack_damage(combo_state)
+	return CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
 
 
 func _get_equipped_weapon_type() -> int:
@@ -2810,7 +2821,13 @@ func _execute_attack_hit() -> void:
 		knock_dir = knock_dir.normalized()
 		# hits_per_step hits each, mirroring the retired Hitbox semantics
 		for _h in range(int(atk.get("hits", 1))):
-			hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level)
+			if hb is Hurtbox:
+				var packet := atk.duplicate(true)
+				packet["element"] = element
+				packet["element_level"] = element_level
+				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)))
+			else:
+				hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level)
 	if _attack_hit_targets.size() >= target_cap:
 		_attack_hit_done = true
 
@@ -2853,6 +2870,9 @@ func _fire_projectile(atk: Dictionary) -> void:
 
 	for _i in range(int(atk.get("hits", 1))):
 		var proj := Projectile.new()
+		proj.attack_packet = atk.duplicate(true)
+		proj.attack_packet["element"] = _current_attack_element if _is_special_attack else ""
+		proj.attack_packet["element_level"] = _current_attack_element_level if _is_special_attack else 0
 		proj.damage = int(atk.get("damage", 10))
 		proj.knockback = float(atk.get("knockback", 3.0))
 		proj.accuracy = int(atk.get("accuracy", 100))
@@ -2862,7 +2882,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.speed = 25.0
 		proj.max_hits = int(atk.get("max_targets", config.get("max_targets", 1)))
 		if _is_special_attack:
-			_apply_element_to_proj(proj)
+			_apply_element_to_proj(proj, "physical")
 		if weapon_type == WeaponData.WeaponType.SLICER:
 			proj.pierce = true
 			proj.bounce_radius = 3.0
@@ -3052,7 +3072,7 @@ func _update_primary_target_info(in_cone: Array, config: Dictionary) -> void:
 			return
 		_primary_target_info = {
 			"kind": "enemy",
-			"name": str(ed.name),
+			"name": "%s Lv.%d" % [str(ed.name), int(enemy.get("enemy_level") or 1)],
 			"hp": int(enemy.get("current_hp")),
 			"max_hp": int(ed.hp_base),
 		}
@@ -3186,3 +3206,7 @@ func _try_auto_revive() -> bool:
 	play_animation(_anim_prefix + "_dam_d", false)
 	_revival.begin(self)
 	return true
+
+
+func can_photon_blast() -> bool:
+	return not _is_defeated and _recovery_left <= 0.0 and _freeze.remaining <= 0.0 and not _ailments.blocks_attack() and GameState.hp > 0 and current_state in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING] and SessionManager.get_location() == "field" and not PsoStartMenu.is_open() and SceneManager._overlay_stack.is_empty()

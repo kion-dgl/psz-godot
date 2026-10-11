@@ -3,6 +3,7 @@ extends Node
 ## Ported from psz-sketch/src/systems/combat/
 
 ## Constants matching psz-sketch
+const Math := preload("res://scripts/utils/combat_math.gd")
 const BASE_HIT_CHANCE := 0.7
 const MAX_HIT_CHANCE := 0.95
 const MIN_HIT_CHANCE := 0.3
@@ -457,11 +458,26 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	var armor_evasion := 0
 	var armor_name := ""
 	if not frame_id.is_empty():
-		var armor = ArmorRegistry.get_armor(frame_id)
+		var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id))
 		if armor:
 			armor_defense = armor.defense_base
 			armor_evasion = armor.evasion_base
 			armor_name = armor.name
+
+	# Equipped units contribute to the same combat stats as other equipment.
+	var unit_stats := {"Power": "attack", "Guard": "defense", "Hit": "accuracy", "Swift": "evasion", "Mind": "technique"}
+	var unit_bonus := {}
+	for index in EquipmentUtils.get_unit_slot_count(frame_id, character):
+		var slot := "unit%d" % (index + 1)
+		var unit = UnitRegistry.get_unit(str(equipment.get(slot, "")))
+		if unit and unit_stats.has(unit.category):
+			var key: String = unit_stats[unit.category]
+			unit_bonus[key] = int(unit_bonus.get(key, 0)) + unit.effect_value
+	player_attack += int(unit_bonus.get("attack", 0))
+	player_defense += int(unit_bonus.get("defense", 0))
+	player_accuracy += int(unit_bonus.get("accuracy", 0))
+	player_evasion += int(unit_bonus.get("evasion", 0))
+	player_technique += int(unit_bonus.get("technique", 0))
 
 	# Set bonuses
 	var set_bonus: Dictionary = {}
@@ -501,7 +517,7 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 
 ## Calculate attack damage for the real-time combat system.
 ## Returns: {damage: int, hits: int, knockback: float, accuracy: int, is_innate: bool, weapon_type: int}
-func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
+func calculate_attack_damage(combo_step: int = 1, strong: bool = false) -> Dictionary:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return {"damage": 10, "hits": 1, "knockback": 5.0, "accuracy": 100, "is_innate": false, "weapon_type": 0}
@@ -509,7 +525,10 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 	var stats: Dictionary = _get_player_stats(character)
 	var player_attack: int = int(stats.get("attack", 10))
 	var weapon_attack: int = int(stats.get("weapon_attack", 0))
-	var player_accuracy: int = int(stats.get("accuracy", 100))
+	var attributes: Dictionary = character.get("weapon_stats", {}).get(str(character.get("equipment", {}).get("weapon", "")), {}).duplicate()
+	var player_accuracy: int = int(stats.get("accuracy", 100)) + int(stats.get("weapon_accuracy", 0)) + int(attributes.get("hit_pct", 0))
+	if strong:
+		player_accuracy = int(player_accuracy * 0.7)
 
 	# Get weapon type
 	var weapon_type: int = 0
@@ -536,6 +555,9 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 	if class_data and class_data.innate_weapon_type == weapon_type:
 		is_innate = true
 
+	if strong:
+		damage_mult *= 1.5 # Provisional strong-attack power; see combat-progression.
+
 	# Base damage per hit
 	var base_damage: float = float(player_attack + weapon_attack) * damage_mult
 	if is_innate:
@@ -553,6 +575,10 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 
 	return {
 		"damage": final_damage,
+		"base_attack": player_attack,
+		"weapon_attack": weapon_attack,
+		"attributes": attributes,
+		"power_multiplier": damage_mult * variance * (1.0 + INNATE_WEAPON_BONUS if is_innate else 1.0),
 		"hits": hits,
 		"knockback": knockback_val,
 		"accuracy": player_accuracy,
@@ -564,23 +590,12 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 
 ## Apply damage to an enemy, accounting for defense and evasion.
 ## Returns: {hit: bool, damage: int, is_critical: bool}
-func apply_damage_to_enemy(raw_damage: int, enemy_defense: int, enemy_evasion: int, player_accuracy: int) -> Dictionary:
-	# Hit/miss check
-	var acc_ratio: float = float(player_accuracy) / maxf(float(enemy_evasion), 1.0)
-	var hit_chance: float = clampf(BASE_HIT_CHANCE * acc_ratio, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
-	if randf() > hit_chance:
+func apply_damage_to_enemy(raw_damage: int, enemy_defense: int, enemy_evasion: int, player_accuracy: int, attack_kind: String = "physical") -> Dictionary:
+	var chance := clampi(Math.hit_percent(player_accuracy, enemy_evasion), 1, 99)
+	if attack_kind == "physical" and randi_range(0, 99) >= chance:
 		return {"hit": false, "damage": 0, "is_critical": false}
-
-	# Defense reduction (PSO-style)
-	var def_reduction: float = float(enemy_defense) * 0.25 + float(raw_damage) * float(enemy_defense) / 600.0
-	var after_def: float = maxf(float(raw_damage) - def_reduction, 1.0)
-
-	# Critical hit check
-	var is_critical: bool = randf() < CRITICAL_BASE_CHANCE
-	if is_critical:
-		after_def *= CRITICAL_MULTIPLIER
-
-	return {"hit": true, "damage": maxi(int(after_def), 1), "is_critical": is_critical}
+	var critical := randf() < CRITICAL_BASE_CHANCE
+	return {"hit": true, "damage": Math.damage(raw_damage, enemy_defense, critical), "is_critical": critical}
 
 
 ## Calculate technique damage and PP cost for a given technique.
@@ -1466,3 +1481,15 @@ func get_combo_config(weapon_type: int) -> WeaponComboConfig:
 ## {} when that step has no accept window (finisher / out of range).
 func get_combo_timing(weapon_type: int, from_step: int) -> Dictionary:
 	return get_combo_config(weapon_type).timing_for_step(from_step)
+
+
+## Resource specials and crafted instance overrides share one delivery contract.
+## These three payload mappings are explicit remake choices; original proc math is #724.
+func get_weapon_special(character: Dictionary) -> Dictionary:
+	var id: String = str(character.get("equipment", {}).get("weapon", ""))
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(id))
+	var stored: Dictionary = character.get("weapon_stats", {}).get(id, {})
+	var element: String = str(stored.get("element", weapon.element if weapon else ""))
+	var level: int = int(stored.get("element_level", weapon.element_level if weapon else 0))
+	var named := {"Heat": "status:burn", "Ice": "status:freeze", "Slow": "status:slow"}
+	return {"element": str(named.get(element, element)), "level": level}

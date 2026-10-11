@@ -1,0 +1,15 @@
+extends Node
+## Shared assertion reporting for live probes that survive scene changes.
+var _ok := true
+var probe_label := "probe"
+
+func _check(condition: bool, message: String) -> void:
+	_ok = condition and _ok
+	print("[%s] %s: %s" % [probe_label, "PASS" if condition else "FAIL", message])
+
+func _ready() -> void:
+	var pack := OS.get_environment("PSZ_PROBE_PACK")
+	if not pack.is_empty() and not ProjectSettings.load_resource_pack(pack, false):
+		get_tree().quit(1)
+		return
+	call_deferred("_run")

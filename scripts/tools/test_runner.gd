@@ -131,6 +131,7 @@ func _run_tests_core() -> void:
 	test_hud_stats_persistent_panel()
 	test_ranger_playthrough()
 	preload("res://scripts/tools/technique_progression_tests.gd").run(self)
+	preload("res://scripts/tools/systems_progression_tests.gd").run(self)
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
@@ -426,7 +427,7 @@ func test_registries() -> void:
 	assert_true(saber != null, "Can look up saber")
 	if saber:
 		assert_eq(saber.name, "Saber", "Saber name correct")
-		assert_eq(saber.attack_base, 40, "Saber ATK base = 40")
+		assert_eq(saber.attack_base, 37, "Saber ATP uses recovered early saber record")
 
 	var common_armor = ArmorRegistry.get_armor("common_armor")
 	assert_true(common_armor != null, "Can look up common_armor")
@@ -1248,7 +1249,7 @@ func test_palette_picker_grid() -> void:
 	# TechniqueManager.TECHNIQUES / a few literals; an action in the grid that
 	# matches none of those is a slot that silently does nothing when pressed —
 	# which is exactly how #575's traps shipped.
-	const DISPATCH_LITERALS := ["attack", "strong_attack", "dodge", "kill_all"]
+	const DISPATCH_LITERALS := ["attack", "strong_attack", "dodge", "kill_all", "photon_blast"]
 	var undispatchable: Array = []
 	for id in grid_ids:
 		var aid: String = str(id)

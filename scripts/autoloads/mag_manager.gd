@@ -153,6 +153,9 @@ func feed_mag(mag_state: Dictionary, item_id: String) -> Dictionary:
 	# Check for evolution
 	var new_form_id: String = determine_form(mag_state)
 	var evolved: bool = new_form_id != form_before
+	var previous_form = get_mag_form(form_before)
+	if previous_form and previous_form.photon_blast in ["Granir", "Pacifal", "Midgul", "Flozir"]:
+		mag_state["inherited_blast"] = previous_form.photon_blast
 	mag_state["form_id"] = new_form_id
 
 	if leveled_up:

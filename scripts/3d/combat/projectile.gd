@@ -5,6 +5,8 @@ class_name Projectile extends Area3D
 var speed: float = 30.0
 var max_range: float = 20.0
 var damage: int = 10
+var attack_kind := "physical"
+var attack_packet: Dictionary = {}
 var knockback: float = 3.0
 var accuracy: int = 100
 var direction: Vector3 = Vector3.FORWARD
@@ -94,7 +96,7 @@ func _on_area_entered(area: Area3D) -> void:
 	# Latch before damage: death callbacks and additional parts can re-enter.
 	_spent = not pierce or (max_hits > 0 and _hit_targets.size() >= max_hits)
 	var hit_pos := hurtbox.owner_node.global_position
-	hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
+	_deliver(hurtbox, direction * knockback)
 	if bounce_radius > 0.0:
 		_bounce_to_nearby(hit_pos)
 	if max_hits > 0 and _hit_targets.size() >= max_hits:
@@ -132,4 +134,11 @@ func _bounce_to_nearby(hit_pos: Vector3) -> void:
 			continue
 		_hit_targets.append(enemy)
 		var bounce_dir: Vector3 = to_enemy
-		enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy, element, element_level)
+		_deliver(enemy.hurtbox, bounce_dir * knockback)
+
+
+func _deliver(hurtbox: Hurtbox, push: Vector3) -> void:
+	if not attack_packet.is_empty():
+		hurtbox.take_attack(attack_packet, push)
+	else:
+		hurtbox.take_hit(damage, push, accuracy, element, element_level, is_instance_valid(owner_node) and owner_node.is_in_group("player"), attack_kind)

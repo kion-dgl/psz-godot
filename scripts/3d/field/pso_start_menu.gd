@@ -527,7 +527,7 @@ func _do_equip() -> void:
 ## agree on order — but an action missing from here is unreachable, which
 ## test_runner's palette-grid test pins.
 const _PAL_PICKER_ROWS: Array = [
-	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
+	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge", "photon_blast"]},
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
 	{"ids": ["monofluid", "difluid", "trifluid"]},
 	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},

@@ -114,10 +114,9 @@ func get_weapon_type_name() -> String:
 
 ## Get attack at specific grind level
 func get_attack_at_grind(grind: int) -> int:
-	if max_grind <= 0:
-		return attack_base
-	var t = clampf(float(grind) / float(max_grind), 0.0, 1.0)
-	return int(lerpf(attack_base, attack_max, t))
+	if attack_base <= 0:
+		return attack_base # Zero-power tech resources still need their original stat field.
+	return attack_base + 2 * clampi(grind, 0, maxi(max_grind, 0))
 
 
 ## Get accuracy at specific grind level
