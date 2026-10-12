@@ -27,3 +27,39 @@ Validation: seeded unit checks in test_runner; actual arena lifecycle/autonomous
 attack probe via `PSZ_ROBOT_CHECK=1 godot --headless --path .
 res://scripts/tools/coliseum_probe.tscn`. The probe must also pass an exported
 build with `PSZ_PROBE_PACK` pointing at the existing asset pack.
+
+## Arca / Humilias
+
+Coliseum Master → Bosses → Humilias, `debug_boss_humilias`, s06z_na1.
+Source species65 `boss_robot_cmb`, original 6000/11000/14000 base HP rows;
+the shared progression layer still applies remake level scaling. The pack
+stores the combined NARC mesh as `boss_robot`; the controller makes this
+asset alias explicit, keeping source identity distinct from Paru.
+
+Combined gun chains21/22/23 and24/25/26 release at frame2; drill chains
+27/28/29/30 and31/32/33/34 have contact at controller counters[52,67);
+sweep35/36/37/38 opens contact at frame8 of37. Original cooldown/HP
+phase predicates gate the three split requests. Both parts return before
+combined exposure resumes. Nine independently warned floor slots activate
+at105, clear at150, and stay in world/arena coordinates as Humilias moves.
+Original centers are −10/0/+10 on each axis; original cell lookup clamps
+truncated (coordinate+15)/10 to 0..2 (021A0EC0/02198778).
+
+Remaining gaps: authored attack selector, walking/turning/part motion,
+request delivery latency, split attack scheduling, hit geometry, projectile
+pools, freeze/slow/status payloads, floor selection and
+original knockdown reaction. Initial split duration approximates active-state
+counting; the retail counter advances only in specific child38 states.
+Floor mode2 persistent visuals/occupancy edges and mode3 status variants
+remain unported. Do not interpret the probe or identity correction as 1:1.
+
+`PSZ_HUMILIAS_CHECK=1` selects the Humilias arena probe from coliseum_probe.
+It drives autonomous gun/drill/sweep, floor activation, damage-gated split,
+paired recombine, retained HP, one defeat, delivery cleanup and retry.
+
+Identity integration also corrects Paru free-roam's legacy Humilias spawn
+and its generator recipe to Chaos/Mobius, and removes the source65→63
+FieldPopulation alias. Existing story layouts are retained: Heretic stages
+Chaos/Mobius in s06z_na1; Control System stages Humilias in s07z_na1. These
+legacy story-arena assignments still need a separate campaign review; use
+the dedicated Coliseum boss encounters for the intended Paru/Arca arenas.

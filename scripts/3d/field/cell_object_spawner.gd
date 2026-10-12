@@ -851,7 +851,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 		return
 
 	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
-	if edata and enemy_id in ["reyburn", "octo_diablo", "chaos_mobius"]:
+	if edata and enemy_id in ["reyburn", "octo_diablo", "chaos_mobius", "humilias"]:
 		if _spawn_boss(pos, enemy_id, edata):
 			return
 
@@ -914,7 +914,8 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
 	var path: String = {"reyburn":"res://scripts/3d/enemies/reyburn_boss.gd",
 		"octo_diablo":"res://scripts/3d/enemies/octo_diablo_boss.gd",
-		"chaos_mobius":"res://scripts/3d/enemies/paru_robot_boss.gd"}[enemy_id]
+		"chaos_mobius":"res://scripts/3d/enemies/paru_robot_boss.gd",
+		"humilias":"res://scripts/3d/enemies/humilias_boss.gd"}[enemy_id]
 	var script := load(path) as GDScript
 	if not script: return false
 	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, script)

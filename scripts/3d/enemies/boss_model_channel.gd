@@ -24,8 +24,9 @@ func setup(parent: Node3D, index: int, mesh: PackedScene, library: AnimationLibr
 	parent.add_child(model)
 	player = NodeUtils.first_of_type(model,"AnimationPlayer") as AnimationPlayer
 	skeleton = NodeUtils.first_of_type(model,"Skeleton3D") as Skeleton3D
-	for name in player.get_animation_library_list(): player.remove_animation_library(name)
-	player.add_animation_library("",library)
+	if library:
+		for name in player.get_animation_library_list(): player.remove_animation_library(name)
+		player.add_animation_library("",library)
 	player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	clock.stage_changed.connect(_stage_changed)
 	clock.finished.connect(_next)

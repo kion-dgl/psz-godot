@@ -12,14 +12,14 @@
     {
       "title": "Mother family and shrine boss are distinct",
       "issue": 683,
-      "evidence": "mother_trinity uses source mother (57), while humilias uses boss_mother (66). The boss roster identifies boss_mother as the z_004 Mother with face parts; humilias boss definition places it in the shrine arena s07z_na1. mother_sword/gun/tech occupy 58\u201360. These are different source identities; current display names are not a reliable reference key.",
-      "next": "Validate regular mother identity in #690 and the shrine boss in #718 before renaming. Heaven\u2019s Mother is an authored composite encounter, not an additional source-table identity."
+      "evidence": "Humilias is now source65 with its own robot controller; Mother Trinity source66 is implemented separately in PR #753, while legacy mother_trinity remains source57 on this branch.",
+      "next": "Reconcile Mother Trinity mappings when #753 lands; retain tower Mother variants 58\u201360."
     },
     {
       "title": "Robot encounter and orphan attack data",
       "issue": 716,
-      "evidence": "chaos_mobius resource and boss definition both use boss_robot, but the encounter is in Arca s06z_na1 while the resource lists Paru. FieldPopulation aliases boss_robot_cmb (65) to boss_robot (63). Boss notes describe a combined Arca rig and refer to chaos_mobius_paru; that ID exists only in the attack table, not as a resource or boss definition. Paru\u2019s arena currently documents a Sinow stand-in.",
-      "next": "Resolve split/combined identity and arena routing together. Do not count chaos_mobius_paru as a playable validated variant or silently delete its recorded kit."
+      "evidence": "Paru source63/64 and Arca source65 now have distinct dedicated controllers and arena routing. Existing pack combined mesh stored as boss_robot.",
+      "next": "Complete target/motion/status fidelity, full original split geometry and campaign playtests."
     },
     {
       "title": "Shinowa and Sinow encounter collision",
@@ -30,8 +30,8 @@
     {
       "title": "Source coverage and additions",
       "issue": 683,
-      "evidence": "All nonempty retail source names except sample, boss_robot_cmb and boss_mother_piece have a resource model match. sample and the empty slot are not playable; combined robot is aliased; Mother pieces lack standalone resources. Four PSO additions (Poison Lily, Chaos Sorcerer, Sinow Beat/Gold) and unresolved shinowa sit outside this source table. This is table coverage, not proof that every original encounter or boss part is implemented.",
-      "next": "Keep source exclusions visible. #718 must verify whether Mother parts are actually implemented; a FieldPopulation comment saying they are boss-owned is not runtime proof."
+      "evidence": "Paru source63/64 and Arca source65 now have distinct dedicated controllers and arena routing. Existing pack combined mesh stored as boss_robot.",
+      "next": "Complete target/motion/status fidelity, full original split geometry and campaign playtests."
     }
   ],
   "enemies": [
@@ -388,12 +388,12 @@
     {
       "id": "humilias",
       "name": "Humilias",
-      "model_id": "boss_mother",
-      "animation_model_id": "boss_mother",
+      "model_id": "boss_robot_cmb",
+      "animation_model_id": "boss_robot_cmb",
       "is_boss": true,
-      "source_id": 66,
+      "source_id": 65,
       "issue": 718,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "Confirmed ROM species 65 Humilias; combined robot, partial behavior port"
     },
     {
       "id": "hypao",
@@ -783,10 +783,10 @@
     },
     {
       "id": "humilias",
-      "model_id": "boss_mother",
-      "arena": "s07z_na1",
+      "model_id": "boss_robot_cmb",
+      "arena": "s06z_na1",
       "issue": 718,
-      "note": "Matches resource model; original behavior pending."
+      "note": "Combined/split robot controller; original source65 stats. Pack mesh alias is explicit."
     },
     {
       "id": "chaos_mobius",
@@ -845,16 +845,16 @@
       "reason": "Empty source slot."
     },
     {
-      "source_id": 65,
-      "model_id": "boss_robot_cmb",
-      "issue": 716,
-      "reason": "FieldPopulation alias to boss_robot; no distinct resource. Combined encounter identity still needs validation."
-    },
-    {
       "source_id": 67,
       "model_id": "boss_mother_piece",
       "issue": 718,
       "reason": "Boss component, intentionally excluded from room population. Actual part spawning/behavior remains unverified."
+    },
+    {
+      "source_id": 66,
+      "model_id": "boss_mother",
+      "reason": "Mother Trinity identity/controller is addressed in separate PR #753. Humilias is source65.",
+      "issue": 718
     }
   ],
   "metadata_exceptions": [

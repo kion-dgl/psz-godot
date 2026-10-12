@@ -215,17 +215,9 @@ static func _build_ambience_fallback() -> void:
 
 ## RE internal names with no enemy of their own, and what to do about them.
 ##
-## boss_robot_cmb is the only name in s06z's template, so dropping it would
-## leave Arca's boss room empty. The RE roster files it under the boss_robot
-## series and the name carries the prefix, so it resolves to the same enemy.
-## That is an inference, flagged as one — every other name here comes straight
-## off a model_id.
-##
-## boss_mother_piece is deliberately absent: the parts are spawned by the
-## mother boss itself, not placed as separate room enemies.
-const NAME_ALIASES := {
-	"boss_robot_cmb": "boss_robot",
-}
+## Humilias has its own source65 resource; no split/combined alias.
+## boss_mother_piece remains spawned by its owning boss, not room population.
+const NAME_ALIASES := {}
 const DROPPED_NAMES := ["boss_mother_piece", "sample", ""]
 
 

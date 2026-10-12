@@ -76,7 +76,7 @@
       "area": "Bosses",
       "grade": "D",
       "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
-      "next": "Playtest Reyburn/Octo and the new Paru split robot encounter. Paru now uses separate parts, recovered attack counter spans and HP tuning; movement, targeting, projectile/status geometry and complete boss parity remain open. Grade and dated owner assessment unchanged; Mac playtest pending.",
+      "next": "Playtest Reyburn/Octo, Paru split robots and Arca Humilias. Humilias now has source65 stats/model identity, combined attack chains, HP-gated splits, paired return and spatial floor warnings. Complete target/movement, status/projectile geometry and knockdown parity. Grade and dated owner assessment unchanged; Mac playtest pending.",
       "label": "score:bosses",
       "reviewed_on": "2026-10-10"
     },

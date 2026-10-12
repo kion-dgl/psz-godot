@@ -37,3 +37,12 @@ func _clear_deliveries() -> void:
 	super._clear_deliveries()
 	contact_hits.clear()
 	for part in robots: part.stop()
+
+func _tier() -> int:
+	return int({"normal":0,"hard":1,"super-hard":2}.get(SessionManager.get_session().get("difficulty","normal"),0))
+
+func _physics_process(delta: float) -> void:
+	if _dying:
+		robots[1].clock.advance(delta)
+		robots[1].player.seek(robots[1].clock.frame_q12/4096.0/60.0,true)
+	super._physics_process(delta)
