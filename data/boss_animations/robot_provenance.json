@@ -1,6 +1,6 @@
 {
   "source": "psz-asset-viewer/public/enemies/boss_robot, extracted original boss_robot NARC",
-  "command": "godot --headless --path . --script scripts/tools/export_robot_clips.gd -- <viewer>/public/enemies/boss_robot",
+  "command": "godot --headless --path . --script res://scripts/tools/export_robot_clips.gd -- <viewer>/public/enemies/boss_robot",
   "archive_sha256": "d7acc41f38c17012cf37e96fdceffac4b8229c827f3cf3f6cc0f789460ea5635",
   "adaptation": "Existing pack contains boss_robot_cmb split meshes. Channel0 tracks retarget z_003u to z_103u; unused put02 joint omitted because shipped mesh lacks it. Exact original split geometry is not claimed. No pack mutation.",
   "sources": {
