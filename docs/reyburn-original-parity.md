@@ -91,7 +91,9 @@ horn test explicitly seeds the part budget. No clean-stat solo/RNG sweep,
 Hard/Super Hard or multiplayer coverage is claimed.
 
 Original intro/death cameras, run/jump/bite root motion, exact target selection,
-small-angle ground steering, airborne facing/pitch, all attack-region semantics,
+small-angle ground steering, enhanced entity time scaling (original B4 uses
+4710/4096 per call; this port still uses a unit controller clock), airborne
+facing/pitch, all attack-region semantics,
 sound timing and the 13 original effect bindings need further work. Primitive
 projectiles/fire/hazard and shared damage are explicit port adapters. Floor
 validation and a degenerate spin-path guard are Godot safeguards. Whole-flight

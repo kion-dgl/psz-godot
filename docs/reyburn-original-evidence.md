@@ -47,7 +47,9 @@ the Godot arena probe; original sequence coverage is recorded separately in JSON
 The flight countdown starts at 1500 Q12-effective updates and resets to 1500 when
 the flight **finishes**, not when it starts. At unit rate this is about 50 seconds
 of grounded time plus the current attack/transition. Existing state completion
-and enhanced time scaling can change observed start intervals. Running around
+and enhanced time scaling can change observed start intervals. In the retained
+long run, enhanced B4 decrements by **4710 raw Q12 units** per controller call
+(about 1.15 nominal updates), observed on 4,443 non-reset transitions. Running around
 changes facing, positions and the chosen attack; it does not replace that timer
 with a simple probability on each animation.
 
