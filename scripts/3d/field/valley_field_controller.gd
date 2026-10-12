@@ -3052,7 +3052,10 @@ func clear_octo_storm() -> void:
 	if not is_instance_valid(_map_root) or str(_current_cell.get("stage_id", "")) != "s02z_na1":
 		return
 	if is_instance_valid(_weather_node):
-		_weather_node.emitting = false
+		var weather := _weather_node
+		var fade := weather.create_tween()
+		fade.tween_property(weather,"amount_ratio",0.0,4.0)
+		fade.tween_callback(func(): weather.emitting = false)
 	var lightning := get_node_or_null("Lightning")
 	if lightning: lightning.queue_free()
 	_slot = _slot.duplicate(true)

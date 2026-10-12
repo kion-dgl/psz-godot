@@ -29,6 +29,7 @@ var _turn_from := 0.0
 var _turn_to := 0.0
 var _return_ticks := 0
 var _death_ticks := 0
+var _edge_radii: Array[float] = []
 var presentation: OctoPresentation
 # Captured intervals, including controller handshakes, not animation lengths.
 const CENTER_SUCTION := [[12,61],[13,91],[15,21],[16,16],[17,35],[18,41],[2,181],[4,21]]
@@ -43,7 +44,7 @@ func _ready() -> void:
 		limb.setup(self,index+1,load(SHORT_MESH if short else LONG_MESH),SHORT_CLIPS if short else LONG_CLIPS,catalog.actions)
 		# Authored arena-relative placement; original controller transforms TBD.
 		var angle: float = [-PI/4,PI/4,-3*PI/4,3*PI/4][index] if short else (-0.8 if index == 4 else 0.8)
-		limb.model.position = Vector3(sin(angle)*6.0,0,cos(angle)*6.0) if short else Vector3(-10 if index == 4 else 10,0,8)
+		limb.model.position = Vector3(sin(angle)*6.0,0,cos(angle)*6.0) if short else Vector3(-8 if index == 4 else 8,0,0)
 		limb.model.rotation.y = angle if short else 0.0
 		limb.model.visible = false
 		limb.attack_tick.connect(_limb_attack)
@@ -107,6 +108,7 @@ func _controller_tick() -> void:
 	if not _origin_set:
 		_origin_set = true
 		_phase_origin = global_position
+		_measure_arena_edges()
 	controller.tick()
 	body_ticks += 1
 	_tick_limbs()
@@ -194,7 +196,10 @@ func _execute_request(id: int) -> void:
 		17:
 			body_state = "spin"
 			controller.timers[1] = 0
-			for index in 4: limbs[index].play([24])
+			for index in 4:
+				limbs[index].model.visible = true
+				limbs[index]._idle = 26
+				limbs[index].play([])
 			play_action(1,{0:-1})
 			_set_parts(false)
 		5,6:
@@ -254,7 +259,7 @@ func _transition_tick() -> void:
 			if transition_ticks == 102:
 				controller.change_mode()
 				model.visible = false
-				global_position = _phase_origin + Vector3(0,0,-18)
+				global_position = _edge_position(0.0)
 				rotation.y = 0
 				_sector = 0
 				for index in 4:
@@ -327,7 +332,11 @@ func _death_action() -> int:
 	return 21
 
 func _intro_tick() -> void:
-	if body_ticks == 1: presentation.begin(target,_phase_origin)
+	if body_ticks == 1:
+		if is_instance_valid(target):
+			var toward := target.global_position-global_position
+			rotation.y = atan2(toward.x,toward.z)
+		presentation.begin(target,_phase_origin)
 	# Original channel 2, then channel 1, then center body (0219D614).
 	if body_ticks in [25,90]:
 		var index := 1 if body_ticks == 25 else 0
@@ -419,7 +428,7 @@ func _spin_tick() -> void:
 func _relocate_tick() -> void:
 	# Heading sectors are recovered; arc radius/easing remain Godot adapters.
 	var angle := lerpf(_turn_from,_turn_to,clampf(float(body_ticks)/120.0,0.0,1.0))
-	global_position = _phase_origin + Vector3(sin(angle),0,-cos(angle))*18.0
+	global_position = _edge_position(angle)
 	rotation.y = -angle
 	if body_ticks >= 120:
 		_restore_limbs()
@@ -450,7 +459,27 @@ func _position_short_limbs() -> void:
 func _tick_limbs() -> void:
 	for limb in limbs:
 		if limb.model.visible: limb.tick()
-		if (body_state == "absorb" or body_state == "spin" and body_ticks < 120) and not limb.busy:
+		if body_state == "absorb" and not limb.busy:
 			limb.model.visible = false
 			_hurt_parts[limb.channel].set_deferred("monitorable",false)
 	_position_short_limbs()
+
+# Find the outer plank boundary on each octagon side. Keep the body in water,
+# with its front hurt volume close enough to the edge for melee.
+func _measure_arena_edges() -> void:
+	for sector in 8:
+		var direction := Vector3(sin(sector*PI/4.0),0,-cos(sector*PI/4.0))
+		var outer := 0.0
+		for step in range(8,121):
+			var point := _phase_origin + direction*float(step)*0.5
+			var ray := PhysicsRayQueryParameters3D.create(point+Vector3.UP*12,point-Vector3.UP*12,1,[get_rid()])
+			var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+			if not hit.is_empty() and hit.normal.y > 0.7:
+				outer = float(step)*0.5
+		_edge_radii.append(outer+4.5 if outer > 0.0 else 26.0)
+
+func _edge_position(angle: float) -> Vector3:
+	var sector := wrapf(angle/(PI/4.0),0.0,8.0)
+	var index := int(sector)
+	var radius := lerpf(_edge_radii[index],_edge_radii[(index+1)%8],sector-index)
+	return _phase_origin + Vector3(sin(angle),0,-cos(angle))*radius

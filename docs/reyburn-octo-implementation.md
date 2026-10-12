@@ -1,5 +1,9 @@
 # Reyburn and Octo Diablo implementation
 
+Player-observed requirements and the next-pass acceptance checklist are recorded
+in [Boss observations and acceptance checklist](boss-playtest-observations.md).
+Use that checklist to drive mechanical work and later original-game comparisons.
+
 This branch replaces Reyburn's authored prototype and Octo's generic EnemyBase
 AI with dedicated, playable controllers. The Octo follow-up also integrates
 main at 97d3f93e, including the reviewed Dark Shrine PR #753 and Coliseum changes.
@@ -108,6 +112,71 @@ Do not treat passing component tests as a full original-game fight comparison.
 - Multiplayer target-slot selection, original RNG stream, balance and matched
   full-fight trajectories remain unverified. Existing arena meshes/cameras and
   authored encounter scaling are reused.
+
+## Brief Reyburn entrance
+
+The October 12 Mac playtest found Reyburn initially facing away while its long
+intro played during live gameplay. The observed original uses an arena-entry
+cutscene: player entrance, overhead flight and loop, landing, then opening roar.
+The local presentation now compresses that order into 4.5 seconds: 1.6 seconds
+of flight, 1 second of landing, and 1.9 seconds of roar. These durations and the
+camera/path are authored choices, not measured retail timings. The camera stays
+4.5 units behind the player at the normal 1.9-unit height and tracks the dragon.
+Landing searches for supported floor roughly 27 units from the player, with a
+body-width margin; unsupported candidates are rejected. Player control
+and the regular orbit camera return immediately after the roar, with Reyburn
+facing the player. Damage and AI scheduling are held during the presentation;
+scene exit also releases the player and camera. Live animation pacing and camera
+framing still need the next hands-on playtest.
+
+The follow-up playtest found repeated bites immediately after control returned
+and continued attacks against the defeated player. An authored pacing layer now
+holds attack selection and pursuit for 75 ticks (2.5 seconds) after entry and each
+sequence. A completed bite sequence also prevents another bite request for 180
+ticks (6 seconds), through both the distance selector and random fallback.
+Timings within a bite sequence remain unchanged. The player defeat latch cancels
+attack queues and existing projectiles and switches Reyburn to idle; a revived
+or replaced player gets a fresh rest period before combat resumes. These values
+are playtest tuning, not recovered original-game cooldowns.
+
+## Flight and ground steering follow-up
+
+The next Mac playtest found an off-arena landing, one airborne fireball per
+flight, and stationary turret-like ground turns. Aerial cycles now make two or
+three fireball passes, relocating between shots, before approaching a supported
+landing point. The shot aims down from the head toward the player. Landing
+selection raycasts the environment collision mesh at the center and eight points
+around a four-unit body footprint, rejects steep or uneven support, and samples
+from the established floor height rather than the airborne body height. A failed
+landing check triggers a safe approach search; it does not descend at the invalid
+position. Jump destinations and advancing bites also use the support check.
+
+Ground pursuit, pre-attack alignment and running now accelerate forward speed
+and yaw speed. Turning is capped at 32 degrees/second and coupled to actual
+travel, so blocked movement cannot rotate the body in place. An obstructed path
+tries a short reverse, and an alignment that times out abandons that request
+rather than snapping toward the player. These movement rates, the aerial path,
+and pass counts are authored adapters to the playtest observations, pending
+comparison with original-game movement. The live probe covers all three aerial
+sequences, actual fireball deliveries, relocation, off-mesh recovery and steering.
+
+## Ground contact and attack positioning
+
+The following playtest found occasional floating feet, excessive circling,
+walking through the dragon, and repeated damage from footstep windows. Ground
+locomotion now applies the sampled collision-floor height to the body. Repositioning
+chooses a supported flank destination, dashes toward it, then turns back for a
+fireball. It commits once range and bearing allow the existing pre-attack turn
+to finish alignment; a denied firing angle ends the maneuver after seven seconds.
+
+Reyburn uses a full-width cylindrical torso on a dedicated solid-boss collision
+layer. The player now collides with that layer as well as the environment; other
+enemy body layers are unchanged. Ordinary walk/run descriptor combat windows are
+suppressed while their sound events remain active, avoiding footstep damage chains.
+Deliberate attack windows remain active. These are authored playtest changes, not
+claims about recovered original footstep damage rules. Live probes verify player
+movement is blocked by the torso, floor following, harmless locomotion, immediate
+fireball selection from a usable vantage and bounded repositioning.
 
 ## Playtest
 
@@ -219,3 +288,14 @@ The shared descriptor helper retains Shrine aiming/projectile-origin hooks and
 supports its single capsule/head receiver in the multipart target scanner.
 All four boss dispatch entries, standard Shrine camera, Trinity anchor, current
 Coliseum controls and both probe entry points are retained.
+
+## Octo playtest corrections (2026-10-12)
+
+The opening now faces the player, central spin retains four extended tentacles,
+and edge placement samples the actual outer plank collision boundary instead of
+using the fixed 18-unit radius. Long tentacle roots flank the body. Suction has
+procedural inward wind streaks. Defeat fades rain over four seconds and blends
+the cloudy sky over six seconds while preserving the starting sky material.
+Weather tweens belong to the surviving arena nodes, so boss cleanup does not
+interrupt them. All values remain authored tuning; visual acceptance is pending
+against P01–P06 in the observation checklist.
