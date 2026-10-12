@@ -5,14 +5,18 @@ const AREA_LEVELS := {"gurhacia": 1, "rioh": 5, "ozette": 10, "paru": 15, "makar
 const DIFFICULTY_LEVELS := {"normal": 0, "hard": 30, "super-hard": 60}
 
 static func level_for(session: Dictionary, authored: int = 0) -> int:
+	var coliseum := int(session.get("coliseum_enemy_level", 0))
+	if coliseum > 0:
+		return clampi(coliseum, 1, 100)
 	var base: int = authored if authored > 0 else int(session.get("enemy_level", 0))
 	if base <= 0:
 		base = int(AREA_LEVELS.get(session.get("area_id", "gurhacia"), 1))
 	return clampi(base + int(DIFFICULTY_LEVELS.get(session.get("difficulty", "normal"), 0)), 1, 100)
 
-static func scaled(source: EnemyData, level: int, difficulty: String = "normal") -> EnemyData:
+## Independently spawned boss components can supply their own recovered tier rows.
+static func scaled(source: EnemyData, level: int, difficulty: String = "normal", rows_override: Array = []) -> EnemyData:
 	var result: EnemyData = source.duplicate()
-	var rows: Array = Original.data.enemies.get(source.id, [])
+	var rows: Array = rows_override if not rows_override.is_empty() else Original.data.enemies.get(source.id, [])
 	if not rows.is_empty():
 		var tier: int = {"normal": 0, "hard": 1, "super-hard": 2}.get(difficulty, 0)
 		var row: Array = rows[tier]

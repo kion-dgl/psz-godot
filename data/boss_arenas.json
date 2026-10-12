@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "comment": "Boss debug-room mapping + behavior draft (#493, tool at #/boss-room). Bosses are arena-bound: behavior is mapped inside the boss's own stage, not a flat sandbox. `arena` is the default (taken from the quest that spawns the boss today); the tool can load any z-arena. Sibling file to enemy_attacks.json. v2 adds per-boss `phases` / `attacks` / `anchors` \u2014 DRAFT tables read off the rig clip vocabularies (spec /states/bosses), to be corrected by observation in the room before any Godot implementation. Unset attack fields default per /mechanics/enemy-attacks. `chain` is a clip-token sequence (tokens ending in `lp` loop); `anchors` are authored with the room's click tool and are positions in the boss's default arena frame.",
+  "comment": "Boss debug-room mapping + behavior draft (#493, tool at #/boss-room). Bosses are arena-bound: behavior is mapped inside the boss's own stage, not a flat sandbox. `arena` is the default (taken from the quest that spawns the boss today); the tool can load any z-arena. Sibling file to enemy_attacks.json. v2 adds per-boss `phases` / `attacks` / `anchors` \u2014 DRAFT tables read off the rig clip vocabularies (spec /states/bosses), to be corrected by observation in the room before any Godot implementation. Unset attack fields default per /mechanics/enemy-attacks. `chain` is an authored clip-token sequence; an `lp` name alone does not prove descriptor looping. Original action/stage/event contracts are in data/re_reference/boss_behavior_contract.json; see docs/boss-behavior-analysis.md. `anchors` are authored with the room's click tool and are positions in the boss's default arena frame.",
   "arenas": {
     "s01z_na1": {
       "area": "valley_z",
@@ -25,7 +25,7 @@
     "s05z_na1": {
       "area": "paru_z",
       "label": "Oblivion City Paru arena",
-      "note": "the real Paru boss (two floating robots) isn't in the PSZ extraction; the boss room is the PSO Sinow line stand-in (sinow_beat / sinow_gold rare)"
+      "note": "the original Paru robot archives and live controller traces are available in psz-re; this debug room currently uses the PSO Sinow stand-in (sinow_beat / sinow_gold rare)"
     },
     "s06z_na1": {
       "area": "arca_z",
@@ -46,6 +46,27 @@
     }
   },
   "bosses": {
+    "mother_trinity": {
+      "model_id": "boss_mother",
+      "arena": "s07z_na1",
+      "quest_source": "debug_boss_mother_trinity",
+      "model_scale": 1.0,
+      "fsm": {
+        "stationary": true
+      },
+      "anchors": [
+        {
+          "name": "body",
+          "pos": [
+            0,
+            0,
+            -10
+          ],
+          "note": "Fixed yaw 0 (+Z); authored cutout fit."
+        }
+      ],
+      "note": "Fixed body in north platform cutout with stage cables behind it. Authored visual fit; not a recovered ROM coordinate. See docs/mother-trinity-reference.md for observations, descriptor chains and uncertainties."
+    },
     "reyburn": {
       "model_id": "boss_dragon",
       "arena": "s01z_na1",
@@ -1092,7 +1113,7 @@
         }
       ],
       "anchors": [],
-      "note": "composite boss: Heaven's Mother is the three tower mother elites (blade/force/shot) cycling as phases; warp_st/warp_ed is the teleport (likely the form transition AND relocation). boss_mother_piece rig (km* clips, 9) in the viewer looks like the fight's floating pieces/adds \u2014 import pending observation. Forms are regular roster enemies (blade_mother spawns in investigate_tower), so no is_boss flags.",
+      "note": "Authored three-style tower encounter, not a verified original form-cycle. Retail Heaven Mother is source mother (57), distinct from Mother Trinity/boss_mother (66). Blade/Shot/Force share overlay 23; the koma pieces belong to Trinity/overlay 31. See docs/boss-behavior-analysis.md for recovered selector/attack chains and the missing live tower evidence.",
       "clip_notes": {
         "wat": "idle",
         "stt": "threat/entrance",

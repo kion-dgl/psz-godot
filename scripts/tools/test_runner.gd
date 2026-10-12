@@ -33,6 +33,7 @@ func _ready() -> void:
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
+	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)
 	test_player_states()
 	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
@@ -73,6 +74,7 @@ func _run_tests_combat() -> void:
 	test_enemy_archetype_modules()
 	test_enemy_berserk_kamikaze()
 	test_coliseum_debug_quest()
+	preload("res://scripts/tools/coliseum_level_tests.gd").run(self)
 	test_coliseum_master_picker()
 	test_coliseum_roster_grouping()
 	test_coliseum_mother_variations()
@@ -4064,11 +4066,10 @@ func test_coliseum_roster_grouping() -> void:
 	assert_eq(enemy_count + boss_count, EnemyRegistry.get_enemy_count(), "tabs cover the roster")
 	assert_true(boss_count > 0, "boss tab is populated")
 	assert_true(saw_reyburn, "reyburn is on the boss tab")
-	# Bosses load their own arena quest (kion playtest); mother_trinity has none
-	# and falls back to the coliseum cell.
+	# Bosses load their own arena quest (kion playtest); Trinity has its own encounter
 	assert_eq(ColiseumRoster.boss_quest_for("reyburn"), "debug_boss_reyburn", "reyburn arena quest")
 	assert_eq(ColiseumRoster.boss_quest_for("sinow_beat"), "debug_boss_paru", "sinow shares the paru arena")
-	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_heavens_mother",
+	assert_eq(ColiseumRoster.boss_quest_for("mother_trinity"), "debug_boss_mother_trinity",
 		"mother_trinity fights in the eternal tower arena (s087_na1)")
 
 	var saw_hildegigas := false

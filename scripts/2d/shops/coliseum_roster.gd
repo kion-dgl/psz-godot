@@ -142,14 +142,12 @@ static func _areas_of(e) -> Array:
 	return out
 
 
-## Explicit arena picks for bosses whose own quest doesn't place THEM (kion:
-## mother_trinity fights in the Eternal Tower boss arena s087_na1 — its quest
-## stages the three mothers there, which is the trinity fight's arena).
+## Preserve Trinity’s dedicated Shrine arena, but spawn Trinity and its pieces.
 const ARENA_QUEST_OVERRIDES := {
-	"mother_trinity": "debug_boss_heavens_mother",
+	"mother_trinity": "debug_boss_mother_trinity",
 }
 
-## Mother Trinity's variations are each their own Bosses-tab option, fighting
+## The separate tower Mother styles each have their own Bosses-tab option, fighting
 ## SOLO in the tower arena (kion) — not is_boss in data, so they're pinned here
 ## (positions from the authored three-mother encounter).
 const MOTHER_VARIATIONS := {
@@ -236,3 +234,29 @@ static func mixed_roster() -> Array:
 			"element":"%d enemies" % names.size(), "hp":hp, "areas":names,
 			"archetype":"mixed group", "kinds":["melee", "ranged", "room clear"]})
 	return [{"name":"Mixed Groups", "area_rank":0, "rows":rows}]
+
+
+## Picker preference is in-memory; only a newly launched Coliseum session gets it.
+static var selected_enemy_level := 0
+const Growth = preload("res://scripts/utils/enemy_progression.gd")
+
+static func row_level(row: Dictionary) -> int:
+	if selected_enemy_level > 0: return clampi(selected_enemy_level, 1, 100)
+	var quest_id := str(row.get("quest_id", ""))
+	if not quest_id.is_empty():
+		var quest := QuestLoader.load_quest(quest_id)
+		var cell: Dictionary = quest.sections[0].cells[0]
+		return Growth.level_for(quest, int(cell.get("enemy_level", 0)))
+	return Growth.level_for({"area_id":row.get("arena", {}).get("area_id", "city")})
+
+static func row_hp(row: Dictionary) -> int:
+	var ids: Array = MIXED_GROUPS[row.id].enemies if MIXED_GROUPS.has(row.id) else [row.id]
+	var total := 0
+	for id in ids:
+		total += Growth.scaled(EnemyRegistry.get_enemy(id), row_level(row)).hp_base
+	return total
+
+static func apply_level_override() -> void:
+	SessionManager.get_session()["coliseum_encounter"] = true
+	if selected_enemy_level > 0:
+		SessionManager.get_session()["coliseum_enemy_level"] = clampi(selected_enemy_level, 1, 100)

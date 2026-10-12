@@ -487,6 +487,10 @@ func _use_standard_item(item_id: String) -> bool:
 ## while one is already active automatically cancels the old one) so this
 ## function just needs to find the field controller and let it spawn.
 func _use_telepipe() -> bool:
+	if SessionManager.get_session().get("coliseum_encounter", false):
+		_last_use_type = "coliseum_escape_blocked"
+		_last_use_amount = 0
+		return false
 	if SessionManager.get_location() != "field":
 		_last_use_type = "telepipe_fail"
 		_last_use_amount = 0

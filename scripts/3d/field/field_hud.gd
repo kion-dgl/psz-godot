@@ -202,7 +202,7 @@ func show_boss_bar(boss: EnemyBase) -> void:
 		add_child(_boss_bar)
 	var max_hp: int = boss.enemy_data.hp_base if boss.enemy_data else boss.current_hp
 	var boss_name: String = boss.enemy_data.name if boss.enemy_data else "Boss"
-	(_boss_bar as _BossHealthBar).bind(boss_name, max_hp, boss.current_hp)
+	(_boss_bar as _BossHealthBar).bind("%s  Lv.%d" % [boss_name, boss.enemy_level], max_hp, boss.current_hp)
 	boss.damaged.connect(func(e: EnemyBase, _amt: int) -> void:
 		if _boss_bar and is_instance_valid(e):
 			(_boss_bar as _BossHealthBar).set_hp(e.current_hp))
@@ -461,6 +461,7 @@ class _TargetInfoPanel extends Control:
 	const HP_TRACK := Color(0.19, 0.31, 0.49)
 
 	var _info: Dictionary = {}
+	var _show_health := true
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -476,8 +477,9 @@ class _TargetInfoPanel extends Control:
 		size = Vector2(PANEL_W, PANEL_H)
 
 	func update_info(info: Dictionary) -> void:
-		if info == _info:
+		if info == _info and _show_health == DebugConfig.show_enemy_health_bars:
 			return
+		_show_health = DebugConfig.show_enemy_health_bars
 		_info = info.duplicate()
 		visible = not _info.is_empty()
 		queue_redraw()
@@ -490,6 +492,7 @@ class _TargetInfoPanel extends Control:
 		if str(_info.get("kind")) == "enemy":
 			draw_string(font, Vector2(14, 20), str(_info.get("name", "")),
 				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - 28, 13, PszPanel.TEXT_DARK)
+			if not _show_health: return
 			var max_hp: int = int(_info.get("max_hp", 0))
 			var hp: int = int(_info.get("hp", 0))
 			var ratio: float = clampf(float(hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 0.0
@@ -776,6 +779,7 @@ class _BossHealthBar extends Control:
 	var _name: String = "Boss"
 	var _max_hp: int = 1
 	var _hp: int = 1
+	var _show_health := true
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -788,6 +792,11 @@ class _BossHealthBar extends Control:
 		offset_top = 40.0
 		offset_bottom = 40.0 + NAME_H + BAR_H + 6.0
 		size = Vector2(BAR_W, NAME_H + BAR_H + 6.0)
+
+	func _process(_delta: float) -> void:
+		if _show_health != DebugConfig.show_enemy_health_bars:
+			_show_health = DebugConfig.show_enemy_health_bars
+			queue_redraw()
 
 	func bind(boss_name: String, max_hp: int, hp: int) -> void:
 		_name = boss_name
@@ -808,6 +817,7 @@ class _BossHealthBar extends Control:
 		# name
 		draw_string(font, Vector2(0, NAME_H - 4), _name,
 			HORIZONTAL_ALIGNMENT_CENTER, BAR_W, 15, Color(0.95, 0.92, 0.85))
+		if not _show_health: return
 		# bar track + border
 		var bar_rect := Rect2(0, NAME_H + 4, BAR_W, BAR_H)
 		draw_rect(bar_rect, HP_TRACK, true)

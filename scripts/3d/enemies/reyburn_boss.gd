@@ -1,6 +1,11 @@
 class_name ReyburnBoss extends EnemyBase
 ## Reyburn — the Gurhacia Valley dragon boss (psz-re boss_dragon / s01z).
 ##
+## Authored prototype, not original-game AI parity. The emulator-backed findings
+## in docs/boss-behavior-analysis.md supersede this controller's timing and phase
+## assumptions. BossActionEvents and BossDamageRules are tested porting helpers;
+## the sequence scheduler and gameplay integration remain to be implemented.
+##
 ## A phase-driven boss that replaces the plain "walk up and melee" behaviour a
 ## generic EnemyBase would give it. Behaviour is data-driven from
 ## data/boss_arenas.json (the authored kit, clips verified against the z_001

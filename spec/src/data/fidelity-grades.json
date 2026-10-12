@@ -40,14 +40,14 @@
       "area": "City",
       "grade": "B",
       "assessment": "Presentation exceeds the original in places, but some angles break down. Principal’s office needs a final pass.",
-      "next": "Inspect multiple camera angles and finish the principal’s office.",
+      "next": "Inspect multiple camera angles and finish the principal’s office. Verify the Coliseum Master’s shared left-menu/right-NPC framing; grade unchanged.",
       "label": "score:city"
     },
     {
       "area": "HUD",
       "grade": "B",
       "assessment": "Better than the original overall, but pixelated and still improvable.",
-      "next": "Verify crisp rendering, readability and layout at supported resolutions.",
+      "next": "Verify crisp rendering, readability and layout at supported resolutions, including effective levels in boss health bars; grade unchanged.",
       "label": "score:hud"
     },
     {
@@ -76,7 +76,7 @@
       "area": "Bosses",
       "grade": "D",
       "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
-      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation. Playtest Reyburn HUD, dodge/pushback, recovery, projectile cleanup and return/retry handling; original attack/phase fidelity and the other boss assignments remain open. Grade and owner assessment unchanged; Mac playtest pending.",
+      "next": "Add Snowfield and Makara bosses; make Mother Brain the Arca Plant boss (including necessary level changes), Dark Falz the Dark Shrine boss with a richer form progression, and Blade/Force/Shot Mother Eternal Tower bosses rather than ordinary enemies. Resolve internal identity mappings before implementation. Playtest Reyburn HUD, dodge/pushback, recovery, projectile cleanup and return/retry handling; original attack/phase fidelity and the other boss assignments remain open. Grade and owner assessment unchanged; Mac playtest pending. Dark Shrine test encounters now have dedicated controllers, descriptor timing and phase-boundary probes; playtest Trinity piece/body exposure and Falz half/quarter reactions. Trinity now uses s07z_na1 with a fixed body in the broken platform edge, animated head receiver and head-origin laser; verify platform coverage and camera in the Mac playtest against reference #755. Trinity now has exclusive tile reservations, hop-spin-melee/tech cycles, synchronized waves, and an authored floor-cover break after two losses with the survivor retained. Verify combat balance and original cover identity; piece visuals, exact retail tactics/delivery geometry, selection, retail coordinates/handoff, and Reyburn/Octo full parity remain incomplete. Falz now walks, strikes forward, carries variable-radius balls, retracts them for radial volleys, telegraphs floor-tail strikes and enters a faster damageable shadow phase below quarter HP. Verify original effect assets and hands-on combat balance. Grades unchanged.",
       "label": "score:bosses",
       "reviewed_on": "2026-10-10"
     },
@@ -91,7 +91,7 @@
       "area": "Systems",
       "grade": "C",
       "assessment": "Kion raises Systems from D to C after local Mac playtesting of PR #752 (6c2230c2 plus the playtest fixes committed in this PR) on 2026-10-11. Combat progression, inventory grinding with visible per-instance ATP and grind levels, dedicated Photon Blast activation and the segmented HUD gauge now support the core loop. The Coliseum exit blocker was reproduced and fixed with regression coverage; broader balance and fidelity work remain.",
-      "next": "Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Existing traversal defects remain separate follow-up work.",
+      "next": "Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Coliseum now exposes player/enemy levels, scaled HP previews and debug invincibility; verify hands-on tuning and controller use. Existing traversal defects remain separate follow-up work. Grade and assessment date unchanged.",
       "label": "score:systems",
       "reviewed_on": "2026-10-11"
     }
