@@ -1,0 +1,18 @@
+{
+  "source": "psz-asset-viewer corrected part-specific GLBs, generated from boss_octopus.narc",
+  "archive_sha256": "c629b8b162eefe43044ff9354e1ad269f5ab0d481cd1342075017757dd61c37e",
+  "command": "godot --headless --path . --script scripts/tools/export_octo_clips.gd -- /path/to/psz-asset-viewer/public/enemies/boss_octopus",
+  "purpose": "Animation libraries for existing distributed meshes. Original pack accidentally includes body clips on the tentacle rigs. No mesh/texture or pack replacement. Application export includes these resources.",
+  "inputs": {
+    "z_002_tt": {
+      "path": "public/enemies/boss_octopus/parts/z_002_tt/z_002_tt.glb",
+      "sha256": "744689d9ec318f6ddc7739d42fd372fdfd833196144041c507e26c98d3ab3ef4",
+      "output": "data/boss_animations/z_002_tt.tres"
+    },
+    "z_002_st": {
+      "path": "public/enemies/boss_octopus/parts/z_002_st/z_002_st.glb",
+      "sha256": "8a2ef5d166738f6501915302d4c5300a127c76bf486727d20f9ceb84715b066d",
+      "output": "data/boss_animations/z_002_st.tres"
+    }
+  }
+}

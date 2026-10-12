@@ -139,6 +139,6 @@ func _bounce_to_nearby(hit_pos: Vector3) -> void:
 
 func _deliver(hurtbox: Hurtbox, push: Vector3) -> void:
 	if not attack_packet.is_empty():
-		hurtbox.take_attack(attack_packet, push)
+		hurtbox.take_attack(attack_packet, push, owner_node)
 	else:
-		hurtbox.take_hit(damage, push, accuracy, element, element_level, is_instance_valid(owner_node) and owner_node.is_in_group("player"), attack_kind)
+		hurtbox.take_hit(damage, push, accuracy, element, element_level, is_instance_valid(owner_node) and owner_node.is_in_group("player"), attack_kind, owner_node)

@@ -842,13 +842,15 @@ func _execute_companion_hit() -> void:
 	for i in range(mini(int(atk.max_targets), in_cone.size())):
 		var enemy: Node3D = in_cone[i]
 		var hb: Variant = enemy.get("hurtbox")
+		if enemy.has_method("hurtbox_in_cone"):
+			hb = enemy.hurtbox_in_cone(origin,rotation.y,_weapon_config).get("hurtbox")
 		if hb == null or not is_instance_valid(hb):
 			continue
 		var knock_dir: Vector3 = enemy.global_position - global_position
 		knock_dir.y = 0
 		knock_dir = knock_dir.normalized()
 		for _h in range(int(atk.hits)):
-			hb.take_hit(int(atk.damage), knock_dir * float(atk.knockback), int(atk.accuracy), "", 0)
+			hb.take_hit(int(atk.damage), knock_dir * float(atk.knockback), int(atk.accuracy), "", 0, false, "physical", self)
 		_note_companion_hit(enemy, int(atk.damage))
 
 

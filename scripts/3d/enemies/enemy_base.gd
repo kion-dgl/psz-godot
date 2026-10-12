@@ -1754,7 +1754,7 @@ func _apply_difficulty() -> void:
 
 
 func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
-	if not is_alive:
+	if not is_alive or not _accepts_damage():
 		return
 
 	# Break freeze/sleep on any hit
@@ -1777,6 +1777,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 	var final_damage: int = int(int(result.get("damage", raw_damage)) * damage_mult * _vulnerable_mult)
 	var is_crit: bool = result.get("is_critical", false)
 	current_hp -= final_damage
+	_after_damage_applied(final_damage)
 	damaged.emit(self, final_damage)
 
 	# Spawn floating damage number
@@ -1787,6 +1788,8 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 	if current_hp <= 0:
 		_die()
 	else:
+		if not _uses_generic_hurt_reaction():
+			return
 		# Try status effect from element
 		if not hit_element.is_empty() and hit_element_level > 0:
 			_try_apply_status(hit_element, hit_element_level)
@@ -1807,6 +1810,19 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		velocity = Vector3.ZERO  # Stop movement during stagger
 
 		_play_animation("dmg", true)  # Force play damage animation
+
+
+## Bosses can gate exposure and consume post-subtraction damage before death.
+func _accepts_damage() -> bool:
+	return true
+
+
+func _after_damage_applied(_amount: int) -> void:
+	pass
+
+
+func _uses_generic_hurt_reaction() -> bool:
+	return true
 
 
 func _die() -> void:
@@ -2314,3 +2330,7 @@ func _update_status_visuals() -> void:
 func _set_model_tint(tint: Color) -> void:
 	for mat in _cached_materials:
 		mat.albedo_color = tint
+
+
+func _set_hit_context(_part: int, _source: Node3D) -> void:
+	pass

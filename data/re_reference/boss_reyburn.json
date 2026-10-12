@@ -93,5 +93,268 @@
     }
   },
   "naming_note": "Reyburn's bones are romanized Japanese (L_ude, atama, sippo) while Octo Diablo's are English (Left_arm, top_head). Different asset authors, same L/R pairing convention.",
-  "vtable_slots": 22
+  "vtable_slots": 22,
+  "entity_map_B5": {
+    "request": "godot-parity-requests.md B5 - psz-godot assumes the Octo-derived entity offsets hold for boss_dragon, and asks for confirmation",
+    "answer": "PARTLY, AND THE PART psz-godot MOST NEEDS IS REFUTED. The common header transfers; the tail does not.",
+    "confidence": "confirmed for the header, refuted for the tail",
+    "oracle": "five savestates of one Reyburn fight at HP 1650 / 1576 / 1439 / 1429 / 1419, entity located by scanning main RAM for vtable 0x0219F8D4. The body is at 0x0237a9d0, whose +0x34 is 0x0237aa04 - the address this file already cites for HP, so the entity is identified by an independently recorded landmark rather than by picking the plausible hit.",
+    "a_scanning_trap_worth_recording": "0x02198018, 0x02198050 and 0x02198088 also contain the vtable word and are NOT entities. Their +0x18 / +0x34 read 63707 / 48400 and similar, and their positions are in the hundreds of thousands. Filter vtable hits by 0 < current <= max <= 20000 or three ghosts survive.",
+    "CONFIRMED_on_reyburn": {
+      "+0x00 vtable": "0x0219F8D4",
+      "+0x18 u16 max HP": "1650, byte-identical across all five states",
+      "+0x34 u16 current HP": "1650 -> 1576 -> 1439 -> 1429 -> 1419",
+      "+0x38 / +0x40 position X / Z": "vary per state",
+      "+0x44 u16 facing": "varies per state (96, 43159, 46392, 46392, 46432)"
+    },
+    "REFUTED_on_reyburn": {
+      "the_claim": "+0xD4 mode, +0xD8 state, +0xE0 selected action, +0xE4 phase row - carried over from Octo Diablo",
+      "what_is_actually_there": {
+        "+0xD4": "0x0237b9a0",
+        "+0xD8": "0x0237ba30",
+        "+0xDC": "0x0237bbf0",
+        "+0xE0": "0x0237bcb0",
+        "+0xE4": "0x0237bd00"
+      },
+      "why_this_is_conclusive": "all five are valid main-RAM addresses, they form an ascending series, they are byte-identical across a 231-point HP drop spanning four separate captures, and they dereference to structured blocks rather than to noise. A phase row index and a mode flag do not behave like that.",
+      "the_consequence_for_psz_godot": "reading phase from +0xE4 on Reyburn yields 0x0237bd00. That is not a wrong number, it is a pointer - so any attack-table lookup indexed by it is unbounded, and any 'phase == 1' test is permanently true.",
+      "what_they_probably_are": "LEAD, not established: five sub-object pointers. Reyburn has 21 bones against Octo's 14 and is the only boss with a separate part-joint record, so a parts array in the class tail is the obvious reading. Nothing here ties a pointer to a named part."
+    },
+    "CANDIDATES_for_the_real_state_fields": {
+      "method": "diffed the first 0x140 bytes of the entity across all five states; only six words differ, four of which are the confirmed HP / position / facing",
+      "+0xD0 u16": "583, 474, 578, 584, 575 - varies but not monotonically with HP. Timer- or frame-counter-shaped.",
+      "+0xEC low byte": "8, 8, 8, 10, 10 - changes once, late in the sequence. The most enum-shaped field in the record and the best candidate for state or selected action.",
+      "confidence": "guess. Identified by variance across five states, nothing more. Neither has been watched changing against a known event."
+    },
+    "NOT_MEASURED_and_psz_godot_should_keep_gating": {
+      "phase threshold": "unmeasured. psz-godot's 35 percent enrage is unsupported, but so is copying Octo's max/2 - the tail layout already differs between the two classes, so nothing licenses assuming the phase RULE transfers when the phase FIELD does not.",
+      "does he fly": "+0x3C (Y) is 0 in all five states, so Reyburn is on the ground at every HP from 100 percent down to 86 percent. That is a genuine constraint on the 'timed flight cycle' psz-godot invented, but it is not evidence about what happens below 86 percent.",
+      "what_would_close_it": "one fight driven past half HP with +0xD0 and +0xEC sampled alongside +0x34 and +0x3C. The static route is exhausted - every savestate on disk is above 86 percent."
+    }
+  },
+  "attack_selection_B1": {
+    "request": "godot-parity-requests.md B1 — 'breakpoint the selection slot in Reyburn's vtable (0x0219F8D4, ov20), read the table it indexes by +0xE4'",
+    "answer": "REFUTED AS POSED. Reyburn is not table-driven. Slot 11 is not a selector on this class, there is no Octo-shaped weight table in its overlay, and nothing in ov20 reads the roll source at all.",
+    "confidence": "confirmed for the negatives; the +0xEC positive is confirmed as a bitfield, unnamed per bit",
+    "method_was_validated_on_OCTO_FIRST": "every step was run against Octo Diablo, where the answer is already recorded, before being run against Reyburn. A scan for u32 rows summing to 100 finds Octo's table at exactly 0x0219FFF4 with rows [90,0,10] and [0,90,10] and only 3 hits in 39 KB. Vtable index 11 of 0x021A1280 resolves to 0x021983f5, the recorded selection function. Decompiling it reproduces the recorded shape: a 3-iteration loop over PTR_DAT_ov21__0219fff4 indexed iVar5*4 + *(entity+0xe4)*0xc, running total compared against *(*(entity+0x10)+0x88), gated on *(entity+0xd8) == 0.",
+    "NEGATIVE_1_no_weight_table_in_ov20": "scanned ov20 (32,704 bytes, 0x02197f80..0x0219ff40) for rows summing to 100 at widths 2..5 as u32 and u16: ZERO hits. Also zero for u32 rows summing to 1000 or 10000. Byte-width scans return 27-43 hits but every one is at an unaligned address inside an instruction stream, which is what noise looks like. The same scan finds Octo's table immediately.",
+    "NEGATIVE_2_nothing_in_ov20_reads_the_roll": "decompiled all 213 ov20 functions and searched for the roll source *(*(entity+0x10)+0x88) that Octo's selector compares its running total against. ZERO functions reference it. So it is not that the table moved — the weighted-roll mechanism is absent from this class.",
+    "SLOT_11_IS_A_FLAG_SETTER_NOT_A_SELECTOR": {
+      "address": "ov20::02198234, 98 bytes (Octo's equivalent is 1278)",
+      "what_it_does": "keyed on param_2 — 0 calls FUN_02035880/FUN_020358e8/FUN_02036b24 and sets +0xEC |= 0x40; 2 sets |= 0x01; 4 sets |= 0x02",
+      "so": "the slot that selects an attack on Octo enters a state and raises a flag on Reyburn"
+    },
+    "POSITIVE_+0xEC_IS_REYBURNS_BEHAVIOUR_STATE_BITFIELD": {
+      "reach": "24 of the 213 ov20 functions read or write it — by far the most-touched field in the class",
+      "bits_observed": {
+        "0x001": "set by slot 11 (param_2==2); cleared in 0219ae94; tested in 0219aec4",
+        "0x002": "set by slot 11 (param_2==4); cleared in 0219ced4; tested in 0219cf80 and 0219e27c",
+        "0x004": "set and cleared in 02199030; tested in 02198a38",
+        "0x008": "set and cleared in 021980c8; tested in 0219ab24",
+        "0x010": "set in 0219a874 / 0219aec4 / 0219c3dc; cleared in 0219ab24 / 0219b574 / 0219cdbc; tested in 021987d0 / 0219aa48",
+        "0x020": "cleared in 0219ab24; tested in 0219aa48",
+        "0x040": "set by slot 11 (param_2==0); tested in 02198300, 02199c98, 0219a2bc, 0219a3ec — the most-tested bit",
+        "0x080": "set in 02198518; tested in 021980c8, 0219a2bc, 0219a3ec",
+        "0x100": "set in 02199c98; tested in 021980c8",
+        "0x200": "tested in 021980c8",
+        "0x400": "set in 0219d59c"
+      },
+      "no_bit_is_NAMED": "which behaviour each bit gates is not established. This is the field's shape and its call sites, not its semantics."
+    },
+    "IT_CONFIRMS_THE_B5_CANDIDATE_FROM_A_SECOND_DIRECTION": "entity_map_B5 flagged +0xEC as a candidate purely from variance — its low byte read 8, 8, 8, 10, 10 across five savestates, with no idea what it was. The code says +0xEC is an OR-accumulated flag word, and 8 -> 10 is exactly bit 1 (0x02) being set, which slot 11 does on param_2 == 4. A static variance scan and a static code read, run for different reasons, land on the same field and agree on the mechanism.",
+    "WHAT_psz_godot_SHOULD_DO": "stop looking for a Reyburn weight table; there is not one to port. Its attack behaviour is a flag machine on +0xEC driven by whatever calls the vtable with param_2. Hand-weighting attacks is a reasonable stand-in ONLY as an admitted invention — it cannot be replaced by a measured table, because the original does not select that way."
+  },
+  "animation_slot_table_DECODED": {
+    "closes": "boss-porting.md's open 'enemy_data_*.rel (DSIF)' for the dragon, and supplies the index space parity request B4 needs",
+    "location": "enemy_data_boss_dragon.rel, region-A offset 88, 26 x u32",
+    "what_it_is": "an ANIMATION table — each entry is a member index into enemy/boss_dragon.narc, in RUNTIME order",
+    "PROOF_IS_AN_EXACT_CONTENT_MATCH": "the 26 values are injective and span 43..69. boss_dragon.narc holds exactly 26 z_*.nsbca members and sorted(values) EQUALS that list exactly. Same identity argument that decoded the octopus table, run independently here.",
+    "AND_THE_FILE_DECLARES_IT": "region-A offset 196 is a 56-byte block of seven {offset, count} pairs: (76,2) (84,1) (88,26) (0,0) (0,0) (0,0) (192,1). The third pair names the animation table's offset AND its count of 26. So the count is confirmed twice over — once by the narc identity and once by the file's own directory.",
+    "slots": {
+      "0": "z_001_tht",
+      "1": "z_001_wlk1",
+      "2": "z_001_wlk2",
+      "3": "z_001_flst",
+      "4": "z_001_fly",
+      "5": "z_001_dmg1",
+      "6": "z_001_dmg2",
+      "7": "z_001_ded",
+      "8": "z_001_brsst",
+      "9": "z_001_brslp",
+      "10": "z_001_brs1",
+      "11": "z_001_atkwg",
+      "12": "z_001_atkrr",
+      "13": "z_001_atkrl",
+      "14": "z_001_atkh1",
+      "15": "z_001_atkh2",
+      "16": "z_001_gl2tr",
+      "17": "z_001_rdg",
+      "18": "z_001_brs2",
+      "19": "z_001_rdst",
+      "20": "z_001_wat",
+      "21": "z_001_tr2gl",
+      "22": "z_001_wat2atkwg",
+      "23": "z_001_gld2claw",
+      "24": "z_001_claw",
+      "25": "z_001_claw2wat"
+    },
+    "the_order_is_FUNCTIONAL_not_alphabetical": "boss_reyburn.json's existing 'animations' list is the 26 names sorted alphabetically, which carries no structure. The table's order does: locomotion (0-2), flight (3-4), reactions (5-7), breath (8-10), attacks (11-15), then transitions and the rest (16-25). That grouping is evidence the runtime indexes this table by a slot number rather than by name.",
+    "FLIGHT_HAS_DEDICATED_SLOTS": "z_001_flst and z_001_fly occupy slots 3 and 4. So flight is an addressable state in the shipped data, which is more than entity_map_B5 could say — that could only report Reyburn grounded at every HP above 86 percent. It still does not show he ENTERS the state in play.",
+    "what_this_does_NOT_give": "per-attack damage, reach, arc or active frames. Parity request B3's static half is only partly answered: the animation table is decoded, the attack parameters are not located."
+  },
+  "MAX_HP_IS_IN_NEITHER_REL": {
+    "finding": "1650 does not appear in enemy_data_boss_dragon.rel as a u16 or a u32, at any alignment. Nor does 5220 in enemy_data_boss_octopus.rel.",
+    "why_it_matters": "boss-porting.md recorded 'Max HP 5220 is NOT in it as a plain u16, so the pool is derived or scaled' from the octopus alone. A second boss behaves the same way, so it is a property of the format rather than a quirk of one file."
+  },
+  "part_hitbox_table_DECODED": {
+    "*** CORRECTED — THE EARLIER READING WAS TRUNCATED AND MISLABELLED ***": "the previous version of this entry claimed 13 entries indexed by a part index 0..12. Both halves are wrong. The array holds SIXTEEN records, and byte 1 is a GROUP ID that repeats, not each record's own index.",
+    "how_the_error_happened": "the finder required byte1 == k, i.e. that the index counts 0,1,2,... It therefore stopped at the first repeat — dragon's byte1 runs 0..12 then 12, 12, 13 — and silently returned the first 13 records as if that were the whole array. A signature that assumes injectivity does not merely miss the non-injective case, it TRUNCATES it, and a truncated array looks exactly like a complete one.",
+    "and_it_is_the_same_disease_the_locator_had": "commit a797389 found the shared part-table locator was landing on the wrong array in 61 of 67 archives, and diagnosed it as 'a locator checked on the one case it works for' — boss_octopus, whose ids happen to be injective. My finder was a different implementation that made the SAME assumption and was validated against the SAME archive. Reproducing octopus exactly is what convinced me it was right; octopus is precisely the case that cannot distinguish the two readings.",
+    "location": "enemy_data_boss_dragon.rel, region-A offset 476, 16 records x 8 bytes",
+    "record": "byte0 = payload flag, byte1 = GROUP ID (repeats), +4 = relocated pointer to 1.19.12 dimensions",
+    "payload_rule_still_holds": "flag 0 -> one value, flag 1 -> three. Checked over all SIXTEEN records this time: consecutive payload-pointer gaps are 4 bytes after every flag-0 record and 12 after the one flag-1 record, no exception. That rule was right; it was verified over a truncated set and survives the correction.",
+    "the_corrected_table": {
+      "group 0": 3.5,
+      "group 1": 4.0,
+      "group 2": 0.75,
+      "group 3": 1.0,
+      "group 4": 1.65,
+      "group 5": 2.8,
+      "group 6": [
+        0.0,
+        7.0,
+        10.0
+      ],
+      "group 7": 0.9,
+      "group 8": 1.25,
+      "group 9": 9.0,
+      "group 10": 1.75,
+      "group 11": 2.5,
+      "group 12": [
+        4.25,
+        3.25,
+        1.75
+      ],
+      "group 13": 2.25
+    },
+    "what_changed_numerically": "three records were missing entirely — the second and third of group 12 (3.25 and 1.75) and all of group 13 (2.25). And 'part 12 = 4.25' was wrong as stated: group 12 has THREE members and 4.25 is only the first. 14 distinct groups, 16 records.",
+    "what_this_costs_psz_godot": "the previous entry told psz-godot these were 'real measured hitbox radii' that 'can replace guessed numbers directly'. For groups 0..11 and their single values that still holds. For group 12 it did not, and a port keying on a part index rather than a group id would have silently dropped three of the sixteen.",
+    "still_not_established": "what a group IS. Three records under one id is the shape of a limb segment or a multi-part hitbox, but nothing here ties a group to a bone or to an attack, and 13 records against 21 bones already ruled out a one-to-one bone mapping. The attack-to-group mapping remains unmeasured, so B3 is still only partly answered.",
+    "superseded_reading": {
+      "0": 3.5,
+      "1": 4.0,
+      "2": 0.75,
+      "3": 1.0,
+      "4": 1.65,
+      "5": 2.8,
+      "6": [
+        0.0,
+        7.0,
+        10.0
+      ],
+      "7": 0.9,
+      "8": 1.25,
+      "9": 9.0,
+      "10": 1.75,
+      "11": 2.5,
+      "12": 4.25
+    }
+  },
+  "HP_FRACTION_CONSTANTS_EXIST_but_not_as_a_phase_gate": {
+    "why_this_entry_exists": "a narrow search for '+0x18 / 2' returns nothing in ov20, which would support 'Reyburn has no HP check at all'. Widening to ANY read of +0x18 refutes that before it was written down.",
+    "the_finding": "FUN_ov20__0219a3ec reads the entity's max HP as a signed short and multiplies it by a 1.19.12 constant using the 64-bit helper FUN_0200a380, rounding with (x + 0x800) >> 12:  if (*(int *)(param_1 + 0x9c) < maxHP * 0.2) { ... }",
+    "the_constants_are_exact": {
+      "0x0219A750": "410 = 0.100098 in 1.19.12, i.e. 0.1 — applied to a value fetched through the part-table root at entity+0x14, not to HP",
+      "0x0219A758": "819 = 0.199951, i.e. 0.2 — this is the one applied to MAX HP",
+      "0x0219A760": "1365 = 0.333252, i.e. 1/3 — used as a plain field value nearby"
+    },
+    "*** WHAT IT IS NOT ***": "it is NOT a phase threshold and NOT 'current HP below 20 percent'. The comparison is against the CONTROLLER's field at +0x9C, not the entity's current HP at +0x34 — and param_1 is the controller here, the entity being *(param_1 + 4), the same indirection recorded for the Octo hooks. What +0x9C holds is unidentified, so all that is established is that a 20-percent-of-max-HP quantity is computed and compared against something.",
+    "what_it_does_and_does_not_change": "psz-godot's 35 percent enrage is still unsupported and Octo's max/2 still does not transfer — both stand. What changes is that 'Reyburn ignores HP entirely' is NOT available as a conclusion: the class does compute a fraction of max HP, and identifying +0x9C is now the concrete next step for B2 rather than a blind hunt.",
+    "the_process_point": "the narrow pattern was chosen because it matched the Octo code exactly, which is precisely why it was the wrong test for a different class. A negative is only worth its coverage, and this one had to be widened twice before it was safe to state."
+  },
+  "THE_DAMAGE_HOOK_AND_WHAT_+0x9C_IS": {
+    "answers": "the open question left by HP_FRACTION_CONSTANTS_EXIST — what writes the controller's +0x9C",
+    "the_hook": "FUN_ov20__0219a114 (286 bytes), Reyburn's damage hook — the structural twin of Octo's FUN_ov21__0219a340: same (int, short*, int*, undefined4) signature and the same iVar4 = *(int *)(param_1 + 4) entity indirection.",
+    "body": "if (*(char *)((int)param_3 + 9) == 1) { if (0 < +0x94) { +0x94 += *param_2; if (+0x94 < 1) FUN_ov20__021986bc(entity); } +0xa4 -= *param_2; }  if (0 < +0x98) { +0x98 += *param_2; }  +0xa0 -= *param_2;  +0x9c -= *param_2;",
+    "*** THE SIGN IS SETTLED FROM INSIDE THE FUNCTION ***": "+0x94 is guarded by 0 < +0x94, INCREMENTED by *param_2, and fires a callback the moment it falls below 1. A pool that starts positive and has to DECREASE to trip that test can only do so if *param_2 is NEGATIVE. So damage arrives as a negative short, and the fields written with -= — +0x9C, +0xA0, +0xA4 — COUNT UP as damage lands. This matters: read naively, '+0x9c -= damage' looks like a pool draining, and every conclusion from it would invert.",
+    "SO_+0x9C_IS_CUMULATIVE_DAMAGE_TAKEN": "which makes FUN_ov20__0219a3ec's gate — if (+0x9c < maxHP * 0.2) — read as 'while Reyburn has taken less than 20 percent of his max HP in total damage'. With max HP 1650 that is 330 damage. It is a real measured behavioural threshold, expressed in damage dealt rather than in HP remaining, which is why searching for an HP-remaining comparison never found it.",
+    "it_is_NOT_the_phase_gate": "the 20-percent test is one of three conjuncts on that branch — it also needs +0xAC < 10 and (entity+0xEC & 0x80) == 0 — and the branch body loops over four slots through FUN_020352a4 and FUN_020865fc, which looks like spawning or target selection rather than a phase change. So this gates ONE behaviour, and calling it 'enrage' would be the same overreach as calling +0xE4 a phase row on this class.",
+    "a_second_mechanic_falls_out": "+0x94 is a separate pool that only moves on hit type 1 (param_3[9] == 1), and when it is exhausted it calls FUN_ov20__021986bc(entity) — a one-shot on depletion. That is the shape of a breakable part or a stagger meter, and it is unexplored.",
+    "the_four_counters": {
+      "+0x94": "hit-type-1 pool, positive-guarded, one-shot callback on depletion",
+      "+0x98": "positive-guarded pool, no callback seen",
+      "+0x9C": "cumulative damage — the one the 20% gate reads",
+      "+0xA0": "cumulative damage as well (same update, no guard)",
+      "+0xA4": "cumulative damage restricted to hit type 1"
+    }
+  },
+  "B2_AS_FAR_AS_THE_CAPTURES_GO": {
+    "the_bound_first": "the seven Reyburn captures span HP 1650 down to 1419 of 1650 -- 100% to 86.0%. B2 asks where the phase changes trigger and notes psz-godot assumes 35%; Octo flips at exactly max/2. NEITHER IS IN THE SAMPLE. No savestate on disk has him below 86%, so no threshold can be measured from what exists, and recording that stops the next person measuring one from data that never reaches it.",
+    "what_the_captures_do_give": "across that 231-point drop only SIX of the 72 words in the entity's first 0x120 bytes change at all: +0x34 (HP), +0x38, +0x40 and +0x44 (position and facing), +0xD0 and +0xEC. Everything else in the entity head is byte-identical over the whole span, which is what makes those six the candidate list.",
+    "the_two_non_obvious_ones": {
+      "+0xD0": "583, 474, 578, 584, 575 -- oscillating in a narrow band and NOT monotone with HP. Consistent with boss-porting's 'u16, timer-shaped'.",
+      "+0xEC": "0x308, 0x308, 0x308, 0x30A, 0x30A -- monotone, and the ONLY non-position field besides HP that moves and never goes back. boss-porting recorded 'low byte, 8 -> 10'; this reproduces it exactly with the surrounding halfword. It is the strongest phase-or-counter candidate, and at 86% HP what it counts is unread."
+    },
+    "the_pointer_block_reconfirmed": "+0xD4, +0xD8, +0xDC, +0xE0 and +0xE4 hold 0x0237B9A0, 0x0237BA30, 0x0237BBF0, 0x0237BCB0 and 0x0237BD00, byte-identical across all seven captures and all valid main-RAM pointers. Octo Diablo's phase/mode/state map does not transfer to Reyburn, as boss-porting already recorded -- now reproduced with values across a wider set.",
+    "so_B2_needs_a_fight": "the static half of B2 is exhausted by this. Answering it needs HP driven below 86%, which is the dynamic measurement the request asks for."
+  },
+  "B2_LIVE_SWEEP_2026_08_01": {
+    "what": "the first dynamic B2 measurement. HP was written down the whole health range on a live Reyburn and the entity head watched for a phase flip.",
+    "how": "gdb-headless.sh --state (major-13 ss13 build, isolated port 3477/display :131), entity located at 0x0237A9D0 by the vtable, HP written at entity+0x34, emulator continued ~1.5s between samples so the game could react.",
+    "sweep_1_fields_D0_to_EC": {
+      "60%,51%,49%": "D0=0x267  EC=0x317",
+      "40%": "D0=0x267  EC=0x31f",
+      "36%": "D0=0x111  EC=0x31f",
+      "34%,25%,15%,8%": "D0=0x185  EC=0x30b",
+      "pointers +0xD4..+0xE4": "0237b9a0 0237ba30 0237bbf0 0237bcb0 0237bd00 — unchanged at EVERY step"
+    },
+    "sweep_2_whole_head": {
+      "window": "entity+0x000..+0x140, 320 bytes, sampled at 90% then 55%, 45%, 40%, 30%",
+      "result": "against the 90% baseline, EXACTLY ONE word differs at every one of 55/45/40/30 — and it is inside {+0x34 HP, +0x38..+0x44 position/facing}. Nothing else in the head moves."
+    },
+    "*** THE RESULT IS NEGATIVE, AND THAT IS THE POINT ***": "no HP threshold was found ANYWHERE tested — not in the entity's first 0x140 bytes, and not in the five blocks its +0xD4..+0xE4 pointers reach. Octo Diablo's rule (cross max/2 and three fields flip) does not reproduce, and psz-godot's assumed 35% is not corroborated by anything. The one candidate that appeared was refuted by bisection, above.",
+    "*** THE CAVEAT THAT MATTERS ***": "writing HP is very likely the WRONG INSTRUMENT for B2, and Octo shows why: its threshold lives in FUN_ov21__02199f84, a hook on the DAMAGE path. Poking HP behind the game's back never calls that hook, so a boss built the same way could not flip no matter how the HP is driven. This refutes 'Reyburn's phase is a function of current HP that can be triggered by setting HP' — it does NOT establish that Reyburn has no phases.",
+    "REFUTED — +0xEC is not monotone": "recorded from the captures as 'low byte, 8 -> 10, MONOTONE' over 100%..86%. Live across the full range it takes 0x30a, 0x30b, 0x317 and 0x31f, moving DOWN as well as up. The monotonicity was an artefact of a 231-point sample at the very top of his health.",
+    "STRENGTHENED — the pointer block": "+0xD4..+0xE4 was recorded as invariant across the captures, which only span 100%..86%. It is now invariant live from 90% down to 8%, so 'Octo's phase/mode/state map does not transfer to Reyburn' holds over the whole health range and not just the top of it.",
+    "what_would_settle_it": "stop writing HP. Either deal real damage across the crossing, or set a Z0 breakpoint on the damage-apply path (slot 4 / FUN_020437d8) and watch 0237b9a0 across it — Z0 is the breakpoint melonDS actually honours, and the Octo precedent says the write will land on a controller, not on the entity.",
+    "step_2_the_pointed_to_blocks": {
+      "why": "Octo's transition is NOT written to the entity. FUN_ov21__02199f84 latches mode on *param_1*, a controller reached as *(param_1+4)==entity — boss-porting flags that exact base trap. Reyburn's +0xD4..+0xE4 hold five POINTERS, so a controller is where a phase would live.",
+      "read": "0x80 at each of 0237b9a0, 0237ba30, 0237bbf0, 0237bcb0, 0237bd00, at 90% HP and at 30%",
+      "result": "only the FIRST (0237b9a0, the one at entity+0xD4) changes at all — 16 of 32 words. The other four are byte-identical.",
+      "control": "with HP HELD at 90% over three samples, only 1 of 32 words moves on its own (+0x4C). So the 16 were not idle churn over the sampling interval."
+    },
+    "*** THE APPARENT THRESHOLD AT 40-45% IS REFUTED ***": {
+      "what_it_looked_like": "sweeping 90..30% the block flipped together between 45% and 40%: +0x24/+0x28 0x400->0x800, +0x2C 0x19a->0x14, +0x04 gained the pointer 0237cb90, +0x08 began counting, +0x0C/+0x18 went non-zero. Latch-shaped, and it would have been reported as B2's answer.",
+      "what_killed_it": "a bisect. Stepping HP 760, 742, 730, 720, 710, 700, 690, 680, 670, 660 — ten samples straight through the supposed trigger — produced NO transition: +0x24 stayed 0x400 and +0x2C stayed 0x19a throughout. Raising HP back to 900, 1200, 1485 produced no reversion either, so it is not a latch that had already fired.",
+      "so": "the flip was an EVENT in time that happened to fall between two samples of a descending sweep. The block is event-driven, not HP-driven. The 16-word difference at step 2 is the same artefact accumulated over a longer interval, and the 3-sample control was simply too short to catch it.",
+      "lesson": "a monotone sweep cannot tell 'changed because of X' from 'changed while X was being changed'. Only the bisect, and the failure to revert, separates them."
+    },
+    "superseded_2026_10_11": "The historical experiment watched0237B9A0 as a controller, but live breakpoint ownership proves the AI controller is0237BEA0 at entity+10. Its broad no-phase conclusion is withdrawn. See live_correction_2026_10_11."
+  },
+  "B2_ANSWERED_2026_08_02_REAL_DAMAGE": {
+    "what": "B2 settled. The previous session showed WRITING HP cannot answer it and named the experiment that could: cross the threshold with REAL damage. This is that experiment.",
+    "the_method_that_works": "the savestate's fight is live — the party keeps attacking, so HP falls on its own at roughly 5-10 per second. So seed HP to just ABOVE a candidate threshold and let the game's own damage carry it across. The crossing then goes through the damage-apply path, which is exactly what a written HP bypasses. Snapshot entity+0x000..+0x140 and the controller at 0x0237B9A0 either side.",
+    "max_over_2 (Octo's rule)": {
+      "crossing": "828 -> 819 by real damage, threshold 825",
+      "entity_head": "0 words changed, excluding HP and position",
+      "controller_0237b9a0": "1 word changed, +0x4C — the word already known to free-run"
+    },
+    "35_percent (psz-godot's assumption)": {
+      "crossing": "579 -> 569 by real damage, threshold 577",
+      "entity_head": "0 words changed, excluding HP and position",
+      "controller_0237b9a0": "1 word changed, +0x4C — the same free-runner"
+    },
+    "*** THE INSTRUMENT CONTROL, which is what makes the negative mean anything ***": "a negative is worthless if the thing being watched never moves. Over 15 consecutive 0.5s intervals of live play the entity head changed in 8 of them — so it is NOT inert. And the only head words that EVER moved are +0xD0 (5 intervals) and +0xEC (4), both while HP sat still at 399. The controller's +0x4C moved in 15 of 15. So the head is live, its only movers are the two known free-running fields, and neither is a function of HP.",
+    "*** THE ANSWER ***": "WITHDRAWN 2026-10-11: the old broad no-phase conclusion used an incorrectly identified controller. The modifier is triggered by damage history and action notification 0; see live_correction_2026_10_11. Historical conclusion: Reyburn has NO HP-triggered phase transition. Octo Diablo's max/2 rule does not transfer, and psz-godot's assumed 35% enrage is invented — neither threshold moves anything when crossed by real damage. The bypass caveat from the previous session is now CLOSED: these crossings went through the damage path, so the negative is not an artefact of the instrument.",
+    "why_that_is_coherent": "it agrees with a static result already recorded: 'Reyburn's attack table — THERE IS NONE. Refuted, not merely unfound.' No attack table means no phase row to select, so there is nothing for an HP threshold to switch. Two independent negatives, one static and one dynamic, describing the same absence.",
+    "for_the_port": "Replace the authored 35% enrage with the recovered damage-budget/request/notification path. Entity+10 owns the AI controller; do not port the historical controller interpretation.",
+    "superseded_2026_10_11": "The historical experiment watched0237B9A0 as a controller, but live breakpoint ownership proves the AI controller is0237BEA0 at entity+10. Its broad no-phase conclusion is withdrawn. See live_correction_2026_10_11."
+  },
+  "live_correction_2026_10_11": {
+    "source": "docs/boss-behavior-live.md; data/boss_behavior_contract.json",
+    "controller": "entity+0x10 ->0237BEA0, backlink controller+4 ->0237A9D0. entity+D4 ->0237B9A0 is visual work, not the AI controller.",
+    "modifier": "Natural-damage trace enables entity flag40 at tick13554, HP318/1650, after exhausting budget98 initialized to1320 from base-stat HP3300; action2 notification0 at frame67 enables it. Direct HP writes do not reproduce damage history.",
+    "resets": "At sequence completion, not state entry; A8 conditionally survives sequences8/14 under flag40 and a50% roll.",
+    "scope": "This revises the old no-HP-phase conclusions and does not establish every difficulty/multiplayer scenario."
+  }
 }

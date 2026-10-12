@@ -63,7 +63,7 @@ func _on_area_entered(area: Area3D) -> void:
 
 		# Deal damage (multi-hit: apply damage multiple times)
 		for _i in range(hits_per_target):
-			hurtbox.take_hit(damage, knockback_dir * knockback, accuracy, element, element_level)
+			hurtbox.take_hit(damage, knockback_dir * knockback, accuracy, element, element_level, false, "physical", owner_node)
 
 
 ## Enable the hitbox (call when attack starts)

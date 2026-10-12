@@ -851,7 +851,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 		return
 
 	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
-	if edata and enemy_id == "reyburn":
+	if edata and enemy_id in ["reyburn", "octo_diablo"]:
 		if _spawn_boss(pos, enemy_id, edata):
 			return
 
@@ -912,14 +912,13 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 ## Spawn a boss enemy via its behaviour subclass and bind the boss health bar.
 ## Returns false if the script failed to load (caller falls back to EnemyBase).
 func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
-	if not _c.ReyburnBossScript:
-		_c.ReyburnBossScript = load("res://scripts/3d/enemies/reyburn_boss.gd")
-	if not _c.ReyburnBossScript:
-		return false
-	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, _c.ReyburnBossScript)
+	var path := "res://scripts/3d/enemies/reyburn_boss.gd" if enemy_id == "reyburn" else "res://scripts/3d/enemies/octo_diablo_boss.gd"
+	var script := load(path) as GDScript
+	if not script: return false
+	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, script)
 	if _c._field_hud and _c._field_hud.has_method("show_boss_bar"):
 		_c._field_hud.show_boss_bar(boss)
-	print("[CellObjects] ReyburnBoss at %s" % pos)
+	print("[CellObjects] Boss %s at %s" % [enemy_id,pos])
 	return true
 
 

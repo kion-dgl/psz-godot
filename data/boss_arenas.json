@@ -47,6 +47,8 @@
   },
   "bosses": {
     "reyburn": {
+      "runtime_controller": "res://scripts/3d/enemies/reyburn_boss.gd",
+      "runtime_note": "The authored preview table is not runtime AI. Godot uses recovered descriptors and dedicated controllers; see /states/reyburn-octo for implemented behavior and parity gaps.",
       "model_id": "boss_dragon",
       "arena": "s01z_na1",
       "quest_source": "claiming_a_stake",
@@ -234,6 +236,8 @@
       }
     },
     "octo_diablo": {
+      "runtime_controller": "res://scripts/3d/enemies/octo_diablo_boss.gd",
+      "runtime_note": "The authored preview table is not runtime AI. Godot uses recovered descriptors and dedicated controllers; see /states/reyburn-octo for implemented behavior and parity gaps.",
       "model_id": "boss_octopus",
       "arena": "s02z_na1",
       "quest_source": "poisoned_water",

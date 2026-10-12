@@ -677,7 +677,7 @@ func _ready() -> void:
 	add_child(_field_hud)
 	# Initial actors spawn before the HUD exists; late spawns bind in the spawner.
 	for room_enemy in _room_enemies:
-		if room_enemy is ReyburnBoss and room_enemy.is_alive:
+		if room_enemy is DescriptorBoss and room_enemy.is_alive:
 			_field_hud.show_boss_bar(room_enemy)
 
 	# Debug info overlay — quest ID / mission ID, section, cell position
