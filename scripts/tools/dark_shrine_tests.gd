@@ -6,6 +6,7 @@ static func run(t: Node) -> void:
 	_pieces(t)
 	_timeline(t)
 	_catch_up(t)
+	_piece_stats(t)
 
 static func _falz(t: Node) -> void:
 	var rules := BossPhaseRules.FalzDamage.new()
@@ -76,3 +77,15 @@ static func _catch_up(t: Node) -> void:
 	t.assert_eq(clock.stage,2,"catch-up crosses both laser windup stages")
 	t.assert_eq(clock.frame_q12,4 * 4096,"catch-up preserves elapsed time across action change")
 	clock.finished.disconnect(on_finished)
+
+static func _piece_stats(t: Node) -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/boss_behavior_contract.json"))
+	var source := EnemyData.new()
+	source.id = "mother_piece"
+	var tiers := ["normal", "hard", "super-hard"]
+	for tier in 3:
+		var scaled := preload("res://scripts/utils/enemy_progression.gd").scaled(
+			source, 1 + tier * 30, tiers[tier], data.catalogs.boss_mother_piece.stats)
+		t.assert_eq(scaled.hp_base, [1600,3850,5000][tier], "piece HP uses its own ROM difficulty row")
+		t.assert_eq(scaled.attack_base, [450,950,1300][tier], "piece attack is independent of body stats")
+		t.assert_true(scaled.original_attack_stats, "piece damage uses recovered-stat combat calculation")

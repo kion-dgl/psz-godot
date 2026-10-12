@@ -19,17 +19,16 @@ func _spawn_pieces() -> void:
 	for index in 3:
 		var piece := MotherPiece.new()
 		piece.piece_index = index
-		piece.enemy_data = enemy_data.duplicate()
-		piece.enemy_data.model_id = ""
-		piece.enemy_data.is_boss = false
-		piece.enemy_data.id = "mother_piece"
-		piece.enemy_data.name = "Mother Piece"
-		piece.enemy_data.hp_base = maxi(1, roundi(float(encounter_max_hp) * 1600.0 / 3500.0))
-		piece.enemy_data.attack_base = enemy_data.attack_base
-		piece.enemy_data.collision_radius = 1.1
-		piece.enemy_data.collision_height = 2.5
-		piece.enemy_data.evasion_base = enemy_data.evasion_base
-		piece.enemy_data.defense_base = enemy_data.defense_base
+		var source := EnemyData.new()
+		source.id = "mother_piece"
+		source.name = "Mother Piece"
+		source.collision_radius = 1.1
+		source.collision_height = 2.5
+		source.exp_reward = 0
+		var difficulty := str(SessionManager.get_session().get("difficulty", "normal"))
+		piece.enemy_level = enemy_level
+		piece.enemy_data = preload("res://scripts/utils/enemy_progression.gd").scaled(
+			source, enemy_level, difficulty, _catalogs.boss_mother_piece.stats)
 		piece.position = Vector3(float(index - 1) * 6.0, 0, 8.0)
 		pieces.append(piece)
 		piece.died.connect(_piece_died)

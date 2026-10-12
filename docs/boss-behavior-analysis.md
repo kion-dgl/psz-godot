@@ -163,8 +163,8 @@ not a claim of complete scheduler/animation runtime parity.
 Trinity now uses `boss_mother` (source 66), including its matching stat rows.
 The old resource incorrectly used tower `mother` (57). The legacy `humilias`
 resource also uses source 66; that separate authored encounter is unchanged and
-remains explicitly unresolved in the roster audit. Three pieces have independent
-HP and targets; the first death requests action 2, the second requests action 3.
+remains explicitly unresolved in the roster audit. Three pieces use their own recovered difficulty rows (1600/3850/5000 base HP),
+independent HP and targets; the first death requests action 2, the second requests action 3.
 The body stays outside enemy targeting until notification 0 exposes it. Damage
 does not interrupt boss animation through the generic flinch path. Headbutts run
 9 → 10 × 0..2 → 11 → 8, while distant targets get swing 7 → laser 8. The latter
