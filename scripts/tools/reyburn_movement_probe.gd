@@ -1,6 +1,11 @@
 extends RefCounted
 ## Live floor, repeated aerial deliveries and movement-coupled steering checks.
 static func run(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
+	await _flight(t,boss)
+	_ground_turn(t,boss,player)
+	await _contact_and_approach(t,boss,player)
+
+static func _flight(t: Node, boss: ReyburnBoss) -> void:
 	var launches: Array[Vector3] = []
 	var observe := func(id: int):
 		if id == 19: launches.append(boss.global_position)
@@ -37,6 +42,8 @@ static func run(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
 	var support := ReyburnFloor.sample(boss,boss.global_position)
 	t._check(boss.state_field == "track" and not support.is_empty() and absf(boss.global_position.y-support.position.y) < 0.1,"off-mesh approach returns to the floor collision mesh")
 	boss.global_position = valid_position
+
+static func _ground_turn(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
 	boss.rotation.y = 0
 	player.global_position = boss.global_position + Vector3(0,0,-15)
 	boss.ground_motion.reset()
@@ -55,6 +62,7 @@ static func run(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
 	t._check(coupled and bounded and distance > 1.0,"ground pursuit moves while turning at a bounded rate")
 	boss._clear_deliveries()
 
+static func _contact_and_approach(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
 	# A body raised above uneven ground must settle to the sampled mesh.
 	boss.global_position.y += 1.0
 	boss.ground_motion.step(boss,4.0)
