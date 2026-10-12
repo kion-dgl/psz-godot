@@ -331,8 +331,14 @@ import Concept from '../../layouts/Concept.astro';
   <h2 id="coliseum-roster">Coliseum roster</h2>
   <p>The Coliseum picker <strong>MUST</strong> group each enemy once under its
     earliest area in progression order, with PSO imports in their own group.
-    Enemy and boss tabs remain separate. Rows <strong>MUST</strong> show enemy
-    name, model ID, attribute, and behavior type in aligned columns. The wider
-    roster keeps selected-enemy details below the list. Area aliases, including
+    Enemy and boss tabs remain separate. Rows <strong>MUST</strong> show enemy name and effective level. Model ID,
+    attribute, behavior and scaled HP belong in the selected-enemy detail card.
+    The picker MUST use the shared left-side shop layout, leaving the live
+    Coliseum Master visible on the right. Player and enemy level controls MUST
+    be accessible by mouse, keyboard and controller before battle. Enemy level
+    defaults to Auto (the normal encounter level); an explicit 1–100 override
+    MUST apply to the whole Coliseum encounter, including boss components, and
+    MUST NOT leak into subsequent normal quests. Canceling an edit MUST preserve
+    the prior value. Confirmation MUST show both player and enemy levels. Area aliases, including
     Oblivion City Paru and Ozette Wetland(s), <strong>MUST</strong> normalize.</p>
 </Concept>

@@ -74,6 +74,7 @@ func _run_tests_combat() -> void:
 	test_enemy_archetype_modules()
 	test_enemy_berserk_kamikaze()
 	test_coliseum_debug_quest()
+	preload("res://scripts/tools/coliseum_level_tests.gd").run(self)
 	test_coliseum_master_picker()
 	test_coliseum_roster_grouping()
 	test_coliseum_mother_variations()

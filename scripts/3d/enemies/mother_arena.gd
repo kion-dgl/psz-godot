@@ -16,12 +16,15 @@ func _ready() -> void:
 	material.albedo_texture = load("res://assets/stages/shrine_z/s07z_na1/lndmd/s07_0_zjime.png")
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.uv1_scale = Vector3(1.5, 0.5, 1)
-	material.uv1_offset = Vector3(0.5, 0, 0)
 	tile.material = material
 	cover.mesh = tile
+	# Expose the primitive surface to the shared imported-mesh texture pass.
+	cover.set_surface_override_material(0, material)
 	cover.position = Vector3(0, 0.025, 2)
 	add_child(cover)
+	# Reuse the stage texture policy: mirrored X/Y, repeat 2 × 2.
+	MeshUtils.apply_mirror_wrap_fixes(cover, MeshUtils.load_texture_fixes(),
+		preload("res://scripts/3d/field/texture_fix_shader_unlit.gdshader"))
 	if body:
 		body.position.z = -6.0
 
@@ -52,7 +55,7 @@ func break_cover() -> void:
 		var chunk := MeshInstance3D.new()
 		var mesh := BoxMesh.new()
 		mesh.size = Vector3(3.8, 0.25, 3.8)
-		mesh.material = cover.mesh.surface_get_material(0)
+		mesh.material = cover.get_active_material(0)
 		chunk.mesh = mesh
 		chunk.position = Vector3(float(index - 1) * 4, 0, 2)
 		add_child(chunk)

@@ -5,6 +5,9 @@ const AREA_LEVELS := {"gurhacia": 1, "rioh": 5, "ozette": 10, "paru": 15, "makar
 const DIFFICULTY_LEVELS := {"normal": 0, "hard": 30, "super-hard": 60}
 
 static func level_for(session: Dictionary, authored: int = 0) -> int:
+	var coliseum := int(session.get("coliseum_enemy_level", 0))
+	if coliseum > 0:
+		return clampi(coliseum, 1, 100)
 	var base: int = authored if authored > 0 else int(session.get("enemy_level", 0))
 	if base <= 0:
 		base = int(AREA_LEVELS.get(session.get("area_id", "gurhacia"), 1))

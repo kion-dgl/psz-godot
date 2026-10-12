@@ -614,6 +614,9 @@ func _get_debug_list() -> Array:
 		"Unlock All Areas (warp): %s" % (on if DebugConfig.unlock_all_areas else off),
 		"Fill PB Meter",
 		"Give 99 Photon Drops",
+		"Set Player Level",
+		"Invincible: %s" % (on if DebugConfig.invincible else off),
+		"Enemy Health Bars: %s" % (on if DebugConfig.show_enemy_health_bars else off),
 	]
 
 
@@ -699,6 +702,20 @@ func _toggle_debug(idx: int) -> void:
 				_debug_msg = "Added %d Photon Drops (%d total)." % [total - before, total]
 			else:
 				_debug_msg = "Photon Drops are at the stack limit or inventory is full."
+
+		14: _edit_debug_level()
+		15: DebugConfig.invincible = not DebugConfig.invincible
+		16: DebugConfig.show_enemy_health_bars = not DebugConfig.show_enemy_health_bars
+
+func _edit_debug_level() -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null: return
+	_active_modal = DebugLevelDialog.edit(_canvas, "Player Level · refills HP/PP; saved with character", int(character.level), false,
+		func(level: int):
+			CharacterManager.set_debug_level(level)
+			_debug_msg = "Player set to Lv.%d. HP/PP restored." % level
+			_canvas.queue_redraw())
+	_active_modal.tree_exited.connect(func(): _active_modal = null)
 
 
 func _enter_sub(idx: int) -> void:

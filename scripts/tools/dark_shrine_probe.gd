@@ -138,14 +138,6 @@ func _finish(boss: DescriptorBoss, field: Node) -> void:
 	var exits: Array = field._map_root.get_children().filter(func(n): return n is Telepipe)
 	_check(exits.size() == 1,"exactly one return warp after encounter clear")
 
-func _snapshot(label: String) -> void:
-	var folder := OS.get_environment("PSZ_BOSS_SCREENSHOTS")
-	if folder.is_empty() or DisplayServer.get_name() == "headless":
-		return
-	await RenderingServer.frame_post_draw
-	DirAccess.make_dir_recursive_absolute(folder)
-	get_viewport().get_texture().get_image().save_png(folder.path_join(label + ".png"))
-
 func _contact_checks(boss: DescriptorBoss, player: Node3D) -> void:
 	var old_attack: int = boss.enemy_data.attack_base
 	var old_stats: bool = boss.enemy_data.original_attack_stats

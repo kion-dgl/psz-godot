@@ -13,3 +13,11 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	call_deferred("_run")
+
+func _snapshot(label: String) -> void:
+	var folder := OS.get_environment("PSZ_BOSS_SCREENSHOTS")
+	if folder.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	await RenderingServer.frame_post_draw
+	DirAccess.make_dir_recursive_absolute(folder)
+	get_viewport().get_texture().get_image().save_png(folder.path_join(label + ".png"))

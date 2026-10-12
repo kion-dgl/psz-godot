@@ -35,17 +35,22 @@ var _tab_row: HBoxContainer
 func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Coliseum Master"
-	# The debug roster needs the full width for four readable columns.
-	_detail_panel = PanelContainer.new()
-	PszStyle.apply_detail_panel_style(_detail_panel)
-	var body := title_label.get_parent()
-	body.add_child(_detail_panel)
-	body.move_child(_detail_panel, hint_label.get_index())
-	hint_label.text = "Up/Down: Select  ←/→: Tab  Enter: Battle  Esc: Leave"
+	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, "")
+	_setup_level_controls()
+	hint_label.text = "↑↓ Select  ←→ Tab  Enter Battle\nP / LB: Player Lv  E / RB: Enemy Lv  Esc Leave"
 	_load_tab(0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not is_instance_valid(_active_modal):
+		if event.is_action_pressed("palette_swap") or (event is InputEventKey and event.pressed and event.keycode == KEY_P):
+			_edit_level(true)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("quest_log") or (event is InputEventKey and event.pressed and event.keycode == KEY_E):
+			_edit_level(false)
+			get_viewport().set_input_as_handled()
+			return
 	ShopNav.handle(self, event, {
 		"modal": _active_modal,
 		"list_size": func() -> int: return _rows.size(),
@@ -64,7 +69,7 @@ func _open_confirm() -> void:
 	var place := "the coliseum"
 	if not str(row.get("quest_id", "")).is_empty() or not (row.get("arena", {}) as Dictionary).is_empty():
 		place = "its arena"
-	ShopNav.confirm(self, "Battle %s in %s?" % [str(row["name"]), place],
+	ShopNav.confirm(self, "Battle %s Lv.%d in %s?\nPlayer Lv.%d" % [str(row["name"]), ColiseumRoster.row_level(row), place, _player_level()],
 		func() -> void: _start_battle(row))
 
 
@@ -80,12 +85,14 @@ func _start_battle(row: Dictionary) -> void:
 	var quest_id := str(row.get("quest_id", ""))
 	if not quest_id.is_empty():
 		SessionManager.enter_quest(quest_id, "normal")
+		ColiseumRoster.apply_level_override()
 		var sections: Array = SessionManager.get_field_sections()
 		var start_pos := str(sections[0].get("start_pos", "0,0")) if sections.size() > 0 else "0,0"
 		SceneManager.goto_scene(FIELD_SCENE, {
 			"current_cell_pos": start_pos, "spawn_edge": "", "keys_collected": {}})
 		return
 	SessionManager.enter_quest(SHELL_QUEST_ID, "normal")
+	ColiseumRoster.apply_level_override()
 	if not (row.get("arena", {}) as Dictionary).is_empty():
 		SessionManager.set_field_sections(ColiseumRoster.make_arena_sections(row))
 		SceneManager.goto_scene(FIELD_SCENE, {
@@ -122,8 +129,7 @@ func _refresh_display() -> void:
 
 	var list := VBoxContainer.new()
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list.add_child(_column_row(["Enemy", "Model", "Attribute", "Behavior type"] if _tab != 2
-		else ["Encounter", "Members", "Count", "Behavior type"], true))
+	list.add_child(_column_row(["Encounter", "Level"], true))
 	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -171,7 +177,7 @@ func _column_row(values: Array, heading: bool = false) -> PanelContainer:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var cells := HBoxContainer.new()
 	cells.add_theme_constant_override("separation", 12)
-	var weights := [3.0, 3.0, 1.5, 3.0]
+	var weights := [3.0, 1.0]
 	for i in values.size():
 		var label := Label.new()
 		label.text = str(values[i])
@@ -187,10 +193,7 @@ func _column_row(values: Array, heading: bool = false) -> PanelContainer:
 
 
 func _row_pill(row: Dictionary, selected: bool) -> PanelContainer:
-	var values := [str(row["name"]), str(row.get("model", "—")),
-		str(row["element"]).capitalize(), str(row["archetype"])]
-	if _tab == 2:
-		values[1] = ", ".join(PackedStringArray(row["areas"]))
+	var values := [str(row["name"]), "Lv.%d" % ColiseumRoster.row_level(row)]
 	var pill := _column_row(values)
 	pill.add_theme_stylebox_override("panel", PszStyle.pill_style(selected))
 	return pill
@@ -210,11 +213,14 @@ func _refresh_detail() -> void:
 	var areas: Array = row["areas"]
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(PszStyle.detail_label("%s%s  ·  HP: %d  ·  %s" % [str(row["name"]),
-		" (Rare)" if bool(row["is_rare"]) else "", int(row["hp"]), str(row["archetype"])], PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("%s%s  ·  Lv.%d  ·  HP: %d" % [str(row["name"]),
+		" (Rare)" if bool(row["is_rare"]) else "", ColiseumRoster.row_level(row), ColiseumRoster.row_hp(row)], PszStyle.TITLE_BG))
 	vbox.add_child(PszStyle.detail_label(("Enemies: %s" if _tab == 2 else "Found in: %s") % ", ".join(PackedStringArray(areas))))
 	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)), PszStyle.TEXT_HIGHLIGHT))
+	vbox.add_child(PszStyle.detail_label("%s · %s" % [str(row.get("element", "")).capitalize(), str(row["archetype"])]))
+	if row.has("model"): vbox.add_child(PszStyle.detail_label("Model: %s" % row.model))
 	_detail_panel.add_child(vbox)
+	_refresh_level_controls()
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
@@ -242,3 +248,41 @@ func _on_nav_repeat(action: String) -> void:
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+var _player_level_button: Button
+var _enemy_level_button: Button
+
+func _setup_level_controls() -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_player_level_button = Button.new()
+	_enemy_level_button = Button.new()
+	for button in [_player_level_button, _enemy_level_button]:
+		button.focus_mode = Control.FOCUS_NONE
+		row.add_child(button)
+	_player_level_button.pressed.connect(func(): _edit_level(true))
+	_enemy_level_button.pressed.connect(func(): _edit_level(false))
+	var body := title_label.get_parent()
+	body.add_child(row)
+	body.move_child(row, 1)
+	_refresh_level_controls()
+
+func _player_level() -> int:
+	var character = CharacterManager.get_active_character()
+	return int(character.level) if character else 1
+
+func _refresh_level_controls() -> void:
+	_player_level_button.text = "Player Lv.%d" % _player_level()
+	_enemy_level_button.text = "Enemy: Auto" if ColiseumRoster.selected_enemy_level == 0 else "Enemy Lv.%d" % ColiseumRoster.selected_enemy_level
+
+func _edit_level(player_level: bool) -> void:
+	if is_instance_valid(_active_modal): return
+	var title := "Player Level · refills HP/PP; saved with character" if player_level else "Enemy Level · Auto uses arena defaults"
+	_active_modal = DebugLevelDialog.edit(self, title,
+		_player_level() if player_level else ColiseumRoster.selected_enemy_level, not player_level,
+		func(level: int):
+			if player_level: CharacterManager.set_debug_level(level)
+			else: ColiseumRoster.selected_enemy_level = level
+			_refresh_display())
+	_active_modal.tree_exited.connect(func(): _active_modal = null)

@@ -142,7 +142,7 @@ static func _areas_of(e) -> Array:
 	return out
 
 
-## Preserve the authored Trinity tower arena, but spawn Trinity and its pieces.
+## Preserve Trinity’s dedicated Shrine arena, but spawn Trinity and its pieces.
 const ARENA_QUEST_OVERRIDES := {
 	"mother_trinity": "debug_boss_mother_trinity",
 }
@@ -234,3 +234,28 @@ static func mixed_roster() -> Array:
 			"element":"%d enemies" % names.size(), "hp":hp, "areas":names,
 			"archetype":"mixed group", "kinds":["melee", "ranged", "room clear"]})
 	return [{"name":"Mixed Groups", "area_rank":0, "rows":rows}]
+
+
+## Picker preference is in-memory; only a newly launched Coliseum session gets it.
+static var selected_enemy_level := 0
+const Growth = preload("res://scripts/utils/enemy_progression.gd")
+
+static func row_level(row: Dictionary) -> int:
+	if selected_enemy_level > 0: return clampi(selected_enemy_level, 1, 100)
+	var quest_id := str(row.get("quest_id", ""))
+	if not quest_id.is_empty():
+		var quest := QuestLoader.load_quest(quest_id)
+		var cell: Dictionary = quest.sections[0].cells[0]
+		return Growth.level_for(quest, int(cell.get("enemy_level", 0)))
+	return Growth.level_for({"area_id":row.get("arena", {}).get("area_id", "city")})
+
+static func row_hp(row: Dictionary) -> int:
+	var ids: Array = MIXED_GROUPS[row.id].enemies if MIXED_GROUPS.has(row.id) else [row.id]
+	var total := 0
+	for id in ids:
+		total += Growth.scaled(EnemyRegistry.get_enemy(id), row_level(row)).hp_base
+	return total
+
+static func apply_level_override() -> void:
+	if selected_enemy_level > 0:
+		SessionManager.get_session()["coliseum_enemy_level"] = clampi(selected_enemy_level, 1, 100)
