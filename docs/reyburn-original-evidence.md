@@ -66,7 +66,7 @@ behind him is therefore not equivalent to standing in front; movement traces
 retain the actual player and boss coordinates rather than assigning behavior from
 input labels alone. NPC target selection prevents attributing every turn to Aiya.
 
-![Recorded boss and player paths](images/reyburn-original-input-paths.png)
+![Recorded boss and player paths](../spec/public/research/reyburn-original-input-paths.png)
 
 ## Three distinct aerial sequences
 
