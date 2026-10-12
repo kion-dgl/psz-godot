@@ -44,20 +44,17 @@ curve. Sixty-five mapped enemies use recovered HP, physical min/max ATP, DFP and
 rows before the authored level extension. Existing authored stats remain the
 tuning baseline for unmapped enemies. The unread EXP-shaped original column is
 not treated as verified EXP.</li>
-<li>EXP MUST be awarded once on actual enemy death and displayed in the HUD.
+<li>EXP MUST be awarded once on actual enemy death and remain available in character progression screens.
 Level-up MUST preserve material HP/PP bonuses. Negative EXP grants MUST NOT
 reduce progression. Save/reload MUST preserve levels, equipment and upgrades.</li>
-<li>Grinding MUST validate current ownership, current grind, cap, required
-material and carried meseta at commit time. Success consumes one required
-grinder and the displayed fee exactly once; rejection changes nothing.
+<li>Grinding MUST validate current ownership, current grind, cap and required material at commit time. Inventory Use applies a Monogrinder (+1), Digrinder (+2) or Trigrinder (+3) to the equipped weapon, clamps to its cap and consumes one item without a meseta fee. Use MUST be disabled for a capped, absent or incompatible weapon. Inventory and equipment MUST show the per-instance grind suffix and upgraded ATP. The Tekker retains its separate +1 service and displayed fee, validating carried meseta at commit time; rejection changes nothing.
 Original physical grinding MUST add two ATP per level (psz-re tools/wpnprm.py,
 16 anchored handgun/rifle records). Existing rarity requirements and fees are retained
 remake values, pending the weapon-economy design. No failure chance is added.</li>
 </ul>
 <h2>Photon Blasts</h2>
 <ul>
-<li>The gauge MUST range from zero to 10000 and display a percentage and ready
-state. It MUST charge from actual damage dealt/taken, excluding misses,
+<li>The gauge MUST range from zero to 10000 and fill the four separate blocks of the HP/PP HUD rim clockwise in yellow. Its diagonal gaps and black center MUST remain unfilled. Playtest guidance MUST NOT appear beneath the production HUD. It MUST charge from actual damage dealt/taken, excluding misses,
 overkill, invulnerability and blast damage itself. An evolved equipped mag
 MUST supply the blast; an unevolved mag MUST NOT fire.</li>
 <li>Evidence: psz-re nodes/sys.photon-blast-effects.json; FUN_020AE168 gates
@@ -70,8 +67,7 @@ come from FUN_020A8BB0 and existing mag resources.</li>
 <li>Activation MUST consume the gauge once, lock actions during its short
 presentation and deliver its effect once. Invalid/dead/interrupted activation
 MUST NOT spend the gauge. Scene exit MUST cancel pending delivery safely.
-A palette action and visible clickable HUD control provide keyboard/controller
-and touch access. Party chains and the original summon rigs remain separate work.</li>
+Dedicated B / right-stick-click inputs and the clickable HUD rim provide keyboard/controller and touch access without requiring a palette assignment. Party chains and the original summon rigs remain separate work.</li>
 <li>Granir and Pacifal are damaging blasts; Midgul applies attack/defense
 weakening; Flozir provides a timed PP benefit. Presentation, radii, durations and
 unrecovered potency are explicitly provisional remake values, not inferred
@@ -79,6 +75,7 @@ from effect names. Tests MUST cover every supported blast and lifecycle reset.</
 </ul>
 <p>Verification: systems_progression_tests.gd plus systems_progression_probe.tscn
 on imported player/enemy rigs, then the existing quest regression matrix.</p>
+<p>Owner review: Kion assessed Systems as C on 2026-10-11 after the PR #752 Mac playtest. The Coliseum exit fix has regression coverage; quest/free-roam traversal and remaining fidelity work still need follow-up.</p>
 <h2>One combined playtest</h2>
 <ol>
 <li>Create a fresh Hunter. Fight an ordinary early-area enemy with the starter
@@ -89,9 +86,9 @@ misses for a 95-HP level-one Ghowl.</li>
 reload. Later areas and higher difficulties should retain their own enemy levels.</li>
 <li>At the Tekker, grind a weapon, check the preview and wallet/material count,
 then return to combat. Compare a matching family attribute and a neutral target.
-A second copy of the same weapon must retain its own grind.</li>
+A second copy of the same weapon must retain its own grind. Use one of each grinder from inventory on an unground Saber: the result MUST be Saber +6 with 49 weapon ATP.</li>
 <li>Feed the Mag to its first evolution. Charge PB in combat, then use the
-visible PB button or assign Photon Blast in the palette. Check one activation,
+B key, right-stick click or the charged HUD rim. Check one activation,
 its effect and return of control. The four stat paths select the four blast types.</li>
 <li>Try an available Heat/Ice/Slow weapon's strong attack. Check visible status
 and expiry. Report balance and presentation feedback for the whole build.</li>

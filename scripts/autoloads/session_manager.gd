@@ -245,6 +245,13 @@ func add_rewards(exp_amount: int, meseta: int) -> void:
 ## Return to city and end session
 func return_to_city() -> Dictionary:
 	TrapBall.vision_until_msec = 0
+	# Coliseum/debug arenas have no guild report or resumable expedition.
+	# Leaving their completed shell pending silently disables every warp pad.
+	if str(_session.get("quest_id", "")).begins_with("debug_"):
+		if str(_completed_quest.get("quest_id", "")).begins_with("debug_"):
+			_completed_quest.clear()
+		if str(_suspended_session.get("quest_id", "")).begins_with("debug_"):
+			_suspended_session.clear()
 	# Full session end → no longer reachable via the in-flight telepipe.
 	# Covers StartWarp, boss-clear, complete_quest, and any explicit "I'm
 	# done with this expedition" path. Telepipe-style suspends use
@@ -336,6 +343,10 @@ func get_current_area_id() -> String:
 
 ## Suspend current session (telepipe — return to city but keep session)
 func suspend_session() -> Dictionary:
+	# All city-return paths (exit pad, telepipe, backtrack) end a practice run.
+	# Real quests retain the normal report/resume lifecycle below.
+	if str(_session.get("quest_id", "")).begins_with("debug_"):
+		return return_to_city()
 	_suspended_session = _session.duplicate(true)
 	_suspended_session["_quest_objectives"] = _quest_objectives.duplicate(true)
 	_suspended_session["_quest_item_counts"] = _quest_item_counts.duplicate(true)

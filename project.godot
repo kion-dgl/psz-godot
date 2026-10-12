@@ -270,6 +270,11 @@ dodge={
 ]
 }
 
+photon_blast={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":66), Object(InputEventJoypadButton,"button_index":8)]
+}
+
 [layer_names]
 
 3d_physics/layer_1="environment"

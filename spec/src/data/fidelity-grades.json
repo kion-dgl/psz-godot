@@ -89,11 +89,11 @@
     },
     {
       "area": "Systems",
-      "grade": "D",
-      "assessment": "Very weak in current play: Kion reports level-1 hits around 100 damage and routine one-shots, with no meaningful player or enemy-level progression. Damage, statuses, weapon specials and grinding have been deferred.",
-      "next": "Playtest the combined systems pass: fresh-character damage and growth, enemy levels, grinding, Photon Blasts, base-disk restrictions and charged upgrades. Also verify Scape Doll recovery and Resta/Anti after a hard restart. Weapon economy and full combat/status fidelity remain open. Grade and owner assessment unchanged; Mac playtest pending.",
+      "grade": "C",
+      "assessment": "Kion raises Systems from D to C after local Mac playtesting of PR #752 (6c2230c2 plus the playtest fixes committed in this PR) on 2026-10-11. Combat progression, inventory grinding with visible per-instance ATP and grind levels, dedicated Photon Blast activation and the segmented HUD gauge now support the core loop. The Coliseum exit blocker was reproduced and fixed with regression coverage; broader balance and fidelity work remain.",
+      "next": "Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Existing traversal defects remain separate follow-up work.",
       "label": "score:systems",
-      "reviewed_on": "2026-10-10"
+      "reviewed_on": "2026-10-11"
     }
   ]
 }

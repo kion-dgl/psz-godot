@@ -12121,7 +12121,8 @@ func test_quest_lifecycle() -> void:
 	assert_eq(SessionManager.get_accepted_quest_area(), "", "Accepted quest area empty initially")
 
 	# ── Accept quest ──
-	var quest_ids := QuestLoader.list_quests()
+	# Practice arenas intentionally end on city return; use a real story quest.
+	var quest_ids := QuestLoader.list_quests().filter(func(id): return not id.begins_with("debug_"))
 	if quest_ids.is_empty():
 		print("  INFO: No quest files found, skipping quest lifecycle tests")
 		print("")

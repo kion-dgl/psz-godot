@@ -7,6 +7,6 @@ script = ExtResource("1")
 id = "monogrinder"
 name = "Monogrinder"
 japanese_name = "モノグラインダー"
-details = "Can be used to grind 1 star to 3 star weapons/armors."
+details = "Raises the equipped weapon by +1 grind, up to its grind limit."
 rarity = 1
 pso_world_id = 533

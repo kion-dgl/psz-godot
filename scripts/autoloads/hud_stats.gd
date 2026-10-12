@@ -20,7 +20,6 @@ extends CanvasLayer
 const LAYER := 200  # Above the PSO start menu (150); below the fade canvas (250)
 const MARGIN := 12.0
 
-var _progression: Control
 var _stats_panel: StatsPanel
 ## True while the current scene is a gameplay scene (city / field). Held —
 ## deliberately NOT recomputed — while SceneManager is mid-transition, so the
@@ -36,8 +35,6 @@ func _ready() -> void:
 	_stats_panel = StatsPanel.new()
 	_stats_panel.visible = false  # Hidden until the first gameplay scene
 	add_child(_stats_panel)
-	_progression = preload("res://scripts/ui/progression_hud.gd").new()
-	add_child(_progression)
 	_refresh_character_info()
 
 	GameState.hp_changed.connect(_on_stats_changed)
@@ -73,7 +70,6 @@ func _update_visibility() -> void:
 		_in_gameplay = scene.scene_file_path.begins_with("res://scenes/3d/")
 	var has_scene_overlay: bool = not SceneManager._overlay_stack.is_empty()
 	_stats_panel.visible = _in_gameplay and not has_scene_overlay
-	_progression.visible = _stats_panel.visible
 
 
 ## Re-read the active character's static info (level). Called on character
@@ -168,6 +164,7 @@ class StatsPanel extends Control:
 		_bg.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(_bg)
 		_ensure_bg_texture()
+		add_child(preload("res://scripts/ui/progression_hud.gd").new())
 
 		_hp_bar = ColorRect.new()
 		_hp_bar.color = HP_COLOR

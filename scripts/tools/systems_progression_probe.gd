@@ -121,7 +121,7 @@ func _blasts(player: Node3D, ch: Dictionary) -> void:
 		target.set_physics_process(false)
 		var hp := target.current_hp
 		var blast := PhotonBlast.equipped_blast()
-		_verify(PhotonBlast.activate(player), "%s activates" % blast)
+		_activate_blast_input(player, form, blast)
 		_verify(not PhotonBlast.activate(player) and PhotonBlast.gauge == 0, "repeat activation cannot spend/fire again")
 		var player_hp := GameState.hp
 		player.take_technique_hit(10, "barta", 0.0)
@@ -185,5 +185,57 @@ func _grinding(ch: Dictionary) -> void:
 	var ground := CombatManager.calculate_attack_damage(1)
 	_verify(int(ground.damage) > int(unground.damage), "grind changes live attack inputs")
 	_verify(int(ch.weapon_grinds.get(other, 0)) == 0, "second weapon instance remains unground")
+	# Inventory route targets only the equipped instance and never charges meseta.
+	var equipped: String = str(ch.equipment.weapon)
+	ch.equipment.weapon = other
+	Inventory.add_item("monogrinder", 2)
+	var wallet: int = GameState.meseta
+	_verify(Inventory.can_use_grinder("monogrinder"), "inventory grinder is available for equipped weapon")
+	_verify(Inventory.use_item("monogrinder") and int(ch.weapon_grinds.get(other, 0)) == 1, "inventory grinder upgrades equipped instance")
+	_verify(int(ch.weapon_grinds.saber) == 5 and GameState.meseta == wallet and Inventory.get_item_count("monogrinder") == 1, "inventory grind consumes one item without fee or changing other weapon")
+	for grinder in ["digrinder", "trigrinder"]:
+		Inventory.add_item(grinder, 1)
+		_verify(Inventory.use_item(grinder), "%s usable from inventory" % grinder)
+		var expected := 3 if grinder == "digrinder" else 6
+		_verify(int(ch.weapon_grinds[other]) == expected, "%s adds correct grind amount" % grinder)
+	_verify(str(Inventory._lookup_item(other).name) == "Saber +6", "equipped instance display includes Saber +6")
+	var renderer = PsoStartMenu._renderer
+	var rows: Array = PsoStartMenu._get_inventory()
+	var old_idx: int = PsoStartMenu._sub_idx
+	PsoStartMenu._sub_idx = rows.find_custom(func(item): return item.id == other)
+	_verify(renderer._items_description(rows).contains("ATK: 49"), "inventory displays ground Saber ATP 49")
+	PsoStartMenu._sub_idx = old_idx
+	var ground_stats: Dictionary = CombatManager._get_player_stats(ch)
+	ch.weapon_grinds[other] = 0
+	var base_stats: Dictionary = CombatManager._get_player_stats(ch)
+	_verify(int(ground_stats.weapon_attack) == int(base_stats.weapon_attack) + 12, "grind raises actual combat ATP")
+	ch.weapon_grinds[other] = WeaponRegistry.get_weapon("saber").max_grind
+	_verify(not Inventory.can_use_grinder("monogrinder") and not Inventory.use_item("monogrinder"), "max grind disables and rejects inventory use")
+	_verify(Inventory.get_item_count("monogrinder") == 1, "rejected grind preserves grinder")
+	ch.equipment.weapon = ""
+	_verify(not Inventory.can_use_grinder("monogrinder"), "unequipped weapon disables grinder")
+	ch.equipment.weapon = other
+	ch.weapon_grinds[other] -= 1
+	_verify(Inventory.use_item("monogrinder") and not Inventory.can_use_grinder("monogrinder"), "last upgrade reaches cap")
+	ch.equipment.weapon = equipped
 	shop.queue_free()
 	await get_tree().process_frame
+
+func _activate_blast_input(player: Node3D, form: String, blast: String) -> void:
+	var pb_input: InputEvent
+	if form in ["yul", "aio"]:
+		var key := InputEventKey.new()
+		key.physical_keycode = KEY_B
+		key.pressed = true
+		pb_input = key
+	else:
+		var button := InputEventJoypadButton.new()
+		button.button_index = JOY_BUTTON_RIGHT_STICK
+		button.pressed = true
+		pb_input = button
+	PhotonBlast.gauge = PhotonBlast.MAX_GAUGE - 1
+	player._unhandled_input(pb_input)
+	_verify(not PhotonBlast.is_presenting(player), "dedicated PB input requires full charge")
+	PhotonBlast.gauge = PhotonBlast.MAX_GAUGE
+	player._unhandled_input(pb_input)
+	_verify(PhotonBlast.is_presenting(player), "%s activates via dedicated input" % blast)

@@ -1136,6 +1136,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if GameState.is_gameplay_blocked():
 		return
 
+	# Dedicated PB input never requires a palette slot. Existing activation
+	# guards enforce full charge, field location and an available player.
+	if event.is_action_pressed("photon_blast"):
+		PhotonBlast.activate(self)
+		get_viewport().set_input_as_handled()
+		return
+
 	# Resolve every action this event pressed through the single precedence
 	# rule (see arbitrate_field_actions + spec/states/start-menu). Previously
 	# the palette block and the interact block ran as INDEPENDENT, non-consuming
