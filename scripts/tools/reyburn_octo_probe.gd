@@ -34,7 +34,7 @@ func _run() -> void:
 		if attempt >= 2: await _autonomous(boss,player)
 		elif boss is ReyburnBoss: await _reyburn(boss,player)
 		else: await _octo(boss,player)
-		await _snapshot(id,boss)
+		await _snapshot_boss(id,boss)
 		await _finish(boss,field,player)
 		SessionManager.return_to_city()
 		await SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
@@ -146,7 +146,7 @@ func _octo_intro(boss: OctoDiabloBoss) -> void:
 		var part := boss._hurt_parts[index+1]
 		_check(part.get_parent() is BoneAttachment3D,"limb hurt part follows animated joint %d" % index)
 	for tick in 30: boss._physics_process(1.0/30.0)
-	await _snapshot("octo-center",boss)
+	await _snapshot_boss("octo-center",boss)
 
 func _octo_transition(boss: OctoDiabloBoss, player: Node3D) -> void:
 	boss._execute_request(4)
@@ -169,7 +169,7 @@ func _octo_transition(boss: OctoDiabloBoss, player: Node3D) -> void:
 	_check(steps == [0,2,14,18,0],"transition follows body/limb completion boundaries")
 	_check(mode_while_latched,"mode switches before latch clears")
 	_check(boss.limbs[4].model.visible and boss.limbs[5].model.visible,"long tentacles emerge in mode one")
-	await _snapshot("octo-edge",boss)
+	await _snapshot_boss("octo-edge",boss)
 	await _octo_edge(boss,player)
 
 func _octo_edge(boss: OctoDiabloBoss, player: Node3D) -> void:
@@ -223,7 +223,7 @@ func _finish(boss: DescriptorBoss, field: Node, player: Node3D) -> void:
 		_check(boss.is_queued_for_deletion(),"death completes after 181 updates")
 		_check(not field._weather_node.emitting and field._slot.weather == "","defeat clears rain without changing retry defaults")
 		_check(not is_instance_valid(boss.presentation._camera),"defeat releases encounter camera")
-		await _snapshot("octo-cleared",boss)
+		await _snapshot_boss("octo-cleared",boss)
 	field._check_room_clear()
 	field._check_room_clear()
 	var exits: Array = field._map_root.get_children().filter(func(n): return n is Telepipe)
@@ -234,7 +234,7 @@ func _contains_chain(actions: Array[int], expected: Array) -> bool:
 		if actions.slice(start,start+expected.size()) == expected: return true
 	return false
 
-func _snapshot(label: String, boss: DescriptorBoss) -> void:
+func _snapshot_boss(label: String, boss: DescriptorBoss) -> void:
 	var folder := OS.get_environment("PSZ_BOSS_SCREENSHOTS")
 	if folder.is_empty() or DisplayServer.get_name() == "headless": return
 	var camera := Camera3D.new()

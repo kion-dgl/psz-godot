@@ -1,8 +1,9 @@
 # Reyburn and Octo Diablo implementation
 
 This branch replaces Reyburn's authored prototype and Octo's generic EnemyBase
-AI with dedicated, playable controllers. It is independent of Dark Shrine PR
-#753. It supersedes the Reyburn implementation in draft #750; that older branch
+AI with dedicated, playable controllers. The Octo follow-up also integrates
+main at 97d3f93e, including the reviewed Dark Shrine PR #753 and Coliseum changes.
+It supersedes the Reyburn implementation in draft #750; that older branch
 should not be merged over this controller. Its forward-facing and full-windup
 requirements are retained through descriptor playback and explicit turn states.
 
@@ -208,3 +209,13 @@ intro order, spin completion, joint attachments, both edge movement requests,
 poison cadence/cleanup/dodge, 181-update defeat, weather reset, and the existing
 Reyburn sequences/rewards/HUD/return/retry checks. It uses controlled stepping
 and a scripted player orbit; it is not a full human-play balance test.
+
+
+### Integration with current main
+
+Merged main `97d3f93e` after GitHub reported conflicts with #753. The reviewed
+Reyburn controller, selector and `BossActionClock` remain byte-for-byte unchanged.
+The shared descriptor helper retains Shrine aiming/projectile-origin hooks and
+supports its single capsule/head receiver in the multipart target scanner.
+All four boss dispatch entries, standard Shrine camera, Trinity anchor, current
+Coliseum controls and both probe entry points are retained.

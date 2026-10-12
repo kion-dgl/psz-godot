@@ -94,7 +94,7 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   tank_rare: { displayName: 'Phobos Dyna', element: 'Dark', location: 'Arca Plant', isRare: true },
   swordman_b: { displayName: 'Zaphobos', element: 'Dark', location: 'Dark Shrine' },
   swordman_rare_b: { displayName: 'Zaphobos Dyna', element: 'Dark', location: 'Dark Shrine', isRare: true },
-  mother: { displayName: 'Mother Trinity', element: 'Dark', location: 'Dark Shrine' },
+  mother: { displayName: 'Heaven Mother', element: 'Dark', location: 'Eternal Tower' },
   mother_sword: { displayName: 'Blade Mother', element: 'Dark', location: 'Eternal Tower' },
   mother_gun: { displayName: 'Shot Mother', element: 'Dark', location: 'Eternal Tower' },
   mother_tech: { displayName: 'Force Mother', element: 'Native', location: 'Eternal Tower' },
@@ -107,7 +107,7 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   // Bosses
   boss_dragon: { displayName: 'Reyburn', element: 'Beast', location: 'Valley' },
   boss_octopus: { displayName: 'Octo Diablo', element: 'Native', location: 'Wetlands' },
-  boss_mother: { displayName: 'Humilias', element: 'Dark', location: 'Ruins' },
+  boss_mother: { displayName: 'Mother Trinity', element: 'Dark', location: 'Dark Shrine' },
   boss_darkfalz: { displayName: 'Dark Falz', element: 'Dark', location: 'Dark Shrine' },
   boss_robot: { displayName: 'Chaos Mobius', element: 'Machine', location: 'Moon Facility' },
   // PSO stand-in bosses (assets scaled 0.09 and baked). Paru = Sinow Beat/Gold

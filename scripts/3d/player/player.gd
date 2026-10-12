@@ -2666,7 +2666,7 @@ func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1
 
 
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
-	if _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
+	if DebugConfig.invincible or _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
 		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP

@@ -43,6 +43,7 @@ const chart = `stateDiagram-v2
 
   <p><strong>Reyburn/Octo implementation contract:</strong> <a href={siteUrl("/states/reyburn-octo")}>recovered behavior port</a> supersedes the draft tables and generic weighted/HP-phase rules below for these two bosses. Unresolved retail behavior is explicitly tracked there.</p>
 
+  <p>Shrine boss arenas MUST retain the standard player orbit camera (50° field of view, 4.5 distance, 1.9 height). Boss size MUST NOT force a wide-angle, zoomed-out gameplay view.</p>
   <h2>Why bosses are not enemy-room archetypes</h2>
   <p>Per <a href={siteUrl('/mechanics/enemy-attacks')}>/mechanics/enemy-attacks</a>, bosses are out of scope for the flat enemy sandbox: each of the five vocabularies is unique, and the behavior is <strong>arena-bound</strong> — fly passes, surfacing pools, relocation spots are positions in the boss's own stage. The observation tool is <a href="https://kion-dgl.github.io/psz-godot/#/boss-room">#/boss-room</a> (one room per boss, loaded inside its arena); the data is <code>data/boss_arenas.json</code> (<code>schema_version: 2</code>).</p>
 
@@ -142,14 +143,14 @@ const chart = `stateDiagram-v2
     <li><strong>Unblocked.</strong> The full 26-clip kit imported via the patched apicula (<code>psz-asset-viewer scripts/processBossRobot.ts</code>): the PSZ boss rigs carry one extra <em>unanimated root object</em> — named after the model, last in the object list — that the clips don't cover, and apicula's exact object-count match rejected every clip. The patch (local <code>~/Projects/apicula</code>) accepts animations with exactly one fewer object. The game rig is <code>boss_robot_cmb</code>'s combined <code>z_003</code>.</li>
     <li><strong>Draft table — sim'd.</strong> Left/right drills and the big sweep (segmented <code>st→lp→at</code> chains; the <code>ed</code> recovery clips are not yet played), left/right gun projectiles, <code>mov_lp</code> locomotion, and the <code>dwn_st → dwn_lp → dwn_ed</code> knockdown chain (same shape as Humilias).</li>
     <li><strong>Open — the two-robot mechanics:</strong> "Chaos &amp; Mobius" are two robots. The narc carries their entrances (<code>stt_n/stt_u</code>), combine/split transitions (<code>ch_in/ch_out</code> per robot), separate deaths (<code>ded_n/ded_u</code>), and separated idle forms (<code>ve_*</code>, the plain <code>boss_robot</code> narc) — all now converted onto the <code>z_003n/z_103u</code> part rigs, pending fight design. The <code>floor_lazer</code> arena props (colored floor tiles!) ride the cmb narc too. <code>gl/gr</code> = gun left/right and <code>stp</code> readings unverified.</li>
-    <li><strong>This is the Arca (heretic) encounter only.</strong> The Paru <em>first</em> encounter — two floating robots, one drill-like (per Kion) — is <strong>absent from the PSZ extraction</strong> (all 66 enemy narcs checked; <code>boss_robot</code> is the sole robot boss, the Arca/union humanoid). Paru is covered by the real <code>shinowa</code> extraction (the Sinow line) instead (see below). The two-robot union material here (<code>ch_in/ch_out</code>, <code>ve_*</code>, the <code>floor_lazer</code> props) remains for the Arca fight design.</li>
+    <li><strong>Original identity correction:</strong> the recovered overlay-22 controller supports both split and combined encounters: source IDs 63/64 are Chaos and Mobius; 65 is Humilias. The split parts and combine transitions are present in the extraction. The older claim that Paru's robots were absent was incorrect. This page's Shinowa/Arca placements remain authored encounter choices; see <code>docs/boss-behavior-analysis.md</code> for the original controller research.</li>
   </ul>
 
-  <h3>Heaven's Mother (composite — Eternal Tower summit, s087_na1)</h3>
+  <h3>Heaven's Mother and the tower Mother test encounter</h3>
   <ul>
-    <li><strong>A composite boss:</strong> the fight is the three tower mother elites — <code>blade_mother</code> (<code>mother_sword</code>), <code>force_mother</code> (<code>mother_tech</code>), <code>shot_mother</code> (<code>mother_gun</code>) — <em>cycling as phases</em> (per Kion). They are regular roster enemies (blade_mother also spawns in <code>investigate_tower</code>), so the data models them as <code>forms[]</code> on one boss entry rather than <code>is_boss</code> flags; the room gets a <strong>form picker</strong> that swaps the loaded rig.</li>
-    <li><strong>Shared 15-clip vocabulary</strong> across all three: melee swings (<code>atk_sa_s</code>/<code>atk_sb_s</code>), a gun-volley chain (<code>atk_gu_a_*</code> on blade, <code>atk_gu_g_*</code> on force/shot), charged techniques (<code>tec_t_st/lp/ed</code> + instant <code>tec_a</code>), and — the signature — <strong><code>warp_st</code>/<code>warp_ed</code>: she teleports</strong>, which likely serves as both relocation and the form-transition presentation.</li>
-    <li><strong>Open:</strong> form order and transition trigger (HP thirds? break?); which technique each form casts; the <code>boss_mother_piece</code> rig in the viewer (9 <code>km*</code> clips — floating pieces/adds?) is unimported pending observation; the arena is the one non-<code>_z</code> boss stage (tower floor 7, and it ships real minimap SVGs unlike the z arenas).</li>
+    <li><strong>Separate from Trinity:</strong> original Heaven Mother is source <code>mother</code> (57), sharing overlay 23 with Blade, Shot and Force Mothers (58–60). Trinity is <code>boss_mother</code> (66), and its pieces are <code>boss_mother_piece</code> (67), using overlay 31.</li>
+    <li><strong>Authored composite:</strong> the existing tower test mission stages <code>blade_mother</code>, <code>force_mother</code> and <code>shot_mother</code> together. The web simulator's cycling forms are a draft design, not verified original behavior. The original controller's melee/gun/tech style selector and attack chains are documented in <code>docs/boss-behavior-analysis.md</code>; no live tower-Mother capture is available yet.</li>
+    <li><strong>Open:</strong> dedicated Heaven Mother resource/controller, original style switching and teleports, technique targeting and live validation. The koma piece rig belongs to Trinity, not the tower Mothers; its meshes exist in the viewer but are absent from the distributed game pack.</li>
   </ul>
 
   <h3>Sinow Beat (Paru — Oblivion City, s05z_na1)</h3>
@@ -173,18 +174,81 @@ const chart = `stateDiagram-v2
   <p>The <strong>Rioh Snowfield</strong> arena (<code>s03z_na1</code>) is a <em>pack fight</em>, not a unique boss: it spawns a Hildegao pack. It needs no <code>boss_arenas.json</code> entry — regular enemy spawns in the arena cell cover it, via <code>debug_boss_snowfield</code>.</p>
 
   <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
+  <p>The earlier filename-based ranged-only draft is superseded by Kion's
+    observed moving encounter. Falz walks toward the player, attacks in front,
+    carries three rotating balls with changing orbit reach, and occasionally
+    sends a tail through the floor. Balls retract into his shadow before an
+    all-direction volley and return only after its projectiles expire. Low-health
+    Falz sinks into the shadow and moves faster. Exact retail timings and effect
+    identities remain unverified; see <code>docs/dark-falz-reference.md</code>.</p>
+
+  <h2>Dark Shrine encounter implementation contract</h2>
+  <p>The dedicated Godot Falz and Trinity encounters are an initial playable port,
+    pending hardware assessment. The ROM catalogs and emulator captures in
+    <code>docs/boss-behavior-analysis.md</code> supersede the filename-based draft
+    above. They MUST NOT be described as complete 1:1 parity.</p>
   <ul>
-    <li><strong>Relocating ranged finale — sim'd.</strong> Walks and runs the ranged kit: throw volley (<code>thr*</code>, one projectile per <code>thrlp</code> rep), <strong>diffusion spread</strong> (<code>dif*</code> — the release fans <code>split: 5</code> projectiles across ±25°), radiate AoE burst (<code>rad*</code>, 360°), single heavy shot (<code>bhsht</code>), and the wide <code>nagi</code> mow-down sweep up close. Every ~25&nbsp;s (<code>flight_interval</code> + <code>relocate_kind submerge</code>) it sinks untargetable and <em>swims</em> (<code>relocate_loop_clip swm</code>) to a new spot — the timer-driven variant of the octopus's fatigue-driven cycle.</li>
-    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
+    <li>Trinity MUST use <code>boss_mother</code>, not the tower Mother rig. Three
+      independently damageable pieces guard its body. Losing the first requests
+      action 2; losing the second requests action 3. The body MUST remain protected
+      until action 3's notification 0. Remaining pieces are cleaned up on boss death.</li>
+    <li>Trinity MUST occupy <code>s07z_na1</code> at full model scale, fixed in the
+      north platform cutout with the stage cables behind her. The body MUST NOT
+      rotate or chase an off-axis player. Pieces MUST start on the player platform.
+      The damage receiver MUST follow the animated head, and lasers MUST originate
+      at the head toward the platform. The authored root is <code>(0, 0, -10)</code>,
+      yaw zero; this is a visual fit, not a recovered ROM coordinate. See
+      <code>docs/mother-trinity-reference.md</code> for Kion's animation observations
+      and their distinct recovered descriptor order.</li>
+    <li>Trinity's piece phase MUST use the visible 4-unit floor grid. Pieces MUST
+      reserve distinct destination squares before jumping and retain their source
+      occupancy until landing. Each landing MUST be followed by a visible spin,
+      a telegraphed melee strike or technique, and recovery before the next hop.
+      A Mother command MUST gather living pieces into a shared windup and release
+      their radial waves on the same simulation tick. Death MUST release both
+      occupied/reserved squares and cancel owned deliveries.</li>
+    <li>The first piece loss MUST leave the floor cover intact. The second MUST
+      start the body-entry transition, pause the survivor, and break the cover at
+      the body-exposure notification. The remaining piece MUST resume its board
+      cycle during the body phase. Retry MUST restore the cover, rear body pose,
+      all three pieces, empty delivery lists and fresh occupancy. Grid exclusions,
+      timings and the reconstructed cover are authored encounter design; the
+      original cover asset and exact behavior remain unverified.</li>
+    <li>Trinity body attacks MUST use descriptor stages: swing action 7, laser 8,
+      headbutt 9, zero to two repeats of 10, recovery 11, then laser 8. Phase changes
+      MUST NOT be overwritten by generic enemy flinch.</li>
+    <li>Falz MUST request reaction 2 strictly below half HP and reaction 3 strictly
+      below quarter HP, each once. The quarter branch takes precedence, even when
+      a hit skips half HP. Budget exhaustion MUST NOT invent a request-1 stagger.</li>
+    <li>Falz MUST walk between attacks and turn toward the player while moving.
+      Frontal strikes MUST lock facing for the windup, hit only in front, and
+      allow recovery. Three orbiting balls MUST remain evenly spaced, change
+      radius, and stop damaging while retracted. A radial volley MUST retract
+      the balls first, keep them hidden while any volley projectile lives, then
+      restore them. The volley MUST NOT replace the ordinary movement cycle.</li>
+    <li>Falz's tail MUST telegraph a fixed floor position before emerging; it
+      MUST NOT track the player after the warning. Below quarter HP, Falz MUST
+      enter a persistent submerged phase with faster movement and shorter attack
+      recovery. Submerged Falz MUST remain damageable so the phase cannot softlock.
+      Death and room exit MUST clear the tail, balls and volley deliveries;
+      retry MUST restore normal speed and all three balls. Speeds, intervals,
+      reach and the quarter-HP form threshold are authored choices.</li>
+    <li>Both encounters MUST finish windup, strike and recovery stages; a filename
+      ending in <code>lp</code> MUST NOT imply looping. Death MUST cancel active
+      windows, remove owned projectiles, award once, and allow a fresh retry.</li>
+    <li>Attack selection, targeting, projectile geometry and piece presentation are
+      explicitly authored approximations in this first port. Piece visuals use
+      procedural markers until the original piece rig is in the distributed pack.
+      Campaign handoff and exact retail spawn coordinates remain separate work.</li>
   </ul>
 
   <h2>Debug missions (the in-game instrument)</h2>
   <p>Each boss arena has a <strong>debug mission</strong> — <code>debug_boss_&lt;id&gt;</code> in <code>data/quests/</code> — that warps the player straight into the boss cell. They are <strong>always unlocked</strong> (no <code>parent_quest</code>, never <code>disabled</code>), sit at the end of the guild-counter list with a <code>DEBUG:</code> name prefix, and award <strong>nothing</strong> (empty rewards). They deliberately ship in beta builds: zero-friction boss testing on real hardware. Remove them from <code>data/quests/manifest.json</code> for a real release.</p>
   <ul>
     <li>Structure: a single <code>type: "boss"</code> section whose one cell is both start and end, spawning the boss (roster id) at the arena origin — the same shape as the story quests' boss sections.</li>
-    <li><strong>Snowfield</strong> (<code>s03z_na1</code>) has no unique boss: its debug mission spawns a <strong>Hildegao pack</strong> (×4) — matching the real game's snowfield boss room. <strong>Heaven's Mother</strong>'s mission spawns all three forms together in the tower summit arena for observation (the real fight cycles them). Makara's mission is pending its composition.</li>
+    <li><strong>Snowfield</strong> (<code>s03z_na1</code>) has no unique boss: its debug mission spawns a <strong>Hildegao pack</strong> (×4) — matching the real game's snowfield boss room. The <strong>tower Mother test mission</strong> spawns all three styles together in the tower summit arena; this authored setup does not establish original form cycling. Makara's mission is pending its composition.</li>
     <li>Each has a matching <code>data/quest_plans/</code> entry (one <code>kill_all + wait_quest_complete</code> step), so <code>PSZ_AUTOPILOT_QUEST=debug_boss_&lt;id&gt;</code> drives the whole accept → warp → clear → report loop headlessly — the autopilot probe for boss work.</li>
-    <li>Bosses currently spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
+    <li>Bosses without a dedicated implementation spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
   </ul>
 
   <h2>Draft → normative workflow</h2>

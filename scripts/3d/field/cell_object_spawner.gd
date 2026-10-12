@@ -851,7 +851,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 		return
 
 	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
-	if edata and enemy_id in ["reyburn", "octo_diablo"]:
+	if edata and enemy_id in ["reyburn", "octo_diablo", "dark_falz", "mother_trinity"]:
 		if _spawn_boss(pos, enemy_id, edata):
 			return
 
@@ -914,13 +914,24 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 ## Spawn a boss enemy via its behaviour subclass and bind the boss health bar.
 ## Returns false if the script failed to load (caller falls back to EnemyBase).
 func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
-	var path := "res://scripts/3d/enemies/reyburn_boss.gd" if enemy_id == "reyburn" else "res://scripts/3d/enemies/octo_diablo_boss.gd"
-	var script := load(path) as GDScript
-	if not script: return false
+	var scripts := {
+		"reyburn": "res://scripts/3d/enemies/reyburn_boss.gd",
+		"octo_diablo": "res://scripts/3d/enemies/octo_diablo_boss.gd",
+		"dark_falz": "res://scripts/3d/enemies/dark_falz_boss.gd",
+		"mother_trinity": "res://scripts/3d/enemies/mother_trinity_boss.gd",
+	}
+	var script := load(scripts[enemy_id]) as GDScript
+	if not script:
+		return false
 	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, script)
+	if boss is MotherTrinityBoss:
+		# This root belongs in the arena cutout, not on walkable floor. Floor
+		# snapping a giant fixed boss can lift/shift it away from its stage fit.
+		boss.position = MotherTrinityBoss.ARENA_ANCHOR
+		boss.rotation = Vector3.ZERO
 	if _c._field_hud and _c._field_hud.has_method("show_boss_bar"):
 		_c._field_hud.show_boss_bar(boss)
-	print("[CellObjects] Boss %s at %s" % [enemy_id,pos])
+	print("[CellObjects] Boss %s at %s" % [enemy_id, pos])
 	return true
 
 
