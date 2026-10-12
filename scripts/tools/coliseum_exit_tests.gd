@@ -31,4 +31,5 @@ func _run() -> void:
 	SessionManager.suspend_session()
 	_check(SessionManager.has_completed_quest() and SessionManager.has_suspended_session(), "story quest keeps report and resume state")
 	SessionManager.reset_all_state()
+	print("[coliseum-exit] DONE %s" % ("ok" if _ok else "FAIL"))
 	get_tree().quit(0 if _ok else 1)
