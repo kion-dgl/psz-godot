@@ -3,8 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  # Stacked implementation PRs need the same gates before their base lands.
+  pull_request: {}
   # Merge-queue temp branches — required checks must also report there, or
   # every queued PR hangs waiting on checks that never run.
   merge_group: {}
