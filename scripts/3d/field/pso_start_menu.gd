@@ -787,6 +787,8 @@ func _execute_use_item(item_id: String, item_name: String) -> void:
 		var fail_info: Dictionary = Inventory.get_last_use_info()
 		if item_id == "trap_vision" and SessionManager.get_location() != "field":
 			_action_message = "Trap Vision only works in the field"
+		elif str(fail_info.get("type", "")) == "coliseum_escape_blocked":
+			_action_message = "Coliseum: win or be defeated to leave"
 		elif str(fail_info.get("type", "")) == "telepipe_fail":
 			_action_message = "Telepipe only works in the field"
 		else:

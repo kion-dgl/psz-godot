@@ -12,7 +12,8 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>Shops <strong>MUST</strong> share behavior through <em>composition</em> — preloaded static helpers (<code>PszStyle</code>, <code>ShopNav</code>, <code>ShopUI</code>) — and <strong>MUST NOT</strong> share it through a common base class. A cross-script base class fails to resolve in the Android export at runtime (it works in-editor and on every other platform); see <code>docs/shop-dedup.md</code>. Each shop is therefore its own <code>extends Control</code> script that calls into the shared helpers.</p>
 
-  <h2 id="presentation">Presentation — diegetic 3D framing</h2>
+  <p>Coliseum encounters MUST end in victory or defeat. They MUST NOT spawn an entry return warp or allow consumable Telepipes; rejected Telepipes MUST NOT be consumed. Victory return pads and defeat handling remain available.</p>
+<h2 id="presentation">Presentation — diegetic 3D framing</h2>
 
   <p>The shop screen is drawn <em>over</em> the live city, not in place of it. When the player accepts an interaction with a shop NPC, the game <strong>MUST</strong>:</p>
   <ul>

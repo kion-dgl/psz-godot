@@ -1246,7 +1246,7 @@ func _spawn_field_elements() -> void:
 	# from the spawn room without needing to clear the area first. This is
 	# the "first-room return teleporter" half of issue #136.
 	var section_idx_for_warp: int = SessionManager.get_current_section()
-	if _current_cell.get("is_start", false) and section_idx_for_warp == 0:
+	if _current_cell.get("is_start", false) and section_idx_for_warp == 0 and not SessionManager.get_session().get("coliseum_encounter", false):
 		var start_warp := StartWarpScript.new()
 		start_warp.auto_collect = false
 		start_warp.interactable = true
@@ -1811,6 +1811,8 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 ## the activated signal to _travel_to_city_via_telepipe instead of advancing
 ## the section.
 func spawn_player_telepipe(world_pos: Vector3) -> void:
+	if SessionManager.get_session().get("coliseum_encounter", false):
+		return
 	# Record the placement first so the cancellation signal (if a previous
 	# telepipe was active) fires before we spawn the new one. The Telepipe
 	# element doesn't observe TelepipeManager directly — TelepipeManager is
@@ -1858,7 +1860,7 @@ func _spawn_player_telepipe_node(world_pos: Vector3) -> void:
 ## field entirely; coming back via the city teleporter starts a fresh
 ## session and a new spawn-room StartWarp.
 func _on_start_warp_interacted(_player: Node3D) -> void:
-	if _transitioning:
+	if _transitioning or SessionManager.get_session().get("coliseum_encounter", false):
 		return
 	_transitioning = true
 	_fdbg("[ValleyField] Player triggered StartWarp → return to city (suspended)")

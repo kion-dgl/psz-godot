@@ -1,5 +1,11 @@
 extends RefCounted
 static func run(t: Node) -> void:
+	var session := SessionManager.get_session()
+	session["coliseum_encounter"] = true
+	var items_before := Inventory._items.duplicate(true)
+	t.assert_eq(Inventory._use_telepipe(), false, "Coliseum blocks consumable escape")
+	t.assert_eq(Inventory._items, items_before, "blocked escape consumes no items")
+	session.erase("coliseum_encounter")
 	var growth = preload("res://scripts/utils/enemy_progression.gd")
 	t.assert_eq(growth.level_for({"area_id":"dark","difficulty":"normal"}),30,"automatic Shrine level remains 30")
 	t.assert_eq(growth.level_for({"area_id":"dark","coliseum_enemy_level":12,"difficulty":"hard"}, 80),12,"Coliseum explicit level overrides cell and difficulty offset")

@@ -10,9 +10,15 @@ func _run() -> void:
 		get_tree().quit(1)
 		return
 	_check_combat(boss, preview_hp)
+	_check(not get_tree().current_scene.get_children().any(func(child): return child is StartWarp), "Coliseum has no entry escape warp")
+	_check(not Inventory._use_telepipe(), "Coliseum refuses consumable escape")
 	_check_health_display()
 	_check_floor_texture(boss)
 	await _snapshot("coliseum_boss_level")
+	boss._die()
+	await get_tree().process_frame
+	get_tree().current_scene._check_room_clear()
+	_check(get_tree().current_scene._map_root.get_children().filter(func(child): return child is Telepipe).size() == 1, "Coliseum victory still creates one return pad")
 	await _check_debug_menu()
 	print("[coliseum-setup] DONE " + ("ok" if _ok else "FAIL"))
 	get_tree().quit(0 if _ok else 1)
@@ -90,6 +96,7 @@ func _check_debug_menu() -> void:
 	SessionManager.enter_quest("debug_boss_dark_falz", "normal")
 	_check(preload("res://scripts/utils/enemy_progression.gd").level_for(SessionManager.get_session()) == 30,
 		"Coliseum override does not leak into next quest")
+	_check(not SessionManager.get_session().get("coliseum_encounter", false), "normal quests do not inherit Coliseum escape restriction")
 	SessionManager.return_to_city()
 	ColiseumRoster.selected_enemy_level = 0
 	await SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")

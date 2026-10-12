@@ -257,5 +257,6 @@ static func row_hp(row: Dictionary) -> int:
 	return total
 
 static func apply_level_override() -> void:
+	SessionManager.get_session()["coliseum_encounter"] = true
 	if selected_enemy_level > 0:
 		SessionManager.get_session()["coliseum_enemy_level"] = clampi(selected_enemy_level, 1, 100)
