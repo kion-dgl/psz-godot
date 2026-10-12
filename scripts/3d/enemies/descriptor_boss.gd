@@ -258,6 +258,8 @@ func _set_exposure(exposed: bool) -> void:
 		hurtbox.set_deferred("monitorable", exposed and is_alive)
 
 func _event_anchor(event: Dictionary) -> Transform3D:
+	# Shrine encounter adapters retain their entity-space combat origins.
+	if _hurt_parts.is_empty(): return global_transform
 	if int(event.get("coordinate_mode", 0)) == 2:
 		var skeleton := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D if model else null
 		var joint := int(event.get("joint_index", -1))
@@ -288,11 +290,14 @@ func _move_forward(speed: float) -> void:
 
 func hurtbox_in_cone(origin: Vector3, yaw: float, config: Dictionary) -> Dictionary:
 	var best: Dictionary = {}
-	var parts: Array = _hurt_parts if not _hurt_parts.is_empty() else [hurtbox]
+	var parts: Array[Hurtbox] = _hurt_parts.duplicate()
+	# Shrine bosses use the base capsule or their own receiver, rather than
+	# the registered Reyburn/Octo parts. Keep them targetable after integration.
+	if parts.is_empty() and is_instance_valid(hurtbox): parts.append(hurtbox)
 	for part in parts:
 		if not is_instance_valid(part) or not part.monitorable or not part.is_visible_in_tree(): continue
 		var shape := part.get_child(0) as CollisionShape3D
-		var radius: float = shape.shape.radius
+		var radius := float(shape.shape.get("radius"))
 		var distance := ConeTargeting.distance_in_cone(origin,yaw,
 			float(config.get("hit_h_dist",2.4)),float(config.get("hit_v_dist",0.5)),
 			float(config.get("hit_h_angle_deg",30.0)),float(config.get("hit_v_angle_deg",40.0)),

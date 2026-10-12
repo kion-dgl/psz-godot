@@ -899,7 +899,9 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 	enemy.collision_layer = 8
 	enemy.collision_mask = 1
 	_c._map_root.add_child(enemy)
-	enemy.position = _place_on_floor(pos)
+	# Octo deliberately occupies the water opening. Generic floor repair
+	# moves (0,0) twelve units onto the planks and corrupts every phase anchor.
+	enemy.position = pos if enemy_id == "octo_diablo" else _place_on_floor(pos)
 	_c._room_enemies.append(enemy)
 	_track_on_minimap(enemy)
 	var spawn_id := enemy_id
