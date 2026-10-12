@@ -16,6 +16,7 @@ var _window_hits: Dictionary = {}
 var _pose := ""
 var _dying := false
 var _tick_fraction := 0.0
+var _action_serial := 0
 var hit_part := 0
 var hit_source: Node3D
 var _hurt_parts: Array[Hurtbox] = []
@@ -50,8 +51,10 @@ func _physics_process(delta: float) -> void:
 	_tick_fraction += delta * 30.0
 	while _tick_fraction >= 1.0:
 		_tick_fraction -= 1.0
+		var serial := _action_serial
 		if is_alive: _controller_tick()
-		clock.advance(1.0 / 30.0)
+		# A controller entry starts at frame zero, not frame one of this tick.
+		if serial == _action_serial: clock.advance(1.0 / 30.0)
 		_sync_pose()
 		if is_alive: _after_action_tick()
 
@@ -80,6 +83,7 @@ func _register_part(parent: Node3D, radius: float, part: int, offset := Vector3.
 	return hb
 
 func play_action(id: int, limits: Dictionary = {}) -> void:
+	_action_serial += 1
 	action_id = id
 	_set_exposure(_accepts_damage())
 	_window_hits.clear()

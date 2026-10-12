@@ -67,9 +67,17 @@ func _reyburn(boss: ReyburnBoss, player: Node3D) -> void:
 	boss._physics_process(1.0/30.0)
 	_check(boss.controller.enhanced,"frame 67 notification enables modifier")
 	var actions: Array[int] = []
-	boss.action_started.connect(func(id): actions.append(id))
+	var ticks: Array[int] = [0]
+	var bite_calls: Array = []
+	boss.action_started.connect(func(id):
+		actions.append(id)
+		if id in [16,17,4]: bite_calls.append([ticks[0],id]))
 	boss.start_request({"id":5,"normal":2,"advance":1})
-	for tick in 220: boss._physics_process(1.0/30.0)
+	for tick in 220:
+		ticks[0] = tick+1
+		boss._physics_process(1.0/30.0)
+	if bite_calls.size() >= 4:
+		_check(bite_calls[1][0]-bite_calls[0][0] == 27 and bite_calls[2][0]-bite_calls[1][0] == 27 and bite_calls[3][0]-bite_calls[2][0] == 52,"bite restart intervals match emulator 331/358/385/437")
 	_check(_contains_chain(actions,[16,16,17,4]),"normal/advancing bite counts execute in order")
 	boss._clear_deliveries()
 	boss.start_request({"id":6,"types":[0],"counts":[1]})

@@ -32,7 +32,10 @@ flinch over a boss action.
   distinct. Existing authored level/difficulty scaling remains in effect.
 - Modifier activation at action 2 notification 0 (frame 67), rather than on HP
   subtraction. Head-budget exhaustion queues the separate damage reaction.
-- Separate normal/advancing bite counts and 10→11→12 breath. Frame-5 notification
+- Separate normal/advancing bite counts, including the one-update restart
+  handshake: the in-arena 16→16→17→4 intervals match captured 27/27/52 ticks
+  (original starts 331/358/385/437). Controller entry retains frame zero.
+  Breath runs 10→11→12. Frame-5 notification
   releases a single shot or three-shot fan; repeat interval is nine ticks,
   heading spacing is ±0x0e38 and the owned pool is capped at six projectiles.
 - Four bone-attached incoming parts share HP and hit ownership. Melee cone scans

@@ -19,6 +19,8 @@ var _motion_end := Vector3.ZERO
 var _jump_ticks := -1
 var _tail_heading := 0.0
 var _part_broken := false
+var _bite_pending := false
+var _bite_complete := false
 var _skeleton: Skeleton3D
 var _home := Vector3.ZERO
 var _initialized_position := false
@@ -94,6 +96,8 @@ func _controller_tick() -> void:
 		if _turn_step(int(request.get("turn",0x222))) or _state_ticks >= 90: _enter_next_state()
 	elif state_field == "0xf0":
 		_tick_breath()
+	elif state_field == "0xf4":
+		_tick_bite()
 	elif state_field == "0x118" and not clock.running:
 		if _state_ticks >= _state_limit: _enter_next_state()
 	elif state_field == "0x114":
@@ -155,6 +159,8 @@ func _breath() -> void:
 	play_action(10)
 
 func _bite() -> void:
+	_bite_pending = false
+	_bite_complete = false
 	var actions: Array = []
 	for i in int(request.get("normal",1)): actions.append(16)
 	for i in int(request.get("advance",0)): actions.append(17)
@@ -233,6 +239,8 @@ func _action_finished() -> void:
 			_state_ticks = 0
 			play_action(11,{0:-1})
 		elif action_id == 12: _enter_next_state()
+	elif state_field == "0xf4":
+		_bite_pending = true
 	elif state_field == "0x114":
 		pass # Jump finishes only after both interpolation and landing animation.
 	elif state_field == "0x118":
@@ -287,3 +295,12 @@ func _event_anchor(event: Dictionary) -> Transform3D:
 		var index := _skeleton.find_bone(bone)
 		if index >= 0: return _skeleton.global_transform * _skeleton.get_bone_global_pose(index)
 	return global_transform
+
+func _tick_bite() -> void:
+	# ov20:0219D1D4 returns through substate zero for one update between bites.
+	if _bite_complete:
+		_enter_next_state()
+	elif _bite_pending:
+		_bite_pending = false
+		_next_action()
+		_bite_complete = action_id == 4
