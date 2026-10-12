@@ -2,6 +2,10 @@ class_name ReyburnBoss extends DescriptorBoss
 ## Recovered ov20 sequences and damage history. Motion adapters are documented
 ## in /states/reyburn-octo; no fixed-percent enrage or percent-of-clip damage.
 
+@export var original_ground_pacing := true
+var deliveries := ReyburnDeliveries.new()
+var _breath_ready := false
+
 var entrance := ReyburnEntrance.new()
 var pacing := ReyburnPacing.new()
 var flight := ReyburnFlight.new()
@@ -27,6 +31,7 @@ var _tail_heading := 0.0
 var _part_broken := false
 var _bite_pending := false
 var _bite_complete := false
+var _horn: Node3D
 var _skeleton: Skeleton3D
 var _home := Vector3.ZERO
 var _initialized_position := false
@@ -48,7 +53,19 @@ func _ready() -> void:
 	var tier: int = {"normal":0,"hard":1,"super-hard":2}.get(SessionManager.get_session().get("difficulty","normal"),0)
 	controller = ReyburnController.new(int(catalog.stats[tier][0]),encounter_max_hp)
 	_skeleton = NodeUtils.first_of_type(model,"Skeleton3D") as Skeleton3D if model else null
+	_attach_horn()
 	_set_exposure(false)
+
+func _attach_horn() -> void:
+	# Original model channel 1 is mode 2, parent channel 0, raw joint 12 (atama).
+	if not _skeleton or _skeleton.find_bone("atama") < 0: return
+	var mesh := load("res://assets/enemies/boss_dragon/parts/z_001_horn/z_001_horn.glb") as PackedScene
+	if not mesh: return
+	var anchor := BoneAttachment3D.new()
+	_skeleton.add_child(anchor)
+	anchor.bone_name = "atama"
+	_horn = mesh.instantiate()
+	anchor.add_child(_horn)
 
 func _physics_process(delta: float) -> void:
 	if entrance != null:
@@ -77,6 +94,7 @@ func _die() -> void:
 	super._die()
 
 func _exit_tree() -> void:
+	deliveries.clear()
 	if entrance != null: entrance.finish(self)
 	super._exit_tree()
 
@@ -101,7 +119,9 @@ func _after_damage_applied(amount: int) -> void:
 	if known:
 		var direction := hit_source.global_position - global_position
 		bearing = wrapf(atan2(direction.x,direction.z) - rotation.y,-PI,PI)
-	if controller.hit(amount,hit_part,bearing,known): _part_broken = true
+	if controller.hit(amount,hit_part,bearing,known):
+		_part_broken = true
+		if is_instance_valid(_horn): _horn.hide()
 
 func start_request(value: Dictionary) -> void:
 	if entrance != null:
@@ -112,14 +132,11 @@ func start_request(value: Dictionary) -> void:
 	_states = _reyburn_sequences[sequence_id].duplicate()
 	ground_motion.reset()
 	approach.reset()
+	deliveries.reset_contact()
 	if sequence_id in [9,10,11]:
-		flight.begin()
-		_states = ["0xdc"]
-		for _pass_number in rng.randi_range(2,3):
-			_states.append_array(["0xe0","0x108"])
-		if sequence_id == 10: _states.append("0xec")
-		_states.append_array(["air_return","0xe4"])
-		if sequence_id == 9: _states.append("0xe8")
+		flight.begin(self)
+		if not request.has("entry_side"): request.entry_side = rng.randi_range(0,1)
+		if not request.has("landing"): request.landing = Vector3(float(rng.randi_range(0,0xbfff)-0x6000)/4096.0,0,float(rng.randi_range(0,0x21fff)-0x11000)/4096.0)
 	_breath_cursor = 0
 	_enter_next_state()
 
@@ -128,6 +145,7 @@ func _enter_next_state() -> void:
 		ground_motion.reset()
 		approach.reset()
 		pacing.completed(sequence_id)
+		if original_ground_pacing: pacing.rest_ticks = 0; pacing.bite_ticks = 0
 		controller.finish(sequence_id,int(request.get("flags",0)),sequence_id in [8,14] and controller.enhanced and rng.randi_range(0,1) == 1)
 		sequence_id = -1
 		state_field = "track"
@@ -147,6 +165,7 @@ func _enter_next_state() -> void:
 
 func _controller_tick() -> void:
 	if state_field == "loaf": return
+	deliveries.tick(self)
 	pacing.tick()
 	if not _initialized_position:
 		_initialized_position = true
@@ -157,13 +176,8 @@ func _controller_tick() -> void:
 	if state_field == "track":
 		_track()
 	elif state_field == "0x10c":
-		if absf(_bearing()) < 0.12 or ground_motion.step(self,2.4):
-			ground_motion.reset()
-			_enter_next_state()
-		elif _state_ticks >= 240:
-			_states.clear()
-			_enter_next_state()
-	elif state_field in ["0xe0","air_return"]:
+		_tick_turn()
+	elif state_field in ["0xdc","0xe0","0xe8","0xec","0x108","0xe4","air_return"]:
 		flight.tick(self)
 	elif state_field == "0xf0":
 		_tick_breath()
@@ -177,7 +191,23 @@ func _controller_tick() -> void:
 		_enter_next_state()
 	_tick_motion()
 
+func _tick_turn() -> void:
+	if original_ground_pacing:
+		var maximum := int(request.get("turn",0x222))
+		var turn := roundi(maximum*sin(minf(float(_state_ticks)/90.0,1.0)*PI))
+		if absf(_bearing()) <= TAU*turn/65536.0 or _state_ticks >= 90: _enter_next_state()
+		else: _turn_step(turn)
+	elif absf(_bearing()) < 0.12 or ground_motion.step(self,2.4):
+		ground_motion.reset()
+		_enter_next_state()
+	elif _state_ticks >= 240:
+		_states.clear()
+		_enter_next_state()
+
 func _track() -> void:
+	if original_ground_pacing:
+		_track_original()
+		return
 	if pacing.rest_ticks > 0: return
 	if approach.active:
 		var next: Dictionary = approach.tick(self)
@@ -188,7 +218,7 @@ func _track() -> void:
 		_part_broken = false
 		chosen = {"id":12}
 	elif controller.flight_timer <= 0:
-		chosen = {"id":(9 if controller.enhanced else 10) if controller.aerial_alternation else 11,"flags":3}
+		chosen = {"id":(10 if controller.enhanced else 9) if controller.aerial_alternation else 11,"flags":3}
 	elif controller.fallback_timer <= 0:
 		var roll := rng.randi_range(0,3)
 		var secondary := rng.randi_range(0,1) if roll == 0 or (roll == 2 and controller.enhanced) else 0
@@ -202,12 +232,35 @@ func _track() -> void:
 		var next: Dictionary = approach.tick(self)
 		if int(next.id) >= 0: start_request(next)
 
+func _track_original() -> void:
+	var chosen := {"id":-1}
+	if _part_broken:
+		_part_broken = false
+		chosen = {"id":12}
+	elif controller.flight_timer <= 0:
+		chosen = controller.flight_request()
+	elif controller.fallback_timer <= 0:
+		var roll := rng.randi_range(0,3)
+		var secondary := rng.randi_range(0,1) if roll == 0 or (roll == 2 and controller.enhanced) else 0
+		chosen = controller.fallback(roll,secondary)
+	else:
+		chosen = controller.priority(_distance(),_bearing())
+	if int(chosen.id) >= 0:
+		start_request(chosen)
+	else:
+		if action_id != 5: play_action(5,{0:-1})
+		ground_motion.retail_step(self)
+
+func _clear_deliveries() -> void:
+	deliveries.clear()
+	super._clear_deliveries()
+
 func _intro() -> void:
 	# Intro camera/arena approach is a bounded adapter, not retail spawn motion.
 	play_sequence([7,18])
 
 func _takeoff() -> void:
-	play_action(7,{1:2})
+	flight.takeoff(self)
 
 func _aerial() -> void:
 	flight.move(self)
@@ -219,11 +272,10 @@ func _land() -> void:
 	flight.land(self)
 
 func _claw() -> void:
-	controller.head_damage = 0
-	play_sequence([20,21])
+	flight.claw(self)
 
 func _aerial_turn() -> void:
-	play_sequence([22,23])
+	flight.spin(self)
 
 func _breath() -> void:
 	var types: Array = request.get("types",[0])
@@ -232,6 +284,7 @@ func _breath() -> void:
 	_shots_left = int(counts[mini(_breath_cursor,counts.size()-1)])
 	_breath_cursor += 1
 	_shot_wait = -1
+	_breath_ready = false
 	play_action(10)
 
 func _bite() -> void:
@@ -255,7 +308,7 @@ func _run() -> void:
 	play_action(6,{0:-1})
 
 func _air_breath() -> void:
-	play_action(19)
+	flight.air_breath(self)
 
 func _turn() -> void:
 	play_action(5,{0:-1})
@@ -279,8 +332,12 @@ func _tail() -> void:
 	play_action(14 if _bearing() >= 0 else 15)
 
 func _tick_breath() -> void:
-	if action_id == 11 and _state_ticks > (15 if _breath_type == 0 else 45):
+	if action_id == 11 and _state_ticks >= (1 if _breath_type == 0 else 2):
 		play_action(12)
+	if _breath_ready:
+		_breath_ready = false
+		_emit_breath()
+		return
 	if _shot_wait >= 0:
 		_shot_wait -= 1
 		if _shot_wait < 0 and _shots_left > 0: _emit_breath()
@@ -297,9 +354,6 @@ func _tick_jump() -> void:
 func _tick_motion() -> void:
 	match state_field:
 		"0x100": ground_motion.step(self,8.0)
-		"0x108": _turn_step(0x100)
-		"0xdc": global_position.y = minf(global_position.y + 0.2,_ground_height+8.0)
-		"0xe4": flight.descend(self)
 		"0xf4":
 			# Translational adapter until original flagged root curves are transferred.
 			if action_id == 17 and clock.frame_q12 >= 10*4096 and clock.frame_q12 <= 37*4096:
@@ -311,6 +365,7 @@ func _action_finished() -> void:
 	if _dying:
 		super._action_finished()
 		return
+	if state_field in ["0xdc","0xe0","0xe8","0xec","0x108","0xe4","air_return"]: return
 	if state_field == "0xf0":
 		if action_id == 10:
 			_state_ticks = 0
@@ -334,8 +389,9 @@ func _boss_notification(id: int, kind: String) -> void:
 	if kind != "point": return
 	controller.notify(id)
 	if id == 2 and state_field == "0x114": _jump_ticks = 0
-	if id == 4 and state_field == "0xf0": _emit_breath()
-	if id == 4 and state_field == "0x108": _fire(0.0)
+	if id == 2 and state_field == "0xdc": flight.released = true
+	if id == 4 and state_field == "0xf0": _breath_ready = true
+	if id == 4 and state_field == "0x108": flight.released = true
 
 func _emit_breath() -> void:
 	if _shots_left <= 0: return
@@ -347,18 +403,7 @@ func _emit_breath() -> void:
 	_shot_wait = 8 if _shots_left > 0 else -1
 
 func _fire(angle: float) -> void:
-	_owned_shots = _owned_shots.filter(func(n): return is_instance_valid(n) and not n.is_queued_for_deletion())
-	if _owned_shots.size() >= 6 or not is_alive: return
-	var before := _owned_shots.size()
-	_shoot(angle,"orb",Color(1.0,0.4,0.05))
-	if _owned_shots.size() == before: return
-	var shot := _owned_shots.back() as EnemyProjectile
-	shot.dir = global_basis.z.rotated(Vector3.UP,angle).normalized()
-	shot.damage = int(shot.damage * (1.5 if controller.enhanced else 1.0))
-	if _skeleton and _skeleton.find_bone("atama") >= 0:
-		shot.global_position = _skeleton.global_transform * _skeleton.get_bone_global_pose(_skeleton.find_bone("atama")).origin
-	if state_field == "0x108" and is_instance_valid(target):
-		shot.dir = (target.global_position + Vector3.UP - shot.global_position).normalized()
+	deliveries.launch(self,angle,_breath_type,state_field == "0x108")
 
 func _damage_target() -> void:
 	if is_alive and is_instance_valid(target) and not pacing.target_defeated(target) and target.has_method("take_damage"):

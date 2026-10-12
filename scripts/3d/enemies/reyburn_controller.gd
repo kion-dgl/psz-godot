@@ -27,6 +27,7 @@ func tick() -> void:
 
 func hit(damage: int, part: int, bearing: float, source_known: bool) -> bool:
 	var broken := budgets.hit(-damage,part)
+	if broken: bite_blocked = true
 	cumulative_damage += damage
 	reaction_damage += damage
 	if part == 1: head_damage += damage
@@ -48,6 +49,9 @@ func finish(id: int, flags: int = 0, retain_side_damage: bool = false) -> void:
 	if id in [0,6]: breath_timer = 150
 	if id == 11: aerial_alternation = true
 	if id in [9,10]: aerial_alternation = false
+
+func flight_request() -> Dictionary:
+	return {"id":(10 if enhanced else 9) if aerial_alternation else 11,"flags":3}
 
 func priority(distance: float, bearing: float, allow_bite: bool = true) -> Dictionary:
 	if not enhanced and budgets.modifier_budget <= 0: return {"id":1}
