@@ -3041,3 +3041,20 @@ func _player_mat_stats(node: Node) -> Array:
 		with_normals += sub[2]
 		mesh_count += sub[3]
 	return [shaded, flat, with_normals, mesh_count]
+
+
+## Encounter-local post-Octo sky. Session/table defaults stay rainy for retries.
+## End-state is observed in retail; these light values are remake presentation.
+func clear_octo_storm() -> void:
+	if not is_instance_valid(_map_root) or str(_current_cell.get("stage_id", "")) != "s02z_na1":
+		return
+	if is_instance_valid(_weather_node):
+		_weather_node.emitting = false
+	var lightning := get_node_or_null("Lightning")
+	if lightning: lightning.queue_free()
+	_slot = _slot.duplicate(true)
+	_slot["weather"] = ""
+	_slot["lightning"] = false
+	_slot["ambient_energy"] = 0.5
+	_slot["sky_top_color"] = Color(0.52,0.57,0.63)
+	_slot["sky_horizon_color"] = Color(0.68,0.72,0.76)

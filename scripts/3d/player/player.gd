@@ -3219,3 +3219,7 @@ func _try_auto_revive() -> bool:
 
 func can_photon_blast() -> bool:
 	return not _is_defeated and _recovery_left <= 0.0 and _freeze.remaining <= 0.0 and not _ailments.blocks_attack() and GameState.hp > 0 and current_state in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING] and SessionManager.get_location() == "field" and not PsoStartMenu.is_open() and SceneManager._overlay_stack.is_empty()
+
+
+func apply_octo_poison(tier: int) -> void:
+	_ailments.apply_octo_poison(self,tier)
