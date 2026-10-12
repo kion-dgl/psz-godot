@@ -66,6 +66,8 @@ func _launch(picker) -> MotherTrinityBoss:
 	return boss
 
 func _check_combat(boss: MotherTrinityBoss, preview_hp: int) -> void:
+	var orbit = get_tree().current_scene.orbit_camera
+	_check(is_equal_approx(orbit.camera.fov, 50.0) and is_equal_approx(orbit.distance, 4.5) and is_equal_approx(orbit.height, 1.9), "Trinity retains normal player camera without wide-angle zoom")
 	boss.set_physics_process(false)
 	for piece in boss.pieces: piece.set_physics_process(false)
 	_check(boss.enemy_level == 5 and boss.current_hp == preview_hp, "spawned boss level and HP match picker preview")
