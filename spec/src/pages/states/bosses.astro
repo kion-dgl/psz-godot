@@ -171,10 +171,13 @@ const chart = `stateDiagram-v2
   <p>The <strong>Rioh Snowfield</strong> arena (<code>s03z_na1</code>) is a <em>pack fight</em>, not a unique boss: it spawns a Hildegao pack. It needs no <code>boss_arenas.json</code> entry — regular enemy spawns in the arena cell cover it, via <code>debug_boss_snowfield</code>.</p>
 
   <h3>Dark Falz (boss_darkfalz — Dark Shrine B, dark_castle)</h3>
-  <ul>
-    <li><strong>Relocating ranged finale — sim'd.</strong> Walks and runs the ranged kit: throw volley (<code>thr*</code>, one projectile per <code>thrlp</code> rep), <strong>diffusion spread</strong> (<code>dif*</code> — the release fans <code>split: 5</code> projectiles across ±25°), radiate AoE burst (<code>rad*</code>, 360°), single heavy shot (<code>bhsht</code>), and the wide <code>nagi</code> mow-down sweep up close. Every ~25&nbsp;s (<code>flight_interval</code> + <code>relocate_kind submerge</code>) it sinks untargetable and <em>swims</em> (<code>relocate_loop_clip swm</code>) to a new spot — the timer-driven variant of the octopus's fatigue-driven cycle.</li>
-    <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
-  </ul>
+  <p>The earlier filename-based ranged-only draft is superseded by Kion's
+    observed moving encounter. Falz walks toward the player, attacks in front,
+    carries three rotating balls with changing orbit reach, and occasionally
+    sends a tail through the floor. Balls retract into his shadow before an
+    all-direction volley and return only after its projectiles expire. Low-health
+    Falz sinks into the shadow and moves faster. Exact retail timings and effect
+    identities remain unverified; see <code>docs/dark-falz-reference.md</code>.</p>
 
   <h2>Dark Shrine encounter implementation contract</h2>
   <p>The dedicated Godot Falz and Trinity encounters are an initial playable port,
@@ -214,6 +217,19 @@ const chart = `stateDiagram-v2
     <li>Falz MUST request reaction 2 strictly below half HP and reaction 3 strictly
       below quarter HP, each once. The quarter branch takes precedence, even when
       a hit skips half HP. Budget exhaustion MUST NOT invent a request-1 stagger.</li>
+    <li>Falz MUST walk between attacks and turn toward the player while moving.
+      Frontal strikes MUST lock facing for the windup, hit only in front, and
+      allow recovery. Three orbiting balls MUST remain evenly spaced, change
+      radius, and stop damaging while retracted. A radial volley MUST retract
+      the balls first, keep them hidden while any volley projectile lives, then
+      restore them. The volley MUST NOT replace the ordinary movement cycle.</li>
+    <li>Falz's tail MUST telegraph a fixed floor position before emerging; it
+      MUST NOT track the player after the warning. Below quarter HP, Falz MUST
+      enter a persistent submerged phase with faster movement and shorter attack
+      recovery. Submerged Falz MUST remain damageable so the phase cannot softlock.
+      Death and room exit MUST clear the tail, balls and volley deliveries;
+      retry MUST restore normal speed and all three balls. Speeds, intervals,
+      reach and the quarter-HP form threshold are authored choices.</li>
     <li>Both encounters MUST finish windup, strike and recovery stages; a filename
       ending in <code>lp</code> MUST NOT imply looping. Death MUST cancel active
       windows, remove owned projectiles, award once, and allow a fresh retry.</li>

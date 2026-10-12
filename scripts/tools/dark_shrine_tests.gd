@@ -2,6 +2,7 @@ extends RefCounted
 ## Seeded boundary tests plus original-game Trinity timeline, callable by runner.
 
 static func run(t: Node) -> void:
+	preload("res://scripts/tools/falz_encounter_tests.gd").run(t)
 	_falz(t)
 	_pieces(t)
 	_timeline(t)

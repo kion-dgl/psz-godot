@@ -4,7 +4,7 @@ extends "res://scripts/tools/probe_checks.gd"
 
 func _run() -> void:
 	probe_label = "dark-shrine"
-	for quest in ["debug_boss_mother_trinity","debug_boss_dark_falz","debug_boss_mother_trinity"]:
+	for quest in ["debug_boss_mother_trinity","debug_boss_dark_falz","debug_boss_mother_trinity","debug_boss_dark_falz"]:
 		SessionManager.enter_quest(quest,"normal")
 		await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos":"0,0", "spawn_edge":"", "keys_collected":{}})
@@ -35,7 +35,7 @@ func _run() -> void:
 			_check(str(field._current_cell.stage_id) == "s07z_na1", "Trinity uses her Dark Shrine arena")
 			await _trinity(boss)
 		else:
-			_falz(boss)
+			await preload("res://scripts/tools/falz_encounter_probe.gd").run(self, boss)
 		await _snapshot(quest + "_body")
 		await _finish(boss,field)
 		SessionManager.return_to_city()
@@ -108,18 +108,8 @@ func _trinity(boss: MotherTrinityBoss) -> void:
 	_check(contacts.any(func(hit: Dictionary): return hit.collider == boss.hurtbox),
 		"platform-height melee volume overlaps lowered head hurtbox")
 
-func _falz(boss: DarkFalzBoss) -> void:
-	boss.current_hp = boss.encounter_max_hp / 2 - 1
-	boss._after_damage_applied(1)
-	_check(boss.pending_reaction == 2,"Falz half HP reaction queued")
-	boss.current_hp = boss.encounter_max_hp / 4 - 1
-	boss._after_damage_applied(1)
-	_check(boss.pending_reaction == 3 and boss.damage_rules.flags == 6,"quarter HP reaction takes priority")
-	boss.play_sequence([17,18])
-	for tick in 80: boss._physics_process(1.0/30.0)
-	_check(boss._owned_shots.size() == 5,"diffusion releases five provisional projectiles at notification 2")
-
 func _finish(boss: DescriptorBoss, field: Node) -> void:
+	var falz_tail: Node3D = boss.tail if boss is DarkFalzBoss and is_instance_valid(boss.tail) else null
 	var piece_deliveries: Array = []
 	if boss is MotherTrinityBoss:
 		for piece in boss.pieces:
@@ -140,6 +130,8 @@ func _finish(boss: DescriptorBoss, field: Node) -> void:
 	if boss is MotherTrinityBoss:
 		_check(boss.board.owners.is_empty(), "boss death releases all board reservations")
 		_check(piece_deliveries.all(func(n): return not is_instance_valid(n)), "boss death clears surviving piece deliveries")
+	if boss is DarkFalzBoss:
+		_check(not is_instance_valid(falz_tail) and not boss.orbit.visible, "Falz death clears tail and hides orbit hazards")
 	_check(boss._owned_shots.is_empty() and shots.all(func(n): return not is_instance_valid(n)),"death clears owned projectiles")
 	field._check_room_clear()
 	field._check_room_clear()

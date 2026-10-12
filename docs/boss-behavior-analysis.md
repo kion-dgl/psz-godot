@@ -172,8 +172,11 @@ selection distance is authored, not a recovered spatial predicate.
 
 Falz's one-shot phase requests use strict half/quarter comparisons and preserve
 quarter-branch priority when a hit skips half HP. The damage accumulator does
-not invent a request-1 stagger. Its initial playable repertoire uses descriptor
-chains 17→18, 19→20, 12→13/14→15→16, 21, and 3→4→5, with explicit loop budgets.
+not invent a request-1 stagger. The revised encounter walks and attacks in front, carries three variable-radius
+orbiting balls, and sends a telegraphed tail through the floor. The balls retract
+for 17→18 radial volleys and return only after deliveries expire. Below quarter
+HP, a persistent faster swim phase replaces temporary relocation. These spatial
+rules and effect visuals are authored; see [the Falz reference](dark-falz-reference.md).
 Generic enemy damage calculation supplies defense-aware damage to the player.
 
 ### Test on this branch
@@ -211,7 +214,7 @@ This PR is a first playable port, **not 1:1 boss parity**. The three procedural
 piece markers are deliberate placeholders: the viewer has original koma meshes,
 but they are absent from the distributed game pack. The authored grid movement, spin/attack cycles, synchronized waves and second-loss
 cover break now make the opening phase playable; exact retail tactics,
-reinforcements, break budgets, attack selection, Falz subobjects,
+reinforcements, break budgets, attack selection, original Falz subobject visuals,
 projectile/beam shapes and trajectories, multiplayer targeting, root motion,
 looping sounds and effects still need ports. Kind-1 attack shapes currently use
 an approximate planar box; incoming body geometry is also provisional.
