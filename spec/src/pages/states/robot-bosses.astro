@@ -1,0 +1,31 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Paru and Arca robot bosses" section="States">
+<p>Paru MUST use D Chaos and D Mobius (ROM species 63/64), two independent
+model/hurt channels sharing encounter HP. Arca MUST use Humilias (65), never
+Mother Trinity (66). This supersedes the older authored boss tables and Sinow
+stand-in for the dedicated Paru debug encounter.</p>
+<p>Execution MUST use 30 controller ticks/second. The split controllers MUST
+advance independently, in original child38 then child34 order. State transitions reset counters to zero; the enclosing update increments
+them before the next dispatch. Both parts MUST route damage through one HP/reward owner;
+attacks, projectiles and hurtboxes MUST stop on death and scene exit.</p>
+<p>The state-8 orbit MUST take 150 ticks and release paired projectiles every
+22 ticks including zero (ov22:0219BA48). State-11 diving contact MUST open at
+7 and close at 24, returning at 54 (0219C1D8). Paru child38 state12 MUST return at 299 and emit areas at 15/210;
+its continuous area growth is unported. Arca child38 state-13 contact MUST
+open at 120 and close at 149 (0219E334). These boundaries describe recovered
+behavior; movement interpolation, target selection, projectile geometry and
+attack scheduling remain explicitly provisional.</p>
+<p>Humilias MUST use the boss_robot_cmb action table and the original combined
+mesh. Gun chains are 21/22/23 and 24/25/26, firing at frame 2. Drill chains
+are 27/28/29/30 and 31/32/33/34, with controller-tick contact [52,67).
+Sweep is 35/36/37/38. Floor hazards MUST be nine independent spatial cells,
+warning at 0, charging at 90, damaging at 105–149 and clearing at 150.
+A single arena-wide pulse is not equivalent.</p>
+<p>Initial PRs MUST be described as partial playable ports, not 1:1 parity.
+Unported original selection, fixed-point motion, projectile pools, status
+payloads and combined/split coordination MUST be disclosed. Automated timing
+and arena lifecycle checks do not establish whole-fight parity or a fidelity
+grade. Kion playtest pending.</p>
+</Concept>

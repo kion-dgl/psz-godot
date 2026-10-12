@@ -30,7 +30,7 @@ func _run() -> void:
 		if attempt >= 2: await _autonomous(boss,player)
 		elif boss is ReyburnBoss: await _reyburn(boss,player)
 		else: await _octo(boss,player)
-		await _snapshot(id,boss)
+		await _snapshot_boss(id,boss)
 		await _finish(boss,field,player)
 		SessionManager.return_to_city()
 		await SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
@@ -165,18 +165,6 @@ func _contains_chain(actions: Array[int], expected: Array) -> bool:
 		if actions.slice(start,start+expected.size()) == expected: return true
 	return false
 
-func _snapshot(label: String, boss: DescriptorBoss) -> void:
-	var folder := OS.get_environment("PSZ_BOSS_SCREENSHOTS")
-	if folder.is_empty() or DisplayServer.get_name() == "headless": return
-	var camera := Camera3D.new()
-	get_tree().root.add_child(camera)
-	camera.global_position = boss.global_position + Vector3(24,18,32)
-	camera.look_at(boss.global_position+Vector3.UP*3,Vector3.UP)
-	camera.current = true
-	await RenderingServer.frame_post_draw
-	DirAccess.make_dir_recursive_absolute(folder)
-	get_viewport().get_texture().get_image().save_png(folder.path_join(label+".png"))
-	camera.queue_free()
 
 
 func _autonomous(boss: DescriptorBoss, player: Node3D) -> void:

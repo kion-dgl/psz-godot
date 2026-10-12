@@ -76,7 +76,7 @@
       "area": "Bosses",
       "grade": "D",
       "assessment": "Mostly placeholders and deliberately deferred. Recover original behavior from psz-re where possible, while separating deliberate new encounter design from fidelity work.",
-      "next": "Playtest the recovered Reyburn sequences, head/body targeting, damage-history modifier, and Octo half-HP transition with independent tentacles. Complete remaining movement, capture/escape, subcontroller geometry and status parity against the emulator. Other boss assignments remain open. Grade and dated owner assessment unchanged; Mac playtest pending.",
+      "next": "Playtest Reyburn/Octo and the new Paru split robot encounter. Paru now uses separate parts, recovered attack counter spans and HP tuning; movement, targeting, projectile/status geometry and complete boss parity remain open. Grade and dated owner assessment unchanged; Mac playtest pending.",
       "label": "score:bosses",
       "reviewed_on": "2026-10-10"
     },

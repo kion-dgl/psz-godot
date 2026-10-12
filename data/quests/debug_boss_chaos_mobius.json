@@ -2,9 +2,9 @@
   "version": 1,
   "last_updated": "2026-07-12",
   "id": "debug_boss_chaos_mobius",
-  "name": "DEBUG: Chaos & Mobius Arena",
-  "description": "Debug mission: warp straight into the boss arena. Always unlocked; no rewards.",
-  "area_id": "arca",
+  "name": "DEBUG: D Chaos & D Mobius",
+  "description": "Dedicated Paru robot encounter. Partial recovered controller port; see /states/robot-bosses.",
+  "area_id": "paru",
   "rewards": {},
   "office_npcs": [],
   "briefing_dialog": [
@@ -17,14 +17,14 @@
     {
       "type": "boss",
       "area": "z",
-      "area_id": "arca",
+      "area_id": "paru",
       "start_pos": "0,0",
       "end_pos": "0,0",
       "entry_direction": "south",
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s06z_na1",
+          "stage_id": "s05z_na1",
           "rotation": 0,
           "connections": {},
           "portals": {
