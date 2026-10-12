@@ -537,7 +537,7 @@ missing entrance clips, repeated reveal, and archetype-specific telegraphs.
 - [ ] Grenade launcher — fires in an arc, explodes on ground impact (PSU style)
 - [ ] Hit feedback juice (screen shake, hitstop frames)
 - [ ] Technique casting system (Forces)
-- [ ] More enemy behaviors (ranged, charger, tank, boss patterns)
+- [ ] More enemy behaviors (ranged, charger, tank, boss patterns) — see [boss behavior analysis and implementation order](boss-behavior-analysis.md)
 - [ ] Sound effects
 - [ ] Photon blasts (mag trigger)
 - [ ] Traps (Cast classes)
