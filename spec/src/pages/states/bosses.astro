@@ -186,6 +186,14 @@ const chart = `stateDiagram-v2
       independently damageable pieces guard its body. Losing the first requests
       action 2; losing the second requests action 3. The body MUST remain protected
       until action 3's notification 0. Remaining pieces are cleaned up on boss death.</li>
+    <li>Trinity MUST occupy <code>s07z_na1</code> at full model scale, fixed in the
+      north platform cutout with the stage cables behind her. The body MUST NOT
+      rotate or chase an off-axis player. Pieces MUST start on the player platform.
+      The damage receiver MUST follow the animated head, and lasers MUST originate
+      at the head toward the platform. The authored root is <code>(0, 0, -10)</code>,
+      yaw zero; this is a visual fit, not a recovered ROM coordinate. See
+      <code>docs/mother-trinity-reference.md</code> for Kion's animation observations
+      and their distinct recovered descriptor order.</li>
     <li>Trinity body attacks MUST use descriptor stages: swing action 7, laser 8,
       headbutt 9, zero to two repeats of 10, recovery 11, then laser 8. Phase changes
       MUST NOT be overwritten by generic enemy flinch.</li>
@@ -198,8 +206,7 @@ const chart = `stateDiagram-v2
     <li>Attack selection, targeting, projectile geometry and piece presentation are
       explicitly authored approximations in this first port. Piece visuals use
       procedural markers until the original piece rig is in the distributed pack.
-      The existing tower arena selection is retained for Trinity's debug encounter;
-      campaign handoff and retail arena placement remain separate work.</li>
+      Campaign handoff and exact retail spawn coordinates remain separate work.</li>
   </ul>
 
   <h2>Debug missions (the in-game instrument)</h2>

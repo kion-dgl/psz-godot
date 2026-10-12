@@ -46,6 +46,27 @@
     }
   },
   "bosses": {
+    "mother_trinity": {
+      "model_id": "boss_mother",
+      "arena": "s07z_na1",
+      "quest_source": "debug_boss_mother_trinity",
+      "model_scale": 1.0,
+      "fsm": {
+        "stationary": true
+      },
+      "anchors": [
+        {
+          "name": "body",
+          "pos": [
+            0,
+            0,
+            -10
+          ],
+          "note": "Fixed yaw 0 (+Z); authored cutout fit."
+        }
+      ],
+      "note": "Fixed body in north platform cutout with stage cables behind it. Authored visual fit; not a recovered ROM coordinate. See docs/mother-trinity-reference.md for observations, descriptor chains and uncertainties."
+    },
     "reyburn": {
       "model_id": "boss_dragon",
       "arena": "s01z_na1",

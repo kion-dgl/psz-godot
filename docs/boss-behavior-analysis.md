@@ -179,7 +179,8 @@ Generic enemy damage calculation supplies defense-aware damage to the player.
 ### Test on this branch
 
 1. Open Coliseum Master → Bosses → Mother Trinity, or accept `DEBUG: Mother
-   Trinity` at the counter. The existing authored tower arena is retained.
+   Trinity` at the counter. The arena is `s07z_na1`; the full-size body is fixed in the north cutout.
+   See [the animation and placement reference](mother-trinity-reference.md).
 2. Attack a piece: Trinity's HP must stay unchanged. Defeat one piece for a
    reaction, then a second for the body transition. Hit the exposed body and
    watch the headbutt/recovery/laser chain.
@@ -214,7 +215,7 @@ projectile/beam shapes and trajectories, multiplayer targeting, root motion,
 looping sounds and effects still need ports. Kind-1 attack shapes currently use
 an approximate planar box; incoming body geometry is also provisional.
 
-There is no automatic Trinity→Falz campaign handoff. The existing tower arena
-choice is a test placement, not a retail arena claim. Reyburn and Octo retain
+There is no automatic Trinity→Falz campaign handoff. Trinity now uses `s07z_na1`; its fixed root placement is an authored visual fit,
+not a recovered retail coordinate. Reyburn and Octo retain
 their prior gameplay implementations: this PR brings their research and replay
 helpers but does not represent either fight as finished or 1:1.

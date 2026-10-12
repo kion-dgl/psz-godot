@@ -29,6 +29,7 @@ func _run() -> void:
 		_contact_checks(boss, player)
 		await _snapshot(quest + "_entry")
 		if boss is MotherTrinityBoss:
+			_check(str(field._current_cell.stage_id) == "s07z_na1", "Trinity uses her Dark Shrine arena")
 			await _trinity(boss)
 		else:
 			_falz(boss)
@@ -40,6 +41,14 @@ func _run() -> void:
 	get_tree().quit(0 if _ok else 1)
 
 func _trinity(boss: MotherTrinityBoss) -> void:
+	_check(boss.position.is_equal_approx(MotherTrinityBoss.ARENA_ANCHOR), "body seated in north platform cutout")
+	var anchor := boss.global_transform
+	boss.target.global_position = boss.to_global(Vector3(7, 0, 14))
+	boss._aim_at_target()
+	_check(boss.global_transform.is_equal_approx(anchor), "off-axis target cannot rotate body away from cables")
+	for piece in boss.pieces:
+		var board_position: Vector3 = boss.get_parent().to_local(piece.global_position)
+		_check(absf(board_position.x) <= 7.0 and absf(board_position.z) <= 7.0, "piece starts on the player platform")
 	_check(boss.pieces.size() == 3,"three independently targetable pieces")
 	var hp := boss.current_hp
 	boss.hurtbox.take_hit(99999,Vector3.ZERO,9999)
@@ -52,6 +61,10 @@ func _trinity(boss: MotherTrinityBoss) -> void:
 	_check(boss.action_id == 3 and not boss._accepts_damage(),"second loss enters protected transition")
 	for tick in 126: boss._physics_process(1.0/30.0)
 	_check(boss.phase_flags == 3 and boss._accepts_damage(),"descriptor event opens body vulnerability")
+	boss.play_action(1, {0:-1})
+	boss._sync_pose()
+	_check(boss.hurtbox.global_position.distance_to(boss._joint_position("head")) < 0.01,
+		"body damage receiver follows animated head onto platform")
 	var action := boss.action_id
 	boss.hurtbox.take_hit(1,Vector3.ZERO,9999)
 	_check(boss.action_id == action and boss.current_state != EnemyBase.EnemyState.HURT,"damage preserves boss action")
@@ -59,7 +72,29 @@ func _trinity(boss: MotherTrinityBoss) -> void:
 	boss.play_sequence([9,10,11,8])
 	for tick in 505: boss._physics_process(1.0/30.0)
 	_check(boss._owned_shots.size() > 0,"Trinity descriptor laser notification releases delivery")
+	_check(boss.global_transform.is_equal_approx(anchor), "complete head and laser chain preserves arena anchor")
+	if not boss._owned_shots.is_empty():
+		var shot := boss._owned_shots.back() as EnemyProjectile
+		_check(shot.global_position.distance_to(boss.global_position + Vector3.UP) > 1.0,
+			"laser originates at animated head instead of body root")
+		_check(shot.dir.y < 0.0, "laser aims down toward the player platform")
+	boss._idle = false # Drive the recovery pose without the idle scheduler replacing it.
+	boss.play_action(9)
+	for tick in 120: boss._physics_process(1.0/30.0)
+	var head := boss.hurtbox.global_position
+	_check(head.y < 3.0, "head-bash recovery lowers the damage receiver to melee height")
 	await get_tree().physics_frame
+	var query := PhysicsShapeQueryParameters3D.new()
+	var reach := SphereShape3D.new()
+	reach.radius = 0.5
+	query.shape = reach
+	query.transform.origin = Vector3(head.x, 1.0, head.z + 2.0)
+	query.collision_mask = 32
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	var contacts := boss.get_world_3d().direct_space_state.intersect_shape(query)
+	_check(contacts.any(func(hit: Dictionary): return hit.collider == boss.hurtbox),
+		"platform-height melee volume overlaps lowered head hurtbox")
 
 func _falz(boss: DarkFalzBoss) -> void:
 	boss.current_hp = boss.encounter_max_hp / 2 - 1

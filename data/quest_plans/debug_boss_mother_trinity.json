@@ -1,7 +1,7 @@
 {
   "questId": "debug_boss_mother_trinity",
   "questName": "DEBUG: Mother Trinity",
-  "areaId": "tower",
+  "areaId": "shrine",
   "sections": [
     {
       "type": "boss",
@@ -21,7 +21,7 @@
           "target": "",
           "_section_idx": 0,
           "_pos": "0,0",
-          "stageId": "s087_na1",
+          "stageId": "s07z_na1",
           "rotation": 0
         }
       ]

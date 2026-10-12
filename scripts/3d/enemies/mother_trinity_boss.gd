@@ -1,6 +1,11 @@
 class_name MotherTrinityBoss extends DescriptorBoss
 ## ov31 request/action chains and body exposure event; placeholder piece tactics.
 
+## Authored fit to s07z_na1: root in the north cutout, facing the platform (+Z).
+## Keep the full-size rig and rear cables aligned; never turn the body to aim.
+const ARENA_ANCHOR := Vector3(0, 0, -10)
+
+var _skeleton: Skeleton3D
 var phase_flags := 0
 var pieces: Array[MotherPiece] = []
 var piece_count := 3
@@ -11,6 +16,7 @@ var _idle := false
 func _ready() -> void:
 	super._ready()
 	_spawn_pieces.call_deferred() # Field places the boss after add_child/_ready.
+	_skeleton = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
 	_enter_idle()
 
 func _spawn_pieces() -> void:
@@ -29,7 +35,7 @@ func _spawn_pieces() -> void:
 		piece.enemy_level = enemy_level
 		piece.enemy_data = preload("res://scripts/utils/enemy_progression.gd").scaled(
 			source, enemy_level, difficulty, _catalogs.boss_mother_piece.stats)
-		piece.position = Vector3(float(index - 1) * 6.0, 0, 8.0)
+		piece.position = Vector3(float(index - 1) * 5.0, 0, 10.0)
 		pieces.append(piece)
 		piece.died.connect(_piece_died)
 		add_child(piece)
@@ -60,7 +66,6 @@ func _physics_process(delta: float) -> void:
 	_idle_left -= delta
 	if _idle_left <= 0.0:
 		_idle = false
-		_aim_at_target()
 		if not phase_flags & 2:
 			play_sequence([6])
 		elif is_instance_valid(target) and global_position.distance_to(target.global_position) < 16.0:
@@ -107,3 +112,38 @@ func _die() -> void:
 			piece.queue_free()
 	pieces.clear()
 	super._die()
+
+
+func _aim_at_target() -> void:
+	pass # The body is anchored to the arena; individual attacks aim independently.
+
+func _sync_pose() -> void:
+	super._sync_pose()
+	if is_instance_valid(_skeleton) and is_instance_valid(hurtbox):
+		_skeleton.force_update_all_bone_transforms()
+		# Follow the lowered head into the platform for the punish window instead
+		# of leaving the damage receiver inside the broken edge at the body root.
+		hurtbox.global_position = _joint_position("head")
+
+func _setup_hurtbox() -> void:
+	super._setup_hurtbox()
+	var shape := hurtbox.get_child(0) as CollisionShape3D
+	var sphere := SphereShape3D.new()
+	sphere.radius = 2.5
+	shape.shape = sphere
+	shape.position = Vector3.ZERO
+
+func _joint_position(bone_name: String) -> Vector3:
+	if is_instance_valid(_skeleton):
+		var index := _skeleton.find_bone(bone_name)
+		if index >= 0:
+			return _skeleton.to_global(_skeleton.get_bone_global_pose(index).origin)
+	return global_position + Vector3.UP
+
+func _shot_origin() -> Vector3:
+	# Aim independently of the rig/cables. Sample the notification's pose.
+	_sync_pose()
+	return _joint_position("head")
+
+func _shot_target() -> Vector3:
+	return target.global_position + Vector3.UP

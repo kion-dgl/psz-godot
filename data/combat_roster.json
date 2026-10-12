@@ -822,6 +822,13 @@
       "arena": "s07z_na2",
       "issue": 717,
       "note": "Matches resource model; original behavior pending."
+    },
+    {
+      "id": "mother_trinity",
+      "model_id": "boss_mother",
+      "arena": "s07z_na1",
+      "issue": 690,
+      "note": "Fixed body in broken north platform edge; see animation reference #755. Piece tactics and attack geometry remain partial."
     }
   ],
   "attack_exceptions": [

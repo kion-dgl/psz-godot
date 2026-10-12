@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "last_updated": "2026-07-12",
+  "last_updated": "2026-10-12",
   "id": "debug_boss_mother_trinity",
   "name": "DEBUG: Mother Trinity",
   "description": "Test Mother Trinity and three independent pieces. Piece visuals and tactics are provisional.",
-  "area_id": "tower",
+  "area_id": "shrine",
   "rewards": {},
   "office_npcs": [],
   "briefing_dialog": [
@@ -17,14 +17,14 @@
     {
       "type": "boss",
       "area": "z",
-      "area_id": "tower",
+      "area_id": "shrine",
       "start_pos": "0,0",
       "end_pos": "0,0",
       "entry_direction": "south",
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s087_na1",
+          "stage_id": "s07z_na1",
           "rotation": 0,
           "connections": {},
           "portals": {
@@ -49,7 +49,7 @@
               "position": [
                 0,
                 0,
-                0
+                -10
               ]
             }
           ]

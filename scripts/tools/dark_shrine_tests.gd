@@ -7,6 +7,7 @@ static func run(t: Node) -> void:
 	_timeline(t)
 	_catch_up(t)
 	_piece_stats(t)
+	_arena_contract(t)
 
 static func _falz(t: Node) -> void:
 	var rules := BossPhaseRules.FalzDamage.new()
@@ -89,3 +90,27 @@ static func _piece_stats(t: Node) -> void:
 		t.assert_eq(scaled.hp_base, [1600,3850,5000][tier], "piece HP uses its own ROM difficulty row")
 		t.assert_eq(scaled.attack_base, [450,950,1300][tier], "piece attack is independent of body stats")
 		t.assert_true(scaled.original_attack_stats, "piece damage uses recovered-stat combat calculation")
+
+
+static func _arena_contract(t: Node) -> void:
+	var quest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/quests/debug_boss_mother_trinity.json"))
+	var cell: Dictionary = quest.sections[0].cells[0]
+	t.assert_eq(quest.area_id, "shrine", "Trinity uses Shrine progression and music")
+	t.assert_eq(cell.stage_id, "s07z_na1", "Trinity arena is the broken-platform stage")
+	t.assert_eq(cell.objects[0].position, [0.0,0.0,-10.0], "Trinity starts in the north cutout")
+	var boss := MotherTrinityBoss.new()
+	var player := Node3D.new()
+	var root := Node3D.new()
+	t.add_child(root)
+	root.add_child(player)
+	boss.enemy_data = EnemyRegistry.get_enemy("mother_trinity")
+	root.add_child(boss)
+	boss.set_physics_process(false)
+	boss.position = MotherTrinityBoss.ARENA_ANCHOR
+	boss.target = player
+	for offset in [Vector3(7,0,4), Vector3(-7,0,4), Vector3(0,0,8)]:
+		player.position = offset
+		boss._aim_at_target()
+		t.assert_true(boss.rotation.is_zero_approx(), "Trinity keeps fixed facing across player positions")
+	boss.is_alive = false # Deferred piece spawn must not run for this geometry-only test.
+	root.queue_free()

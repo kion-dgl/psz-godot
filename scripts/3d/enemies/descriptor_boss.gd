@@ -159,13 +159,19 @@ func _shoot(angle: float = 0.0, visual: String = "orb") -> void:
 	shot.max_range = 60.0
 	shot.color = Color(0.65, 0.12, 0.85)
 	shot.visual = visual
-	var aim := target.global_position - global_position
-	aim.y = 0
+	var origin := _shot_origin()
+	var aim := _shot_target() - origin
 	shot.dir = aim.normalized().rotated(Vector3.UP, angle)
 	get_parent().add_child(shot)
-	shot.global_position = global_position + Vector3.UP
+	shot.global_position = origin
 	_owned_shots = _owned_shots.filter(is_instance_valid)
 	_owned_shots.append(shot)
+
+func _shot_origin() -> Vector3:
+	return global_position + Vector3.UP
+
+func _shot_target() -> Vector3:
+	return Vector3(target.global_position.x, global_position.y + 1.0, target.global_position.z)
 
 func _clear_deliveries() -> void:
 	clock.cancel()

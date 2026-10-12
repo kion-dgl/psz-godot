@@ -975,6 +975,11 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera.set_target(player)
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
+	if str(_current_cell.get("stage_id", "")) == "s07z_na1":
+		# Frame the full-size arena boss and the platform from the entry point.
+		orbit_camera.distance = 9.0
+		orbit_camera.height = 3.0
+		orbit_camera.camera.fov = 85.0
 
 	# Blob shadow — dark circle under the player (unshaded, always visible).
 	# Slots with real dynamic shadows skip it (#646): a shadow-casting sun

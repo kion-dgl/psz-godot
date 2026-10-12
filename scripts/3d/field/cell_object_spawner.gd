@@ -921,6 +921,11 @@ func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
 	if not script:
 		return false
 	var boss := _spawn_scripted_enemy(pos, enemy_id, edata, script)
+	if boss is MotherTrinityBoss:
+		# This root belongs in the arena cutout, not on walkable floor. Floor
+		# snapping a giant fixed boss can lift/shift it away from its stage fit.
+		boss.position = MotherTrinityBoss.ARENA_ANCHOR
+		boss.rotation = Vector3.ZERO
 	if _c._field_hud and _c._field_hud.has_method("show_boss_bar"):
 		_c._field_hud.show_boss_bar(boss)
 	print("[CellObjects] Boss %s at %s" % [enemy_id, pos])
