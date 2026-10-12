@@ -476,7 +476,7 @@
  {
   "id": "mother_trinity",
   "name": "Mother Trinity",
-  "model_id": "mother",
+  "model_id": "boss_mother",
   "element": "Dark",
   "locations": [
    "shrine"

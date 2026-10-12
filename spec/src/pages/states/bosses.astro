@@ -176,13 +176,39 @@ const chart = `stateDiagram-v2
     <li><strong>Open:</strong> <code>up/down</code> could instead be the knockdown pair (the draft punishes with <code>dam3</code> once); <code>orca</code> is unidentified; whether the original fight is multi-form (one rig imported — if forms exist they are separate future work).</li>
   </ul>
 
+  <h2>Dark Shrine encounter implementation contract</h2>
+  <p>The dedicated Godot Falz and Trinity encounters are an initial playable port,
+    pending hardware assessment. The ROM catalogs and emulator captures in
+    <code>docs/boss-behavior-analysis.md</code> supersede the filename-based draft
+    above. They MUST NOT be described as complete 1:1 parity.</p>
+  <ul>
+    <li>Trinity MUST use <code>boss_mother</code>, not the tower Mother rig. Three
+      independently damageable pieces guard its body. Losing the first requests
+      action 2; losing the second requests action 3. The body MUST remain protected
+      until action 3's notification 0. Remaining pieces are cleaned up on boss death.</li>
+    <li>Trinity body attacks MUST use descriptor stages: swing action 7, laser 8,
+      headbutt 9, zero to two repeats of 10, recovery 11, then laser 8. Phase changes
+      MUST NOT be overwritten by generic enemy flinch.</li>
+    <li>Falz MUST request reaction 2 strictly below half HP and reaction 3 strictly
+      below quarter HP, each once. The quarter branch takes precedence, even when
+      a hit skips half HP. Budget exhaustion MUST NOT invent a request-1 stagger.</li>
+    <li>Both encounters MUST finish windup, strike and recovery stages; a filename
+      ending in <code>lp</code> MUST NOT imply looping. Death MUST cancel active
+      windows, remove owned projectiles, award once, and allow a fresh retry.</li>
+    <li>Attack selection, targeting, projectile geometry and piece presentation are
+      explicitly authored approximations in this first port. Piece visuals use
+      procedural markers until the original piece rig is in the distributed pack.
+      The existing tower arena selection is retained for Trinity's debug encounter;
+      campaign handoff and retail arena placement remain separate work.</li>
+  </ul>
+
   <h2>Debug missions (the in-game instrument)</h2>
   <p>Each boss arena has a <strong>debug mission</strong> — <code>debug_boss_&lt;id&gt;</code> in <code>data/quests/</code> — that warps the player straight into the boss cell. They are <strong>always unlocked</strong> (no <code>parent_quest</code>, never <code>disabled</code>), sit at the end of the guild-counter list with a <code>DEBUG:</code> name prefix, and award <strong>nothing</strong> (empty rewards). They deliberately ship in beta builds: zero-friction boss testing on real hardware. Remove them from <code>data/quests/manifest.json</code> for a real release.</p>
   <ul>
     <li>Structure: a single <code>type: "boss"</code> section whose one cell is both start and end, spawning the boss (roster id) at the arena origin — the same shape as the story quests' boss sections.</li>
     <li><strong>Snowfield</strong> (<code>s03z_na1</code>) has no unique boss: its debug mission spawns a <strong>Hildegao pack</strong> (×4) — matching the real game's snowfield boss room. <strong>Heaven's Mother</strong>'s mission spawns all three forms together in the tower summit arena for observation (the real fight cycles them). Makara's mission is pending its composition.</li>
     <li>Each has a matching <code>data/quest_plans/</code> entry (one <code>kill_all + wait_quest_complete</code> step), so <code>PSZ_AUTOPILOT_QUEST=debug_boss_&lt;id&gt;</code> drives the whole accept → warp → clear → report loop headlessly — the autopilot probe for boss work.</li>
-    <li>Bosses currently spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
+    <li>Bosses without a dedicated implementation spawn through the <em>generic</em> <code>EnemyBase</code> melee skeleton (their <code>.tres</code> roster entries) — these missions are where the per-boss Godot implementations get exercised as they land, mirroring this page's tables.</li>
   </ul>
 
   <h2>Draft → normative workflow</h2>

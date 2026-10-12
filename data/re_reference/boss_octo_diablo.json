@@ -30,8 +30,9 @@
         ]
       }
     ],
-    "reading": "phase 0 uses action 0 nine times in ten; phase 1 uses action 1 nine times in ten; both fall back to action 2 one time in ten",
-    "caveat": "rows 2+ at that address are adjacent unrelated data (sequential small IDs), not further phases"
+    "reading": "Spout projectile variant 0 has 90% in row 0; variant 1 has 90% in row 1; variant 2 has 10% in either. Roll comes from controller+88; record indices 5/6/7 are allocated by this branch.",
+    "caveat": "rows 2+ at that address are adjacent unrelated data (sequential small IDs), not further phases",
+    "scope_correction_2026_10_11": "These are spout projectile-variant weights inside the event-0 branch of entity notification handler 021983F4, not whole-boss attack weights. Main selection is controller 0219A458; see docs/boss-behavior-live.md and data/boss_behavior_contract.json."
   },
   "state_machine": {
     "field": "entity+0xD8",
@@ -41,18 +42,19 @@
       "1_to_2": 0.2,
       "2_to_0": 3.05
     },
-    "caveat": "one cycle, sampled at ~5 Hz over the GDB stub. Treat the durations as approximate."
+    "caveat": "one cycle, sampled at ~5 Hz over the GDB stub. Treat the durations as approximate.",
+    "scope_correction_2026_10_11": "Entity+D8 is the projectile-effect state in the inspected path, not the boss AI controller state."
   },
   "entity_offsets": {
     "+0x00": "vtable pointer",
     "+0x18": "u16 max HP",
-    "+0x34": "u16 current HP",
+    "+0x34": "s32 current HP; older u16 reads observed only the low half",
     "+0x44": "u16 facing angle, rotates continuously",
     "+0xD4": "mode flag; selects 8 vs 6 iterations in slot 7 and gates slot 9's transform path",
-    "+0xD8": "state id",
-    "+0xE0": "selected action index",
-    "+0xE4": "phase row into the attack table",
-    "NOT_position": "+0x38/+0x3C/+0x40 was earlier labelled position; it reads 0,0,0 on this boss and slot 9 only writes it when +0xD4 == 1. The body appears to be stationary."
+    "+0xD8": "projectile/effect state in 021983F4; not controller+8 active state",
+    "+0xE0": "spout projectile variant; not descriptor action index",
+    "+0xE4": "spout projectile-variant table row",
+    "+0x38/+0x3C/+0x40": "Q12 XYZ position; zero in the initial stationary-body capture, but used as position in mode 1"
   },
   "part_animation": {
     "region": "0x0237C5A0 .. 0x0237C760, immediately past the entity",
@@ -211,7 +213,32 @@
     "immunity_window": "Hits land and are REFUSED. Damage numbers of 2401/1602/1601 appear while body HP is pinned at exactly 2610, and no ov21-class entity in the heap absorbs them (11 candidates checked across a 7s pair; one changed, by 2). Duration varies \u2014 65.4s and 100.1s measured \u2014 so it ends when the dive-and-reappear sequence completes, not on a timer. Caveat: parts may not use the ov21 layout.",
     "hp_clamp": "CONFIRMED and conditional. On the first crossing, damage that would take HP below max/2 is clamped to exactly max/2 \u2014 verified from 2830 with a hit that produced exactly a 220-point drop. After the transition (mode 1) there is no clamp: the same setup gave a 1001-point hit straight through. A port must clamp the first crossing or a strong character skips phase 2 entirely.",
     "clamp_location": "SOLVED \u2014 FUN_ov21__0219A340, the boss hook at (entity+0x10)->vtable slot 4, called from FUN_02036148 right after the HP write. if (mode == 0) HP = max(HP, maxHP/2). For the port that is the whole rule: apply damage normally, then immediately clamp HP up to half while the boss is still in phase 0.",
-    "mechanism": "every hit runs Entity_ApplyHit -> FUN_02036148 and the HP write lands below max/2; HP is then restored to exactly max/2 before the next hit. Seen three times in a row, then released on the fourth (delta -21 from 2610 went through to 2589). For the port: apply the damage, then snap HP back to max/2 while the window is open \u2014 do not refuse the hit, or the damage numbers will not show."
+    "mechanism": "every hit runs Entity_ApplyHit -> FUN_02036148 and the HP write lands below max/2; HP is then restored to exactly max/2 before the next hit. Seen three times in a row, then released on the fourth (delta -21 from 2610 went through to 2589). For the port: apply the damage, then snap HP back to max/2 while the window is open \u2014 do not refuse the hit, or the damage numbers will not show.",
+    "THE_DIVE_HP_CHECK_IS_LOCATED": {
+      "closes": "boss-porting.md's 'The dive at half health is an HP check in the damage path, separate from the phase field. Not yet located.'",
+      "function": "FUN_ov21__02199f84 (878 bytes)",
+      "the_condition_verbatim": "iVar4 = *(int *)(param_1 + 4);  if (((*(int *)(iVar4 + 0xd4) == 0) && (*(int *)(iVar4 + 0x34) <= (int)*(short *)(iVar4 + 0x18) / 2)) && (*(int *)(param_1 + 0xd4) == 0)) { *(undefined4 *)(param_1 + 0xd4) = 1; }",
+      "in_words": "three conjuncts \u2014 the ENTITY's mode is 0, the ENTITY's current HP has reached at most half its max HP, and this object's own +0xD4 is still 0 \u2014 and the effect is to set THIS OBJECT's +0xD4 to 1. It is a level-triggered latch on HP <= max/2, which is why it is 'separate from the phase field': the HP test drives a MODE latch, and the phase is downstream of that.",
+      "*** THE BASE TRAP, WHICH IS THE POINT OF THIS ENTRY ***": "param_1 is NOT the entity. The entity is reached as *(param_1 + 4). So the three reads at +0xd4, +0x34 and +0x18 hang off iVar4, the entity, while the WRITE at +0xd4 hangs off param_1 \u2014 a different object at the SAME offset. A search that reported 'this function touches +0xD4' without naming the base would conflate a read of the entity's mode with a write to the controller's own flag. That is exactly the failure tools/offset_search.py was written to prevent, and it occurs here in a single if-statement.",
+      "the_convention_cross_confirms": "FUN_ov21__0219a340, the already-solved clamp, opens with the identical idiom iVar2 = *(int *)(param_1 + 4) and then tests iVar2+0xd4 and iVar2+0x18/2. Two independently found boss hooks share the same object layout, so *(param_1+4) == entity is a property of the hook signature rather than a reading of one function.",
+      "the_clamp_and_the_trigger_are_the_same_threshold": "the clamp raises HP back to maxHP/2 while mode is 0; the trigger fires when HP <= maxHP/2 while mode is 0. Both compute (short)maxHP/2 from +0x18 and both gate on mode 0, so the clamp guarantees the trigger's condition is met exactly at the boundary rather than overshot \u2014 which is why a large hit cannot skip the transition.",
+      "the_phase_step_is_a_SECOND_function": {
+        "where": "FUN_ov21__02198a9c",
+        "what": "if (*(int *)(param_1 + 0xe4) == 0 && *(int *)(param_1 + 0xd4) == 1) *(int *)(param_1 + 0xe4) = 1;",
+        "reading": "phase follows mode \u2014 it flips only once mode is already 1, which matches the live capture where +0xD4 and +0xE4 both went 0 -> 1 at the crossing.",
+        "NOT_established": "whether this function's param_1 is the entity or a controller. Both offsets hang off the same base here, so the statement is self-consistent either way, and nothing in this pass pins which object it is. Do not assume it is the entity."
+      }
+    },
+    "THE_CLAMP_IS_PROVEN_STATICALLY_FOR_ALL_HIT_SIZES": {
+      "closes": "boss-porting.md's 'HP clamp at the threshold ... confirm with one large hit from just above half'",
+      "why_no_further_experiment_is_needed": "the requested experiment was one large hit. FUN_ov21__0219a340's body settles it for EVERY hit size at once: while mode is 0 it unconditionally raises HP back to (short)maxHP/2 whenever the post-damage HP is below it. There is no magnitude term in the branch, so no hit can pass through. The code is a strictly stronger oracle than the single measurement asked for, and it agrees with the live 220-point-drop capture already recorded."
+    },
+    "THE_MECHANISM_IS_OCTO_ONLY": {
+      "search": "every function in ov20 (Reyburn, 213), ov21 (Octo, 231), ov22 (Paru robot, 274) and arm9 (8115) decompiled and scanned for a halving of +0x18",
+      "result": "EXACTLY TWO hits, both in ov21 \u2014 FUN_ov21__02199f84 (the dive trigger) and FUN_ov21__0219a340 (the clamp). Zero in ov20, zero in ov22, zero in all 8115 arm9 functions.",
+      "consequence": "the half-HP clamp and the max/2 dive are Octo Diablo's alone, not shared boss behaviour. A port must not give them to another boss, and psz-godot copying Octo's max/2 rule to Reyburn would be inventing a mechanism the class does not contain."
+    },
+    "timing_correction_2026_10_11": "Old 65.4/100.1 wall-second measurements include debugger pacing and do not establish original game durations. New natural trace: latch tick 173; transition steps 2 at 262, 14 at 407; entity mode 1 at 509; step 18 at 510; latch cleared 602. See retained trace. HP is clamped only while entity mode 0, not for the whole latch interval."
   },
   "bone_matrices": {
     "body_array": {
@@ -228,9 +255,9 @@
       "format": "3x3 row-major, 1.19.12 fixed point",
       "model": "z_002_tt (9 objects) \u2014 matched by count"
     },
-    "index_to_name": "UNKNOWN. Counts identify the model; the permutation within each array is not established.",
+    "index_to_name": "RESOLVED \u2014 index i is the i-th object of the model, see INDEX_TO_NAME_RESOLVED below. This field previously read 'UNKNOWN' alongside the resolution in the same object; the stale half is corrected rather than deleted so the contradiction is on record.",
     "observed": "indices 9 and 10 of the body array are rigidly opposed (7/9 components negated) across frames.",
-    "refuted": "apicula object order \u2014 L/R pairs appeared 4 apart in one frame and in no frame on re-sample.",
+    "refuted": "WITHDRAWN. This read 'apicula object order \u2014 L/R pairs appeared 4 apart in one frame and in no frame on re-sample'. The re-sample tested whether the mirrored entries' VALUES were exact mirrors, which they need not be while an animation plays. Measured as a RANKING instead \u2014 score all 91 index pairs blind for mirrored components \u2014 the five left/right name pairs take the top five ranks in all 6 savestates, with the worst named pair (9) strictly above the best unnamed one (8). The object-order reading is confirmed, not refuted.",
     "INDEX_TO_NAME_RESOLVED": {
       "rule": "a matrix array is indexed by the model's OBJECT id, so index i is the i-th name in the nsbmd object list",
       "body_array_0x0237C840": [
@@ -263,6 +290,13 @@
       "it_predicts_both_live_observations": "the \"mirrored entries sit 4 apart\" claim was RIGHT about the layout and was wrongly retracted. In object order Left_arm/Right_arm, Left_hand/Right_hand, Left_mouth/Right_mouth and Left_tent/Right_tent each sit exactly 4 apart. The re-sample that refuted it was testing whether their VALUES were exact mirrors, which they need not be while an animation plays - a different claim. Separately, indices 9 and 10 were measured rigidly opposed across every frame, and positions 9 and 10 are left_head and right_head.",
       "the_old_bone_list_was_wrong": "this file listed 16 names for z_002 including `eye` and `head_02`. The model has 14 objects. `eye` comes from a different name run in the nsbmd and `head_02` is not an object name. z_002_st and z_002_tt were recorded as 10 and 8 joints; they have 11 and 9, both carrying a Cylinder01 at index 1. The tentacle array's count of 9 therefore matches z_002_tt exactly rather than approximately.",
       "source": "tools/nsbmd.py, data/model_objects.json, nodes/sys.model-objects.json"
+    },
+    "MEASURED_NOT_ASSERTED": {
+      "how": "tools/bonemat.py. All 91 pairs of the 14-entry body array scored for components that are negations of each other, with no reference to the names; the named pairs are only looked up afterwards.",
+      "result": "Left_arm/Right_arm 17, Left_hand/Right_hand 17, left_head/right_head 17, Left_tent/Right_tent 16, Left_mouth/Right_mouth 9 \u2014 ranks 1..5 of 91. Best unnamed pair 8.",
+      "why_strict_separation_is_the_test": "being in the top five is weak on its own, since five pairs land somewhere. The gap between the worst named pair and the best unnamed one is what distinguishes 'the model says these are counterparts' from every other pairing the array admits.",
+      "layout_validated_too": "both arrays hold valid rotation matrices \u2014 orthonormal rows, determinant +1 \u2014 in every one of the 6 states, which is what confirms the address, count and 36-byte stride the mapping rests on. z_002 is the ONLY model in boss_octopus.narc with 14 objects and z_002_tt the only one with 9, out of 19 models, so 'matched by count' is tight within the archive rather than a coincidence.",
+      "apicula_is_NOT_needed": "boss-porting.md's plan was to decode an .nsbca and correlate per-frame curves. The names alone carry a testable prediction, so no animation decode was required."
     }
   },
   "shared_base_methods": {

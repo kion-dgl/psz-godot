@@ -142,11 +142,9 @@ static func _areas_of(e) -> Array:
 	return out
 
 
-## Explicit arena picks for bosses whose own quest doesn't place THEM (kion:
-## mother_trinity fights in the Eternal Tower boss arena s087_na1 — its quest
-## stages the three mothers there, which is the trinity fight's arena).
+## Preserve the authored Trinity tower arena, but spawn Trinity and its pieces.
 const ARENA_QUEST_OVERRIDES := {
-	"mother_trinity": "debug_boss_heavens_mother",
+	"mother_trinity": "debug_boss_mother_trinity",
 }
 
 ## Mother Trinity's variations are each their own Bosses-tab option, fighting

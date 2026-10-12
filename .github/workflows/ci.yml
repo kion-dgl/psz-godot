@@ -53,6 +53,12 @@ jobs:
           fi
           exit $rc
 
+      - name: Original boss event and damage replay
+        run: |
+          godot --headless --path . --script res://scripts/tools/test_boss_action_events.gd 2>&1 | tee /tmp/boss-replay.log
+          grep -q '0 failures' /tmp/boss-replay.log
+          ! grep -q 'SCRIPT ERROR' /tmp/boss-replay.log
+
       - name: Startup cache and download probe
         run: python3 scripts/tools/autoplay/startup_check.py
 
