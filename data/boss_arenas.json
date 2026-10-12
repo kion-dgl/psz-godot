@@ -1092,7 +1092,7 @@
         }
       ],
       "anchors": [],
-      "note": "composite boss: Heaven's Mother is the three tower mother elites (blade/force/shot) cycling as phases; warp_st/warp_ed is the teleport (likely the form transition AND relocation). boss_mother_piece rig (km* clips, 9) in the viewer looks like the fight's floating pieces/adds \u2014 import pending observation. Forms are regular roster enemies (blade_mother spawns in investigate_tower), so no is_boss flags.",
+      "note": "Authored three-style tower encounter, not a verified original form-cycle. Retail Heaven Mother is source mother (57), distinct from Mother Trinity/boss_mother (66). Blade/Shot/Force share overlay 23; the koma pieces belong to Trinity/overlay 31. See docs/boss-behavior-analysis.md for recovered selector/attack chains and the missing live tower evidence.",
       "clip_notes": {
         "wat": "idle",
         "stt": "threat/entrance",

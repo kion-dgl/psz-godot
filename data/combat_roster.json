@@ -30,7 +30,7 @@
     {
       "title": "Source coverage and additions",
       "issue": 683,
-      "evidence": "All nonempty retail source names except sample, boss_robot_cmb and boss_mother_piece have a resource model match. sample and the empty slot are not playable; combined robot is aliased; Mother pieces lack standalone resources. Four PSO additions (Poison Lily, Chaos Sorcerer, Sinow Beat/Gold) and unresolved shinowa sit outside this source table. This is table coverage, not proof that every original encounter or boss part is implemented.",
+      "evidence": "The source crosswalk explicitly excludes sample, the empty slot, boss_robot_cmb (alias), boss_mother_piece (procedural runtime component without a standalone resource), and tower mother (57), whose previous resource was misidentified as Mother Trinity. Four PSO additions and unresolved shinowa remain outside this source table. Coverage does not establish original behavior or encounter identity.",
       "next": "Keep source exclusions visible. #718 must verify whether Mother parts are actually implemented; a FieldPopulation comment saying they are boss-owned is not runtime proof."
     }
   ],

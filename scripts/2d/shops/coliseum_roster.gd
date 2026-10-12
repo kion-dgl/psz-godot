@@ -147,7 +147,7 @@ const ARENA_QUEST_OVERRIDES := {
 	"mother_trinity": "debug_boss_mother_trinity",
 }
 
-## Mother Trinity's variations are each their own Bosses-tab option, fighting
+## The separate tower Mother styles each have their own Bosses-tab option, fighting
 ## SOLO in the tower arena (kion) — not is_boss in data, so they're pinned here
 ## (positions from the authored three-mother encounter).
 const MOTHER_VARIATIONS := {
