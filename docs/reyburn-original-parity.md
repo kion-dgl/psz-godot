@@ -67,7 +67,8 @@ existing resource leaks. These logs are not represented as warning-free.
 
 Open **Coliseum Master → Bosses → Reyburn**. Use the usual local asset pack.
 The new original ground pacing is enabled by default. The unsigned macOS package
-was cross-exported on Linux; it has not been executed on a Mac.
+was cross-exported on Linux and checked for both arm64 and x86_64 executables,
+packaged scripts/fixtures and ZIP integrity; it has not been executed on a Mac.
 
 1. Stay still in front, then repeat from a flank and behind. Record where he turns,
    which ground attack starts, and whether collision traps the player.

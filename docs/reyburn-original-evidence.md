@@ -66,6 +66,29 @@ behind him is therefore not equivalent to standing in front; movement traces
 retain the actual player and boss coordinates rather than assigning behavior from
 input labels alone. NPC target selection prevents attributing every turn to Aiya.
 
+For the equal-length 7,200-update runs, these are **animation starts**, not
+independent attack-selection probabilities (restarts and multi-stage attacks can
+increment them). The same initial save produces visibly different grounded
+behavior when input changes:
+
+| Observed action starts | Still | Directional movement | Approach/retreat |
+|---|---:|---:|---:|
+| Normal bite (16) | 18 | 14 | 10 |
+| Advancing bite (17) | 4 | 9 | 4 |
+| Ground breath start (10) | 7 | 6 | 7 |
+| Wing attack (13) | 3 | 3 | 4 |
+| Tail right (14) | 2 | 3 | 1 |
+| Tail left (15) | 5 | 2 | 5 |
+| Run clip (6) | 6 | 2 | 3 |
+| Boss HP at capture end | 841 | 902 | 975 |
+
+NPCs did the damage in these three runs. Even the no-input player moves under
+combat displacement: X ranges about -1.08 to 4.84 and Z 13.09 to 22.62. Thus the
+still case cannot stand in for controlled front/flank/rear experiments. The
+original spatial selector includes a normal bite band 8–10 with a narrow facing
+cone, advancing bite 12.5–17.5 with another narrow cone, and cooled-down breath
+15–50 within 45 degrees. Damage counters and pending states can take precedence.
+
 ![Recorded boss and player paths](../spec/public/research/reyburn-original-input-paths.png)
 
 ## Three distinct aerial sequences
