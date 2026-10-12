@@ -1,0 +1,107 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Combat progression and Photon Blasts" section="States">
+<p>One playtest covers #723, #732, #343, #734 and #342. This contract supersedes
+older placeholder real-time damage math. Original references and deliberate
+remake choices are recorded below; owner balance review remains pending.</p>
+<h2>Damage and equipment</h2>
+<ul>
+<li>Physical hits MUST combine class, mag, material, unit and weapon stats.
+Weapon grind and family percentages MUST belong to the equipped instance;
+family percentages modify weapon ATP only. Weapon accuracy and hit percentage
+MUST reach hit resolution. Normal and strong attacks MUST use distinct power
+and accuracy modifiers. Existing combo reach and timing remain in force.</li>
+<li>The shared numeric resolver MUST subtract defense from modified attack,
+divide by five with integer truncation, clamp negative damage to zero, then
+apply resistance and critical modifiers. A critical adds half the integer damage.
+The default part multiplier is one. Attack variance remains the current ±10%
+remake choice pending full original weapon min/max extraction.</li>
+<li>Original evidence: psz-re tools/parttable.py and ARM9 FUN_02042A4C
+(the subtraction and division by 5, critical addition, reciprocal body-part
+multiplier); FUN_02042964 (accuracy × 4/10 minus evasion × 0x333/4096,
+then attack accuracy multiplier). Pure fixtures MUST pin numeric boundaries,
+zero damage, attributes, grind caps and the three recovered accuracy samples.</li>
+<li>Strong attacks use 1.5× power and 0.7× accuracy as explicit provisional
+remake tuning; weapon special payloads fall back to the weapon resource when
+an instance has no override. This does not implement the full Photon Arts roster
+or claim all existing status payloads match PSZ. Native Heat, Ice and Slow
+map explicitly to burn, freeze and slow using existing Godot lifetimes and proc
+chances; these mappings are remake interpretations pending the full #724 audit.
+Other native specials remain unsupported; no invented life/meseta costs or
+instant-kill behavior is added.</li>
+</ul>
+<h2>Progression and grinding</h2>
+<ul>
+<li>Enemy level MUST be fixed by authored quest/area and difficulty, never the
+current player level. It MUST remain stable on revisits and reload. Level-derived
+HP, attack, defense, evasion and EXP MUST be applied to per-spawn data copies;
+registry resources MUST NOT be mutated. Target feedback MUST show level.</li>
+<li>Area base levels and growth slopes are remake choices. The original uses
+three difficulty rows (psz-re data/enemy_stat_table.json, FUN_02035598) and
+additional quest/party scalers; these do not establish an original enemy-level
+curve. Sixty-five mapped enemies use recovered HP, physical min/max ATP, DFP and EVP
+rows before the authored level extension. Existing authored stats remain the
+tuning baseline for unmapped enemies. The unread EXP-shaped original column is
+not treated as verified EXP.</li>
+<li>EXP MUST be awarded once on actual enemy death and remain available in character progression screens.
+Level-up MUST preserve material HP/PP bonuses. Negative EXP grants MUST NOT
+reduce progression. Save/reload MUST preserve levels, equipment and upgrades.</li>
+<li>Grinding MUST validate current ownership, current grind, cap and required material at commit time. Inventory Use applies a Monogrinder (+1), Digrinder (+2) or Trigrinder (+3) to the equipped weapon, clamps to its cap and consumes one item without a meseta fee. Use MUST be disabled for a capped, absent or incompatible weapon. Inventory and equipment MUST show the per-instance grind suffix and upgraded ATP. The Tekker retains its separate +1 service and displayed fee, validating carried meseta at commit time; rejection changes nothing.
+Original physical grinding MUST add two ATP per level (psz-re tools/wpnprm.py,
+16 anchored handgun/rifle records). Existing rarity requirements and fees are retained
+remake values, pending the weapon-economy design. No failure chance is added.</li>
+</ul>
+<h2>Photon Blasts</h2>
+<ul>
+<li>The gauge MUST range from zero to 10000 and fill the four separate blocks of the HP/PP HUD rim clockwise in yellow. Its diagonal gaps and black center MUST remain unfilled. Playtest guidance MUST NOT appear beneath the production HUD. It MUST charge from actual damage dealt/taken, excluding misses,
+overkill, invulnerability and blast damage itself. An evolved equipped mag
+MUST supply the blast; an unevolved mag MUST NOT fire.</li>
+<li>Evidence: psz-re nodes/sys.photon-blast-effects.json; FUN_020AE168 gates
+10000 and a valid type; FUN_0203A850 clears gauge on mag equip; FUN_020B964C
+adds bucketed damage ratios using PB parameter data and requiring mag level above nine. The current
+implementation uses the first selector row; the exact selector identity and
+caller routing of six versus ten buckets remain unverified. These are explicit
+integration assumptions, not claimed original fidelity. Blast types
+come from FUN_020A8BB0 and existing mag resources.</li>
+<li>Activation MUST consume the gauge once, lock actions during its short
+presentation and deliver its effect once. Invalid/dead/interrupted activation
+MUST NOT spend the gauge. Scene exit MUST cancel pending delivery safely.
+Dedicated B / right-stick-click inputs and the clickable HUD rim provide keyboard/controller and touch access without requiring a palette assignment. Party chains and the original summon rigs remain separate work.</li>
+<li>Granir and Pacifal are damaging blasts; Midgul applies attack/defense
+weakening; Flozir provides a timed PP benefit. Presentation, radii, durations and
+unrecovered potency are explicitly provisional remake values, not inferred
+from effect names. Tests MUST cover every supported blast and lifecycle reset.</li>
+</ul>
+<p>Verification: systems_progression_tests.gd plus systems_progression_probe.tscn
+on imported player/enemy rigs, then the existing quest regression matrix.</p>
+<p>Owner review: Kion assessed Systems as C on 2026-10-11 after the PR #752 Mac playtest. The Coliseum exit fix has regression coverage; quest/free-roam traversal and remaining fidelity work still need follow-up.</p>
+<h2>One combined playtest</h2>
+<ol>
+<li>Create a fresh Hunter. Fight an ordinary early-area enemy with the starter
+Saber; observe landed damage, misses, its level and HP. Compare normal and strong
+attacks. The deterministic live fixture currently needs six swings including
+misses for a 95-HP level-one Ghowl.</li>
+<li>Earn level two through kills and check EXP, HP and stats. Save, quit and
+reload. Later areas and higher difficulties should retain their own enemy levels.</li>
+<li>At the Tekker, grind a weapon, check the preview and wallet/material count,
+then return to combat. Compare a matching family attribute and a neutral target.
+A second copy of the same weapon must retain its own grind. Use one of each grinder from inventory on an unground Saber: the result MUST be Saber +6 with 49 weapon ATP.</li>
+<li>Feed the Mag to its first evolution. Charge PB in combat, then use the
+B key, right-stick click or the charged HUD rim. Check one activation,
+its effect and return of control. The four stat paths select the four blast types.</li>
+<li>Try an available Heat/Ice/Slow weapon's strong attack. Check visible status
+and expiry. Report balance and presentation feedback for the whole build.</li>
+</ol>
+<p>Automated entry points: <code>res://scripts/tools/systems_progression_probe.tscn</code>
+and <code>res://scripts/tools/technique_progression_probe.tscn</code>, with an isolated
+XDG_DATA_HOME and PSZ_PROBE_PACK pointing at the asset pack. Run
+<code>python3 scripts/tools/check_systems_reference.py /path/to/psz-re</code>
+to reproduce the original-data comparison.</p>
+<p>Preserved remake choices: class stat curves, EXP rewards, ±10% attack variance,
+5% base critical chance, 15% innate-weapon bonus, strong-attack modifiers,
+area-level slopes, shop fees and PB effect potency/presentation. Unrecovered
+zero-power technique-weapon resources, party chains, complete original status
+and PA semantics, and full damage/part-resistance fidelity remain open.</p>
+<p>Original <code>FUN_02042964</code> bypasses the physical hit roll for attack kinds 2 and 3; techniques and PB effects likewise bypass weapon accuracy. Zero-ATP technique weapons are excluded from grinding until their original stat mapping is implemented, so the shop cannot charge for an ineffective upgrade.</p>
+</Concept>

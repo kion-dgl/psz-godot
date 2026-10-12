@@ -215,7 +215,7 @@ func _open_item_menu(item: Dictionary) -> void:
 			choices.append({"label": "Equip", "enabled": _can_equip_from_inventory(item)})
 			actions.append("equip")
 	elif usable:
-		choices.append({"label": "Use", "enabled": true})
+		choices.append({"label": "Use", "enabled": not Inventory.is_grinder(item_id) or Inventory.can_use_grinder(item_id)})
 		actions.append("use")
 	choices.append({"label": "Drop", "enabled": not equipped})
 	actions.append("drop")
@@ -527,7 +527,7 @@ func _do_equip() -> void:
 ## agree on order — but an action missing from here is unreachable, which
 ## test_runner's palette-grid test pins.
 const _PAL_PICKER_ROWS: Array = [
-	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
+	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge", "photon_blast"]},
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
 	{"ids": ["monofluid", "difluid", "trifluid"]},
 	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
@@ -595,8 +595,7 @@ func _get_options_list() -> Array:
 
 
 ## Debug submenu — developer toggles + cheats, split out of Options (#menu-debug).
-## Row 0 is the one-shot "Unlock All Missions" action; the rest mirror the
-## DebugConfig boolean flags. Kept index-aligned with _toggle_debug().
+## One-shot cheats and DebugConfig toggles. Kept index-aligned with _toggle_debug().
 func _get_debug_list() -> Array:
 	var on := "ON"
 	var off := "OFF"
@@ -613,6 +612,8 @@ func _get_debug_list() -> Array:
 		"Equip All (debug): %s" % (on if DebugConfig.equip_all else off),
 		"Reveal Map (debug): %s" % (on if DebugConfig.reveal_map else off),
 		"Unlock All Areas (warp): %s" % (on if DebugConfig.unlock_all_areas else off),
+		"Fill PB Meter",
+		"Give 99 Photon Drops",
 	]
 
 
@@ -684,6 +685,20 @@ func _toggle_debug(idx: int) -> void:
 				if DebugConfig.unlock_all_areas
 				else "Warp back to quest-unlocked fields only."
 			)
+		12:
+			if PhotonBlast.equipped_blast().is_empty():
+				_debug_msg = "Equip an evolved Mag to use Photon Blast."
+			else:
+				PhotonBlast.gauge = PhotonBlast.MAX_GAUGE
+				_debug_msg = "PB meter filled to 100%."
+		13:
+			var before := Inventory.get_item_count("photon_drop")
+			if Inventory.add_item("photon_drop", 99):
+				var total := Inventory.get_item_count("photon_drop")
+				SaveManager.save_game()
+				_debug_msg = "Added %d Photon Drops (%d total)." % [total - before, total]
+			else:
+				_debug_msg = "Photon Drops are at the stack limit or inventory is full."
 
 
 func _enter_sub(idx: int) -> void:
@@ -744,6 +759,7 @@ func _execute_use_item(item_id: String, item_name: String) -> void:
 			"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
 			"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
 			"trap_vision": _action_message = "Trap Vision active for %d seconds" % int(info.get("amount", 0))
+			"grind": _action_message = "Equipped weapon upgraded to +%d" % int(info.get("amount", 0))
 			"tech": _action_message = "Learned %s!" % item_name
 			"telepipe": _action_message = "Telepipe placed — step into it to warp"
 			_: _action_message = "Used %s" % item_name
@@ -829,6 +845,7 @@ func _get_inventory() -> Array:
 			and not ShopNav.sell_disabled(item_id)
 		item["usable"] = (
 			Inventory.CONSUMABLE_EFFECTS.has(item_id)
+			or Inventory.is_grinder(item_id)
 			or disk_usable
 			or item_id in ["telepipe", "trap_vision", "sol_atomizer"]
 			or (TrapBall.TRAP_MODELS.has(item_id) and Inventory.can_use_traps())

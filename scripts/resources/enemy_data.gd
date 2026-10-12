@@ -55,6 +55,9 @@ enum BehaviorType {
 
 ## Base attack damage
 @export var attack_base: int = 10
+## Populated by recovered per-spawn stat rows; legacy authored attacks remain final damage.
+var attack_min: int = 0
+var original_attack_stats: bool = false
 
 ## Base defense
 @export var defense_base: int = 5

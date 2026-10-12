@@ -154,7 +154,7 @@ func add_experience(amount: int) -> Dictionary:
 	if character == null:
 		return {"leveled_up": false, "new_level": 0}
 
-	character["experience"] = int(character["experience"]) + amount
+	character["experience"] = int(character["experience"]) + maxi(amount, 0)
 	var old_level: int = character["level"]
 	var new_level := _calculate_level(int(character["experience"]))
 	var leveled_up := new_level > old_level
@@ -164,8 +164,8 @@ func add_experience(amount: int) -> Dictionary:
 		var class_data = ClassRegistry.get_class_data(character["class_id"])
 		if class_data:
 			var stats: Dictionary = class_data.get_stats_at_level(new_level)
-			character["max_hp"] = stats.get("hp", character["max_hp"])
-			character["max_pp"] = stats.get("pp", character["max_pp"])
+			character["max_hp"] = int(stats.get("hp", character["max_hp"])) + int(character.get("material_bonuses", {}).get("hp", 0))
+			character["max_pp"] = int(stats.get("pp", character["max_pp"])) + int(character.get("material_bonuses", {}).get("pp", 0))
 			character["hp"] = character["max_hp"]
 			character["pp"] = character["max_pp"]
 		level_up.emit(new_level)

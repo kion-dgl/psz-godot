@@ -9,6 +9,7 @@ signal config_changed()
 const ICON_BASE := "res://assets/ui/psz-palette/"
 
 const ALL_ACTIONS: Array = [
+	{"id": "photon_blast", "label": "Photon Blast", "short": "PB", "category": "combat", "icon": "charged_photon_art.png"},
 	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat", "icon": "attack.png"},
 	{"id": "strong_attack", "label": "Strong Attack", "short": "S.Atk", "category": "combat", "icon": "strong_attack.png"},
 	{"id": "dodge", "label": "Dodge", "short": "Dodge", "category": "combat", "icon": "dodge.png"},

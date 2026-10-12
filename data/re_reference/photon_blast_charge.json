@@ -1,0 +1,51 @@
+{
+  "source": "PSZ USA player/pb_param_data.rel, NDR payload at file +0x30; ARM9 FUN_020B964C",
+  "sha256_uncompressed": "50e67d199b2571ae3aaf8ab02a8059d8d1c80d4c17b65802ccbabfa0469ec3e6",
+  "selector_multipliers": [
+    375,
+    450,
+    580,
+    700
+  ],
+  "six_thresholds": [
+    25,
+    33,
+    50,
+    100,
+    200,
+    1000
+  ],
+  "six_awards": [
+    4,
+    6,
+    7,
+    10,
+    12,
+    17
+  ],
+  "ten_thresholds": [
+    5,
+    7,
+    10,
+    13,
+    15,
+    18,
+    20,
+    22,
+    25,
+    1000
+  ],
+  "ten_awards": [
+    6,
+    7,
+    8,
+    10,
+    11,
+    13,
+    14,
+    16,
+    18,
+    24
+  ],
+  "charge_multiplier": 18
+}

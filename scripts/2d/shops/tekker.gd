@@ -19,13 +19,9 @@ var _tab_row: HBoxContainer    # Persistent tab bar container
 var _detail_panel: PanelContainer  # Shared right-column detail card
 
 ## Grinder requirements by weapon rarity
-const GRINDER_FOR_RARITY := {
-	1: "monogrinder", 2: "monogrinder", 3: "monogrinder",
-	4: "digrinder", 5: "digrinder",
-	6: "trigrinder", 7: "trigrinder",
-}
-
-const RARITY_COST_MULT := {1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.0, 6: 6.0, 7: 10.0}
+const Grinding := preload("res://scripts/utils/weapon_grinding.gd")
+const GRINDER_FOR_RARITY = Grinding.GRINDER_FOR_RARITY
+const RARITY_COST_MULT = Grinding.RARITY_COST_MULT
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel
@@ -88,38 +84,8 @@ func _grind_selected() -> void:
 	if _grindable_weapons.is_empty() or _selected_index >= _grindable_weapons.size():
 		return
 
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return
-
-	var weapon_info: Dictionary = _grindable_weapons[_selected_index]
-	var weapon_id: String = weapon_info["id"]
-	var current_grind: int = weapon_info["grind"]
-	var rarity: int = weapon_info["rarity"]
-
-	# Check grinder requirement
-	var grinder_id: String = GRINDER_FOR_RARITY.get(rarity, "monogrinder")
-	if not Inventory.has_item(grinder_id):
-		var grinder_name: String = grinder_id.replace("_", " ").capitalize()
-		hint_label.text = "Need a %s to grind this weapon!" % grinder_name
-		return
-
-	# Calculate cost
-	var cost := int((200 + current_grind * 100) * RARITY_COST_MULT.get(rarity, 1.0))
-	if int(character.get("meseta", 0)) < cost:
-		hint_label.text = "Not enough meseta! Need %d M" % cost
-		return
-
-	# Grind always succeeds in PSZ
-	character["meseta"] = int(character["meseta"]) - cost
-	GameState.meseta = int(character["meseta"])
-	Inventory.remove_item(grinder_id, 1)
-
-	if not character.has("weapon_grinds"):
-		character["weapon_grinds"] = {}
-	character["weapon_grinds"][weapon_id] = current_grind + 1
-
-	hint_label.text = "Ground %s to +%d! (-%d M)" % [weapon_info["name"], current_grind + 1, cost]
+	var result := Grinding.apply(str(_grindable_weapons[_selected_index]["id"]))
+	hint_label.text = result.message
 	_build_lists()
 	_selected_index = mini(_selected_index, maxi(_grindable_weapons.size() - 1, 0))
 	_refresh_display()
@@ -242,10 +208,7 @@ func _process(delta: float) -> void:
 
 ## The active character's meseta (0 if no active character).
 func _get_meseta() -> int:
-	var character = CharacterManager.get_active_character()
-	if character:
-		return int(character.get("meseta", 0))
-	return 0
+	return GameState.meseta
 
 
 ## NavRepeat callback: re-emit a held nav action as a synthetic input event

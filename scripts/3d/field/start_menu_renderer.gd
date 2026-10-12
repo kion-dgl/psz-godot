@@ -172,7 +172,7 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	var weapon_grind: int = int(ch.get("weapon_grinds", {}).get(weapon_id, 0))
 	var weapon_atk: int = weapon.get_attack_at_grind(weapon_grind) if weapon else 0
 	var weapon_acc: int = weapon.get_accuracy_at_grind(weapon_grind) if weapon else 0
-	var weapon_name: String = weapon.name if weapon else "--"
+	var weapon_name: String = str(Inventory._lookup_item(weapon_id).name) if weapon else "--"
 
 	var frame_id: String = str(equip.get("frame", ""))
 	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id)) if not frame_id.is_empty() else null
@@ -353,7 +353,8 @@ func _items_description(inv: Array) -> String:
 		# Try to get details from registries
 		var weapon = WeaponRegistry.get_weapon(base_id)
 		if weapon:
-			desc += "\nATK: %d  ACC: %d" % [weapon.attack_base, weapon.accuracy_base]
+			var grind: int = int(_c._get_character().get("weapon_grinds", {}).get(item_id, 0))
+			desc += "\nATK: %d  ACC: %d" % [weapon.get_attack_at_grind(grind), weapon.get_accuracy_at_grind(grind)]
 			if not weapon.element.is_empty() and weapon.element != "None":
 				desc += "\nElement: %s" % weapon.element
 		var armor = ArmorRegistry.get_armor(base_id)
@@ -452,7 +453,8 @@ func _draw_equip(c: Control, font: Font) -> void:
 				var wdata = WeaponRegistry.get_weapon(Inventory.get_base_id(item_id))
 				var adata = ArmorRegistry.get_armor(Inventory.get_base_id(item_id))
 				if wdata:
-					desc += "\nATK: %d  ACC: %d" % [wdata.attack_base, wdata.accuracy_base]
+					var grind: int = int(_c._get_character().get("weapon_grinds", {}).get(item_id, 0))
+					desc += "\nATK: %d  ACC: %d" % [wdata.get_attack_at_grind(grind), wdata.get_accuracy_at_grind(grind)]
 					if not wdata.element.is_empty() and wdata.element != "None":
 						desc += "\nElement: %s" % wdata.element
 				elif adata:

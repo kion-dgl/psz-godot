@@ -167,7 +167,7 @@ func _die() -> void:
 	super._die()
 
 
-func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
 	# Being hit wakes a sleeping lily (spec §poison-lily).
 	if _lily_state == LilyState.SLEEPING:
 		_wake()
@@ -187,4 +187,4 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, 
 					_play_lily_anim("idle", true)
 			, CONNECT_ONE_SHOT)
 
-	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level)
+	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level, attack_kind)

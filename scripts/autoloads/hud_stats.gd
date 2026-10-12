@@ -164,6 +164,7 @@ class StatsPanel extends Control:
 		_bg.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(_bg)
 		_ensure_bg_texture()
+		add_child(preload("res://scripts/ui/progression_hud.gd").new())
 
 		_hp_bar = ColorRect.new()
 		_hp_bar.color = HP_COLOR

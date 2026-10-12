@@ -384,9 +384,32 @@ const CONSUMABLE_EFFECTS := {
 
 ## Use a consumable item (removes it and applies effect)
 ## Returns a dict: {success: bool, type: String, amount: int} or {success: false}
+func is_grinder(item_id: String) -> bool:
+	return item_id in ["monogrinder", "digrinder", "trigrinder"]
+
+func can_use_grinder(item_id: String) -> bool:
+	return bool(preload("res://scripts/utils/weapon_grinding.gd").equipped_quote(item_id).success)
+
+
 func use_item(item_id: String) -> bool:
 	if not has_item(item_id):
 		return false
+	if is_grinder(item_id):
+		return _use_grinder(item_id)
+	return _use_standard_item(item_id)
+
+
+func _use_grinder(item_id: String) -> bool:
+	if not preload("res://scripts/utils/weapon_grinding.gd").use_equipped(item_id):
+		return false
+	_last_use_type = "grind"
+	var ch = CharacterManager.get_active_character()
+	_last_use_amount = int(ch.weapon_grinds[ch.equipment.weapon])
+	SaveManager.save_game()
+	return true
+
+
+func _use_standard_item(item_id: String) -> bool:
 
 	if item_id == "sol_atomizer":
 		return _use_status_cure(item_id)
@@ -632,6 +655,9 @@ func _lookup_item(item_id: String) -> Dictionary:
 					var element_prefix: String = _photon_display_name(photon_id)
 					if not element_prefix.is_empty():
 						display_name = element_prefix + " " + display_name
+			var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
+			if grind > 0:
+				display_name += " +%d" % grind
 		return {"name": display_name, "max_stack": 1}
 
 	# ArmorRegistry (non-stackable)

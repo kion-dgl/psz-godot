@@ -1595,9 +1595,17 @@ func _deal_damage_for(def: Dictionary) -> void:
 		target.take_damage(_attack_damage(def), Vector3.ZERO, bool(def.get("knockdown", false)))
 
 
+var attack_multiplier := 1.0
+var enemy_level := 1
+
 func _attack_damage(def: Dictionary) -> int:
 	var base_attack: int = enemy_data.attack_base if enemy_data else 10
-	return int(round(float(base_attack) * float(def.get("damage_mult", 1.0))))
+	if enemy_data and enemy_data.original_attack_stats:
+		base_attack = randi_range(enemy_data.attack_min, enemy_data.attack_base)
+		var ch = CharacterManager.get_active_character()
+		var stats: Dictionary = CombatManager._get_player_stats(ch) if ch else {}
+		return CombatManager.Math.damage(int(base_attack * attack_multiplier * float(def.get("damage_mult", 1.0))), int(stats.get("defense", 0)) + int(stats.get("armor_defense", 0)))
+	return int(round(float(base_attack) * attack_multiplier * float(def.get("damage_mult", 1.0))))
 
 
 
@@ -1745,7 +1753,7 @@ func _apply_difficulty() -> void:
 	_detection_range = base_det * float(s["detection"])
 
 
-func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
+func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
 	if not is_alive:
 		return
 
@@ -1759,7 +1767,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		if fx_def.has("damage_taken_mult"):
 			damage_mult *= float(fx_def.damage_taken_mult)
 
-	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy)
+	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy, attack_kind)
 	if not result.get("hit", true):
 		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
 		return
@@ -2175,7 +2183,7 @@ func _detect_stuck_movement(pos_before: Vector3, delta: float) -> void:
 # ── Status Effects ──────────────────────────────────────────────────────────
 
 func _try_apply_status(hit_element: String, level: int) -> void:
-	var status_type: String = CombatManager.roll_element_status(hit_element)
+	var status_type: String = hit_element.trim_prefix("status:") if hit_element.begins_with("status:") else CombatManager.roll_element_status(hit_element)
 	if status_type.is_empty():
 		return
 
