@@ -82,9 +82,39 @@ off-axis target, piece spawn positions, animated head receiver, downward laser,
 phase transitions, death cleanup and retry. Inspect rendered entry/body images
 as well as assertions. A passing timing test alone cannot validate arena fit.
 
-The three procedural piece visuals/tactics, exact attack selection, swing
+The three procedural piece visuals, exact retail tactics/attack selection, swing
 joint transform, beam shape, effects, audio completeness and original spawn
 coordinate still require further verification. The current laser remains a
 projectile approximation. The game camera is widened in this arena to show
 more of the full-size boss and platform. Manual combat/balance review remains
 necessary; these checks do not establish retail fidelity.
+
+
+## Follow-up observation: board phase and body entry
+
+Kion's follow-up confirms three hopping objects: each lands at the center of a
+floor square and no square can hold two. They spin, cast a technique or perform
+a melee attack, then hop again. Mother can command a small wave from all three
+simultaneously. Two pieces must break before Mother enters the broken-platform
+body phase; the last piece remains active. The goal is a cohesive encounter,
+not a claim of 1:1 behavior.
+
+The exported floor visibly has a 5×5 grid with 4-unit tiles, centered at
+`x,z = -8,-4,0,4,8`. The authored board uses the four southern rows; the northern
+row is reserved for the body-entry zone. Destinations and occupied source cells
+are both reserved during flight. Pieces prefer a free neighboring square toward
+the player, spin, alternate melee/technique attacks, then recover. A command waits
+for all living pieces to land and wind up before releasing simultaneous radial
+waves (one damage resolution per player across the volley).
+
+An intact cover across the three northern middle tiles is reconstructed using
+the existing stage floor texture. Mother starts behind it and moves into the
+cutout during the second-loss transition. The cover breaks at the existing body
+exposure event; the survivor pauses during entry and then resumes. This is an
+authored visual reconstruction, **not identification of an original cover asset**.
+
+Viewer identities: `boss_mother/z_004` is Mother Trinity;
+`boss_mother_piece/z_004_koma_a` and its `koma_b`/`koma_c` parts are her pieces;
+`mother/b_072` is Heaven Mother, separate from Blade/Shot/Force. The viewer also
+contains `ef_e_d_arnd` and `ef_e_d_stg` under `boss_mother_piece`; their role in
+wave/stage behavior needs visual confirmation, not inference from filenames.

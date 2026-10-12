@@ -8,6 +8,7 @@ static func run(t: Node) -> void:
 	_catch_up(t)
 	_piece_stats(t)
 	_arena_contract(t)
+	preload("res://scripts/tools/mother_board_tests.gd").run(t)
 
 static func _falz(t: Node) -> void:
 	var rules := BossPhaseRules.FalzDamage.new()
@@ -95,7 +96,7 @@ static func _piece_stats(t: Node) -> void:
 static func _arena_contract(t: Node) -> void:
 	var quest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/quests/debug_boss_mother_trinity.json"))
 	var cell: Dictionary = quest.sections[0].cells[0]
-	t.assert_eq(quest.area_id, "shrine", "Trinity uses Shrine progression and music")
+	t.assert_eq(quest.area_id, "dark", "Trinity uses Shrine progression and music")
 	t.assert_eq(cell.stage_id, "s07z_na1", "Trinity arena is the broken-platform stage")
 	t.assert_eq(cell.objects[0].position, [0.0,0.0,-10.0], "Trinity starts in the north cutout")
 	var boss := MotherTrinityBoss.new()

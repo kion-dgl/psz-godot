@@ -4,7 +4,7 @@
   "id": "debug_boss_mother_trinity",
   "name": "DEBUG: Mother Trinity",
   "description": "Test Mother Trinity and three independent pieces. Piece visuals and tactics are provisional.",
-  "area_id": "shrine",
+  "area_id": "dark",
   "rewards": {},
   "office_npcs": [],
   "briefing_dialog": [
@@ -17,7 +17,7 @@
     {
       "type": "boss",
       "area": "z",
-      "area_id": "shrine",
+      "area_id": "dark",
       "start_pos": "0,0",
       "end_pos": "0,0",
       "entry_direction": "south",

@@ -194,6 +194,20 @@ const chart = `stateDiagram-v2
       yaw zero; this is a visual fit, not a recovered ROM coordinate. See
       <code>docs/mother-trinity-reference.md</code> for Kion's animation observations
       and their distinct recovered descriptor order.</li>
+    <li>Trinity's piece phase MUST use the visible 4-unit floor grid. Pieces MUST
+      reserve distinct destination squares before jumping and retain their source
+      occupancy until landing. Each landing MUST be followed by a visible spin,
+      a telegraphed melee strike or technique, and recovery before the next hop.
+      A Mother command MUST gather living pieces into a shared windup and release
+      their radial waves on the same simulation tick. Death MUST release both
+      occupied/reserved squares and cancel owned deliveries.</li>
+    <li>The first piece loss MUST leave the floor cover intact. The second MUST
+      start the body-entry transition, pause the survivor, and break the cover at
+      the body-exposure notification. The remaining piece MUST resume its board
+      cycle during the body phase. Retry MUST restore the cover, rear body pose,
+      all three pieces, empty delivery lists and fresh occupancy. Grid exclusions,
+      timings and the reconstructed cover are authored encounter design; the
+      original cover asset and exact behavior remain unverified.</li>
     <li>Trinity body attacks MUST use descriptor stages: swing action 7, laser 8,
       headbutt 9, zero to two repeats of 10, recovery 11, then laser 8. Phase changes
       MUST NOT be overwritten by generic enemy flinch.</li>

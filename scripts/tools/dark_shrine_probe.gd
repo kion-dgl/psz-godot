@@ -21,12 +21,15 @@ func _run() -> void:
 		var field := get_tree().current_scene
 		var player := get_tree().get_first_node_in_group("player") as Node3D
 		boss.set_physics_process(false)
+		if boss is MotherTrinityBoss:
+			for piece in boss.pieces: piece.set_physics_process(false)
 		player.set_physics_process(false)
 		_check(boss.model != null and boss.animation_player != null,"imported boss rig and animations loaded")
 		_check(field._field_hud._boss_bar != null and field._field_hud._boss_bar.visible,"boss HUD visible")
 		_check(boss.current_hp == boss.encounter_max_hp,"retry starts with full independent HP")
 		boss.target = player
 		_contact_checks(boss, player)
+		player.current_state = player.PlayerState.DODGING
 		await _snapshot(quest + "_entry")
 		if boss is MotherTrinityBoss:
 			_check(str(field._current_cell.stage_id) == "s07z_na1", "Trinity uses her Dark Shrine arena")
@@ -54,12 +57,21 @@ func _trinity(boss: MotherTrinityBoss) -> void:
 	boss.hurtbox.take_hit(99999,Vector3.ZERO,9999)
 	_check(boss.current_hp == hp and boss.is_alive,"body protected before piece transition")
 	for piece in boss.pieces: piece.set_physics_process(false)
+	_check(not boss.arena.broken and boss.arena.cover.visible, "intact floor cover before two piece losses")
+	_wave_contact_checks(boss)
+	await _board_checks(boss)
+	boss._enter_idle()
 	boss.pieces[0].hurtbox.take_hit(99999,Vector3.ZERO,9999)
+	_check(not boss.arena.broken, "first piece loss leaves cover intact")
 	_check(boss.piece_count == 2 and boss.action_id == 2,"first piece loss reacts without exposing body")
 	boss.pieces[1].hurtbox.take_hit(99999,Vector3.ZERO,9999)
 	for tick in 62: boss._physics_process(1.0/30.0)
+	_check(boss.pieces[2].paused, "surviving piece pauses for body entry")
 	_check(boss.action_id == 3 and not boss._accepts_damage(),"second loss enters protected transition")
 	for tick in 126: boss._physics_process(1.0/30.0)
+	_check(boss.arena.broken and not boss.arena.cover.visible, "second-loss exposure breaks floor cover")
+	_check(boss.pieces[2].is_alive and not boss.pieces[2].paused, "surviving piece resumes during body phase")
+	_check(boss.model.position.z == 0, "body finishes entering the cutout")
 	_check(boss.phase_flags == 3 and boss._accepts_damage(),"descriptor event opens body vulnerability")
 	boss.play_action(1, {0:-1})
 	boss._sync_pose()
@@ -108,6 +120,12 @@ func _falz(boss: DarkFalzBoss) -> void:
 	_check(boss._owned_shots.size() == 5,"diffusion releases five provisional projectiles at notification 2")
 
 func _finish(boss: DescriptorBoss, field: Node) -> void:
+	var piece_deliveries: Array = []
+	if boss is MotherTrinityBoss:
+		for piece in boss.pieces:
+			if is_instance_valid(piece) and piece.is_alive:
+				piece.release_wave({})
+				piece_deliveries.append_array(piece._shots)
 	var deaths: Array[int] = []
 	boss.died.connect(func(_enemy): deaths.append(1))
 	boss._shoot()
@@ -119,6 +137,9 @@ func _finish(boss: DescriptorBoss, field: Node) -> void:
 	_check(deaths.size() == 1 and experience == CharacterManager.get_active_character().experience,"lethal hit and repeat death reward exactly once")
 	_check(not field._field_hud._boss_bar.visible,"death hides boss HUD")
 	await get_tree().process_frame
+	if boss is MotherTrinityBoss:
+		_check(boss.board.owners.is_empty(), "boss death releases all board reservations")
+		_check(piece_deliveries.all(func(n): return not is_instance_valid(n)), "boss death clears surviving piece deliveries")
 	_check(boss._owned_shots.is_empty() and shots.all(func(n): return not is_instance_valid(n)),"death clears owned projectiles")
 	field._check_room_clear()
 	field._check_room_clear()
@@ -149,4 +170,77 @@ func _contact_checks(boss: DescriptorBoss, player: Node3D) -> void:
 	_check(GameState.hp == GameState.max_hp - 10, "unprotected boss delivery damages player")
 	boss.enemy_data.attack_base = old_attack
 	boss.enemy_data.original_attack_stats = old_stats
+	GameState.set_hp(GameState.max_hp)
+
+
+func _board_checks(boss: MotherTrinityBoss) -> void:
+	# Manual catch-up drives ten seconds of decisions without real-time delivery
+	# stepping. Guard the probe hero, then clear stale shots before the wave view.
+	boss.target.current_state = boss.target.PlayerState.DODGING
+	boss.target.dodge_timer = 0.0
+	var aligned := true
+	for piece in boss.pieces: piece._left = 0
+	for tick in 300:
+		for piece in boss.pieces:
+			piece._physics_process(1.0 / 30.0)
+			if piece.step != MotherPiece.Step.HOP:
+				var center := boss.to_global(MotherBoard.center(boss.board.occupied[piece.piece_index]))
+				aligned = aligned and piece.global_position.distance_to(center) < 0.01
+	_check(aligned, "all landed piece positions remain at floor-square centers")
+	_check(boss.pieces.all(func(piece): return piece.attack_count >= 2), "every piece completes hop-spin-attack cycles")
+	_check(boss.pieces.all(func(piece): return piece._shots.any(func(shot): return shot is EnemyProjectile)), "piece cycles include technique projectiles")
+	_check(boss.pieces.all(func(piece): return piece._shots.any(func(shot): return shot is MotherWave)), "piece cycles include short melee strikes")
+	for piece in boss.pieces: piece.clear_deliveries()
+	boss._idle = false
+	boss.play_action(6)
+	for tick in 45: boss._physics_process(1.0 / 30.0)
+	_check(boss._wave_pending, "Trinity command notification requests a coordinated wave")
+	var release_ticks: Array[int] = [-1,-1,-1]
+	for tick in 100:
+		for piece in boss.pieces: piece._physics_process(1.0 / 30.0)
+		if boss._wave_pending:
+			boss._try_release_wave()
+		for index in 3:
+			if boss.pieces[index].wave_count > 0 and release_ticks[index] < 0:
+				release_ticks[index] = tick
+	_check(release_ticks[0] >= 0 and release_ticks[0] == release_ticks[1] and release_ticks[1] == release_ticks[2],
+		"all three pieces release the command wave on the same tick")
+	if not OS.get_environment("PSZ_BOSS_SCREENSHOTS").is_empty() and DisplayServer.get_name() != "headless":
+		await get_tree().create_timer(0.4).timeout
+		await _snapshot("trinity_board_wave")
+	for piece in boss.pieces: piece.clear_deliveries()
+	await get_tree().physics_frame
+	boss.target.current_state = boss.target.PlayerState.IDLE
+	GameState.set_hp(GameState.max_hp)
+
+
+func _wave_contact_checks(boss: MotherTrinityBoss) -> void:
+	var player := boss.target
+	GameState.set_hp(GameState.max_hp)
+	player.current_state = player.PlayerState.DODGING
+	player.dodge_timer = 0.0
+	var budget: Dictionary = {}
+	for index in 3:
+		var wave := MotherWave.new()
+		wave.target = player
+		wave.damage = 10
+		wave.hit_budget = budget
+		boss.get_parent().add_child(wave)
+		wave.global_position = player.global_position - Vector3.RIGHT
+		wave._physics_process(0.2)
+		wave.queue_free()
+	_check(GameState.hp == GameState.max_hp, "synchronized waves respect dodge immunity")
+	player.current_state = player.PlayerState.IDLE
+	player._recovery_left = 0.0
+	budget = {}
+	for index in 3:
+		var wave := MotherWave.new()
+		wave.target = player
+		wave.damage = 10
+		wave.hit_budget = budget
+		boss.get_parent().add_child(wave)
+		wave.global_position = player.global_position - Vector3.RIGHT
+		wave._physics_process(0.2)
+		wave.queue_free()
+	_check(GameState.hp == GameState.max_hp - 10, "overlapping command waves share one damage resolution")
 	GameState.set_hp(GameState.max_hp)

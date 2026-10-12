@@ -1,7 +1,7 @@
 {
   "questId": "debug_boss_mother_trinity",
   "questName": "DEBUG: Mother Trinity",
-  "areaId": "shrine",
+  "areaId": "dark",
   "sections": [
     {
       "type": "boss",

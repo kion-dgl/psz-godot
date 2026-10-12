@@ -209,8 +209,9 @@ running with a display. Use an isolated `XDG_DATA_HOME` for test saves.
 
 This PR is a first playable port, **not 1:1 boss parity**. The three procedural
 piece markers are deliberate placeholders: the viewer has original koma meshes,
-but they are absent from the distributed game pack. Piece board movement,
-attacks, reinforcements, break budgets, exact attack selection, Falz subobjects,
+but they are absent from the distributed game pack. The authored grid movement, spin/attack cycles, synchronized waves and second-loss
+cover break now make the opening phase playable; exact retail tactics,
+reinforcements, break budgets, attack selection, Falz subobjects,
 projectile/beam shapes and trajectories, multiplayer targeting, root motion,
 looping sounds and effects still need ports. Kind-1 attack shapes currently use
 an approximate planar box; incoming body geometry is also provisional.
