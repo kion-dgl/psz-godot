@@ -46,8 +46,12 @@ func advance(delta: float) -> void:
 
 func _tick() -> void:
 	if _pending_finish:
+		var carry := _fraction
 		cancel()
 		finished.emit()
+		# A controller may synchronously begin its next action from finished.
+		# Keep unconsumed catch-up ticks instead of losing time at that boundary.
+		_fraction = carry
 		return
 	var descriptor: Dictionary = action.stages[stage]
 	var end := (int(descriptor.clip_frames) - 1) * 4096

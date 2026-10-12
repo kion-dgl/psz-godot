@@ -5,6 +5,7 @@ static func run(t: Node) -> void:
 	_falz(t)
 	_pieces(t)
 	_timeline(t)
+	_catch_up(t)
 
 static func _falz(t: Node) -> void:
 	var rules := BossPhaseRules.FalzDamage.new()
@@ -63,3 +64,15 @@ static func _timeline(t: Node) -> void:
 	for tick in 120: clock.advance(1.0/30.0)
 	t.assert_eq(cycles,[1,2,3,4],"explicit Falz charge budget exits looping stage")
 	t.assert_true(not clock.running,"finite loop budget cannot hang attack sequence")
+
+static func _catch_up(t: Node) -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/boss_behavior_contract.json"))
+	var actions: Array = data.catalogs.boss_mother.actions
+	var clock := BossActionClock.new()
+	var on_finished := func(): clock.begin(actions[8])
+	clock.finished.connect(on_finished)
+	clock.begin(actions[2])
+	clock.advance(5.0) # 150 updates: reaction 61, then 89 laser updates.
+	t.assert_eq(clock.stage,2,"catch-up crosses both laser windup stages")
+	t.assert_eq(clock.frame_q12,4 * 4096,"catch-up preserves elapsed time across action change")
+	clock.finished.disconnect(on_finished)
