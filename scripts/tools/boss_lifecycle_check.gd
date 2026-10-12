@@ -24,7 +24,7 @@ func _run() -> void:
 		await get_tree().create_timer(0.1).timeout
 		var player := get_tree().get_first_node_in_group("player") as Node3D
 		var field = get_tree().current_scene
-		_check(field._map_root != null and boss.current_hp == boss._max_hp, "attempt %d starts fresh boss HP" % attempt)
+		_check(field._map_root != null and boss.current_hp == boss.encounter_max_hp, "attempt %d starts fresh boss HP" % attempt)
 		_check(field._field_hud._boss_bar != null and field._field_hud._boss_bar.visible, "boss HUD visible on entry/retry")
 		boss.set_physics_process(false)
 		player.set_physics_process(false)
@@ -45,30 +45,32 @@ func _damage_guards(player: Node3D, boss: ReyburnBoss) -> void:
 	GameState.set_hp(GameState.max_hp)
 	player.current_state = player.PlayerState.DODGING
 	player.dodge_timer = 0.0
-	_check(not boss._arc_hit(6, 180, 10) and GameState.hp == GameState.max_hp, "dodged wing contact cannot request pushback")
+	boss._damage_target()
+	_check(GameState.hp == GameState.max_hp, "dodge rejects boss delivery")
 	player.current_state = player.PlayerState.IDLE
 	player._recovery_left = 1.0
-	_check(not boss._arc_hit(6, 180, 10), "recovery rejects boss contact")
+	boss._damage_target()
+	_check(GameState.hp == GameState.max_hp, "recovery rejects boss delivery")
 	player._recovery_left = 0.0
-	_check(boss._arc_hit(6, 180, 10) and GameState.hp == GameState.max_hp - 10, "unprotected boss contact damages once")
+	boss._damage_target()
+	_check(GameState.hp < GameState.max_hp, "unprotected boss delivery damages player")
 	await get_tree().physics_frame
 
 func _finish_encounter(player: Node3D, boss: ReyburnBoss, field: Node) -> void:
 	var deaths: Array[int] = []
 	boss.died.connect(func(_enemy): deaths.append(1))
-	boss._spawn_fireball(20)
-	var projectile_count := boss._projectiles.size()
-	var shots := boss._projectiles.duplicate()
+	boss._fire(0.0)
+	var projectile_count := boss._owned_shots.size()
+	var shots := boss._owned_shots.duplicate()
 	boss._die()
 	var experience: int = CharacterManager.get_active_character().experience
 	boss._die()
-	boss._attack_done = false
-	boss._apply_attack_effect()
-	boss._spawn_fireball(20)
+	boss._damage_target()
+	boss._fire(0.0)
 	_check(deaths.size() == 1 and CharacterManager.get_active_character().experience == experience, "repeat death emits/rewards once")
 	_check(field._field_hud._boss_bar != null and not field._field_hud._boss_bar.visible, "death hides boss HUD")
 	await get_tree().process_frame
-	_check(projectile_count == 1 and not is_instance_valid(shots[0]) and boss._projectiles.is_empty(), "death clears projectiles and prevents new release")
+	_check(projectile_count == 1 and not is_instance_valid(shots[0]) and boss._owned_shots.is_empty(), "death clears projectiles and prevents new release")
 	field._check_room_clear()
 	field._check_room_clear()
 	var exits: Array = field._map_root.get_children().filter(func(n): return n is Telepipe)

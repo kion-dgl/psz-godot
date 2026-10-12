@@ -1876,7 +1876,7 @@ class _GifoieSpiral extends Area3D:
 				return
 			_hit_targets.append(hurtbox.owner_node)
 			var hit_dir: Vector3 = (hurtbox.owner_node.global_position - caster.global_position).normalized()
-			hurtbox.take_hit(damage, hit_dir * knockback, accuracy, element, element_level, true, "technique")
+			hurtbox.take_hit(damage, hit_dir * knockback, accuracy, element, element_level, true, "technique", caster)
 
 
 func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -1893,7 +1893,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 	# Full damage to primary target
 	if target_enemy.hurtbox:
 		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
-		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 
 	# Reduced damage to nearby enemies
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -1904,7 +1904,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 		var dist: float = enemy.global_position.distance_to(explosion_pos)
 		if dist <= explosion_radius and enemy.hurtbox:
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
-			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 
 	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
 
@@ -1973,7 +1973,7 @@ func _spawn_zonde(damage: int, kb: float) -> void:
 		return
 	if target_enemy.hurtbox:
 		var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		target_enemy.hurtbox.take_hit(damage, forward * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+		target_enemy.hurtbox.take_hit(damage, forward * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 	_spawn_zonde_visual(target_enemy.global_position)
 
 
@@ -2019,7 +2019,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 	# Hit primary target
 	if primary.hurtbox:
 		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		primary.hurtbox.take_hit(damage, fwd * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+		primary.hurtbox.take_hit(damage, fwd * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 	_spawn_zonde_visual(primary.global_position)
 
 	# Chain from the last hit enemy to the nearest unhit enemy
@@ -2042,7 +2042,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 		if best_enemy == null:
 			break
 		var chain_dir: Vector3 = (best_enemy.global_position - last_hit.global_position).normalized()
-		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 		_spawn_zonde_visual(best_enemy.global_position)
 		hit_enemies.append(best_enemy)
 		last_hit = best_enemy
@@ -2054,7 +2054,7 @@ func _spawn_razonde(damage: int, kb: float) -> void:
 	for enemy in nearby:
 		if enemy.hurtbox:
 			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique")
+			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 		_spawn_zonde_visual(enemy.global_position)
 	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
 
@@ -2819,6 +2819,8 @@ func _execute_attack_hit() -> void:
 		if _attack_hit_targets.has(target_id):
 			continue
 		var hb = enemy.get("hurtbox")
+		if enemy.has_method("hurtbox_in_cone"):
+			hb = enemy.hurtbox_in_cone(global_position+Vector3.UP,player_rotation,config).get("hurtbox")
 		if hb == null or not is_instance_valid(hb):
 			continue
 		# Consume contact before callbacks: evasion/immunity cannot re-roll.
@@ -2832,9 +2834,9 @@ func _execute_attack_hit() -> void:
 				var packet := atk.duplicate(true)
 				packet["element"] = element
 				packet["element_level"] = element_level
-				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)))
+				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
 			else:
-				hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level)
+				hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level, true, "physical", self)
 	if _attack_hit_targets.size() >= target_cap:
 		_attack_hit_done = true
 
@@ -3217,3 +3219,7 @@ func _try_auto_revive() -> bool:
 
 func can_photon_blast() -> bool:
 	return not _is_defeated and _recovery_left <= 0.0 and _freeze.remaining <= 0.0 and not _ailments.blocks_attack() and GameState.hp > 0 and current_state in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING] and SessionManager.get_location() == "field" and not PsoStartMenu.is_open() and SceneManager._overlay_stack.is_empty()
+
+
+func apply_octo_poison(tier: int) -> void:
+	_ailments.apply_octo_poison(self,tier)

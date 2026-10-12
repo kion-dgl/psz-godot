@@ -34,6 +34,10 @@ static func scan_enemies(enemies: Array, origin: Vector3, yaw: float, config: Di
 			continue
 		if not enemy.get("is_alive"):
 			continue
+		if enemy.has_method("hurtbox_in_cone"):
+			var part: Dictionary = enemy.hurtbox_in_cone(origin,yaw,config)
+			if not part.is_empty(): found.append({"enemy":enemy,"dist":part.dist})
+			continue
 		var radius: float = 0.5
 		var height: float = 1.5
 		var ed = enemy.get("enemy_data")

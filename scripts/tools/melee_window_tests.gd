@@ -23,7 +23,7 @@ class SwingPlayer extends "res://scripts/3d/player/player.gd":
 class Receiver extends Node:
 	var contacts := 0
 	var elements: Array[String] = []
-	func take_hit(_damage: int, _knockback: Vector3, _accuracy: int, element: String, _level: int) -> void:
+	func take_hit(_damage: int, _knockback: Vector3, _accuracy: int, element: String, _level: int, _credit: bool = false, _kind: String = "physical", _source: Node3D = null) -> void:
 		contacts += 1
 		elements.append(element)
 

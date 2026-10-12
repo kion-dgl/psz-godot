@@ -107,6 +107,8 @@ func _trinity(boss: MotherTrinityBoss) -> void:
 	var contacts := boss.get_world_3d().direct_space_state.intersect_shape(query)
 	_check(contacts.any(func(hit: Dictionary): return hit.collider == boss.hurtbox),
 		"platform-height melee volume overlaps lowered head hurtbox")
+	_check(boss.is_in_group("enemies") and not boss.hurtbox_in_cone(head+Vector3(0,0,2),PI,{}).is_empty(),
+		"shared multipart scanner retains exposed Trinity head receiver")
 
 func _finish(boss: DescriptorBoss, field: Node) -> void:
 	var falz_tail: Node3D = boss.tail if boss is DarkFalzBoss and is_instance_valid(boss.tail) else null
@@ -139,6 +141,10 @@ func _finish(boss: DescriptorBoss, field: Node) -> void:
 	_check(exits.size() == 1,"exactly one return warp after encounter clear")
 
 func _contact_checks(boss: DescriptorBoss, player: Node3D) -> void:
+	if boss is DarkFalzBoss:
+		var receiver := boss.hurtbox.get_child(0) as CollisionShape3D
+		_check(not boss.hurtbox_in_cone(receiver.global_position+Vector3(0,0,2),PI,{}).is_empty(),
+			"shared multipart scanner retains Falz capsule receiver")
 	var old_attack: int = boss.enemy_data.attack_base
 	var old_stats: bool = boss.enemy_data.original_attack_stats
 	boss.enemy_data.attack_base = 10

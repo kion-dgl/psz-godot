@@ -142,10 +142,9 @@ static func _death_once(t: Node) -> void:
 	enemy.queue_free()
 	var boss := ReyburnBoss.new()
 	boss.is_alive = false
-	boss._attack_done = false
-	boss._apply_attack_effect()
-	boss._spawn_fireball(10)
-	t.assert_true(not boss._attack_done and boss._projectiles.is_empty(), "dead boss cannot resolve or release queued attack")
+	boss._damage_target()
+	boss._fire(0.0)
+	t.assert_true(boss._owned_shots.is_empty(), "dead boss cannot resolve or release queued attack")
 	boss.free()
 
 

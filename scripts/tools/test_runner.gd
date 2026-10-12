@@ -7,6 +7,7 @@ var _fail := 0
 
 
 func _ready() -> void:
+	preload("res://scripts/tools/reyburn_octo_tests.gd").run(self)
 
 	print("\n══════════════════════════════════")
 	print("  PSZ-GODOT HEADLESS TEST RUNNER")

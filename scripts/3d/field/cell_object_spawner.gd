@@ -851,7 +851,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 		return
 
 	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
-	if edata and enemy_id in ["reyburn", "dark_falz", "mother_trinity"]:
+	if edata and enemy_id in ["reyburn", "octo_diablo", "dark_falz", "mother_trinity"]:
 		if _spawn_boss(pos, enemy_id, edata):
 			return
 
@@ -899,7 +899,9 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 	enemy.collision_layer = 8
 	enemy.collision_mask = 1
 	_c._map_root.add_child(enemy)
-	enemy.position = _place_on_floor(pos)
+	# Octo deliberately occupies the water opening. Generic floor repair
+	# moves (0,0) twelve units onto the planks and corrupts every phase anchor.
+	enemy.position = pos if enemy_id == "octo_diablo" else _place_on_floor(pos)
 	_c._room_enemies.append(enemy)
 	_track_on_minimap(enemy)
 	var spawn_id := enemy_id
@@ -914,6 +916,7 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
 	var scripts := {
 		"reyburn": "res://scripts/3d/enemies/reyburn_boss.gd",
+		"octo_diablo": "res://scripts/3d/enemies/octo_diablo_boss.gd",
 		"dark_falz": "res://scripts/3d/enemies/dark_falz_boss.gd",
 		"mother_trinity": "res://scripts/3d/enemies/mother_trinity_boss.gd",
 	}

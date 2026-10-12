@@ -1,535 +1,386 @@
-class_name ReyburnBoss extends EnemyBase
-## Reyburn — the Gurhacia Valley dragon boss (psz-re boss_dragon / s01z).
-##
-## Authored prototype, not original-game AI parity. The emulator-backed findings
-## in docs/boss-behavior-analysis.md supersede this controller's timing and phase
-## assumptions. BossActionEvents and BossDamageRules are tested porting helpers;
-## the sequence scheduler and gameplay integration remain to be implemented.
-##
-## A phase-driven boss that replaces the plain "walk up and melee" behaviour a
-## generic EnemyBase would give it. Behaviour is data-driven from
-## data/boss_arenas.json (the authored kit, clips verified against the z_001
-## animation set in data/re_reference/boss_reyburn.json):
-##
-##   * ground phase — walks the arena (wlk1) with the full melee + breath kit:
-##     bite / rush-bite charge / tail swipes / wing-flap knockback / war-cry AoE
-##     / a three-shot fireball volley. Opens with the tht roar.
-##   * flight phase — periodically takes off, repositions, and drops a land-slam
-##     AoE where it comes down.
-##   * enrage — below 35% HP it speeds up, its cooldowns shorten, it growls, and
-##     a red glow marks the shift (a modifier overlay, not a separate moveset).
-##
-## HP (1650), the arena and the model come from data/enemies/reyburn.tres. This
-## reuses EnemyBase for HP/damage/death/animation resolution; the phase + attack
-## logic lives here (the sanctioned bespoke-subclass pattern — see poison_lily.gd).
+class_name ReyburnBoss extends DescriptorBoss
+## Recovered ov20 sequences and damage history. Motion adapters are documented
+## in /states/reyburn-octo; no fixed-percent enrage or percent-of-clip damage.
 
-const KIT_PATH := "res://data/boss_arenas.json"
-const ENRAGE_FRAC := 0.35
-const FLIGHT_HP_FRAC := 0.5 # Remake threshold; original entry condition is unresolved.
+var entrance := ReyburnEntrance.new()
+var pacing := ReyburnPacing.new()
+var flight := ReyburnFlight.new()
+var ground_motion := ReyburnMotion.new()
+var approach := ReyburnApproach.new()
 
-enum S { INTRO, GROUND, TELEGRAPH, ATTACK, LOAF, FLIGHT_OUT, FLIGHT_HOVER, FLIGHT_SLAM, DEAD }
-
-var _s: S = S.INTRO
-var _t: float = 0.0                 # generic per-state timer
-var _cooldown: float = 0.0
-var _flight_clock: float = 0.0
-var _enraged := false
-var _max_hp: int = 1650
-
-# tuning pulled from boss_arenas.json (defaults are the reyburn values)
-var _move_speed := 4.0
-var _turn_speed := deg_to_rad(120.0)
-var _attack_base := 12
-var _atk_cooldown := 2.5
-var _flight_interval := 22.0
-var _hover_height := 8.0
-var _fly_speed_mult := 2.5
-var _loaf_min := 2.5
-var _loaf_max := 4.5
-var _enrage_speed_mult := 1.3
-var _enrage_cd_mult := 0.6
-
-var _ground_attacks: Array = []
-var _flight_attacks: Array = []
-var _cur: Dictionary = {}           # attack currently telegraphing/executing
-var _attack_done := false           # damage already applied this swing
-var _fly_target: Vector3 = Vector3.ZERO
-var _glow: OmniLight3D = null
-var _projectiles: Array[Area3D] = []
-
+var controller: ReyburnController
+var sequence_id := -1
+var state_field := ""
+var request: Dictionary = {}
+var _states: Array = []
+var _state_ticks := 0
+var _state_limit := 0
+var _breath_cursor := 0
+var _breath_type := 0
+var _shots_left := 0
+var _shot_wait := -1
+var _ground_height := 0.0
+var _motion_start := Vector3.ZERO
+var _motion_end := Vector3.ZERO
+var _jump_ticks := -1
+var _tail_heading := 0.0
+var _part_broken := false
+var _bite_pending := false
+var _bite_complete := false
+var _skeleton: Skeleton3D
+var _home := Vector3.ZERO
+var _initialized_position := false
+var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	super._ready()
-	_max_hp = enemy_data.hp_base if enemy_data else 1650
-	_ground_y = global_position.y
-	_load_kit()
-	if model:
-		model.scale = Vector3.ONE * 1.0
-	_s = S.INTRO
-	_t = 1.2
-	_play("tht")                    # war-cry opener
+	set_collision_layer_value(7,true)
+	# Keep the solid torso full-width down to the floor rather than tapering
+	# to a point at the bottom of the large capsule.
+	for child in get_children():
+		if child is CollisionShape3D:
+			var torso := CylinderShape3D.new()
+			torso.radius = enemy_data.collision_radius
+			torso.height = enemy_data.collision_height
+			child.shape = torso
+			child.position.y = torso.height/2.0
+	rng.randomize()
+	var tier: int = {"normal":0,"hard":1,"super-hard":2}.get(SessionManager.get_session().get("difficulty","normal"),0)
+	controller = ReyburnController.new(int(catalog.stats[tier][0]),encounter_max_hp)
+	_skeleton = NodeUtils.first_of_type(model,"Skeleton3D") as Skeleton3D if model else null
+	_set_exposure(false)
 
-
-# Faithful multi-part hitbox rig (psz-re Q5 / sys.enemy-part-joints + the shape
-# table): Reyburn has FOUR damage parts, not one capsule — a body sphere in
-# entity space plus spheres riding the head bone (atama, joint 12, ×2) and the
-# tail (sippo_02, joint 18). Each is a measured sphere and, when bone-attached,
-# moves with the animation, so the player hits the dragon where it's seen. A hit
-# on any part routes through Hurtbox → _on_hit_received (one HP pool at +0x34).
-const _HIT_PARTS := [
-	{"r": 3.5, "bone": "", "off": Vector3.ZERO},              # part 0: body (joint 0xFF)
-	{"r": 4.0, "bone": "atama", "off": Vector3(0, -0.5, 0)},  # part 1: head
-	{"r": 0.75, "bone": "atama", "off": Vector3(0, -0.5, 0)}, # part 2: head
-	{"r": 1.0, "bone": "sippo_02", "off": Vector3.ZERO},      # part 3: tail
-]
-
-
-func _setup_hurtbox() -> void:
-	var skel: Skeleton3D = null
-	if model:
-		skel = NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
-	if skel:
-		var names: Array = []
-		for b in skel.get_bone_count():
-			names.append(skel.get_bone_name(b))
-		print("[ReyburnBoss] skeleton %d bones: %s" % [skel.get_bone_count(), ", ".join(names)])
-	else:
-		print("[ReyburnBoss] no skeleton on model — hit parts placed entity-local")
-	for i in _HIT_PARTS.size():
-		var p: Dictionary = _HIT_PARTS[i]
-		var hb := Hurtbox.new()
-		hb.name = "Hurtbox_part%d" % i
-		hb.owner_node = self
-		var cs := CollisionShape3D.new()
-		var sph := SphereShape3D.new()
-		sph.radius = float(p["r"])
-		cs.shape = sph
-		cs.position = p["off"]
-		hb.add_child(cs)
-		var parent: Node = self
-		var bone: String = str(p["bone"])
-		if not bone.is_empty() and skel and skel.find_bone(bone) != -1:
-			var att := BoneAttachment3D.new()
-			att.name = "Attach_%s_%d" % [bone, i]
-			skel.add_child(att)
-			att.bone_name = bone
-			parent = att
-		elif not bone.is_empty():
-			print("[ReyburnBoss] bone '%s' not in skeleton — part %d entity-local" % [bone, i])
-		parent.add_child(hb)
-		if i == 0:
-			hurtbox = hb  # base/projectile code reads a single .hurtbox
-
-
-func _load_kit() -> void:
-	if not ResourceLoader.exists(KIT_PATH) and not FileAccess.file_exists(KIT_PATH):
-		return
-	var f := FileAccess.open(KIT_PATH, FileAccess.READ)
-	if not f: return
-	var data: Variant = JSON.parse_string(f.get_as_text())
-	if typeof(data) != TYPE_DICTIONARY: return
-	var bosses: Dictionary = data.get("bosses", data)
-	var b: Dictionary = bosses.get("reyburn", {})
-	if b.is_empty(): return
-	var st: Dictionary = b.get("stats", {})
-	_move_speed = float(st.get("move_speed", _move_speed))
-	_turn_speed = deg_to_rad(float(st.get("turn_speed_deg", 120.0)))
-	_attack_base = int(st.get("attack_base", _attack_base))
-	_atk_cooldown = float(st.get("attack_cooldown", _atk_cooldown))
-	var fsm: Dictionary = b.get("fsm", {})
-	_flight_interval = float(fsm.get("flight_interval", _flight_interval))
-	_hover_height = float(fsm.get("hover_height", _hover_height))
-	_fly_speed_mult = float(fsm.get("fly_speed_mult", _fly_speed_mult))
-	_loaf_min = float(fsm.get("loaf_duration_min", _loaf_min))
-	_loaf_max = float(fsm.get("loaf_duration_max", _loaf_max))
-	for ph in b.get("phases", []):
-		if ph.get("id") == "enrage":
-			_enrage_speed_mult = float(ph.get("speed_mult", _enrage_speed_mult))
-			_enrage_cd_mult = float(ph.get("cooldown_mult", _enrage_cd_mult))
-	for a in b.get("attacks", []):
-		var phases: Array = a.get("phases", ["ground"])
-		if "flight" in phases: _flight_attacks.append(a)
-		else: _ground_attacks.append(a)
-
-
-# ---- main loop --------------------------------------------------------------
 func _physics_process(delta: float) -> void:
-	if not is_alive or _s == S.DEAD:
+	if entrance != null:
+		if dormant: return
+		if entrance.tick(self, delta):
+			entrance = null
+			controller.finish(0)
+			_states.clear()
+			_enter_next_state()
 		return
-	_cooldown = maxf(0.0, _cooldown - delta)
-	_flight_clock += delta
-	if not _enraged and current_hp <= int(_max_hp * ENRAGE_FRAC):
-		_enter_enrage()
+	if is_alive and not dormant: pacing.check_target(self)
+	super._physics_process(delta)
 
-	if not target or not is_instance_valid(target):
-		target = _find_player()
-		if not target:
-			return
-	var dist: float = _planar_dist(target.global_position)
+func _accepts_damage() -> bool:
+	return entrance == null
 
-	match _s:
-		S.INTRO: _tick_intro(delta)
-		S.GROUND: _tick_ground(delta, dist)
-		S.TELEGRAPH: _tick_telegraph(delta)
-		S.ATTACK: _tick_attack(delta)
-		S.LOAF: _tick_loaf(delta)
-		S.FLIGHT_OUT: _tick_flight_out(delta)
-		S.FLIGHT_HOVER: _tick_flight_hover(delta)
-		S.FLIGHT_SLAM: _tick_flight_slam(delta)
-
-
-func _tick_intro(delta: float) -> void:
-	_apply_gravity(delta)
-	move_and_slide()
-	_t -= delta
-	if _t <= 0.0:
-		_s = S.GROUND
-
-
-func _tick_ground(delta: float, dist: float) -> void:
-	_face(target.global_position, delta)
-	_apply_gravity(delta)
-	# Flight is a LOW-HEALTH behaviour, not a from-full timer. psz-re (Q5/B2)
-	# measured Reyburn grounded from 100% down to 86% with no takeoff observed,
-	# and the exact threshold is unconfirmed — so a dragon flying off every 22s
-	# from full HP was invented jank. Gate it below half health until the real
-	# trigger is traced; keep the timer so it still paces within that phase.
-	if _flight_attacks.size() > 0 and current_hp < _max_hp * FLIGHT_HP_FRAC \
-			and _flight_clock >= _flight_interval and _cooldown <= 0.0:
-		_begin_flight()
-	elif _cooldown <= 0.0 and _pick_ground_attack(dist):
-		pass                                       # _pick_ground_attack sets _s = TELEGRAPH
-	else:
-		_walk_toward(target.global_position, delta)
-	move_and_slide()
-
-
-func _tick_telegraph(delta: float) -> void:
-	_face(target.global_position, delta)
-	velocity = Vector3.ZERO
-	_apply_gravity(delta)
-	move_and_slide()
-	_t -= delta
-	if _t <= 0.0:
-		_execute_attack()
-
-
-func _tick_attack(delta: float) -> void:
-	_apply_gravity(delta)
-	# charge attacks keep lunging forward during the swing
-	if _cur.get("kind") == "charge" and not _attack_done:
-		velocity.x = -sin(rotation.y) * _move_speed * _speed_mult() * 1.8
-		velocity.z = -cos(rotation.y) * _move_speed * _speed_mult() * 1.8
-	else:
-		velocity.x = 0; velocity.z = 0
-	move_and_slide()
-	_t -= delta
-	if not _attack_done and _t <= _cur.get("_hit_at", 0.0):
-		_apply_attack_effect()
-	if _t <= 0.0:
-		_enter_loaf()
-
-
-func _tick_loaf(delta: float) -> void:
-	_face(target.global_position, delta)
-	velocity = Vector3.ZERO
-	_apply_gravity(delta)
-	move_and_slide()
-	_t -= delta
-	if _t <= 0.0:
-		_s = S.GROUND
-
-
-func _tick_flight_out(delta: float) -> void:
-	# rise to hover height and move to the reposition point
-	global_position.y = lerpf(global_position.y, _ground_y + _hover_height, delta * 2.0)
-	var to := (_fly_target - global_position)
-	to.y = 0
-	if to.length() > 1.0:
-		var v := to.normalized() * _move_speed * _fly_speed_mult
-		global_position.x += v.x * delta
-		global_position.z += v.z * delta
-	_t -= delta
-	if _t <= 0.0:
-		_s = S.FLIGHT_HOVER
-		_t = 1.0
-		_play("fly")
-
-
-func _tick_flight_hover(delta: float) -> void:
-	_face(target.global_position, delta)
-	_t -= delta
-	if _t <= 0.0:
-		# come down onto the player's position for the slam
-		_fly_target = target.global_position
-		_s = S.FLIGHT_SLAM
-		_t = 0.8
-		_attack_done = false
-		_play("gld2claw")
-
-
-func _tick_flight_slam(delta: float) -> void:
-	var tp := _fly_target; tp.y = _ground_y
-	global_position = global_position.lerp(tp, delta * 6.0)
-	_t -= delta
-	if not _attack_done and global_position.y <= _ground_y + 0.6:
-		_attack_done = true
-		global_position.y = _ground_y
-		_aoe_burst(6.0, 180.0, int(_attack_base * 1.5))
-	if _t <= 0.0:
-		global_position.y = _ground_y
-		_flight_clock = 0.0
-		_play("claw2wat")
-		_enter_loaf()
-
-
-# ---- attack selection & execution ------------------------------------------
-func _pick_ground_attack(dist: float) -> bool:
-	var choices: Array = []
-	for a in _ground_attacks:
-		var lo := float(a.get("min_range", 0.0))
-		var hi := float(a.get("max_range", 6.0))
-		if dist >= lo and dist <= hi:
-			var w := float(a.get("weight", 1.0))
-			choices.append([a, w])
-	if choices.is_empty():
-		return false
-	var total := 0.0
-	for c in choices: total += c[1]
-	var roll := randf() * total
-	var chosen: Dictionary = choices[0][0]
-	for c in choices:
-		roll -= c[1]
-		if roll < 0.0:
-			chosen = c[0]; break
-	_begin_attack(chosen)
-	return true
-
-
-func _begin_attack(a: Dictionary) -> void:
-	_cur = a.duplicate(true)
-	_s = S.TELEGRAPH
-	# telegraph is a short wind-up before the clip's damage frame
-	_t = 0.35
-	_attack_done = false
-	# play the first clip of the chain (or the attack clip)
-	var chain: Array = a.get("chain", [])
-	_play(chain[0] if chain.size() > 0 else a.get("clip", "atkh1"))
-
-
-func _execute_attack() -> void:
-	# start the swing proper: play the striking clip and set its length
-	var clip: String = _cur.get("clip", "atkh1")
-	_play(clip, true)
-	var length := 0.8
-	if animation_player:
-		var full := _find_animation(clip)
-		if full != "" and animation_player.has_animation(full):
-			length = maxf(0.4, animation_player.get_animation(full).length)
-	_s = S.ATTACK
-	_t = length
-	_cur["_hit_at"] = length * 0.45         # apply damage ~55% through the clip
-	_attack_done = false
-
-
-func _apply_attack_effect() -> void:
-	if not is_alive or _attack_done:
-		return
-	_attack_done = true
-	var kind: String = _cur.get("kind", "melee_arc")
-	var dmg := int(_attack_base * float(_cur.get("damage_mult", 1.0)))
-	match kind:
-		"projectile", "lob":
-			var n := int(_cur.get("split", _cur.get("lp_loops", 1)))
-			for i in maxi(1, n):
-				_spawn_fireball(dmg)
-		"aoe_burst":
-			_aoe_burst(float(_cur.get("hit_reach", 6.0)), float(_cur.get("hit_half_angle_deg", 180.0)), dmg)
-		_:  # melee_arc, charge
-			var reach := float(_cur.get("max_range", 4.0))
-			var half := float(_cur.get("hit_half_angle_deg", 60.0))
-			if _arc_hit(reach, half, dmg) and _cur.has("knockback"):
-				_knockback_player(float(_cur.get("knockback", 0.0)))
-
-
-func _enter_loaf() -> void:
-	_s = S.LOAF
-	_t = randf_range(_loaf_min, _loaf_max)
-	_cooldown = _atk_cooldown * (_enrage_cd_mult if _enraged else 1.0)
-	_play("wat")
-
-
-func _begin_flight() -> void:
-	_s = S.FLIGHT_OUT
-	_t = 1.0
-	# pick a reposition point on the far side of the arena from the player
-	var away := (global_position - target.global_position)
-	away.y = 0
-	if away.length() < 1.0:
-		away = Vector3(1, 0, 0)
-	_fly_target = target.global_position + away.normalized() * 10.0
-	_play("flst")                               # takeoff
-
-
-# ---- damage helpers ---------------------------------------------------------
-func _arc_hit(reach: float, half_angle_deg: float, dmg: int) -> bool:
-	if not is_alive or not target or not is_instance_valid(target): return false
-	if target.has_method("can_take_hit") and not target.can_take_hit(): return false
-	var to := target.global_position - global_position
-	to.y = 0
-	if to.length() > reach: return false
-	var facing := Vector3(-sin(rotation.y), 0, -cos(rotation.y))
-	if to.length() > 0.01 and rad_to_deg(facing.angle_to(to.normalized())) > half_angle_deg:
-		return false
-	if target.has_method("take_damage"):
-		target.take_damage(dmg)
-	return true
-
-
-func _aoe_burst(radius: float, half_angle_deg: float, dmg: int) -> void:
-	# radial burst around the dragon; half_angle 180 = full circle
-	if not target or not is_instance_valid(target): return
-	var to := target.global_position - global_position
-	to.y = 0
-	if to.length() <= radius:
-		if half_angle_deg >= 179.0:
-			if target.has_method("take_damage"): target.take_damage(dmg)
-		else:
-			_arc_hit(radius, half_angle_deg, dmg)
-	_spawn_shockwave(radius)
-
-
-func _knockback_player(strength: float) -> void:
-	if not target or not is_instance_valid(target): return
-	var dir := Vector3(-sin(rotation.y), 0, -cos(rotation.y))
-	if target.has_method("apply_knockback"):
-		target.apply_knockback(dir * strength)
-	elif "velocity" in target:
-		target.velocity += dir * strength
-
-
-func _spawn_fireball(dmg: int) -> void:
-	if not is_alive: return
-	if not target or not is_instance_valid(target): return
-	var proj := Area3D.new()
-	proj.collision_layer = 0
-	proj.collision_mask = 2
-	proj.monitoring = true
-	var col := CollisionShape3D.new()
-	var sph := SphereShape3D.new(); sph.radius = 0.5
-	col.shape = sph
-	proj.add_child(col)
-	var mesh := MeshInstance3D.new()
-	var sm := SphereMesh.new(); sm.radius = 0.35; sm.height = 0.7
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.5, 0.1)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.4, 0.05)
-	mat.emission_energy_multiplier = 3.0
-	sm.material = mat
-	mesh.mesh = sm
-	proj.add_child(mesh)
-	proj.set_meta("hit", false)
-	proj.body_entered.connect(func(body: Node3D) -> void:
-		if not is_alive or proj.get_meta("hit"): return
-		if body.is_in_group("player") and body.has_method("take_damage"):
-			proj.set_meta("hit", true)
-			body.take_damage(dmg)
-			proj.queue_free())
-	_projectiles = _projectiles.filter(is_instance_valid)
-	_projectiles.append(proj)
-	get_parent().add_child(proj)
-	var start := global_position + Vector3(0, 1.6, 0)
-	proj.global_position = start
-	# slight spread per shot so a volley fans out
-	var aim := (target.global_position + Vector3(0, 1, 0) - start).normalized()
-	aim = aim.rotated(Vector3.UP, randf_range(-0.18, 0.18))
-	var end := start + aim * 20.0
-	var tw := proj.create_tween()
-	tw.tween_property(proj, "global_position", end, 20.0 / 12.0)
-	tw.tween_callback(proj.queue_free)
-
-
-func _spawn_shockwave(radius: float) -> void:
-	EnemyLob.spawn_ring(get_parent(),
-		Vector3(global_position.x, _ground_y, global_position.z), radius)
-
-
-# ---- phase / movement helpers ----------------------------------------------
-func _enter_enrage() -> void:
-	_enraged = true
-	_play("tht")                                # growl
-	_glow = OmniLight3D.new()
-	_glow.light_color = Color(1.0, 0.2, 0.1)
-	_glow.light_energy = 2.5
-	_glow.omni_range = 8.0
-	_glow.position = Vector3(0, 2.0, 0)
-	add_child(_glow)
-
-
-func _speed_mult() -> float:
-	return _enrage_speed_mult if _enraged else 1.0
-
-
-func _walk_toward(pos: Vector3, _delta: float) -> void:
-	var to := pos - global_position
-	to.y = 0
-	if to.length() <= 3.5:
-		velocity.x = 0; velocity.z = 0
-		return
-	var v := to.normalized() * _move_speed * _speed_mult()
-	velocity.x = v.x
-	velocity.z = v.z
-	_play("wlk1")
-
-
-func _face(pos: Vector3, delta: float) -> void:
-	var to := pos - global_position
-	to.y = 0
-	if to.length() < 0.01: return
-	var want := atan2(to.x, to.z)
-	rotation.y = rotate_toward(rotation.y, want, _turn_speed * delta)
-	if model: model.rotation.y = 0
-
-
-func _apply_gravity(delta: float) -> void:
-	if not is_on_floor():
-		velocity.y -= 24.0 * delta
-	elif velocity.y < 0.0:
-		velocity.y = 0.0
-
-
-func _planar_dist(pos: Vector3) -> float:
-	var a := global_position; a.y = 0
-	var b := pos; b.y = 0
-	return a.distance_to(b)
-
-
-func _play(short: String, force: bool = true) -> void:
-	_play_animation(short, force)
-
-
-# ---- base overrides ---------------------------------------------------------
-func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
-	# Take damage/HP via the base, but never let it drop us into the base HURT
-	# state machine — the boss drives its own states. Re-assert our state after.
-	var prev := _s
-	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level, attack_kind)
-	if is_alive and _s != S.DEAD:
-		# base may have set current_state = HURT; ignore it, keep the boss FSM
-		if prev in [S.INTRO]:
-			_s = S.GROUND
-		else:
-			_s = prev
-
+func _combat_event(record: Dictionary) -> void:
+	# Walking/running is repositioning, not a repeatable full-strength attack.
+	if action_id in [5,6]: return
+	if entrance == null and not pacing.target_defeated(target): super._combat_event(record)
 
 func _die() -> void:
-	if not is_alive:
-		return
-	for projectile in _projectiles:
-		if is_instance_valid(projectile): projectile.queue_free()
-	_projectiles.clear()
-	_s = S.DEAD
-	if _glow and is_instance_valid(_glow):
-		_glow.queue_free()
+	if entrance != null:
+		entrance.finish(self)
+		entrance = null
 	super._die()
+
+func _exit_tree() -> void:
+	if entrance != null: entrance.finish(self)
+	super._exit_tree()
+
+func _setup_hurtbox() -> void:
+	var skeleton := NodeUtils.first_of_type(model,"Skeleton3D") as Skeleton3D if model else null
+	var parts := [[3.5,"",Vector3.ZERO],[4.0,"atama",Vector3(0,-0.5,0)],
+		[0.75,"atama",Vector3(0,-0.5,0)],[1.0,"sippo_02",Vector3.ZERO]]
+	for index in parts.size():
+		var part: Array = parts[index]
+		var anchor: Node3D = self
+		if skeleton and not str(part[1]).is_empty() and skeleton.find_bone(part[1]) >= 0:
+			var attachment := BoneAttachment3D.new()
+			skeleton.add_child(attachment)
+			attachment.bone_name = part[1]
+			anchor = attachment
+		var hb := _register_part(anchor,float(part[0]),index,part[2])
+		if index == 0: hurtbox = hb
+
+func _after_damage_applied(amount: int) -> void:
+	var bearing := 0.0
+	var known := is_instance_valid(hit_source) and hit_source != self
+	if known:
+		var direction := hit_source.global_position - global_position
+		bearing = wrapf(atan2(direction.x,direction.z) - rotation.y,-PI,PI)
+	if controller.hit(amount,hit_part,bearing,known): _part_broken = true
+
+func start_request(value: Dictionary) -> void:
+	if entrance != null:
+		entrance.finish(self)
+		entrance = null
+	request = value.duplicate(true)
+	sequence_id = int(request.id)
+	_states = _reyburn_sequences[sequence_id].duplicate()
+	ground_motion.reset()
+	approach.reset()
+	if sequence_id in [9,10,11]:
+		flight.begin()
+		_states = ["0xdc"]
+		for _pass_number in rng.randi_range(2,3):
+			_states.append_array(["0xe0","0x108"])
+		if sequence_id == 10: _states.append("0xec")
+		_states.append_array(["air_return","0xe4"])
+		if sequence_id == 9: _states.append("0xe8")
+	_breath_cursor = 0
+	_enter_next_state()
+
+func _enter_next_state() -> void:
+	if _states.is_empty():
+		ground_motion.reset()
+		approach.reset()
+		pacing.completed(sequence_id)
+		controller.finish(sequence_id,int(request.get("flags",0)),sequence_id in [8,14] and controller.enhanced and rng.randi_range(0,1) == 1)
+		sequence_id = -1
+		state_field = "track"
+		_state_ticks = 0
+		play_action(4,{0:-1})
+		return
+	_sequence.clear()
+	state_field = str(_states.pop_front())
+	_state_ticks = 0
+	_state_limit = 0
+	var entries := {
+		"0xcc":_intro,"0xdc":_takeoff,"0xe0":_aerial,"0xe4":_land,"air_return":_air_return,
+		"0xe8":_claw,"0xec":_aerial_turn,"0xf0":_breath,"0xf4":_bite,
+		"0xf8":_wing,"0xfc":_roar,"0x100":_run,"0x108":_air_breath,
+		"0x10c":_turn,"0x110":_modifier,"0x114":_jump,"0x118":_tail,"0xd4":_reaction}
+	entries[state_field].call()
+
+func _controller_tick() -> void:
+	if state_field == "loaf": return
+	pacing.tick()
+	if not _initialized_position:
+		_initialized_position = true
+		_home = global_position
+		_ground_height = global_position.y
+	controller.tick()
+	_state_ticks += 1
+	if state_field == "track":
+		_track()
+	elif state_field == "0x10c":
+		if absf(_bearing()) < 0.12 or ground_motion.step(self,2.4):
+			ground_motion.reset()
+			_enter_next_state()
+		elif _state_ticks >= 240:
+			_states.clear()
+			_enter_next_state()
+	elif state_field in ["0xe0","air_return"]:
+		flight.tick(self)
+	elif state_field == "0xf0":
+		_tick_breath()
+	elif state_field == "0xf4":
+		_tick_bite()
+	elif state_field == "0x118" and not clock.running:
+		if _state_ticks >= _state_limit: _enter_next_state()
+	elif state_field == "0x114":
+		_tick_jump()
+	elif _state_limit > 0 and _state_ticks >= _state_limit:
+		_enter_next_state()
+	_tick_motion()
+
+func _track() -> void:
+	if pacing.rest_ticks > 0: return
+	if approach.active:
+		var next: Dictionary = approach.tick(self)
+		if int(next.id) >= 0: start_request(next)
+		return
+	var chosen := {"id":-1}
+	if _part_broken:
+		_part_broken = false
+		chosen = {"id":12}
+	elif controller.flight_timer <= 0:
+		chosen = {"id":(9 if controller.enhanced else 10) if controller.aerial_alternation else 11,"flags":3}
+	elif controller.fallback_timer <= 0:
+		var roll := rng.randi_range(0,3)
+		var secondary := rng.randi_range(0,1) if roll == 0 or (roll == 2 and controller.enhanced) else 0
+		chosen = controller.fallback(roll,secondary,pacing.bite_ticks <= 0)
+	else:
+		chosen = controller.priority(_distance(),_bearing(),pacing.bite_ticks <= 0)
+	if int(chosen.id) >= 0:
+		start_request(chosen)
+	else:
+		approach.begin(self)
+		var next: Dictionary = approach.tick(self)
+		if int(next.id) >= 0: start_request(next)
+
+func _intro() -> void:
+	# Intro camera/arena approach is a bounded adapter, not retail spawn motion.
+	play_sequence([7,18])
+
+func _takeoff() -> void:
+	play_action(7,{1:2})
+
+func _aerial() -> void:
+	flight.move(self)
+
+func _air_return() -> void:
+	flight.move(self,true)
+
+func _land() -> void:
+	flight.land(self)
+
+func _claw() -> void:
+	controller.head_damage = 0
+	play_sequence([20,21])
+
+func _aerial_turn() -> void:
+	play_sequence([22,23])
+
+func _breath() -> void:
+	var types: Array = request.get("types",[0])
+	var counts: Array = request.get("counts",[1])
+	_breath_type = int(types[mini(_breath_cursor,types.size()-1)])
+	_shots_left = int(counts[mini(_breath_cursor,counts.size()-1)])
+	_breath_cursor += 1
+	_shot_wait = -1
+	play_action(10)
+
+func _bite() -> void:
+	_bite_pending = false
+	_bite_complete = false
+	var actions: Array = []
+	for i in int(request.get("normal",1)): actions.append(16)
+	for i in int(request.get("advance",0)): actions.append(17)
+	actions.append(4)
+	play_sequence(actions)
+
+func _wing() -> void:
+	_state_limit = int(request.get("duration",150))
+	play_action(13,{0:-1})
+
+func _roar() -> void:
+	play_action(1)
+
+func _run() -> void:
+	_state_limit = int(request.get("duration",150))
+	play_action(6,{0:-1})
+
+func _air_breath() -> void:
+	play_action(19)
+
+func _turn() -> void:
+	play_action(5,{0:-1})
+
+func _modifier() -> void:
+	play_action(2)
+
+func _reaction() -> void:
+	play_action(3)
+
+func _jump() -> void:
+	_motion_start = global_position
+	_motion_end = global_position - global_basis.z * 12.0
+	var floor_hit := ReyburnFloor.landing(self,_motion_end)
+	_motion_end = floor_hit.get("position",global_position)
+	_jump_ticks = -1
+	play_action(7,{1:-1})
+
+func _tail() -> void:
+	_tail_heading = rotation.y + PI
+	play_action(14 if _bearing() >= 0 else 15)
+
+func _tick_breath() -> void:
+	if action_id == 11 and _state_ticks > (15 if _breath_type == 0 else 45):
+		play_action(12)
+	if _shot_wait >= 0:
+		_shot_wait -= 1
+		if _shot_wait < 0 and _shots_left > 0: _emit_breath()
+
+func _tick_jump() -> void:
+	if _jump_ticks < 0: return
+	_jump_ticks += 1
+	var progress := minf(float(_jump_ticks)/75.0,1.0)
+	global_position = _motion_start.lerp(_motion_end,(1.0-cos(progress*PI))*0.5)
+	global_position.y += sin(progress*PI)*3.0
+	if _jump_ticks == 32: play_action(8)
+	if _jump_ticks >= 75 and not clock.running: _enter_next_state()
+
+func _tick_motion() -> void:
+	match state_field:
+		"0x100": ground_motion.step(self,8.0)
+		"0x108": _turn_step(0x100)
+		"0xdc": global_position.y = minf(global_position.y + 0.2,_ground_height+8.0)
+		"0xe4": flight.descend(self)
+		"0xf4":
+			# Translational adapter until original flagged root curves are transferred.
+			if action_id == 17 and clock.frame_q12 >= 10*4096 and clock.frame_q12 <= 37*4096:
+				var next_position := global_position + global_basis.z * (6.0/30.0)
+				if not ReyburnFloor.sample(self,next_position).is_empty(): _move_forward(6.0)
+
+func _action_finished() -> void:
+	if entrance != null: return
+	if _dying:
+		super._action_finished()
+		return
+	if state_field == "0xf0":
+		if action_id == 10:
+			_state_ticks = 0
+			play_action(11,{0:-1})
+		elif action_id == 12: _enter_next_state()
+	elif state_field == "0xf4":
+		_bite_pending = true
+	elif state_field == "0x114":
+		pass # Jump finishes only after both interpolation and landing animation.
+	elif state_field == "0x118":
+		rotation.y = _tail_heading
+		_state_limit = _state_ticks + 30
+	else:
+		super._action_finished()
+
+func _sequence_finished() -> void:
+	_enter_next_state()
+
+func _boss_notification(id: int, kind: String) -> void:
+	if entrance != null: return
+	if kind != "point": return
+	controller.notify(id)
+	if id == 2 and state_field == "0x114": _jump_ticks = 0
+	if id == 4 and state_field == "0xf0": _emit_breath()
+	if id == 4 and state_field == "0x108": _fire(0.0)
+
+func _emit_breath() -> void:
+	if _shots_left <= 0: return
+	_fire(0.0)
+	if _breath_type == 0:
+		_fire(TAU * 0x0e38 / 65536.0)
+		_fire(-TAU * 0x0e38 / 65536.0)
+	_shots_left -= 1
+	_shot_wait = 8 if _shots_left > 0 else -1
+
+func _fire(angle: float) -> void:
+	_owned_shots = _owned_shots.filter(func(n): return is_instance_valid(n) and not n.is_queued_for_deletion())
+	if _owned_shots.size() >= 6 or not is_alive: return
+	var before := _owned_shots.size()
+	_shoot(angle,"orb",Color(1.0,0.4,0.05))
+	if _owned_shots.size() == before: return
+	var shot := _owned_shots.back() as EnemyProjectile
+	shot.dir = global_basis.z.rotated(Vector3.UP,angle).normalized()
+	shot.damage = int(shot.damage * (1.5 if controller.enhanced else 1.0))
+	if _skeleton and _skeleton.find_bone("atama") >= 0:
+		shot.global_position = _skeleton.global_transform * _skeleton.get_bone_global_pose(_skeleton.find_bone("atama")).origin
+	if state_field == "0x108" and is_instance_valid(target):
+		shot.dir = (target.global_position + Vector3.UP - shot.global_position).normalized()
+
+func _damage_target() -> void:
+	if is_alive and is_instance_valid(target) and not pacing.target_defeated(target) and target.has_method("take_damage"):
+		target.take_damage(int(_attack_damage({}) * (1.5 if controller.enhanced else 1.0)))
+
+func _death_action() -> int:
+	return 9
+
+func _event_anchor(event: Dictionary) -> Transform3D:
+	# The GLB converter reorders joints: raw NSBMD indices are NOT bone indices.
+	var names := {12:"atama",18:"sippo_02"}
+	var bone: String = names.get(int(event.get("joint_index",-1)),"")
+	if int(event.get("coordinate_mode",0)) == 2 and _skeleton and not bone.is_empty():
+		var index := _skeleton.find_bone(bone)
+		if index >= 0: return _skeleton.global_transform * _skeleton.get_bone_global_pose(index)
+	return global_transform
+
+func _tick_bite() -> void:
+	# ov20:0219D1D4 returns through substate zero for one update between bites.
+	if _bite_complete:
+		_enter_next_state()
+	elif _bite_pending:
+		_bite_pending = false
+		_next_action()
+		_bite_complete = action_id == 4

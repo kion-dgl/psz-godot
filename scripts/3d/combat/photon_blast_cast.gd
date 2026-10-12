@@ -56,4 +56,4 @@ func _release() -> void:
 				enemy.add_child(debuff)
 		else:
 			var power: int = int(stats.attack) + int(stats.weapon_attack) if blast == "Granir" else int(stats.technique) + 100
-			enemy.hurtbox.take_attack({"damage": power * 5, "accuracy": 10000, "charge_pb": false, "kind": "blast"}, Vector3.ZERO)
+			enemy.hurtbox.take_attack({"damage": power * 5, "accuracy": 10000, "charge_pb": false, "kind": "blast"}, Vector3.ZERO, player)

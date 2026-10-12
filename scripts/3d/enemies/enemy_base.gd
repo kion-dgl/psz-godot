@@ -2330,3 +2330,7 @@ func _update_status_visuals() -> void:
 func _set_model_tint(tint: Color) -> void:
 	for mat in _cached_materials:
 		mat.albedo_color = tint
+
+
+func _set_hit_context(_part: int, _source: Node3D) -> void:
+	pass

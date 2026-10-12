@@ -1,0 +1,63 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Reyburn and Octo Diablo" section="States">
+  <p>This contract supersedes the authored Reyburn and Octo attack/phase tables in
+  /states/bosses. Source: psz-re 29266e6 plus Octo follow-up b1f69d0, ROM overlay 20/21 and the retained
+  melonDS natural-damage captures. It defines the testable port; complete
+  input/RNG/motion parity remains an open requirement.</p>
+  <h2>Shared execution</h2>
+  <p>DescriptorBoss MUST advance descriptor stages and events at 30 action ticks
+  per second, preserving catch-up ticks. Damage windows MUST use their original
+  frame boundaries, persist hit memory until closing, and close on cancellation.
+  Damage MUST NOT replace boss actions with generic flinch. Death MUST cancel all
+  channels and projectiles, award completion once, and permit a fresh encounter.</p>
+  <h2>Reyburn</h2>
+  <p>The controller MUST use the sixteen recovered sequence identities. Budgets
+  MUST initialize from the difficulty's base stat HP, separately from encounter
+  HP. Positive-guarded budgets use rounded 819/4096 and 1638/4096. Part 1 spends
+  the first; all hits spend the second. Source-bearing damage and hit counters
+  MUST use an inclusive 0x2aaa turn threshold. Completion, not entry, clears the
+  sequence-specific counters. Action 2 notification 0 MUST enable the modifier;
+  changing HP alone MUST NOT enable it.</p>
+  <p>Selection MUST preserve damage-priority order, spatial bands, the four-way
+  fallback without reroll, and 375/1500/150 action-tick timers. Normal/advancing
+  bites MUST run separate counts; breath MUST run 10 → 11 → 12 and release at
+  notification 4, with nine-tick repeat spacing and a six-projectile pool.
+  The three-shot fan MUST use heading ±0x0e38. Facing MUST remain locked during
+  normal bite damage windows. Four hurt parts MUST share HP and hit ownership.</p>
+  <h2>Octo Diablo</h2>
+  <p>Mode 0 MUST clamp post-subtraction HP at integer half of encounter maximum,
+  before death checks. Reaching half MUST latch a transition without interrupting
+  an active attack. The boundary sequence MUST be 0 → 2 → 14 → 18 → 0;
+  step 2 waits for limbs, step 14 withdraws/repositions, and mode changes before
+  the latch clears. Body and six limb channels MUST advance independently.</p>
+  <p>Spout MUST play 8 → 9 → 10 → 11 → 1; aim may hold action 9 for up to 30
+  ticks, and action 10 notification 0 releases the projectile. Variant weights
+  [90,0,10] and [0,90,10] MUST select projectiles, never the main attack.
+  Main selection MUST retain ordered timer/hit-count checks. Limb hits MUST
+  share encounter HP and receive their own reaction without cancelling body
+  playback. Death MUST cancel combat delivery, then permit the dedicated
+  sinking presentation to finish.</p>
+  <p>Octo MUST retain its authored water-center spawn rather than use generic
+  nearest-floor repair. Center failed suction MUST preserve captured intervals
+  61/91/21/16/35/41/181/21 for actions 12/13/15/16/17/18/2/4 before idle.
+  Edge failure MUST preserve 61/154/31/151/23 for 12/13/14/3/4, without recoil.
+  Request 17 MUST spin, request 12 MUST run the screw channels, and requests
+  13/15 MUST change arena side. Variant 1 alone may poison. Death MUST use
+  action 21 and finish after 181 updates; subsequent encounters restore rain.</p>
+  <p>The intro and phase/death cameras, root placement, side-travel curve,
+  suction force and cloudy-sky grade are authored adapters. Successful
+  swallow/capture is not implemented. Incoming spheres follow named joints;
+  exact joint-pair volumes, secondary parts, status immunity/resistance and
+  original poison damage remain open.</p>
+  <h2>Parity boundaries and validation</h2>
+  <p>Recovered timing, budgets and request priorities MUST be tested against
+  retained emulator evidence and boundary inputs. A field probe MUST exercise
+  both real arena spawns, clips, incoming damage, phase transition, projectiles,
+  HUD, death, return warp and retry. Captured timing is not proof of full parity.
+  Arena-relative placement, movement/root-motion approximation, unported capture
+  ownership/escape input, attack-group damage/status/effects and multiplayer
+  targeting MUST be disclosed until independently compared to the original.
+  Scorecard grades MUST remain unchanged pending Kion's playtest.</p>
+</Concept>
