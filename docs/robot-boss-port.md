@@ -63,3 +63,12 @@ FieldPopulation alias. Existing story layouts are retained: Heretic stages
 Chaos/Mobius in s06z_na1; Control System stages Humilias in s07z_na1. These
 legacy story-arena assignments still need a separate campaign review; use
 the dedicated Coliseum boss encounters for the intended Paru/Arca arenas.
+
+Validation record for the Paru base PR: 9,949 unit checks; rendered and
+exported Linux arena probe; 215-page Astro build; code-health, asset refs,
+roster and orphan checks. Full matrix: Boot and Search and Rescue passed.
+Free-roam navigation failed at Valley s01a_td1 and Rioh s03b_td2. Paru Pact
+canonical/backtrack each failed all three attempts at s05a_lc2, position
+(−14.8,0.2,−20.9), no floor ahead. Stopped the dependent dialogue probe.
+These match previously documented navigation failures; later quests were
+not verified. The arena boss probes are separate and pass.

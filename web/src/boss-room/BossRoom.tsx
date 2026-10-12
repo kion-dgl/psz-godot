@@ -181,7 +181,7 @@ export default function BossRoom() {
   // parent enemy's parts/ dir instead of a top-level model.
   const formIdx = ov.form ?? 0;
   const activeForm = boss?.forms?.[formIdx] ?? boss?.forms?.[0];
-  const effectiveModelId = activeForm?.model_id ?? boss?.model_id ?? '';
+  const effectiveModelId = activeForm?.model_id ?? boss?.asset_model_id ?? boss?.model_id ?? '';
   const effectiveGlbUrl = activeForm?.part_of
     ? bossPartUrl(activeForm.part_of, effectiveModelId)
     : assetUrl(`assets/enemies/${effectiveModelId}/${effectiveModelId}.glb`);

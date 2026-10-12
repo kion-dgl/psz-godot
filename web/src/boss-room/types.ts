@@ -271,6 +271,8 @@ export interface BossForm {
 }
 
 export interface BossDef {
+  /** Explicit pack mesh alias; model_id retains original species identity. */
+  asset_model_id?: string;
   model_id: string; // assets/enemies/<model_id>/<model_id>.glb (forms[0] for composite bosses)
   arena: string; // default arena stage_id — the tool can load any
   quest_source: string; // quest whose boss segment spawns this boss
