@@ -1,0 +1,58 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Paru and Arca robot bosses" section="States">
+<p>Paru MUST use D Chaos and D Mobius (ROM species 63/64), two independent
+model/hurt channels sharing encounter HP. Arca MUST use Humilias (65), never
+Mother Trinity (66). This supersedes the older authored boss tables and Sinow
+stand-in for the dedicated Paru debug encounter.</p>
+<p>Paru MUST frame both robots before enabling player control, and frame their defeat before awarding rewards or clearing the room. Camera and player processing MUST restore on completion or scene exit. The entrance MUST retain the original robot animation paths. Its camera MUST remain behind the player and follow animated robot positions until both entrance clips finish. Camera framing and bounded victory root travel are authored presentation, not recovered retail camera curves. The reticle MUST follow the selected moving hurtbox. Paru shared HP MUST use the original difficulty row (5400/10200/12000), without the additional remake level multiplier.</p>
+<p>Execution MUST use 30 controller ticks/second. The split controllers MUST
+advance independently, in original child38 then child34 order. State transitions reset counters to zero; the enclosing update increments
+them before the next dispatch. Both parts MUST route damage through one HP/reward owner;
+attacks, projectiles and hurtboxes MUST stop on death and scene exit.</p>
+<p>Paru MUST use the original z_003u drill rig with its put02 animation tracks,
+z_003n for the other robot, and o0c_bsef01 for digging. Humilias z_103u MUST NOT
+substitute for the Paru drill mesh. The floating drill robot MUST show a spinning drill,
+retain its original underground entrance path, pursue the player while hovering,
+and periodically burrow toward a captured player position before emerging.
+A submerged robot MUST NOT be targetable or accept hits; emergence MUST have a
+visible warning. The other robot MUST approach and dash as its primary attack,
+with occasional strafing and post-dash laser shots. The existing linked orbit
+sequence MUST retain its timing and projectile cadence. Hover/burrow selection,
+travel distances, warnings, and digging-effect scale/lifetime are authored adapters;
+Zonde casting and persistent slow holes remain unverified/unimplemented.</p>
+<p>The state-8 orbit MUST take 150 ticks and release paired projectiles every
+22 ticks including zero (ov22:0219BA48). State-11 diving contact MUST open at
+7 and close at 24, returning at 54 (0219C1D8). Paru child38 state12 MUST return at 299 and emit areas at 15/210;
+its continuous area growth is unported. Arca child38 state-13 contact MUST
+open at 120 and close at 149 (0219E334). These boundaries describe recovered
+behavior; movement interpolation, target selection, projectile geometry and
+attack scheduling remain explicitly provisional.</p>
+<p>Humilias MUST use the boss_robot_cmb action table and the original combined
+mesh. Gun chains are 21/22/23 and 24/25/26, firing at frame 2. Drill chains
+are 27/28/29/30 and 31/32/33/34, with controller-tick contact [52,67).
+Sweep is 35/36/37/38. Floor hazards MUST be nine independent spatial cells,
+warning at 0, charging at 90, damaging at 105–149 and clearing at 150.
+A single arena-wide pulse is not equivalent. Grid coordinates MUST stay in
+the arena frame while the boss moves. Centers MUST be −10/0/+10 on
+each axis; lookup MUST truncate (coordinate+15)/10 then clamp to 0..2
+(021A0EC0, 02198778). Combined phase requests retain Q12 HP ≤3072/2048/1024 in order.
+The Mac playtest version uses an authored eight-second minimum rather than
+the ROM cooldown (row byte5 × 30).
+Both split channels MUST complete their return before exposing the combined
+body; damage and rewards MUST retain the same owner.</p>
+<p>The Humilias intro MUST briefly show the two robots combining, then restore
+control and camera. Hover movement MUST show foot exhaust. Floor attacks MUST
+warn five of the nine panels, leaving four safe. Lasers MUST freeze on an
+unguarded hit and respect dodge immunity. Accumulated damage MUST trigger
+kneel/hold/recovery. Malfunction MUST separate the damageable parts and give
+the player a quiet opening; the authored eight-second window allows one late
+shot. Pattern cadence, stagger thresholds, effects and split pacing are
+playtest tuning, not recovered original behavior.</p>
+<p>Initial PRs MUST be described as partial playable ports, not 1:1 parity.
+Unported original selection, fixed-point motion, projectile pools, status
+payloads and combined/split coordination MUST be disclosed. Automated timing
+and arena lifecycle checks do not establish whole-fight parity or a fidelity
+grade. Initial Mac feedback incorporated; follow-up playtest pending.</p>
+</Concept>

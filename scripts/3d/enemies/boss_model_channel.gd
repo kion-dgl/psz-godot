@@ -15,17 +15,18 @@ var _idle := 23
 var _hold := 0
 var _pose := ""
 
-func setup(parent: Node3D, index: int, mesh: PackedScene, library: AnimationLibrary, actions: Array) -> void:
+func setup(parent: Node3D, index: int, mesh: PackedScene, library: AnimationLibrary, actions: Array, idle: int = -1) -> void:
 	channel = index
-	_idle = 23 if index < 5 else 44
+	_idle = idle if idle >= 0 else (23 if index < 5 else 44)
 	_actions = actions
 	model = mesh.instantiate()
 	model.name = "BossChannel%d" % index
 	parent.add_child(model)
 	player = NodeUtils.first_of_type(model,"AnimationPlayer") as AnimationPlayer
 	skeleton = NodeUtils.first_of_type(model,"Skeleton3D") as Skeleton3D
-	for name in player.get_animation_library_list(): player.remove_animation_library(name)
-	player.add_animation_library("",library)
+	if library:
+		for name in player.get_animation_library_list(): player.remove_animation_library(name)
+		player.add_animation_library("",library)
 	player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	clock.stage_changed.connect(_stage_changed)
 	clock.finished.connect(_next)
@@ -55,7 +56,7 @@ func tick() -> void:
 func _stage_changed(descriptor: Dictionary) -> void:
 	_pose = str(descriptor.member).get_basename()
 	if not player.has_animation(_pose):
-		push_error("Missing Octo channel %d clip %s" % [channel,_pose])
+		push_error("Missing boss channel %d clip %s" % [channel,_pose])
 		_pose = ""
 		return
 	player.play(_pose)

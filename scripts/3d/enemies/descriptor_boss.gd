@@ -235,7 +235,7 @@ func _die() -> void:
 		hurtbox.set_deferred("monitorable", false)
 	for part in _hurt_parts: part.set_deferred("monitorable", false)
 	_sequence.clear()
-	died.emit(self)
+	_emit_defeat()
 	_notify_leader_loss()
 	var id := _death_action()
 	if id >= 0:
@@ -305,3 +305,6 @@ func hurtbox_in_cone(origin: Vector3, yaw: float, config: Dictionary) -> Diction
 		if distance >= 0.0 and (best.is_empty() or distance < float(best.dist)):
 			best = {"hurtbox":part,"dist":distance}
 	return best
+
+func _emit_defeat() -> void:
+	died.emit(self)

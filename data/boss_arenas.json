@@ -25,7 +25,7 @@
     "s05z_na1": {
       "area": "paru_z",
       "label": "Oblivion City Paru arena",
-      "note": "the original Paru robot archives and live controller traces are available in psz-re; this debug room currently uses the PSO Sinow stand-in (sinow_beat / sinow_gold rare)"
+      "note": "Dedicated Chaos & Mobius encounter uses original split meshes. Legacy Sinow debug mission remains available."
     },
     "s06z_na1": {
       "area": "arca_z",
@@ -480,136 +480,155 @@
       "note": "no ded clip in the rig \u2014 death presentation is likely scripted (sinks?); z_002_st = the coiled SURFACING tentacle (posed: dips 5.7 below its base, crests 4.2 above on wat / 5.2 on spout) \u2014 the four placed instances; z_002_tt = the long straight arm (posed it plunges 11.4 below base; likely the strike/sweep arm) \u2014 NOT statically staged: reserved for attack presentations aimed at the player (#508 follow-up); o0b_kaeru (static frog prop) unattached \u2014 placement unknown"
     },
     "humilias": {
-      "model_id": "boss_mother",
-      "arena": "s07z_na1",
+      "model_id": "boss_robot_cmb",
+      "arena": "s06z_na1",
       "quest_source": "control_system",
       "model_scale": 1.0,
       "stats": {
-        "hp": 400,
-        "move_speed": 2.0,
-        "attack_cooldown": 3.0,
+        "hp": 450,
+        "move_speed": 3.5,
+        "attack_cooldown": 2.5,
         "attack_base": 16,
-        "turn_speed_deg": 60
+        "turn_speed_deg": 90
       },
       "fsm": {
         "intro_clip": "",
-        "walk_clip": "move",
-        "idle_clip": "wat1",
+        "walk_clip": "mov_lp",
         "loaf_duration_min": 2.0,
         "loaf_duration_max": 3.5,
         "punish_break_damage": 80,
         "punish_vulnerable_mult": 2.0,
-        "punish_start_clip": "fall",
-        "punish_clip": "fallwat",
+        "punish_start_clip": "dwn_st",
+        "punish_clip": "dwn_lp",
         "punish_duration": 4.0,
-        "punish_end_clip": "stdup"
+        "punish_end_clip": "dwn_ed"
       },
       "phases": [
         {
-          "id": "active",
-          "label": "Active",
-          "note": "slow advance (move); full kit"
+          "id": "engaged",
+          "label": "Engaged",
+          "note": "the combined robot: mov_lp locomotion, drill/gun/sweep kit"
         },
         {
           "id": "downed",
           "label": "Downed (punish)",
-          "note": "the knockdown chain: fall \u2192 fallwat loop (4s, \u00d72 damage, weak point exposed) \u2192 stdup; entered at 80 accumulated damage \u2014 the real trigger (cumulative vs weak-point hits) is an open question"
+          "note": "the dwn_st \u2192 dwn_lp loop \u2192 dwn_ed knockdown chain \u2014 same shape as humilias"
         }
       ],
       "attacks": [
         {
-          "id": "laser_sweep",
-          "clip": "laser",
+          "id": "drill_left",
+          "clip": "atk_dl_at",
           "chain": [
-            "laserst",
-            "laserlp",
-            "laser"
-          ],
-          "kind": "beam_sweep",
-          "phases": [
-            "active"
-          ],
-          "min_range": 4,
-          "max_range": 20,
-          "note": "charge st\u2192lp then the 1.92s firing sweep"
-        },
-        {
-          "id": "arm_swing",
-          "clip": "swing",
-          "chain": [
-            "swingst",
-            "swinglp",
-            "swing"
+            "atk_dl_st",
+            "atk_dl_lp",
+            "atk_dl_at"
           ],
           "kind": "melee_arc",
           "phases": [
-            "active"
+            "engaged"
           ],
-          "hit_half_angle_deg": 80,
-          "max_range": 7,
-          "hit_reach": 6
-        },
-        {
-          "id": "headbutt",
-          "clip": "hedb",
-          "chain": [
-            "hedbst",
-            "hedblp",
-            "hedb"
-          ],
-          "kind": "charge",
-          "phases": [
-            "active"
-          ],
-          "min_range": 4,
-          "max_range": 10,
+          "max_range": 6,
           "hit_reach": 5,
-          "damage_mult": 1.5,
-          "note": "press/grind \u2014 hedbhitlp is the grinding-on-hit loop, hedb2wt2/hedb2lp the recover transitions"
+          "weight": 0.7,
+          "note": "left drill \u2014 st/lp telegraph then the at hit piece; the ed recovery clip is not played by the draft chain"
         },
         {
-          "id": "combo",
-          "clip": "cmblp",
+          "id": "drill_right",
+          "clip": "atk_dr_at",
           "chain": [
-            "cmbst",
-            "cmblp",
-            "cmbend"
+            "atk_dr_st",
+            "atk_dr_lp",
+            "atk_dr_at"
           ],
           "kind": "melee_arc",
           "phases": [
-            "active"
+            "engaged"
           ],
-          "hit_half_angle_deg": 60,
+          "max_range": 6,
+          "hit_reach": 5,
+          "weight": 0.7
+        },
+        {
+          "id": "gun_left",
+          "clip": "atk_gl_at",
+          "chain": [
+            "atk_gl_st",
+            "atk_gl_at"
+          ],
+          "kind": "projectile",
+          "phases": [
+            "engaged"
+          ],
+          "min_range": 5,
+          "max_range": 20,
+          "weight": 0.7,
+          "note": "gl/gr = gun left/right (reading unverified)"
+        },
+        {
+          "id": "gun_right",
+          "clip": "atk_gr_at",
+          "chain": [
+            "atk_gr_st",
+            "atk_gr_at"
+          ],
+          "kind": "projectile",
+          "phases": [
+            "engaged"
+          ],
+          "min_range": 5,
+          "max_range": 20,
+          "weight": 0.7
+        },
+        {
+          "id": "sweep",
+          "clip": "atk_sw_at",
+          "chain": [
+            "atk_sw_st",
+            "atk_sw_lp",
+            "atk_sw_at"
+          ],
+          "kind": "melee_arc",
+          "phases": [
+            "engaged"
+          ],
+          "hit_half_angle_deg": 100,
           "max_range": 7,
           "hit_reach": 6,
-          "note": "full st/lp/ed combo string (the only complete 3-piece family on the rig)"
+          "damage_mult": 1.5,
+          "note": "the big sweep \u2014 66-frame telegraph"
         }
       ],
-      "parts": [
-        "z_004_kao_a",
-        "z_004_kao_b"
-      ],
-      "spawn_pos": [
-        0,
-        0,
-        -8
-      ],
       "anchors": [],
+      "note": "Humilias is ROM species 65; combined robot mesh is stored under boss_robot in the existing pack. Mother Trinity is species 66 and unrelated.",
+      "parts": [],
       "clip_notes": {
-        "wat1": "idle",
-        "wat2": "idle variant",
-        "move": "locomotion \u2014 slow advance",
-        "fall": "knockdown \u2014 falls over",
-        "fallwat": "fallen idle \u2014 the punish window",
-        "stdup": "stand back up",
-        "hit": "big stagger (1.92s)",
-        "dam1": "flinch",
-        "ded": "death"
-      }
+        "wat": "combined idle",
+        "mov_st": "move start",
+        "mov_lp": "move loop",
+        "mov_ed": "move end",
+        "stp": "stomp/step (13KB \u2014 big one-shot, reading unverified)",
+        "dwn_st": "knockdown \u2014 falls",
+        "dwn_lp": "downed loop (punish window)",
+        "dwn_ed": "gets back up",
+        "atk_sw_st": "sweep windup (66 frames)",
+        "atk_sw_lp": "sweep loop",
+        "atk_sw_at": "sweep hit",
+        "atk_sw_ed": "sweep recovery",
+        "ch_in_n": "n robot combine-in",
+        "ch_out_n": "n robot split-out (same for _u)",
+        "stt_n": "n robot entrance (25KB)",
+        "stt_u": "u robot entrance",
+        "ded_n": "n robot death",
+        "ded_u": "u robot death"
+      },
+      "runtime_controller": "res://scripts/3d/enemies/humilias_boss.gd",
+      "runtime_note": "Partial recovered action/phase/grid port. See /states/robot-bosses.",
+      "asset_model_id": "boss_robot"
     },
     "chaos_mobius": {
       "model_id": "boss_robot",
-      "arena": "s06z_na1",
+      "arena": "s05z_na1",
       "quest_source": "heretic",
       "model_scale": 1.0,
       "stats": {
@@ -728,7 +747,7 @@
         }
       ],
       "anchors": [],
-      "note": "ENCOUNTER 2 of 2 (per Kion): Arca is the SECOND encounter \u2014 Chaos & Mobius JOIN into the larger combined robot (z_003, the full 26-clip kit). The first encounter is the split top+bottom at Paru (chaos_mobius_paru). Full kit imported via the patched apicula (viewer processBossRobot.ts) \u2014 the rigs carry one extra unanimated root object apicula's exact-count match rejected; the game rig is boss_robot_cmb's combined z_003. The ch_in/ch_out combine-split transitions (parts z_003n/z_103u) are the join animation from the split form; ded_n/ded_u deaths and the floor_lazer arena props also ride the cmb narc.",
+      "note": "Paru is the split D Chaos/D Mobius encounter (ROM species 63/64). Older preview attack table is not runtime behavior. Humilias (65) is the Arca combined encounter.",
       "parts": [],
       "clip_notes": {
         "wat": "combined idle",
@@ -749,7 +768,9 @@
         "stt_u": "u robot entrance",
         "ded_n": "n robot death",
         "ded_u": "u robot death"
-      }
+      },
+      "runtime_controller": "res://scripts/3d/enemies/paru_robot_boss.gd",
+      "runtime_note": "Original split robot parts and counter boundaries; provisional movement/selection. See /states/robot-bosses."
     },
     "chaos_sorcerer": {
       "model_id": "chaos_sorcerer",
@@ -1002,22 +1023,38 @@
       "anchors": [
         {
           "name": "post_ne",
-          "pos": [10, 0, 10],
+          "pos": [
+            10,
+            0,
+            10
+          ],
           "note": "DRAFT post position \u2014 re-author against the real s05z_na1 posts in the room (move/anchor tool)"
         },
         {
           "name": "post_nw",
-          "pos": [-10, 0, 10],
+          "pos": [
+            -10,
+            0,
+            10
+          ],
           "note": "DRAFT post position"
         },
         {
           "name": "post_se",
-          "pos": [10, 0, -10],
+          "pos": [
+            10,
+            0,
+            -10
+          ],
           "note": "DRAFT post position"
         },
         {
           "name": "post_sw",
-          "pos": [-10, 0, -10],
+          "pos": [
+            -10,
+            0,
+            -10
+          ],
           "note": "DRAFT post position"
         }
       ],

@@ -31,6 +31,12 @@ func _ready() -> void:
 	CharacterManager._active_slot = -1
 	CharacterManager.create_character(0, "humar", "ProbeHero")
 	CharacterManager.set_active_slot(0)
+	if OS.get_environment("PSZ_HUMILIAS_CHECK") == "1":
+		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/humilias_probe.gd").new())
+		return
+	if OS.get_environment("PSZ_ROBOT_CHECK") == "1":
+		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/robot_probe.gd").new())
+		return
 	if OS.get_environment("PSZ_REYBURN_OCTO_CHECK") == "1":
 		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/reyburn_octo_probe.gd").new())
 		return

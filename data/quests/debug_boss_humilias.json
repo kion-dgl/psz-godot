@@ -3,7 +3,7 @@
   "last_updated": "2026-07-12",
   "id": "debug_boss_humilias",
   "name": "DEBUG: Humilias Arena",
-  "description": "Debug mission: warp straight into the boss arena. Always unlocked; no rewards.",
+  "description": "Humilias combined/split robot battle in Arca Plant. Partial recovered controller port.",
   "area_id": "arca",
   "rewards": {},
   "office_npcs": [],
@@ -24,7 +24,7 @@
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s07z_na1",
+          "stage_id": "s06z_na1",
           "rotation": 0,
           "connections": {},
           "portals": {

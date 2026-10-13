@@ -95,7 +95,7 @@ describe('boss_arenas.json — bosses', () => {
       // pack publish (like the tentacle/face parts), not asserted here.
       const models: string[] = b.forms
         ? b.forms.filter((f: any) => !f.part_of).map((f: any) => f.model_id)
-        : [b.model_id];
+        : [b.asset_model_id ?? b.model_id];
       for (const m of models) {
         const glb = `assets/enemies/${m}/${m}.glb`;
         expect(ASSET_TREE.has(glb), `${id}: ${glb} not in asset_tree.txt`).toBe(true);
