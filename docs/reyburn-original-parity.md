@@ -14,6 +14,9 @@ for the eight emulator experiments, flight timeline, objects and all 26 clips.
   ground-fire trail. Normal claw and enhanced spin emit no breath projectile.
 * Separate six-slot projectile and ground-fire pools; delayed fire damage and
   lingering claw hazard. These still use primitive visuals/shared damage adapters.
+* Spatial and fallback breath both use the original two-way variant choice,
+  including mixed/triple enhanced requests. Cooldowns preserve the enhanced
+  4710/4096 Q12 decrement, replayed against consecutive original RAM samples.
 * Ground breath hold is one/two original updates, with notification-to-launch
   ordering. Ground selection defaults to original pacing rather than authored
   attack rests and approach loops. `original_ground_pacing=false` retains the
@@ -55,7 +58,7 @@ The arena probe checks all 16 recovered requests, all 26 imported body clips,
 three aerial projectile counts, six spin paths, supported/off-mesh landings,
 horn break, actual melee/head hit routing, original bite restart intervals,
 modifier notification, defeat/retry and autonomous progress. A rendered Xvfb
-OpenGL run also passed and produced inspected screenshots. Unit suite: 9,847
+OpenGL run also passed and produced inspected screenshots. Unit suite: 9,856
 passed, zero failed. The math oracle: zero failures.
 
 The asset pack used here lacks city NPC `np_009_00_0` and the Valley boss minimap
@@ -91,9 +94,9 @@ horn test explicitly seeds the part budget. No clean-stat solo/RNG sweep,
 Hard/Super Hard or multiplayer coverage is claimed.
 
 Original intro/death cameras, run/jump/bite root motion, exact target selection,
-small-angle ground steering, enhanced entity time scaling (original B4 uses
-4710/4096 per call; this port still uses a unit controller clock), airborne
-facing/pitch, all attack-region semantics,
+small-angle ground steering, enhanced animation/motion/state time scaling
+(cooldown counters are ported; the movement/state integrator still uses unit
+updates), airborne facing/pitch, all attack-region semantics,
 sound timing and the 13 original effect bindings need further work. Primitive
 projectiles/fire/hazard and shared damage are explicit port adapters. Floor
 validation and a degenerate spin-path guard are Godot safeguards. Whole-flight

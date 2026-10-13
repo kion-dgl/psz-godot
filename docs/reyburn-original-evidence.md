@@ -178,6 +178,34 @@ The boss is not just one mesh plus an animation player:
 Names are resource bindings, not proof that each effect is spawned on every action.
 The trace separately records effect-spawn calls and attack records.
 
+## Authored arena objects
+
+The arena set files are separate from the boss-owned effect and projectile pools.
+Re-parsing `build/fs/set/01/z/na1/s01z_na1_*.rel` with the existing
+`setobj.all_records()` and `objplace.rooms()` resolves a return-warp model
+(`o0s_warps`, factory7/variant1), a treasure chest (`o0c_trebox`, factory10/variant0),
+and a modelless player-entry record (factory1) in **d, s, f1, f2, f3 and f4**.
+The first free-field set also has factory22/variant0 at (-13.283,0,0.790).
+The registry resolver emits no model, but the existing `sys.object-class-table`
+proof identifies type0x2016/class0x15 as the quest marker named **???**: constructor
+`0209F60C` spawns effect48, `ef_com_quest`. It is an effect-backed quest object,
+not a missing boss mesh.
+
+| Set | Authored records | Return warp X/Z | Chest X/Z | Player entry X/Z |
+|---|---:|---|---|---|
+| d | 3 | 0.627 / 5.757 | 0.551 / -7.496 | 0.323 / 15.753 |
+| s | 3 | 0.548 / 6.183 | 0.551 / -7.496 | 0.323 / 15.753 |
+| f1 | 4 | 0.450 / -0.250 | -7.844 / 0.269 | 0.323 / 18.054 |
+| f2 | 3 | 0.345 / -0.206 | 0.551 / -7.496 | 0.323 / 18.054 |
+| f3 | 3 | 0.530 / 4.743 | 0.551 / -7.496 | 0.323 / 18.054 |
+| f4 | 3 | 0.345 / 12.304 | 0.551 / -7.496 | 0.323 / 18.054 |
+
+These are authored coordinates, not proof of when a visible object appears.
+The capture set does not establish all quest-family selection or reward/warp
+activation events. Godot's debug fight currently retains its return-warp adapter;
+full reward-object and quest-event parity remains open. The exact interaction
+script and activation conditions for this f1 quest marker were not exercised.
+
 ## Animation accounting
 
 All **26 body clips** are present in the exported Godot body. Original action

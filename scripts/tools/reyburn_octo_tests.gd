@@ -49,6 +49,7 @@ static func run(t: Node) -> void:
 	t.assert_true(horn.bite_blocked,"original seeded-budget trace: head hit immediately disables bites")
 	t.assert_eq(horn.budgets.part_budget,-3,"original head budget preserves overshoot")
 	t.assert_eq(horn.priority(9.0,0.0).id,-1,"broken horn excludes normal bite")
+	_original_clock_and_breath(t)
 	var o := OctoController.new()
 	t.assert_eq(o.clamp_hp(-999,5220),2610,"lethal mode-zero hit clamps before death")
 	o.latch(2610,5220)
@@ -74,3 +75,19 @@ static func run(t: Node) -> void:
 	o.hit_count = 11
 	t.assert_eq(o.select_request(true,false,-1,false),13,"eleven hits precede D0 timer")
 	t.assert_eq(o.select_request(true,false,0,false),15,"limb request precedes all mode-one timers")
+
+static func _original_clock_and_breath(t: Node) -> void:
+	var breath := ReyburnController.new(3300,1650)
+	breath.breath_timer = 0
+	t.assert_eq(breath.priority(30.0,0.0,true,0).types,[0],"normal spatial breath can select fan")
+	t.assert_eq(breath.priority(30.0,0.0,true,1).types,[1],"normal spatial breath can select homing shot")
+	breath.enhanced = true
+	t.assert_eq(breath.priority(30.0,0.0,true,0).id,15,"enhanced spatial breath can select mixed sequence")
+	t.assert_eq(breath.priority(30.0,0.0,true,1).counts,[3],"enhanced spatial breath can select three strong shots")
+	# Original still_long ticks 13554..13559, including the first enhanced tick.
+	var timer := ReyburnController.new(3300,1650)
+	timer.enhanced = true
+	timer.flight_timer = 1220608.0/4096.0
+	for expected: int in [1215898,1211188,1206478,1201768,1197058]:
+		timer.tick()
+		t.assert_eq(roundi(timer.flight_timer*4096),expected,"enhanced timer matches original consecutive RAM samples")

@@ -10,9 +10,9 @@ var reaction_damage := 0
 var head_damage := 0
 var off_angle_damage := 0
 var off_angle_hits := 0
-var fallback_timer := 375
-var flight_timer := 1500
-var breath_timer := 150
+var fallback_timer := 375.0
+var flight_timer := 1500.0
+var breath_timer := 150.0
 var aerial_alternation := false
 
 func _init(base: int, maximum: int) -> void:
@@ -21,9 +21,11 @@ func _init(base: int, maximum: int) -> void:
 	budgets = BossDamageRules.ReyburnBudgets.new(base)
 
 func tick() -> void:
-	fallback_timer -= 1
-	flight_timer -= 1
-	breath_timer -= 1
+	# B0/B4/BC use entity time. B8 (not a cooldown here) uses unit time.
+	var elapsed := 4710.0/4096.0 if enhanced else 1.0
+	fallback_timer -= elapsed
+	flight_timer -= elapsed
+	breath_timer -= elapsed
 
 func hit(damage: int, part: int, bearing: float, source_known: bool) -> bool:
 	var broken := budgets.hit(-damage,part)
@@ -53,29 +55,38 @@ func finish(id: int, flags: int = 0, retain_side_damage: bool = false) -> void:
 func flight_request() -> Dictionary:
 	return {"id":(10 if enhanced else 9) if aerial_alternation else 11,"flags":3}
 
-func priority(distance: float, bearing: float, allow_bite: bool = true) -> Dictionary:
+func priority(distance: float, bearing: float, allow_bite: bool = true, breath_roll: int = -1) -> Dictionary:
 	if not enhanced and budgets.modifier_budget <= 0: return {"id":1}
 	if off_angle_damage >= (base_hp * 410 + 2048) >> 12: return {"id":14 if enhanced else 8}
 	if off_angle_hits >= 10: return {"id":4}
 	if cumulative_damage >= (max_hp * 819 + 2048) >> 12:
 		return {"id":2,"duration":240 if enhanced else 150}
+	return _spatial_priority(distance,bearing,allow_bite,breath_roll)
+
+func _spatial_priority(distance: float, bearing: float, allow_bite: bool, breath_roll: int) -> Dictionary:
 	if not bite_blocked and allow_bite:
 		if distance >= 12.5 and distance <= 17.5 and absf(bearing) <= TAU * 0x0555 / 65536.0:
 			return {"id":5,"normal":0,"advance":1}
 		if distance >= 8.0 and distance <= 10.0 and absf(bearing) <= TAU * 0x0471 / 65536.0:
 			return {"id":5,"normal":1,"advance":0}
 	if breath_timer <= 0 and distance >= 15.0 and distance <= 50.0 and absf(bearing) <= TAU / 8.0:
-		return {"id":6,"types":[0],"counts":[1]}
+		return {"id":6,"breath_choice":true} if breath_roll < 0 else breath_request(breath_roll)
 	return {"id":-1}
 
 func fallback(roll: int, secondary: int, allow_bite: bool = true) -> Dictionary:
 	match roll:
 		0:
-			if enhanced and secondary == 0: return {"id":15,"flags":5,"types":[0,1],"counts":[1,1]}
-			return {"id":6,"flags":5,"types":[secondary],"counts":[3 if enhanced else 1]}
+			var request := breath_request(secondary)
+			request.flags = 5
+			return request
 		1:
 			if not bite_blocked and allow_bite: return {"id":5,"flags":5,"normal":2,"advance":1,"turn":0x01c7}
 		2:
 			return {"id":13 if enhanced else 7,"flags":5,"duration":150,"types":[secondary],"counts":[1]}
 		3: return {"id":3,"flags":5}
 	return {"id":-1}
+
+func breath_request(roll: int) -> Dictionary:
+	# Both spatial A3EC and fallback A2BC use the same two-way choice.
+	if enhanced and roll == 0: return {"id":15,"types":[0,1],"counts":[1,1]}
+	return {"id":6,"types":[roll],"counts":[3 if enhanced else 1]}

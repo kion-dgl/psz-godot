@@ -106,6 +106,8 @@ static func _original_takeoff(t: Node, boss: ReyburnBoss) -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/reyburn_parity.json"))
 	var fixture: Dictionary = data.takeoff_fixture
 	var original: Vector3 = boss.global_position
+	var enhanced := boss.controller.enhanced
+	boss.controller.enhanced = false
 	var p: Array = fixture.positions_raw[0]
 	boss.global_position = boss.get_parent().global_transform*(Vector3(p[0],p[1],p[2])/4096.0)
 	boss.rotation.y = float(fixture.facing_raw)*TAU/65536.0
@@ -124,6 +126,7 @@ static func _original_takeoff(t: Node, boss: ReyburnBoss) -> void:
 	t._check(measured.size() == fixture.positions_raw.size(),"whole original takeoff duration matches 266 updates")
 	t._check(worst < 0.02,"whole original takeoff stays within 0.02 world units")
 	boss.global_position = original
+	boss.controller.enhanced = enhanced
 	boss._states.clear()
 	boss._enter_next_state()
 

@@ -245,6 +245,7 @@ func _track_original() -> void:
 		chosen = controller.fallback(roll,secondary)
 	else:
 		chosen = controller.priority(_distance(),_bearing())
+	if chosen.get("breath_choice",false): chosen = controller.breath_request(rng.randi_range(0,1))
 	if int(chosen.id) >= 0:
 		start_request(chosen)
 	else:
