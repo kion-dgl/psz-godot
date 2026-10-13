@@ -57,7 +57,7 @@ godot --headless --path . --export-debug macOS build/macos/reyburn-original-pari
 The arena probe checks all 16 recovered requests, all 26 imported body clips,
 three aerial projectile counts, six spin paths, supported/off-mesh landings,
 horn break, actual melee/head hit routing, original bite restart intervals,
-modifier notification, defeat/retry and autonomous progress. A rendered Xvfb
+modifier notification, translated-arena first projectiles, defeat/retry and autonomous progress. A rendered Xvfb
 OpenGL run also passed and produced inspected screenshots. Unit suite: 9,856
 passed, zero failed. The math oracle: zero failures.
 
@@ -85,6 +85,7 @@ packaged scripts/fixtures and ZIP integrity; it has not been executed on a Mac.
    from visual placeholder complaints.
 5. Attack the head until the horn breaks. Confirm the horn disappears and he
    stops choosing bites. Check death cleanup, return warp and a fresh retry.
+   A lethal ranged hit during flight is a separate, still-unverified death case.
 
 ## Remaining 1:1 gaps
 
@@ -101,5 +102,11 @@ sound timing and the 13 original effect bindings need further work. Primitive
 projectiles/fire/hazard and shared damage are explicit port adapters. Floor
 validation and a degenerate spin-path guard are Godot safeguards. Whole-flight
 comparison beyond the measured takeoff remains open. The two archive clips with
-no descriptor references are accounted for as unused, not assigned invented
+no descriptor references are accounted for as unreferenced by that table, not assigned invented
 combat behavior.
+
+Stationary-player comparison also depends on the player controller: current
+`Player.take_damage()` explicitly ignores physics knockback and uses animation
+reactions, whereas the original no-input captures show player displacement.
+Matching that displacement/spacing is still open and can affect repeated bite
+selection.

@@ -1,5 +1,9 @@
 # Reyburn original-game parity audit (2026-10-12)
 
+Copied from `psz-re/docs/reyburn-original-parity.md`. Commands and trace paths
+below refer to the **psz-re checkout**; the Godot implementation and test commands
+are in [the branch guide](reyburn-original-parity.md).
+
 This audit uses the USA retail ROM, actual melonDS execution, RAM breakpoints, and
 original archive tables. It is not a claim that the complete Godot encounter is
 already 1:1. The consumer is `psz-godot:feature/reyburn-original-parity`.
@@ -22,6 +26,25 @@ not ordinary player damage balance. Repeated directional input is not perfect
 fixed-radius circling: camera-relative controls, collision and NPC targeting all
 matter. Standing still means no player input, not that the boss has only one target.
 No fresh entrance, clean-stat solo, other difficulty or multiplayer run is claimed.
+
+To rerun the directional-input case with the same source save (choose unused
+GDB port/display values if running other emulator sessions):
+
+```sh
+mkdir -p build/reyburn_replay
+python3 -c 'import json; p=json.load(open("data/traces/reyburn_parity/perimeter.meta.json")); print(json.dumps(p["input_schedule"]))' > build/reyburn_replay/input.json
+bash tools/boss-live-run.sh reyburn \
+  ../psz-melonmix/sandbox/incoming/20260728-230040_Phantasy_Star_0__USA_.ml2 \
+  0x0237a9d0 45677 :977 7200 build/reyburn_replay/perimeter.jsonl \
+  --events --reyburn-details --input-script build/reyburn_replay/input.json
+```
+
+The wrapper owns and cleans up its emulator/display, captures start/end screens,
+and keeps input screenshots named by tick. Add `--seed-part-budget 1` only for the
+explicit horn-branch experiment, and `--stop-on-death` only when an early action9
+termination is intended. Those interventions are recorded in metadata. Retained
+trace validation is reproducible without rerunning the emulator; live XTEST input
+is externally queued and is not a claim of deterministic input-frame replay.
 
 ## Original test matrix
 

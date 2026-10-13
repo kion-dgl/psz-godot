@@ -1,6 +1,7 @@
 extends RefCounted
 ## Live floor and sequence-specific aerial behavior from original captures.
 static func run(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
+	_ground_delivery_frame(t,boss)
 	_original_assets(t,boss)
 	_original_takeoff(t,boss)
 	await _flight(t,boss)
@@ -134,3 +135,26 @@ static func _original_assets(t: Node, boss: ReyburnBoss) -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/reyburn_parity.json"))
 	for clip: String in data.animation_inventory.slots:
 		t._check(boss.animation_player.has_animation(clip.get_basename()),"original body clip available: "+clip)
+
+static func _ground_delivery_frame(t: Node, boss: ReyburnBoss) -> void:
+	# A non-origin mission room must not immediately expire its first ground shots.
+	var parent := boss.get_parent() as Node3D
+	var previous := parent.position
+	parent.position.x += 128.0
+	boss._initialized_position = false
+	boss._clear_deliveries()
+	var serial := boss.deliveries.serial
+	boss.start_request({"id":6,"types":[0],"counts":[1]})
+	for tick in 180:
+		boss._physics_process(1.0/30.0)
+		if boss.deliveries.serial > serial: break
+	for tick in 3: boss.deliveries.tick(boss)
+	var flying := boss.deliveries.shots.size() == 3
+	for shot: Dictionary in boss.deliveries.shots: flying = flying and shot.impact == -1
+	t._check(flying,"translated arena keeps first ground fan inside arena-local bounds")
+	boss._clear_deliveries()
+	parent.position = previous
+	boss._initialized_position = false
+	boss._states.clear()
+	boss._enter_next_state()
+	boss._physics_process(1.0/30.0)

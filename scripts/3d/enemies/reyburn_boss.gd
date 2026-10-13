@@ -1,6 +1,6 @@
 class_name ReyburnBoss extends DescriptorBoss
 ## Recovered ov20 sequences and damage history. Motion adapters are documented
-## in /states/reyburn-octo; no fixed-percent enrage or percent-of-clip damage.
+## in docs/reyburn-original-parity.md; no fixed-percent enrage or percent-of-clip damage.
 
 @export var original_ground_pacing := true
 var deliveries := ReyburnDeliveries.new()
@@ -171,6 +171,7 @@ func _controller_tick() -> void:
 		_initialized_position = true
 		_home = global_position
 		_ground_height = global_position.y
+		flight.begin(self) # Ground deliveries need the arena frame before the first flight.
 	controller.tick()
 	_state_ticks += 1
 	if state_field == "track":
