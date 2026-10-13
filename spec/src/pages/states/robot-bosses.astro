@@ -34,10 +34,25 @@ mesh. Gun chains are 21/22/23 and 24/25/26, firing at frame 2. Drill chains
 are 27/28/29/30 and 31/32/33/34, with controller-tick contact [52,67).
 Sweep is 35/36/37/38. Floor hazards MUST be nine independent spatial cells,
 warning at 0, charging at 90, damaging at 105–149 and clearing at 150.
-A single arena-wide pulse is not equivalent.</p>
+A single arena-wide pulse is not equivalent. Grid coordinates MUST stay in
+the arena frame while the boss moves. Centers MUST be −10/0/+10 on
+each axis; lookup MUST truncate (coordinate+15)/10 then clamp to 0..2
+(021A0EC0, 02198778). Combined phase requests retain Q12 HP ≤3072/2048/1024 in order.
+The Mac playtest version uses an authored eight-second minimum rather than
+the ROM cooldown (row byte5 × 30).
+Both split channels MUST complete their return before exposing the combined
+body; damage and rewards MUST retain the same owner.</p>
+<p>The Humilias intro MUST briefly show the two robots combining, then restore
+control and camera. Hover movement MUST show foot exhaust. Floor attacks MUST
+warn five of the nine panels, leaving four safe. Lasers MUST freeze on an
+unguarded hit and respect dodge immunity. Accumulated damage MUST trigger
+kneel/hold/recovery. Malfunction MUST separate the damageable parts and give
+the player a quiet opening; the authored eight-second window allows one late
+shot. Pattern cadence, stagger thresholds, effects and split pacing are
+playtest tuning, not recovered original behavior.</p>
 <p>Initial PRs MUST be described as partial playable ports, not 1:1 parity.
 Unported original selection, fixed-point motion, projectile pools, status
 payloads and combined/split coordination MUST be disclosed. Automated timing
 and arena lifecycle checks do not establish whole-fight parity or a fidelity
-grade. Kion playtest pending.</p>
+grade. Initial Mac feedback incorporated; follow-up playtest pending.</p>
 </Concept>

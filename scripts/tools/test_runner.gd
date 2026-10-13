@@ -7,6 +7,7 @@ var _fail := 0
 
 
 func _ready() -> void:
+	preload("res://scripts/tools/test_humilias_rules.gd").run(self)
 	preload("res://scripts/tools/test_robot_rules.gd").run(self)
 	preload("res://scripts/tools/reyburn_octo_tests.gd").run(self)
 

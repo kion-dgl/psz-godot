@@ -187,16 +187,11 @@ func _enter(index: int, state: int) -> void:
 	var aim := target.global_position if is_instance_valid(target) else origin
 	goals[index] = Vector3(clampf(aim.x,origin.x-13,origin.x+13),origin.y,clampf(aim.z,origin.z-13,origin.z+13))
 
-func _tier() -> int:
-	return int({"normal":0,"hard":1,"super-hard":2}.get(SessionManager.get_session().get("difficulty","normal"),0))
-
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(selected_part) and _reticle.visible:
 		_reticle.global_position = selected_part.get_child(0).global_position
 	if _dying:
 		cinematic_ticks += delta*30.0
-		robots[1].clock.advance(delta)
-		robots[1].player.seek(robots[1].clock.frame_q12/4096.0/60.0,true)
 	super._physics_process(delta)
 	if _dying:
 		for index in 2: _stage_defeat_part(index)

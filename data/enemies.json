@@ -417,7 +417,7 @@
  {
   "id": "humilias",
   "name": "Humilias",
-  "model_id": "boss_mother",
+  "model_id": "boss_robot_cmb",
   "element": "Machine",
   "locations": [
    "arca"

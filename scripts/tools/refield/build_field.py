@@ -32,7 +32,7 @@ ROOT = bvf.ROOT
 AREA_META = {
     "ozette":   {"stage": "s02", "obs": "wetlands",  "boss": ["octo_diablo"],            "field": "wetlands_field",  "name": "Ozette Wetland",     "loc": "Ozette Wetland"},
     "rioh":     {"stage": "s03", "obs": "snowfield",  "boss": ["hildegigas", "hildegao", "hildegao"], "field": "snowfield_field", "name": "Rioh Snowfield", "loc": "Rioh Snowfield"},
-    "paru":     {"stage": "s05", "obs": "paru",       "boss": ["humilias"],               "field": "paru_field",      "name": "Oblivion City Paru", "loc": "Oblivion City Paru"},
+    "paru":     {"stage": "s05", "obs": "paru",       "boss": ["chaos_mobius"],               "field": "paru_field",      "name": "Oblivion City Paru", "loc": "Oblivion City Paru"},
 }
 
 
