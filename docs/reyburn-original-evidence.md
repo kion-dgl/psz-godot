@@ -1,6 +1,7 @@
 # Reyburn original-game parity audit (2026-10-12)
 
-Copied from `psz-re/docs/reyburn-original-parity.md`. Commands and trace paths
+Source evidence: **psz-re `14e32abce61c936f6f8e6ae7923b0626b729cbf0`**,
+`docs/reyburn-original-parity.md`. Commands and trace paths
 below refer to the **psz-re checkout**; the Godot implementation and test commands
 are in [the branch guide](reyburn-original-parity.md).
 
@@ -145,7 +146,7 @@ Y>=12.5. It is not a continuous visible orbit over the player.
 
 The request chooses one of two reentry ends and a landing point with X in [-6,6)
 and Z in [-17,17). Original paths use Q12 natural cubic interpolation sampled at
-16 points, not Catmull–Rom. The retained set provides **749 exact sampled points**.
+up to 16 points, not Catmull–Rom. The retained set provides **749 exact sampled points**.
 The independent follower check covers **414 one-update transitions**: all are
 within one raw Q12 unit (1/4096 world unit). These checks do not by themselves
 prove whole-flight integration, facing, root motion, collision or damage parity.
@@ -306,3 +307,7 @@ and Super Hard; multiplayer targets; natural unseeded horn break; full entrance
 and death camera/event timelines; original sound/effect playback; exact root motion,
 steering and hitbox semantics. Current arena completion tests and mathematical
 fixtures establish a narrower, useful result, not full visual/combat parity.
+
+Research gate: `python3 tools/verify.py --no-write` exited 0 with 593 passed,
+zero failed and 10 existing checks skipped for missing inputs. The new Reyburn
+oracle passes; its recorded node status was written by the normal verifier run.
