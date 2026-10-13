@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { getEnemyDisplayName, getEnemyGlbPath } from '../storybook/enemyData';
 
 const CONFIG_PATH = path.resolve(__dirname, '../../public/data/boss_arenas.json');
 const ENEMIES_PATH = path.resolve(__dirname, '../../public/data/enemies.json');
@@ -32,18 +33,14 @@ describe('boss_arenas.json — structure', () => {
   it('has schema_version 2, arenas, and bosses', () => {
     expect(config.schema_version).toBe(2);
     expect(arenas.length).toBeGreaterThan(0);
-    expect(bosses.length).toBe(8); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + sinow_beat (real shinowa rig, #516) + chaos_sorcerer (PSO stand-in)
+    expect(bosses.length).toBe(9); // 4 PSZ uniques + heaven's mother composite + chaos_mobius + sinow_beat (real shinowa rig, #516) + chaos_sorcerer (PSO stand-in)
   });
 
   it('every roster boss has a room', () => {
-    // mother_trinity is flagged is_boss but rides the regular `mother` rig,
-    // spawns in no quest, and has no designed fight — the mother_caster
-    // enemy room covers the rig until the fight exists.
-    // mother_trinity: rides the `mother` rig, no designed fight yet.
     // sinow_gold: rare palette-swap of Sinow Beat — the Paru boss room now
     // runs the single real shinowa rig (#516), so Gold has no room of its own
     // (it shares the encounter; a tinted variant is a later follow-up).
-    const NOT_ROOMED = new Set(['mother_trinity', 'sinow_gold']);
+    const NOT_ROOMED = new Set(['sinow_gold']);
     const rosterBosses = roster.filter((e) => e.is_boss).map((e) => e.id);
     const missing = rosterBosses.filter((id) => !config.bosses[id] && !NOT_ROOMED.has(id));
     expect(missing, `is_boss roster entries without a boss room: ${missing.join(', ')}`).toHaveLength(0);
@@ -301,5 +298,15 @@ describe('boss_arenas.json — arenas', () => {
       expect(ok, `${stageId}: area ${a.area}`).toBe(true);
       expect(typeof a.label === 'string' && a.label.length > 0, `${stageId} label`).toBe(true);
     }
+  });
+});
+
+
+describe('Mother asset identities', () => {
+  it('keeps Trinity distinct from the tower Mother rig', () => {
+    expect(getEnemyDisplayName('boss_mother')).toBe('Mother Trinity');
+    expect(getEnemyDisplayName('mother')).toBe('Heaven Mother');
+    expect(getEnemyGlbPath('boss_mother')).toContain('/boss_mother/boss_mother.glb');
+    expect(getEnemyGlbPath('mother')).toContain('/mother/mother.glb');
   });
 });

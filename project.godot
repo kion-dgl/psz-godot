@@ -282,6 +282,7 @@ photon_blast={
 3d_physics/layer_3="triggers"
 3d_physics/layer_4="enemies"
 3d_physics/layer_5="hitboxes"
+3d_physics/layer_7="solid_bosses"
 
 [rendering]
 

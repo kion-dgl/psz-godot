@@ -1,12 +1,17 @@
 # Reyburn and Octo Diablo implementation
 
+Player-observed requirements and the next-pass acceptance checklist are recorded
+in [Boss observations and acceptance checklist](boss-playtest-observations.md).
+Use that checklist to drive mechanical work and later original-game comparisons.
+
 This branch replaces Reyburn's authored prototype and Octo's generic EnemyBase
-AI with dedicated, playable controllers. It is independent of Dark Shrine PR
-#753. It supersedes the Reyburn implementation in draft #750; that older branch
+AI with dedicated, playable controllers. The Octo follow-up also integrates
+main at 97d3f93e, including the reviewed Dark Shrine PR #753 and Coliseum changes.
+It supersedes the Reyburn implementation in draft #750; that older branch
 should not be merged over this controller. Its forward-facing and full-windup
 requirements are retained through descriptor playback and explicit turn states.
 
-The source is psz-re commit 29266e6: overlay-20/21 decompilation, original action
+The initial source is psz-re commit 29266e6: overlay-20/21 decompilation, original action
 catalogs, and retained melonDS captures. The original research includes 43,300
 controller updates across twelve boss runs. Those captures were made during the
 preceding research work; this PR replays them and runs Godot, rather than claiming
@@ -91,13 +96,15 @@ Do not treat passing component tests as a full original-game fight comparison.
   retail scales an intermediate combat packet field.
 - Octo's single-player spatial/limb eligibility adapters do not yet port all
   `0219A7E4`, `0219A8C0`, `02199194` predicates or per-source-slot counts. Some
-  branches therefore remain unavailable to autonomous selection. Timer priority
+  branches use single-player eligibility approximations. Timer priority
   rules are recovered, but this is not the complete original selector.
-- Octo's absorb/vomit is a visual attack chain; player capture ownership,
-  restraint, escape input, eat outcomes and release are not implemented.
-  Tentacle placement, incoming spheres, break budget, ranged/sweep contact and
-  projectile presentation are provisional. Slam allocation uses the recovered
-  local update 3; the complete limb subcontrollers are not ported.
+- Octo now pulls the player and separates the measured center/edge failure
+  paths. Successful capture ownership, restraint, escape input, eat outcomes
+  and release are still not implemented: reaching the mouth does not swallow
+  or damage the player. Tentacle root placement and incoming spheres remain
+  approximations, although hurt parts now follow named animated joints.
+  Slam allocation uses local update 3; the complete limb subcontrollers,
+  joint-pair volumes and multiplayer selectors are not ported.
 - Octo withdrawal/emergence uses the captured 102/92-update progression after
   the limb wait, with an authored transform relative to the existing arena.
   This is not a fixed half-HP timer, but matching step order alone does not
@@ -105,6 +112,71 @@ Do not treat passing component tests as a full original-game fight comparison.
 - Multiplayer target-slot selection, original RNG stream, balance and matched
   full-fight trajectories remain unverified. Existing arena meshes/cameras and
   authored encounter scaling are reused.
+
+## Brief Reyburn entrance
+
+The October 12 Mac playtest found Reyburn initially facing away while its long
+intro played during live gameplay. The observed original uses an arena-entry
+cutscene: player entrance, overhead flight and loop, landing, then opening roar.
+The local presentation now compresses that order into 4.5 seconds: 1.6 seconds
+of flight, 1 second of landing, and 1.9 seconds of roar. These durations and the
+camera/path are authored choices, not measured retail timings. The camera stays
+4.5 units behind the player at the normal 1.9-unit height and tracks the dragon.
+Landing searches for supported floor roughly 27 units from the player, with a
+body-width margin; unsupported candidates are rejected. Player control
+and the regular orbit camera return immediately after the roar, with Reyburn
+facing the player. Damage and AI scheduling are held during the presentation;
+scene exit also releases the player and camera. Live animation pacing and camera
+framing still need the next hands-on playtest.
+
+The follow-up playtest found repeated bites immediately after control returned
+and continued attacks against the defeated player. An authored pacing layer now
+holds attack selection and pursuit for 75 ticks (2.5 seconds) after entry and each
+sequence. A completed bite sequence also prevents another bite request for 180
+ticks (6 seconds), through both the distance selector and random fallback.
+Timings within a bite sequence remain unchanged. The player defeat latch cancels
+attack queues and existing projectiles and switches Reyburn to idle; a revived
+or replaced player gets a fresh rest period before combat resumes. These values
+are playtest tuning, not recovered original-game cooldowns.
+
+## Flight and ground steering follow-up
+
+The next Mac playtest found an off-arena landing, one airborne fireball per
+flight, and stationary turret-like ground turns. Aerial cycles now make two or
+three fireball passes, relocating between shots, before approaching a supported
+landing point. The shot aims down from the head toward the player. Landing
+selection raycasts the environment collision mesh at the center and eight points
+around a four-unit body footprint, rejects steep or uneven support, and samples
+from the established floor height rather than the airborne body height. A failed
+landing check triggers a safe approach search; it does not descend at the invalid
+position. Jump destinations and advancing bites also use the support check.
+
+Ground pursuit, pre-attack alignment and running now accelerate forward speed
+and yaw speed. Turning is capped at 32 degrees/second and coupled to actual
+travel, so blocked movement cannot rotate the body in place. An obstructed path
+tries a short reverse, and an alignment that times out abandons that request
+rather than snapping toward the player. These movement rates, the aerial path,
+and pass counts are authored adapters to the playtest observations, pending
+comparison with original-game movement. The live probe covers all three aerial
+sequences, actual fireball deliveries, relocation, off-mesh recovery and steering.
+
+## Ground contact and attack positioning
+
+The following playtest found occasional floating feet, excessive circling,
+walking through the dragon, and repeated damage from footstep windows. Ground
+locomotion now applies the sampled collision-floor height to the body. Repositioning
+chooses a supported flank destination, dashes toward it, then turns back for a
+fireball. It commits once range and bearing allow the existing pre-attack turn
+to finish alignment; a denied firing angle ends the maneuver after seven seconds.
+
+Reyburn uses a full-width cylindrical torso on a dedicated solid-boss collision
+layer. The player now collides with that layer as well as the environment; other
+enemy body layers are unchanged. Ordinary walk/run descriptor combat windows are
+suppressed while their sound events remain active, avoiding footstep damage chains.
+Deliberate attack windows remain active. These are authored playtest changes, not
+claims about recovered original footstep damage rules. Live probes verify player
+movement is blocked by the torso, floor following, harmless locomotion, immediate
+fireball selection from a usable vantage and bounded repositioning.
 
 ## Playtest
 
@@ -139,3 +211,91 @@ The existing `PSZ_BOSS_LIFECYCLE_CHECK=1` probe remains supported.
 
 Scorecard: Bosses (`score:bosses`) and Combat (`score:combat`). Bosses next-review
 wording is updated; owner grade/date remain unchanged pending Kion's Mac playtest.
+
+
+## Octo follow-up for Mac review (2026-10-12)
+
+Based on **psz-re b1f69d0**, `docs/octo-encounter-followup.md`, the retained
+8,100-update center trace, 5,207-update edge/death trace, and separate successful
+ink-hit probe. The Godot changes do not claim a new matched-input emulator run.
+Reyburn's reviewed controller and captured bite timing remain unchanged.
+
+- **Spawn correction:** the generic floor-repair routine previously moved Octo
+  from the water opening to the nearest plank, twelve units away. Octo now keeps
+  its authored spawn; both phases and recoil share the correct center anchor.
+- **Intro:** channel 2 rises at update 25, hides at 85; channel 1 rises at 90,
+  hides at 150; the body rises at 180; play resumes at 240. A behind-player
+  camera tracks these reveals and restores the prior camera/control state.
+  These are authored camera views at recovered boundaries, not imported retail
+  camera curves. The first rise is supported by static code, not the late save.
+- **Center suction:** actions `12→13→15→16→17→18→2→4→1`, with intervals
+  **61/91/21/16/35/41/181/21** updates. Pull is collision/floor-aware and below
+  normal running speed. Vomit recoils the entity nine units, then exposes the
+  tired body for 181 updates (about six seconds), followed by a 25-update return.
+- **Edge suction:** `12→13→14→3→4→1`, intervals **61/154/31/151/23**. No recoil;
+  tired recovery lasts 151 updates (about five seconds). Both currently take
+  the failure path; successful swallow/capture remains a parity gap.
+- **Requests:** 17 spins the body, with the recovered radius-17 contact window
+  `[30,90)`; 12 runs the two screw clips (contact starts at local update 45);
+  13 moves to another octagonal side; 15 temporarily reveals short channels 3/4
+  while turning, then returns to the two long tentacles. Side movement uses a
+  tuned 18-unit radius/120-update arc, not a recovered movement curve.
+- **Tentacles:** short limbs face outward with separate raised/stretched waits.
+  A nearby available limb attacks instead of starting all four slams together.
+  Incoming spheres now follow `Point07`/`Point10`, mapped by original model
+  names; short parts use 3–6, long parts 11/12. Exact joint-pair volumes and
+  secondary parts are still missing. Waiting damage reactions use strict
+  `> maxHP/5`, replacing the unconditional one-tenth-HP reaction.
+- **Ink:** only variant 1 (combat record 6) can poison. Base chances are
+  50/100/100 percent by difficulty. Player poison uses the recovered 150-update
+  interval and 1230/1380/1530-update durations, and clears through existing
+  status recovery. The remake's generic 5%-max-HP DoT and absent retail status
+  resistance/immunity rules are explicit balance gaps. Other variants do not
+  install poison; dodge/defeat/recovery guards remain in effect.
+- **Defeat:** action 21, procedural sinking during updates 20–109, hidden at
+  110, cleanup at 181. Camera/control restores and rain/lightning stop; the
+  existing cloudy sky receives an authored brighter grade. New encounters
+  restore the storm. Original event flags, palette and sink curve remain open.
+
+The imported octagonal plank mesh and collision are reused. This is not a claim
+of proven original collision masks, melee reach, full attack damage/effects,
+independent four-player limb selection, or successful suction capture parity.
+
+### Mac review route
+
+Pull `feature/reyburn-octo-behavior`, then open **Coliseum Master → Bosses →
+Octo Diablo** or **DEBUG: Octo Diablo Arena**. Watch the intro before moving.
+Circle the central hole and try melee on raised/stretched joints. Bait suction
+and run away; compare the center recoil/stun to the shorter edge recovery.
+Attack through half HP, check the two long tentacles and movement to another
+side, then check ink poison, defeat sinking, cleared rain/cloudy sky, return,
+and a fresh rainy retry. Report camera clipping, inaccessible hurt locations,
+movement through planks, and phase/death stalls. Successful swallowing is not
+available in this build and should not be mistaken for an accidental regression.
+
+The arena probe now asserts original suction action-start timestamps, recoil,
+intro order, spin completion, joint attachments, both edge movement requests,
+poison cadence/cleanup/dodge, 181-update defeat, weather reset, and the existing
+Reyburn sequences/rewards/HUD/return/retry checks. It uses controlled stepping
+and a scripted player orbit; it is not a full human-play balance test.
+
+
+### Integration with current main
+
+Merged main `97d3f93e` after GitHub reported conflicts with #753. The reviewed
+Reyburn controller, selector and `BossActionClock` remain byte-for-byte unchanged.
+The shared descriptor helper retains Shrine aiming/projectile-origin hooks and
+supports its single capsule/head receiver in the multipart target scanner.
+All four boss dispatch entries, standard Shrine camera, Trinity anchor, current
+Coliseum controls and both probe entry points are retained.
+
+## Octo playtest corrections (2026-10-12)
+
+The opening now faces the player, central spin retains four extended tentacles,
+and edge placement samples the actual outer plank collision boundary instead of
+using the fixed 18-unit radius. Long tentacle roots flank the body. Suction has
+procedural inward wind streaks. Defeat fades rain over four seconds and blends
+the cloudy sky over six seconds while preserving the starting sky material.
+Weather tweens belong to the surviving arena nodes, so boss cleanup does not
+interrupt them. All values remain authored tuning; visual acceptance is pending
+against P01–P06 in the observation checklist.

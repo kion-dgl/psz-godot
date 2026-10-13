@@ -160,19 +160,31 @@ func add_experience(amount: int) -> Dictionary:
 	var leveled_up := new_level > old_level
 
 	if leveled_up:
-		character["level"] = new_level
-		var class_data = ClassRegistry.get_class_data(character["class_id"])
-		if class_data:
-			var stats: Dictionary = class_data.get_stats_at_level(new_level)
-			character["max_hp"] = int(stats.get("hp", character["max_hp"])) + int(character.get("material_bonuses", {}).get("hp", 0))
-			character["max_pp"] = int(stats.get("pp", character["max_pp"])) + int(character.get("material_bonuses", {}).get("pp", 0))
-			character["hp"] = character["max_hp"]
-			character["pp"] = character["max_pp"]
-		level_up.emit(new_level)
+		_apply_level(character, new_level)
 		SfxManager.play("res://assets/sfx/ui/level_up.wav")
 		_sync_to_game_state()
 
 	return {"leveled_up": leveled_up, "new_level": new_level}
+
+
+## Debug editor: changing level also moves XP to that level's threshold.
+## Uses normal character persistence; opening/canceling the picker changes nothing.
+func set_debug_level(value: int) -> void:
+	var character = get_active_character()
+	if character == null: return
+	var level := clampi(value, 1, MAX_LEVEL)
+	var table = _get_exp_table()
+	character["experience"] = table.get_exp_for_level(level) if table else 50 * (level - 1) * (level - 1)
+	_apply_level(character, level)
+	_sync_to_game_state()
+
+func _apply_level(character: Dictionary, level: int) -> void:
+	character["level"] = level
+	var stats := get_stats_at_level(str(character.class_id), level)
+	for pair in [["hp", "max_hp"], ["pp", "max_pp"]]:
+		character[pair[1]] = int(stats.get(pair[0], character[pair[1]])) + int(character.get("material_bonuses", {}).get(pair[0], 0))
+		character[pair[0]] = character[pair[1]]
+	level_up.emit(level)
 
 
 ## Get stats at a specific level for a class

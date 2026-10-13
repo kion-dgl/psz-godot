@@ -179,6 +179,13 @@ func _damage_target() -> void:
 	if is_alive and is_instance_valid(target) and target.has_method("take_damage"):
 		target.take_damage(_attack_damage({}))
 
+func _aim_at_target() -> void:
+	if is_instance_valid(target):
+		var direction := target.global_position - global_position
+		direction.y = 0
+		if direction.length_squared() > 0.01:
+			rotation.y = atan2(direction.x, direction.z)
+
 func _shoot(angle: float = 0.0, visual: String = "orb", tint := Color(0.65,0.12,0.85)) -> void:
 	if not is_alive or not is_instance_valid(target):
 		return
@@ -188,13 +195,19 @@ func _shoot(angle: float = 0.0, visual: String = "orb", tint := Color(0.65,0.12,
 	shot.max_range = 60.0
 	shot.color = tint
 	shot.visual = visual
-	var aim := target.global_position - global_position
-	aim.y = 0
+	var origin := _shot_origin()
+	var aim := _shot_target() - origin
 	shot.dir = aim.normalized().rotated(Vector3.UP, angle)
 	get_parent().add_child(shot)
-	shot.global_position = global_position + Vector3.UP
+	shot.global_position = origin
 	_owned_shots = _owned_shots.filter(is_instance_valid)
 	_owned_shots.append(shot)
+
+func _shot_origin() -> Vector3:
+	return global_position + Vector3.UP
+
+func _shot_target() -> Vector3:
+	return Vector3(target.global_position.x, global_position.y + 1.0, target.global_position.z)
 
 func _clear_deliveries() -> void:
 	clock.cancel()
@@ -222,7 +235,7 @@ func _die() -> void:
 		hurtbox.set_deferred("monitorable", false)
 	for part in _hurt_parts: part.set_deferred("monitorable", false)
 	_sequence.clear()
-	died.emit(self)
+	_emit_defeat()
 	_notify_leader_loss()
 	var id := _death_action()
 	if id >= 0:
@@ -245,6 +258,8 @@ func _set_exposure(exposed: bool) -> void:
 		hurtbox.set_deferred("monitorable", exposed and is_alive)
 
 func _event_anchor(event: Dictionary) -> Transform3D:
+	# Shrine encounter adapters retain their entity-space combat origins.
+	if _hurt_parts.is_empty(): return global_transform
 	if int(event.get("coordinate_mode", 0)) == 2:
 		var skeleton := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D if model else null
 		var joint := int(event.get("joint_index", -1))
@@ -275,14 +290,21 @@ func _move_forward(speed: float) -> void:
 
 func hurtbox_in_cone(origin: Vector3, yaw: float, config: Dictionary) -> Dictionary:
 	var best: Dictionary = {}
-	for part in _hurt_parts:
-		if not part.monitorable or not part.is_visible_in_tree(): continue
+	var parts: Array[Hurtbox] = _hurt_parts.duplicate()
+	# Shrine bosses use the base capsule or their own receiver, rather than
+	# the registered Reyburn/Octo parts. Keep them targetable after integration.
+	if parts.is_empty() and is_instance_valid(hurtbox): parts.append(hurtbox)
+	for part in parts:
+		if not is_instance_valid(part) or not part.monitorable or not part.is_visible_in_tree(): continue
 		var shape := part.get_child(0) as CollisionShape3D
-		var sphere := shape.shape as SphereShape3D
+		var radius := float(shape.shape.get("radius"))
 		var distance := ConeTargeting.distance_in_cone(origin,yaw,
 			float(config.get("hit_h_dist",2.4)),float(config.get("hit_v_dist",0.5)),
 			float(config.get("hit_h_angle_deg",30.0)),float(config.get("hit_v_angle_deg",40.0)),
-			shape.global_position,sphere.radius)
+			shape.global_position,radius)
 		if distance >= 0.0 and (best.is_empty() or distance < float(best.dist)):
 			best = {"hurtbox":part,"dist":distance}
 	return best
+
+func _emit_defeat() -> void:
+	died.emit(self)

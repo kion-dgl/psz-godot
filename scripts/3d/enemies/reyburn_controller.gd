@@ -49,13 +49,13 @@ func finish(id: int, flags: int = 0, retain_side_damage: bool = false) -> void:
 	if id == 11: aerial_alternation = true
 	if id in [9,10]: aerial_alternation = false
 
-func priority(distance: float, bearing: float) -> Dictionary:
+func priority(distance: float, bearing: float, allow_bite: bool = true) -> Dictionary:
 	if not enhanced and budgets.modifier_budget <= 0: return {"id":1}
 	if off_angle_damage >= (base_hp * 410 + 2048) >> 12: return {"id":14 if enhanced else 8}
 	if off_angle_hits >= 10: return {"id":4}
 	if cumulative_damage >= (max_hp * 819 + 2048) >> 12:
 		return {"id":2,"duration":240 if enhanced else 150}
-	if not bite_blocked:
+	if not bite_blocked and allow_bite:
 		if distance >= 12.5 and distance <= 17.5 and absf(bearing) <= TAU * 0x0555 / 65536.0:
 			return {"id":5,"normal":0,"advance":1}
 		if distance >= 8.0 and distance <= 10.0 and absf(bearing) <= TAU * 0x0471 / 65536.0:
@@ -64,13 +64,13 @@ func priority(distance: float, bearing: float) -> Dictionary:
 		return {"id":6,"types":[0],"counts":[1]}
 	return {"id":-1}
 
-func fallback(roll: int, secondary: int) -> Dictionary:
+func fallback(roll: int, secondary: int, allow_bite: bool = true) -> Dictionary:
 	match roll:
 		0:
 			if enhanced and secondary == 0: return {"id":15,"flags":5,"types":[0,1],"counts":[1,1]}
 			return {"id":6,"flags":5,"types":[secondary],"counts":[3 if enhanced else 1]}
 		1:
-			if not bite_blocked: return {"id":5,"flags":5,"normal":2,"advance":1,"turn":0x01c7}
+			if not bite_blocked and allow_bite: return {"id":5,"flags":5,"normal":2,"advance":1,"turn":0x01c7}
 		2:
 			return {"id":13 if enhanced else 7,"flags":5,"duration":150,"types":[secondary],"counts":[1]}
 		3: return {"id":3,"flags":5}
