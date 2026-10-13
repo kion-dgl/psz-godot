@@ -11060,7 +11060,9 @@ func test_valley_day_slot() -> void:
 	assert_eq(Slots.slot_for("gurhacia", "s01b_lb1"), valley,
 		"s01b rides the same row (no variant split under the cheat rig)")
 	var boss := Slots.slot_for("gurhacia", "s01z_na1")
-	assert_eq(boss.get("sun_energy"), 0.9, "s01z rides the area row (exception dropped)")
+	assert_eq(boss.get("sky_style"), "valley_mountains", "Reyburn uses the canyon backdrop and procedural clouds")
+	assert_true(not boss.has("sun_energy") and not boss.has("sun_pitch"),
+		"Reyburn scenery follows the time-of-day lighting instead of pinning the daytime sun")
 
 	print("")
 

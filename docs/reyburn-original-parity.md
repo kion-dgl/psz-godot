@@ -89,6 +89,36 @@ packaged scripts/fixtures and ZIP integrity; it has not been executed on a Mac.
 
 ## Remaining 1:1 gaps
 
+### Local arena backdrop preview
+
+The Reyburn arena retains the canyon artwork and placement from
+`s01_0_bview3` / `s01_0_bview2`. A skyline mask removes the baked sky above
+each cliff, exposing the Makara E cloud-sky shader behind it. The masks are
+pinned to the silhouettes in the original 128-pixel textures; they do not
+chroma-key the rock, so blue cliff shadows remain intact. The old
+`s01_2_bkemu1` edge-smoke strip is hidden, removing its brown seam.
+
+This is a hybrid panorama plus procedural sky, not newly modeled terrain.
+The textured cliffs receive environment ambient light for day/night and
+weather changes; their painted relief is preserved without direct light
+revealing the flat cards. The sky follows the field hour and resolved
+rain/drizzle weather. Nearby rocks and the floor keep their baked lighting.
+No new geometry or collision is added. Other Valley rooms and Makara E
+are unchanged.
+
+Preview without a boss using the normal local assets:
+
+```sh
+PSZ_WALK_STAGE=s01z_na1 godot --path . res://scenes/tools/valley_walktest.tscn
+```
+
+**F6** cycles day, sunset, night and sunrise. **F7** cycles sand, clear,
+drizzle and rain. These preview keys reload the lab; they do not change the
+saved game or production defaults. For captures, set `PSZ_WALK_HOUR=19`,
+`PSZ_WALK_WEATHER_KIND=rain`, and `PSZ_WALK_SHOT=/absolute/path/preview.png`.
+
+### Encounter parity
+
 This is a reviewable parity experiment, not a completed 1:1 certification. The
 original recordings use one altered-stat Normal save with NPC companions; one
 horn test explicitly seeds the part budget. No clean-stat solo/RNG sweep,

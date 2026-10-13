@@ -159,6 +159,14 @@ const SLOTS := {
 	# baked rock). Plants blend because they're organic and soft; stone and
 	# lumber don't. The toro lanterns keep their warm placed-light pools
 	# without being lit themselves.
+	"s01z_na1": {
+		"hour": 10.0,
+		"sky_style": "valley_mountains",
+		"sun_shadows": true,
+		"shadow_catcher": true,
+		"weather": "sand",
+		"lit_surfaces": [],
+	},
 	"gurhacia": {
 		"hour": 10.0,
 		"sun_energy": 0.9,

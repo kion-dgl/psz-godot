@@ -328,6 +328,7 @@ func _ready() -> void:
 			_fdbg("[ValleyField] Loaded skybox: %s" % skybox_path)
 	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(_map_root, stage_id)
 	preload("res://scripts/3d/field/makara_lighting.gd").prepare_stage(_map_root, stage_id, _slot)
+	preload("res://scripts/3d/field/valley_arena_backdrop.gd").prepare_stage(_map_root, stage_id)
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
@@ -868,6 +869,9 @@ func _apply_field_slot(preview_hour: float = -1.0) -> void:
 	preload("res://scripts/3d/field/makara_lighting.gd").refresh_ambient(_map_root, _world_env.environment)
 	preload("res://scripts/3d/field/makara_sky.gd").apply(
 		_world_env.environment, _sky_material, _dir_light, _slot)
+	preload("res://scripts/3d/field/valley_arena_backdrop.gd").apply_sky(
+		_world_env.environment, _sky_material, _dir_light, _slot, hour,
+		FieldSlotTableScript.resolve_weather(str(SessionManager.get_session().get("weather", "")), _slot))
 	if _slot.has("bake_mix"):
 		_night_bake_mix = float(_slot["bake_mix"])
 	if _slot.has("tonemap_white"):
