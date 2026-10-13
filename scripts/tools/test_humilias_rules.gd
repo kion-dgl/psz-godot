@@ -2,9 +2,9 @@ extends RefCounted
 static func run(t: Node) -> void:
 	for phase in 3:
 		var threshold: int = [3072,2048,1024][phase]
-		t.assert_true(HumiliasRules.split_due(phase,1800,threshold,4096,0),"inclusive Q12 phase boundary")
-		t.assert_true(not HumiliasRules.split_due(phase,1799,threshold,4096,0),"cooldown before split")
-		t.assert_true(not HumiliasRules.split_due(phase,1800,threshold+1,4096,0),"HP above phase threshold")
+		t.assert_true(HumiliasRules.split_due(phase,240,threshold,4096,0),"inclusive Q12 phase boundary")
+		t.assert_true(not HumiliasRules.split_due(phase,239,threshold,4096,0),"cooldown before split")
+		t.assert_true(not HumiliasRules.split_due(phase,240,threshold+1,4096,0),"HP above phase threshold")
 	t.assert_true(not HumiliasRules.split_due(3,9999,0,4096,0),"three HP split requests maximum")
 	var grid := RobotFloorGrid.new()
 	grid.pulse([0,8])
@@ -19,3 +19,10 @@ static func run(t: Node) -> void:
 	t.assert_eq(grid.cell_at(Vector3(-5,0,0)),4,"inclusive boundary enters next cell")
 	t.assert_eq(grid.cell_at(Vector3(99,0,-99)),2,"retail lookup clamps outside arena")
 	grid.free()
+
+	for pattern in 3:
+		var cells := HumiliasRules.floor_pattern(pattern)
+		t.assert_eq(cells.size(),5,"five floor panels warn per activation")
+		var unique: Dictionary = {}
+		for cell in cells: unique[cell] = true
+		t.assert_eq(unique.size(),5,"four distinct safe panels remain")

@@ -32,7 +32,7 @@ func advance() -> void:
 		var tile := tiles[index]
 		tile.visible = counters[index] >= 0
 		var material := (tile.mesh as PlaneMesh).material as StandardMaterial3D
-		material.albedo_color = Color(1,0.15,0.05,0.65) if damaging(index) else Color(1,0.7,0.1,0.4 if counters[index] >= 90 else 0.18)
+		material.albedo_color = Color(0.2,0.75,1.0,0.8) if damaging(index) else Color(1,0.65,0.05,0.6 if counters[index] >= 90 else 0.3+0.15*sin(counters[index]*0.3))
 
 func damaging(index: int) -> bool:
 	return counters[index] >= 105 and counters[index] < 150

@@ -48,18 +48,28 @@ asset alias explicit, keeping source identity distinct from Paru.
 
 Combined gun chains21/22/23 and24/25/26 release at frame2; drill chains
 27/28/29/30 and31/32/33/34 have contact at controller counters[52,67);
-sweep35/36/37/38 opens contact at frame8 of37. Original cooldown/HP
-phase predicates gate the three split requests. Both parts return before
+sweep35/36/37/38 opens contact at frame8 of37. Quarter-HP thresholds gate three split requests with an authored eight-second
+minimum between phases. Both parts return before
 combined exposure resumes. Nine independently warned floor slots activate
 at105, clear at150, and stay in world/arena coordinates as Humilias moves.
 Original centers are −10/0/+10 on each axis; original cell lookup clamps
 truncated (coordinate+15)/10 to 0..2 (021A0EC0/02198778).
 
-Remaining gaps: authored attack selector, walking/turning/part motion,
-request delivery latency, split attack scheduling, hit geometry, projectile
-pools, freeze/slow/status payloads, floor selection and
-original knockdown reaction. Initial split duration approximates active-state
-counting; the retail counter advances only in specific child38 states.
+Mac playtest follow-up: intro shows the two parts converging and combining in
+about 2.6 seconds, with camera/control restored afterward. Movement uses hover
+exhaust and ground rings. Every ten active seconds a five-panel pattern warns
+in amber, then activates cyan at the existing 105-tick boundary. Gun delivery
+is a larger cyan laser that freezes on an unguarded hit; dodge avoids both.
+Accumulating 8% HP damage triggers the recovered kneel/hold/recover clips,
+with a six-second stagger cooldown. The eight-second malfunction split is a
+punish window: both parts accept damage and only one late shot is allowed.
+These pacing, thresholds, visual effects and pattern choices are authored from
+playtest feedback, not recovered retail tuning.
+
+Remaining gaps: authored attack selector, turning/part motion, request delivery
+latency, hit geometry, projectile pools and exact retail status durations.
+The retail split counter advances only in specific child38 states; this version
+uses a deliberately quiet fixed-duration opening.
 Floor mode2 persistent visuals/occupancy edges and mode3 status variants
 remain unported. Do not interpret the probe or identity correction as 1:1.
 
