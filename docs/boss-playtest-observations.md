@@ -179,3 +179,55 @@ outer plank boundaries with a 4.5-unit body offset, lateral long-limb roots,
 procedural inward wind streaks, a four-second rain fade, and a six-second sky
 crossfade. These are authored presentation/placement choices requiring another
 visual playtest; they are not newly recovered original-game constants.
+
+## Paru: first Mac playtest, 2026-10-12
+
+Kion tested PR #756 after main merge `3af72591`: no opening or victory
+cutscene, reticle remained at arena center instead of either robot, and the
+fight took too long even after raising the player to level 100.
+
+The follow-up adds authored camera framing during both robots' entry/death
+animations. The entrance preserves the original robot paths, with a camera fixed
+behind the player tracking the animated skeletons; only victory root travel is bounded. It
+locks control during those shots, and delays rewards until defeat
+presentation ends. Target selection positions the reticle on the moving receiver.
+Paru uses the retail difficulty HP pool without remake level multiplication:
+normal is now 5,400 instead of 11,448 at the default Paru enemy level 15.
+Player level and equipment still affect outgoing damage; this is not a claim
+that fight duration has been validated by a second human playtest.
+
+- [ ] Confirm opening and victory framing and control handoff on Mac.
+- [ ] Confirm targeting while each robot moves and rises.
+- [ ] Assess fight duration with the intended equipment and difficulty.
+
+Bosses scorecard (`score:bosses`): no grade change; follow-up playtest pending.
+
+## Paru: original-game comparison follow-up, 2026-10-12
+
+Kion observes a spinning drill on the floating robot, an entrance from underground,
+hovering attacks and periodic burrowing/emergence toward the player. The other
+robot favors dashes, sometimes strafes and shoots. The linked spinning sequence
+already looks good and must be preserved. Possible Zonde casting is tentative.
+
+Implementation follow-up uses a procedural spinning drill on the existing
+combined-archive mesh, an authored hover/burrow mix within the recovered attack
+spans, a locked emergence point with a warning ring, and underground damage and
+targeting exclusion. The dash robot now approaches, periodically strafes and
+adds occasional post-dash laser shots. Original entrance paths remain unchanged.
+Zonde remains unconfirmed; do not equate arena electrical effects with casting.
+Exact split geometry, retail selection predicates, persistent slow holes, and
+spatial fidelity remain open. Hands-on acceptance of this pass is pending.
+
+Design note: Kion considers this the weakest original boss and is considering
+replacing it with a Sinow encounter later. This is not a decision to replace the
+current implementation; finish and assess the robot encounter first.
+
+### Asset identity correction
+
+Kion identifies o0c_bsef01 as the digging effect, z_003u as the drill robot,
+and z_003n as its partner. The original viewer GLBs match recorded source hashes.
+The original z_003u has animated put02 tracks; the prior Humilias z_103u adapter
+removed that joint and caused the missing drill. Runtime now uses the original
+Paru rigs and native drill tracks, replacing the procedural drill. Digging uses
+o0c_bsef01 with authored expansion/lifetime. Publish the added assets to the
+pack and mirror before exporting/landing this follow-up.

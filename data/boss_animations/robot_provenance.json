@@ -1,10 +1,12 @@
 {
-  "source": "psz-asset-viewer/public/enemies/boss_robot, extracted original boss_robot NARC",
-  "command": "godot --headless --path . --script res://scripts/tools/export_robot_clips.gd -- <viewer>/public/enemies/boss_robot",
+  "source": "https://dashgl.github.io/psz-asset-viewer/enemies/boss_robot/parts/",
+  "command": "godot --headless --path . --script res://scripts/tools/export_robot_clips.gd -- <repo>/assets/enemies/boss_robot_paru",
   "archive_sha256": "d7acc41f38c17012cf37e96fdceffac4b8229c827f3cf3f6cc0f789460ea5635",
-  "adaptation": "Existing pack contains boss_robot_cmb split meshes. Channel0 tracks retarget z_003u to z_103u; unused put02 joint omitted because shipped mesh lacks it. Exact original split geometry is not claimed. No pack mutation.",
+  "adaptation": "Original Paru z_003u and z_003n rigs, retaining put02 drill tracks. z_003u viewer export omits texture bindings; restored named material/texture bindings from the shipped z_103u rig using original Paru textures. No geometry or animation retargeting. o0c_bsef01 used for digging, with authored effect scale/lifetime.",
   "sources": {
     "z_003u": "2b8b97e21c3e4cfa7abb943a8e48c123a045b8c763c8b02118e16a2b602ff221",
-    "z_003n": "7452f6ae97fef78a7fabdc48b451cf9f4c233f674fb382a63afa7f88b06afa4e"
-  }
+    "z_003n": "7452f6ae97fef78a7fabdc48b451cf9f4c233f674fb382a63afa7f88b06afa4e",
+    "o0c_bsef01": "96cbec632da2f2ac1cfd625141a9148b269a5fb385d7c8a154b0e452b27781fd"
+  },
+  "runtime_z_003u_sha256": "f41f1a732fae4af70d539ac5fce144395e37bc460b7e04965d6cecb41e79518a"
 }

@@ -18,10 +18,20 @@ HP-interpolated idle delays, original intro/idle/death clips.
 Not 1:1: authored starting positions, floating-point trajectory adapters,
 fixed provisional targeting of the local player, lower approach predicate,
 projectile speed/heading/shape/status and original growing area collision.
-The initial aerial impacts are bounded pulses, not original expanding areas.
-Full split mesh differs from the combined archive's split geometry shipped
-in the asset pack; original curves are retargeted by bone name (provenance in
-`data/boss_animations/robot_provenance.json`). No full-fight fidelity claim.
+The floating robot now alternates authored hover attacks and a burrow within the
+299-tick span. The original z_003u mesh and put02 tracks supply the drill; o0c_bsef01 supplies
+the digging effect (with authored scale/lifetime). Burrowing
+hides/disables its receiver, warns at the captured emergence point, and restores
+it on emergence. The other robot approaches, dashes, occasionally strafes and
+fires post-dash lasers. Linked orbit timing is unchanged. Persistent slow holes
+and Zonde casting are not implemented; Zonde is still unconfirmed.
+Original split geometry now loads from assets/enemies/boss_robot_paru instead
+of Humilias split parts. Native put02 drill animation is retained. The viewer's
+z_003u export omitted texture bindings; named material/texture bindings are
+restored from z_103u against original Paru textures. Source and runtime hashes
+are in data/boss_animations/robot_provenance.json. These assets are published
+in the pack referenced by assets_manifest.json and the R2 raw mirror. No full-fight
+fidelity claim.
 
 Validation: seeded unit checks in test_runner; actual arena lifecycle/autonomous
 attack probe via `PSZ_ROBOT_CHECK=1 godot --headless --path .
