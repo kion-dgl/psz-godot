@@ -3394,6 +3394,7 @@ assets/player/photon_blasts/fb_rabbit.png
 assets/sfx/common/common_000.wav
 assets/sfx/common/common_002.wav
 assets/sfx/common/common_004.wav
+assets/sfx/common/common_005.wav
 assets/sfx/common/common_007.wav
 assets/sfx/common/common_008.wav
 assets/sfx/common/common_009.wav
