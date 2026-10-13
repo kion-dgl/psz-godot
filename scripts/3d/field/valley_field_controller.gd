@@ -677,7 +677,7 @@ func _ready() -> void:
 	add_child(_field_hud)
 	# Initial actors spawn before the HUD exists; late spawns bind in the spawner.
 	for room_enemy in _room_enemies:
-		if room_enemy is DescriptorBoss and room_enemy.is_alive:
+		if room_enemy is EnemyBase and room_enemy.is_alive and room_enemy.enemy_data and room_enemy.enemy_data.is_boss:
 			_field_hud.show_boss_bar(room_enemy)
 
 	# Debug info overlay — quest ID / mission ID, section, cell position
@@ -976,6 +976,7 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
 
+
 	# Blob shadow — dark circle under the player (unshaded, always visible).
 	# Slots with real dynamic shadows skip it (#646): a shadow-casting sun
 	# (#648) or moon, or lantern pools (#649 — the wetlands' post omnis are
@@ -1245,7 +1246,7 @@ func _spawn_field_elements() -> void:
 	# from the spawn room without needing to clear the area first. This is
 	# the "first-room return teleporter" half of issue #136.
 	var section_idx_for_warp: int = SessionManager.get_current_section()
-	if _current_cell.get("is_start", false) and section_idx_for_warp == 0:
+	if _current_cell.get("is_start", false) and section_idx_for_warp == 0 and not SessionManager.get_session().get("coliseum_encounter", false):
 		var start_warp := StartWarpScript.new()
 		start_warp.auto_collect = false
 		start_warp.interactable = true
@@ -1810,6 +1811,8 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 ## the activated signal to _travel_to_city_via_telepipe instead of advancing
 ## the section.
 func spawn_player_telepipe(world_pos: Vector3) -> void:
+	if SessionManager.get_session().get("coliseum_encounter", false):
+		return
 	# Record the placement first so the cancellation signal (if a previous
 	# telepipe was active) fires before we spawn the new one. The Telepipe
 	# element doesn't observe TelepipeManager directly — TelepipeManager is
@@ -1857,7 +1860,7 @@ func _spawn_player_telepipe_node(world_pos: Vector3) -> void:
 ## field entirely; coming back via the city teleporter starts a fresh
 ## session and a new spawn-room StartWarp.
 func _on_start_warp_interacted(_player: Node3D) -> void:
-	if _transitioning:
+	if _transitioning or SessionManager.get_session().get("coliseum_encounter", false):
 		return
 	_transitioning = true
 	_fdbg("[ValleyField] Player triggered StartWarp → return to city (suspended)")
@@ -3041,3 +3044,23 @@ func _player_mat_stats(node: Node) -> Array:
 		with_normals += sub[2]
 		mesh_count += sub[3]
 	return [shaded, flat, with_normals, mesh_count]
+
+
+## Encounter-local post-Octo sky. Session/table defaults stay rainy for retries.
+## End-state is observed in retail; these light values are remake presentation.
+func clear_octo_storm() -> void:
+	if not is_instance_valid(_map_root) or str(_current_cell.get("stage_id", "")) != "s02z_na1":
+		return
+	if is_instance_valid(_weather_node):
+		var weather := _weather_node
+		var fade := weather.create_tween()
+		fade.tween_property(weather,"amount_ratio",0.0,4.0)
+		fade.tween_callback(func(): weather.emitting = false)
+	var lightning := get_node_or_null("Lightning")
+	if lightning: lightning.queue_free()
+	_slot = _slot.duplicate(true)
+	_slot["weather"] = ""
+	_slot["lightning"] = false
+	_slot["ambient_energy"] = 0.5
+	_slot["sky_top_color"] = Color(0.52,0.57,0.63)
+	_slot["sky_horizon_color"] = Color(0.68,0.72,0.76)

@@ -29,6 +29,11 @@ static func run(t: Node) -> void:
 	t.assert_eq(r.fallback(1,0).id,-1,"blocked fallback bite has no reroll")
 	r.breath_timer = 0
 	t.assert_eq(r.priority(40.0,0.0).id,6,"distant breath requires expired cooldown")
+	var paced := ReyburnController.new(3300,1650)
+	t.assert_eq(paced.priority(9.0,0.0,false).id,-1,"bite cooldown gates spatial priority")
+	t.assert_eq(paced.fallback(1,0,false).id,-1,"bite cooldown also gates fallback")
+	paced.budgets.modifier_budget = 0
+	t.assert_eq(paced.priority(9.0,0.0,false).id,1,"bite cooldown preserves modifier reaction")
 	var o := OctoController.new()
 	t.assert_eq(o.clamp_hp(-999,5220),2610,"lethal mode-zero hit clamps before death")
 	o.latch(2610,5220)

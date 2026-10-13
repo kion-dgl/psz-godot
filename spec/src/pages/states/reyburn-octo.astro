@@ -3,7 +3,7 @@ import Concept from '../../layouts/Concept.astro';
 ---
 <Concept title="Reyburn and Octo Diablo" section="States">
   <p>This contract supersedes the authored Reyburn and Octo attack/phase tables in
-  /states/bosses. Source: psz-re 29266e6, ROM overlay 20/21 and the retained
+  /states/bosses. Source: psz-re 29266e6 plus Octo follow-up b1f69d0, ROM overlay 20/21 and the retained
   melonDS natural-damage captures. It defines the testable port; complete
   input/RNG/motion parity remains an open requirement.</p>
   <h2>Shared execution</h2>
@@ -37,7 +37,20 @@ import Concept from '../../layouts/Concept.astro';
   [90,0,10] and [0,90,10] MUST select projectiles, never the main attack.
   Main selection MUST retain ordered timer/hit-count checks. Limb hits MUST
   share encounter HP and receive their own reaction without cancelling body
-  playback. Death MUST cancel every limb.</p>
+  playback. Death MUST cancel combat delivery, then permit the dedicated
+  sinking presentation to finish.</p>
+  <p>Octo MUST retain its authored water-center spawn rather than use generic
+  nearest-floor repair. Center failed suction MUST preserve captured intervals
+  61/91/21/16/35/41/181/21 for actions 12/13/15/16/17/18/2/4 before idle.
+  Edge failure MUST preserve 61/154/31/151/23 for 12/13/14/3/4, without recoil.
+  Request 17 MUST spin, request 12 MUST run the screw channels, and requests
+  13/15 MUST change arena side. Variant 1 alone may poison. Death MUST use
+  action 21 and finish after 181 updates; subsequent encounters restore rain.</p>
+  <p>The intro and phase/death cameras, root placement, side-travel curve,
+  suction force and cloudy-sky grade are authored adapters. Successful
+  swallow/capture is not implemented. Incoming spheres follow named joints;
+  exact joint-pair volumes, secondary parts, status immunity/resistance and
+  original poison damage remain open.</p>
   <h2>Parity boundaries and validation</h2>
   <p>Recovered timing, budgets and request priorities MUST be tested against
   retained emulator evidence and boundary inputs. A field probe MUST exercise

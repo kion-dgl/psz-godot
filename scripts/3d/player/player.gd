@@ -2666,7 +2666,7 @@ func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1
 
 
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
-	if _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
+	if DebugConfig.invincible or _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
 		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
@@ -3219,3 +3219,7 @@ func _try_auto_revive() -> bool:
 
 func can_photon_blast() -> bool:
 	return not _is_defeated and _recovery_left <= 0.0 and _freeze.remaining <= 0.0 and not _ailments.blocks_attack() and GameState.hp > 0 and current_state in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING] and SessionManager.get_location() == "field" and not PsoStartMenu.is_open() and SceneManager._overlay_stack.is_empty()
+
+
+func apply_octo_poison(tier: int) -> void:
+	_ailments.apply_octo_poison(self,tier)

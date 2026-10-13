@@ -1,0 +1,181 @@
+{
+  "schema": "psz-re/dark-shrine/1",
+  "trinity_request_enter": {
+    "1": "0x2198154",
+    "2": "0x219adc4",
+    "3": "0x2197f80",
+    "4": "0x219ab60",
+    "5": "0x219ad08",
+    "6": "0x219ad6c",
+    "7": "0x219acb0",
+    "8": "0x219aad0"
+  },
+  "trinity_request_actions": {
+    "1": 4,
+    "2": null,
+    "3": 2,
+    "4": 3,
+    "5": 6,
+    "6": 7,
+    "7": 8,
+    "8": 9
+  },
+  "trinity_body_capture": {
+    "trace": "data/traces/dark_shrine/trinity_request4.jsonl.gz",
+    "sha256": "d880430c9797c727a9aef7a6ab4bc5399ca7d253a9a5d1815a4b4da41b4c4780",
+    "metadata": {
+      "boss": "trinity",
+      "source_state": "../psz-melonmix/sandbox/incoming/20260806-232507_Phantasy_Star_0__USA_.ml8",
+      "source_sha256": "c7cf23bd727de4ec093071ac18ef6fefa3a7f5a124f34a6a77884e6796783190",
+      "entity": "0x237b770",
+      "requested_ticks": 1800,
+      "tick_unit": "calls to boss controller update, not assumed video frames",
+      "memory_writes": [
+        {
+          "address": "0x237d118",
+          "before": 0,
+          "after": 4,
+          "width": 4,
+          "purpose": "seed pending request, not natural piece defeat"
+        }
+      ],
+      "complete": true,
+      "controller": "0x237d0c0",
+      "captured_ticks": 1800,
+      "captured_events": 1907,
+      "wall_seconds": 60.037
+    },
+    "flags": [
+      {
+        "tick": 0,
+        "flags": 0
+      },
+      {
+        "tick": 2,
+        "flags": 1
+      },
+      {
+        "tick": 128,
+        "flags": 3
+      }
+    ],
+    "actions": [
+      [
+        2,
+        3
+      ],
+      [
+        243,
+        1
+      ],
+      [
+        245,
+        1
+      ],
+      [
+        287,
+        9
+      ],
+      [
+        438,
+        10
+      ],
+      [
+        539,
+        10
+      ],
+      [
+        640,
+        11
+      ],
+      [
+        691,
+        1
+      ],
+      [
+        693,
+        8
+      ],
+      [
+        894,
+        1
+      ],
+      [
+        896,
+        1
+      ],
+      [
+        938,
+        9
+      ],
+      [
+        1089,
+        11
+      ],
+      [
+        1140,
+        1
+      ],
+      [
+        1142,
+        8
+      ],
+      [
+        1343,
+        1
+      ],
+      [
+        1345,
+        1
+      ],
+      [
+        1387,
+        9
+      ],
+      [
+        1538,
+        11
+      ],
+      [
+        1589,
+        1
+      ],
+      [
+        1591,
+        8
+      ],
+      [
+        1792,
+        1
+      ],
+      [
+        1794,
+        1
+      ]
+    ],
+    "notifications": [
+      [
+        128,
+        0
+      ],
+      [
+        804,
+        10
+      ],
+      [
+        1253,
+        10
+      ],
+      [
+        1702,
+        10
+      ]
+    ]
+  },
+  "limits": [
+    "Request 4 seeded directly; pieces remain alive. This does not verify natural piece defeat.",
+    "Request 2 is conditional idle, not a fixed action. Headbutt repetition follows request parameter.",
+    "Falz damage formula and Trinity piece-count selector remain static interpretations in docs/boss-behavior-live.md.",
+    "No claim of full encounter, visual, RNG, collision, multiplayer or Godot parity."
+  ]
+}

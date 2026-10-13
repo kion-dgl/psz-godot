@@ -14,6 +14,14 @@ func apply(player: Node3D, kind: String) -> void:
 		player._drop_charge()
 	_update_label(player)
 
+## Combat record 6: level 3/4/5, default 1230/1380/1530 updates and
+## 150-update interval. DoT amount remains the remake's generic poison tuning.
+func apply_octo_poison(player: Node3D, tier: int) -> void:
+	if not player.can_take_hit(): return
+	var level := clampi(tier,0,2)
+	effects["poison"] = {"remaining": float([1230,1380,1530][level])/30.0, "elapsed":0.0}
+	_update_label(player)
+
 func clear(player: Node3D) -> void:
 	effects.clear()
 	player._freeze.clear(player)
@@ -38,10 +46,11 @@ func tick(player: Node3D, delta: float) -> bool:
 		var old_elapsed := float(fx.elapsed)
 		fx.elapsed = old_elapsed + active_delta
 		fx.remaining = maxf(0.0, float(fx.remaining) - delta)
-		if kind == "burn":
-			var ticks := int(fx.elapsed) - int(old_elapsed)
+		if kind in ["burn","poison"]:
+			var interval := 5.0 if kind == "poison" else 1.0
+			var ticks := int(float(fx.elapsed)/interval) - int(old_elapsed/interval)
 			for _tick in ticks:
-				player.take_damage(maxi(1, int(GameState.max_hp * float(CombatManager.STATUS_EFFECTS.burn.dot_percent))), Vector3.ZERO, false, true)
+				player.take_damage(maxi(1, int(GameState.max_hp * float(CombatManager.STATUS_EFFECTS[kind].dot_percent))), Vector3.ZERO, false, true)
 				if not effects.has(kind):
 					break # Lethal damage/recovery cleared the collection.
 		elif kind == "stun":

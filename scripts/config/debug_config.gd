@@ -1,6 +1,8 @@
 class_name DebugConfig
 ## Global debug toggle states. Checked by the field controller each frame.
 
+static var invincible := false
+static var show_enemy_health_bars := true
 static var show_floor_collision := false
 static var show_gate_dots := false
 # Floating label above each gate showing its portal id + target cell. Off by
