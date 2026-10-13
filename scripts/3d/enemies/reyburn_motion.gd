@@ -41,3 +41,15 @@ func step(boss, requested_speed: float, destination: Variant = null) -> bool:
 	boss.rotation.y += turn*minf(traveled/maxf(motion.length(),0.0001),1.0)
 	if traveled < motion.length()*0.2 and absf(speed) > 0.5: reverse_ticks = 30
 	return absf(boss._bearing()) < 0.12
+
+func retail_step(boss) -> void:
+	# Tracking state 0219DD38: 0x100 displacement, 0x5B turn per unit time.
+	var turn := 91
+	if not boss._has_floor_at(boss.global_position+boss.global_basis.z*7.5): turn *= 3
+	boss._turn_step(turn)
+	var motion: Vector3 = boss.global_basis.z*(256.0/4096.0)
+	var floor_hit := ReyburnFloor.sample(boss,boss.global_position+motion)
+	if floor_hit.is_empty(): return
+	boss.move_and_collide(motion)
+	boss.global_position.y = floor_hit.position.y
+	boss._ground_height = floor_hit.position.y

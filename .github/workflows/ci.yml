@@ -59,6 +59,14 @@ jobs:
           grep -q '0 failures' /tmp/boss-replay.log
           ! grep -q 'SCRIPT ERROR' /tmp/boss-replay.log
 
+      - name: Original Reyburn path and movement replay
+        run: |
+          set -o pipefail
+          godot --headless --path . --script res://scripts/tools/test_reyburn_parity.gd 2>&1 | tee /tmp/reyburn-parity.log
+          grep -q '749 original spline samples, 0 failures' /tmp/reyburn-parity.log
+          grep -q '414 original one-update fixtures' /tmp/reyburn-parity.log
+          ! grep -q 'SCRIPT ERROR' /tmp/reyburn-parity.log
+
       - name: Startup cache and download probe
         run: python3 scripts/tools/autoplay/startup_check.py
 

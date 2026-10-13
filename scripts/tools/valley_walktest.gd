@@ -281,6 +281,22 @@ func _input(event: InputEvent) -> void:
 		_update_status()
 		return
 	match keycode:
+		KEY_F6:
+			if _stage_id != "s01z_na1":
+				return
+			var hours := [10.0, 19.0, 23.0, 6.0]
+			var next := (hours.find(float(_slot.get("hour", 10.0))) + 1) % hours.size()
+			OS.set_environment("PSZ_WALK_HOUR", str(hours[next]))
+			_pending_stage = _stage_id
+			get_tree().reload_current_scene()
+		KEY_F7:
+			if _stage_id != "s01z_na1":
+				return
+			var kinds := ["sand", "", "drizzle", "rain"]
+			var next := (kinds.find(str(_slot.get("weather", "sand"))) + 1) % kinds.size()
+			OS.set_environment("PSZ_WALK_WEATHER_KIND", kinds[next])
+			_pending_stage = _stage_id
+			get_tree().reload_current_scene()
 		KEY_BRACKETLEFT:
 			_moonlight.light_energy = maxf(0.0, _moonlight.light_energy - 0.05)
 		KEY_BRACKETRIGHT:
@@ -402,3 +418,6 @@ func _update_status() -> void:
 		"on" if _dir_light.shadow_enabled else "off",
 		_dir_light.shadow_normal_bias,
 		"sun-open" if _sun_open else "shell-cast-off"]
+	if _stage_id == "s01z_na1":
+		_status.text += "\nF6 time: %02d:00  |  F7 weather: %s" % [
+			int(_slot.get("hour", 10.0)), str(_slot.get("weather", "")) if not str(_slot.get("weather", "")).is_empty() else "clear"]

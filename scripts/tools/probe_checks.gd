@@ -14,12 +14,12 @@ func _ready() -> void:
 		return
 	call_deferred("_run")
 
-func _snapshot_boss(label: String, boss: DescriptorBoss) -> void:
+func _snapshot_boss(label: String, boss: DescriptorBoss, offset := Vector3(24,18,32)) -> void:
 	var folder := OS.get_environment("PSZ_BOSS_SCREENSHOTS")
 	if folder.is_empty() or DisplayServer.get_name() == "headless": return
 	var camera := Camera3D.new()
 	get_tree().root.add_child(camera)
-	camera.global_position = boss.global_position + Vector3(24,18,32)
+	camera.global_position = boss.global_position + offset
 	camera.look_at(boss.global_position+Vector3.UP*3,Vector3.UP)
 	camera.current = true
 	await RenderingServer.frame_post_draw

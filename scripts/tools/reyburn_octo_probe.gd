@@ -62,6 +62,8 @@ func _entrance(boss: ReyburnBoss, player: Node3D) -> void:
 	_check(boss.get_viewport().get_camera_3d().get_parent().get("target") == player, "entrance restores player camera")
 
 func _reyburn(boss: ReyburnBoss, player: Node3D) -> void:
+	_check(is_instance_valid(boss._horn) and boss._horn.visible,"separate original horn attached before break")
+	await _snapshot_boss("reyburn-intact",boss,Vector3(12,7,16))
 	boss.rng.seed = 20261012
 	var hp := boss.current_hp
 	var budget := boss.controller.budgets.part_budget
@@ -131,8 +133,13 @@ func _reyburn(boss: ReyburnBoss, player: Node3D) -> void:
 	for tick in 15: boss._physics_process(1.0/30.0)
 	await _pacing(boss,player)
 	await preload("res://scripts/tools/reyburn_movement_probe.gd").run(self,boss,player)
+	boss.controller.budgets.part_budget = 1
+	boss._hurt_parts[1].take_hit(20,Vector3.ZERO,9999,"",0,true,"physical",player)
+	_check(boss.controller.bite_blocked and not boss._horn.visible,"head damage breaks separate horn and suppresses bite")
 
 func _pacing(boss: ReyburnBoss, player: Node3D) -> void:
+	# Preserve checks for the optional reviewed pacing adapter.
+	boss.original_ground_pacing = false
 	boss.rotation.y = 0
 	player.global_position = boss.global_position + Vector3(0,0,9)
 	boss.controller.fallback_timer = 375
@@ -158,6 +165,7 @@ func _pacing(boss: ReyburnBoss, player: Node3D) -> void:
 	player._is_defeated = false
 	boss._physics_process(1.0/30.0)
 	_check(boss.state_field == "track" and boss.pacing.rest_ticks > 0, "revived player gets a fresh pause")
+	boss.original_ground_pacing = true
 	await get_tree().physics_frame
 
 func _octo(boss: OctoDiabloBoss, player: Node3D) -> void:
@@ -297,6 +305,7 @@ func _contains_chain(actions: Array[int], expected: Array) -> bool:
 	for start in actions.size():
 		if actions.slice(start,start+expected.size()) == expected: return true
 	return false
+
 
 
 

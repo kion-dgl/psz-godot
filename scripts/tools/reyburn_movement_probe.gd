@@ -1,6 +1,9 @@
 extends RefCounted
-## Live floor, repeated aerial deliveries and movement-coupled steering checks.
+## Live floor and sequence-specific aerial behavior from original captures.
 static func run(t: Node, boss: ReyburnBoss, player: Node3D) -> void:
+	_ground_delivery_frame(t,boss)
+	_original_assets(t,boss)
+	_original_takeoff(t,boss)
 	await _flight(t,boss)
 	_ground_turn(t,boss,player)
 	await _contact_and_approach(t,boss,player)
@@ -13,17 +16,16 @@ static func _flight(t: Node, boss: ReyburnBoss) -> void:
 	for sequence in [9,10,11]:
 		launches.clear()
 		boss._clear_deliveries()
+		var emitted_before := boss.deliveries.serial
 		boss.start_request({"id":sequence})
 		for tick in 1800:
 			boss._physics_process(1.0/30.0)
 			if boss.sequence_id == -1: break
 		t._check(boss.sequence_id == -1,"aerial cycle %d completes" % sequence)
-		t._check(launches.size() in [2,3],"aerial cycle %d attacks two or three times" % sequence)
-		t._check(boss._owned_shots.size() == launches.size(),"each aerial attack delivers a fireball")
-		var relocated := launches.size() > 1
-		for index in range(1,launches.size()):
-			relocated = relocated and launches[index].distance_to(launches[index-1]) > 3.0
-		t._check(relocated,"aerial cycle %d relocates between attacks" % sequence)
+		var expected := 1 if sequence == 11 else 0
+		t._check(launches.size() == expected,"aerial sequence %d selects only its original attack" % sequence)
+		t._check(boss.deliveries.serial-emitted_before == expected,"aerial sequence %d original projectile count" % sequence)
+		if sequence == 10: t._check(boss.flight.pass_index == 6,"enhanced aerial spin completes six paths")
 		var floor_hit := ReyburnFloor.sample(boss,boss.global_position)
 		t._check(not floor_hit.is_empty() and absf(boss.global_position.y-floor_hit.position.y) < 0.1,"aerial cycle %d lands on supported floor" % sequence)
 		await t.get_tree().physics_frame
@@ -35,7 +37,7 @@ static func _flight(t: Node, boss: ReyburnBoss) -> void:
 	boss.state_field = "0xe4"
 	boss._state_ticks = 0
 	boss._land()
-	t._check(boss.state_field == "air_return","off-mesh landing redirects to safe approach")
+	t._check(not ReyburnFloor.sample(boss,boss.flight.landing_point).is_empty(),"off-mesh landing chooses supported destination")
 	for tick in 1800:
 		boss._physics_process(1.0/30.0)
 		if boss.state_field == "track": break
@@ -100,3 +102,59 @@ static func _contact_and_approach(t: Node, boss: ReyburnBoss, player: Node3D) ->
 	boss.approach.reset()
 	player.global_position = player_position
 	boss._clear_deliveries()
+
+static func _original_takeoff(t: Node, boss: ReyburnBoss) -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/reyburn_parity.json"))
+	var fixture: Dictionary = data.takeoff_fixture
+	var original: Vector3 = boss.global_position
+	var enhanced := boss.controller.enhanced
+	boss.controller.enhanced = false
+	var p: Array = fixture.positions_raw[0]
+	boss.global_position = boss.get_parent().global_transform*(Vector3(p[0],p[1],p[2])/4096.0)
+	boss.rotation.y = float(fixture.facing_raw)*TAU/65536.0
+	boss.start_request({"id":9,"entry_side":0,"landing":Vector3.ZERO})
+	var measured: Array[Vector3] = []
+	for tick in 500:
+		measured.append(boss.flight.local_position(boss))
+		boss._physics_process(1.0/30.0)
+		if boss.state_field != "0xdc": break
+	var worst := 0.0
+	for i in mini(measured.size(),fixture.positions_raw.size()):
+		var q: Array = fixture.positions_raw[i]
+		worst = maxf(worst,measured[i].distance_to(Vector3(q[0],q[1],q[2])/4096.0))
+	print("[reyburn-original] takeoff duration Godot=%d original=%d max aligned position error=%f" % [measured.size(),fixture.positions_raw.size(),worst])
+	t._check(boss.state_field == "0xe0","original takeoff exits into end reentry")
+	t._check(measured.size() == fixture.positions_raw.size(),"whole original takeoff duration matches 266 updates")
+	t._check(worst < 0.02,"whole original takeoff stays within 0.02 world units")
+	boss.global_position = original
+	boss.controller.enhanced = enhanced
+	boss._states.clear()
+	boss._enter_next_state()
+
+static func _original_assets(t: Node, boss: ReyburnBoss) -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/reyburn_parity.json"))
+	for clip: String in data.animation_inventory.slots:
+		t._check(boss.animation_player.has_animation(clip.get_basename()),"original body clip available: "+clip)
+
+static func _ground_delivery_frame(t: Node, boss: ReyburnBoss) -> void:
+	# A non-origin mission room must not immediately expire its first ground shots.
+	var parent := boss.get_parent() as Node3D
+	var previous := parent.position
+	parent.position.x += 128.0
+	boss._initialized_position = false
+	boss._clear_deliveries()
+	var serial := boss.deliveries.serial
+	boss.start_request({"id":6,"types":[0],"counts":[1]})
+	for tick in 180:
+		boss._physics_process(1.0/30.0)
+		if boss.deliveries.serial > serial: break
+	for tick in 3: boss.deliveries.tick(boss)
+	var flying := boss.deliveries.shots.size() == 3
+	for shot: Dictionary in boss.deliveries.shots: flying = flying and shot.impact == -1
+	t._check(flying,"translated arena keeps first ground fan inside arena-local bounds")
+	boss._clear_deliveries()
+	parent.position = previous
+	boss._initialized_position = false
+	boss._states.clear()
+	boss._enter_next_state()
+	boss._physics_process(1.0/30.0)

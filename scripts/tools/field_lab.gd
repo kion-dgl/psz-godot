@@ -112,6 +112,11 @@ static func apply_slot(slot: Dictionary, env: Environment, sky_mat: ProceduralSk
 static func boot_environment(lab: Node, area_id: String, stage_id: String) -> Dictionary:
 	var built := build_environment(lab)
 	var slot: Dictionary = FieldSlotTable.slot_for(area_id, stage_id)
+	if stage_id == "s01z_na1":
+		if OS.has_environment("PSZ_WALK_HOUR"):
+			slot["hour"] = float(OS.get_environment("PSZ_WALK_HOUR"))
+		if OS.has_environment("PSZ_WALK_WEATHER_KIND"):
+			slot["weather"] = OS.get_environment("PSZ_WALK_WEATHER_KIND")
 	apply_slot(slot, built["env"], built["sky_mat"], built["dir_light"],
 		built["moonlight"])
 	if not OS.get_environment("PSZ_WALK_SUN_PITCH").is_empty():
@@ -132,6 +137,9 @@ static func boot_environment(lab: Node, area_id: String, stage_id: String) -> Di
 			float(OS.get_environment("PSZ_WALK_AMBIENT"))
 	preload("res://scripts/3d/field/makara_sky.gd").apply(
 		built["env"], built["sky_mat"], built["dir_light"], slot)
+	preload("res://scripts/3d/field/valley_arena_backdrop.gd").apply_sky(
+		built["env"], built["sky_mat"], built["dir_light"], slot,
+		float(slot.get("hour", 10.0)), str(slot.get("weather", "")))
 	built["slot"] = slot
 	return built
 
@@ -198,6 +206,7 @@ static func load_field_stage(scene_root: Node, slot: Dictionary,
 			TEXTURE_FIX_SHADER_UNLIT, slot.get("lit_surfaces", []))
 	preload("res://scripts/3d/field/shrine_lighting.gd").make_double_sided(map_root, stage_id)
 	preload("res://scripts/3d/field/makara_lighting.gd").prepare_stage(map_root, stage_id, slot)
+	preload("res://scripts/3d/field/valley_arena_backdrop.gd").prepare_stage(map_root, stage_id)
 	preload("res://scripts/3d/field/tower_lighting.gd").spawn(map_root, stage_id)
 	return map_root
 
