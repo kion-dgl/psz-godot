@@ -851,7 +851,7 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive",
 		return
 
 	# Bosses use a dedicated behaviour subclass (phases, flight, boss health bar).
-	if edata and enemy_id in ["reyburn", "octo_diablo", "dark_falz", "mother_trinity"]:
+	if edata and enemy_id in ["reyburn", "octo_diablo", "chaos_mobius", "dark_falz", "mother_trinity"]:
 		if _spawn_boss(pos, enemy_id, edata):
 			return
 
@@ -917,6 +917,7 @@ func _spawn_boss(pos: Vector3, enemy_id: String, edata) -> bool:
 	var scripts := {
 		"reyburn": "res://scripts/3d/enemies/reyburn_boss.gd",
 		"octo_diablo": "res://scripts/3d/enemies/octo_diablo_boss.gd",
+		"chaos_mobius": "res://scripts/3d/enemies/paru_robot_boss.gd",
 		"dark_falz": "res://scripts/3d/enemies/dark_falz_boss.gd",
 		"mother_trinity": "res://scripts/3d/enemies/mother_trinity_boss.gd",
 	}

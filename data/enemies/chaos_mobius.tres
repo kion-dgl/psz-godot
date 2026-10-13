@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "chaos_mobius"
-name = "Chaos & Mobius"
+name = "D Chaos & D Mobius"
 japanese_name = ""
 element = 2
 locations = PackedStringArray("Oblivion City Paru")

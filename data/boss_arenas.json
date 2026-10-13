@@ -25,7 +25,7 @@
     "s05z_na1": {
       "area": "paru_z",
       "label": "Oblivion City Paru arena",
-      "note": "the original Paru robot archives and live controller traces are available in psz-re; this debug room currently uses the PSO Sinow stand-in (sinow_beat / sinow_gold rare)"
+      "note": "Dedicated Chaos & Mobius encounter uses original split meshes. Legacy Sinow debug mission remains available."
     },
     "s06z_na1": {
       "area": "arca_z",
@@ -609,7 +609,7 @@
     },
     "chaos_mobius": {
       "model_id": "boss_robot",
-      "arena": "s06z_na1",
+      "arena": "s05z_na1",
       "quest_source": "heretic",
       "model_scale": 1.0,
       "stats": {
@@ -728,7 +728,7 @@
         }
       ],
       "anchors": [],
-      "note": "ENCOUNTER 2 of 2 (per Kion): Arca is the SECOND encounter \u2014 Chaos & Mobius JOIN into the larger combined robot (z_003, the full 26-clip kit). The first encounter is the split top+bottom at Paru (chaos_mobius_paru). Full kit imported via the patched apicula (viewer processBossRobot.ts) \u2014 the rigs carry one extra unanimated root object apicula's exact-count match rejected; the game rig is boss_robot_cmb's combined z_003. The ch_in/ch_out combine-split transitions (parts z_003n/z_103u) are the join animation from the split form; ded_n/ded_u deaths and the floor_lazer arena props also ride the cmb narc.",
+      "note": "Paru is the split D Chaos/D Mobius encounter (ROM species 63/64). Older preview attack table is not runtime behavior. Humilias (65) is the Arca combined encounter.",
       "parts": [],
       "clip_notes": {
         "wat": "combined idle",
@@ -749,7 +749,9 @@
         "stt_u": "u robot entrance",
         "ded_n": "n robot death",
         "ded_u": "u robot death"
-      }
+      },
+      "runtime_controller": "res://scripts/3d/enemies/paru_robot_boss.gd",
+      "runtime_note": "Original split robot parts and counter boundaries; provisional movement/selection. See /states/robot-bosses."
     },
     "chaos_sorcerer": {
       "model_id": "chaos_sorcerer",

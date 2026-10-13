@@ -28,7 +28,9 @@ static func scaled(source: EnemyData, level: int, difficulty: String = "normal",
 		result.original_attack_stats = true
 	# Tier rows already incorporate difficulty; only scale authored normal-area levels.
 	var growth := float(maxi(level - int(DIFFICULTY_LEVELS.get(difficulty, 0)) - 1, 0))
-	result.hp_base = maxi(1, int(result.hp_base * (1.0 + growth * 0.08)))
+	# Paru is one shared encounter pool; retail tier HP already budgets both robots.
+	if source.id != "chaos_mobius":
+		result.hp_base = maxi(1, int(result.hp_base * (1.0 + growth * 0.08)))
 	result.attack_base = maxi(1, int(result.attack_base * (1.0 + growth * 0.05)))
 	result.attack_min = int(result.attack_min * (1.0 + growth * 0.05))
 	result.defense_base = int(result.defense_base * (1.0 + growth * 0.08))

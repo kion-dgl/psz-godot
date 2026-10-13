@@ -15,9 +15,9 @@ var _idle := 23
 var _hold := 0
 var _pose := ""
 
-func setup(parent: Node3D, index: int, mesh: PackedScene, library: AnimationLibrary, actions: Array) -> void:
+func setup(parent: Node3D, index: int, mesh: PackedScene, library: AnimationLibrary, actions: Array, idle: int = -1) -> void:
 	channel = index
-	_idle = 23 if index < 5 else 44
+	_idle = idle if idle >= 0 else (23 if index < 5 else 44)
 	_actions = actions
 	model = mesh.instantiate()
 	model.name = "BossChannel%d" % index
@@ -55,7 +55,7 @@ func tick() -> void:
 func _stage_changed(descriptor: Dictionary) -> void:
 	_pose = str(descriptor.member).get_basename()
 	if not player.has_animation(_pose):
-		push_error("Missing Octo channel %d clip %s" % [channel,_pose])
+		push_error("Missing boss channel %d clip %s" % [channel,_pose])
 		_pose = ""
 		return
 	player.play(_pose)

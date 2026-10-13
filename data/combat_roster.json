@@ -18,7 +18,7 @@
     {
       "title": "Robot encounter and orphan attack data",
       "issue": 716,
-      "evidence": "chaos_mobius resource and boss definition both use boss_robot, but the encounter is in Arca s06z_na1 while the resource lists Paru. FieldPopulation aliases boss_robot_cmb (65) to boss_robot (63). Boss notes describe a combined Arca rig and refer to chaos_mobius_paru; that ID exists only in the attack table, not as a resource or boss definition. Paru’s arena currently documents a Sinow stand-in.",
+      "evidence": "chaos_mobius resource and boss definition both use boss_robot, but the encounter is in Arca s06z_na1 while the resource lists Paru. FieldPopulation aliases boss_robot_cmb (65) to boss_robot (63). Boss notes describe a combined Arca rig and refer to chaos_mobius_paru; that ID exists only in the attack table, not as a resource or boss definition. Paru\u2019s arena currently documents a Sinow stand-in.",
       "next": "Resolve split/combined identity and arena routing together. Do not count chaos_mobius_paru as a playable validated variant or silently delete its recorded kit."
     },
     {
@@ -147,13 +147,13 @@
     },
     {
       "id": "chaos_mobius",
-      "name": "Chaos & Mobius",
+      "name": "D Chaos & D Mobius",
       "model_id": "boss_robot",
       "animation_model_id": "boss_robot",
       "is_boss": true,
       "source_id": 63,
       "issue": 716,
-      "identity_status": "identity conflict / variant unresolved"
+      "identity_status": "ROM species 63/64 split Paru encounter; partial behavior port"
     },
     {
       "id": "chaos_sorcerer",
@@ -791,9 +791,9 @@
     {
       "id": "chaos_mobius",
       "model_id": "boss_robot",
-      "arena": "s06z_na1",
+      "arena": "s05z_na1",
       "issue": 716,
-      "note": "Matches resource model; original behavior pending."
+      "note": "Dedicated split robot controller; remaining parity gaps in /states/robot-bosses."
     },
     {
       "id": "chaos_sorcerer",
