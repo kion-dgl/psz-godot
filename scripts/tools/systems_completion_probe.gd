@@ -60,7 +60,7 @@ func _loadout_menu(player: Node3D, ch: Dictionary) -> void:
 	await _choose(0)
 	_verify(ch.equipment.weapon == "saber" and ch.weapon_grinds.saber == 5, "live recall restores exact weapon and current grind")
 	_verify(player.weapon_node != null and Inventory._items.keys()[0] == "saber", "recall refreshes rig and inventory ordering")
-	await _manual_bank_withdrawal(storage, ch)
+	_manual_bank_withdrawal(storage, ch)
 	storage.queue_free()
 	await get_tree().process_frame
 	await _snapshot("equipment-sets")
