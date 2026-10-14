@@ -69,6 +69,7 @@ static func _finish(menu: Node, outcome: Dictionary, refresh: bool = false) -> v
 	menu._action_message = outcome.message
 	if outcome.success:
 		if refresh:
+			menu._sub_idx = menu._get_equip_slots().size() - 1
 			var player = menu.get_tree().get_first_node_in_group("player")
 			if player:
 				player.refresh_weapon()

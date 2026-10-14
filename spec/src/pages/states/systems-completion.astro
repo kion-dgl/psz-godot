@@ -39,6 +39,20 @@ existing grinding/PB checks, exercises the live bank and loadout menu, then test
 recovery paths. The Force probe verifies learning, upgrade rejection/consumption,
 projectile level/damage, PP and persistence; its level gain is injected EXP and is
 not natural campaign pacing evidence.</p>
+<h2>Validation results</h2>
+<p>14,288 unit checks pass with zero failures or script errors. The isolated live
+route and separate-process restart pass, including ordinary bank withdrawal,
+frame-slot-count changes during recall, paginated full lists and both death paths.
+The Force probe, both original-reference checks, asset references, code-health
+and orphan ratchets pass. The 219-page site builds; rendered previews were inspected.</p>
+<p>The broader quest regression is not green. Boot and Search and Rescue pass,
+but generated Gurhacia/Rioh/Ozette/Paru routes hit floor or waypoint failures.
+Untouched main clears a different generated Rioh route; that does not establish
+parity for the failed variant. A separate untouched-main Paru Pact replay reaches
+the known missing floor at <code>s05a_lc2</code>, cell <code>3,4</code>, from
+approximately <code>(-14.8, 0.2, -20.9)</code>, with zero of three floor probes
+hitting. The PR records the final canonical/backtrack retry results and which
+later phases remain untested.</p>
 <h2>Human review</h2>
 <p>Review naming and recall with keyboard/controller, two same-name weapons with
 different upgrades, storage retrieval, full inventory, a sold item and save/relaunch.

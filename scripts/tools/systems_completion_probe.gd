@@ -45,6 +45,7 @@ func _loadout_menu(player: Node3D, ch: Dictionary) -> void:
 	await get_tree().process_frame
 	_verify(Sets.list_sets().size() == 1 and Sets.list_sets()[0].name == "Field kit", "live name dialog saves set")
 	ch.equipment.weapon = ""
+	ch.equipment.frame = "" # Recall must rebuild a differently sized Equip list.
 	var storage = load("res://scenes/2d/storage.tscn").instantiate()
 	get_tree().root.add_child(storage)
 	await get_tree().process_frame
@@ -55,10 +56,12 @@ func _loadout_menu(player: Node3D, ch: Dictionary) -> void:
 	_verify(not Inventory.has_item("saber") and GameState.shared_storage.size() > 0, "real storage screen deposits referenced weapon")
 	var new_id := Inventory.add_weapon("saber")
 	_verify(new_id != "saber", "buying a duplicate cannot alias banked gear")
+	PsoStartMenu._sub_idx = PsoStartMenu._get_equip_slots().size() - 1
 	PsoStartMenu._sub_accept()
 	await _choose(1)
 	await _choose(0)
 	_verify(ch.equipment.weapon == "saber" and ch.weapon_grinds.saber == 5, "live recall restores exact weapon and current grind")
+	_verify(PsoStartMenu._sub_idx == PsoStartMenu._get_equip_slots().size() - 1, "recall keeps Sets selected when frame slot count changes")
 	_verify(player.weapon_node != null and Inventory._items.keys()[0] == "saber", "recall refreshes rig and inventory ordering")
 	_manual_bank_withdrawal(storage, ch)
 	storage.queue_free()
