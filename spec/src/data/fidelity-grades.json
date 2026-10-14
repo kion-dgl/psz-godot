@@ -66,11 +66,11 @@
     },
     {
       "area": "Traps",
-      "grade": "D",
-      "assessment": "Owner grade remains D pending laptop playtest. The trap-validation batch restores source texture transforms, corrects short room-group tables, and uses the original nominal 30 Hz fuse clock after rising. Seeded and exported live checks cover placement, configured radius boundaries, payload delivery and CAST/Trap Vision targeting; these checks do not raise the grade.",
-      "next": "Playtest the material changes, normal/hard/very-hard escape windows, all four placed items, CAST visibility and non-CAST Trap Vision expiry/disarming. Review the known-seed layout fixtures, including Snowfield L rooms. Original hostile radii, Light confusion and exact status potency/duration remain open. Playtest both Gun variants, the attack-triggered bomb, full-size Needler sweep, and poison machine; their distinct behavior is implemented, with exact original timing and damage semantics still open.",
+      "grade": "B",
+      "assessment": "Kion raises Traps from D to B after the PR #761 laptop playtest on 2026-10-13. Distinct trap meshes, corrected materials and layouts, tactical enemy statuses, cycling needle/poison plates, rescuable bear traps, visible ball arming and the Coliseum trap page provide a playable tested baseline.",
+      "next": "Refine balance and effects in field encounters. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
       "label": "score:traps",
-      "reviewed_on": "2026-10-10"
+      "reviewed_on": "2026-10-13"
     },
     {
       "area": "Bosses",

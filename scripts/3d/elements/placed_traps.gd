@@ -12,7 +12,7 @@ static func build(kind: String, state: String = "on", record: Dictionary = {}) -
 		"needle_trap": trap = NeedleTrap.new()
 		_: return null
 	trap.set_meta("trap_kind", kind)
-	trap.element_state = state
+	trap.element_state = ("off" if state == "on" else state) if trap is BearTrap else state
 	trap.rotation.y = deg_to_rad(float(record.get("rotation", 0.0)))
 	if trap is GunTrap:
 		var source_model := str(record.get("model", "o0c_gun01"))
@@ -29,6 +29,7 @@ static func snapshots(root: Node3D) -> Array:
 		var record := {"type": str(node.get_meta("trap_kind", fallback)), "state": node.element_state,
 			"px": node.position.x, "py": node.position.y, "pz": node.position.z,
 			"rotation": rad_to_deg(node.rotation.y), "model": node.model_path.get_file().get_basename()}
+		if node is BearTrap and node.is_alive: record.state = "spent"
 		if node is FieldHazard: record.merge(node.save_hazard(), true)
 		records.append(record)
 	return records

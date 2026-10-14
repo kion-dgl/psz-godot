@@ -40,6 +40,9 @@ func _ready() -> void:
 	if OS.get_environment("PSZ_REYBURN_OCTO_CHECK") == "1":
 		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/reyburn_octo_probe.gd").new())
 		return
+	if OS.get_environment("PSZ_COLISEUM_TRAP_CHECK") == "1":
+		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/coliseum_trap_probe.gd").new())
+		return
 	if OS.get_environment("PSZ_COLISEUM_SETUP_CHECK") == "1":
 		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/coliseum_setup_probe.gd").new())
 		return

@@ -10,8 +10,9 @@ extends Control
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 const FIELD_SCENE := "res://scenes/3d/field/valley_field.tscn"
 const SHELL_QUEST_ID := "debug_coliseum"
-const TAB_NAMES := ["Enemies", "Bosses", "Mixed Groups"]
-const TAB_COUNT := 3
+const TrapTests := preload("res://scripts/2d/shops/coliseum_traps.gd")
+const TAB_NAMES := ["Enemies", "Bosses", "Mixed Groups", "Traps"]
+const TAB_COUNT := 4
 
 var _selected_index: int = 0
 var _tab: int = 0
@@ -66,6 +67,10 @@ func _open_confirm() -> void:
 	if row_v == null:
 		return
 	var row: Dictionary = row_v
+	if row.has("trap_kind"):
+		ShopNav.confirm(self, "Test %s?\nThe return telepipe is available immediately." % str(row.name),
+			func() -> void: _start_battle(row))
+		return
 	var place := "the coliseum"
 	if not str(row.get("quest_id", "")).is_empty() or not (row.get("arena", {}) as Dictionary).is_empty():
 		place = "its arena"
@@ -82,6 +87,11 @@ func _start_battle(row: Dictionary) -> void:
 	# Reyburn's flight phases, arena geometry — only make sense in their own
 	# stages); boss VARIATIONS (the mothers) get a synthesized solo cell in their
 	# arena; everything else fights 1:1 in the coliseum.
+	if row.has("trap_kind"):
+		SessionManager.enter_quest(SHELL_QUEST_ID, "normal")
+		SessionManager.set_field_sections(TrapTests.sections(row))
+		SceneManager.goto_scene(FIELD_SCENE, ColiseumRoster.warp_data())
+		return
 	var quest_id := str(row.get("quest_id", ""))
 	if not quest_id.is_empty():
 		SessionManager.enter_quest(quest_id, "normal")
@@ -105,7 +115,9 @@ func _start_battle(row: Dictionary) -> void:
 func _load_tab(tab: int) -> void:
 	_tab = wrapi(tab, 0, TAB_COUNT)
 	_selected_index = 0
-	_groups = ColiseumRoster.mixed_roster() if _tab == 2 else ColiseumRoster.grouped_roster(_tab == 1)
+	if _tab == 3: _groups = TrapTests.groups()
+	else: _groups = ColiseumRoster.mixed_roster() if _tab == 2 else ColiseumRoster.grouped_roster(_tab == 1)
+	hint_label.text = "↑↓ Select  ←→ Tab  Enter Test  Esc Leave\nOne trap per visit · Return telepipe always available" if _tab == 3 else "↑↓ Select  ←→ Tab  Enter Battle\nP / LB: Player Lv  E / RB: Enemy Lv  Esc Leave"
 	_rows = []
 	for g in _groups:
 		_rows.append_array(g["rows"])
@@ -129,7 +141,7 @@ func _refresh_display() -> void:
 
 	var list := VBoxContainer.new()
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list.add_child(_column_row(["Encounter", "Level"], true))
+	list.add_child(_column_row(["Trap", ""] if _tab == 3 else ["Encounter", "Level"], true))
 	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -193,7 +205,7 @@ func _column_row(values: Array, heading: bool = false) -> PanelContainer:
 
 
 func _row_pill(row: Dictionary, selected: bool) -> PanelContainer:
-	var values := [str(row["name"]), "Lv.%d" % ColiseumRoster.row_level(row)]
+	var values := [str(row["name"]), "Test" if row.has("trap_kind") else "Lv.%d" % ColiseumRoster.row_level(row)]
 	var pill := _column_row(values)
 	pill.add_theme_stylebox_override("panel", PszStyle.pill_style(selected))
 	return pill
@@ -208,6 +220,9 @@ func _refresh_detail() -> void:
 	if _selected_index < 0 or _selected_index >= _rows.size():
 		return
 	var row: Dictionary = _rows[_selected_index]
+	if row.has("trap_kind"):
+		_refresh_trap_detail(row)
+		return
 	var kinds: Array = row["kinds"]
 	kinds.sort()
 	var areas: Array = row["areas"]
@@ -220,6 +235,20 @@ func _refresh_detail() -> void:
 	vbox.add_child(PszStyle.detail_label("%s · %s" % [str(row.get("element", "")).capitalize(), str(row["archetype"])]))
 	if row.has("model"): vbox.add_child(PszStyle.detail_label("Model: %s" % row.model))
 	_detail_panel.add_child(vbox)
+	_refresh_level_controls()
+
+
+func _refresh_trap_detail(row: Dictionary) -> void:
+	var details := VBoxContainer.new()
+	details.add_theme_constant_override("separation", 8)
+	details.add_child(PszStyle.detail_label(str(row.name), PszStyle.TITLE_BG))
+	var description := PszStyle.detail_label(str(row.hint))
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	details.add_child(description)
+	var exit_hint := PszStyle.detail_label("No enemies. Use the telepipe beside the entrance whenever you want to leave.", PszStyle.TEXT_HIGHLIGHT)
+	exit_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	details.add_child(exit_hint)
+	_detail_panel.add_child(details)
 	_refresh_level_controls()
 
 
@@ -274,10 +303,11 @@ func _player_level() -> int:
 
 func _refresh_level_controls() -> void:
 	_player_level_button.text = "Player Lv.%d" % _player_level()
+	_enemy_level_button.visible = _tab != 3
 	_enemy_level_button.text = "Enemy: Auto" if ColiseumRoster.selected_enemy_level == 0 else "Enemy Lv.%d" % ColiseumRoster.selected_enemy_level
 
 func _edit_level(player_level: bool) -> void:
-	if is_instance_valid(_active_modal): return
+	if is_instance_valid(_active_modal) or (_tab == 3 and not player_level): return
 	var title := "Player Level · refills HP/PP; saved with character" if player_level else "Enemy Level · Auto uses arena defaults"
 	_active_modal = DebugLevelDialog.edit(self, title,
 		_player_level() if player_level else ColiseumRoster.selected_enemy_level, not player_level,

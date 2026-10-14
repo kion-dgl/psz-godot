@@ -15,7 +15,7 @@ class_name TrapBall
 ##   player-placed   dropped at the player's feet, arms after ARM_DELAY, fires
 ##                   on the first valid target inside TRIGGER_RADIUS.
 ##   field-placed    authored into the room and INVISIBLE. Arms when a player
-##                   walks inside TRIGGER_RADIUS, rises out of the ground, and
+##                   walks inside TRIGGER_RADIUS, reveals with a small downward movement, and
 ##                   fires on the players.
 ##
 ## Both then run the same fuse: a measured frame count between arming and the
@@ -83,11 +83,12 @@ const LIFETIME := 60.0
 const BOB_AMPLITUDE := 0.06
 const BOB_SPEED := 3.0
 
-## How far a field trap rises out of the ground once armed. The game lifts it to
-## +0x2800 in 1.19.12 = 2.5 units.
+## Field traps begin at the former armed height, then drop slightly on reveal.
 const FIELD_RISE_HEIGHT := 2.5
+const FIELD_ARM_DROP := 0.25
+const ARM_SOUND := "res://assets/sfx/traps/arm.wav"
 const FIELD_RISE_SECONDS := 11.0 / FUSE_FPS
-## Retained original Heat trace, phase 1; interpolate between 30 Hz samples.
+## Retained original Heat trace for source validation; remake motion descends instead.
 const FIELD_RISE_Q12 := [4096, 4916, 5727, 6512, 7257, 7951, 8588, 9166, 9687, 10155, 10240]
 
 ## How long one Trap Vision lasts.
@@ -106,8 +107,8 @@ const TRAP_VISION_SECONDS := 60.0
 ## is itself ~0.5 across, so its centre sits a little under the crown.
 const REST_HEIGHT := 1.6
 
-## A field trap sits ON the floor while dormant, not at head height.
-const FIELD_REST_HEIGHT := 0.35
+## Dormant traps float at their armed starting height, revealed by Trap Vision.
+const FIELD_REST_HEIGHT := FIELD_RISE_HEIGHT
 
 signal triggered(trap_id: String)
 
@@ -277,7 +278,7 @@ func _load_ball() -> void:
 ## meshes sit under a Skeleton3D.
 ##
 ## A field-placed trap gets this too: it spends most of its life invisible, but
-## the moment it arms it rises into view, and it is the same mesh either way.
+## the moment it arms it lowers into view, and it is the same mesh either way.
 func _apply_mirror_wrap(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh: Mesh = (node as MeshInstance3D).mesh
@@ -387,7 +388,9 @@ func _should_arm() -> bool:
 
 
 func _arm() -> void:
+	if _armed or _spent or disarmed: return
 	_armed = true
+	if is_inside_tree(): SfxManager.play_at(ARM_SOUND, global_position)
 	if _model:
 		_model.visible = true
 	# A field trap's arming IS its trigger — the proximity that woke it is the
@@ -411,9 +414,7 @@ func _idle_motion() -> void:
 
 
 func _rise_height() -> float:
-	var sample := clampf(_rise * 11.0, 0.0, 10.0)
-	var index := int(sample)
-	return lerpf(float(FIELD_RISE_Q12[index]), float(FIELD_RISE_Q12[mini(index + 1, 10)]), sample - index) / 4096.0
+	return lerpf(FIELD_REST_HEIGHT, FIELD_REST_HEIGHT - FIELD_ARM_DROP, smoothstep(0.0, 1.0, _rise))
 
 
 func _armed_motion() -> void:

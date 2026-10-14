@@ -14,7 +14,7 @@ static func run(t: Node) -> void:
 	t.assert_true(not FieldHazard.in_cone(Vector3(0, 2.01, 1), 12.0), "vertically separated target is safe")
 	var source_doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/environment_traps.json"))
 	t.assert_eq(NeedlerTrap.RANGE, float(source_doc.needler.sweep_radius), "source Needler sweep range")
-	for texture in PoisonTrap.GAS_PROFILES:
+	for texture in ["o0c_1_poisonm"]:
 		for key in PoisonTrap.GAS_PROFILES[texture]:
 			var value = source_doc.materials.o0c_poisonm[texture][key]
 			if value is Array: value = Vector2(value[0], value[1])

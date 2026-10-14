@@ -184,15 +184,21 @@ static func _poison(player: Node3D) -> bool:
 	ok = Check._check(not player.has_status_effects(), "gas exposure respects recovery immunity") and ok
 	player._recovery_left = 0.0
 	await _wait(player, 0.2)
-	ok = Check._check(player._ailments.effects.has("poison") and GameState.hp == GameState.max_hp, "gas overlap applies poison without needle contact damage") and ok
+	ok = Check._check(player._ailments.effects.has("poison") and GameState.hp == GameState.max_hp - NeedleTrap.DAMAGE_AMOUNT and is_instance_valid(player._ailments._poison_effect), "poison needles deal normal contact damage and show poison effect") and ok
+	await _wait(player, NeedleTrap.EXTENDED_TIME)
+	player.clear_status_effects()
+	await _wait(player, 0.2)
+	ok = Check._check(not trap.spikes_extended and not player.has_status_effects(), "retracted poison needles cannot apply poison") and ok
+	await _wait(player, NeedleTrap.RETRACTED_TIME)
+	ok = Check._check(trap.spikes_extended and player._ailments.effects.has("poison"), "next needle extension applies poison to overlapping player") and ok
 	trap.set_state("off")
 	player.set_physics_process(true)
 	await _wait(player, 5.2)
 	player.set_physics_process(false)
-	ok = Check._check(GameState.hp == GameState.max_hp - maxi(1, int(GameState.max_hp * 0.05)), "poison ticks after five real gameplay seconds and persists after leaving gas") and ok
+	ok = Check._check(GameState.hp == GameState.max_hp - 2 * NeedleTrap.DAMAGE_AMOUNT - maxi(1, int(GameState.max_hp * 0.05)), "poison ticks after five real gameplay seconds and persists after leaving gas") and ok
 	Inventory.add_item("sol_atomizer", 1)
 	Inventory.use_item("sol_atomizer")
-	ok = Check._check(not player._ailments.effects.has("poison"), "real Sol Atomizer use cures gas poison") and ok
+	ok = Check._check(not player._ailments.effects.has("poison") and not is_instance_valid(player._ailments._poison_effect), "real Sol Atomizer cures poison and removes effect") and ok
 	player.global_position = ORIGIN
 	trap.set_state("on")
 	await _wait(player, 0.2)

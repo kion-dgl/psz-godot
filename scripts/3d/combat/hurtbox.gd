@@ -19,6 +19,7 @@ func _ready() -> void:
 
 ## Called by Hitbox when we're hit
 func take_hit(damage: int, knockback: Vector3, accuracy: int = 100, element: String = "", element_level: int = 0, player_credit: bool = false, attack_kind: String = "physical", source: Node3D = null) -> void:
+	if owner_node and owner_node.has_method("can_receive_hit_from") and not owner_node.can_receive_hit_from(source): return
 	var before: int = maxi(int(owner_node.current_hp), 0) if owner_node is EnemyBase else 0
 	hit_received.emit(damage, knockback, accuracy)
 

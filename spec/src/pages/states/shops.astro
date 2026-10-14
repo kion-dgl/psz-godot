@@ -12,7 +12,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>Shops <strong>MUST</strong> share behavior through <em>composition</em> — preloaded static helpers (<code>PszStyle</code>, <code>ShopNav</code>, <code>ShopUI</code>) — and <strong>MUST NOT</strong> share it through a common base class. A cross-script base class fails to resolve in the Android export at runtime (it works in-editor and on every other platform); see <code>docs/shop-dedup.md</code>. Each shop is therefore its own <code>extends Control</code> script that calls into the shared helpers.</p>
 
-  <p>Coliseum encounters MUST end in victory or defeat. They MUST NOT spawn an entry return warp or allow consumable Telepipes; rejected Telepipes MUST NOT be consumed. Victory return pads and defeat handling remain available.</p>
+  <p>Coliseum combat encounters MUST end in victory or defeat. The Traps test page is an exception: its authored return telepipe MUST be available immediately. They MUST NOT spawn an entry return warp or allow consumable Telepipes; rejected Telepipes MUST NOT be consumed. Victory return pads and defeat handling remain available.</p>
 <h2 id="presentation">Presentation — diegetic 3D framing</h2>
 
   <p>The shop screen is drawn <em>over</em> the live city, not in place of it. When the player accepts an interaction with a shop NPC, the game <strong>MUST</strong>:</p>
@@ -330,6 +330,13 @@ import Concept from '../../layouts/Concept.astro';
     <li><code>scripts/2d/guild_counter.gd</code> (GuildCounter) — the quest board; same skeleton, distinct row semantics (not the shop row contract).</li>
   </ul>
   <h2 id="coliseum-roster">Coliseum roster</h2>
+  <p>A separate Traps page MUST list Needle, Bear, both Gun variants, Clay/Needler,
+  Bomb Container, Poison Gas and the four elemental balls. Each selection MUST
+  open a fresh single-trap arena with no enemies. A return telepipe beside the
+  entrance MUST work before the trap is touched, without leaving a suspended
+  quest or pending report. The trap MUST be outside the entrance and exit path.
+  The selected row MUST explain how to trigger it; enemy-level controls MUST be
+  hidden on this page. Re-entering MUST reset the trap.</p>
   <p>The Coliseum picker <strong>MUST</strong> group each enemy once under its
     earliest area in progression order, with PSO imports in their own group.
     Enemy and boss tabs remain separate. Rows <strong>MUST</strong> show enemy name and effective level. Model ID,

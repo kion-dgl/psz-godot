@@ -26,7 +26,9 @@ func _show_sweep(fraction: float) -> void:
 	for material in _sweep_materials: material.set_shader_parameter("reveal_radius", maxf(1.5, RANGE * fraction))
 	# The fan UVs span V=1 at its origin to V=0.165 at its rim. Translate
 	# the narrow needle strip across that span; cadence is remake tuning.
-	for material in _fan_materials: material.set_shader_parameter("uv_offset", Vector2(-0.25, 1.0 if fraction <= 0.0 else 1.15625 - 0.835 * fraction))
+	for material in _fan_materials:
+		material.set_shader_parameter("visibility_alpha", 1.0 if element_state == "active" and fraction > 0.0 else 0.0)
+		material.set_shader_parameter("uv_offset", Vector2(-0.25, 1.0 if fraction <= 0.0 else 1.15625 - 0.835 * fraction))
 
 func _apply_state() -> void:
 	super._apply_state()

@@ -26,7 +26,7 @@ static func run(tree: SceneTree) -> bool:
 					node.disarmed = true
 					actual.append({"type":node.trap_id, "position":node.position})
 				elif node is BearTrap:
-					node.set_state("off")
+					node.set_state("spent")
 					actual.append({"type":"capture_trap", "position":node.position})
 				elif node is NeedleTrap or node is FieldHazard:
 					node.set_state("off")

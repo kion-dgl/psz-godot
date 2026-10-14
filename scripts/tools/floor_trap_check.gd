@@ -45,10 +45,16 @@ static func _needle(player: Node3D, origin: Vector3, kind: String) -> bool:
 	trap.set_state("on")
 	await _settle(player)
 	ok = Check._check(GameState.hp == hp - trap.damage, kind + " activation under player deals configured damage") and ok
-	# Heal without leaving the area, avoiding a lethal repeat on the 50-damage stand-in.
 	_reset(player)
-	await player.get_tree().create_timer(NeedleTrap.INVULN_TIME + 0.15).timeout
-	ok = Check._check(GameState.hp == hp - trap.damage, kind + " remaining on spikes takes another hit after cooldown") and ok
+	await player.get_tree().create_timer(NeedleTrap.EXTENDED_TIME + 0.15).timeout
+	ok = Check._check(not trap.spikes_extended and GameState.hp == hp, "needle retracts and cannot hit twice in one extension") and ok
+	player.global_position = origin + Vector3(8, 0, 0)
+	await _settle(player)
+	player.global_position = origin
+	await _settle(player)
+	ok = Check._check(GameState.hp == hp, "entering retracted needles is safe") and ok
+	await player.get_tree().create_timer(NeedleTrap.RETRACTED_TIME).timeout
+	ok = Check._check(trap.spikes_extended and GameState.hp == hp - trap.damage, "next extension hits player still on plate") and ok
 	trap.set_state("off")
 	_reset(player)
 	await _settle(player)
@@ -73,51 +79,7 @@ static func _needle(player: Node3D, origin: Vector3, kind: String) -> bool:
 	return ok
 
 static func _bear(player: Node3D, origin: Vector3) -> bool:
-	_reset(player)
-	player.global_position = origin + Vector3(8, 0, 0)
-	var bear := BearTrap.new()
-	player.get_parent().add_child(bear)
-	bear.global_position = origin
-	await _settle(player)
-	player.global_position = origin
-	await _settle(player)
-	var hp := GameState.hp
-	var ok := Check._check(bear._is_holding and player.current_state == player.PlayerState.CUTSCENE, "bear physical overlap captures player")
-	var held_at := player.global_position
-	player.set_physics_process(true)
-	Input.action_press("move_right")
-	await player.get_tree().create_timer(0.3).timeout
-	Input.action_release("move_right")
-	player.set_physics_process(false)
-	ok = Check._check(Vector2(player.global_position.x, player.global_position.z).distance_to(Vector2(held_at.x, held_at.z)) < 0.05, "bear capture blocks actual movement input") and ok
-	await player.get_tree().create_timer(0.7).timeout
-	ok = Check._check(bear._is_holding and GameState.hp == hp, "bear holds before dealing damage") and ok
-	await player.get_tree().create_timer(1.6).timeout
-	ok = Check._check(not bear._is_holding and bear.element_state == "off" and GameState.hp == hp - BearTrap.DAMAGE_AMOUNT, "bear releases once after 2.5 seconds and deals 20 damage") and ok
-	ok = Check._check(player.current_state == player.PlayerState.DAMAGED, "bear release preserves damage reaction") and ok
-	_reset(player)
-	bear.set_state("on")
-	await _settle(player)
-	bear.set_state("off")
-	ok = Check._check(not bear._is_holding and player.current_state == player.PlayerState.IDLE, "disabling bear releases capture immediately without damage") and ok
-	_reset(player)
-	player._recovery_left = 1.0
-	bear.set_state("on")
-	await _settle(player)
-	ok = Check._check(not bear._is_holding, "bear cannot capture immune player") and ok
-	player._recovery_left = 0.0
-	await _settle(player)
-	ok = Check._check(bear._is_holding, "bear captures when immunity ends without re-entry") and ok
-	player.take_damage(1)
-	await _settle(player)
-	ok = Check._check(not bear._is_holding and bear.element_state == "off" and player.current_state == player.PlayerState.DAMAGED, "external hit cancels bear hold without overwriting stagger") and ok
-	_reset(player)
-	bear.set_state("on")
-	await _settle(player)
-	bear.queue_free()
-	await _settle(player)
-	ok = Check._check(player.current_state == player.PlayerState.IDLE, "removing bear releases capture") and ok
-	return ok
+	return await preload("res://scripts/tools/bear_trap_check.gd").run(player, origin)
 
 static func _persistence(player: Node3D, origin: Vector3) -> bool:
 	var field := player.get_tree().current_scene

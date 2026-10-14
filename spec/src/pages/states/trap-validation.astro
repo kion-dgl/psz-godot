@@ -32,16 +32,14 @@ import Concept from '../../layouts/Concept.astro';
   as Burn; o0c_needle and o0c_poisonm are separate objects, not additional members
   of the eight-name trap taxonomy. Gun/Burn/Needler/Poison MUST use their dedicated source meshes and the distinct behavior contracts below. Correct identity/placement does not establish exact original AI or damage parity.</p>
   <h2>Reaction interval</h2>
-  <p>A field ball MUST reveal when armed and complete its rise before consuming
-  its fuse. The original update at 0x0209B358 increments counter +0x148 only
-  in phase +0x144 == 2, after rising in phase 1; it requests detonation when
-  counter &gt; fuse. Godot MUST preserve this ordering. The rise MUST interpolate
-  the eleven retained Heat samples from 1.0 to 2.5 units over 11/30 seconds,
-  holding the last sample for its final update. The full warning interval is
-  rise + 46/30, 31/30 or 16/30 seconds by difficulty. The countdown uses a
-  nominal 30 Hz clock (two DS VBlanks per original update). Trigger and effect
-  distances MUST be measured independently from the ground origin, with actor
-  collision size unable to silently enlarge either configured radius.</p>
+  <p>Owner playtest direction (2026-10-13): field balls MUST start at their former
+  armed height (2.5 units), reveal and play the PSO trap-set sound when armed,
+  then lower by 0.25 units over 11/30 seconds before consuming their fuse.
+  This downward motion intentionally replaces the original rise. The retained
+  original samples remain reference evidence. The full reaction interval is
+  movement + 46/30, 31/30 or 16/30 seconds by difficulty. Countdown uses the
+  measured nominal 30 Hz clock. Trigger and effect distances remain independent
+  ground-origin measurements; collider size MUST NOT enlarge them.</p>
   <p>CAST/Trap Vision dormant detection, attack-to-disarm, living-target rules,
   timed vision refresh/reset, and multiple simultaneous player traps retain the
   existing recovery contract. Multiple player traps deliberately differ from
@@ -81,30 +79,38 @@ import Concept from '../../layouts/Concept.astro';
   Trap actions reuse Burn, Freeze, Confuse and Resta artwork until dedicated art
   exists. Light remains a Stun substitute, not original confusion.</p>
   <h2>Floor trap interaction and persistence</h2>
-  <p>Armed needle traps MUST damage a living player who stays in their
-  area, at most once per two seconds per trap. Dodge/recovery immunity MUST
-  reject damage without spending that cooldown; an overlapping player becomes
-  eligible when immunity ends. Off traps MUST remain safe, including when
-  switched off underneath the player. Activation underneath a player MUST work.</p>
-  <p>Bear/Capture traps MUST block movement for 2.5 seconds, then deal 20 damage
-  once and turn off. Disabling or removing a trap MUST release its hold without
-  overwriting damage or defeat state. An external hit interrupts capture without
-  a delayed second trap hit. Active floor hazards and spent captures MUST retain
-  their type, position and on/off state when a room is revisited.</p>
+  <p>Needle and poison plates MUST extend for one second, retract safely for
+  three seconds, and hit each player at most once per extension. Only extended
+  needles deal contact damage (8 HP); poison needles also apply Poison before
+  impact so lethal damage can clear it. Dodge/recovery rejects both payloads.
+  Needle rows align with the black slots at original model size. Side bars stay
+  visible in both phases. Poison lasts 20 seconds, ticks every five seconds,
+  and does not stack or refresh. Purple bubbles persist until cure/expiry/death;
+  SE_PL_POISON repeats with a 0.6-second pause after each clip and stops on cure.</p>
+  <p>Bear/Capture traps start dormant/off, hidden except to CASTs or Trap Vision.
+  Reveal alone MUST NOT allow targeting. Stepping inside activates a targetable
+  0.6-second escape window. Anyone remaining inside is held for 2.5 seconds,
+  then released and dealt 20 damage by one explosion. A free player can destroy
+  an activated trap with one hit and release its victim without damage. A
+  captured player's previously fired projectile MUST NOT rescue them. Removal
+  or interruption safely releases control. Spent traps remain spent on room
+  revisits; leaving during an active capture also saves the trap as spent.</p>
+  <p>Coliseum → Traps lists eleven fixtures, with one trap per fresh visit, no
+  enemies and an unconditional return telepipe beside the entrance.</p>
   <p>These contact rules are remake behavior. Run the needle/bear real-overlap regression with
   <code>PSZ_TRAP_CHECK=1 PSZ_FLOOR_TRAP_CHECK=1</code> and the Coliseum probe.</p>
   <h2>Distinct environmental hazards</h2>
   <p>Gun variants MUST retain their authored model and facing on first spawn and
   revisit. Gun, Burn and Needler MUST expose attackable hurtboxes without joining
-  enemy-clear counts. Poison MUST retain its base and toggle only its gas overlay.
+  enemy-clear counts. Poison MUST retain its base and side bars and toggle only its aligned needle rows.
   All six meshes already exist; no new mesh production is required.</p>
   <table>
     <thead><tr><th>Type</th><th>Activation and delivery</th><th>Counterplay / lifetime</th></tr></thead>
     <tbody>
       <tr><td>Gun (o0c_gun01 / 02)</td><td>Acquire a living player within 14 units and a 120° forward cone, with clear sight. Warn for 0.6 s, then release o0c_bullet01 at 10 units/s along the locked aim. Deal 8 damage on impact.</td><td>Shots MUST sweep walls, respect dodge/recovery, expire at 14 units and never home. Fire no faster than once per 2 s after release. One positive hit disables the gun and its outstanding shots.</td></tr>
       <tr><td>Burn / bomb container</td><td>Contact alone MUST NOT detonate it. One positive attack starts a visible 0.6 s warning, then a single 4-unit blast with 50 raw damage to living players and enemies in clear sight; enemy defense still applies.</td><td>Escape or dodge the blast. Repeated attacks MUST NOT duplicate it. No loot, status inferred from its name, or repeated contact damage. Remains spent across room visits.</td></tr>
-      <tr><td>Needler / clay</td><td>A living player in the forward cone within 3 units, or a positive attack, starts a 0.75 s warning. A 0.6 s sweep expands from 0 to 12 units in the authored 120° cone. Deal 25 damage at most once per actor per sweep.</td><td>Use full source scale (about 21 units wide), never Storybook's 0.12 preview scale. Scroll the needle texture outward with the sweep and reveal its fan, keeping only its central 1.5-unit region visible at rest. Targets behind it, outside the cone/range or behind walls MUST be safe. Re-arm after 12 s; disable stops the sweep.</td></tr>
-      <tr><td>Poison machine</td><td>While on, its 6.1-unit-wide floor gas area applies Poison to eligible overlapping players, checked at most once per 2 s per trap. It MUST NOT deal needle contact damage.</td><td>Poison lasts 20 s, ticks every 5 s using existing poison damage tuning, does not stack or refresh while active, and follows existing cure/death cleanup. Off stops new exposure but does not cure an existing ailment. Dodge/recovery rejects exposure.</td></tr>
+      <tr><td>Needler / clay</td><td>A living player in the forward cone within 3 units, or a positive attack, starts a 0.75 s warning. A 0.6 s sweep expands from 0 to 12 units in the authored 120° cone. Deal 25 damage at most once per actor per sweep.</td><td>Use full source scale (about 21 units wide), never Storybook's 0.12 preview scale. Scroll the needle texture outward with the sweep and reveal its fan, keeping the launcher visible but hiding all bullets until firing, and hiding them again during cooldown. Targets behind it, outside the cone/range or behind walls MUST be safe. Re-arm after 12 s; disable stops the sweep.</td></tr>
+      <tr><td>Poison machine</td><td>Its 6.1-unit-wide needle plate deals 8 contact damage plus Poison, only during the one-second extended phase; three retracted seconds allow escape.</td><td>Poison lasts 20 s, ticks every 5 s using existing poison damage tuning, does not stack or refresh while active, and follows existing cure/death cleanup. Off stops new exposure but does not cure an existing ailment. Dodge/recovery rejects exposure.</td></tr>
     </tbody>
   </table>
   <p>These activation, warning, cooldown and flat-damage values are explicit remake
@@ -138,13 +144,24 @@ import Concept from '../../layouts/Concept.astro';
   (512,0), (512,-512), (0,-512), (0,0) with 16×16 textures. The four original
   models share the same transform. Nearest sampling, unlit color and alpha cutout
   MUST remain. This preserves the original crossed quads and their center/corner
-  texture details; it does not substitute sphere geometry. Bear and needle MUST restore each source surface's Max-mode SRT and wrap bits,
-  superseding the earlier empirically chosen storybook offsets. In exported UV space:
-  needle base uses scale (2,-1), offset (0,1.5), mirror S/repeat T; spikes use
-  (1,-2), (0,2), repeat S/mirror T. Bear prongs use (2,-1), (0,1), mirror S/repeat T;
-  its base uses (2,-2), (0,1), mirror both. These floor profiles are statically
-  decoded; they are not claimed as live original animation measurements. Existing
-  scroll speed, on/off visibility, capture and damage contracts remain.</p>
+  texture details; it does not substitute sphere geometry. Bear retains the source material transforms. The needle/poison base uses
+  scale (2,-1), offset (0,1.5), mirror S/repeat T. Following owner visual review,
+  their needle strips use Storybook scale (2,1), offset (-0.17,-0.18), mirror both,
+  shifted onto the slot rows; original geometry height is preserved. Horizontal
+  rail faces remain visible while needle faces hide. Bear prongs use (2,-1),
+  (0,1), mirror S/repeat T; its base uses (2,-2), (0,1), mirror both. These
+  documented remake corrections supersede strict source-profile matching for
+  the needle strip alone.</p>
+  <h2>Owner review — 2026-10-13</h2>
+  <p>Kion approved raising Traps to B after the laptop playtest and iterative
+  corrections in PR #761. Final comparisons:
+  <a href={siteUrl('/research/trap-validation/owner-needle-states.png')}>Needle states</a> ·
+  <a href={siteUrl('/research/trap-validation/owner-poison-states.png')}>Poison states</a> ·
+  <a href={siteUrl('/research/trap-validation/owner-bear-states.png')}>Bear states</a>.
+  PSO audio uses catalog entries common/common_011.wav (SE_PL_POISON) and
+  ruin/ruin_068.wav (SE_SH_TRAPSET), published as sfx/player/poison.wav and
+  sfx/traps/arm.wav. The poison audio belongs to its effect node, pauses
+  0.6 seconds between clips, and stops immediately when the status clears.</p>
   <h2>Verification</h2>
   <p>Seeded checks MUST cover source membership, independent radius boundaries,
   rise/fuse ordering and trigger-once behavior. A live physics probe MUST cover
