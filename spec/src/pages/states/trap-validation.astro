@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 <Concept title="Trap validation" section="States">
@@ -99,11 +100,11 @@ import Concept from '../../layouts/Concept.astro';
   For an exported build, PSZ_PROBE_PACK can point to the matching assets.pck.
   The probe creates an isolated test character; use a separate XDG_DATA_HOME
   when running it alongside a personal save.</p>
-  <p><a href="/research/trap-validation/results.json">Exported probe results (84 checks, 45 layouts)</a>.</p>
-  <p><a href="/research/trap-validation/ball-before.png">Ball before</a> ·
-  <a href="/research/trap-validation/ball-after.png">Ball after</a> ·
-  <a href="/research/trap-validation/floor-on.png">Floor traps on</a> ·
-  <a href="/research/trap-validation/floor-off.png">Floor traps off</a>.</p>
+  <p><a href={siteUrl('/research/trap-validation/results.json')}>Exported probe results (84 checks, 45 layouts)</a>.</p>
+  <p><a href={siteUrl('/research/trap-validation/ball-before.png')}>Ball before</a> ·
+  <a href={siteUrl('/research/trap-validation/ball-after.png')}>Ball after</a> ·
+  <a href={siteUrl('/research/trap-validation/floor-on.png')}>Floor traps on</a> ·
+  <a href={siteUrl('/research/trap-validation/floor-off.png')}>Floor traps off</a>.</p>
   <p>Broader regression limitation: Search and Rescue and Paru free-roam pass.
   The Paru Pact route stops at s05a_lc2, cell 3,4, position approximately
   (-14.8,0.2,-20.9), with no floor ahead. Unchanged main 3c0e8b28 reproduces

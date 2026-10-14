@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../utils/site';
 import Concept from '../../layouts/Concept.astro';
 ---
 <Concept title="Trap counterplay and recovery" section="States">
@@ -42,7 +43,7 @@ import Concept from '../../layouts/Concept.astro';
     A spent/disarmed trap MUST NOT trigger or apply its payload twice.</li>
     <li>Trigger range and blast range MUST be represented separately. This batch
     retains 4-unit hostile radii as remake tuning. The subsequent
-    <a href="/states/trap-validation">trap-validation contract</a> replaces the 60 Hz fuse divisor with a
+    <a href={siteUrl('/states/trap-validation')}>trap-validation contract</a> replaces the 60 Hz fuse divisor with a
     live-traced 30 Hz timebase and separates rise from countdown. Original
     hostile radii and Light Trap confusion remain #607/#724 research work; the existing stun substitute MUST remain labelled as such.</li>
   </ul>
@@ -64,7 +65,7 @@ import Concept from '../../layouts/Concept.astro';
   it MUST NOT act as a full self-heal. Companion revival remains follow-up work.</p>
   <h2>Rendering and boss completion</h2>
   <p>Bear and needle traps MUST use instance-owned materials with the source-derived
-  profiles in <a href="/states/trap-validation">trap validation</a>, including each
+  profiles in <a href={siteUrl('/states/trap-validation')}>trap validation</a>, including each
   surface's scale, translation and repeat/mirror bits. Off MUST hide only the
   animated prongs/spikes. Bear release and scene teardown MUST release the player
   hold without overwriting damage, defeat or revival state. Armed prongs MUST scroll.
