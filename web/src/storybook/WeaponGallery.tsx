@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
+import { OrbitControls, useGLTF, useTexture, Environment } from '@react-three/drei';
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { ErrorBoundary } from '../utils/ErrorBoundary';
@@ -45,30 +45,23 @@ interface WeaponVariant {
   displayName: string;
 }
 
-function disposeObject(obj: THREE.Object3D) {
-  obj.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.geometry?.dispose();
-      if (Array.isArray(child.material)) {
-        child.material.forEach((m) => { m.map?.dispose(); m.dispose(); });
-      } else if (child.material) {
-        child.material.map?.dispose();
-        child.material.dispose();
-      }
-    }
-  });
-}
-
 function WeaponModel({ weaponId, variant, settings }: {
   weaponId: string; variant: string; settings: MaterialSettings;
 }) {
   const glbPath = getWeaponGlbPath(weaponId, variant);
   const { scene } = useGLTF(glbPath);
+  // The CDN PNG can display even when GLTFLoader's ImageBitmap load fails.
+  // Load the variant explicitly through TextureLoader as a fallback.
+  const texture = useTexture(getWeaponTexturePath(weaponId, variant));
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     clone.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && obj.geometry) obj.geometry.computeVertexNormals();
+      if (obj instanceof THREE.Mesh && obj.geometry) {
+        obj.geometry = obj.geometry.clone();
+        obj.geometry.computeVertexNormals();
+        obj.userData.originalMaterial = obj.material;
+      }
     });
     const box = new THREE.Box3().setFromObject(clone);
     const center = box.getCenter(new THREE.Vector3());
@@ -77,39 +70,54 @@ function WeaponModel({ weaponId, variant, settings }: {
   }, [scene]);
 
   useEffect(() => {
-    return () => { disposeObject(clonedScene); };
+    return () => {
+      clonedScene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) obj.geometry.dispose();
+      });
+    };
   }, [clonedScene]);
 
   useEffect(() => {
+    const materials: THREE.Material[] = [];
+    const textures: THREE.Texture[] = [];
     clonedScene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const side = SIDE_MAP[settings.sideMode];
-      if (settings.materialMode === 'normal') {
-        obj.material = new THREE.MeshNormalMaterial({ wireframe: false, side });
-      } else if (settings.materialMode === 'wireframe') {
-        obj.material = new THREE.MeshBasicMaterial({ wireframe: true, color: 0x00ff00, side });
-      } else {
-        const original = obj.userData.originalMaterial || obj.material;
-        if (!obj.userData.originalMaterial) obj.userData.originalMaterial = obj.material;
-        if (original instanceof THREE.MeshBasicMaterial ||
-            original instanceof THREE.MeshStandardMaterial ||
-            original instanceof THREE.MeshPhongMaterial) {
-          const mat = original.clone();
-          mat.wireframe = false;
+      const original = obj.userData.originalMaterial as THREE.Material | THREE.Material[];
+      const makeMaterial = (source: THREE.Material): THREE.Material => {
+        let mat: THREE.Material;
+        if (settings.materialMode === 'normal') {
+          mat = new THREE.MeshNormalMaterial({ side });
+        } else if (settings.materialMode === 'wireframe') {
+          mat = new THREE.MeshBasicMaterial({ wireframe: true, color: 0x00ff00, side });
+        } else {
+          mat = source.clone();
           mat.side = side;
-          if (mat.map) {
-            mat.map = mat.map.clone();
+          if (mat instanceof THREE.MeshBasicMaterial ||
+              mat instanceof THREE.MeshStandardMaterial ||
+              mat instanceof THREE.MeshPhongMaterial) {
+            mat.wireframe = false;
+            mat.map = (mat.map || texture).clone();
+            mat.map.flipY = false;
+            mat.map.colorSpace = THREE.SRGBColorSpace;
             mat.map.wrapS = settings.wrapS;
             mat.map.wrapT = settings.wrapT;
             mat.map.offset.set(settings.offsetX, settings.offsetY);
             mat.map.repeat.set(settings.repeatX, settings.repeatY);
             mat.map.needsUpdate = true;
+            textures.push(mat.map);
           }
-          obj.material = mat;
         }
-      }
+        materials.push(mat);
+        return mat;
+      };
+      obj.material = Array.isArray(original) ? original.map(makeMaterial) : makeMaterial(original);
     });
-  }, [clonedScene, settings]);
+    return () => {
+      materials.forEach((material) => material.dispose());
+      textures.forEach((map) => map.dispose());
+    };
+  }, [clonedScene, settings, texture]);
 
   return <primitive object={clonedScene} />;
 }
@@ -375,7 +383,7 @@ export default function WeaponGallery() {
               {selectedWeaponInfo.variants.map((v) => (
                 <div key={v}>
                   <div style={{ fontSize: '9px', color: '#888', marginBottom: '4px' }}>{v}</div>
-                  <img src={getWeaponTexturePath(selectedVariant.weaponId, v)}
+                  <img crossOrigin="anonymous" src={getWeaponTexturePath(selectedVariant.weaponId, v)}
                     alt={`${v} texture`}
                     style={{
                       width: '100%',
