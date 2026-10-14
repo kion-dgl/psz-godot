@@ -30,9 +30,7 @@ import Concept from '../../layouts/Concept.astro';
   not simultaneous spawn counts. Seven additional poison-machine records enter
   through the object table. psz-re identifies o0c_clay1 as Needler and o0c_bombcont
   as Burn; o0c_needle and o0c_poisonm are separate objects, not additional members
-  of the eight-name trap taxonomy. Current Gun/Burn/Needler spawns still use the
-  needle contact-trap stand-in, so correct identity/placement does not establish
-  original turret AI, projectile, model or explosion parity.</p>
+  of the eight-name trap taxonomy. Gun/Burn/Needler/Poison MUST use their dedicated source meshes and the distinct behavior contracts below. Correct identity/placement does not establish exact original AI or damage parity.</p>
   <h2>Reaction interval</h2>
   <p>A field ball MUST reveal when armed and complete its rise before consuming
   its fuse. The original update at 0x0209B358 increments counter +0x148 only
@@ -83,7 +81,7 @@ import Concept from '../../layouts/Concept.astro';
   Trap actions reuse Burn, Freeze, Confuse and Resta artwork until dedicated art
   exists. Light remains a Stun substitute, not original confusion.</p>
   <h2>Floor trap interaction and persistence</h2>
-  <p>Armed needle/contact traps MUST damage a living player who stays in their
+  <p>Armed needle traps MUST damage a living player who stays in their
   area, at most once per two seconds per trap. Dodge/recovery immunity MUST
   reject damage without spending that cooldown; an overlapping player becomes
   eligible when immunity ends. Off traps MUST remain safe, including when
@@ -93,10 +91,39 @@ import Concept from '../../layouts/Concept.astro';
   overwriting damage or defeat state. An external hit interrupts capture without
   a delayed second trap hit. Active floor hazards and spent captures MUST retain
   their type, position and on/off state when a room is revisited.</p>
-  <p>These contact rules are remake behavior. Gun, Burn, Needler and Poison still
-  use the needle stand-in; this validation does not establish their original
-  firing, explosion or poison behavior. Run the real-overlap regression with
+  <p>These contact rules are remake behavior. Run the needle/bear real-overlap regression with
   <code>PSZ_TRAP_CHECK=1 PSZ_FLOOR_TRAP_CHECK=1</code> and the Coliseum probe.</p>
+  <h2>Distinct environmental hazards</h2>
+  <p>Gun variants MUST retain their authored model and facing on first spawn and
+  revisit. Gun, Burn and Needler MUST expose attackable hurtboxes without joining
+  enemy-clear counts. Poison MUST retain its base and toggle only its gas overlay.
+  All six meshes already exist; no new mesh production is required.</p>
+  <table>
+    <thead><tr><th>Type</th><th>Activation and delivery</th><th>Counterplay / lifetime</th></tr></thead>
+    <tbody>
+      <tr><td>Gun (o0c_gun01 / 02)</td><td>Acquire a living player within 14 units and a 120° forward cone, with clear sight. Warn for 0.6 s, then release o0c_bullet01 at 10 units/s along the locked aim. Deal 8 damage on impact.</td><td>Shots MUST sweep walls, respect dodge/recovery, expire at 14 units and never home. Fire no faster than once per 2 s after release. One positive hit disables the gun and its outstanding shots.</td></tr>
+      <tr><td>Burn / bomb container</td><td>Contact alone MUST NOT detonate it. One positive attack starts a visible 0.6 s warning, then a single 4-unit blast with 50 raw damage to living players and enemies in clear sight; enemy defense still applies.</td><td>Escape or dodge the blast. Repeated attacks MUST NOT duplicate it. No loot, status inferred from its name, or repeated contact damage. Remains spent across room visits.</td></tr>
+      <tr><td>Needler / clay</td><td>A living player in the forward cone within 3 units, or a positive attack, starts a 0.75 s warning. A 0.6 s sweep expands from 0 to 12 units in the authored 120° cone. Deal 25 damage at most once per actor per sweep.</td><td>Use full source scale (about 21 units wide), never Storybook's 0.12 preview scale. Reveal the textured fan outward during the sweep, keeping only its central 1.5-unit region visible at rest. Targets behind it, outside the cone/range or behind walls MUST be safe. Re-arm after 12 s; disable stops the sweep.</td></tr>
+      <tr><td>Poison machine</td><td>While on, its 6.1-unit-wide floor gas area applies Poison to eligible overlapping players, checked at most once per 2 s per trap. It MUST NOT deal needle contact damage.</td><td>Poison lasts 20 s, ticks every 5 s using existing poison damage tuning, does not stack or refresh while active, and follows existing cure/death cleanup. Off stops new exposure but does not cure an existing ailment. Dodge/recovery rejects exposure.</td></tr>
+    </tbody>
+  </table>
+  <p>These activation, warning, cooldown and flat-damage values are explicit remake
+  tuning. Original code supports Needler's directional 0x5555 turn-unit cone and
+  12-unit expanding attack shape; the source model's bounds independently support
+  its full scale. No live Needler was present in the retained capture corpus.
+  The original parameters 25 and 50 enter a clamped percentage conversion, so
+  they MUST NOT be described as measured flat HP damage. Exact original trigger,
+  timing and percentage-damage semantics remain open.</p>
+  <p>Off/spent states, model variant, facing and remaining cooldown MUST survive
+  room revisits. Pending bomb warnings MUST remain pending; active Needler sweeps
+  resume in cooldown to prevent duplicate hits against reconstructed actors. Gun
+  warnings restart safely on revisit. Room teardown MUST free outstanding shots
+  and warning/blast visuals. Autopilot disarming MUST affect all hazard families.</p>
+  <p>Seeded tests MUST cover cone/radius boundaries, rotated facing, model mapping,
+  source material transforms and snapshot behavior. The exported live probe
+  <code>PSZ_TRAP_CHECK=1 PSZ_ENV_TRAP_CHECK=1</code> MUST separately exercise both
+  gun variants, wall blocking, dodges, bomb target eligibility and trigger-once,
+  Needler sweep/rearm, poison exposure/cure/expiry, and room persistence.</p>
   <h2>Burst materials</h2>
   <p>All four ball materials MUST restore the converter-skipped texture transform:
   UV scale (2,2), offset (0,-1), then mirrored repeat on both axes. Retained
@@ -121,7 +148,7 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Review fixtures</h2>
   <p>The probe selects five seeds (1, 2, 14, 17, 42) across nine rooms, including
   both reported Snowfield L variants and representatives of all eight named
-  trap types plus the poison-machine stand-in. Expected records and actual spawned
+  trap types plus the poison machine. Expected records and actual spawned
   nodes are compared by type, count and position, with visibility forced for inspection.</p>
   <pre><code>PSZ_TRAP_CHECK=1 godot --path . res://scripts/tools/coliseum_probe.tscn</code></pre>
   <p>Set PSZ_GAMEPLAY_CAPTURE_DIR to an existing directory to retain screenshots.

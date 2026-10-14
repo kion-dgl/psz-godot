@@ -19,8 +19,16 @@ uniform bool mirror_y = true;
 uniform float alpha_scissor = 0.5;
 uniform vec4 albedo_tint : source_color = vec4(1.0);
 uniform float visibility_alpha = 1.0;
+// Optional radial reveal for the source-sized Needler effect.
+uniform float reveal_radius = -1.0;
+varying vec2 local_xz;
+
+void vertex() {
+	local_xz = VERTEX.xz;
+}
 
 void fragment() {
+	if (reveal_radius >= 0.0 && length(local_xz) > reveal_radius) discard;
 	vec2 uv = UV * uv_scale + uv_offset;
 	vec2 half_texel = 0.5 / vec2(textureSize(albedo_texture, 0));
 	uv = mirror_uv(uv, half_texel, mirror_x, mirror_y);

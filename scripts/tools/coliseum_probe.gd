@@ -199,7 +199,9 @@ class Watch extends Node:
 
 	func _run_traps(player: Node3D, enemy: EnemyBase) -> void:
 		var passed: bool
-		if OS.get_environment("PSZ_FLOOR_TRAP_CHECK") == "1":
+		if OS.get_environment("PSZ_ENV_TRAP_CHECK") == "1":
+			passed = await preload("res://scripts/tools/environment_trap_check.gd").run(player, enemy)
+		elif OS.get_environment("PSZ_FLOOR_TRAP_CHECK") == "1":
 			passed = await preload("res://scripts/tools/floor_trap_check.gd").run(player, enemy)
 		elif OS.get_environment("PSZ_STATUS_CHECK") == "1":
 			passed = await preload("res://scripts/tools/enemy_status_check.gd").run(player, enemy)

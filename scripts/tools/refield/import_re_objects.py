@@ -292,9 +292,12 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
             if kind is None:
                 unknown_traps.add(name)
                 continue
+            if kind == "gun_trap" and int(trap.get("variant", 0)) not in (0, 1):
+                raise ValueError(f"Unknown source gun variant: {key}: {trap}")
             entry["objects"].append({
                 "g": trap.get("group"),
                 "k": kind,
+                **({"m": "o0c_gun02" if int(trap.get("variant", 0)) == 1 else "o0c_gun01"} if kind == "gun_trap" else {}),
                 "x": _round(trap.get("x", 0.0)),
                 "y": _round(trap.get("y", 0.0)),
                 "z": _round(trap.get("z", 0.0)),

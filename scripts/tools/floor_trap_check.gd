@@ -10,7 +10,7 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	Inventory._items.erase("scape_doll")
 	var origin := player.global_position
 	var ok := true
-	for kind in ["needle_trap", "needler_trap", "burn_trap", "gun_trap", "poison_trap"]:
+	for kind in ["needle_trap"]:
 		ok = await _needle(player, origin, kind) and ok
 	ok = await _bear(player, origin) and ok
 	ok = await _persistence(player, origin) and ok
@@ -35,7 +35,6 @@ static func _needle(player: Node3D, origin: Vector3, kind: String) -> bool:
 	player.global_position = origin + Vector3(8, 0, 0)
 	var trap := NeedleTrap.new()
 	trap.trap_kind = kind
-	trap.damage = int(CellObjectSpawner.CONTACT_TRAP_DAMAGE.get(kind, NeedleTrap.DAMAGE_AMOUNT))
 	player.get_parent().add_child(trap)
 	trap.global_position = origin
 	await _settle(player)
@@ -136,7 +135,7 @@ static func _persistence(player: Node3D, origin: Vector3) -> bool:
 	var ok := Check._check(records.size() == 7, "room snapshot retains all seven floor-trap identifiers")
 	ok = Check._check(GameState.hp == GameState.max_hp, "floor traps do not damage a player outside their areas") and ok
 	for node in field._map_root.get_children():
-		if node is BearTrap or node is NeedleTrap: node.queue_free()
+		if node is BearTrap or node is NeedleTrap or node is FieldHazard: node.queue_free()
 	await _settle(player)
 	# Use the real restore dispatcher with only these fixture records.
 	spawner._restore_cell_objects({"objects": records, "drops": []})
@@ -146,7 +145,7 @@ static func _persistence(player: Node3D, origin: Vector3) -> bool:
 	for record in records:
 		ok = Check._check(restored.has(record), "room revisit preserves " + record.type + " position and " + record.state + " state") and ok
 	for node in field._map_root.get_children():
-		if node is BearTrap or node is NeedleTrap: node.queue_free()
+		if node is BearTrap or node is NeedleTrap or node is FieldHazard: node.queue_free()
 	await _settle(player)
 	return ok
 

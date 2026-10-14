@@ -28,7 +28,7 @@ static func run(tree: SceneTree) -> bool:
 				elif node is BearTrap:
 					node.set_state("off")
 					actual.append({"type":"capture_trap", "position":node.position})
-				elif node is NeedleTrap:
+				elif node is NeedleTrap or node is FieldHazard:
 					node.set_state("off")
 					actual.append({"type":node.trap_kind, "position":node.position})
 			var matched := actual.size() == expected.size()

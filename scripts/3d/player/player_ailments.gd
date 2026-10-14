@@ -9,8 +9,8 @@ func apply(player: Node3D, kind: String) -> void:
 		return
 	if kind == "freeze":
 		player._freeze.apply(player, float(CombatManager.STATUS_EFFECTS.freeze.duration))
-	elif kind in ["burn", "stun"] and not effects.has(kind):
-		effects[kind] = {"remaining": float(CombatManager.STATUS_EFFECTS[kind].duration), "elapsed": 0.0}
+	elif kind in ["burn", "stun", "poison"] and not effects.has(kind):
+		effects[kind] = {"remaining": 20.0 if kind == "poison" else float(CombatManager.STATUS_EFFECTS[kind].duration), "elapsed": 0.0}
 		player._drop_charge()
 	_update_label(player)
 
