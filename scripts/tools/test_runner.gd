@@ -24,6 +24,7 @@ func _ready() -> void:
 	_run_tests_combat()
 	_run_tests_systems()
 	preload("res://scripts/tools/test_gameplay_recovery.gd").run(self)
+	preload("res://scripts/tools/enemy_status_tests.gd").run(self)
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])

@@ -25,7 +25,6 @@ const INVULN_TIME := 2.0
 
 var _spike_materials: Array[ShaderMaterial] = []
 var _damage_area: Area3D
-var _invuln_timer: float = 0.0
 var _hit_bodies: Dictionary = {}
 
 
@@ -65,14 +64,15 @@ func _setup_damage_area() -> void:
 
 
 func _on_damage_body_entered(body: Node3D) -> void:
-	if element_state != "on":
+	if element_state != "on" or not body.is_in_group("player") or not body.has_method("take_damage"):
+		return
+	if body.has_method("can_take_hit") and not body.can_take_hit():
 		return
 	var body_id: int = body.get_instance_id()
 	if _hit_bodies.has(body_id):
 		return
 	_hit_bodies[body_id] = INVULN_TIME
-	if body.has_method("take_damage"):
-		body.take_damage(damage)
+	body.take_damage(damage)
 
 
 func _update_animation(delta: float) -> void:
@@ -83,6 +83,10 @@ func _update_animation(delta: float) -> void:
 			expired.append(body_id)
 	for body_id in expired:
 		_hit_bodies.erase(body_id)
+	# Entry alone misses players who remain inside after a hit or dodge.
+	if element_state == "on" and _damage_area:
+		for body in _damage_area.get_overlapping_bodies():
+			_on_damage_body_entered(body)
 
 
 func _apply_state() -> void:

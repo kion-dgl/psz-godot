@@ -61,7 +61,7 @@ func _on_body_stepped(body: Node3D) -> void:
 		return
 	if body.has_method("can_take_hit") and not body.can_take_hit():
 		return
-	if _is_holding:
+	if _is_holding or body.get("current_state") == body.PlayerState.CUTSCENE:
 		return
 	_is_holding = true
 	_caught_body = body
@@ -79,7 +79,14 @@ func _update_animation(delta: float) -> void:
 		offset.y -= SCROLL_SPEED * delta
 		material.set_shader_parameter("uv_offset", offset)
 
+	if not _is_holding and interaction_area:
+		for body in interaction_area.get_overlapping_bodies():
+			_on_body_stepped(body)
 	if not _is_holding:
+		return
+	# Damage, defeat and other state owners can interrupt the capture.
+	if not is_instance_valid(_caught_body) or _caught_body.get("current_state") != _caught_body.PlayerState.CUTSCENE:
+		set_state("off")
 		return
 	_hold_timer += delta
 	if _hold_timer >= HOLD_DURATION:
@@ -87,6 +94,8 @@ func _update_animation(delta: float) -> void:
 
 
 func _release() -> void:
+	if not _is_holding:
+		return
 	_is_holding = false
 	if is_instance_valid(_caught_body):
 		if _caught_body.has_method("take_damage"):
@@ -99,6 +108,8 @@ func _release() -> void:
 
 
 func _apply_state() -> void:
+	if element_state != "on":
+		_release_hold()
 	for material in _prong_materials:
 		material.set_shader_parameter("visibility_alpha", 1.0 if element_state == "on" else 0.0)
 
@@ -111,6 +122,9 @@ func _apply_state() -> void:
 func _release_hold() -> void:
 	if is_instance_valid(_caught_body) and _caught_body.get("current_state") == _caught_body.PlayerState.CUTSCENE:
 		_caught_body.transition_to(_caught_body.PlayerState.IDLE)
+	_is_holding = false
+	_caught_body = null
+	_hold_timer = 0.0
 
 
 func _exit_tree() -> void:

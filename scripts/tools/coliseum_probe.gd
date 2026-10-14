@@ -198,7 +198,13 @@ class Watch extends Node:
 			_fail("mixed group verification failed")
 
 	func _run_traps(player: Node3D, enemy: EnemyBase) -> void:
-		var passed: bool = await preload("res://scripts/tools/trap_validation_check.gd").run(player, enemy)
+		var passed: bool
+		if OS.get_environment("PSZ_FLOOR_TRAP_CHECK") == "1":
+			passed = await preload("res://scripts/tools/floor_trap_check.gd").run(player, enemy)
+		elif OS.get_environment("PSZ_STATUS_CHECK") == "1":
+			passed = await preload("res://scripts/tools/enemy_status_check.gd").run(player, enemy)
+		else:
+			passed = await preload("res://scripts/tools/trap_validation_check.gd").run(player, enemy)
 		print("[traps] DONE " + ("ok" if passed else "FAIL"))
 		get_tree().quit(0 if passed else 1)
 

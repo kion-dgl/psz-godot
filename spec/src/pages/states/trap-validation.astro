@@ -69,6 +69,34 @@ import Concept from '../../layouts/Concept.astro';
   are remake rules. The original's counter limits, timebase, rise samples and Heal
   amount are evidence-backed. No-target detonation consumes a triggered trap without
   hitting anyone. Dodging rejects damage and status together; heal cannot revive.</p>
+  <h2>Enemy status playtest tuning</h2>
+  <p>Enemy Burn MUST deal 5% of the target's maximum HP each second for six
+  seconds, with visible rising fire and damage numbers. It can kill. Freeze and
+  Stun MUST stop movement, AI attacks and model animation for five seconds;
+  taking damage MUST NOT end either effect. Freeze retains its 1.5× damage-taken
+  multiplier. Ice surrounds frozen enemies; orbiting stars identify Stun.
+  Expiry and death MUST clear visuals and restore animation playback. Reapplying
+  a status refreshes its duration without stacking damage or resetting its tick.
+  These are intentional remake balance changes following laptop playtesting,
+  not original-game parity claims. Player status tuning remains separate.</p>
+  <p>The palette editor MUST show icons on its four-action Combat and Traps rows.
+  Trap actions reuse Burn, Freeze, Confuse and Resta artwork until dedicated art
+  exists. Light remains a Stun substitute, not original confusion.</p>
+  <h2>Floor trap interaction and persistence</h2>
+  <p>Armed needle/contact traps MUST damage a living player who stays in their
+  area, at most once per two seconds per trap. Dodge/recovery immunity MUST
+  reject damage without spending that cooldown; an overlapping player becomes
+  eligible when immunity ends. Off traps MUST remain safe, including when
+  switched off underneath the player. Activation underneath a player MUST work.</p>
+  <p>Bear/Capture traps MUST block movement for 2.5 seconds, then deal 20 damage
+  once and turn off. Disabling or removing a trap MUST release its hold without
+  overwriting damage or defeat state. An external hit interrupts capture without
+  a delayed second trap hit. Active floor hazards and spent captures MUST retain
+  their type, position and on/off state when a room is revisited.</p>
+  <p>These contact rules are remake behavior. Gun, Burn, Needler and Poison still
+  use the needle stand-in; this validation does not establish their original
+  firing, explosion or poison behavior. Run the real-overlap regression with
+  <code>PSZ_TRAP_CHECK=1 PSZ_FLOOR_TRAP_CHECK=1</code> and the Coliseum probe.</p>
   <h2>Burst materials</h2>
   <p>All four ball materials MUST restore the converter-skipped texture transform:
   UV scale (2,2), offset (0,-1), then mirrored repeat on both axes. Retained

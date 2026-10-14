@@ -664,13 +664,11 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			draw_y += 26
 
 		var row_ids: Array = row_def.ids
-		# Three cells is the normal width; a longer row (Traps has four) packs
-		# tighter rather than overflowing the panel. At four across there is no
-		# room for an icon box AND readable text, so those cells drop the icon
-		# and use the action's `short` name across the full cell.
+		# Dense rows put the label below the icon so every action stays visible.
 		var per_row: int = maxi(3, row_ids.size())
 		var cell_w: float = (pw - 12.0) / float(per_row)
 		var tight: bool = row_ids.size() > 3
+		cell_h = 56.0 if tight else 36.0
 		for ci in range(row_ids.size()):
 			var action_id: String = row_ids[ci]
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
@@ -686,14 +684,14 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), PsoStartMenu.C_SELECT)
 
 			var text_x: float = cx + 3
-			if not tight:
-				var icon_y: float = draw_y + (cell_h - icon_sz) * 0.5
-				c.draw_rect(Rect2(cx + 3, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
-				var icon: Texture2D = _c._get_action_icon(action_id)
-				if icon:
-					var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
-					c.draw_texture_rect(icon, Rect2(cx + 3, icon_y, icon_sz, icon_sz), false, icon_mod)
-				text_x = cx + icon_sz + 8
+			var icon_y: float = draw_y + 2 if tight else draw_y + (cell_h - icon_sz) * 0.5
+			var icon_x: float = cx + (cell_w - icon_sz) * 0.5 if tight else cx + 3
+			c.draw_rect(Rect2(icon_x, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
+			var icon: Texture2D = _c._get_action_icon(action_id)
+			if icon:
+				var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
+				c.draw_texture_rect(icon, Rect2(icon_x, icon_y, icon_sz, icon_sz), false, icon_mod)
+			if not tight: text_x = cx + icon_sz + 8
 
 			var col: Color
 			if is_sel:
@@ -702,7 +700,7 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 				col = Color(0.5, 0.5, 0.5)
 			else:
 				col = PsoStartMenu.C_TEXT
-			c.draw_string(font, Vector2(text_x, draw_y + 23), label,
+			c.draw_string(font, Vector2(text_x, draw_y + (49 if tight else 23)), label,
 				HORIZONTAL_ALIGNMENT_LEFT, cx + cell_w - 6 - text_x, PsoStartMenu.FONT_SIZE, col)
 
 			flat_idx += 1

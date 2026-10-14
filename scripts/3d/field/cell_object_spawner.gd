@@ -368,13 +368,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					else:
 						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")))
 			"bear_trap", "capture_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")))
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
 			"poison_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")))
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -685,6 +685,8 @@ func _save_cell_state() -> void:
 				"rotation": rad_to_deg(w.rotation.y),
 				"destructible": w.is_destructible,
 			})
+
+	obj_states.append_array(_placed_trap_states())
 
 	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
 	for obj in objects:
@@ -1126,22 +1128,36 @@ const CONTACT_TRAP_DAMAGE := {
 ## but the same spawn shape (place + arm), so they ride through here too —
 ## the two wrappers were folded together when the dispatch's fan-out hit the
 ## code-graph ratchet (#644); behaviour identical.
-func _spawn_placed_trap(pos: Vector3, kind: String) -> void:
+func _spawn_placed_trap(pos: Vector3, kind: String, state: String = "on") -> void:
 	if kind == "bear_trap" or kind == "capture_trap":
 		var bear: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
+		bear.set("element_state", state)
+		bear.set_meta("trap_kind", kind)
 		_c._map_root.add_child(bear)
 		bear.position = pos
-		bear.call("set_state", "on")
 		print("[CellObjects] BearTrap at %s" % pos)
 		return
 	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
 	if CONTACT_TRAP_DAMAGE.has(kind):
 		trap.set("damage", int(CONTACT_TRAP_DAMAGE[kind]))
 	trap.set("trap_kind", kind)
+	trap.set("element_state", state)
 	_c._map_root.add_child(trap)
 	trap.position = pos
-	trap.call("set_state", "on")
 	print("[CellObjects] %s at %s" % [kind, pos])
+
+
+## Floor hazards must survive a room revisit, including spent captures.
+func _placed_trap_states() -> Array:
+	var states: Array = []
+	var map_root: Node3D = _c.get("_map_root")
+	if not is_instance_valid(map_root): return states
+	for node in map_root.get_children():
+		if not (node is BearTrap or node is NeedleTrap): continue
+		var kind: String = node.trap_kind if node is NeedleTrap else str(node.get_meta("trap_kind", "capture_trap"))
+		states.append({"type": kind, "state": node.element_state,
+			"px": node.position.x, "py": node.position.y, "pz": node.position.z})
+	return states
 
 
 ## The authored elemental trap: invisible until it arms, then it rises and
