@@ -10,6 +10,15 @@ static func run(t: Node) -> void:
 	t.assert_eq(growth.level_for({"area_id":"dark","difficulty":"normal"}),30,"automatic Shrine level remains 30")
 	t.assert_eq(growth.level_for({"area_id":"dark","coliseum_enemy_level":12,"difficulty":"hard"}, 80),12,"Coliseum explicit level overrides cell and difficulty offset")
 	t.assert_eq(growth.level_for({"coliseum_enemy_level":900}),100,"Coliseum level clamps at 100")
+	for area in growth.AREA_LEVELS:
+		for difficulty in growth.DIFFICULTY_LEVELS:
+			var session_data := {"area_id": "gurhacia", "difficulty": difficulty}
+			var expected: int = growth.AREA_LEVELS[area] + growth.DIFFICULTY_LEVELS[difficulty]
+			t.assert_eq(growth.level_for(session_data, 0, area), expected, "current section controls area fallback")
+			t.assert_eq(growth.level_for(JSON.parse_string(JSON.stringify(session_data)), 0, area), expected, "serialized level inputs are stable")
+			session_data.enemy_level = 12
+			t.assert_eq(growth.level_for(session_data, 0, area), 12 + growth.DIFFICULTY_LEVELS[difficulty], "authored quest beats section fallback")
+			t.assert_eq(growth.level_for(session_data, 4, area), 4 + growth.DIFFICULTY_LEVELS[difficulty], "authored cell beats quest")
 	var dialog := DebugLevelDialog.new()
 	t.add_child(dialog)
 	dialog.configure("Enemy level",0,true)

@@ -203,6 +203,8 @@ func get_exp_progress() -> Dictionary:
 
 	var level: int = character["level"]
 	var total_exp: int = character["experience"]
+	if level >= MAX_LEVEL:
+		return {"current": 0, "needed": 0, "percent": 1.0, "maxed": true}
 	var exp_table = _get_exp_table()
 	if exp_table == null:
 		return {"current": total_exp, "needed": 100, "percent": 0.0}

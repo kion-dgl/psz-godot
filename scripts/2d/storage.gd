@@ -372,7 +372,12 @@ func _do_item_move(qty: int) -> void:
 				found = true
 				break
 		if not found:
-			GameState.shared_storage.append({"id": item_id, "name": item_name, "quantity": move_qty})
+			var character: Dictionary = CharacterManager.get_active_character()
+			GameState.shared_storage.append({
+				"id": item_id, "name": item_name, "quantity": move_qty,
+				"owner": preload("res://scripts/utils/equipment_sets.gd").owner(character),
+				"properties": preload("res://scripts/utils/equipment_instance.gd").capture(character, item_id),
+			})
 		Inventory.remove_item(item_id, move_qty)
 		if move_qty > 1:
 			hint_label.text = "Stored %d× %s." % [move_qty, item_name]
@@ -387,12 +392,9 @@ func _do_item_move(qty: int) -> void:
 		var move_qty: int = 1 if Inventory._is_per_slot(item_id) else qty
 		# Per-slot can_add_item is per copy; for stackable, add_item
 		# silently clamps to max_stack — we already capped via stack_room.
-		if Inventory._is_per_slot(item_id) and not Inventory.can_add_item(item_id):
-			_open_info_modal(ShopNav.MSG_NO_ROOM)
-			return
-		Inventory.add_item(item_id, move_qty)
+		if not _receive_stored_item(item, move_qty): return
 		for s_item in GameState.shared_storage:
-			if str(s_item.get("id", "")) == item_id:
+			if s_item == item:
 				s_item["quantity"] = int(s_item.get("quantity", 0)) - move_qty
 				if int(s_item["quantity"]) <= 0:
 					GameState.shared_storage.erase(s_item)
@@ -694,3 +696,20 @@ func _on_nav_repeat(action: String) -> void:
 	ev.pressed = true
 	_unhandled_input(ev)
 
+
+## Keep the original identity and its mutable properties on withdrawal.
+func _receive_stored_item(item: Dictionary, quantity: int) -> bool:
+	var id := str(item.id)
+	if not Inventory._is_per_slot(id): return Inventory.add_item(id, quantity)
+	if not Inventory.can_add_item(id):
+		_open_info_modal(ShopNav.MSG_NO_ROOM)
+		return false
+	if Inventory.has_item(id):
+		_open_info_modal("An item with this legacy identity is already carried.")
+		return false
+	if item.has("properties"):
+		preload("res://scripts/utils/equipment_instance.gd").restore(CharacterManager.get_active_character(), id, item.properties)
+	Inventory._items[id] = 1
+	Inventory.item_added.emit(id, 1, 1)
+	Inventory._maybe_auto_sort()
+	return true

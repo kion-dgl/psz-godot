@@ -887,7 +887,7 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 		dormant: bool = false) -> EnemyBase:
 	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
 	var growth = preload("res://scripts/utils/enemy_progression.gd")
-	enemy.enemy_level = growth.level_for(SessionManager.get_session(), int(_c._current_cell.get("enemy_level", 0)))
+	enemy.enemy_level = growth.level_for(SessionManager.get_session(), int(_c._current_cell.get("enemy_level", 0)), SessionManager.get_current_area_id())
 	enemy.enemy_data = growth.scaled(edata, enemy.enemy_level, str(SessionManager.get_session().get("difficulty", "normal")))
 	# Before add_child, so _ready() hides the body during setup (see EnemyBase).
 	enemy.dormant = dormant

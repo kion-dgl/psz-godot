@@ -138,6 +138,7 @@ func _run_tests_core() -> void:
 	test_ranger_playthrough()
 	preload("res://scripts/tools/technique_progression_tests.gd").run(self)
 	preload("res://scripts/tools/systems_progression_tests.gd").run(self)
+	preload("res://scripts/tools/equipment_set_tests.gd").run(self)
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
