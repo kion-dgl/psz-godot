@@ -245,5 +245,24 @@
     "The original parameters 25 and 50 enter a percentage conversion, not proven flat HP damage.",
     "The broader story/navigation matrix is not green; separate from these trap probes.",
     "Enemy-status regression ran headless; the other three probes ran the exported binary with the published pack."
-  ]
+  ],
+  "story_matrix": {
+    "status": "not_green",
+    "passed": [
+      "Boot",
+      "Search and Rescue"
+    ],
+    "failed": [
+      "Valley free roam: s01a_ib2 missing floor",
+      "Snowfield free roam: s03b_ic3 missing floor",
+      "PP canonical and backtrack: s05a_lc2 missing floor, repeated three attempts each"
+    ],
+    "non_gating": [
+      "Wetlands free roam waypoint snag",
+      "Paru free roam: s05a_lc1 missing floor, classified non-gating by the existing harness"
+    ],
+    "stopped_after": "PP failures; later dependency-chain quests not verified",
+    "pp_failure": "cell 3,4, player (-14.833,0.190,-20.935), target (-1.893,0,-22), distance 12.98, all 3 floor probes miss",
+    "baseline_evidence": "Same PP position reproduced previously on base 3c0e8b28 with the same published pack; main since then only changed the Bosses scorecard."
+  }
 }
