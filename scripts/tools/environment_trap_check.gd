@@ -244,10 +244,7 @@ static func _edges(player: Node3D) -> bool:
 	Floor._reset(player)
 	return ok
 
-static func _persistence(player: Node3D) -> bool:
-	# The shared floor regression exercises the real save/restore dispatcher.
-	var ok := await Floor._persistence(player, ORIGIN)
-	var field := player.get_tree().current_scene
+static func _pending_snapshot(field: Node) -> Array:
 	var spawner: CellObjectSpawner = field._cell_spawner
 	spawner._spawn_placed_trap(ORIGIN, "gun_trap", "on", {"model": "o0c_gun02", "rotation": 90.0, "timer": 10.0})
 	spawner._spawn_placed_trap(ORIGIN + Vector3(3, 0, 0), "burn_trap", "warning", {"timer": 0.6})
@@ -260,6 +257,14 @@ static func _persistence(player: Node3D) -> bool:
 	var records: Array = saved.objects.filter(func(o): return o.type in ["gun_trap", "burn_trap", "needler_trap"])
 	for node in field._map_root.get_children():
 		if node is FieldHazard: node.queue_free()
+	return records
+
+static func _persistence(player: Node3D) -> bool:
+	# The shared floor regression exercises the real save/restore dispatcher.
+	var ok := await Floor._persistence(player, ORIGIN)
+	var field := player.get_tree().current_scene
+	var spawner: CellObjectSpawner = field._cell_spawner
+	var records := _pending_snapshot(field)
 	await _wait(player, 0.05)
 	spawner._restore_cell_objects({"objects": records, "drops": []})
 	var restored_gun: GunTrap
@@ -272,14 +277,18 @@ static func _persistence(player: Node3D) -> bool:
 		elif node is BombTrap:
 			if node.element_state == "spent": spent_bomb = node
 			else: restored_bomb = node
-	ok = Check._check(restored_gun != null and restored_gun.model_path.ends_with("gun02.glb") and is_equal_approx(restored_gun.rotation.y, PI/2) and is_equal_approx(restored_gun.timer, 10.0), "real room restore retains gun variant, authored yaw and cooldown") and ok
-	ok = Check._check(restored_needler != null and restored_needler.element_state == "cooldown" and restored_needler.timer == NeedlerTrap.COOLDOWN, "room restore converts an active Needler wave to cooldown") and ok
-	ok = Check._check(restored_bomb != null and restored_bomb.element_state == "warning" and spent_bomb != null and not spent_bomb.model.visible, "room restore retains pending and spent bombs separately") and ok
+	ok = _restored_state_checks(restored_gun, restored_needler, restored_bomb, spent_bomb) and ok
 	await _wait(player, 0.8)
 	ok = Check._check(restored_bomb != null and restored_bomb.detonations == 1 and spent_bomb != null and spent_bomb.detonations == 0, "pending bomb detonates once after restore; spent bomb stays inert") and ok
 	for node in field._map_root.get_children():
 		if node is FieldHazard: node.queue_free()
 	await _wait(player, 0.05)
+	return ok
+
+static func _restored_state_checks(restored_gun: GunTrap, restored_needler: NeedlerTrap, restored_bomb: BombTrap, spent_bomb: BombTrap) -> bool:
+	var ok := Check._check(restored_gun != null and restored_gun.model_path.ends_with("gun02.glb") and is_equal_approx(restored_gun.rotation.y, PI/2) and is_equal_approx(restored_gun.timer, 10.0), "real room restore retains gun variant, authored yaw and cooldown")
+	ok = Check._check(restored_needler != null and restored_needler.element_state == "cooldown" and restored_needler.timer == NeedlerTrap.COOLDOWN, "room restore converts an active Needler wave to cooldown") and ok
+	ok = Check._check(restored_bomb != null and restored_bomb.element_state == "warning" and spent_bomb != null and not spent_bomb.model.visible, "room restore retains pending and spent bombs separately") and ok
 	return ok
 
 static func _visuals(player: Node3D) -> void:
@@ -307,7 +316,8 @@ static func _visuals(player: Node3D) -> void:
 		trap.set_process(false)
 		if trap is NeedlerTrap:
 			trap.set_state("active")
-			trap._reveal(12.0)
+			trap._show_sweep(1.0)
+			print("[trap-art] Needler surfaces=%d radius=%s" % [trap._sweep_materials.size(), str(trap._sweep_materials.map(func(m): return m.get_shader_parameter("reveal_radius")))])
 			camera.global_position = ORIGIN + Vector3(0, 16, 22)
 			camera.look_at(ORIGIN + Vector3(0, 0, 4))
 		else:

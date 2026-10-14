@@ -10,20 +10,27 @@ const DAMAGE := 25 # Intentional flat HP tuning; original parameter is percentag
 var _hit_actors: Dictionary = {}
 var sweeps := 0
 var _sweep_materials: Array[ShaderMaterial] = []
+var _fan_materials: Array[ShaderMaterial] = []
 
 func _ready() -> void:
 	super._ready()
 	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int) -> void:
-		if mat is ShaderMaterial: _sweep_materials.append(mat)
+		if mat is ShaderMaterial:
+			_sweep_materials.append(mat)
+			var texture: Texture2D = mat.get_shader_parameter("albedo_texture")
+			if texture.resource_path.get_file().get_basename() == "o0s_0_trapc02": _fan_materials.append(mat)
 	)
-	_reveal(1.5)
+	_show_sweep(0.0)
 
-func _reveal(radius: float) -> void:
-	for material in _sweep_materials: material.set_shader_parameter("reveal_radius", radius)
+func _show_sweep(fraction: float) -> void:
+	for material in _sweep_materials: material.set_shader_parameter("reveal_radius", maxf(1.5, RANGE * fraction))
+	# The fan UVs span V=1 at its origin to V=0.165 at its rim. Translate
+	# the narrow needle strip across that span; cadence is remake tuning.
+	for material in _fan_materials: material.set_shader_parameter("uv_offset", Vector2(-0.25, 1.0 if fraction <= 0.0 else 1.15625 - 0.835 * fraction))
 
 func _apply_state() -> void:
 	super._apply_state()
-	if element_state != "active": _reveal(1.5)
+	if element_state != "active": _show_sweep(0.0)
 
 func _init() -> void:
 	trap_kind = "needler_trap"
@@ -53,7 +60,7 @@ func _update_animation(delta: float) -> void:
 		"active":
 			var fraction := 1.0 - timer / SWEEP_SECONDS
 			if model: model.scale = Vector3.ONE # Never use Storybook's preview scale.
-			_reveal(maxf(1.5, RANGE * fraction))
+			_show_sweep(fraction)
 			_sweep(RANGE * fraction)
 			if timer <= 0.0:
 				set_state("cooldown")
