@@ -1,0 +1,173 @@
+{
+  "schema": "psz-re/trap-material/1",
+  "source_state": "20260808-092002_Phantasy_Star_0__USA_.ml1",
+  "source_sha256": "40acfbb9d7d0fc56d88a186f9fcadc7942b4eea7e03ad3dd7a7f98ed49d7af3d",
+  "original_gpu": [
+    {
+      "model": "o0c_burst01",
+      "polygons": 2,
+      "uv_s12_4": [
+        [
+          512,
+          0
+        ],
+        [
+          512,
+          -512
+        ],
+        [
+          0,
+          -512
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "model": "o0c_burst04",
+      "polygons": 2,
+      "uv_s12_4": [
+        [
+          512,
+          0
+        ],
+        [
+          512,
+          -512
+        ],
+        [
+          0,
+          -512
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "floor_materials": {
+    "o0c_1_needle": {
+      "uv_scale": [
+        2.0,
+        -1.0
+      ],
+      "uv_offset": [
+        0.0,
+        1.5
+      ],
+      "mirror_x": true,
+      "mirror_y": false,
+      "source_srt": [
+        2.0,
+        1.0,
+        -0.25,
+        0.5
+      ],
+      "model": "o0c_needle",
+      "source": "NSBMD Max-mode material SRT; not live floor-trap polygon capture"
+    },
+    "o0c_1_needle2": {
+      "uv_scale": [
+        1.0,
+        -2.0
+      ],
+      "uv_offset": [
+        0.0,
+        2.0
+      ],
+      "mirror_x": false,
+      "mirror_y": true,
+      "source_srt": [
+        1.0,
+        2.0,
+        0.0,
+        0.25
+      ],
+      "model": "o0c_needle",
+      "source": "NSBMD Max-mode material SRT; not live floor-trap polygon capture"
+    },
+    "o0c_1_tora1": {
+      "uv_scale": [
+        2.0,
+        -1.0
+      ],
+      "uv_offset": [
+        0.0,
+        1.0
+      ],
+      "mirror_x": true,
+      "mirror_y": false,
+      "source_srt": [
+        2.0,
+        1.0,
+        -0.25,
+        0.0
+      ],
+      "model": "o0c_torabasami",
+      "source": "NSBMD Max-mode material SRT; not live floor-trap polygon capture"
+    },
+    "o0c_1_tora2": {
+      "uv_scale": [
+        2.0,
+        -2.0
+      ],
+      "uv_offset": [
+        0.0,
+        1.0
+      ],
+      "mirror_x": true,
+      "mirror_y": true,
+      "source_srt": [
+        2.0,
+        2.0,
+        -0.25,
+        -0.25
+      ],
+      "model": "o0c_torabasami",
+      "source": "NSBMD Max-mode material SRT; not live floor-trap polygon capture"
+    }
+  },
+  "texture_dimensions": [
+    16,
+    16
+  ],
+  "exported_quad_uv": [
+    [
+      1,
+      0.5
+    ],
+    [
+      1,
+      -0.5
+    ],
+    [
+      0,
+      -0.5
+    ],
+    [
+      0,
+      0.5
+    ]
+  ],
+  "shader_uv_scale": [
+    2,
+    2
+  ],
+  "shader_uv_offset": [
+    0,
+    -1
+  ],
+  "mirror": [
+    true,
+    true
+  ],
+  "derivation": "Original S12.4 coordinates / (16 texels * 16) = (2,0),(2,-2),(0,-2),(0,0). GLB UV * 2 + (0,-1) reproduces these. Reflected V is equivalent under mirrored repeat.",
+  "limitations": [
+    "Live polygon evidence covers visible Ice and Heal in one retained state.",
+    "Heat and Light share the same original mesh/material transform, checked statically.",
+    "This restores source UV mapping; it does not replace the original crossed-quad mesh with a sphere."
+  ]
+}

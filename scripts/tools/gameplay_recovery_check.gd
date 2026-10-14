@@ -74,6 +74,7 @@ static func _materials(player: Node3D) -> bool:
 	var ok := _check(not bear._prong_materials.is_empty() and not needle._spike_materials.is_empty(), "real floor-trap surfaces use mirrored shaders")
 	if not bear._prong_materials.is_empty():
 		var mat: ShaderMaterial = bear._prong_materials[0]
+		bear.set_state("on")
 		var offset: Vector2 = mat.get_shader_parameter("uv_offset")
 		bear._update_animation(0.5)
 		ok = _check(is_equal_approx(mat.get_shader_parameter("uv_offset").y, offset.y - 0.25) and not mat.get_shader_parameter("mirror_y"), "armed bear scrolls with repeat V") and ok
@@ -81,20 +82,14 @@ static func _materials(player: Node3D) -> bool:
 		ok = _check(mat.get_shader_parameter("visibility_alpha") == 0.0, "bear off hides prongs") and ok
 	if not needle._spike_materials.is_empty():
 		var mat: ShaderMaterial = needle._spike_materials[0]
-		ok = _check(mat.get_shader_parameter("uv_scale") == Vector2(2, 1) and mat.get_shader_parameter("uv_offset") == Vector2(-0.17, -0.18), "needle uses storybook UV profile") and ok
+		ok = _check(mat.get_shader_parameter("uv_scale") == Vector2(2, 1) and mat.get_shader_parameter("uv_offset") == Vector2(-0.17, -0.18) and mat.get_shader_parameter("align_needle_slots"), "needle strip uses corrected mapping and slot alignment") and ok
 		needle.set_state("on")
 		ok = _check(mat.get_shader_parameter("visibility_alpha") == 1.0, "needle on reveals spikes") and ok
-	bear.set_state("on")
+	bear.set_state("off")
 	player.transition_to(player.PlayerState.IDLE)
 	bear._on_body_stepped(player)
-	ok = _check(player.current_state == player.PlayerState.CUTSCENE, "bear catches live player") and ok
-	bear._release()
-	ok = _check(player.current_state == player.PlayerState.DAMAGED, "bear release preserves damage reaction") and ok
-	bear.set_state("on")
-	player.transition_to(player.PlayerState.IDLE)
-	bear._on_body_stepped(player)
-	bear._exit_tree()
-	ok = _check(player.current_state == player.PlayerState.IDLE, "room teardown releases surviving bear hold") and ok
+	ok = _check(bear.element_state == "warning" and player.current_state == player.PlayerState.IDLE, "bear activation leaves an escape window") and ok
+	bear.set_state("spent")
 	await _capture_materials(player, bear, needle)
 	bear.queue_free()
 	needle.queue_free()

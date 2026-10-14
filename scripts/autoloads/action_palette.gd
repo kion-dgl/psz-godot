@@ -23,13 +23,11 @@ const ALL_ACTIONS: Array = [
 	{"id": "star_atomizer", "label": "Star Atomizer", "short": "Star", "category": "recovery", "icon": "star_atomizer.png"},
 	{"id": "moon_atomizer", "label": "Moon Atomizer", "short": "Moon", "category": "recovery", "icon": "moon_atomizer.png"},
 	{"id": "telepipe", "label": "Telepipe", "short": "Pipe", "category": "recovery", "icon": "telepipe.png"},
-	# Traps (#575) — CAST-only, enforced at use in Inventory._use_trap. No icon
-	# art exists for these yet; get_action_icon returns null and the slot falls
-	# back to its label, which is why `short` matters here.
-	{"id": "heat_trap", "label": "Heat Trap", "short": "Heat", "category": "trap", "icon": "heat_trap.png"},
-	{"id": "ice_trap", "label": "Ice Trap", "short": "Ice", "category": "trap", "icon": "ice_trap.png"},
-	{"id": "light_trap", "label": "Light Trap", "short": "Light", "category": "trap", "icon": "light_trap.png"},
-	{"id": "heal_trap", "label": "Heal Trap", "short": "Heal", "category": "trap", "icon": "heal_trap.png"},
+	# CAST traps reuse the matching status/healing artwork.
+	{"id": "heat_trap", "label": "Heat Trap", "short": "Heat", "category": "trap", "icon": "status_burn.png"},
+	{"id": "ice_trap", "label": "Ice Trap", "short": "Ice", "category": "trap", "icon": "status_freeze.png"},
+	{"id": "light_trap", "label": "Light Trap", "short": "Light", "category": "trap", "icon": "status_confuse.png"},
+	{"id": "heal_trap", "label": "Heal Trap", "short": "Heal", "category": "trap", "icon": "resta.png"},
 	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "del_all.png"},
 	# Techniques — base only; charged variants accessed via hold-to-charge
 	{"id": "foie", "label": "Foie", "short": "Foie", "category": "technique", "icon": "foie.png"},

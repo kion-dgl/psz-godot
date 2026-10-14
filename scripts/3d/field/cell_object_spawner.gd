@@ -219,13 +219,13 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				else:
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"bear_trap", "capture_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
 			"poison_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -368,13 +368,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					else:
 						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap", "needler_trap", "burn_trap", "gun_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"bear_trap", "capture_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"heal_trap", "heat_trap", "light_trap", "ice_trap":
 				_spawn_elemental_trap(pos, obj_type)
 			"poison_trap":
-				_spawn_placed_trap(pos, obj_type)
+				_spawn_placed_trap(pos, obj_type, str(obj.get("state", "on")), obj)
 			"wall":
 				var w_destructible: bool = bool(obj.get("destructible", true))
 				_spawn_wall(pos, obj_rot, w_destructible)
@@ -685,6 +685,8 @@ func _save_cell_state() -> void:
 				"rotation": rad_to_deg(w.rotation.y),
 				"destructible": w.is_destructible,
 			})
+
+	obj_states.append_array(_placed_trap_states())
 
 	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
 	for obj in objects:
@@ -1108,40 +1110,19 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
-## Damage per contact-trap kind.
-##
-## The Needler's 25 and the Burn's 50 are MEASURED — psz-re read them as the one
-## constant each type's parameter block carries across the whole corpus (248 and
-## 458 records). The Gun trap genuinely varies per instance and psz-re does not
-## publish the field, so it takes the needle trap's own default. `needle_trap`
-## is the legacy id the static quests author.
-const CONTACT_TRAP_DAMAGE := {
-	"needler_trap": 25,
-	"burn_trap": 50,
-}
-
-## The four contact traps share one script and differ by data — the repo's
-## hierarchy rule. Only the elemental family needs its own behaviour, because
-## only it is invisible and fused. The bear/capture traps are their own script
-## but the same spawn shape (place + arm), so they ride through here too —
-## the two wrappers were folded together when the dispatch's fan-out hit the
-## code-graph ratchet (#644); behaviour identical.
-func _spawn_placed_trap(pos: Vector3, kind: String) -> void:
-	if kind == "bear_trap" or kind == "capture_trap":
-		var bear: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
-		_c._map_root.add_child(bear)
-		bear.position = pos
-		bear.call("set_state", "on")
-		print("[CellObjects] BearTrap at %s" % pos)
-		return
-	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
-	if CONTACT_TRAP_DAMAGE.has(kind):
-		trap.set("damage", int(CONTACT_TRAP_DAMAGE[kind]))
-	trap.set("trap_kind", kind)
-	_c._map_root.add_child(trap)
+## Distinct hazard delivery and dedicated meshes; /states/trap-validation.
+func _spawn_placed_trap(pos: Vector3, kind: String, state: String = "on", record: Dictionary = {}) -> void:
+	var trap := PlacedTraps.build(kind, state, record)
+	if trap == null: return
+	if OS.get_environment("PSZ_AUTOPILOT") == "1": trap.element_state = "off"
 	trap.position = pos
-	trap.call("set_state", "on")
+	_c._map_root.add_child(trap)
 	print("[CellObjects] %s at %s" % [kind, pos])
+
+
+func _placed_trap_states() -> Array:
+	var root: Node3D = _c.get("_map_root")
+	return PlacedTraps.snapshots(root) if is_instance_valid(root) else []
 
 
 ## The authored elemental trap: invisible until it arms, then it rises and

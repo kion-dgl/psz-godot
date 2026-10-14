@@ -193,8 +193,12 @@ var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
 const STUCK_THRESHOLD := 0.2  # Seconds blocked before trying alternate direction
 
 ## Status effects
+const StatusFeedback = preload("res://scripts/3d/enemies/enemy_status_effects.gd")
+var _status_feedback: Node3D
+var _status_animation_speed := 1.0
+var _status_animation_locked := false
 var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float, phase: String}]
-var _is_immobilized: bool = false  # frozen/stunned(phase1)/sleeping
+var _is_immobilized: bool = false  # frozen/stunned/sleeping
 var _stun_no_attack: bool = false  # stun phase 2: can move, can't attack
 const DOT_TICK_INTERVAL := 1.0
 ## Model tint per timed status — every CombatManager.STATUS_EFFECTS key
@@ -495,7 +499,8 @@ func _early_process_returns(delta: float) -> bool:
 
 func _tick_combat_timers(delta: float) -> void:
 	_process_status_effects(delta)
-	_tank.tick(self, delta)
+	if not _is_immobilized:
+		_tank.tick(self, delta)
 	_finjer_spin_cooldown = maxf(_finjer_spin_cooldown - delta, 0.0)
 	attack_cooldown_timer = maxf(attack_cooldown_timer - delta, 0.0)
 
@@ -526,6 +531,10 @@ func _physics_process(delta: float) -> void:
 			if current_anim == "wlk":
 				current_anim = ""
 
+	if _is_immobilized:
+		velocity = Vector3.ZERO
+		return
+
 	# Flyers hold their hover altitude while engaged (spec /states/enemies §flyer —
 	# the anti-melee design; they MUST NOT ground mid-combat): gravity is bypassed
 	# and y lerps to the hover plane. Everything else falls normally.
@@ -535,13 +544,6 @@ func _physics_process(delta: float) -> void:
 			_ground_y + float(_fsm.get("hover_height", 1.3)), 2.0 * delta)
 	elif not is_on_floor():
 		velocity.y -= GRAVITY * delta
-
-	# Immobilized by status effect — skip AI
-	if _is_immobilized:
-		velocity.x = 0
-		velocity.z = 0
-		move_and_slide()
-		return
 
 	# Update state
 	FrameProfiler.mark("enemy_ai")
@@ -1757,13 +1759,13 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 	if not is_alive or not _accepts_damage():
 		return
 
-	# Break freeze/sleep on any hit
+	# Break only statuses whose enemy definition allows interruption (sleep).
 	_break_on_hit_effects()
 
 	# Apply damage multiplier from freeze
 	var damage_mult := 1.0
 	for fx in _status_effects:
-		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		var fx_def: Dictionary = StatusFeedback.definition(fx.type)
 		if fx_def.has("damage_taken_mult"):
 			damage_mult *= float(fx_def.damage_taken_mult)
 
@@ -1793,6 +1795,9 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		# Try status effect from element
 		if not hit_element.is_empty() and hit_element_level > 0:
 			_try_apply_status(hit_element, hit_element_level)
+
+		if _is_immobilized:
+			return
 
 		# The roller's authored punish window survives nonlethal hits.
 		if _charge.get("phase", "") == "ed" and _vulnerable_mult > 1.0:
@@ -1828,6 +1833,9 @@ func _uses_generic_hurt_reaction() -> bool:
 func _die() -> void:
 	if not is_alive:
 		return
+	_status_effects.clear()
+	_update_immobilized()
+	_update_status_visuals()
 	_restore_charge_model()
 	is_alive = false
 	is_attacking = false
@@ -1906,6 +1914,8 @@ func _play_idle_pose() -> String:
 ## Play an animation by name (short name like "atk" will match "s_001_atk").
 ## Returns the resolved full animation name, or "" if nothing played.
 func _play_animation(anim_name: String, force: bool = false, locomotion: bool = false) -> String:
+	if _is_immobilized:
+		return ""
 	_tank.reset_animation(self)
 	if anim_name == "wat":
 		var pose := _play_idle_pose()
@@ -2222,12 +2232,17 @@ func _try_apply_status(hit_element: String, level: int) -> void:
 
 
 func apply_status_effect(status_type: String) -> void:
-	# Don't stack same status
+	if not is_alive:
+		return
+	# Refresh duration without stacking damage or resetting the DoT cadence.
 	for fx in _status_effects:
 		if fx.type == status_type:
+			fx.timer = float(StatusFeedback.definition(status_type).get("duration", 2))
+			fx.phase = "immobilize" if status_type == "stun" else ""
+			_update_immobilized()
 			return
 
-	var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(status_type, {})
+	var fx_def: Dictionary = StatusFeedback.definition(status_type)
 	if fx_def.is_empty():
 		return
 
@@ -2246,11 +2261,12 @@ func _process_status_effects(delta: float) -> void:
 	var expired: Array = []
 
 	for fx in _status_effects:
+		var active_delta: float = minf(delta, maxf(float(fx.timer), 0.0))
 		fx.timer -= delta
 
 		# Stun phase transition: immobilize → no_attack
 		if fx.type == "stun" and fx.phase == "immobilize":
-			var fx_def_stun: Dictionary = CombatManager.STATUS_EFFECTS.get("stun", {})
+			var fx_def_stun: Dictionary = StatusFeedback.definition("stun")
 			var immob_dur: float = float(fx_def_stun.get("immobilize_duration", 1))
 			var total_dur: float = float(fx_def_stun.get("duration", 3))
 			var elapsed: float = total_dur - fx.timer
@@ -2258,11 +2274,11 @@ func _process_status_effects(delta: float) -> void:
 				fx.phase = "no_attack"
 
 		# DoT (burn, poison)
-		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		var fx_def: Dictionary = StatusFeedback.definition(fx.type)
 		var dot_pct: float = float(fx_def.get("dot_percent", 0.0))
 		if dot_pct > 0.0:
-			fx.dot_timer += delta
-			if fx.dot_timer >= DOT_TICK_INTERVAL:
+			fx.dot_timer += active_delta
+			while fx.dot_timer + 0.00001 >= DOT_TICK_INTERVAL:
 				fx.dot_timer -= DOT_TICK_INTERVAL
 				var max_hp := 100
 				if enemy_data:
@@ -2290,7 +2306,7 @@ func _process_status_effects(delta: float) -> void:
 func _break_on_hit_effects() -> void:
 	var broke: Array = []
 	for fx in _status_effects:
-		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		var fx_def: Dictionary = StatusFeedback.definition(fx.type)
 		if fx_def.get("breaks_on_hit", false):
 			broke.append(fx)
 	for fx in broke:
@@ -2310,12 +2326,27 @@ func _update_immobilized() -> void:
 			else:
 				_stun_no_attack = true
 		else:
-			var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+			var fx_def: Dictionary = StatusFeedback.definition(fx.type)
 			if float(fx_def.get("skip_chance", 0.0)) >= 1.0:
 				_is_immobilized = true
 
+	if animation_player:
+		if _is_immobilized and not _status_animation_locked:
+			_status_animation_speed = animation_player.speed_scale
+			_status_animation_locked = true
+			animation_player.speed_scale = 0.0
+		elif not _is_immobilized and _status_animation_locked:
+			animation_player.speed_scale = _status_animation_speed
+			_status_animation_locked = false
+
 
 func _update_status_visuals() -> void:
+	if is_inside_tree():
+		if not is_instance_valid(_status_feedback) and not _status_effects.is_empty():
+			_status_feedback = StatusFeedback.new()
+			add_child(_status_feedback)
+		if is_instance_valid(_status_feedback):
+			_status_feedback.sync(_status_effects)
 	if not model:
 		return
 	if _status_effects.is_empty():

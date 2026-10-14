@@ -2855,7 +2855,7 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 	widened["hit_h_angle_deg"] = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
 	var candidates: Array = get_tree().get_nodes_in_group("enemies")
-	candidates.append_array(get_tree().get_nodes_in_group("targetable_traps"))
+	candidates.append_array(get_tree().get_nodes_in_group("targetable_traps").filter(func(trap): return not trap.has_method("can_receive_hit_from") or trap.can_receive_hit_from(self)))
 	return ConeTargeting.scan_enemies(candidates, origin, player_rotation, widened)
 
 
@@ -2872,7 +2872,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 		var data = enemy.get("enemy_data")
 		if data != null:
 			height = float(data.collision_height)
-		height = maxf(height, float(enemy.get("target_height") or 0.0))
+		if enemy.get("target_height") != null: height = maxf(height, float(enemy.get("target_height")))
 		var aim := enemy.global_position + Vector3(0, height * 0.5, 0) - spawn_pos
 		if not aim.is_zero_approx():
 			forward = aim.normalized()

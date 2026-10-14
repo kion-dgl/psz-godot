@@ -23,6 +23,7 @@ var color := Color(1.0, 0.5, 0.1)  # warm default; techs/attacks may recolor
 var target: Node3D              # the player — distance-tested each step
 var on_hit: Callable = Callable()  # optional extra effect (e.g. the lily's poison DoT)
 
+var model_path := "" # Optional authored projectile mesh, e.g. the field turret bullet.
 var visual := "orb"
 var technique_id := ""
 var hit_budget: Dictionary = {}
@@ -32,6 +33,13 @@ var _hit := false
 
 
 func _ready() -> void:
+	if not model_path.is_empty():
+		var packed := load(model_path) as PackedScene
+		if packed:
+			var mesh := packed.instantiate() as Node3D
+			add_child(mesh)
+			mesh.global_basis = Basis.looking_at(dir.normalized(), Vector3.UP, true)
+			return
 	var mi := MeshInstance3D.new()
 	var sm := SphereMesh.new()
 	sm.radius = PROJECTILE_RADIUS + 0.1

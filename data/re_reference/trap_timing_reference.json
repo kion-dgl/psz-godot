@@ -1,0 +1,53 @@
+{
+  "rise_y_raw_q12": [
+    4096,
+    4916,
+    5727,
+    6512,
+    7257,
+    7951,
+    8588,
+    9166,
+    9687,
+    10155,
+    10240
+  ],
+  "schema": "psz-re/trap-timing/1",
+  "field_normal_traces": [
+    {
+      "trace": "trap_heat_trigger",
+      "counting_updates": 46,
+      "counting_vblanks": 92
+    },
+    {
+      "trace": "trap_heat_approach",
+      "counting_updates": 46,
+      "counting_vblanks": 92
+    },
+    {
+      "trace": "trap_ice_approach",
+      "counting_updates": 46,
+      "counting_vblanks": 92
+    }
+  ],
+  "nominal_updates_per_second": 30,
+  "detonation_comparison": "counter > limit",
+  "limits": {
+    "field": [
+      45,
+      30,
+      15
+    ],
+    "player_heal": 150,
+    "player_hostile": 75
+  },
+  "limits_source": "tools/plytrap.py check; FUN_0209B8C4",
+  "rise": "counter stays zero during rise; heat traces spend 11 updates in rising state before countdown",
+  "limitations": [
+    "Only normal field traps captured live; other limits use the same statically decoded update.",
+    "Position was overridden; these are controlled trigger tests, not unmodified walking.",
+    "No damage/status conclusion: HP did not change in these source states.",
+    "Heat triggered at 2 units in approach; elevated CAST-visible Ice did not. No universal hostile radius inferred.",
+    "30 Hz is nominal (two DS VBlanks per update), not a calibrated wall-clock frequency."
+  ]
+}

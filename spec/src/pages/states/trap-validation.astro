@@ -1,0 +1,193 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Trap validation" section="States">
+  <p>This contract extends /states/gameplay-recovery-traps for #94, #579, #592,
+  #607, #615, #737 and #738. Original evidence and deliberate remake choices
+  MUST remain distinguishable. Combat-wide status parity remains #724.</p>
+  <h2>Authored placement</h2>
+  <p>Every imported room MUST retain its original group count and every record's
+  group membership, including files with fewer than six groups. A missing legacy
+  group table MUST NOT mean that all records spawn. The root-derived correction
+  in psz-re MUST be joined by record identity, with missing joins rejected and identical records consumed in original slot order.
+  Groups 0–4 follow the selected mask; only an existing group 5 is sampled.
+  Correct group selection also changes subsequent draws from the shared generator
+  RNG, so regenerated fixtures can change later enemy/key samples.</p>
+  <p>For s02a_nc2_d, groups [10,0,0,12] MUST select exactly two gun traps,
+  from group 0 or group 3, never both. Layout 4 remains reserved for the
+  mission/multiplayer path. Room identity MUST come from the selected stage ID,
+  not inferred from observed boxes or hidden traps. Seeded fixtures MUST record
+  stage, layout mask, type, count and positions.</p>
+  <p>The lc2 report compares a candidate pool with a selected layout: its two
+  gun records belong to groups 1 and 2 respectively. Mask 0x21 selects neither;
+  0x23 selects group 1, and 0x25 selects group 2. A room with no visible gun can
+  therefore still be lc2. The live fixture uses the actual stage ID, reveals its
+  spawned traps and checks every selected position. This finding does not identify
+  the room in the historical screenshot/run, whose seed and selected mask were absent.</p>
+  <p>The imported candidate pools contain 302 Ice, 243 Gun, 190 Heat, 139 Light,
+  123 Heal, 66 Capture, 43 Burn and 16 Needler records. These are pool counts,
+  not simultaneous spawn counts. Seven additional poison-machine records enter
+  through the object table. psz-re identifies o0c_clay1 as Needler and o0c_bombcont
+  as Burn; o0c_needle and o0c_poisonm are separate objects, not additional members
+  of the eight-name trap taxonomy. Gun/Burn/Needler/Poison MUST use their dedicated source meshes and the distinct behavior contracts below. Correct identity/placement does not establish exact original AI or damage parity.</p>
+  <h2>Reaction interval</h2>
+  <p>Owner playtest direction (2026-10-13): field balls MUST start at their former
+  armed height (2.5 units), reveal and play the PSO trap-set sound when armed,
+  then lower by 0.25 units over 11/30 seconds before consuming their fuse.
+  This downward motion intentionally replaces the original rise. The retained
+  original samples remain reference evidence. The full reaction interval is
+  movement + 46/30, 31/30 or 16/30 seconds by difficulty. Countdown uses the
+  measured nominal 30 Hz clock. Trigger and effect distances remain independent
+  ground-origin measurements; collider size MUST NOT enlarge them.</p>
+  <p>CAST/Trap Vision dormant detection, attack-to-disarm, living-target rules,
+  timed vision refresh/reset, and multiple simultaneous player traps retain the
+  existing recovery contract. Multiple player traps deliberately differ from
+  the original one-slot-per-player manager. Original hostile radii and status
+  payloads MUST NOT be inferred from the Heal scan or texture colors.</p>
+  <h2>Player traps and payload boundaries</h2>
+  <p>All four items remain CAST-only and field-only. Valid placement consumes one
+  item. Missing player, defeat, city use and non-CAST use MUST preserve inventory.
+  Multiple placed traps are intentional remake behavior. Each arms after one second,
+  waits for a living eligible target, expires unused at 60 seconds, and applies
+  its payload once at the end of its fuse. Both radii remain independently 4.0 units.</p>
+  <table>
+    <thead><tr><th>Item</th><th>Player target</th><th>Countdown</th><th>Current payload</th></tr></thead>
+    <tbody>
+      <tr><td>Heat</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Burn</td></tr>
+      <tr><td>Ice</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Freeze</td></tr>
+      <tr><td>Light</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Stun substitute; original confusion remains unimplemented</td></tr>
+      <tr><td>Heal</td><td>Living player</td><td>151/30 s</td><td>50% maximum HP, capped at maximum</td></tr>
+    </tbody>
+  </table>
+  <p>Hostile field balls target the living player and retain 15 damage plus the
+  same current status payloads. These damage, status, lifetime and arming choices
+  are remake rules. The original's counter limits, timebase, rise samples and Heal
+  amount are evidence-backed. No-target detonation consumes a triggered trap without
+  hitting anyone. Dodging rejects damage and status together; heal cannot revive.</p>
+  <h2>Enemy status playtest tuning</h2>
+  <p>Enemy Burn MUST deal 5% of the target's maximum HP each second for six
+  seconds, with visible rising fire and damage numbers. It can kill. Freeze and
+  Stun MUST stop movement, AI attacks and model animation for five seconds;
+  taking damage MUST NOT end either effect. Freeze retains its 1.5× damage-taken
+  multiplier. Ice surrounds frozen enemies; orbiting stars identify Stun.
+  Expiry and death MUST clear visuals and restore animation playback. Reapplying
+  a status refreshes its duration without stacking damage or resetting its tick.
+  These are intentional remake balance changes following laptop playtesting,
+  not original-game parity claims. Player status tuning remains separate.</p>
+  <p>The palette editor MUST show icons on its four-action Combat and Traps rows.
+  Trap actions reuse Burn, Freeze, Confuse and Resta artwork until dedicated art
+  exists. Light remains a Stun substitute, not original confusion.</p>
+  <h2>Floor trap interaction and persistence</h2>
+  <p>Needle and poison plates MUST extend for one second, retract safely for
+  three seconds, and hit each player at most once per extension. Only extended
+  needles deal contact damage (8 HP); poison needles also apply Poison before
+  impact so lethal damage can clear it. Dodge/recovery rejects both payloads.
+  Needle rows align with the black slots at original model size. Side bars stay
+  visible in both phases. Poison lasts 20 seconds, ticks every five seconds,
+  and does not stack or refresh. Purple bubbles persist until cure/expiry/death;
+  SE_PL_POISON repeats with a 0.6-second pause after each clip and stops on cure.</p>
+  <p>Bear/Capture traps start dormant/off, hidden except to CASTs or Trap Vision.
+  Reveal alone MUST NOT allow targeting. Stepping inside activates a targetable
+  0.6-second escape window. Anyone remaining inside is held for 2.5 seconds,
+  then released and dealt 20 damage by one explosion. A free player can destroy
+  an activated trap with one hit and release its victim without damage. A
+  captured player's previously fired projectile MUST NOT rescue them. Removal
+  or interruption safely releases control. Spent traps remain spent on room
+  revisits; leaving during an active capture also saves the trap as spent.</p>
+  <p>Coliseum → Traps lists eleven fixtures, with one trap per fresh visit, no
+  enemies and an unconditional return telepipe beside the entrance.</p>
+  <p>These contact rules are remake behavior. Run the needle/bear real-overlap regression with
+  <code>PSZ_TRAP_CHECK=1 PSZ_FLOOR_TRAP_CHECK=1</code> and the Coliseum probe.</p>
+  <h2>Distinct environmental hazards</h2>
+  <p>Gun variants MUST retain their authored model and facing on first spawn and
+  revisit. Gun, Burn and Needler MUST expose attackable hurtboxes without joining
+  enemy-clear counts. Poison MUST retain its base and side bars and toggle only its aligned needle rows.
+  All six meshes already exist; no new mesh production is required.</p>
+  <table>
+    <thead><tr><th>Type</th><th>Activation and delivery</th><th>Counterplay / lifetime</th></tr></thead>
+    <tbody>
+      <tr><td>Gun (o0c_gun01 / 02)</td><td>Acquire a living player within 14 units and a 120° forward cone, with clear sight. Warn for 0.6 s, then release o0c_bullet01 at 10 units/s along the locked aim. Deal 8 damage on impact.</td><td>Shots MUST sweep walls, respect dodge/recovery, expire at 14 units and never home. Fire no faster than once per 2 s after release. One positive hit disables the gun and its outstanding shots.</td></tr>
+      <tr><td>Burn / bomb container</td><td>Contact alone MUST NOT detonate it. One positive attack starts a visible 0.6 s warning, then a single 4-unit blast with 50 raw damage to living players and enemies in clear sight; enemy defense still applies.</td><td>Escape or dodge the blast. Repeated attacks MUST NOT duplicate it. No loot, status inferred from its name, or repeated contact damage. Remains spent across room visits.</td></tr>
+      <tr><td>Needler / clay</td><td>A living player in the forward cone within 3 units, or a positive attack, starts a 0.75 s warning. A 0.6 s sweep expands from 0 to 12 units in the authored 120° cone. Deal 25 damage at most once per actor per sweep.</td><td>Use full source scale (about 21 units wide), never Storybook's 0.12 preview scale. Scroll the needle texture outward with the sweep and reveal its fan, keeping the launcher visible but hiding all bullets until firing, and hiding them again during cooldown. Targets behind it, outside the cone/range or behind walls MUST be safe. Re-arm after 12 s; disable stops the sweep.</td></tr>
+      <tr><td>Poison machine</td><td>Its 6.1-unit-wide needle plate deals 8 contact damage plus Poison, only during the one-second extended phase; three retracted seconds allow escape.</td><td>Poison lasts 20 s, ticks every 5 s using existing poison damage tuning, does not stack or refresh while active, and follows existing cure/death cleanup. Off stops new exposure but does not cure an existing ailment. Dodge/recovery rejects exposure.</td></tr>
+    </tbody>
+  </table>
+  <p>These activation, warning, cooldown and flat-damage values are explicit remake
+  tuning. Original code supports Needler's directional 0x5555 turn-unit cone and
+  12-unit expanding attack shape; the source model's bounds independently support
+  its full scale. No live Needler was present in the retained capture corpus.
+  The original parameters 25 and 50 enter a clamped percentage conversion, so
+  they MUST NOT be described as measured flat HP damage. Exact original trigger,
+  timing and percentage-damage semantics remain open.</p>
+  <p>Off/spent states, model variant, facing and remaining cooldown MUST survive
+  room revisits. Pending bomb warnings MUST remain pending; active Needler sweeps
+  resume in cooldown to prevent duplicate hits against reconstructed actors. Gun
+  warnings restart safely on revisit. Room teardown MUST free outstanding shots
+  and warning/blast visuals. Autopilot disarming MUST affect all hazard families.</p>
+  <p>Seeded tests MUST cover cone/radius boundaries, rotated facing, model mapping,
+  source material transforms and snapshot behavior. The exported live probe
+  <code>PSZ_TRAP_CHECK=1 PSZ_ENV_TRAP_CHECK=1</code> MUST separately exercise both
+  gun variants, wall blocking, dodges, bomb target eligibility and trigger-once,
+  Needler sweep/rearm, poison exposure/cure/expiry, and room persistence.</p>
+  <p><a href={siteUrl('/research/trap-validation/environment-results.json')}>Environmental probe evidence (51 checks, 45 layouts)</a>:
+  <a href={siteUrl('/research/trap-validation/environment-gun_trap.png')}>Gun</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-burn_trap.png')}>Bomb</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-needler_trap.png')}>Needler sweep</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-poison_trap.png')}>Poison</a>.
+  Captures use a controlled preview floor; Needler is held at its final sweep pose.
+  These checks validate the remake contract, not unmeasured original timing/damage.</p>
+  <h2>Burst materials</h2>
+  <p>All four ball materials MUST restore the converter-skipped texture transform:
+  UV scale (2,2), offset (0,-1), then mirrored repeat on both axes. Retained
+  original GPU polygons for visible Ice and Heal use S12.4 coordinates
+  (512,0), (512,-512), (0,-512), (0,0) with 16×16 textures. The four original
+  models share the same transform. Nearest sampling, unlit color and alpha cutout
+  MUST remain. This preserves the original crossed quads and their center/corner
+  texture details; it does not substitute sphere geometry. Bear retains the source material transforms. The needle/poison base uses
+  scale (2,-1), offset (0,1.5), mirror S/repeat T. Following owner visual review,
+  their needle strips use Storybook scale (2,1), offset (-0.17,-0.18), mirror both,
+  shifted onto the slot rows; original geometry height is preserved. Horizontal
+  rail faces remain visible while needle faces hide. Bear prongs use (2,-1),
+  (0,1), mirror S/repeat T; its base uses (2,-2), (0,1), mirror both. These
+  documented remake corrections supersede strict source-profile matching for
+  the needle strip alone.</p>
+  <h2>Owner review — 2026-10-13</h2>
+  <p>Kion approved raising Traps to B after the laptop playtest and iterative
+  corrections in PR #761. Final comparisons:
+  <a href={siteUrl('/research/trap-validation/owner-needle-states.png')}>Needle states</a> ·
+  <a href={siteUrl('/research/trap-validation/owner-poison-states.png')}>Poison states</a> ·
+  <a href={siteUrl('/research/trap-validation/owner-bear-states.png')}>Bear states</a>.
+  PSO audio uses catalog entries common/common_011.wav (SE_PL_POISON) and
+  ruin/ruin_068.wav (SE_SH_TRAPSET), published as sfx/player/poison.wav and
+  sfx/traps/arm.wav. The poison audio belongs to its effect node, pauses
+  0.6 seconds between clips, and stops immediately when the status clears.</p>
+  <h2>Verification</h2>
+  <p>Seeded checks MUST cover source membership, independent radius boundaries,
+  rise/fuse ordering and trigger-once behavior. A live physics probe MUST cover
+  item placement, revealed targeting, walking away before detonation, payload
+  delivery, and material states. A rendered fixture MUST expose dormant,
+  armed and spent appearances for laptop review. Original timing observations
+  MUST include emulator provenance and distinguish injected from natural states.</p>
+  <h2>Review fixtures</h2>
+  <p>The probe selects five seeds (1, 2, 14, 17, 42) across nine rooms, including
+  both reported Snowfield L variants and representatives of all eight named
+  trap types plus the poison machine. Expected records and actual spawned
+  nodes are compared by type, count and position, with visibility forced for inspection.</p>
+  <pre><code>PSZ_TRAP_CHECK=1 godot --path . res://scripts/tools/coliseum_probe.tscn</code></pre>
+  <p>Set PSZ_GAMEPLAY_CAPTURE_DIR to an existing directory to retain screenshots.
+  For an exported build, PSZ_PROBE_PACK can point to the matching assets.pck.
+  The probe creates an isolated test character; use a separate XDG_DATA_HOME
+  when running it alongside a personal save.</p>
+  <p><a href={siteUrl('/research/trap-validation/results.json')}>Exported probe results (84 checks, 45 layouts)</a>.</p>
+  <p><a href={siteUrl('/research/trap-validation/ball-before.png')}>Ball before</a> ·
+  <a href={siteUrl('/research/trap-validation/ball-after.png')}>Ball after</a> ·
+  <a href={siteUrl('/research/trap-validation/floor-on.png')}>Floor traps on</a> ·
+  <a href={siteUrl('/research/trap-validation/floor-off.png')}>Floor traps off</a>.</p>
+  <p>Broader regression limitation: Search and Rescue and Paru free-roam pass.
+  The Paru Pact route stops at s05a_lc2, cell 3,4, position approximately
+  (-14.8,0.2,-20.9), with no floor ahead. Unchanged main 3c0e8b28 reproduces
+  the same failure from the same post-SR save. Gurhacia/Rioh navigation probes
+  also fail on that baseline. These findings do not constitute a green full
+  story regression, and downstream story progression remains unverified here.</p>
+</Concept>

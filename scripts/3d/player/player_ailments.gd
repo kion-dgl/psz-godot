@@ -3,14 +3,15 @@ extends RefCounted
 ## not a complete original status specification; see /states/gameplay-recovery-traps.
 var effects: Dictionary = {}
 var _label: Label3D
+var _poison_effect: Node3D
 
 func apply(player: Node3D, kind: String) -> void:
 	if not player.can_take_hit():
 		return
 	if kind == "freeze":
 		player._freeze.apply(player, float(CombatManager.STATUS_EFFECTS.freeze.duration))
-	elif kind in ["burn", "stun"] and not effects.has(kind):
-		effects[kind] = {"remaining": float(CombatManager.STATUS_EFFECTS[kind].duration), "elapsed": 0.0}
+	elif kind in ["burn", "stun", "poison"] and not effects.has(kind):
+		effects[kind] = {"remaining": 20.0 if kind == "poison" else float(CombatManager.STATUS_EFFECTS[kind].duration), "elapsed": 0.0}
 		player._drop_charge()
 	_update_label(player)
 
@@ -61,7 +62,19 @@ func tick(player: Node3D, delta: float) -> bool:
 	return held
 
 
+func _sync_poison_effect(player: Node3D) -> void:
+	if not effects.has("poison"):
+		if is_instance_valid(_poison_effect):
+			_poison_effect.stop_sound()
+			_poison_effect.hide()
+			_poison_effect.queue_free()
+		_poison_effect = null
+	elif not is_instance_valid(_poison_effect) and player.is_inside_tree():
+		_poison_effect = preload("res://scripts/3d/player/player_poison_effect.gd").new()
+		player.add_child(_poison_effect)
+
 func _update_label(player: Node3D) -> void:
+	_sync_poison_effect(player)
 	if not player.is_inside_tree():
 		return
 	if effects.is_empty():

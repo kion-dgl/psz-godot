@@ -66,11 +66,11 @@
     },
     {
       "area": "Traps",
-      "grade": "D",
-      "assessment": "Partially implemented: bear/needle and placeable trap textures render incorrectly; player and field traps need timing, radius and status validation. Free-roam layouts and trap visibility also remain incomplete.",
-      "next": "Fix materials; validate arming, timing, radius and status payloads for player/field traps; verify authored layout placement. Ensure CAST trap visibility and a usable Trap Vision item that lets non-CASTs see and target traps. Playtest the material, reveal/disarm and status-delivery batch; exact fuse timing, hostile radii, confusion and authored placements remain open. Grade unchanged.",
+      "grade": "B",
+      "assessment": "Kion raises Traps from D to B after the PR #761 laptop playtest on 2026-10-13. Distinct trap meshes, corrected materials and layouts, tactical enemy statuses, cycling needle/poison plates, rescuable bear traps, visible ball arming and the Coliseum trap page provide a playable tested baseline.",
+      "next": "Refine balance and effects in field encounters. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
       "label": "score:traps",
-      "reviewed_on": "2026-10-10"
+      "reviewed_on": "2026-10-13"
     },
     {
       "area": "Bosses",

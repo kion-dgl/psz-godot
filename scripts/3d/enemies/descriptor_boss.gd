@@ -47,6 +47,11 @@ func _uses_generic_hurt_reaction() -> bool:
 func _physics_process(delta: float) -> void:
 	if not is_alive and not _dying or dormant:
 		return
+	if is_alive:
+		_process_status_effects(delta)
+		if _is_immobilized:
+			velocity = Vector3.ZERO
+			return
 	if not is_instance_valid(target): target = _find_player()
 	_tick_fraction += delta * 30.0
 	while _tick_fraction >= 1.0:
@@ -224,6 +229,9 @@ func _death_action() -> int:
 func _die() -> void:
 	if not is_alive:
 		return
+	_status_effects.clear()
+	_update_immobilized()
+	_update_status_visuals()
 	_clear_deliveries()
 	is_alive = false
 	_dying = true

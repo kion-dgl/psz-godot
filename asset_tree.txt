@@ -3417,6 +3417,7 @@ assets/sfx/forest/forest_051.wav
 assets/sfx/forest/forest_059.wav
 assets/sfx/player/footstep_1.wav
 assets/sfx/player/footstep_2.wav
+assets/sfx/player/poison.wav
 assets/sfx/player/take_hard_hit.wav
 assets/sfx/player/take_hit.wav
 assets/sfx/se/001_SEQARC_PLAYER/033_SE_PLAYER_DOWN_MIDDLE.wav
@@ -3679,6 +3680,7 @@ assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/017_SE_BOSS_DF2_DEAD.wav
 assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/018_SE_BOSS_DF2_REBOUND.wav
 assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/019_SE_BOSS_DF2_DIVING.wav
 assets/sfx/se_enemy/029_SEQARC_BOSS_DF2/manifest.csv
+assets/sfx/traps/arm.wav
 assets/sfx/ui/dialog_open.wav
 assets/sfx/ui/door_unlocked.wav
 assets/sfx/ui/game_saved.wav

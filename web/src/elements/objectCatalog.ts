@@ -280,7 +280,7 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     sourceSet: '01_o01a',
     states: [
       { name: 'off', label: 'Off', description: 'Gas retracted' },
-      { name: 'on', label: 'On', description: 'Gas venting, deals damage' },
+      { name: 'on', label: 'On', description: 'Gas venting, inflicts poison' },
     ],
     stateHiddenTextures: { off: ['o0c_1_poisonm2.png'] },
     // Same UV setup as the needle trap: base flat at 1x, armed overlay offset
@@ -292,9 +292,9 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
   },
   {
     id: 'clay-trap',
-    title: 'Clay Trap',
+    title: 'Needler Trap (Clay)',
     description:
-      'Large trap volume — roughly 21 units across, wall-sized rather than prop-sized, so it is scaled down to fit the preview. Textured from the shared o0s_*_trapc sheet rather than any field palette, so it looks identical everywhere it appears. Exact gameplay role not yet confirmed against the DS build.',
+      'Needler trap: original factory 21 uses this roughly 21-unit-wide directional effect. Source code defines a 12-unit, 120-degree sweep. The 0.12 scale is for this preview only; gameplay uses the full source size. Timing and damage are remake tuning pending live DS verification.',
     category: 'Traps',
     glb: '/assets/objects/valley/o0c_clay1.glb',
     model: 'o0c_clay1',

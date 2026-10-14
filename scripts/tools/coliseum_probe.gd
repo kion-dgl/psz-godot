@@ -40,6 +40,9 @@ func _ready() -> void:
 	if OS.get_environment("PSZ_REYBURN_OCTO_CHECK") == "1":
 		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/reyburn_octo_probe.gd").new())
 		return
+	if OS.get_environment("PSZ_COLISEUM_TRAP_CHECK") == "1":
+		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/coliseum_trap_probe.gd").new())
+		return
 	if OS.get_environment("PSZ_COLISEUM_SETUP_CHECK") == "1":
 		get_tree().root.add_child.call_deferred(preload("res://scripts/tools/coliseum_setup_probe.gd").new())
 		return
@@ -162,6 +165,12 @@ class Watch extends Node:
 
 
 	func _check_optional_probe(player: Node3D) -> bool:
+		if OS.get_environment("PSZ_TRAP_CHECK") == "1":
+			var enemy := _find_enemy()
+			if enemy != null and not weapons_started:
+				weapons_started = true
+				_run_traps.call_deferred(player, enemy)
+			return true
 		if _check_combo(player): return true
 		if not ColiseumRoster.MIXED_GROUPS.has(enemy_id): return false
 		if not weapons_started:
@@ -190,6 +199,19 @@ class Watch extends Node:
 			get_tree().quit(0)
 		else:
 			_fail("mixed group verification failed")
+
+	func _run_traps(player: Node3D, enemy: EnemyBase) -> void:
+		var passed: bool
+		if OS.get_environment("PSZ_ENV_TRAP_CHECK") == "1":
+			passed = await preload("res://scripts/tools/environment_trap_check.gd").run(player, enemy)
+		elif OS.get_environment("PSZ_FLOOR_TRAP_CHECK") == "1":
+			passed = await preload("res://scripts/tools/floor_trap_check.gd").run(player, enemy)
+		elif OS.get_environment("PSZ_STATUS_CHECK") == "1":
+			passed = await preload("res://scripts/tools/enemy_status_check.gd").run(player, enemy)
+		else:
+			passed = await preload("res://scripts/tools/trap_validation_check.gd").run(player, enemy)
+		print("[traps] DONE " + ("ok" if passed else "FAIL"))
+		get_tree().quit(0 if passed else 1)
 
 	func _check_weapons(player: Node3D, enemy: EnemyBase) -> void:
 		if enemy._archetype == "bruiser":

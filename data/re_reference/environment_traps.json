@@ -1,0 +1,141 @@
+{
+  "schema": "psz-re/environment-traps/1",
+  "registry_counts": {
+    "o0c_gun01": 23,
+    "o0c_gun02": 23,
+    "o0c_bombcont": 23,
+    "o0c_clay1": 23,
+    "o0c_needle": 23,
+    "o0c_poisonm": 23
+  },
+  "factory_models": {
+    "16.0": "o0c_gun01",
+    "16.1": "o0c_gun02",
+    "20.0": "o0c_bombcont",
+    "21.0": "o0c_clay1",
+    "40.0": "o0c_needle",
+    "40.1": "o0c_poisonm"
+  },
+  "needler": {
+    "model": "o0c_clay1",
+    "name_source": "tools/traps.py naming-code sweep; constructor 0209D7C8 writes object name 0x16",
+    "cone_turn_units": 21845,
+    "cone_degrees": 119.9981689453125,
+    "sweep_radius": 12,
+    "bounds_min": [
+      -10.4140625,
+      0.0,
+      -1.21484375
+    ],
+    "bounds_size": [
+      20.8271484375,
+      1.1904296875,
+      12.4423828125
+    ],
+    "bounds_source": "original NSBMD header, including its bounding-box scale",
+    "animations": "two texture-SRT animations, not skeletal scaling",
+    "source": "0209D8FC cone limit; 0209DC50/56 radius; 02099F50 checks angle <= limit/2"
+  },
+  "materials": {
+    "o0c_gun01": {},
+    "o0c_gun02": {},
+    "o0c_bombcont": {
+      "o0c_0_bcont": {
+        "uv_scale": [
+          2.0,
+          -2.0
+        ],
+        "uv_offset": [
+          0.0,
+          1.0
+        ],
+        "mirror_x": true,
+        "mirror_y": true
+      }
+    },
+    "o0c_clay1": {
+      "o0s_0_trapc02": {
+        "uv_scale": [
+          1.0,
+          -1.0
+        ],
+        "uv_offset": [
+          -0.25,
+          1.0
+        ],
+        "mirror_x": false,
+        "mirror_y": false
+      },
+      "o0s_1_trapc01": {
+        "uv_scale": [
+          2.0,
+          -1.0
+        ],
+        "uv_offset": [
+          0.0,
+          1.0
+        ],
+        "mirror_x": true,
+        "mirror_y": false
+      }
+    },
+    "o0c_needle": {
+      "o0c_1_needle": {
+        "uv_scale": [
+          2.0,
+          -1.0
+        ],
+        "uv_offset": [
+          0.0,
+          1.5
+        ],
+        "mirror_x": true,
+        "mirror_y": false
+      },
+      "o0c_1_needle2": {
+        "uv_scale": [
+          1.0,
+          -2.0
+        ],
+        "uv_offset": [
+          0.0,
+          2.0
+        ],
+        "mirror_x": false,
+        "mirror_y": true
+      }
+    },
+    "o0c_poisonm": {
+      "o0c_1_poisonm": {
+        "uv_scale": [
+          2.0,
+          -1.0
+        ],
+        "uv_offset": [
+          0.0,
+          1.5
+        ],
+        "mirror_x": true,
+        "mirror_y": false
+      },
+      "o0c_1_poisonm2": {
+        "uv_scale": [
+          1.0,
+          -2.0
+        ],
+        "uv_offset": [
+          0.0,
+          1.0
+        ],
+        "mirror_x": false,
+        "mirror_y": true
+      }
+    }
+  },
+  "limitations": [
+    "No resident Needler object found in the retained savestate corpus; no new live activation trace.",
+    "Full-size clay geometry and its 12-unit cone agree; Storybook scale 0.12 is a preview convenience, not source scale.",
+    "Needler 25 and Burn 50 are source parameters passed to a clamped percentage conversion, not established flat HP damage.",
+    "Gun cadence, proximity triggers, blast radii and poison timing remain remake tuning; no exact original behavior claim."
+  ]
+}

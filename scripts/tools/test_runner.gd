@@ -24,6 +24,7 @@ func _ready() -> void:
 	_run_tests_combat()
 	_run_tests_systems()
 	preload("res://scripts/tools/test_gameplay_recovery.gd").run(self)
+	preload("res://scripts/tools/enemy_status_tests.gd").run(self)
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -155,6 +156,8 @@ func _run_tests_core() -> void:
 	test_enemies_stand_on_authored_slots()
 	test_keys_stand_on_authored_slots()
 	test_key_spawn_policy()
+	preload("res://scripts/tools/test_trap_validation.gd").run(self)
+	preload("res://scripts/tools/environment_trap_tests.gd").run(self)
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
@@ -2198,9 +2201,9 @@ func test_field_trap_behaviour() -> void:
 	var player_heat := TrapScript.build("heat_trap")
 	assert_true(player_heal != null and player_heat != null, "both trap balls build")
 	if player_heal != null and player_heat != null:
-		assert_true(is_equal_approx(player_heal.fuse_seconds(), 150.0 / 60.0),
+		assert_true(is_equal_approx(player_heal.fuse_seconds(), 151.0 / 30.0),
 			"a player's Heal trap fuses over 150 frames")
-		assert_true(is_equal_approx(player_heat.fuse_seconds(), 75.0 / 60.0),
+		assert_true(is_equal_approx(player_heat.fuse_seconds(), 76.0 / 30.0),
 			"every other player trap fuses over 75 frames")
 		assert_true(not player_heal.field_placed, "a built trap is the player's by default")
 		player_heal.free()
@@ -2213,7 +2216,7 @@ func test_field_trap_behaviour() -> void:
 		if field_trap == null:
 			continue
 		assert_true(field_trap.field_placed, "build_field sets the parameter-block byte")
-		assert_true(is_equal_approx(field_trap.fuse_seconds(), expect[d] / 60.0),
+		assert_true(is_equal_approx(field_trap.fuse_seconds(), (expect[d] + 1.0) / 30.0),
 			"difficulty %d fuses over %d frames" % [d, int(expect[d])])
 		field_trap.free()
 
@@ -2222,7 +2225,7 @@ func test_field_trap_behaviour() -> void:
 	var clamped := TrapScript.build_field("ice_trap", 9)
 	assert_true(clamped != null, "an out-of-range difficulty still builds")
 	if clamped != null:
-		assert_true(is_equal_approx(clamped.fuse_seconds(), 15.0 / 60.0),
+		assert_true(is_equal_approx(clamped.fuse_seconds(), 16.0 / 30.0),
 			"an out-of-range difficulty clamps to the fastest fuse")
 		clamped.free()
 
