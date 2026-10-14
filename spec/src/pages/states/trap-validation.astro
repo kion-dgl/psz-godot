@@ -124,6 +124,13 @@ import Concept from '../../layouts/Concept.astro';
   <code>PSZ_TRAP_CHECK=1 PSZ_ENV_TRAP_CHECK=1</code> MUST separately exercise both
   gun variants, wall blocking, dodges, bomb target eligibility and trigger-once,
   Needler sweep/rearm, poison exposure/cure/expiry, and room persistence.</p>
+  <p><a href={siteUrl('/research/trap-validation/environment-results.json')}>Environmental probe evidence (51 checks, 45 layouts)</a>:
+  <a href={siteUrl('/research/trap-validation/environment-gun_trap.png')}>Gun</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-burn_trap.png')}>Bomb</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-needler_trap.png')}>Needler sweep</a> ·
+  <a href={siteUrl('/research/trap-validation/environment-poison_trap.png')}>Poison</a>.
+  Captures use a controlled preview floor; Needler is held at its final sweep pose.
+  These checks validate the remake contract, not unmeasured original timing/damage.</p>
   <h2>Burst materials</h2>
   <p>All four ball materials MUST restore the converter-skipped texture transform:
   UV scale (2,2), offset (0,-1), then mirrored repeat on both axes. Retained
