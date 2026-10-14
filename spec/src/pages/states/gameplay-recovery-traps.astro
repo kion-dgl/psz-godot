@@ -41,9 +41,10 @@ import Concept from '../../layouts/Concept.astro';
     recovery and defeat guards. Healing MUST NOT revive a defeated player.
     A spent/disarmed trap MUST NOT trigger or apply its payload twice.</li>
     <li>Trigger range and blast range MUST be represented separately. This batch
-    does not claim that the existing 4-unit hostile radius or 60 Hz fuse divisor
-    matches the original. Exact timing/radii and Light Trap confusion remain #607/#724
-    research work; the existing stun substitute MUST remain labelled as such.</li>
+    retains 4-unit hostile radii as remake tuning. The subsequent
+    <a href="/states/trap-validation">trap-validation contract</a> replaces the 60 Hz fuse divisor with a
+    live-traced 30 Hz timebase and separates rise from countdown. Original
+    hostile radii and Light Trap confusion remain #607/#724 research work; the existing stun substitute MUST remain labelled as such.</li>
   </ul>
   <h2>Status delivery and support</h2>
   <p>The 3D player MUST accept the currently supported trap payloads: freeze,
@@ -62,12 +63,13 @@ import Concept from '../../layouts/Concept.astro';
   Atomizer without a supported downed teammate MUST be rejected without consumption;
   it MUST NOT act as a full self-heal. Companion revival remains follow-up work.</p>
   <h2>Rendering and boss completion</h2>
-  <p>Bear and needle traps MUST use instance-owned materials with the storybook's
-  per-surface UV transforms and repeat/mirror axes. Off states MUST hide only their
-  active surfaces. Armed bear prongs MUST scroll; releasing a caught player MUST NOT
-  overwrite damage, defeat or revival state. Room teardown MUST release a surviving
-  hold. This is project visual parity, not a claim that storybook tuning
-  reproduces the DS material. Trap-ball overrides MUST preserve source tint/alpha.</p>
+  <p>Bear and needle traps MUST use instance-owned materials with the source-derived
+  profiles in <a href="/states/trap-validation">trap validation</a>, including each
+  surface's scale, translation and repeat/mirror bits. Off MUST hide only the
+  animated prongs/spikes. Bear release and scene teardown MUST release the player
+  hold without overwriting damage, defeat or revival state. Armed prongs MUST scroll.
+  Original floor animation timing remains unmeasured; the static texture
+  transforms supersede the earlier storybook tuning.</p>
   <p>Repeated room-clear checks MUST NOT create multiple boss return warps. Objective
   updates after the fight MUST still be able to unlock a deferred exit.</p>
   <p>Dialog boxes MUST own a copy of their page array; closing a dialog MUST NOT

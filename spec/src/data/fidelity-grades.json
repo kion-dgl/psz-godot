@@ -67,8 +67,8 @@
     {
       "area": "Traps",
       "grade": "D",
-      "assessment": "Partially implemented: bear/needle and placeable trap textures render incorrectly; player and field traps need timing, radius and status validation. Free-roam layouts and trap visibility also remain incomplete.",
-      "next": "Fix materials; validate arming, timing, radius and status payloads for player/field traps; verify authored layout placement. Ensure CAST trap visibility and a usable Trap Vision item that lets non-CASTs see and target traps. Playtest the material, reveal/disarm and status-delivery batch; exact fuse timing, hostile radii, confusion and authored placements remain open. Grade unchanged. Kion accepted the Reyburn behavior upgrade in a Mac playtest on 2026-10-12 (PR #758, behavior revision 08afa91f); full original-game parity and the remaining listed checks are still open. The same playtest accepted the canyon-art backdrop with a procedural sky.",
+      "assessment": "Owner grade remains D pending laptop playtest. The trap-validation batch restores source texture transforms, corrects short room-group tables, and uses the original nominal 30 Hz fuse clock after rising. Seeded and exported live checks cover placement, configured radius boundaries, payload delivery and CAST/Trap Vision targeting; these checks do not raise the grade.",
+      "next": "Playtest the material changes, normal/hard/very-hard escape windows, all four placed items, CAST visibility and non-CAST Trap Vision expiry/disarming. Review the known-seed layout fixtures, including Snowfield L rooms. Original hostile radii, Light confusion and exact status potency/duration remain open; Gun/Burn/Needler still use contact-trap stand-ins.",
       "label": "score:traps",
       "reviewed_on": "2026-10-10"
     },

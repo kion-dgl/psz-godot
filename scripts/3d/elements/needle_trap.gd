@@ -5,6 +5,11 @@ class_name NeedleTrap
 ## Light damage with invulnerability window so player can recover and leave.
 
 const SPIKE_TEX_NAME := "o0c_1_needle2"
+## Original NSBMD Max-mode SRT and per-surface wrap bits; /states/trap-validation.
+const MATERIAL_PROFILES := {
+	"o0c_1_needle": {"uv_scale": Vector2(2.0, -1.0), "uv_offset": Vector2(0.0, 1.5), "mirror_x": true, "mirror_y": false},
+	"o0c_1_needle2": {"uv_scale": Vector2(1.0, -2.0), "uv_offset": Vector2(0.0, 2.0), "mirror_x": false, "mirror_y": true},
+}
 const DAMAGE_AMOUNT := 8
 const INVULN_TIME := 2.0
 
@@ -40,7 +45,7 @@ func _ready() -> void:
 
 
 func _setup_materials() -> void:
-	_spike_materials = _setup_split_materials(SPIKE_TEX_NAME, Vector4(2.0, 1.0, -0.17, -0.18))
+	_spike_materials = _setup_split_materials(SPIKE_TEX_NAME, MATERIAL_PROFILES)
 
 func _setup_damage_area() -> void:
 	_damage_area = Area3D.new()

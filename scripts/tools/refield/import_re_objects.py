@@ -194,6 +194,33 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
     objects_doc = json.loads((re_root / "data" / "object_placement_per_room.json").read_text())
     traps_doc = json.loads((re_root / "data" / "trap_placement_per_room.json").read_text())
 
+    membership = json.loads((re_root / "data" / "room_object_membership.json").read_text())["rooms"]
+    # Both old exports are subsets of the record stream. Join by ROM identity,
+    # not their order (the runtime file is sorted and traps omit slot IDs).
+    for doc, collection in ((objects_doc, "boxes"), (traps_doc, "placements")):
+        for key, rec in doc.get("per_room", {}).items():
+            if rec.get("group_sizes") is not None:
+                continue
+            if key not in membership:
+                raise ValueError(f"missing root group table for {key}")
+            correction = membership[key]
+            rec["group_sizes"] = correction["groups"]
+            used_slots = set()
+            for row in rec.get(collection, []):
+                candidates = [r for r in correction["records"]
+                    if r["index"] not in used_slots and r["factory_index"] == row.get("factory_index", row.get("type"))
+                    and r["variant"] == row["variant"]
+                    and r["angle"] == row["angle"]
+                    and all(round(r[axis], 4) == round(row[axis], 4) for axis in ("x", "y", "z"))
+                    and ("slot" not in row or r["index"] == row["slot"])]
+                if not candidates:
+                    raise ValueError(f"ambiguous/missing root record for {key}: {row}")
+                # Legacy exports retain source slot order, including identical
+                # records in different groups. Consume each identity once.
+                chosen = min(candidates, key=lambda r: r["index"])
+                used_slots.add(chosen["index"])
+                row["group"] = chosen["group"]
+
     rooms: dict[str, dict] = {}
     unknown_traps: set[str] = set()
     deferred: dict[str, int] = {}
@@ -309,9 +336,10 @@ def build(re_root: pathlib.Path, sets: tuple[str, ...]) -> dict:
               "never rotates the room mesh, so they are world coordinates once "
               "the cell origin is added. Regenerate with "
               "scripts/tools/refield/import_re_objects.py."),
-        "source": "psz-re data/{object,trap}_placement_per_room.json",
+        "source": "psz-re data/{object,trap}_placement_per_room.json + room_object_membership.json",
         "sets": list(sets),
         "the_rule": [
+            "group count is authored (1..6); root-table membership corrects legacy null groups; never flatten those files",
             "groups 0..4 are built VERBATIM, whichever the layout mask names",
             "the layout index is a rand(100) draw against a depth-banded weight row",
             "a mask is eligible only if every group it names is non-empty; group 5 is forced in",

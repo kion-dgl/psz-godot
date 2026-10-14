@@ -81,7 +81,7 @@ static func _materials(player: Node3D) -> bool:
 		ok = _check(mat.get_shader_parameter("visibility_alpha") == 0.0, "bear off hides prongs") and ok
 	if not needle._spike_materials.is_empty():
 		var mat: ShaderMaterial = needle._spike_materials[0]
-		ok = _check(mat.get_shader_parameter("uv_scale") == Vector2(2, 1) and mat.get_shader_parameter("uv_offset") == Vector2(-0.17, -0.18), "needle uses storybook UV profile") and ok
+		ok = _check(mat.get_shader_parameter("uv_scale") == Vector2(1, -2) and mat.get_shader_parameter("uv_offset") == Vector2(0, 2) and not mat.get_shader_parameter("mirror_x"), "needle uses original material transform and repeat S") and ok
 		needle.set_state("on")
 		ok = _check(mat.get_shader_parameter("visibility_alpha") == 1.0, "needle on reveals spikes") and ok
 	bear.set_state("on")

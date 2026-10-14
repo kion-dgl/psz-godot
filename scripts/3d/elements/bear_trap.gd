@@ -5,6 +5,11 @@ class_name BearTrap
 ## States: on (armed, prongs visible), off (triggered, prongs hidden)
 
 const PRONG_TEX_NAME := "o0c_1_tora1"
+## Original NSBMD Max-mode SRT and per-surface wrap bits; /states/trap-validation.
+const MATERIAL_PROFILES := {
+	"o0c_1_tora1": {"uv_scale": Vector2(2.0, -1.0), "uv_offset": Vector2(0.0, 1.0), "mirror_x": true, "mirror_y": false},
+	"o0c_1_tora2": {"uv_scale": Vector2(2.0, -2.0), "uv_offset": Vector2(0.0, 1.0), "mirror_x": true, "mirror_y": true},
+}
 const DAMAGE_AMOUNT := 20
 const HOLD_DURATION := 2.5
 const SCROLL_SPEED := 0.5
@@ -31,7 +36,7 @@ func _ready() -> void:
 
 
 func _setup_materials() -> void:
-	_prong_materials = _setup_split_materials(PRONG_TEX_NAME, Vector4(1.0, 1.0, 0.0, -2.31), false)
+	_prong_materials = _setup_split_materials(PRONG_TEX_NAME, MATERIAL_PROFILES)
 
 func _setup_trigger_area() -> void:
 	var area := Area3D.new()

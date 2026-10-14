@@ -21,12 +21,9 @@ class_name TrapBall
 ## Both then run the same fuse: a measured frame count between arming and the
 ## blast, during which the ball is up and visible and can be walked away from.
 ##
-## NOT DECODED, and flagged so nobody reads this as measured: what arms a field
-## trap. psz-re can read the state machine but the transition out of dormant is
-## written by the base object class and was not followed, so "a player walks
-## close" is the obvious reading of a thing that rises out of the ground on a
-## fuse — it is not measured, and neither is its radius. TRIGGER_RADIUS is the
-## one radius psz-re does publish (the Heal element's player scan) reused here.
+## Original trigger sweeps now confirm proximity activation, but do not establish
+## one universal hostile radius: elevated CAST-visible Ice and hidden Heat differ.
+## Configured hostile radii remain remake rules; see /states/trap-validation.
 
 ## Ball model per trap element.
 ##
@@ -69,14 +66,14 @@ const TRAP_EFFECTS := {
 ## no number to port. This is ours, sized to sting rather than kill.
 const FIELD_TRAP_DAMAGE := 15
 
-## Frames between arming and the blast, measured out of FUN_0209B8C4.
+## Counter limits decoded from FUN_0209B8C4 (strict > comparison at 30 Hz).
 ##
 ## The player's trap singles out element 0 (Heal) at 150 and gives every other
 ## element 75. The field's trap switches on the session record's difficulty byte
 ## instead, and gets FASTER as the difficulty rises — 45 / 30 / 15.
 const PLAYER_FUSE_FRAMES := {0: 150, "else": 75}
 const FIELD_FUSE_FRAMES := [45, 30, 15]
-const FUSE_FPS := 60.0 # Remake conversion; original timer timebase is unresolved.
+const FUSE_FPS := 30.0 # Original live trace: one update per two VBlanks.
 
 ## The one radius psz-re publishes: the Heal element scans the four players and
 ## acts inside 0x4000 = 4.0 units.
@@ -89,7 +86,9 @@ const BOB_SPEED := 3.0
 ## How far a field trap rises out of the ground once armed. The game lifts it to
 ## +0x2800 in 1.19.12 = 2.5 units.
 const FIELD_RISE_HEIGHT := 2.5
-const FIELD_RISE_SECONDS := 0.35
+const FIELD_RISE_SECONDS := 11.0 / FUSE_FPS
+## Retained original Heat trace, phase 1; interpolate between 30 Hz samples.
+const FIELD_RISE_Q12 := [4096, 4916, 5727, 6512, 7257, 7951, 8588, 9166, 9687, 10155, 10240]
 
 ## How long one Trap Vision lasts.
 ##
@@ -148,7 +147,7 @@ var is_alive: bool:
 	get: return can_be_targeted()
 var target_radius: float = 0.75
 var target_height: float:
-	get: return 2.0 * (_rest_height() + FIELD_RISE_HEIGHT * _rise)
+	get: return 2.0 * (_rise_height() if field_placed and _armed else _rest_height())
 
 func can_be_targeted() -> bool:
 	return field_placed and trap_id != "heal_trap" and not _spent and not disarmed and (_armed or traps_are_visible())
@@ -227,13 +226,13 @@ static func build_field(id: String, difficulty_index: int = 0) -> TrapBall:
 	return trap
 
 
-## Seconds from arming to the blast, from the measured frame counts.
+## Countdown after rising. Original increments first, detonates at counter > limit.
 func fuse_seconds() -> float:
 	if field_placed:
-		return float(FIELD_FUSE_FRAMES[clampi(difficulty, 0, FIELD_FUSE_FRAMES.size() - 1)]) / FUSE_FPS
+		return float(FIELD_FUSE_FRAMES[clampi(difficulty, 0, FIELD_FUSE_FRAMES.size() - 1)] + 1) / FUSE_FPS
 	var element: int = int(TRAP_ELEMENT.get(trap_id, 1))
 	var frames: int = int(PLAYER_FUSE_FRAMES.get(element, PLAYER_FUSE_FRAMES["else"]))
-	return float(frames) / FUSE_FPS
+	return float(frames + 1) / FUSE_FPS
 
 
 func _ready() -> void:
@@ -250,21 +249,13 @@ func _rest_height() -> float:
 	return FIELD_REST_HEIGHT if field_placed else REST_HEIGHT
 
 
-## Mirrored-repeat UV wrapping, which StandardMaterial3D cannot express.
-##
-## The burst GLBs declare wrapS = wrapT = MIRRORED_REPEAT (glTF 33648) and run
-## TEXCOORD_0 V from -0.5 to +0.5, i.e. half of every quad samples outside 0..1
-## and is meant to mirror back. Godot's glTF importer has no mirrored mode — the
-## material only carries a `texture_repeat` bool — and it imports these as
-## texture_repeat = false (CLAMP). Clamping smears the texture's edge row across
-## the entire outside-0..1 half, which is the "grey angular mass with a coloured
-## streak" these models render as. Plain repeat is not right either: it wraps
-## instead of mirroring and seams down the middle of each quad.
-##
-## This is the same fix the stage/gate geometry already needed — see the shared
-## fold in mirror_repeat.gdshaderinc. The long-term fix is at the asset level
-## (bake the mirror into the texture and author UVs in 0..1), which would let
-## every mirror_repeat* shader retire.
+## The converter skips the original burst texture matrix. Retained original GPU
+## polygons use normalized UVs (2,0),(2,-2),(0,-2),(0,0), while the exported
+## GLB has (1,.5),(1,-.5),(0,-.5),(0,.5). Restore scale AND translation before
+## mirrored repeat; wrapping alone leaves a grey mass and a colored stripe.
+## See data/re_reference/trap_material_reference.json and /states/trap-validation.
+const BALL_UV_SCALE := Vector2(2.0, 2.0)
+const BALL_UV_OFFSET := Vector2(0.0, -1.0)
 const MIRROR_SHADER := preload("res://scripts/3d/shaders/mirror_repeat_effect.gdshader")
 
 
@@ -299,6 +290,8 @@ func _apply_mirror_wrap(node: Node) -> void:
 				mat.shader = MIRROR_SHADER
 				mat.set_shader_parameter("albedo_texture", src.albedo_texture)
 				mat.set_shader_parameter("albedo_tint", src.albedo_color)
+				mat.set_shader_parameter("uv_scale", BALL_UV_SCALE)
+				mat.set_shader_parameter("uv_offset", BALL_UV_OFFSET)
 				mat.set_shader_parameter("mirror_x", true)
 				mat.set_shader_parameter("mirror_y", true)
 				mat.set_shader_parameter("alpha_scissor", src.alpha_scissor_threshold)
@@ -318,7 +311,7 @@ func _build_area() -> void:
 	var sphere := SphereShape3D.new()
 	sphere.radius = trigger_radius
 	shape.shape = sphere
-	shape.position.y = _rest_height()
+	shape.position.y = 0.0
 	_area.add_child(shape)
 	add_child(_area)
 	_blast_area = _area.duplicate() as Area3D
@@ -372,11 +365,14 @@ func _process(delta: float) -> void:
 
 	# Stage 3 — the fuse. The ball is up and visible and can be walked away
 	# from; whoever is still inside when it reaches zero takes the blast.
+	var fuse_delta := delta
 	if field_placed and _rise < 1.0:
+		var rise_left := (1.0 - _rise) * FIELD_RISE_SECONDS
 		_rise = minf(1.0, _rise + delta / FIELD_RISE_SECONDS)
+		fuse_delta = maxf(0.0, delta - rise_left)
 	_armed_motion()
 	_apply_visibility()
-	_fuse_left -= delta
+	_fuse_left -= fuse_delta
 	if _fuse_left <= 0.0:
 		_detonate()
 
@@ -414,12 +410,16 @@ func _idle_motion() -> void:
 	_model.rotation.y = _age
 
 
+func _rise_height() -> float:
+	var sample := clampf(_rise * 11.0, 0.0, 10.0)
+	var index := int(sample)
+	return lerpf(float(FIELD_RISE_Q12[index]), float(FIELD_RISE_Q12[mini(index + 1, 10)]), sample - index) / 4096.0
+
+
 func _armed_motion() -> void:
 	if not _model:
 		return
-	var base: float = _rest_height()
-	if field_placed:
-		base += FIELD_RISE_HEIGHT * _rise
+	var base: float = _rise_height() if field_placed else _rest_height()
 	_model.position.y = base + sin(_age * BOB_SPEED) * BOB_AMPLITUDE
 	_model.rotation.y = _age
 
@@ -431,9 +431,15 @@ func _check_targets() -> bool:
 	if not _area:
 		return false
 	for body in _area.get_overlapping_bodies():
-		if _is_valid_target(body):
+		if _is_valid_target(body) and contains_target(body, trigger_radius):
 			return true
 	return false
+
+
+## Broad-phase overlap includes actor collision radius; the gameplay boundary
+## is independently measured from each actor's origin. /states/trap-validation.
+func contains_target(body: Node3D, radius: float) -> bool:
+	return global_position.distance_squared_to(body.global_position) <= radius * radius
 
 
 func _is_valid_target(body: Node) -> bool:
@@ -465,7 +471,7 @@ func _detonate() -> void:
 	var hits := 0
 
 	for body in _blast_area.get_overlapping_bodies():
-		if not _is_valid_target(body):
+		if not _is_valid_target(body) or not contains_target(body, blast_radius):
 			continue
 		hits += 1
 		if field_placed:
@@ -510,6 +516,8 @@ func _expire() -> void:
 
 func _finish() -> void:
 	set_process(false)
-	if _area:
-		_area.set_deferred("monitoring", false)
+	for area in [_area, _blast_area, hurtbox]:
+		if area:
+			area.set_deferred("monitoring", false)
+			area.set_deferred("monitorable", false)
 	queue_free()

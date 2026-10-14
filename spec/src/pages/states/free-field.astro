@@ -244,10 +244,11 @@ const tree = `flowchart TD
     <li><strong>arm when a living player comes within the configured trigger radius</strong>
       (currently 4.0 units, remake tuning; only the original heal scan radius is confirmed), then rise 2.5 units out
       of the ground and become visible;</li>
-    <li>run a <strong>fuse</strong> of 45 / 30 / 15 frames on normal / hard / v_hard —
+    <li>complete its rise, then run a <strong>fuse</strong> using counter limits 45 / 30 / 15 on normal / hard / v_hard —
       the original gets <em>faster</em>, not stronger, with difficulty — and detonate on
-      whoever is still inside the separately configured blast radius. The 60 Hz
-      conversion remains unverified;</li>
+      whoever is still inside the separately configured blast radius. Live original capture shows one update per two VBlanks (30 Hz nominal).
+      The strict counter &gt; limit condition gives 46 / 31 / 16 updates;
+      rise time is additional;</li>
     <li>apply its element: heat → burn, ice → freeze, light → confusion (stunned stands
       in), <strong>heal → restore 50% of max HP</strong>. About 10% of the original's
       authored elemental traps are heal traps, so not every field trap is hostile.</li>
@@ -255,7 +256,7 @@ const tree = `flowchart TD
   <p>
     A <strong>player-placed</strong> trap of the same element is always visible to its
     owner, arms on a timer, waits for a valid target, and then runs its own measured
-    fuse — 150 frames for heal, 75 for the rest.
+    fuse — limits 150 for heal, 75 for the rest (151 / 76 updates at 30 Hz).
   </p>
 
   <h3>Seeing a dormant trap</h3>
@@ -291,7 +292,13 @@ const tree = `flowchart TD
     <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre. Object and trap positions are no longer approximated — see above.</li>
     <li><strong>Which allowed wave</strong> a room rolls is our own weighted pick (see above).</li>
     <li><strong>Authored walls are not placed.</strong> Their positions are as measured as the boxes; the reason is gameplay, not data. A wall blocks, the free-roam autopilot's walk backbone cannot attack one, and a wall across the line between two doorways is a soft-lock rather than a cosmetic complaint. Gated behind <code>FieldPopulation.PLACE_WALLS</code> until the nav harness routes around blockers.</li>
-    <li><strong>What arms a field trap is not decoded.</strong> psz-re reads the state machine but not the transition out of dormant, so "a player walks close" is the obvious reading of a thing that rises out of the ground on a fuse — it is not measured, and neither is its radius. The 4.0 units above is the one radius the original publishes (the heal element's player scan), reused.</li>
+    <li><strong>Original hostile trigger and blast radii remain unmeasured.</strong>
+      Controlled player-position sweeps activate hidden Heat and elevated CAST-visible
+      Ice at different horizontal distances, so they do not establish a universal
+      radius. The 4.0-unit trigger and blast settings are separate remake values.
+      The rise interpolates eleven original Heat samples to 2.5 units; dormant
+      CAST reveal height remains remake presentation. See the source traces and
+      fixtures in <a href="/states/trap-validation">trap validation</a>.</li>
     <li><strong>A field trap's damage is ours.</strong> The original's elemental trap carries no per-instance parameters at all, so there is no number to port.</li>
     <li><strong>Gun-trap damage varies per instance</strong> in the original and the field is not published, so it takes the contact trap's default.</li>
     <li><strong>The four contact traps share one model</strong> until dedicated meshes land.</li>

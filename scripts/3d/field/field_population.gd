@@ -342,9 +342,8 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 	var groups = entry.get("groups", null)
 	var picked: Array = []
 	if groups == null:
-		# No recoverable group table: psz-re records that the loader falls back
-		# and builds the file flat. Do the same rather than dropping the room.
-		picked = _cap(records, _cap_per_group)
+		push_error("FieldPopulation: missing authored group table for " + room_code)
+		return [] # Missing evidence is not permission to place the whole pool.
 	else:
 		var mask := layout_mask
 		if mask < 0:

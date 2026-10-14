@@ -1,0 +1,113 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Trap validation" section="States">
+  <p>This contract extends /states/gameplay-recovery-traps for #94, #579, #592,
+  #607, #615, #737 and #738. Original evidence and deliberate remake choices
+  MUST remain distinguishable. Combat-wide status parity remains #724.</p>
+  <h2>Authored placement</h2>
+  <p>Every imported room MUST retain its original group count and every record's
+  group membership, including files with fewer than six groups. A missing legacy
+  group table MUST NOT mean that all records spawn. The root-derived correction
+  in psz-re MUST be joined by record identity, with missing joins rejected and identical records consumed in original slot order.
+  Groups 0–4 follow the selected mask; only an existing group 5 is sampled.
+  Correct group selection also changes subsequent draws from the shared generator
+  RNG, so regenerated fixtures can change later enemy/key samples.</p>
+  <p>For s02a_nc2_d, groups [10,0,0,12] MUST select exactly two gun traps,
+  from group 0 or group 3, never both. Layout 4 remains reserved for the
+  mission/multiplayer path. Room identity MUST come from the selected stage ID,
+  not inferred from observed boxes or hidden traps. Seeded fixtures MUST record
+  stage, layout mask, type, count and positions.</p>
+  <p>The lc2 report compares a candidate pool with a selected layout: its two
+  gun records belong to groups 1 and 2 respectively. Mask 0x21 selects neither;
+  0x23 selects group 1, and 0x25 selects group 2. A room with no visible gun can
+  therefore still be lc2. The live fixture uses the actual stage ID, reveals its
+  spawned traps and checks every selected position. This finding does not identify
+  the room in the historical screenshot/run, whose seed and selected mask were absent.</p>
+  <p>The imported candidate pools contain 302 Ice, 243 Gun, 190 Heat, 139 Light,
+  123 Heal, 66 Capture, 43 Burn and 16 Needler records. These are pool counts,
+  not simultaneous spawn counts. Seven additional poison-machine records enter
+  through the object table. psz-re identifies o0c_clay1 as Needler and o0c_bombcont
+  as Burn; o0c_needle and o0c_poisonm are separate objects, not additional members
+  of the eight-name trap taxonomy. Current Gun/Burn/Needler spawns still use the
+  needle contact-trap stand-in, so correct identity/placement does not establish
+  original turret AI, projectile, model or explosion parity.</p>
+  <h2>Reaction interval</h2>
+  <p>A field ball MUST reveal when armed and complete its rise before consuming
+  its fuse. The original update at 0x0209B358 increments counter +0x148 only
+  in phase +0x144 == 2, after rising in phase 1; it requests detonation when
+  counter &gt; fuse. Godot MUST preserve this ordering. The rise MUST interpolate
+  the eleven retained Heat samples from 1.0 to 2.5 units over 11/30 seconds,
+  holding the last sample for its final update. The full warning interval is
+  rise + 46/30, 31/30 or 16/30 seconds by difficulty. The countdown uses a
+  nominal 30 Hz clock (two DS VBlanks per original update). Trigger and effect
+  distances MUST be measured independently from the ground origin, with actor
+  collision size unable to silently enlarge either configured radius.</p>
+  <p>CAST/Trap Vision dormant detection, attack-to-disarm, living-target rules,
+  timed vision refresh/reset, and multiple simultaneous player traps retain the
+  existing recovery contract. Multiple player traps deliberately differ from
+  the original one-slot-per-player manager. Original hostile radii and status
+  payloads MUST NOT be inferred from the Heal scan or texture colors.</p>
+  <h2>Player traps and payload boundaries</h2>
+  <p>All four items remain CAST-only and field-only. Valid placement consumes one
+  item. Missing player, defeat, city use and non-CAST use MUST preserve inventory.
+  Multiple placed traps are intentional remake behavior. Each arms after one second,
+  waits for a living eligible target, expires unused at 60 seconds, and applies
+  its payload once at the end of its fuse. Both radii remain independently 4.0 units.</p>
+  <table>
+    <thead><tr><th>Item</th><th>Player target</th><th>Countdown</th><th>Current payload</th></tr></thead>
+    <tbody>
+      <tr><td>Heat</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Burn</td></tr>
+      <tr><td>Ice</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Freeze</td></tr>
+      <tr><td>Light</td><td>Living enemies, excluding boxes</td><td>76/30 s</td><td>Stun substitute; original confusion remains unimplemented</td></tr>
+      <tr><td>Heal</td><td>Living player</td><td>151/30 s</td><td>50% maximum HP, capped at maximum</td></tr>
+    </tbody>
+  </table>
+  <p>Hostile field balls target the living player and retain 15 damage plus the
+  same current status payloads. These damage, status, lifetime and arming choices
+  are remake rules. The original's counter limits, timebase, rise samples and Heal
+  amount are evidence-backed. No-target detonation consumes a triggered trap without
+  hitting anyone. Dodging rejects damage and status together; heal cannot revive.</p>
+  <h2>Burst materials</h2>
+  <p>All four ball materials MUST restore the converter-skipped texture transform:
+  UV scale (2,2), offset (0,-1), then mirrored repeat on both axes. Retained
+  original GPU polygons for visible Ice and Heal use S12.4 coordinates
+  (512,0), (512,-512), (0,-512), (0,0) with 16×16 textures. The four original
+  models share the same transform. Nearest sampling, unlit color and alpha cutout
+  MUST remain. This preserves the original crossed quads and their center/corner
+  texture details; it does not substitute sphere geometry. Bear and needle MUST restore each source surface's Max-mode SRT and wrap bits,
+  superseding the earlier empirically chosen storybook offsets. In exported UV space:
+  needle base uses scale (2,-1), offset (0,1.5), mirror S/repeat T; spikes use
+  (1,-2), (0,2), repeat S/mirror T. Bear prongs use (2,-1), (0,1), mirror S/repeat T;
+  its base uses (2,-2), (0,1), mirror both. These floor profiles are statically
+  decoded; they are not claimed as live original animation measurements. Existing
+  scroll speed, on/off visibility, capture and damage contracts remain.</p>
+  <h2>Verification</h2>
+  <p>Seeded checks MUST cover source membership, independent radius boundaries,
+  rise/fuse ordering and trigger-once behavior. A live physics probe MUST cover
+  item placement, revealed targeting, walking away before detonation, payload
+  delivery, and material states. A rendered fixture MUST expose dormant,
+  armed and spent appearances for laptop review. Original timing observations
+  MUST include emulator provenance and distinguish injected from natural states.</p>
+  <h2>Review fixtures</h2>
+  <p>The probe selects five seeds (1, 2, 14, 17, 42) across nine rooms, including
+  both reported Snowfield L variants and representatives of all eight named
+  trap types plus the poison-machine stand-in. Expected records and actual spawned
+  nodes are compared by type, count and position, with visibility forced for inspection.</p>
+  <pre><code>PSZ_TRAP_CHECK=1 godot --path . res://scripts/tools/coliseum_probe.tscn</code></pre>
+  <p>Set PSZ_GAMEPLAY_CAPTURE_DIR to an existing directory to retain screenshots.
+  For an exported build, PSZ_PROBE_PACK can point to the matching assets.pck.
+  The probe creates an isolated test character; use a separate XDG_DATA_HOME
+  when running it alongside a personal save.</p>
+  <p><a href="/research/trap-validation/results.json">Exported probe results (84 checks, 45 layouts)</a>.</p>
+  <p><a href="/research/trap-validation/ball-before.png">Ball before</a> ·
+  <a href="/research/trap-validation/ball-after.png">Ball after</a> ·
+  <a href="/research/trap-validation/floor-on.png">Floor traps on</a> ·
+  <a href="/research/trap-validation/floor-off.png">Floor traps off</a>.</p>
+  <p>Broader regression limitation: Search and Rescue and Paru free-roam pass.
+  The Paru Pact route stops at s05a_lc2, cell 3,4, position approximately
+  (-14.8,0.2,-20.9), with no floor ahead. Unchanged main 3c0e8b28 reproduces
+  the same failure from the same post-SR save. Gurhacia/Rioh navigation probes
+  also fail on that baseline. These findings do not constitute a green full
+  story regression, and downstream story progression remains unverified here.</p>
+</Concept>

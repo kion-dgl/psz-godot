@@ -207,22 +207,25 @@ func _apply_materials_recursive(node: Node, callback: Callable) -> void:
 
 ## Per-instance floor-trap surfaces. Godot 4 textures have no mirrored-repeat
 ## flag; the shared shader implements the axes without mutating imported assets.
-func _setup_split_materials(feature_tex: String, feature_uv: Vector4, feature_mirror_y: bool = true) -> Array[ShaderMaterial]:
+func _setup_split_materials(feature_tex: String, profiles: Dictionary) -> Array[ShaderMaterial]:
 	var features: Array[ShaderMaterial] = []
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
 		var source := mat as StandardMaterial3D
 		if source == null or source.albedo_texture == null:
 			return
-		var feature := feature_tex in source.albedo_texture.resource_path
+		var texture_name := source.albedo_texture.resource_path.get_file().get_basename()
+		if not profiles.has(texture_name):
+			push_error("Missing floor-trap material profile: " + texture_name)
+			return
+		var profile: Dictionary = profiles[texture_name]
 		var material := ShaderMaterial.new()
 		material.shader = preload("res://scripts/3d/shaders/mirror_repeat_effect.gdshader")
 		material.set_shader_parameter("albedo_texture", source.albedo_texture)
 		material.set_shader_parameter("albedo_tint", source.albedo_color)
 		material.set_shader_parameter("alpha_scissor", source.alpha_scissor_threshold)
-		material.set_shader_parameter("mirror_y", feature_mirror_y if feature else true)
-		if feature:
-			material.set_shader_parameter("uv_scale", Vector2(feature_uv.x, feature_uv.y))
-			material.set_shader_parameter("uv_offset", Vector2(feature_uv.z, feature_uv.w))
+		for key in ["mirror_x", "mirror_y", "uv_scale", "uv_offset"]:
+			material.set_shader_parameter(key, profile[key])
+		if texture_name == feature_tex:
 			features.append(material)
 		mesh.set_surface_override_material(surface, material)
 	)
