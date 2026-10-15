@@ -371,13 +371,9 @@ func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 	var total: int = maxi(1, count)
 	var positions: Array[Vector3] = _resolve_key_positions(total)
 
-	# Remaining-count guard: the cell is only marked collected once EVERY key
-	# in it is taken. Marking on the first pickup would suppress the respawn of
-	# the others on re-entry (_keys_collected is the respawn guard), stranding
-	# the player below the gate's requirement with no way to top up.
-	var remaining := [total]
-
-	for i in total:
+	# Capture the holding room before a transition changes _current_cell.
+	var tracking := key_tracking_id(str(_c._current_cell.get("pos", "")), key_for_cell)
+	for i in pending_key_indices(_c._keys_collected, tracking, total):
 		var key := KeyPickupScript.new()
 		key.key_id = key_item_id
 		key.name = ("KeyPickup_%s_%d" % [key_for_cell, i]) if total > 1 else ("KeyPickup_%s" % key_for_cell)
@@ -390,13 +386,32 @@ func _create_key_pickup(key_for_cell: String, count: int = 1) -> void:
 
 		# Track collection for grid state and update HUD
 		key.interacted.connect(func(_player: Node3D) -> void:
-			remaining[0] -= 1
-			if remaining[0] <= 0:
-				_c._keys_collected[key_for_cell] = true
+			record_key_collection(_c._keys_collected, tracking, i, total)
 			_c._update_key_hud()
 		)
 		print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s, %d/%d)" % [
 			key_for_cell, positions[i], key_item_id, i + 1, total])
+
+
+## Collection identity is separate from the shared inventory/gate key id.
+static func key_tracking_id(holder: String, target: String) -> String:
+	return holder + ">" + target
+
+
+static func pending_key_indices(state: Dictionary, tracking: String, total: int) -> Array[int]:
+	var pending: Array[int] = []
+	if state.get(tracking, false):
+		return pending
+	for i in maxi(1, total):
+		if not state.get("%s#%d" % [tracking, i], false):
+			pending.append(i)
+	return pending
+
+
+static func record_key_collection(state: Dictionary, tracking: String, index: int, total: int) -> void:
+	state["%s#%d" % [tracking, index]] = true
+	if pending_key_indices(state, tracking, total).is_empty():
+		state[tracking] = true
 
 
 ## One spawn position per key, in tier order (#627, spec /mechanics/key-placement):

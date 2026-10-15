@@ -61,7 +61,7 @@
       "area": "Free roam",
       "grade": "B",
       "assessment": "Close to the original’s feature set; needs substantial playtesting and object-placement polish. Wetlands floors/routing can trap the player.",
-      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations.",
+      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations. Playtest split-room two-key gates, partial key collection and legacy-save recovery; grade unchanged pending owner review.",
       "label": "score:free-roam"
     },
     {

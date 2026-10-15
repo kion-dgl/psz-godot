@@ -156,6 +156,7 @@ func _run_tests_core() -> void:
 	test_enemies_stand_on_authored_slots()
 	test_keys_stand_on_authored_slots()
 	test_key_spawn_policy()
+	preload("res://scripts/tools/key_collection_tests.gd").run(self)
 	preload("res://scripts/tools/test_trap_validation.gd").run(self)
 	preload("res://scripts/tools/environment_trap_tests.gd").run(self)
 	test_field_trap_behaviour()
