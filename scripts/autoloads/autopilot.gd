@@ -681,7 +681,6 @@ const PRINCIPAL_INTERACT_POS := Vector3(0.0, 1.1, -3.9)  # desk front, within IN
 
 var _report_acted := false           # office Principal-guard fired
 var _principal_guard_done := false   # Principal proven not to complete the quest
-var _counter_report_tries := 0       # counter-report interact attempts (retry guard)
 var _guild_report_count := 0
 
 func _drive_office_report() -> void:
@@ -726,14 +725,9 @@ func _drive_counter_report() -> void:
 	# Overlay already up → _drive_guild_report owns it; stop retrying.
 	if SceneManager != null and not SceneManager._scene_stack.is_empty():
 		return
-	if _counter_report_tries >= 8:
-		_fail_and_quit("counter report — guild overlay never opened after 8 tries")
-		return
-	_counter_report_tries += 1
-	print("[sanity] counter: teleport to guild NPC to report quest (try %d)" % _counter_report_tries)
+	print("[sanity] counter: teleport to guild NPC to report quest")
 	_teleport_player(COUNTER_NPC_POS)
-	_after(0.6, func() -> void: _press_action("interact"))
-	_after(1.8, _drive_counter_report)
+	_after(0.6, func() -> void: _interact_until_overlay(GUILD_COUNTER))
 
 
 ## In the guild_counter overlay with a completed quest: the "Report" entry is
