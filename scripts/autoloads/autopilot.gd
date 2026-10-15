@@ -681,7 +681,6 @@ const PRINCIPAL_INTERACT_POS := Vector3(0.0, 1.1, -3.9)  # desk front, within IN
 
 var _report_acted := false           # office Principal-guard fired
 var _principal_guard_done := false   # Principal proven not to complete the quest
-var _counter_report_tries := 0       # counter-report interact attempts (retry guard)
 var _guild_report_count := 0
 
 func _drive_office_report() -> void:
@@ -726,14 +725,9 @@ func _drive_counter_report() -> void:
 	# Overlay already up → _drive_guild_report owns it; stop retrying.
 	if SceneManager != null and not SceneManager._scene_stack.is_empty():
 		return
-	if _counter_report_tries >= 8:
-		_fail_and_quit("counter report — guild overlay never opened after 8 tries")
-		return
-	_counter_report_tries += 1
-	print("[sanity] counter: teleport to guild NPC to report quest (try %d)" % _counter_report_tries)
+	print("[sanity] counter: teleport to guild NPC to report quest")
 	_teleport_player(COUNTER_NPC_POS)
-	_after(0.6, func() -> void: _press_action("interact"))
-	_after(1.8, _drive_counter_report)
+	_after(0.6, func() -> void: _interact_until_overlay(GUILD_COUNTER))
 
 
 ## In the guild_counter overlay with a completed quest: the "Report" entry is
@@ -966,6 +960,10 @@ func _teleport_player(pos: Vector3) -> void:
 	if "velocity" in p:
 		p.velocity = Vector3.ZERO
 	print("[sanity] teleport player → (%.2f, %.2f, %.2f)" % [pos.x, pos.y, pos.z])
+
+
+func _interact_until_overlay(expected: String) -> void:
+	preload("res://scripts/tools/interaction_retry.gd").watch(self, expected)
 
 
 func _after(seconds: float, cb: Callable) -> void:
@@ -2258,7 +2256,7 @@ func _drive_city_counter() -> void:
 				_warp_pad_interacted = true
 				print("[sanity] counter: free-roam route — straight to warp pad (guild skipped)")
 				_teleport_player(WARP_PAD_POS)
-				_after(0.8, func() -> void: _press_action("interact"))
+				_after(0.8, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 			return
 		if not _counter_npc_interacted:
 			_counter_npc_interacted = true
@@ -2269,7 +2267,7 @@ func _drive_city_counter() -> void:
 			if _menu_carry_opened and not _menu_carry_checked:
 				_after(0.6, _probe_menu_carry_interact)
 				return
-			_after(0.6, func() -> void: _press_action("interact"))
+			_after(0.6, func() -> void: _interact_until_overlay(GUILD_COUNTER))
 		return
 
 	var accepted: Dictionary = SessionManager.get_accepted_quest()
@@ -2289,7 +2287,7 @@ func _drive_city_counter() -> void:
 		if OS.get_environment("PSZ_AUTOPILOT_MENU_GATE") == "1":
 			_after(0.8, _probe_start_menu_blocks_interact)
 			return
-		_after(0.8, func() -> void: _press_action("interact"))
+		_after(0.8, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 
 
 # ── Guild counter overlay ──────────────────────────────────────
@@ -2416,7 +2414,7 @@ func _probe_menu_blocked_check() -> void:
 	# Close the menu and confirm interact works again on the next frame (no
 	# buffered confirm leak — the press below is a fresh one).
 	PsoStartMenu.close()
-	_after(0.4, func() -> void: _press_action("interact"))
+	_after(0.4, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 
 
 # ── Field: per-cell driver ─────────────────────────────────────
