@@ -1,4 +1,5 @@
 extends "res://scripts/tools/probe_checks.gd"
+## Run: godot --headless --path . res://scripts/tools/key_collection_probe.tscn
 ## Real pickups and gate, with room teardown and JSON state round-trip.
 const VF := preload("res://scripts/3d/field/valley_field_controller.gd")
 const PGM := preload("res://scripts/3d/field/portal_gate_manager.gd")
