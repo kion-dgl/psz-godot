@@ -968,6 +968,10 @@ func _teleport_player(pos: Vector3) -> void:
 	print("[sanity] teleport player → (%.2f, %.2f, %.2f)" % [pos.x, pos.y, pos.z])
 
 
+func _interact_until_overlay(expected: String) -> void:
+	preload("res://scripts/tools/interaction_retry.gd").watch(self, expected)
+
+
 func _after(seconds: float, cb: Callable) -> void:
 	get_tree().create_timer(seconds).timeout.connect(cb)
 
@@ -2258,7 +2262,7 @@ func _drive_city_counter() -> void:
 				_warp_pad_interacted = true
 				print("[sanity] counter: free-roam route — straight to warp pad (guild skipped)")
 				_teleport_player(WARP_PAD_POS)
-				_after(0.8, func() -> void: _press_action("interact"))
+				_after(0.8, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 			return
 		if not _counter_npc_interacted:
 			_counter_npc_interacted = true
@@ -2269,7 +2273,7 @@ func _drive_city_counter() -> void:
 			if _menu_carry_opened and not _menu_carry_checked:
 				_after(0.6, _probe_menu_carry_interact)
 				return
-			_after(0.6, func() -> void: _press_action("interact"))
+			_after(0.6, func() -> void: _interact_until_overlay(GUILD_COUNTER))
 		return
 
 	var accepted: Dictionary = SessionManager.get_accepted_quest()
@@ -2289,7 +2293,7 @@ func _drive_city_counter() -> void:
 		if OS.get_environment("PSZ_AUTOPILOT_MENU_GATE") == "1":
 			_after(0.8, _probe_start_menu_blocks_interact)
 			return
-		_after(0.8, func() -> void: _press_action("interact"))
+		_after(0.8, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 
 
 # ── Guild counter overlay ──────────────────────────────────────
@@ -2416,7 +2420,7 @@ func _probe_menu_blocked_check() -> void:
 	# Close the menu and confirm interact works again on the next frame (no
 	# buffered confirm leak — the press below is a fresh one).
 	PsoStartMenu.close()
-	_after(0.4, func() -> void: _press_action("interact"))
+	_after(0.4, func() -> void: _interact_until_overlay(WARP_TELEPORTER))
 
 
 # ── Field: per-cell driver ─────────────────────────────────────

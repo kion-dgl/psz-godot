@@ -54,7 +54,7 @@
       "area": "Quests",
       "grade": "C+",
       "assessment": "Playable from start to finish; much of the early effort went here, but a return pass is needed.",
-      "next": "Replay the story, recording progression, routing, encounter and presentation defects.",
+      "next": "Replay the story, recording progression, routing, encounter and presentation defects. Verify Deep Ore Extraction first-pass pickups and bounded guild/warp interaction retries; grade unchanged pending owner playtesting.",
       "label": "score:quests"
     },
     {
