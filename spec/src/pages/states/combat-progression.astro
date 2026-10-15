@@ -34,7 +34,7 @@ instant-kill behavior is added.</li>
 <h2>Progression and grinding</h2>
 <ul>
 <li>Enemy level MUST be fixed by authored quest/area and difficulty, never the
-current player level. It MUST remain stable on revisits and reload. Level-derived
+current player level. Without a cell/quest override, multi-area quests MUST use the current section’s area rather than the quest’s starting area. It MUST remain stable on revisits and reload. Level-derived
 HP, attack, defense, evasion and EXP MUST be applied to per-spawn data copies;
 registry resources MUST NOT be mutated. Target feedback MUST show level.</li>
 <li>Area base levels and growth slopes are remake choices. The original uses
@@ -44,7 +44,7 @@ curve. Sixty-five mapped enemies use recovered HP, physical min/max ATP, DFP and
 rows before the authored level extension. Existing authored stats remain the
 tuning baseline for unmapped enemies. The unread EXP-shaped original column is
 not treated as verified EXP.</li>
-<li>EXP MUST be awarded once on actual enemy death and remain available in character progression screens.
+<li>EXP MUST be awarded once on actual enemy death and remain available in character progression screens. The persistent HUD MUST show within-level EXP progress, a full MAX bar at level 100, and a brief level-up flash; character switches MUST clear the flash.
 Level-up MUST preserve material HP/PP bonuses. Negative EXP grants MUST NOT
 reduce progression. Save/reload MUST preserve levels, equipment and upgrades.</li>
 <li>Grinding MUST validate current ownership, current grind, cap and required material at commit time. Inventory Use applies a Monogrinder (+1), Digrinder (+2) or Trigrinder (+3) to the equipped weapon, clamps to its cap and consumes one item without a meseta fee. Use MUST be disabled for a capped, absent or incompatible weapon. Inventory and equipment MUST show the per-instance grind suffix and upgraded ATP. The Tekker retains its separate +1 service and displayed fee, validating carried meseta at commit time; rejection changes nothing.

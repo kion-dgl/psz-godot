@@ -39,6 +39,13 @@ const chart = `stateDiagram-v2
   charging meseta. See <a href={siteUrl("/states/gameplay-recovery-traps")}>trap counterplay and recovery</a>.
   The defeat rules below apply when no doll is available.</p>
 
+  <h2>Companion revival boundary</h2>
+  <p>Companions currently have no damage receiver or down-state. As explicitly
+  allowed by #341, companion revival is deferred until that lifecycle exists;
+  #345 retains Reverser/support-delivery follow-up. Moon Atomizer MUST retain
+  its stock when no downed companion can receive it. The player recovery contract
+  is independently verifiable in <code>systems_completion_probe.tscn</code>.</p>
+
   <h2>Trigger</h2>
   <ul>
     <li>The player enters <strong>Defeat</strong> when their HP reaches

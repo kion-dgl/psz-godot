@@ -71,15 +71,28 @@ func _add_per_slot_instance(base_id: String) -> String:
 		SfxManager.play("res://assets/sfx/common/common_022.wav")
 		return ""
 	var inst_id: String = base_id
-	while _items.has(inst_id):
+	while _instance_id_reserved(inst_id):
 		_instance_counter += 1
 		inst_id = "%s#%d" % [base_id, _instance_counter]
 	_items[inst_id] = 1
+	preload("res://scripts/utils/equipment_instance.gd").acquired(inst_id)
 	var info = _lookup_item(inst_id)
 	item_added.emit(inst_id, 1, 1)
 	print("[Inventory] Added 1x ", info.name, " (", inst_id, ")")
 	_maybe_auto_sort()
 	return inst_id
+
+
+## Reserve banked IDs and saved references, including sold gear.
+func _instance_id_reserved(id: String) -> bool:
+	if _items.has(id): return true
+	for item in GameState.shared_storage:
+		if item.get("id", "") == id: return true
+	var ch = CharacterManager.get_active_character()
+	if ch != null:
+		for entry in ch.get("equipment_sets", []):
+			if id in entry.get("equipment", {}).values(): return true
+	return false
 
 
 ## Returns true if the active character has auto-sort enabled. Default
@@ -223,10 +236,11 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		var base_id: String = get_base_id(item_id)
 		for _i in range(max_add):
 			var inst_id: String = base_id
-			while _items.has(inst_id):
+			while _instance_id_reserved(inst_id):
 				_instance_counter += 1
 				inst_id = "%s#%d" % [base_id, _instance_counter]
 			_items[inst_id] = 1
+			preload("res://scripts/utils/equipment_instance.gd").acquired(inst_id)
 		print("[Inventory] Added ", max_add, "x ", item_name)
 		item_added.emit(item_id, max_add, max_add)
 		_maybe_auto_sort()
@@ -344,10 +358,14 @@ func can_add_item(item_id: String) -> bool:
 
 ## Count total inventory slots used. Per-slot items count each copy as 1 slot.
 func get_total_slots() -> int:
+	return count_slots(_items)
+
+
+func count_slots(items: Dictionary) -> int:
 	var total := 0
-	for item_id in _items:
+	for item_id in items:
 		if _is_per_slot(item_id):
-			total += int(_items[item_id])  # each copy = 1 slot
+			total += int(items[item_id])  # each copy = 1 slot
 		else:
 			total += 1  # entire stack = 1 slot
 	return total

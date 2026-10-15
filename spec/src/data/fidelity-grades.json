@@ -91,7 +91,7 @@
       "area": "Systems",
       "grade": "C",
       "assessment": "Kion raises Systems from D to C after local Mac playtesting of PR #752 (6c2230c2 plus the playtest fixes committed in this PR) on 2026-10-11. Combat progression, inventory grinding with visible per-instance ATP and grind levels, dedicated Photon Blast activation and the segmented HUD gauge now support the core loop. The Coliseum exit blocker was reproduced and fixed with regression coverage; broader balance and fidelity work remain.",
-      "next": "Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Coliseum now exposes player/enemy levels, scaled HP previews and debug invincibility; verify hands-on tuning and controller use. Existing traversal defects remain separate follow-up work. Grade and assessment date unchanged.",
+      "next": "Playtest Equip → Sets (save/recall, bank retrieval, missing-item refusal, controller naming) and the EXP bar/level-up flash. Verify multi-area enemy levels and both death paths. Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Coliseum now exposes player/enemy levels, scaled HP previews and debug invincibility; verify hands-on tuning and controller use. Existing traversal defects remain separate follow-up work. Grade and assessment date unchanged.",
       "label": "score:systems",
       "reviewed_on": "2026-10-11"
     }
