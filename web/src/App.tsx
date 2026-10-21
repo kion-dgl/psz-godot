@@ -26,6 +26,7 @@ const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const RetargetTunerVrm = lazy(() => import('./retarget/RetargetTunerVrm'));
 const MixamoLoader = lazy(() => import('./retarget/MixamoLoader'));
 const BakedVrmaPszViewer = lazy(() => import('./retarget/BakedVrmaPszViewer'));
+const VrmPszViewer = lazy(() => import('./retarget/VrmPszViewer'));
 const PsoIkVrmViewer = lazy(() => import('./retarget/PsoIkVrmViewer'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/retarget-tuner-vrm" element={<RetargetTunerVrm />} />
             <Route path="/vrm-mixamo" element={<MixamoLoader />} />
             <Route path="/vrma-to-psz" element={<BakedVrmaPszViewer />} />
+            <Route path="/vrm-psz" element={<VrmPszViewer />} />
             <Route path="/pso-ik-vrm" element={<PsoIkVrmViewer />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />

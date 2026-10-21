@@ -79,6 +79,12 @@
 /assets/npcs/*
 !/assets/npcs/item_shop/
 !/assets/npcs/item_shop/*
+# Standard VRoid Studio export (user-authored, commit-safe) playing PSO
+# motions through the VRM↔PSZ pipeline; clips baked by web/scripts/
+# bake-retarget-vrm-chibi.py (suffixed _vex). The chibi test model stays
+# ignored below — its license forbids redistribution.
+!/assets/npcs/vrm_example/
+!/assets/npcs/vrm_example/*
 # Reverse-retargeted VRMA animations targeting the PSZ player/NPC
 # skeleton. Output of web/scripts/bake-vrma-to-psz.mjs. Lives outside
 # assets/player/* (which is asset-pack-only and gets stripped from
@@ -179,3 +185,4 @@ scripts/tools/quest_solver/node_modules/
 # macOS
 .DS_Store
 .zcode/
+assets/npcs/vrm_chibi/
