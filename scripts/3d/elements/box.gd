@@ -79,12 +79,47 @@ func destroy() -> void:
 	set_state("destroyed")
 	SfxManager.play_at("res://assets/sfx/common/common_160.wav", global_position)
 	destroyed_box.emit()
+	# Break visual. The original's container-break effect id is not yet
+	# decoded (no per-container entry in the effect factory tables), so this
+	# is an engine-native fragment burst sized from the container; swap for
+	# the decoded effect when psz-re pins it.
+	var parent := get_parent()
+	if parent:
+		parent.call_deferred("add_child", _make_burst())
 
 	# Spawn drop if configured
 	if drop_type != "none":
 		_spawn_drop()
 
 	print("[Box] Destroyed")
+
+
+func _make_burst() -> Node3D:
+	var host := Node3D.new()
+	host.position = position
+	host.rotation = rotation
+	var burst := CPUParticles3D.new()
+	burst.one_shot = true
+	burst.amount = 22
+	burst.lifetime = 0.55
+	burst.explosiveness = 1.0
+	burst.direction = Vector3.UP
+	burst.spread = 65.0
+	burst.initial_velocity_min = 2.2
+	burst.initial_velocity_max = 5.0
+	burst.gravity = Vector3(0, -12, 0)
+	burst.scale_amount_min = 0.55
+	burst.scale_amount_max = 1.0
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.16, 0.16, 0.16) * clampf(collision_size.length() * 0.35, 0.7, 1.6)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.72, 0.55, 0.34)
+	mesh.material = mat
+	burst.draw_mesh = mesh
+	host.add_child(burst)
+	burst.finished.connect(host.queue_free)
+	burst.restart()
+	return host
 
 
 func _spawn_drop() -> void:
