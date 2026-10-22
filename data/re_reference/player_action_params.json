@@ -1,0 +1,4869 @@
+{
+  "source": "retail raw/player/*_pa00.narc DSIF payload (psz-asset-viewer); per-type action parameter rows at fixed NDR offsets, extracted raw",
+  "layout": "each cluster holds: window total byte, kind tag (3), 0xFF separators, hit/window byte pairs, and per-action extra event bytes. Row 4 carries the heavy/PA event list. Values are gameplay ticks against the 30fps action clock; they are NOT animation clip lengths.",
+  "semantics": "UNCONFIRMED: which byte is the hit frame vs combo-continue window vs heavy branch needs the consumer function in the player action driver (decomp ask). Cross-reference data/re_reference/player_anim_timings.json clip lengths when mapping: saber windows 20/22/23 vs clips 17/18/16; sword 44/43/48 vs clips 23/23/25.",
+  "types": {
+    "common": {
+      "m": {
+        "narc": "00_common_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            16,
+            3,
+            255,
+            255,
+            13,
+            28,
+            8,
+            255,
+            8,
+            12,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            12,
+            28,
+            9,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            24,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            11,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            92,
+            3,
+            72,
+            255,
+            0,
+            80,
+            255,
+            71,
+            18,
+            27,
+            37,
+            48,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "00_common_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            16,
+            3,
+            255,
+            255,
+            13,
+            28,
+            8,
+            255,
+            8,
+            12,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            12,
+            28,
+            9,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            24,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            11,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            92,
+            3,
+            72,
+            255,
+            0,
+            80,
+            255,
+            71,
+            18,
+            27,
+            37,
+            48,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "00_common_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            16,
+            3,
+            255,
+            255,
+            13,
+            28,
+            8,
+            255,
+            8,
+            12,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            12,
+            28,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            10,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            92,
+            3,
+            72,
+            255,
+            0,
+            80,
+            255,
+            71,
+            18,
+            27,
+            37,
+            48,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "00_common_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            16,
+            3,
+            255,
+            255,
+            13,
+            28,
+            8,
+            255,
+            8,
+            12,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            12,
+            28,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            10,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            92,
+            3,
+            72,
+            255,
+            0,
+            80,
+            255,
+            71,
+            18,
+            27,
+            37,
+            48,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "saver": {
+      "m": {
+        "narc": "01_saver_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            20,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            22,
+            3,
+            255,
+            255,
+            12,
+            28,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            23,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            13,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            48,
+            3,
+            5,
+            45,
+            0,
+            14,
+            255,
+            5,
+            11,
+            23,
+            37,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "01_saver_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            20,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            22,
+            3,
+            255,
+            255,
+            12,
+            28,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            23,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            13,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            48,
+            3,
+            5,
+            45,
+            0,
+            14,
+            255,
+            5,
+            11,
+            23,
+            37,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "01_saver_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            20,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            22,
+            3,
+            255,
+            255,
+            12,
+            28,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            23,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            13,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            48,
+            3,
+            5,
+            45,
+            0,
+            14,
+            255,
+            5,
+            11,
+            23,
+            37,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "01_saver_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            21,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            22,
+            3,
+            255,
+            255,
+            12,
+            28,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            24,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            13,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            48,
+            3,
+            5,
+            45,
+            0,
+            14,
+            255,
+            5,
+            11,
+            23,
+            37,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "sword": {
+      "m": {
+        "narc": "02_sword_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            44,
+            3,
+            255,
+            255,
+            18,
+            30,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            43,
+            3,
+            255,
+            255,
+            22,
+            34,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            48,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            14,
+            42,
+            0,
+            42,
+            255,
+            15,
+            17,
+            22,
+            30,
+            39,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "02_sword_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            44,
+            3,
+            255,
+            255,
+            18,
+            30,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            43,
+            3,
+            255,
+            255,
+            22,
+            34,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            48,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            14,
+            42,
+            0,
+            42,
+            255,
+            15,
+            17,
+            22,
+            30,
+            39,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "02_sword_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            44,
+            3,
+            255,
+            255,
+            18,
+            30,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            43,
+            3,
+            255,
+            255,
+            22,
+            34,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            48,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            14,
+            42,
+            0,
+            42,
+            255,
+            15,
+            17,
+            22,
+            30,
+            39,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "02_sword_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            44,
+            3,
+            255,
+            255,
+            18,
+            30,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            43,
+            3,
+            255,
+            255,
+            22,
+            34,
+            255,
+            255,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            48,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            14,
+            42,
+            0,
+            42,
+            255,
+            15,
+            17,
+            22,
+            30,
+            39,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "dagger": {
+      "m": {
+        "narc": "03_dagger_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            22,
+            3,
+            255,
+            255,
+            18,
+            28,
+            255,
+            255,
+            7,
+            15,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            16,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            29,
+            11,
+            22,
+            31,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            63,
+            3,
+            48,
+            255,
+            0,
+            48,
+            255,
+            46,
+            15,
+            26,
+            28,
+            30,
+            48,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "03_dagger_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            22,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            7,
+            15,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            29,
+            11,
+            22,
+            31,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            63,
+            3,
+            48,
+            255,
+            0,
+            48,
+            255,
+            46,
+            15,
+            26,
+            28,
+            30,
+            48,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "03_dagger_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            22,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            7,
+            15,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            29,
+            11,
+            22,
+            31,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            63,
+            3,
+            48,
+            255,
+            0,
+            48,
+            255,
+            46,
+            15,
+            26,
+            28,
+            30,
+            48,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "03_dagger_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            22,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            7,
+            15,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            18,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            29,
+            11,
+            22,
+            31,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            63,
+            3,
+            48,
+            255,
+            0,
+            48,
+            255,
+            46,
+            15,
+            26,
+            28,
+            30,
+            48,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "spear": {
+      "m": {
+        "narc": "04_spear_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            28,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            21,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            35,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            72,
+            3,
+            69,
+            255,
+            0,
+            68,
+            255,
+            5,
+            18,
+            26,
+            39,
+            51,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "04_spear_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            28,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            21,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            35,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            72,
+            3,
+            69,
+            255,
+            0,
+            68,
+            255,
+            5,
+            18,
+            26,
+            39,
+            51,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "04_spear_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            28,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            21,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            35,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            72,
+            3,
+            69,
+            255,
+            0,
+            68,
+            255,
+            5,
+            18,
+            26,
+            39,
+            51,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "04_spear_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            28,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            21,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            35,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            20,
+            22,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            72,
+            3,
+            69,
+            255,
+            0,
+            68,
+            255,
+            5,
+            18,
+            26,
+            39,
+            51,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "claw": {
+      "m": {
+        "narc": "05_claw_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            23,
+            3,
+            255,
+            255,
+            15,
+            27,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            35,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            31,
+            11,
+            33,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            60,
+            3,
+            54,
+            255,
+            0,
+            255,
+            10,
+            8,
+            11,
+            17,
+            23,
+            29,
+            38,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "05_claw_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            23,
+            3,
+            255,
+            255,
+            15,
+            27,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            36,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            10,
+            11,
+            31,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            60,
+            3,
+            54,
+            255,
+            0,
+            255,
+            10,
+            8,
+            11,
+            17,
+            23,
+            29,
+            38,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "05_claw_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            23,
+            3,
+            255,
+            255,
+            15,
+            27,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            36,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            10,
+            11,
+            31,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            60,
+            3,
+            54,
+            255,
+            0,
+            255,
+            10,
+            8,
+            11,
+            17,
+            23,
+            29,
+            38,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "05_claw_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            23,
+            3,
+            255,
+            255,
+            15,
+            27,
+            255,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            36,
+            3,
+            255,
+            255,
+            255,
+            255,
+            11,
+            10,
+            11,
+            31,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            60,
+            3,
+            54,
+            255,
+            0,
+            255,
+            10,
+            8,
+            11,
+            17,
+            23,
+            29,
+            38,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "shield": {
+      "m": {
+        "narc": "06_shield_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            23,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            16,
+            26,
+            12,
+            255,
+            12,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            12,
+            14,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            75,
+            3,
+            19,
+            61,
+            0,
+            55,
+            255,
+            10,
+            24,
+            32,
+            42,
+            50,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "06_shield_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            23,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            16,
+            26,
+            12,
+            255,
+            12,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            12,
+            14,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            75,
+            3,
+            19,
+            61,
+            0,
+            55,
+            255,
+            10,
+            24,
+            32,
+            42,
+            50,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "06_shield_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            23,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            16,
+            26,
+            12,
+            255,
+            12,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            12,
+            14,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            75,
+            3,
+            19,
+            61,
+            0,
+            55,
+            255,
+            10,
+            24,
+            32,
+            42,
+            50,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "06_shield_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            14,
+            23,
+            10,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            16,
+            26,
+            12,
+            255,
+            12,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            12,
+            14,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            75,
+            3,
+            19,
+            61,
+            0,
+            55,
+            255,
+            10,
+            24,
+            32,
+            42,
+            50,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "d_saver": {
+      "m": {
+        "narc": "07_d_saver_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            16,
+            17,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            25,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            40,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            20,
+            24,
+            27,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            24,
+            91,
+            0,
+            255,
+            17,
+            13,
+            21,
+            47,
+            58,
+            68,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "07_d_saver_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            16,
+            17,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            25,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            40,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            20,
+            24,
+            27,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            24,
+            91,
+            0,
+            255,
+            17,
+            13,
+            21,
+            47,
+            58,
+            68,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "07_d_saver_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            16,
+            17,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            25,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            40,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            20,
+            24,
+            27,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            24,
+            91,
+            0,
+            255,
+            17,
+            13,
+            21,
+            47,
+            58,
+            68,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "07_d_saver_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            16,
+            17,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            25,
+            3,
+            255,
+            255,
+            22,
+            32,
+            255,
+            255,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            40,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            20,
+            24,
+            27,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            24,
+            91,
+            0,
+            255,
+            17,
+            13,
+            21,
+            47,
+            58,
+            68,
+            73,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "handgun": {
+      "m": {
+        "narc": "08_handgun_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            3,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            4,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            26,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            6,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            105,
+            3,
+            255,
+            255,
+            0,
+            255,
+            26,
+            68,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "08_handgun_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            3,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            4,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            26,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            6,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            105,
+            3,
+            255,
+            255,
+            0,
+            255,
+            26,
+            68,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "08_handgun_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            3,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            4,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            26,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            6,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            105,
+            3,
+            255,
+            255,
+            0,
+            255,
+            26,
+            68,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "08_handgun_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            3,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            15,
+            24,
+            255,
+            255,
+            4,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            26,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            6,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            105,
+            3,
+            255,
+            255,
+            0,
+            255,
+            26,
+            68,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "a_rifle": {
+      "m": {
+        "narc": "09_a_rifle_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            32,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            17,
+            31,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            6,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            4,
+            255,
+            0,
+            255,
+            255,
+            51,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "09_a_rifle_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            32,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            17,
+            31,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            6,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            4,
+            255,
+            0,
+            255,
+            255,
+            51,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "09_a_rifle_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            32,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            17,
+            31,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            6,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            4,
+            255,
+            0,
+            255,
+            255,
+            51,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "09_a_rifle_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            32,
+            3,
+            255,
+            255,
+            16,
+            32,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            17,
+            31,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            6,
+            13,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            4,
+            255,
+            0,
+            255,
+            255,
+            51,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "shotgun": {
+      "m": {
+        "narc": "10_shotgun_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            12,
+            25,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            28,
+            3,
+            255,
+            255,
+            13,
+            25,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            14,
+            16,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            18,
+            52,
+            0,
+            255,
+            255,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "10_shotgun_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            12,
+            25,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            28,
+            3,
+            255,
+            255,
+            13,
+            25,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            14,
+            16,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            18,
+            52,
+            0,
+            255,
+            255,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "10_shotgun_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            12,
+            25,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            28,
+            3,
+            255,
+            255,
+            13,
+            25,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            14,
+            16,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            18,
+            52,
+            0,
+            255,
+            255,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "10_shotgun_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            12,
+            25,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            28,
+            3,
+            255,
+            255,
+            13,
+            25,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            14,
+            16,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            79,
+            3,
+            18,
+            52,
+            0,
+            255,
+            255,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "machinegun": {
+      "m": {
+        "narc": "11_machinegun_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            32,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            78,
+            3,
+            50,
+            55,
+            0,
+            59,
+            255,
+            8,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "11_machinegun_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            32,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            78,
+            3,
+            50,
+            55,
+            0,
+            59,
+            255,
+            8,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "11_machinegun_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            32,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            78,
+            3,
+            50,
+            55,
+            0,
+            59,
+            255,
+            8,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "11_machinegun_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            30,
+            3,
+            255,
+            255,
+            20,
+            33,
+            255,
+            255,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            32,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            4,
+            8,
+            14,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            78,
+            3,
+            50,
+            55,
+            0,
+            59,
+            255,
+            8,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "grenade": {
+      "m": {
+        "narc": "12_grenade_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            56,
+            255,
+            0,
+            56,
+            36,
+            8,
+            38,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "12_grenade_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            56,
+            255,
+            0,
+            56,
+            36,
+            8,
+            38,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "12_grenade_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            56,
+            255,
+            0,
+            56,
+            36,
+            8,
+            38,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "12_grenade_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            34,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            56,
+            255,
+            0,
+            56,
+            36,
+            8,
+            38,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "l_cannon": {
+      "m": {
+        "narc": "13_l_cannon_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            255,
+            255,
+            0,
+            255,
+            255,
+            24,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "13_l_cannon_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            255,
+            255,
+            0,
+            255,
+            255,
+            24,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "13_l_cannon_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            255,
+            255,
+            0,
+            255,
+            255,
+            24,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "13_l_cannon_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            30,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            5,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            0,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            100,
+            3,
+            255,
+            255,
+            0,
+            255,
+            255,
+            24,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "rod": {
+      "m": {
+        "narc": "14_rod_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            31,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            32,
+            3,
+            255,
+            255,
+            14,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            33,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            10,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            58,
+            3,
+            255,
+            255,
+            0,
+            255,
+            35,
+            18,
+            40,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "14_rod_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            31,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            32,
+            3,
+            255,
+            255,
+            14,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            33,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            10,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            58,
+            3,
+            255,
+            255,
+            0,
+            255,
+            35,
+            18,
+            40,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "14_rod_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            31,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            32,
+            3,
+            255,
+            255,
+            14,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            33,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            10,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            58,
+            3,
+            255,
+            255,
+            0,
+            255,
+            35,
+            18,
+            40,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "14_rod_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            31,
+            3,
+            255,
+            255,
+            14,
+            26,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            32,
+            3,
+            255,
+            255,
+            14,
+            28,
+            255,
+            255,
+            11,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            33,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            10,
+            17,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            58,
+            3,
+            255,
+            255,
+            0,
+            255,
+            35,
+            18,
+            40,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "wand": {
+      "m": {
+        "narc": "15_wand_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            24,
+            3,
+            255,
+            255,
+            12,
+            26,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            9,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            39,
+            255,
+            0,
+            39,
+            255,
+            11,
+            39,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "15_wand_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            24,
+            3,
+            255,
+            255,
+            12,
+            26,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            9,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            39,
+            255,
+            0,
+            39,
+            255,
+            11,
+            39,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "15_wand_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            24,
+            3,
+            255,
+            255,
+            12,
+            26,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            9,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            39,
+            255,
+            0,
+            39,
+            255,
+            11,
+            39,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "15_wand_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            24,
+            3,
+            255,
+            255,
+            12,
+            26,
+            255,
+            255,
+            8,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            26,
+            3,
+            255,
+            255,
+            13,
+            28,
+            255,
+            255,
+            9,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            28,
+            3,
+            255,
+            255,
+            255,
+            255,
+            255,
+            9,
+            15,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            62,
+            3,
+            39,
+            255,
+            0,
+            39,
+            255,
+            11,
+            39,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "slicer": {
+      "m": {
+        "narc": "16_slicer_m_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            39,
+            3,
+            255,
+            255,
+            20,
+            39,
+            12,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            39,
+            3,
+            255,
+            255,
+            10,
+            59,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            10,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            11,
+            47,
+            0,
+            31,
+            255,
+            9,
+            32,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sm": {
+        "narc": "16_slicer_sm_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            39,
+            3,
+            255,
+            255,
+            20,
+            39,
+            12,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            39,
+            3,
+            255,
+            255,
+            10,
+            59,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            10,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            11,
+            47,
+            0,
+            31,
+            255,
+            9,
+            32,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "sw": {
+        "narc": "16_slicer_sw_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            39,
+            3,
+            255,
+            255,
+            20,
+            39,
+            12,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            39,
+            3,
+            255,
+            255,
+            10,
+            59,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            10,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            11,
+            47,
+            0,
+            31,
+            255,
+            9,
+            32,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "w": {
+        "narc": "16_slicer_w_pa00.narc",
+        "fields": {
+          "action row 1 (combo step 1 window)": [
+            39,
+            3,
+            255,
+            255,
+            20,
+            39,
+            12,
+            255,
+            10,
+            255,
+            255,
+            255
+          ],
+          "action row 2 (combo step 2 window)": [
+            39,
+            3,
+            255,
+            255,
+            10,
+            59,
+            12,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 3 (combo step 3 / finisher window)": [
+            38,
+            3,
+            255,
+            255,
+            255,
+            255,
+            13,
+            10,
+            255,
+            255,
+            255,
+            255
+          ],
+          "action row 4 (heavy/PA event list)": [
+            67,
+            3,
+            11,
+            47,
+            0,
+            31,
+            255,
+            9,
+            32,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "row 5 flag pair": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

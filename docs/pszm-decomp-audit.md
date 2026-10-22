@@ -301,24 +301,33 @@ is **gameplay behavior**: stats, targeting, enemy AI, bosses, timings,
 hits/hitboxes, combos, and stage generation. The roadmap below is ordered by
 that.
 
-### Animation timings — EXTRACTED (data/re_reference/player_anim_timings.json)
+### Animation timings — EXTRACTED (clips only) + the real combat-window table
 
-The psz-asset-viewer GLBs (converted from the original per-type animation
-NARCs) carry exact clip durations; at 30 fps they give the original timing
-backbone per weapon type and player frame (m/w):
+Two different datasets, now both extracted:
 
-- Combo steps `atk1..3` (saber 17/18/16f, sword 23/23/25f, handgun 14/15/17f,
-  machinegun 22/23/23f, …) — the authoritative replacement reference for the
-  hand-tuned `WEAPON_TYPE_CONFIGS` windows ("initial #554 tuning").
-- Photon Arts `pa1..3` per type (saber 32/43/40f …) — PA timing for #95.
-- Technique cast `tec` (16f typical), Photon Blast clips.
-- Full hit-reaction family: `dam_n` light (6f), `dam_h` heavy (19f),
-  `dam_d` knockdown (19f + loop + get-up) — the original hit-feedback
-  cadence for our hit-stop/knockdown tiers.
-- Rerun: `python3 scripts/tools/dump_player_anim_timings.py --viewer
-  <psz-asset-viewer>`. Note the clip split (windup/active/recovery) is NOT
-  in durations alone — hit-frame events come from the descriptor/event data
-  the boss catalog already uses; pair the two.
+1. **Clip lengths** (`data/re_reference/player_anim_timings.json`, rerun:
+   `dump_player_anim_timings.py --viewer <viewer>`): exact per-type clip
+   frames at 30fps from the GLBs — saber combo 17/18/16f, sword 23/23/25f,
+   handgun 14/15/17f, PAs, technique casts, and the hit-reaction family
+   (`dam_n` 6f, `dam_h` 19f, `dam_d` 19f+loop+get-up). These are the
+   ANIMATIONS — bounds and pacing reference, not the gameplay windows.
+2. **Action parameter rows** (`data/re_reference/player_action_params.json`,
+   rerun: `dump_player_action_params.py --raw <raw/>`): the actual per-type
+   gameplay timing windows around the attack chain. Inside every
+   `raw/player/XX_type_[m|w]_pa00.narc`, next to the animations, rides a
+   DSIF rel whose shared 152-byte action rows carry ~25–35 per-type bytes:
+   per combo step a window total + hit-window byte pairs + event bytes,
+   plus a fourth row with the heavy/PA event list. Saber windows
+   20/22/23 vs clips 17/18/16; sword 44/43/48 vs clips 23/23/25 — the
+   gameplay window is deliberately longer than the clip (continue/cancel
+   margin). Which byte is hit-frame vs combo-continue vs heavy-branch is
+   **pending the consumer function** — the player action driver is the top
+   decomp-session ask (it reads this table and drives the 30Hz action
+   clock, the same descriptor playback the boss code already ports).
+   `weapon_id.narc` turned out to be an item-resource resolver (six
+   10-bit fields per row, 1023=invalid — model/effect resource picks), not
+   timing data; the small `paeff*.rel` files are effect-chain tables for
+   the `FUN_0204dc30` effect factory.
 
 ### Stage generation — inventory extracted; generator logic is the target
 
@@ -356,8 +365,11 @@ tests < 0; do not "fix" it.)
 
 ### Recommended order (behavior-first)
 
-1. **Combo/hit-reaction timing retune** from `player_anim_timings.json`
-   (windows scaled to real clip frames) — S, immediate feel win.
+1. **Combo/hit-reaction timing**: decode the action-param row semantics
+   (decomp ask: the player action driver consuming the pa00 DSIF table) and
+   retune `WEAPON_TYPE_CONFIGS` windows from `player_action_params.json`
+   (windows, not clips). Until the field mapping lands, clips are pacing
+   bounds only — S once mapped.
 2. **Stage generation**: switch the grid generator to sample the real room
    inventory + variant pools; port `FUN_020573b0`'s group/member/entry wave
    allocator over the deploy rels for 1:1 room populations — M.
@@ -372,9 +384,11 @@ tests < 0; do not "fix" it.)
    partially blocked on fill functions.
 6. **Enemy entity SMs** (`FUN_0201c308`, `020645ac`, `02064728`, `0204e2ac`)
    as the reference architecture for behavior upgrades — L.
-7. **Phase B requests** (bank as decomp-session asks): room-graph generator,
-   Falz/Mother/Humilias schedulers, enemy EXP, technic power, APC tactics
-   consumers (`apc_param.zarc` rels decode but need field semantics).
+7. **Phase B requests** (bank as decomp-session asks): **player action
+   driver** (consumer of the pa00 action rows — unlocks #1), room-graph
+   generator, Falz/Mother/Humilias schedulers, enemy EXP, technic power,
+   APC tactics consumers (`apc_param.zarc` rels decode but need field
+   semantics).
 
 Previously completed: RNG port (`scripts/utils/psz_rng.gd`), ROM-exact class
 stat rows + retail XP provenance (L46 typo fixed), boss captures (existing),
