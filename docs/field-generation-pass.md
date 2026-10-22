@@ -29,14 +29,23 @@
   - Group 5 (traps/extra) rolls seed-exact when the room's generated seed is
     passed (`authored_objects(..., room_seed)`): a private FieldRng seeded
     from the room seed draws the count and the shuffle, per `FUN_02030B6C`.
-- **Remaining glue** (next task, not blocking): the field controller still
-  builds layouts via `grid_generator.gd`'s psz-sketch algorithm. The swap is
-  now mechanical — instantiate `OriginalFieldGenerator` with the area's
-  parameters from `field_generation_params.json` + a session seed, then feed
-  each cell the generator's `layout` (into `authored_objects`' mask) and
-  `seed` (into the group-5 roll). The gate stage (gates/keys/+0x30 picker,
-  params 4..8) remains unmodelled — godot's existing gate layer covers it
-  behaviorally; seed-exact gate replay is the one open RE item.
+- **CONTROLLER SWAPPED (2026-10-22, second pass)**: `grid_generator.gd` now
+  generates area A and B sections through the original algorithm
+  (`generate_original`, `USE_ORIGINAL_FIELD_GENERATOR`) —
+  `OriginalFieldGenerator` runs from the session seed with the area's
+  parameters, area B continuing area A's stream (no per-floor reseed), the
+  records become the internal grid, and the EXISTING gate/key economy then
+  runs over the original topology before `_to_output`. Room rotation is the
+  one approximation: chosen so the stage's authored doors cover the
+  generated connections (validated in Python: all 18 variant codes across
+  every area prefix cover every door set of their shape, and all 131 fixture
+  records resolve) — the original's exact orientation code needs per-model
+  orientation data psz-re has not exported. Each cell carries the generated
+  `layout` category and `room_seed`, so object placement and the group-5
+  roll are the console's own draws. Still unmodelled: the gate stage
+  (params 4..8) — godot's gate economy stands in; rare rooms (nr*) and the
+  coliseum second-room (8%) await picker modeling; the E-transition and
+  boss sections remain single rooms as before.
 Status pass over field/level generation, object placement, and enemy
 placement, against the original game. The headline: **the original's
 generation algorithm is already solved** in

@@ -623,6 +623,15 @@ static func _drop_unopenable_fences(objects: Array) -> Array:
 	return kept
 
 
+## The layout mask (bit set over groups 0..5) for a GENERATED layout category
+## — the original's per-room +0x31 draw (FUN_02082814), produced by
+## OriginalFieldGenerator.transcribe(). -1 returns -1 (caller draws instead).
+static func mask_for_layout(layout: int) -> int:
+	if layout < 0 or layout >= _layout_masks.size():
+		return -1
+	return int(_layout_masks[layout])
+
+
 ## Which of the five layout masks this room instance uses.
 static func _pick_layout(groups: Array, depth: int, rng: RandomNumberGenerator) -> int:
 	var occupied: int = 0
@@ -1046,7 +1055,8 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 ## objects and the caller's key slots share ONE draw; -1 (the default) draws
 ## here as before.
 static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
-		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1) -> Array:
+		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1,
+		room_seed: int = -1) -> Array:
 	# Only the START room is held to authored AMBIENCE alone: the original's
 	# sa1 never carries a wave, and loot nobody walked to has no business in
 	# the room the player spawns into. is_end is NOT: the goal is
@@ -1061,7 +1071,7 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 	# ambience side-stream (grid_generator._populate_cell), not the field's.
 	if is_start:
 		var critters: Array = []
-		for obj in authored_objects(room_code, depth, rng, layout_mask):
+		for obj in authored_objects(room_code, depth, rng, layout_mask, room_seed):
 			if str(obj.get("type", "")) == "ambience":
 				critters.append(obj)
 		return critters
@@ -1084,7 +1094,7 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 				"wave": w,
 			})
 
-	var authored: Array = authored_objects(room_code, depth, rng, layout_mask)
+	var authored: Array = authored_objects(room_code, depth, rng, layout_mask, room_seed)
 	if authored.is_empty():
 		# No authored table for this room code. Fall back to the ring rather
 		# than leaving the room bare — see BOXES_PER_ROOM.

@@ -363,6 +363,14 @@ func get_rng_state() -> Array:
 	return [_rng.get_state_lo(), _rng.get_state_hi()]
 
 
+## Continue a second section (area B) from where the first (area A) stopped —
+## the original never reseeds between floors or sections; one session stream
+## carries them all.
+func continue_from(state: Array) -> void:
+	if state.size() == 2:
+		_rng.set_state(int(state[0]), int(state[1]))
+
+
 func to_records() -> Array:
 	var origin := normalized_origin()
 	var out := []
