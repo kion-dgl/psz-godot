@@ -98,9 +98,13 @@ and <code>res://scripts/tools/technique_progression_probe.tscn</code>, with an i
 XDG_DATA_HOME and PSZ_PROBE_PACK pointing at the asset pack. Run
 <code>python3 scripts/tools/check_systems_reference.py /path/to/psz-re</code>
 to reproduce the original-data comparison.</p>
-<p>Preserved remake choices: class stat curves, EXP rewards, ±10% attack variance,
+<p>Preserved remake choices: EXP rewards, ±10% attack variance,
 5% base critical chance, 15% innate-weapon bonus, strong-attack modifiers,
-area-level slopes, shop fees and PB effect potency/presentation. Unrecovered
+area-level slopes, shop fees and PB effect potency/presentation. Class stat
+curves are no longer a remake choice: per-level stats for all 100 levels come
+ROM-exact from <code>data/re_reference/player_lv_param.json</code> (original
+<code>player_lv_param</code> table, <code>FUN_020412d8</code> row layout;
+class-to-member mapping proven by breakpoint curve match). Unrecovered
 zero-power technique-weapon resources, party chains, complete original status
 and PA semantics, and full damage/part-resistance fidelity remain open.</p>
 <p>Original <code>FUN_02042964</code> bypasses the physical hit roll for attack kinds 2 and 3; techniques and PB effects likewise bypass weapon accuracy. Zero-ATP technique weapons are excluded from grinding until their original stat mapping is implemented, so the shop cannot charge for an ineffective upgrade.</p>
