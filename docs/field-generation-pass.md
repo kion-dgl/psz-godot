@@ -1,5 +1,42 @@
 # Field generation pass (2026-10-21/22)
 
+## IMPLEMENTED AND TESTED (2026-10-22)
+
+- **`scripts/tools/field_gen_reference.py`** — the reference implementation.
+  `--check growth`: **14/14 fixtures reproduce** target, branches, room count
+  and cell set from each fixture's `generation_start_state` (no offset
+  search — the two fields the remote oracle could not reproduce, s04a and
+  s06b, reproduce here because the state is given). `--check transcription`:
+  **14/14 seed-anchored, 129/129 seeds and 129/129 layout categories exact**
+  (two fixtures via the documented picker-room variant-draw skip, which the
+  check auto-detects). The unmodelled gate stage's draw cost is thereby
+  MEASURED per fixture: 20–27 draws for 8–9-room fields, 47–51 for 14–15.
+- **`scripts/3d/field/original_field_generator.gd`** — the GDScript port
+  (growth + goal + transcription + code assembly) on `FieldRng`.
+  **`scripts/tools/original_field_generator_check.gd`** runs the same 14
+  fixtures headless; its logic was validated by transliteration (the exact
+  algorithm above scores 14/14 / 131/131 seeds+layouts in Python).
+- **Object placement** (`field_population.gd`):
+  - Set-family selector implemented (`select_set_family`, `FUN_02041a50`):
+    per-session byte → d/s/f<n>, failures fall back to f1. Default "d".
+  - Placement corpus upgraded to `object_placement_per_room.json` (1495
+    room-set files, all families) merged with `trap_placement_per_room.json`,
+    normalized into the legacy record shape with count-based legacy union —
+    every legacy record is retained (simulated: 0 missing) while the fuller
+    decode adds coverage (14.5k records across all families vs 3.6k in the
+    legacy d-only export). The deliberately-not-imported kinds (keys,
+    treasure boxes, warps, NPC placements… #594) stay out.
+  - Group 5 (traps/extra) rolls seed-exact when the room's generated seed is
+    passed (`authored_objects(..., room_seed)`): a private FieldRng seeded
+    from the room seed draws the count and the shuffle, per `FUN_02030B6C`.
+- **Remaining glue** (next task, not blocking): the field controller still
+  builds layouts via `grid_generator.gd`'s psz-sketch algorithm. The swap is
+  now mechanical — instantiate `OriginalFieldGenerator` with the area's
+  parameters from `field_generation_params.json` + a session seed, then feed
+  each cell the generator's `layout` (into `authored_objects`' mask) and
+  `seed` (into the group-5 roll). The gate stage (gates/keys/+0x30 picker,
+  params 4..8) remains unmodelled — godot's existing gate layer covers it
+  behaviorally; seed-exact gate replay is the one open RE item.
 Status pass over field/level generation, object placement, and enemy
 placement, against the original game. The headline: **the original's
 generation algorithm is already solved** in
