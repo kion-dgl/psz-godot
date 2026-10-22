@@ -4,6 +4,11 @@ Audit of what `https://psp2i.dev/rozalin/pszm-decomp` (private, cloned to
 `/tmp/pszm-decomp` for this audit) can contribute to psz-godot, system by
 system, versus what the project already sources from `psz-re` and wikis.
 
+**Scope note (2026-10-21):** the project direction is western-punk/PSO with
+original weapon content — so this audit's live priorities are BEHAVIOR
+systems (see "Direction" and the behavior-first roadmap at the end); item
+data sections below are kept for reference but deprioritized.
+
 ## What the decomp actually is
 
 A byte-matching decompilation of **Phantasy Star Zero Mini** (KPSJ, DSiWare).
@@ -110,7 +115,7 @@ vectors embedded in the headless check
 Not yet wired into combat/drop rolls — swap-in is the remaining step when
 those systems adopt recovered odds.
 
-### 3. Drops — the biggest win available
+### 3. Drops — DEPRIORITIZED (2026-10-21: item content is creative territory; wiki lists suffice)
 
 Today: `drop_config.gd` flat 20% chance, 30/70 item-vs-meseta, **uniform**
 pick from a wiki-shaped list (`cell_object_spawner.gd:985–1040`). The decomp
@@ -285,25 +290,95 @@ Python port of ArchiveUnpacker, confirming the audit's level-rows item:
   fields. Field-by-field decode still requires the consumer RE (unbanked),
   as expected.
 
-## Recommended order
+## Direction (owner, 2026-10-21) — behavior over content
 
-1. **Port RNG** (`FUN_0203e874/45d84/45d5c`) — S, unblocks meaningful odds.
-2. **Land the table dumper** (validated Python port of ArchiveUnpacker →
-   `scripts/tools/`) **+ drop-table decode with `FUN_020577ac`** — M,
-   replaces the least-sourced system (drops) with 24 real weighted tables.
-3. **Combat chains** (`FUN_02044f2c`/`441a8` semantics) — M, replaces
-   authored crit/variance/strong-attack math with the recovered percentage
-   chains.
-4. **Level rows — decode done** (`data/re_reference/player_lv_param.json`,
-   class mapping resolved). Remaining: consume real rows in `class_data.gd`,
-   re-dump from retail zarc, material caps (`FUN_0203e570`) — S–M.
-5. **Enemy targeting/hit semantics** (`FUN_02072774`, `02064b58`, `02063a18`)
-   and, if desired, 1:1 room populations from `deploy/`/`set/` rels — M–L.
-6. **Weapon-type payload decode** (attack timing) + mag/PB/shop tables — M,
-   after the dumper lands.
-7. **Phase B watch** — enemy EXP, retail boss schedulers (Falz/Mother/
-   Humilias), and technic power all live in the dead retail set; bank
-   questions for the decomp repo's next sessions rather than inventing.
+psz-godot is leaning into its western-punk/PSO identity: normal weapons
+(sabers, brands, …) are original thematic content that makes photon weaponry
+stand out. So item/equipment CONTENT (weapon lists, drops, shop stocks,
+rare tables) is creative territory — wiki-sourced lists suffice and the ROM
+drop/shop tables are **deprioritized**. What we take from the original game
+is **gameplay behavior**: stats, targeting, enemy AI, bosses, timings,
+hits/hitboxes, combos, and stage generation. The roadmap below is ordered by
+that.
+
+### Animation timings — EXTRACTED (data/re_reference/player_anim_timings.json)
+
+The psz-asset-viewer GLBs (converted from the original per-type animation
+NARCs) carry exact clip durations; at 30 fps they give the original timing
+backbone per weapon type and player frame (m/w):
+
+- Combo steps `atk1..3` (saber 17/18/16f, sword 23/23/25f, handgun 14/15/17f,
+  machinegun 22/23/23f, …) — the authoritative replacement reference for the
+  hand-tuned `WEAPON_TYPE_CONFIGS` windows ("initial #554 tuning").
+- Photon Arts `pa1..3` per type (saber 32/43/40f …) — PA timing for #95.
+- Technique cast `tec` (16f typical), Photon Blast clips.
+- Full hit-reaction family: `dam_n` light (6f), `dam_h` heavy (19f),
+  `dam_d` knockdown (19f + loop + get-up) — the original hit-feedback
+  cadence for our hit-stop/knockdown tiers.
+- Rerun: `python3 scripts/tools/dump_player_anim_timings.py --viewer
+  <psz-asset-viewer>`. Note the clip split (windup/active/recovery) is NOT
+  in durations alone — hit-frame events come from the descriptor/event data
+  the boss catalog already uses; pair the two.
+
+### Stage generation — inventory extracted; generator logic is the target
+
+`data/re_reference/stage_room_inventory.json` (rerun:
+`dump_stage_room_inventory.py --raw <raw/>`) maps the original floor
+vocabulary from the retail file tree:
+
+- 9 areas: s00 city (nr1–nr6 rooms), s01–s07 fields (two layout variants
+  a/b each, ~19–23 room slots, entry `e` room, boss `z` room), s08 tower
+  (per-floor structure s081–s086 + caps).
+- Room-shape families by code prefix (ga, ib, ic, lb, lc, na, nb, nc, sa,
+  tb, tc, td, xb) with per-room variant pools: set rels `_d` `_f1.._f4`
+  `_s` (+ `_r` rare) and matching `enemy/deploy/<mode>/` tables — the
+  original generator picks among per-room LAYOUT variants (a/b alternate
+  which f-slot they skip), not freeform grids.
+- `quest/random_dungeon.rel` decodes to a tiny DSIF config (28 bytes) —
+  includes a doubling series 50/100/200/400/800 (depth/difficulty scaling?);
+  the actual room-graph selection logic is code-side.
+- Code-side assets: spawn/wave allocator semantics fully recovered in
+  `drafts/near/arm9/FUN_020573b0.c` (group/member/entry table schema below),
+  deployment loader `FUN_0205c2c8.c`, weighted-select `FUN_020577ac.c`
+  (banked). The room-LINKING algorithm (how rooms chain into a floor) is in
+  the dead retail set — the main Phase B request alongside boss schedulers.
+  Until then, sampling our grid generator from the inventory (same room
+  families, same variant-pool behavior) is achievable now.
+
+**Spawn/wave table schema (FUN_020573b0, semantics recovered):** group
+stride 8 `{first-member half, count, state, seed, flags, used}`; member
+stride 12 `{group, count, first-entry, metadata×2, variant, max}`; entry
+stride 8 `{kind, order, flags, parent-member}`; count chosen by
+`FUN_02057794`, members weighted-selected by `FUN_020577ac`, spawn order
+shuffled by an 8-element permutation unless group flag 4. (A final flag2
+selection loop is compiled-out/disabled in the ROM — count starts 0 and
+tests < 0; do not "fix" it.)
+
+### Recommended order (behavior-first)
+
+1. **Combo/hit-reaction timing retune** from `player_anim_timings.json`
+   (windows scaled to real clip frames) — S, immediate feel win.
+2. **Stage generation**: switch the grid generator to sample the real room
+   inventory + variant pools; port `FUN_020573b0`'s group/member/entry wave
+   allocator over the deploy rels for 1:1 room populations — M.
+3. **Enemy targeting**: port `FUN_02072774` scanner semantics (arc-width
+   gates, 15-slot remembered-hit, focused-vs-other dispatch) and
+   `FUN_02064b58` range predicate into `enemy_base` — M.
+4. **Hit application**: `FUN_02063a18` (10-entry recent-hit dedupe,
+   eligibility, feedback effect factory `FUN_0204dc30`) — M.
+5. **Combat chain wiring**: crit% stat-sum (needs attack-vector fill RE),
+   variance (`FUN_02044038` field names — decomp request), status chain +
+   `020cbc04` level tables, defender ×0.8 state, ranged +5% crit band — M,
+   partially blocked on fill functions.
+6. **Enemy entity SMs** (`FUN_0201c308`, `020645ac`, `02064728`, `0204e2ac`)
+   as the reference architecture for behavior upgrades — L.
+7. **Phase B requests** (bank as decomp-session asks): room-graph generator,
+   Falz/Mother/Humilias schedulers, enemy EXP, technic power, APC tactics
+   consumers (`apc_param.zarc` rels decode but need field semantics).
+
+Previously completed: RNG port (`scripts/utils/psz_rng.gd`), ROM-exact class
+stat rows + retail XP provenance (L46 typo fixed), boss captures (existing),
+enemy stat table (existing).
 
 ## Path reference (decomp repo-relative)
 
