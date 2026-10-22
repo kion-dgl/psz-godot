@@ -370,9 +370,14 @@ tests < 0; do not "fix" it.)
    retune `WEAPON_TYPE_CONFIGS` windows from `player_action_params.json`
    (windows, not clips). Until the field mapping lands, clips are pacing
    bounds only — S once mapped.
-2. **Stage generation**: switch the grid generator to sample the real room
-   inventory + variant pools; port `FUN_020573b0`'s group/member/entry wave
-   allocator over the deploy rels for 1:1 room populations — M.
+2. **Stage generation**: the original algorithm is SOLVED
+   (`data/re_reference/level_generation_algorithm.json` — 5/5 fields
+   reproduced exactly) and the parameters are now consolidated in
+   `data/re_reference/field_generation_params.json`; the port plan and
+   delta list live in `docs/field-generation-pass.md` (topology swap of
+   `grid_generator.gd` onto `FieldRng`, then wave counts via the decoded
+   `FUN_02057794` rule; slot subsets pending `FUN_020573b0` field names) —
+   M.
 3. **Enemy targeting**: port `FUN_02072774` scanner semantics (arc-width
    gates, 15-slot remembered-hit, focused-vs-other dispatch) and
    `FUN_02064b58` range predicate into `enemy_base` — M.
