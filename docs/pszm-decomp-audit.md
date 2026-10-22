@@ -54,31 +54,47 @@ identities not inferred" in our own CI checkers).
 
 ## Detail by system
 
-### 1. Combat math — finish the recovered chain (high value, small effort)
+### 1. Combat math — chain fully decoded (2026-10-21 update)
 
 `scripts/utils/combat_math.gd` carries the retail core (ARM9 02042A4C/
 02042964): `(atk×4/10) − ((def×819+2048)>>12)`, Q12 multiplier scale. The
 decomp's banked Mini twin `src/arm9/FUN_020440c8.c` matches this structure
-exactly — cross-build confirmation — **and adds everything around it that we
-currently invent**:
+exactly — cross-build confirmation.
 
-- `drafts/near/arm9/FUN_02044f2c.c` — full hit dispatch: part-based
-  attack[59]/defence[29] vector filling via attacker/defender vtables,
-  guaranteed-hit path (flag bit 0), miss flagging, and the final damage value
-  extraction (`FUN_02036d14`).
-- `drafts/near/arm9/FUN_020441a8.c` (0xad4, semantics mapped in header) — the
-  damage arm with the **percentage chains**: this is where crit and variance
-  actually roll. Replaces our authored "5% crit, +50%, ±10% variance"
-  (`spec/src/pages/states/combat-progression.astro` lists these as remake
-  choices today). Second arm `FUN_02044cac` is unbanked (ranged/tech path).
-- `src/arm9/FUN_020440c8.c` also encodes the always-hit rules we already
-  mirrored (types 2/3 bypass) plus a ranged/distance attenuation branch
-  (`scale = 100 − factor×2>>12`) we don't have.
-- Attribute grid: `src/arm9/FUN_020abfb8.c` + `drafts/near/arm9/FUN_020ad9bc.c`
-  — 3×3 category A/B rule entries `{category, receive, invert}` with Q12
-  blend (0x3e8000 scale, clamps 0x800/0x1000). This is the engine's real
-  native/beast/machine/dark multiplier machinery behind our
-  `attribute_attack()`.
+**`drafts/near/arm9/FUN_020441a8.c` (melee damage arm, 0xad4) is now decoded**
+(the float-helper trio resolves to a standard percent→Q12 rounding idiom):
+
+- Damage core: `((A + B + C×attr_pct) − defense) / 5`, then × kind multiplier
+  (attack+0xc8) × resistance factor × body-part multiplier — our
+  `combat_math.damage()` skeleton and part-multiplier handling already match.
+- **Crit is stat-driven, not flat**: `crit% = (attack[0xdc]+attack[0xe0]+
+  attack[0xe4]) / 10`, percent-rolled; **crit adds +50%** (`d + d/2`) — our
+  ×1.5 is already correct; flat 5% corresponds to a stat sum of 50.
+- **Ranged sweet spot**: type-1 attacks gain **+5% crit** when the
+  relation/distance factor lands in `[round(atk_word×0.8), atk_word]`.
+- **Defender damage-reduce state**: flag bit at defence+0x60 multiplies the
+  whole result by 0.8 (Q12 3277).
+- **Element-vs-family** applies as `(attack_element_word + 100)%` scaling on
+  only the C component — confirms our "family % applies to weapon ATP only".
+- Negation gate before damage: defender stats (+0x4c/+0x50/+0x54) can void the
+  hit outright (percent roll; attack+0x88 ≠ 0 forces it).
+- **Status-infliction chain**: kind→type mapping (attack+0x8c kinds 6/7/10/11
+  or explicit +0x70), level from +0x90, chance +0x94 × resist factor, level
+  tables at ROM `0x020cbc04` (5 levels × 5 types), immunity masks
+  (defence+0x30/+0x3c/+0x34). Replaces our authored `10% + 10%×element_level`
+  once the level table is dumped.
+- `drafts/near/arm9/FUN_02044038.c` — **the damage variance**: for kind-20
+  attacks it draws the game RNG to 0..9 and writes category/value groups into
+  the attack work fields, with a signed negate-mod-32 branch. Field names are
+  still `???` in the decomp — one targeted session from portable semantics.
+  Our ±10% authored variance sits exactly here in the pipeline.
+
+Still open: the second damage arm `FUN_02044cac` (attack kind 1) is unbanked;
+the attack-vector fill (attacker vtable+8, `FUN_02044dd4`) defines which
+player/weapon stats land in words 0xb8/0xbc/0xc0/0xdc..0xe4 — needed before
+the crit% formula can be wired to real stats. Attribute grid:
+`src/arm9/FUN_020abfb8.c` + `drafts/near/arm9/FUN_020ad9bc.c` (3×3 category
+rules, Q12 blend 0x3e8000, clamps 0x800/0x1000) remains as before.
 
 ### 2. RNG — PORTED (scripts/utils/psz_rng.gd)
 
@@ -181,19 +197,38 @@ set, not the Mini's live code.
 ### 7. Weapon attributes — solid already; the gap is per-type timing
 
 The ~360-item dataset is ROM-anchored with wiki-agreement asserted in CI;
-grind +2 verified. The decomp's `src/arm9/FUN_0206cb5c.c` decodes
-`item/weapon_id.narc` (4.5 KB — **per weapon-type**, not per-weapon): entries
-0–15 carry 216-byte payloads, plus special entries (16 → 1320 B, 20 → 648 B,
-etc.). Field meanings are unconfirmed in the decomp, but these payloads are
-the natural home of **attack-speed/animation timing** — precisely what our
-`WEAPON_TYPE_CONFIGS` combo windows (`combat_manager.gd:107–358`, "initial
-#554 tuning, not DS timing") hand-tune. Decoding them is a bounded RE task
-with a banked consumer as reference. Adjacent unbanked-but-present data:
-`wpneqprm.zarc` (equipment params), `mag_param.narc` (385 B — real mag
-feeding table vs our tuned values), `pb_param_data.rel` (Photon Blast),
-`shop1–7.narc` (real shop stocks vs our authored inventories),
-`item/paeff00–16.rel` (per-weapon-type PA effects), `uniprm/genprm/proprm.rel`
-(unit/general/projectile params).
+grind +2 verified. Structure findings (2026-10-21):
+
+- `item/weapon_id.narc` (ZPR-wrapped NARC, 4,522 → 12,772 B): **27 entries —
+  16 × 320 B per-weapon-type DSIF rels (256-byte NDR payload each) plus 11
+  special entries** (1408/416×5/736/96/416/496/1520 B) matching the
+  `FUN_0206cb5c` group layout. These per-type payloads are the natural home
+  of attack-speed/PA-slot data that our hand-tuned `WEAPON_TYPE_CONFIGS`
+  approximates; first byte of each wpnprm row (10/40/30/20…) looks like the
+  type/model link. Field decode is the remaining RE task.
+- `item/wpnprm.rel` (per-weapon rows): 4,592 B DSIF → **362 rows × 12 bytes**
+  after a 136-byte sub-header (NDR second field 0x10f8 = 362×12). The Mini
+  and retail copies differ by only **26 bytes** — same table, tiny build
+  tweaks. Field decode already exists in `psz-re/tools/wpnprm.py` (our CI
+  imports it for saber/handgun anchors); the retail copy is available in the
+  `psz-asset-viewer` GitHub clone under `raw/item/` (the Projects working
+  copy gitignores `raw/`). Extend the CI check to full-set agreement rather
+  than re-deriving offsets.
+- **Retail provenance source discovered**: `psz-asset-viewer`'s repo carries
+  the full retail `raw/` extraction (player, item, enemy, quest dirs). The
+  committed `player_lv_param.json` was re-dumped from it; XP now matches
+  `experience_table.tres` **99/99** after fixing a pre-existing L46
+  totalExp typo (234,820 → ROM 234,720 — the table's own expToNext values
+  already implied the ROM number). The Mini's L5–L9 XP differences are
+  demo-only tuning, not retail behavior.
+
+Adjacent unbanked-but-present data: `wpneqprm.zarc` (equipment params),
+`mag_param.narc` (ZPR→NARC→one 608 B DSIF with a 512-byte table — real mag
+feeding values vs our tuned ones), `pb_param_data.rel` (Photon Blast — CI
+already pins its charge buckets), `shop1–7.narc` (real shop stocks),
+`item/paeff00–16.rel` (per-type PA effects), `uniprm/genprm/proprm.rel`
+(unit/general/projectile params), `apc/apc_param.zarc` (companion AI: action
+sets, equipment, sp actions, tactics — 5 DSIF rels).
 
 ### 8. Techniques — no source found yet
 
