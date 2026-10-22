@@ -80,14 +80,19 @@ currently invent**:
   native/beast/machine/dark multiplier machinery behind our
   `attribute_attack()`.
 
-### 2. RNG — port the exact generator (small effort, enables everything else)
+### 2. RNG — PORTED (scripts/utils/psz_rng.gd)
 
 `src/arm9/FUN_0203e874.c` (64-bit state: `acc = s2 + s1*s0`; result =
 `high32(high32(acc) * n)`), `FUN_02045d84` (percentage roll:
 `pct>=100 → hit, pct<=0 → miss, else RNG(100) < pct`), `FUN_02045d5c`
-(`lo + RNG(hi−lo)` — the damage-variance roll provider). A ~30-line Godot
-port makes every subsequent "1:1" claim meaningful (drops, variance, crit
-order-of-rolls).
+(`lo + RNG(hi−lo)` — the damage-variance roll provider). Ported to
+`scripts/utils/psz_rng.gd` (32/16-bit limb math, no overflow assumptions);
+`scripts/tools/psz_rng_reference.py` is the big-int mirror that generated the
+vectors embedded in the headless check
+`scripts/tools/psz_rng_check.gd` (run:
+`godot --headless --path . --script res://scripts/tools/psz_rng_check.gd`).
+Not yet wired into combat/drop rolls — swap-in is the remaining step when
+those systems adopt recovered odds.
 
 ### 3. Drops — the biggest win available
 
