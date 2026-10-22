@@ -1,0 +1,33 @@
+{
+  "_": "Which of the six authored object/enemy sets a session loads. The same selector keys both set/<NN>/<v>/<room>/... (objects, boxes, traps) and enemy/deploy/<set>/... , so one value decides both for the whole session.",
+  "function": "FUN_02041a50",
+  "session_record": "0x0211A3C4",
+  "selector_byte": "+0x0C, clamped to 0..2 by FUN_0209ce8c (which clamps the difficulty tier at +0x0D the same way)",
+  "families": {
+    "0": "d",
+    "1": "s",
+    "2": "f<n>, where n is byte +0x0B of the per-mission record reached through the stage context (FUN_02031a74 -> FUN_02031c74). Valid 1..9."
+  },
+  "EVERY_FAILURE_FALLS_BACK_TO_f1": "three separate paths emit the literal 'f1' -- no mission record, n < 1, and n > 9. The string pool carries 'f1' three times over for exactly this.",
+  "code_allows_more_than_the_data_has": "the range check is 1..9 but only f1..f4 exist on disk, so six of the nine f-slots are unused. That is a fact about the code, not evidence that more sets were cut.",
+  "scope": "PER SESSION, not per room. One family is chosen and every room then loads its own authored set from it, which is why a field is internally consistent.",
+  "instruction_evidence": "FUN_02041a50 loads +0x0C with `mov #12`, tests it against 1 and 0, loads the mission byte with `mov #11`, and bounds it with `cmp #1` and `cmp #9`.",
+  "NOT_CLAIMED": "what the per-mission record is beyond that byte offset, how the session's +0x0C comes to hold its value, or what loads the r / c / cm families.",
+  "THE_DIRECTORY_HOLDS_MORE_THAN_THIS_SELECTOR_EMITS": {
+    "counts": {
+      "d": 290,
+      "f4": 280,
+      "s": 271,
+      "f2": 249,
+      "f1": 230,
+      "f3": 141,
+      "r": 28,
+      "c": 4,
+      "cm": 2
+    },
+    "r": "exactly the na1 and nc2 rooms, in every stage 01..07 and both variants -- 28 files",
+    "c_and_cm": "all stage 00 variant e, the City -- 6 files",
+    "reading": "this byte cannot produce those names, so ANOTHER path loads them. An earlier draft asserted the six selector letters were all that existed and failed on these 34 files; the claim was corrected rather than the filter."
+  },
+  "*** WHERE THE f-NUMBER COMES FROM — ANSWERED, see data/quest_deploy_set.json ***": "the NOT_CLAIMED line above said 'what the per-mission record is beyond that byte offset' was open. Half of it is now closed. The per-mission record is the QUEST OVERRIDE RECORD inside quest_0NNNNNN.rel, the same block whose bytes +0x18..+0x22 override the generator parameters, and it is located by its own decimal quest id in the first word. Byte +0x0B read there is -1 on all 27 dive and story quests and 1..9 on 28 of 29 free quests: single-player free quests author 1 and 2, multiplayer free quests author 3 and 4. So f1..f4 are QUEST numbers split by SCOPE, not field variants and not difficulty tiers. Confirmed against savestate RAM 75/75 through the generator's own pointer. STILL NOT CLAIMED: how the session's +0x0C comes to hold its value — that half of the line above stands."
+}

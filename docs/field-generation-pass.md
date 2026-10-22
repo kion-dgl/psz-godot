@@ -1,16 +1,83 @@
-# Field generation pass (2026-10-21)
+# Field generation pass (2026-10-21/22)
 
 Status pass over field/level generation, object placement, and enemy
 placement, against the original game. The headline: **the original's
 generation algorithm is already solved** in
-`data/re_reference/level_generation_algorithm.json` (psz-re work: 5-of-5
-savestate fields reproduced exactly, cells and room counts, no fitted
-constants). The gap is that `grid_generator.gd` still ports the psz-sketch
-5×5 algorithm rather than the solved one. This pass consolidates the solved
-parameters into repo data, decodes the missing wave-count rule, and ports
-the field RNG.
+`data/re_reference/level_generation_algorithm.json` (psz-re work; the oracle
+`tools/generate.py --check` on the psz-re host currently reproduces **7 of
+9** savestate fields exactly — s01a/b, s02a/b, s03a/b, s05a; the two newer
+14–15-room captures s04a/s06b are the open ones). The gap is that
+`grid_generator.gd` still ports the psz-sketch 5×5 algorithm rather than the
+solved one. This pass consolidates the solved parameters into repo data,
+decodes the missing wave-count rule, ports the field RNG, and imports the
+newer psz-re corpus (24 files — see the import list below).
+
+## Session-seed chain (new since the godot mirror; solved end to end)
+
+- The RNG seed is **16-bit**, arrives in a category-7 session message, and is
+  recoverable from ANY savestate by walking the LCG backward (≤ ~650 draws;
+  all 14 corpus states verify).
+- **Generation starts at offset ZERO from the session seed** on a first
+  floor: the state at `FUN_02081EA8`'s entry IS the zero-extended 16-bit
+  seed. No window to search.
+- **No per-floor reseed**: successive floors lie on one stream
+  (`s01a --+13--> s01e --+199--> s01b`, offsets add exactly). Seed-exact
+  replay means replaying a session from its 16-bit seed.
+- Seed space 65536 → seed brute-force search is possible.
+- The layout **a/b variant source** is the remaining blocked item — needs
+  ~3 area-B field savestates (capture request, corpus is 11:1 a:b).
+
+## RNG unification
+
+`gameplay_rng.json` confirms both game RNGs run the **same LCG algorithm**
+on two objects (level generation via a pointer chain; gameplay as a static
+global). This unifies the two readings: the decomp's
+`acc = s2 + s1*s0` IS `state = state*M + C` with `state[1]`/`state[2]`
+holding the multiplier/increment. Verified numerically:
+`PszRng.new(state, 0x5D588B656C078965, 0x269EC3)` produces the identical
+draw sequence as `FieldRng.new(state)`. The two GDScript ports are correct
+and are the same generator with different default constants.
+
+## Object/enemy placement status after the import
+
+- **Set family selector DECODED** (`object_set_selector.json`,
+  `FUN_02041a50`): per SESSION, u8 at session record `+0x0C` — 0=d, 1=s,
+  2=f<n> with n from the mission record's `+0x0B`; every failure path falls
+  back to f1. This replaces godot's hardcoded `DEPLOY_SET = "d"` assumption
+  (dive quests → "d" is right for story dive; free fields resolve through
+  the mission record).
+- `object_placement_per_room.json` (5.5 MB) is the newer, richer placement
+  export: 24-byte records with room-local x/y/z in 1.19.12 fixed point plus
+  a u16 facing at +0x10, and the corrected six-group build rule
+  (root-table membership, layout-mask eligibility, group 5 rolled at
+  40/20/20/20). Supersedes `room_objects.json`'s rule text; consumers
+  should migrate when wiring the generator port.
+- `enemy_deploy_positions/record/slot_selection/wave_rolls/wave_schedule`
+  round out the enemy side. **Slot-subset selection is still unsolved**
+  (`enemy_slot_selection.json`: 14 seeded observations; it is never the
+  first N and not count-indexed). Negative result this pass: a seeded
+  FieldRng/Combat-RNG Fisher-Yates over 8/9 slots does NOT reproduce the
+  observed subsets (0–1 of 5 multi-enemy observations, noise). The rule
+  needs the consumer code — decomp ask: which function reads room-record
+  `+0x14` and what seeds the gameplay RNG at room entry.
+- Wave count rule decoded (decomp `FUN_02057794`, banked):
+  `count = min + rng(max − min + 1)` on the gameplay RNG.
 
 ## New artifacts from this pass
+
+Imported from psz-re (kion@192.168.10.37, `~/projects/psz-re/data/`):
+refreshed `level_generation_algorithm.json` (+15 entries: seed chain,
+third parameter layer, 5/5→7/9 oracle growth) and `enemy_room_assignment.json`
+(same consumer shape, adds `field3`); new files:
+`generation_fixtures/generation_targets/field_fixtures` (oracle fixtures),
+`level_generation_topology`, `level_topology_builder`, `room_vocabulary`,
+`object_placement_per_room`, `object_set_selector`, `object_class_table`,
+`object_factory_tables`, `trap_placement_per_room`,
+`wall_placement_per_room`, `enemy_deploy_positions`, `enemy_deploy_record`,
+`enemy_slot_selection`, `enemy_wave_rolls`, `enemy_wave_schedule`,
+`enemy_difficulty_tier`, `enemy_implementation_reference`,
+`combo_windows`, `player_combo_windows`, `gameplay_rng`,
+`savestate_index`.
 
 - **`data/re_reference/field_generation_params.json`** (rerun:
   `dump_field_generation_params.py --raw <raw/>`) — per-area generation
