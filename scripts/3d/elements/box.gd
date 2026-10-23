@@ -6,6 +6,8 @@ class_name Box
 
 signal destroyed_box
 
+const ShrapnelBurstScript := preload("res://scripts/3d/elements/shrapnel_burst.gd")
+
 ## Whether this box is a rare variant (uses the shared o0c_recont instead of
 ## the active area's oNN_cont)
 @export var is_rare: bool = false
@@ -96,80 +98,18 @@ func destroy() -> void:
 	destroyed_box.emit()
 	# Break visual. The original's container-break effect id is not yet
 	# decoded (no per-container entry in the effect factory tables), so this
-	# is an engine-native fragment burst sized from the container; swap for
-	# the decoded effect when psz-re pins it.
+	# is engine-native shrapnel sized from the container; swap for the
+	# decoded effect when psz-re pins it.
 	var parent := get_parent()
 	if parent:
-		parent.call_deferred("add_child", _make_burst())
+		ShrapnelBurstScript.spawn(parent, global_position + Vector3.UP * (collision_size.y * 0.5),
+			clampf(collision_size.length() * 0.35, 0.35, 0.8), Color(0.72, 0.55, 0.34))
 
 	# Spawn drop if configured
 	if drop_type != "none":
 		_spawn_drop()
 
 	print("[Box] Destroyed")
-
-
-## Shrapnel: the container blows apart into tumbling shards thrown radially
-## with an upward bias, falling under gravity. The original's container-break
-## effect id is still undecoded (no per-container entry in the effect factory
-## tables), so these are engine-native shards sized from the container — the
-## motion profile is the part playtesting asked for: outward, violent, brief.
-func _make_burst() -> Node3D:
-	var host := Node3D.new()
-	host.position = position + Vector3.UP * (collision_size.y * 0.5)
-	host.rotation = rotation
-	var shard_scale: float = clampf(collision_size.length() * 0.35, 0.7, 1.6)
-
-	var shards := CPUParticles3D.new()
-	shards.one_shot = true
-	shards.amount = 36
-	shards.lifetime = 0.8
-	shards.explosiveness = 1.0
-	shards.direction = Vector3.UP
-	shards.spread = 85.0
-	shards.initial_velocity_min = 3.0
-	shards.initial_velocity_max = 7.0
-	shards.gravity = Vector3(0, -14, 0)
-	shards.scale_amount_min = 0.45
-	shards.scale_amount_max = 1.35
-	shards.angular_velocity_min = -12.0
-	shards.angular_velocity_max = 12.0
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.14, 0.18, 0.1) * shard_scale
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.72, 0.55, 0.34)
-	mat.roughness = 0.9
-	mesh.material = mat
-	shards.draw_mesh = mesh
-	host.add_child(shards)
-	shards.finished.connect(host.queue_free)
-	shards.restart()
-
-	# A short hot flash under the shards sells the detonation beat.
-	var flash := CPUParticles3D.new()
-	flash.one_shot = true
-	flash.amount = 6
-	flash.lifetime = 0.18
-	flash.explosiveness = 1.0
-	flash.direction = Vector3.UP
-	flash.spread = 180.0
-	flash.initial_velocity_min = 0.4
-	flash.initial_velocity_max = 1.2
-	flash.scale_amount_min = 1.2
-	flash.scale_amount_max = 2.0
-	var fmesh := SphereMesh.new()
-	fmesh.radius = 0.16 * shard_scale
-	fmesh.height = 0.32 * shard_scale
-	var fmat := StandardMaterial3D.new()
-	fmat.albedo_color = Color(1.0, 0.78, 0.4, 0.85)
-	fmat.emission_enabled = true
-	fmat.emission = Color(1.0, 0.6, 0.2)
-	fmat.emission_energy_multiplier = 2.2
-	fmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	fmesh.material = fmat
-	flash.draw_mesh = fmesh
-	host.add_child(flash)
-	return host
 
 
 func _spawn_drop() -> void:

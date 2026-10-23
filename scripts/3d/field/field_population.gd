@@ -317,7 +317,7 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 				records.append(inherited)
 			elif STEM_KIND_DEFAULTS.has(kind) and not kind in STEM_KIND_SKIPPED:
 				records.append({
-					"g": int(b.get("group", 0)),
+					"g": int(b["group"]) if b.get("group") != null else 0,
 					"k": STEM_KIND_DEFAULTS[kind],
 					"x": float(b.get("x", 0.0)),
 					"y": float(b.get("y", 0.0)),
@@ -342,7 +342,7 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 				records.append(inherited)
 			elif TRAP_NAME_KINDS.has(name):
 				records.append({
-					"g": int(p.get("group", 0)),
+					"g": int(p["group"]) if p.get("group") != null else 0,
 					"k": TRAP_NAME_KINDS[name],
 					"x": float(p.get("x", 0.0)),
 					"y": float(p.get("y", 0.0)),
