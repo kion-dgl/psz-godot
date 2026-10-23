@@ -311,8 +311,8 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 			if b.get("x") == null or b.get("z") == null:
 				continue
 			var kind: String = str(b.get("kind", ""))
-			var sig := _pos_sig(b.get("x"), b.get("y"), b.get("z"), b.get("angle"))
-			var inherited := _take_legacy(by_pos, avail, used, sig)
+			var sig: String = _pos_sig(b.get("x"), b.get("y"), b.get("z"), b.get("angle"))
+			var inherited = _take_legacy(by_pos, avail, used, sig)
 			if inherited != null:
 				records.append(inherited)
 			elif STEM_KIND_DEFAULTS.has(kind) and not kind in STEM_KIND_SKIPPED:
@@ -336,8 +336,8 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 			if p.get("x") == null or p.get("z") == null:
 				continue
 			var name: String = str(p.get("name", ""))
-			var tsig := _pos_sig(p.get("x"), p.get("y"), p.get("z"), p.get("angle"))
-			var inherited := _take_legacy(by_pos, avail, used, tsig)
+			var tsig: String = _pos_sig(p.get("x"), p.get("y"), p.get("z"), p.get("angle"))
+			var inherited = _take_legacy(by_pos, avail, used, tsig)
 			if inherited != null:
 				records.append(inherited)
 			elif TRAP_NAME_KINDS.has(name):

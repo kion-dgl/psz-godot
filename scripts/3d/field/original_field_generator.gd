@@ -75,7 +75,7 @@ class Room:
 	var rotation := -1
 	var variant := 0
 	var keys := 0
-	var seed := 0
+	var rng_seed := 0
 	var layout := -1
 
 
@@ -102,8 +102,8 @@ func _shuffle(arr: Array) -> void:
 func _place(parent: Room, direction: int) -> bool:
 	if parent.x < 0 or parent.y < 0:
 		return false
-	var x := parent.x + DELTA[direction][0]
-	var y := parent.y + DELTA[direction][1]
+	var x: int = parent.x + int(DELTA[direction][0])
+	var y: int = parent.y + int(DELTA[direction][1])
 	if x < 0 or x >= GRID_W or y < 0 or y >= GRID_H:
 		return false
 	if cells.has(Vector2i(x, y)):
@@ -263,7 +263,7 @@ func transcribe(order_override: Array = [], keys_by_index: Dictionary = {},
 		if room.keys > 0:
 			_rng.draw(2)
 			_rng.draw(2)
-		room.seed = _rng.draw(0xFFFFFFFF)
+		room.rng_seed = _rng.draw(0xFFFFFFFF)
 		room.layout = _layout_for(room.depth)
 		done.append(room)
 
@@ -392,7 +392,7 @@ func to_records() -> Array:
 			"adj": r.adj.duplicate(),
 			"way_back": r.wayback,
 			"keys": r.keys,
-			"seed": r.seed,
+			"seed": r.rng_seed,
 			"layout": r.layout,
 		})
 	return out

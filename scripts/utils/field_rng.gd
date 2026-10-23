@@ -42,11 +42,11 @@ func set_state(lo: int, hi: int) -> void:
 
 
 ## Bounded draw in [0, range); range 0 returns the raw high word.
-func draw(range: int) -> int:
+func draw(draw_range: int) -> int:
 	_advance()
-	if range == 0:
+	if draw_range == 0:
 		return _hi
-	return _mul32_to_64(_hi, range)[0]
+	return _mul32_to_64(_hi, draw_range)[0]
 
 
 ## 32x32 -> 64 multiply as [hi32, lo32]; every intermediate stays under 2^34.
@@ -72,8 +72,8 @@ func _advance() -> void:
 	var ll := _mul32_to_64(_lo, MULTIPLIER_LO)
 	var lh := _mul32_to_64(_lo, MULTIPLIER_HI)
 	var hl := _mul32_to_64(_hi, MULTIPLIER_LO)
-	var lo := ll[1] + INCREMENT
+	var lo: int = int(ll[1]) + INCREMENT
 	var carry := lo >> 32
-	var hi := ll[0] + carry + ((lh[1] + hl[1]) & 0xFFFFFFFF)
+	var hi: int = int(ll[0]) + carry + ((int(lh[1]) + int(hl[1])) & 0xFFFFFFFF)
 	_lo = lo & 0xFFFFFFFF
 	_hi = hi & 0xFFFFFFFF

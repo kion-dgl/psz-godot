@@ -55,8 +55,8 @@ func _advance_bounded(n: int) -> int:
 	# acc = s2 + s1 * s0 (mod 2^64), kept as two 32-bit halves.
 	var pl := _mul32_to_64(_s1, _s0_lo)
 	var ph := _mul32_to_64(_s1, _s0_hi)
-	var lo := pl[1] + _s2
-	var hi := pl[0] + (lo >> 32) + (ph[1] & 0xFFFFFFFF)
+	var lo: int = int(pl[1]) + _s2
+	var hi: int = int(pl[0]) + (lo >> 32) + (int(ph[1]) & 0xFFFFFFFF)
 	_s0_lo = lo & 0xFFFFFFFF
 	_s0_hi = hi & 0xFFFFFFFF
 	if n == 0:
