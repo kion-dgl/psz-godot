@@ -69,6 +69,8 @@ const RE_DIR := "res://data/re_reference/"
 ## "d" remains the default: it is the dive set validated against observed
 ## Valley waves. Field controllers call select_set_family() per session.
 const DEFAULT_SET_FAMILY := "d"
+
+const FieldRngScript := preload("res://scripts/utils/field_rng.gd")
 static var set_family := DEFAULT_SET_FAMILY
 
 
@@ -702,7 +704,7 @@ static func _roll_group_five(records: Array, rng: RandomNumberGenerator,
 	var count := 0
 	var frng: FieldRng = null
 	if room_seed >= 0:
-		frng = FieldRng.new(room_seed & 0xFFFFFFFF, 0)
+		frng = FieldRngScript.new(room_seed & 0xFFFFFFFF, 0)
 		var roll: int = frng.draw(100)
 		var acc := 0
 		for i in _group5_weights.size():

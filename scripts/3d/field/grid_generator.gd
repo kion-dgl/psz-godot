@@ -401,6 +401,8 @@ func _get_gates(stage_id: String) -> Array[String]:
 ## orientation code needs per-model orientation data psz-re has not exported.
 const USE_ORIGINAL_FIELD_GENERATOR := true
 
+const OriginalFieldGeneratorClass := preload("res://scripts/3d/field/original_field_generator.gd")
+
 static var _original_area_params: Dictionary = {}
 
 
@@ -435,7 +437,7 @@ static func _original_params_for(area_prefix: String) -> Array:
 func generate_original(area: String, area_prefix: String) -> Dictionary:
 	_ensure_unified_config()
 	var stage_prefix := "%s%s" % [area_prefix, area]
-	var gen := OriginalFieldGenerator.new(_session_seed & 0xFFFFFFFF, 0,
+	var gen := OriginalFieldGeneratorClass.new(_session_seed & 0xFFFFFFFF, 0,
 		stage_prefix, _original_params_for(area_prefix))
 	# Two sections from one stream: area B continues where area A's generator
 	# stopped, exactly as successive floors continue one session stream.

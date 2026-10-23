@@ -18,6 +18,11 @@ extends RefCounted
 ## shuffle after goal selection (self-consistent); replaying a console field
 ## exactly needs the fixture's transcription order and goal passed in.
 
+## Preloaded rather than class_name-resolved: this project runs from CLI
+## without an editor session, and new global classes only register after an
+## editor scan (same reason area_objects preloads grid_generator).
+const FieldRngClass := preload("res://scripts/utils/field_rng.gd")
+
 const GRID_W := 7
 const GRID_H := 10
 const DELTA := [[0, -1], [1, 0], [0, 1], [-1, 0]]   # 0x020f2ef8
@@ -44,7 +49,7 @@ const VARIANTS := [
 ## layout (+0x31) weight rows by depth band, table 0x020f2e70
 const LAYOUT_BANDS := [[50, 20, 20, 10], [40, 20, 20, 20], [25, 25, 25, 25]]
 
-var _rng: FieldRng
+var _rng: FieldRngClass
 var cells := {}          # Vector2i -> Room
 var _queue: Array = []   # gen+0xc growth frontier, appended at placement time
 var list: Array = []     # gen+0x60 room list, placement order
@@ -77,7 +82,7 @@ class Room:
 func _init(seed_lo: int, seed_hi: int, stage_id: String, gen_params: Array) -> void:
 	stage = stage_id
 	params = gen_params
-	_rng = FieldRng.new(seed_lo, seed_hi)
+	_rng = FieldRngClass.new(seed_lo, seed_hi)
 	_rng.draw(0)   # the generation_start_state is the state at FUN_02081ea8's
 	# ENTRY; the first real draw (target) steps from it, so consume one step.
 

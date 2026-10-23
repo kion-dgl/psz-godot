@@ -1,4 +1,7 @@
 extends SceneTree
+
+const OriginalFieldGeneratorClass := preload("res://scripts/3d/field/original_field_generator.gd")
+const FieldRngClass := preload("res://scripts/utils/field_rng.gd")
 ## Headless check: OriginalFieldGenerator against the 14 console fixtures.
 ##
 ## Stage 1 (growth) runs the generator from each fixture's
@@ -41,13 +44,13 @@ func _init() -> void:
 		var lo := state & 0xFFFFFFFF
 		var hi := state >> 32
 		var params: Array = f["input"]["params"]
-		var gen := OriginalFieldGenerator.new(lo, hi, f["stage"], params)
+		var gen := OriginalFieldGeneratorClass.new(lo, hi, f["stage"], params)
 		gen.run()
 		var want_cells := {}
 		for r in f["rooms"]:
 			want_cells[Vector2i(r["xy"][0], r["xy"][1])] = true
 		var origin := gen.normalized_origin()
-		var cells_match := gen.list.size() == f["rooms"].size()
+		var cells_match: bool = gen.list.size() == f["rooms"].size()
 		if cells_match:
 			for room in gen.list:
 				if not want_cells.has(Vector2i(room.x - origin.x, room.y - origin.y)):
@@ -63,7 +66,7 @@ func _init() -> void:
 				f["id"], gen.target, str(f["drawn"]["target"]), gen.list.size(),
 				f["rooms"].size(), str(cells_match)])
 			continue
-		var res := _anchor(f, gen)
+		var res = _anchor(f, gen)
 		if res == null:
 			fails += 1
 			push_error("%s: transcription not anchored" % f["id"])
@@ -93,7 +96,7 @@ func _anchor(f, gen):
 		adj_by_index[room.index] = room.adj
 	for skip_set in _skip_candidates(f):
 		for k in 300:
-			var rng := FieldRng.new(base[0], base[1])
+			var rng := FieldRngClass.new(base[0], base[1])
 			for i in k:
 				rng.draw(0)   # step without consuming a bounded value
 			var res := _chain(rng, order, rooms_by_index, depth_by_index,
@@ -127,8 +130,8 @@ func _chain(rng: FieldRng, order, rooms_by_index, depth_by_index,
 		if int(rec.get("keys", 0)) > 0:
 			rng.draw(2)
 			rng.draw(2)
-		if rng.draw(0xFFFFFFFF) != int(rec["seed"], 16):
-			return null
+		if rng.draw(0xFFFFFFFF) != str(rec["seed"]).hex_to_int():
+			return {"seeds": -1, "layouts": 0}
 		seeds += 1
 		var roll: int = rng.draw(100)
 		var depth: int = depth_by_index[idx]
