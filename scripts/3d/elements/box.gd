@@ -19,6 +19,11 @@ signal destroyed_box
 
 var is_alive: bool = true
 
+## Cone-targeting bounds, fitted from the loaded container in _ready (walls
+## carry the same pair). The cone reads these for no-enemy_data targets.
+var target_radius := 0.5
+var target_height := 0.5
+
 
 func _init() -> void:
 	interactable = false  # Destroyed by attacking, not interacting
@@ -38,10 +43,20 @@ func _ready() -> void:
 
 	super._ready()
 	_fit_collision_to_model()
+	# Cone bounds ON the container, aimed at its vertical centre — the same
+	# fix walls got. The cone's default for a no-enemy_data target is a 0.5
+	# sphere at the ORIGIN (the feet), which put the lock-on point on the
+	# floor beside the box and left close-range swings missing it entirely.
+	target_radius = maxf(collision_size.x, collision_size.z) * 0.5
+	# FULL height: the cone places its aim sphere at position + height/2,
+	# matching enemies' collision_height semantics — so this lands the aim
+	# point at the container's true centre, not on the floor beside it.
+	target_height = collision_size.y
 	collision_body = _build_static_collision("BoxCollision")
 	_setup_hurtbox("BoxHurtbox")
 	_setup_mirror_textures(Vector2(0, 1) if is_rare else Vector2.ZERO)
-	_setup_reticle(collision_size.y + 0.5)
+	# Reticle at the centre too, not floating above the lid.
+	_setup_reticle(target_height)
 
 
 ## Size the collision box from the container the area actually loaded.
@@ -94,31 +109,66 @@ func destroy() -> void:
 	print("[Box] Destroyed")
 
 
+## Shrapnel: the container blows apart into tumbling shards thrown radially
+## with an upward bias, falling under gravity. The original's container-break
+## effect id is still undecoded (no per-container entry in the effect factory
+## tables), so these are engine-native shards sized from the container — the
+## motion profile is the part playtesting asked for: outward, violent, brief.
 func _make_burst() -> Node3D:
 	var host := Node3D.new()
-	host.position = position
+	host.position = position + Vector3.UP * (collision_size.y * 0.5)
 	host.rotation = rotation
-	var burst := CPUParticles3D.new()
-	burst.one_shot = true
-	burst.amount = 22
-	burst.lifetime = 0.55
-	burst.explosiveness = 1.0
-	burst.direction = Vector3.UP
-	burst.spread = 65.0
-	burst.initial_velocity_min = 2.2
-	burst.initial_velocity_max = 5.0
-	burst.gravity = Vector3(0, -12, 0)
-	burst.scale_amount_min = 0.55
-	burst.scale_amount_max = 1.0
+	var shard_scale: float = clampf(collision_size.length() * 0.35, 0.7, 1.6)
+
+	var shards := CPUParticles3D.new()
+	shards.one_shot = true
+	shards.amount = 36
+	shards.lifetime = 0.8
+	shards.explosiveness = 1.0
+	shards.direction = Vector3.UP
+	shards.spread = 85.0
+	shards.initial_velocity_min = 3.0
+	shards.initial_velocity_max = 7.0
+	shards.gravity = Vector3(0, -14, 0)
+	shards.scale_amount_min = 0.45
+	shards.scale_amount_max = 1.35
+	shards.angular_velocity_min = -12.0
+	shards.angular_velocity_max = 12.0
 	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.16, 0.16, 0.16) * clampf(collision_size.length() * 0.35, 0.7, 1.6)
+	mesh.size = Vector3(0.14, 0.18, 0.1) * shard_scale
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.72, 0.55, 0.34)
+	mat.roughness = 0.9
 	mesh.material = mat
-	burst.draw_mesh = mesh
-	host.add_child(burst)
-	burst.finished.connect(host.queue_free)
-	burst.restart()
+	shards.draw_mesh = mesh
+	host.add_child(shards)
+	shards.finished.connect(host.queue_free)
+	shards.restart()
+
+	# A short hot flash under the shards sells the detonation beat.
+	var flash := CPUParticles3D.new()
+	flash.one_shot = true
+	flash.amount = 6
+	flash.lifetime = 0.18
+	flash.explosiveness = 1.0
+	flash.direction = Vector3.UP
+	flash.spread = 180.0
+	flash.initial_velocity_min = 0.4
+	flash.initial_velocity_max = 1.2
+	flash.scale_amount_min = 1.2
+	flash.scale_amount_max = 2.0
+	var fmesh := SphereMesh.new()
+	fmesh.radius = 0.16 * shard_scale
+	fmesh.height = 0.32 * shard_scale
+	var fmat := StandardMaterial3D.new()
+	fmat.albedo_color = Color(1.0, 0.78, 0.4, 0.85)
+	fmat.emission_enabled = true
+	fmat.emission = Color(1.0, 0.6, 0.2)
+	fmat.emission_energy_multiplier = 2.2
+	fmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fmesh.material = fmat
+	flash.draw_mesh = fmesh
+	host.add_child(flash)
 	return host
 
 
