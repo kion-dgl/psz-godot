@@ -118,25 +118,19 @@ func _ready() -> void:
 ## raised kaidan plaza.
 func _add_interactables() -> void:
 	# Nudged ~1.1u forward along their facing (just behind the counter front).
-	# The clerks are Meshy bipeds (mixamorig:* rig) placed un-animated as a
-	# look test (kion 2026-10-20): their bind pose is a natural arms-down
-	# stance, so no idle is wired yet. PSO clips retarget onto this rig via
-	# web/scripts/bake-retarget-mixamo.py (per-character bakes, verified in
-	# the meshy_preview lab); wiring them in waits on the web animation-
-	# targeting pass.
 	_add_npc(
 		"StorageNPC", Vector3(-10.53, -10.67, 114.15), 0.94,
-		"res://assets/npcs/storage_clerk/storage_clerk.glb",
+		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
 		"Storage",
 		"res://scenes/2d/storage.tscn",
-		"", "", "", Vector3(3.6, 3, 3.6)
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	_add_npc(
 		"QuestCounterNPC", Vector3(-7.86, -10.67, 111.39), 0.64,
-		"res://assets/npcs/guild_clerk/guild_clerk.glb",
+		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
 		"Guild Counter",
 		"res://scenes/2d/guild_counter.tscn",
-		"", "", "", Vector3(3.6, 3, 3.6)
+		"pso_f_sa_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	# Coliseum Master (kion): debug enemy lab beside the guild counter — pick any
 	# roster enemy and warp alone with it into the s00a_nr2 coliseum for 1:1 combat
@@ -156,18 +150,6 @@ func _add_interactables() -> void:
 		# disabled the city scene — freezing him mid-greet (the T-pose) and
 		# resuming the bow only when the menu closed. Plain idle throughout.
 		"pso_ro_stand", "", "", Vector3(2.8, 3, 2.8)
-	)
-	# VRM↔PSZ pipeline test (kion 2026-10-20): a stock VRoid Studio export
-	# (VRM 1.0 "example" — J_Bip_* rig) playing the PSO idle through the same
-	# CityNPC path as every other NPC. Clips baked by web/scripts/
-	# bake-retarget-vrm-chibi.py with per-model rest offsets (suffixed _vex).
-	# The model is a committed project asset, so the spawn is unconditional.
-	_add_npc(
-		"VrmTestNPC", Vector3(-8.6, -10.67, 115.5), 0.94,
-		"res://assets/npcs/vrm_example/vrm_example.glb",
-		"VRM Test",
-		"",  # inert interaction — this NPC exists to be looked at
-		"pso_f_sa_stand_vex", "", "", Vector3(1.4, 1.4, 1.4)
 	)
 	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
 	# counter→warp trigger is gone; the teleporter lives in this scene now.
@@ -260,9 +242,6 @@ func _notification(what: int) -> void:
 func _check_quest_accepted() -> void:
 	var data := SceneManager.get_transition_data()
 	if data.get("storage_closed", false):
-		# No-op while the clerks ship un-animated: play_oneshot early-returns
-		# without an idle-bound NPCAnimPlayer. Re-point at the retargeted
-		# clips (plymotiondata_421_stcl) when the animation pass lands.
 		_play_npc_reaction("StorageNPC", "plymotiondata_421")
 		return
 	if not data.get("quest_accepted", false):
@@ -276,8 +255,6 @@ func _check_quest_accepted() -> void:
 	if not counter_npc:
 		return
 	if counter_npc.has_method("play_oneshot"):
-		# No-op while un-animated — see the storage-close note above; the
-		# retargeted clip is pso_f_emote_bow_gucl once wired.
 		counter_npc.play_oneshot("pso_f_emote_bow")
 	# Anchor the bubble to the NPC's live position + head offset. (A stale
 	# hardcoded world pos left it floating far from the repositioned counter.)

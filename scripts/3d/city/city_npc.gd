@@ -21,7 +21,6 @@ const NPC_ANIM_SOURCES := [
 	"res://assets/npcs/item_shop/item_shop_anims.glb",       # in-house Blender-authored (vrm_idle, vrm_bow)
 	"res://assets/npcs/item_shop/vrma_anims.glb",            # pixiv VRoid VRMA pack (vrma_greeting etc.)
 	"res://assets/animations/vrma_psz.glb",                  # VRMA retargeted onto PSZ (reverse direction)
-	"res://assets/npcs/vrm_example/npc_idles_vrm.glb",       # PSO retargeted onto the example VRoid VRM (committed; clips suffixed _vex)
 	"res://assets/player/animations/saver_m.glb",
 	"res://assets/player/animations/saver_w.glb",
 ]
