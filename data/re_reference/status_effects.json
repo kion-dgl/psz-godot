@@ -1,0 +1,925 @@
+{
+ "source": "psz-re tools/statusfx.py, 2026-08-09. Backlog item 30 sub-step 3.",
+ "question": "which effect id is each of the eight ef_stc_* models, what fires it, and under what condition",
+ "answer": "SIX of the eight are the status system, one is a death event, and one is not reached at all. The status index space is exactly six wide -- two effect-id tables, a bit table, three parameter grids and an immunity table all say six -- and the six-way assignment is confirmed three ways that share no step: arm9 behaviour, the item immunity chain through uniprm.rel, and the attack-side roll.",
+ "models": {
+  "ef_stc_poisn": 59,
+  "ef_stc_burn": 60,
+  "ef_stc_para": 61,
+  "ef_stc_conf": 62,
+  "ef_stc_freeze": 63,
+  "ef_stc_slow": 64,
+  "ef_stc_elect": 65,
+  "ef_stc_death": 147
+ },
+ "status_tables": {
+  "table_A": {
+   "address": "0x020ED084",
+   "carrier": "status object at entity+0x64",
+   "consumer": "FUN_0203649C",
+   "rows": [
+    {
+     "index": 0,
+     "effect_id": 60,
+     "model": "ef_stc_burn"
+    },
+    {
+     "index": 1,
+     "effect_id": 63,
+     "model": "ef_stc_freeze"
+    },
+    {
+     "index": 2,
+     "effect_id": 61,
+     "model": "ef_stc_para"
+    },
+    {
+     "index": 3,
+     "effect_id": 62,
+     "model": "ef_stc_conf"
+    },
+    {
+     "index": 4,
+     "effect_id": 59,
+     "model": "ef_stc_poisn"
+    },
+    {
+     "index": 5,
+     "effect_id": 64,
+     "model": "ef_stc_slow"
+    }
+   ]
+  },
+  "table_B": {
+   "address": "0x020ED16C",
+   "carrier": "status object at entity+0x158",
+   "consumer": "FUN_0203A258",
+   "rows": [
+    {
+     "index": 0,
+     "effect_id": 60,
+     "model": "ef_stc_burn"
+    },
+    {
+     "index": 1,
+     "effect_id": 63,
+     "model": "ef_stc_freeze"
+    },
+    {
+     "index": 2,
+     "effect_id": 61,
+     "model": "ef_stc_para"
+    },
+    {
+     "index": 3,
+     "effect_id": 62,
+     "model": "ef_stc_conf"
+    },
+    {
+     "index": 4,
+     "effect_id": 59,
+     "model": "ef_stc_poisn"
+    },
+    {
+     "index": 5,
+     "effect_id": 64,
+     "model": "ef_stc_slow"
+    }
+   ]
+  },
+  "tables_agree": true,
+  "freeze_literals": {
+   "0x02036572": {
+    "via": "descriptor +0x54, FUN_02046D94",
+    "ids": [
+     63
+    ],
+    "names": [
+     "ef_stc_freeze"
+    ]
+   },
+   "0x0203A3CE": {
+    "via": "register argument to FUN_0203B8EC",
+    "encoding": "0x213F",
+    "immediate": 63,
+    "is_movs": true
+   }
+  },
+  "death_literal": {
+   "site": "0x02036728",
+   "via": "descriptor +0x54, FUN_02046D94",
+   "ids": [
+    147
+   ],
+   "names": [
+    "ef_stc_death"
+   ]
+  },
+  "slot_1_is_special_cased": true,
+  "note": "both consumers branch on index 1 BEFORE the table read, so the table's own entry for 1 is dead code -- and it matches the literal the branch uses"
+ },
+ "status_bits": {
+  "address": "0x020ED154",
+  "bits": [
+   9,
+   10,
+   11,
+   12,
+   13,
+   14
+  ],
+  "contiguous": true,
+  "flag_word": "entity+0xF8 (param_1[0x3E])"
+ },
+ "parameter_grids": {
+  "tick_interval": {
+   "address": "0x020F2CE0",
+   "reader": "FUN_0207F7A4",
+   "unit": "0x1000 per frame",
+   "grid": [
+    [
+     368640,
+     368640,
+     368640,
+     368640,
+     368640
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     614400,
+     614400,
+     614400,
+     614400,
+     614400
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "nonzero_rows": [
+    0,
+    4
+   ]
+  },
+  "duration": {
+   "address": "0x020F2D58",
+   "reader": "FUN_0207F7D8",
+   "unit": "0x1000 per frame",
+   "grid": [
+    [
+     1351680,
+     1351680,
+     1351680,
+     1351680,
+     1351680
+    ],
+    [
+     491520,
+     491520,
+     491520,
+     491520,
+     491520
+    ],
+    [
+     184320,
+     245760,
+     307200,
+     368640,
+     430080
+    ],
+    [
+     1228800,
+     1351680,
+     1474560,
+     1597440,
+     1720320
+    ],
+    [
+     3809280,
+     4423680,
+     5038080,
+     5652480,
+     6266880
+    ],
+    [
+     737280,
+     860160,
+     983040,
+     1105920,
+     1228800
+    ]
+   ]
+  },
+  "magnitude": {
+   "address": "0x020F2DD0",
+   "readers": [
+    "FUN_0207F808 (rows 0 and 4: HP fraction per tick)",
+    "FUN_0207F774 (row 1 only: incoming-damage multiplier)"
+   ],
+   "unit": "4096 = 1.0",
+   "grid": [
+    [
+     172,
+     205,
+     233,
+     258,
+     279
+    ],
+    [
+     4915,
+     5734,
+     6554,
+     7373,
+     8192
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     123,
+     123,
+     123,
+     123,
+     123
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "nonzero_rows": [
+    0,
+    1,
+    4
+   ]
+  },
+  "frames": {
+   "tick": [
+    90.0,
+    0.0,
+    0.0,
+    0.0,
+    150.0,
+    0.0
+   ],
+   "duration_level1": [
+    330.0,
+    120.0,
+    45.0,
+    300.0,
+    930.0,
+    180.0
+   ],
+   "duration_level5": [
+    330.0,
+    120.0,
+    105.0,
+    420.0,
+    1530.0,
+    300.0
+   ]
+  }
+ },
+ "behaviour": {
+  "rows": [
+   {
+    "index": 0,
+    "behaviour": "damage over time",
+    "evidence": [
+     "FUN_0207F690 `cmp r1,#0x0`",
+     "tick 90 frames",
+     "magnitude scales with level: [4.2, 5.0, 5.7, 6.3, 6.8] % of max HP"
+    ]
+   },
+   {
+    "index": 1,
+    "behaviour": "immobilise, animation-lock, amplify incoming damage",
+    "evidence": [
+     "FUN_0203A258 writes movement speed 0",
+     "FUN_02036A4C -> FUN_02042560 pauses every part's animation",
+     "FUN_0207F774 returns 0x1000 for every index but 1, and FUN_02042A4C multiplies the computed damage by it: [1.2, 1.4, 1.6, 1.8, 2.0]",
+     "cleared outright by hit flag 0x400 in FUN_0207F540",
+     "the only one of the eight models with no .nsbca/.nsbma"
+    ]
+   },
+   {
+    "index": 2,
+    "behaviour": "animation-lock without a movement penalty",
+    "evidence": [
+     "FUN_02036A4C from arm 2 of FUN_0203649C's switch",
+     "FUN_0203A258 leaves movement speed at base",
+     "shortest duration of the six: 45..105 frames"
+    ]
+   },
+   {
+    "index": 3,
+    "behaviour": "retarget",
+    "evidence": [
+     "FUN_02037294 `== 3` resolves a DIFFERENT entity and asserts it is not the caller's own",
+     "FUN_02037404, FUN_0207AEEC, FUN_0207CFAC switch the target selector to mode 3"
+    ]
+   },
+   {
+    "index": 4,
+    "behaviour": "damage over time, weak, flat, long",
+    "evidence": [
+     "FUN_0207F690 `cmp r1,#0x4`",
+     "tick 150 frames, slower than index 0",
+     "magnitude does NOT scale with level: [3.0, 3.0, 3.0, 3.0, 3.0] % of max HP",
+     "longest duration of the six: 930..1530 frames"
+    ]
+   },
+   {
+    "index": 5,
+    "behaviour": "half movement speed, slowed animation",
+    "evidence": [
+     "FUN_0203A258 writes movement speed base/2",
+     "FUN_02036B30 rescales every part's animation rate"
+    ]
+   }
+  ],
+  "dot_indexes_from_code": [
+   0,
+   4
+  ],
+  "dot_indexes_from_data": [
+   0,
+   4
+  ]
+ },
+ "immunity": {
+  "address": "0x020F5944",
+  "attribute_ids": [
+   31,
+   32,
+   33,
+   34,
+   35,
+   36
+  ],
+  "wildcard": 39,
+  "consumer": "FUN_020B6D7C -> FUN_020B73FC(equipment, attributeId)",
+  "mask_builders": [
+   "FUN_020B9378",
+   "FUN_020AAA4C"
+  ],
+  "mask_field": "defender stat block +0x30, six bits, one per status",
+  "contiguous": true
+ },
+ "uniprm": {
+  "file": "item/uniprm.rel",
+  "decompressed": 960,
+  "region_a": "0x20",
+  "root": "0x380",
+  "array": "0x30",
+  "count": 94,
+  "stride": 9,
+  "record": "{u16 kind, u8 attribute, u16 reserved, i32 value}",
+  "array_end": "0x37E",
+  "array_fits_before_root": true,
+  "reserved_always_zero": true,
+  "search_hits": [
+   {
+    "stride": 9,
+    "record0_byte": "0x32"
+   }
+  ],
+  "search_space": 1080,
+  "protect_units": {
+   "77": 31,
+   "78": 32,
+   "79": 33,
+   "80": 34,
+   "81": 35,
+   "82": 36
+  },
+  "protect_units_carry_no_magnitude": true,
+  "column_in_range": true,
+  "distinct_attributes": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   15,
+   16,
+   17,
+   18,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   28,
+   29,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   40,
+   41,
+   43
+  ]
+ },
+ "item_text": {
+  "group": 80,
+  "rows": [
+   {
+    "status_index": 0,
+    "unit": 77,
+    "name": "Heat Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst combustion.",
+    "protects_against": "combustion"
+   },
+   {
+    "status_index": 1,
+    "unit": 78,
+    "name": "Ice Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst freezing.",
+    "protects_against": "freezing"
+   },
+   {
+    "status_index": 2,
+    "unit": 79,
+    "name": "Stun Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst paralysis",
+    "protects_against": "paralysis"
+   },
+   {
+    "status_index": 3,
+    "unit": 80,
+    "name": "Light Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst confusion.",
+    "protects_against": "confusion"
+   },
+   {
+    "status_index": 4,
+    "unit": 81,
+    "name": "Dark Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst poisoning.",
+    "protects_against": "poisoning"
+   },
+   {
+    "status_index": 5,
+    "unit": 82,
+    "name": "Slow Protect",
+    "description": "Slot into armor to use.\nProvides complete protection\nagainst slowdown.",
+    "protects_against": "slowdown"
+   }
+  ],
+  "alignment_control": [
+   {
+    "index": 68,
+    "name": "Dark Resist Lv 4",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 69,
+    "name": "Dark Resist Lv 5",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 70,
+    "name": "All Resist Lv 1",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 71,
+    "name": "All Resist Lv 2",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 72,
+    "name": "All Resist Lv 3",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 73,
+    "name": "All Resist Lv 4",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 74,
+    "name": "All Resist Lv 5",
+    "description": "Slot into armor to use.\nBoosts resistanc"
+   },
+   {
+    "index": 75,
+    "name": "Element Boost",
+    "description": "Slot into armor to use.\nUps element leve"
+   },
+   {
+    "index": 76,
+    "name": "Tech-Level Boost",
+    "description": "Slot into armor to use.\nUps technique le"
+   },
+   {
+    "index": 86,
+    "name": "Compress PA",
+    "description": "Slot into armor to use.\nShortens charge "
+   },
+   {
+    "index": 87,
+    "name": "PA Save Lv 1",
+    "description": "Slot into armor to use.\nSlightly cuts ph"
+   },
+   {
+    "index": 88,
+    "name": "PA Save Lv 2",
+    "description": "Slot into armor to use.\nCuts photon arts"
+   },
+   {
+    "index": 89,
+    "name": "PA Save Lv 3",
+    "description": "Slot into armor to use. Cuts\nphoton arts"
+   }
+  ]
+ },
+ "attack_side": {
+  "roller": "FUN_02042A4C",
+  "attack_kind_field": "attack+0x8C",
+  "kind_to_status": {
+   "1": 0,
+   "2": 1,
+   "3": 2,
+   "4": 3,
+   "5": 4,
+   "14": 5
+  },
+  "explicit_override": "attack+0x3C; when it is not -1 it IS the status index and level/chance/duration come from attack+0x40/+0x44/+0x48 instead of +0x90/+0x94",
+  "chance": "chance * (100 - (defender+0x4C + defender+0x50 + defender+0x54)) / 100, rolled through FUN_02086D8C; skipped entirely when the immunity bit for that index is set in defender+0x30",
+  "written_to": {
+   "+0x0C": "status index",
+   "+0x0D": "level 1..5",
+   "+0x0E": "duration override, 0 means use the grid"
+  },
+  "applier": "FUN_0207F540(statusObject, record)",
+  "applier_flags": {
+   "0x40": "clear any status",
+   "0x400": "clear only index 1"
+  },
+  "carrier_from": "FUN_02036148 passes damagePacket+8 as the record",
+  "damage_packet_fields": {
+   "+0x14": "status index (record +0x0C)",
+   "+0x15": "status level (record +0x0D)",
+   "+0x16": "duration override (record +0x0E)",
+   "+0x17/+0x18": "the two stat-modifier slots (record +0x0F/+0x10)"
+  },
+  "extends": "data/damage_packet.json, which stops at +0x13 and +0x20"
+ },
+ "death": {
+  "effect_id": 147,
+  "model": "ef_stc_death",
+  "spawner": "0x020366E4",
+  "site": "0x02036728",
+  "descriptor_field": "+0x54",
+  "caller": "0x020514DC",
+  "command": "dispatch table 0x020F28C4, category 4, index 1 (handler 0x020514C5)",
+  "condition": "bit 30 of the command packet's +0x08 word; bit 31 clear. Bit 30 clear takes the other arm and shows a floating number through FUN_020369C8 instead",
+  "also_on_that_path": "FUN_0207F4FC clears the whole status object first",
+  "not_a_status": "no entry in either 6-slot table; no index maps to 147"
+ },
+ "unlocated": {
+  "effect_id": 65,
+  "model": "ef_stc_elect",
+  "producer": null,
+  "eliminated": [
+   "the two status tables (0x020ED084, 0x020ED16C): six entries each, no 65 -- the status space is six wide and the bit table, the three parameter grids and the immunity table all agree on six",
+   "the descriptor +0x54 spawn scan: 64 literal of 98 FUN_02046D94 sites over arm9 and all 32 overlays, 35 distinct ids, no 65",
+   "the register-argument scan: 40 literal of 51 effect-API sites, 30 distinct ids, no 65",
+   "the enemy attachment table: 314 records, ids {38, 39, 59, 96}",
+   "item/paeff00..16.rel: 109 records, 55 distinct ids, no 65",
+   "every `movs rX,#65` in arm9 and all 32 overlays followed within 12 halfwords by a BL to any of the seven effect entry points: 0 hits. The two `movs rX,#0x41` that a naive scan reports are struct offsets -- 0x02040C86 is 0x41<<2 = +0x104 and its callee FUN_02036B30 takes one argument"
+  ],
+  "refuted_lead": {
+   "what": "the arrays at 0x020ED338 and 0x020F4434, which open with 59,60,61,62,63,64 and contain 65",
+   "why_it_is_wrong": "0x020ED338 is entries 9..33 of the 34-entry table at 0x020ED314 that FUN_0203AAF0 indexes with the byte at entity+0x4D (`< 0x22`) and passes to FUN_020C193C with 0x020ED204 and 0x020ED28C. Sound ids, not effect ids"
+  },
+  "what_is_left": "not a static question yet: the id would have to arrive in a descriptor field written from data, so the next instrument is a savestate with a shock effect on screen"
+ },
+ "poison_override_correction": {
+  "per_effect_id": {
+   "38": {
+    "records": 9,
+    "reuse_own_model": 0,
+    "substituted_models": [
+     "ef_com_exp02.nsbmd"
+    ],
+    "species": [
+     "board",
+     "board_blue",
+     "board_green",
+     "quad",
+     "quad_rare",
+     "shooter",
+     "shooter_leader",
+     "tank",
+     "tank_rare"
+    ]
+   },
+   "39": {
+    "records": 12,
+    "reuse_own_model": 10,
+    "substituted_models": [
+     "ef_e_l_bom.nsbmd",
+     "ef_e_m_brhit.nsbmd"
+    ],
+    "species": [
+     "board",
+     "board_blue",
+     "board_green",
+     "boss_dragon",
+     "boss_robot_cmb",
+     "frog_bomb",
+     "quad",
+     "quad_rare",
+     "shooter",
+     "shooter_leader",
+     "tank",
+     "tank_rare"
+    ]
+   },
+   "59": {
+    "records": 23,
+    "reuse_own_model": 0,
+    "substituted_models": [
+     "ef_e_d_fog.nsbmd",
+     "ef_e_l_hov.nsbmd",
+     "ef_e_m_fogc.nsbmd",
+     "ef_e_m_jmp.nsbmd",
+     "ef_e_m_kaze.nsbmd",
+     "ef_e_m_stt.nsbmd",
+     "ef_e_s_wbr.nsbmd",
+     "ef_en_m_dfog.nsbmd"
+    ],
+    "species": [
+     "boss_dragon",
+     "boss_mother",
+     "boss_robot",
+     "boss_robot_cmb",
+     "deer",
+     "gorilla",
+     "gorilla_female",
+     "gorilla_rare",
+     "hyena",
+     "hyena_rare",
+     "lion",
+     "lion_rare",
+     "lizard",
+     "rabbit",
+     "rabbit_rare",
+     "snake",
+     "snake_rare",
+     "vulture",
+     "wolf"
+    ]
+   },
+   "96": {
+    "records": 39,
+    "reuse_own_model": 39,
+    "substituted_models": [],
+    "species": [
+     "armadillo",
+     "armadillo_rare",
+     "bat",
+     "bat_blue",
+     "deer",
+     "frog",
+     "frog_bomb",
+     "frog_rare",
+     "gorilla",
+     "gorilla_female",
+     "gorilla_rare",
+     "hyena",
+     "hyena_rare",
+     "lion",
+     "lion_rare",
+     "lizard",
+     "mole",
+     "mother",
+     "mother_gun",
+     "mother_sword",
+     "mother_tech",
+     "orangutan",
+     "orangutan_rare",
+     "rabbit",
+     "rabbit_rare",
+     "rappy",
+     "rappy_blue",
+     "rappy_red",
+     "roc",
+     "roc_rare",
+     "seal",
+     "seal_rare",
+     "shrimp",
+     "shrimp_rare",
+     "snake",
+     "snake_rare",
+     "tiger",
+     "vulture",
+     "wolf"
+    ]
+   }
+  },
+  "claim": "id 59 is borrowed as a slot: 0 of its 23 records use ef_stc_poisn's own model, against 39 of 39 for id 96 and 10 of 12 for id 39",
+  "consequence": "the ef_stc_poisn MODEL reaches the screen only through the status path"
+ },
+ "sound_table_refutation": {
+  "table": "0x020ED314",
+  "entries": 34,
+  "values": [
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63,
+   64,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   34,
+   35,
+   36,
+   37
+  ],
+  "consumer": "FUN_0203AAF0 -> FUN_020C193C",
+  "index": "the byte at entity+0x4D, bounded `< 0x22`",
+  "companions": [
+   "0x020ED204",
+   "0x020ED28C"
+  ],
+  "the_lookalike": "0x020ED338 is entry 9 of this table, and reads 59,60,61,62,63,64,... which is why it passed for an effect-id list",
+  "contains_65": true
+ },
+ "scoring": {
+  "actual": [
+   60,
+   63,
+   61,
+   62,
+   59,
+   64
+  ],
+  "candidates": {
+   "item_description_order": {
+    "predicted": [
+     60,
+     63,
+     61,
+     62,
+     59,
+     64
+    ],
+    "exact": 6,
+    "rate": 100.0
+   },
+   "item_NAME_order (adversarial: the game's own five-element series)": {
+    "predicted": [
+     60,
+     63,
+     null,
+     null,
+     null,
+     64
+    ],
+    "exact": 3,
+    "rate": 50.0
+   },
+   "ascending_archive_id_order (adversarial)": {
+    "predicted": [
+     59,
+     60,
+     61,
+     62,
+     63,
+     64
+    ],
+    "exact": 3,
+    "rate": 50.0
+   },
+   "rotation_1 of the accepted assignment (adversarial)": {
+    "predicted": [
+     63,
+     61,
+     62,
+     59,
+     64,
+     60
+    ],
+    "exact": 0,
+    "rate": 0.0
+   },
+   "rotation_2 of the accepted assignment (adversarial)": {
+    "predicted": [
+     61,
+     62,
+     59,
+     64,
+     60,
+     63
+    ],
+    "exact": 0,
+    "rate": 0.0
+   },
+   "rotation_3 of the accepted assignment (adversarial)": {
+    "predicted": [
+     62,
+     59,
+     64,
+     60,
+     63,
+     61
+    ],
+    "exact": 0,
+    "rate": 0.0
+   },
+   "rotation_4 of the accepted assignment (adversarial)": {
+    "predicted": [
+     59,
+     64,
+     60,
+     63,
+     61,
+     62
+    ],
+    "exact": 0,
+    "rate": 0.0
+   },
+   "rotation_5 of the accepted assignment (adversarial)": {
+    "predicted": [
+     64,
+     60,
+     63,
+     61,
+     62,
+     59
+    ],
+    "exact": 0,
+    "rate": 0.0
+   }
+  },
+  "discrimination": "the accepted chain scores 6 of 6; the game's own competing text order scores 3 of 6; ascending archive order scores 2 of 6; all five rotations score 0 of 6"
+ }
+}

@@ -1462,7 +1462,7 @@ func get_weapon_type_config(weapon_type: int) -> Dictionary:
 		var fa := FileAccess.open("res://data/re_reference/original_attack_timing.json", FileAccess.READ)
 		if fa:
 			var json := JSON.new()
-			if json.parse(fa.get_as_string()) == OK and json.data is Dictionary:
+			if json.parse(fa.get_as_text()) == OK and json.data is Dictionary:
 				_original_timing_types = json.data.get("types", {})
 			fa.close()
 	var original: Dictionary = _original_timing_types.get(str(weapon_type), {})

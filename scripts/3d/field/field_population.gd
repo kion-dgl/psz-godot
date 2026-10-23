@@ -327,7 +327,7 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 					# the record's +0x12 byte: variant within the factory kind
 					# (walls pick the stage model, containers go plain/rare,
 					# type-19 traps pick their burst element)
-					"v": int(b.get("variant", 0)),
+					"v": int(b["variant"]) if b.get("variant") != null else 0,
 				})
 		var trap_entry: Dictionary = trap_room.get(key, {})
 		var trap_sizes: Array = trap_entry.get("group_sizes") if trap_entry.get("group_sizes") is Array else []
@@ -349,7 +349,7 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 					"z": float(p.get("z", 0.0)),
 					"a": int(p.get("angle", 0)),
 					"m": "",
-					"v": int(p.get("variant", 0)),
+					"v": int(p["variant"]) if p.get("variant") != null else 0,
 				})
 		# Union with the legacy corpus: a legacy record the newer decodes do
 		# not carry at any matching position is kept verbatim — both exports
