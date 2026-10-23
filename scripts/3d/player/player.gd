@@ -199,6 +199,7 @@ var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
 var _attack_hit_done: bool = false  # Window closed, target cap consumed, or volley released.
+var _attack_hit_step: int = 0  # Index into the original timing's hit_fracs for this swing.
 var _attack_hit_targets: Dictionary = {}  # Enemy instance IDs consumed across this swing.
 var _attack_damage_snapshot: Dictionary = {}  # One damage roll per swing, independent of scan rate.
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
@@ -1529,7 +1530,22 @@ func _try_queue_combo(special: bool) -> void:
 	if t.is_empty():
 		return
 	var frac := _attack_frac()
-	if frac >= float(t.just_start):
+	# Original chain window (data/re_reference/original_attack_timing.json):
+	# the follow-up press chains only inside [chain_open, chain_close]; the
+	# opening REPLACES the tuned just_start, and a press past the close is
+	# neither queued nor fumbled — the combo simply drops at swing end.
+	var timing_steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
+	var open := float(t.just_start)
+	var close := -1.0
+	if not timing_steps.is_empty():
+		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
+		if step.get("chain_open_frac") != null:
+			open = float(step["chain_open_frac"])
+		if step.get("chain_close_frac") != null:
+			close = float(step["chain_close_frac"])
+	if close >= 0.0 and frac > close:
+		return
+	if frac >= open:
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
 		_queued_combo_yaw = _held_movement_yaw()
@@ -2216,11 +2232,28 @@ func _handle_attack_state(delta: float) -> void:
 
 ## Melee retries until close/cap; ranged keeps one release. A skipped window
 ## gets one current-position scan so slow frames do not erase the whole swing.
+## With original timing data (original_timing_steps), damage instead fires at
+## each decoded HIT FRAME — multi-hit swings (dagger atk1's two impacts,
+## atk3's three) land every one, at the original's frame-exact moments.
 func _update_attack_contact(previous_elapsed: float) -> void:
 	if current_state != PlayerState.ATTACKING or _attack_hit_done or combo_state <= 0 or _attack_anim_length <= 0:
 		return
 	var weapon_type := _get_equipped_weapon_type()
 	var config := CombatManager.get_weapon_type_config(weapon_type)
+	var timing_steps: Array = config.get("original_timing_steps", [])
+	if not timing_steps.is_empty():
+		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
+		var hit_fracs: Array = step.get("hit_fracs", [])
+		# An EMPTY hit list (slicer atk2/atk3, the thrown discs) means the
+		# damage rides the projectile, not a swing frame — take the legacy
+		# window path for those rather than ending the swing with no hit.
+		while not hit_fracs.is_empty() and _attack_hit_step < hit_fracs.size() \
+				and _attack_anim_elapsed >= float(hit_fracs[_attack_hit_step]) * _attack_anim_length:
+			_execute_attack_hit()
+			_attack_hit_step += 1
+		if not hit_fracs.is_empty():
+			_attack_hit_done = _attack_hit_step >= hit_fracs.size()
+			return
 	var openings: Array = config.get("damaging_frac", [0.4, 0.4, 0.45])
 	var index := clampi(combo_state - 1, 0, openings.size() - 1)
 	var opening := float(openings[index]) * _attack_anim_length
@@ -2329,6 +2362,7 @@ func _play_and_track_attack(anim_name: String) -> void:
 	_arm_attack_step(anim_name)
 	# Each new swing owns a fresh window and target budget.
 	_attack_hit_done = false
+	_attack_hit_step = 0
 	_attack_hit_targets.clear()
 	_attack_damage_snapshot.clear()
 	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).

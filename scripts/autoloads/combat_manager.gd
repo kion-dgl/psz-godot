@@ -1445,9 +1445,30 @@ func _check_wave_cleared() -> void:
 		wave_cleared.emit()
 
 
+## Frame-exact original attack timing per weapon type, merged into the type
+## config at runtime (data/re_reference/original_attack_timing.json, derived
+## from the emulator-validated psz-re decode of the pa00 attack records:
+## hit frames, chain windows, clip lengths). Types without an entry keep
+## their tuned WEAPON_TYPE_CONFIGS values.
+static var _original_timing_types: Dictionary = {}
+static var _original_timing_loaded := false
+
+
 ## Get weapon type config, falling back to saber defaults
 func get_weapon_type_config(weapon_type: int) -> Dictionary:
-	return WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])
+	var config: Dictionary = WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])
+	if not _original_timing_loaded:
+		_original_timing_loaded = true
+		var fa := FileAccess.open("res://data/re_reference/original_attack_timing.json", FileAccess.READ)
+		if fa:
+			var json := JSON.new()
+			if json.parse(fa.get_as_string()) == OK and json.data is Dictionary:
+				_original_timing_types = json.data.get("types", {})
+			fa.close()
+	var original: Dictionary = _original_timing_types.get(str(weapon_type), {})
+	if original.is_empty():
+		return config
+	return config.merged({"original_timing_steps": original.get("steps", [])})
 
 
 ## Heading sampled on the accepted press; applied before the next committed swing.
