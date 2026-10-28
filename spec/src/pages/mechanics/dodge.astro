@@ -6,33 +6,52 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Dodge" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>A forward roll in the facing direction at the moment the dodge starts. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>animation commitment</em> plus a short invincibility window: a poorly-timed roll is a punish (see <a href={siteUrl('/states/player-state')}>Player State Machine → Action commitment</a>).</p>
+  <p>A committed roll in the <em>steering</em> direction at the moment the dodge is admitted. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>commitment</em>: the full 41-frame action must play out, its displacement curve is front-loaded, and it grants <strong>no damage immunity</strong> — the roll is safe because it moves the player and passes through bodies, not because hits whiff (see <a href={siteUrl('/states/player-state')}>Player State Machine → Action commitment</a>).</p>
 
-  <h2>Phases and timing</h2>
+  <h2>Phases and timing (30 fps action clock)</h2>
   <table>
     <thead><tr><th>Phase</th><th>Window</th><th>Behavior</th></tr></thead>
     <tbody>
-      <tr><td><strong>I-frames</strong></td><td><code>0 … DODGE_IFRAME_DURATION</code> (0.2&nbsp;s ≈ 11 frames)</td><td>Invincible: a hit does no damage and does not interrupt the roll.</td></tr>
-      <tr><td><strong>Move</strong></td><td><code>0 … clip_length × DODGE_MOVE_FRACTION</code> (0.7)</td><td>Velocity at <code>DODGE_SPEED</code> (7.0) in the cached direction; edge-checked so the roll will not leave the floor.</td></tr>
-      <tr><td><strong>Recovery</strong></td><td>rest of the clip</td><td>Velocity zeroed; crouch-and-stand plays out. Fully vulnerable.</td></tr>
+      <tr><td><strong>Pass-through</strong></td><td>frames 0–9 (0.33 s)</td><td>Body contact disabled: the rolling player passes through enemies and push bodies; contact-based charge stops do not register.</td></tr>
+      <tr><td><strong>Roll</strong></td><td>frames 0–19</td><td>Displacement follows the original root-motion curve (see below); the visual clip is the weapon-set's <code>&lt;prefix&gt;_esc_f</code>.</td></tr>
+      <tr><td><strong>Get-up</strong></td><td>frames 20–40</td><td>Root motion decays to a small forward drift then a settle-back to the final root; fully vulnerable; contact re-enabled from frame 10.</td></tr>
+      <tr><td><strong>Completion</strong></td><td>frame 41</td><td>Logical position snaps to the final drawn root; the idle or run loop attaches immediately with no blend.</td></tr>
     </tbody>
   </table>
   <ul>
-    <li>The i-frame window <strong>MUST</strong> be the fixed <code>DODGE_IFRAME_DURATION</code> (0.2&nbsp;s) from roll start — <strong>not</strong> the whole move phase. Past the window, a hit interrupts the roll (DODGING → DAMAGED/DOWN). <em>History: #273 used the move phase (≈ 0.47&nbsp;s for saber); #377 tightened it.</em></li>
-    <li>The roll <strong>MUST NOT</strong> be player-cancelable — not by attack, not by another dodge. It commits until the clip finishes (or damage outside the i-frames interrupts it).</li>
-    <li>A dodge input while ATTACKING <strong>MUST</strong> be ignored — the swing completes first.</li>
+    <li>The action <strong>MUST</strong> last 41 frames (1.367 s), weapon-independent — the extracted <code>_esc_f</code> clip (20 frames) is the roll half only; the full action chains the get-up.</li>
+    <li>Displacement <strong>MUST</strong> follow the original per-frame curve (<code>data/re_reference/player_dodge_motion.json</code>): burst over frames 2–5, a ≈1085 Q12/frame plateau through frame 13, decay to frame 25, then settle-back; total travel 17901 Q12 ≈ 4.37 u in the dodge direction (the curve's small ±x wobble is the roll arc and <strong>SHOULD</strong> be kept). A constant-velocity roll <strong>MUST NOT</strong> be used.</li>
+    <li>A dodge admitted while RUNNING <strong>SHOULD</strong> add one run-speed step in the dodge direction on the admission frame (the ROM's motion integrate applies the carried run speed once before clearing it).</li>
+    <li>The roll <strong>MUST</strong> stop at floor edges (the ROM's root-floor reconciliation restores the last on-floor root) — it cannot leave the floor.</li>
+  </ul>
+
+  <h2>Durability — the 2026-10 ROM correction</h2>
+  <p><strong>There are no dodge i-frames.</strong> The ROM's hit-reaction gate (<code>pszm_actor_hit</code>) excludes the knockdown/dead states (19–22, 27, 28) and the special states (23–25) — dodge (state 15) is <em>not</em> excluded: a hit at any point of the roll damages the player and interrupts the action, and a hit during states 12/15 additionally resets the actor position to the banked root. The 10-frame flag the dodge sets gates <em>body contact</em> (the roll-through), not damage. <em>History: #273 gave the roll the whole move phase as i-frames; #377 tightened it to a fixed 0.2 s window; the decoded ROM removes damage immunity entirely — the pass-through window replaces it.</em></p>
+  <ul>
+    <li><code>take_damage</code> during DODGING <strong>MUST</strong> apply damage and interrupt (DODGING → DAMAGED/DOWN) at every frame of the action, exactly as when idle.</li>
+    <li>For the first 10 frames, enemy body contact and contact-based reactions <strong>MUST</strong> pass through the rolling player (a charging enemy does not stop on the roll).</li>
+  </ul>
+
+  <h2>Admission</h2>
+  <ul>
+    <li>A dodge input while ATTACKING or DODGING <strong>MUST</strong> be ignored — the current action commits first (busy-press replay case).</li>
+    <li>Holding the dodge button <strong>MUST NOT</strong> chain rolls — one roll per press (held-no-repeat replay case).</li>
+    <li>A dodge <strong>MUST NOT</strong> be admitted within 10 frames of the previous admission (the tick gate) or during the 15-frame spawn/scene warmup.</li>
+    <li>The dodge direction <strong>MUST</strong> be the steering held entering the press frame: while running, the current movement direction; while idle, the facing. A direction pressed on the same frame as the dodge <strong>MUST NOT</strong> redirect it (simultaneous-turn replay case).</li>
     <li>Starting a dodge <strong>MUST</strong> drop an in-progress technique charge.</li>
-    <li>The move phase scales to the active weapon's <code>&lt;prefix&gt;_esc_f</code> clip length (falling back to <code>DODGE_DURATION</code>, 0.8&nbsp;s), so travel distance is partly weapon-driven. The i-frame window does <strong>not</strong> scale — it is 0.2&nbsp;s for every weapon.</li>
   </ul>
 
   <h2>Reference</h2>
-  <p>The in-repo <code>dodge-debug</code> tool (web mock at <code>#/dodge-debug</code>) visualizes the roll and i-frames for tuning — to be ported here as an interactive view.</p>
+  <ul>
+    <li><code>data/re_reference/player_dodge_motion.json</code> — the 41-frame displacement curve (rerun: <code>scripts/tools/dump_player_dodge_motion.py --evidence &lt;pszm-decomp&gt;/native/evidence/player-dodge-frame-rom.json</code>).</li>
+    <li><code>pszm-decomp</code> <code>native/runtime/player_frame.c</code> (admission gates, 41-frame action clock, completion attach), <code>native/runtime/action_animation.c</code> (motion 3 length), <code>native/runtime/actor_hit.c</code> (state-15 hit reaction — no immunity), <code>player-dodge-frame-rom.json</code> / <code>player-dodge-input-rom.json</code> (ROM replays: 41-frame timeline, root trace, admission cases).</li>
+    <li>The in-repo <code>dodge-debug</code> tool (web mock at <code>#/dodge-debug</code>) visualized the authored i-frame model — retained for history, superseded by this page.</li>
+  </ul>
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_dodge</code> guards commitment (no-op during ATTACKING/DODGING), caches the facing direction, and scales the move phase to the active weapon's <code>_esc_f</code> clip length; <code>_handle_dodge</code> drives the roll at <code>DODGE_SPEED</code> for the move fraction (with an edge check so it won't roll off a ledge), then zeroes velocity through the recovery and returns to IDLE; <code>take_damage</code> is a no-op while DODGING with <code>dodge_timer &lt; DODGE_IFRAME_DURATION</code>.</li>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_dodge</code> guards commitment and cooldown, caches the steering direction, and seeds the roll with one run-speed step when admitted from RUNNING; <code>_handle_dodge</code> steps the ROM displacement curve per frame with the floor edge check; completion snaps to the final root and returns to IDLE; <code>take_damage</code> treats DODGING like IDLE (no immunity window); the pass-through window gates contact-based interactions.</li>
   </ul>
-  <p>Status: <strong>implemented (#273, tightened by #377)</strong> — <code>test_player_states</code> pins both sides of the 0.2&nbsp;s window; <code>test_action_commitment</code> pins the no-cancel rules.</p>
 
   <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

@@ -39,10 +39,27 @@ const STORAGE_KEY = 'psz-enemy-room:v1';
 
 const PLAYER_SPEED = 5.0;
 const PLAYER_RADIUS = 0.4;
-const DODGE_DURATION = 0.4;
-const DODGE_SPEED = 8.0;
-/** player.gd:247 DODGE_IFRAME_DURATION — first 0.2s of the dodge is invincible. */
-const DODGE_IFRAME_DURATION = 0.2;
+/** ROM dodge action (spec /mechanics/dodge): 41 frames @30fps, roll + get-up. */
+const DODGE_FRAMES = 41;
+const DODGE_DURATION = DODGE_FRAMES / 30;
+/** ROM per-frame root-motion displacement in units (dodge-local: +z = dodge
+ *  direction, +x = right) — data/re_reference/player_dodge_motion.json. */
+const DODGE_CURVE: ReadonlyArray<readonly [number, number]> = [
+  [0.0000, 0.0000], [0.0320, 0.0337], [0.0322, 0.1653], [-0.0054, 0.6079],
+  [-0.0054, 0.6418], [-0.0049, 0.3613], [-0.0049, 0.2747], [-0.0049, 0.2649],
+  [-0.0046, 0.2649], [-0.0029, 0.2629], [-0.0029, 0.3088], [-0.0005, 0.2905],
+  [-0.0005, 0.2156], [0.0037, 0.1675], [0.0037, 0.1416], [0.0066, 0.1226],
+  [0.0068, 0.0981], [0.0093, 0.0803], [0.0093, 0.0688], [0.0063, 0.0510],
+  [0.0066, 0.0273], [0.0007, 0.0112], [0.0010, 0.0078], [0.0000, 0.0044],
+  [0.0002, 0.0020], [-0.0007, -0.0005], [-0.0007, -0.0022], [-0.0020, -0.0037],
+  [-0.0020, -0.0044], [-0.0034, -0.0046], [-0.0032, -0.0046], [-0.0051, -0.0054],
+  [-0.0049, -0.0071], [-0.0068, -0.0085], [-0.0066, -0.0098], [-0.0078, -0.0103],
+  [-0.0076, -0.0110], [-0.0081, -0.0110], [-0.0078, -0.0110], [-0.0076, -0.0107],
+];
+/** ROM correction 2026-10: no dodge i-frames — every frame of the roll is
+ *  damageable; the first 10 frames pass body contact through (color only
+ *  here — the mock's attacks resolve against the player regardless). */
+const DODGE_PASS_THROUGH = 10 / 30;
 const PLAYER_MAX_HP = 100;
 const ARENA_HALF = 11;
 
@@ -557,8 +574,15 @@ export default function EnemyRoom() {
         p.moveDir = ml > 0 ? { x: mx / ml, z: mz / ml } : { x: 0, z: 0 };
         if (p.dodgeTimer > 0) {
           p.dodgeTimer -= clock.dt;
-          p.pos.x += p.dodgeDir.x * DODGE_SPEED * clock.dt;
-          p.pos.z += p.dodgeDir.z * DODGE_SPEED * clock.dt;
+          // ROM displacement curve: the per-frame delta (dodge-local) rotated
+          // into the world by the cached dodge direction.
+          const frame = Math.min(
+            DODGE_CURVE.length - 1,
+            Math.max(0, Math.floor((DODGE_DURATION - p.dodgeTimer) * 30)),
+          );
+          const [dx, dz] = DODGE_CURVE[frame] ?? [0, 0];
+          p.pos.x += dz * p.dodgeDir.x + dx * p.dodgeDir.z;
+          p.pos.z += dz * p.dodgeDir.z - dx * p.dodgeDir.x;
         } else if (ml > 0) {
           p.pos.x += p.moveDir.x * PLAYER_SPEED * clock.dt;
           p.pos.z += p.moveDir.z * PLAYER_SPEED * clock.dt;
@@ -566,7 +590,9 @@ export default function EnemyRoom() {
         p.pos.x = THREE.MathUtils.clamp(p.pos.x, -ARENA_HALF, ARENA_HALF);
         p.pos.z = THREE.MathUtils.clamp(p.pos.z, -ARENA_HALF, ARENA_HALF);
 
-        const invincible = p.dodgeTimer > DODGE_DURATION - DODGE_IFRAME_DURATION;
+        // No dodge i-frames (ROM correction): attacks resolve against a
+        // rolling player exactly like a standing one.
+        const invincible = false;
 
         // Enemy
         const events = stepEnemy(sim, e, {
@@ -622,7 +648,9 @@ export default function EnemyRoom() {
       // ── Visual sync ──
       s.playerGroup.position.set(p.pos.x, 0, p.pos.z);
       if (p.moveDir.x || p.moveDir.z) s.playerGroup.rotation.y = Math.atan2(p.moveDir.x, p.moveDir.z);
-      const invNow = p.dodgeTimer > DODGE_DURATION - DODGE_IFRAME_DURATION;
+      // Roll tint: teal through the 10-frame pass-through, blue for the rest
+      // of the committed action.
+      const invNow = p.dodgeTimer > 0 && p.dodgeTimer > DODGE_DURATION - DODGE_PASS_THROUGH;
       s.playerBodyMat.color.setHex(invNow ? 0x88ffcc : p.dodgeTimer > 0 ? 0x2288aa : 0x44ccff);
 
       // Leap gets a visual hop (parabola over the damaging window).

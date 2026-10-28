@@ -39,6 +39,7 @@ func _run_tests_combat() -> void:
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)
 	test_player_states()
+	test_original_camera()
 	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
 	test_player_model_y_damping()
@@ -2920,29 +2921,65 @@ func test_player_states() -> void:
 	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
 	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
 
-	# Dodge i-frames (spec /mechanics/dodge, tightened by #377): only the
-	# first DODGE_IFRAME_DURATION (0.2s) of the roll is invincible — NOT the
-	# whole move phase. Off-tree instance — take_damage's i-frame return
-	# fires before any tree-dependent call.
-	assert_eq(consts.get("DODGE_IFRAME_DURATION"), 0.2, "i-frame window is the fixed 0.2s (#377)")
+	# Dodge durability (spec /mechanics/dodge, 2026-10 ROM correction): the
+	# original's hit-reaction gate excludes the knockdown/dead states, NOT the
+	# dodge — there are no i-frames. Every frame of the roll is damageable and
+	# interrupts the action; the pass-through window gates contact only.
+	assert_true(not consts.has("DODGE_IFRAME_DURATION"), "i-frame constant removed (ROM correction)")
+	assert_eq(consts.get("DODGE_DURATION"), 41.0 / 30.0, "dodge is the 41-frame ROM action (roll + get-up)")
+	assert_eq(consts.get("DODGE_PASS_THROUGH"), 10.0 / 30.0, "pass-through window is the first 10 frames")
 	var p = PlayerScript.new()
 	var hp_full: int = GameState.max_hp
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.1
-	p.dodge_move_end = 0.5
-	p.take_damage(25)
-	assert_eq(GameState.hp, hp_full, "hit inside the 0.2s window ignores damage (i-frames)")
-	assert_eq(p.current_state, states["DODGING"], "i-frame hit does not interrupt the roll")
-	p.dodge_timer = 0.3  # inside the move phase but PAST the i-frame window
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "hit past 0.2s takes damage even mid-move-phase (#377)")
-	assert_eq(p.current_state, states["DAMAGED"], "post-window hit interrupts the roll (DODGING → DAMAGED)")
+	p.dodge_timer = 0.1  # inside the pass-through window
+	p.take_damage(15)
+	assert_eq(GameState.hp, hp_full - 15, "no dodge immunity: a hit inside the pass-through window damages")
+	assert_eq(p.current_state, states["DAMAGED"], "any hit interrupts the roll (DODGING → DAMAGED)")
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
+	p.dodge_timer = 0.9  # deep in the get-up frames
+	p.take_damage(25)  # heavy hit
+	assert_eq(GameState.hp, hp_full - 25, "get-up frames take damage")
+	assert_eq(p.current_state, states["DOWN"], "get-up hit interrupts the roll (DODGING → DOWN)")
+	GameState.set_hp(hp_full)
+
+	# Pass-through gates contact, not damage: open for the first 10 frames.
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.05
+	assert_true(p.is_dodge_passing_through(), "pass-through open in the first 10 frames")
+	p.dodge_timer = 0.4
+	assert_true(not p.is_dodge_passing_through(), "pass-through closed after 10 frames")
+	p.current_state = states["IDLE"]
+	assert_true(not p.is_dodge_passing_through(), "pass-through only applies while DODGING")
+
+	# ROM displacement curve (data/re_reference/player_dodge_motion.json):
+	# total travel 17901 Q12 ≈ 4.37 u in the dodge direction (+z local), with
+	# the front-loaded plateau at ~1085 Q12/frame.
+	var curve_total := Vector2.ZERO
+	for i in range(41):
+		curve_total += p._dodge_curve_delta(i)
+	assert_almost_eq(curve_total.y, 17901.0, 1.0, "dodge curve total travel is 17901 Q12")
+	assert_almost_eq(absf(curve_total.x), 30.0, 1.0, "curve lateral wobble sums to ~30 Q12 (the roll arc)")
+	assert_eq(p._dodge_curve_delta(8).y, 1085.0, "curve plateau step is 1085 Q12/frame")
+	assert_eq(p._dodge_curve_delta(0), Vector2.ZERO, "admission frame is static")
+	assert_eq(p._dodge_curve_delta(45), Vector2.ZERO, "past the table the get-up adds no displacement")
+	# The embedded constant must stay in lockstep with the reference JSON
+	# (the shipped pack carries no data/ tree, so the curve lives in code —
+	# this is the drift pin between the two).
+	var reference: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/re_reference/player_dodge_motion.json"))
+	if reference is Dictionary and reference.get("delta_per_frame") is Array:
+		var rows: Array = reference["delta_per_frame"]
+		assert_eq(p.DODGE_MOTION_CURVE.size(), rows.size(), "embedded curve length matches the reference JSON")
+		var drift := false
+		for i in range(mini(p.DODGE_MOTION_CURVE.size(), rows.size())):
+			if p.DODGE_MOTION_CURVE[i] != Vector2(float(rows[i][0]), float(rows[i][1])):
+				drift = true
+				break
+		assert_true(not drift, "embedded curve matches the reference JSON exactly")
+	else:
+		assert_true(false, "player_dodge_motion.json unreadable — cannot pin the embedded curve")
 	GameState.set_hp(hp_full)
 
 	# Charge-cancel on DODGING (spec /states/player-state): a mid-charge
@@ -3003,6 +3040,114 @@ func test_player_defeat_invulnerable() -> void:
 # damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
 # pops glide, while physics stays exact. Snaps on a real fall so the mesh never
 # floats. Locks the damping contract; the buttery result is verified in-game.
+# ── Original world camera (spec /mechanics/camera) ──
+# The ROM camera-slot-1 model, ported from the decomp's world_camera.c: fixed
+# elevation 11.25°, radius 5.0 u, manual rotate 768 angle units/frame, recenter
+# ease Δ/8 per 30 fps frame (snap band 256 units), a running-only follow swing
+# stepping half the per-frame displacement in angle units, and 50%/frame
+# look-point easing. All rates are checked at the reference 30 fps tick.
+class _CamFollowTarget extends Node3D:
+	var player_rotation := 0.0
+	var current_state := 2  # PlayerState.RUNNING
+	var facing := 0.0
+	func get_camera_follow_yaw() -> float:
+		return facing
+
+
+func test_original_camera() -> void:
+	print("── Original world camera (ROM model) ──")
+	const ORBIT_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
+	const OrbitScript := preload("res://scripts/3d/camera/orbit_camera.gd")
+	# Constants match the ROM (65536-unit angle circle, Q12 geometry).
+	assert_almost_eq(OrbitScript.PITCH, TAU * 2048.0 / 65536.0, 0.00001, "elevation is 2048 units = 11.25°")
+	assert_almost_eq(OrbitScript.RADIUS, 5.0, 0.00001, "ring radius is 20480 Q12 = 5.0 u")
+	assert_almost_eq(OrbitScript.MANUAL_RATE, TAU * 768.0 / 65536.0 * 30.0, 0.00001,
+		"manual rotate is 768 units/frame ≈ 126.6°/s")
+	assert_almost_eq(OrbitScript.RECENTER_SNAP, TAU * 256.0 / 65536.0, 0.00001, "recenter snap band is 256 units")
+
+	var cam: Node3D = ORBIT_SCENE.instantiate()
+	add_child(cam)
+	var target := _CamFollowTarget.new()
+	add_child(target)
+	cam.set_target(target)
+
+	# Recenter ease: Δ/8 per frame toward facing+180°, snap inside the band.
+	# (Start off the exact-opposite heading — at Δ=180° the wrapped difference
+	# is sign-ambiguous; the ROM's difference() keeps +32768 positive there.)
+	cam.camera_rotation = 0.2
+	cam._begin_recenter()  # desired = PI (behind facing +z)
+	var before: float = cam.camera_rotation
+	cam._step_recenter(1.0 / 30.0, false)
+	assert_almost_eq(cam.camera_rotation - before, (PI - 0.2) / 8.0, 0.00001,
+		"recenter steps Δ/8 per 30 fps frame")
+	# Repeated eases converge and snap exactly onto the target heading.
+	for _i in range(40):
+		cam._step_recenter(1.0 / 30.0, false)
+	assert_almost_eq(cam.camera_rotation, PI, OrbitScript.RECENTER_SNAP,
+		"recenter converges behind the facing")
+	assert_true(not cam._recenter_mode, "recenter mode releases on snap")
+
+	# Manual rotate: exactly 768 units per 30 fps frame in the pressed
+	# direction (input-driven path).
+	Input.action_press("camera_right")
+	cam.camera_rotation = 0.0
+	cam._recenter_mode = false
+	cam._step_heading(1.0 / 30.0)
+	Input.action_release("camera_right")
+	assert_almost_eq(cam.camera_rotation, TAU - TAU * 768.0 / 65536.0, 0.00001,
+		"manual rotate moves 768 units/frame (wrap-safe)")
+
+	# Follow swing: RUNNING only; steps half the per-frame player displacement
+	# expressed in angle units; snaps when the gap is inside the gate. (Start
+	# off the exact-opposite heading — Δ=180° is the ROM's ambiguity guard.)
+	cam.camera_rotation = 0.2
+	# One run frame of player displacement: MOVE_SPEED/30 = 0.2 u → 819 Q12 →
+	# step ~409 angle units; gap PI−0.2 ≫ limit → step, no snap.
+	target.global_position = Vector3(0.0, 0.0, 6.0 / 30.0)
+	cam._anchor_xz = Vector2.ZERO
+	cam._anchor_valid = true
+	cam._step_follow_swing()
+	assert_almost_eq(cam.camera_rotation, 0.2 + 6.0 / 30.0 * OrbitScript.FOLLOW_COEFF, 0.00001,
+		"follow swing steps displacement/2 in angle units")
+	# Small gap (inside the displacement gate) snaps exactly behind the steering.
+	cam.camera_rotation = PI - TAU * 300.0 / 65536.0
+	target.facing = 0.0
+	cam._anchor_xz = Vector2.ZERO
+	cam._step_follow_swing()
+	assert_almost_eq(cam.camera_rotation, PI, 0.00001, "follow swing snaps when the gap is inside the gate")
+	# Exactly opposite: the ROM's ambiguity guard — no movement.
+	cam.camera_rotation = 0.0
+	cam._anchor_xz = Vector2.ZERO
+	cam._step_follow_swing()
+	assert_almost_eq(cam.camera_rotation, 0.0, 0.00001, "exactly-opposite steering does not move the camera")
+	# Not running: no swing at all.
+	target.current_state = 0
+	cam._anchor_xz = Vector2.ZERO
+	cam._step_follow_swing()
+	assert_almost_eq(cam.camera_rotation, 0.0, 0.00001, "follow swing is running-only")
+
+	# Look-point easing: 50% of the gap per 30 fps frame (soft follow).
+	target.current_state = 2
+	target.global_position = Vector3.ZERO
+	cam.set_target(target)  # re-establishes the anchor on the player
+	cam._update_camera_position(0.0)
+	target.global_position = Vector3(4.0, 0.0, 0.0)
+	cam._update_camera_position(1.0 / 30.0)
+	assert_almost_eq(cam._look_xz.x, 2.0, 0.00001, "look point closes 50%/frame toward the player")
+	assert_almost_eq(cam._look_xz.y, 0.0, 0.00001, "look point does not overshoot")
+	# Eye geometry: 1.5 u look height + 11.25° elevation ring at radius 5.
+	var eye: Vector3 = cam.camera.global_position
+	assert_almost_eq(eye.y, OrbitScript.LOOK_HEIGHT + OrbitScript.RADIUS * sin(OrbitScript.PITCH), 0.00001,
+		"eye height is look height + radius·sin(pitch)")
+	var horiz := Vector3(eye.x - cam._look_xz.x, 0.0, eye.z - cam._look_xz.y)
+	assert_almost_eq(horiz.length(), OrbitScript.RADIUS * cos(OrbitScript.PITCH), 0.00001,
+		"eye sits on the 11.25° ring around the look point")
+	assert_almost_eq(cam.camera.fov, 44.0, 0.00001, "vertical fov is the ROM projection's ≈44°")
+	cam.free()
+	target.free()
+	print("")
+
+
 func test_player_model_y_damping() -> void:
 	print("── Player Model Y Damping ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
@@ -3102,10 +3247,9 @@ func test_action_commitment() -> void:
 	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
 	GameState.set_hp(GameState.max_hp)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.5  # outside the i-frame window
-	p.dodge_move_end = 0.5
+	p.dodge_timer = 0.5  # get-up frames — damageable, no dodge immunity
 	p.take_damage(25)  # heavy hit
-	assert_eq(p.current_state, states["DOWN"], "damage outside i-frames interrupts a roll (DODGING → DOWN)")
+	assert_eq(p.current_state, states["DOWN"], "damage interrupts a roll (DODGING → DOWN)")
 	GameState.set_hp(GameState.max_hp)
 
 	# Hitbox lifetime (#428): EVERY exit from ATTACKING deactivates the attack

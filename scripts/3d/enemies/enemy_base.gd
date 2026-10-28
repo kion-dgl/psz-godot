@@ -1159,7 +1159,9 @@ func _process_charge(delta: float) -> void:
 				if EnemyAttackLogic.arc_hit_test(global_position, _attack_facing,
 						target.global_position, PLAYER_HIT_RADIUS, half, reach) and _charge_contact_clear():
 					_attack_hit_resolved = true
-					var dodged: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
+					# The roll's first 10 frames pass contact through (spec
+					# /mechanics/dodge): the charge bowls past a rolling player.
+					var dodged: bool = target.has_method("is_dodge_passing_through") and target.is_dodge_passing_through()
 					if not dodged:
 						_deal_damage_for(_attack_def)
 						# stop_on_hit: false (roller) bowls the player over and keeps

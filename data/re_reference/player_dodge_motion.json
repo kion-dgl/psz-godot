@@ -1,0 +1,185 @@
+{
+ "source": "pszm-decomp ROM replay native/evidence/player-dodge-frame-rom.json (records[0] idle-heading-0; drawn root words 6/8 of the 80-word frame); replayed against the original full-rate motion resources",
+ "arm9_sha256": "799818abc389dcf74747c4a521a659110ca7636280d5caf14cc5aadb87e7454e",
+ "resource_sha256": "7c37575aceca68c613ec4043fceef593746ccbd09b676705797b86c755cd4433",
+ "units": "Q12 fixed point (4096 = 1 unit), dodge-local frame (+z = dodge heading, +x = right)",
+ "duration_frames": 41,
+ "tick_fps": 30,
+ "delta_per_frame": [
+  [
+   0,
+   0
+  ],
+  [
+   131,
+   138
+  ],
+  [
+   132,
+   677
+  ],
+  [
+   -22,
+   2490
+  ],
+  [
+   -22,
+   2629
+  ],
+  [
+   -20,
+   1480
+  ],
+  [
+   -20,
+   1125
+  ],
+  [
+   -20,
+   1085
+  ],
+  [
+   -19,
+   1085
+  ],
+  [
+   -12,
+   1077
+  ],
+  [
+   -12,
+   1265
+  ],
+  [
+   -2,
+   1190
+  ],
+  [
+   -2,
+   883
+  ],
+  [
+   15,
+   686
+  ],
+  [
+   15,
+   580
+  ],
+  [
+   27,
+   502
+  ],
+  [
+   28,
+   402
+  ],
+  [
+   38,
+   329
+  ],
+  [
+   38,
+   282
+  ],
+  [
+   26,
+   209
+  ],
+  [
+   27,
+   112
+  ],
+  [
+   3,
+   46
+  ],
+  [
+   4,
+   32
+  ],
+  [
+   0,
+   18
+  ],
+  [
+   1,
+   8
+  ],
+  [
+   -3,
+   -2
+  ],
+  [
+   -3,
+   -9
+  ],
+  [
+   -8,
+   -15
+  ],
+  [
+   -8,
+   -18
+  ],
+  [
+   -14,
+   -19
+  ],
+  [
+   -13,
+   -19
+  ],
+  [
+   -21,
+   -22
+  ],
+  [
+   -20,
+   -29
+  ],
+  [
+   -28,
+   -35
+  ],
+  [
+   -27,
+   -40
+  ],
+  [
+   -32,
+   -42
+  ],
+  [
+   -31,
+   -45
+  ],
+  [
+   -33,
+   -45
+  ],
+  [
+   -32,
+   -45
+  ],
+  [
+   -31,
+   -44
+  ]
+ ],
+ "total_q12": [
+  30,
+  17901
+ ],
+ "total_units": [
+  0.0073,
+  4.3704
+ ],
+ "notes": [
+  "Motion frame 0 is static (admission frame); the curve covers frames 1..40, frame 41 completes the action.",
+  "Displacement profile: burst (frames 2-5), plateau ~1085 Q12/frame (frames 6-13), decay (14-25), settle-back to the final root (26-40).",
+  "The +x/-x wobble is the roll arc baked in the original motion; keep it for 1:1 travel.",
+  "Admission while RUNNING adds one run-speed step in the dodge direction on the admission frame (not part of this table).",
+  "duration differs from the extracted _esc_f clip (20 frames): the original action is roll + get-up, weapon-independent."
+ ]
+}

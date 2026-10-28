@@ -1,0 +1,68 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Camera" section="Mechanics">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>The field camera is the original game's world camera (camera slot 1 at <code>0204845c</code> in the PSZ Mini ROM, per the decomp's verified reconstruction <code>native/runtime/world_camera.c</code>): a fixed-elevation orbit that eases its look point toward the player, rotates on demand at a fixed rate, eases behind the player on request, and — while the player is <strong>running</strong> — lazily swings behind the steering direction at a speed proportional to how fast the player moves. There is <strong>no player-controlled pitch</strong> and no free orbit: elevation is fixed data.</p>
+
+  <h2>Geometry</h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Original value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Elevation (pitch)</td><td>2048 / 65536 = 11.25°</td><td>Fixed; the eye sits above the look point by <code>radius × sin(pitch)</code> ≈ 0.98 u.</td></tr>
+      <tr><td>Radius</td><td>20480 Q12 = 5.0 u (max 5.0 u)</td><td>Fixed ring radius from the look point; the ROM carries zoom-out/zoom-in easing toward this cap, inert at the default value.</td></tr>
+      <tr><td>Look-point height</td><td>6144 Q12 = 1.5 u</td><td>The ROM pins an absolute 1.5 u (its fields are flat); we define it player-relative — look at <code>player.y + 1.5 u</code>. Equivalent on flat ground.</td></tr>
+      <tr><td>Eye position</td><td>≈ 2.48 u above the player, 4.90 u out along the ring</td><td><code>eye = target + radius × (sin·heading, sin·pitch, cos·heading)</code>.</td></tr>
+      <tr><td>Vertical FOV</td><td>≈ 44° (projection Q12 10141)</td><td>4:3 on the DS; the widescreen build keeps the vertical FOV.</td></tr>
+      <tr><td>Initial heading</td><td>spawn heading + 180°</td><td>The camera starts behind the player.</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>The look point <strong>MUST</strong> ease toward the player's ground position by 50% per 30 fps frame (<code>target += (anchor − target) / 2</code>, never overshooting) — this soft-follow is the camera's core feel. Horizontal easing applies to X/Z only.</li>
+    <li>Vertical follow <strong>MAY</strong> damp separately (engine accommodation for the stair-descent Y sawtooth, #538); the ROM assumes flat fields and has no vertical follow logic.</li>
+    <li>The ROM adds the look-point word inside the eye-position pre-shift sum as well as outside it (a sub-centimeter rounding quirk at <code>target/4096</code>); a float implementation <strong>MAY</strong> omit it.</li>
+  </ul>
+
+  <h2>Rotation</h2>
+  <p>Heading state wraps at 65536 angle units (360°). Three behaviors drive it:</p>
+  <table>
+    <thead><tr><th>Behavior</th><th>Trigger</th><th>Rate / rule</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Manual rotate</strong></td>
+        <td>rotate-left / rotate-right held (ROM: X + L / X + R shoulder)</td>
+        <td>±768 units/frame (4.22°/frame ≈ 126.6°/s at 30 fps), immediate, no easing.</td>
+      </tr>
+      <tr>
+        <td><strong>Recenter</strong></td>
+        <td>camera-recenter pressed (ROM: L without X)</td>
+        <td>Ease heading toward <code>facing + 180°</code> by <code>Δ/8</code> per frame; snap when <code>|Δ| ≤ 256</code> (1.4°). The ease aborts early (releasing to normal follow) once ≥ 10 frames have passed <em>and</em> the player supplies movement or camera input. While the recenter input is held, the auto-follow swing is suspended.</td>
+      </tr>
+      <tr>
+        <td><strong>Follow swing</strong></td>
+        <td>player state is RUNNING (only)</td>
+        <td>Target heading <code>= steering + 180°</code>. Per frame: if <code>|Δ| > last_frame_player_displacement</code> (in Q12 angle-unit correspondence — the ROM uses the raw per-frame movement distance as the limit and steps by half of it), step <code>±displacement/2</code>; else snap exactly. No swing while idle, walking, attacking, or dodging. A player standing exactly opposite (<code>Δ = 180°</code>) does not move the camera (the ROM's ambiguity guard).</td>
+      </tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Manual rotate and recenter input <strong>MUST</strong> be ignored while camera input is locked (start menu open, shop focus, scripted scenes — the ROM's actor-state lock flag).</li>
+    <li>During a dodge the camera <strong>MUST</strong> follow the drawn root (the moving roll position), keeping the anchor height — the ROM's <code>camera_root</code> rule.</li>
+  </ul>
+
+  <h2>Provenance</h2>
+  <ul>
+    <li><code>pszm-decomp</code> <code>native/runtime/world_camera.c/.h</code> (camera slot 1 defaults, ease, follow, look-at) and <code>native/runtime/player_camera.c</code> (per-frame driver: follow-heading source per actor state, recenter gating, follow-flag set only in the running state) — byte-verified reconstruction validated against 6144 ROM replay cases (<code>native/evidence/player-camera-rom.json</code>).</li>
+    <li>Dodge-follow root rule from <code>native/runtime/player_frame.c</code> (busy one-shots follow the drawn root; the camera anchor height is preserved).</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/camera/orbit_camera.gd</code> (OrbitCamera) — the original-model controller: fixed elevation/radius, 50%-per-frame look-point easing, 768/frame manual rate, Δ/8 recenter ease with the 256-unit snap band and early release, running-only follow swing at displacement/2 per frame. Mouse-drag orbit and player pitch control are retired with the original model (this page supersedes them).</li>
+  </ul>
+
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
+</Concept>

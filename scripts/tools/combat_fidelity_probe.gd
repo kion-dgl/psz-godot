@@ -18,8 +18,6 @@ class Target extends Node3D:
 
 class EnemyTarget extends Node3D:
 	var hits := 0
-	var invincible := false
-	func is_dodge_iframed() -> bool: return invincible
 	func take_damage(_damage: int, _knockback: Vector3, _knockdown: bool) -> void:
 		hits += 1
 
@@ -188,7 +186,6 @@ func _check_enemy_deliveries() -> void:
 			add_child(victim)
 			_fixtures.append(victim)
 			victim.position = Vector3(0, 0, 4)
-			victim.invincible = mode == "dodge"
 			if mode in ["wall", "overlap", "muzzle", "before_wall"]:
 				var z := 2.0
 				if mode == "overlap": z = 0.0
@@ -208,7 +205,9 @@ func _check_enemy_deliveries() -> void:
 			for tick in range(120):
 				shot._physics_process(dt)
 				if shot.is_queued_for_deletion(): break
-			var expected := 1 if mode in ["clear", "before_wall"] else 0
+			# "dodge" pins the ROM correction: a rolling target has no projectile
+			# immunity — the shot lands exactly like the "clear" case.
+			var expected := 1 if mode in ["clear", "before_wall", "dodge"] else 0
 			_check(victim.hits == expected and shot.is_queued_for_deletion(), "enemy shot %s dt=%s" % [mode, dt])
 			shot._physics_process(dt)
 			_check(victim.hits == expected, "enemy shot consumed once")
@@ -218,7 +217,6 @@ func _check_enemy_deliveries() -> void:
 		add_child(victim)
 		_fixtures.append(victim)
 		victim.position = Vector3(0, 0, 4)
-		victim.invincible = mode == "dodge"
 		_box(Vector3(0,-0.5,0), Vector3(30,1,30))
 		if mode == "wall": _box(Vector3(0,2,2), Vector3(8,8,0.05))
 		if mode == "cover":
@@ -234,7 +232,8 @@ func _check_enemy_deliveries() -> void:
 		lob.set_physics_process(false)
 		await _sync_physics()
 		lob._physics_process(1.5)
-		var expected := 1 if mode == "hit" else 0
+		# "dodge" pins the ROM correction: the blast damages a rolling target.
+		var expected := 1 if mode in ["hit", "dodge"] else 0
 		_check(victim.hits == expected and lob._spent, "enemy lob %s slow frame" % mode)
 		lob._physics_process(1.5)
 		_check(victim.hits == expected, "lob landing consumed once")

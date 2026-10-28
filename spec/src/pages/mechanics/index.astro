@@ -8,7 +8,8 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Systems</h2>
   <ul>
-    <li><a href={siteUrl('/mechanics/dodge')}>Dodge</a> — roll distance and invincibility (i-frame) window. Reference: the in-repo <code>dodge-debug</code> tuning tool.</li>
+    <li><a href={siteUrl('/mechanics/dodge')}>Dodge</a> — the 41-frame committed roll: root-motion displacement curve, pass-through window, and admission gates (ROM-decoded; no i-frames).</li>
+    <li><a href={siteUrl('/mechanics/camera')}>Camera</a> — the original world camera: fixed elevation, soft-follow look point, manual rotate rate, recenter ease, and the running-only follow swing.</li>
     <li><a href={siteUrl('/mechanics/combos')}>Combat combos</a> — attack chains and per-weapon combo timing windows.</li>
     <li><a href={siteUrl('/mechanics/targeting')}>Targeting &amp; hit detection</a> — the per-weapon hit cone, damaging-frame hit resolution, and the target-info HUD. Reference: the in-repo <code>combat-room</code> tool.</li>
     <li><a href={siteUrl('/mechanics/enemy-attacks')}>Enemy attacks</a> — per-enemy attack tables: selection bands, windup → damaging-window timelines, and the arc hit shape. Reference: the in-repo <code>enemy-room</code> tool.</li>
