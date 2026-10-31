@@ -1,0 +1,5545 @@
+{
+ "source": "psz-re tools/fieldfix.py -- offline, from the savestate corpus only",
+ "answers": "psz-godot #584: real generated fields tied to the input that produced them",
+ "ON_A_FIRST_FLOOR_THE_SESSION_SEED_IS_THE_GENERATION_SEED": "10 of 10 area-A fields have a generation-start LCG state EQUAL to their 16-bit session seed, zero-extended, with ZERO draws in between -- so for a first floor the seed really is the field's seed and #584's question has a clean yes. 0 of 4 area-B fields do, and they cannot: the previous floor's generation already spent draws on the same continuous stream, and their offsets are [205, 209, 223, 456].",
+ "THE_SEED_ALONE_DOES_NOT_DETERMINE_A_FIELD": "the generator shares ONE continuous LCG with the whole session, so a field is a function of the LCG STATE AT GENERATION START plus the eleven assembled parameters -- and those come from the quest override record, not from the area. The 16-bit session seed is recorded where recoverable, and on a FIRST floor the offset between it and generation start is ZERO: generation_start_state IS the seed, zero-extended. On a later floor the offset is nonzero and per capture (205, 209, 223, 456 here), because the previous floor already spent draws on the same stream. The 55..84 figure this file used to quote was NOT that offset -- it was the distance to the first per-room SEED, which the transcriber writes at the very end and which therefore already contains generation's own cost; over these fixtures that quantity is 48..113 on a first floor. See tools/fieldfix.py --seed-run.",
+ "how_to_consume": "each fixture's input block is the whole input. Run your generator from generation_start_state with those params and compare `edges` (normalised grid coordinates), `transcription_order` (internal placement index -> output room index) and `grid.goal_xy`. `rooms` is the field as the game transcribed it: cell, room code, rotation, per-direction neighbour and gate, keys, layout index.",
+ "generator": {
+  "entry": "0x02081EA8",
+  "grid": "7 wide x 10 tall, cells 0x1C bytes at gen+0xB4, row stride 0xC4",
+  "start_cell": "(3, 9 - params[9]) -- column 3 of 7, and near the BOTTOM row",
+  "first_placement": "unconditionally NORTH, from FUN_02081F98",
+  "lcg": "state = state * 0x5D588B656C078965 + 0x269EC3; rand(r) = ((state>>32)*r)>>32",
+  "there_is_no_fallback_layout": "FUN_02081EA8 has no all-or-nothing restart and no canned layout. It grows greedily once (FUN_020821D0), and if it came up short it runs ONE extension attempt (FUN_02082228) and grows again. Nothing is ever thrown away."
+ },
+ "not_to_be_confused_with": "data/generation_fixtures.json, which is two LIVE breakpoint readings of the drawn target at 0x02081ED4. This file is the field itself, offline, from savestates.",
+ "fixture_count": 14,
+ "seed_relation": {
+  "first_floors": 10,
+  "first_floors_starting_at_the_seed": 10,
+  "later_floors": 4,
+  "later_floors_starting_at_the_seed": 0,
+  "later_floor_offsets": [
+   205,
+   209,
+   223,
+   456
+  ]
+ },
+ "did_not_reproduce": [],
+ "fixtures": [
+  {
+   "id": "s01a-20260729-132155",
+   "stage": "s01a",
+   "capture": "20260729-132155_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0x0000000000002748",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x2748",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 210
+   },
+   "drawn": {
+    "target": 9,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "B4",
+    "goal": "A1",
+    "start_xy": [
+     1,
+     3
+    ],
+    "goal_xy": [
+     0,
+     0
+    ],
+    "origin_shift": [
+     2,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s01a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0x36A5EBB1"
+    },
+    {
+     "index": 1,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s01a_tb3",
+     "shape": "t",
+     "rotation": 3,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0xCCD08985"
+    },
+    {
+     "index": 2,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s01a_td2",
+     "shape": "t",
+     "rotation": 1,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      },
+      "west": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 2,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x124C95E7"
+    },
+    {
+     "index": 3,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s01a_lb3",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 6,
+       "gate": "open"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x57A03839"
+    },
+    {
+     "index": 4,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s01a_lb3",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 8,
+       "gate": "two-key"
+      },
+      "south": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x0D000F25"
+    },
+    {
+     "index": 5,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s01a_lb1",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 1,
+     "seed": "0x0448E0E7"
+    },
+    {
+     "index": 6,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s01a_nb2",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 2,
+     "seed": "0x27AAC34D"
+    },
+    {
+     "index": 7,
+     "cell": "A1",
+     "xy": [
+      0,
+      0
+     ],
+     "code": "s01a_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x9C351426"
+    },
+    {
+     "index": 8,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s01a_nb2",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x32EAD9B8"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    4,
+    1,
+    5,
+    0,
+    2,
+    8,
+    6,
+    7
+   ],
+   "also_seen_in": [
+    "20260728-223013_Phantasy_Star_0__USA_.ml2",
+    "20260728-223013_Phantasy_Star_0__USA_.ml3",
+    "20260728-223013_Phantasy_Star_0__USA_.ml4",
+    "20260728-223013_Phantasy_Star_0__USA_.ml6",
+    "Phantasy Star 0 (USA).ml1"
+   ]
+  },
+  {
+   "id": "s01a-20260801-173629",
+   "stage": "s01a",
+   "capture": "20260801-173629_Phantasy_Star_0__USA_.ml2",
+   "input": {
+    "generation_start_state": "0x00000000000015D5",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x15D5",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 225
+   },
+   "drawn": {
+    "target": 9,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C5",
+    "goal": "A3",
+    "start_xy": [
+     2,
+     4
+    ],
+    "goal_xy": [
+     0,
+     2
+    ],
+    "origin_shift": [
+     1,
+     2
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s01a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 2,
+     "seed": "0x9845A041"
+    },
+    {
+     "index": 1,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s01a_tc3",
+     "shape": "t",
+     "rotation": 1,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0xB794C15F"
+    },
+    {
+     "index": 2,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s01a_lb1",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0x4C413C0B"
+    },
+    {
+     "index": 3,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s01a_tb3",
+     "shape": "t",
+     "rotation": 3,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 7,
+       "gate": "one-key"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x2824C088"
+    },
+    {
+     "index": 4,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s01a_lb3",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 2,
+       "gate": "open"
+      },
+      "west": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x0CFBD573"
+    },
+    {
+     "index": 5,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s01a_ga1",
+     "shape": "g",
+     "rotation": 3,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0xEA55351B"
+    },
+    {
+     "index": 6,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s01a_ic1",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 8,
+       "gate": "open"
+      },
+      "south": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x213D9DCA"
+    },
+    {
+     "index": 7,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s01a_na1",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x9AFA92FC"
+    },
+    {
+     "index": 8,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s01a_nb2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 6,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0xFF6A09FE"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    0,
+    7,
+    2,
+    5,
+    4,
+    8,
+    1,
+    6
+   ],
+   "also_seen_in": [
+    "20260801-173644_Phantasy_Star_0__USA_.ml3",
+    "20260801-173726_Phantasy_Star_0__USA_.ml4",
+    "20260801-174504_Phantasy_Star_0__USA_.ml2",
+    "20260801-174524_Phantasy_Star_0__USA_.ml4",
+    "20260801-174628_Phantasy_Star_0__USA_.ml1",
+    "20260801-175134_Phantasy_Star_0__USA_.ml2",
+    "20260801-222856_Phantasy_Star_0__USA_.ml2",
+    "20260801-222901_Phantasy_Star_0__USA_.ml3",
+    "20260801-222906_Phantasy_Star_0__USA_.ml4",
+    "Phantasy Star 0 (USA).ml1",
+    "Phantasy Star 0 (USA).ml2",
+    "Phantasy Star 0 (USA).ml6",
+    "Phantasy Star 0 (USA).ml8",
+    "box-EMPTY.ml"
+   ]
+  },
+  {
+   "id": "s01a-20260805-121646",
+   "stage": "s01a",
+   "capture": "20260805-121646_Phantasy_Star_0__USA_.ml2",
+   "input": {
+    "generation_start_state": "0x000000000000B0C6",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     0,
+     1
+    ],
+    "session_seed": "0xB0C6",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 210
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C3",
+    "goal": "A1",
+    "start_xy": [
+     2,
+     2
+    ],
+    "goal_xy": [
+     0,
+     0
+    ],
+    "origin_shift": [
+     1,
+     7
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s01a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 2,
+     "seed": "0x111885E3"
+    },
+    {
+     "index": 1,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s01a_td2",
+     "shape": "t",
+     "rotation": 0,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0xFDF9ED67"
+    },
+    {
+     "index": 2,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s01a_tc3",
+     "shape": "t",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      },
+      "west": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0xFC35A35C"
+    },
+    {
+     "index": 3,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s01a_ic3",
+     "shape": "i",
+     "rotation": 1,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x12C2B07F"
+    },
+    {
+     "index": 4,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s01a_nc2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x920DF517"
+    },
+    {
+     "index": 5,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s01a_lb3",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "one-key"
+      },
+      "east": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0x6EE87987"
+    },
+    {
+     "index": 6,
+     "cell": "A1",
+     "xy": [
+      0,
+      0
+     ],
+     "code": "s01a_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0xF093DC5E"
+    },
+    {
+     "index": 7,
+     "cell": "E2",
+     "xy": [
+      4,
+      1
+     ],
+     "code": "s01a_nc2",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0x0587BF02"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      1
+     ]
+    ]
+   ],
+   "transcription_order": [
+    6,
+    5,
+    0,
+    3,
+    1,
+    7,
+    2,
+    4
+   ],
+   "also_seen_in": []
+  },
+  {
+   "id": "s01a-20260805-130717",
+   "stage": "s01a",
+   "capture": "20260805-130717_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0x0000000000009955",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x9955",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 253
+   },
+   "drawn": {
+    "target": 9,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C3",
+    "goal": "C1",
+    "start_xy": [
+     2,
+     2
+    ],
+    "goal_xy": [
+     2,
+     0
+    ],
+    "origin_shift": [
+     1,
+     4
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s01a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0x363AB2FB"
+    },
+    {
+     "index": 1,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s01a_lb1",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x29F2C2D2"
+    },
+    {
+     "index": 2,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s01a_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      },
+      "south": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0xFADEDC47"
+    },
+    {
+     "index": 3,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s01a_ib2",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "open"
+      },
+      "south": {
+       "room": 8,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 2,
+     "seed": "0xE10B47C6"
+    },
+    {
+     "index": 4,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s01a_lb3",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 2,
+       "gate": "open"
+      },
+      "south": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0xF4860015"
+    },
+    {
+     "index": 5,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s01a_lc2",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 6,
+       "gate": "open"
+      },
+      "south": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x123B3B56"
+    },
+    {
+     "index": 6,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s01a_ga1",
+     "shape": "g",
+     "rotation": 1,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "west": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0xE49D29F4"
+    },
+    {
+     "index": 7,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s01a_nc2",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 2,
+     "seed": "0xBF4A293B"
+    },
+    {
+     "index": 8,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s01a_na1",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 0,
+     "seed": "0x88F6BFC5"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ]
+   ],
+   "transcription_order": [
+    6,
+    5,
+    3,
+    1,
+    0,
+    8,
+    4,
+    2,
+    7
+   ],
+   "also_seen_in": [
+    "20260805-130727_Phantasy_Star_0__USA_.ml3",
+    "20260805-130733_Phantasy_Star_0__USA_.ml4"
+   ]
+  },
+  {
+   "id": "s01a-20260807-100328",
+   "stage": "s01a",
+   "capture": "20260807-100328_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0x000000000000BBE0",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0xBBE0",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 203
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C5",
+    "goal": "C2",
+    "start_xy": [
+     2,
+     4
+    ],
+    "goal_xy": [
+     2,
+     1
+    ],
+    "origin_shift": [
+     1,
+     2
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s01a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 2,
+     "seed": "0xC56F3B9C"
+    },
+    {
+     "index": 1,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s01a_lc1",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x6FE213F9"
+    },
+    {
+     "index": 2,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s01a_lc2",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 2,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0x5DDA761B"
+    },
+    {
+     "index": 3,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s01a_ib2",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x0A214CB8"
+    },
+    {
+     "index": 4,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s01a_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 5,
+       "gate": "two-key"
+      },
+      "south": {
+       "room": 3,
+       "gate": "open"
+      },
+      "west": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x578FBB9C"
+    },
+    {
+     "index": 5,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s01a_ga1",
+     "shape": "g",
+     "rotation": 1,
+     "depth": 5,
+     "role": "goal",
+     "exits": {
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0xF8FB0742"
+    },
+    {
+     "index": 6,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s01a_nb2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x91DADC94"
+    },
+    {
+     "index": 7,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s01a_na1",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 2,
+     "seed": "0x9EDA2FA5"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    4,
+    0,
+    1,
+    5,
+    6,
+    3,
+    7,
+    2
+   ],
+   "also_seen_in": [
+    "20260728-223013_Phantasy_Star_0__USA_.ml5",
+    "20260807-100346_Phantasy_Star_0__USA_.ml1",
+    "20260807-100354_Phantasy_Star_0__USA_.ml2",
+    "20260807-100405_Phantasy_Star_0__USA_.ml3",
+    "20260807-100412_Phantasy_Star_0__USA_.ml4"
+   ]
+  },
+  {
+   "id": "s01b-20260729-174940",
+   "stage": "s01b",
+   "capture": "20260729-174940_Phantasy_Star_0__USA_.ml2",
+   "input": {
+    "generation_start_state": "0xDD66205DDB235481",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x2748",
+    "draws_from_session_seed_to_generation_start": 223,
+    "draws_from_generation_start_to_capture": 199
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "B4",
+    "goal": "D2",
+    "start_xy": [
+     1,
+     3
+    ],
+    "goal_xy": [
+     3,
+     1
+    ],
+    "origin_shift": [
+     2,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s01b_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 1,
+     "seed": "0xA5DA3E23"
+    },
+    {
+     "index": 1,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s01b_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "open"
+      },
+      "east": {
+       "room": 4,
+       "gate": "open"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x0AADA1EA"
+    },
+    {
+     "index": 2,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s01b_ib2",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x954B3D61"
+    },
+    {
+     "index": 3,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s01b_nb2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 1,
+     "layout": 1,
+     "seed": "0x24D065A2"
+    },
+    {
+     "index": 4,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s01b_ib2",
+     "shape": "i",
+     "rotation": 3,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 5,
+       "gate": "one-key"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0xA866979E"
+    },
+    {
+     "index": 5,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s01b_lb3",
+     "shape": "l",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 1,
+     "seed": "0xB0CBA1DC"
+    },
+    {
+     "index": 6,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s01b_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0xC43370FA"
+    },
+    {
+     "index": 7,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s01b_nc2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x65CED7B1"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      2
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    5,
+    1,
+    7,
+    6,
+    0,
+    4,
+    2
+   ],
+   "also_seen_in": []
+  },
+  {
+   "id": "s02a-20260729-132203",
+   "stage": "s02a",
+   "capture": "20260729-132203_Phantasy_Star_0__USA_.ml2",
+   "input": {
+    "generation_start_state": "0x0000000000006ACA",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x6ACA",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 196
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "D4",
+    "goal": "B1",
+    "start_xy": [
+     3,
+     3
+    ],
+    "goal_xy": [
+     1,
+     0
+    ],
+    "origin_shift": [
+     0,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "D4",
+     "xy": [
+      3,
+      3
+     ],
+     "code": "s02a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 2,
+     "seed": "0x6643A9AC"
+    },
+    {
+     "index": 1,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s02a_lb1",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 2,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x80CC7FE9"
+    },
+    {
+     "index": 2,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s02a_ib1",
+     "shape": "i",
+     "rotation": 1,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 1,
+       "gate": "open"
+      },
+      "west": {
+       "room": 3,
+       "gate": "two-key"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0xD099FEBB"
+    },
+    {
+     "index": 3,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s02a_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 2,
+       "gate": "open"
+      },
+      "south": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0xAC709055"
+    },
+    {
+     "index": 4,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s02a_nb2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 0,
+     "seed": "0x0C2FAAA9"
+    },
+    {
+     "index": 5,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s02a_ib2",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0xBA4E97CF"
+    },
+    {
+     "index": 6,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s02a_na1",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 1,
+     "seed": "0x755E6068"
+    },
+    {
+     "index": 7,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s02a_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 5,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x9445ECC5"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ]
+    ]
+   ],
+   "transcription_order": [
+    5,
+    4,
+    0,
+    6,
+    7,
+    1,
+    3,
+    2
+   ],
+   "also_seen_in": []
+  },
+  {
+   "id": "s02a-20260807-131932",
+   "stage": "s02a",
+   "capture": "20260807-131932_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0x000000000000E7B3",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0xE7B3",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 191
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "A3",
+    "goal": "C3",
+    "start_xy": [
+     0,
+     2
+    ],
+    "goal_xy": [
+     2,
+     2
+    ],
+    "origin_shift": [
+     3,
+     4
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s02a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0xFECD28CA"
+    },
+    {
+     "index": 1,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s02a_td1",
+     "shape": "t",
+     "rotation": 3,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0xD69872F5"
+    },
+    {
+     "index": 2,
+     "cell": "A1",
+     "xy": [
+      0,
+      0
+     ],
+     "code": "s02a_lb1",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x6FD662E4"
+    },
+    {
+     "index": 3,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s02a_ib2",
+     "shape": "i",
+     "rotation": 1,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x8C89268B"
+    },
+    {
+     "index": 4,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s02a_tb3",
+     "shape": "t",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 6,
+       "gate": "open"
+      },
+      "south": {
+       "room": 7,
+       "gate": "one-key"
+      },
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x1F49AE85"
+    },
+    {
+     "index": 5,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s02a_nc2",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0xDD3E05AA"
+    },
+    {
+     "index": 6,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s02a_na1",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 3,
+     "layout": 1,
+     "seed": "0x56BB292D"
+    },
+    {
+     "index": 7,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s02a_ga1",
+     "shape": "g",
+     "rotation": 2,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 2,
+     "seed": "0xE4FB9A53"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      0,
+      0
+     ],
+     [
+      1,
+      0
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      3,
+      1
+     ]
+    ]
+   ],
+   "transcription_order": [
+    7,
+    2,
+    3,
+    6,
+    4,
+    0,
+    1,
+    5
+   ],
+   "also_seen_in": [
+    "20260807-131941_Phantasy_Star_0__USA_.ml2"
+   ]
+  },
+  {
+   "id": "s02b-20260807-131952",
+   "stage": "s02b",
+   "capture": "20260807-131952_Phantasy_Star_0__USA_.ml4",
+   "input": {
+    "generation_start_state": "0xA6D08DA784CF77BE",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0xE7B3",
+    "draws_from_session_seed_to_generation_start": 205,
+    "draws_from_generation_start_to_capture": 208
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "B4",
+    "goal": "D1",
+    "start_xy": [
+     1,
+     3
+    ],
+    "goal_xy": [
+     3,
+     0
+    ],
+    "origin_shift": [
+     2,
+     3
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s02b_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0x805C9446"
+    },
+    {
+     "index": 1,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s02b_ib1",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "open"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0xAFA77E3A"
+    },
+    {
+     "index": 2,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s02b_tb3",
+     "shape": "t",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      },
+      "west": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x2004F236"
+    },
+    {
+     "index": 3,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s02b_td1",
+     "shape": "t",
+     "rotation": 1,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 6,
+       "gate": "one-key"
+      },
+      "west": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x92BF1FBF"
+    },
+    {
+     "index": 4,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s02b_nc2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 1,
+     "seed": "0x21A09CE7"
+    },
+    {
+     "index": 5,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s02b_lc1",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0xAE5EAB4B"
+    },
+    {
+     "index": 6,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s02b_na1",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 0,
+     "seed": "0xFBB759C6"
+    },
+    {
+     "index": 7,
+     "cell": "D1",
+     "xy": [
+      3,
+      0
+     ],
+     "code": "s02b_ga1",
+     "shape": "g",
+     "rotation": 1,
+     "depth": 5,
+     "role": "goal",
+     "exits": {
+      "west": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x9C1F7763"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      0
+     ],
+     [
+      3,
+      0
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ]
+   ],
+   "transcription_order": [
+    7,
+    1,
+    6,
+    4,
+    3,
+    0,
+    5,
+    2
+   ],
+   "also_seen_in": [
+    "20260807-132001_Phantasy_Star_0__USA_.ml5"
+   ]
+  },
+  {
+   "id": "s03a-20260729-132216",
+   "stage": "s03a",
+   "capture": "20260729-132216_Phantasy_Star_0__USA_.ml3",
+   "input": {
+    "generation_start_state": "0x0000000000000484",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x0484",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 246
+   },
+   "drawn": {
+    "target": 9,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "B5",
+    "goal": "A1",
+    "start_xy": [
+     1,
+     4
+    ],
+    "goal_xy": [
+     0,
+     0
+    ],
+    "origin_shift": [
+     2,
+     2
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "B5",
+     "xy": [
+      1,
+      4
+     ],
+     "code": "s03a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 3,
+     "seed": "0x887708A4"
+    },
+    {
+     "index": 1,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s03a_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "open"
+      },
+      "east": {
+       "room": 3,
+       "gate": "open"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x99D4A02C"
+    },
+    {
+     "index": 2,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s03a_nc2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x49241FF5"
+    },
+    {
+     "index": 3,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s03a_lc2",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 8,
+       "gate": "one-key"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 1,
+     "seed": "0xF7258DD9"
+    },
+    {
+     "index": 4,
+     "cell": "A4",
+     "xy": [
+      0,
+      3
+     ],
+     "code": "s03a_lb3",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 2,
+     "seed": "0xC6FC93A0"
+    },
+    {
+     "index": 5,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s03a_ib1",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 1,
+     "seed": "0x0029E8A0"
+    },
+    {
+     "index": 6,
+     "cell": "A2",
+     "xy": [
+      0,
+      1
+     ],
+     "code": "s03a_ic1",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x558F308C"
+    },
+    {
+     "index": 7,
+     "cell": "A1",
+     "xy": [
+      0,
+      0
+     ],
+     "code": "s03a_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 5,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 6,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x54E4882F"
+    },
+    {
+     "index": 8,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s03a_nb2",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 0,
+     "seed": "0x23E7E49C"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      2
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    [
+     [
+      0,
+      3
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      1,
+      4
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    6,
+    8,
+    7,
+    1,
+    4,
+    5,
+    2,
+    0
+   ],
+   "also_seen_in": []
+  },
+  {
+   "id": "s03b-20260808-092002",
+   "stage": "s03b",
+   "capture": "20260808-092002_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0xA2A2CA8C7D7644D3",
+    "params": [
+     8,
+     10,
+     2,
+     2,
+     50,
+     25,
+     50,
+     30,
+     85,
+     0,
+     1
+    ],
+    "session_seed": "0xBC40",
+    "draws_from_session_seed_to_generation_start": 209,
+    "draws_from_generation_start_to_capture": 194
+   },
+   "drawn": {
+    "target": 8,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C5",
+    "goal": "C1",
+    "start_xy": [
+     2,
+     4
+    ],
+    "goal_xy": [
+     2,
+     0
+    ],
+    "origin_shift": [
+     1,
+     5
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s03b_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 1,
+     "seed": "0x84044E72"
+    },
+    {
+     "index": 1,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s03b_td1",
+     "shape": "t",
+     "rotation": 1,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      },
+      "west": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x5DE2E912"
+    },
+    {
+     "index": 2,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s03b_lc2",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 1,
+     "layout": 2,
+     "seed": "0xECEA9C0D"
+    },
+    {
+     "index": 3,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s03b_ic1",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x1C9C292B"
+    },
+    {
+     "index": 4,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s03b_ib2",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x911F924B"
+    },
+    {
+     "index": 5,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s03b_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x399EF7B4"
+    },
+    {
+     "index": 6,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s03b_lb1",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 2,
+       "gate": "open"
+      },
+      "west": {
+       "room": 7,
+       "gate": "two-key"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x6216D9A7"
+    },
+    {
+     "index": 7,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s03b_nc2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 6,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0x8949EF5A"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    0,
+    2,
+    4,
+    1,
+    7,
+    5,
+    6
+   ],
+   "also_seen_in": [
+    "20260808-092014_Phantasy_Star_0__USA_.ml2",
+    "20260808-092031_Phantasy_Star_0__USA_.ml3"
+   ]
+  },
+  {
+   "id": "s04a-20260806-232322",
+   "stage": "s04a",
+   "capture": "20260806-232322_Phantasy_Star_0__USA_.ml1",
+   "input": {
+    "generation_start_state": "0x000000000000CF87",
+    "params": [
+     13,
+     15,
+     3,
+     3,
+     50,
+     25,
+     50,
+     30,
+     85,
+     4,
+     1
+    ],
+    "session_seed": "0xCF87",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 394
+   },
+   "drawn": {
+    "target": 14,
+    "branches": 3
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "A6",
+    "goal": "D1",
+    "start_xy": [
+     0,
+     5
+    ],
+    "goal_xy": [
+     3,
+     0
+    ],
+    "origin_shift": [
+     3,
+     0
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "A6",
+     "xy": [
+      0,
+      5
+     ],
+     "code": "s04a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 2,
+     "seed": "0x755940E8"
+    },
+    {
+     "index": 1,
+     "cell": "A5",
+     "xy": [
+      0,
+      4
+     ],
+     "code": "s04a_lb3",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 2,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x26780821"
+    },
+    {
+     "index": 2,
+     "cell": "B5",
+     "xy": [
+      1,
+      4
+     ],
+     "code": "s04a_ic1",
+     "shape": "i",
+     "rotation": 3,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 3,
+       "gate": "two-key"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 1,
+     "seed": "0x279628F4"
+    },
+    {
+     "index": 3,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s04a_ib1",
+     "shape": "i",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x1C8BE2B6"
+    },
+    {
+     "index": 4,
+     "cell": "D5",
+     "xy": [
+      3,
+      4
+     ],
+     "code": "s04a_lb3",
+     "shape": "l",
+     "rotation": 3,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x0A92E9A4"
+    },
+    {
+     "index": 5,
+     "cell": "D4",
+     "xy": [
+      3,
+      3
+     ],
+     "code": "s04a_lc2",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 4,
+       "gate": "open"
+      },
+      "west": {
+       "room": 6,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0xD069CA98"
+    },
+    {
+     "index": 6,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s04a_td2",
+     "shape": "t",
+     "rotation": 2,
+     "depth": 6,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 5,
+       "gate": "open"
+      },
+      "west": {
+       "room": 8,
+       "gate": "two-key"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 1,
+     "seed": "0x0E20F893"
+    },
+    {
+     "index": 7,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s04a_lc1",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 7,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 9,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 6,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0xAF583201"
+    },
+    {
+     "index": 8,
+     "cell": "B4",
+     "xy": [
+      1,
+      3
+     ],
+     "code": "s04a_tb3",
+     "shape": "t",
+     "rotation": 2,
+     "depth": 7,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 11,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 6,
+       "gate": "open"
+      },
+      "west": {
+       "room": 12,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 2,
+     "seed": "0x6A2AA274"
+    },
+    {
+     "index": 9,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s04a_lb3",
+     "shape": "l",
+     "rotation": 3,
+     "depth": 8,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 10,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 7,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0xA396439F"
+    },
+    {
+     "index": 10,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s04a_ic3",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 9,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 13,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 9,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x6F0B0CCA"
+    },
+    {
+     "index": 11,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s04a_nc2",
+     "shape": "n",
+     "rotation": 0,
+     "depth": 8,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 8,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x2B2DDD5C"
+    },
+    {
+     "index": 12,
+     "cell": "A4",
+     "xy": [
+      0,
+      3
+     ],
+     "code": "s04a_nb2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 8,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 8,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0x3F34A4D6"
+    },
+    {
+     "index": 13,
+     "cell": "D1",
+     "xy": [
+      3,
+      0
+     ],
+     "code": "s04a_ga1",
+     "shape": "g",
+     "rotation": 0,
+     "depth": 10,
+     "role": "goal",
+     "exits": {
+      "south": {
+       "room": 10,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0xAF74C8DC"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      3
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      0,
+      4
+     ],
+     [
+      0,
+      5
+     ]
+    ],
+    [
+     [
+      0,
+      4
+     ],
+     [
+      1,
+      4
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      1,
+      4
+     ],
+     [
+      2,
+      4
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      3,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      4
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    [
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      3
+     ],
+     [
+      3,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    6,
+    5,
+    7,
+    8,
+    2,
+    10,
+    3,
+    1,
+    11,
+    13,
+    0,
+    4,
+    9,
+    12
+   ],
+   "also_seen_in": [
+    "20260807-092850_Phantasy_Star_0__USA_.ml2",
+    "20260807-092856_Phantasy_Star_0__USA_.ml3",
+    "20260807-095507_Phantasy_Star_0__USA_.ml1",
+    "20260807-095517_Phantasy_Star_0__USA_.ml2"
+   ]
+  },
+  {
+   "id": "s05a-20260729-132223",
+   "stage": "s05a",
+   "capture": "20260729-132223_Phantasy_Star_0__USA_.ml4",
+   "input": {
+    "generation_start_state": "0x0000000000005C60",
+    "params": [
+     9,
+     11,
+     2,
+     3,
+     50,
+     25,
+     50,
+     30,
+     85,
+     3,
+     0
+    ],
+    "session_seed": "0x5C60",
+    "draws_from_session_seed_to_generation_start": 0,
+    "draws_from_generation_start_to_capture": 255
+   },
+   "drawn": {
+    "target": 10,
+    "branches": 2
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "B3",
+    "goal": "D3",
+    "start_xy": [
+     1,
+     2
+    ],
+    "goal_xy": [
+     3,
+     2
+    ],
+    "origin_shift": [
+     2,
+     4
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s05a_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0xE4510A94"
+    },
+    {
+     "index": 1,
+     "cell": "B2",
+     "xy": [
+      1,
+      1
+     ],
+     "code": "s05a_lc1",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 2,
+       "gate": "open"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x276597FF"
+    },
+    {
+     "index": 2,
+     "cell": "C2",
+     "xy": [
+      2,
+      1
+     ],
+     "code": "s05a_td1",
+     "shape": "t",
+     "rotation": 2,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "east": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 0,
+     "seed": "0x813AA5D1"
+    },
+    {
+     "index": 3,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s05a_td2",
+     "shape": "t",
+     "rotation": 0,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 6,
+       "gate": "two-key"
+      },
+      "west": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x3FE86B36"
+    },
+    {
+     "index": 4,
+     "cell": "C1",
+     "xy": [
+      2,
+      0
+     ],
+     "code": "s05a_lb1",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 2,
+       "gate": "open"
+      },
+      "west": {
+       "room": 7,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 2,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x1AF0803F"
+    },
+    {
+     "index": 5,
+     "cell": "E2",
+     "xy": [
+      4,
+      1
+     ],
+     "code": "s05a_lc2",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 8,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x6EA09620"
+    },
+    {
+     "index": 6,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s05a_ga1",
+     "shape": "g",
+     "rotation": 2,
+     "depth": 4,
+     "role": "goal",
+     "exits": {
+      "north": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 0,
+     "seed": "0x93029B7B"
+    },
+    {
+     "index": 7,
+     "cell": "B1",
+     "xy": [
+      1,
+      0
+     ],
+     "code": "s05a_ic1",
+     "shape": "i",
+     "rotation": 1,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "open"
+      },
+      "west": {
+       "room": 9,
+       "gate": "one-key"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0xA45784F6"
+    },
+    {
+     "index": 8,
+     "cell": "E3",
+     "xy": [
+      4,
+      2
+     ],
+     "code": "s05a_nb2",
+     "shape": "n",
+     "rotation": 2,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 1,
+     "way_back": 0,
+     "layout": 2,
+     "seed": "0xE5A7A5B2"
+    },
+    {
+     "index": 9,
+     "cell": "A1",
+     "xy": [
+      0,
+      0
+     ],
+     "code": "s05a_nc2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 7,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 3,
+     "seed": "0x9C25705B"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      1,
+      0
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ]
+    ],
+    [
+     [
+      2,
+      1
+     ],
+     [
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      1
+     ]
+    ],
+    [
+     [
+      4,
+      1
+     ],
+     [
+      4,
+      2
+     ]
+    ]
+   ],
+   "transcription_order": [
+    3,
+    0,
+    5,
+    6,
+    2,
+    8,
+    7,
+    9,
+    1,
+    4
+   ],
+   "also_seen_in": []
+  },
+  {
+   "id": "s06b-20260806-232327",
+   "stage": "s06b",
+   "capture": "20260806-232327_Phantasy_Star_0__USA_.ml2",
+   "input": {
+    "generation_start_state": "0x92CF7B631130D742",
+    "params": [
+     15,
+     17,
+     3,
+     4,
+     50,
+     25,
+     50,
+     30,
+     85,
+     0,
+     0
+    ],
+    "session_seed": "0x65DA",
+    "draws_from_session_seed_to_generation_start": 456,
+    "draws_from_generation_start_to_capture": 445
+   },
+   "drawn": {
+    "target": 15,
+    "branches": 3
+   },
+   "grid": {
+    "width": 7,
+    "height": 10,
+    "start": "C5",
+    "goal": "F1",
+    "start_xy": [
+     2,
+     4
+    ],
+    "goal_xy": [
+     5,
+     0
+    ],
+    "origin_shift": [
+     1,
+     5
+    ]
+   },
+   "rooms": [
+    {
+     "index": 0,
+     "cell": "C5",
+     "xy": [
+      2,
+      4
+     ],
+     "code": "s06b_sa1",
+     "shape": "s",
+     "rotation": 2,
+     "depth": 0,
+     "role": "start",
+     "exits": {
+      "north": {
+       "room": 1,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": -1,
+     "layout": 0,
+     "seed": "0xBF21F978"
+    },
+    {
+     "index": 1,
+     "cell": "C4",
+     "xy": [
+      2,
+      3
+     ],
+     "code": "s06b_ic3",
+     "shape": "i",
+     "rotation": 2,
+     "depth": 1,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 2,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 0,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 2,
+     "seed": "0x1CA98F47"
+    },
+    {
+     "index": 2,
+     "cell": "C3",
+     "xy": [
+      2,
+      2
+     ],
+     "code": "s06b_td1",
+     "shape": "t",
+     "rotation": 0,
+     "depth": 2,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 4,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 1,
+       "gate": "open"
+      },
+      "west": {
+       "room": 3,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x429465CA"
+    },
+    {
+     "index": 3,
+     "cell": "B3",
+     "xy": [
+      1,
+      2
+     ],
+     "code": "s06b_ib1",
+     "shape": "i",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 2,
+       "gate": "open"
+      },
+      "west": {
+       "room": 12,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 1,
+     "layout": 1,
+     "seed": "0x1CF86B00"
+    },
+    {
+     "index": 4,
+     "cell": "D3",
+     "xy": [
+      3,
+      2
+     ],
+     "code": "s06b_xb2",
+     "shape": "x",
+     "rotation": 3,
+     "depth": 3,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 6,
+       "gate": "one-key"
+      },
+      "east": {
+       "room": 7,
+       "gate": "one-key"
+      },
+      "south": {
+       "room": 5,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 2,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 2,
+     "seed": "0x3A7A3625"
+    },
+    {
+     "index": 5,
+     "cell": "D4",
+     "xy": [
+      3,
+      3
+     ],
+     "code": "s06b_lb1",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 4,
+       "gate": "open"
+      },
+      "east": {
+       "room": 8,
+       "gate": "enemy-defeat"
+      }
+     },
+     "keys": 1,
+     "way_back": 0,
+     "layout": 0,
+     "seed": "0x283C0C2B"
+    },
+    {
+     "index": 6,
+     "cell": "D2",
+     "xy": [
+      3,
+      1
+     ],
+     "code": "s06b_ib2",
+     "shape": "i",
+     "rotation": 0,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 9,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 3,
+     "seed": "0x0C50E9E5"
+    },
+    {
+     "index": 7,
+     "cell": "E3",
+     "xy": [
+      4,
+      2
+     ],
+     "code": "s06b_na1",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 4,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0xCD7B632C"
+    },
+    {
+     "index": 8,
+     "cell": "E4",
+     "xy": [
+      4,
+      3
+     ],
+     "code": "s06b_lc2",
+     "shape": "l",
+     "rotation": 2,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "south": {
+       "room": 11,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 5,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 1,
+     "seed": "0xF9BCC151"
+    },
+    {
+     "index": 9,
+     "cell": "D1",
+     "xy": [
+      3,
+      0
+     ],
+     "code": "s06b_lc2",
+     "shape": "l",
+     "rotation": 1,
+     "depth": 5,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 10,
+       "gate": "enemy-defeat"
+      },
+      "south": {
+       "room": 6,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 2,
+     "layout": 0,
+     "seed": "0x6F32F8E4"
+    },
+    {
+     "index": 10,
+     "cell": "E1",
+     "xy": [
+      4,
+      0
+     ],
+     "code": "s06b_ib2",
+     "shape": "i",
+     "rotation": 1,
+     "depth": 6,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 13,
+       "gate": "enemy-defeat"
+      },
+      "west": {
+       "room": 9,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0x2A8A8397"
+    },
+    {
+     "index": 11,
+     "cell": "E5",
+     "xy": [
+      4,
+      4
+     ],
+     "code": "s06b_lb1",
+     "shape": "l",
+     "rotation": 0,
+     "depth": 6,
+     "role": null,
+     "exits": {
+      "north": {
+       "room": 8,
+       "gate": "open"
+      },
+      "east": {
+       "room": 14,
+       "gate": "one-key"
+      }
+     },
+     "keys": 0,
+     "way_back": 0,
+     "layout": 1,
+     "seed": "0xF80951BC"
+    },
+    {
+     "index": 12,
+     "cell": "A3",
+     "xy": [
+      0,
+      2
+     ],
+     "code": "s06b_nb2",
+     "shape": "n",
+     "rotation": 3,
+     "depth": 4,
+     "role": null,
+     "exits": {
+      "east": {
+       "room": 3,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 1,
+     "layout": 2,
+     "seed": "0xAE73389D"
+    },
+    {
+     "index": 13,
+     "cell": "F1",
+     "xy": [
+      5,
+      0
+     ],
+     "code": "s06b_ga1",
+     "shape": "g",
+     "rotation": 1,
+     "depth": 7,
+     "role": "goal",
+     "exits": {
+      "west": {
+       "room": 10,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0x2B67FFDE"
+    },
+    {
+     "index": 14,
+     "cell": "F5",
+     "xy": [
+      5,
+      4
+     ],
+     "code": "s06b_nc2",
+     "shape": "n",
+     "rotation": 1,
+     "depth": 7,
+     "role": null,
+     "exits": {
+      "west": {
+       "room": 11,
+       "gate": "open"
+      }
+     },
+     "keys": 0,
+     "way_back": 3,
+     "layout": 3,
+     "seed": "0xDEBFEFAB"
+    }
+   ],
+   "edges": [
+    [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ],
+    [
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ]
+    ],
+    [
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ]
+    ],
+    [
+     [
+      3,
+      0
+     ],
+     [
+      4,
+      0
+     ]
+    ],
+    [
+     [
+      3,
+      1
+     ],
+     [
+      3,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ]
+    ],
+    [
+     [
+      3,
+      2
+     ],
+     [
+      4,
+      2
+     ]
+    ],
+    [
+     [
+      3,
+      3
+     ],
+     [
+      4,
+      3
+     ]
+    ],
+    [
+     [
+      4,
+      0
+     ],
+     [
+      5,
+      0
+     ]
+    ],
+    [
+     [
+      4,
+      3
+     ],
+     [
+      4,
+      4
+     ]
+    ],
+    [
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      4
+     ]
+    ]
+   ],
+   "transcription_order": [
+    4,
+    9,
+    12,
+    2,
+    13,
+    6,
+    11,
+    7,
+    0,
+    8,
+    14,
+    5,
+    1,
+    10,
+    3
+   ],
+   "also_seen_in": [
+    "20260806-232331_Phantasy_Star_0__USA_.ml3",
+    "20260806-232335_Phantasy_Star_0__USA_.ml4"
+   ]
+  }
+ ]
+}

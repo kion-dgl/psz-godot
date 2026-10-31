@@ -39,6 +39,7 @@ func _run_tests_combat() -> void:
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)
 	test_player_states()
+	test_original_camera()
 	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
 	test_player_model_y_damping()
@@ -138,6 +139,7 @@ func _run_tests_core() -> void:
 	test_ranger_playthrough()
 	preload("res://scripts/tools/technique_progression_tests.gd").run(self)
 	preload("res://scripts/tools/systems_progression_tests.gd").run(self)
+	preload("res://scripts/tools/equipment_set_tests.gd").run(self)
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
@@ -2919,29 +2921,65 @@ func test_player_states() -> void:
 	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
 	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
 
-	# Dodge i-frames (spec /mechanics/dodge, tightened by #377): only the
-	# first DODGE_IFRAME_DURATION (0.2s) of the roll is invincible — NOT the
-	# whole move phase. Off-tree instance — take_damage's i-frame return
-	# fires before any tree-dependent call.
-	assert_eq(consts.get("DODGE_IFRAME_DURATION"), 0.2, "i-frame window is the fixed 0.2s (#377)")
+	# Dodge durability (spec /mechanics/dodge, 2026-10 ROM correction): the
+	# original's hit-reaction gate excludes the knockdown/dead states, NOT the
+	# dodge — there are no i-frames. Every frame of the roll is damageable and
+	# interrupts the action; the pass-through window gates contact only.
+	assert_true(not consts.has("DODGE_IFRAME_DURATION"), "i-frame constant removed (ROM correction)")
+	assert_eq(consts.get("DODGE_DURATION"), 41.0 / 30.0, "dodge is the 41-frame ROM action (roll + get-up)")
+	assert_eq(consts.get("DODGE_PASS_THROUGH"), 10.0 / 30.0, "pass-through window is the first 10 frames")
 	var p = PlayerScript.new()
 	var hp_full: int = GameState.max_hp
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.1
-	p.dodge_move_end = 0.5
-	p.take_damage(25)
-	assert_eq(GameState.hp, hp_full, "hit inside the 0.2s window ignores damage (i-frames)")
-	assert_eq(p.current_state, states["DODGING"], "i-frame hit does not interrupt the roll")
-	p.dodge_timer = 0.3  # inside the move phase but PAST the i-frame window
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "hit past 0.2s takes damage even mid-move-phase (#377)")
-	assert_eq(p.current_state, states["DAMAGED"], "post-window hit interrupts the roll (DODGING → DAMAGED)")
+	p.dodge_timer = 0.1  # inside the pass-through window
+	p.take_damage(15)
+	assert_eq(GameState.hp, hp_full - 15, "no dodge immunity: a hit inside the pass-through window damages")
+	assert_eq(p.current_state, states["DAMAGED"], "any hit interrupts the roll (DODGING → DAMAGED)")
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
+	p.dodge_timer = 0.9  # deep in the get-up frames
+	p.take_damage(25)  # heavy hit
+	assert_eq(GameState.hp, hp_full - 25, "get-up frames take damage")
+	assert_eq(p.current_state, states["DOWN"], "get-up hit interrupts the roll (DODGING → DOWN)")
+	GameState.set_hp(hp_full)
+
+	# Pass-through gates contact, not damage: open for the first 10 frames.
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.05
+	assert_true(p.is_dodge_passing_through(), "pass-through open in the first 10 frames")
+	p.dodge_timer = 0.4
+	assert_true(not p.is_dodge_passing_through(), "pass-through closed after 10 frames")
+	p.current_state = states["IDLE"]
+	assert_true(not p.is_dodge_passing_through(), "pass-through only applies while DODGING")
+
+	# ROM displacement curve (data/re_reference/player_dodge_motion.json):
+	# total travel 17901 Q12 ≈ 4.37 u in the dodge direction (+z local), with
+	# the front-loaded plateau at ~1085 Q12/frame.
+	var curve_total := Vector2.ZERO
+	for i in range(41):
+		curve_total += p._dodge_curve_delta(i)
+	assert_almost_eq(curve_total.y, 17901.0, 1.0, "dodge curve total travel is 17901 Q12")
+	assert_almost_eq(absf(curve_total.x), 30.0, 1.0, "curve lateral wobble sums to ~30 Q12 (the roll arc)")
+	assert_eq(p._dodge_curve_delta(8).y, 1085.0, "curve plateau step is 1085 Q12/frame")
+	assert_eq(p._dodge_curve_delta(0), Vector2.ZERO, "admission frame is static")
+	assert_eq(p._dodge_curve_delta(45), Vector2.ZERO, "past the table the get-up adds no displacement")
+	# The embedded constant must stay in lockstep with the reference JSON
+	# (the shipped pack carries no data/ tree, so the curve lives in code —
+	# this is the drift pin between the two).
+	var reference: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/re_reference/player_dodge_motion.json"))
+	if reference is Dictionary and reference.get("delta_per_frame") is Array:
+		var rows: Array = reference["delta_per_frame"]
+		assert_eq(p.DODGE_MOTION_CURVE.size(), rows.size(), "embedded curve length matches the reference JSON")
+		var drift := false
+		for i in range(mini(p.DODGE_MOTION_CURVE.size(), rows.size())):
+			if p.DODGE_MOTION_CURVE[i] != Vector2(float(rows[i][0]), float(rows[i][1])):
+				drift = true
+				break
+		assert_true(not drift, "embedded curve matches the reference JSON exactly")
+	else:
+		assert_true(false, "player_dodge_motion.json unreadable — cannot pin the embedded curve")
 	GameState.set_hp(hp_full)
 
 	# Charge-cancel on DODGING (spec /states/player-state): a mid-charge
@@ -3002,6 +3040,33 @@ func test_player_defeat_invulnerable() -> void:
 # damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
 # pops glide, while physics stays exact. Snaps on a real fall so the mesh never
 # floats. Locks the damping contract; the buttery result is verified in-game.
+# Previous orbit controls with the retained 5-unit, 11.25-degree framing.
+func test_original_camera() -> void:
+	var cam = preload("res://scenes/3d/camera/orbit_camera.tscn").instantiate()
+	add_child(cam)
+	var target := Node3D.new()
+	add_child(target)
+	cam.set_target(target)
+	cam.camera_rotation = 0.3
+	cam._update_camera_position(0.0)
+	var look := target.global_position + Vector3.UP * 1.5
+	assert_almost_eq(cam.camera.global_position.distance_to(look), 5.0, 0.00001, "retained camera radius")
+	assert_almost_eq(cam.camera.global_position.y, 1.5 + 5.0 * sin(PI / 16.0), 0.00001, "retained camera elevation")
+	assert_almost_eq(cam.camera.fov, 44.0, 0.00001, "retained framing FOV")
+	target.position.x += 1.0
+	cam._update_camera_position(1.0 / 60.0)
+	assert_almost_eq(cam.camera_rotation, 0.3, 0.00001, "movement does not rotate camera")
+	assert_almost_eq(cam.camera.global_position.x, 1.0 + sin(0.3) * cam.distance, 0.00001, "horizontal follow is immediate")
+	cam.camera_pitch = 0.2
+	cam._center_behind_player()
+	assert_almost_eq(cam.camera_rotation, PI, 0.00001, "recenter is immediate")
+	assert_almost_eq(cam.camera_pitch, 0.0, 0.00001, "recenter restores default pitch")
+	cam._update_camera_position(0.0)
+	assert_true(cam.camera.global_transform.is_equal_approx(cam.get_follow_transform()), "shop return agrees with camera pose")
+	cam.free()
+	target.free()
+
+
 func test_player_model_y_damping() -> void:
 	print("── Player Model Y Damping ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
@@ -3101,10 +3166,9 @@ func test_action_commitment() -> void:
 	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
 	GameState.set_hp(GameState.max_hp)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.5  # outside the i-frame window
-	p.dodge_move_end = 0.5
+	p.dodge_timer = 0.5  # get-up frames — damageable, no dodge immunity
 	p.take_damage(25)  # heavy hit
-	assert_eq(p.current_state, states["DOWN"], "damage outside i-frames interrupts a roll (DODGING → DOWN)")
+	assert_eq(p.current_state, states["DOWN"], "damage interrupts a roll (DODGING → DOWN)")
 	GameState.set_hp(GameState.max_hp)
 
 	# Hitbox lifetime (#428): EVERY exit from ATTACKING deactivates the attack

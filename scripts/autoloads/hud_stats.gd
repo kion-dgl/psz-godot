@@ -165,6 +165,7 @@ class StatsPanel extends Control:
 		add_child(_bg)
 		_ensure_bg_texture()
 		add_child(preload("res://scripts/ui/progression_hud.gd").new())
+		add_child(preload("res://scripts/ui/experience_hud.gd").new())
 
 		_hp_bar = ColorRect.new()
 		_hp_bar.color = HP_COLOR

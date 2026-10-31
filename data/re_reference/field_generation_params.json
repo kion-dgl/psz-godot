@@ -1,0 +1,315 @@
+{
+  "source": "retail raw/ quest/single/dive/quest_0010S00.rel + quest/random_dungeon.rel; semantics from data/re_reference/level_generation_algorithm.json (FUN_02031ce8 three-pass merge, resolved live via DTCM breakpoint)",
+  "merge_rule": "arm9 default 0x020ec2d8 <- random_dungeon.rel overlay (pass 2) <- per-area sparse diff (pass 3, sentinel = inherit: negative for bytes 0..8/0x0a, 0xFE for byte 9 and the picker loop). The merged block exists only as a DTCM stack local at generation time.",
+  "target_rule": "target = min + rand(max-min); branches = pair[0] + rand(pair[1]-pair[0]); budget identity target = 2*branches + spine + 1 (FUN_02083378); growth stops at placed >= target, one extension pass when short",
+  "areas": {
+    "1": {
+      "min_rooms": 8,
+      "max_rooms": 10,
+      "branch_pair": [
+        2,
+        2
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        2,
+        255,
+        255,
+        255,
+        255,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        0
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "2": {
+      "min_rooms": 8,
+      "max_rooms": 10,
+      "branch_pair": [
+        2,
+        2
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        2,
+        255,
+        255,
+        255,
+        255,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        0
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "3": {
+      "min_rooms": 8,
+      "max_rooms": 10,
+      "branch_pair": [
+        2,
+        2
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        255,
+        255,
+        255,
+        2,
+        255,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        3
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "4": {
+      "min_rooms": 9,
+      "max_rooms": 11,
+      "branch_pair": [
+        2,
+        3
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        255,
+        255,
+        2,
+        255,
+        255,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        2
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "5": {
+      "min_rooms": 9,
+      "max_rooms": 11,
+      "branch_pair": [
+        2,
+        3
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        255,
+        2,
+        255,
+        255,
+        255,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        1
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "6": {
+      "min_rooms": 10,
+      "max_rooms": 12,
+      "branch_pair": [
+        2,
+        3
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        255,
+        255,
+        255,
+        255,
+        2,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        4
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    },
+    "7": {
+      "min_rooms": 10,
+      "max_rooms": 12,
+      "branch_pair": [
+        2,
+        3
+      ],
+      "gate_params_4_to_8": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "start_y_param": 3,
+      "goal_mode": 0,
+      "picker_index_bytes": [
+        255,
+        255,
+        255,
+        255,
+        2,
+        4,
+        3,
+        3
+      ],
+      "live_rare_slots": [
+        4
+      ],
+      "note": "branch pair (2,2) skips the branch draw entirely (max==min); (2,3) draws rand(1)=0 - branches are ALWAYS 2"
+    }
+  },
+  "random_dungeon_overlay": {
+    "room_bounds_superseded": [
+      10,
+      13
+    ],
+    "params_4_to_6": [
+      50,
+      25,
+      50
+    ],
+    "corridor_chance_u16_0x0c": 500,
+    "weights_per_10000": [
+      50,
+      100,
+      200,
+      400,
+      800
+    ],
+    "weights_note": "weight index i is selected by a picker byte; value is the per-10000 chance. weights[4]=800 is the coliseum rate read by the E-transition builder (8%)"
+  },
+  "rare_room_slots": {
+    "0": {
+      "room": "nr1",
+      "mask": "0x000e",
+      "stages": [
+        1,
+        2,
+        3
+      ],
+      "note": "cake shop"
+    },
+    "1": {
+      "room": "nr3",
+      "mask": "0x0020",
+      "stages": [
+        5
+      ],
+      "note": "paru room"
+    },
+    "2": {
+      "room": "nr4",
+      "mask": "0x0010",
+      "stages": [
+        4
+      ],
+      "note": "pumpkins (makara)"
+    },
+    "3": {
+      "room": "nr5",
+      "mask": "0x0008",
+      "stages": [
+        3
+      ],
+      "note": "snowfield room"
+    },
+    "4": {
+      "room": "nr6",
+      "mask": "0x00c0",
+      "stages": [
+        6,
+        7
+      ],
+      "note": "pizza shop (arca plant)"
+    },
+    "5": {
+      "room": "nr2",
+      "mask": "0x0000",
+      "stages": [],
+      "note": "COLISEUM - never via the picker; placed by the E-transition builder at 8% (weights[4]=800/10000)"
+    },
+    "6": {
+      "room": "na1",
+      "mask": "0xfffe",
+      "stages": "all",
+      "note": "ordinary dead end"
+    },
+    "7": {
+      "room": "nc2",
+      "mask": "0xfffe",
+      "stages": "all",
+      "note": "ordinary dead end"
+    }
+  },
+  "rare_room_odds_stage1": {
+    "nr1": "2.0%",
+    "na1": "4.0%",
+    "nc2": "4.0%",
+    "nothing": "90.0%",
+    "coliseum_e_transition": "8.0% (separate roll)"
+  },
+  "wave_count_rule": "FUN_02057794 (banked, pszm-decomp): count = ctx_min + game_rng(ctx_max - ctx_min + 1) - INCLUSIVE range on the combat RNG (PszRng). ctx min/max are the [w3, w4] fields of the per-room wave records in enemy_room_assignment.json"
+}

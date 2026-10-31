@@ -1,0 +1,16 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Saved equipment sets" section="States">
+<p>Saved loadouts are a requested remake feature (#169/#170), not a recovered PS Zero mechanic.</p>
+<ul>
+<li>Each character MAY save eight named sets, containing a schema version, exact weapon/frame/unit/Mag instance references and inventory ordering. Stable identity tokens MUST distinguish different physical items sharing a legacy display ID. Saving or replacing a set MUST NOT copy or restore historical item stats or quantities.</li>
+<li>Recall MUST validate the entire set before changing equipment, inventory or storage. Missing items, duplicate slot references, incompatible equipment, insufficient frame slots or inventory capacity MUST refuse the whole recall with an explanation.</li>
+<li>Recall MUST retrieve referenced equipment from shared storage when its depositing character matches the current character. Legacy bank entries without ownership provenance MUST be withdrawn manually first. Other characters' equipment MUST NOT be silently substituted.</li>
+<li>Recall MUST preserve current grind, attributes, armor slots and Mag state. Inventory ordering restores surviving saved IDs first, then other carried items. It does not replenish consumed supplies or deposit surplus items.</li>
+<li>Storage transfers MUST preserve instance IDs and metadata (including identity tokens); newly acquired equipment MUST NOT reuse IDs referenced by storage or a saved set. A conflicting legacy withdrawal MUST refuse rather than overwrite an instance.</li>
+<li>The Equip menu MUST offer save, recall, rename and delete. Destructive replacement/deletion requires confirmation; cancel changes nothing. Changes persist through the normal save path. Switching Mags resets PB through the existing equipment refresh path.</li>
+</ul>
+<p>Verification: deterministic transaction and persistence fixtures plus a live start-menu/storage/rig probe. Character growth and enemy level curves remain the explicitly documented remake choices in <a href={siteUrl("/states/combat-progression")}>combat progression</a>; no class mapping is inferred from table order.</p>
+</Concept>

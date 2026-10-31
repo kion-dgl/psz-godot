@@ -436,6 +436,7 @@ func _draw_equip(c: Control, font: Font) -> void:
 		if not item_id.is_empty():
 			var info: Dictionary = Inventory._lookup_item(item_id)
 			display_name = str(info.get("name", item_id))
+		if slot_type == "sets": display_name = "Save / recall"
 		c.draw_string(font, Vector2(px + 80, draw_y + 16), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE_SM, col)
 
 		draw_y += 24
@@ -462,6 +463,8 @@ func _draw_equip(c: Control, font: Font) -> void:
 					desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [adata.defense_base, adata.evasion_base, aslots]
 			else:
 				desc = "Empty slot\n\n[Enter] Equip"
+		if slots[desc_idx].get("key", "") == "sets": desc = "Named equipment sets\nSave / recall\nRename / delete"
+		if not _c._action_message.is_empty(): desc += "\n" + _c._action_message
 		_draw_bottom_desc(c, font, desc)
 
 

@@ -81,7 +81,7 @@ var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _pal_bg_cache: Dictionary = {}  # palette page_idx → background Texture2D (#421)
-var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
+var _active_modal: Node = null  # Yes/No confirmation overlay for state-change actions
 var _renderer: StartMenuRenderer  # Canvas rendering, extracted to StartMenuRenderer
 var _input: StartMenuInput  # Input / navigation routing, extracted to StartMenuInput
 
@@ -745,7 +745,10 @@ func _sub_accept() -> void:
 			_equip_slot_idx = _sub_idx
 			_equip_item_idx = 0
 			if _equip_slot_idx < slots.size():
-				_mode = Mode.EQUIP_PICK
+				if slots[_equip_slot_idx].key == "sets":
+					preload("res://scripts/ui/equipment_set_menu.gd").open(self)
+				else:
+					_mode = Mode.EQUIP_PICK
 		Mode.TECHS:
 			var techs := _get_techniques()
 			if _sub_idx < techs.size():
@@ -1049,6 +1052,7 @@ func _get_equip_slots() -> Array:
 
 	# Mag
 	slots.append({"label": "Mag", "key": "mag", "type": "mag", "item": str(equip.get("mag", ""))})
+	slots.append({"label": "Sets", "key": "sets", "type": "sets", "item": ""})
 	return slots
 
 

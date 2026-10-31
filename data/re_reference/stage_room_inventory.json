@@ -1,0 +1,6391 @@
+{
+  "source": "retail PSZ raw/ extraction (psz-asset-viewer) file inventory of set/, enemy/deploy/ and scene/",
+  "semantics": "room codes and variant suffixes are filename-derived; per-mode meaning is a working hypothesis until the retail generator code is recovered. _f1.._f4 free-mode variants are the strongest signal: the original generator picks among per-room layout variants, not freeform grids.",
+  "room_code_notes": "s00 = city (nr1..nr6 radar rooms); sNNa/sNNb = area NN layout variants; e = entry room; z = boss/end room. Two-letter prefixes (ga ib ic lb lc na nb nc sa tb tc td xb ia nr) are the original room-shape families.",
+  "areas": {
+    "s00": {
+      "stages": {
+        "s00a": {
+          "rooms": {
+            "nr1": {
+              "set_variants": [
+                "d"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr3": {
+              "set_variants": [],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr4": {
+              "set_variants": [],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr5": {
+              "set_variants": [],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr6": {
+              "set_variants": [
+                "d"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s00e": {
+          "rooms": {
+            "sa1": {
+              "set_variants": [
+                "c",
+                "cm"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa2": {
+              "set_variants": [
+                "c",
+                "cm"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa3": {
+              "set_variants": [
+                "c"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa4": {
+              "set_variants": [
+                "c"
+              ],
+              "deploy_modes": [],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s01": {
+      "stages": {
+        "s01a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr1": {
+              "set_variants": [
+                "d",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s01b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s01e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s01z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s02": {
+      "stages": {
+        "s02a": {
+          "rooms": {
+            "b02": {
+              "set_variants": [],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic2": {
+              "set_variants": [],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb2": {
+              "set_variants": [],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc3": {
+              "set_variants": [],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s02b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr1": {
+              "set_variants": [
+                "d",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s02e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s02z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s03": {
+      "stages": {
+        "s03a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr5": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s03b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr5": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s03e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s03z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s04": {
+      "stages": {
+        "s04a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr4": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s04b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr4": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s04e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s04z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s05": {
+      "stages": {
+        "s05a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s05b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s05e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s05z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s06": {
+      "stages": {
+        "s06a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr6": {
+              "set_variants": [
+                "d",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s06b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr6": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s06e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s06z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s07": {
+      "stages": {
+        "s07a": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr6": {
+              "set_variants": [
+                "d",
+                "f1"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s07b": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ic3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nb1": {
+              "set_variants": [],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "nb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nc2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "r",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr6": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2"
+              ],
+              "deploy_modes": [],
+              "geometry": []
+            },
+            "sa1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tb3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "tc3": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "td2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "xb2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s07e": {
+          "rooms": {
+            "ia1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "nr2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f4"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4"
+              ],
+              "geometry": []
+            }
+          }
+        },
+        "s07z": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "na2": {
+              "set_variants": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "deploy_modes": [
+                "d",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "s08": {
+      "stages": {
+        "s080": {
+          "rooms": {
+            "sa0": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s081": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s082": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s083": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s084": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s085": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s086": {
+          "rooms": {
+            "ga1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "lb1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "sa1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s087": {
+          "rooms": {
+            "na1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            }
+          }
+        },
+        "s08e": {
+          "rooms": {
+            "ib0": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib1": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": [
+                "narc"
+              ]
+            },
+            "ib2": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib3": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib4": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib5": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib6": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib7": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib8": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            },
+            "ib9": {
+              "set_variants": [
+                "f1"
+              ],
+              "deploy_modes": [
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "s"
+              ],
+              "geometry": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "total_rooms": 339
+}

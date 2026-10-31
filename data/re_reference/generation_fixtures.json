@@ -1,0 +1,47 @@
+{
+  "source": "live breakpoint on 0x02081ed4 (the str that writes the drawn target into gen+0x87c), ml2 + one A press",
+  "method": "load ml2 headless, arm Z0 at 0x02081ed4, press A to confirm the field selection. At the hit r1 holds the target about to be stored, r5 the generator object and r4 the PARAMETER BLOCK. The RNG state one draw back is the generation seed, since the target draw is generation's first draw.",
+  "fixtures": [
+    {
+      "trial": "run1",
+      "seed": "0x0000000000005f8c",
+      "target": 9,
+      "placed_at_growth_return": 9,
+      "generator_object": "0x0225c050",
+      "branches_left": 0,
+      "spine_left": 1,
+      "note": "placed == target exactly at FUN_020821d0's return"
+    },
+    {
+      "trial": "run2",
+      "seed": "0x000000000000cc99",
+      "target": 8,
+      "rooms": 8,
+      "param_block_addr": "0x027e36b0",
+      "param_block": "080a02023219321e55030000f40102ffffff04030332006400c8009001203",
+      "min": 8,
+      "max": 10,
+      "second_pair": [
+        2,
+        2
+      ],
+      "pcts": [
+        50,
+        25,
+        50,
+        30,
+        85
+      ],
+      "field": [
+        "sa1",
+        "td1",
+        "lc1",
+        "ib1",
+        "tc3",
+        "na1",
+        "na1",
+        "ga1"
+      ]
+    }
+  ]
+}

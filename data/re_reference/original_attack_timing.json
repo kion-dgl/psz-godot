@@ -1,0 +1,434 @@
+{
+  "source": "derived from data/re_reference/player_combo_windows.json (psz-re emulator-validated decode of the pa00 attack records; hit frames, chain windows, clip lengths)",
+  "units": "fractions of the swing animation; hit_fracs fire damage at each crossing, chain_open/close_frac bound follow-up presses; atk3 never carries a chain window (no fourth hit)",
+  "types": {
+    "0": {
+      "file": "saver",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2571
+          ],
+          "chain_open_frac": 0.3714,
+          "chain_close_frac": 0.8,
+          "length_frames": 35
+        },
+        {
+          "hit_fracs": [
+            0.2778
+          ],
+          "chain_open_frac": 0.3333,
+          "chain_close_frac": 0.7778,
+          "length_frames": 36
+        },
+        {
+          "hit_fracs": [
+            0.4545
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 33
+        }
+      ]
+    },
+    "1": {
+      "file": "sword",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.3191
+          ],
+          "chain_open_frac": 0.383,
+          "chain_close_frac": 0.6383,
+          "length_frames": 47
+        },
+        {
+          "hit_fracs": [
+            0.3261
+          ],
+          "chain_open_frac": 0.4783,
+          "chain_close_frac": 0.7391,
+          "length_frames": 46
+        },
+        {
+          "hit_fracs": [
+            0.44
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 50
+        }
+      ]
+    },
+    "2": {
+      "file": "dagger",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.1556,
+            0.3333
+          ],
+          "chain_open_frac": 0.4,
+          "chain_close_frac": 0.6222,
+          "length_frames": 45
+        },
+        {
+          "hit_fracs": [
+            0.2895
+          ],
+          "chain_open_frac": 0.4211,
+          "chain_close_frac": 0.7368,
+          "length_frames": 38
+        },
+        {
+          "hit_fracs": [
+            0.2075,
+            0.4151,
+            0.5849
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 53
+        }
+      ]
+    },
+    "5": {
+      "file": "spear",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2941
+          ],
+          "chain_open_frac": 0.4118,
+          "chain_close_frac": 0.7647,
+          "length_frames": 34
+        },
+        {
+          "hit_fracs": [
+            0.2973
+          ],
+          "chain_open_frac": 0.3784,
+          "chain_close_frac": 0.7027,
+          "length_frames": 37
+        },
+        {
+          "hit_fracs": [
+            0.55
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 40
+        }
+      ]
+    },
+    "3": {
+      "file": "claw",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2368
+          ],
+          "chain_open_frac": 0.3684,
+          "chain_close_frac": 0.6842,
+          "length_frames": 38
+        },
+        {
+          "hit_fracs": [
+            0.2632
+          ],
+          "chain_open_frac": 0.3947,
+          "chain_close_frac": 0.7105,
+          "length_frames": 38
+        },
+        {
+          "hit_fracs": [
+            0.2245,
+            0.6735
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 49
+        }
+      ]
+    },
+    "8": {
+      "file": "shield",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2703
+          ],
+          "chain_open_frac": 0.3784,
+          "chain_close_frac": 0.6216,
+          "length_frames": 37
+        },
+        {
+          "hit_fracs": [
+            0.3077
+          ],
+          "chain_open_frac": 0.4103,
+          "chain_close_frac": 0.6667,
+          "length_frames": 39
+        },
+        {
+          "hit_fracs": [
+            0.359
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 39
+        }
+      ]
+    },
+    "4": {
+      "file": "d_saver",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.3404,
+            0.3617
+          ],
+          "chain_open_frac": 0.4681,
+          "chain_close_frac": 0.6809,
+          "length_frames": 47
+        },
+        {
+          "hit_fracs": [
+            0.3953
+          ],
+          "chain_open_frac": 0.5116,
+          "chain_close_frac": 0.7442,
+          "length_frames": 43
+        },
+        {
+          "hit_fracs": [
+            0.3922,
+            0.4706,
+            0.5294
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 51
+        }
+      ]
+    },
+    "9": {
+      "file": "handgun",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.1034
+          ],
+          "chain_open_frac": 0.5172,
+          "chain_close_frac": 0.8276,
+          "length_frames": 29
+        },
+        {
+          "hit_fracs": [
+            0.129
+          ],
+          "chain_open_frac": 0.4839,
+          "chain_close_frac": 0.7742,
+          "length_frames": 31
+        },
+        {
+          "hit_fracs": [
+            0.1714
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 35
+        }
+      ]
+    },
+    "11": {
+      "file": "a_rifle",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2105
+          ],
+          "chain_open_frac": 0.4211,
+          "chain_close_frac": 0.8421,
+          "length_frames": 38
+        },
+        {
+          "hit_fracs": [
+            0.2308
+          ],
+          "chain_open_frac": 0.4359,
+          "chain_close_frac": 0.7949,
+          "length_frames": 39
+        },
+        {
+          "hit_fracs": [
+            0.3095
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 42
+        }
+      ]
+    },
+    "10": {
+      "file": "machinegun",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.1778,
+            0.3111
+          ],
+          "chain_open_frac": 0.4444,
+          "chain_close_frac": 0.7333,
+          "length_frames": 45
+        },
+        {
+          "hit_fracs": [
+            0.1739,
+            0.3043
+          ],
+          "chain_open_frac": 0.4348,
+          "chain_close_frac": 0.7174,
+          "length_frames": 46
+        },
+        {
+          "hit_fracs": [
+            0.1739,
+            0.3043
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 46
+        }
+      ]
+    },
+    "12": {
+      "file": "grenade",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2973
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 37
+        },
+        {},
+        {}
+      ]
+    },
+    "13": {
+      "file": "l_cannon",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2941
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 34
+        },
+        {},
+        {}
+      ]
+    },
+    "14": {
+      "file": "rod",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.275
+          ],
+          "chain_open_frac": 0.35,
+          "chain_close_frac": 0.65,
+          "length_frames": 40
+        },
+        {
+          "hit_fracs": [
+            0.2683
+          ],
+          "chain_open_frac": 0.3415,
+          "chain_close_frac": 0.6829,
+          "length_frames": 41
+        },
+        {
+          "hit_fracs": [
+            0.4595
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 37
+        }
+      ]
+    },
+    "15": {
+      "file": "wand",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.2162
+          ],
+          "chain_open_frac": 0.3243,
+          "chain_close_frac": 0.7027,
+          "length_frames": 37
+        },
+        {
+          "hit_fracs": [
+            0.2195
+          ],
+          "chain_open_frac": 0.3171,
+          "chain_close_frac": 0.6829,
+          "length_frames": 41
+        },
+        {
+          "hit_fracs": [
+            0.4545
+          ],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 33
+        }
+      ]
+    },
+    "6": {
+      "file": "slicer",
+      "build": "m",
+      "steps": [
+        {
+          "hit_fracs": [
+            0.303
+          ],
+          "chain_open_frac": 0.6061,
+          "chain_close_frac": 1.1818,
+          "length_frames": 33
+        },
+        {
+          "hit_fracs": [],
+          "chain_open_frac": 0.2857,
+          "chain_close_frac": 1.6857,
+          "length_frames": 35
+        },
+        {
+          "hit_fracs": [],
+          "chain_open_frac": null,
+          "chain_close_frac": null,
+          "length_frames": 31
+        }
+      ]
+    }
+  }
+}

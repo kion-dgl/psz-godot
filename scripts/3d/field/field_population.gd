@@ -59,11 +59,30 @@ class_name FieldPopulation
 ## (psz-re default_parameters bytes 4..8).
 
 const RE_DIR := "res://data/re_reference/"
-## Deploy set to roll from. The RE notes record that d/f1..f4/s draw from the
-## same pool with near-identical size distributions, so the set does not
-## meaningfully change which waves exist; "d" is the one validated against
-## kion's observed Valley waves.
-const DEPLOY_SET := "d"
+
+## Which of the six authored object/enemy set families this session loads.
+## The original chooses ONE family per session (FUN_02041a50, see
+## data/re_reference/object_set_selector.json): session byte +0x0C — 0 = "d",
+## 1 = "s", 2 = f<n> with n from the mission record's byte +0x0B, and every
+## failure path (no mission record, n < 1, n > 9) falls back to "f1". The
+## family keys BOTH set/<NN>/<v>/<room>/... and enemy/deploy/<set>/.
+## "d" remains the default: it is the dive set validated against observed
+## Valley waves. Field controllers call select_set_family() per session.
+const DEFAULT_SET_FAMILY := "d"
+
+const FieldRngScript := preload("res://scripts/utils/field_rng.gd")
+static var set_family := DEFAULT_SET_FAMILY
+
+
+static func select_set_family(family_byte: int, mission_byte: int) -> String:
+	if family_byte == 0:
+		return "d"
+	if family_byte == 1:
+		return "s"
+	if family_byte == 2 and mission_byte >= 1 and mission_byte <= 9:
+		return "f%d" % mission_byte
+	return "f1"
+
 
 ## Box count for a room the authored table does not cover. Nothing in a shipped
 ## field hits this today — every cell of every field quest resolves — so it is
@@ -157,12 +176,23 @@ static func _load() -> void:
 	_assignment = assign_doc.get("assignment", {})
 	_wave_counts = assign_doc.get("wave_counts", {})
 	var wave_doc: Dictionary = _read_json(RE_DIR + "enemy_wave_templates.json")
-	var deploy: Dictionary = wave_doc.get(DEPLOY_SET, {})
+	if not wave_doc.has(set_family):
+		# The wave corpus ships the validated "d" pool; d/f1..f4/s draw from
+		# the same pool with near-identical size distributions, so falling
+		# back keeps the roll well-formed for the other families.
+		push_warning("FieldPopulation: no wave set '" + set_family + "', using 'd'")
+	var deploy: Dictionary = wave_doc.get(set_family, wave_doc.get(DEFAULT_SET_FAMILY, {}))
 	_waves = deploy.get("waves", [])
 	_build_model_map()
 
 	var obj_doc: Dictionary = _read_json(RE_DIR + "room_objects.json")
-	_rooms = obj_doc.get("rooms", {})
+	var placement_doc: Dictionary = _read_json(RE_DIR + "object_placement_per_room.json")
+	var trap_doc: Dictionary = _read_json(RE_DIR + "trap_placement_per_room.json")
+	if not placement_doc.get("per_room", {}).is_empty():
+		_rooms = _normalize_placement(placement_doc["per_room"],
+			trap_doc.get("per_room", {}), obj_doc.get("rooms", {}))
+	else:
+		_rooms = obj_doc.get("rooms", {})
 	_build_ambience_fallback()
 	_layout_masks = obj_doc.get("layout_masks", [])
 	_layout_weights = obj_doc.get("layout_weights_by_depth", {})
@@ -193,6 +223,168 @@ static func _read_json(path: String) -> Dictionary:
 	return json.data
 
 
+## Stem -> psz-godot object type for records the legacy importer translated.
+## Derived by joining the legacy room_objects.json records against the
+## object_placement_per_room.json records on (room, x, y, z, angle) — every
+## matched stem is listed; where a position match exists the legacy record is
+## inherited VERBATIM instead, so this map only covers new coverage (the
+## other set families) and cannot contradict an importer decision.
+const STEM_KIND_DEFAULTS := {
+	"box": "box",
+	"rare_box": "rare_box",
+	"wall": "wall",
+	"o0c_bird": "ambience",
+	"o0c_butterfly": "ambience",
+	"o0c_dragonfly": "ambience",
+	"o0c_fence": "fence",
+	"o0c_shfence": "fence",
+	"o0c_dgfance": "fence",
+	"o0c_fence4": "fence",
+	"o0c_healhp": "heal_pad",
+	"o0c_poisonm": "poison_trap",
+	"o0c_remswitch": "step_switch",
+	"o0c_switchf": "step_switch",
+	"o0c_switchs": "step_switch",
+}
+
+## Trap record names (trap_placement_per_room.json placements) -> the legacy
+## importer's type vocabulary, which the spawner already consumes.
+const TRAP_NAME_KINDS := {
+	"Heat Trap": "heat_trap",
+	"Ice Trap": "ice_trap",
+	"Light Trap": "light_trap",
+	"Gun Trap": "gun_trap",
+	"Capture Trap": "capture_trap",
+	"Burn Trap": "burn_trap",
+	"Heal Trap": "heal_trap",
+	"Needler Trap": "needler_trap",
+}
+
+
+## Kinds deliberately not imported (legacy room_objects.json not_imported_yet
+## — keys, treasure boxes, message packs, needles, warps, return pads, NPC
+## placements, compasses; psz-godot #594 widens these together with spawner
+## cases). Skipped here so the wider corpus does not silently spawn objects
+## the pipeline has no consumer for.
+const STEM_KIND_SKIPPED := ["o0c_key", "o0c_trebox", "o0c_mspack", "o0s_warpm",
+	"o0s_warps", "o0s_warpb", "o0s_warpcb", "o0s_warpcn", "o0s_warpch",
+	"o0s_warpcv", "o0c_return", "o0c_warparena1", "o0c_ruller01",
+	"o00_compass", "o00_compass2"]
+
+
+## Normalize the placement corpora (object_placement_per_room.json — all set
+## families, 1495 room-set files — merged with trap_placement_per_room.json,
+## the separate decode of the same set files' trap records) into the legacy
+## record shape {g,k,x,y,z,a,m} the consumer expects. A record whose
+## position matches a legacy record of the same room inherits that record
+## wholesale — preserving the importer's kind vocabulary, fence link ids and
+## model picks (one stem, o0c_switchf, mapped to BOTH capture_trap and
+## step_switch by the importer, so position inheritance is the only faithful
+## resolution). Positions match at one decimal: the two exports quantize the
+## same 1.19.12 fixed-point source differently (e.g. 7.2749 vs 7.28), and
+## authored objects never sit within 0.1 of each other. Unmatched records
+## take the stem/name defaults above; skipped kinds stay out, as today.
+static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
+		legacy_rooms: Dictionary) -> Dictionary:
+	var out := {}
+	for key in per_room.keys():
+		var entry: Dictionary = per_room[key]
+		var legacy: Dictionary = legacy_rooms.get(key, {})
+		var legacy_objects: Array = legacy.get("objects") if legacy.get("objects") is Array else []
+		# Count-based union: legacy records grouped by position sig, consumed
+		# one per matching new record, so same-position legacy twins both
+		# survive. Simulated against the corpora: every legacy record is
+		# retained (0 missing) while the fuller new decode adds coverage.
+		var by_pos := {}
+		var avail := {}
+		for rec in legacy_objects:
+			var s := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
+			if not by_pos.has(s):
+				by_pos[s] = []
+				avail[s] = 0
+			by_pos[s].append(rec)
+			avail[s] = int(avail[s]) + 1
+		var used := {}
+		var records: Array = []
+		var boxes: Array = entry.get("boxes") if entry.get("boxes") is Array else []
+		for b in boxes:
+			if b.get("x") == null or b.get("z") == null:
+				continue
+			var kind: String = str(b.get("kind", ""))
+			var sig: String = _pos_sig(b.get("x"), b.get("y"), b.get("z"), b.get("angle"))
+			var inherited = _take_legacy(by_pos, avail, used, sig)
+			if inherited != null:
+				records.append(inherited)
+			elif STEM_KIND_DEFAULTS.has(kind) and not kind in STEM_KIND_SKIPPED:
+				records.append({
+					"g": int(b["group"]) if b.get("group") != null else 0,
+					"k": STEM_KIND_DEFAULTS[kind],
+					"x": float(b.get("x", 0.0)),
+					"y": float(b.get("y", 0.0)),
+					"z": float(b.get("z", 0.0)),
+					"a": int(b.get("angle", 0)),
+					"m": str(b.get("model", "")),
+					# the record's +0x12 byte: variant within the factory kind
+					# (walls pick the stage model, containers go plain/rare,
+					# type-19 traps pick their burst element)
+					"v": int(b["variant"]) if b.get("variant") != null else 0,
+				})
+		var trap_entry: Dictionary = trap_room.get(key, {})
+		var trap_sizes: Array = trap_entry.get("group_sizes") if trap_entry.get("group_sizes") is Array else []
+		var placements: Array = trap_entry.get("placements") if trap_entry.get("placements") is Array else []
+		for p in placements:
+			if p.get("x") == null or p.get("z") == null:
+				continue
+			var name: String = str(p.get("name", ""))
+			var tsig: String = _pos_sig(p.get("x"), p.get("y"), p.get("z"), p.get("angle"))
+			var inherited = _take_legacy(by_pos, avail, used, tsig)
+			if inherited != null:
+				records.append(inherited)
+			elif TRAP_NAME_KINDS.has(name):
+				records.append({
+					"g": int(p["group"]) if p.get("group") != null else 0,
+					"k": TRAP_NAME_KINDS[name],
+					"x": float(p.get("x", 0.0)),
+					"y": float(p.get("y", 0.0)),
+					"z": float(p.get("z", 0.0)),
+					"a": int(p.get("angle", 0)),
+					"m": "",
+					"v": int(p["variant"]) if p.get("variant") != null else 0,
+				})
+		# Union with the legacy corpus: a legacy record the newer decodes do
+		# not carry at any matching position is kept verbatim — both exports
+		# decode the same set files, and dropping a placeable record on a
+		# quantization boundary is a regression, not fidelity.
+		for rec in legacy_objects:
+			var lsig := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
+			if _take_legacy(by_pos, avail, used, lsig) != null:
+				records.append(rec)
+		var sizes: Array = entry.get("group_sizes") if entry.get("group_sizes") is Array else []
+		var merged: Array = []
+		for g in range(6):
+			merged.append((int(sizes[g]) if g < sizes.size() else 0)
+				+ (int(trap_sizes[g]) if g < trap_sizes.size() else 0))
+		out[key] = {"groups": merged, "objects": records}
+	return out
+
+
+## Consume one legacy record at `sig` if any remain unconsumed.
+static func _take_legacy(by_pos: Dictionary, avail: Dictionary, used: Dictionary, sig) -> Variant:
+	if not by_pos.has(sig) or int(used.get(sig, 0)) >= int(avail[sig]):
+		return null
+	var rec = by_pos[sig][used.get(sig, 0)]
+	used[sig] = int(used.get(sig, 0)) + 1
+	return rec
+
+
+static func _pos_sig(x, y, z, a) -> String:
+	var fx := float(x) if x != null else 0.0
+	var fy := float(y) if y != null else 0.0
+	var fz := float(z) if z != null else 0.0
+	var ia := int(a) if a != null else 0
+	return "%.1f|%.1f|%.1f|%d" % [fx, fy, fz, ia]
+
+
 ## Index the out-of-deploy-set rooms (the importer emits them only for bases
 ## with no `d` row — see import_re_objects._take_offset_ambience). A base
 ## keeps the entry of its lexicographically FIRST set key, so `s00e_sa1_c`
@@ -201,10 +393,10 @@ static func _build_ambience_fallback() -> void:
 	_ambience_fallback.clear()
 	for key in _rooms.keys():
 		var k := str(key)
-		if k.ends_with("_" + DEPLOY_SET):
+		if k.ends_with("_" + set_family):
 			continue
 		var base := k.substr(0, k.rfind("_"))
-		if _rooms.has("%s_%s" % [base, DEPLOY_SET]):
+		if _rooms.has("%s_%s" % [base, set_family]):
 			continue
 		var held: Dictionary = _ambience_fallback.get(base, {})
 		if held.is_empty() or k < str(held.get("_key", "")):
@@ -332,9 +524,9 @@ static func _resolve(re_name: String) -> Array:
 ## slots are selected under the same mask. -1 (the default) draws here, as
 ## before -- the key-slot consumer must never let the room draw twice.
 static func authored_objects(room_code: String, depth: int, rng: RandomNumberGenerator,
-		layout_mask: int = -1) -> Array:
+		layout_mask: int = -1, room_seed: int = -1) -> Array:
 	_load()
-	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
+	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, set_family], {})
 	var records: Array = entry.get("objects", [])
 	if records.is_empty():
 		return _fallback_ambience(room_code)
@@ -352,7 +544,7 @@ static func authored_objects(room_code: String, depth: int, rng: RandomNumberGen
 		for g in range(5):
 			if (mask >> g) & 1:
 				picked.append_array(_cap(_in_group(records, g), _cap_per_group))
-		picked.append_array(_roll_group_five(_in_group(records, 5), rng))
+		picked.append_array(_roll_group_five(_in_group(records, 5), rng, room_seed))
 
 	var out: Array = []
 	for rec in _cap(picked, _cap_per_room):
@@ -438,6 +630,15 @@ static func _drop_unopenable_fences(objects: Array) -> Array:
 	return kept
 
 
+## The layout mask (bit set over groups 0..5) for a GENERATED layout category
+## — the original's per-room +0x31 draw (FUN_02082814), produced by
+## OriginalFieldGenerator.transcribe(). -1 returns -1 (caller draws instead).
+static func mask_for_layout(layout: int) -> int:
+	if layout < 0 or layout >= _layout_masks.size():
+		return -1
+	return int(_layout_masks[layout])
+
+
 ## Which of the five layout masks this room instance uses.
 static func _pick_layout(groups: Array, depth: int, rng: RandomNumberGenerator) -> int:
 	var occupied: int = 0
@@ -489,16 +690,36 @@ static func _weighted_index(weights: Array, rng: RandomNumberGenerator) -> int:
 
 
 ## Group 5: a rolled count of 0..3, then a shuffle, then take that many.
-static func _roll_group_five(records: Array, rng: RandomNumberGenerator) -> Array:
+## Group 5 — the rolled group. With `room_seed >= 0` the roll is seed-exact
+## per the original (FUN_02030B6C): a private LCG seeded from the room
+## record's own seed at +0x14 draws rand(100) against [40,20,20,20] for the
+## count, then Fisher-Yates and takes that many — one stream for both. The
+## generator's per-room seed (OriginalFieldGenerator / field fixtures'
+## records) is that value, so a room's group-5 contents reproduce regardless
+## of traversal order. Without a seed the caller's rng rolls, as before.
+static func _roll_group_five(records: Array, rng: RandomNumberGenerator,
+		room_seed: int = -1) -> Array:
 	if records.is_empty():
 		return []
-	var count: int = _weighted_index(_group5_weights, rng)
+	var count := 0
+	var frng: FieldRng = null
+	if room_seed >= 0:
+		frng = FieldRngScript.new(room_seed & 0xFFFFFFFF, 0)
+		var roll: int = frng.draw(100)
+		var acc := 0
+		for i in _group5_weights.size():
+			acc += int(_group5_weights[i])
+			if roll < acc:
+				count = i
+				break
+	else:
+		count = _weighted_index(_group5_weights, rng)
 	if count <= 0:
 		return []
 	# Fisher-Yates over a copy, so the source order is never mutated.
 	var pool: Array = records.duplicate()
 	for i in range(pool.size() - 1, 0, -1):
-		var j: int = rng.randi_range(0, i)
+		var j: int = frng.draw(i + 1) if frng else rng.randi_range(0, i)
 		var tmp = pool[i]
 		pool[i] = pool[j]
 		pool[j] = tmp
@@ -574,14 +795,14 @@ static func _to_object(rec: Dictionary) -> Dictionary:
 ## assert placement picks FROM this list rather than near it.
 static func authored_enemy_slots(room_code: String) -> Array:
 	_load()
-	return _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	return _enemy_slots.get("%s_%s" % [room_code, set_family], [])
 
 
 static func enemy_slot_positions(room_code: String, count: int,
 		rng: RandomNumberGenerator) -> Array:
 	_load()
 	# Same keying as authored_objects: the data is per deploy set.
-	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, set_family], [])
 	if slots.is_empty() or count <= 0:
 		return []
 
@@ -618,7 +839,7 @@ static func enemy_slot_positions(room_code: String, count: int,
 static func enemy_slot_positions_away(room_code: String, count: int,
 		rng: RandomNumberGenerator, away_from: Vector3) -> Array:
 	_load()
-	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	var slots: Array = _enemy_slots.get("%s_%s" % [room_code, set_family], [])
 	if slots.is_empty() or count <= 0:
 		return []
 
@@ -659,7 +880,7 @@ static func enemy_slot_positions_away(room_code: String, count: int,
 ## list rather than near it.
 static func authored_key_slots(room_code: String) -> Array:
 	_load()
-	return _key_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	return _key_slots.get("%s_%s" % [room_code, set_family], [])
 
 
 ## The reference table's key records collapsed to distinct positions.
@@ -697,7 +918,7 @@ static func _distinct_key_slots(objects: Array) -> Array:
 ## takes those rooms' records regardless of mask.
 static func drawn_mask(room_code: String, depth: int, rng: RandomNumberGenerator) -> int:
 	_load()
-	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, DEPLOY_SET], {})
+	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, set_family], {})
 	var groups = entry.get("groups", null)
 	if groups == null:
 		return -1
@@ -714,7 +935,7 @@ static func drawn_mask(room_code: String, depth: int, rng: RandomNumberGenerator
 static func key_slot_positions(room_code: String, count: int,
 		rng: RandomNumberGenerator, mask: int) -> Array:
 	_load()
-	var slots: Array = _key_slots.get("%s_%s" % [room_code, DEPLOY_SET], [])
+	var slots: Array = _key_slots.get("%s_%s" % [room_code, set_family], [])
 	var pool: Array = []
 	for slot in slots:
 		if _slot_in_mask(slot.get("g", []), mask):
@@ -841,7 +1062,8 @@ static func _wave_count(room_code: String, rng: RandomNumberGenerator) -> int:
 ## objects and the caller's key slots share ONE draw; -1 (the default) draws
 ## here as before.
 static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
-		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1) -> Array:
+		rng: RandomNumberGenerator, depth: int = -1, layout_mask: int = -1,
+		room_seed: int = -1) -> Array:
 	# Only the START room is held to authored AMBIENCE alone: the original's
 	# sa1 never carries a wave, and loot nobody walked to has no business in
 	# the room the player spawns into. is_end is NOT: the goal is
@@ -856,7 +1078,7 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 	# ambience side-stream (grid_generator._populate_cell), not the field's.
 	if is_start:
 		var critters: Array = []
-		for obj in authored_objects(room_code, depth, rng, layout_mask):
+		for obj in authored_objects(room_code, depth, rng, layout_mask, room_seed):
 			if str(obj.get("type", "")) == "ambience":
 				critters.append(obj)
 		return critters
@@ -879,7 +1101,7 @@ static func objects_for_cell(room_code: String, is_start: bool, _is_end: bool,
 				"wave": w,
 			})
 
-	var authored: Array = authored_objects(room_code, depth, rng, layout_mask)
+	var authored: Array = authored_objects(room_code, depth, rng, layout_mask, room_seed)
 	if authored.is_empty():
 		# No authored table for this room code. Fall back to the ring rather
 		# than leaving the room bare — see BOXES_PER_ROOM.

@@ -41,6 +41,7 @@ func _ready() -> void:
 	# falls back to the Valley model there rather than loading nothing.
 	model_path = AreaObjects.current_model_path("wall")
 	super._ready()
+	_fit_collision_to_model()
 	collision_body = _build_static_collision("WallCollision")
 	_setup_hurtbox("WallHurtbox")
 	_setup_mirror_textures()
@@ -48,6 +49,22 @@ func _ready() -> void:
 	# enemy standing in the doorway, not like loot on the ground.
 	if is_destructible:
 		_setup_reticle(collision_size.y * 0.5)
+
+
+## Size the collision (and with it the hurtbox and cone bounds) from the wall
+## model the area actually loaded — the same fix boxes got: the per-field
+## walls are not all 6 x 1.85 x 0.52, and a fixed box leaves taller or wider
+## walls partly uncollidable, unhittable and untargeable. Falls back to the
+## authored default when there is nothing to measure.
+func _fit_collision_to_model() -> void:
+	if not model:
+		return
+	var extents := AreaObjects.model_extents(model)
+	if extents.size.x <= 0.0 or extents.size.y <= 0.0 or extents.size.z <= 0.0:
+		return
+	collision_size = extents.size
+	target_radius = maxf(extents.size.x, extents.size.z) * 0.5
+	target_height = extents.size.y
 
 
 ## Called when the wall takes damage (from player attacks via the Hurtbox).
@@ -73,4 +90,27 @@ func destroy() -> void:
 	hide_reticle()
 	set_state("destroyed")
 	destroyed_wall.emit()
+	_spawn_debris()
 	print("[Wall] Destroyed")
+
+
+## The original spawns the per-field break-apart debris (oNN_wallptcl — a
+## different mesh and texture in every field; area_objects.gd). The model is
+## the original's own; the scatter motion is ours.
+func _spawn_debris() -> void:
+	var parent := get_parent()
+	if not parent:
+		return
+	var path := "res://assets/objects/" + AreaObjects.current_model_path("wallptcl")
+	if not ResourceLoader.exists(path):
+		return
+	var debris := Node3D.new()
+	var scene: PackedScene = load(path)
+	if scene:
+		debris.add_child(scene.instantiate())
+	debris.position = position
+	debris.rotation = rotation
+	parent.call_deferred("add_child", debris)
+	var tween := debris.create_tween()
+	tween.tween_interval(0.9)
+	tween.tween_callback(debris.queue_free)

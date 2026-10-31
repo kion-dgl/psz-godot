@@ -105,7 +105,8 @@ export interface SimInput {
   dt: number;
   playerPos: Vec2;
   playerRadius: number;
-  /** True during dodge i-frames (player.gd:247 DODGE_IFRAME_DURATION 0.2s). */
+  /** True when the player should not take the hit. The ROM dodge grants no
+   *  i-frames (spec /mechanics/dodge) — the room passes false while rolling. */
   playerInvincible: boolean;
   /** Seedable random source in [0,1) — mulberry32 in tests, Math.random in the UI. */
   rng: () => number;

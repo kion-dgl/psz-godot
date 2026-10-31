@@ -2,9 +2,9 @@ extends RefCounted
 
 class Dummy extends Node3D:
 	var hits := 0
-	var dodging := false
+	var rolling := false
 	func take_damage(_n: int, _v: Vector3 = Vector3.ZERO, _k: bool = false): hits += 1
-	func is_dodge_iframed() -> bool: return dodging
+	func is_dodge_passing_through() -> bool: return rolling
 
 class Lily extends PoisonLily:
 	func _ready(): pass
@@ -118,11 +118,12 @@ static func _test_ice(r: Node) -> void:
 	r.assert_eq(t.hits,1,"fan shares one resolution per target")
 	var bolt := EnemyProjectile.new()
 	bolt.target = t
-	t.dodging = true
+	t.rolling = true
 	bolt._resolve_contact()
-	t.dodging = false
+	r.assert_eq(t.hits,2,"no dodge immunity: projectile contact lands on a rolling target (ROM correction)")
+	t.rolling = false
 	bolt._resolve_contact()
-	r.assert_eq(t.hits,1,"dodged contact cannot hit later in the same cast")
+	r.assert_eq(t.hits,2,"one resolution per target stands")
 	bolt.free()
 	t.free()
 
@@ -146,7 +147,7 @@ static func _test_freeze(r: Node) -> void:
 	p.dodge_timer = 0.0
 	var hp: int = GameState.hp
 	p.take_technique_hit(1,"barta",0.0)
-	r.assert_eq(GameState.hp,hp,"dodge blocks ice damage")
-	r.assert_eq(p._freeze.remaining,0.0,"dodge blocks freeze")
+	r.assert_eq(GameState.hp,hp-1,"no dodge immunity: ice damages the roll (ROM correction)")
+	r.assert_true(p._freeze.remaining>0.0,"ice can freeze through the roll")
 	p.free()
 	GameState.set_hp(saved_hp)

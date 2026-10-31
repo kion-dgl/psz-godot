@@ -1,0 +1,97 @@
+{
+  "_": "The room-graph TOPOLOGY pass -- what grows the branch rooms and then GATES the forward exits (an earlier draft of this file called that sealing; see params_8_SEALS_SPARE_EXITS.CORRECTED). level_generation_algorithm.json calls FUN_020b2740 'the placement algorithm' in one entry and the 0x020b2xxx cluster 'the actual topology code' in another; the second is right. THIS PASS PLACES ROOMS, NOT OBJECTS. Nothing in it touches a box, an enemy or a trap. Read out of arm9 with tools/decomp.py.",
+  "entry": "FUN_020b2740",
+  "cell_record": {
+    "_": "Derived from the accesses, not from shape. Offsets are bytes.",
+    "+0x00": "flags: 0x04 START, 0x08 GOAL, 0x20 selects the alternate probability, 0x40 visited",
+    "+0x01": "id used as the pool key",
+    "+0x04": "how many times this cell has been extended from -- the predicate requires <= 1, and FUN_020b27ec increments it",
+    "+0x05": "how many branch attachments this cell carries, hard-capped at 2",
+    "+0x06": "accumulator A, propagated back along the path",
+    "+0x07": "accumulator B, propagated back along the path",
+    "+0x08": "the cell's stored direction",
+    "+0x0E": "BFS depth (scratch)",
+    "+0x0F": "incoming direction (scratch)",
+    "+0x10..+0x13": "four neighbour cell indices, -1 = none"
+  },
+  "frontier": {
+    "function": "FUN_020b257c",
+    "slots": 20,
+    "count_at": "list+0x50",
+    "budget_at": "list+0x54",
+    "visited_flag": "0x40",
+    "rule": "mark visited, step to the neighbour in the cell's stored direction, write it into slot i unless already visited or already listed (then -1); decrement the budget for any cell that is not START"
+  },
+  "predicate": {
+    "function": "FUN_020b2978",
+    "all_must_hold": [
+      "cell kind at +0x04 is <= 1",
+      "NONE of the four neighbours is already occupied -- this is the spacing rule",
+      "the two accumulators at +0x06 and +0x07 are EQUAL"
+    ],
+    "then_one_of": {
+      "flag 0x20 set": "rand(100) < params[4]",
+      "otherwise": "the room budget at list+0x54 must be >= 1, and if gen[3] <= gen[2] then rand() < gen[2] - gen[3]"
+    }
+  },
+  "distance_pool": {
+    "function": "FUN_020b2868 fills it, FUN_020b2444 inserts, FUN_020b247c draws",
+    "buckets": 3,
+    "bucket_stride": "0x20",
+    "rule": "breadth-first from the seed cell, depth capped at 2, skipping any cell flagged START or GOAL (flags & 0x0C). A cell is added to bucket[depth] when depth > 0 and its occupancy is below 2.",
+    "draw": "collect the NON-EMPTY buckets and pick one UNIFORMLY AT RANDOM, then take a cell from it. Distance does not weight the draw -- a depth-1 bucket and a depth-2 bucket are equally likely when both are non-empty."
+  },
+  "how_many": {
+    "function": "FUN_020b27ec",
+    "result": "1 or 2 ROOMS added by this branch",
+    "rule": "needs budget >= 2 to return 2 at all; otherwise rand(100) against params[6] when the cell has flag 0x20, or params[7] when it does not",
+    "runtime": {
+      "params[6]": 50,
+      "params[7]": 10,
+      "reading": "50% chance of a pair on a 0x20 cell, 10% otherwise"
+    }
+  },
+  "place": {
+    "function": "FUN_020b2920",
+    "rule": "repeat the 1-or-2 count: draw a cell from the pool, require occupancy < 2, increment it, remove the cell from the pool once it reaches 2, then propagate the count back along the path with FUN_020b2a14"
+  },
+  "propagation": {
+    "function": "FUN_020b2a14",
+    "rule": "walk from the cell along its stored direction, adding the two deltas to +0x06 and +0x07 at each step, stopping at a cell flagged START (0x04). This is what makes the predicate's '+0x06 == +0x07' a balance condition over the whole path."
+  },
+  "WHAT_THIS_CONFIRMS": "level_generation_algorithm.json recorded bytes 4..8 of the parameter block as 'unidentified, but they read as percentages and are the best candidate yet for the box / enemy / trap placement weights kion asked about'. Three of them are now identified BY THEIR USE: params[4] is the placement probability for a 0x20 cell (runtime 50), and params[6] / params[7] are the probability of placing a PAIR rather than a single (runtime 50 and 10). The instruction stream loads them at exactly those byte indices.",
+  "NOT_CLAIMED": "That this pass has anything to do with boxes, enemies or traps -- it does not, and an earlier draft of this file implied it did by inheriting the word 'placement'. Object, enemy and trap placement is a SEPARATE pass and is still unlocated. The 'doorway bit 4 is not claimed to be the in-game locked GATE' caveat is now CLOSED: it is the enemy-defeat gate. See params_8_SEALS_SPARE_EXITS.CORRECTED and nodes/sys.field-doorways.json.",
+  "params_8_SEALS_SPARE_EXITS": {
+    "_RENAMED": "params_8_IS_THE_ENEMY_DEFEAT_GATE_CHANCE. The key under which this block was filed is kept so the correction is visible rather than silent.",
+    "read_by": "FUN_020b2bf4, a pass over every room",
+    "rule": "clamp params[8] to 0..100. For each room that is neither START (flag 0x04) nor GOAL (flag 0x08), draw rand(100) < params[8]; if it passes, every doorway that HAS A LINKED NEIGHBOUR, is not already marked (mask 7) and is not the room's incoming direction gets attribute 4.",
+    "runtime": {
+      "params[8]": 75
+    },
+    "CORRECTED": {
+      "what_this_file_said": "'three rooms in four have their side exits sealed, which is what makes a field mostly linear rather than a mesh'",
+      "why_it_is_wrong": "nothing is sealed and there are no spare exits to seal. FUN_0208209c creates every cell through exactly one parent link and is the only caller of the neighbour setter FUN_020832f8, so the room graph is a TREE -- which is what makes a field linear. Attribute 4 leaves the connection in place: over 62 field captures and 592 rooms, all 344 doorways carrying it still hold a live neighbour index at record +0x18.",
+      "what_it_actually_is": "the ENEMY-DEFEAT GATE chance, which data/level_topology_builder.json already recorded from the same function and which kion confirmed in play -- valley B3 had both its north and east exits locked at once, the signature of a per-ROOM roll. Measured: 268 rooms gate every eligible forward exit, 106 gate none, 0 are mixed, and 0 of 592 gate the doorway they were entered through.",
+      "closed_by": "psz-godot #581, tools/walls.py, nodes/sys.field-doorways.json"
+    }
+  },
+  "doorway_bitmask": {
+    "_": "Identified along the way, and it is what both passes write into.",
+    "location": "cell + 0x14 + direction, one byte per doorway, four per cell",
+    "setter": "FUN_020b2854(cell, dir, bits) ORs bits in; FUN_020825f8(cell, dir, bits) tests them",
+    "bit_1_and_2": "written by FUN_020b27ec with the 1-or-2 placement count -- the doorway a placement branch passes through",
+    "bit_4": "written by the params[8] pass -- the ENEMY-DEFEAT GATE, not a seal. The connection behind it survives.",
+    "mask_7": "every reader tests bits 1|2|4 together, so mask 7 means 'this doorway already carries a gate' and no later pass may give it another"
+  },
+  "WHAT_IT_PLACES": "ROOMS. FUN_02081f4c drives the sequence -- FUN_020b2698 constructs and sizes the budget, FUN_020b2718 loops FUN_020b2740 until the budget is spent, FUN_020b2bf4 puts an enemy-defeat gate on what is left over, FUN_020b26f0 tears down. Everything operates on the cell grid, the room list and the doorway bytes; there is no object, enemy or trap table anywhere in the cluster. The budget being a fraction of the ROOM COUNT is the clearest tell.",
+  "params_5_IS_THE_BRANCH_BUDGET": {
+    "read_by": "FUN_020b2698, the placement object's constructor",
+    "rule": "gen[2] = (roomCount - 2) * params[5] / 100, computed only when roomCount > 1. FUN_0200a5ac is integer division.",
+    "what_gen2_is": "the BUDGET the placement loop spends: FUN_020b2740 stops the moment gen[2] <= gen[3], and the predicate FUN_020b2978 draws against gen[2] - gen[3], the amount still unspent.",
+    "runtime": {
+      "params[5]": 25,
+      "consequence": "with the runtime room range of 10..13 the budget is (8..11) * 25 / 100 = 2 in EVERY case -- integer division flattens the whole range to TWO extra branches per field"
+    }
+  },
+  "WHAT_IT_PLACES_IS_QUALIFIED_BY_THE_REPLAY": "This file says FUN_020b2740 PLACES ROOMS, and the forward replay says it cannot add cells: tools/genreplay.py reproduces the FULL normalised edge set of all 14 fields in data/field_fixtures.json from FUN_02081EA8 alone -- growth, the one extension attempt and the goal pass -- with FUN_02081F4C not modelled at all. A pass that added even one cell would desynchronise every one of those. So FUN_020b27ec's 'one or two' is a branch ATTACHMENT count -- it is written into the doorway bitmask at cell+0x14+dir as the KEY gate (bits 1 and 2) and propagated back along the path by FUN_020b2a14 -- and not a room placement. Recorded here rather than rewriting the entries above, because this is a measurement about a function this repo has read and not yet executed. See nodes/sys.field-generation-target.json and tools/fieldgen.py, whose null gate/key fields are exactly what closing FUN_02081F4C would fill in."
+}

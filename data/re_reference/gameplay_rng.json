@@ -1,0 +1,184 @@
+{
+  "title": "The gameplay RNG \u2014 a second LCG, separate from the level generator's",
+  "question": "Where does combat's randomness come from? Raised as an open thread on sys.wave-roll after four sessions were found holding several captures at an identical generator stream depth.",
+  "answer": "A different RNG object. The game runs the same LCG twice over two separate states: one for level generation, one for everything that happens during play.",
+  "objects": {
+    "level_generation": {
+      "pointer": "0x0211A3B4",
+      "indirection": "two derefs \u2014 *(*(0x0211A3B4))",
+      "observed_object": "0x02238780",
+      "storage": "heap; the address is reached through a pointer, and it is the object the per-room seeds are drawn from"
+    },
+    "gameplay": {
+      "address": "0x0211C844",
+      "indirection": "none \u2014 the address is a literal in the rand() function and is dereferenced directly",
+      "storage": "static global"
+    }
+  },
+  "shared_algorithm": {
+    "note": "Both objects run the identical LCG and carry their own constants, so a read of either self-checks.",
+    "layout": "{+0x00 u64 state, +0x08 u64 mult, +0x10 u64 incr}",
+    "multiplier": "0x5D588B656C078965",
+    "increment": "0x269EC3",
+    "rand_0": "state >> 32",
+    "rand_range": "((state >> 32) * range) >> 32"
+  },
+  "call_chain": [
+    {
+      "address": "0x02042964",
+      "name": "FUN_02042964",
+      "size": 228,
+      "role": "the to-hit roll. Exactly one BL, to the percent roll. It has a single caller (FUN_020437d8), so every to-hit computation in the game goes through it."
+    },
+    {
+      "address": "0x02086D8C",
+      "name": "FUN_02086D8C",
+      "size": 38,
+      "role": "the percent roll, decoded in full: return 1 if chance >= 100, return 0 if chance <= 0, otherwise return rand(100) < chance. Exactly one BL, to rand()."
+    },
+    {
+      "address": "0x02035B60",
+      "name": "FUN_02035B60",
+      "size": 52,
+      "role": "rand(range) on the gameplay object. Loads 0x0211C844 as a literal twice, steps state = state * mult + incr, and returns the raw high word when range is 0 or ((state >> 32) * range) >> 32 otherwise."
+    }
+  ],
+  "evidence": {
+    "static": "Each hop in the chain is the function's only BL, and rand()'s only literal pool entry is 0x0211C844, so the chain is walkable from the image without a disassembler.",
+    "empirical": "Across 30 savestates the object at 0x0211C844 carries the recorded multiplier and increment in 30 of 30 \u2014 a self-checking read \u2014 and is never the generator's object address. In all four sessions where the generator's state is IDENTICAL across captures, the gameplay state differs; the largest measured advance is 3300 draws (session 0xD4EB, generator frozen at depth 433)."
+  },
+  "consequences": [
+    "The generator's stream is not a clock for play. It advances during level generation and essentially not otherwise, which is why boss-fight captures all sit at one depth.",
+    "It positively explains a refutation already on record. data/enemy_wave_rolls.json refuted 'spawn-time draws' on the grounds that the LCG does not advance during play; that observation was about the generator object, and the reason is now known rather than merely measured.",
+    "The gameplay RNG is NOT combat-specific despite being reached here through the to-hit roll: session 0x2748 advances it 10,974 draws between two ordinary field captures. It is the general play RNG, and combat is one consumer.",
+    "A psz-godot port needs two independent streams, not one. Seeding a single RNG from the session seed and drawing both layout and combat from it would desynchronise generation."
+  ],
+  "seeding": {
+    "answer": "Seeded ONCE AT BOOT from a SHA-1 digest \u2014 NOT from the 16-bit session seed that seeds the level generator.",
+    "chain": "FUN_0200C95C (boot init) calls FUN_020C3E90 and then FUN_020C1450 at adjacent sites with no argument setup between, so the 64-bit value FUN_020C3E90 returns in r0:r1 is installed directly as the state.",
+    "seed_installer": {
+      "address": "0x020C1450",
+      "size": 24,
+      "callers": 1,
+      "caller_site": "0x0200C9A6",
+      "role": "stores r0/r1 to +0x00/+0x04 then writes the multiplier and increment. One caller in the whole image, so the object is seeded once per boot \u2014 never per session and never per floor."
+    },
+    "seed_source": {
+      "address": "0x020C3E90",
+      "size": 50,
+      "role": "reserves 156 bytes of stack, gathers entropy, runs hash init/update(32 bytes)/final, and returns the first 8 bytes of the digest as r0:r1."
+    },
+    "hash": {
+      "identified_as": "SHA-1",
+      "init": "0x02057D30",
+      "iv_pool": "0x02057D6C \u2014 immediately after the 60-byte body, where ARM literal pools live",
+      "iv": [
+        "0x67452301",
+        "0xEFCDAB89",
+        "0x98BADCFE",
+        "0x10325476",
+        "0xC3D2E1F0"
+      ],
+      "why_it_discriminates": "0xC3D2E1F0 is the fifth word SHA-1 has and MD5 does not. The image also carries an MD5 IV, at 0x0202BE0C and 0x020577EC, so matching the SHA-1 IV distinguishes the two rather than merely matching something."
+    },
+    "entropy_reads": {
+      "0x04000006": "REG_VCOUNT \u2014 the scanline counter, so the seed depends on boot timing",
+      "0x027FFC00": "the ARM7/ARM9 shared area holding firmware user settings",
+      "0x021184DC": "a RAM buffer"
+    },
+    "empirical_control": "Walking the state back looking for a 16-bit value finds nothing in 300,000 draws for the gameplay object, across 6 states. The same walk on the generator object in the same states finds one every time within 433 draws. The control matters: a bare negative is also what a broken walk-back produces."
+  },
+  "open": "Nothing outstanding on the RNG census itself. The remaining RNG question is the original one on sys.wave-roll: what actually drives the wave roll, which needs the code that consumes the assignment table in enemy/group_<set>.rel read rather than more statistics.",
+  "inlining": {
+    "sites": 39,
+    "modules": [
+      "arm9",
+      "ov12",
+      "ov17",
+      "ov22",
+      "ov23",
+      "ov24",
+      "ov25",
+      "ov27",
+      "ov28",
+      "ov29",
+      "ov30",
+      "ov31"
+    ],
+    "finding": "The compiler INLINED the LCG step. 33 functions carry their own copy; 32 of them never call rand() at all.",
+    "instrumentation_consequence": "A breakpoint or watchpoint on rand() (0x02035B60) sees only a minority of the stream. Anything counting draws must watch the OBJECT at 0x0211C844, not the function.",
+    "corrects": "The previous entry cited rand()'s 146 caller sites as the measure of how widely the object is used. That is true but undercounts what matters for instrumentation, because the inlined sites call nothing.",
+    "detection": "A site counts only when the function both has 0x0211C844 in a pc-relative load and contains the exact three-halfword core 6898 68D9 CB0C (ldr r0,[r3,#8]; ldr r1,[r3,#12]; ldmia r3!,{r2,r3}).",
+    "lower_bound": "The signature pins registers r0/r1/r2/r3, so any site the compiler allocated differently is invisible to it, as is anything outside the function ledger. 33 is a floor, not a total.",
+    "corrected_from": "Previously recorded as 33. The register-tolerant census raises it to 39.",
+    "why_the_earlier_caveat_was_wrong": "33 was flagged as a lower bound 'because the signature pins r0/r1/r2/r3'. Decoding the same shape with registers left free shows every step site in the game uses base r3 and reglist {r2,r3}, so the register pinning cost nothing. The real undercount was LEDGER COVERAGE: six sites sit in overlay code no ledger function covers, including all of ov23, which is why ov23 was missing from the earlier module list.",
+    "generic_shape": "ldr rT1,[rN,#8] ; ldr rT2,[rN,#12] ; ldmia rN!,{...} \u2014 the step for ANY object of this layout, so a site counts as the gameplay object's only when rN was loaded from a literal equal to 0x0211C844."
+  },
+  "reseed": {
+    "answer": "No reseed is visible anywhere in the corpus.",
+    "method": "A reseed installs an unrelated value, so states either side of one cannot be joined by stepping. Every within-session pair was tested in both directions.",
+    "result": "46 of 46 pairs across 5 sessions join by forward stepping, the widest by 11,096 draws.",
+    "limit": "This is an observation over the pairs the corpus holds, not a proof. A reseed falling entirely between two captures with no capture in between would be invisible to it."
+  },
+  "dormant_third_rng": {
+    "object": "0x0211DCA4",
+    "owner": "0x020E0B68",
+    "owner_callers": 6,
+    "finding": "A THIRD LCG instance. FUN_020E0B68 carries the object address, the multiplier and the increment in its own literal pool, so it both constructs and steps it.",
+    "status": "Dead in every capture \u2014 all zeroes in 37 of 37 savestates.",
+    "why_that_is_strong": "The zero MULTIPLIER, not just the zero state. An LCG with multiplier and increment both zero steps to zero and stays there, so the object has never been constructed at all rather than merely left idle.",
+    "caveat": "The corpus is single-player field and boss captures only. This says the subsystem never ran in any captured session, not that it is unreachable in the game.",
+    "belongs_to": "Nintendo Wi-Fi Connection (DWC)",
+    "how_identified": "Two of the owner's five calling functions \u2014 FUN_020E8DD4 and FUN_020E8F40 \u2014 reference the strings 'dwc_pid' and 'dwc_eval' directly. The surrounding code carries the SDK banner '[SDK+NINTENDO:DWC3.1.30001.080708.1933_DWC_3_1_P', the auth endpoint 'https://nas.nintendowifi.net/ac', and the account fields gsbrcd / ingamesn / acctcreate.",
+    "why_dormant": "Expected rather than curious: the savestate corpus is offline single-player field and boss captures, so DWC is never brought up and its RNG is never constructed. That is why the object's MULTIPLIER is zero and not merely its state.",
+    "marker_span": {
+      "range": "0x020C7C7C..0x020E8F40",
+      "marker_functions": 24,
+      "note": "A bracket, not a claim that everything inside is DWC \u2014 the range holds far more functions than the 24 bearing marker strings. It is used for the disjointness check, where being too wide only strengthens the result."
+    },
+    "disjoint_from_gameplay_rng": "Zero functions anywhere in that span reference the gameplay object at 0x0211C844, so networking randomness and gameplay randomness are handled by non-overlapping code."
+  },
+  "lcg_census": {
+    "finding": "Four STATIC LCG objects in the image plus the level generator's heap-allocated one. Exactly one static object ever runs.",
+    "pools": {
+      "0x020212A4": "0x02107054 (owner FUN_020210A4)",
+      "0x020C146C": "0x0211C844 \u2014 the gameplay seeder",
+      "0x020C1490": "this-based \u2014 FUN_020C1478, the generator's seeder",
+      "0x020C14D0": "this-based \u2014 FUN_020C14B8",
+      "0x020DD648": "this-based \u2014 FUN_020DD5E0",
+      "0x020E0C2C": "0x0211DCA4 \u2014 DWC",
+      "0x020E21D0": "0x0211DE44 (owner FUN_020E20C8, inside the DWC span)"
+    },
+    "live": [
+      "0x0211C844"
+    ],
+    "dormant": [
+      "0x02107054",
+      "0x0211DCA4",
+      "0x0211DE44"
+    ],
+    "evidence": "Over 37 states 0x0211C844 carries the multiplier every time and takes 35 distinct values; the other three read all zeroes \u2014 multiplier included \u2014 in all 37, so they are never constructed.",
+    "note": "The pools resolving to no static address belong to constructors taking the object in `this`, which is how the generator's heap object is reached.",
+    "dormant_all_networking": {
+      "0x0211DCA4": "DWC \u2014 dwc_pid / dwc_eval callers",
+      "0x0211DE44": "DWC \u2014 owner FUN_020E20C8 inside the DWC span",
+      "0x02107054": "Ubiquitous CPS TCP/IP stack \u2014 owner FUN_020210A4 references '[SDK+UBIQUITOUS:CPS]' itself; its ARM caller chain runs FUN_02025C44 -> FUN_02025BC8, which references '[SDK+NINTENDO:WiFi2.1.30003.0709200229]'. Same region carries '%d.%d.%d.%d' and 'NintendoDS'.",
+      "conclusion": "All three dormant LCGs are networking. The game ships three networking RNGs and none of them runs offline, which is why they read all zeroes in every capture."
+    },
+    "correction": "The previous entry described 0x02107054 as 'the only dormant object outside the DWC range'. Accurate, but it invited the reading that it was a different KIND of thing. It is networking too \u2014 a different SDK layer sitting far lower in the image than DWC.",
+    "wifi_cps_span": {
+      "range": "0x020210A4..0x020286AC",
+      "marker_functions": 4,
+      "functions_in_span": 191,
+      "gameplay_refs_inside": 0,
+      "note": "Disjointness holds here exactly as for DWC."
+    },
+    "only_found_via_arm_scan": "FUN_020210A4 is ARM and is called only from ARM, so the THUMB-only caller walk could not climb out of it \u2014 the same gap that made it look like dead code. The identification depended on the ARM-aware scan."
+  },
+  "thumb_only_scan_blind_spot": {
+    "problem": "Every caller scan in this project decodes THUMB only. FUN_020210A4, which owns the dormant object 0x02107054, has zero callers by every THUMB measure \u2014 no BL, no BLX, and its address never appears as data in any image \u2014 so it reads as dead code.",
+    "reality": "It is not dead. It has one ARM-mode BL caller, FUN_02025C44 at 0x02025D70, whose surrounding words decode as an ordinary ARM epilogue.",
+    "why_it_matters": "Earlier single-caller claims rested on the same kind of scan, including 'the gameplay RNG is seeded once at boot', which depends entirely on FUN_020C1450 having exactly one caller.",
+    "resolution": "All five published single-caller targets \u2014 0x020C1450, 0x02042964, 0x02035B60, 0x020C3E90, 0x020C1478 \u2014 were re-checked for ARM BL callers and every one comes back zero. Nothing already committed is affected, and the re-check is now a gated assertion rather than a one-off."
+  }
+}

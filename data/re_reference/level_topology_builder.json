@@ -1,0 +1,145 @@
+{
+  "source": "psz-re - arm9 0x020b2xxx cluster decompiled via pyghidra, 2026-07-29",
+  "summary": "the gate economy, decoded. This answers kion's stated core question - when the game adds no gate, a one-key gate, a two-key gate, or an enemy-defeat gate.",
+  "pipeline": {
+    "driver": "FUN_02081f4c builds a 20-byte object then runs five stages against it",
+    "object": {
+      "[0]": "a 0x50-byte structure from FUN_020835c0",
+      "[1]": "a 0x58-byte structure from FUN_020b24f0",
+      "[2]": "the key-gate BUDGET",
+      "[3]": "the SPENT counter",
+      "[4]": "pointer to the 32-byte parameter block"
+    },
+    "stages": [
+      "FUN_020b2698 - construct, and compute the budget",
+      "FUN_020b2718 - repeat FUN_020b2740 until a pass returns 0",
+      "FUN_020b2a54 + FUN_020b2afc - weighted pick, assigned to one eligible room",
+      "FUN_020b2b50 - fallback for rooms the pick did not cover",
+      "FUN_020b2bf4 - enemy-defeat gates"
+    ]
+  },
+  "key_gate_budget": {
+    "formula": "(roomCount - 2) * params[5] / 100, via the unsigned divide at FUN_0200a5ac",
+    "default_params_5": 35,
+    "minus_two": "the start and goal rooms are excluded, matching the observed invariant that index 0 is always the start and there is exactly one goal",
+    "enforcement": "FUN_020b2740 returns 0 as soon as spent (object[3]) reaches budget (object[2]), so the budget is a hard cap on the number of gated doors"
+  },
+  "one_key_versus_two": {
+    "function": "FUN_020b27ec",
+    "rule": "pick params[6] if the room's flag byte has 0x20 set, otherwise params[7]. Roll rand(100). If the roll is below that percentage the door gets attribute 2 (two keys), otherwise attribute 1 (one key). A two-key gate additionally requires the caller's count to be >= 2.",
+    "defaults": {
+      "params_6": 30,
+      "params_7": 10
+    },
+    "side_effects": "increments the room's own gate counter at internal +0x04 and the global spent counter"
+  },
+  "enemy_defeat_gates": {
+    "function": "FUN_020b2bf4",
+    "rule": "params[8] is a PERCENT CHANCE PER ROOM, clamped to [0,100]. For each room whose flags have neither 0x04 nor 0x08 set, roll rand(100) once; if it passes, set attribute 4 on EVERY direction that has a neighbour, is not already attributed 7, and is not the way-back direction stored at internal +0x08.",
+    "default_params_8": 10,
+    "key_consequence": "the roll is per ROOM, not per door, so a room that passes gets ALL of its forward exits gated at once. kion observed exactly this: B3 in valley area A had BOTH its north and east exits as enemy-defeat gates.",
+    "entrance_never_gated": "the way-back direction is excluded, matching the observation that the room entered from is always open"
+  },
+  "door_attributes": {
+    "setter": "FUN_020b2854(room, dir, attr) does room[0x14+dir] |= attr",
+    "values": {
+      "0": "open",
+      "1": "one key",
+      "2": "two keys",
+      "4": "enemy-defeat"
+    },
+    "note": "matches the GATE map already in tools/pszd.py, derived independently from live reads"
+  },
+  "internal_room_record": {
+    "note": "this is the GENERATOR's working record, not the 52-byte output record",
+    "+0x00": "flag byte; bits 0x04, 0x08 and 0x20 are tested",
+    "+0x04": "count of gates placed on this room",
+    "+0x05": "byte required to be 0 for the weighted pick to target this room",
+    "+0x08": "int, the way-back direction, excluded from gating",
+    "+0x10..0x13": "adjacency, one signed char per direction, negative meaning no neighbour",
+    "+0x14..0x17": "door attribute byte per direction",
+    "+0x19": "the weighted-pick result"
+  },
+  "weighted_picker": {
+    "function": "FUN_020b2a54",
+    "mechanism": "eight candidate slots. Slot i is eligible when the u16 mask table at 0x020f5798 has bit param_2 set for entry i. An eligible slot's weight is params[0x0e + i], used as an index into the five u16 weights at params[0x16]. A roll of rand(10000) then walks the cumulative weights, so weights are in ten-thousandths.",
+    "mask_table": [
+      14,
+      32,
+      16,
+      8,
+      192,
+      0,
+      254,
+      254
+    ],
+    "default_block_is_empty": "in the DEFAULT parameter block all eight index bytes are 0xFF and all five weights are 0, so the default has no options at all. Whatever this picks is entirely supplied by the per-stage override - which raises the value of locating that table (item 32).",
+    "what_it_picks": "NOT identified. It assigns a single byte to one room at internal +0x19."
+  },
+  "consistency_check": {
+    "status": "suggestive, not proof - it assumes the default params[5] of 35 and kion may have been in a stage that overrides it",
+    "valley_area_a": "9 rooms gives a budget of (9-2)*35/100 = 2 gated doors. kion reported B2 gated to the north, and a two-key gate between B1-east and B2-west which is ONE shared door - so two gated doors, exactly the budget.",
+    "enemy_defeat": "B3 having both north and east gated is the per-room-roll signature rather than per-door"
+  },
+  "still_unmapped": {
+    "params_0_1": "min/max room count, already known",
+    "params_2_3": "a second min/max pair range-checked to [0,8], role unknown",
+    "params_4": "80, not yet seen being read",
+    "params_9": "passed to FUN_02081f98",
+    "params_10": "passed to FUN_020822ac",
+    "params_0x0c": "u16 = 10, not yet seen being read"
+  },
+  "corrected_with_real_parameters": {
+    "note": "the figures in this file were derived from the arm9 DEFAULT block. The values actually loaded from quest/random_dungeon.rel differ, so the real behaviour is below.",
+    "key_gate_budget": "(roomCount - 2) * 25 / 100, not 35 - so 1 gated door for an 8 or 9 room field and 2 for a 10 room field",
+    "double_gate_chance": "params[6] = 50 (rooms with flag 0x20) or params[7] = 10 - so a coin flip rather than 30%",
+    "enemy_defeat_chance": "params[8] = 75 per ROOM, not 10. Three rooms in four get all their forward exits gated, which matches how often PSZ locks the player in until a room is cleared",
+    "weighted_picker_is_live": "the default block has every index 0xFF and every weight 0, which made the picker look inert. At runtime the indices are [0,1,3,4,2,4,1,1] and the weights are [50,100,200,400,800] in ten-thousandths, so it does select something - still unidentified.",
+    "consistency_check_corrected": "the previous check used 35% and got a budget of 2 for valley area A, matching two observed gated doors. With the real 25% the budget is 1. The observation still fits but differently: the one key gate is the two-key door shared between B1-east and B2-west, and B2's north gate must then be an enemy-defeat gate - which at 75% per room is the likely case anyway. Recorded as a correction rather than left standing, since the earlier arithmetic was right about the formula and wrong about the input."
+  },
+  "gate_and_key_placement": {
+    "source": "psz-re - FUN_020b2978/2868/2920/2a14/2444 decompiled, 2026-07-29; item 31's leftover",
+    "eligibility_test": {
+      "function": "FUN_020b2978",
+      "rejections": [
+        "the candidate room already carries more than one gate (internal +0x04)",
+        "any neighbour already carries gates - so gated rooms are never adjacent",
+        "internal +0x06 != internal +0x07, the gate/key balance described below"
+      ],
+      "acceptance": {
+        "rooms with flag 0x20": "rand(100) < params[4]. That IDENTIFIES params[4] = 50, which item 33 had left as 'not seen being read anywhere'",
+        "other rooms": "requires the 0x58 object's +0x54 to be positive, then accepts with a probability that scales with the REMAINING budget - the draw is compared against (budget - spent), so gates get rarer as the budget is consumed rather than simply stopping at a cliff"
+      }
+    },
+    "neighbourhood_collection": {
+      "function": "FUN_020b2868",
+      "what": "a breadth-first walk out from the room that just received a gate, limited to depth < 2, pushing rooms into a collection. FUN_020b2444 files each one by depth into a bucket at collection + depth*0x20, so there are three buckets of 32 bytes.",
+      "skips": "rooms whose flag byte has 0x04 or 0x08 - the start and the goal, the same two the enemy-defeat pass skips",
+      "labels": {
+        "internal +0x0e": "BFS depth from the gated room",
+        "internal +0x0f": "the direction it was entered from, so the walk does not double back"
+      }
+    },
+    "key_placement": {
+      "function": "FUN_020b2920",
+      "what": "loops as many times as the gate demands keys, each time drawing a room from the collected neighbourhood and incrementing that room's key count at internal +0x05. A room is dropped from the pool once it holds 2, which is why no room ever holds more than two keys.",
+      "so": "keys for a gate are scattered in the gated room's own local neighbourhood, within two rooms of it"
+    },
+    "THE_SOLVABILITY_INVARIANT": {
+      "function": "FUN_020b2a14",
+      "mechanism": "walks from a room up the way-back chain at internal +0x08 until it reaches the room flagged 0x04 (the start), adding to two counters on every room along the way: +0x06 gets the gate requirement, +0x07 gets the keys available. FUN_020b27ec calls it with (attr, 0) when it places a gate and FUN_020b2920 with (0, 1) for each key placed.",
+      "the_invariant": "FUN_020b2978 refuses to place a gate unless +0x06 == +0x07 on the candidate. So a gate can only go somewhere the keys needed to pass every gate on the route are already collectable before reaching it. That is what stops the generator producing an unwinnable field, and it is the constraint kion was asking about when he said the devil is in the details of how gates and keys are balanced.",
+      "validation": "checked against all five field savestates: total keys equals total gate requirement exactly in every one - 2/2, 2/2, 1/1, 3/3 and 1/1. No room holds more than 2 keys, and the number of gated rooms never exceeds the budget.",
+      "worked_example": "s05a has two gates, a 2-key at D2 south and a 1-key at B1 west, against two caches, 2 keys at C1 and 1 at E3. Three keys, three required.",
+      "matches_kions_report": "valley A's single gate is B1 east needing 2 keys, and B2 holds exactly 2 keys. B2 is one room back along the path from the start, i.e. inside the depth-limited neighbourhood the collection pass walks."
+    },
+    "new_internal_fields": {
+      "+0x05": "key count in this room, capped at 2",
+      "+0x06": "gate requirement accumulated on the path from the start",
+      "+0x07": "keys available accumulated on the path from the start",
+      "+0x0e": "BFS depth during collection",
+      "+0x0f": "incoming direction during collection"
+    },
+    "still_unread": "FUN_020b257c (180B), the loop advance at the end of FUN_020b2740, which is where room PLACEMENT on the grid happens"
+  }
+}

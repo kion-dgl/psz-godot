@@ -1,0 +1,1163 @@
+{
+  "schema": "psz-re/player-movement-reference/1",
+  "confidence": "confirmed for this running-state rule by code plus 42 frame transitions and a separate reversal trace",
+  "sources": [
+    "ARM9 0203AB7C facing update",
+    "ARM9 020397D4 translation update",
+    "data/traces/player_turn_probe.json",
+    "data/traces/player_turn_reversal.json"
+  ],
+  "fields_relative_to_player": {
+    "position_x": "0x9c",
+    "position_y": "0xa0",
+    "position_z": "0xa4",
+    "facing_yaw_u16": "0xc0",
+    "travel_target_yaw_u16": "0xc2",
+    "movement_speed_this_update_q12": "0x100",
+    "last_movement_speed_q12": "0x104",
+    "state_id": "0x240"
+  },
+  "running_facing_rule": {
+    "state_id": 3,
+    "turn_units": 65536,
+    "delta": "target-current; subtract 65536 if >32768, add 65536 if <-32768",
+    "snap_if": "abs(delta) <= 2048 OR abs(delta) > 24576",
+    "snap_angles_degrees": {
+      "small_inclusive": 11.25,
+      "large_exclusive": 135
+    },
+    "otherwise": "current = (current + trunc_toward_zero(delta/6)) modulo 65536",
+    "outside_state_3": "0203AB7C returns 0 without changing yaw; other state/caller behavior must be handled separately"
+  },
+  "translation": {
+    "direction": "travel/target yaw at +0xc2, not smoothed facing at +0xc0",
+    "formula": "X += (speed * sin_table[yaw>>4]) >> 12; Z += (speed * cos_table[yaw>>4]) >> 12",
+    "observed_speed_raw": 835,
+    "observed_speed_units_per_update": 0.203857421875,
+    "oracle": "Exact raw X/Z deltas agree in all 42 selected moving transitions",
+    "adversarial": "Substituting facing yaw for target yaw fails in 41 of those 42 transitions"
+  },
+  "limits": [
+    "This is a player running rule, not an enemy/boss universal turn rate.",
+    "It does not define a fixed physical turn radius: translation follows target yaw while the displayed facing catches up.",
+    "Speed 835 is from this fixture; terrain, state, class and other modifiers are not exhaustively tested.",
+    "Input is camera-relative; its target angle may change while the same button remains held.",
+    "Apply once per original simulation update, not blindly once per Godot rendered frame.",
+    "The first input sample can update the target before facing/position move. Idle release behavior is not generalized from these running samples."
+  ],
+  "verified_transitions": [
+    {
+      "sample": 5,
+      "previous_yaw": 0,
+      "target_yaw": 49152,
+      "current_yaw": 62806,
+      "delta": -16384,
+      "step": -2730,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -835,
+        0
+      ]
+    },
+    {
+      "sample": 6,
+      "previous_yaw": 62806,
+      "target_yaw": 49152,
+      "current_yaw": 60531,
+      "delta": -13654,
+      "step": -2275,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -835,
+        0
+      ]
+    },
+    {
+      "sample": 7,
+      "previous_yaw": 60531,
+      "target_yaw": 48735,
+      "current_yaw": 58565,
+      "delta": -11796,
+      "step": -1966,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -835,
+        -35
+      ]
+    },
+    {
+      "sample": 8,
+      "previous_yaw": 58565,
+      "target_yaw": 48318,
+      "current_yaw": 56858,
+      "delta": -10247,
+      "step": -1707,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -833,
+        -68
+      ]
+    },
+    {
+      "sample": 9,
+      "previous_yaw": 56858,
+      "target_yaw": 47892,
+      "current_yaw": 55364,
+      "delta": -8966,
+      "step": -1494,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -829,
+        -101
+      ]
+    },
+    {
+      "sample": 10,
+      "previous_yaw": 55364,
+      "target_yaw": 47457,
+      "current_yaw": 54047,
+      "delta": -7907,
+      "step": -1317,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -824,
+        -136
+      ]
+    },
+    {
+      "sample": 11,
+      "previous_yaw": 54047,
+      "target_yaw": 47013,
+      "current_yaw": 52875,
+      "delta": -7034,
+      "step": -1172,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -818,
+        -171
+      ]
+    },
+    {
+      "sample": 12,
+      "previous_yaw": 52875,
+      "target_yaw": 46567,
+      "current_yaw": 51824,
+      "delta": -6308,
+      "step": -1051,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -810,
+        -206
+      ]
+    },
+    {
+      "sample": 13,
+      "previous_yaw": 51824,
+      "target_yaw": 46138,
+      "current_yaw": 50877,
+      "delta": -5686,
+      "step": -947,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -801,
+        -239
+      ]
+    },
+    {
+      "sample": 14,
+      "previous_yaw": 50877,
+      "target_yaw": 45718,
+      "current_yaw": 50018,
+      "delta": -5159,
+      "step": -859,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -790,
+        -271
+      ]
+    },
+    {
+      "sample": 15,
+      "previous_yaw": 50018,
+      "target_yaw": 45299,
+      "current_yaw": 49232,
+      "delta": -4719,
+      "step": -786,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -779,
+        -302
+      ]
+    },
+    {
+      "sample": 16,
+      "previous_yaw": 49232,
+      "target_yaw": 44912,
+      "current_yaw": 48512,
+      "delta": -4320,
+      "step": -720,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -767,
+        -331
+      ]
+    },
+    {
+      "sample": 17,
+      "previous_yaw": 48512,
+      "target_yaw": 44526,
+      "current_yaw": 47848,
+      "delta": -3986,
+      "step": -664,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -754,
+        -360
+      ]
+    },
+    {
+      "sample": 18,
+      "previous_yaw": 47848,
+      "target_yaw": 44116,
+      "current_yaw": 47226,
+      "delta": -3732,
+      "step": -622,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -740,
+        -388
+      ]
+    },
+    {
+      "sample": 19,
+      "previous_yaw": 47226,
+      "target_yaw": 43705,
+      "current_yaw": 46640,
+      "delta": -3521,
+      "step": -586,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -724,
+        -418
+      ]
+    },
+    {
+      "sample": 20,
+      "previous_yaw": 46640,
+      "target_yaw": 43265,
+      "current_yaw": 46078,
+      "delta": -3375,
+      "step": -562,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -706,
+        -447
+      ]
+    },
+    {
+      "sample": 21,
+      "previous_yaw": 46078,
+      "target_yaw": 42823,
+      "current_yaw": 45536,
+      "delta": -3255,
+      "step": -542,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -686,
+        -477
+      ]
+    },
+    {
+      "sample": 22,
+      "previous_yaw": 45536,
+      "target_yaw": 42394,
+      "current_yaw": 45013,
+      "delta": -3142,
+      "step": -523,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -666,
+        -505
+      ]
+    },
+    {
+      "sample": 23,
+      "previous_yaw": 45013,
+      "target_yaw": 41964,
+      "current_yaw": 44505,
+      "delta": -3049,
+      "step": -508,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -644,
+        -532
+      ]
+    },
+    {
+      "sample": 24,
+      "previous_yaw": 44505,
+      "target_yaw": 41539,
+      "current_yaw": 44011,
+      "delta": -2966,
+      "step": -494,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -623,
+        -557
+      ]
+    },
+    {
+      "sample": 25,
+      "previous_yaw": 44011,
+      "target_yaw": 41115,
+      "current_yaw": 43529,
+      "delta": -2896,
+      "step": -482,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -599,
+        -583
+      ]
+    },
+    {
+      "sample": 26,
+      "previous_yaw": 43529,
+      "target_yaw": 40711,
+      "current_yaw": 43060,
+      "delta": -2818,
+      "step": -469,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -576,
+        -605
+      ]
+    },
+    {
+      "sample": 27,
+      "previous_yaw": 43060,
+      "target_yaw": 40307,
+      "current_yaw": 42602,
+      "delta": -2753,
+      "step": -458,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -553,
+        -627
+      ]
+    },
+    {
+      "sample": 28,
+      "previous_yaw": 42602,
+      "target_yaw": 39923,
+      "current_yaw": 42156,
+      "delta": -2679,
+      "step": -446,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -529,
+        -647
+      ]
+    },
+    {
+      "sample": 29,
+      "previous_yaw": 42156,
+      "target_yaw": 39527,
+      "current_yaw": 41718,
+      "delta": -2629,
+      "step": -438,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -504,
+        -667
+      ]
+    },
+    {
+      "sample": 30,
+      "previous_yaw": 41718,
+      "target_yaw": 39087,
+      "current_yaw": 41280,
+      "delta": -2631,
+      "step": -438,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -475,
+        -687
+      ]
+    },
+    {
+      "sample": 31,
+      "previous_yaw": 41280,
+      "target_yaw": 38647,
+      "current_yaw": 40842,
+      "delta": -2633,
+      "step": -438,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -446,
+        -707
+      ]
+    },
+    {
+      "sample": 32,
+      "previous_yaw": 40842,
+      "target_yaw": 38212,
+      "current_yaw": 40404,
+      "delta": -2630,
+      "step": -438,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -417,
+        -724
+      ]
+    },
+    {
+      "sample": 33,
+      "previous_yaw": 40404,
+      "target_yaw": 37777,
+      "current_yaw": 39967,
+      "delta": -2627,
+      "step": -437,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -386,
+        -741
+      ]
+    },
+    {
+      "sample": 41,
+      "previous_yaw": 37777,
+      "target_yaw": 53309,
+      "current_yaw": 40365,
+      "delta": 15532,
+      "step": 2588,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 42,
+      "previous_yaw": 40365,
+      "target_yaw": 53309,
+      "current_yaw": 42522,
+      "delta": 12944,
+      "step": 2157,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 43,
+      "previous_yaw": 42522,
+      "target_yaw": 53309,
+      "current_yaw": 44319,
+      "delta": 10787,
+      "step": 1797,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 44,
+      "previous_yaw": 44319,
+      "target_yaw": 53309,
+      "current_yaw": 45817,
+      "delta": 8990,
+      "step": 1498,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 45,
+      "previous_yaw": 45817,
+      "target_yaw": 53309,
+      "current_yaw": 47065,
+      "delta": 7492,
+      "step": 1248,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 46,
+      "previous_yaw": 47065,
+      "target_yaw": 53309,
+      "current_yaw": 48105,
+      "delta": 6244,
+      "step": 1040,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 47,
+      "previous_yaw": 48105,
+      "target_yaw": 53309,
+      "current_yaw": 48972,
+      "delta": 5204,
+      "step": 867,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 48,
+      "previous_yaw": 48972,
+      "target_yaw": 53309,
+      "current_yaw": 49694,
+      "delta": 4337,
+      "step": 722,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 49,
+      "previous_yaw": 49694,
+      "target_yaw": 53309,
+      "current_yaw": 50296,
+      "delta": 3615,
+      "step": 602,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 50,
+      "previous_yaw": 50296,
+      "target_yaw": 53309,
+      "current_yaw": 50798,
+      "delta": 3013,
+      "step": 502,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 51,
+      "previous_yaw": 50798,
+      "target_yaw": 53309,
+      "current_yaw": 51216,
+      "delta": 2511,
+      "step": 418,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 52,
+      "previous_yaw": 51216,
+      "target_yaw": 53309,
+      "current_yaw": 51564,
+      "delta": 2093,
+      "step": 348,
+      "snap": false,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    },
+    {
+      "sample": 53,
+      "previous_yaw": 51564,
+      "target_yaw": 53309,
+      "current_yaw": 53309,
+      "delta": 1745,
+      "step": 1745,
+      "snap": true,
+      "position_delta_raw_xz": [
+        -770,
+        323
+      ]
+    }
+  ],
+  "reversal": {
+    "before": [
+      53309,
+      20541
+    ],
+    "after": [
+      20541,
+      20541
+    ],
+    "angular_change_degrees": 180
+  },
+  "analog_input": {
+    "confidence": "27 live injected movement steps and 32 settled eight-direction camera samples",
+    "original_angle_decoder": "ARM9 0203D388 returns camera-relative eight-way yaw from D-pad bits",
+    "target_writers": [
+      "020ACC34",
+      "020ACC8C",
+      "020ACCB8",
+      "020AD660"
+    ],
+    "tested_injection_point": "ARM9 0203CC8C entry, r0 = local player; after input handling in 0203C8F0, before facing and translation",
+    "probe": "tools/player_analog_probe.py; holds D-pad Up and changes ONLY player+0xC2 to 12345 then 45113",
+    "stick_formula": "world_yaw = camera_current_yaw + 32768 - atan2(stick_x, -stick_y) * 65536/(2*pi), modulo 65536",
+    "stick_axes": "x positive right; y positive down. Camera yaw is object+0x82 for vtable020F99A8.",
+    "camera_pointer_chain": "manager = *(u32*)02108C84; index = *(u32*)(manager+64); camera = *(u32*)(manager+40+index*4), all offsets hex",
+    "source_review": {
+      "repository": "https://github.com/kion-dgl/psz-melonmix",
+      "commit": "d6f3a6803b5a1f7882ea118702325028e4232622",
+      "file": "psz/PSZPlugin.cpp",
+      "function": "ApplyMoveStick",
+      "findings": [
+        "Disabled by default; writes hardcoded facing021A2170 rather than travel target.",
+        "Existing atan2 term has the opposite sign for left/right compared with the eight-direction oracle.",
+        "Called by presentation Update; post-input simulation hook has been tested here, presentation timing has not."
+      ]
+    },
+    "integration_guidance": [
+      "For an initial running-only hook, use the actual local player object, require state3 and active stick above deadzone; keep D-pad bits supplying run state.",
+      "Override target after original input decoding on each simulation update. Let original facing smoothing consume the new target.",
+      "Do not generalize this hook to attacks, dodge, lock-on, menus, cutscenes or NPCs without separate testing.",
+      "A production core hook or guest-code patch and controller deadzone/speed policy remain to implement. This experiment proves arbitrary headings, not full analog-speed support."
+    ],
+    "injected_steps": [
+      {
+        "sample": 5,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 6,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 7,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 8,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 9,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 10,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 11,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 12,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 13,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 14,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 15,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 16,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 17,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 18,
+        "injected_target": 12345,
+        "delta_xz_raw": [
+          772,
+          315
+        ]
+      },
+      {
+        "sample": 19,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 20,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 21,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 22,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 23,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 24,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 25,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 26,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 27,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 28,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 29,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 30,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      },
+      {
+        "sample": 31,
+        "injected_target": 45113,
+        "delta_xz_raw": [
+          -773,
+          -316
+        ]
+      }
+    ],
+    "camera_direction_samples": [
+      {
+        "sample": 1,
+        "keys": [
+          "Up"
+        ],
+        "camera_yaw": 20030,
+        "target_yaw": 52798,
+        "offset": 32768
+      },
+      {
+        "sample": 2,
+        "keys": [
+          "Up"
+        ],
+        "camera_yaw": 20030,
+        "target_yaw": 52798,
+        "offset": 32768
+      },
+      {
+        "sample": 3,
+        "keys": [
+          "Up"
+        ],
+        "camera_yaw": 20030,
+        "target_yaw": 52798,
+        "offset": 32768
+      },
+      {
+        "sample": 4,
+        "keys": [
+          "Up"
+        ],
+        "camera_yaw": 20030,
+        "target_yaw": 52798,
+        "offset": 32768
+      },
+      {
+        "sample": 6,
+        "keys": [
+          "Up",
+          "Right"
+        ],
+        "camera_yaw": 19604,
+        "target_yaw": 44180,
+        "offset": 24576
+      },
+      {
+        "sample": 7,
+        "keys": [
+          "Up",
+          "Right"
+        ],
+        "camera_yaw": 19584,
+        "target_yaw": 44160,
+        "offset": 24576
+      },
+      {
+        "sample": 8,
+        "keys": [
+          "Up",
+          "Right"
+        ],
+        "camera_yaw": 19138,
+        "target_yaw": 43714,
+        "offset": 24576
+      },
+      {
+        "sample": 9,
+        "keys": [
+          "Up",
+          "Right"
+        ],
+        "camera_yaw": 18692,
+        "target_yaw": 43268,
+        "offset": 24576
+      },
+      {
+        "sample": 11,
+        "keys": [
+          "Right"
+        ],
+        "camera_yaw": 17850,
+        "target_yaw": 34234,
+        "offset": 16384
+      },
+      {
+        "sample": 12,
+        "keys": [
+          "Right"
+        ],
+        "camera_yaw": 17422,
+        "target_yaw": 33806,
+        "offset": 16384
+      },
+      {
+        "sample": 13,
+        "keys": [
+          "Right"
+        ],
+        "camera_yaw": 17023,
+        "target_yaw": 33407,
+        "offset": 16384
+      },
+      {
+        "sample": 14,
+        "keys": [
+          "Right"
+        ],
+        "camera_yaw": 16631,
+        "target_yaw": 33015,
+        "offset": 16384
+      },
+      {
+        "sample": 16,
+        "keys": [
+          "Down",
+          "Right"
+        ],
+        "camera_yaw": 15811,
+        "target_yaw": 24003,
+        "offset": 8192
+      },
+      {
+        "sample": 17,
+        "keys": [
+          "Down",
+          "Right"
+        ],
+        "camera_yaw": 15382,
+        "target_yaw": 23574,
+        "offset": 8192
+      },
+      {
+        "sample": 18,
+        "keys": [
+          "Down",
+          "Right"
+        ],
+        "camera_yaw": 14946,
+        "target_yaw": 23138,
+        "offset": 8192
+      },
+      {
+        "sample": 19,
+        "keys": [
+          "Down",
+          "Right"
+        ],
+        "camera_yaw": 14515,
+        "target_yaw": 22707,
+        "offset": 8192
+      },
+      {
+        "sample": 21,
+        "keys": [
+          "Down"
+        ],
+        "camera_yaw": 13651,
+        "target_yaw": 13651,
+        "offset": 0
+      },
+      {
+        "sample": 22,
+        "keys": [
+          "Down"
+        ],
+        "camera_yaw": 13651,
+        "target_yaw": 13651,
+        "offset": 0
+      },
+      {
+        "sample": 23,
+        "keys": [
+          "Down"
+        ],
+        "camera_yaw": 13651,
+        "target_yaw": 13651,
+        "offset": 0
+      },
+      {
+        "sample": 24,
+        "keys": [
+          "Down"
+        ],
+        "camera_yaw": 13651,
+        "target_yaw": 13651,
+        "offset": 0
+      },
+      {
+        "sample": 26,
+        "keys": [
+          "Down",
+          "Left"
+        ],
+        "camera_yaw": 14051,
+        "target_yaw": 5859,
+        "offset": 57344
+      },
+      {
+        "sample": 27,
+        "keys": [
+          "Down",
+          "Left"
+        ],
+        "camera_yaw": 14072,
+        "target_yaw": 5880,
+        "offset": 57344
+      },
+      {
+        "sample": 28,
+        "keys": [
+          "Down",
+          "Left"
+        ],
+        "camera_yaw": 14509,
+        "target_yaw": 6317,
+        "offset": 57344
+      },
+      {
+        "sample": 29,
+        "keys": [
+          "Down",
+          "Left"
+        ],
+        "camera_yaw": 14945,
+        "target_yaw": 6753,
+        "offset": 57344
+      },
+      {
+        "sample": 31,
+        "keys": [
+          "Left"
+        ],
+        "camera_yaw": 15807,
+        "target_yaw": 64959,
+        "offset": 49152
+      },
+      {
+        "sample": 32,
+        "keys": [
+          "Left"
+        ],
+        "camera_yaw": 16243,
+        "target_yaw": 65395,
+        "offset": 49152
+      },
+      {
+        "sample": 33,
+        "keys": [
+          "Left"
+        ],
+        "camera_yaw": 16668,
+        "target_yaw": 284,
+        "offset": 49152
+      },
+      {
+        "sample": 34,
+        "keys": [
+          "Left"
+        ],
+        "camera_yaw": 17090,
+        "target_yaw": 706,
+        "offset": 49152
+      },
+      {
+        "sample": 36,
+        "keys": [
+          "Up",
+          "Left"
+        ],
+        "camera_yaw": 17862,
+        "target_yaw": 58822,
+        "offset": 40960
+      },
+      {
+        "sample": 37,
+        "keys": [
+          "Up",
+          "Left"
+        ],
+        "camera_yaw": 18273,
+        "target_yaw": 59233,
+        "offset": 40960
+      },
+      {
+        "sample": 38,
+        "keys": [
+          "Up",
+          "Left"
+        ],
+        "camera_yaw": 18684,
+        "target_yaw": 59644,
+        "offset": 40960
+      },
+      {
+        "sample": 39,
+        "keys": [
+          "Up",
+          "Left"
+        ],
+        "camera_yaw": 19121,
+        "target_yaw": 60081,
+        "offset": 40960
+      }
+    ]
+  }
+}

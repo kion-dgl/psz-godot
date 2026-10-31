@@ -4,9 +4,6 @@ extends RefCounted
 class Target extends Node3D:
 	var hits := 0
 	var effects := 0
-	var invincible := false
-	func is_dodge_iframed() -> bool:
-		return invincible
 	func take_damage(_damage: int, _knockback: Vector3, _knockdown: bool) -> void:
 		hits += 1
 
@@ -43,15 +40,13 @@ static func run(runner: Node) -> void:
 	runner.assert_eq(target.hits, 0, "swept near miss stays a miss")
 	shot.free()
 	target.position = Vector3(0, 0, 2)
-	target.invincible = true
 	shot = _shot(runner, target)
 	shot._physics_process(0.5)
-	runner.assert_true(shot._hit, "dodge consumes swept contact")
-	runner.assert_eq(target.hits, 0, "dodge suppresses direct damage")
-	runner.assert_eq(target.effects, 0, "dodge suppresses on-hit poison")
-	target.invincible = false
+	runner.assert_true(shot._hit, "direct contact consumes the projectile")
+	runner.assert_eq(target.hits, 1, "no dodge immunity: projectile contact damages regardless of state (ROM correction)")
+	runner.assert_eq(target.effects, 1, "on-hit poison applies on the direct hit")
 	shot._physics_process(0.5)
-	runner.assert_eq(target.hits, 0, "dodged projectile cannot hit after i-frames end")
+	runner.assert_eq(target.hits, 1, "consumed projectile cannot hit again")
 	shot.free()
 	target.free()
 

@@ -7,3 +7,10 @@
 # Generated OUTPUTS of the local Three.js preview exporters, not runtime inputs.
 assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_pillar_preview.json
 assets/stages/shrine_b/s07b_ga1/lndmd/shrine_lantern_preview.glb
+
+# Local-only VRM↔PSZ pipeline test (never in the pack): chibi_model_2.0.vrm is
+# OnlyAuthor / Redistribution_Prohibited, so assets/npcs/vrm_chibi/ is
+# gitignored. The in-game spawn is guarded by ResourceLoader.exists and this
+# ignore entry keeps check_asset_refs green on machines that have the asset.
+assets/npcs/vrm_chibi/vrm_chibi.glb
+assets/npcs/vrm_chibi/npc_idles_vrm.glb
