@@ -3040,112 +3040,31 @@ func test_player_defeat_invulnerable() -> void:
 # damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
 # pops glide, while physics stays exact. Snaps on a real fall so the mesh never
 # floats. Locks the damping contract; the buttery result is verified in-game.
-# ── Original world camera (spec /mechanics/camera) ──
-# The ROM camera-slot-1 model, ported from the decomp's world_camera.c: fixed
-# elevation 11.25°, radius 5.0 u, manual rotate 768 angle units/frame, recenter
-# ease Δ/8 per 30 fps frame (snap band 256 units), a running-only follow swing
-# stepping half the per-frame displacement in angle units, and 50%/frame
-# look-point easing. All rates are checked at the reference 30 fps tick.
-class _CamFollowTarget extends Node3D:
-	var player_rotation := 0.0
-	var current_state := 2  # PlayerState.RUNNING
-	var facing := 0.0
-	func get_camera_follow_yaw() -> float:
-		return facing
-
-
+# Previous orbit controls with the retained 5-unit, 11.25-degree framing.
 func test_original_camera() -> void:
-	print("── Original world camera (ROM model) ──")
-	const ORBIT_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
-	const OrbitScript := preload("res://scripts/3d/camera/orbit_camera.gd")
-	# Constants match the ROM (65536-unit angle circle, Q12 geometry).
-	assert_almost_eq(OrbitScript.PITCH, TAU * 2048.0 / 65536.0, 0.00001, "elevation is 2048 units = 11.25°")
-	assert_almost_eq(OrbitScript.RADIUS, 5.0, 0.00001, "ring radius is 20480 Q12 = 5.0 u")
-	assert_almost_eq(OrbitScript.MANUAL_RATE, TAU * 768.0 / 65536.0 * 30.0, 0.00001,
-		"manual rotate is 768 units/frame ≈ 126.6°/s")
-	assert_almost_eq(OrbitScript.RECENTER_SNAP, TAU * 256.0 / 65536.0, 0.00001, "recenter snap band is 256 units")
-
-	var cam: Node3D = ORBIT_SCENE.instantiate()
+	var cam = preload("res://scenes/3d/camera/orbit_camera.tscn").instantiate()
 	add_child(cam)
-	var target := _CamFollowTarget.new()
+	var target := Node3D.new()
 	add_child(target)
 	cam.set_target(target)
-
-	# Recenter ease: Δ/8 per frame toward facing+180°, snap inside the band.
-	# (Start off the exact-opposite heading — at Δ=180° the wrapped difference
-	# is sign-ambiguous; the ROM's difference() keeps +32768 positive there.)
-	cam.camera_rotation = 0.2
-	cam._begin_recenter()  # desired = PI (behind facing +z)
-	var before: float = cam.camera_rotation
-	cam._step_recenter(1.0 / 30.0, false)
-	assert_almost_eq(cam.camera_rotation - before, (PI - 0.2) / 8.0, 0.00001,
-		"recenter steps Δ/8 per 30 fps frame")
-	# Repeated eases converge and snap exactly onto the target heading.
-	for _i in range(40):
-		cam._step_recenter(1.0 / 30.0, false)
-	assert_almost_eq(cam.camera_rotation, PI, OrbitScript.RECENTER_SNAP,
-		"recenter converges behind the facing")
-	assert_true(not cam._recenter_mode, "recenter mode releases on snap")
-
-	# Manual rotate: exactly 768 units per 30 fps frame in the pressed
-	# direction (input-driven path).
-	Input.action_press("camera_right")
-	cam.camera_rotation = 0.0
-	cam._recenter_mode = false
-	cam._step_heading(1.0 / 30.0)
-	Input.action_release("camera_right")
-	assert_almost_eq(cam.camera_rotation, TAU - TAU * 768.0 / 65536.0, 0.00001,
-		"manual rotate moves 768 units/frame (wrap-safe)")
-
-	# Follow swing: RUNNING only; steps half the per-frame player displacement
-	# expressed in angle units; snaps when the gap is inside the gate. (Start
-	# off the exact-opposite heading — Δ=180° is the ROM's ambiguity guard.)
-	cam.camera_rotation = 0.2
-	# One run frame of player displacement: MOVE_SPEED/30 = 0.2 u → 819 Q12 →
-	# step ~409 angle units; gap PI−0.2 ≫ limit → step, no snap.
-	target.global_position = Vector3(0.0, 0.0, 6.0 / 30.0)
-	cam._anchor_xz = Vector2.ZERO
-	cam._anchor_valid = true
-	cam._step_follow_swing()
-	assert_almost_eq(cam.camera_rotation, 0.2 + 6.0 / 30.0 * OrbitScript.FOLLOW_COEFF, 0.00001,
-		"follow swing steps displacement/2 in angle units")
-	# Small gap (inside the displacement gate) snaps exactly behind the steering.
-	cam.camera_rotation = PI - TAU * 300.0 / 65536.0
-	target.facing = 0.0
-	cam._anchor_xz = Vector2.ZERO
-	cam._step_follow_swing()
-	assert_almost_eq(cam.camera_rotation, PI, 0.00001, "follow swing snaps when the gap is inside the gate")
-	# Exactly opposite: the ROM's ambiguity guard — no movement.
-	cam.camera_rotation = 0.0
-	cam._anchor_xz = Vector2.ZERO
-	cam._step_follow_swing()
-	assert_almost_eq(cam.camera_rotation, 0.0, 0.00001, "exactly-opposite steering does not move the camera")
-	# Not running: no swing at all.
-	target.current_state = 0
-	cam._anchor_xz = Vector2.ZERO
-	cam._step_follow_swing()
-	assert_almost_eq(cam.camera_rotation, 0.0, 0.00001, "follow swing is running-only")
-
-	# Look-point easing: 50% of the gap per 30 fps frame (soft follow).
-	target.current_state = 2
-	target.global_position = Vector3.ZERO
-	cam.set_target(target)  # re-establishes the anchor on the player
+	cam.camera_rotation = 0.3
 	cam._update_camera_position(0.0)
-	target.global_position = Vector3(4.0, 0.0, 0.0)
-	cam._update_camera_position(1.0 / 30.0)
-	assert_almost_eq(cam._look_xz.x, 2.0, 0.00001, "look point closes 50%/frame toward the player")
-	assert_almost_eq(cam._look_xz.y, 0.0, 0.00001, "look point does not overshoot")
-	# Eye geometry: 1.5 u look height + 11.25° elevation ring at radius 5.
-	var eye: Vector3 = cam.camera.global_position
-	assert_almost_eq(eye.y, OrbitScript.LOOK_HEIGHT + OrbitScript.RADIUS * sin(OrbitScript.PITCH), 0.00001,
-		"eye height is look height + radius·sin(pitch)")
-	var horiz := Vector3(eye.x - cam._look_xz.x, 0.0, eye.z - cam._look_xz.y)
-	assert_almost_eq(horiz.length(), OrbitScript.RADIUS * cos(OrbitScript.PITCH), 0.00001,
-		"eye sits on the 11.25° ring around the look point")
-	assert_almost_eq(cam.camera.fov, 44.0, 0.00001, "vertical fov is the ROM projection's ≈44°")
+	var look := target.global_position + Vector3.UP * 1.5
+	assert_almost_eq(cam.camera.global_position.distance_to(look), 5.0, 0.00001, "retained camera radius")
+	assert_almost_eq(cam.camera.global_position.y, 1.5 + 5.0 * sin(PI / 16.0), 0.00001, "retained camera elevation")
+	assert_almost_eq(cam.camera.fov, 44.0, 0.00001, "retained framing FOV")
+	target.position.x += 1.0
+	cam._update_camera_position(1.0 / 60.0)
+	assert_almost_eq(cam.camera_rotation, 0.3, 0.00001, "movement does not rotate camera")
+	assert_almost_eq(cam.camera.global_position.x, 1.0 + sin(0.3) * cam.distance, 0.00001, "horizontal follow is immediate")
+	cam.camera_pitch = 0.2
+	cam._center_behind_player()
+	assert_almost_eq(cam.camera_rotation, PI, 0.00001, "recenter is immediate")
+	assert_almost_eq(cam.camera_pitch, 0.0, 0.00001, "recenter restores default pitch")
+	cam._update_camera_position(0.0)
+	assert_true(cam.camera.global_transform.is_equal_approx(cam.get_follow_transform()), "shop return agrees with camera pose")
 	cam.free()
 	target.free()
-	print("")
 
 
 func test_player_model_y_damping() -> void:
