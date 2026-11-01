@@ -5,6 +5,7 @@ class SwingPlayer extends "res://scripts/3d/player/player.gd":
 	var weapon_type := 0
 	var volleys := 0
 	var damage_rolls := 0
+	var projectiles := 0
 	func _ready() -> void:
 		set_physics_process(false)
 		set_process(false)
@@ -15,8 +16,9 @@ class SwingPlayer extends "res://scripts/3d/player/player.gd":
 		var cfg: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 		return {"weapon_type": weapon_type, "max_targets": cfg.get("max_targets_per_step", [cfg.max_targets, cfg.max_targets, cfg.max_targets])[combo_state - 1],
 			"hits": cfg.hits_per_step[combo_state - 1], "damage": 10}
-	func _fire_projectile(_atk: Dictionary) -> void:
+	func _fire_projectile(atk: Dictionary) -> void:
 		volleys += 1
+		projectiles += int(atk.hits)
 	func _update_combo_ring(_delta: float) -> void:
 		pass
 
@@ -33,10 +35,16 @@ class Target extends Node3D:
 
 static func run(t: Node) -> void:
 	seed(554)
+	CombatManager.get_weapon_type_config(0)
+	var imported: Dictionary = CombatManager._original_timing_types
+	CombatManager._original_timing_types = {}
 	_check_weapons(t)
 	_check_boundaries(t)
 	_check_target_budget(t)
 	_check_cancellation_and_ranged(t)
+	CombatManager._original_timing_types = imported
+	_check_imported_events(t)
+	_check_imported_chain_boundaries(t)
 
 static func _check_weapons(t: Node) -> void:
 	for weapon_type in [0, 1, 2, 3, 4, 5, 7, 8, 13, 14, 15]:
@@ -151,3 +159,45 @@ static func _target(t: Node, distance: float) -> Target:
 	target.position.z = distance
 	target.add_to_group("enemies")
 	return target
+
+
+static func _check_imported_events(t: Node) -> void:
+	for weapon_type in [0, 1, 2, 3, 4, 10]:
+		var cfg: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+		for step in range(1, 4):
+			var pl := _player(t, weapon_type, step)
+			var target := _target(t, 1.0)
+			var events: Array = cfg.original_timing_steps[step - 1].hit_fracs
+			for i in events.size():
+				var at := float(events[i])
+				pl._handle_attack_state(at - pl._attack_anim_elapsed - 0.00001)
+				t.assert_eq(pl.volleys if weapon_type == 10 else target.hurtbox.contacts, i, "no contact before imported event")
+				pl._handle_attack_state(0.00002)
+				t.assert_eq(pl.volleys if weapon_type == 10 else target.hurtbox.contacts, i + 1, "one impact per imported event wt=%s step=%s" % [weapon_type, step])
+			pl._handle_attack_state(0.001)
+			t.assert_eq(pl.damage_rolls, 1, "imported events share one damage snapshot")
+			if weapon_type == 10:
+				t.assert_eq(pl.projectiles, events.size(), "one projectile per imported event, no multiplied burst")
+			pl.free()
+			target.free()
+	var slow := _player(t, 2, 3)
+	var victim := _target(t, 1.0)
+	slow._handle_attack_state(0.95)
+	t.assert_eq(victim.hurtbox.contacts, 3, "slow tick delivers three crossed dagger events")
+	slow.free()
+	victim.free()
+
+
+static func _check_imported_chain_boundaries(t: Node) -> void:
+	for weapon_type in [0, 1, 2, 10]:
+		for step in [1, 2]:
+			var timing: Dictionary = CombatManager.get_weapon_type_config(weapon_type).original_timing_steps[step - 1]
+			var opening := float(timing.chain_open_frac)
+			var closing := float(timing.chain_close_frac)
+			for fraction in [opening - 0.00001, opening, closing, closing + 0.00001]:
+				var pl := _player(t, weapon_type, step)
+				pl._attack_anim_elapsed = fraction
+				pl._try_queue_combo(false)
+				t.assert_eq(pl._queued_combo == SwingPlayer.ComboQueue.NORMAL, fraction >= opening and fraction <= closing, "imported chain accepts inclusive boundaries")
+				t.assert_eq(pl._combo_fumbled, fraction < opening, "only early presses fumble")
+				pl.free()

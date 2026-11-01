@@ -288,84 +288,92 @@ static func _normalize_placement(per_room: Dictionary, trap_room: Dictionary,
 		legacy_rooms: Dictionary) -> Dictionary:
 	var out := {}
 	for key in per_room.keys():
-		var entry: Dictionary = per_room[key]
-		var legacy: Dictionary = legacy_rooms.get(key, {})
-		var legacy_objects: Array = legacy.get("objects") if legacy.get("objects") is Array else []
-		# Count-based union: legacy records grouped by position sig, consumed
-		# one per matching new record, so same-position legacy twins both
-		# survive. Simulated against the corpora: every legacy record is
-		# retained (0 missing) while the fuller new decode adds coverage.
-		var by_pos := {}
-		var avail := {}
-		for rec in legacy_objects:
-			var s := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
-			if not by_pos.has(s):
-				by_pos[s] = []
-				avail[s] = 0
-			by_pos[s].append(rec)
-			avail[s] = int(avail[s]) + 1
-		var used := {}
-		var records: Array = []
-		var boxes: Array = entry.get("boxes") if entry.get("boxes") is Array else []
-		for b in boxes:
-			if b.get("x") == null or b.get("z") == null:
-				continue
-			var kind: String = str(b.get("kind", ""))
-			var sig: String = _pos_sig(b.get("x"), b.get("y"), b.get("z"), b.get("angle"))
-			var inherited = _take_legacy(by_pos, avail, used, sig)
-			if inherited != null:
-				records.append(inherited)
-			elif STEM_KIND_DEFAULTS.has(kind) and not kind in STEM_KIND_SKIPPED:
-				records.append({
-					"g": int(b["group"]) if b.get("group") != null else 0,
-					"k": STEM_KIND_DEFAULTS[kind],
-					"x": float(b.get("x", 0.0)),
-					"y": float(b.get("y", 0.0)),
-					"z": float(b.get("z", 0.0)),
-					"a": int(b.get("angle", 0)),
-					"m": str(b.get("model", "")),
-					# the record's +0x12 byte: variant within the factory kind
-					# (walls pick the stage model, containers go plain/rare,
-					# type-19 traps pick their burst element)
-					"v": int(b["variant"]) if b.get("variant") != null else 0,
-				})
-		var trap_entry: Dictionary = trap_room.get(key, {})
-		var trap_sizes: Array = trap_entry.get("group_sizes") if trap_entry.get("group_sizes") is Array else []
-		var placements: Array = trap_entry.get("placements") if trap_entry.get("placements") is Array else []
-		for p in placements:
-			if p.get("x") == null or p.get("z") == null:
-				continue
-			var name: String = str(p.get("name", ""))
-			var tsig: String = _pos_sig(p.get("x"), p.get("y"), p.get("z"), p.get("angle"))
-			var inherited = _take_legacy(by_pos, avail, used, tsig)
-			if inherited != null:
-				records.append(inherited)
-			elif TRAP_NAME_KINDS.has(name):
-				records.append({
-					"g": int(p["group"]) if p.get("group") != null else 0,
-					"k": TRAP_NAME_KINDS[name],
-					"x": float(p.get("x", 0.0)),
-					"y": float(p.get("y", 0.0)),
-					"z": float(p.get("z", 0.0)),
-					"a": int(p.get("angle", 0)),
-					"m": "",
-					"v": int(p["variant"]) if p.get("variant") != null else 0,
-				})
-		# Union with the legacy corpus: a legacy record the newer decodes do
-		# not carry at any matching position is kept verbatim — both exports
-		# decode the same set files, and dropping a placeable record on a
-		# quantization boundary is a regression, not fidelity.
-		for rec in legacy_objects:
-			var lsig := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
-			if _take_legacy(by_pos, avail, used, lsig) != null:
-				records.append(rec)
-		var sizes: Array = entry.get("group_sizes") if entry.get("group_sizes") is Array else []
-		var merged: Array = []
-		for g in range(6):
-			merged.append((int(sizes[g]) if g < sizes.size() else 0)
-				+ (int(trap_sizes[g]) if g < trap_sizes.size() else 0))
-		out[key] = {"groups": merged, "objects": records}
+		out[key] = _normalize_room(per_room[key], trap_room.get(key, {}), legacy_rooms.get(key, {}))
 	return out
+
+
+static func _normalize_room(entry: Dictionary, trap_entry: Dictionary, legacy: Dictionary) -> Dictionary:
+	var legacy_objects: Array = legacy.get("objects") if legacy.get("objects") is Array else []
+	# Count-based union: legacy records grouped by position sig, consumed
+	# one per matching new record, so same-position legacy twins both
+	# survive. Simulated against the corpora: every legacy record is
+	# retained (0 missing) while the fuller new decode adds coverage.
+	var by_pos := {}
+	var avail := {}
+	for rec in legacy_objects:
+		var s := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
+		if not by_pos.has(s):
+			by_pos[s] = []
+			avail[s] = 0
+		by_pos[s].append(rec)
+		avail[s] = int(avail[s]) + 1
+	var used := {}
+	var records: Array = []
+	_normalize_boxes(entry, by_pos, avail, used, records)
+	var trap_sizes: Array = trap_entry.get("group_sizes") if trap_entry.get("group_sizes") is Array else []
+	_normalize_traps(trap_entry, by_pos, avail, used, records)
+	# Union with the legacy corpus: a legacy record the newer decodes do
+	# not carry at any matching position is kept verbatim — both exports
+	# decode the same set files, and dropping a placeable record on a
+	# quantization boundary is a regression, not fidelity.
+	for rec in legacy_objects:
+		var lsig := _pos_sig(rec.get("x"), rec.get("y"), rec.get("z"), rec.get("a"))
+		if _take_legacy(by_pos, avail, used, lsig) != null:
+			records.append(rec)
+	var sizes: Array = entry.get("group_sizes") if entry.get("group_sizes") is Array else []
+	var merged: Array = []
+	for g in range(6):
+		merged.append((int(sizes[g]) if g < sizes.size() else 0)
+			+ (int(trap_sizes[g]) if g < trap_sizes.size() else 0))
+	return {"groups": merged if entry.get("group_sizes") is Array else legacy.get("groups"), "objects": records}
+
+static func _normalize_boxes(entry: Dictionary, by_pos: Dictionary, avail: Dictionary, used: Dictionary, records: Array) -> void:
+	var boxes: Array = entry.get("boxes") if entry.get("boxes") is Array else []
+	for b in boxes:
+		if b.get("x") == null or b.get("z") == null:
+			continue
+		var kind: String = str(b.get("kind", ""))
+		var sig: String = _pos_sig(b.get("x"), b.get("y"), b.get("z"), b.get("angle"))
+		var inherited = _take_legacy(by_pos, avail, used, sig)
+		if inherited != null:
+			records.append(inherited)
+		elif STEM_KIND_DEFAULTS.has(kind) and not kind in STEM_KIND_SKIPPED:
+			records.append({
+				"g": int(b["group"]) if b.get("group") != null else 0,
+				"k": STEM_KIND_DEFAULTS[kind],
+				"x": float(b.get("x", 0.0)),
+				"y": float(b.get("y", 0.0)),
+				"z": float(b.get("z", 0.0)),
+				"a": int(b.get("angle", 0)),
+				"m": str(b.get("model", "")),
+				# the record's +0x12 byte: variant within the factory kind
+				# (walls pick the stage model, containers go plain/rare,
+				# type-19 traps pick their burst element)
+				"v": int(b["variant"]) if b.get("variant") != null else 0,
+			})
+
+
+static func _normalize_traps(trap_entry: Dictionary, by_pos: Dictionary, avail: Dictionary, used: Dictionary, records: Array) -> void:
+	var placements: Array = trap_entry.get("placements") if trap_entry.get("placements") is Array else []
+	for p in placements:
+		if p.get("x") == null or p.get("z") == null:
+			continue
+		var name: String = str(p.get("name", ""))
+		var tsig: String = _pos_sig(p.get("x"), p.get("y"), p.get("z"), p.get("angle"))
+		var inherited = _take_legacy(by_pos, avail, used, tsig)
+		if inherited != null:
+			records.append(inherited)
+		elif TRAP_NAME_KINDS.has(name):
+			records.append({
+				"g": int(p["group"]) if p.get("group") != null else 0,
+				"k": TRAP_NAME_KINDS[name],
+				"x": float(p.get("x", 0.0)),
+				"y": float(p.get("y", 0.0)),
+				"z": float(p.get("z", 0.0)),
+				"a": int(p.get("angle", 0)),
+				"m": "",
+				"v": int(p["variant"]) if p.get("variant") != null else 0,
+			})
 
 
 ## Consume one legacy record at `sig` if any remain unconsumed.
@@ -633,7 +641,13 @@ static func _drop_unopenable_fences(objects: Array) -> Array:
 ## The layout mask (bit set over groups 0..5) for a GENERATED layout category
 ## — the original's per-room +0x31 draw (FUN_02082814), produced by
 ## OriginalFieldGenerator.transcribe(). -1 returns -1 (caller draws instead).
-static func mask_for_layout(layout: int) -> int:
+static func mask_for_layout(layout: int, room_code: String = "") -> int:
+	_load()
+	if layout < 0:
+		return -1
+	var entry: Dictionary = _rooms.get("%s_%s" % [room_code, set_family], {})
+	if entry.get("groups") is Array:
+		layout = _eligible_layout(entry.groups, layout)
 	if layout < 0 or layout >= _layout_masks.size():
 		return -1
 	return int(_layout_masks[layout])
@@ -641,6 +655,12 @@ static func mask_for_layout(layout: int) -> int:
 
 ## Which of the five layout masks this room instance uses.
 static func _pick_layout(groups: Array, depth: int, rng: RandomNumberGenerator) -> int:
+	if _eligible_layouts(groups).is_empty():
+		return 0
+	return _eligible_layout(groups, _weighted_index(_layout_weights.get(_depth_band(depth), []), rng))
+
+
+static func _eligible_layouts(groups: Array) -> Array[int]:
 	var occupied: int = 0
 	for g in range(min(groups.size(), 6)):
 		if int(groups[g]) > 0:
@@ -654,10 +674,14 @@ static func _pick_layout(groups: Array, depth: int, rng: RandomNumberGenerator) 
 		var m: int = int(_layout_masks[i])
 		if m == (m & occupied):
 			eligible.append(i)
+	return eligible
+
+
+static func _eligible_layout(groups: Array, drawn: int) -> int:
+	var eligible := _eligible_layouts(groups)
 	if eligible.is_empty():
 		return 0
 
-	var drawn: int = _weighted_index(_layout_weights.get(_depth_band(depth), []), rng)
 	if drawn in eligible:
 		return drawn
 	# Not eligible: the highest eligible index at or below 3, else 0.

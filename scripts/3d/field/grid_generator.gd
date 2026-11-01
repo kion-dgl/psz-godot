@@ -449,13 +449,11 @@ func generate_original(area: String, area_prefix: String) -> Dictionary:
 
 	var records: Array = gen.to_records()
 	var grid: Dictionary = {}
-	var key_by_index := {}
 	var start_pos := Vector2i.ZERO
 	var end_pos := Vector2i.ZERO
 	for rec in records:
 		var pos := Vector2i(rec["internal"].y, rec["internal"].x)  # row = y, col = x
 		var key := _pos_key(pos)
-		key_by_index[rec["index"]] = key
 		grid[key] = {
 			"stage_id": rec["code"],
 			"rotation": 0,
@@ -470,33 +468,38 @@ func generate_original(area: String, area_prefix: String) -> Dictionary:
 			"generated_layout": int(rec["layout"]),
 			"room_seed": int(rec["seed"]),
 			"generated_dirs": _connection_dirs(rec),
+			"entry_direction": "" if rec["role"] == "start" else ["north", "east", "south", "west"][int(rec["way_back"])],
 		}
 		if rec["role"] == "start":
 			start_pos = pos
 		if rec["role"] == "goal":
 			end_pos = pos
-	# Rotation: the authored door set must cover the generated connections.
-	for key in grid:
-		var cell: Dictionary = grid[key]
-		var dirs: Array = cell["generated_dirs"]
-		var chosen := -1
-		for steps in 4:
-			var gates := _gates_at_rotation(str(cell["stage_id"]), steps)
-			var covers := true
-			for d in dirs:
-				if d not in gates:
-					covers = false
-					break
-			if covers:
-				chosen = steps * 90
-				break
-		if chosen < 0 and not dirs.is_empty():
-			push_warning("GridGenerator: no rotation covers %s's connections %s" % [cell["stage_id"], dirs])
-			chosen = 0
-		cell["rotation"] = maxi(chosen, 0)
+	_fit_original_tiles(grid, stage_prefix, area)
 	if not _assign_door_attributes(grid, _pos_key(start_pos)):
 		push_warning("GridGenerator: original-algorithm field not solvable (gate economy)")
 	return _to_output(grid, [], [], start_pos, end_pos)
+
+
+## Adapt the generated graph to the authored Godot door sets.
+func _fit_original_tiles(grid: Dictionary, prefix: String, area: String) -> void:
+	var stages: Array[String] = []
+	for stage in _active_gates:
+		if str(stage).begins_with(prefix) and not str(stage).ends_with("sa1") and not str(stage).ends_with("ga1"):
+			stages.append(str(stage))
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		var needed: Array[String] = cell.generated_dirs.duplicate()
+		if cell.is_end:
+			cell.key_gate_direction = OPPOSITE[str(cell.entry_direction)]
+		if cell.is_start and area == "b":
+			cell.entry_warp_direction = OPPOSITE[str(needed[0])]
+			needed.append(cell.entry_warp_direction)
+		var fit := _tile_with_exact_doors(stages, needed, str(cell.stage_id))
+		if fit.is_empty():
+			push_error("No authored tile for generated connections %s: %s" % [cell.stage_id, needed])
+		else:
+			cell.stage_id = fit.stage
+			cell.rotation = int(fit.rotation) * 90
 
 
 ## The connection directions a generated record carries, as godot direction
@@ -1195,10 +1198,12 @@ func _assign_door_attributes(grid: Dictionary, start_key: String,
 
 ## The connections a cell actually has, as {dir: neighbour_key}.
 func _cell_connections(grid: Dictionary, key: String) -> Dictionary:
+	if grid[key].has("connections"):
+		return grid[key].connections.duplicate()
 	var cell: Dictionary = grid[key]
 	var pos: Vector2i = _parse_pos(key)
 	var out: Dictionary = {}
-	for dir in _get_rotated_gates(cell):
+	for dir in cell.get("generated_dirs", _get_rotated_gates(cell)):
 		var off: Vector2i = DIR_OFFSET[dir]
 		var nkey := _pos_key(Vector2i(pos.x + off.x, pos.y + off.y))
 		if grid.has(nkey):
@@ -1594,6 +1599,8 @@ func _leads_somewhere(grid: Dictionary, key: String, cell: Dictionary, dir: Stri
 ## An `a` section has none — it is entered from the city through `sa1`'s
 ## defaultSpawn, and that tile carries a single south door.
 func _entry_warp_dir(grid: Dictionary, key: String, cell: Dictionary) -> String:
+	if cell.has("generated_dirs"):
+		return str(cell.get("entry_warp_direction", ""))
 	if not cell.get("is_start", false):
 		return ""
 	var pos: Vector2i = _parse_pos(key)
@@ -1715,15 +1722,7 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 
 	for key in grid:
 		var cell: Dictionary = grid[key]
-		var pos: Vector2i = _parse_pos(key)
-		var gates: Array[String] = _get_rotated_gates(cell)
-
-		var connections: Dictionary = {}
-		for dir in gates:
-			var offset: Vector2i = DIR_OFFSET[dir]
-			var nkey := _pos_key(Vector2i(pos.x + offset.x, pos.y + offset.y))
-			if grid.has(nkey):
-				connections[dir] = nkey
+		var connections: Dictionary = _cell_connections(grid, key)
 
 		var warp_edge := ""
 		if cell.get("is_end", false):
@@ -1806,7 +1805,7 @@ func _populate_cell(cell: Dictionary) -> Dictionary:
 	# seed-exact (FUN_02030B6C).
 	var generated_layout := int(cell.get("generated_layout", -1))
 	if generated_layout >= 0:
-		layout_mask = FieldPopulation.mask_for_layout(generated_layout)
+		layout_mask = FieldPopulation.mask_for_layout(generated_layout, stage_id)
 	if layout_mask < 0:
 		layout_mask = FieldPopulation.drawn_mask(stage_id, depth, pop_rng)
 	var room_seed := int(cell.get("room_seed", -1))

@@ -41,6 +41,11 @@ static func run(player: Node3D, enemy: EnemyBase) -> bool:
 	var opening := float(cfg.damaging_frac[0])
 	var closing := float(cfg.damage_end_frac[0])
 	var expected := int(cfg.hits_per_step[0])
+	var events: Array = cfg.get("original_timing_steps", [{}])[0].get("hit_fracs", [])
+	if not events.is_empty():
+		opening = float(events[0]) - 0.01
+		closing = float(events[-1]) + 0.01
+		expected = 1
 	for late in [false, true]:
 		contacts.clear()
 		enemy.current_hp = maxi(enemy_hp, 1000)

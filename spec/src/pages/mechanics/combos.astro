@@ -6,11 +6,13 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Combat Combos" section="Mechanics">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
-  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by <strong>two-tier timing</strong> (#461) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. A single boundary, <code>just_start</code>, splits the swing: a press <em>before</em> it fumbles, a press <em>at or after</em> it <strong>queues</strong> the next step, which fires when the current swing completes. This preserves action commitment (#377 — a swing always fully executes, see <a href={siteUrl('/states/player-state')}>Player State Machine</a>).</p>
+  <p>Melee attacks chain in a 3-hit combo (per-weapon <code>combo_steps</code>). Chaining is governed by <strong>two-tier timing</strong> (#461) measured as a <em>fraction of the current swing's animation</em> — not a wall-clock timer. Imported <code>chain_open_frac</code> and <code>chain_close_frac</code> define an inclusive accept window when present; a press after its close is ignored. Otherwise the fallback boundary, <code>just_start</code>, splits the swing: a press <em>before</em> it fumbles, a press <em>at or after</em> it <strong>queues</strong> the next step, which fires when the current swing completes. This preserves action commitment (#377 — a swing always fully executes, see <a href={siteUrl('/states/player-state')}>Player State Machine</a>).</p>
 
   <p>There is <strong>no just-attack tier</strong>. An earlier draft (#155/PR #459) added a third, "just-attack" window granting a damage bonus for precise timing; Rozalin's #459 playtest found this both inaccurate to PSZ and counterintuitive (#461). <strong>Crit and damage bonuses come from character stats and equipment, not combo timing.</strong> Players use the accept window to decide <em>when</em> to advance the combo (reposition / stagger), not to farm a per-hit bonus.</p>
 
-  <h2>The two tiers</h2>
+  <p>The timing indicator MUST use the same effective open/close boundaries as input. Imported windows override the fallback table below.</p>
+
+  <h2>The fallback two tiers</h2>
   <pre>
   frame 0                    animation end
   |------------|-------------|

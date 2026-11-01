@@ -83,8 +83,8 @@ func _init(seed_lo: int, seed_hi: int, stage_id: String, gen_params: Array) -> v
 	stage = stage_id
 	params = gen_params
 	_rng = FieldRngClass.new(seed_lo, seed_hi)
-	_rng.draw(0)   # the generation_start_state is the state at FUN_02081ea8's
-	# ENTRY; the first real draw (target) steps from it, so consume one step.
+	# FieldRng.draw advances before returning: run()'s target draw is the
+	# first step from generation_start_state. Do not advance twice.
 
 
 ## FUN_02083590 shuffle: one draw per element; lists of <= 1 element are free.

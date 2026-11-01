@@ -1570,19 +1570,9 @@ func _try_queue_combo(special: bool) -> void:
 	if t.is_empty():
 		return
 	var frac := _attack_frac()
-	# Original chain window (data/re_reference/original_attack_timing.json):
-	# the follow-up press chains only inside [chain_open, chain_close]; the
-	# opening REPLACES the tuned just_start, and a press past the close is
-	# neither queued nor fumbled — the combo simply drops at swing end.
-	var timing_steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
-	var open := float(t.just_start)
-	var close := -1.0
-	if not timing_steps.is_empty():
-		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
-		if step.get("chain_open_frac") != null:
-			open = float(step["chain_open_frac"])
-		if step.get("chain_close_frac") != null:
-			close = float(step["chain_close_frac"])
+	var window := _chain_window(t)
+	var open := window[0]
+	var close := window[1]
 	if close >= 0.0 and frac > close:
 		return
 	if frac >= open:
@@ -2289,7 +2279,7 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 		# window path for those rather than ending the swing with no hit.
 		while not hit_fracs.is_empty() and _attack_hit_step < hit_fracs.size() \
 				and _attack_anim_elapsed >= float(hit_fracs[_attack_hit_step]) * _attack_anim_length:
-			_execute_attack_hit()
+			_execute_attack_hit(true)
 			_attack_hit_step += 1
 		if not hit_fracs.is_empty():
 			_attack_hit_done = _attack_hit_step >= hit_fracs.size()
@@ -2441,6 +2431,18 @@ func _ensure_combo_ring() -> void:
 	add_child(_combo_ring)
 
 
+func _chain_window(timing: Dictionary) -> Array[float]:
+	var window: Array[float] = [float(timing.just_start), 1.0]
+	var steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
+	if not steps.is_empty():
+		var step: Dictionary = steps[clampi(combo_state - 1, 0, steps.size() - 1)]
+		if step.get("chain_open_frac") != null:
+			window[0] = float(step.chain_open_frac)
+		if step.get("chain_close_frac") != null:
+			window[1] = float(step.chain_close_frac)
+	return window
+
+
 func _update_combo_ring(_delta: float) -> void:
 	if not DebugConfig.show_combo_timing:
 		if _combo_ring:
@@ -2449,19 +2451,18 @@ func _update_combo_ring(_delta: float) -> void:
 
 	_ensure_combo_ring()
 
-	# Visualize the chain-accept window (#461): visible from just_start to the
-	# swing's end (a press here queues a normal chain; before it fumbles),
-	# green, shrinking toward animation end.
+	# Use the same effective accept window as input, including imported close.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
 		t = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
 	var frac := _attack_frac()
-	if not t.is_empty() and frac >= float(t.just_start) and frac < 1.0:
+	var window := _chain_window(t) if not t.is_empty() else [0.0, 0.0]
+	if not t.is_empty() and frac >= window[0] and frac <= window[1]:
 		_combo_ring.visible = true
 		_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
 		# Shrink as the swing runs out
-		var pct: float = 1.0 - (frac - float(t.just_start)) / maxf(1.0 - float(t.just_start), 0.01)
+		var pct: float = 1.0 - (frac - window[0]) / maxf(window[1] - window[0], 0.01)
 		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
 		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
 		var accept_color := Color(0.2, 1.0, 0.4)
@@ -2876,10 +2877,14 @@ const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RI
 ## enemies in the weapon's hit cone — the same geometry targeting and the
 ## reticles use, applied directly through each enemy's Hurtbox (the old
 ## whole-swing Area3D box is retired for melee).
-func _execute_attack_hit() -> void:
+func _execute_attack_hit(single_impact: bool = false) -> void:
 	if _attack_damage_snapshot.is_empty():
 		_attack_damage_snapshot = _get_attack_damage()
 	var atk: Dictionary = _attack_damage_snapshot
+	if single_impact:
+		_attack_hit_targets.clear()
+		atk = atk.duplicate()
+		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
 	if weapon_type in RANGED_WEAPON_TYPES:
@@ -3263,14 +3268,6 @@ func _try_interact() -> void:
 		interacted_with.emit(target)
 		if is_instance_valid(target):
 			print("[Player] Interacted with: ", target.name)
-
-
-## Steering/facing yaw the camera chases while running (spec /mechanics/camera,
-## the ROM's follow_heading = motion.desired_heading): the held movement
-## direction when steering, else the displayed facing.
-func get_camera_follow_yaw() -> float:
-	var held: Variant = _held_movement_yaw()
-	return float(held) if held != null else player_rotation
 
 
 ## One guard for hostile contact, ailments and recovery. Dodging does NOT

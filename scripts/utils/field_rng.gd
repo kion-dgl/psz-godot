@@ -1,5 +1,7 @@
 class_name FieldRng
 extends RefCounted
+
+const UnsignedProduct := preload("res://scripts/utils/unsigned_product.gd")
 ## The field-generation RNG: the Nintendo 64-bit LCG (the Pokemon Gen 4/5
 ## constants), distinct from the combat RNG in psz_rng.gd.
 ## Source: data/re_reference/level_generation_algorithm.json (identity
@@ -13,7 +15,7 @@ extends RefCounted
 ##
 ## State is kept as two 32-bit halves; the 64x64 advance is composed from
 ## 32x32 limb products so no 64-bit overflow behavior is assumed. Verified
-## against the Python mirror by scripts/tools/field_rng_check.py vectors.
+## against the Python mirror by scripts/tools/field_rng_check.gd vectors.
 
 const MULTIPLIER_LO := 0x6C078965
 const MULTIPLIER_HI := 0x5D588B65
@@ -46,22 +48,7 @@ func draw(draw_range: int) -> int:
 	_advance()
 	if draw_range == 0:
 		return _hi
-	return _mul32_to_64(_hi, draw_range)[0]
-
-
-## 32x32 -> 64 multiply as [hi32, lo32]; every intermediate stays under 2^34.
-static func _mul32_to_64(a: int, b: int) -> Array:
-	var al := a & 0xFFFF
-	var ah := a >> 16
-	var bl := b & 0xFFFF
-	var bh := b >> 16
-	var ll := al * bl
-	var mid := ah * bl + al * bh
-	var hh := ah * bh
-	var lo_carry := (mid & 0xFFFF) + (ll >> 16)
-	var lo := ((lo_carry & 0xFFFF) << 16) | (ll & 0xFFFF)
-	var hi := hh + (mid >> 16) + (lo_carry >> 16)
-	return [hi, lo]
+	return UnsignedProduct.multiply(_hi, draw_range)[0]
 
 
 func _advance() -> void:
@@ -69,9 +56,9 @@ func _advance() -> void:
 	# product = s_lo*m_lo + (s_lo*m_hi + s_hi*m_lo) << 32 + (s_hi*m_hi) << 64.
 	# The << 64 term drops mod 2^64; of the cross terms only their low 32
 	# bits survive the shift (their carry lands at bit 64+ and drops too).
-	var ll := _mul32_to_64(_lo, MULTIPLIER_LO)
-	var lh := _mul32_to_64(_lo, MULTIPLIER_HI)
-	var hl := _mul32_to_64(_hi, MULTIPLIER_LO)
+	var ll := UnsignedProduct.multiply(_lo, MULTIPLIER_LO)
+	var lh := UnsignedProduct.multiply(_lo, MULTIPLIER_HI)
+	var hl := UnsignedProduct.multiply(_hi, MULTIPLIER_LO)
 	var lo: int = int(ll[1]) + INCREMENT
 	var carry := lo >> 32
 	var hi: int = int(ll[0]) + carry + ((int(lh[1]) + int(hl[1])) & 0xFFFFFFFF)
