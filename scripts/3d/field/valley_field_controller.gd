@@ -222,6 +222,9 @@ func _ready() -> void:
 		_return_to_city()
 		return
 
+	spawn_edge = preload("res://scripts/3d/field/section_entry.gd").resolve(spawn_edge, str(_current_cell.get("pos", "")), section)
+	_spawn_edge = spawn_edge
+
 	# Track visited cells
 	_visited_cells[current_cell_pos] = true
 
@@ -2282,6 +2285,7 @@ func _drop_deferred_room_key() -> void:
 	_gate_mgr._create_key_pickup(
 		str(_deferred_key_pickup.get("key_for", "")),
 		int(_deferred_key_pickup.get("count", 1)))
+	SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 	_deferred_key_pickup = {}
 
 
@@ -2794,18 +2798,8 @@ func _on_end_reached() -> void:
 		var new_idx: int = SessionManager.get_current_section()
 		var new_section: Dictionary = sections[new_idx]
 
-		# Determine entry edge from previous section's exit direction
-		# or the new section's entry_direction field
-		var entry_edge: String = ""
-		var prev_idx: int = new_idx - 1
-		if prev_idx >= 0:
-			var prev_section: Dictionary = sections[prev_idx]
-			var exit_dir: String = str(prev_section.get("exit_direction", ""))
-			if not exit_dir.is_empty():
-				entry_edge = OPPOSITE.get(exit_dir, "")
-			# Also try the new section's entry_direction
-			if entry_edge.is_empty():
-				entry_edge = str(new_section.get("entry_direction", ""))
+		# The destination owns its entry; adjacent sections need not share orientation.
+		var entry_edge: String = str(new_section.get("entry_direction", ""))
 
 		var target_state: Dictionary = SessionManager.get_section_state(new_idx)
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {

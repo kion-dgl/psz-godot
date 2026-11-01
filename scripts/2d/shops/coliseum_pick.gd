@@ -161,7 +161,7 @@ func _refresh_display() -> void:
 				selected_pill = pill
 			row_idx += 1
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	list.add_child(scroll)
 	content_panel.add_child(list)
 	if selected_pill != null:

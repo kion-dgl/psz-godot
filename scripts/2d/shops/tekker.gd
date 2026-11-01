@@ -105,7 +105,7 @@ func _refresh_display() -> void:
 	for child in _tab_row.get_children():
 		child.queue_free()
 	_tab_row.add_child(PszStyle.create_tab_bar(TAB_NAMES, _mode))
-	_tab_row.add_child(PszStyle.create_meseta_label(_get_meseta()))
+	PszStyle.update_shop_balance(self, _get_meseta())
 
 	# Content panel — pill rows
 	for child in content_panel.get_children():
@@ -139,7 +139,7 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				selected_pill = pill
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:

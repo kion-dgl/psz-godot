@@ -119,8 +119,11 @@ static func signature(mesh: ArrayMesh) -> String:
 		for channel in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_TEX_UV, Mesh.ARRAY_INDEX, Mesh.ARRAY_COLOR, Mesh.ARRAY_BONES, Mesh.ARRAY_WEIGHTS]:
 			hash_state.update(var_to_bytes(arrays[channel]))
 		var source := mesh.surface_get_material(surface)
-		hash_state.update((source.resource_name if source else "").to_utf8_buffer())
+		if source and not source.resource_name.is_empty():
+			hash_state.update(source.resource_name.to_utf8_buffer())
 		if source is StandardMaterial3D:
-			hash_state.update(texture_identity(source.albedo_texture).to_utf8_buffer())
+			var texture_hash := texture_identity(source.albedo_texture)
+			if not texture_hash.is_empty():
+				hash_state.update(texture_hash.to_utf8_buffer())
 			hash_state.update(var_to_bytes([source.albedo_color, source.transparency]))
 	return hash_state.finish().hex_encode()

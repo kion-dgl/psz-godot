@@ -1,0 +1,19 @@
+---
+import SpecLayout from '../../layouts/Base.astro';
+---
+<SpecLayout title="Playtest feedback">
+  <h1>November 1 playtest fixes</h1>
+  <p>These requirements refine the existing shop, free-field, trap and feedback contracts.</p>
+  <ul>
+    <li>Shop body headers MUST span the body card. Meseta MUST appear at its bottom right and refresh after transactions. The item shop MUST show only the meseta footer, without a directions footer. Its header MUST have rounded upper corners and a visible border. Item-shop rows MUST show a fixed marker slot ([E], ✕, or blank), then the icon, spacing, and item text. The modal border MUST be 3px; the Meseta: footer MUST sit directly against the bottom border without extra blue padding. Footer corners MUST follow the modal’s inner radius. Vertical list scrollbars MUST remain visible even on short lists, with an 8px gap on their left. Description layout remains a separate task.</li>
+    <li>Miss feedback MUST be smaller than damage numbers and red. Awarded EXP MUST appear once in purple, using the actual reward (for example +75 exp).</li>
+    <li>Enemy defeat MUST have an audible cue, preserving authored death-animation sounds where available.</li>
+    <li>A newly dropped room key MUST play an arrival cue; restoring an existing key MUST NOT replay that cue.</li>
+    <li>A recovery cube MUST sound only when it actually heals and MUST become dark grey after use. Full-HP contact MUST NOT consume it.</li>
+    <li>Room-change waypoints MUST NOT cast shadows. Flyer reticles MUST follow the animated visual body.</li>
+    <li>Turret hurtboxes MUST extend to the visible body and allow melee contact without standing inside it; firing and destruction behavior are unchanged.</li>
+    <li>Entering a section start without an explicit room-entry edge MUST use that section's authored entry direction. Explicit backtracking and room-to-room entry MUST retain their destination edge. Valley E and B starts MUST enter from south, with north remaining negative Z as in the stage editor.</li>
+    <li>Underground static mirrored surfaces MUST use the existing offline native-material bake. Unsupported animated surfaces MUST retain their shader path. Runtime MUST NOT bake textures.</li>
+  </ul>
+  <p>Validation includes seeded entry-selection tests and a runtime feedback/transition probe. Visual and audio acceptance remains subject to playtesting.</p>
+</SpecLayout>

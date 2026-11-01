@@ -292,6 +292,7 @@ func _run_tests_systems() -> void:
 	test_minimap_enemy_markers()
 	test_minimap_key_markers()
 	preload("res://scripts/tools/native_mirror_tests.gd").run(self)
+	preload("res://scripts/tools/playtest_feedback_tests.gd").run(self)
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 	test_orbit_camera_follow_y_damping()

@@ -315,4 +315,5 @@ func hurtbox_in_cone(origin: Vector3, yaw: float, config: Dictionary) -> Diction
 	return best
 
 func _emit_defeat() -> void:
+	EnemySoundPlayback.play_defeat(enemy_data.model_id if enemy_data else "", global_position)
 	died.emit(self)

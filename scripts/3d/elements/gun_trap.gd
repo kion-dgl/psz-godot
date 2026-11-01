@@ -11,6 +11,9 @@ var shots_fired := 0
 func _init() -> void:
 	trap_kind = "gun_trap"
 	model_path = "valley/o0c_gun01.glb"
+	collision_size = Vector3(2.8, 2.4, 2.8)
+	target_radius = 1.4
+	target_height = 1.2
 
 func _update_animation(delta: float) -> void:
 	if not is_alive: return

@@ -26,3 +26,4 @@ behavior = 0
 attack_cooldown = 1.5
 collision_radius = 0.5
 collision_height = 1.5
+reticle_bone = "Point_Spine"
