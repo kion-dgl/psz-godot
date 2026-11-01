@@ -83,6 +83,8 @@ manifest to avoid dropping other areas.
 Valley free-roam appearance has owner approval. Other areas need gameplay
 review. Generated resources live in ignored asset folders; the tracked
 `data/stage_configs/stage-mirror-bakes.json` describes them. Standalone export
-presets exclude these assets so they ship through the asset pack. No deployed
-pack, asset manifest, release version, or fidelity grade was changed. Pack
-publication and a clean release remain separate from this local rollout.
+presets exclude these assets so they ship through the asset pack. PR #769 publishes a pack assembled from the verified previously deployed
+pack plus exactly 339 generated resources; the packed-resource audit also
+passes all 35,822 checks. The PR updates the asset manifest and index. Release
+versions and fidelity grades remain unchanged; application release/merge still
+requires green CI.
