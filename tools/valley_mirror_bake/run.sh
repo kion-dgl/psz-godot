@@ -24,7 +24,7 @@ text = (root / 'project.godot').read_text()
 (review / 'project.godot').write_text(text.replace('config/name="PSZ Godot"', 'config/name="PSZ Valley Material Tool"'))
 PY
 case "${1:-review}" in
-  bake) exec "$GODOT_BIN" --headless --path "$review_dir" --script tools/valley_mirror_bake/bake.gd ;;
+  bake) exec "$GODOT_BIN" --headless --path "$review_dir" --script res://tools/valley_mirror_bake/bake.gd ;;
   audit) exec "$GODOT_BIN" --headless --path "$review_dir" res://tools/valley_mirror_bake/audit.tscn ;;
   render) exec "$GODOT_BIN" --path "$review_dir" --resolution 1600x1000 res://tools/valley_mirror_bake/viewer.tscn -- --verify ;;
   review) exec "$GODOT_BIN" --path "$review_dir" --resolution 1600x1000 res://tools/valley_mirror_bake/viewer.tscn ;;

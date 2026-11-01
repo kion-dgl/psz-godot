@@ -14,6 +14,6 @@ if [[ -z "${GODOT_BIN:-}" ]]; then
   fi
 fi
 if [[ "${1:-}" == --test ]]; then
-  exec "$GODOT_BIN" --headless --path "$project_dir" --script tests.gd
+  exec "$GODOT_BIN" --headless --path "$project_dir" --script res://tests.gd
 fi
 exec "$GODOT_BIN" --path "$project_dir" -- "$@"
