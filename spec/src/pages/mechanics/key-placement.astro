@@ -29,6 +29,17 @@ import Concept from '../../layouts/Concept.astro';
     <li>The drop fires when the <em>final</em> wave dies — once per clear, not once per wave.</li>
   </ul>
 
+  <h2>Collection survives room changes</h2>
+  <p>Collection state <strong>MUST</strong> identify the holding room and target gate,
+    not the target gate alone. Taking a copy in one room <strong>MUST NOT</strong>
+    suppress another room's copy for the same gate. Each copy in a room <strong>MUST</strong>
+    be tracked separately so a partial pickup followed by re-entry or save/reload
+    restores only the untaken copies, at their original resolved slots.</p>
+  <p>Legacy bare target-cell flags cannot identify which holding room was collected.
+    They <strong>MUST NOT</strong> suppress pickups; affected saves can recover by revisiting
+    their key rooms. This recovery may restore an already-taken legacy copy. Existing
+    quest-plan holding-room/target flags remain authoritative for completed batches.</p>
+
   <h2>Resolution order</h2>
 
   <table>

@@ -51,7 +51,7 @@ var _dir_light: DirectionalLight3D
 var _moonlight: DirectionalLight3D
 var _sky_material: ProceduralSkyMaterial
 var _transitioning := false
-var _keys_collected: Dictionary = {}  # cell_pos → true (key pickup, prevents respawn)
+var _keys_collected: Dictionary = {}  # holding>target[#copy] → true (key pickup, prevents respawn)
 var _gates_opened: Dictionary = {}   # cell_pos → true (gate opened by player, stays open on re-entry)
 var _cell_states: Dictionary = {}    # cell_pos → { objects: [{state, ...}], drops: [{type, pos, ...}] }
 var _current_cell: Dictionary = {}
@@ -638,7 +638,7 @@ func _ready() -> void:
 	# key is an unopenable gate, a soft lock.
 	if _current_cell.get("has_key", false):
 		var key_for: String = str(_current_cell.get("key_for_cell", ""))
-		if not key_for.is_empty() and not _keys_collected.has(key_for):
+		if not key_for.is_empty():
 			# key_count is how many copies this cell holds; the gate it feeds
 			# consumes required_keys of them (key_gate.gd). Defaults to 1 for
 			# cells authored before multi-key gates existed.
