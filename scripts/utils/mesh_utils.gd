@@ -1,4 +1,6 @@
 class_name MeshUtils
+const NativeMirror := preload("res://scripts/utils/native_mirror_bake.gd")
+const StageVariants := preload("res://scripts/utils/stage_mirror_variants.gd")
 ## Shared mesh helpers. Deduplicated from the identical `_apply_texture_recursive`
 ## in character_create.gd and character_select.gd — #294.
 
@@ -104,6 +106,10 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 		waterfall_shader: Shader, cast_shadows := false,
 		unlit_stage := false, unlit_fix_shader: Shader = null,
 		keep_lit: Array = []) -> void:
+	# Load-only stage variants: all source/settings checks must pass before
+	# replacing any mesh. Other areas and old packs retain the shader path.
+	if not node.scene_file_path.is_empty():
+		StageVariants.apply_stage(node, load_texture_fixes())
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
@@ -117,6 +123,9 @@ static func apply_field_materials(node: Node, fix_shader: Shader,
 			if not (mat is StandardMaterial3D):
 				continue
 			var std_mat := mat as StandardMaterial3D
+			if std_mat.has_meta(NativeMirror.META):
+				mi.set_surface_override_material(i, StageVariants.field_material(std_mat, unlit_stage, keep_lit))
+				continue
 			var fix := fix_for_material(std_mat)
 			if fix.get("hidden", false):
 				# Suppress an authored effect surface without hiding the other
@@ -234,6 +243,8 @@ static func _mirror_material(std_mat: StandardMaterial3D, fix: Dictionary,
 ## surfaces whose texture fix asks for mirror wrap get the custom shader —
 ## Godot can't mirror-repeat imported textures natively.
 static func apply_mirror_wrap_fixes(node: Node, fixes: Dictionary, fix_shader: Shader) -> void:
+	if not node.scene_file_path.is_empty():
+		StageVariants.apply_stage(node, fixes)
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		# SmoothNormals._surface_count + _active_material, not the plain
@@ -245,6 +256,8 @@ static func apply_mirror_wrap_fixes(node: Node, fixes: Dictionary, fix_shader: S
 			if not (mat is StandardMaterial3D):
 				continue
 			var std := mat as StandardMaterial3D
+			if std.has_meta(NativeMirror.META):
+				continue
 			if not std.albedo_texture:
 				continue
 			var fix: Dictionary = fixes.get(std.albedo_texture.resource_path.get_file(), {})
@@ -355,7 +368,15 @@ static func apply_glow_materials(node: Node, passes: Dictionary) -> int:
 						and (own_mat as StandardMaterial3D).albedo_texture != null:
 					src_tex = (own_mat as StandardMaterial3D).albedo_texture
 				if src_tex != null:
-					var mask_tex := _teal_mask_texture(src_tex)
+					var mask_tex: ImageTexture
+					if base.has_meta(NativeMirror.META):
+						var identity: Dictionary = base.get_meta(NativeMirror.META)
+						var original := load(str(identity.source_texture)) as Texture2D
+						mask_tex = _teal_mask_texture(original)
+						if mask_tex:
+							mask_tex = ImageTexture.create_from_image(NativeMirror.atlas_image(mask_tex.get_image(), identity.fix))
+					else:
+						mask_tex = _teal_mask_texture(src_tex)
 					if mask_tex:
 						std.emission_texture = mask_tex
 			std.roughness = float(glow.get("roughness", 0.5))

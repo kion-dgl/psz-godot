@@ -50,6 +50,7 @@
 !/assets/stages/*/*/
 !/assets/stages/*/*/lndmd/
 /assets/stages/*/*/lndmd/*
+/assets/stages/native_mirror/lndmd/*
 !/assets/stages/*/*/lndmd/*-floor.glb
 !/assets/stages/*/*/lndmd/*-floor.glb.import
 # de_roll_le holds PSO-derived decorator meshes (the underground/sewer cave

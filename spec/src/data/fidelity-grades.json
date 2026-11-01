@@ -61,7 +61,7 @@
       "area": "Free roam",
       "grade": "B",
       "assessment": "Close to the original’s feature set; needs substantial playtesting and object-placement polish. Wetlands floors/routing can trap the player.",
-      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations.",
+      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations. Valley native-mirror free roam is visually approved. Playtest the expanded field-stage rollout, including area lighting, glow masks and mipmapped materials; broader traversal remains pending.",
       "label": "score:free-roam"
     },
     {
