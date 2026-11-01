@@ -165,7 +165,10 @@ func _entries() -> void:
 		check(room._spawn_edge == expected, "section %d enters %s" % [index, expected])
 		var spawn: Vector3 = room._portal_data[expected].spawn_pos
 		check(Vector2(room.player.global_position.x, room.player.global_position.z).distance_to(Vector2(spawn.x, spawn.z)) < 0.5, "section %d player at %s spawn" % [index, expected])
-		check(room._portal_data.north.gate_pos.z < room._portal_data.south.gate_pos.z, "section %d north/south match stage editor" % index)
+		if index == 2:
+			check(room._portal_data.south.id == "portal_1769178737883_7bppcx8w1", "Valley B arrives through Valley E themed gate")
+		else:
+			check(room._portal_data.north.gate_pos.z < room._portal_data.south.gate_pos.z, "transition room orientation preserved")
 		var before := SfxManager._next_idx
 		room._deferred_key_pickup = {"key_for": "probe", "count": 1}
 		room._drop_deferred_room_key()

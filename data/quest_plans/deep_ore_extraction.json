@@ -573,8 +573,8 @@
             "east": "2,1"
           },
           "portals": {
-            "east": "portal_1769178737883_7bppcx8w1",
-            "west": "portal_1769178748150_zpfcscb89"
+            "east": "portal_1769178748150_zpfcscb89",
+            "west": "portal_1769178737883_7bppcx8w1"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -824,7 +824,7 @@
             "pickup_quest_item"
           ],
           "exit": "east",
-          "exit_portal_id": "portal_1769178737883_7bppcx8w1",
+          "exit_portal_id": "portal_1769178748150_zpfcscb89",
           "target": "2,1",
           "_section_idx": 2,
           "_pos": "2,0",

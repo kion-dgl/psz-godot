@@ -1155,8 +1155,8 @@
             "south": "1,2"
           },
           "portals": {
-            "south": "portal_1769178748150_zpfcscb89",
-            "north": "portal_1769178737883_7bppcx8w1"
+            "south": "portal_1769178737883_7bppcx8w1",
+            "north": "portal_1769178748150_zpfcscb89"
           },
           "is_start": true,
           "is_end": false,

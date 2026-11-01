@@ -5,7 +5,7 @@ import shutil
 
 ROOT = Path(__file__).resolve().parents[2]
 CUES = (
-    'common/common_146.wav',  # SE_TECH_RESTA
+    'common/common_186.wav',  # SE_SYS_WINCLOSE
     'forest/forest_007.wav',  # SE_MOJA_DEAD
     'cave/cave_015.wav',     # SE_POIZ_DEAD
     'machine/machine_022.wav',  # SE_SINO_DEAD

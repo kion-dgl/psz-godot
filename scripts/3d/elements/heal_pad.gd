@@ -85,7 +85,7 @@ func _on_body_entered(body: Node3D) -> void:
 		return  # charged until it actually heals — a full-HP step is not a spend
 	set_state(STATE_USED)
 	GameState.set_hp(GameState.max_hp)
-	SfxManager.play("res://assets/sfx/common/common_146.wav")
+	SfxManager.play("res://assets/sfx/common/common_186.wav")
 	print("[HealPad] Restored HP to %d/%d at %s (pad spent)" % [
 		GameState.hp, GameState.max_hp, global_position])
 
