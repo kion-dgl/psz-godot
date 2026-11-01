@@ -8733,6 +8733,8 @@
       {
         "direction": "south",
         "id": "portal_1769178737883_7bppcx8w1",
+        "spawnPosition": [-4.906268227625629, 0, -23.8166114972771],
+        "triggerPosition": [-4.906268227625629, 0, -27.8166114972771],
         "rotationOffset": 180,
         "label": "south",
         "position": [

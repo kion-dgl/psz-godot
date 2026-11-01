@@ -10,6 +10,9 @@ func check(ok: bool, label: String) -> void:
 	if not ok: failures += 1
 
 func _run() -> void:
+	if OS.get_environment("PSZ_PROBE_ENTRY_ONLY") == "1":
+		get_tree().change_scene_to_file("res://scenes/tools/valley_entry_debug.tscn")
+		return
 	var pack := OS.get_environment("PSZ_PROBE_PACK")
 	if not pack.is_empty():
 		check(ProjectSettings.load_resource_pack(pack), "built asset pack mounts")
