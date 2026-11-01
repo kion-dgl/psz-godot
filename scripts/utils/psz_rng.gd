@@ -1,5 +1,7 @@
 class_name PszRng
 extends RefCounted
+
+const UnsignedProduct := preload("res://scripts/utils/unsigned_product.gd")
 ## Byte-exact port of the PSZ bounded RNG.
 ## Source: pszm-decomp src/arm9/FUN_0203e874.c (state advance + bounded draw),
 ## FUN_02045d84.c (percentage roll), FUN_02045d5c.c (range roll).
@@ -53,28 +55,12 @@ func range(lo: int, hi: int) -> int:
 
 func _advance_bounded(n: int) -> int:
 	# acc = s2 + s1 * s0 (mod 2^64), kept as two 32-bit halves.
-	var pl := _mul32_to_64(_s1, _s0_lo)
-	var ph := _mul32_to_64(_s1, _s0_hi)
+	var pl := UnsignedProduct.multiply(_s1, _s0_lo)
+	var ph := UnsignedProduct.multiply(_s1, _s0_hi)
 	var lo: int = int(pl[1]) + _s2
 	var hi: int = int(pl[0]) + (lo >> 32) + (int(ph[1]) & 0xFFFFFFFF)
 	_s0_lo = lo & 0xFFFFFFFF
 	_s0_hi = hi & 0xFFFFFFFF
 	if n == 0:
 		return _s0_hi
-	return _mul32_to_64(_s0_hi, n)[0]
-
-
-## 32x32 -> 64 multiply as [hi32, lo32]; limb math keeps every intermediate
-## below 2^34 so signed 64-bit ints never overflow.
-static func _mul32_to_64(a: int, b: int) -> Array:
-	var al := a & 0xFFFF
-	var ah := a >> 16
-	var bl := b & 0xFFFF
-	var bh := b >> 16
-	var ll := al * bl
-	var mid := ah * bl + al * bh
-	var hh := ah * bh
-	var lo_carry := (mid & 0xFFFF) + (ll >> 16)
-	var lo := ((lo_carry & 0xFFFF) << 16) | (ll & 0xFFFF)
-	var hi := hh + (mid >> 16) + (lo_carry >> 16)
-	return [hi, lo]
+	return UnsignedProduct.multiply(_s0_hi, n)[0]

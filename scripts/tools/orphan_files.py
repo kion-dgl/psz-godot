@@ -103,11 +103,23 @@ def analyze() -> list[dict]:
         "res://scripts/tools/test_runner.gd",
     }
 
+    # Nested Godot projects have their own res:// namespace. Relative
+    # preload/load paths are relative to the referring script, not repo root.
+    project_dirs = [Path(f).parent for f in files if Path(f).name == "project.godot"]
+
     # path -> set of files that mention it (any text file).
     path_mentions: dict[str, set[str]] = {}
     for f, body in text.items():
+        parents = Path(f).parents
+        project_dir = max((p for p in project_dirs if p in parents), key=lambda p: len(p.parts), default=Path("."))
         for p in RES_PATH_RE.findall(body):
-            path_mentions.setdefault(p, set()).add(f)
+            resolved = "res://" + (project_dir / p.removeprefix("res://")).as_posix()
+            path_mentions.setdefault(resolved, set()).add(f)
+        if f.endswith(".gd"):
+            for relative in re.findall(r'(?:preload|load)\(\s*["\']([^"\']+)["\']', body):
+                if not relative.startswith(("res://", "user://", "/")):
+                    resolved = "res://" + (Path(f).parent / relative).as_posix()
+                    path_mentions.setdefault(resolved, set()).add(f)
 
     # class_name -> file that declares it; and per-.gd word sets for usage.
     gd_files = [f for f in text if f.endswith(".gd")]

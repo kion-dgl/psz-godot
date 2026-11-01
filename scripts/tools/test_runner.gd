@@ -291,6 +291,7 @@ func _run_tests_systems() -> void:
 	test_field_state_full_contract_roundtrip()
 	test_minimap_enemy_markers()
 	test_minimap_key_markers()
+	preload("res://scripts/tools/native_mirror_tests.gd").run(self)
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 	test_orbit_camera_follow_y_damping()
@@ -1487,7 +1488,7 @@ func test_key_scatter_dead_ends() -> void:
 	assert_true(int(t["offered"]) > 0,
 		"the sweep met dead ends in scatter pools (%d — widen it if 0)" % t["offered"])
 	assert_eq(int(t["missed"]), 0,
-		"every dead end a scatter pool offers takes a key first (#639)")
+		"dead ends take the available gate keys first (#639)")
 	assert_eq(int(t["key_cells_without_enemy"]), 0,
 		"a key cell never emits without an enemy to drop it (#639)")
 	assert_eq(int(t["behind_own_gate"]), 0, "no key sits behind the gate it opens")
@@ -1526,11 +1527,19 @@ func _tally_key_scatter(gen, cells: Dictionary, t: Dictionary) -> void:
 		var locked_dir := _key_gate_dir(cells[pos])
 		if locked_dir.is_empty():
 			continue
+		var offered := 0
+		var filled := 0
 		for p in gen._key_scatter_pool(grid, pos, locked_dir):
 			if gen._cell_connections(grid, p).size() == 1:
-				t["offered"] = int(t["offered"]) + 1
-				if int(cells[p].get("key_count", 0)) <= 0:
-					t["missed"] = int(t["missed"]) + 1
+				offered += 1
+				if int(cells[p].get("key_count", 0)) > 0:
+					filled += 1
+		t["offered"] = int(t["offered"]) + offered
+		# A one-key gate cannot fill two offered dead ends. Require the
+		# affordable number first, rather than inventing surplus keys.
+		var demand := int(cells[pos].door_attributes[locked_dir])
+		t["missed"] = int(t["missed"]) + maxi(0, mini(offered, demand) - filled)
+
 
 
 ## The direction of a cell's key gate (attr 1 or 2), or "" when it has none.
@@ -2953,6 +2962,13 @@ func test_player_states() -> void:
 	p.current_state = states["IDLE"]
 	assert_true(not p.is_dodge_passing_through(), "pass-through only applies while DODGING")
 
+	_check_dodge_curve(p)
+	_check_dodge_charge_cancel(p, states)
+	p.free()
+	print("")
+
+
+func _check_dodge_curve(p) -> void:
 	# ROM displacement curve (data/re_reference/player_dodge_motion.json):
 	# total travel 17901 Q12 ≈ 4.37 u in the dodge direction (+z local), with
 	# the front-loaded plateau at ~1085 Q12/frame.
@@ -2980,8 +2996,9 @@ func test_player_states() -> void:
 		assert_true(not drift, "embedded curve matches the reference JSON exactly")
 	else:
 		assert_true(false, "player_dodge_motion.json unreadable — cannot pin the embedded curve")
-	GameState.set_hp(hp_full)
 
+
+func _check_dodge_charge_cancel(p, states: Dictionary) -> void:
 	# Charge-cancel on DODGING (spec /states/player-state): a mid-charge
 	# technique drops on entering DODGING, releasing the slot.
 	var released: Array = []
@@ -2992,8 +3009,6 @@ func test_player_states() -> void:
 	p.transition_to(states["DODGING"])
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
-	p.free()
-	print("")
 
 
 # ── Defeat damage-immunity (#469, spec /states/player-death) ──
@@ -9071,7 +9086,7 @@ func test_combo_two_tier() -> void:
 	pl.set("_combo_fumbled", false)  # fresh swing for the accept asserts below
 
 	# chain-accept: at/after just_start queues a NORMAL chain.
-	pl.set("_attack_anim_elapsed", 0.5)
+	pl.set("_attack_anim_elapsed", float(CombatManager.get_weapon_type_config(0).original_timing_steps[0].chain_open_frac))
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"press at/after just_start queues a normal chain")
@@ -9122,7 +9137,7 @@ func test_combo_chain_lifecycle() -> void:
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 
 	# chain-accept: a press at/after just_start queues a NORMAL chain.
-	var pl = _combo_swing_player(PlayerScript, 2, 0.8)
+	var pl = _combo_swing_player(PlayerScript, 2, float(CombatManager.get_weapon_type_config(0).original_timing_steps[1].chain_open_frac))
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"press at/after just_start queues a normal chain")
@@ -9194,7 +9209,7 @@ func test_combo_miss_early_fumble() -> void:
 		"fumbling press queues nothing")
 
 	# Mash: presses inside the accept window are now locked out.
-	pl.set("_attack_anim_elapsed", 0.5)  # just window
+	pl.set("_attack_anim_elapsed", float(CombatManager.get_weapon_type_config(0).original_timing_steps[0].chain_open_frac))  # just window
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
 		"just-window press after a fumble is ignored")
@@ -9299,7 +9314,7 @@ func test_damaging_frame() -> void:
 	pl._handle_attack_state(0.2)  # elapsed 0.2 < saber damaging_frac[0] 0.40
 	assert_true(not bool(pl.get("_attack_hit_done")), "no hit before the damaging frame")
 	pl._handle_attack_state(0.25)  # elapsed 0.45 ≥ 0.40 → resolves (off-tree: empty cone)
-	assert_true(not bool(pl.get("_attack_hit_done")), "empty melee scan keeps the window open")
+	assert_true(bool(pl.get("_attack_hit_done")), "empty imported event is consumed once")
 	pl._handle_attack_state(0.15)
 	assert_true(bool(pl.get("_attack_hit_done")), "empty window closes after its end")
 	pl._play_and_track_attack("no_such_anim")

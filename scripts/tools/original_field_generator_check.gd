@@ -40,9 +40,9 @@ func _init() -> void:
 	var total_rooms := 0
 	var fails := 0
 	for f in fixtures:
-		var state: int = int(f["input"]["generation_start_state"].hex_to_int())
-		var lo := state & 0xFFFFFFFF
-		var hi := state >> 32
+		var state: String = str(f["input"]["generation_start_state"]).trim_prefix("0x")
+		var lo := state.substr(8, 8).hex_to_int()
+		var hi := state.substr(0, 8).hex_to_int()
 		var params: Array = f["input"]["params"]
 		var gen := OriginalFieldGeneratorClass.new(lo, hi, f["stage"], params)
 		gen.run()
@@ -87,7 +87,7 @@ func _anchor(f, gen):
 	var base: Array = gen.get_rng_state()
 	var rooms_by_index := {}
 	for r in f["rooms"]:
-		rooms_by_index[r["index"]] = r
+		rooms_by_index[int(r["index"])] = r
 	var order: Array = f["transcription_order"]
 	var depth_by_index := {}
 	var adj_by_index := {}
@@ -112,7 +112,8 @@ func _chain(rng: FieldRng, order, rooms_by_index, depth_by_index,
 	var layouts := 0
 	var variant_of := {}
 	var done: Array = []
-	for idx in order:
+	for raw_index in order:
+		var idx := int(raw_index)
 		var rec: Dictionary = rooms_by_index[idx]
 		var shape: int = SHAPE_LETTERS.find(rec["shape"])
 		if shape < 0:
@@ -181,5 +182,5 @@ func _skip_candidates(f) -> Array:
 	var out: Array = [{}]
 	for r in f["rooms"]:
 		if PICKER_CODES.has(r["code"].split("_")[1]):
-			out.append({r["index"]: true})
+			out.append({int(r["index"]): true})
 	return out

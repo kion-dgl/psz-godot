@@ -53,6 +53,11 @@ jobs:
           fi
           exit $rc
 
+      - name: Original field RNG and generator reference checks
+        run: |
+          godot --headless --path . --script res://scripts/tools/field_rng_check.gd
+          godot --headless --path . --script res://scripts/tools/original_field_generator_check.gd
+
       - name: Original boss event and damage replay
         run: |
           godot --headless --path . --script res://scripts/tools/test_boss_action_events.gd 2>&1 | tee /tmp/boss-replay.log
