@@ -147,10 +147,10 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>Every shop screen <strong>MUST</strong>:</p>
   <ul>
-    <li>Lay out a fixed skeleton, top to bottom: a <strong>title</strong>, a <strong>tab bar</strong> (the "mode bar"), a <strong>content row</strong> holding a scrolling <strong>list</strong> (and, where applicable, a <strong>detail panel</strong>), and a <strong>hint line</strong>. A <strong>portrait</strong> of the shopkeeper <strong>MUST</strong> be overlaid on the right via <code>ShopUI.setup_portrait()</code>.</li>
+    <li>Lay out a fixed skeleton, top to bottom: a <strong>title</strong>, a <strong>tab bar</strong> (the "mode bar"), a <strong>content row</strong> holding a scrolling <strong>list</strong> (and, where applicable, a <strong>detail panel</strong>), and a <strong>footer</strong> (shops and storage MUST show only the balance, without directions; the Photon Collector MUST show Photon Drops instead of Meseta). A <strong>portrait</strong> of the shopkeeper <strong>MUST</strong> be overlaid on the right via <code>ShopUI.setup_portrait()</code>.</li>
     <li>Drive navigation through <code>ShopNav</code> so the input grammar is identical everywhere (see below).</li>
     <li>Render every list entry through <code>PszStyle.shop_row()</code> (see <a href="#the-row-contract">The row contract</a>), and the tab bar through <code>PszStyle.create_tab_bar()</code>.</li>
-    <li>Show the player's spendable balance — meseta or Photon Drops — in the <strong>top-right of the tab row</strong>, not inline in the list. The title <strong>MUST</strong> sit above center so the on-screen keyboard cannot cover it.</li>
+    <li>Show meseta at the <strong>bottom-right of the body card</strong>, not inline in the list or tab row. Photon Drops retain their exchange-counter display. The title <strong>MUST</strong> sit above center so the on-screen keyboard cannot cover it.</li>
   </ul>
 
   <h3>Input grammar</h3>
@@ -313,7 +313,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Conformance</h2>
   <ol>
-    <li>Open any shop. The title sits above center; the balance is top-right of the tabs; the hint line names the Left/Right, Up/Down, Accept, Cancel actions.</li>
+    <li>Open any shop. The title sits above center; the balance is bottom-right of the body; the full-width title touches the body edges; shops and storage show only their balance footer, without a second directions footer.</li>
     <li>Move Left/Right — the tab changes and the selection resets to the top.</li>
     <li>Move Up/Down onto a row you cannot afford — it is greyed (one grey, no second colour), and the detail panel states the reason.</li>
     <li>Select equipped gear (weapon shop sell, or storage deposit) — the row shows <code>[E]</code> as a <em>prefix</em> and is greyed; the detail explains it cannot be sold / deposited.</li>

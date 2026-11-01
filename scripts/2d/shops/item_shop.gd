@@ -51,6 +51,7 @@ func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [shop_panel, detail_panel])
 	title_label.text = "Item Shop"
 	_setup_portrait()
+	hint_label.hide() # Meseta is the only footer; confirmations remain in dialogs.
 	_update_hint()
 	_load_shop_items()
 	_generate_disk_inventory()
@@ -156,9 +157,9 @@ func _generate_sell_list() -> void:
 
 func _update_hint() -> void:
 	if _tab == Tab.SELL:
-		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Sell  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Sell  Esc: Leave"
 	else:
-		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -345,7 +346,7 @@ func _refresh_mode_bar() -> void:
 	for child in _mode_bar.get_children():
 		child.queue_free()
 	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
-	_mode_bar.add_child(PszStyle.create_meseta_label(_get_meseta()))
+	PszStyle.update_shop_balance(self, _get_meseta())
 
 
 func _refresh_display() -> void:
@@ -379,7 +380,7 @@ func _refresh_display() -> void:
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
 			# Through shop_row so the [E] equipped + ✕ cannot-use markers sit in the
-			# leftmost slot, consistent with the weapon/storage sell lists.
+			# leftmost slot, followed by the item icon and aligned item names.
 			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
 				"icons": sell_icons,
 				"equipped": bool(item.get("equipped", false)),
@@ -452,7 +453,7 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				selected_pill = pill
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	shop_panel.add_child(scroll)
 
 	if selected_pill != null:

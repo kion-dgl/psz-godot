@@ -1773,7 +1773,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 
 	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy, attack_kind)
 	if not result.get("hit", true):
-		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
+		_spawn_damage_number("MISS", Color(1.0, 0.15, 0.15))
 		return
 
 	# Apply damage multiplier from freeze, then the recovery punish window if the
@@ -1843,6 +1843,8 @@ func _die() -> void:
 	is_attacking = false
 	_vulnerable_mult = 1.0
 	current_state = EnemyState.DEAD
+	if is_inside_tree():
+		EnemySoundPlayback.play_defeat(enemy_data.model_id if enemy_data else "", global_position)
 	died.emit(self)
 	_notify_leader_loss()
 
@@ -2145,25 +2147,10 @@ static func _glow_dot() -> ImageTexture:
 
 
 func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
-	var label := Label3D.new()
-	label.text = text
-	label.font_size = 48
-	label.pixel_size = 0.01
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = color
-	label.outline_size = 6
-	label.outline_modulate = Color(0, 0, 0)
-	# Position above the enemy with slight random offset
-	label.position = Vector3(randf_range(-0.3, 0.3), 2.0 + randf_range(0, 0.3), 0)
-	add_child(label)
-
-	# Animate: float up and fade out
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y + 1.0, 0.8).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
-	tween.chain().tween_callback(label.queue_free)
+	if not is_inside_tree():
+		return
+	preload("res://scripts/3d/elements/combat_popup.gd").show(
+		get_parent(), global_position + Vector3(randf_range(-0.3, 0.3), 2.0, 0), text, color, text == "MISS")
 
 
 func _setup_reticle() -> void:
@@ -2175,6 +2162,24 @@ func _setup_reticle() -> void:
 		height = enemy_data.collision_height
 	_reticle = TargetReticle.build(height * 0.5)
 	add_child(_reticle)
+	if model and enemy_data and (_archetype == "flyer_combo" or not enemy_data.reticle_bone.is_empty()):
+		var skeleton := NodeUtils.first_of_type(model, "Skeleton3D") as Skeleton3D
+		if skeleton:
+			for bone in range(skeleton.get_bone_count()):
+				if skeleton.get_bone_name(bone) == enemy_data.reticle_bone or (enemy_data.reticle_bone.is_empty() and "spine" in skeleton.get_bone_name(bone).to_lower()):
+					var anchor := BoneAttachment3D.new()
+					anchor.bone_name = skeleton.get_bone_name(bone)
+					skeleton.add_child(anchor)
+					_reticle.reparent(anchor, false)
+					_reticle.position = Vector3.ZERO
+					_reticle.set_disable_scale(true)
+					return
+
+		var point := model.find_child(enemy_data.reticle_bone, true, false) as Node3D if not enemy_data.reticle_bone.is_empty() else null
+		if point:
+			_reticle.reparent(point, false)
+			_reticle.position = Vector3.ZERO
+			_reticle.set_disable_scale(true)
 
 
 func show_reticle() -> void:

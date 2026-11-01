@@ -26,8 +26,6 @@ const EXCHANGE_ITEMS := [
 ]
 
 var _selected_index: int = 0
-var _mode_bar_parent: Control
-var _tab_row: HBoxContainer
 var _detail_panel: PanelContainer
 var _active_modal: Control = null
 # Cached pill nodes (one per EXCHANGE_ITEMS row) so a cursor move re-styles the
@@ -43,7 +41,6 @@ var _pill_nodes: Array = []
 
 
 func _ready() -> void:
-	_mode_bar_parent = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Photon Collector"
 	_setup_portrait()
@@ -175,22 +172,8 @@ func _handle_debug_mag(item_id: String, item_name: String, cost: int) -> void:
 func _refresh_display() -> void:
 	mode_label.visible = false
 
-	if not is_instance_valid(_tab_row):
-		_tab_row = HBoxContainer.new()
-		_tab_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		_tab_row.add_theme_constant_override("separation", 8)
-		_mode_bar_parent.add_child(_tab_row)
-		_mode_bar_parent.move_child(_tab_row, mode_label.get_index() + 1)
-	for child in _tab_row.get_children():
-		child.queue_free()
-
 	var pd_count: int = Inventory.get_item_count("photon_drop")
-	var pd_label := Label.new()
-	pd_label.text = "Photon Drops: %d" % pd_count
-	pd_label.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
-	pd_label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
-	pd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_tab_row.add_child(pd_label)
+	PszStyle.update_shop_balance(self, pd_count, "Photon Drops")
 
 	for child in content_panel.get_children():
 		child.queue_free()
@@ -227,7 +210,7 @@ func _refresh_display() -> void:
 		if i == _selected_index:
 			selected_pill = pill
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:

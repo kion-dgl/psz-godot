@@ -1182,8 +1182,8 @@
             "east": "2,1"
           },
           "portals": {
-            "east": "portal_1769178737883_7bppcx8w1",
-            "west": "portal_1769178748150_zpfcscb89"
+            "east": "portal_1769178748150_zpfcscb89",
+            "west": "portal_1769178737883_7bppcx8w1"
           },
           "is_start": true,
           "is_end": false,

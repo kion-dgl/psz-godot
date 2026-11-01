@@ -100,3 +100,7 @@ func get_model_path() -> String:
 		return ""
 	# TODO: Update path when enemy models are imported
 	return "res://assets/enemies/" + model_id + "/" + model_id + ".glb"
+
+
+## Animated body anchor for reticles on models whose origin stays on the floor.
+@export var reticle_bone: String = ""

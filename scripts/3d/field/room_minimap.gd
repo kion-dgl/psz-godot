@@ -80,7 +80,7 @@ var _rotation_deg: int = 0
 
 func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		connections: Dictionary, warp_edge: String,
-		_map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
+		map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -120,6 +120,19 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 
 	# Parse gates with their baked direction (data-gate-dir attribute)
 	var svg_gates := MinimapSvg.parse_gates(svg_text)
+	# Runtime portals are authoritative: SVG packs may predate direction fixes.
+	# Project their physical centers through the same transform as the player.
+	if not portal_data.is_empty() and _svg_scale > 0.0:
+		svg_gates = []
+		for direction in portal_data:
+			if direction == "default":
+				continue
+			var portal: Dictionary = portal_data[direction]
+			var local := map_root.to_local(Vector3(portal.get("gate_pos", portal.spawn_pos)))
+			svg_gates.append({
+				"center": Vector2(local.x * _svg_scale + _svg_offset_x, local.z * _svg_scale + _svg_offset_y),
+				"dir": StageRotation.rotate_dir(str(direction), (360 - rotation_deg) % 360),
+			})
 
 	print("[RoomMinimap] stage=%s  svg_gates=%d  scale=%.2f  offset=(%.1f, %.1f)  rot=%d" % [
 		stage_id, svg_gates.size(), _svg_scale, _svg_offset_x, _svg_offset_y, _rotation_deg])

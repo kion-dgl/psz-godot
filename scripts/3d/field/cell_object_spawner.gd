@@ -997,6 +997,7 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String, scaled_data: EnemyData =
 	if exp_amount > 0:
 		var result := CharacterManager.add_experience(exp_amount)
 		SessionManager.add_rewards(exp_amount, 0)
+		preload("res://scripts/3d/elements/combat_popup.gd").show(_c, pos + Vector3.UP * 2.8, "+%d exp" % exp_amount, Color(0.75, 0.35, 1.0))
 		print("[EnemyDrop] +%d EXP for %s" % [exp_amount, enemy_name])
 		if result.leveled_up:
 			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)

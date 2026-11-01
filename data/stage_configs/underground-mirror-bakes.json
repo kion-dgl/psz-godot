@@ -1,0 +1,517 @@
+{
+	"stages": {
+		"res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3.nj.glb": {
+			"fixes": {
+				"fe_obj001_complex3_0.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj001_complex3_1.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj001_complex3_2.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj001_complex3_3.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj001_complex3_4.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						25,
+						26,
+						27,
+						29,
+						30,
+						31,
+						32,
+						34,
+						35,
+						36,
+						37
+					],
+					"node": "fe_obj001_complex3_nj/Skeleton3D/fe_obj001_complex3_nj",
+					"resource": "res://assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/893bef7029d9.res",
+					"signature": "1bb24b95b6d76ff54c8653115d7a2023d3f5ad3dbdecec76b8cdf800662add11"
+				}
+			],
+			"source_sha256": "aa76cb6f06ab6696203045ff0c058a81b99728763fa5ea56cdf3ca48f2b04d61",
+			"version": 1
+		},
+		"res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj002_mizu.nj.glb": {
+			"fixes": {
+				"fe_obj002_mizu_0.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						0
+					],
+					"node": "fe_obj002_mizu_nj/Skeleton3D/fe_obj002_mizu_nj",
+					"resource": "res://assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/425a20aaf3c5.res",
+					"signature": "57e69fa5b791d6dce64642223971caa5113a7fe3e0a5b193eb1c06a18c271091"
+				}
+			],
+			"source_sha256": "929e323b431994c4c2d4b4738fa65f087a74c056757196892aa1aa3e311434d7",
+			"version": 1
+		},
+		"res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2.nj.glb": {
+			"fixes": {
+				"fe_obj006_grid2_0.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_1.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_10.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_11.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_2.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_3.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_4.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_5.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_6.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_7.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_8.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"fe_obj006_grid2_9.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16
+					],
+					"node": "fe_obj006_grid2_nj/Skeleton3D/fe_obj006_grid2_nj",
+					"resource": "res://assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/95a142eb804d.res",
+					"signature": "ac7ba33ae48c1c9c2d44d9922a7e8fdc77fefb1ea846de489ebe7a5096f62600"
+				}
+			],
+			"source_sha256": "8a3da56b05c0afb3f8d9cdb970e1812e6d849f32e5f06d4138e0ec5c493359f7",
+			"version": 1
+		},
+		"res://assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb": {
+			"fixes": {
+				"s00_0_auto1.png": {
+					"wrapS": "mirror",
+					"wrapT": "repeat"
+				},
+				"s00_1_wall2.png": {
+					"wrapS": "mirror",
+					"wrapT": "repeat"
+				},
+				"s00_1_wall5.png": {
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				},
+				"s00_2_sh.png": {
+					"wrapS": "mirror",
+					"wrapT": "repeat"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						2,
+						7,
+						9,
+						12
+					],
+					"node": "s00e_sa4_m/Skeleton3D/s00e_sa4_m",
+					"resource": "res://assets/stages/city_e/s00e_sa4/lndmd/mirror-bake/fe95695f5ecf.res",
+					"signature": "6df80ae328052a604927414d7d3cf5e25b70e02d0d2259cf29e25c8eb92cff88"
+				}
+			],
+			"source_sha256": "2256b395e12d8f62570c16ab59382af517e891aa7bed3c6798714b13a98024a5",
+			"version": 1
+		}
+	},
+	"strategy": "reflected_period",
+	"textures": {
+		"041a54b560079a8e8682a45e1a6c67b3a90c9a4ae7d582443b910c28a1361694": {
+			"mipmaps": true,
+			"output_bytes": 21844,
+			"output_size": [
+				64,
+				64
+			],
+			"pixels_sha256": "79ba6e4db32d91be64cdde6aab7287fd2e4e06c217b5346a30a0a3dc635d6dc3",
+			"resource": "res://assets/stages/native_mirror/lndmd/041a54b560079a8e8682a45e1a6c67b3a90c9a4ae7d582443b910c28a1361694.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_3.png",
+			"source_bytes": 4096,
+			"source_size": [
+				32,
+				32
+			]
+		},
+		"210ca7ecb2f9e47af858aba7a1a90a754402f8d35c72e184d00adf25fda0fccc": {
+			"mipmaps": true,
+			"output_bytes": 87380,
+			"output_size": [
+				128,
+				128
+			],
+			"pixels_sha256": "c19f184dd1050d6cfb1cd9b4b76b5cefe89307550d169a1630985d4a539c615b",
+			"resource": "res://assets/stages/native_mirror/lndmd/210ca7ecb2f9e47af858aba7a1a90a754402f8d35c72e184d00adf25fda0fccc.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_9.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"3492192e9ea281561fd9ea5c4334853d849c23d24437419e0c2ecc6b50bdf7c3": {
+			"mipmaps": true,
+			"output_bytes": 43692,
+			"output_size": [
+				128,
+				64
+			],
+			"pixels_sha256": "96b6e2f9f1731dceb506042d6ba3034fe65260de905ffd008d8d621b18cd344e",
+			"resource": "res://assets/stages/native_mirror/lndmd/3492192e9ea281561fd9ea5c4334853d849c23d24437419e0c2ecc6b50bdf7c3.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/lndmd/s00_0_auto1.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"3b76770b6448044706cf99058de58017d0309e89152f059d4d80e98c4dfb7b98": {
+			"mipmaps": true,
+			"output_bytes": 10924,
+			"output_size": [
+				64,
+				32
+			],
+			"pixels_sha256": "d4c5bb638054254aa9fe5e24cf01ff48cdabbbf1bcd6c33a97a43153aa81467d",
+			"resource": "res://assets/stages/native_mirror/lndmd/3b76770b6448044706cf99058de58017d0309e89152f059d4d80e98c4dfb7b98.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/lndmd/s00_2_sh.png",
+			"source_bytes": 4096,
+			"source_size": [
+				32,
+				32
+			]
+		},
+		"3e9fa759e3d36ae29fe25da9701150be54019fd22fae396bff4204bc33c18c70": {
+			"mipmaps": true,
+			"output_bytes": 87380,
+			"output_size": [
+				128,
+				128
+			],
+			"pixels_sha256": "00c045c79304cc643bbab32d943cd9e4d520e101c55127f875385a9faa05c460",
+			"resource": "res://assets/stages/native_mirror/lndmd/3e9fa759e3d36ae29fe25da9701150be54019fd22fae396bff4204bc33c18c70.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3_1.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"424e3fa265fc757b4dc19215d0436a8ec39b2a1bced43acc6fe3b0fef0bd3eb9": {
+			"mipmaps": true,
+			"output_bytes": 87380,
+			"output_size": [
+				128,
+				128
+			],
+			"pixels_sha256": "7fb3e83a1344e6c833fecb9fa3cec8a5a6c415ac741b943594f44685f40fc919",
+			"resource": "res://assets/stages/native_mirror/lndmd/424e3fa265fc757b4dc19215d0436a8ec39b2a1bced43acc6fe3b0fef0bd3eb9.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_2.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"5784dab5067416657ace66001f65a49a846be02cd4395023fb60cf86fb501231": {
+			"mipmaps": true,
+			"output_bytes": 349524,
+			"output_size": [
+				256,
+				256
+			],
+			"pixels_sha256": "99ba3a56308d8382257eb7aba23284a268679b1edd5029e117ecdadd4cf4988b",
+			"resource": "res://assets/stages/native_mirror/lndmd/5784dab5067416657ace66001f65a49a846be02cd4395023fb60cf86fb501231.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_10.png",
+			"source_bytes": 65536,
+			"source_size": [
+				128,
+				128
+			]
+		},
+		"60e5fb82312f90901b776a2967b5f462d93935f568ad8ac5e34636b6dcfbbd9d": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "2d86b65869751eecaa3fa07a533851fb19569b7171a22da731f73dbf22ff646c",
+			"resource": "res://assets/stages/native_mirror/lndmd/60e5fb82312f90901b776a2967b5f462d93935f568ad8ac5e34636b6dcfbbd9d.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3_3.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"7357b153db901d8cd564d4b38a21a112fb93c2632d57dd82c73689cfc7d9269a": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "6f5b58f2a764f383af143e6501c2d80d396af94b38d2e7566df42dcd3a91f367",
+			"resource": "res://assets/stages/native_mirror/lndmd/7357b153db901d8cd564d4b38a21a112fb93c2632d57dd82c73689cfc7d9269a.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_0.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"88b074d7921a43655ab06dfe5abd37f96b02650f794a0a4dbd9b50ef74895689": {
+			"mipmaps": true,
+			"output_bytes": 87388,
+			"output_size": [
+				64,
+				256
+			],
+			"pixels_sha256": "0e814dfcfeba852302e60997fc7867169f68d4c97a9bb5324fbaade3bef14fab",
+			"resource": "res://assets/stages/native_mirror/lndmd/88b074d7921a43655ab06dfe5abd37f96b02650f794a0a4dbd9b50ef74895689.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/lndmd/s00_1_wall2.png",
+			"source_bytes": 32768,
+			"source_size": [
+				32,
+				256
+			]
+		},
+		"90993d89bdb222e71a5d7959559b9bb70d1b055d2e482e57a667584fab1fae85": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "450fef5aa10332c7dc427b1cb574e5eedf617bd9b2db0ae62afa61af9d9f7fcd",
+			"resource": "res://assets/stages/native_mirror/lndmd/90993d89bdb222e71a5d7959559b9bb70d1b055d2e482e57a667584fab1fae85.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_8.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"9b7b9aea10ccb2cc92911c172ec23ed40133d8cb3561806782e60736b8f13d20": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "d1ee4e2f197f146afc764110955fbd0c2786103e959872f959ad64ce0fd9dd19",
+			"resource": "res://assets/stages/native_mirror/lndmd/9b7b9aea10ccb2cc92911c172ec23ed40133d8cb3561806782e60736b8f13d20.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_4.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"a848d37887887d05c19d736c04a26e5d5aaf8f4734218da877c3423984c0e2bd": {
+			"mipmaps": true,
+			"output_bytes": 21844,
+			"output_size": [
+				64,
+				64
+			],
+			"pixels_sha256": "c5d76aa6322dc876e3463e89228da96f94355169e41d07ae540b087cd3f1a78e",
+			"resource": "res://assets/stages/native_mirror/lndmd/a848d37887887d05c19d736c04a26e5d5aaf8f4734218da877c3423984c0e2bd.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_11.png",
+			"source_bytes": 4096,
+			"source_size": [
+				32,
+				32
+			]
+		},
+		"ab60403962a16ef8435d57cb5b14136b78426bdb66c92a61f14e349e44bc0f60": {
+			"mipmaps": true,
+			"output_bytes": 349524,
+			"output_size": [
+				256,
+				256
+			],
+			"pixels_sha256": "1089dd8cc0545094512afba9a52c9c4590a910f161af14d82edcbdc2145bdd2f",
+			"resource": "res://assets/stages/native_mirror/lndmd/ab60403962a16ef8435d57cb5b14136b78426bdb66c92a61f14e349e44bc0f60.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj002_mizu_0.png",
+			"source_bytes": 65536,
+			"source_size": [
+				128,
+				128
+			]
+		},
+		"acd2dcb1d954a72a392d5e7b41a6b9ea1381e2a6e8c4424571af133a2ee34423": {
+			"mipmaps": true,
+			"output_bytes": 5592404,
+			"output_size": [
+				1024,
+				1024
+			],
+			"pixels_sha256": "30d7ab41f4574f1e2069d38641612e8dc3ba7f969250e003db7037fd5020d0bd",
+			"resource": "res://assets/stages/native_mirror/lndmd/acd2dcb1d954a72a392d5e7b41a6b9ea1381e2a6e8c4424571af133a2ee34423.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3_0.png",
+			"source_bytes": 1048576,
+			"source_size": [
+				512,
+				512
+			]
+		},
+		"b92af3a73efba1f1e9965fd9c964ae6a617aa30207e702db1f912a37e64cc9b1": {
+			"mipmaps": true,
+			"output_bytes": 349524,
+			"output_size": [
+				256,
+				256
+			],
+			"pixels_sha256": "f47db5914fd4f7050dadc79b201c200ccec4d2dec55bb6b1173c2e81fe63b436",
+			"resource": "res://assets/stages/native_mirror/lndmd/b92af3a73efba1f1e9965fd9c964ae6a617aa30207e702db1f912a37e64cc9b1.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/lndmd/s00_1_wall5.png",
+			"source_bytes": 65536,
+			"source_size": [
+				128,
+				128
+			]
+		},
+		"dd3faaa72a634458059aba55fb8eb51feb92fd077ff2d56761c0ac90bccea415": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "cbe93fec0de93eec92f9fa3f1c41ee32749f12fd7c3800e7e20f05ae6ee7b602",
+			"resource": "res://assets/stages/native_mirror/lndmd/dd3faaa72a634458059aba55fb8eb51feb92fd077ff2d56761c0ac90bccea415.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_6.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"f5b245a8b4ba7c3d0c5d07b4a0aa6318beebcebf37dcfaab1855f571ecefbe5b": {
+			"mipmaps": true,
+			"output_bytes": 1398100,
+			"output_size": [
+				512,
+				512
+			],
+			"pixels_sha256": "18b7b34d0ce77defd4531bd6f76bb9664f842c8672bdc8753692d1f7a438c1f8",
+			"resource": "res://assets/stages/native_mirror/lndmd/f5b245a8b4ba7c3d0c5d07b4a0aa6318beebcebf37dcfaab1855f571ecefbe5b.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_5.png",
+			"source_bytes": 262144,
+			"source_size": [
+				256,
+				256
+			]
+		},
+		"f8bd6b9a92a371473b64f41c95e8c1ecb0bec55f704180c5cd9a187eca8df391": {
+			"mipmaps": true,
+			"output_bytes": 349524,
+			"output_size": [
+				256,
+				256
+			],
+			"pixels_sha256": "c51653cbdac6bc71a905b4fef37c7882a2389ee2e9111e5747c3748e1dbfc81a",
+			"resource": "res://assets/stages/native_mirror/lndmd/f8bd6b9a92a371473b64f41c95e8c1ecb0bec55f704180c5cd9a187eca8df391.res",
+			"source": "res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_1.png",
+			"source_bytes": 65536,
+			"source_size": [
+				128,
+				128
+			]
+		}
+	},
+	"version": 1
+}

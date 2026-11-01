@@ -412,6 +412,8 @@ func _do_item_move(qty: int) -> void:
 # ── Render ─────────────────────────────────────────────────────────────────
 
 func _refresh_display() -> void:
+	var character: Dictionary = CharacterManager.get_active_character()
+	PszStyle.update_shop_balance(self, int(character.get("meseta", 0)))
 	# Tab bar
 	for child in _mode_bar.get_children():
 		child.queue_free()
@@ -443,7 +445,7 @@ func _refresh_panel() -> void:
 	else:
 		_render_meseta_panel(vbox)
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	panel.add_child(scroll)
 
 	# Keep the selected row in view, with a row of margin so the selection moves

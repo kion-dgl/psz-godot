@@ -23,6 +23,9 @@ static func apply_stage(root: Node, fixes: Dictionary) -> int:
 	if root.has_meta("native_mirror_applied") or root.has_meta("native_mirror_reference"):
 		return 0
 	var entry: Dictionary = manifest().get("stages", {}).get(root.scene_file_path, {})
+	return apply_entry(root, entry, fixes)
+
+static func apply_entry(root: Node, entry: Dictionary, fixes: Dictionary) -> int:
 	if entry.is_empty():
 		return 0
 	var prepared := _prepare_variants(root, entry, fixes)
