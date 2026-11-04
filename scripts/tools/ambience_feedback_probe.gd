@@ -27,7 +27,7 @@ func _run() -> void:
 	get_tree().quit(0 if _ok else 1)
 
 func _city() -> void:
-	var market := preload("res://assets/stages/city_e/market/dairon2.glb").instantiate()
+	var market := preload("res://assets/stages/city_e/market/dairon3.glb").instantiate()
 	add_child(market)
 	camera.position = Vector3(0, 14, 49)
 	camera.look_at(Vector3(0, 0, 30))
@@ -35,14 +35,14 @@ func _city() -> void:
 	var draws_before := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 	var before := market.get_child_count()
 	var counts := preload("res://scripts/3d/city/market_ambience.gd").apply(market)
-	_check(counts.ground > 0 and counts.crowd == 1, "cloud ground and authored crowd surfaces found")
+	_check(counts.clouds == 1 and counts.crowd == 1, "authored sky/ground cloud surface and crowd found")
 	_check(market.get_child_count() == before, "ambience adds no nodes or collision")
 	camera.position = Vector3(0, 14, 49)
 	camera.look_at(Vector3(0, 0, 30))
 	await capture("city-a")
 	var draws_after := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 	print("[ambience-feedback] city draw calls: %d -> %d; surfaces: %s" % [draws_before, draws_after, counts])
-	_check(draws_after <= draws_before + int(counts.ground), "clouds add at most one draw per ground surface")
+	_check(draws_after <= draws_before, "clouds reuse the authored surface without extra ground passes")
 	await get_tree().create_timer(6.0).timeout
 	await capture("city-b")
 	camera.position = Vector3(16, 5, 30)
@@ -93,11 +93,15 @@ func _traps() -> void:
 	for id in ["heat_trap", "ice_trap", "light_trap", "heal_trap"]:
 		var trap := TrapBall.build(id)
 		add_child(trap)
+		var origin := trap._model.global_position
 		trap._detonate()
 		var blast := get_node_or_null("HazardBlast")
 		_check(blast != null and is_equal_approx(blast.get_child(0).mesh.radius, trap.blast_radius), id + " shows actual blast radius")
-		await capture(id)
+		_check(blast != null and blast.global_position.is_equal_approx(origin), id + " blast starts at visible trap")
 		await get_tree().create_timer(0.5).timeout
+		_check(is_instance_valid(blast), "blast remains readable after half a second")
+		await capture(id)
+		await get_tree().create_timer(preload("res://scripts/3d/elements/hazard_blast.gd").DURATION + 0.1).timeout
 		_check(not is_instance_valid(blast), "blast outlives trap then cleans up")
 	var bomb := PlacedTraps.build("burn_trap") as BombTrap
 	add_child(bomb)
@@ -107,7 +111,7 @@ func _traps() -> void:
 	_check(bomb.detonations == 1 and bomb_blast != null, "bomb retains warning and emits once")
 	_check(bomb_blast != null and is_equal_approx(bomb_blast.get_child(0).mesh.radius, bomb.RADIUS), "bomb visual matches damage radius")
 	await capture("bomb")
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(preload("res://scripts/3d/elements/hazard_blast.gd").DURATION + 0.1).timeout
 	bomb.free()
 	var unused := TrapBall.build("heat_trap")
 	add_child(unused)

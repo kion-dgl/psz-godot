@@ -66,10 +66,11 @@ func _fit_to_model() -> void:
 	stars.position = Vector3(center.x, bounds.end.y + 0.4, center.z)
 	for star in stars.get_children():
 		star.position *= maxf(radius / 0.7, 1.0)
-	fire.position = center - Vector3.UP * height * 0.15
-	fire.emission_sphere_radius = radius * 0.7
-	fire.scale_amount_min = height * 0.18
-	fire.scale_amount_max = height * 0.35
+	fire.position = center
+	fire.emission_box_extents = Vector3(maxf(bounds.size.x * 0.35, 0.2), height * 0.4, maxf(bounds.size.z * 0.35, 0.2))
+	# Larger enemies get distributed patches, not a single oversized blaze.
+	fire.scale_amount_min = clampf(height * 0.18, 0.3, 0.5)
+	fire.scale_amount_max = clampf(height * 0.3, 0.5, 0.8)
 
 func sync(effects: Array) -> void:
 	var kinds: Array = effects.map(func(fx: Dictionary): return fx.type)

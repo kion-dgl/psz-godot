@@ -4,7 +4,7 @@ const CLOUDS := preload("res://scripts/3d/shaders/city_clouds.gdshader")
 const CROWD := preload("res://scripts/3d/shaders/city_crowd.gdshader")
 
 static func apply(root: Node) -> Dictionary:
-	var counts := {"ground": 0, "crowd": 0}
+	var counts := {"clouds": 0, "crowd": 0}
 	var pending: Array[Node] = [root]
 	while not pending.is_empty():
 		var node: Node = pending.pop_back()
@@ -12,7 +12,9 @@ static func apply(root: Node) -> Dictionary:
 		if not node is MeshInstance3D or not node.mesh:
 			continue
 		for surface in node.mesh.get_surface_count():
-			var original = node.get_active_material(surface)
+			# Read the authored material: the generic scroll pass may already
+			# have replaced wave02 with an additive water shader.
+			var original = node.mesh.surface_get_material(surface)
 			if not original is StandardMaterial3D:
 				continue
 			var id: String = original.resource_name
@@ -22,11 +24,14 @@ static func apply(root: Node) -> Dictionary:
 				crowd.set_shader_parameter("atlas", original.albedo_texture)
 				node.set_surface_override_material(surface, crowd)
 				counts.crowd += 1
-			elif id.begins_with("floor03") or id.begins_with("floor4") or id.begins_with("gr01"):
-				var ground := original.duplicate() as StandardMaterial3D
+			elif original.albedo_texture and original.albedo_texture.resource_path.get_file().ends_with("s00_2_wave02.png"):
+				# The model already contains the sky cards AND the ground shadow.
+				# Keep their UVs, alpha and vertex colors; additive blending makes
+				# the almost-black ground card disappear instead of casting shade.
 				var clouds := ShaderMaterial.new()
 				clouds.shader = CLOUDS
-				ground.next_pass = clouds
-				node.set_surface_override_material(surface, ground)
-				counts.ground += 1
+				clouds.set_shader_parameter("cloud_texture", original.albedo_texture)
+				clouds.set_shader_parameter("cloud_color", original.albedo_color)
+				node.set_surface_override_material(surface, clouds)
+				counts.clouds += 1
 	return counts
