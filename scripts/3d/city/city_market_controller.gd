@@ -19,10 +19,11 @@ const SPAWN_VARIANTS := {
 func _ready() -> void:
 	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes
 	# needed, so this area deliberately skips _fix_city_materials(). The two
-	# wave surfaces are the exception: they are meant to be moving water, and
-	# a still texture reads as a painted-on puddle. _apply_scroll_fixes() is
-	# the narrow pass that animates those and touches nothing else.
+	# animated surfaces are the exception. Apply generic scroll fixes first,
+	# then restore wave02 as alpha-blended clouds and their ground shadow
+	# (the additive water shader cannot darken the ground).
 	_apply_scroll_fixes()
+	preload("res://scripts/3d/city/market_ambience.gd").apply($Market)
 	# The authored sidecar (wetlands envelope, kion's locked tuning from the
 	# counter) with the legacy row only as fallback.
 	if not _add_authored_lights("s00e_sa1"):
