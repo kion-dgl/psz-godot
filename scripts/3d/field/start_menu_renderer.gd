@@ -64,7 +64,7 @@ func _item_mute_state(item_id: String) -> Array:
 func _draw_menu() -> void:
 	var c: Control = _c._canvas
 	var font: Font = MENU_FONT
-	var vp := Vector2(PsoStartMenu.VIEWPORT_W, PsoStartMenu.VIEWPORT_H)
+	var vp := c.size
 
 	# L-shaped backdrop
 	var left_top := Rect2(0, 0, PsoStartMenu.LEFT_W, vp.y - PsoStartMenu.BOTTOM_H)
@@ -142,8 +142,8 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	# from a 256×159 DS source). Layout coords inside the sprite:
 	#   page indicator box: x=191, y=24, 65×28 (between the L/R icons)
 	#   stat text area:     x=17,  y=58, 402×162
-	var px: float = PsoStartMenu.VIEWPORT_W - PsoStartMenu.STATS_BG.get_width() - 50
-	var py: float = PsoStartMenu.VIEWPORT_H - PsoStartMenu.STATS_BG.get_height() - 20
+	var px: float = c.size.x - PsoStartMenu.STATS_BG.get_width() - 50
+	var py: float = c.size.y - PsoStartMenu.STATS_BG.get_height() - 20
 	c.draw_texture(PsoStartMenu.STATS_BG, Vector2(px, py))
 
 	# Page selector centered in the indicator box
@@ -219,7 +219,7 @@ func _draw_items(c: Control, font: Font) -> void:
 	var inv: Array = _c._get_inventory()
 
 	var px: float = 5.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	# Wider than the other sub-screens' 300px list (Kion: "make the inventory a bit
 	# wider") — the description panel shifts right to match (see the _draw_bottom_desc
 	# call below). The bottom backdrop strip is full-width, so there's ample room.
@@ -395,7 +395,7 @@ func _draw_equip(c: Control, font: Font) -> void:
 
 	# Custom equip list with headers and white rows
 	var px: float = 5.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -471,7 +471,7 @@ func _draw_equip(c: Control, font: Font) -> void:
 func _draw_equip_picker(c: Control, font: Font) -> void:
 	var candidates: Array = _c._get_equip_candidates(_c._equip_slot_idx)
 	var px: float = 310.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var pw: float = 200.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -490,7 +490,7 @@ func _draw_techs(c: Control, font: Font) -> void:
 
 	# Draw tech list
 	var px: float = 5.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -556,7 +556,7 @@ func _draw_techs(c: Control, font: Font) -> void:
 func _draw_palette(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Palette")
 
-	var base_y: float = PsoStartMenu.VIEWPORT_H - PsoStartMenu.BOTTOM_H + 8
+	var base_y: float = c.size.y - PsoStartMenu.BOTTOM_H + 8
 	var panel_h: float = PsoStartMenu.BOTTOM_H - 16
 
 	# Left side: page tabs + HUD preview + slot list
@@ -722,7 +722,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 
 		# Left panel: mag stats with gauge bars
 		var px: float = 5.0
-		var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+		var py: float = c.size.y - 305.0
 		var pw: float = 300.0
 		var ph: float = 300.0
 		_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -775,7 +775,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 		# Right panel: feedable items
 		var feed: Array = _c._get_feed_items()
 		var dpx: float = 310.0
-		var dpy: float = PsoStartMenu.VIEWPORT_H - 305.0
+		var dpy: float = c.size.y - 305.0
 		var dpw: float = 200.0
 		var dph: float = 300.0
 		_draw_inner_panel(c, Rect2(dpx, dpy, dpw, dph))
@@ -826,7 +826,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 func _draw_quest(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Quest")
 	var px: float = 5.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var pw: float = 505.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -851,7 +851,13 @@ func _draw_options(c: Control, font: Font) -> void:
 	for o in opts:
 		items.append({"name": o, "type": "tool"})
 	_draw_bottom_list(c, font, items, _c._options_idx)
-	_draw_bottom_desc(c, font, "Adjust game settings.\n\n[Enter] Select\n[Esc] Back")
+	var description := "Adjust game settings.\n\n[Enter] Select\n[Esc] Back"
+	if _c._options_idx == 8:
+		description = "Fit fills the screen.\nFixed ratios add bars.\nNo image stretching.\n\n[Left/Right] Change\n[Enter] Next"
+	elif _c._options_idx == 9:
+		var pixels := VideoSettings.render_size()
+		description = "3D: %d x %d\nUI stays sharp.\nLower: faster, softer.\n1.5x / 2x: demanding.\n\n[Left/Right] Change" % [pixels.x, pixels.y]
+	_draw_bottom_desc(c, font, description)
 
 
 func _draw_debug(c: Control, font: Font) -> void:
@@ -913,7 +919,7 @@ func _draw_section_label(c: Control, font: Font, text: String) -> void:
 
 func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> void:
 	var px: float = 5.0
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
@@ -966,7 +972,7 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 
 
 func _draw_bottom_desc(c: Control, font: Font, text: String, px: float = 310.0, pw: float = 200.0) -> void:
-	var py: float = PsoStartMenu.VIEWPORT_H - 305.0
+	var py: float = c.size.y - 305.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 	# Simple multi-line text

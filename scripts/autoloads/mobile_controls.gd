@@ -38,7 +38,7 @@ const TEX_DPAD_DOWN  := preload("res://assets/kenney_input-prompts/Nintendo Swit
 const TEX_DPAD_LEFT  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_left.png")
 const TEX_DPAD_RIGHT := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_right.png")
 
-# 1280×720 viewport coords.
+# Logical viewport units (1280×720 minimum, expanded to the device aspect).
 const ACTION_INSET     := Vector2(180, 180)   # diamond centre, from bottom-right
 const ACTION_RADIUS    := 95
 const ACTION_BTN_SIZE  := 96                  # square sprite size (pixels)
@@ -62,6 +62,7 @@ var _dpad: Node2D
 var _dpad_base_sprite: Sprite2D
 var _dpad_dir_sprites: Dictionary = {}  # button_index -> Sprite2D
 var _last_axis := Vector2.ZERO
+var _layout_items: Array[Dictionary] = []
 
 # Menu-mode state. Re-evaluated every frame from authoritative sources
 # (PsoStartMenu, SceneManager, current scene path) — there is no project-
@@ -98,6 +99,7 @@ func _activate() -> void:
 	_layer.name = "MobileControls"
 	add_child(_layer)
 	_build()
+	get_viewport().size_changed.connect(_relayout)
 	_refresh_mode()  # initial visibility
 
 func _deactivate() -> void:
@@ -155,6 +157,7 @@ func _build() -> void:
 	_dpad = _build_dpad(v)
 	_dpad.visible = false
 	_layer.add_child(_dpad)
+	_anchor_control(_dpad, Vector2(0, 1))
 
 	# ---- A/B/X/Y diamond bottom-right, Switch face-button sprites ----
 	# Diamond layout: A on the right (east), B at bottom (south), X at top
@@ -177,12 +180,12 @@ func _build() -> void:
 	# Home button removed — nothing in the project binds JOY_BUTTON_GUIDE.
 	var top_y := TOP_INSET + TOP_BTN_SIZE * 0.5
 	_add_sprite_button(JOY_BUTTON_BACK,  TEX_BTN_MINUS, Vector2(TOP_BTN_SIZE * 0.5 + TOP_INSET, top_y), TOP_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_START, TEX_BTN_PLUS,  Vector2(v.x * 0.5,                       top_y), TOP_BTN_SIZE + 8)
+	_add_sprite_button(JOY_BUTTON_START, TEX_BTN_PLUS,  Vector2(v.x * 0.5,                       top_y), TOP_BTN_SIZE + 8, Vector2(0.5, 0))
 
 	# ---- Shoulder row: L1 (PAL) on left, R1 on right ----
 	var second_y := top_y + TOP_BTN_SIZE * 0.5 + SHOULDER_BTN_SIZE * 0.5 + 12
 	_add_sprite_button(JOY_BUTTON_LEFT_SHOULDER,  TEX_BTN_L, Vector2(SHOULDER_BTN_SIZE * 0.5 + TOP_INSET, second_y), SHOULDER_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_RIGHT_SHOULDER, TEX_BTN_R, Vector2(v.x - SHOULDER_BTN_SIZE * 0.5 - TOP_INSET, second_y), SHOULDER_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_RIGHT_SHOULDER, TEX_BTN_R, Vector2(v.x - SHOULDER_BTN_SIZE * 0.5 - TOP_INSET, second_y), SHOULDER_BTN_SIZE, Vector2(1, 0))
 
 	# ---- Camera arrows above L1 / R1 ----
 	# camera_left/camera_right in project.godot are bound to right-stick
@@ -221,6 +224,7 @@ func _add_face_button(face_position: String, tex: Texture2D, centre: Vector2, si
 		sprite.modulate = Color.WHITE
 		_emit_button(get_idx.call(), false))
 	_layer.add_child(btn)
+	_anchor_control(btn, Vector2.ONE)
 
 func _make_sprite_button(tex: Texture2D, centre: Vector2, size: float) -> TouchScreenButton:
 	var btn := TouchScreenButton.new()
@@ -237,7 +241,7 @@ func _make_sprite_button(tex: Texture2D, centre: Vector2, size: float) -> TouchS
 	btn.add_child(sprite)
 	return btn
 
-func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size: float) -> void:
+func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size: float, anchor := Vector2.ZERO) -> void:
 	# Fixed-button-index variant — used for system buttons (BACK, START, L, R)
 	# whose mapping doesn't depend on the input scheme.
 	var btn := _make_sprite_button(tex, centre, size)
@@ -249,6 +253,7 @@ func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size
 		sprite.modulate = Color.WHITE
 		_emit_button(button_index, false))
 	_layer.add_child(btn)
+	_anchor_control(btn, anchor)
 
 func _add_axis_button(label: String, centre: Vector2, size: float, axis: int, value: float) -> void:
 	# Drawn as a translucent rounded square with a unicode arrow label, since
@@ -294,6 +299,15 @@ func _add_axis_button(label: String, centre: Vector2, size: float, axis: int, va
 		p.modulate = Color.WHITE
 		_emit_axis(axis, 0.0))
 	_layer.add_child(btn)
+	_anchor_control(btn, Vector2(1, 0) if value > 0 else Vector2.ZERO)
+
+func _anchor_control(node: Node2D, anchor: Vector2) -> void:
+	_layout_items.append({"node": node, "anchor": anchor, "offset": node.position - get_viewport().get_visible_rect().size * anchor})
+
+func _relayout() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	for item in _layout_items:
+		item.node.position = viewport_size * item.anchor + item.offset
 
 func _emit_button(button_index: int, pressed: bool) -> void:
 	var ev := InputEventJoypadButton.new()

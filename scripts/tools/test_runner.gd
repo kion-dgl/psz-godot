@@ -281,6 +281,7 @@ func _run_tests_systems() -> void:
 	test_debug_unlock_all_missions()
 	test_input_config()
 	test_crt_filter()
+	preload("res://scripts/tools/video_settings_tests.gd").run(self)
 	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
