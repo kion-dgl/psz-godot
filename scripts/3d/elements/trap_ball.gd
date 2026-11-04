@@ -484,6 +484,8 @@ func _detonate() -> void:
 
 	print("[TrapBall] %s%s triggered on %d target(s)" % [
 		trap_id, " (field)" if field_placed else "", hits])
+	var colors := {"heat_trap": Color(1, 0.4, 0.08), "ice_trap": Color(0.3, 0.8, 1), "light_trap": Color(0.9, 0.4, 1), "heal_trap": Color(0.3, 1, 0.6)}
+	preload("res://scripts/3d/elements/hazard_blast.gd").show_flash(self, blast_radius, colors.get(trap_id, Color.WHITE))
 	triggered.emit(trap_id)
 	_finish()
 

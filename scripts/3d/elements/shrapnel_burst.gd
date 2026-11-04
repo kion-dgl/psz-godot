@@ -13,20 +13,29 @@ class_name ShrapnelBurst
 const SELF := preload("res://scripts/3d/elements/shrapnel_burst.gd")
 
 const SHARD_COUNT := 18
-const LIFETIME := 0.9
-const SPEED_MIN := 3.0
-const SPEED_MAX := 6.5
+const LIFETIME := 0.65
+const SPEED_MIN := 1.2
+const SPEED_MAX := 2.6
 
 var _age := 0.0
 var _shards: Array = []      # {node, velocity, spin: Vector3}
 var _flash: OmniLight3D
 
 
-static func spawn(parent: Node3D, at: Vector3, base_size: float, tint: Color) -> void:
+static func spawn_bounds(source: Node3D, bounds: AABB, tint: Color) -> Node3D:
+	if not source.is_inside_tree() or source.get_parent() == null:
+		return null
 	var burst: Node3D = SELF.new()
-	burst.position = at
-	burst._build(base_size, tint)
-	parent.call_deferred("add_child", burst)
+	burst.name = "DestructionBurst"
+	source.get_parent().add_child(burst)
+	burst.global_transform = source.global_transform
+	burst._build(clampf(minf(bounds.size.x, bounds.size.y) * 0.13, 0.08, 0.25), tint)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 779
+	for shard in burst._shards:
+		shard.node.position = bounds.position + Vector3(rng.randf(), rng.randf(), rng.randf()) * bounds.size
+	burst._flash.position = bounds.get_center()
+	return burst
 
 
 func _build(base_size: float, tint: Color) -> void:
@@ -42,6 +51,7 @@ func _build(base_size: float, tint: Color) -> void:
 		mat.roughness = 0.9
 		mesh.material = mat
 		shard.mesh = mesh
+		shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		shard.rotation = Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)
 		add_child(shard)
 		var yaw := rng.randf() * TAU
@@ -69,6 +79,7 @@ func _process(delta: float) -> void:
 		shard["velocity"] = Vector3(shard["velocity"].x, shard["velocity"].y - 14.0 * delta, shard["velocity"].z)
 		node.position += shard["velocity"] * delta
 		node.rotation += Vector3(shard["spin"]) * delta
+		node.scale = Vector3.ONE * clampf((LIFETIME - _age) / 0.2, 0.01, 1.0)
 	if _flash:
 		_flash.light_energy = maxf(0.0, 3.0 * (1.0 - _age / 0.2))
 		if _flash.light_energy <= 0.0:

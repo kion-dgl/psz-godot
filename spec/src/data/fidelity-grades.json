@@ -40,7 +40,7 @@
       "area": "City",
       "grade": "B",
       "assessment": "Presentation exceeds the original in places, but some angles break down. Principal’s office needs a final pass.",
-      "next": "Inspect multiple camera angles and finish the principal’s office. Verify the Coliseum Master’s shared left-menu/right-NPC framing; grade unchanged.",
+      "next": "Inspect multiple camera angles and finish the principal’s office. Verify the Coliseum Master’s shared left-menu/right-NPC framing and playtest the drifting market cloud shadows and animated background crowd; grade unchanged.",
       "label": "score:city"
     },
     {
@@ -68,7 +68,7 @@
       "area": "Traps",
       "grade": "B",
       "assessment": "Kion raises Traps from D to B after the PR #761 laptop playtest on 2026-10-13. Distinct trap meshes, corrected materials and layouts, tactical enemy statuses, cycling needle/poison plates, rescuable bear traps, visible ball arming and the Coliseum trap page provide a playable tested baseline.",
-      "next": "Refine balance and effects in field encounters. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
+      "next": "Playtest the radius-matched blast feedback and player burn flames in field encounters; refine balance. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
       "label": "score:traps",
       "reviewed_on": "2026-10-13"
     },
@@ -84,7 +84,7 @@
       "area": "Combat",
       "grade": "C",
       "assessment": "Basic mechanics exist; lock-on and better enemy behavior are still needed.",
-      "next": "Specify lock-on, validate enemy families and review attack rhythm, hit alignment and recovery in play.",
+      "next": "Specify lock-on, validate enemy families and review attack rhythm, hit alignment and recovery in play. Playtest the shorter, model-sized box and wall destruction bursts.",
       "label": "score:combat"
     },
     {

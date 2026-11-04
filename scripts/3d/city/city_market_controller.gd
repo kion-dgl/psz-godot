@@ -23,6 +23,7 @@ func _ready() -> void:
 	# a still texture reads as a painted-on puddle. _apply_scroll_fixes() is
 	# the narrow pass that animates those and touches nothing else.
 	_apply_scroll_fixes()
+	preload("res://scripts/3d/city/market_ambience.gd").apply($Market)
 	# The authored sidecar (wetlands envelope, kion's locked tuning from the
 	# counter) with the legacy row only as fallback.
 	if not _add_authored_lights("s00e_sa1"):

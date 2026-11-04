@@ -6,7 +6,6 @@ class_name Box
 
 signal destroyed_box
 
-const ShrapnelBurstScript := preload("res://scripts/3d/elements/shrapnel_burst.gd")
 
 ## Whether this box is a rare variant (uses the shared o0c_recont instead of
 ## the active area's oNN_cont)
@@ -96,14 +95,7 @@ func destroy() -> void:
 	set_state("destroyed")
 	SfxManager.play_at("res://assets/sfx/common/common_160.wav", global_position)
 	destroyed_box.emit()
-	# Break visual. The original's container-break effect id is not yet
-	# decoded (no per-container entry in the effect factory tables), so this
-	# is engine-native shrapnel sized from the container; swap for the
-	# decoded effect when psz-re pins it.
-	var parent := get_parent()
-	if parent:
-		ShrapnelBurstScript.spawn(parent, global_position + Vector3.UP * (collision_size.y * 0.5),
-			clampf(collision_size.length() * 0.35, 0.35, 0.8), Color(0.72, 0.55, 0.34))
+	_spawn_break_effect(Color(0.72, 0.55, 0.34))
 
 	# Spawn drop if configured
 	if drop_type != "none":

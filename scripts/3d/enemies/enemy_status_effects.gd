@@ -13,40 +13,7 @@ static func definition(kind: String) -> Dictionary:
 	return DEFINITIONS.get(kind, CombatManager.STATUS_EFFECTS.get(kind, {}))
 
 func _ready() -> void:
-	fire = CPUParticles3D.new()
-	fire.emitting = false
-	fire.amount = 36
-	fire.lifetime = 0.65
-	fire.preprocess = 0.3
-	fire.direction = Vector3.UP
-	fire.spread = 20.0
-	fire.gravity = Vector3(0, 1.5, 0)
-	fire.initial_velocity_min = 1.0
-	fire.initial_velocity_max = 2.0
-	fire.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	fire.emission_sphere_radius = 0.55
-	fire.position.y = 0.7
-	fire.scale_amount_min = 0.4
-	fire.scale_amount_max = 0.8
-	var gradient := Gradient.new()
-	gradient.colors = PackedColorArray([Color(1, 0.95, 0.3, 0.95), Color(1, 0.35, 0.03, 0.8), Color(0.8, 0.05, 0, 0)])
-	gradient.offsets = PackedFloat32Array([0, 0.4, 1])
-	fire.color_ramp = gradient
-	var texture := GradientTexture2D.new()
-	var mask := Gradient.new()
-	mask.colors = PackedColorArray([Color.WHITE, Color(1, 1, 1, 0)])
-	texture.gradient = mask
-	texture.fill = GradientTexture2D.FILL_RADIAL
-	texture.fill_from = Vector2(0.5, 0.5)
-	texture.fill_to = Vector2(0.5, 0)
-	var flame := QuadMesh.new()
-	flame.size = Vector2(0.65, 1.1)
-	var flame_material := _material(Color.WHITE)
-	flame_material.albedo_texture = texture
-	flame_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	flame_material.vertex_color_use_as_albedo = true
-	flame.material = flame_material
-	fire.mesh = flame
+	fire = preload("res://scripts/3d/effects/burn_flames.gd").create()
 	add_child(fire)
 	ice = MeshInstance3D.new()
 	var crystal := CylinderMesh.new()
@@ -106,7 +73,8 @@ func _fit_to_model() -> void:
 
 func sync(effects: Array) -> void:
 	var kinds: Array = effects.map(func(fx: Dictionary): return fx.type)
-	fire.emitting = "burn" in kinds
+	fire.visible = "burn" in kinds
+	fire.emitting = fire.visible
 	ice.visible = "freeze" in kinds
 	stars.visible = "stun" in kinds or "sleep" in kinds
 

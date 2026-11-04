@@ -1,0 +1,37 @@
+extends RefCounted
+
+static func run(t: Node) -> void:
+	seed(777)
+	var detached := Node3D.new()
+	t.assert_true(preload("res://scripts/3d/elements/shrapnel_burst.gd").spawn_bounds(detached, AABB(), Color.GRAY) == null, "detached destruction safely skips visuals")
+	t.assert_true(preload("res://scripts/3d/elements/hazard_blast.gd").show_flash(detached, 4.0) == null, "detached trap safely skips visuals")
+	detached.free()
+	var parent := Node3D.new()
+	t.add_child(parent)
+	parent.position = Vector3(10, 3, -5)
+	parent.scale = Vector3(2, 2, 2)
+	var source := Node3D.new()
+	parent.add_child(source)
+	source.position = Vector3(2, 0, 1)
+	var blast = preload("res://scripts/3d/elements/hazard_blast.gd").show_flash(source, 4.0)
+	t.assert_eq(blast.global_position, source.global_position, "blast uses gameplay origin under transformed parent")
+	t.assert_almost_eq(blast.global_basis.get_scale().x, 1.0, 0.001, "blast radius is in world units")
+	t.assert_almost_eq(blast.get_child(0).mesh.radius, 4.0, 0.001, "blast matches gameplay radius")
+	var burst = preload("res://scripts/3d/elements/shrapnel_burst.gd").spawn_bounds(source, AABB(Vector3(-3, 0, -0.3), Vector3(6, 2, 0.6)), Color.GRAY)
+	t.assert_eq(burst.global_transform, source.global_transform, "break effect preserves source transform")
+	t.assert_eq(burst._shards.size(), 18, "wall burst has bounded shard count")
+	var bounds := AABB(Vector3(-3, 0, -0.3), Vector3(6, 2, 0.6))
+	var contained := true
+	for shard in burst._shards:
+		contained = contained and bounds.has_point(shard.node.position)
+		contained = contained and shard.node.mesh.size.length() < 1.0
+	t.assert_true(contained, "small debris starts throughout the model bounds")
+	burst._process(0.7)
+	t.assert_true(burst.is_queued_for_deletion(), "destruction effect has bounded lifetime")
+	var feedback = preload("res://scripts/3d/enemies/enemy_status_effects.gd").new()
+	parent.add_child(feedback)
+	feedback.sync([{"type": "burn"}])
+	t.assert_true(feedback.fire.visible and feedback.fire.emitting, "burn emits visible flames")
+	feedback.sync([{"type": "stun"}])
+	t.assert_true(not feedback.fire.visible and not feedback.fire.emitting, "burn clears immediately with another status active")
+	parent.free()

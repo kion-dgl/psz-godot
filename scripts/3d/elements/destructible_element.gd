@@ -23,6 +23,15 @@ var hurtbox: Hurtbox
 var _reticle: Node3D
 
 
+func _spawn_break_effect(tint: Color) -> void:
+	var bounds := AABB(Vector3(-collision_size.x * 0.5, 0, -collision_size.z * 0.5), collision_size)
+	if model:
+		var measured := model.transform * AreaObjects.model_extents(model)
+		if measured.size.length_squared() > 0.0:
+			bounds = measured
+	preload("res://scripts/3d/elements/shrapnel_burst.gd").spawn_bounds(self, bounds, tint)
+
+
 func _setup_reticle(y_offset: float) -> void:
 	_reticle = TargetReticle.build(y_offset)
 	add_child(_reticle)
