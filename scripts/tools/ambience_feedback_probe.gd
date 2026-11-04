@@ -27,7 +27,13 @@ func _run() -> void:
 	get_tree().quit(0 if _ok else 1)
 
 func _city() -> void:
-	var market := preload("res://assets/stages/city_e/market/dairon3.glb").instantiate()
+	# Binary stage assets are downloaded for this rendered probe, but absent
+	# in CI's asset-free script-parse pass. Load them only when the probe runs.
+	var market_scene := load("res://assets/stages/city_e/market/dairon3.glb") as PackedScene
+	if market_scene == null:
+		_check(false, "downloaded market asset is available")
+		return
+	var market := market_scene.instantiate()
 	add_child(market)
 	camera.position = Vector3(0, 14, 49)
 	camera.look_at(Vector3(0, 0, 30))
