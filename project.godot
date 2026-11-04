@@ -50,6 +50,8 @@ gdscript/warnings/unused_private_class_variable=1
 
 [autoload]
 
+VideoSettings="*res://scripts/autoloads/video_settings.gd"
+
 GameState="*res://scripts/autoloads/game_state.gd"
 ItemRegistry="*res://scripts/autoloads/item_registry.gd"
 WeaponRegistry="*res://scripts/autoloads/weapon_registry.gd"
@@ -104,6 +106,7 @@ export/convert_text_resources_to_binary=false
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 ; 4 = SCREEN_SENSOR_LANDSCAPE: allow BOTH landscape orientations and let the
 ; device sensor pick based on how the phone is held (Android screenOrientation
 ; "sensorLandscape"). Default 0 (SCREEN_LANDSCAPE) locks to one side. Never

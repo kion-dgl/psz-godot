@@ -385,6 +385,12 @@ func _input_options(event: InputEvent) -> bool:
 			# the plain ON/OFF toggles it earns a Left arm to step backwards.
 			CrtFilter.cycle(-1)
 			return true
+		elif _c._options_idx == 8:
+			VideoSettings.cycle_aspect(-1)
+			return true
+		elif _c._options_idx == 9:
+			VideoSettings.cycle_scale(-1)
+			return true
 		# (Controls: Reconfigure at idx 2 is action-only — Left/Right is a no-op.)
 	elif event.is_action_pressed("ui_right", false):
 		if _c._options_idx == 0:
@@ -395,6 +401,12 @@ func _input_options(event: InputEvent) -> bool:
 			return true
 		elif _c._options_idx == 7:
 			CrtFilter.cycle(1)
+			return true
+		elif _c._options_idx == 8:
+			VideoSettings.cycle_aspect(1)
+			return true
+		elif _c._options_idx == 9:
+			VideoSettings.cycle_scale(1)
 			return true
 	elif event.is_action_pressed("ui_accept"):
 		_c._toggle_option(_c._options_idx)
