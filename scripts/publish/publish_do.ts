@@ -76,6 +76,7 @@ function formatBytes(n: number): string {
 
 function buildPack(): { hex: string; size: number } {
   mkdirSync(DIST_DIR, { recursive: true });
+  execSync("python3 scripts/tools/vrm/check_policy.py --assets", { cwd: REPO_ROOT, stdio: "inherit" });
   // Must run before the export so assets/uid_map.json lands in the pack (#539).
   execSync("python3 scripts/tools/gen_uid_map.py", { cwd: REPO_ROOT, stdio: "inherit" });
   const cmd = `godot --headless --path . --export-pack "${PRESET_NAME}" ${PCK_OUT}`;

@@ -86,6 +86,7 @@ function parseArgs(): CliArgs {
 function contentTypeFor(path: string): string {
   const ext = path.slice(path.lastIndexOf(".")).toLowerCase();
   switch (ext) {
+    case ".vrm":
     case ".glb": return "model/gltf-binary";
     case ".gltf": return "model/gltf+json";
     case ".png": return "image/png";

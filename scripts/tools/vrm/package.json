@@ -1,0 +1,11 @@
+{
+  "name": "psz-humar-vrm-validation",
+  "private": true,
+  "type": "module",
+  "scripts": { "validate": "node validate_humar.mjs" },
+  "devDependencies": {
+    "@pixiv/three-vrm": "3.5.5",
+    "gltf-validator": "2.0.0-dev.3.10",
+    "three": "0.187.0"
+  }
+}

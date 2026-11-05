@@ -868,19 +868,13 @@ func _resolve_footstep_clip() -> String:
 func _load_character_model() -> void:
 	var character = CharacterManager.get_active_character()
 	if character == null:
-		# No active character — use default texture on existing model
-		_apply_player_texture_from_path(DEFAULT_TEXTURE_PATH)
-		return
-
+		character = {"class_id": "humar", "appearance": {}}
 	var paths: Dictionary = PlayerConfig.get_paths_for_character(character)
-	var model_path: String = paths["model_path"]
 	var texture_path: String = paths["texture_path"]
-
-	# Swap model if different from default pc_000
-	if ResourceLoader.exists(model_path):
-		_swap_model(model_path)
-	else:
-		push_warning("[Player] Model not found: %s, using default" % model_path)
+	var avatar := preload("res://scripts/3d/player/player_avatar.gd").instantiate(paths["model_path"])
+	if avatar == null:
+		return
+	_install_character_model(avatar)
 
 	# Apply texture
 	if ResourceLoader.exists(texture_path):
@@ -897,23 +891,15 @@ func _load_character_model() -> void:
 			_apply_player_texture_from_path(DEFAULT_TEXTURE_PATH)
 
 
-func _swap_model(model_path: String) -> void:
+func _install_character_model(new_model: Node3D) -> void:
 	var model_node := $PlayerModel/Model
 	if model_node:
 		model_node.get_parent().remove_child(model_node)
 		model_node.free()
-
-	var packed: PackedScene = load(model_path) as PackedScene
-	if packed == null:
-		push_warning("[Player] Failed to load model: " + model_path)
-		return
-
-	var new_model := packed.instantiate() as Node3D
 	new_model.name = "Model"
 	$PlayerModel.add_child(new_model)
 	# Move Model before Animations to maintain child order
 	$PlayerModel.move_child(new_model, 0)
-	print("[Player] Loaded model: %s" % model_path)
 
 
 func _apply_player_texture_from_path(texture_path: String) -> void:

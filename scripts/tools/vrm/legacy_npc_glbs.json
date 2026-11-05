@@ -1,0 +1,27 @@
+{
+  "reason": "Existing NPC models and animation libraries only. Remove entries as NPCs migrate; do not add new human model exceptions.",
+  "paths": [
+    "res://assets/npcs/cowgirl/cowgirl_hybrid.glb",
+    "res://assets/npcs/dorn/dorn.glb",
+    "res://assets/npcs/dr_carlo/dr_carlo.glb",
+    "res://assets/npcs/elio/elio.glb",
+    "res://assets/npcs/fern/fern.glb",
+    "res://assets/npcs/item_shop/item_shop_anims.glb",
+    "res://assets/npcs/item_shop/npc_idles_vrm.glb",
+    "res://assets/npcs/item_shop/vrma_anims.glb",
+    "res://assets/npcs/kai/pc_a01_000.glb",
+    "res://assets/npcs/mira/mira.glb",
+    "res://assets/npcs/np_000_00_0/np_000_00_0.glb",
+    "res://assets/npcs/np_001_00_0/np_001_00_0.glb",
+    "res://assets/npcs/np_002_00_0/np_002_00_0.glb",
+    "res://assets/npcs/np_003_00_0/np_003_00_0.glb",
+    "res://assets/npcs/np_004_00_0/np_004_00_0.glb",
+    "res://assets/npcs/np_009_00_0/np_009_00_0.glb",
+    "res://assets/npcs/np_017_00_0/np_017_00_0.glb",
+    "res://assets/npcs/np_018_00_0/np_018_00_0.glb",
+    "res://assets/npcs/principal/principal.glb",
+    "res://assets/npcs/ren/ren.glb",
+    "res://assets/npcs/sarisa/pc_a00_000.glb",
+    "res://assets/npcs/vash/vash.glb"
+  ]
+}
