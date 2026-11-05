@@ -1250,7 +1250,7 @@
       "archetype": "simple_melee",
       "stats": {
         "move_speed": 3.0,
-        "attack_range": 2.0,
+        "attack_range": 1.5,
         "attack_cooldown": 1.5,
         "detection_range": 15.0,
         "attack_base": 10
@@ -1263,11 +1263,11 @@
           "windup_frac": 0.35,
           "damage_end_frac": 0.6,
           "hit_half_angle_deg": 45.0,
-          "hit_reach": 2.0,
+          "hit_reach": 1.2,
           "damage_mult": 1.0,
           "weight": 1.0,
           "min_range": 0.0,
-          "max_range": 2.0
+          "max_range": 1.5
         }
       ]
     },

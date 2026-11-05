@@ -84,7 +84,7 @@
       "area": "Combat",
       "grade": "C",
       "assessment": "Basic mechanics exist; lock-on and better enemy behavior are still needed.",
-      "next": "Specify lock-on, validate enemy families and review attack rhythm, hit alignment and recovery in play. Playtest the shorter, model-sized box and wall destruction bursts.",
+      "next": "Implement lock-on (#775) and continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts.",
       "label": "score:combat"
     },
     {

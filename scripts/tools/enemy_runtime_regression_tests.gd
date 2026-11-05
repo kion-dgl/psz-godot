@@ -139,10 +139,13 @@ static func _test_freeze(r: Node) -> void:
 	p._start_dodge()
 	r.assert_true(p.current_state != p.PlayerState.DODGING,"freeze blocks dodge")
 	p._freeze.tick(p,2.1)
+	p._tick_hit_invulnerability(2.1)
 	r.assert_eq(p._freeze.remaining,0.0,"freeze expires")
 	p.take_technique_hit(1,"gibarta",0.0)
+	p._tick_hit_invulnerability(0.5)
 	p.take_damage(1)
 	r.assert_eq(p._freeze.remaining,0.0,"later damage breaks freeze")
+	p._tick_hit_invulnerability(0.5)
 	p.current_state = p.PlayerState.DODGING
 	p.dodge_timer = 0.0
 	var hp: int = GameState.hp

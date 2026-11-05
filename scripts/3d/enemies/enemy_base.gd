@@ -190,6 +190,8 @@ var _detection_range: float = 15.0
 ## Stuck detection — try perpendicular direction when blocked
 var _stuck_time: float = 0.0
 var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
+var _detour_left := 0.0
+var _detour_direction := Vector3.ZERO
 const STUCK_THRESHOLD := 0.2  # Seconds blocked before trying alternate direction
 
 ## Status effects
@@ -267,6 +269,7 @@ var _sound_playback: EnemySoundPlayback
 func _ready() -> void:
 	add_to_group("enemies")
 	set_collision_mask_value(2, true)  # Enable player layer collision (preserve other mask bits)
+	set_collision_mask_value(4, true)  # Other enemies are solid bodies, too (#773).
 	_setup_from_data()
 	_setup_model()
 	_setup_sound_playback()
@@ -294,8 +297,16 @@ func _ready() -> void:
 
 	if dormant:
 		visible = false
+		_set_body_enabled(false)
 		if hurtbox:
 			hurtbox.set_deferred("monitorable", false)
+
+
+## Only physical body shapes; combat hurtboxes have their own lifecycle.
+func _set_body_enabled(enabled: bool) -> void:
+	for child in get_children():
+		if child is CollisionShape3D:
+			child.set_deferred("disabled", not enabled)
 
 
 func _setup_from_data() -> void:
@@ -560,12 +571,14 @@ func _physics_process(delta: float) -> void:
 			_process_hurt(delta)
 
 	FrameProfiler.mark("enemy_move_slide")
+	_apply_obstacle_detour(delta)
 	var pos_before := global_position
+	var intended_velocity := velocity
 	move_and_slide()
 
 	# Stuck detection: if we tried to move but barely displaced, try going around
 	if current_state == EnemyState.CHASING:
-		_detect_stuck_movement(pos_before, delta)
+		_detect_stuck_movement(pos_before, intended_velocity, delta)
 
 	# Safety: if enemy ends up over empty space, stop horizontal movement
 	if (velocity.x * velocity.x + velocity.z * velocity.z) > 0.001:
@@ -866,6 +879,9 @@ func _chase_baseline(dist: float, attack_range: float) -> void:
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
 		_face_direction(direction)
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 
 ## Quadruped arc-circler (fsm.ts:689-725): circles on an arc (wlk_l/wlk_r by side) and
@@ -1840,6 +1856,7 @@ func _die() -> void:
 	_update_status_visuals()
 	_restore_charge_model()
 	is_alive = false
+	_set_body_enabled(false)
 	is_attacking = false
 	_vulnerable_mult = 1.0
 	current_state = EnemyState.DEAD
@@ -2078,6 +2095,7 @@ func reveal(delay: float = 0.0) -> void:
 			return
 	dormant = false
 	visible = true
+	_set_body_enabled(true)
 	if hurtbox:
 		hurtbox.set_deferred("monitorable", true)
 	_spawn_lock = SPAWN_LOCK_SEC
@@ -2192,13 +2210,35 @@ func hide_reticle() -> void:
 		_reticle.visible = false
 
 
-## Stuck-avoidance (CHASING only, after move_and_slide): displacement stalling below
-## the attempted speed steers perpendicular around the obstacle, flipping the side if
-## still stuck after three thresholds.
-func _detect_stuck_movement(pos_before: Vector3, delta: float) -> void:
-	var attempted_speed := Vector2(velocity.x, velocity.z).length()
+## Apply after AI chooses velocity, BEFORE movement: otherwise the next chase
+## update overwrites the escape direction without ever moving along it.
+func _apply_obstacle_detour(delta: float) -> void:
+	if current_state != EnemyState.CHASING:
+		_detour_left = 0.0
+		_stuck_time = 0.0
+		return
+	if _detour_left <= 0.0:
+		return
+	_detour_left = maxf(0.0, _detour_left - delta)
+	var speed := Vector2(velocity.x, velocity.z).length()
+	if speed <= 0.5:
+		return
+	# Lift only the query slightly to exclude floor-contact recovery. Actual
+	# movement stays grounded and still goes through move_and_slide.
+	if not _can_move_to(_detour_direction) or test_move(global_transform.translated(Vector3.UP * 0.05), _detour_direction * 0.3):
+		_detour_left = 0.0
+		_stuck_side *= -1.0
+		return
+	velocity.x = _detour_direction.x * speed
+	velocity.z = _detour_direction.z * speed
+
+
+## move_and_slide modifies velocity on contact. Measure the original intent,
+## not the resulting zero/sliding velocity, to detect an actual obstruction.
+func _detect_stuck_movement(pos_before: Vector3, intended_velocity: Vector3, delta: float) -> void:
+	var attempted_speed := Vector2(intended_velocity.x, intended_velocity.z).length()
 	var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
-	if attempted_speed <= 0.5 or actual_disp >= delta * 0.5:
+	if attempted_speed <= 0.5 or actual_disp >= delta * attempted_speed * 0.25:
 		_stuck_time = 0.0
 		return
 	_stuck_time += delta
@@ -2206,11 +2246,21 @@ func _detect_stuck_movement(pos_before: Vector3, delta: float) -> void:
 		var to_target := (target.global_position - global_position)
 		var dir := Vector3(to_target.x, 0, to_target.z).normalized()
 		var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
-		velocity.x = perp.x * attempted_speed * 0.7
-		velocity.z = perp.z * attempted_speed * 0.7
-		if _stuck_time > STUCK_THRESHOLD * 3:
-			_stuck_side *= -1.0
-			_stuck_time = STUCK_THRESHOLD
+		# Follow the blocking face, not a target-relative tangent that can point
+		# back into a box and alternate sides before clearing its corner.
+		for i in range(get_slide_collision_count()):
+			var normal := get_slide_collision(i).get_normal()
+			if absf(normal.y) < 0.5:
+				perp = Vector3(-normal.z, 0, normal.x).normalized() * _stuck_side
+				break
+		for candidate in [perp, -perp]:
+			if candidate.length_squared() > 0.5 and _can_move_to(candidate) and not test_move(global_transform.translated(Vector3.UP * 0.05), candidate * 0.3):
+				if candidate.dot(perp) < 0.0:
+					_stuck_side *= -1.0
+				_detour_direction = candidate
+				_detour_left = 0.6
+				_stuck_time = 0.0
+				return
 
 
 # ── Status Effects ──────────────────────────────────────────────────────────

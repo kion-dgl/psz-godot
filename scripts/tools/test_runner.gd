@@ -38,6 +38,7 @@ func _ready() -> void:
 # Player state machine + combat: states, commitment, combos, damage math,
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
+	preload("res://scripts/tools/player_hit_recovery_tests.gd").run(self)
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)
 	test_player_states()
@@ -2952,6 +2953,7 @@ func test_player_states() -> void:
 	assert_eq(p.current_state, states["DAMAGED"], "any hit interrupts the roll (DODGING → DAMAGED)")
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
+	p._tick_hit_invulnerability(0.5)  # Independent hit after recovery.
 	p.dodge_timer = 0.9  # deep in the get-up frames
 	p.take_damage(25)  # heavy hit
 	assert_eq(GameState.hp, hp_full - 25, "get-up frames take damage")
@@ -3186,6 +3188,7 @@ func test_action_commitment() -> void:
 	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
 	GameState.set_hp(GameState.max_hp)
 	p.current_state = states["DODGING"]
+	p._tick_hit_invulnerability(0.5)  # Independent hit after recovery.
 	p.dodge_timer = 0.5  # get-up frames — damageable, no dodge immunity
 	p.take_damage(25)  # heavy hit
 	assert_eq(p.current_state, states["DOWN"], "damage interrupts a roll (DODGING → DOWN)")
@@ -3200,6 +3203,7 @@ func test_action_commitment() -> void:
 	p.transition_to(states["ATTACKING"])
 	hb.activate()
 	hb._hit_targets.append(p)  # simulate a landed hit ("stored" target slot)
+	p._tick_hit_invulnerability(0.5)  # Independent damage-interrupt case.
 	p.take_damage(15)
 	assert_true(not hb.monitoring, "damage interrupt deactivates the attack hitbox (#428)")
 	assert_eq(hb._hit_targets.size(), 0, "deactivation clears stored hits — no carry-over (#428)")

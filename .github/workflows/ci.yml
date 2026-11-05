@@ -87,6 +87,13 @@ jobs:
           grep -q '\[combat-fidelity\] DONE ok' /tmp/combat-probe.log
           ! grep -q 'SCRIPT ERROR' /tmp/combat-probe.log
 
+      - name: Enemy body collision probe
+        run: |
+          set -o pipefail
+          godot --headless --path . --quit-after 2400 res://scripts/tools/enemy_collision_probe.tscn 2>&1 | tee /tmp/enemy-collision.log
+          grep -q '\[enemy-collision\] DONE failures=0' /tmp/enemy-collision.log
+          ! grep -q 'ERROR:' /tmp/enemy-collision.log
+
       - name: Free-field layout tests
         # Invariant check for the RE-measured Valley free field + Reyburn data
         # (issues #562/#563, spec /states/free-field): trees, door/rotation
