@@ -39,6 +39,14 @@ func _init(controller) -> void:
 ##   v1 (reference): { "south": "portal_id_xxx" } — looks up position from stage config
 ##   legacy (baked): { "south": { "gate": [...], "spawn": [...], ... } } — uses inline positions
 func _parse_baked_portals(baked: Dictionary) -> Dictionary:
+	# Older retained fields baked the Valley B entrance IDs under reversed keys.
+	# Rebuild this room's references from the corrected stage directions, keeping
+	# its grid rotation/connections and the authored physical gate geometry.
+	if str(_c._current_cell.get("stage_id", "")) == "s01b_sa1":
+		baked = {}
+		for portal in _c._stage_config.get("portals", []):
+			var direction := StageRotation.rotate_dir(str(portal.direction), _c._rotation_deg)
+			baked[direction] = str(portal.id)
 	var result := {}
 	# Build a lookup from portal_id → config portal for v1 references
 	var config_portals_by_id := {}

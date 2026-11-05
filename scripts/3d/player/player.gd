@@ -180,6 +180,10 @@ var walk_timer: float = 0.0
 # clears it after the particle phase; city arrival spawns a fresh Player.
 var _is_defeated: bool = false
 var _recovery_left := 0.0
+## Playtest tuning: a landed impact briefly protects against crowd multi-hits.
+## Separate from revive recovery and dodge; poison/burn ticks bypass it.
+const HIT_INVULNERABILITY_DURATION := 0.5
+var _hit_invulnerability_left := 0.0
 var _revival = preload("res://scripts/3d/player/player_revival.gd").new()
 var _ailments = preload("res://scripts/3d/player/player_ailments.gd").new()
 var _freeze = preload("res://scripts/3d/player/player_freeze.gd").new()
@@ -199,6 +203,7 @@ var _attack_anim_length: float = 0.0  # Current attack animation duration
 var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
 var _attack_hit_done: bool = false  # Window closed, target cap consumed, or volley released.
+var _attack_hit_step: int = 0  # Index into the original timing's hit_fracs for this swing.
 var _attack_hit_targets: Dictionary = {}  # Enemy instance IDs consumed across this swing.
 var _attack_damage_snapshot: Dictionary = {}  # One damage roll per swing, independent of scan rate.
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
@@ -275,24 +280,47 @@ const RACAST_CLASSES := ["racast", "racaseal"]
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
-# Per-dodge cache of the active animation's length and the timestamp the
-# move phase ends (= length × DODGE_MOVE_FRACTION). Recomputed at every
-# _start_dodge so each weapon's own _esc_f duration is respected.
-var dodge_anim_duration: float = 0.0
-var dodge_move_end: float = 0.0
-const DODGE_DURATION: float = 0.8
-const DODGE_SPEED: float = 7.0
-# Invincibility window from roll start (spec /mechanics/dodge, #377):
-# fixed ≈11 frames for every weapon — deliberately NOT the whole move
-# phase, so a poorly-timed roll is a punish. The rest of the roll and
-# the recovery are vulnerable, and a hit there interrupts the dodge.
-const DODGE_IFRAME_DURATION: float = 0.2
-# Fraction of the dodge animation during which we apply velocity. The
-# remaining (1 - fraction) is the recovery — the character lands in a
-# crouch and stands up. Sliding through that recovery looked wrong, so
-# we cut velocity at this boundary while staying in DODGING so the
-# animation finishes naturally.
-const DODGE_MOVE_FRACTION: float = 0.7
+# ROM dodge action (spec /mechanics/dodge): a 41-frame @30fps committed roll
+# whose displacement follows the original root-motion curve — burst, a
+# ~1085 Q12/frame plateau, decay, settle-back; total travel 17901 Q12 ≈ 4.37 u.
+# The extracted `_esc_f` clips cover only the 20-frame roll half, so the
+# gameplay window deliberately outlives the clip (roll → get-up).
+const DODGE_FRAMES: int = 41
+const DODGE_DURATION: float = DODGE_FRAMES / 30.0
+# Body-contact pass-through from roll start: the ROM's dodge sets a 10-frame
+# flag that disables body contact — the roll passes through enemies and push
+# bodies. It grants NO damage immunity: the ROM's hit-reaction gate excludes
+# the knockdown/dead states, not the dodge, so every frame of the roll is
+# damageable and interruptible.
+const DODGE_PASS_THROUGH: float = 10.0 / 30.0
+# Admission gates: a press is rejected within 10 frames of the previous
+# admission (the tick gate — it only bites after a damage-interrupted roll)
+# and during the 15-frame spawn warmup.
+const DODGE_ADMISSION_COOLDOWN: float = 10.0 / 30.0
+const DODGE_SPAWN_WARMUP: float = 15.0 / 30.0
+var dodge_cooldown: float = 0.0
+# One run-speed step (Q12) applied on the admission frame when the dodge is
+# admitted from RUNNING — the ROM's motion integrate consumes the carried run
+# speed in the dodge direction once before clearing it.
+var _dodge_run_seed: float = 0.0
+# Per-frame XZ displacement (Q12, dodge-local: +z = dodge heading, +x = right)
+# — the ROM replay's drawn-root trace. Embedded because the shipped pack
+# carries no data/ tree (the export excludes it; re_reference JSONs are audit
+# sources, not runtime assets). Regenerate from
+# data/re_reference/player_dodge_motion.json (dump_player_dodge_motion.py);
+# test_runner pins the constant against that file.
+const DODGE_MOTION_CURVE: PackedVector2Array = [
+	Vector2(0, 0), Vector2(131, 138), Vector2(132, 677), Vector2(-22, 2490),
+	Vector2(-22, 2629), Vector2(-20, 1480), Vector2(-20, 1125), Vector2(-20, 1085),
+	Vector2(-19, 1085), Vector2(-12, 1077), Vector2(-12, 1265), Vector2(-2, 1190),
+	Vector2(-2, 883), Vector2(15, 686), Vector2(15, 580), Vector2(27, 502),
+	Vector2(28, 402), Vector2(38, 329), Vector2(38, 282), Vector2(26, 209),
+	Vector2(27, 112), Vector2(3, 46), Vector2(4, 32), Vector2(0, 18),
+	Vector2(1, 8), Vector2(-3, -2), Vector2(-3, -9), Vector2(-8, -15),
+	Vector2(-8, -18), Vector2(-14, -19), Vector2(-13, -19), Vector2(-21, -22),
+	Vector2(-20, -29), Vector2(-28, -35), Vector2(-27, -40), Vector2(-32, -42),
+	Vector2(-31, -45), Vector2(-33, -45), Vector2(-32, -45), Vector2(-31, -44),
+]
 
 # Interaction system
 var interaction_area: Area3D
@@ -360,6 +388,10 @@ func _ready() -> void:
 
 	# Start in idle state
 	transition_to(PlayerState.IDLE)
+
+	# ROM spawn warmup: dodge admission is closed for the first 15 frames
+	# (spec /mechanics/dodge).
+	dodge_cooldown = DODGE_SPAWN_WARMUP
 
 
 func _setup_animations() -> void:
@@ -971,8 +1003,31 @@ func _process(delta: float) -> void:
 		_smooth_model_y(delta)
 
 
+var _dodge_body_exceptions: Array[PhysicsBody3D] = []
+
+
+## Keep the existing ten-frame dodge pass-through window when enemies are solid.
+## Exceptions are bilateral because either character can initiate movement.
+func _sync_dodge_body_collisions() -> void:
+	if not is_dodge_passing_through():
+		for body in _dodge_body_exceptions:
+			if is_instance_valid(body):
+				remove_collision_exception_with(body)
+				body.remove_collision_exception_with(self)
+		_dodge_body_exceptions.clear()
+		return
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy is PhysicsBody3D and enemy not in _dodge_body_exceptions:
+			add_collision_exception_with(enemy)
+			enemy.add_collision_exception_with(self)
+			_dodge_body_exceptions.append(enemy)
+
+
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
+	_tick_hit_invulnerability(delta)
+	if dodge_cooldown > 0.0:
+		dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
 	if _recovery_left > 0.0:
 		_recovery_left = maxf(0.0, _recovery_left - delta)
 		if _recovery_left <= 0.0 and current_state == PlayerState.DAMAGED:
@@ -998,6 +1053,7 @@ func _physics_process(delta: float) -> void:
 
 	var status_holds: bool = _ailments.tick(self, delta)
 	if _freeze.tick(self, delta) or status_holds:
+		_sync_dodge_body_collisions()
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
@@ -1018,6 +1074,7 @@ func _physics_process(delta: float) -> void:
 			velocity.z = 0
 
 	FrameProfiler.mark("player_move_slide")
+	_sync_dodge_body_collisions()
 	# Apply movement
 	move_and_slide()
 
@@ -1408,65 +1465,76 @@ func _start_dodge() -> void:
 	# calling transition_to directly.
 	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
-	# Store facing direction for dodge movement
-	dodge_direction = player_rotation
+	# ROM admission gates (spec /mechanics/dodge): the tick gate rejects a
+	# press within 10 frames of the previous admission — only reachable after
+	# a damage-interrupted roll, since a completed roll is 41 frames old.
+	if dodge_cooldown > 0.0:
+		return
+	# Dodge direction = the steering held entering the press frame: the current
+	# movement direction while running, the facing while idle. A direction
+	# pressed on the same frame does NOT redirect the roll (ROM replay
+	# simultaneous-turn case).
+	var held: Variant = _held_movement_yaw()
+	dodge_direction = float(held) if held != null else player_rotation
 	dodge_timer = 0.0
-	# Look up the active weapon's _esc_f length so the move phase scales
-	# to the actual clip (saber is 0.667s, others vary). Fall back to
-	# DODGE_DURATION if the animation isn't loaded for some reason —
-	# better to dodge a short distance than not at all.
-	var anim_name := _anim_prefix + "_esc_f"
-	if animation_player and animation_player.has_animation(anim_name):
-		dodge_anim_duration = animation_player.get_animation(anim_name).length
-	else:
-		dodge_anim_duration = DODGE_DURATION
-	dodge_move_end = dodge_anim_duration * DODGE_MOVE_FRACTION
+	dodge_cooldown = DODGE_ADMISSION_COOLDOWN
+	_dodge_run_seed = (MOVE_SPEED / 30.0) * 4096.0 if current_state == PlayerState.RUNNING else 0.0
 	transition_to(PlayerState.DODGING)
 
 
 func _handle_dodge(delta: float) -> void:
 	dodge_timer += delta
 
+	# Completion (frame 41): the action ends, idle/run attaches with no blend,
+	# and the logical position rides the body (the curve's settle-back already
+	# delivered the final root).
 	if dodge_timer >= DODGE_DURATION:
 		velocity.x = 0
 		velocity.z = 0
 		transition_to(PlayerState.IDLE)
 		return
 
-	# Recovery phase (last 1 - DODGE_MOVE_FRACTION of the clip): the
-	# character lands in a crouch and stands up. Stay in DODGING so the
-	# animation keeps playing, but stop applying velocity — sliding
-	# through the crouch+rise while no foot motion is visible looked
-	# bad. animation_finished will transition us to IDLE when the clip
-	# actually completes.
-	if dodge_timer >= dodge_move_end:
-		velocity.x = 0
-		velocity.z = 0
-		return
+	# ROM displacement curve (spec /mechanics/dodge): per-frame XZ delta in the
+	# dodge-local frame, rotated into the world by the dodge heading. Frame 0 is
+	# the admission frame — static in the curve; when admitted from RUNNING the
+	# ROM's motion integrate applies the carried run speed once in the dodge
+	# direction before clearing it, so seed that step here.
+	var frame := int(dodge_timer * 30.0)
+	var local := _dodge_curve_delta(frame)
+	if frame == 0 and _dodge_run_seed > 0.0:
+		local += Vector2(0.0, _dodge_run_seed)
+	var world := Vector3(
+		local.x * cos(dodge_direction) + local.y * sin(dodge_direction), 0.0,
+		-local.x * sin(dodge_direction) + local.y * cos(dodge_direction)) / 4096.0
 
-	# Move in the direction player was facing when dodge started
-	var dodge_dir := Vector3(sin(dodge_direction), 0, cos(dodge_direction))
-
-	# Check floor ahead - stop at edges to prevent dodging off
-	if _can_move_to(dodge_dir):
-		velocity.x = dodge_dir.x * DODGE_SPEED
-		velocity.z = dodge_dir.z * DODGE_SPEED
+	# The roll stops at floor edges (ROM root-floor reconciliation restores the
+	# last on-floor root); with the curve the equivalent is zeroing the step.
+	if world.length() > 0.0001 and _can_move_to(world.normalized()):
+		velocity.x = world.x / delta
+		velocity.z = world.z / delta
 	else:
 		velocity.x = 0
 		velocity.z = 0
 
 
+## One frame of the ROM dodge displacement curve (dodge-local, Q12). Frames
+## past the table's tail are the already-settled get-up — no displacement.
+func _dodge_curve_delta(frame: int) -> Vector2:
+	if frame < 0 or frame >= DODGE_MOTION_CURVE.size():
+		return Vector2.ZERO
+	return DODGE_MOTION_CURVE[frame]
+
+
 # The PSO dodge animations (e.g. pmsa_esc_f) have ~4m of root-bone Z
-# translation baked in that does NOT return to zero by the final frame
-# (z≈4.36 at end of pmsa_esc_f). The game already drives the CharacterBody3D
-# forward via gameplay velocity (DODGE_SPEED × DODGE_DURATION = ~4m), so the
-# animation root motion compounded with that. Worse, the wait animation has
-# no root translation track, so when the AnimationPlayer transitions from
-# _esc_f → _wait the root bone snapped from z=4.36 back to rest pose at 0,
+# translation baked in (z≈4.36 at end of pmsa_esc_f — the ROM curve's total
+# travel). The dodge displacement is driven by the ROM per-frame curve
+# (spec /mechanics/dodge), so the baked root motion would compound with it,
+# and the wait animation has no root translation track, so on the
+# _esc_f → _wait transition the root bone would snap from z=4.36 back to rest,
 # producing a large visible slide at the end of the roll. Stripping the
 # 000_Root translation track at load time leaves the rest of the animation
-# (limb poses, hip drop, body curl) intact, while letting velocity be the
-# sole source of horizontal motion.
+# (limb poses, hip drop, body curl) intact, while the curve is the sole
+# source of horizontal motion.
 func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> void:
 	var target_path := "%s:000_Root" % skeleton_name
 	for i in range(anim.get_track_count() - 1, -1, -1):
@@ -1529,7 +1597,12 @@ func _try_queue_combo(special: bool) -> void:
 	if t.is_empty():
 		return
 	var frac := _attack_frac()
-	if frac >= float(t.just_start):
+	var window := _chain_window(t)
+	var open := window[0]
+	var close := window[1]
+	if close >= 0.0 and frac > close:
+		return
+	if frac >= open:
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
 		_queued_combo_yaw = _held_movement_yaw()
@@ -2216,11 +2289,28 @@ func _handle_attack_state(delta: float) -> void:
 
 ## Melee retries until close/cap; ranged keeps one release. A skipped window
 ## gets one current-position scan so slow frames do not erase the whole swing.
+## With original timing data (original_timing_steps), damage instead fires at
+## each decoded HIT FRAME — multi-hit swings (dagger atk1's two impacts,
+## atk3's three) land every one, at the original's frame-exact moments.
 func _update_attack_contact(previous_elapsed: float) -> void:
 	if current_state != PlayerState.ATTACKING or _attack_hit_done or combo_state <= 0 or _attack_anim_length <= 0:
 		return
 	var weapon_type := _get_equipped_weapon_type()
 	var config := CombatManager.get_weapon_type_config(weapon_type)
+	var timing_steps: Array = config.get("original_timing_steps", [])
+	if not timing_steps.is_empty():
+		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
+		var hit_fracs: Array = step.get("hit_fracs", [])
+		# An EMPTY hit list (slicer atk2/atk3, the thrown discs) means the
+		# damage rides the projectile, not a swing frame — take the legacy
+		# window path for those rather than ending the swing with no hit.
+		while not hit_fracs.is_empty() and _attack_hit_step < hit_fracs.size() \
+				and _attack_anim_elapsed >= float(hit_fracs[_attack_hit_step]) * _attack_anim_length:
+			_execute_attack_hit(true)
+			_attack_hit_step += 1
+		if not hit_fracs.is_empty():
+			_attack_hit_done = _attack_hit_step >= hit_fracs.size()
+			return
 	var openings: Array = config.get("damaging_frac", [0.4, 0.4, 0.45])
 	var index := clampi(combo_state - 1, 0, openings.size() - 1)
 	var opening := float(openings[index]) * _attack_anim_length
@@ -2329,6 +2419,7 @@ func _play_and_track_attack(anim_name: String) -> void:
 	_arm_attack_step(anim_name)
 	# Each new swing owns a fresh window and target budget.
 	_attack_hit_done = false
+	_attack_hit_step = 0
 	_attack_hit_targets.clear()
 	_attack_damage_snapshot.clear()
 	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
@@ -2367,6 +2458,18 @@ func _ensure_combo_ring() -> void:
 	add_child(_combo_ring)
 
 
+func _chain_window(timing: Dictionary) -> Array[float]:
+	var window: Array[float] = [float(timing.just_start), 1.0]
+	var steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
+	if not steps.is_empty():
+		var step: Dictionary = steps[clampi(combo_state - 1, 0, steps.size() - 1)]
+		if step.get("chain_open_frac") != null:
+			window[0] = float(step.chain_open_frac)
+		if step.get("chain_close_frac") != null:
+			window[1] = float(step.chain_close_frac)
+	return window
+
+
 func _update_combo_ring(_delta: float) -> void:
 	if not DebugConfig.show_combo_timing:
 		if _combo_ring:
@@ -2375,19 +2478,18 @@ func _update_combo_ring(_delta: float) -> void:
 
 	_ensure_combo_ring()
 
-	# Visualize the chain-accept window (#461): visible from just_start to the
-	# swing's end (a press here queues a normal chain; before it fumbles),
-	# green, shrinking toward animation end.
+	# Use the same effective accept window as input, including imported close.
 	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
 		t = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
 	var frac := _attack_frac()
-	if not t.is_empty() and frac >= float(t.just_start) and frac < 1.0:
+	var window := _chain_window(t) if not t.is_empty() else [0.0, 0.0]
+	if not t.is_empty() and frac >= window[0] and frac <= window[1]:
 		_combo_ring.visible = true
 		_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
 		# Shrink as the swing runs out
-		var pct: float = 1.0 - (frac - float(t.just_start)) / maxf(1.0 - float(t.just_start), 0.01)
+		var pct: float = 1.0 - (frac - window[0]) / maxf(window[1] - window[0], 0.01)
 		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
 		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
 		var accept_color := Color(0.2, 1.0, 0.4)
@@ -2626,7 +2728,10 @@ func play_animation(anim_name: String, _loop: bool = true) -> void:
 func _on_animation_finished(_anim_name: String) -> void:
 	match current_state:
 		PlayerState.DODGING:
-			transition_to(PlayerState.IDLE)
+			# The roll clip ends at frame ~20, but the committed action runs to
+			# frame 41 (ROM roll + get-up; the extracted clip set has no get-up
+			# asset) — hold the DODGING state; _handle_dodge completes it.
+			play_animation(_anim_prefix + "_wait", true)
 		PlayerState.ATTACKING:
 			# Step end: fire the queued chain or break the combo. Guarded so
 			# the elapsed-length safety net can't double-fire the same step.
@@ -2646,17 +2751,20 @@ func _on_animation_finished(_anim_name: String) -> void:
 				transition_to(PlayerState.DAMAGED)  # DAMAGED → IDLE when wake-up finishes
 
 
-## True during the dodge's invincible window — the shared test enemies use to know a
-## contact was dodged (charge stop_on_hit semantics, spec /mechanics/dodge).
-func is_dodge_iframed() -> bool:
-	return current_state == PlayerState.DODGING and dodge_timer < DODGE_IFRAME_DURATION
+## True during the dodge's pass-through window (spec /mechanics/dodge): the
+## first 10 frames disable body contact — charging enemies and push bodies
+## pass through the rolling player instead of registering a contact hit.
+## Damage is NOT blocked here; see take_damage — the original's hit-reaction
+## gate does not exclude the dodge state.
+func is_dodge_passing_through() -> bool:
+	return current_state == PlayerState.DODGING and dodge_timer < DODGE_PASS_THROUGH
 
 
 # Public API for external systems. `force_knockdown` maps an attack's knockdown flag
 # (spec /mechanics/enemy-attacks) to the knock-down reaction regardless of damage tier.
 ## Enemy technique contact: dodge/defeat guards cover both damage and status.
 func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1.0) -> void:
-	if not can_take_hit():
+	if not can_take_hit() or _hit_invulnerability_left > 0.0:
 		return
 	take_damage(damage)
 	var definition: Dictionary = TechniqueManager.get_technique(technique_id)
@@ -2665,8 +2773,14 @@ func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1
 		apply_status_effect("freeze")
 
 
+func _tick_hit_invulnerability(delta: float) -> void:
+	_hit_invulnerability_left = maxf(0.0, _hit_invulnerability_left - delta)
+
+
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
 	if DebugConfig.invincible or _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
+		return
+	if not status_tick and _hit_invulnerability_left > 0.0:
 		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
@@ -2680,14 +2794,14 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 	if current_state == PlayerState.DOWN and GameState.hp <= 0:
 		return
 
-	# Dodge i-frames (spec /mechanics/dodge): only the first
-	# DODGE_IFRAME_DURATION of the roll is invincible (#377 tightened this
-	# from the whole move phase); a hit after the window damages AND
-	# interrupts the roll like any other hit.
-	if is_dodge_iframed() and not status_tick:
-		return
+	# No dodge immunity (spec /mechanics/dodge, 2026-10 ROM correction): the
+	# original's hit-reaction gate excludes the knockdown/dead states, not the
+	# dodge — every frame of the roll is damageable and interrupts the action
+	# (DODGING → DAMAGED/DOWN via the shared paths below). The roll's safety is
+	# its displacement plus the 10-frame body pass-through, not i-frames.
 
 	if damage > 0 and not status_tick:
+		_hit_invulnerability_left = HIT_INVULNERABILITY_DURATION
 		_freeze.clear(self)
 	PhotonBlast.gain_damage(mini(maxi(damage, 0), GameState.hp), GameState.max_hp, true)
 	GameState.set_hp(GameState.hp - damage)
@@ -2797,10 +2911,14 @@ const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RI
 ## enemies in the weapon's hit cone — the same geometry targeting and the
 ## reticles use, applied directly through each enemy's Hurtbox (the old
 ## whole-swing Area3D box is retired for melee).
-func _execute_attack_hit() -> void:
+func _execute_attack_hit(single_impact: bool = false) -> void:
 	if _attack_damage_snapshot.is_empty():
 		_attack_damage_snapshot = _get_attack_damage()
 	var atk: Dictionary = _attack_damage_snapshot
+	if single_impact:
+		_attack_hit_targets.clear()
+		atk = atk.duplicate()
+		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
 	if weapon_type in RANGED_WEAPON_TYPES:
@@ -3186,9 +3304,10 @@ func _try_interact() -> void:
 			print("[Player] Interacted with: ", target.name)
 
 
-## One guard for hostile contact, ailments and recovery.
+## One guard for hostile contact, ailments and recovery. Dodging does NOT
+## gate hits (spec /mechanics/dodge) — it only passes contact through.
 func can_take_hit() -> bool:
-	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not is_dodge_iframed() and not PhotonBlast.is_presenting(self)
+	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not PhotonBlast.is_presenting(self)
 
 func apply_status_effect(kind: String) -> void:
 	_ailments.apply(self, kind)

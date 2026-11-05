@@ -40,7 +40,7 @@
       "area": "City",
       "grade": "B",
       "assessment": "Presentation exceeds the original in places, but some angles break down. Principal’s office needs a final pass.",
-      "next": "Inspect multiple camera angles and finish the principal’s office. Verify the Coliseum Master’s shared left-menu/right-NPC framing; grade unchanged.",
+      "next": "Inspect multiple camera angles and finish the principal’s office. Verify the Coliseum Master’s shared left-menu/right-NPC framing and playtest the drifting market cloud shadows and animated background crowd; grade unchanged.",
       "label": "score:city"
     },
     {
@@ -61,14 +61,14 @@
       "area": "Free roam",
       "grade": "B",
       "assessment": "Close to the original’s feature set; needs substantial playtesting and object-placement polish. Wetlands floors/routing can trap the player.",
-      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations.",
+      "next": "Fix Wetlands stuck routes, then test traps, objects and traversal across room variations. Valley native-mirror free roam is visually approved. Playtest the expanded field-stage rollout, including area lighting, glow masks and mipmapped materials; broader traversal remains pending.",
       "label": "score:free-roam"
     },
     {
       "area": "Traps",
       "grade": "B",
       "assessment": "Kion raises Traps from D to B after the PR #761 laptop playtest on 2026-10-13. Distinct trap meshes, corrected materials and layouts, tactical enemy statuses, cycling needle/poison plates, rescuable bear traps, visible ball arming and the Coliseum trap page provide a playable tested baseline.",
-      "next": "Refine balance and effects in field encounters. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
+      "next": "Blast and burn feedback are approved in #783; Kion approved #780 turret enemy targeting and spin/explosion behavior on 2026-11-05. Next, refine balance across field encounters. Original hostile radii, Light confusion, exact environmental timing/damage parity and the broader status/weapon-element audit remain open; intentional owner-directed remake behavior is documented in trap-validation.",
       "label": "score:traps",
       "reviewed_on": "2026-10-13"
     },
@@ -84,14 +84,14 @@
       "area": "Combat",
       "grade": "C",
       "assessment": "Basic mechanics exist; lock-on and better enemy behavior are still needed.",
-      "next": "Specify lock-on, validate enemy families and review attack rhythm, hit alignment and recovery in play.",
+      "next": "Implement lock-on (#775) and continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts.",
       "label": "score:combat"
     },
     {
       "area": "Systems",
       "grade": "C",
       "assessment": "Kion raises Systems from D to C after local Mac playtesting of PR #752 (6c2230c2 plus the playtest fixes committed in this PR) on 2026-10-11. Combat progression, inventory grinding with visible per-instance ATP and grind levels, dedicated Photon Blast activation and the segmented HUD gauge now support the core loop. The Coliseum exit blocker was reproduced and fixed with regression coverage; broader balance and fidelity work remain.",
-      "next": "Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Coliseum now exposes player/enemy levels, scaled HP previews and debug invincibility; verify hands-on tuning and controller use. Existing traversal defects remain separate follow-up work. Grade and assessment date unchanged.",
+      "next": "Playtest Equip → Sets (save/recall, bank retrieval, missing-item refusal, controller naming) and the EXP bar/level-up flash. Verify multi-area enemy levels and both death paths. Continue quest and free-roam playtesting after the Coliseum exit fix. Validate economy, class/EXP and enemy-level tuning, weapon specials/status fidelity, technique weapons and party Photon Blast behavior. Coliseum now exposes player/enemy levels, scaled HP previews and debug invincibility; verify hands-on tuning and controller use. Existing traversal defects remain separate follow-up work. Grade and assessment date unchanged.",
       "label": "score:systems",
       "reviewed_on": "2026-10-11"
     }

@@ -419,7 +419,7 @@
       "the straight-room rotation rule: rand(2) doubled, plus 1 when the room's doors run east/west rather than north/south",
       "the key shuffle being exactly two rand(2) swaps over the pair [0,1]"
     ],
-    "NOT_replayed": "placement. FUN_02083484 (the direction delta) and FUN_020833ac (how many children to spawn) are still unread, so the draws before the first seed cannot be reproduced and forward.py takes the room list as given rather than generating it. A seed-to-records replay of the WHOLE generator still needs those two.",
+    "NOT_replayed": "*** SUPERSEDED — placement IS now read. *** This field said 'FUN_02083484 (the direction delta) and FUN_020833ac (how many children to spawn) are still unread'. Both have since been read: FUN_02083484 makes NO draw at all (direction deltas are a pure lookup at 0x020f2ef8), and FUN_020833ac is a branch coin rand(a+b) against a plus an extra rand(100). The real draw consumers are the two SHUFFLES — the 4-draw direction bag per spawn, and FUN_02083590 on the growth queue at one draw per queued element. tools/genreplay.py replays placement forward and reproduces all five fields' edge sets. Left stale, this field caused the claim to be repeated to kion as an open item after it had been closed.",
     "variant_values_not_predicted": "the 30 variant draws are consumed but their values are not predicted, because FUN_02082628 filters candidates against the neighbours' (shape, class, digit) and the neighbours may not be transcribed yet. The draw COUNT is confirmed by everything downstream staying in phase."
   },
   "ordering_contradiction_RESOLVED": {
@@ -1461,5 +1461,294 @@
     },
     "WHAT_THIS_RETIRES": "three separate explanations, all of them symptoms of one wrong constant: my 'the shortfall is unspent budget', the 'cap near ten rooms' from the ten-field statistics, and the fitted 'stop at target-1' rule that reproduced three fields for the right count and the wrong reason. None of them was needed. The stopping rule is placed >= target, exactly as the disassembly reads.",
     "the_lesson": "the sim was tuned against its own wrong input for several iterations, and each round of tuning produced a plausible mechanism - a budget, a cap, an off-by-one - that fitted the discrepancy instead of removing it. The check that broke the loop was the one that used no fit at all: an adjacency invariant that had to hold, tested against data already on disk."
+  },
+  "THE_TWO_SHUFFLE_TEST_IS_RUN_AND_THE_ANSWER_IS_NO": {
+    "the_recorded_test": "the backlog recorded a three-way inconsistency and named the cheap decisive test: 'replay the internal order with TWO gen+0x60 shuffles and see whether the 8-room fields match that instead'. tools/genreplay.py already parameterised it — room_list_shuffle(extra) — so it cost one argument.",
+    "result": {
+      "1 shuffle": "5 of 5 fields reproduce the internal order (s01a, s01b, s02a, s03a, s05a)",
+      "2 shuffles": "0 of 5",
+      "3 shuffles": "0 of 5"
+    },
+    "so_the_extension_pass_did_not_run": "and the refutation is stronger than the test asked for. The question was whether the 8-room fields match under two shuffles; the answer is that under two shuffles NO field matches, including the three that are not 8 rooms. A second gen+0x60 shuffle is excluded outright rather than merely unsupported, so FUN_02082228 never ran in any of these five generations.",
+    "WHICH_RESOLVES_THE_INCONSISTENCY_BY_ELIMINATION": "the three propositions were (a) the internal order needs exactly one shuffle, (b) therefore placed >= target on the first pass, and (c) target = 10 + rand(3) >= 10 while placed is 8 in two fields. (a) is now confirmed against two alternatives, so (b) follows, so (c) is the one that must be wrong. That is exactly where the backlog had already pointed — 'what is wrong is the INPUTS to the target draw, not the loop' — and this converts that from the surviving guess into the only remaining option.",
+    "AND_THE_SEARCH_PINS_THE_EFFECTIVE_TARGET": "for every field the ONLY target value that reproduces the edge set equals that field's room count exactly: s01a 9, s01b 8, s02a 8, s03a 9, s05a 10. So the effective targets are 8, 8, 9, 9, 10. Against params[0] = 10 and params[1] = 13, which give 10 + rand(3) = 10..12, four of the five are below the minimum possible value. The target is not being drawn from those parameters for these stages.",
+    "what_to_read_next": "the target draw's inputs. Either params[0]/params[1] are not the pair feeding it, or they are per-stage and the values recorded came from a different stage's descriptor. The loop, the budget accounting and the placement draws are all validated and are not the problem."
+  },
+  "TARGET_DRAW_CONFIRMED_FROM_DISASSEMBLY": {
+    "why_it_needed_disassembly": "the decompiler emits the first draw as FUN_020832b4() with NO arguments, while the second pair's draw right below it gets (iVar3 - iVar5, iVar5, 0). So the target's RANGE was not visible in the C at all, and 'target = params[0] + rand(params[1] - params[0])' was an inference from the surrounding arithmetic rather than something read.",
+    "the_instructions": [
+      "02081eae  ldrsb r2,[r4,r1]   ; r2 = params[0], SIGNED byte",
+      "02081eb2  cmp r2,#0x2 / blt  ; params[0] < 2  -> force 10",
+      "02081eb8  ldrsb r0,[r4,r0]   ; r0 = params[1]",
+      "02081eba  cmp r2,r0  / bgt   ; params[0] > params[1] -> force 10",
+      "02081ebe  cmp r0,#0x14 / bge ; params[1] >= 20 -> force 10",
+      "02081ec2  sub r0,r0,r2       ; r0 = params[1] - params[0]  <-- THE RANGE",
+      "02081ec6  bl 0x020832b4      ; rand(r0)",
+      "02081ed0  add r1,r0,r1       ; params[0] + rand(range)"
+    ],
+    "verdict": "the recorded rule is CORRECT. sub r0,r0,r2 immediately precedes the branch-and-link, so r0 carries params[1] - params[0] into the draw. All three bound checks match what was recorded too. With the verified block params[0]=10, params[1]=13, the target is 10 + rand(3), i.e. exactly {10, 11, 12}, with no path to a smaller value short of the force-10 clause."
+  },
+  "*** RETRACTION — THE TWO-SHUFFLE TEST DID NOT SHOW WHAT I SAID IT SHOWED ***": {
+    "what_was_claimed": "the previous iteration ran genreplay with 2 and 3 gen+0x60 shuffles, got 0/5 against 5/5 for one shuffle, and concluded 'a second gen+0x60 shuffle is EXCLUDED rather than merely unsupported, so FUN_02082228 never ran in any of these five generations'.",
+    "why_it_is_invalid": "the test added a BARE extra shuffle and changed nothing else. The real extension path is not one extra draw. FUN_02081ea8 runs  if (actual < target) { FUN_02082228(gen); FUN_020821d0(gen); }  — so taking that branch adds the extension's OWN draws (FUN_020833ac, plus FUN_02082050's four direction draws) AND a whole SECOND growth loop, which shuffles the queue once per queued element. The resulting stream is longer and differently shaped, not offset by one. Showing that a bare extra shuffle fails says nothing about whether the extension ran.",
+    "and_the_disassembly_forces_the_opposite": "target is now confirmed to be at least 10 in every case, while the observed actual counts are 8, 8, 9, 9, 10. So actual < target in at least four of the five fields, and the retry branch MUST have been taken in those four. The extension pass almost certainly DID run — the opposite of what the previous entry concluded.",
+    "what_survives": "only the narrow reading: adding one bare shuffle to the validated 1-shuffle model breaks it. That is a fact about the model, not about the game.",
+    "the_lesson": "the entry that proposed the test called it a 'CHEAP DECISIVE TEST', and it was cheap. It was not decisive, because the cheap version of the experiment was not the experiment. Running the affordable approximation and reporting it as though it were the real one is how a wrong result gets into the record with a confident label.",
+    "the_actual_next_step": "model the retry properly in tools/genreplay.py: on actual < target, run FUN_02082228 (shuffle gen+0x60, walk the room list, one FUN_020833ac count, one FUN_02082050 attempt) and then FUN_020821d0 again, and only then the transcription shuffle. If that reproduces the 8-room fields, the whole generator closes."
+  },
+  "THE_RETRY_IS_MODELLED_AND_IT_IS_NOT_THE_MISSING_PIECE": {
+    "what_was_done": "the previous entry's real next step: model FUN_02082228 and the second FUN_020821d0 in the replay, from the DECOMPILED CODE rather than from the prose summary — that shortcut is what produced the retracted result.",
+    "the_extension_pass_as_coded": [
+      "FUN_02083590(gen+0x60) — shuffle the ROOM LIST first, one draw per room",
+      "walk the shuffled list by index; skip a room whose flags have bit 2 (the start) or whose child count at cell+0x02 is >= 4",
+      "n = FUN_020833ac(gen, target - placed), then FORCED to >= 1 if it returned 0",
+      "ONE FUN_02082050(gen, room, n) attempt — note the want is n, NOT n+1 as the main loop uses",
+      "on success: FUN_0208340c, OR flag 0x10 into the room, and RETURN — at most one room extended per call"
+    ],
+    "the_result": {
+      "search": "targets restricted to {10, 11, 12}, the only values the verified block can produce; window widened to 900 draws before the first seed, 3.5x the original 260",
+      "s01a (9 rooms)": "0 edge matches",
+      "s01b (8 rooms)": "0 edge matches",
+      "s02a (8 rooms)": "0 edge matches",
+      "s03a (9 rooms)": "0 edge matches",
+      "s05a (10 rooms)": "1 edge match at target=10, branches=2, and the internal order reproduces"
+    },
+    "*** THE POSITIVE CONTROL IS THE POINT ***": "s05a is the one field whose room count is 10, the smallest value 10 + rand(3) can produce, and it reproduces at exactly target=10 with the order matching. So the harness, the widened window, the extension model and the order check all work — when the target is achievable. The four fields that do not reproduce are exactly the four whose counts are below 10. That is a negative with its own control attached, rather than a bare absence.",
+    "two_explanations_are_now_eliminated": {
+      "the retry": "modelled faithfully from the code and it changes nothing. Both readings of FUN_0208340c's dropped argument (spend as the main loop does, or spend nothing) give identical results, because the configurations that DO reproduce are ones where placed == target and the retry branch never fires.",
+      "the search window": "900 draws finds nothing that 260 did not. The true start is not simply further back."
+    },
+    "what_is_left": "the parameter block at GENERATION time. The verification that the 32-byte block is byte-identical to quest/random_dungeon.rel was performed on savestates, i.e. AFTER the field was generated. If the block is reloaded or overwritten per quest, the values in force during generation need not be the ones a savestate preserves. That is now the prime suspect and it is the only one left standing."
+  },
+  "HARNESS_TRAP_in_genreplay_observed": {
+    "the_bug": "genreplay.observed(st) does NOT populate 'order'. search() adds it separately with obs['order'] = observed_order(st, obs). Code that calls observed() directly and then compares against obs['order'] gets a KeyError, and code that uses obs.get('order') gets None — so the order check is structurally always False and every field reports order_ok = 0.",
+    "how_it_was_caught": "the first run of the retry model reported 0/5 reproduced. That was suspicious rather than interesting, because the target == room-count configurations had reproduced 5/5 an iteration earlier and the retry branch cannot even fire in those. Checking why a previously-passing case had started failing found the bug instead of a finding.",
+    "why_it_is_recorded": "a 0/5 from this bug looks exactly like a real refutation, and it would have been the second false negative in this thread in two iterations."
+  },
+  "ROOM_COUNT_ANOMALY_SOLVED_a_THIRD_parameter_layer": {
+    "status": "SOLVED. The observed 8/9/9/8/10 room counts are exactly what the parameters in force at generation time predict.",
+    "the_parameter_block_is_assembled_in_THREE_layers": {
+      "1 default": "FUN_02031ce8 copies 32 bytes from DAT_02031e24, the arm9 built-in",
+      "2 stage block": "if *(ctx + 0x1c) is non-null, overwrite from it — this is quest/random_dungeon.rel, the block already verified byte-identical in savestates",
+      "3 QUEST OVERRIDE": "iVar4 = FUN_02031c74(ctx); each byte at iVar4+0x18..+0x22 individually overrides params[0..10], and +0x23..+0x2A the 8-byte tail. Sentinel is -1 ('leave alone') for most fields and -2 for params[9] and the tail.",
+      "then": "the assembled 32 bytes are copied out to the caller's buffer and handed to FUN_02081ea8"
+    },
+    "WHY_THE_SAVESTATE_CHECK_WAS_MISLEADING": "the byte-identical verification was performed on the block at *(ctx + 0x1c) — layer 2. Layer 3 is applied on top of a separate copy and never written back there, so the .rel block a savestate preserves is genuinely unmodified AND genuinely not what the generator used. The check was correct and the inference from it was not.",
+    "the_override_record": {
+      "how_to_reach_it": "ctx = *(0x02108C60); rec = *(ctx + *(ctx+8)*4); override = *(rec + 0x0C)",
+      "read_live_from_all_five_field_savestates": {
+        "s01a / s01b / s02a / s03a": "08 0a 02 02 32 19 32 1e 55 03 00  -> rooms 8..10, second pair 2/2",
+        "s05a": "09 0b 02 03 32 19 32 1e 55 03 00  -> rooms 9..11, second pair 2/3"
+      },
+      "against the .rel block": "rooms 10/13 -> 8/10 (or 9/11), second pair [1,3] -> [2,2] (or [2,3]), params[7] 10 -> 30, params[8] 75 -> 85. params[4,5,6,9,10] unchanged."
+    },
+    "EVERY_OBSERVED_COUNT_NOW_FITS": "target = params[0] + rand(params[1] - params[0]), confirmed from disassembly. With 8/10 that is 8 + rand(2) = {8, 9}: observed s01a 9, s01b 8, s02a 8, s03a 9 — all inside. With 9/11 it is 9 + rand(2) = {9, 10}: observed s05a 10 — inside. Five for five, where the .rel block's 10..12 could not produce four of them at all.",
+    "*** AN INDEPENDENT CONFIRMATION THAT WAS NOT FITTED ***": "the replay search reported branches = 2 as the reproducing value for ALL FIVE fields, found by brute force over {1, 2} with no knowledge of this record. The override independently sets params[2] = params[3] = 2, and FUN_02081ea8 computes the second pair as params[2] + rand(params[3] - params[2]) — with both 2 the range is zero, so branches is forced to exactly 2 with no draw at all. Two unrelated routes agree on the same value.",
+    "what_this_unblocks": "the replay can now be run with the REAL parameters rather than a search over targets. The remaining question is only whether the draw counts line up once branches is forced rather than searched — for s05a the second pair has range 1 and therefore consumes one draw, which the previous searches never modelled."
+  },
+  "FORWARD_GENERATOR_CLOSES_5_of_5_from_the_real_parameters": {
+    "status": "The placement stage is a validated forward model. From an RNG state and the live override parameters it reproduces every observed field's edge set AND its internal room order.",
+    "what_is_no_longer_searched": "the target room count and the branch budget. Both are now DRAWN FROM THE STREAM inside FUN_02081ea8's sequence — target = params[0] + rand(params[1]-params[0]), then branches = params[2] + rand(params[3]-params[2]) — using the parameters read live from the quest override. Previous runs brute-forced target over a range and branches over {1,2}, which meant the model had two free dials. It now has none.",
+    "the_only_remaining_search": "the start offset. The RNG state at generation time is not directly recoverable, so it is found by stepping back from the live state; that is a property of the observation, not a fitted parameter of the model.",
+    "results": {
+      "s01a": "params [8,10,2,2] -> drew target 9, branches 2  -> 9 rooms, edges match, ORDER matches (back 210)",
+      "s01b": "params [8,10,2,2] -> drew target 8, branches 2  -> 8 rooms, edges match, ORDER matches (back 199)",
+      "s02a": "params [8,10,2,2] -> drew target 8, branches 2  -> 8 rooms, edges match, ORDER matches (back 196)",
+      "s03a": "params [8,10,2,2] -> drew target 9, branches 2  -> 9 rooms, edges match, ORDER matches (back 246)",
+      "s05a": "params [9,11,2,3] -> drew target 10, branches 2 -> 10 rooms, edges match, ORDER matches (back 255)"
+    },
+    "why_this_is_a_strong_check_and_not_a_fit": "the edge set and the internal order are both reproduced, and the order is recovered independently by locating the per-room seeds in the stream. Every draw from the target onwards has to be in phase for the order to come out right, so a single wrong draw count or ordering anywhere would break it. Two of the five drew a target ABOVE their range's minimum (9 from 8..10, 10 from 9..11), so the target draw itself is exercised rather than trivially constant.",
+    "what_this_closes": "the room-count anomaly that has run through this thread — 8/9/9/8/10 against a parameter block reading 10..13 — is fully accounted for, and the placement stage no longer has an unexplained residual. The gate stage (keys and doors) and enemy placement remain separate stages with their own open items.",
+    "for_psz_godot": "this is what parity request A5 asked for. The generator can now be ported as an algorithm rather than transcribed as fixtures: seed, FUN_02081ea8's two draws, FUN_02083378's budget split, FUN_02081f98's start placement, then the growth loop with its per-iteration frontier shuffle. The parameters must come from the QUEST OVERRIDE, not from quest/random_dungeon.rel.",
+    "*** QUALIFIED — A RESIDUAL REMAINS, AND IT IS THE DRAW COUNT ***": "the previous write-up said the placement stage has 'no unexplained residual'. That is too strong, and a concurrent check on sys.field-generation-target says so: model_draw_accounting_contradicts_its_layout_matches passes, meaning that at every offset where the model consumes exactly the draws the stream allows, it FAILS to reproduce the field. Both results are true and the joint statement is the real finding: THE OFFSET WHERE THE MODEL REPRODUCES THE FIELD IS NOT THE OFFSET WHERE ITS DRAW ACCOUNTING IS CONSISTENT. The model gets the right topology and the right internal order, at a place in the stream its own draw budget does not justify.",
+    "a_reading_of_that_residual_NOT_established": "the discrepancy is most likely BEFORE placement rather than inside it. Everything from the target draw onwards is demonstrably in phase — the internal order is recovered independently from the per-room seeds and would desynchronise on a single miscount — so the decisions are right relative to each other. A constant offset error would move the start without disturbing that. What is not counted, then, is whatever the driver does before FUN_02081ea8. This is a reading; nothing here tests it.",
+    "what_it_means_for_a_port": "the ALGORITHM is portable now: given the RNG state at the target draw and the override parameters, it produces the right field. What is not portable yet is predicting where in a session's stream that state occurs, because the pre-placement draw budget is unaccounted for. A port that seeds its own generator does not care; one that wants to match a specific real session's field does.",
+    "landed_as_a_check": "tools/genreplay.py gained override_params(), GenFull and replay_field(); tools/checks.py gained the_forward_generator_reproduces_every_field_from_the_live_parameters, bound to sys.field-generation-target. Before this the 5/5 result existed only in a scratch script outside the repo, which is exactly the state the verify gate exists to prevent."
+  },
+  "FUN_020328f4_IS_A_BUILDER_DISPATCH_NOT_A_VARIANT_PICK": {
+    "answers": "parity request A5's remaining static item, 'the variant a/b pick (FUN_020328f4)'",
+    "method": "106 bytes of THUMB in arm9, decoded by hand from build/arm9_dec.bin. No decompiler involved; the checker re-decodes the same bytes.",
+    "structure": {
+      "guard": "returns immediately if *arg1 == 0, and again if FUN_0206d0f8(arg2) returns non-zero",
+      "*(arg2+0) == 8": "FUN_020831a0",
+      "kind == 3": "FUN_02082bbc, after FUN_02031a74 then FUN_02031c74, then FUN_02094264 whose result supplies a byte at +4",
+      "kind == 1": "FUN_02082b30",
+      "otherwise": "FUN_02082a98",
+      "kind": "*(arg2 + 4)"
+    },
+    "*** IT DOES NOT PICK A VARIANT ***": "the name in the request implies an a/b choice. What the function actually does is choose WHICH ROOM-LIST BUILDER runs. Three of the four arms — FUN_020831a0, FUN_02082bbc and FUN_02082b30 — are already on record as the only callers of FUN_02082be4, the routine that copies five words into a room descriptor (data/level_room_naming.json).",
+    "*** ONLY ONE ARM ROLLS ***": "the same record notes FUN_02082b30 contains an RNG roll (FUN_020780f4 then FUN_0207816c) against a five-entry threshold table. That arm is reached on kind == 1 alone, so the other three builders are deterministic. If a variant is chosen anywhere in this path, it is chosen there.",
+    "not_established": "what the kind field is, and whether the a/b variant is decided inside FUN_02082b30's roll or somewhere else entirely. The dispatch narrows where to look; it does not read the choice."
+  },
+  "FUN_02082b30_ROLL_IS_A_SECOND_ROOM_CHANCE": {
+    "follows": "FUN_020328f4_IS_A_BUILDER_DISPATCH_NOT_A_VARIANT_PICK — this is the kind==1 arm, the only one that rolls",
+    "decoded": {
+      "range": "rand(10000) — the literal is 0x2710, so the odds are in hundredths of a percent",
+      "index": "a SIGNED byte from the stack frame, clamped to 0..4; negative or >=5 falls back to index 0",
+      "threshold": "a u16 read from a 16-halfword block copied into the frame by FUN_02031ce8",
+      "hit": "rand(10000) < threshold[index]",
+      "on_hit": "kind = 5",
+      "tail": "FUN_02082be4(dest, src, kind)"
+    },
+    "*** WHAT THE ROLL DECIDES ***": "data/level_room_naming.json already records that FUN_02082be4 'copies five words into dest[0..4], optionally a SECOND descriptor at dest+0x34 when kind == 5'. So this roll is a per-ten-thousand chance that the room list gets a SECOND ENTRY. It adds a room; it does not pick a variant.",
+    "*** SO THE a/b VARIANT IS NOT IN THIS PATH AT ALL ***": "A5 named FUN_020328f4 'the variant a/b pick'. The dispatch chooses a room-list builder, and the only builder that rolls is rolling for a second room. Neither step touches an a/b choice, so the variant is decided somewhere else entirely and this whole path is excluded.",
+    "the_five_entry_table_is_now_code_backed": "the table size was previously recorded as five from counting. The clamp compares the index against 5 literally, so the size comes from the code rather than from the data.",
+    "skipped_when": "the roll is bypassed entirely when the guard value is 0 or 8, which calls FUN_02082be4 with kind = 0."
+  },
+  "GENERATOR_PARAMETERS_ARE_READABLE_FROM_A_SAVESTATE": {
+    "addresses": {
+      "0x02237878": "u32 stage number",
+      "0x02237884": "4 x u8 {min rooms, max rooms, min branches, max branches}"
+    },
+    "measured": "over 12 field savestates the stage word always equals the stage in that floor's own room codes; the quad reads (8,10,2,2) on s01/s02/s03 and (9,11,2,3) on s05; and every floor's actual room count falls inside its own [min,max].",
+    "what_it_changes": "this record said the room-count parameters are overwritten by a quest override 'into a copy a savestate never shows'. A copy is not the only place they appear — these two fixed addresses carry the same values A5 recorded from live observation, so a regression fixture can be built offline without an emulator.",
+    "*** AND THE a/b VARIANT IS NOT HERE ***": "two floors share stage 1 and differ in variant (a and b), and their stage word and parameter quad are BYTE-IDENTICAL. So the variant is not carried in the quest parameter block. Together with the builder dispatch and its second-room roll, that is the third and last obvious place excluded.",
+    "the_variant_is_a_per_floor_input": "across all 12 field states every room in a floor shares one stage AND one variant — 8 to 10 rooms each, never mixed. So a/b is decided once per floor, before or at generation, rather than per room. Eleven floors are 'a' and one is 'b'."
+  },
+  "THE_a_b_VARIANT_SOURCE_IS_BLOCKED_ON_CAPTURES": {
+    "state_of_play": "three places are now excluded: the builder dispatch FUN_020328f4, its only probabilistic arm FUN_02082b30 (which rolls for a second room, not a variant), and the quest parameter block at 0x02237878/0x02237884 (byte-identical between an 'a' and a 'b' floor of the same stage). The variant is known to be a per-floor INPUT: every room in a floor shares it.",
+    "why_the_differential_does_not_converge": "zero is the commonest byte in RAM, so 'zero in every variant-a floor' excludes almost nothing — 1,172,077 bytes qualify across the 11 area-A floors. All the discrimination has to come from area-B floors, and the corpus has exactly ONE. A single b sample divides the candidate set by 256, which still leaves 1,440 survivors. That is noise, and it is what is observed.",
+    "the_price_of_fixing_it": "each additional area-B floor divides the set by another 256: two b-floors leave order ten candidates, three leave under one. So THREE more area-B field savestates would pin the variant source outright, and two would narrow it to a hand-checkable list.",
+    "this_is_a_capture_request": "not an analysis failure. Nothing about the method is wrong; the corpus is 11-to-1 in favour of area A and a differential needs the rare case, not the common one.",
+    "byproduct_FUN_02082a98": "decoded while looking: it is the ROOM TABLE INITIALISER, not a variant source. It loops 20 times at stride 52 (0x34, the room-record size) calling FUN_0208286c, and writes a word at base+0x414 — adjacent to the room count already recorded at base+0x410."
+  },
+  "THERE_IS_NO_PER_FLOOR_SEED": {
+    "answers": "parity request A5's remaining open item, 'the seed source'",
+    "finding": "successive floors do NOT each start from a fresh seed. Three DIFFERENT floors captured in one session lie on a single LCG stream: s01a --+13--> s01e --+199--> s01b, and the offsets add exactly (13 + 199 = 212, the direct s01a->s01b distance). A generator that re-seeded per floor could not put three floors on one chain, let alone with consistent arithmetic.",
+    "between_generations": "the stream is static. Seven separate savestates share one byte-identical RNG state, and other groups of six, four and two do the same. So the stream advances only when something draws — which independently reconfirms that gameplay does not step this RNG.",
+    "*** WHAT THAT MEANS FOR A PORT ***": "there is nothing to reproduce a floor FROM, in the sense the request assumes. The 'seed' for any floor is simply wherever the previous floor left the stream. Seed-exact replay therefore has to reproduce a SESSION from its starting state, not a floor from a floor seed — which is what the existing backward-replay work already does by anchoring on the per-room seeds.",
+    "so_the_question_is_narrower_now": "what sets the stream at session start — boot, or the save being loaded, or a title-screen frame counter — is untouched by this. What is settled is that no reset happens per floor."
+  },
+  "THE_RNG_SEED_IS_32_BIT": {
+    "follows": "THERE_IS_NO_PER_FLOOR_SEED — which narrowed the question to what sets the stream at session start",
+    "the_constructors": "three functions build an RNG object with identical bodies: FUN_020c1450 (writes a FIXED GLOBAL at 0x0211C844), FUN_020c1478 and FUN_020c14b8 (take the object in r0). Each writes {+0x00 the seed from its caller, +0x08 multiplier 0x5D588B656C078965, +0x10 increment 0x269EC3, +0x14 zero}. None of them COMPUTES a seed.",
+    "constants_are_code_not_data": "the multiplier and increment are hardcoded in all three constructors. That was previously recorded as 'not per save' from savestates agreeing; it is now read from the instructions.",
+    "*** THE SEED IS 32 BITS ***": "FUN_02078148 — which seeds the object FUN_020780f4 hands out — calls the constructor with r2 = 0, and r2 is the HIGH half of the 64-bit seed. So the seed is a 32-bit value zero-extended, and the seed space is 2^32 rather than 2^64. That is the difference between a brute-force seed search being possible and being impossible.",
+    "also_confirmed_from_code": "FUN_020780f4 is literally `return *(0x0211A3B4)`, matching the recorded pointer chain.",
+    "still_open": "the seed VALUE's source. FUN_02078148 passes r1 through from its own caller, so the number comes from one level further up. What is settled is its WIDTH and that the constants are fixed."
+  },
+  "THE_SESSION_SEED_IS_16_BIT_AND_RECOVERABLE": {
+    "closes": "parity request A5's 'seed source', end to end",
+    "the_chain": "FUN_0209ccd4 — already on record as MESSAGE HANDLER 7:0 — unpacks the message and passes the seed with `ldrh`, a HALFWORD, into FUN_02078148, which zero-extends it into the 64-bit state. So the seed is 16 bits and the space is 65536, narrower than the 32 bits the previous pass bounded.",
+    "*** THE PREDICTION AND ITS TEST ***": "if the state starts below 2^16 then walking the LCG BACKWARD from any savestate must reach a value below 2^16, and soon. It does — all 14 distinct states in the corpus, within 196 to 648 draws. A random 64-bit state clears that bar with probability 2^-48, so over the few thousand steps taken the expected number of false hits is about 3e-11.",
+    "self_checking": "the three states already shown to lie on one stream all recover the SAME seed, 0x2748, from different depths (210, 223 and 422 draws back). A coincidence could not arrange that.",
+    "*** WHY IT MATTERS MORE THAN THE ANSWER ***": "seed-exact replay no longer needs a capture at session start. ANY savestate carries its session's seed, recoverable in under a thousand backward steps — so a reimplementation can be validated against every field state already on disk.",
+    "seed_comes_from_the_session_message": "it arrives in a category-7 message, which is what makes every player in a session generate the same floors.",
+    "recovered": [
+      {
+        "state": "20260728-230040_Phantasy_Star_0__USA_.ml2",
+        "floor": "s01z",
+        "live": "0x138FD9F79ED5B2EA",
+        "seed": "0xD4EB",
+        "draws_back": 433
+      },
+      {
+        "state": "20260728-234707_Phantasy_Star_0__USA_.ml7",
+        "floor": "s03z",
+        "live": "0x3C2BAB012AEEC4DA",
+        "seed": "0xD2B2",
+        "draws_back": 648
+      },
+      {
+        "state": "20260729-000627_Phantasy_Star_0__USA_.ml1",
+        "floor": "s02z",
+        "live": "0x89A493BDA8CAE69F",
+        "seed": "0x22C9",
+        "draws_back": 558
+      },
+      {
+        "state": "20260729-085641_Phantasy_Star_0__USA_.ml1",
+        "floor": "s05z",
+        "live": "0x73CCBF92C86DEB5A",
+        "seed": "0xA3B7",
+        "draws_back": 629
+      },
+      {
+        "state": "20260729-132155_Phantasy_Star_0__USA_.ml1",
+        "floor": "s01a",
+        "live": "0xC00AAA276F20D8CA",
+        "seed": "0x2748",
+        "draws_back": 210
+      },
+      {
+        "state": "20260729-132203_Phantasy_Star_0__USA_.ml2",
+        "floor": "s02a",
+        "live": "0x17253AB84EC3C37E",
+        "seed": "0x6ACA",
+        "draws_back": 196
+      },
+      {
+        "state": "20260729-132216_Phantasy_Star_0__USA_.ml3",
+        "floor": "s03a",
+        "live": "0x3BF34DD3C96AD17A",
+        "seed": "0x0484",
+        "draws_back": 246
+      },
+      {
+        "state": "20260729-132223_Phantasy_Star_0__USA_.ml4",
+        "floor": "s05a",
+        "live": "0x605417EB26FFC4D9",
+        "seed": "0x5C60",
+        "draws_back": 255
+      },
+      {
+        "state": "20260729-174925_Phantasy_Star_0__USA_.ml1",
+        "floor": "s01e",
+        "live": "0xDD66205DDB235481",
+        "seed": "0x2748",
+        "draws_back": 223
+      },
+      {
+        "state": "20260729-174940_Phantasy_Star_0__USA_.ml2",
+        "floor": "s01b",
+        "live": "0xA95A743EBA14C4CE",
+        "seed": "0x2748",
+        "draws_back": 422
+      },
+      {
+        "state": "20260730-070048_Phantasy_Star_0__USA_.ml3",
+        "floor": "s01a",
+        "live": "0x6AC571A35874833B",
+        "seed": "0x9A9E",
+        "draws_back": 219
+      },
+      {
+        "state": "20260730-070052_Phantasy_Star_0__USA_.ml4",
+        "floor": "s03a",
+        "live": "0xE9396BD36CEB0FAB",
+        "seed": "0x7E4C",
+        "draws_back": 205
+      },
+      {
+        "state": "20260730-092000_Phantasy_Star_0__USA_.ml1",
+        "floor": "s02a",
+        "live": "0x3AB6D70D4443D653",
+        "seed": "0x00D8",
+        "draws_back": 217
+      },
+      {
+        "state": "20260730-092011_Phantasy_Star_0__USA_.ml2",
+        "floor": "s05a",
+        "live": "0xAA4453A0981A9BA3",
+        "seed": "0x3B95",
+        "draws_back": 262
+      }
+    ]
+  },
+  "GENERATION_IS_LOCATABLE_FROM_THE_SESSION_SEED": {
+    "follows": "THE_SESSION_SEED_IS_16_BIT_AND_RECOVERABLE",
+    "*** CORRECTED 2026-08-09 -- IT IS OFFSET ZERO, NOT A WINDOW ***": "this record used to say the room-seed run begins 55..84 draws after the session seed and that a replay should step that window to reach generation. That measured the distance to the first per-room SEED, which the transcriber writes at the very END, so it already contained generation's own cost. Generation START is at offset ZERO on a first floor: the 64-bit state at FUN_02081EA8's entry IS the 16-bit session seed, zero-extended, in 10 of 10 area-A field fixtures, re-derived by stepping the seed forward by the recorded offset and landing on the state, 14 of 14 including later floors. There is no window to step and no offset to search.",
+    "*** THE RUN LENGTH DOES NOT IDENTIFY THE FLOOR SIZE ***": {
+      "1 room": "0 draws",
+      "8 rooms": "21..24 draws",
+      "9 rooms": "24..26 draws",
+      "10 rooms": "29..32 draws",
+      "14 rooms": "46 draws",
+      "15 rooms": "50 draws",
+      "WITHDRAWN": "the non-overlap this used to assert is DEAD -- 8 and 9 rooms both reach 24, in the live corpus and independently in all 14 fixtures measured forward from generation. What survives is the coarse step: a one-room area spends 0 draws and every field spends at least 21, so the run length separates 'generated once' from 'generated a field' and nothing finer.",
+      "what replaced it": "the room count is DRAWN, not measured off the stream -- target = params[0] + rand(params[1] - params[0]) at generation start, which reproduces the room count of all 14 fixtures."
+    },
+    "the transcriber's lead-in is measured, not modelled": "between the end of the room-list shuffle and the first per-room seed there are 12..37 draws over the 14 fixtures. The replay's own generation prefix is 33..104 draws and every one of the 131 recorded per-room seeds lands after it, which is the phase-order round trip; the lead-in itself has not been replayed.",
+    "later_floors_sit_further_along": "a later floor cannot start at the seed -- generation shares ONE continuous LCG with the session and the previous floor already spent draws on it. 0 of 4 area-B fixtures start at the seed; their offsets are 205, 209, 223 and 456, MEASURED rather than predicted. Predicting one needs the previous floor's draws replayed."
   }
 }

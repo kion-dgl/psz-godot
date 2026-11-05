@@ -1,0 +1,20 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Camera" section="Mechanics">
+  <p>Playtest decision: retain the decomp-derived framing and restore the previous orbit controls. The reconstructed automatic follow and recenter behavior did not pass gameplay acceptance.</p>
+  <h2>Framing</h2>
+  <p>The default camera sits 5 units from a look point 1.5 units above the player, at an elevation of 11.25°, with a vertical FOV of 44°. Optional pitch input can adjust the elevation; recenter restores the default.</p>
+  <h2>Controls and follow</h2>
+  <ul>
+    <li>Left/right camera input rotates by the previous configured rotation speed, including while running.</li>
+    <li>Right or middle mouse drag orbits horizontally. Optional vertical camera input adjusts pitch.</li>
+    <li>Recenter immediately snaps behind the player's facing and resets pitch.</li>
+    <li>Horizontal position follows immediately. Movement does not automatically rotate the camera.</li>
+    <li>Vertical follow retains stair smoothing and teleport snapping. Shop focus retains ownership of its camera pose.</li>
+  </ul>
+  <p>Implemented in <code>scripts/3d/camera/orbit_camera.gd</code>. This is an intentional control preference, not a claim of original-game camera behavior parity.</p>
+  <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
+</Concept>

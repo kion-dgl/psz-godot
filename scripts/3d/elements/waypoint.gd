@@ -51,6 +51,7 @@ func _apply_state() -> void:
 func _apply_unique_materials(node: Node, offset_x: float) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
+		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:

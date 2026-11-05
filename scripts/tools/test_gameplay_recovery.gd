@@ -70,7 +70,8 @@ static func _status_boundaries(t: Node) -> void:
 	GameState.set_hp(GameState.max_hp)
 	player.current_state = player.PlayerState.DODGING
 	player.apply_status_effect("burn")
-	t.assert_true(player._ailments.effects.is_empty(), "dodge rejects incoming status")
+	t.assert_true(not player._ailments.effects.is_empty(), "no dodge immunity: status applies through the roll (ROM correction)")
+	player.clear_status_effects()
 	player.current_state = player.PlayerState.IDLE
 	player.apply_status_effect("stun")
 	player._ailments.tick(player, 0.5)

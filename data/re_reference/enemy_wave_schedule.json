@@ -1,0 +1,95 @@
+{
+ "source": "psz-re tools/waveplan.py \u2014 FUN_0206D60C / FUN_0206DBA8 / 0x0206DD98 read out of arm9, scored against 82 field savestates",
+ "answers": "psz-godot Q1 (does a room run sequential waves, and what advances one) and Q2 (what makes enemies appear once the player is already in the room). Both, and they are one subsystem.",
+ "*** Q1 \u2014 A ROOM RUNS SEVERAL WAVES. IT IS (b), NOT (a) ***": {
+  "the_rule": "wave count = w3 + rand(w4 - w3 + 1), read straight off the group_<set>.rel room record's +0x0C and +0x10 by FUN_0206DA04: `iVar3 = rec[0x0C]; return iVar3 + rand(rec[0x10] - iVar3 + 1)`. w3 and w4 are a MIN and a MAX over 1..3. Each wave is then an INDEPENDENT weighted draw from that room's allowed-template list, so the same template may run twice.",
+  "the_draw": "FUN_0206DA1C. It copies the room's `count` list entries {templateIndex u32, weight u32, flag u32} into a scratch array, FILTERING on the entry flag, sums the surviving weights, rolls rand(sum) and walks the accumulation. That closes data/enemy_wave_rolls.json's `still_open` \u2014 the roll is a plain weighted pick over a filtered list, and the reason no reading of room+0x14 ever predicted it is that the seed is not the input.",
+  "the_entry_flag_is_a_CONDITION": "flag 0 -> always allowed; flag 1 -> only when FUN_02032E78 is 0; flag 2 -> only when it is 1. FUN_02032E78 reads bit 1 of the field-map room record's byte +0x33. Counts across the six group files: flag 1 in 12944 entries, 0 in 495, 2 in 181.",
+  "AND_ONE_MORE_WAVE_CAN_BE_APPENDED": "if the drawn count is > 0, the room passes FUN_02032E30 (its field-map record's byte +0x32 >= 0) and enemy/group_2nd.rel holds a record for the room's stage wildcard `sNNz_xxx`, the planner appends ONE extra wave drawn from group_2nd and marks it family 1. It is always the LAST wave. FUN_0206D60C: `local_98 = local_94; local_94 = local_94 + 1;`",
+  "GROUP_2ND_IS_NOT_A_DIFFICULTY-TIER_TABLE": "data/enemy_wave_templates.json recorded 'an index range of exactly 0..2 with a percentage split is the shape of the DIFFICULTY TIER' as a lead. It is not: FUN_02040204 resolves a group_2nd template index against group_2nd's OWN template table (family 1), exactly as family 0 resolves against group_<set>'s, and the wave it produces is a normal wave of enemies. The lead is refuted and kept.",
+  "*** THE DISCRIMINATION ***": {
+   "corpus": "82 field savestates holding a resident plan, 479 room instances with at least one wave",
+   "waves_per_room": {
+    "1": 98,
+    "2": 348,
+    "3": 33
+   },
+   "multi_wave_rooms": "381 / 479",
+   "reading_b_several_templates_in_sequence": "479 / 479 \u2014 every room instance's wave count lies inside [w3, w4] of its own room code in the SET THE SESSION CHOSE, once the group_2nd extra wave is counted",
+   "reading_a_one_template_drawn_once": "98 / 479",
+   "control_always_w4": "327 / 479 \u2014 the range is not degenerate, so 'inside the range' is not a free pass",
+   "before_the_extra_wave_is_counted": "476 / 479; the 3 misses are three captures of ONE room instance (s06b_ib1 in set s, w3 = w4 = 2, 3 waves resident) and its third wave carries family = 1. That is the only group_2nd wave in the whole corpus and it is exactly the thing the code says appends one."
+  }
+ },
+ "*** Q1b \u2014 WHAT ADVANCES A WAVE ***": {
+  "the_cursor": "room record byte +4 is the ACTIVE wave ordinal within the room, 0xFF meaning none. It is set to the wave's ordinal when a wave is dispatched (FUN_02051468) and back to 0xFF when every enemy of that wave is dead (FUN_020514DC).",
+  "the_state_machine": "the plan object *0x0210E24C runs a 3-state machine off its +0x5C through the table at 0x020F9798 (enter/tick/exit, 0x18-byte rows). State 1 is IDLE, state 2 is A WAVE IS LIVE. Its tick FUN_0206DAFC reads the cursor: -1 and nothing pending -> FUN_0206DBA8 tries to start a wave; not -1 and that wave uncleared -> enter state 2.",
+  "state_2_enter_0x0206DD98": "allocates the 0x4C-byte live-encounter object at plan+0x64, copies the cursor into plan+0x50, takes the wave record the cursor names, calls FUN_02074D68(enemyData, waveRec+6, waveRec+7) and then FUN_0203FA8C once per enemy id in the wave's slice of the enemy array.",
+  "state_2_exit_0x0206DE4C": "frees the encounter object and sets plan+0x50 back to -1.",
+  "so_the_advance_is": "THE PREVIOUS WAVE BEING KILLED. Nothing is on a timer and nothing counts down. FUN_020514DC marks the dying enemy, and when no enemy of its wave is alive it sets waveRec+5 bit 0 and the room's cursor to 0xFF; the idle state then re-arms and the next uncleared wave starts. psz-godot's existing 'later waves are held until the room is cleared' is the right SHAPE and one wave too coarse: it is held until the previous WAVE is cleared, not the room."
+ },
+ "*** Q2 \u2014 YES. THE TRIGGER IS THE DEPLOY BLOCK'S NINTH SLOT ***": {
+  "the_finding": "the ninth slot of a deploy block is NOT a spawn position. It is a room-local trigger volume: +0x60 = x, +0x64 = z, +0x68 = RADIUS, and the block's trailing word at +0x6C is the armed bit.",
+  "the_code": "FUN_0206DBA8 walks every uncleared wave of the current room. For each it fetches the deploy block through FUN_02040320 (0x70-byte stride off the loaded deploy payload's root) and asks: if (block+0x6C & 1) == 0 -> spawn now; else if roomRec+5 bit 3 (the room has already been engaged) -> spawn now; else test each of the four players' positions against (block+0x60, 0, block+0x64) with radius block+0x68 and spawn only on a hit.",
+  "so_in_words": "a wave whose block arms the trigger stays dormant until a player walks inside its circle. Once ANY wave in the room has started, the room is flagged engaged and the remaining waves ignore their circles.",
+  "AND_A_SECOND_SMALLER_ONE": "within a wave the enemies do not all appear on the same frame. FUN_0206E1C8 gives each spawned entity a staggered reveal delay \u2014 a running sum of rand(4)+4 frames \u2014 then SHUFFLES the delays, and FUN_0206E248 reveals each as the encounter's frame counter passes it. So a group of four pops in one at a time, in random order, a handful of frames apart.",
+  "*** THE DISCRIMINATION \u2014 THE SAME COLUMN, TWO POPULATIONS ***": {
+   "slots_0_to_7_third_column_is_an_ELEVATION": "n = 12827, 6772 of them EXACTLY 0.0 (52.8%), max 16.0, and 7074 sit on an exact multiple of 4.0",
+   "slot_8_third_column_is_a_RADIUS": "n = 590, 0 of them zero, min 1.021, median 14.931, max 50.338 \u2014 three times the elevation column's maximum, continuous, and never zero",
+   "why_that_is_the_test": "the two are the same word of the same record read at different slot indices. A wrong reading would give one population; they are categorically different \u2014 52.8% zeros against 0%, quantised against continuous, 16.0 against 50.3.",
+   "and_the_point_sits_at_the_ROOM_CENTRE": "median trigger x = 0.011, median z = -0.273, while the spawn slots scatter; median distance from the room origin 14.19",
+   "THE_GAME_ITSELF_NEVER_USES_SLOT_8_AS_A_POSITION": "the planner's Fisher-Yates in FUN_0206D60C shuffles EIGHT entries (0..7) and writes the result into each enemy record's byte +1. Across 3213 enemy records read out of the corpus the slot index is 0..7 and slot 8 appears 0 times: {0: 465, 1: 395, 2: 489, 3: 399, 4: 448, 5: 364, 6: 341, 7: 312}",
+   "coverage": "590 of 1604 blocks arm a trigger (36.8%); the other 1014 leave slot 8 at (0,0,0) and spawn on room entry. 101 triggers have a radius under 5 units (you must walk onto the spot) and 33 have one of 31.1 or more, which covers a 44x44 cell from any corner and is effectively 'on entry'."
+  },
+  "A_CORRECTION_TO_fmt.enemy-deploy-record_AND_TO_data/enemy_slot_selection.json": "the node's 'the trailing word equals (slots[8] != (0,0,0)) on 1604/1604 blocks, so it restates the ninth slot and selects nothing' is arithmetically UNTOUCHED and its reading is wrong: the word is the trigger's ARMED bit and slot 8 is the trigger, so the biconditional holds because an unarmed trigger is stored as zeroes. And enemy_slot_selection.json's `used: [8]` observations are position COINCIDENCES rather than the game's own slot index \u2014 the game records 0..7 only."
+ },
+ "*** THE PLANNER, IN ONE PLACE ***": {
+  "entry": "FUN_02050F8C zeroes the three arrays and calls FUN_0206D60C; FUN_0206D60C is called once per floor generation, from FUN_0209CC0C and FUN_020315E8.",
+  "per_room": [
+   "look the room code up in group_<set>.rel by string (FUN_020401C8 over 20-byte records {codePtr, listPtr, count, w3, w4})",
+   "look the stage wildcard sNNz_xxx up in group_2nd.rel the same way",
+   "n = FUN_0206DA04(mainRecord) = w3 + rand(w4-w3+1)",
+   "if n > 0 and FUN_02032E30(room) and the group_2nd record exists: append one more wave, family 1",
+   "for each wave: FUN_0206DA1C draws a template; write a 12-byte wave record and one 8-byte enemy record per enemy id",
+   "a wave holding an enemy of rank 3 (FUN_02037584: ids 0x3D,0x3E,0x3F,0x41,0x42,0x44) sets roomRec+5 bit 2 and that room is skipped by the slot shuffle"
+  ],
+  "then_two_passes_over_the_whole_floor": [
+   "SLOT SHUFFLE \u2014 for every wave of every non-rank-3 room, shuffle [0..7] with FUN_020780F4/FUN_0207816C and write the first `enemy count` entries into the enemy records' byte +1. That is data/enemy_slot_selection.json's open question answered: it is a per-WAVE permutation of the eight slots, which is why no prefix and no count-indexed table ever fit.",
+   "MARKED ENEMY \u2014 shuffle the room order, then walk rooms and mark ONE random enemy in each until the target at 0x0210E258 is reached, setting bit 1 on the enemy record, its wave record and its room record. Rooms with a rank-3 enemy are skipped."
+  ]
+ },
+ "*** THE TEMPLATE FLAG IS AN ENCOUNTER SELECTOR, AND IT IS A BIJECTION ***": {
+  "what_it_is": "the wave-template record's third word is split into two halves at plan time \u2014 low half into waveRec+6, high half into waveRec+7 (FUN_0206D60C: `ldrsh r0,[r1,#8] / strb r0,[r4,#6]` and `ldrsh r0,[r1,#0xA] / strb r0,[r4,#7]`). State-2 enter passes both to FUN_02074D68, which indexes the table at 0x020F2740 as [low][high] with a 0xC-byte row and 3 words per row, and on a non -1 entry builds a 0x80-byte object and hands it the id.",
+  "so_what_12068ae_saw": "'a boss wave is flagged above 0xFFFF' is the HIGH HALF being non-zero. This is what else the field encodes: the low half is 1..8 and the high half 0..2, and together they name an encounter id.",
+  "THE_TWO_WAY_CHECK": "the table has 27 cells of which 14 are not -1. The six group files use 14 distinct flag values. Every used pair lands on a populated cell and every populated cell is used \u2014 0 used-but-absent and 0 present-but-unused. An off-by-one in either half would break both directions at once.",
+  "ids": {
+   "1,0": 24,
+   "1,1": 20,
+   "2,0": 25,
+   "2,1": 21,
+   "3,0": 26,
+   "4,0": 27,
+   "5,0": 28,
+   "5,1": 22,
+   "6,0": 29,
+   "6,1": 22,
+   "7,0": 30,
+   "7,1": 31,
+   "7,2": 19,
+   "8,0": 23
+  }
+ },
+ "*** AND IT NAMES THE WRITER c7c18aa COULD NOT FIND ***": {
+  "what_was_open": "c7c18aa established that the treasure box's appearance is gated by FUN_0205136C on bit `kind` of byte +6 of the per-room record at 0x0210E25C, and recorded 'what writes byte +6 bit 0 is NOT located' after four THUMB scans.",
+  "the_writer": "FUN_020514DC, the enemy-death handler, at 0x02051566. It walks the dying enemy's wave; if no enemy of the wave is alive it clears the room's cursor and sets waveRec+5 bit 0; it then walks EVERY wave of the room and sets roomRec+6 bit f for each family f with no uncleared wave left. `psVar10` is a short*, so `*(byte*)(psVar10 + 3)` is byte +6 \u2014 which is why a scan for a byte store at +6 on this array found nothing.",
+  "and_the_array_is_this_one": "0x0210E25C, 0x0210E254 and 0x0210E24C are FUN_02050E5C's own literals: the room array, its count and the plan object. c7c18aa's 'field map' IS the enemy plan, and its 'live encounter object at map+0x64' is the 0x4C-byte object state-2 enter allocates.",
+  "so_the_permission_bit_MEANS": "'every enemy wave of this room belonging to family f is dead'. A room with no wave in a family starts with that bit already set, because FUN_0206D60C sets it at plan time for empty families \u2014 which is why a room with no enemies shows its box immediately.",
+  "THE_TWO_WAY_CHECK": "across 479 room instances, roomRec+6 bit 0 and roomRec+5 bit 0 (all waves cleared) agree 478 times and disagree 1: {'perm_bit0=False,cleared=False': 368, 'perm_bit0=True,cleared=False': 1, 'perm_bit0=True,cleared=True': 110}. The single disagreement is s06b_ib1 in the group_2nd capture \u2014 both family-0 waves cleared so bit 0 is set, the family-1 wave still alive so the ROOM is not cleared. That is the mechanism, not an exception."
+ },
+ "*** WHAT IS NOT DONE ***": {
+  "the_deploy_block_index_is_never_written": "waveRec+4 selects the deploy BLOCK and FUN_0206D60C never writes it, so it is 0 from the array memset. Across the corpus it is 0 in all 893 resident waves. 81 of 1742 deploy files ship a SECOND block and nothing observed reaches it. Either another writer exists that no capture has caught, or the second block is authored data the shipped path does not use.",
+  "the_group_2nd_wave_has_one_observation": "3 captures of 1 room instance. The code path is read in full and the arithmetic closes 479/479 with it, but 'FUN_02032E30 decides which rooms get one' rests on the branch rather than on a population.",
+  "the_trigger_is_read_and_not_watched": "FUN_0206DBA8's distance test is decoded from its own instructions and the block field split is scored on the static corpus. No capture holds a player mid-approach with a dormant wave resident, so 'the enemies appear when you cross the circle' has not been watched happening. tools/live-input-probe.sh can produce that state.",
+  "FUN_02032E78_and_FUN_02032EA0": "the two field-map bits that gate list entries (byte +0x33 bit 1) and the group_2nd wave's spawn (byte +0x32) are read but not named \u2014 what sets them is not established."
+ }
+}

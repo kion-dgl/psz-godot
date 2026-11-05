@@ -93,6 +93,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/enemy-room', label: 'Enemy Rooms' },
       { to: '/boss-room', label: 'Boss Rooms' },
       { to: '/texture-anim', label: 'Texture Anim' },
+      { to: '/mirror-bake', label: 'Mirror UV Bake' },
       { to: '/wall-debug', label: 'Wall #534' },
       { to: '/field-generator', label: 'Field Preview' },
       { to: '/field-solver', label: 'Field Solver' },

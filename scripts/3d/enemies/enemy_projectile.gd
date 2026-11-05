@@ -144,8 +144,8 @@ func _resolve_contact() -> void:
 	if hit_budget.has(key):
 		return
 	hit_budget[key] = true
-	if target.has_method("is_dodge_iframed") and target.is_dodge_iframed():
-		return
+	# No dodge immunity (spec /mechanics/dodge): a roll is damageable at every
+	# frame — the projectile resolves contact regardless of the target's state.
 	if not technique_id.is_empty() and target.has_method("take_technique_hit"):
 		target.take_technique_hit(damage, technique_id)
 	elif target.has_method("take_damage"):

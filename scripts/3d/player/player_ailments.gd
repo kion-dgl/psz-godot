@@ -4,6 +4,7 @@ extends RefCounted
 var effects: Dictionary = {}
 var _label: Label3D
 var _poison_effect: Node3D
+var _burn_effect: CPUParticles3D
 
 func apply(player: Node3D, kind: String) -> void:
 	if not player.can_take_hit():
@@ -73,8 +74,22 @@ func _sync_poison_effect(player: Node3D) -> void:
 		_poison_effect = preload("res://scripts/3d/player/player_poison_effect.gd").new()
 		player.add_child(_poison_effect)
 
+func _sync_burn_effect(player: Node3D) -> void:
+	if not effects.has("burn"):
+		if is_instance_valid(_burn_effect):
+			_burn_effect.hide()
+			_burn_effect.queue_free()
+		_burn_effect = null
+	elif not is_instance_valid(_burn_effect) and player.is_inside_tree():
+		_burn_effect = preload("res://scripts/3d/effects/burn_flames.gd").create()
+		_burn_effect.name = "BurnEffect"
+		player.add_child(_burn_effect)
+		_burn_effect.emitting = true
+
+
 func _update_label(player: Node3D) -> void:
 	_sync_poison_effect(player)
+	_sync_burn_effect(player)
 	if not player.is_inside_tree():
 		return
 	if effects.is_empty():

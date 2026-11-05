@@ -51,11 +51,11 @@ static func _test_telegraphs(runner: Node) -> void:
 
 class ContactTarget extends Node3D:
 	var hits := 0
-	var invincible := false
+	var passing_through := false
 	func take_damage(_amount: int, _knockback: Vector3 = Vector3.ZERO, _knockdown: bool = false) -> void:
 		hits += 1
-	func is_dodge_iframed() -> bool:
-		return invincible
+	func is_dodge_passing_through() -> bool:
+		return passing_through
 
 
 static func _test_dash(runner: Node) -> void:
@@ -63,7 +63,7 @@ static func _test_dash(runner: Node) -> void:
 		var target := ContactTarget.new()
 		runner.add_child(target)
 		target.position = Vector3(0, 0, 2.5)
-		target.invincible = dodging
+		target.passing_through = dodging
 		var definition: Dictionary = EnemyAttackRegistry.get_attacks("booma_origin")[0]
 		var enemy: EnemyBase = runner._make_charge_enemy({"atk": 0.8167, "run": 0.3333, "atk_mi": 0.2333}, definition, target)
 		enemy._archetype = "bruiser"
@@ -83,7 +83,7 @@ static func _test_dash(runner: Node) -> void:
 			saw_run = saw_run or enemy.current_anim == "run"
 			saw_recovery = saw_recovery or enemy.current_anim == "atk_mi"
 		runner.assert_true(saw_run and saw_recovery, "dash and recovery follow preparation")
-		runner.assert_eq(target.hits, 0 if dodging else 1, "dash contact respects dodge and one-hit budget")
+		runner.assert_eq(target.hits, 0 if dodging else 1, "dash contact passes through the roll and respects the one-hit budget")
 		runner.assert_true(not enemy.is_attacking, "charge recovers even after a dodge")
 		enemy.free()
 		target.free()

@@ -53,6 +53,11 @@ jobs:
           fi
           exit $rc
 
+      - name: Original field RNG and generator reference checks
+        run: |
+          godot --headless --path . --script res://scripts/tools/field_rng_check.gd
+          godot --headless --path . --script res://scripts/tools/original_field_generator_check.gd
+
       - name: Original boss event and damage replay
         run: |
           godot --headless --path . --script res://scripts/tools/test_boss_action_events.gd 2>&1 | tee /tmp/boss-replay.log
@@ -81,6 +86,16 @@ jobs:
           godot --headless --path . --quit-after 600 res://scripts/tools/combat_fidelity_probe.tscn 2>&1 | tee /tmp/combat-probe.log
           grep -q '\[combat-fidelity\] DONE ok' /tmp/combat-probe.log
           ! grep -q 'SCRIPT ERROR' /tmp/combat-probe.log
+
+      - name: Enemy body collision probe
+        run: |
+          set -o pipefail
+          # quit-after counts render frames, while this probe awaits physics frames.
+          # Cap rendering so a fast headless runner cannot exit before it finishes.
+          godot --headless --path . --max-fps 60 --quit-after 3600 res://scripts/tools/enemy_collision_probe.tscn 2>&1 | tee /tmp/enemy-collision.log
+          grep -q '\[enemy-collision\] DONE failures=0' /tmp/enemy-collision.log
+          # Like the main suite, allow missing proprietary assets in CI.
+          ! grep -q 'SCRIPT ERROR' /tmp/enemy-collision.log
 
       - name: Free-field layout tests
         # Invariant check for the RE-measured Valley free field + Reyburn data

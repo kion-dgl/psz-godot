@@ -4,13 +4,14 @@ const Original = preload("res://data/re_reference/enemy_combat_stats.json")
 const AREA_LEVELS := {"gurhacia": 1, "rioh": 5, "ozette": 10, "paru": 15, "makara": 20, "arca": 25, "dark": 30}
 const DIFFICULTY_LEVELS := {"normal": 0, "hard": 30, "super-hard": 60}
 
-static func level_for(session: Dictionary, authored: int = 0) -> int:
+static func level_for(session: Dictionary, authored: int = 0, current_area: String = "") -> int:
 	var coliseum := int(session.get("coliseum_enemy_level", 0))
 	if coliseum > 0:
 		return clampi(coliseum, 1, 100)
 	var base: int = authored if authored > 0 else int(session.get("enemy_level", 0))
 	if base <= 0:
-		base = int(AREA_LEVELS.get(session.get("area_id", "gurhacia"), 1))
+		var area := current_area if not current_area.is_empty() else str(session.get("area_id", "gurhacia"))
+		base = int(AREA_LEVELS.get(area, 1))
 	return clampi(base + int(DIFFICULTY_LEVELS.get(session.get("difficulty", "normal"), 0)), 1, 100)
 
 ## Independently spawned boss components can supply their own recovered tier rows.

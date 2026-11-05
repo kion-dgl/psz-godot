@@ -8,12 +8,11 @@ var _selected_index: int = 0
 
 var _active_modal: Control = null
 
-## Difficulty is hardcoded to Normal for now. The per-quest difficulty picker
-## was removed (difficulty will move to character-select, PSO-GC style); the
-## unlock/scaling infrastructure (GameState.unlocked_difficulties,
-## enemy/drop/reward tiers) stays in place, dormant, keyed on this value.
-## Spec: /states/difficulty-unlock.
-const DEFAULT_DIFFICULTY := "normal"
+## Display labels preserve the existing difficulty keys used by saves and scaling.
+const DIFFICULTY_KEYS := ["normal", "hard", "super-hard"]
+const DIFFICULTY_LABELS := ["Normal", "Hard", "Very Hard"]
+var _difficulty_index: int = 0
+var _mode_bar: HBoxContainer
 
 const AREA_DISPLAY := {
 	"gurhacia": "Valley",
@@ -36,7 +35,13 @@ const AREA_DISPLAY := {
 
 
 func _ready() -> void:
-	var _mode_bar: HBoxContainer = mode_label.get_parent()
+	_mode_bar = mode_label.get_parent()
+	var quest: Dictionary = SessionManager.get_accepted_quest()
+	if SessionManager.has_completed_quest():
+		quest = SessionManager.get_completed_quest()
+	elif SessionManager.has_suspended_quest():
+		quest = SessionManager._suspended_session
+	_difficulty_index = maxi(0, DIFFICULTY_KEYS.find(str(quest.get("difficulty", "normal"))))
 	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
 	title_label.text = "Guild Counter"
 	_setup_portrait()
@@ -213,6 +218,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		var direction := 1 if event.is_action_pressed("ui_right") else -1
+		_select_difficulty(wrapi(_difficulty_index + direction, 0, DIFFICULTY_KEYS.size()))
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(_entries.size(), 1))
 		_refresh_display()
@@ -233,7 +242,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_open_cancel_modal()
 				return
 			else:
-				# Quest: confirm directly — difficulty is implied Normal now.
+				# Confirm the selected quest and tier.
 				_open_accept_modal()
 				return
 		_refresh_display()
@@ -258,7 +267,7 @@ func _open_accept_modal() -> void:
 		_refresh_display()
 		return
 	var modal := ConfirmDialog.new()
-	modal.ask("Accept %s?" % str(entry.get("name", "this quest")))
+	modal.ask("Accept %s on %s?" % [str(entry.get("name", "this quest")), DIFFICULTY_LABELS[_difficulty_index]])
 	modal.confirmed.connect(func() -> void:
 		_active_modal = null
 		_accept_entry()
@@ -334,8 +343,10 @@ func _accept_entry() -> void:
 			_refresh_display()
 			return
 		# Accept quest — don't start session yet, player must walk to warp.
-		# Difficulty is implied Normal (picker removed; see DEFAULT_DIFFICULTY).
-		SessionManager.accept_quest(entry["quest_id"], DEFAULT_DIFFICULTY)
+		if not GameState.is_difficulty_unlocked(DIFFICULTY_KEYS[_difficulty_index]):
+			hint_label.text = "Difficulty locked!"
+			return
+		SessionManager.accept_quest(entry["quest_id"], DIFFICULTY_KEYS[_difficulty_index])
 		SceneManager.pop_scene({"quest_accepted": true})
 
 
@@ -347,9 +358,6 @@ func _report_quest() -> void:
 	var quest_id: String = str(data.get("quest_id", ""))
 	if not quest_id.is_empty():
 		GameState.complete_mission(quest_id)
-	# SessionManager.report_quest still tracks difficulty unlocks in GameState
-	# (dormant infra), but with the picker gone we don't surface the unlock
-	# message — there's no Hard/Super-Hard to select yet.
 	# Show completion message
 	var msg := "Quest complete! EXP: %d  Meseta: %d" % [
 		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]
@@ -382,6 +390,7 @@ func _format_rewards(granted: Dictionary) -> String:
 
 
 func _refresh_display() -> void:
+	_refresh_difficulty_tabs()
 	# List panel — pill rows
 	for child in list_panel.get_children():
 		child.queue_free()
@@ -431,7 +440,7 @@ func _refresh_display() -> void:
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill
-	hint_label.text = "Up/Down: Select  Enter: Choose  Esc: Leave"
+	hint_label.text = "Left/Right: Difficulty  Up/Down: Select  Enter: Choose  Esc: Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
@@ -460,6 +469,7 @@ func _refresh_detail() -> void:
 	if not str(entry["area"]).is_empty():
 		vbox.add_child(PszStyle.detail_label("Area: %s" % entry["area"]))
 
+	vbox.add_child(PszStyle.detail_label("Difficulty: %s" % DIFFICULTY_LABELS[_difficulty_index]))
 	vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
 	var desc: String = str(entry.get("description", ""))
 	if not entry.get("available", true):
@@ -494,3 +504,35 @@ func _on_nav_repeat(action: String) -> void:
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+func _select_difficulty(index: int) -> void:
+	if is_instance_valid(_active_modal) or _has_active_quest():
+		return
+	if not GameState.is_difficulty_unlocked(DIFFICULTY_KEYS[index]):
+		hint_label.text = "Clear the story on %s to unlock %s." % [DIFFICULTY_LABELS[index - 1], DIFFICULTY_LABELS[index]]
+		return
+	_difficulty_index = index
+	_refresh_display()
+	SfxManager.play("res://assets/sfx/ui/menu_move.wav")
+
+
+func _refresh_difficulty_tabs() -> void:
+	for child in _mode_bar.get_children():
+		_mode_bar.remove_child(child)
+		child.queue_free()
+	var tabs := PszStyle.create_tab_bar(DIFFICULTY_LABELS, _difficulty_index)
+	_mode_bar.add_child(tabs)
+	for i in range(DIFFICULTY_KEYS.size()):
+		var tab := tabs.get_child(i) as Control
+		if not GameState.is_difficulty_unlocked(DIFFICULTY_KEYS[i]):
+			tab.modulate = Color(0.6, 0.6, 0.6)
+			tab.tooltip_text = "Clear the story on %s to unlock." % DIFFICULTY_LABELS[i - 1]
+		tab.mouse_filter = Control.MOUSE_FILTER_STOP
+		for label in tab.get_children():
+			if label is Control:
+				label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tab.gui_input.connect(func(event: InputEvent) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_select_difficulty(i)
+		)

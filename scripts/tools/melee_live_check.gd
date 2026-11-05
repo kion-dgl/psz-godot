@@ -59,15 +59,15 @@ static func _case(player: Node3D, enemy: EnemyBase, weapon: String, mode: String
 			break
 		clips[str(step)] = {"name": clip, "length": player.animation_player.get_animation(clip).length}
 		var frac: float = player._attack_frac()
-		# Independently authored expectations: saber/sword .40/.40/.45;
-		# daggers .35/.35/.40. Active duration .15 is explicitly Godot tuning.
-		var opening := (0.35 if weapon == "daggers" else 0.40) + (0.05 if step == 3 else 0.0)
-		var inside := _target_inside(mode, frac, opening)
+		var timing := _source_step(weapon, step)
+		var opening := float(timing.hit_fracs[0])
+		var last := float(timing.hit_fracs[-1])
+		var inside := _target_inside(mode, frac, opening, last)
 		enemy.global_position = player.global_position + Vector3(0, 0, -1.5 if inside else -20.0)
 		if mode == "interrupt" and frac >= opening - 0.10:
 			player.transition_to(player.PlayerState.DAMAGED)
 			interrupted = true
-		if mode == "combo" and step < 3 and frac >= 0.75:
+		if mode == "combo" and step < 3 and frac >= (float(timing.chain_open_frac) + float(timing.chain_close_frac)) * 0.5:
 			player._start_attack() # Queues normally; no forced combo_state.
 		await player.get_tree().physics_frame
 	# Observe several further ticks to catch deferred/stored damage after an exit.
@@ -80,7 +80,7 @@ static func _case(player: Node3D, enemy: EnemyBase, weapon: String, mode: String
 static func _verdict(weapon: String, mode: String, contacts: Array[Dictionary], clips: Dictionary, finished: bool, valid_clips: bool, interrupted: bool) -> Dictionary:
 	var expected := [0, 0, 0]
 	if mode in ["late_entry", "combo"]:
-		expected = [2, 2, 3] if weapon == "daggers" else [1, 1, 1]
+		expected = [2, 1, 3] if weapon == "daggers" else [1, 1, 1]
 		if mode != "combo":
 			expected = [expected[0], 0, 0]
 	var actual := [0, 0, 0]
@@ -91,16 +91,30 @@ static func _verdict(weapon: String, mode: String, contacts: Array[Dictionary], 
 			within_window = false
 			continue
 		actual[step - 1] += 1
-		var opening := (0.35 if weapon == "daggers" else 0.40) + (0.05 if step == 3 else 0.0)
-		within_window = within_window and float(contact.fraction) >= opening and float(contact.fraction) < opening + 0.15
+		var events: Array = _source_step(weapon, step).hit_fracs
+		var event_index: int = int(actual[step - 1]) - 1
+		if event_index >= events.size():
+			within_window = false
+		else:
+			var event_fraction := float(events[event_index])
+			var tick_fraction := 1.0 / 60.0 / float(clips[str(step)].length)
+			within_window = within_window and float(contact.fraction) >= event_fraction and float(contact.fraction) <= event_fraction + tick_fraction + 0.01
+
 	return {"weapon": weapon, "mode": mode, "clips": clips, "contacts": contacts,
 		"expected": expected, "actual": actual, "finished": finished,
 		"passed": finished and valid_clips and within_window and actual == expected and (mode != "interrupt" or interrupted)}
 
 
-static func _target_inside(mode: String, fraction: float, opening: float) -> bool:
+static func _target_inside(mode: String, fraction: float, opening: float, last: float) -> bool:
 	match mode:
 		"early_only": return fraction < opening - 0.10
-		"after_close": return fraction >= opening + 0.18
+		"after_close": return fraction >= last + 0.05
 		"interrupt": return fraction >= opening - 0.10
-		_: return fraction >= opening + 0.025
+		_: return fraction >= opening - 0.06
+
+
+## Read the evidence directly, independently of CombatManager's merged config.
+static func _source_step(weapon: String, step: int) -> Dictionary:
+	var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/re_reference/original_attack_timing.json"))
+	var key: String = {"saber": "0", "sword": "1", "daggers": "2"}[weapon]
+	return source.types[key].steps[step - 1]

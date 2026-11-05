@@ -7,8 +7,9 @@ extends Node3D
 ## Player movement is camera-relative (handled in player.gd via get_viewport().get_camera_3d()).
 
 # Camera settings
-@export var distance: float = 4.5
-@export var height: float = 1.9
+@export var distance: float = 5.0 * cos(PI / 16.0)
+@export var height: float = 5.0 * sin(PI / 16.0)
+const LOOK_HEIGHT: float = 1.5
 @export var rotation_speed: float = 0.05
 @export var mouse_sensitivity: float = 0.005
 ## Min/max pitch as offset from the default look angle (which is set by
@@ -59,6 +60,7 @@ func _ready() -> void:
 	# Detach Camera3D from parent hierarchy so we control its world position directly.
 	# This prevents the Camera3D's local transform from stacking on top of our positioning.
 	camera.set_as_top_level(true)
+	camera.fov = 44.0
 
 	if target:
 		_update_camera_position(0.0)
@@ -119,7 +121,7 @@ func _update_camera_position(delta: float) -> void:
 	else:
 		_follow_y = _damp_follow_y(_follow_y, target_pos.y, delta)
 
-	var look_at_pos := Vector3(target_pos.x, _follow_y + 1.0, target_pos.z)
+	var look_at_pos := Vector3(target_pos.x, _follow_y + LOOK_HEIGHT, target_pos.z)
 
 	# Sphere-orbit: derive a single radius + base pitch from the
 	# exported `distance`/`height` so pitch=0 reproduces the original
@@ -138,7 +140,7 @@ func _update_camera_position(delta: float) -> void:
 
 	var cam_pos := Vector3(
 		target_pos.x + sin(camera_rotation) * horiz,
-		_follow_y + vert,
+		_follow_y + LOOK_HEIGHT + vert,
 		target_pos.z + cos(camera_rotation) * horiz,
 	)
 
@@ -192,7 +194,7 @@ func get_follow_transform() -> Transform3D:
 		return camera.global_transform
 	var target_pos := target.global_position
 	var fy: float = _follow_y if _follow_y_valid else target_pos.y
-	var look_at_pos := Vector3(target_pos.x, fy + 1.0, target_pos.z)
+	var look_at_pos := Vector3(target_pos.x, fy + LOOK_HEIGHT, target_pos.z)
 	var radius: float = sqrt(distance * distance + height * height)
 	var base_pitch: float = atan2(height, distance)
 	var pitch: float = base_pitch + camera_pitch
@@ -200,8 +202,7 @@ func get_follow_transform() -> Transform3D:
 	var vert: float = sin(pitch) * radius
 	var cam_pos := Vector3(
 		target_pos.x + sin(camera_rotation) * horiz,
-		fy + vert,
+		fy + LOOK_HEIGHT + vert,
 		target_pos.z + cos(camera_rotation) * horiz,
 	)
 	return Transform3D(Basis(), cam_pos).looking_at(look_at_pos, Vector3.UP)
-

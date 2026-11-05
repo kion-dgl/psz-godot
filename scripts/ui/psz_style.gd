@@ -278,7 +278,13 @@ static func shop_row(item_name: String, right_text: String, opts: Dictionary = {
 	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
 	# Dim the row's item icon when muted so the icon greys with the text (#417) —
 	# the ✕ marker in the leftmost cell stays full-colour (it's a marker, not item art).
-	return create_pill_with_icons(icons, item_name, selected, right_text, color, marker_cell(marker_kind), muted)
+	var row := create_pill_with_icons(icons, item_name, selected, right_text, color, marker_cell(marker_kind), muted)
+	var style := pill_style(selected)
+	style.content_margin_left = 4.0
+	row.add_theme_stylebox_override("panel", style)
+	row.set_meta("compact_shop_row", true)
+
+	return row
 
 
 ## Width of the leftmost shop-row marker slot. Wide enough for the "[E]" tag; the
@@ -348,13 +354,14 @@ static func create_section_header(text: String) -> PanelContainer:
 
 
 ## The standard vertical scrolling list container for shop/storage screens:
-## fills its slot and scrolls vertically only. Add a VBox of rows as its child.
+## fills its slot and scrolls vertically only. Attach rows with set_list_content.
 ## Shared so every list scrolls identically (#368 list-scroll consistency).
 static func make_list_scroll() -> ScrollContainer:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	return scroll
 
 
@@ -415,11 +422,17 @@ static func restyle_selection(pill_nodes: Array, old_index: int, new_index: int)
 	if old_index >= 0 and old_index < pill_nodes.size():
 		var old_pill = pill_nodes[old_index]
 		if is_instance_valid(old_pill):
-			old_pill.add_theme_stylebox_override("panel", pill_style(false))
+			var style := pill_style(false)
+			if old_pill.has_meta("compact_shop_row"):
+				style.content_margin_left = 4.0
+			old_pill.add_theme_stylebox_override("panel", style)
 	if new_index >= 0 and new_index < pill_nodes.size():
 		var new_pill = pill_nodes[new_index]
 		if is_instance_valid(new_pill):
-			new_pill.add_theme_stylebox_override("panel", pill_style(true))
+			var style := pill_style(true)
+			if new_pill.has_meta("compact_shop_row"):
+				style.content_margin_left = 4.0
+			new_pill.add_theme_stylebox_override("panel", style)
 			scroll_selected_into_view(new_pill)
 
 
@@ -441,7 +454,7 @@ static func create_tab_bar(tab_names: Array, active_tab: int) -> HBoxContainer:
 
 static func create_meseta_label(meseta: int) -> Label:
 	var label := Label.new()
-	label.text = "%d M" % meseta
+	label.text = "Meseta: %d" % meseta
 	label.add_theme_color_override("font_color", TEXT_MESETA)
 	label.add_theme_font_size_override("font_size", FONT_ITEM)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -504,20 +517,21 @@ static func setup_shop_portrait(
 	body_card.size_flags_stretch_ratio = 3.0
 	var glass := StyleBoxFlat.new()
 	glass.bg_color = Color(BG.r, BG.g, BG.b, 0.82)
-	glass.content_margin_left = 10.0
-	glass.content_margin_right = 10.0
-	glass.content_margin_top = 8.0
-	glass.content_margin_bottom = 8.0
+	glass.content_margin_left = 3.0
+	glass.content_margin_right = 3.0
+	glass.content_margin_top = 3.0
+	glass.content_margin_bottom = 3.0
 	glass.corner_radius_top_left = 6
 	glass.corner_radius_top_right = 6
 	glass.corner_radius_bottom_left = 6
 	glass.corner_radius_bottom_right = 6
-	glass.border_width_top = 3
-	glass.border_color = TITLE_BG
+	glass.set_border_width_all(3)
+	glass.border_color = BG_BORDER
 	body_card.add_theme_stylebox_override("panel", glass)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_card.add_child(vbox)
+	_setup_shop_body_contents(vbox)
 	outer.add_child(body_card)
 
 	# RIGHT: the detail card, top-aligned, ~40% of frame height.
@@ -633,3 +647,53 @@ static func clear_detail_panel(panel: PanelContainer) -> void:
 	for child in panel.get_children():
 		if child.name != "ScanlineOverlay":
 			child.queue_free()
+
+
+## Update the persistent footer instead of rebuilding a balance in the tab row.
+static func update_shop_balance(screen: Control, amount: int, currency: String = "Meseta") -> void:
+	var label := screen.find_child("ShopBalance", true, false) as Label
+	if label:
+		label.text = "%s: %d" % [currency, amount]
+		label.visible = true
+	var hint := screen.find_child("HintLabel", true, false) as Control
+	if hint:
+		hint.hide()
+
+
+static func _setup_shop_body_contents(vbox: VBoxContainer) -> void:
+	var title := vbox.get_node_or_null("TitleLabel") as Label
+	if title:
+		var header := title_style()
+		header.corner_radius_top_left = 3
+		header.corner_radius_top_right = 3
+		title.add_theme_stylebox_override("normal", header)
+	# Keep the blue banner flush with the card; list padding belongs to rows.
+	for child in vbox.get_children():
+		if child is HBoxContainer:
+			for inner in child.get_children():
+				if inner is PanelContainer:
+					var list_style := inner_panel_style()
+					list_style.content_margin_left = 4.0
+					list_style.content_margin_right = 4.0
+					inner.add_theme_stylebox_override("panel", list_style)
+	var balance := create_meseta_label(0)
+	balance.name = "ShopBalance"
+	balance.visible = false
+	var footer := hint_style()
+	# Inner radius = modal radius (6) minus its 3px border.
+	footer.corner_radius_bottom_left = 3
+	footer.corner_radius_bottom_right = 3
+	footer.border_width_left = 0
+	footer.border_width_right = 0
+	footer.border_width_bottom = 0
+	balance.add_theme_stylebox_override("normal", footer)
+	vbox.add_child(balance)
+
+
+## Keep a real gap before the scrollbar on Godot 4.5, including short lists.
+static func set_list_content(scroll: ScrollContainer, content: Control) -> void:
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_child(content)
+	scroll.add_child(margin)

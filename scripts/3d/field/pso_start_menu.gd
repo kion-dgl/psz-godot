@@ -81,7 +81,7 @@ var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _pal_bg_cache: Dictionary = {}  # palette page_idx → background Texture2D (#421)
-var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
+var _active_modal: Node = null  # Yes/No confirmation overlay for state-change actions
 var _renderer: StartMenuRenderer  # Canvas rendering, extracted to StartMenuRenderer
 var _input: StartMenuInput  # Input / navigation routing, extracted to StartMenuInput
 
@@ -139,6 +139,7 @@ func _ready() -> void:
 	# normal event flow, so only the right stick's first move is synthesized here.
 	_nav = NavRepeat.new(NAV_ACTIONS, _input._dispatch_ui_action)
 	_canvas.draw.connect(_renderer._draw_menu)
+	_canvas.resized.connect(_canvas.queue_redraw)
 	add_child(_canvas)
 
 	# An area transition is a full change_scene_to_file: this autoload survives
@@ -591,6 +592,8 @@ func _get_options_list() -> Array:
 		"Camera Y-Axis: %s" % (on if InputConfig.enable_camera_y else off),
 		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
 		"CRT Filter: %s" % CrtFilter.get_mode_label(),
+		"Aspect Ratio: %s" % VideoSettings.aspect_label(),
+		"3D Render Scale: %s" % VideoSettings.scale_label(),
 	]
 
 
@@ -654,6 +657,8 @@ func _toggle_option(idx: int) -> void:
 			# setting belongs to the machine, not to the character, so it
 			# deliberately does NOT ride along with SaveManager.save_game().
 			CrtFilter.cycle(1)
+		8: VideoSettings.cycle_aspect(1)
+		9: VideoSettings.cycle_scale(1)
 
 
 ## Dispatch a Debug-submenu row. Index-aligned with _get_debug_list().
@@ -745,7 +750,10 @@ func _sub_accept() -> void:
 			_equip_slot_idx = _sub_idx
 			_equip_item_idx = 0
 			if _equip_slot_idx < slots.size():
-				_mode = Mode.EQUIP_PICK
+				if slots[_equip_slot_idx].key == "sets":
+					preload("res://scripts/ui/equipment_set_menu.gd").open(self)
+				else:
+					_mode = Mode.EQUIP_PICK
 		Mode.TECHS:
 			var techs := _get_techniques()
 			if _sub_idx < techs.size():
@@ -1049,6 +1057,7 @@ func _get_equip_slots() -> Array:
 
 	# Mag
 	slots.append({"label": "Mag", "key": "mag", "type": "mag", "item": str(equip.get("mag", ""))})
+	slots.append({"label": "Sets", "key": "sets", "type": "sets", "item": ""})
 	return slots
 
 

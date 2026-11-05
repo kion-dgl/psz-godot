@@ -1,0 +1,105 @@
+{
+ "source": "enemy/deploy/<set>/<stage><variant>_<room>.rel, 1742 files, ZPR-compressed",
+ "answers": "parity request A1's static half, PARTLY \u2014 the container and the record stride are decoded; the field semantics are not",
+ "container": {
+  "outer": "ZPR. The 224 bytes the parity doc quotes is the DECOMPRESSED size; on disk they are ~170.",
+  "inner": "DSIF, with an NDR\\0 block whose payload starts 0x10 past its magic. Also NOF0 and NEND, the same shape as enemy_data_*.rel.",
+  "payload_sizes": {
+   "16 bytes": 219,
+   "128 bytes": 1442,
+   "240 bytes": 81
+  }
+ },
+ "THE_TRAILER_IS_A_STRIDE_AND_A_COUNT": {
+  "shape": "the payload's last four words are (16, K, 0, 0)",
+  "K_values": "0 for the 16-byte payloads, 1 for the 128-byte, 2 for the 240-byte",
+  "*** AN EXACT IDENTITY, NOT A FIT ***": "len(body) == 28 * K holds for ALL 1523 files that have a body, where body is the payload minus that four-word trailer. 4 + 28*0 = 4, 4 + 28*1 = 32, 4 + 28*2 = 60 words \u2014 the three observed payload sizes exactly. So K is a block count and a block is 28 words."
+ },
+ "THE_RECORD_IS_A_TRIPLE_NOT_A_QUAD": {
+  "test": "pool every file's body and count, for a given stride, how often each column is zero",
+  "stride 3": "columns are zero 1323 / 1027 / 7483 times \u2014 column 2 stands out by a factor of six",
+  "stride 4": "2680 / 2738 / 2731 / 2702 \u2014 flat, i.e. no structure at all",
+  "reading": "the body is a run of 3-word records. That matters because the trailer's 16 says the RECORD SIZE is 16 bytes, i.e. four words, and taking that at face value gives the structureless stride-4 reading. The 16 describes something else \u2014 most likely the stride of whatever the NOF0 block relocates \u2014 and reading it as the body's record size is the trap here."
+ },
+ "the_block_does_not_tile_evenly_and_the_leftover_is_a_FLAG": {
+  "arithmetic": "28 words is 9 triples (27 words) with one word left over",
+  "what_that_word_holds": "0 in 1014 blocks and 1 in 590 blocks, and nothing else \u2014 a boolean, never a coordinate",
+  "so": "a block is 9 slots plus a flag, which is why 28 is not divisible by 3"
+ },
+ "unused_slots_are_all_zero": "1019 of 14436 triples read (0, 0, 0)",
+ "what_would_settle_it": "A1's dynamic half. Read the spawned enemies' positions out of RAM on room entry and correlate against the triples for that room code. That decides the field order by measurement instead of by which permutation looks plausible, and it is the half of A1 this does not touch.",
+ "*** THE PREVIOUS ENTRY'S REFUTATION IS WITHDRAWN \u2014 col2 IS an elevation ***": {
+  "what_was_claimed": "that the (x, z, y) reading with y a ground-level height was REFUTED, because the third component is zero in only 50.5 percent of occupied triples \u2014 'a coin flip'.",
+  "why_that_was_wrong": "zero-frequency was the only property tested, and it is the weakest one available. Two stronger properties were sitting in the same data and both say the third component is categorically unlike the first two.",
+  "1_it_is_NEVER_NEGATIVE": "col0 spans -34.06 to 49.97 and col1 spans -40.06 to 50.49 \u2014 freely signed, as a position about a room origin should be. col2 spans 0.00 to 50.34 and never goes below zero, across all 13417 occupied triples. A third free coordinate would be signed like the other two; a height above a floor cannot be.",
+  "2_it_is_QUANTISED_and_they_are_not": "col2's most common values are 8.000 (x289), 4.588, 5.059, 4.000 (x183), 12.000 (x117), 16.000 (x116) \u2014 the peaks are exact multiples of 4.0. And it takes 1724 distinct values against col0's 7657 on the same triples. Discrete levels with a continuous tail is what storey heights look like; it is not what a free coordinate looks like.",
+  "the_reading_now": "col0 and col1 are the horizontal pair and col2 is an ELEVATION, quantised mostly to multiples of 4.0 with 0 meaning ground. That makes the 50.5 percent figure a fact about the levels rather than evidence against them \u2014 half the deploy slots in this roster sit on raised geometry.",
+  "confidence": "likely, not confirmed. Two independent structural properties agree and nothing contradicts them, but which of col0/col1 is x and which is z is still unknown, and nothing here has been checked against a spawned enemy's actual position. A1's dynamic half remains the oracle.",
+  "the_lesson": "the earlier refutation was published on one weak statistic when two decisive ones were available in the same array. A negative needs its coverage checked exactly as hard as a positive does \u2014 and 'is it often zero' is a much weaker question than 'is it ever negative'."
+ },
+ "ALIGNMENT_CONFIRMED_the_flag_is_LAST": "the block could have been a leading flag plus nine triples instead of nine triples plus a trailing flag, and the two differ by one word of phase. Tested both: flag-last gives a field holding only {0: 1014, 1: 590}, flag-first gives 823, 6535, -18062, -35834 and hundreds more. The trailing reading is the right one.",
+ "THE_DEPLOY_SET_IS_PER_QUEST_NOT_PER_STAGE": {
+  "closes": "the 'stage -> deploy_set map' asked for by parity requests A5 and A6 \u2014 by refuting its premise",
+  "*** THE PREMISE IS WRONG ***": "A5 and A6 ask for 'each stage's deploy set (d / f1..f4 / s)', which assumes the set is a property of the stage. It is not. Every stage appears in EVERY set: s01..s07 in all six, s08 in five (absent only from 'd'). The set is an orthogonal axis, so no stage -> set map exists to be written down.",
+  "the_selector": {
+   "function": "FUN_02041a50 (110 bytes), called from FUN_0204005c, FUN_02041a20 and FUN_020402a4",
+   "logic": [
+    "if *(char *)(0x0211A3C4 + 0x0C) == 1  ->  \"s\"",
+    "if *(char *)(0x0211A3C4 + 0x0C) == 0  ->  \"d\"",
+    "otherwise rec = FUN_02031c74(); if rec == 0 -> \"f1\"",
+    "if rec[0x0B] < 1 -> \"f1\";  if rec[0x0B] > 9 -> \"f1\"",
+    "else sprintf(out, \"f%d\", rec[0x0B])"
+   ],
+   "so": "a global mode byte picks the story and 'd' sets outright, and everything else falls through to a NUMBER held in the quest record, formatted as f<N> and clamped to 1..9 with f1 as the fallback in all three failure cases."
+  },
+  "*** IT IS THE SAME RECORD THAT OVERRIDES THE ROOM COUNT ***": "FUN_02031c74 is the accessor already identified for the generator's parameter override \u2014 the one whose bytes +0x18..+0x22 overwrite params[0..10] and explained the 8/9/9/8/10 room counts. The deploy set is byte +0x0B of that same block. So room count and enemy layout are selected by one per-quest record, which is a much simpler picture than a per-stage table.",
+  "confirmed_live": "all five field savestates read override+0x0B = -1, which takes the `< 1` branch and yields f1. That is the same -1 sentinel the record uses at +0x18..+0x22 for 'leave alone', so the value is consistent with the rest of the block rather than being a separate convention.",
+  "f4_IS_A_STRICT_SUPERSET": "321 distinct file stems exist across all six sets, and f4 holds all 321 \u2014 every other set's stems are 100 percent contained in it (d 285, f1 280, f2 284, f3 261, s 311). 144 stems are present in all six. So f4 is the complete roster and the others are subsets of it.",
+  "s08_NAMES_ITS_VARIANT_WITH_A_DIGIT": "s01..s07 use <stage><letter>_<room> (s01a_ib1); s08 uses <stage><digit>_<room> (s080_sa0, s081_ga1 .. s084_*). That is why 26 files per set do not match the letter pattern, and it is a parsing trap for anything walking these filenames."
+ },
+ "THE_TRIPLES_ARE_ROOM_LOCAL": {
+  "claim": "the ground-plane pair is in the SAME frame and units as data/room_doorways.json, bounded by the room's own wall",
+  "measurement": "11402 of 11511 spawns (99.1%) across 277 rooms fall inside +-22; median radius 9.7, 99th percentile 21.9",
+  "why_it_is_a_real_oracle": "room_doorways.json is derived from the room MODELS, an unrelated part of the ROM. A wrong stride or phase would scatter over the i32 range and respect no boundary at all, so this is the strongest check the stride-3 reading has.",
+  "for_the_port": "drop the triples in as room-local positions; nothing needs ringing around a room centre",
+  "tool": "python3 tools/deploy.py --index"
+ },
+ "ROOM_GEOMETRY_CANNOT_SETTLE_THE_AXIS_ORDER \u2014 REFUTED": {
+  "what_was_tried": "use each room's footprint to decide which column is x, by asking which assignment keeps the spawns inside the room",
+  "why_it_fails": "every room in room_doorways.json is a single 44x44 cell, symmetric in x and z, so swapping the columns scores IDENTICALLY by construction. A square cannot say which side is which.",
+  "the_refinement_and_why_it_is_too_weak": "a spawn that crosses a wall should be standing in that wall's doorway. Out of 115 out-of-bounds slots it explains 14 one way and 3 the other -- and the gap sits mostly in the 'no such door' column (34 vs 75), which just reflects how many more north/south doors exist than east/west. A door-count prior, not a measurement.",
+  "so": "the axis order, and ONLY the axis order, still needs A1's dynamic half",
+  "SUPERSEDED": "this refutation is about the FOOTPRINT only, and in that form it stands. Door geometry does settle the order \u2014 see THE_COLUMN_ORDER_IS_Z_THEN_X. The earlier out-of-bounds refinement recorded here pointed the same way (14 slots against 3 for col0=z) and is now corroborated rather than dismissed."
+ },
+ "A_SMALL_CORRECTION_col2_peaks_are_not_exact": "recorded above as 'exact multiples of 4.0'. They are not: 0x3FFF, 0xBFFF and 0xFFFF sit one LSB below 4.0, 12.0 and 16.0, against a clean 0x8000 for 8.0. Same counts (289/183/117/116), so it is the same data rounded in the write-up. Why the near-miss is unexplained.",
+ "THE_COLUMN_ORDER_IS_X_THEN_Z \u2014 CONFIRMED against live spawns": {
+  "answer": "col0 is x and col1 is z. The obvious order after all.",
+  "oracle": "a savestate is a RAM snapshot, so A1's 'dynamic half' needs no emulator: read the spawned enemies out of the state with pszd's entity scan and the room table, and compare against the triples.",
+  "result": "50 enemies across six rooms (s01a_tb3, s02a_lb1, s03a_xb2, s03z_na1, s05a_lc1, s05z_na1) and 20 field states sit on a deploy slot EXACTLY \u2014 residual 0.000 at 1.19.12 precision \u2014 and 0 do under the swapped order.",
+  "worked_example": "s03a_xb2 set d, four enemies at full HP: (-12.415, 11.029), (7.803, 3.117), (4.182, 9.419), (-11.866, 14.117) are four of the eight occupied slots, verbatim.",
+  "for_the_port": "read the triples as (x, z, elevation). This is the plain reading; no transposition."
+ },
+ "*** THE (z, x) READING IS REFUTED \u2014 recorded, not deleted ***": {
+  "what_was_claimed": "col0 is z and col1 is x \u2014 NOT the (x, z) a reader would assume",
+  "what_it_rested_on": "door geometry: spawns reach further toward walls WITH doors under (z,x) on three of four walls, and under (x,z) all four inverted. The inversion was called 'absurd' \u2014 enemies crowding solid walls and avoiding openings.",
+  "why_it_was_wrong": "the measurement is real; the SIGN was interpreted backwards. These are AUTHORED spawn points, not physics. A designer places enemies in the body of the room and away from the doorway the player walks in through, so sitting further from doored walls is exactly what should be expected. A design convention was treated as a physical constraint.",
+  "what_still_stands": "the footprint refutation (a 44x44 cell is square, so containment cannot separate the axes) and the wall_approach measurement itself. Only the inference from it is withdrawn.",
+  "lesson": "a geometric signal can be real and still not tell you its own direction. It needed an oracle that compares against the game, and one existed the whole time."
+ },
+ "*** THE SET LETTERS ARE THE QUEST DIRECTORIES \u2014 and 'yields f1' is REFUTED ***": {
+  "closes": "the node's fourth open question, 'which deploy SET a given room instance uses'",
+  "the_premise_it_refutes": "the question assumed an observation had to pick the set, and could not, because several sets match the same room's spawns exactly (s01a_tb3 matches d, f1 and f2 at 4/4). The game never asks the question that way \u2014 the set is chosen from one byte before any room is drawn.",
+  "the_byte": "byte +0x0C of the 16-byte session record at 0x0211A3C4 \u2014 the SAME record whose byte +0x0D is the difficulty tier. FUN_02041a50's pool word DAT_02041ac0 reads 0x0211a3c4 in RAM, and its three string pointers resolve to 's' (0x020f8dc4), 'd' (0x020f8dc8) and the format 'f%d' (0x020f8dd4), with 'f1' at three separate failure pointers.",
+  "WHAT_BYTE_12_SELECTS_boss_porting_had_it_as_unestablished": "boss-porting.md records '+12 gets the identical clamp, so the record carries two tri-state mode bytes side by side. What +12 selects is NOT established.' It is now: +12 is the deploy-set family. The 0..2 clamp in FUN_0209ce8c is exactly three families, and there are exactly three \u2014 d, s and f.",
+  "the_letters": {
+   "d": "DIVE \u2014 every savestate on a single/dive quest (0010100..0010700) reads byte 12 = 0",
+   "s": "STORY \u2014 every savestate on a single/story quest (0030100..) reads byte 12 = 1",
+   "f1..f4": "FREE \u2014 single/free is 0020100..0021500. INFERRED from the else-branch and the 0..2 clamp; byte 12 = 2 has never been observed, because no savestate is on a free quest."
+  },
+  "the_quest_id_space_is_decimal_and_this_extends_the_dive_finding": "build/fs/quest splits single/multi then city/dive/free/story, and the id is multi*100000 + family*10000 + N*100 (+ sub). So boss-porting's 'quest id = 110000 + floor*100' for the multiplayer dive is not a magic base \u2014 110000 is multi(1) + dive(1), and the same decomposition names all 62 shipped quest files.",
+  "*** THE RECORDED 'yields f1' IS REFUTED ***": "this file said 'all five field savestates read override+0x0B = -1, which takes the < 1 branch and yields f1'. The override byte does read -1, and that half stands. But byte +0x0C is tested FIRST and short-circuits, and it reads 0 or 1 in all 37 readable savestates \u2014 so the f-branch is never taken, the override byte is never consulted, and f1 is never selected. The error was tracing the branch that was interesting rather than the branch that runs first.",
+  "live_agreement": "for the 7 field states whose enemies sit exactly on deploy slots, the byte-12 prediction is never beaten by another set (7/7), and the 3 STORY states match set 's' and NO other set at all \u2014 those are what make it a result rather than a tie. tools/checks.py::the_deploy_set_is_chosen_by_byte_12_of_the_session_record.",
+  "FOR_PSZ_GODOT": "single-player STORY mode uses deploy set 's' exclusively \u2014 read enemy/deploy/s/<stage><variant>_<room>.rel. 'd' is the single-player dive and f1..f4 are free. This pairs with the tier finding: story-mode enemies are set 's', tier 0.",
+  "what_would_falsify_it": "a savestate on a single/free quest reading byte 12 = 2, or any savestate whose enemies sit on a set other than the one byte 12 names."
+ }
+}

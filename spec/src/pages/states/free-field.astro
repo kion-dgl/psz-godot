@@ -202,8 +202,7 @@ const tree = `flowchart TD
   </ul>
   <p>
     Every draw goes through the generator's seeded RNG, so a seed reproduces a field
-    exactly. Authored <strong>walls</strong> are in the table and are deliberately
-    <em>not</em> placed — see the approximation list below.
+    exactly. Authored <strong>walls</strong> are placed during ordinary play; the autopilot obstacle override skips them for navigation probes.
   </p>
 
   <h2>Traps</h2>
@@ -288,10 +287,10 @@ const tree = `flowchart TD
 
   <h2>What is deliberately approximated</h2>
   <ul>
-    <li><strong>The generator algorithm itself</strong> is located in the decomp (psz-re <code>FUN_02082a98</code>; room count = <code>min + rand(max−min)</code>) but not yet ported. Current fields are <strong>static fixtures</strong> transcribed from observed layouts — parity of output, not of the RNG. (issue #562 Phase 3.)</li>
+    <li>The original generator MUST advance once from the recorded entry state for its first draw (the RNG already advances on draw). It supplies the seeded room graph, return directions, layout categories and room seeds. The Godot adapter MUST preserve that graph, expose the terminal goal pad and section return door, and choose authored tiles whose rotated doors match those connections. Layout categories MUST use the room's eligible-group fallback without another random draw. If the newer placement export omits a group table, the adapter MUST retain the legacy authored table rather than replace it with empty groups.</li>
     <li><strong>Enemy spawn positions</strong> within a room are not decoded; the builder rings them around room centre. Object and trap positions are no longer approximated — see above.</li>
     <li><strong>Which allowed wave</strong> a room rolls is our own weighted pick (see above).</li>
-    <li><strong>Authored walls are not placed.</strong> Their positions are as measured as the boxes; the reason is gameplay, not data. A wall blocks, the free-roam autopilot's walk backbone cannot attack one, and a wall across the line between two doorways is a soft-lock rather than a cosmetic complaint. Gated behind <code>FieldPopulation.PLACE_WALLS</code> until the nav harness routes around blockers.</li>
+
     <li><strong>Original hostile trigger and blast radii remain unmeasured.</strong>
       Controlled player-position sweeps activate hidden Heat and elevated CAST-visible
       Ice at different horizontal distances, so they do not establish a universal

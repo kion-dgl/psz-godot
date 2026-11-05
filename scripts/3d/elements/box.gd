@@ -6,6 +6,7 @@ class_name Box
 
 signal destroyed_box
 
+
 ## Whether this box is a rare variant (uses the shared o0c_recont instead of
 ## the active area's oNN_cont)
 @export var is_rare: bool = false
@@ -18,6 +19,11 @@ signal destroyed_box
 
 
 var is_alive: bool = true
+
+## Cone-targeting bounds, fitted from the loaded container in _ready (walls
+## carry the same pair). The cone reads these for no-enemy_data targets.
+var target_radius := 0.5
+var target_height := 0.5
 
 
 func _init() -> void:
@@ -38,10 +44,20 @@ func _ready() -> void:
 
 	super._ready()
 	_fit_collision_to_model()
+	# Cone bounds ON the container, aimed at its vertical centre — the same
+	# fix walls got. The cone's default for a no-enemy_data target is a 0.5
+	# sphere at the ORIGIN (the feet), which put the lock-on point on the
+	# floor beside the box and left close-range swings missing it entirely.
+	target_radius = maxf(collision_size.x, collision_size.z) * 0.5
+	# FULL height: the cone places its aim sphere at position + height/2,
+	# matching enemies' collision_height semantics — so this lands the aim
+	# point at the container's true centre, not on the floor beside it.
+	target_height = collision_size.y
 	collision_body = _build_static_collision("BoxCollision")
 	_setup_hurtbox("BoxHurtbox")
 	_setup_mirror_textures(Vector2(0, 1) if is_rare else Vector2.ZERO)
-	_setup_reticle(collision_size.y + 0.5)
+	# Reticle at the centre too, not floating above the lid.
+	_setup_reticle(target_height)
 
 
 ## Size the collision box from the container the area actually loaded.
@@ -79,6 +95,7 @@ func destroy() -> void:
 	set_state("destroyed")
 	SfxManager.play_at("res://assets/sfx/common/common_160.wav", global_position)
 	destroyed_box.emit()
+	_spawn_break_effect(Color(0.72, 0.55, 0.34))
 
 	# Spawn drop if configured
 	if drop_type != "none":

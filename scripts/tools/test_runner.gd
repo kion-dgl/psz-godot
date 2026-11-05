@@ -25,6 +25,8 @@ func _ready() -> void:
 	_run_tests_systems()
 	preload("res://scripts/tools/test_gameplay_recovery.gd").run(self)
 	preload("res://scripts/tools/enemy_status_tests.gd").run(self)
+	preload("res://scripts/tools/ambience_feedback_tests.gd").run(self)
+	preload("res://scripts/tools/boss_warp_tests.gd").run(self)
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -36,9 +38,11 @@ func _ready() -> void:
 # Player state machine + combat: states, commitment, combos, damage math,
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
+	preload("res://scripts/tools/player_hit_recovery_tests.gd").run(self)
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)
 	test_player_states()
+	test_original_camera()
 	test_player_defeat_invulnerable()
 	test_player_anim_library_cache()
 	test_player_model_y_damping()
@@ -138,6 +142,7 @@ func _run_tests_core() -> void:
 	test_ranger_playthrough()
 	preload("res://scripts/tools/technique_progression_tests.gd").run(self)
 	preload("res://scripts/tools/systems_progression_tests.gd").run(self)
+	preload("res://scripts/tools/equipment_set_tests.gd").run(self)
 	test_technique_disks()
 	test_disk_duplicate_use_strips_suffix()
 	test_new_registries()
@@ -158,6 +163,7 @@ func _run_tests_core() -> void:
 	test_key_spawn_policy()
 	preload("res://scripts/tools/test_trap_validation.gd").run(self)
 	preload("res://scripts/tools/environment_trap_tests.gd").run(self)
+	preload("res://scripts/tools/turret_tests.gd").run(self)
 	test_field_trap_behaviour()
 	test_trap_vision_reveal()
 	test_palette_picker_grid()
@@ -278,6 +284,7 @@ func _run_tests_systems() -> void:
 	test_debug_unlock_all_missions()
 	test_input_config()
 	test_crt_filter()
+	preload("res://scripts/tools/video_settings_tests.gd").run(self)
 	test_confirm_input_precedence()
 	test_blackjack()
 	test_kill_state_survives_warp_flush()
@@ -289,6 +296,8 @@ func _run_tests_systems() -> void:
 	test_field_state_full_contract_roundtrip()
 	test_minimap_enemy_markers()
 	test_minimap_key_markers()
+	preload("res://scripts/tools/native_mirror_tests.gd").run(self)
+	preload("res://scripts/tools/playtest_feedback_tests.gd").run(self)
 	test_script_parse()
 	test_autoloads_avoid_packonly_classscope_preloads()
 	test_orbit_camera_follow_y_damping()
@@ -1485,7 +1494,7 @@ func test_key_scatter_dead_ends() -> void:
 	assert_true(int(t["offered"]) > 0,
 		"the sweep met dead ends in scatter pools (%d — widen it if 0)" % t["offered"])
 	assert_eq(int(t["missed"]), 0,
-		"every dead end a scatter pool offers takes a key first (#639)")
+		"dead ends take the available gate keys first (#639)")
 	assert_eq(int(t["key_cells_without_enemy"]), 0,
 		"a key cell never emits without an enemy to drop it (#639)")
 	assert_eq(int(t["behind_own_gate"]), 0, "no key sits behind the gate it opens")
@@ -1524,11 +1533,19 @@ func _tally_key_scatter(gen, cells: Dictionary, t: Dictionary) -> void:
 		var locked_dir := _key_gate_dir(cells[pos])
 		if locked_dir.is_empty():
 			continue
+		var offered := 0
+		var filled := 0
 		for p in gen._key_scatter_pool(grid, pos, locked_dir):
 			if gen._cell_connections(grid, p).size() == 1:
-				t["offered"] = int(t["offered"]) + 1
-				if int(cells[p].get("key_count", 0)) <= 0:
-					t["missed"] = int(t["missed"]) + 1
+				offered += 1
+				if int(cells[p].get("key_count", 0)) > 0:
+					filled += 1
+		t["offered"] = int(t["offered"]) + offered
+		# A one-key gate cannot fill two offered dead ends. Require the
+		# affordable number first, rather than inventing surplus keys.
+		var demand := int(cells[pos].door_attributes[locked_dir])
+		t["missed"] = int(t["missed"]) + maxi(0, mini(offered, demand) - filled)
+
 
 
 ## The direction of a cell's key gate (attr 1 or 2), or "" when it has none.
@@ -2919,31 +2936,76 @@ func test_player_states() -> void:
 	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
 	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
 
-	# Dodge i-frames (spec /mechanics/dodge, tightened by #377): only the
-	# first DODGE_IFRAME_DURATION (0.2s) of the roll is invincible — NOT the
-	# whole move phase. Off-tree instance — take_damage's i-frame return
-	# fires before any tree-dependent call.
-	assert_eq(consts.get("DODGE_IFRAME_DURATION"), 0.2, "i-frame window is the fixed 0.2s (#377)")
+	# Dodge durability (spec /mechanics/dodge, 2026-10 ROM correction): the
+	# original's hit-reaction gate excludes the knockdown/dead states, NOT the
+	# dodge — there are no i-frames. Every frame of the roll is damageable and
+	# interrupts the action; the pass-through window gates contact only.
+	assert_true(not consts.has("DODGE_IFRAME_DURATION"), "i-frame constant removed (ROM correction)")
+	assert_eq(consts.get("DODGE_DURATION"), 41.0 / 30.0, "dodge is the 41-frame ROM action (roll + get-up)")
+	assert_eq(consts.get("DODGE_PASS_THROUGH"), 10.0 / 30.0, "pass-through window is the first 10 frames")
 	var p = PlayerScript.new()
 	var hp_full: int = GameState.max_hp
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.1
-	p.dodge_move_end = 0.5
-	p.take_damage(25)
-	assert_eq(GameState.hp, hp_full, "hit inside the 0.2s window ignores damage (i-frames)")
-	assert_eq(p.current_state, states["DODGING"], "i-frame hit does not interrupt the roll")
-	p.dodge_timer = 0.3  # inside the move phase but PAST the i-frame window
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "hit past 0.2s takes damage even mid-move-phase (#377)")
-	assert_eq(p.current_state, states["DAMAGED"], "post-window hit interrupts the roll (DODGING → DAMAGED)")
+	p.dodge_timer = 0.1  # inside the pass-through window
+	p.take_damage(15)
+	assert_eq(GameState.hp, hp_full - 15, "no dodge immunity: a hit inside the pass-through window damages")
+	assert_eq(p.current_state, states["DAMAGED"], "any hit interrupts the roll (DODGING → DAMAGED)")
 	GameState.set_hp(hp_full)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
-	p.take_damage(5)
-	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
+	p._tick_hit_invulnerability(0.5)  # Independent hit after recovery.
+	p.dodge_timer = 0.9  # deep in the get-up frames
+	p.take_damage(25)  # heavy hit
+	assert_eq(GameState.hp, hp_full - 25, "get-up frames take damage")
+	assert_eq(p.current_state, states["DOWN"], "get-up hit interrupts the roll (DODGING → DOWN)")
 	GameState.set_hp(hp_full)
 
+	# Pass-through gates contact, not damage: open for the first 10 frames.
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.05
+	assert_true(p.is_dodge_passing_through(), "pass-through open in the first 10 frames")
+	p.dodge_timer = 0.4
+	assert_true(not p.is_dodge_passing_through(), "pass-through closed after 10 frames")
+	p.current_state = states["IDLE"]
+	assert_true(not p.is_dodge_passing_through(), "pass-through only applies while DODGING")
+
+	_check_dodge_curve(p)
+	_check_dodge_charge_cancel(p, states)
+	p.free()
+	print("")
+
+
+func _check_dodge_curve(p) -> void:
+	# ROM displacement curve (data/re_reference/player_dodge_motion.json):
+	# total travel 17901 Q12 ≈ 4.37 u in the dodge direction (+z local), with
+	# the front-loaded plateau at ~1085 Q12/frame.
+	var curve_total := Vector2.ZERO
+	for i in range(41):
+		curve_total += p._dodge_curve_delta(i)
+	assert_almost_eq(curve_total.y, 17901.0, 1.0, "dodge curve total travel is 17901 Q12")
+	assert_almost_eq(absf(curve_total.x), 30.0, 1.0, "curve lateral wobble sums to ~30 Q12 (the roll arc)")
+	assert_eq(p._dodge_curve_delta(8).y, 1085.0, "curve plateau step is 1085 Q12/frame")
+	assert_eq(p._dodge_curve_delta(0), Vector2.ZERO, "admission frame is static")
+	assert_eq(p._dodge_curve_delta(45), Vector2.ZERO, "past the table the get-up adds no displacement")
+	# The embedded constant must stay in lockstep with the reference JSON
+	# (the shipped pack carries no data/ tree, so the curve lives in code —
+	# this is the drift pin between the two).
+	var reference: Variant = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://data/re_reference/player_dodge_motion.json"))
+	if reference is Dictionary and reference.get("delta_per_frame") is Array:
+		var rows: Array = reference["delta_per_frame"]
+		assert_eq(p.DODGE_MOTION_CURVE.size(), rows.size(), "embedded curve length matches the reference JSON")
+		var drift := false
+		for i in range(mini(p.DODGE_MOTION_CURVE.size(), rows.size())):
+			if p.DODGE_MOTION_CURVE[i] != Vector2(float(rows[i][0]), float(rows[i][1])):
+				drift = true
+				break
+		assert_true(not drift, "embedded curve matches the reference JSON exactly")
+	else:
+		assert_true(false, "player_dodge_motion.json unreadable — cannot pin the embedded curve")
+
+
+func _check_dodge_charge_cancel(p, states: Dictionary) -> void:
 	# Charge-cancel on DODGING (spec /states/player-state): a mid-charge
 	# technique drops on entering DODGING, releasing the slot.
 	var released: Array = []
@@ -2954,8 +3016,6 @@ func test_player_states() -> void:
 	p.transition_to(states["DODGING"])
 	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
 	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
-	p.free()
-	print("")
 
 
 # ── Defeat damage-immunity (#469, spec /states/player-death) ──
@@ -3002,6 +3062,33 @@ func test_player_defeat_invulnerable() -> void:
 # damps the visible mesh's Y toward the body (via _damp_scalar) so those per-step
 # pops glide, while physics stays exact. Snaps on a real fall so the mesh never
 # floats. Locks the damping contract; the buttery result is verified in-game.
+# Previous orbit controls with the retained 5-unit, 11.25-degree framing.
+func test_original_camera() -> void:
+	var cam = preload("res://scenes/3d/camera/orbit_camera.tscn").instantiate()
+	add_child(cam)
+	var target := Node3D.new()
+	add_child(target)
+	cam.set_target(target)
+	cam.camera_rotation = 0.3
+	cam._update_camera_position(0.0)
+	var look := target.global_position + Vector3.UP * 1.5
+	assert_almost_eq(cam.camera.global_position.distance_to(look), 5.0, 0.00001, "retained camera radius")
+	assert_almost_eq(cam.camera.global_position.y, 1.5 + 5.0 * sin(PI / 16.0), 0.00001, "retained camera elevation")
+	assert_almost_eq(cam.camera.fov, 44.0, 0.00001, "retained framing FOV")
+	target.position.x += 1.0
+	cam._update_camera_position(1.0 / 60.0)
+	assert_almost_eq(cam.camera_rotation, 0.3, 0.00001, "movement does not rotate camera")
+	assert_almost_eq(cam.camera.global_position.x, 1.0 + sin(0.3) * cam.distance, 0.00001, "horizontal follow is immediate")
+	cam.camera_pitch = 0.2
+	cam._center_behind_player()
+	assert_almost_eq(cam.camera_rotation, PI, 0.00001, "recenter is immediate")
+	assert_almost_eq(cam.camera_pitch, 0.0, 0.00001, "recenter restores default pitch")
+	cam._update_camera_position(0.0)
+	assert_true(cam.camera.global_transform.is_equal_approx(cam.get_follow_transform()), "shop return agrees with camera pose")
+	cam.free()
+	target.free()
+
+
 func test_player_model_y_damping() -> void:
 	print("── Player Model Y Damping ──")
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
@@ -3101,10 +3188,10 @@ func test_action_commitment() -> void:
 	assert_eq(p.current_state, states["DAMAGED"], "damage interrupts a swing (ATTACKING → DAMAGED)")
 	GameState.set_hp(GameState.max_hp)
 	p.current_state = states["DODGING"]
-	p.dodge_timer = 0.5  # outside the i-frame window
-	p.dodge_move_end = 0.5
+	p._tick_hit_invulnerability(0.5)  # Independent hit after recovery.
+	p.dodge_timer = 0.5  # get-up frames — damageable, no dodge immunity
 	p.take_damage(25)  # heavy hit
-	assert_eq(p.current_state, states["DOWN"], "damage outside i-frames interrupts a roll (DODGING → DOWN)")
+	assert_eq(p.current_state, states["DOWN"], "damage interrupts a roll (DODGING → DOWN)")
 	GameState.set_hp(GameState.max_hp)
 
 	# Hitbox lifetime (#428): EVERY exit from ATTACKING deactivates the attack
@@ -3116,6 +3203,7 @@ func test_action_commitment() -> void:
 	p.transition_to(states["ATTACKING"])
 	hb.activate()
 	hb._hit_targets.append(p)  # simulate a landed hit ("stored" target slot)
+	p._tick_hit_invulnerability(0.5)  # Independent damage-interrupt case.
 	p.take_damage(15)
 	assert_true(not hb.monitoring, "damage interrupt deactivates the attack hitbox (#428)")
 	assert_eq(hb._hit_targets.size(), 0, "deactivation clears stored hits — no carry-over (#428)")
@@ -9007,7 +9095,7 @@ func test_combo_two_tier() -> void:
 	pl.set("_combo_fumbled", false)  # fresh swing for the accept asserts below
 
 	# chain-accept: at/after just_start queues a NORMAL chain.
-	pl.set("_attack_anim_elapsed", 0.5)
+	pl.set("_attack_anim_elapsed", float(CombatManager.get_weapon_type_config(0).original_timing_steps[0].chain_open_frac))
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"press at/after just_start queues a normal chain")
@@ -9058,7 +9146,7 @@ func test_combo_chain_lifecycle() -> void:
 	const PlayerScript := preload("res://scripts/3d/player/player.gd")
 
 	# chain-accept: a press at/after just_start queues a NORMAL chain.
-	var pl = _combo_swing_player(PlayerScript, 2, 0.8)
+	var pl = _combo_swing_player(PlayerScript, 2, float(CombatManager.get_weapon_type_config(0).original_timing_steps[1].chain_open_frac))
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NORMAL),
 		"press at/after just_start queues a normal chain")
@@ -9130,7 +9218,7 @@ func test_combo_miss_early_fumble() -> void:
 		"fumbling press queues nothing")
 
 	# Mash: presses inside the accept window are now locked out.
-	pl.set("_attack_anim_elapsed", 0.5)  # just window
+	pl.set("_attack_anim_elapsed", float(CombatManager.get_weapon_type_config(0).original_timing_steps[0].chain_open_frac))  # just window
 	pl._try_queue_combo(false)
 	assert_eq(int(pl.get("_queued_combo")), int(PlayerScript.ComboQueue.NONE),
 		"just-window press after a fumble is ignored")
@@ -9235,7 +9323,7 @@ func test_damaging_frame() -> void:
 	pl._handle_attack_state(0.2)  # elapsed 0.2 < saber damaging_frac[0] 0.40
 	assert_true(not bool(pl.get("_attack_hit_done")), "no hit before the damaging frame")
 	pl._handle_attack_state(0.25)  # elapsed 0.45 ≥ 0.40 → resolves (off-tree: empty cone)
-	assert_true(not bool(pl.get("_attack_hit_done")), "empty melee scan keeps the window open")
+	assert_true(bool(pl.get("_attack_hit_done")), "empty imported event is consumed once")
 	pl._handle_attack_state(0.15)
 	assert_true(bool(pl.get("_attack_hit_done")), "empty window closes after its end")
 	pl._play_and_track_attack("no_such_anim")

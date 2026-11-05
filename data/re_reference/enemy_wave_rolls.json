@@ -1,0 +1,556 @@
+{
+  "source": "psz-re tools/waves.py \u2014 room table + spawned entities read out of savestates, 2026-08-02",
+  "answers": "parity request A2, PARTLY \u2014 the observed roll is identified where the spawn shape is distinctive, and the obvious seed readings are refuted",
+  "method": "a savestate is a RAM snapshot, so A2's 'dynamic half' needs no emulator. The room table gives each room's code and its +0x14 word; pszd's entity scan gives the enemies standing in the loaded room; the deploy slots say WHICH room those enemies belong to, because they sit on its slots exactly. Species is not stored in an entity, only its class vtable, so a template is identified by the SHAPE of the spawn \u2014 the sorted multiset of per-vtable counts.",
+  "*** THE ASSIGNMENT TABLE IS VALIDATED, for ordinary rooms ***": "every ordinary-room spawn matches one of that room's allowed templates, and three do so uniquely: s02a_lb1 -> template 22 (frog x5), s03a_xb2 -> template 38 (rabbit x4), s05a_lc1 -> template 81 (quad x2). enemy_room_assignment was read out of group_<set>.rel and had never been checked against a spawn until now.",
+  "*** BOSS ROOMS DO NOT FOLLOW THE WAVE TABLE ***": "all three z-variant na1 observations match NO allowed template. s05z_na1 holds a single entity whose vtable is 0x021A1604 \u2014 the Paru robot, per data/boss_paru_robot.json \u2014 while its only allowed template is [34, 33, 33], three ordinary enemies. s03z_na1 has two identical enemies against allowed templates [20,19] and [23 x5]. A port that applies the assignment table uniformly spawns three enemies where the boss belongs.",
+  "*** THE SEED READINGS ARE REFUTED ***": {
+    "tested": "the whole +0x14 word and either half modulo the allowed-list length; the whole word and its high half modulo the summed weight, as a weighted pick",
+    "result": "over the three uniquely identified rolls: seed%n 0/3, hi16%n 0/3, lo16%n 1/3, seed%total-in-window 1/3, hi16%total-in-window 0/3. Nothing survives.",
+    "so": "the roll is not a plain modulus into the allowed list. Recorded so the next attempt starts past these and a port does not ship `seed % len(list)` as if it were measured.",
+    "caveat": "three uniquely identified rolls is a small sample. It is enough to REFUTE \u2014 each hypothesis fails at least twice \u2014 and not enough to derive the real function."
+  },
+  "still_open": "what +0x14 actually is, and what does drive the roll. Also: s01a_tb3's spawn shape [2,2] is matched by four of its thirteen allowed templates (2, 3, 4, 5), so shape alone does not always pin one \u2014 a vtable-to-species map would.",
+  "observations": [
+    {
+      "state": "20260728-234707_Phantasy_Star_0__USA_.ml7",
+      "room": "s03z_na1",
+      "deploy_set": "s",
+      "enemies": 2,
+      "shape": [
+        2
+      ],
+      "vtables": {
+        "0x0219B594": 2
+      },
+      "matched_slots": 2,
+      "seed": "0x1a61fcbf",
+      "candidate_templates": []
+    },
+    {
+      "state": "20260729-085641_Phantasy_Star_0__USA_.ml1",
+      "room": "s05z_na1",
+      "deploy_set": "s",
+      "enemies": 1,
+      "shape": [
+        1
+      ],
+      "vtables": {
+        "0x021A1604": 1
+      },
+      "matched_slots": 1,
+      "seed": "0xe9e12c2a",
+      "candidate_templates": []
+    },
+    {
+      "state": "20260729-085648_Phantasy_Star_0__USA_.ml2",
+      "room": "s05z_na1",
+      "deploy_set": "s",
+      "enemies": 1,
+      "shape": [
+        1
+      ],
+      "vtables": {
+        "0x021A1604": 1
+      },
+      "matched_slots": 1,
+      "seed": "0xe9e12c2a",
+      "candidate_templates": []
+    },
+    {
+      "state": "20260729-132155_Phantasy_Star_0__USA_.ml1",
+      "room": "s01a_tb3",
+      "deploy_set": "d",
+      "enemies": 4,
+      "shape": [
+        2,
+        2
+      ],
+      "vtables": {
+        "0x0219C6B8": 2,
+        "0x0219C38C": 2
+      },
+      "matched_slots": 4,
+      "seed": "0xccd08985",
+      "candidate_templates": [
+        {
+          "template": 2,
+          "weight": 10,
+          "names": [
+            "lizard",
+            "lizard",
+            "snake",
+            "snake"
+          ]
+        },
+        {
+          "template": 3,
+          "weight": 20,
+          "names": [
+            "vulture",
+            "vulture",
+            "snake",
+            "snake"
+          ]
+        },
+        {
+          "template": 4,
+          "weight": 10,
+          "names": [
+            "lizard",
+            "lizard",
+            "snake_rare",
+            "snake_rare"
+          ]
+        },
+        {
+          "template": 5,
+          "weight": 20,
+          "names": [
+            "vulture",
+            "vulture",
+            "snake_rare",
+            "snake_rare"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "20260729-132203_Phantasy_Star_0__USA_.ml2",
+      "room": "s02a_lb1",
+      "deploy_set": "d",
+      "enemies": 5,
+      "shape": [
+        5
+      ],
+      "vtables": {
+        "0x0219AE34": 5
+      },
+      "matched_slots": 5,
+      "seed": "0x80cc7fe9",
+      "candidate_templates": [
+        {
+          "template": 22,
+          "weight": 10,
+          "names": [
+            "frog",
+            "frog",
+            "frog",
+            "frog",
+            "frog"
+          ]
+        }
+      ],
+      "hypotheses": {
+        "index": 0,
+        "of": 6,
+        "weight_window": [
+          0,
+          10
+        ],
+        "weight_total": 57,
+        "seed_mod_n": false,
+        "hi16_mod_n": false,
+        "lo16_mod_n": false,
+        "seed_mod_total_in_window": true,
+        "hi16_mod_total_in_window": false
+      }
+    },
+    {
+      "state": "20260729-132216_Phantasy_Star_0__USA_.ml3",
+      "room": "s03a_xb2",
+      "deploy_set": "d",
+      "enemies": 4,
+      "shape": [
+        4
+      ],
+      "vtables": {
+        "0x0219B388": 4
+      },
+      "matched_slots": 4,
+      "seed": "0x99d4a02c",
+      "candidate_templates": [
+        {
+          "template": 38,
+          "weight": 30,
+          "names": [
+            "rabbit",
+            "rabbit",
+            "rabbit",
+            "rabbit"
+          ]
+        }
+      ],
+      "hypotheses": {
+        "index": 0,
+        "of": 13,
+        "weight_window": [
+          0,
+          30
+        ],
+        "weight_total": 228,
+        "seed_mod_n": false,
+        "hi16_mod_n": false,
+        "lo16_mod_n": false,
+        "seed_mod_total_in_window": false,
+        "hi16_mod_total_in_window": false
+      }
+    },
+    {
+      "state": "20260729-132223_Phantasy_Star_0__USA_.ml4",
+      "room": "s05a_lc1",
+      "deploy_set": "d",
+      "enemies": 2,
+      "shape": [
+        2
+      ],
+      "vtables": {
+        "0x0219C32C": 2
+      },
+      "matched_slots": 2,
+      "seed": "0x276597ff",
+      "candidate_templates": [
+        {
+          "template": 81,
+          "weight": 5,
+          "names": [
+            "quad",
+            "quad"
+          ]
+        }
+      ],
+      "hypotheses": {
+        "index": 7,
+        "of": 12,
+        "weight_window": [
+          85,
+          90
+        ],
+        "weight_total": 110,
+        "seed_mod_n": false,
+        "hi16_mod_n": false,
+        "lo16_mod_n": true,
+        "seed_mod_total_in_window": false,
+        "hi16_mod_total_in_window": false
+      }
+    }
+  ],
+  "*** THE RNG SEARCH FOR THE ROLL IS EXHAUSTED \u2014 six families refuted ***": {
+    "1_plain_modulus_of_the_seed": "the whole +0x14 word and either half, modulo the allowed-list length; and the word and its high half modulo the summed weight as a weighted pick. 0/3, 0/3, 1/3, 1/3, 0/3.",
+    "2_local_lcg_seeded_from_the_seed": "144 forms \u2014 four seeding conventions x three warm-ups x six draw indices x weighted and index picks. None reproduces all three rolls.",
+    "3_spawn_time_draws": "REFUTED BY MECHANISM, not by search: the generation LCG does not advance during play at all, so nothing is drawn off it at room entry (data/rng_draw_stream.json).",
+    "4_unanchored_stream_search": "searching 400 stream positions for the slot subset returns hits at exactly the chance rate, with no consistent offset (data/enemy_slot_selection.json).",
+    "5_draws_adjacent_to_the_rooms_own_seed": "every offset in +-4 of the room's seed, under both conventions. No offset works for all three rolls, and s03a_xb2 has no hit at any offset at all.",
+    "6_fixed_choices": "not the first allowed entry (2 of 3 are index 0 but the third is index 7) and not the highest-weighted entry (s03a_xb2 drew weight 30 while weight 60 was available).",
+    "what_would_settle_it": "reading the CODE that consumes the assignment table, rather than more statistics off three observations. The table lives in enemy/group_<set>.rel and its consumer is the function that walks the {template, weight} list. That is a disassembly job, and it is where the remaining half of A2 actually lives \u2014 every reading that can be tested from savestates alone has now been tested.",
+    "why_three_rolls_is_the_ceiling": "a template is identified from a spawn only when the composition is distinctive enough to pin one allowed entry. Across the whole corpus that happens three times. More field savestates, taken in rooms with distinctive waves, would raise it \u2014 that is a capture request, not an analysis one."
+  },
+  "*** THE SIX SETS ARE VARIANTS OF ONE TABLE ***": {
+    "pairwise_identity": "73%..85% of bytes over the common 37968, for every pair \u2014 they share the room-code list and the bulk of the assignment data",
+    "f3_and_f4": "the SAME 42288-byte payload apart from TWO u32 fields: 0x5b6c 70->71 and 0x617c 5->10. Their wave-template tables were already recorded as identical (140 templates at the same offset), so the two sets differ by two numbers in the assignment data, not by design.",
+    "why_it_matters": "the sets were treated as six independent tables. A port deciding what to ship does not need six. It is also the structural reason an observed spawn matches several sets at once \u2014 the open question the byte-12 selector had to answer instead of an observation."
+  },
+  "*** WHERE THE CONSUMER SEARCH CAN ACTUALLY START ***": {
+    "the_problem": "last iteration handed A2's remainder to disassembly. Finding the consumer needs the table's runtime address, and a first look suggested it was not resident after generation.",
+    "that_was_wrong": "residency is STATE-DEPENDENT. Of 22 field-overlay savestates: seven hold all 252 room-code strings (the table fully resident), four hold exactly ONE \u2014 the code of the room the player is standing in \u2014 and the rest hold none. The four holding one are precisely the multi-room generated floors; the fully-resident ones are single-room states.",
+    "anchor": "in 20260729-085641 the payload is resident at 0x023D4F60, and 30 words elsewhere in RAM point into that block \u2014 six of them in the 0x021A3xxx region. That is the starting point for finding the code that walks the {template, weight} list: a resident copy with a known base and known referrers, rather than a cold search of the overlay.",
+    "caveat": "which SET is resident at that address is not pinned. The six payloads are 73%+ identical, so a probe has to be chosen from a region where they actually differ, and the obvious ones are shared."
+  },
+  "*** THE RESIDENT TABLE IDENTIFIES ITS OWN SET ***": {
+    "closes": "the honest limit recorded last iteration \u2014 'which SET is resident at that address is not pinned'",
+    "method": "the wave table is loaded into the heap, so a savestate still holding it can be matched back to the file it came from: compare byte for byte against each group_*.rel payload, skipping the words the loader relocates (from the file's own NOF0 table). Load base varies by session \u2014 0x023D3E70, 0x023D3E80, 0x023D3E90, 0x023D4F60 across the corpus \u2014 so it is found by searching for the room-code list rather than assumed.",
+    "*** IT AGREES WITH BYTE 12, BY A DIFFERENT ROUTE ***": "11 states hold an intact copy, and in every one the best-matching file is the set deploy.selected_set() predicts from byte +0x0C of the session record. Two independent routes \u2014 the loaded bytes and the session record \u2014 never disagree. The sharpest single case is 20260730-070044: 96% for 'd' against 71..90% for the five rivals.",
+    "the_negative_control_is_built_in": "3 further states hold a copy the heap has since reused. Their agreement collapses to 17..47% and goes FLAT across all six files \u2014 a margin of one point or less. That is the signature of no signal rather than of disagreement, and the check excludes them on the margin and then asserts that none of the excluded ones has a real margin, so the exclusion cannot hide a contradiction.",
+    "states": [
+      {
+        "state": "20260728-230040_Phantasy_Star_0__USA_.ml2",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8043886612021858,
+        "margin": 0.12392927934101372,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260728-232054_Phantasy_Star_0__USA_.ml4",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "f2",
+        "top": 0.4745819962844114,
+        "margin": 0.016077897923755635,
+        "scores": {
+          "d": 0.452,
+          "f1": 0.446,
+          "f2": 0.475,
+          "f3": 0.451,
+          "f4": 0.451,
+          "s": 0.459
+        }
+      },
+      {
+        "state": "20260728-234707_Phantasy_Star_0__USA_.ml7",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8043886612021858,
+        "margin": 0.12392927934101372,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-000627_Phantasy_Star_0__USA_.ml1",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-000632_Phantasy_Star_0__USA_.ml2",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-000637_Phantasy_Star_0__USA_.ml3",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-000641_Phantasy_Star_0__USA_.ml4",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-085641_Phantasy_Star_0__USA_.ml1",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.804474043715847,
+        "margin": 0.12401466185467491,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-085648_Phantasy_Star_0__USA_.ml2",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.804474043715847,
+        "margin": 0.12401466185467491,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "20260729-174925_Phantasy_Star_0__USA_.ml1",
+        "base": "0x023D3E90",
+        "selector": "d",
+        "best_match": "f2",
+        "top": 0.20401959128525587,
+        "margin": 0.004049695898787897,
+        "scores": {
+          "d": 0.2,
+          "f1": 0.165,
+          "f2": 0.204,
+          "f3": 0.194,
+          "f4": 0.194,
+          "s": 0.181
+        }
+      },
+      {
+        "state": "20260729-174940_Phantasy_Star_0__USA_.ml2",
+        "base": "0x023D3E80",
+        "selector": "d",
+        "best_match": "f2",
+        "top": 0.20427292687046106,
+        "margin": 0.004980385288463618,
+        "scores": {
+          "d": 0.199,
+          "f1": 0.165,
+          "f2": 0.204,
+          "f3": 0.193,
+          "f4": 0.193,
+          "s": 0.182
+        }
+      },
+      {
+        "state": "20260730-070044_Phantasy_Star_0__USA_.ml2",
+        "base": "0x023D3E70",
+        "selector": "d",
+        "best_match": "d",
+        "top": 0.9638744637615715,
+        "margin": 0.06769918895356064,
+        "scores": {
+          "d": 0.964,
+          "f1": 0.706,
+          "f2": 0.884,
+          "f3": 0.896,
+          "f4": 0.896,
+          "s": 0.73
+        }
+      },
+      {
+        "state": "Phantasy Star 0 (USA).ml3",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      },
+      {
+        "state": "Phantasy Star 0 (USA).ml5",
+        "base": "0x023D4F60",
+        "selector": "s",
+        "best_match": "s",
+        "top": 0.8042178961748634,
+        "margin": 0.12384295950875968,
+        "scores": {
+          "d": 0.634,
+          "f1": 0.661,
+          "f2": 0.68,
+          "f3": 0.635,
+          "f4": 0.635,
+          "s": 0.804
+        }
+      }
+    ]
+  },
+  "*** CORRECTION: BOSS ROOMS DO FOLLOW THE TABLE ***": {
+    "what_was_recorded": "that the z-variant dead ends match NO allowed template, and that a port applying the table uniformly would spawn ordinary enemies where the boss belongs.",
+    "why_it_was_wrong": "TEMPLATE INDICES ARE NOT STABLE ACROSS SETS. The sets hold 140, 141 and 144 templates, so index 92 is boss_robot in group_d and orangutan x3 in group_s. enemy_room_assignment.json is derived from group_d, and the code looked its indices up in the OBSERVATION's set \u2014 which for the boss states is s. That turned t92 into three orangutans and manufactured the mismatch.",
+    "corrected": "read against the table the assignment actually came from, s05z_na1 resolves UNIQUELY to boss_robot \u2014 which is independently what the entity's loaded descriptor says it is. Two routes, one answer. In set d exactly six rooms allow a boss template, one each: s01z_na1 dragon, s02z_na1 octopus, s05z_na1 robot, s06z_na1 robot_cmb, s07z_na1 mother+pieces, s07z_na2 darkfalz.",
+    "still_unexplained": "s03z_na1 spawns two identical enemies and set d's list for it offers shapes [1,1] and [5]. One room, not a rule.",
+    "the_lesson": "a template index is meaningless without the set it belongs to. tools/waves.py now pins the lookup to the assignment's own set."
+  },
+  "*** THE TEMPLATE FLAG'S HIGH HALFWORD MARKS A BOSS WAVE ***": {
+    "finding": "six templates in every set carry flag > 0xFFFF, of the form (n << 16) | low with n = 1 or 2, and they are EXACTLY the six boss archives \u2014 dragon, octopus, robot, robot_cmb, mother+pieces, darkfalz.",
+    "converse_holds": "no boss template lacks a high flag, in any set.",
+    "use": "it tells a boss wave from an ordinary one without knowing any species names, and it is how the six boss rooms can be found in the table directly."
+  },
+  "*** THE ROOM INDEX IS STABLE ACROSS SETS \u2014 AND f1 CARRIES A STAGE 8 ***": {
+    "the_room_list": "every set opens with the SAME 252 room codes, 12 bytes apart from payload offset 0, byte-identical and in identical order (s01a_ib1 .. s07z_na2). So a ROOM is addressed by an index in 0..251 and that index means the same thing in every set.",
+    "why_that_is_worth_stating": "the TEMPLATE index is NOT stable \u2014 92 is boss_robot in group_d and orangutan x3 in group_s \u2014 and confusing the two produced a wrong boss-room finding here. The room index is the one that can be carried across sets safely.",
+    "*** f1 ALONE HAS A STAGE 8 ***": "group_f1 does not stop at 252. It carries TEN more rooms after them \u2014 s08e_ib0 through s08e_ib9 \u2014 a stage 8 that no other set mentions at all. That fits the rest of f1's profile: it is the least similar set pairwise (73-74%) and the one with the most wave templates (144 against 140/141).",
+    "it_also_explains": "part of the 73-85% pairwise similarity already recorded \u2014 the first 3021 bytes of every file are the same room list.",
+    "still_only_parsed_for_d": "the per-room ASSIGNMENT table itself is still only parsed for group_d. Extending it needs the 252-entry record array that indexes the room list, which is not located yet: the room codes are not referenced by relocated pointer (only 2 relocations target the string block, both in the root), so the table addresses rooms by index rather than by address."
+  },
+  "consumer_search": {
+    "premise_corrected": "The standing note said this needed 'the code that consumes the assignment table in enemy/group_<set>.rel' read. The .rel carries NO code \u2014 all seven payloads have zero THUMB prologues, zero ARM prologues and zero `bx lr`. They are relocatable DATA; the consumer is in arm9.",
+    "lookup_key_is_a_string": {
+      "builder": "0x0206D2E4 (132 bytes, 6 callers)",
+      "format": "s%02d%c_%c%c%1d at 0x020F9770",
+      "boss_format": "s%02dz_xxx at 0x020F9780",
+      "how": "Formats the room record's five i32 fields (stage, variant, shape, class, digit) through sprintf, after three helpers at 0x0206D248 / 0x0206D27C / 0x0206D2B0 validate variant, shape and class.",
+      "why_it_matters": "The table's first array is 12-byte room-code strings, so the lookup is a string search. This explains a long-standing null: no numeric index into the table was ever found because there is not one."
+    },
+    "callers_of_the_builder": [
+      "arm9:0x020400C2 in FUN_0204005C",
+      "arm9:0x020402B8 in FUN_020402A4",
+      "arm9:0x020416EC in FUN_020416DC",
+      "arm9:0x02041970 in FUN_02041918",
+      "arm9:0x0206D650 in FUN_0206D60C",
+      "ov04:0x02129C36 in FUN_02129C00"
+    ],
+    "table_in_ram": "Loaded as a DSIF/NDR block on the HEAP \u2014 0x023D4F30 DSIF, 0x023D4F50 NDR, payload 0x023D4F60 in savestate 20260728-230040. The +0x10 payload rule holds in RAM exactly as in the file. NO static global points at it, which is why searching the globals for the consumer finds nothing.",
+    "still_open": "Which of a room's allowed templates is drawn. This iteration identifies the lookup key and rules out the .rel as the place to read; the six refuted hypothesis families stay refuted.",
+    "WITHDRAWN": "The previous entry said the room-code string 'matches the table's 12-byte room-code array' and concluded 'the lookup is a string search'. Both halves are individually true but the LINK was inferred, not shown. All six callers of FUN_0206D2E4 build FILENAMES; none searches the table. The claim is withdrawn. Who searches the table's code array is unknown again.",
+    "what_the_string_is_really_for": {
+      "FUN_0204005C": "enemy/deploy/<code>.rel via '%s/%s/%s/%s.%s', and enemy/group_<set>.rel via '%s/%s_%s.%s'",
+      "FUN_020402A4": "the same deploy path",
+      "FUN_020416DC": "'%s/%s.narc' and '%s/%s.nsbtx'",
+      "FUN_02041918": "'%s/%s_%s.rel'",
+      "ov04 FUN_02129C00": "a radar-map sprite path"
+    },
+    "loader_found": {
+      "enemy_data_loader": "0x0204005C \u2014 builds both the per-room deploy path and the group-set path",
+      "container_loader": "0x020BA440 \u2014 its literal pool holds 'DSIF' (0x46495344) and 'NOF0' (0x30464F4E); the relocating loader both files go through"
+    },
+    "set_selection_decoded": {
+      "resolver": "0x02041A50 (110 bytes)",
+      "logic": "b = *(signed char*)0x0211A3D0;  b==1 -> 's';  b==0 -> 'd';  otherwise n = obj[0x0B] from FUN_02031C74's result, and 'f1' if the object is missing or n<1 or n>9, else sprintf('f%d', n).",
+      "range": "d, s, f1..f9 \u2014 exactly the shape of the shipped filesystem (group_d, group_s, group_f1..group_f4). group_2nd is named directly by the loader rather than through this resolver.",
+      "runtime_byte_NOT_confirmed": "The byte is read when the area LOADS and savestates are taken long afterwards. Across the corpus 0x0211A3D0 reads 0 in 18 states and 1 in 14, and disagrees with itself across captures of the SAME room in one session. The decode rests on the branch structure alone; the live value is inconclusive and is not offered as support."
+    }
+  },
+  "*** THE SEEDED-LCG FAMILY, RE-REFUTED ON THE GAME'S OWN CONVENTION ***": {
+    "why_redone": "The earlier refutation tried 144 forms built from four GUESSED seeding conventions. Guesses can all be wrong the same way, which would make the null worthless. The convention is now known exactly.",
+    "convention": "FUN_020C14B8 \u2014 the constructor FUN_02030B6C seeds from room+0x14 for object placement \u2014 is ctor(this, lo, hi): state = hi<<32|lo, then mult/incr. It is BYTE-IDENTICAL to FUN_020C1478 (22 bytes, 01604260044a05498260c160044a0021026141617047). rand() steps before it reads, exactly as FUN_02035B60 does.",
+    "retest": "192 forms \u2014 weighted pick and plain index, across a 96-draw window rather than six, because the object placement sharing this seed consumes a count draw and a Fisher-Yates shuffle first.",
+    "result": "NONE reproduces all three pinned rolls. Hit spread across forms: 139 reproduce 0 of 3, 48 reproduce 1, 5 reproduce 2 \u2014 consistent with chance.",
+    "the_contrast_is_the_point": "The same room seed demonstrably DOES drive object placement (see fmt.room-object-set). It does not drive the wave template. So the template is not simply a later draw off the room's own stream.",
+    "census_gap_closed": "The LCG census left three constant pools as 'this-based' and unnamed; 0x020C14D0 -> FUN_020C14B8 is now named as the per-room private RNG constructor."
+  }
+}

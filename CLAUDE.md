@@ -128,6 +128,13 @@ and observations. Passing tests, merging, or closing issues alone must not
 raise grades or refresh the assessment date. Identify the specific areas
 reviewed when an assessment is partial. See the PR template and `/fidelity/`.
 
+## Three.js → Godot material ports
+
+Issue #381 targets asset-side UV baking so mirrored static materials use
+Godot's StandardMaterial3D and inherit native lighting/material features.
+The existing mirror shaders are a migration fallback, not the target design.
+Follow `/engineering/#mirrored-repeat-porting` for the bake contract.
+
 ## Orphan / superseded files → `/archive/`, not `rm`
 
 When working files turn up that look orphaned (untracked, no references

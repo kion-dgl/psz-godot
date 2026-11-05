@@ -226,9 +226,9 @@ func _unit_price(u) -> int:
 
 func _update_hint() -> void:
 	if _tab == Tab.SELL:
-		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Sell  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Sell  Esc: Leave"
 	else:
-		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
 func _get_current_list() -> Array:
@@ -412,7 +412,7 @@ func _refresh_display() -> void:
 	for child in _mode_bar.get_children():
 		child.queue_free()
 	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
-	_mode_bar.add_child(PszStyle.create_meseta_label(_get_meseta()))
+	PszStyle.update_shop_balance(self, _get_meseta())
 
 	# List panel — pill rows
 	for child in list_panel.get_children():
@@ -482,7 +482,7 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				selected_pill = pill
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	list_panel.add_child(scroll)
 
 	if selected_pill != null:

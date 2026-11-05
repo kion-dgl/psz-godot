@@ -424,6 +424,10 @@ assets/npcs/fern/fern.glb
 assets/npcs/fern/fern.png
 assets/npcs/grind-portrait.jpeg
 assets/npcs/guild-portrait.jpeg
+assets/npcs/guild_clerk/guild_clerk.glb
+assets/npcs/guild_clerk/guild_clerk_Image_0.jpg
+assets/npcs/guild_clerk/guild_clerk_Image_1.jpg
+assets/npcs/guild_clerk/guild_clerk_Image_2.jpg
 assets/npcs/item-portrait.jpeg
 assets/npcs/item_shop/item_shop.glb
 assets/npcs/item_shop/item_shop__01.png
@@ -512,9 +516,31 @@ assets/npcs/ren/ren.png
 assets/npcs/sarisa/pc_a00_000.glb
 assets/npcs/sarisa/pc_a00_000.png
 assets/npcs/storage-portrait.jpeg
+assets/npcs/storage_clerk/storage_clerk.glb
+assets/npcs/storage_clerk/storage_clerk_Image_0.jpg
+assets/npcs/storage_clerk/storage_clerk_Image_1.jpg
+assets/npcs/storage_clerk/storage_clerk_Image_2.jpg
 assets/npcs/synth-portrait.jpeg
 assets/npcs/vash/vash.glb
 assets/npcs/vash/vash.png
+assets/npcs/vrm_chibi/npc_idles_vrm.glb
+assets/npcs/vrm_chibi/vrm_chibi.glb
+assets/npcs/vrm_chibi/vrm_chibi_MatcapWarp.png
+assets/npcs/vrm_chibi/vrm_chibi_N00_000_00_Face_00_out.png
+assets/npcs/vrm_chibi/vrm_chibi_Shader_NoneBlack.png
+assets/npcs/vrm_chibi/vrm_chibi_Shader_NoneNormal.png
+assets/npcs/vrm_chibi/vrm_chibi_Thumbnail.png
+assets/npcs/vrm_chibi/vrm_chibi__01.png
+assets/npcs/vrm_chibi/vrm_chibi__02.png
+assets/npcs/vrm_chibi/vrm_chibi__03.png
+assets/npcs/vrm_chibi/vrm_chibi__04.png
+assets/npcs/vrm_chibi/vrm_chibi__05.png
+assets/npcs/vrm_chibi/vrm_chibi__06.png
+assets/npcs/vrm_chibi/vrm_chibi__07.png
+assets/npcs/vrm_chibi/vrm_chibi__09.png
+assets/npcs/vrm_chibi/vrm_chibi__10.png
+assets/npcs/vrm_chibi/vrm_chibi__11.png
+assets/npcs/vrm_chibi/vrm_chibi__12.png
 assets/npcs/weapon-portrait.jpeg
 assets/objects/arca/ff_wall_o06.png
 assets/objects/arca/o06_cont.glb
@@ -3391,6 +3417,8 @@ assets/player/photon_blasts/fb_kenta.glb
 assets/player/photon_blasts/fb_kenta.png
 assets/player/photon_blasts/fb_rabbit.glb
 assets/player/photon_blasts/fb_rabbit.png
+assets/sfx/ancient/ancient_022.wav
+assets/sfx/cave/cave_015.wav
 assets/sfx/common/common_000.wav
 assets/sfx/common/common_002.wav
 assets/sfx/common/common_004.wav
@@ -3404,8 +3432,11 @@ assets/sfx/common/common_023.wav
 assets/sfx/common/common_025.wav
 assets/sfx/common/common_026.wav
 assets/sfx/common/common_027.wav
+assets/sfx/common/common_146.wav
 assets/sfx/common/common_160.wav
 assets/sfx/common/common_172.wav
+assets/sfx/common/common_186.wav
+assets/sfx/forest/forest_007.wav
 assets/sfx/forest/forest_017.wav
 assets/sfx/forest/forest_018.wav
 assets/sfx/forest/forest_019.wav
@@ -3415,6 +3446,7 @@ assets/sfx/forest/forest_022.wav
 assets/sfx/forest/forest_023.wav
 assets/sfx/forest/forest_051.wav
 assets/sfx/forest/forest_059.wav
+assets/sfx/machine/machine_022.wav
 assets/sfx/player/footstep_1.wav
 assets/sfx/player/footstep_2.wav
 assets/sfx/player/poison.wav
@@ -3711,6 +3743,7 @@ assets/sfx/weapons/slicer_swing_1.wav
 assets/sfx/weapons/spear_swing_1.wav
 assets/sfx/weapons/sword_swing_1.wav
 assets/sfx/weapons/unarmed_swing_1.wav
+assets/stages/arca_a/s06a_ga1/lndmd/mirror-bake/83daa7ed7a27.res
 assets/stages/arca_a/s06a_ga1/lndmd/s06_0_kaid1.png
 assets/stages/arca_a/s06a_ga1/lndmd/s06_0_kazae1.png
 assets/stages/arca_a/s06a_ga1/lndmd/s06_0_wall02.png
@@ -3730,6 +3763,7 @@ assets/stages/arca_a/s06a_ga1/lndmd/s06a_ga1_minimap_r0.svg
 assets/stages/arca_a/s06a_ga1/lndmd/s06a_ga1_minimap_r180.svg
 assets/stages/arca_a/s06a_ga1/lndmd/s06a_ga1_minimap_r270.svg
 assets/stages/arca_a/s06a_ga1/lndmd/s06a_ga1_minimap_r90.svg
+assets/stages/arca_a/s06a_ib1/lndmd/mirror-bake/35653bc08c9c.res
 assets/stages/arca_a/s06a_ib1/lndmd/s06_0_kaza01.png
 assets/stages/arca_a/s06a_ib1/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_ib1/lndmd/s06_0_wall02.png
@@ -3747,6 +3781,7 @@ assets/stages/arca_a/s06a_ib1/lndmd/s06a_ib1_minimap_r0.svg
 assets/stages/arca_a/s06a_ib1/lndmd/s06a_ib1_minimap_r180.svg
 assets/stages/arca_a/s06a_ib1/lndmd/s06a_ib1_minimap_r270.svg
 assets/stages/arca_a/s06a_ib1/lndmd/s06a_ib1_minimap_r90.svg
+assets/stages/arca_a/s06a_ib2/lndmd/mirror-bake/575f5126744f.res
 assets/stages/arca_a/s06a_ib2/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_ib2/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_ib2/lndmd/s06_0_wall03.png
@@ -3764,6 +3799,7 @@ assets/stages/arca_a/s06a_ib2/lndmd/s06a_ib2_minimap_r0.svg
 assets/stages/arca_a/s06a_ib2/lndmd/s06a_ib2_minimap_r180.svg
 assets/stages/arca_a/s06a_ib2/lndmd/s06a_ib2_minimap_r270.svg
 assets/stages/arca_a/s06a_ib2/lndmd/s06a_ib2_minimap_r90.svg
+assets/stages/arca_a/s06a_ic1/lndmd/mirror-bake/074deaf711e8.res
 assets/stages/arca_a/s06a_ic1/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_ic1/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_ic1/lndmd/s06_0_wall03.png
@@ -3782,6 +3818,7 @@ assets/stages/arca_a/s06a_ic1/lndmd/s06a_ic1_minimap_r0.svg
 assets/stages/arca_a/s06a_ic1/lndmd/s06a_ic1_minimap_r180.svg
 assets/stages/arca_a/s06a_ic1/lndmd/s06a_ic1_minimap_r270.svg
 assets/stages/arca_a/s06a_ic1/lndmd/s06a_ic1_minimap_r90.svg
+assets/stages/arca_a/s06a_ic3/lndmd/mirror-bake/bc8b9e7c87df.res
 assets/stages/arca_a/s06a_ic3/lndmd/s06_0_bwat01.png
 assets/stages/arca_a/s06a_ic3/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_ic3/lndmd/s06_0_wall03.png
@@ -3801,6 +3838,7 @@ assets/stages/arca_a/s06a_ic3/lndmd/s06a_ic3_minimap_r0.svg
 assets/stages/arca_a/s06a_ic3/lndmd/s06a_ic3_minimap_r180.svg
 assets/stages/arca_a/s06a_ic3/lndmd/s06a_ic3_minimap_r270.svg
 assets/stages/arca_a/s06a_ic3/lndmd/s06a_ic3_minimap_r90.svg
+assets/stages/arca_a/s06a_lb1/lndmd/mirror-bake/46c62e5999fc.res
 assets/stages/arca_a/s06a_lb1/lndmd/s06_0_kaza01.png
 assets/stages/arca_a/s06a_lb1/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_lb1/lndmd/s06_0_wall02.png
@@ -3818,6 +3856,7 @@ assets/stages/arca_a/s06a_lb1/lndmd/s06a_lb1_minimap_r0.svg
 assets/stages/arca_a/s06a_lb1/lndmd/s06a_lb1_minimap_r180.svg
 assets/stages/arca_a/s06a_lb1/lndmd/s06a_lb1_minimap_r270.svg
 assets/stages/arca_a/s06a_lb1/lndmd/s06a_lb1_minimap_r90.svg
+assets/stages/arca_a/s06a_lb3/lndmd/mirror-bake/94d76a0404d2.res
 assets/stages/arca_a/s06a_lb3/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_lb3/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_lb3/lndmd/s06_0_wall03.png
@@ -3836,6 +3875,7 @@ assets/stages/arca_a/s06a_lb3/lndmd/s06a_lb3_minimap_r0.svg
 assets/stages/arca_a/s06a_lb3/lndmd/s06a_lb3_minimap_r180.svg
 assets/stages/arca_a/s06a_lb3/lndmd/s06a_lb3_minimap_r270.svg
 assets/stages/arca_a/s06a_lb3/lndmd/s06a_lb3_minimap_r90.svg
+assets/stages/arca_a/s06a_lc1/lndmd/mirror-bake/c8f5098c9289.res
 assets/stages/arca_a/s06a_lc1/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_lc1/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_lc1/lndmd/s06_0_wall03.png
@@ -3854,6 +3894,7 @@ assets/stages/arca_a/s06a_lc1/lndmd/s06a_lc1_minimap_r0.svg
 assets/stages/arca_a/s06a_lc1/lndmd/s06a_lc1_minimap_r180.svg
 assets/stages/arca_a/s06a_lc1/lndmd/s06a_lc1_minimap_r270.svg
 assets/stages/arca_a/s06a_lc1/lndmd/s06a_lc1_minimap_r90.svg
+assets/stages/arca_a/s06a_lc2/lndmd/mirror-bake/85bb41061496.res
 assets/stages/arca_a/s06a_lc2/lndmd/s06_0_bwat01.png
 assets/stages/arca_a/s06a_lc2/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_lc2/lndmd/s06_0_wall02.png
@@ -3874,6 +3915,7 @@ assets/stages/arca_a/s06a_lc2/lndmd/s06a_lc2_minimap_r0.svg
 assets/stages/arca_a/s06a_lc2/lndmd/s06a_lc2_minimap_r180.svg
 assets/stages/arca_a/s06a_lc2/lndmd/s06a_lc2_minimap_r270.svg
 assets/stages/arca_a/s06a_lc2/lndmd/s06a_lc2_minimap_r90.svg
+assets/stages/arca_a/s06a_na1/lndmd/mirror-bake/a6396e3b41dc.res
 assets/stages/arca_a/s06a_na1/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_na1/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_na1/lndmd/s06_0_wall03.png
@@ -3892,6 +3934,7 @@ assets/stages/arca_a/s06a_na1/lndmd/s06a_na1_minimap_r0.svg
 assets/stages/arca_a/s06a_na1/lndmd/s06a_na1_minimap_r180.svg
 assets/stages/arca_a/s06a_na1/lndmd/s06a_na1_minimap_r270.svg
 assets/stages/arca_a/s06a_na1/lndmd/s06a_na1_minimap_r90.svg
+assets/stages/arca_a/s06a_nb2/lndmd/mirror-bake/8681399fe426.res
 assets/stages/arca_a/s06a_nb2/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_nb2/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_nb2/lndmd/s06_0_wall03.png
@@ -3909,6 +3952,7 @@ assets/stages/arca_a/s06a_nb2/lndmd/s06a_nb2_minimap_r0.svg
 assets/stages/arca_a/s06a_nb2/lndmd/s06a_nb2_minimap_r180.svg
 assets/stages/arca_a/s06a_nb2/lndmd/s06a_nb2_minimap_r270.svg
 assets/stages/arca_a/s06a_nb2/lndmd/s06a_nb2_minimap_r90.svg
+assets/stages/arca_a/s06a_nc2/lndmd/mirror-bake/b7b34724a2f9.res
 assets/stages/arca_a/s06a_nc2/lndmd/s06_0_bwat01.png
 assets/stages/arca_a/s06a_nc2/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_nc2/lndmd/s06_0_wall02.png
@@ -3929,6 +3973,7 @@ assets/stages/arca_a/s06a_nc2/lndmd/s06a_nc2_minimap_r0.svg
 assets/stages/arca_a/s06a_nc2/lndmd/s06a_nc2_minimap_r180.svg
 assets/stages/arca_a/s06a_nc2/lndmd/s06a_nc2_minimap_r270.svg
 assets/stages/arca_a/s06a_nc2/lndmd/s06a_nc2_minimap_r90.svg
+assets/stages/arca_a/s06a_sa1/lndmd/mirror-bake/bd681a2952c6.res
 assets/stages/arca_a/s06a_sa1/lndmd/s06_0_kaid1.png
 assets/stages/arca_a/s06a_sa1/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_sa1/lndmd/s06_0_wall02.png
@@ -3947,6 +3992,7 @@ assets/stages/arca_a/s06a_sa1/lndmd/s06a_sa1_minimap_r0.svg
 assets/stages/arca_a/s06a_sa1/lndmd/s06a_sa1_minimap_r180.svg
 assets/stages/arca_a/s06a_sa1/lndmd/s06a_sa1_minimap_r270.svg
 assets/stages/arca_a/s06a_sa1/lndmd/s06a_sa1_minimap_r90.svg
+assets/stages/arca_a/s06a_tb3/lndmd/mirror-bake/b5916e199c56.res
 assets/stages/arca_a/s06a_tb3/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_tb3/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_tb3/lndmd/s06_0_wall03.png
@@ -3965,6 +4011,7 @@ assets/stages/arca_a/s06a_tb3/lndmd/s06a_tb3_minimap_r0.svg
 assets/stages/arca_a/s06a_tb3/lndmd/s06a_tb3_minimap_r180.svg
 assets/stages/arca_a/s06a_tb3/lndmd/s06a_tb3_minimap_r270.svg
 assets/stages/arca_a/s06a_tb3/lndmd/s06a_tb3_minimap_r90.svg
+assets/stages/arca_a/s06a_tc3/lndmd/mirror-bake/daf2e89de27f.res
 assets/stages/arca_a/s06a_tc3/lndmd/s06_0_spce02.png
 assets/stages/arca_a/s06a_tc3/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_tc3/lndmd/s06_0_wall03.png
@@ -3983,6 +4030,7 @@ assets/stages/arca_a/s06a_tc3/lndmd/s06a_tc3_minimap_r0.svg
 assets/stages/arca_a/s06a_tc3/lndmd/s06a_tc3_minimap_r180.svg
 assets/stages/arca_a/s06a_tc3/lndmd/s06a_tc3_minimap_r270.svg
 assets/stages/arca_a/s06a_tc3/lndmd/s06a_tc3_minimap_r90.svg
+assets/stages/arca_a/s06a_td1/lndmd/mirror-bake/5602026da028.res
 assets/stages/arca_a/s06a_td1/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_td1/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_td1/lndmd/s06_0_wall03.png
@@ -4002,6 +4050,7 @@ assets/stages/arca_a/s06a_td1/lndmd/s06a_td1_minimap_r0.svg
 assets/stages/arca_a/s06a_td1/lndmd/s06a_td1_minimap_r180.svg
 assets/stages/arca_a/s06a_td1/lndmd/s06a_td1_minimap_r270.svg
 assets/stages/arca_a/s06a_td1/lndmd/s06a_td1_minimap_r90.svg
+assets/stages/arca_a/s06a_td2/lndmd/mirror-bake/f5abb1702576.res
 assets/stages/arca_a/s06a_td2/lndmd/s06_0_kaza01.png
 assets/stages/arca_a/s06a_td2/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_td2/lndmd/s06_0_wall02.png
@@ -4019,6 +4068,7 @@ assets/stages/arca_a/s06a_td2/lndmd/s06a_td2_minimap_r0.svg
 assets/stages/arca_a/s06a_td2/lndmd/s06a_td2_minimap_r180.svg
 assets/stages/arca_a/s06a_td2/lndmd/s06a_td2_minimap_r270.svg
 assets/stages/arca_a/s06a_td2/lndmd/s06a_td2_minimap_r90.svg
+assets/stages/arca_a/s06a_xb2/lndmd/mirror-bake/4c9d347bb938.res
 assets/stages/arca_a/s06a_xb2/lndmd/s06_0_wall01.png
 assets/stages/arca_a/s06a_xb2/lndmd/s06_0_wall02.png
 assets/stages/arca_a/s06a_xb2/lndmd/s06_0_wall03.png
@@ -4036,6 +4086,7 @@ assets/stages/arca_a/s06a_xb2/lndmd/s06a_xb2_minimap_r0.svg
 assets/stages/arca_a/s06a_xb2/lndmd/s06a_xb2_minimap_r180.svg
 assets/stages/arca_a/s06a_xb2/lndmd/s06a_xb2_minimap_r270.svg
 assets/stages/arca_a/s06a_xb2/lndmd/s06a_xb2_minimap_r90.svg
+assets/stages/arca_b/s06b_ga1/lndmd/mirror-bake/823c9b3f2661.res
 assets/stages/arca_b/s06b_ga1/lndmd/s06_0_bdoo07.png
 assets/stages/arca_b/s06b_ga1/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_ga1/lndmd/s06_0_bwal06.png
@@ -4056,6 +4107,7 @@ assets/stages/arca_b/s06b_ga1/lndmd/s06b_ga1_minimap_r0.svg
 assets/stages/arca_b/s06b_ga1/lndmd/s06b_ga1_minimap_r180.svg
 assets/stages/arca_b/s06b_ga1/lndmd/s06b_ga1_minimap_r270.svg
 assets/stages/arca_b/s06b_ga1/lndmd/s06b_ga1_minimap_r90.svg
+assets/stages/arca_b/s06b_ib1/lndmd/mirror-bake/3ef6ba387b2a.res
 assets/stages/arca_b/s06b_ib1/lndmd/s06_0_bdis00.png
 assets/stages/arca_b/s06b_ib1/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_ib1/lndmd/s06_0_blin01.png
@@ -4076,6 +4128,7 @@ assets/stages/arca_b/s06b_ib1/lndmd/s06b_ib1_minimap_r0.svg
 assets/stages/arca_b/s06b_ib1/lndmd/s06b_ib1_minimap_r180.svg
 assets/stages/arca_b/s06b_ib1/lndmd/s06b_ib1_minimap_r270.svg
 assets/stages/arca_b/s06b_ib1/lndmd/s06b_ib1_minimap_r90.svg
+assets/stages/arca_b/s06b_ib2/lndmd/mirror-bake/76e9bfc2a5fe.res
 assets/stages/arca_b/s06b_ib2/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_ib2/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_ib2/lndmd/s06_0_bwal02.png
@@ -4095,6 +4148,7 @@ assets/stages/arca_b/s06b_ib2/lndmd/s06b_ib2_minimap_r0.svg
 assets/stages/arca_b/s06b_ib2/lndmd/s06b_ib2_minimap_r180.svg
 assets/stages/arca_b/s06b_ib2/lndmd/s06b_ib2_minimap_r270.svg
 assets/stages/arca_b/s06b_ib2/lndmd/s06b_ib2_minimap_r90.svg
+assets/stages/arca_b/s06b_ic1/lndmd/mirror-bake/6372b7617177.res
 assets/stages/arca_b/s06b_ic1/lndmd/s06_0_bdoo04.png
 assets/stages/arca_b/s06b_ic1/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_ic1/lndmd/s06_0_bwal05.png
@@ -4114,6 +4168,7 @@ assets/stages/arca_b/s06b_ic1/lndmd/s06b_ic1_minimap_r0.svg
 assets/stages/arca_b/s06b_ic1/lndmd/s06b_ic1_minimap_r180.svg
 assets/stages/arca_b/s06b_ic1/lndmd/s06b_ic1_minimap_r270.svg
 assets/stages/arca_b/s06b_ic1/lndmd/s06b_ic1_minimap_r90.svg
+assets/stages/arca_b/s06b_ic3/lndmd/mirror-bake/d6dcc5a9ead0.res
 assets/stages/arca_b/s06b_ic3/lndmd/s06_0_bdoo05.png
 assets/stages/arca_b/s06b_ic3/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_ic3/lndmd/s06_0_bwal05.png
@@ -4133,6 +4188,7 @@ assets/stages/arca_b/s06b_ic3/lndmd/s06b_ic3_minimap_r0.svg
 assets/stages/arca_b/s06b_ic3/lndmd/s06b_ic3_minimap_r180.svg
 assets/stages/arca_b/s06b_ic3/lndmd/s06b_ic3_minimap_r270.svg
 assets/stages/arca_b/s06b_ic3/lndmd/s06b_ic3_minimap_r90.svg
+assets/stages/arca_b/s06b_lb1/lndmd/mirror-bake/124ef5a8ac2f.res
 assets/stages/arca_b/s06b_lb1/lndmd/s06_0_bdis00.png
 assets/stages/arca_b/s06b_lb1/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_lb1/lndmd/s06_0_blin01.png
@@ -4153,6 +4209,7 @@ assets/stages/arca_b/s06b_lb1/lndmd/s06b_lb1_minimap_r0.svg
 assets/stages/arca_b/s06b_lb1/lndmd/s06b_lb1_minimap_r180.svg
 assets/stages/arca_b/s06b_lb1/lndmd/s06b_lb1_minimap_r270.svg
 assets/stages/arca_b/s06b_lb1/lndmd/s06b_lb1_minimap_r90.svg
+assets/stages/arca_b/s06b_lb3/lndmd/mirror-bake/a227b87b930a.res
 assets/stages/arca_b/s06b_lb3/lndmd/s06_0_bdis00.png
 assets/stages/arca_b/s06b_lb3/lndmd/s06_0_bdoo06.png
 assets/stages/arca_b/s06b_lb3/lndmd/s06_0_blin01.png
@@ -4173,6 +4230,7 @@ assets/stages/arca_b/s06b_lb3/lndmd/s06b_lb3_minimap_r0.svg
 assets/stages/arca_b/s06b_lb3/lndmd/s06b_lb3_minimap_r180.svg
 assets/stages/arca_b/s06b_lb3/lndmd/s06b_lb3_minimap_r270.svg
 assets/stages/arca_b/s06b_lb3/lndmd/s06b_lb3_minimap_r90.svg
+assets/stages/arca_b/s06b_lc1/lndmd/mirror-bake/7d1148f2a58e.res
 assets/stages/arca_b/s06b_lc1/lndmd/s06_0_bdoo05.png
 assets/stages/arca_b/s06b_lc1/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_lc1/lndmd/s06_0_bwal05.png
@@ -4192,6 +4250,7 @@ assets/stages/arca_b/s06b_lc1/lndmd/s06b_lc1_minimap_r0.svg
 assets/stages/arca_b/s06b_lc1/lndmd/s06b_lc1_minimap_r180.svg
 assets/stages/arca_b/s06b_lc1/lndmd/s06b_lc1_minimap_r270.svg
 assets/stages/arca_b/s06b_lc1/lndmd/s06b_lc1_minimap_r90.svg
+assets/stages/arca_b/s06b_lc2/lndmd/mirror-bake/3e5f1b4dd13b.res
 assets/stages/arca_b/s06b_lc2/lndmd/s06_0_bdoo04.png
 assets/stages/arca_b/s06b_lc2/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_lc2/lndmd/s06_0_bwal05.png
@@ -4211,6 +4270,7 @@ assets/stages/arca_b/s06b_lc2/lndmd/s06b_lc2_minimap_r0.svg
 assets/stages/arca_b/s06b_lc2/lndmd/s06b_lc2_minimap_r180.svg
 assets/stages/arca_b/s06b_lc2/lndmd/s06b_lc2_minimap_r270.svg
 assets/stages/arca_b/s06b_lc2/lndmd/s06b_lc2_minimap_r90.svg
+assets/stages/arca_b/s06b_na1/lndmd/mirror-bake/24e125ebd59b.res
 assets/stages/arca_b/s06b_na1/lndmd/s06_0_bdoo06.png
 assets/stages/arca_b/s06b_na1/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_na1/lndmd/s06_0_bwal02.png
@@ -4230,6 +4290,7 @@ assets/stages/arca_b/s06b_na1/lndmd/s06b_na1_minimap_r0.svg
 assets/stages/arca_b/s06b_na1/lndmd/s06b_na1_minimap_r180.svg
 assets/stages/arca_b/s06b_na1/lndmd/s06b_na1_minimap_r270.svg
 assets/stages/arca_b/s06b_na1/lndmd/s06b_na1_minimap_r90.svg
+assets/stages/arca_b/s06b_nb2/lndmd/mirror-bake/b9e13e48f532.res
 assets/stages/arca_b/s06b_nb2/lndmd/s06_0_bdis00.png
 assets/stages/arca_b/s06b_nb2/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_nb2/lndmd/s06_0_blin01.png
@@ -4250,6 +4311,7 @@ assets/stages/arca_b/s06b_nb2/lndmd/s06b_nb2_minimap_r0.svg
 assets/stages/arca_b/s06b_nb2/lndmd/s06b_nb2_minimap_r180.svg
 assets/stages/arca_b/s06b_nb2/lndmd/s06b_nb2_minimap_r270.svg
 assets/stages/arca_b/s06b_nb2/lndmd/s06b_nb2_minimap_r90.svg
+assets/stages/arca_b/s06b_nc2/lndmd/mirror-bake/bc9e34304a44.res
 assets/stages/arca_b/s06b_nc2/lndmd/s06_0_bdoo04.png
 assets/stages/arca_b/s06b_nc2/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_nc2/lndmd/s06_0_bwal05.png
@@ -4269,6 +4331,7 @@ assets/stages/arca_b/s06b_nc2/lndmd/s06b_nc2_minimap_r0.svg
 assets/stages/arca_b/s06b_nc2/lndmd/s06b_nc2_minimap_r180.svg
 assets/stages/arca_b/s06b_nc2/lndmd/s06b_nc2_minimap_r270.svg
 assets/stages/arca_b/s06b_nc2/lndmd/s06b_nc2_minimap_r90.svg
+assets/stages/arca_b/s06b_sa1/lndmd/mirror-bake/f7e3183dbeb3.res
 assets/stages/arca_b/s06b_sa1/lndmd/s06_0_bdoo06.png
 assets/stages/arca_b/s06b_sa1/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_sa1/lndmd/s06_0_bwal02.png
@@ -4291,6 +4354,7 @@ assets/stages/arca_b/s06b_sa1/lndmd/s06b_sa1_minimap_r0.svg
 assets/stages/arca_b/s06b_sa1/lndmd/s06b_sa1_minimap_r180.svg
 assets/stages/arca_b/s06b_sa1/lndmd/s06b_sa1_minimap_r270.svg
 assets/stages/arca_b/s06b_sa1/lndmd/s06b_sa1_minimap_r90.svg
+assets/stages/arca_b/s06b_tb3/lndmd/mirror-bake/30d0a601afe7.res
 assets/stages/arca_b/s06b_tb3/lndmd/s06_0_bdis00.png
 assets/stages/arca_b/s06b_tb3/lndmd/s06_0_bdoo06.png
 assets/stages/arca_b/s06b_tb3/lndmd/s06_0_blin01.png
@@ -4311,6 +4375,7 @@ assets/stages/arca_b/s06b_tb3/lndmd/s06b_tb3_minimap_r0.svg
 assets/stages/arca_b/s06b_tb3/lndmd/s06b_tb3_minimap_r180.svg
 assets/stages/arca_b/s06b_tb3/lndmd/s06b_tb3_minimap_r270.svg
 assets/stages/arca_b/s06b_tb3/lndmd/s06b_tb3_minimap_r90.svg
+assets/stages/arca_b/s06b_tc3/lndmd/mirror-bake/a3402ff9f520.res
 assets/stages/arca_b/s06b_tc3/lndmd/s06_0_bdoo04.png
 assets/stages/arca_b/s06b_tc3/lndmd/s06_0_bwal04.png
 assets/stages/arca_b/s06b_tc3/lndmd/s06_0_bwal05.png
@@ -4330,6 +4395,7 @@ assets/stages/arca_b/s06b_tc3/lndmd/s06b_tc3_minimap_r0.svg
 assets/stages/arca_b/s06b_tc3/lndmd/s06b_tc3_minimap_r180.svg
 assets/stages/arca_b/s06b_tc3/lndmd/s06b_tc3_minimap_r270.svg
 assets/stages/arca_b/s06b_tc3/lndmd/s06b_tc3_minimap_r90.svg
+assets/stages/arca_b/s06b_td1/lndmd/mirror-bake/54ea28b0c1d5.res
 assets/stages/arca_b/s06b_td1/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_td1/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_td1/lndmd/s06_0_bsuid00.png
@@ -4349,6 +4415,7 @@ assets/stages/arca_b/s06b_td1/lndmd/s06b_td1_minimap_r0.svg
 assets/stages/arca_b/s06b_td1/lndmd/s06b_td1_minimap_r180.svg
 assets/stages/arca_b/s06b_td1/lndmd/s06b_td1_minimap_r270.svg
 assets/stages/arca_b/s06b_td1/lndmd/s06b_td1_minimap_r90.svg
+assets/stages/arca_b/s06b_td2/lndmd/mirror-bake/087343a14638.res
 assets/stages/arca_b/s06b_td2/lndmd/s06_0_bdoo02.png
 assets/stages/arca_b/s06b_td2/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_td2/lndmd/s06_0_bsuid00.png
@@ -4368,6 +4435,7 @@ assets/stages/arca_b/s06b_td2/lndmd/s06b_td2_minimap_r0.svg
 assets/stages/arca_b/s06b_td2/lndmd/s06b_td2_minimap_r180.svg
 assets/stages/arca_b/s06b_td2/lndmd/s06b_td2_minimap_r270.svg
 assets/stages/arca_b/s06b_td2/lndmd/s06b_td2_minimap_r90.svg
+assets/stages/arca_b/s06b_xb2/lndmd/mirror-bake/37cc2d9c6e8d.res
 assets/stages/arca_b/s06b_xb2/lndmd/s06_0_bdoo06.png
 assets/stages/arca_b/s06b_xb2/lndmd/s06_0_blin01.png
 assets/stages/arca_b/s06b_xb2/lndmd/s06_0_bwal02.png
@@ -4387,6 +4455,7 @@ assets/stages/arca_b/s06b_xb2/lndmd/s06b_xb2_minimap_r0.svg
 assets/stages/arca_b/s06b_xb2/lndmd/s06b_xb2_minimap_r180.svg
 assets/stages/arca_b/s06b_xb2/lndmd/s06b_xb2_minimap_r270.svg
 assets/stages/arca_b/s06b_xb2/lndmd/s06b_xb2_minimap_r90.svg
+assets/stages/arca_e/s06e_ia1/lndmd/mirror-bake/80dbc2f0341b.res
 assets/stages/arca_e/s06e_ia1/lndmd/s06_0_bsuid00.png
 assets/stages/arca_e/s06e_ia1/lndmd/s06_0_bwal07.png
 assets/stages/arca_e/s06e_ia1/lndmd/s06_0_egomi.png
@@ -4407,6 +4476,7 @@ assets/stages/arca_e/s06e_ia1/lndmd/s06e_ia1_minimap_r0.svg
 assets/stages/arca_e/s06e_ia1/lndmd/s06e_ia1_minimap_r180.svg
 assets/stages/arca_e/s06e_ia1/lndmd/s06e_ia1_minimap_r270.svg
 assets/stages/arca_e/s06e_ia1/lndmd/s06e_ia1_minimap_r90.svg
+assets/stages/arca_z/s06z_na1/lndmd/mirror-bake/14289a52524a.res
 assets/stages/arca_z/s06z_na1/lndmd/s06_0_zdoo01.png
 assets/stages/arca_z/s06z_na1/lndmd/s06_0_zhaik1.png
 assets/stages/arca_z/s06z_na1/lndmd/s06_0_zhass1.png
@@ -4746,6 +4816,10 @@ assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_6.png
 assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_7.png
 assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_8.png
 assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2_9.png
+assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/425a20aaf3c5.res
+assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/893bef7029d9.res
+assets/stages/city_e/s00e_sa4/de_roll_le/mirror-bake/95a142eb804d.res
+assets/stages/city_e/s00e_sa4/lndmd/mirror-bake/fe95695f5ecf.res
 assets/stages/city_e/s00e_sa4/lndmd/s00_0_auto1.png
 assets/stages/city_e/s00e_sa4/lndmd/s00_0_ground1.png
 assets/stages/city_e/s00e_sa4/lndmd/s00_0_ground2.png
@@ -4761,6 +4835,7 @@ assets/stages/city_e/s00e_sa4/lndmd/s00_2_light.png
 assets/stages/city_e/s00e_sa4/lndmd/s00_2_sh.png
 assets/stages/city_e/s00e_sa4/lndmd/s00_2_wave1.png
 assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb
+assets/stages/makara_a/s04a_ga1/lndmd/mirror-bake/3ac5e438c750.res
 assets/stages/makara_a/s04a_ga1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_ga1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_ga1/lndmd/s04_0_etcs.png
@@ -4780,6 +4855,7 @@ assets/stages/makara_a/s04a_ga1/lndmd/s04a_ga1_minimap_r0.svg
 assets/stages/makara_a/s04a_ga1/lndmd/s04a_ga1_minimap_r180.svg
 assets/stages/makara_a/s04a_ga1/lndmd/s04a_ga1_minimap_r270.svg
 assets/stages/makara_a/s04a_ga1/lndmd/s04a_ga1_minimap_r90.svg
+assets/stages/makara_a/s04a_ib1/lndmd/mirror-bake/c71a7fde0243.res
 assets/stages/makara_a/s04a_ib1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_ib1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_ib1/lndmd/s04_0_hasira2.png
@@ -4800,6 +4876,7 @@ assets/stages/makara_a/s04a_ib1/lndmd/s04a_ib1_minimap_r0.svg
 assets/stages/makara_a/s04a_ib1/lndmd/s04a_ib1_minimap_r180.svg
 assets/stages/makara_a/s04a_ib1/lndmd/s04a_ib1_minimap_r270.svg
 assets/stages/makara_a/s04a_ib1/lndmd/s04a_ib1_minimap_r90.svg
+assets/stages/makara_a/s04a_ib2/lndmd/mirror-bake/5fd51960d06f.res
 assets/stages/makara_a/s04a_ib2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_ib2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_ib2/lndmd/s04_0_hasira2.png
@@ -4820,6 +4897,7 @@ assets/stages/makara_a/s04a_ib2/lndmd/s04a_ib2_minimap_r0.svg
 assets/stages/makara_a/s04a_ib2/lndmd/s04a_ib2_minimap_r180.svg
 assets/stages/makara_a/s04a_ib2/lndmd/s04a_ib2_minimap_r270.svg
 assets/stages/makara_a/s04a_ib2/lndmd/s04a_ib2_minimap_r90.svg
+assets/stages/makara_a/s04a_ic1/lndmd/mirror-bake/a37b040faba5.res
 assets/stages/makara_a/s04a_ic1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_ic1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_ic1/lndmd/s04_0_hasira2.png
@@ -4837,6 +4915,7 @@ assets/stages/makara_a/s04a_ic1/lndmd/s04a_ic1_minimap_r0.svg
 assets/stages/makara_a/s04a_ic1/lndmd/s04a_ic1_minimap_r180.svg
 assets/stages/makara_a/s04a_ic1/lndmd/s04a_ic1_minimap_r270.svg
 assets/stages/makara_a/s04a_ic1/lndmd/s04a_ic1_minimap_r90.svg
+assets/stages/makara_a/s04a_ic3/lndmd/mirror-bake/c495ddcddb97.res
 assets/stages/makara_a/s04a_ic3/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_ic3/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_ic3/lndmd/s04_0_hasira2.png
@@ -4854,6 +4933,7 @@ assets/stages/makara_a/s04a_ic3/lndmd/s04a_ic3_minimap_r0.svg
 assets/stages/makara_a/s04a_ic3/lndmd/s04a_ic3_minimap_r180.svg
 assets/stages/makara_a/s04a_ic3/lndmd/s04a_ic3_minimap_r270.svg
 assets/stages/makara_a/s04a_ic3/lndmd/s04a_ic3_minimap_r90.svg
+assets/stages/makara_a/s04a_lb1/lndmd/mirror-bake/ded70bf23eff.res
 assets/stages/makara_a/s04a_lb1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_lb1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_lb1/lndmd/s04_0_hasira2.png
@@ -4874,6 +4954,7 @@ assets/stages/makara_a/s04a_lb1/lndmd/s04a_lb1_minimap_r0.svg
 assets/stages/makara_a/s04a_lb1/lndmd/s04a_lb1_minimap_r180.svg
 assets/stages/makara_a/s04a_lb1/lndmd/s04a_lb1_minimap_r270.svg
 assets/stages/makara_a/s04a_lb1/lndmd/s04a_lb1_minimap_r90.svg
+assets/stages/makara_a/s04a_lb3/lndmd/mirror-bake/1a2cc1ef7d80.res
 assets/stages/makara_a/s04a_lb3/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_lb3/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_lb3/lndmd/s04_0_hasira2.png
@@ -4893,6 +4974,7 @@ assets/stages/makara_a/s04a_lb3/lndmd/s04a_lb3_minimap_r0.svg
 assets/stages/makara_a/s04a_lb3/lndmd/s04a_lb3_minimap_r180.svg
 assets/stages/makara_a/s04a_lb3/lndmd/s04a_lb3_minimap_r270.svg
 assets/stages/makara_a/s04a_lb3/lndmd/s04a_lb3_minimap_r90.svg
+assets/stages/makara_a/s04a_lc1/lndmd/mirror-bake/b7e10116e18e.res
 assets/stages/makara_a/s04a_lc1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_lc1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_lc1/lndmd/s04_0_hasira2.png
@@ -4910,6 +4992,7 @@ assets/stages/makara_a/s04a_lc1/lndmd/s04a_lc1_minimap_r0.svg
 assets/stages/makara_a/s04a_lc1/lndmd/s04a_lc1_minimap_r180.svg
 assets/stages/makara_a/s04a_lc1/lndmd/s04a_lc1_minimap_r270.svg
 assets/stages/makara_a/s04a_lc1/lndmd/s04a_lc1_minimap_r90.svg
+assets/stages/makara_a/s04a_lc2/lndmd/mirror-bake/59166368a71d.res
 assets/stages/makara_a/s04a_lc2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_lc2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_lc2/lndmd/s04_0_hasira2.png
@@ -4927,6 +5010,7 @@ assets/stages/makara_a/s04a_lc2/lndmd/s04a_lc2_minimap_r0.svg
 assets/stages/makara_a/s04a_lc2/lndmd/s04a_lc2_minimap_r180.svg
 assets/stages/makara_a/s04a_lc2/lndmd/s04a_lc2_minimap_r270.svg
 assets/stages/makara_a/s04a_lc2/lndmd/s04a_lc2_minimap_r90.svg
+assets/stages/makara_a/s04a_na1/lndmd/mirror-bake/0d6d8936b26b.res
 assets/stages/makara_a/s04a_na1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_na1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_na1/lndmd/s04_0_hasira2.png
@@ -4946,6 +5030,7 @@ assets/stages/makara_a/s04a_na1/lndmd/s04a_na1_minimap_r0.svg
 assets/stages/makara_a/s04a_na1/lndmd/s04a_na1_minimap_r180.svg
 assets/stages/makara_a/s04a_na1/lndmd/s04a_na1_minimap_r270.svg
 assets/stages/makara_a/s04a_na1/lndmd/s04a_na1_minimap_r90.svg
+assets/stages/makara_a/s04a_nb2/lndmd/mirror-bake/b9b3764c7695.res
 assets/stages/makara_a/s04a_nb2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_nb2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_nb2/lndmd/s04_0_hasira2.png
@@ -4966,6 +5051,7 @@ assets/stages/makara_a/s04a_nb2/lndmd/s04a_nb2_minimap_r0.svg
 assets/stages/makara_a/s04a_nb2/lndmd/s04a_nb2_minimap_r180.svg
 assets/stages/makara_a/s04a_nb2/lndmd/s04a_nb2_minimap_r270.svg
 assets/stages/makara_a/s04a_nb2/lndmd/s04a_nb2_minimap_r90.svg
+assets/stages/makara_a/s04a_nc2/lndmd/mirror-bake/ff00c8883581.res
 assets/stages/makara_a/s04a_nc2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_nc2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_nc2/lndmd/s04_0_hasira2.png
@@ -4983,6 +5069,7 @@ assets/stages/makara_a/s04a_nc2/lndmd/s04a_nc2_minimap_r0.svg
 assets/stages/makara_a/s04a_nc2/lndmd/s04a_nc2_minimap_r180.svg
 assets/stages/makara_a/s04a_nc2/lndmd/s04a_nc2_minimap_r270.svg
 assets/stages/makara_a/s04a_nc2/lndmd/s04a_nc2_minimap_r90.svg
+assets/stages/makara_a/s04a_sa1/lndmd/mirror-bake/5556c21b72d5.res
 assets/stages/makara_a/s04a_sa1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_sa1/lndmd/s04_0_dora.png
 assets/stages/makara_a/s04a_sa1/lndmd/s04_0_etce.png
@@ -5001,6 +5088,7 @@ assets/stages/makara_a/s04a_sa1/lndmd/s04a_sa1_minimap_r0.svg
 assets/stages/makara_a/s04a_sa1/lndmd/s04a_sa1_minimap_r180.svg
 assets/stages/makara_a/s04a_sa1/lndmd/s04a_sa1_minimap_r270.svg
 assets/stages/makara_a/s04a_sa1/lndmd/s04a_sa1_minimap_r90.svg
+assets/stages/makara_a/s04a_tb3/lndmd/mirror-bake/3a46aa02c400.res
 assets/stages/makara_a/s04a_tb3/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_tb3/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_tb3/lndmd/s04_0_hasira2.png
@@ -5020,6 +5108,7 @@ assets/stages/makara_a/s04a_tb3/lndmd/s04a_tb3_minimap_r0.svg
 assets/stages/makara_a/s04a_tb3/lndmd/s04a_tb3_minimap_r180.svg
 assets/stages/makara_a/s04a_tb3/lndmd/s04a_tb3_minimap_r270.svg
 assets/stages/makara_a/s04a_tb3/lndmd/s04a_tb3_minimap_r90.svg
+assets/stages/makara_a/s04a_tc3/lndmd/mirror-bake/b1859cd47ad4.res
 assets/stages/makara_a/s04a_tc3/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_tc3/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_tc3/lndmd/s04_0_hasira2.png
@@ -5037,6 +5126,7 @@ assets/stages/makara_a/s04a_tc3/lndmd/s04a_tc3_minimap_r0.svg
 assets/stages/makara_a/s04a_tc3/lndmd/s04a_tc3_minimap_r180.svg
 assets/stages/makara_a/s04a_tc3/lndmd/s04a_tc3_minimap_r270.svg
 assets/stages/makara_a/s04a_tc3/lndmd/s04a_tc3_minimap_r90.svg
+assets/stages/makara_a/s04a_td1/lndmd/mirror-bake/0a66959cd2ad.res
 assets/stages/makara_a/s04a_td1/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_td1/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_td1/lndmd/s04_0_hasira2.png
@@ -5057,6 +5147,7 @@ assets/stages/makara_a/s04a_td1/lndmd/s04a_td1_minimap_r0.svg
 assets/stages/makara_a/s04a_td1/lndmd/s04a_td1_minimap_r180.svg
 assets/stages/makara_a/s04a_td1/lndmd/s04a_td1_minimap_r270.svg
 assets/stages/makara_a/s04a_td1/lndmd/s04a_td1_minimap_r90.svg
+assets/stages/makara_a/s04a_td2/lndmd/mirror-bake/1c04188d79d2.res
 assets/stages/makara_a/s04a_td2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_td2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_td2/lndmd/s04_0_hasira2.png
@@ -5077,6 +5168,7 @@ assets/stages/makara_a/s04a_td2/lndmd/s04a_td2_minimap_r0.svg
 assets/stages/makara_a/s04a_td2/lndmd/s04a_td2_minimap_r180.svg
 assets/stages/makara_a/s04a_td2/lndmd/s04a_td2_minimap_r270.svg
 assets/stages/makara_a/s04a_td2/lndmd/s04a_td2_minimap_r90.svg
+assets/stages/makara_a/s04a_xb2/lndmd/mirror-bake/d351e7392264.res
 assets/stages/makara_a/s04a_xb2/lndmd/s04_0_cliff.png
 assets/stages/makara_a/s04a_xb2/lndmd/s04_0_etca.png
 assets/stages/makara_a/s04a_xb2/lndmd/s04_0_hasira2.png
@@ -5097,6 +5189,7 @@ assets/stages/makara_a/s04a_xb2/lndmd/s04a_xb2_minimap_r0.svg
 assets/stages/makara_a/s04a_xb2/lndmd/s04a_xb2_minimap_r180.svg
 assets/stages/makara_a/s04a_xb2/lndmd/s04a_xb2_minimap_r270.svg
 assets/stages/makara_a/s04a_xb2/lndmd/s04a_xb2_minimap_r90.svg
+assets/stages/makara_b/s04b_ga1/lndmd/mirror-bake/440eb012530f.res
 assets/stages/makara_b/s04b_ga1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_ga1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_ga1/lndmd/s04_0_hasira2.png
@@ -5118,6 +5211,7 @@ assets/stages/makara_b/s04b_ga1/lndmd/s04b_ga1_minimap_r0.svg
 assets/stages/makara_b/s04b_ga1/lndmd/s04b_ga1_minimap_r180.svg
 assets/stages/makara_b/s04b_ga1/lndmd/s04b_ga1_minimap_r270.svg
 assets/stages/makara_b/s04b_ga1/lndmd/s04b_ga1_minimap_r90.svg
+assets/stages/makara_b/s04b_ib1/lndmd/mirror-bake/fa892fe3346b.res
 assets/stages/makara_b/s04b_ib1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_ib1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_ib1/lndmd/s04_0_hasira2.png
@@ -5139,6 +5233,7 @@ assets/stages/makara_b/s04b_ib1/lndmd/s04b_ib1_minimap_r0.svg
 assets/stages/makara_b/s04b_ib1/lndmd/s04b_ib1_minimap_r180.svg
 assets/stages/makara_b/s04b_ib1/lndmd/s04b_ib1_minimap_r270.svg
 assets/stages/makara_b/s04b_ib1/lndmd/s04b_ib1_minimap_r90.svg
+assets/stages/makara_b/s04b_ib2/lndmd/mirror-bake/598ab2d9d9e2.res
 assets/stages/makara_b/s04b_ib2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_ib2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_ib2/lndmd/s04_0_hasira2.png
@@ -5159,6 +5254,7 @@ assets/stages/makara_b/s04b_ib2/lndmd/s04b_ib2_minimap_r0.svg
 assets/stages/makara_b/s04b_ib2/lndmd/s04b_ib2_minimap_r180.svg
 assets/stages/makara_b/s04b_ib2/lndmd/s04b_ib2_minimap_r270.svg
 assets/stages/makara_b/s04b_ib2/lndmd/s04b_ib2_minimap_r90.svg
+assets/stages/makara_b/s04b_ic1/lndmd/mirror-bake/c46c32a26016.res
 assets/stages/makara_b/s04b_ic1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_ic1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_ic1/lndmd/s04_0_hasira2.png
@@ -5181,6 +5277,7 @@ assets/stages/makara_b/s04b_ic1/lndmd/s04b_ic1_minimap_r0.svg
 assets/stages/makara_b/s04b_ic1/lndmd/s04b_ic1_minimap_r180.svg
 assets/stages/makara_b/s04b_ic1/lndmd/s04b_ic1_minimap_r270.svg
 assets/stages/makara_b/s04b_ic1/lndmd/s04b_ic1_minimap_r90.svg
+assets/stages/makara_b/s04b_ic3/lndmd/mirror-bake/ab40885203ed.res
 assets/stages/makara_b/s04b_ic3/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_ic3/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_ic3/lndmd/s04_0_hasira2.png
@@ -5203,6 +5300,7 @@ assets/stages/makara_b/s04b_ic3/lndmd/s04b_ic3_minimap_r0.svg
 assets/stages/makara_b/s04b_ic3/lndmd/s04b_ic3_minimap_r180.svg
 assets/stages/makara_b/s04b_ic3/lndmd/s04b_ic3_minimap_r270.svg
 assets/stages/makara_b/s04b_ic3/lndmd/s04b_ic3_minimap_r90.svg
+assets/stages/makara_b/s04b_lb1/lndmd/mirror-bake/cf2c68f3e5ba.res
 assets/stages/makara_b/s04b_lb1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_lb1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_lb1/lndmd/s04_0_hasira2.png
@@ -5224,6 +5322,7 @@ assets/stages/makara_b/s04b_lb1/lndmd/s04b_lb1_minimap_r0.svg
 assets/stages/makara_b/s04b_lb1/lndmd/s04b_lb1_minimap_r180.svg
 assets/stages/makara_b/s04b_lb1/lndmd/s04b_lb1_minimap_r270.svg
 assets/stages/makara_b/s04b_lb1/lndmd/s04b_lb1_minimap_r90.svg
+assets/stages/makara_b/s04b_lb3/lndmd/mirror-bake/d3439ac0fc04.res
 assets/stages/makara_b/s04b_lb3/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_lb3/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_lb3/lndmd/s04_0_hasira2.png
@@ -5244,6 +5343,7 @@ assets/stages/makara_b/s04b_lb3/lndmd/s04b_lb3_minimap_r0.svg
 assets/stages/makara_b/s04b_lb3/lndmd/s04b_lb3_minimap_r180.svg
 assets/stages/makara_b/s04b_lb3/lndmd/s04b_lb3_minimap_r270.svg
 assets/stages/makara_b/s04b_lb3/lndmd/s04b_lb3_minimap_r90.svg
+assets/stages/makara_b/s04b_lc1/lndmd/mirror-bake/1a706c2cc8e4.res
 assets/stages/makara_b/s04b_lc1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_lc1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_lc1/lndmd/s04_0_hasira2.png
@@ -5265,6 +5365,7 @@ assets/stages/makara_b/s04b_lc1/lndmd/s04b_lc1_minimap_r0.svg
 assets/stages/makara_b/s04b_lc1/lndmd/s04b_lc1_minimap_r180.svg
 assets/stages/makara_b/s04b_lc1/lndmd/s04b_lc1_minimap_r270.svg
 assets/stages/makara_b/s04b_lc1/lndmd/s04b_lc1_minimap_r90.svg
+assets/stages/makara_b/s04b_lc2/lndmd/mirror-bake/be80f13d8c07.res
 assets/stages/makara_b/s04b_lc2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_lc2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_lc2/lndmd/s04_0_hasira2.png
@@ -5287,6 +5388,7 @@ assets/stages/makara_b/s04b_lc2/lndmd/s04b_lc2_minimap_r0.svg
 assets/stages/makara_b/s04b_lc2/lndmd/s04b_lc2_minimap_r180.svg
 assets/stages/makara_b/s04b_lc2/lndmd/s04b_lc2_minimap_r270.svg
 assets/stages/makara_b/s04b_lc2/lndmd/s04b_lc2_minimap_r90.svg
+assets/stages/makara_b/s04b_na1/lndmd/mirror-bake/469be6cba065.res
 assets/stages/makara_b/s04b_na1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_na1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_na1/lndmd/s04_0_hasira2.png
@@ -5307,6 +5409,7 @@ assets/stages/makara_b/s04b_na1/lndmd/s04b_na1_minimap_r0.svg
 assets/stages/makara_b/s04b_na1/lndmd/s04b_na1_minimap_r180.svg
 assets/stages/makara_b/s04b_na1/lndmd/s04b_na1_minimap_r270.svg
 assets/stages/makara_b/s04b_na1/lndmd/s04b_na1_minimap_r90.svg
+assets/stages/makara_b/s04b_nb2/lndmd/mirror-bake/514ac41144ad.res
 assets/stages/makara_b/s04b_nb2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_nb2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_nb2/lndmd/s04_0_hasira2.png
@@ -5327,6 +5430,7 @@ assets/stages/makara_b/s04b_nb2/lndmd/s04b_nb2_minimap_r0.svg
 assets/stages/makara_b/s04b_nb2/lndmd/s04b_nb2_minimap_r180.svg
 assets/stages/makara_b/s04b_nb2/lndmd/s04b_nb2_minimap_r270.svg
 assets/stages/makara_b/s04b_nb2/lndmd/s04b_nb2_minimap_r90.svg
+assets/stages/makara_b/s04b_nc2/lndmd/mirror-bake/cefb768534ea.res
 assets/stages/makara_b/s04b_nc2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_nc2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_nc2/lndmd/s04_0_hasira2.png
@@ -5348,6 +5452,7 @@ assets/stages/makara_b/s04b_nc2/lndmd/s04b_nc2_minimap_r0.svg
 assets/stages/makara_b/s04b_nc2/lndmd/s04b_nc2_minimap_r180.svg
 assets/stages/makara_b/s04b_nc2/lndmd/s04b_nc2_minimap_r270.svg
 assets/stages/makara_b/s04b_nc2/lndmd/s04b_nc2_minimap_r90.svg
+assets/stages/makara_b/s04b_sa1/lndmd/mirror-bake/67283d19115c.res
 assets/stages/makara_b/s04b_sa1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_sa1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_sa1/lndmd/s04_0_etcs.png
@@ -5369,6 +5474,7 @@ assets/stages/makara_b/s04b_sa1/lndmd/s04b_sa1_minimap_r0.svg
 assets/stages/makara_b/s04b_sa1/lndmd/s04b_sa1_minimap_r180.svg
 assets/stages/makara_b/s04b_sa1/lndmd/s04b_sa1_minimap_r270.svg
 assets/stages/makara_b/s04b_sa1/lndmd/s04b_sa1_minimap_r90.svg
+assets/stages/makara_b/s04b_tb3/lndmd/mirror-bake/8e11fd860bcd.res
 assets/stages/makara_b/s04b_tb3/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_tb3/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_tb3/lndmd/s04_0_hasira2.png
@@ -5390,6 +5496,7 @@ assets/stages/makara_b/s04b_tb3/lndmd/s04b_tb3_minimap_r0.svg
 assets/stages/makara_b/s04b_tb3/lndmd/s04b_tb3_minimap_r180.svg
 assets/stages/makara_b/s04b_tb3/lndmd/s04b_tb3_minimap_r270.svg
 assets/stages/makara_b/s04b_tb3/lndmd/s04b_tb3_minimap_r90.svg
+assets/stages/makara_b/s04b_tc3/lndmd/mirror-bake/fbce321dfee8.res
 assets/stages/makara_b/s04b_tc3/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_tc3/lndmd/s04_0_etcdo.png
 assets/stages/makara_b/s04b_tc3/lndmd/s04_0_hasira2.png
@@ -5409,6 +5516,7 @@ assets/stages/makara_b/s04b_tc3/lndmd/s04b_tc3_minimap_r0.svg
 assets/stages/makara_b/s04b_tc3/lndmd/s04b_tc3_minimap_r180.svg
 assets/stages/makara_b/s04b_tc3/lndmd/s04b_tc3_minimap_r270.svg
 assets/stages/makara_b/s04b_tc3/lndmd/s04b_tc3_minimap_r90.svg
+assets/stages/makara_b/s04b_td1/lndmd/mirror-bake/d05219141f9e.res
 assets/stages/makara_b/s04b_td1/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_td1/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_td1/lndmd/s04_0_hasira2.png
@@ -5429,6 +5537,7 @@ assets/stages/makara_b/s04b_td1/lndmd/s04b_td1_minimap_r0.svg
 assets/stages/makara_b/s04b_td1/lndmd/s04b_td1_minimap_r180.svg
 assets/stages/makara_b/s04b_td1/lndmd/s04b_td1_minimap_r270.svg
 assets/stages/makara_b/s04b_td1/lndmd/s04b_td1_minimap_r90.svg
+assets/stages/makara_b/s04b_td2/lndmd/mirror-bake/d40d83fff062.res
 assets/stages/makara_b/s04b_td2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_td2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_td2/lndmd/s04_0_hasira2.png
@@ -5449,6 +5558,7 @@ assets/stages/makara_b/s04b_td2/lndmd/s04b_td2_minimap_r0.svg
 assets/stages/makara_b/s04b_td2/lndmd/s04b_td2_minimap_r180.svg
 assets/stages/makara_b/s04b_td2/lndmd/s04b_td2_minimap_r270.svg
 assets/stages/makara_b/s04b_td2/lndmd/s04b_td2_minimap_r90.svg
+assets/stages/makara_b/s04b_xb2/lndmd/mirror-bake/c2c95a361f71.res
 assets/stages/makara_b/s04b_xb2/lndmd/s04_0_earth.png
 assets/stages/makara_b/s04b_xb2/lndmd/s04_0_etc.png
 assets/stages/makara_b/s04b_xb2/lndmd/s04_0_hasira2.png
@@ -5469,6 +5579,7 @@ assets/stages/makara_b/s04b_xb2/lndmd/s04b_xb2_minimap_r0.svg
 assets/stages/makara_b/s04b_xb2/lndmd/s04b_xb2_minimap_r180.svg
 assets/stages/makara_b/s04b_xb2/lndmd/s04b_xb2_minimap_r270.svg
 assets/stages/makara_b/s04b_xb2/lndmd/s04b_xb2_minimap_r90.svg
+assets/stages/makara_e/s04e_ia1/lndmd/mirror-bake/efe892ab6010.res
 assets/stages/makara_e/s04e_ia1/lndmd/s04_0_etce.png
 assets/stages/makara_e/s04e_ia1/lndmd/s04_0_kabe1.png
 assets/stages/makara_e/s04e_ia1/lndmd/s04_0_kabe2.png
@@ -5487,6 +5598,7 @@ assets/stages/makara_e/s04e_ia1/lndmd/s04e_ia1_minimap_r0.svg
 assets/stages/makara_e/s04e_ia1/lndmd/s04e_ia1_minimap_r180.svg
 assets/stages/makara_e/s04e_ia1/lndmd/s04e_ia1_minimap_r270.svg
 assets/stages/makara_e/s04e_ia1/lndmd/s04e_ia1_minimap_r90.svg
+assets/stages/makara_z/s04z_na1/lndmd/mirror-bake/dfa5c0f97ad7.res
 assets/stages/makara_z/s04z_na1/lndmd/s04_0_cliff3.png
 assets/stages/makara_z/s04z_na1/lndmd/s04_0_hikari.png
 assets/stages/makara_z/s04z_na1/lndmd/s04_0_quart3.png
@@ -5507,6 +5619,110 @@ assets/stages/makara_z/s04z_na1/lndmd/s04z_na1_minimap_r0.svg
 assets/stages/makara_z/s04z_na1/lndmd/s04z_na1_minimap_r180.svg
 assets/stages/makara_z/s04z_na1/lndmd/s04z_na1_minimap_r270.svg
 assets/stages/makara_z/s04z_na1/lndmd/s04z_na1_minimap_r90.svg
+assets/stages/native_mirror/lndmd/00845ad12e1f1d6721a60a377d380fb692387d5693c58d4262d5317921ab8dd4.res
+assets/stages/native_mirror/lndmd/041a54b560079a8e8682a45e1a6c67b3a90c9a4ae7d582443b910c28a1361694.res
+assets/stages/native_mirror/lndmd/043e1db993fc3d5aae140e0edab44001956df1445b7c489ce1957b5f1be0b7e6.res
+assets/stages/native_mirror/lndmd/05bec37f39cab24d8cbe5f88e5a7225a0cb5cbca585fe40224f864a84409e854.res
+assets/stages/native_mirror/lndmd/06cc6938dec18bcfc3a4929b02aa3ea325f605ab6a27002212897f1722c3f1f7.res
+assets/stages/native_mirror/lndmd/0977066fca8e5377cd084e82b565bc3e48dfc6de1dcd5404b6479d75392bb529.res
+assets/stages/native_mirror/lndmd/09a8d6328b769004f89bf0a2c66b3aa88d8d30a17aad4c908166dd91d96abbae.res
+assets/stages/native_mirror/lndmd/0a56e097893db33c018ff64a540957de0cf396281443bc235559755f8da50ea7.res
+assets/stages/native_mirror/lndmd/0c45e92cd95e7208931422493779e713e79b2b9f8a13e096ca5846cd69d3a08c.res
+assets/stages/native_mirror/lndmd/0d7808d15b9ba144852462388a96e37f0ea5503422cfdb538bf7428ee0b6095b.res
+assets/stages/native_mirror/lndmd/0fddea6a0a3f90b55153c14ebbe02e141ac43d3f90c9bef9486d43eb56d0f09c.res
+assets/stages/native_mirror/lndmd/0ffdf1ab7223686dbb7104bc3bd4367a63fb2ae9e6bd554225663a00952d3380.res
+assets/stages/native_mirror/lndmd/108a86db8bf9895f98ac39c381075087f6d9cd5d208bb69b82998772fbe8be3d.res
+assets/stages/native_mirror/lndmd/114283f48ba37020a3a2770c2f34cfa3c7ff620d22fb619f06a10f3ad4fd682f.res
+assets/stages/native_mirror/lndmd/150ddad37ea4adbb19bc42613bc8d6f0a53a27c1b43eca16194d6eb6bcc0b9f7.res
+assets/stages/native_mirror/lndmd/167da5a63c506a9b15771d75c18d96e40ed046ff624de0d725dd542e70d0d3dc.res
+assets/stages/native_mirror/lndmd/16f3149980672c7f8088b0670e186f914033696920aa4beb631fa11fba9f434a.res
+assets/stages/native_mirror/lndmd/17b855b3d5d957cc4890507944cfe622e333a0c93efbd39c1405dd5fb3607f33.res
+assets/stages/native_mirror/lndmd/18dffbea0388c5cba18c917e1d97f5e50a3a7e2c0ad5d349d461da3cc69af19d.res
+assets/stages/native_mirror/lndmd/1950b320d2c40d971055fca3250ea8ea356506e081bdf69672eed21fc3aefd04.res
+assets/stages/native_mirror/lndmd/210ca7ecb2f9e47af858aba7a1a90a754402f8d35c72e184d00adf25fda0fccc.res
+assets/stages/native_mirror/lndmd/24aaf8951128e1778f707128b56dc947a59e046cdc420fffd4e75d962442ad6c.res
+assets/stages/native_mirror/lndmd/25c40230cd9ca6a8e96639006c17d7890b601e6b67e46bd91a30b724fb977df9.res
+assets/stages/native_mirror/lndmd/260c5caa89050c88dbbd0b2f6b28096c9d0a3487d841ef3cb0416623ca848abf.res
+assets/stages/native_mirror/lndmd/29a535f6b4dc022de84bad6f6aa0bffbb67ee23fbeefb61be97cbebc940d8839.res
+assets/stages/native_mirror/lndmd/29daae977463308820a87b168243740ad18eeebb71889a27db91d462bb51f948.res
+assets/stages/native_mirror/lndmd/2d7a467d101590d1e16731d1518a53815fac7b87887ecb1a07042b356412b70d.res
+assets/stages/native_mirror/lndmd/2dd8757f935ad20a7b852b81ee9532d934d9ff1f7bc90f02b1f77640f2820140.res
+assets/stages/native_mirror/lndmd/2e6d418fce62da2b49b848e2c5d049013f7905a27e221c8536be6ba132122a2b.res
+assets/stages/native_mirror/lndmd/30b6887b604689bbc093faf4f4120b7470abcfadea54b4ce6569454e81ed7de6.res
+assets/stages/native_mirror/lndmd/3492192e9ea281561fd9ea5c4334853d849c23d24437419e0c2ecc6b50bdf7c3.res
+assets/stages/native_mirror/lndmd/37cadb88ab95718ddd2a37e1c7920cd8a51fd705ba22eed7bbb3b3694d1827dc.res
+assets/stages/native_mirror/lndmd/3b76770b6448044706cf99058de58017d0309e89152f059d4d80e98c4dfb7b98.res
+assets/stages/native_mirror/lndmd/3c7b957000f4b3ed6e74549fe3a67bb8457c1a3f0c9d9fe032f620c9eabba4db.res
+assets/stages/native_mirror/lndmd/3c941f8007f595333c0dd45434015360cb529e21104b5265ddc88e6b95713158.res
+assets/stages/native_mirror/lndmd/3e9fa759e3d36ae29fe25da9701150be54019fd22fae396bff4204bc33c18c70.res
+assets/stages/native_mirror/lndmd/41b0c7d9d5749b822be59f0e6ff3d98af887b8bc05c3ae260d086aa8dac60397.res
+assets/stages/native_mirror/lndmd/4231493b02b8a2de4d0b090d7c538c1112a67d22f34d5fbe0da5e8279ba6991e.res
+assets/stages/native_mirror/lndmd/424d98e0183d95289fded25d25009ab9617879c415da0da7522b4e0365e1c278.res
+assets/stages/native_mirror/lndmd/424e3fa265fc757b4dc19215d0436a8ec39b2a1bced43acc6fe3b0fef0bd3eb9.res
+assets/stages/native_mirror/lndmd/42c80f9685e3c4613f4d441a34c26f0b92a809cf447984b9dd39d260dbe3684e.res
+assets/stages/native_mirror/lndmd/43be6cf5663364a0d8f496f2766b98f12d7184b35710359a84909fa8b27c79aa.res
+assets/stages/native_mirror/lndmd/43fd8e2dbad351cc33c930e487ecb51ad014b43f198ee3f56e7e310791ff3fde.res
+assets/stages/native_mirror/lndmd/457a4644f88b00b351d32fd3f84caf07851dd4393282ef198f8f2f53784a856d.res
+assets/stages/native_mirror/lndmd/4619af68ae002e9e34d5eeaa270f82be4ea25ea37a579ce8bcf004dacf47ded1.res
+assets/stages/native_mirror/lndmd/49cd6f5dd33f53ad25ed4dd915a73801166d9a5ef5319b78f66fa8a491a56089.res
+assets/stages/native_mirror/lndmd/4a5bea34201bb8d0d131f02dbbc0a3130feaa46e53678a7a02036427bef4ec39.res
+assets/stages/native_mirror/lndmd/4afe9ad4da9af1898c6647923b92d36b06c9bc5301e5c8694650619824cc1804.res
+assets/stages/native_mirror/lndmd/4b0cf4af61ef673f9c441b6421105f836c4ea8e5f341f43adf209642797c5e68.res
+assets/stages/native_mirror/lndmd/4ff7358ede8931bd807774546455a9345235f7299d0531732a21dbe4a83041d8.res
+assets/stages/native_mirror/lndmd/5665cc249ba8c10d03602cea170637333cf08f80fbdd933a98088dcb6372da7e.res
+assets/stages/native_mirror/lndmd/5784dab5067416657ace66001f65a49a846be02cd4395023fb60cf86fb501231.res
+assets/stages/native_mirror/lndmd/5a15588f02a2c5679dc93a33a0176469d61b4759b25991b86cc937c22d5f4450.res
+assets/stages/native_mirror/lndmd/5e2b4de08f2b67f672deb641a66f2f5baf61c07c5382bcd8f5fcba1fbf75bc8a.res
+assets/stages/native_mirror/lndmd/60e5fb82312f90901b776a2967b5f462d93935f568ad8ac5e34636b6dcfbbd9d.res
+assets/stages/native_mirror/lndmd/61b0b394d125259b58a4385d292c10bbd576ad0acdfbfa973e0d6b2dfe5396b2.res
+assets/stages/native_mirror/lndmd/62d32d28e570ca51956af0567894c6122652311c1687ce369535fac52a6f3e47.res
+assets/stages/native_mirror/lndmd/6846c036f6419498bc03e19f3600cd2fc46e8d1cea047bda92331b9467a21bc7.res
+assets/stages/native_mirror/lndmd/691c16069546d99149742ce860009340278ee16de65b825b76500c4b73926476.res
+assets/stages/native_mirror/lndmd/7357b153db901d8cd564d4b38a21a112fb93c2632d57dd82c73689cfc7d9269a.res
+assets/stages/native_mirror/lndmd/78400f1e4bd0e86588e5d9382985dfcef055e1557e63077343b1e1a51797a300.res
+assets/stages/native_mirror/lndmd/8523e1f3bdeb303971dc63ce6ff5fff408b9bc5e2696eeb5a2b7313be6c63809.res
+assets/stages/native_mirror/lndmd/8767330d85fe60ae3380dda9239f59110a09ae41adf1d48dabbd8323a48a655a.res
+assets/stages/native_mirror/lndmd/88b074d7921a43655ab06dfe5abd37f96b02650f794a0a4dbd9b50ef74895689.res
+assets/stages/native_mirror/lndmd/8e2d60f168f968c5ba2c408027caa11c6a5cbb4d39ed18e476f00fd5fae331a5.res
+assets/stages/native_mirror/lndmd/90993d89bdb222e71a5d7959559b9bb70d1b055d2e482e57a667584fab1fae85.res
+assets/stages/native_mirror/lndmd/923845e2c522643ac72ded0cf4ea6fb235c80b84fa686eba7b634b33c06ad857.res
+assets/stages/native_mirror/lndmd/94721c85c0d358dfcc5c0a86c161b7ddb00ae6325919c5c7d866f94d6c82204c.res
+assets/stages/native_mirror/lndmd/980d1c6194a25db9f3323d5b862e2e1a63c7ead06141d276b74b5b2e2738eece.res
+assets/stages/native_mirror/lndmd/9b7b9aea10ccb2cc92911c172ec23ed40133d8cb3561806782e60736b8f13d20.res
+assets/stages/native_mirror/lndmd/9bba9c0c15035bc87134cad8dcadc4a5731ae0fabf8d61ca31cba61e2458db7c.res
+assets/stages/native_mirror/lndmd/a368f57a7bb901be9b6a7fcd474aec938b86143fcd5c6c2ad547eb769ec3c5d9.res
+assets/stages/native_mirror/lndmd/a848d37887887d05c19d736c04a26e5d5aaf8f4734218da877c3423984c0e2bd.res
+assets/stages/native_mirror/lndmd/a8d944e82922667725d226c6604a0685f3a794a489263a1e7c16d7a8df1534c6.res
+assets/stages/native_mirror/lndmd/a95b52c704925fbd1e981159c1482171bf5c480832cc361f98083be083e3d977.res
+assets/stages/native_mirror/lndmd/ab60403962a16ef8435d57cb5b14136b78426bdb66c92a61f14e349e44bc0f60.res
+assets/stages/native_mirror/lndmd/acd2dcb1d954a72a392d5e7b41a6b9ea1381e2a6e8c4424571af133a2ee34423.res
+assets/stages/native_mirror/lndmd/aed161c9d7f6ccb23bf78a51a09e470c89e4f2326f76933d2cf4e8e4dd55bc84.res
+assets/stages/native_mirror/lndmd/b368444c742553e10b0b084dbf2e90f21aabd6294dd8f4df588e17f5d0613e38.res
+assets/stages/native_mirror/lndmd/b92af3a73efba1f1e9965fd9c964ae6a617aa30207e702db1f912a37e64cc9b1.res
+assets/stages/native_mirror/lndmd/c58eeb71f6cdd626ab722979fb2ddba1c226cb80f2730d4deec22ded09676d75.res
+assets/stages/native_mirror/lndmd/c64b9a53ee1f25ac90bf15f56ceea741e94409f1e03420b8beca8e57922626b4.res
+assets/stages/native_mirror/lndmd/c7d31df697c91c3efa9d903836efdcd1d1e72c4e7969c7a5d690f7511b08c729.res
+assets/stages/native_mirror/lndmd/cb7ad6fc657dbf6235685878eba0c97f27b24f90ec45faee2fb8fc97d5218f1e.res
+assets/stages/native_mirror/lndmd/cc80059f1454fbd9af9aaa91532dcb5c5bce7c66333e035061e6d806b908cfbc.res
+assets/stages/native_mirror/lndmd/d1c2791b21c2ac7b168e8877e64569624130d873ac6254af1339a0b3e1f3e385.res
+assets/stages/native_mirror/lndmd/d275819f806448b4fde79eccf1f242bb76a6cdffc33d35dde18a80a2f43d8600.res
+assets/stages/native_mirror/lndmd/d6fda345d56001c3f0e42100d4d4ecbfe614680253759921b4919ef09ab97a78.res
+assets/stages/native_mirror/lndmd/d72254025d8f9037234e96c690a2506d93c113ca789c7954458b50f7bbb70ed4.res
+assets/stages/native_mirror/lndmd/dc0f49ab1b9b20b8742705649b9c61869bad3661a81517a0f4d5b438ede8f85f.res
+assets/stages/native_mirror/lndmd/dd3faaa72a634458059aba55fb8eb51feb92fd077ff2d56761c0ac90bccea415.res
+assets/stages/native_mirror/lndmd/e27f3112e879b263c4949ba419795fb9a350e13cebb7ef27761403c4d07c4c5a.res
+assets/stages/native_mirror/lndmd/e4d7a86ee8813765e192fecf68642de51b15a719144805faff9011a40222ec37.res
+assets/stages/native_mirror/lndmd/e77322d6af6a63338521595464fa4b48f5c61266180fecd344e94b1c260840b1.res
+assets/stages/native_mirror/lndmd/ee851855de6f1d9f228b29b52d30228624c342f577ce0120d3173e66aa27fab4.res
+assets/stages/native_mirror/lndmd/eefcc088d54dedaf4865c14a4f8a737517ec30ca8bbf51bc4009c735fc92d6ab.res
+assets/stages/native_mirror/lndmd/f59de5cab981676c9d7e6e2c52af109ed72041cbfdb9d3e2568e055060ee1324.res
+assets/stages/native_mirror/lndmd/f5b245a8b4ba7c3d0c5d07b4a0aa6318beebcebf37dcfaab1855f571ecefbe5b.res
+assets/stages/native_mirror/lndmd/f7baf133d2b297f4d1494bd2ae3b174582776ffe616db94a2be9fb96aabaf209.res
+assets/stages/native_mirror/lndmd/f8bd6b9a92a371473b64f41c95e8c1ecb0bec55f704180c5cd9a187eca8df391.res
+assets/stages/native_mirror/lndmd/f8d7e229546afc10efde4aef9588404b19575563136706d54949ac021e48d59a.res
+assets/stages/native_mirror/lndmd/fb8255f3d90295d15b65e22936f3847a0b5bca5de6c5a49185528febb4fbac50.res
+assets/stages/native_mirror/lndmd/ff31045ba80435e36bfdcb579d244ec7db8be5fc7ccb0f7d3a5ad5ce0f72d737.res
+assets/stages/paru_a/s05a_ga1/lndmd/mirror-bake/d6014ecb5e33.res
 assets/stages/paru_a/s05a_ga1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_ga1/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_ga1/lndmd/s05_0_tail1.png
@@ -5526,6 +5742,7 @@ assets/stages/paru_a/s05a_ga1/lndmd/s05a_ga1_minimap_r0.svg
 assets/stages/paru_a/s05a_ga1/lndmd/s05a_ga1_minimap_r180.svg
 assets/stages/paru_a/s05a_ga1/lndmd/s05a_ga1_minimap_r270.svg
 assets/stages/paru_a/s05a_ga1/lndmd/s05a_ga1_minimap_r90.svg
+assets/stages/paru_a/s05a_ib1/lndmd/mirror-bake/06e1b81bb5dc.res
 assets/stages/paru_a/s05a_ib1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_ib1/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_ib1/lndmd/s05_0_road3.png
@@ -5546,6 +5763,7 @@ assets/stages/paru_a/s05a_ib1/lndmd/s05a_ib1_minimap_r0.svg
 assets/stages/paru_a/s05a_ib1/lndmd/s05a_ib1_minimap_r180.svg
 assets/stages/paru_a/s05a_ib1/lndmd/s05a_ib1_minimap_r270.svg
 assets/stages/paru_a/s05a_ib1/lndmd/s05a_ib1_minimap_r90.svg
+assets/stages/paru_a/s05a_ib2/lndmd/mirror-bake/5911caa0db55.res
 assets/stages/paru_a/s05a_ib2/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_ib2/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_ib2/lndmd/s05_0_road3.png
@@ -5566,6 +5784,7 @@ assets/stages/paru_a/s05a_ib2/lndmd/s05a_ib2_minimap_r0.svg
 assets/stages/paru_a/s05a_ib2/lndmd/s05a_ib2_minimap_r180.svg
 assets/stages/paru_a/s05a_ib2/lndmd/s05a_ib2_minimap_r270.svg
 assets/stages/paru_a/s05a_ib2/lndmd/s05a_ib2_minimap_r90.svg
+assets/stages/paru_a/s05a_ic1/lndmd/mirror-bake/1799a64916ad.res
 assets/stages/paru_a/s05a_ic1/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_ic1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_ic1/lndmd/s05_0_road1.png
@@ -5586,6 +5805,7 @@ assets/stages/paru_a/s05a_ic1/lndmd/s05a_ic1_minimap_r0.svg
 assets/stages/paru_a/s05a_ic1/lndmd/s05a_ic1_minimap_r180.svg
 assets/stages/paru_a/s05a_ic1/lndmd/s05a_ic1_minimap_r270.svg
 assets/stages/paru_a/s05a_ic1/lndmd/s05a_ic1_minimap_r90.svg
+assets/stages/paru_a/s05a_ic3/lndmd/mirror-bake/251ca06d278d.res
 assets/stages/paru_a/s05a_ic3/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_ic3/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_ic3/lndmd/s05_0_road1.png
@@ -5606,6 +5826,7 @@ assets/stages/paru_a/s05a_ic3/lndmd/s05a_ic3_minimap_r0.svg
 assets/stages/paru_a/s05a_ic3/lndmd/s05a_ic3_minimap_r180.svg
 assets/stages/paru_a/s05a_ic3/lndmd/s05a_ic3_minimap_r270.svg
 assets/stages/paru_a/s05a_ic3/lndmd/s05a_ic3_minimap_r90.svg
+assets/stages/paru_a/s05a_lb1/lndmd/mirror-bake/e6a2c5e97c38.res
 assets/stages/paru_a/s05a_lb1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_lb1/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_lb1/lndmd/s05_0_road3.png
@@ -5626,6 +5847,7 @@ assets/stages/paru_a/s05a_lb1/lndmd/s05a_lb1_minimap_r0.svg
 assets/stages/paru_a/s05a_lb1/lndmd/s05a_lb1_minimap_r180.svg
 assets/stages/paru_a/s05a_lb1/lndmd/s05a_lb1_minimap_r270.svg
 assets/stages/paru_a/s05a_lb1/lndmd/s05a_lb1_minimap_r90.svg
+assets/stages/paru_a/s05a_lb3/lndmd/mirror-bake/ae5852a1d45f.res
 assets/stages/paru_a/s05a_lb3/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_lb3/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_lb3/lndmd/s05_0_road3.png
@@ -5646,6 +5868,7 @@ assets/stages/paru_a/s05a_lb3/lndmd/s05a_lb3_minimap_r0.svg
 assets/stages/paru_a/s05a_lb3/lndmd/s05a_lb3_minimap_r180.svg
 assets/stages/paru_a/s05a_lb3/lndmd/s05a_lb3_minimap_r270.svg
 assets/stages/paru_a/s05a_lb3/lndmd/s05a_lb3_minimap_r90.svg
+assets/stages/paru_a/s05a_lc1/lndmd/mirror-bake/a3698ff855d6.res
 assets/stages/paru_a/s05a_lc1/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_lc1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_lc1/lndmd/s05_0_road1.png
@@ -5666,6 +5889,7 @@ assets/stages/paru_a/s05a_lc1/lndmd/s05a_lc1_minimap_r0.svg
 assets/stages/paru_a/s05a_lc1/lndmd/s05a_lc1_minimap_r180.svg
 assets/stages/paru_a/s05a_lc1/lndmd/s05a_lc1_minimap_r270.svg
 assets/stages/paru_a/s05a_lc1/lndmd/s05a_lc1_minimap_r90.svg
+assets/stages/paru_a/s05a_lc2/lndmd/mirror-bake/022dd3c1f2da.res
 assets/stages/paru_a/s05a_lc2/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_lc2/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_lc2/lndmd/s05_0_road1.png
@@ -5686,6 +5910,7 @@ assets/stages/paru_a/s05a_lc2/lndmd/s05a_lc2_minimap_r0.svg
 assets/stages/paru_a/s05a_lc2/lndmd/s05a_lc2_minimap_r180.svg
 assets/stages/paru_a/s05a_lc2/lndmd/s05a_lc2_minimap_r270.svg
 assets/stages/paru_a/s05a_lc2/lndmd/s05a_lc2_minimap_r90.svg
+assets/stages/paru_a/s05a_na1/lndmd/mirror-bake/1bdff1e32ca9.res
 assets/stages/paru_a/s05a_na1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_na1/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_na1/lndmd/s05_0_road3.png
@@ -5705,6 +5930,7 @@ assets/stages/paru_a/s05a_na1/lndmd/s05a_na1_minimap_r0.svg
 assets/stages/paru_a/s05a_na1/lndmd/s05a_na1_minimap_r180.svg
 assets/stages/paru_a/s05a_na1/lndmd/s05a_na1_minimap_r270.svg
 assets/stages/paru_a/s05a_na1/lndmd/s05a_na1_minimap_r90.svg
+assets/stages/paru_a/s05a_nb2/lndmd/mirror-bake/018d0937bec5.res
 assets/stages/paru_a/s05a_nb2/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_nb2/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_nb2/lndmd/s05_0_road3.png
@@ -5725,6 +5951,7 @@ assets/stages/paru_a/s05a_nb2/lndmd/s05a_nb2_minimap_r0.svg
 assets/stages/paru_a/s05a_nb2/lndmd/s05a_nb2_minimap_r180.svg
 assets/stages/paru_a/s05a_nb2/lndmd/s05a_nb2_minimap_r270.svg
 assets/stages/paru_a/s05a_nb2/lndmd/s05a_nb2_minimap_r90.svg
+assets/stages/paru_a/s05a_nc2/lndmd/mirror-bake/8e28fb0ed6c5.res
 assets/stages/paru_a/s05a_nc2/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_nc2/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_nc2/lndmd/s05_0_road1.png
@@ -5745,6 +5972,7 @@ assets/stages/paru_a/s05a_nc2/lndmd/s05a_nc2_minimap_r0.svg
 assets/stages/paru_a/s05a_nc2/lndmd/s05a_nc2_minimap_r180.svg
 assets/stages/paru_a/s05a_nc2/lndmd/s05a_nc2_minimap_r270.svg
 assets/stages/paru_a/s05a_nc2/lndmd/s05a_nc2_minimap_r90.svg
+assets/stages/paru_a/s05a_sa1/lndmd/mirror-bake/04f83f67e190.res
 assets/stages/paru_a/s05a_sa1/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_sa1/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_sa1/lndmd/s05_0_road1.png
@@ -5767,6 +5995,7 @@ assets/stages/paru_a/s05a_sa1/lndmd/s05a_sa1_minimap_r0.svg
 assets/stages/paru_a/s05a_sa1/lndmd/s05a_sa1_minimap_r180.svg
 assets/stages/paru_a/s05a_sa1/lndmd/s05a_sa1_minimap_r270.svg
 assets/stages/paru_a/s05a_sa1/lndmd/s05a_sa1_minimap_r90.svg
+assets/stages/paru_a/s05a_tb3/lndmd/mirror-bake/e9f200c2b2eb.res
 assets/stages/paru_a/s05a_tb3/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_tb3/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_tb3/lndmd/s05_0_road3.png
@@ -5787,6 +6016,7 @@ assets/stages/paru_a/s05a_tb3/lndmd/s05a_tb3_minimap_r0.svg
 assets/stages/paru_a/s05a_tb3/lndmd/s05a_tb3_minimap_r180.svg
 assets/stages/paru_a/s05a_tb3/lndmd/s05a_tb3_minimap_r270.svg
 assets/stages/paru_a/s05a_tb3/lndmd/s05a_tb3_minimap_r90.svg
+assets/stages/paru_a/s05a_tc3/lndmd/mirror-bake/45b31d31b0d3.res
 assets/stages/paru_a/s05a_tc3/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_tc3/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_tc3/lndmd/s05_0_road1.png
@@ -5807,6 +6037,7 @@ assets/stages/paru_a/s05a_tc3/lndmd/s05a_tc3_minimap_r0.svg
 assets/stages/paru_a/s05a_tc3/lndmd/s05a_tc3_minimap_r180.svg
 assets/stages/paru_a/s05a_tc3/lndmd/s05a_tc3_minimap_r270.svg
 assets/stages/paru_a/s05a_tc3/lndmd/s05a_tc3_minimap_r90.svg
+assets/stages/paru_a/s05a_td1/lndmd/mirror-bake/9058b098f331.res
 assets/stages/paru_a/s05a_td1/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_td1/lndmd/s05_0_etc1.png
 assets/stages/paru_a/s05a_td1/lndmd/s05_0_field.png
@@ -5830,6 +6061,7 @@ assets/stages/paru_a/s05a_td1/lndmd/s05a_td1_minimap_r0.svg
 assets/stages/paru_a/s05a_td1/lndmd/s05a_td1_minimap_r180.svg
 assets/stages/paru_a/s05a_td1/lndmd/s05a_td1_minimap_r270.svg
 assets/stages/paru_a/s05a_td1/lndmd/s05a_td1_minimap_r90.svg
+assets/stages/paru_a/s05a_td2/lndmd/mirror-bake/2ef641d7355f.res
 assets/stages/paru_a/s05a_td2/lndmd/s05_0_edge1.png
 assets/stages/paru_a/s05a_td2/lndmd/s05_0_etc1.png
 assets/stages/paru_a/s05a_td2/lndmd/s05_0_field.png
@@ -5853,6 +6085,7 @@ assets/stages/paru_a/s05a_td2/lndmd/s05a_td2_minimap_r0.svg
 assets/stages/paru_a/s05a_td2/lndmd/s05a_td2_minimap_r180.svg
 assets/stages/paru_a/s05a_td2/lndmd/s05a_td2_minimap_r270.svg
 assets/stages/paru_a/s05a_td2/lndmd/s05a_td2_minimap_r90.svg
+assets/stages/paru_a/s05a_xb2/lndmd/mirror-bake/08f2cb29f3b1.res
 assets/stages/paru_a/s05a_xb2/lndmd/s05_0_field.png
 assets/stages/paru_a/s05a_xb2/lndmd/s05_0_road1.png
 assets/stages/paru_a/s05a_xb2/lndmd/s05_0_road3.png
@@ -5873,6 +6106,7 @@ assets/stages/paru_a/s05a_xb2/lndmd/s05a_xb2_minimap_r0.svg
 assets/stages/paru_a/s05a_xb2/lndmd/s05a_xb2_minimap_r180.svg
 assets/stages/paru_a/s05a_xb2/lndmd/s05a_xb2_minimap_r270.svg
 assets/stages/paru_a/s05a_xb2/lndmd/s05a_xb2_minimap_r90.svg
+assets/stages/paru_b/s05b_ga1/lndmd/mirror-bake/84628e628e23.res
 assets/stages/paru_b/s05b_ga1/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_ga1/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_ga1/lndmd/s05_0_field4.png
@@ -5892,6 +6126,7 @@ assets/stages/paru_b/s05b_ga1/lndmd/s05b_ga1_minimap_r0.svg
 assets/stages/paru_b/s05b_ga1/lndmd/s05b_ga1_minimap_r180.svg
 assets/stages/paru_b/s05b_ga1/lndmd/s05b_ga1_minimap_r270.svg
 assets/stages/paru_b/s05b_ga1/lndmd/s05b_ga1_minimap_r90.svg
+assets/stages/paru_b/s05b_ib1/lndmd/mirror-bake/470ba51b9964.res
 assets/stages/paru_b/s05b_ib1/lndmd/s05_0_field2.png
 assets/stages/paru_b/s05b_ib1/lndmd/s05_0_field3.png
 assets/stages/paru_b/s05b_ib1/lndmd/s05_0_hasi1.png
@@ -5912,6 +6147,7 @@ assets/stages/paru_b/s05b_ib1/lndmd/s05b_ib1_minimap_r0.svg
 assets/stages/paru_b/s05b_ib1/lndmd/s05b_ib1_minimap_r180.svg
 assets/stages/paru_b/s05b_ib1/lndmd/s05b_ib1_minimap_r270.svg
 assets/stages/paru_b/s05b_ib1/lndmd/s05b_ib1_minimap_r90.svg
+assets/stages/paru_b/s05b_ib2/lndmd/mirror-bake/beb677623b3b.res
 assets/stages/paru_b/s05b_ib2/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_ib2/lndmd/s05_0_hasi1.png
 assets/stages/paru_b/s05b_ib2/lndmd/s05_0_tail1.png
@@ -5931,6 +6167,7 @@ assets/stages/paru_b/s05b_ib2/lndmd/s05b_ib2_minimap_r0.svg
 assets/stages/paru_b/s05b_ib2/lndmd/s05b_ib2_minimap_r180.svg
 assets/stages/paru_b/s05b_ib2/lndmd/s05b_ib2_minimap_r270.svg
 assets/stages/paru_b/s05b_ib2/lndmd/s05b_ib2_minimap_r90.svg
+assets/stages/paru_b/s05b_ic1/lndmd/mirror-bake/63b6ab4f7c99.res
 assets/stages/paru_b/s05b_ic1/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_ic1/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_ic1/lndmd/s05_0_field4.png
@@ -5951,6 +6188,7 @@ assets/stages/paru_b/s05b_ic1/lndmd/s05b_ic1_minimap_r0.svg
 assets/stages/paru_b/s05b_ic1/lndmd/s05b_ic1_minimap_r180.svg
 assets/stages/paru_b/s05b_ic1/lndmd/s05b_ic1_minimap_r270.svg
 assets/stages/paru_b/s05b_ic1/lndmd/s05b_ic1_minimap_r90.svg
+assets/stages/paru_b/s05b_ic3/lndmd/mirror-bake/8c83f54c9548.res
 assets/stages/paru_b/s05b_ic3/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_ic3/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_ic3/lndmd/s05_0_field4.png
@@ -5971,6 +6209,7 @@ assets/stages/paru_b/s05b_ic3/lndmd/s05b_ic3_minimap_r0.svg
 assets/stages/paru_b/s05b_ic3/lndmd/s05b_ic3_minimap_r180.svg
 assets/stages/paru_b/s05b_ic3/lndmd/s05b_ic3_minimap_r270.svg
 assets/stages/paru_b/s05b_ic3/lndmd/s05b_ic3_minimap_r90.svg
+assets/stages/paru_b/s05b_lb1/lndmd/mirror-bake/f4e545e1b4f2.res
 assets/stages/paru_b/s05b_lb1/lndmd/s05_0_field2.png
 assets/stages/paru_b/s05b_lb1/lndmd/s05_0_field3.png
 assets/stages/paru_b/s05b_lb1/lndmd/s05_0_hasi1.png
@@ -5991,6 +6230,7 @@ assets/stages/paru_b/s05b_lb1/lndmd/s05b_lb1_minimap_r0.svg
 assets/stages/paru_b/s05b_lb1/lndmd/s05b_lb1_minimap_r180.svg
 assets/stages/paru_b/s05b_lb1/lndmd/s05b_lb1_minimap_r270.svg
 assets/stages/paru_b/s05b_lb1/lndmd/s05b_lb1_minimap_r90.svg
+assets/stages/paru_b/s05b_lb3/lndmd/mirror-bake/b846d69768fb.res
 assets/stages/paru_b/s05b_lb3/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_lb3/lndmd/s05_0_hasi1.png
 assets/stages/paru_b/s05b_lb3/lndmd/s05_0_tail1.png
@@ -6010,6 +6250,7 @@ assets/stages/paru_b/s05b_lb3/lndmd/s05b_lb3_minimap_r0.svg
 assets/stages/paru_b/s05b_lb3/lndmd/s05b_lb3_minimap_r180.svg
 assets/stages/paru_b/s05b_lb3/lndmd/s05b_lb3_minimap_r270.svg
 assets/stages/paru_b/s05b_lb3/lndmd/s05b_lb3_minimap_r90.svg
+assets/stages/paru_b/s05b_lc1/lndmd/mirror-bake/7c94a8ef6fae.res
 assets/stages/paru_b/s05b_lc1/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_lc1/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_lc1/lndmd/s05_0_field4.png
@@ -6030,6 +6271,7 @@ assets/stages/paru_b/s05b_lc1/lndmd/s05b_lc1_minimap_r0.svg
 assets/stages/paru_b/s05b_lc1/lndmd/s05b_lc1_minimap_r180.svg
 assets/stages/paru_b/s05b_lc1/lndmd/s05b_lc1_minimap_r270.svg
 assets/stages/paru_b/s05b_lc1/lndmd/s05b_lc1_minimap_r90.svg
+assets/stages/paru_b/s05b_lc2/lndmd/mirror-bake/316080b18fa7.res
 assets/stages/paru_b/s05b_lc2/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_lc2/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_lc2/lndmd/s05_0_field4.png
@@ -6050,6 +6292,7 @@ assets/stages/paru_b/s05b_lc2/lndmd/s05b_lc2_minimap_r0.svg
 assets/stages/paru_b/s05b_lc2/lndmd/s05b_lc2_minimap_r180.svg
 assets/stages/paru_b/s05b_lc2/lndmd/s05b_lc2_minimap_r270.svg
 assets/stages/paru_b/s05b_lc2/lndmd/s05b_lc2_minimap_r90.svg
+assets/stages/paru_b/s05b_na1/lndmd/mirror-bake/363c544d93cf.res
 assets/stages/paru_b/s05b_na1/lndmd/s05_0_field2.png
 assets/stages/paru_b/s05b_na1/lndmd/s05_0_field3.png
 assets/stages/paru_b/s05b_na1/lndmd/s05_0_hasi1.png
@@ -6069,6 +6312,7 @@ assets/stages/paru_b/s05b_na1/lndmd/s05b_na1_minimap_r0.svg
 assets/stages/paru_b/s05b_na1/lndmd/s05b_na1_minimap_r180.svg
 assets/stages/paru_b/s05b_na1/lndmd/s05b_na1_minimap_r270.svg
 assets/stages/paru_b/s05b_na1/lndmd/s05b_na1_minimap_r90.svg
+assets/stages/paru_b/s05b_nb2/lndmd/mirror-bake/e8e362d89650.res
 assets/stages/paru_b/s05b_nb2/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_nb2/lndmd/s05_0_hasi1.png
 assets/stages/paru_b/s05b_nb2/lndmd/s05_0_tail1.png
@@ -6088,6 +6332,7 @@ assets/stages/paru_b/s05b_nb2/lndmd/s05b_nb2_minimap_r0.svg
 assets/stages/paru_b/s05b_nb2/lndmd/s05b_nb2_minimap_r180.svg
 assets/stages/paru_b/s05b_nb2/lndmd/s05b_nb2_minimap_r270.svg
 assets/stages/paru_b/s05b_nb2/lndmd/s05b_nb2_minimap_r90.svg
+assets/stages/paru_b/s05b_nc2/lndmd/mirror-bake/178804ca7887.res
 assets/stages/paru_b/s05b_nc2/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_nc2/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_nc2/lndmd/s05_0_field4.png
@@ -6108,6 +6353,7 @@ assets/stages/paru_b/s05b_nc2/lndmd/s05b_nc2_minimap_r0.svg
 assets/stages/paru_b/s05b_nc2/lndmd/s05b_nc2_minimap_r180.svg
 assets/stages/paru_b/s05b_nc2/lndmd/s05b_nc2_minimap_r270.svg
 assets/stages/paru_b/s05b_nc2/lndmd/s05b_nc2_minimap_r90.svg
+assets/stages/paru_b/s05b_sa1/lndmd/mirror-bake/a72a7561695c.res
 assets/stages/paru_b/s05b_sa1/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_sa1/lndmd/s05_0_hasi1.png
 assets/stages/paru_b/s05b_sa1/lndmd/s05_0_tail1.png
@@ -6128,6 +6374,7 @@ assets/stages/paru_b/s05b_sa1/lndmd/s05b_sa1_minimap_r0.svg
 assets/stages/paru_b/s05b_sa1/lndmd/s05b_sa1_minimap_r180.svg
 assets/stages/paru_b/s05b_sa1/lndmd/s05b_sa1_minimap_r270.svg
 assets/stages/paru_b/s05b_sa1/lndmd/s05b_sa1_minimap_r90.svg
+assets/stages/paru_b/s05b_tb3/lndmd/mirror-bake/da54491529ef.res
 assets/stages/paru_b/s05b_tb3/lndmd/s05_0_field2.png
 assets/stages/paru_b/s05b_tb3/lndmd/s05_0_field3.png
 assets/stages/paru_b/s05b_tb3/lndmd/s05_0_hasi1.png
@@ -6148,6 +6395,7 @@ assets/stages/paru_b/s05b_tb3/lndmd/s05b_tb3_minimap_r0.svg
 assets/stages/paru_b/s05b_tb3/lndmd/s05b_tb3_minimap_r180.svg
 assets/stages/paru_b/s05b_tb3/lndmd/s05b_tb3_minimap_r270.svg
 assets/stages/paru_b/s05b_tb3/lndmd/s05b_tb3_minimap_r90.svg
+assets/stages/paru_b/s05b_tc3/lndmd/mirror-bake/8b7f3c8d4be0.res
 assets/stages/paru_b/s05b_tc3/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_tc3/lndmd/s05_0_fiel3b.png
 assets/stages/paru_b/s05b_tc3/lndmd/s05_0_field4.png
@@ -6168,6 +6416,7 @@ assets/stages/paru_b/s05b_tc3/lndmd/s05b_tc3_minimap_r0.svg
 assets/stages/paru_b/s05b_tc3/lndmd/s05b_tc3_minimap_r180.svg
 assets/stages/paru_b/s05b_tc3/lndmd/s05b_tc3_minimap_r270.svg
 assets/stages/paru_b/s05b_tc3/lndmd/s05b_tc3_minimap_r90.svg
+assets/stages/paru_b/s05b_td1/lndmd/mirror-bake/b8196711e43a.res
 assets/stages/paru_b/s05b_td1/lndmd/s05_0_etc1.png
 assets/stages/paru_b/s05b_td1/lndmd/s05_0_fiel2b.png
 assets/stages/paru_b/s05b_td1/lndmd/s05_0_fiel3b.png
@@ -6188,6 +6437,7 @@ assets/stages/paru_b/s05b_td1/lndmd/s05b_td1_minimap_r0.svg
 assets/stages/paru_b/s05b_td1/lndmd/s05b_td1_minimap_r180.svg
 assets/stages/paru_b/s05b_td1/lndmd/s05b_td1_minimap_r270.svg
 assets/stages/paru_b/s05b_td1/lndmd/s05b_td1_minimap_r90.svg
+assets/stages/paru_b/s05b_td2/lndmd/mirror-bake/8db52498393a.res
 assets/stages/paru_b/s05b_td2/lndmd/s05_0_etc1.png
 assets/stages/paru_b/s05b_td2/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_td2/lndmd/s05_0_hasi1.png
@@ -6209,6 +6459,7 @@ assets/stages/paru_b/s05b_td2/lndmd/s05b_td2_minimap_r0.svg
 assets/stages/paru_b/s05b_td2/lndmd/s05b_td2_minimap_r180.svg
 assets/stages/paru_b/s05b_td2/lndmd/s05b_td2_minimap_r270.svg
 assets/stages/paru_b/s05b_td2/lndmd/s05b_td2_minimap_r90.svg
+assets/stages/paru_b/s05b_xb2/lndmd/mirror-bake/deb6705f0326.res
 assets/stages/paru_b/s05b_xb2/lndmd/s05_0_field.png
 assets/stages/paru_b/s05b_xb2/lndmd/s05_0_hasi1.png
 assets/stages/paru_b/s05b_xb2/lndmd/s05_0_tail1.png
@@ -6228,6 +6479,7 @@ assets/stages/paru_b/s05b_xb2/lndmd/s05b_xb2_minimap_r0.svg
 assets/stages/paru_b/s05b_xb2/lndmd/s05b_xb2_minimap_r180.svg
 assets/stages/paru_b/s05b_xb2/lndmd/s05b_xb2_minimap_r270.svg
 assets/stages/paru_b/s05b_xb2/lndmd/s05b_xb2_minimap_r90.svg
+assets/stages/paru_e/s05e_ia1/lndmd/mirror-bake/5a8e4ed8dd49.res
 assets/stages/paru_e/s05e_ia1/lndmd/s05_0_field.png
 assets/stages/paru_e/s05e_ia1/lndmd/s05_0_hasi1.png
 assets/stages/paru_e/s05e_ia1/lndmd/s05_0_road1.png
@@ -6248,6 +6500,7 @@ assets/stages/paru_e/s05e_ia1/lndmd/s05e_ia1_minimap_r0.svg
 assets/stages/paru_e/s05e_ia1/lndmd/s05e_ia1_minimap_r180.svg
 assets/stages/paru_e/s05e_ia1/lndmd/s05e_ia1_minimap_r270.svg
 assets/stages/paru_e/s05e_ia1/lndmd/s05e_ia1_minimap_r90.svg
+assets/stages/paru_z/s05z_na1/lndmd/mirror-bake/ef1c2ada0db4.res
 assets/stages/paru_z/s05z_na1/lndmd/s05_0_field.png
 assets/stages/paru_z/s05z_na1/lndmd/s05_0_hasi1.png
 assets/stages/paru_z/s05z_na1/lndmd/s05_0_tail1b.png
@@ -6267,6 +6520,7 @@ assets/stages/paru_z/s05z_na1/lndmd/s05z_na1_minimap_r0.svg
 assets/stages/paru_z/s05z_na1/lndmd/s05z_na1_minimap_r180.svg
 assets/stages/paru_z/s05z_na1/lndmd/s05z_na1_minimap_r270.svg
 assets/stages/paru_z/s05z_na1/lndmd/s05z_na1_minimap_r90.svg
+assets/stages/shrine_a/s07a_ga1/lndmd/mirror-bake/8600fc500910.res
 assets/stages/shrine_a/s07a_ga1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_ga1/lndmd/s07_0_alined.png
 assets/stages/shrine_a/s07a_ga1/lndmd/s07_0_apole.png
@@ -6285,6 +6539,7 @@ assets/stages/shrine_a/s07a_ga1/lndmd/s07a_ga1_minimap_r0.svg
 assets/stages/shrine_a/s07a_ga1/lndmd/s07a_ga1_minimap_r180.svg
 assets/stages/shrine_a/s07a_ga1/lndmd/s07a_ga1_minimap_r270.svg
 assets/stages/shrine_a/s07a_ga1/lndmd/s07a_ga1_minimap_r90.svg
+assets/stages/shrine_a/s07a_ib1/lndmd/mirror-bake/07f48e929b10.res
 assets/stages/shrine_a/s07a_ib1/lndmd/s07_0_acell.png
 assets/stages/shrine_a/s07a_ib1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_ib1/lndmd/s07_0_alined.png
@@ -6303,6 +6558,7 @@ assets/stages/shrine_a/s07a_ib1/lndmd/s07a_ib1_minimap_r0.svg
 assets/stages/shrine_a/s07a_ib1/lndmd/s07a_ib1_minimap_r180.svg
 assets/stages/shrine_a/s07a_ib1/lndmd/s07a_ib1_minimap_r270.svg
 assets/stages/shrine_a/s07a_ib1/lndmd/s07a_ib1_minimap_r90.svg
+assets/stages/shrine_a/s07a_ib2/lndmd/mirror-bake/4a795a64365f.res
 assets/stages/shrine_a/s07a_ib2/lndmd/s07_0_acell.png
 assets/stages/shrine_a/s07a_ib2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_ib2/lndmd/s07_0_alined.png
@@ -6321,6 +6577,7 @@ assets/stages/shrine_a/s07a_ib2/lndmd/s07a_ib2_minimap_r0.svg
 assets/stages/shrine_a/s07a_ib2/lndmd/s07a_ib2_minimap_r180.svg
 assets/stages/shrine_a/s07a_ib2/lndmd/s07a_ib2_minimap_r270.svg
 assets/stages/shrine_a/s07a_ib2/lndmd/s07a_ib2_minimap_r90.svg
+assets/stages/shrine_a/s07a_ic1/lndmd/mirror-bake/5d764f4f2b34.res
 assets/stages/shrine_a/s07a_ic1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_ic1/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_ic1/lndmd/s07_0_akumo3.png
@@ -6341,6 +6598,7 @@ assets/stages/shrine_a/s07a_ic1/lndmd/s07a_ic1_minimap_r0.svg
 assets/stages/shrine_a/s07a_ic1/lndmd/s07a_ic1_minimap_r180.svg
 assets/stages/shrine_a/s07a_ic1/lndmd/s07a_ic1_minimap_r270.svg
 assets/stages/shrine_a/s07a_ic1/lndmd/s07a_ic1_minimap_r90.svg
+assets/stages/shrine_a/s07a_ic3/lndmd/mirror-bake/1b700e25ab36.res
 assets/stages/shrine_a/s07a_ic3/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_ic3/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_ic3/lndmd/s07_0_akumo3.png
@@ -6361,6 +6619,7 @@ assets/stages/shrine_a/s07a_ic3/lndmd/s07a_ic3_minimap_r0.svg
 assets/stages/shrine_a/s07a_ic3/lndmd/s07a_ic3_minimap_r180.svg
 assets/stages/shrine_a/s07a_ic3/lndmd/s07a_ic3_minimap_r270.svg
 assets/stages/shrine_a/s07a_ic3/lndmd/s07a_ic3_minimap_r90.svg
+assets/stages/shrine_a/s07a_lb1/lndmd/mirror-bake/f538f56b902b.res
 assets/stages/shrine_a/s07a_lb1/lndmd/s07_0_acell.png
 assets/stages/shrine_a/s07a_lb1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_lb1/lndmd/s07_0_alined.png
@@ -6379,6 +6638,7 @@ assets/stages/shrine_a/s07a_lb1/lndmd/s07a_lb1_minimap_r0.svg
 assets/stages/shrine_a/s07a_lb1/lndmd/s07a_lb1_minimap_r180.svg
 assets/stages/shrine_a/s07a_lb1/lndmd/s07a_lb1_minimap_r270.svg
 assets/stages/shrine_a/s07a_lb1/lndmd/s07a_lb1_minimap_r90.svg
+assets/stages/shrine_a/s07a_lb3/lndmd/mirror-bake/9b320cf5375f.res
 assets/stages/shrine_a/s07a_lb3/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_lb3/lndmd/s07_0_alined.png
 assets/stages/shrine_a/s07a_lb3/lndmd/s07_0_apole.png
@@ -6397,6 +6657,7 @@ assets/stages/shrine_a/s07a_lb3/lndmd/s07a_lb3_minimap_r0.svg
 assets/stages/shrine_a/s07a_lb3/lndmd/s07a_lb3_minimap_r180.svg
 assets/stages/shrine_a/s07a_lb3/lndmd/s07a_lb3_minimap_r270.svg
 assets/stages/shrine_a/s07a_lb3/lndmd/s07a_lb3_minimap_r90.svg
+assets/stages/shrine_a/s07a_lc1/lndmd/mirror-bake/ef5d717b433d.res
 assets/stages/shrine_a/s07a_lc1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_lc1/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_lc1/lndmd/s07_0_akumo3.png
@@ -6417,6 +6678,7 @@ assets/stages/shrine_a/s07a_lc1/lndmd/s07a_lc1_minimap_r0.svg
 assets/stages/shrine_a/s07a_lc1/lndmd/s07a_lc1_minimap_r180.svg
 assets/stages/shrine_a/s07a_lc1/lndmd/s07a_lc1_minimap_r270.svg
 assets/stages/shrine_a/s07a_lc1/lndmd/s07a_lc1_minimap_r90.svg
+assets/stages/shrine_a/s07a_lc2/lndmd/mirror-bake/5d89196ee266.res
 assets/stages/shrine_a/s07a_lc2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_lc2/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_lc2/lndmd/s07_0_akumo3.png
@@ -6436,6 +6698,7 @@ assets/stages/shrine_a/s07a_lc2/lndmd/s07a_lc2_minimap_r0.svg
 assets/stages/shrine_a/s07a_lc2/lndmd/s07a_lc2_minimap_r180.svg
 assets/stages/shrine_a/s07a_lc2/lndmd/s07a_lc2_minimap_r270.svg
 assets/stages/shrine_a/s07a_lc2/lndmd/s07a_lc2_minimap_r90.svg
+assets/stages/shrine_a/s07a_na1/lndmd/mirror-bake/f9bedc9b6169.res
 assets/stages/shrine_a/s07a_na1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_na1/lndmd/s07_0_alined.png
 assets/stages/shrine_a/s07a_na1/lndmd/s07_0_apole.png
@@ -6454,6 +6717,7 @@ assets/stages/shrine_a/s07a_na1/lndmd/s07a_na1_minimap_r0.svg
 assets/stages/shrine_a/s07a_na1/lndmd/s07a_na1_minimap_r180.svg
 assets/stages/shrine_a/s07a_na1/lndmd/s07a_na1_minimap_r270.svg
 assets/stages/shrine_a/s07a_na1/lndmd/s07a_na1_minimap_r90.svg
+assets/stages/shrine_a/s07a_nb2/lndmd/mirror-bake/6cfec5277193.res
 assets/stages/shrine_a/s07a_nb2/lndmd/s07_0_acell.png
 assets/stages/shrine_a/s07a_nb2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_nb2/lndmd/s07_0_alined.png
@@ -6472,6 +6736,7 @@ assets/stages/shrine_a/s07a_nb2/lndmd/s07a_nb2_minimap_r0.svg
 assets/stages/shrine_a/s07a_nb2/lndmd/s07a_nb2_minimap_r180.svg
 assets/stages/shrine_a/s07a_nb2/lndmd/s07a_nb2_minimap_r270.svg
 assets/stages/shrine_a/s07a_nb2/lndmd/s07a_nb2_minimap_r90.svg
+assets/stages/shrine_a/s07a_nc2/lndmd/mirror-bake/e6f7ae277d94.res
 assets/stages/shrine_a/s07a_nc2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_nc2/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_nc2/lndmd/s07_0_akumo3.png
@@ -6492,6 +6757,7 @@ assets/stages/shrine_a/s07a_nc2/lndmd/s07a_nc2_minimap_r0.svg
 assets/stages/shrine_a/s07a_nc2/lndmd/s07a_nc2_minimap_r180.svg
 assets/stages/shrine_a/s07a_nc2/lndmd/s07a_nc2_minimap_r270.svg
 assets/stages/shrine_a/s07a_nc2/lndmd/s07a_nc2_minimap_r90.svg
+assets/stages/shrine_a/s07a_sa1/lndmd/mirror-bake/68fe80054e1f.res
 assets/stages/shrine_a/s07a_sa1/lndmd/s07_0_aline.png
 assets/stages/shrine_a/s07a_sa1/lndmd/s07_0_apole.png
 assets/stages/shrine_a/s07a_sa1/lndmd/s07_0_ayuka2.png
@@ -6512,6 +6778,7 @@ assets/stages/shrine_a/s07a_sa1/lndmd/s07a_sa1_minimap_r0.svg
 assets/stages/shrine_a/s07a_sa1/lndmd/s07a_sa1_minimap_r180.svg
 assets/stages/shrine_a/s07a_sa1/lndmd/s07a_sa1_minimap_r270.svg
 assets/stages/shrine_a/s07a_sa1/lndmd/s07a_sa1_minimap_r90.svg
+assets/stages/shrine_a/s07a_tb3/lndmd/mirror-bake/7bc340f15f67.res
 assets/stages/shrine_a/s07a_tb3/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_tb3/lndmd/s07_0_alined.png
 assets/stages/shrine_a/s07a_tb3/lndmd/s07_0_apole.png
@@ -6530,6 +6797,7 @@ assets/stages/shrine_a/s07a_tb3/lndmd/s07a_tb3_minimap_r0.svg
 assets/stages/shrine_a/s07a_tb3/lndmd/s07a_tb3_minimap_r180.svg
 assets/stages/shrine_a/s07a_tb3/lndmd/s07a_tb3_minimap_r270.svg
 assets/stages/shrine_a/s07a_tb3/lndmd/s07a_tb3_minimap_r90.svg
+assets/stages/shrine_a/s07a_tc3/lndmd/mirror-bake/e96620dd288d.res
 assets/stages/shrine_a/s07a_tc3/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_tc3/lndmd/s07_0_akumo.png
 assets/stages/shrine_a/s07a_tc3/lndmd/s07_0_akumo3.png
@@ -6549,6 +6817,7 @@ assets/stages/shrine_a/s07a_tc3/lndmd/s07a_tc3_minimap_r0.svg
 assets/stages/shrine_a/s07a_tc3/lndmd/s07a_tc3_minimap_r180.svg
 assets/stages/shrine_a/s07a_tc3/lndmd/s07a_tc3_minimap_r270.svg
 assets/stages/shrine_a/s07a_tc3/lndmd/s07a_tc3_minimap_r90.svg
+assets/stages/shrine_a/s07a_td1/lndmd/mirror-bake/0d6c97063553.res
 assets/stages/shrine_a/s07a_td1/lndmd/s07_0_acelld.png
 assets/stages/shrine_a/s07a_td1/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_td1/lndmd/s07_0_alined.png
@@ -6568,6 +6837,7 @@ assets/stages/shrine_a/s07a_td1/lndmd/s07a_td1_minimap_r0.svg
 assets/stages/shrine_a/s07a_td1/lndmd/s07a_td1_minimap_r180.svg
 assets/stages/shrine_a/s07a_td1/lndmd/s07a_td1_minimap_r270.svg
 assets/stages/shrine_a/s07a_td1/lndmd/s07a_td1_minimap_r90.svg
+assets/stages/shrine_a/s07a_td2/lndmd/mirror-bake/f057d815497a.res
 assets/stages/shrine_a/s07a_td2/lndmd/s07_0_acelld.png
 assets/stages/shrine_a/s07a_td2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_td2/lndmd/s07_0_alined.png
@@ -6587,6 +6857,7 @@ assets/stages/shrine_a/s07a_td2/lndmd/s07a_td2_minimap_r0.svg
 assets/stages/shrine_a/s07a_td2/lndmd/s07a_td2_minimap_r180.svg
 assets/stages/shrine_a/s07a_td2/lndmd/s07a_td2_minimap_r270.svg
 assets/stages/shrine_a/s07a_td2/lndmd/s07a_td2_minimap_r90.svg
+assets/stages/shrine_a/s07a_xb2/lndmd/mirror-bake/439f4e659f98.res
 assets/stages/shrine_a/s07a_xb2/lndmd/s07_0_acell.png
 assets/stages/shrine_a/s07a_xb2/lndmd/s07_0_adoor.png
 assets/stages/shrine_a/s07a_xb2/lndmd/s07_0_alined.png
@@ -6605,6 +6876,7 @@ assets/stages/shrine_a/s07a_xb2/lndmd/s07a_xb2_minimap_r0.svg
 assets/stages/shrine_a/s07a_xb2/lndmd/s07a_xb2_minimap_r180.svg
 assets/stages/shrine_a/s07a_xb2/lndmd/s07a_xb2_minimap_r270.svg
 assets/stages/shrine_a/s07a_xb2/lndmd/s07a_xb2_minimap_r90.svg
+assets/stages/shrine_b/s07b_ga1/lndmd/mirror-bake/0d0702d00878.res
 assets/stages/shrine_b/s07b_ga1/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_ga1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_ga1/lndmd/s07_0_line2.png
@@ -6624,6 +6896,7 @@ assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_minimap_r0.svg
 assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_minimap_r180.svg
 assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_minimap_r270.svg
 assets/stages/shrine_b/s07b_ga1/lndmd/s07b_ga1_minimap_r90.svg
+assets/stages/shrine_b/s07b_ib1/lndmd/mirror-bake/2a26ec123d90.res
 assets/stages/shrine_b/s07b_ib1/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_ib1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_ib1/lndmd/s07_0_line2.png
@@ -6643,6 +6916,7 @@ assets/stages/shrine_b/s07b_ib1/lndmd/s07b_ib1_minimap_r0.svg
 assets/stages/shrine_b/s07b_ib1/lndmd/s07b_ib1_minimap_r180.svg
 assets/stages/shrine_b/s07b_ib1/lndmd/s07b_ib1_minimap_r270.svg
 assets/stages/shrine_b/s07b_ib1/lndmd/s07b_ib1_minimap_r90.svg
+assets/stages/shrine_b/s07b_ib2/lndmd/mirror-bake/7ea9372be2be.res
 assets/stages/shrine_b/s07b_ib2/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_ib2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_ib2/lndmd/s07_0_line2.png
@@ -6662,6 +6936,7 @@ assets/stages/shrine_b/s07b_ib2/lndmd/s07b_ib2_minimap_r0.svg
 assets/stages/shrine_b/s07b_ib2/lndmd/s07b_ib2_minimap_r180.svg
 assets/stages/shrine_b/s07b_ib2/lndmd/s07b_ib2_minimap_r270.svg
 assets/stages/shrine_b/s07b_ib2/lndmd/s07b_ib2_minimap_r90.svg
+assets/stages/shrine_b/s07b_ic1/lndmd/mirror-bake/8fcb8d16b8d6.res
 assets/stages/shrine_b/s07b_ic1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_ic1/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_ic1/lndmd/s07_0_kumo3.png
@@ -6682,6 +6957,7 @@ assets/stages/shrine_b/s07b_ic1/lndmd/s07b_ic1_minimap_r0.svg
 assets/stages/shrine_b/s07b_ic1/lndmd/s07b_ic1_minimap_r180.svg
 assets/stages/shrine_b/s07b_ic1/lndmd/s07b_ic1_minimap_r270.svg
 assets/stages/shrine_b/s07b_ic1/lndmd/s07b_ic1_minimap_r90.svg
+assets/stages/shrine_b/s07b_ic3/lndmd/mirror-bake/26663f822ff7.res
 assets/stages/shrine_b/s07b_ic3/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_ic3/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_ic3/lndmd/s07_0_kumo3.png
@@ -6702,6 +6978,7 @@ assets/stages/shrine_b/s07b_ic3/lndmd/s07b_ic3_minimap_r0.svg
 assets/stages/shrine_b/s07b_ic3/lndmd/s07b_ic3_minimap_r180.svg
 assets/stages/shrine_b/s07b_ic3/lndmd/s07b_ic3_minimap_r270.svg
 assets/stages/shrine_b/s07b_ic3/lndmd/s07b_ic3_minimap_r90.svg
+assets/stages/shrine_b/s07b_lb1/lndmd/mirror-bake/8a1d48270795.res
 assets/stages/shrine_b/s07b_lb1/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_lb1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_lb1/lndmd/s07_0_line2.png
@@ -6721,6 +6998,7 @@ assets/stages/shrine_b/s07b_lb1/lndmd/s07b_lb1_minimap_r0.svg
 assets/stages/shrine_b/s07b_lb1/lndmd/s07b_lb1_minimap_r180.svg
 assets/stages/shrine_b/s07b_lb1/lndmd/s07b_lb1_minimap_r270.svg
 assets/stages/shrine_b/s07b_lb1/lndmd/s07b_lb1_minimap_r90.svg
+assets/stages/shrine_b/s07b_lb3/lndmd/mirror-bake/7fc9246b49a2.res
 assets/stages/shrine_b/s07b_lb3/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_lb3/lndmd/s07_0_line2.png
 assets/stages/shrine_b/s07b_lb3/lndmd/s07_0_lined.png
@@ -6740,6 +7018,7 @@ assets/stages/shrine_b/s07b_lb3/lndmd/s07b_lb3_minimap_r0.svg
 assets/stages/shrine_b/s07b_lb3/lndmd/s07b_lb3_minimap_r180.svg
 assets/stages/shrine_b/s07b_lb3/lndmd/s07b_lb3_minimap_r270.svg
 assets/stages/shrine_b/s07b_lb3/lndmd/s07b_lb3_minimap_r90.svg
+assets/stages/shrine_b/s07b_lc1/lndmd/mirror-bake/77742438cef9.res
 assets/stages/shrine_b/s07b_lc1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_lc1/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_lc1/lndmd/s07_0_kumo3.png
@@ -6760,6 +7039,7 @@ assets/stages/shrine_b/s07b_lc1/lndmd/s07b_lc1_minimap_r0.svg
 assets/stages/shrine_b/s07b_lc1/lndmd/s07b_lc1_minimap_r180.svg
 assets/stages/shrine_b/s07b_lc1/lndmd/s07b_lc1_minimap_r270.svg
 assets/stages/shrine_b/s07b_lc1/lndmd/s07b_lc1_minimap_r90.svg
+assets/stages/shrine_b/s07b_lc2/lndmd/mirror-bake/e42fb3bb3501.res
 assets/stages/shrine_b/s07b_lc2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_lc2/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_lc2/lndmd/s07_0_kumo3.png
@@ -6780,6 +7060,7 @@ assets/stages/shrine_b/s07b_lc2/lndmd/s07b_lc2_minimap_r0.svg
 assets/stages/shrine_b/s07b_lc2/lndmd/s07b_lc2_minimap_r180.svg
 assets/stages/shrine_b/s07b_lc2/lndmd/s07b_lc2_minimap_r270.svg
 assets/stages/shrine_b/s07b_lc2/lndmd/s07b_lc2_minimap_r90.svg
+assets/stages/shrine_b/s07b_na1/lndmd/mirror-bake/c007bcb42b3e.res
 assets/stages/shrine_b/s07b_na1/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_na1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_na1/lndmd/s07_0_line2.png
@@ -6799,6 +7080,7 @@ assets/stages/shrine_b/s07b_na1/lndmd/s07b_na1_minimap_r0.svg
 assets/stages/shrine_b/s07b_na1/lndmd/s07b_na1_minimap_r180.svg
 assets/stages/shrine_b/s07b_na1/lndmd/s07b_na1_minimap_r270.svg
 assets/stages/shrine_b/s07b_na1/lndmd/s07b_na1_minimap_r90.svg
+assets/stages/shrine_b/s07b_nb2/lndmd/mirror-bake/b855f1f583de.res
 assets/stages/shrine_b/s07b_nb2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_nb2/lndmd/s07_0_line2.png
 assets/stages/shrine_b/s07b_nb2/lndmd/s07_0_lined.png
@@ -6818,6 +7100,7 @@ assets/stages/shrine_b/s07b_nb2/lndmd/s07b_nb2_minimap_r0.svg
 assets/stages/shrine_b/s07b_nb2/lndmd/s07b_nb2_minimap_r180.svg
 assets/stages/shrine_b/s07b_nb2/lndmd/s07b_nb2_minimap_r270.svg
 assets/stages/shrine_b/s07b_nb2/lndmd/s07b_nb2_minimap_r90.svg
+assets/stages/shrine_b/s07b_nc2/lndmd/mirror-bake/b110b9d6f314.res
 assets/stages/shrine_b/s07b_nc2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_nc2/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_nc2/lndmd/s07_0_kumo3.png
@@ -6838,6 +7121,7 @@ assets/stages/shrine_b/s07b_nc2/lndmd/s07b_nc2_minimap_r0.svg
 assets/stages/shrine_b/s07b_nc2/lndmd/s07b_nc2_minimap_r180.svg
 assets/stages/shrine_b/s07b_nc2/lndmd/s07b_nc2_minimap_r270.svg
 assets/stages/shrine_b/s07b_nc2/lndmd/s07b_nc2_minimap_r90.svg
+assets/stages/shrine_b/s07b_sa1/lndmd/mirror-bake/3ac2a7af75c1.res
 assets/stages/shrine_b/s07b_sa1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_sa1/lndmd/s07_0_kabe.png
 assets/stages/shrine_b/s07b_sa1/lndmd/s07_0_kaidan.png
@@ -6857,6 +7141,7 @@ assets/stages/shrine_b/s07b_sa1/lndmd/s07b_sa1_minimap_r0.svg
 assets/stages/shrine_b/s07b_sa1/lndmd/s07b_sa1_minimap_r180.svg
 assets/stages/shrine_b/s07b_sa1/lndmd/s07b_sa1_minimap_r270.svg
 assets/stages/shrine_b/s07b_sa1/lndmd/s07b_sa1_minimap_r90.svg
+assets/stages/shrine_b/s07b_tb3/lndmd/mirror-bake/720b2fa71dda.res
 assets/stages/shrine_b/s07b_tb3/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_tb3/lndmd/s07_0_line2.png
 assets/stages/shrine_b/s07b_tb3/lndmd/s07_0_lined.png
@@ -6876,6 +7161,7 @@ assets/stages/shrine_b/s07b_tb3/lndmd/s07b_tb3_minimap_r0.svg
 assets/stages/shrine_b/s07b_tb3/lndmd/s07b_tb3_minimap_r180.svg
 assets/stages/shrine_b/s07b_tb3/lndmd/s07b_tb3_minimap_r270.svg
 assets/stages/shrine_b/s07b_tb3/lndmd/s07b_tb3_minimap_r90.svg
+assets/stages/shrine_b/s07b_tc3/lndmd/mirror-bake/c9cf91f436cf.res
 assets/stages/shrine_b/s07b_tc3/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_tc3/lndmd/s07_0_kumo.png
 assets/stages/shrine_b/s07b_tc3/lndmd/s07_0_kumo3.png
@@ -6896,6 +7182,7 @@ assets/stages/shrine_b/s07b_tc3/lndmd/s07b_tc3_minimap_r0.svg
 assets/stages/shrine_b/s07b_tc3/lndmd/s07b_tc3_minimap_r180.svg
 assets/stages/shrine_b/s07b_tc3/lndmd/s07b_tc3_minimap_r270.svg
 assets/stages/shrine_b/s07b_tc3/lndmd/s07b_tc3_minimap_r90.svg
+assets/stages/shrine_b/s07b_td1/lndmd/mirror-bake/9312734fa4ff.res
 assets/stages/shrine_b/s07b_td1/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_td1/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_td1/lndmd/s07_0_lined.png
@@ -6915,6 +7202,7 @@ assets/stages/shrine_b/s07b_td1/lndmd/s07b_td1_minimap_r0.svg
 assets/stages/shrine_b/s07b_td1/lndmd/s07b_td1_minimap_r180.svg
 assets/stages/shrine_b/s07b_td1/lndmd/s07b_td1_minimap_r270.svg
 assets/stages/shrine_b/s07b_td1/lndmd/s07b_td1_minimap_r90.svg
+assets/stages/shrine_b/s07b_td2/lndmd/mirror-bake/bbe31b9bfd62.res
 assets/stages/shrine_b/s07b_td2/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_td2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_td2/lndmd/s07_0_lined.png
@@ -6934,6 +7222,7 @@ assets/stages/shrine_b/s07b_td2/lndmd/s07b_td2_minimap_r0.svg
 assets/stages/shrine_b/s07b_td2/lndmd/s07b_td2_minimap_r180.svg
 assets/stages/shrine_b/s07b_td2/lndmd/s07b_td2_minimap_r270.svg
 assets/stages/shrine_b/s07b_td2/lndmd/s07b_td2_minimap_r90.svg
+assets/stages/shrine_b/s07b_xb2/lndmd/mirror-bake/f54c5c6a4778.res
 assets/stages/shrine_b/s07b_xb2/lndmd/s07_0_cell.png
 assets/stages/shrine_b/s07b_xb2/lndmd/s07_0_door.png
 assets/stages/shrine_b/s07b_xb2/lndmd/s07_0_lined.png
@@ -6952,6 +7241,7 @@ assets/stages/shrine_b/s07b_xb2/lndmd/s07b_xb2_minimap_r0.svg
 assets/stages/shrine_b/s07b_xb2/lndmd/s07b_xb2_minimap_r180.svg
 assets/stages/shrine_b/s07b_xb2/lndmd/s07b_xb2_minimap_r270.svg
 assets/stages/shrine_b/s07b_xb2/lndmd/s07b_xb2_minimap_r90.svg
+assets/stages/shrine_e/s07e_ia1/lndmd/mirror-bake/0efe0579b5e7.res
 assets/stages/shrine_e/s07e_ia1/lndmd/s07_0_aline.png
 assets/stages/shrine_e/s07e_ia1/lndmd/s07_0_ayuka2.png
 assets/stages/shrine_e/s07e_ia1/lndmd/s07_0_ayukas.png
@@ -6972,6 +7262,7 @@ assets/stages/shrine_e/s07e_ia1/lndmd/s07e_ia1_minimap_r0.svg
 assets/stages/shrine_e/s07e_ia1/lndmd/s07e_ia1_minimap_r180.svg
 assets/stages/shrine_e/s07e_ia1/lndmd/s07e_ia1_minimap_r270.svg
 assets/stages/shrine_e/s07e_ia1/lndmd/s07e_ia1_minimap_r90.svg
+assets/stages/shrine_z/s07z_na1/lndmd/mirror-bake/cb010fd19401.res
 assets/stages/shrine_z/s07z_na1/lndmd/s07_0_kaidan.png
 assets/stages/shrine_z/s07z_na1/lndmd/s07_0_zhaikei.png
 assets/stages/shrine_z/s07z_na1/lndmd/s07_0_zjime.png
@@ -6991,6 +7282,7 @@ assets/stages/shrine_z/s07z_na1/lndmd/s07z_na1_minimap_r0.svg
 assets/stages/shrine_z/s07z_na1/lndmd/s07z_na1_minimap_r180.svg
 assets/stages/shrine_z/s07z_na1/lndmd/s07z_na1_minimap_r270.svg
 assets/stages/shrine_z/s07z_na1/lndmd/s07z_na1_minimap_r90.svg
+assets/stages/shrine_z/s07z_na2/lndmd/mirror-bake/6d80dee82d9b.res
 assets/stages/shrine_z/s07z_na2/lndmd/s07_0_zhikari.png
 assets/stages/shrine_z/s07z_na2/lndmd/s07_0_zsky.png
 assets/stages/shrine_z/s07z_na2/lndmd/s07_0_zsky3.png
@@ -7008,6 +7300,7 @@ assets/stages/shrine_z/s07z_na2/lndmd/s07z_na2_minimap_r0.svg
 assets/stages/shrine_z/s07z_na2/lndmd/s07z_na2_minimap_r180.svg
 assets/stages/shrine_z/s07z_na2/lndmd/s07z_na2_minimap_r270.svg
 assets/stages/shrine_z/s07z_na2/lndmd/s07z_na2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_ga1/lndmd/mirror-bake/f55e47548b93.res
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03_0_tile2.png
@@ -7025,6 +7318,7 @@ assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_ga1/lndmd/s03a_ga1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_ib1/lndmd/mirror-bake/70c9827a2cf7.res
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03_0_tile2.png
@@ -7044,6 +7338,7 @@ assets/stages/snowfield_a/s03a_ib1/lndmd/s03a_ib1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03a_ib1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03a_ib1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_ib1/lndmd/s03a_ib1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_ib2/lndmd/mirror-bake/3aebb6345a91.res
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03_0_tile2.png
@@ -7063,6 +7358,7 @@ assets/stages/snowfield_a/s03a_ib2/lndmd/s03a_ib2_minimap_r0.svg
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03a_ib2_minimap_r180.svg
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03a_ib2_minimap_r270.svg
 assets/stages/snowfield_a/s03a_ib2/lndmd/s03a_ib2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_ic1/lndmd/mirror-bake/2b60f84cec20.res
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03_0_tile2.png
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03_0_view2.png
@@ -7081,6 +7377,7 @@ assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_ic1/lndmd/s03a_ic1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_ic3/lndmd/mirror-bake/ef6a8752807e.res
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03_0_tile2.png
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03_0_view2.png
@@ -7099,6 +7396,7 @@ assets/stages/snowfield_a/s03a_ic3/lndmd/s03a_ic3_minimap_r0.svg
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03a_ic3_minimap_r180.svg
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03a_ic3_minimap_r270.svg
 assets/stages/snowfield_a/s03a_ic3/lndmd/s03a_ic3_minimap_r90.svg
+assets/stages/snowfield_a/s03a_lb1/lndmd/mirror-bake/5a3f9d943d8d.res
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03_0_tile2.png
@@ -7118,6 +7416,7 @@ assets/stages/snowfield_a/s03a_lb1/lndmd/s03a_lb1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03a_lb1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03a_lb1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_lb1/lndmd/s03a_lb1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_lb3/lndmd/mirror-bake/f7afb9c1147f.res
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03_0_tile2.png
@@ -7137,6 +7436,7 @@ assets/stages/snowfield_a/s03a_lb3/lndmd/s03a_lb3_minimap_r0.svg
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03a_lb3_minimap_r180.svg
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03a_lb3_minimap_r270.svg
 assets/stages/snowfield_a/s03a_lb3/lndmd/s03a_lb3_minimap_r90.svg
+assets/stages/snowfield_a/s03a_lc1/lndmd/mirror-bake/c95d2862d986.res
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03_0_tile2.png
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03_0_view2.png
@@ -7155,6 +7455,7 @@ assets/stages/snowfield_a/s03a_lc1/lndmd/s03a_lc1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03a_lc1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03a_lc1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_lc1/lndmd/s03a_lc1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_lc2/lndmd/mirror-bake/4af551a28c3c.res
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03_0_view2.png
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03_0_yuka1.png
@@ -7172,6 +7473,7 @@ assets/stages/snowfield_a/s03a_lc2/lndmd/s03a_lc2_minimap_r0.svg
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03a_lc2_minimap_r180.svg
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03a_lc2_minimap_r270.svg
 assets/stages/snowfield_a/s03a_lc2/lndmd/s03a_lc2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_na1/lndmd/mirror-bake/a98d66907a2e.res
 assets/stages/snowfield_a/s03a_na1/lndmd/s03_0_mosss.png
 assets/stages/snowfield_a/s03a_na1/lndmd/s03_0_view2.png
 assets/stages/snowfield_a/s03a_na1/lndmd/s03_0_yuka1.png
@@ -7190,6 +7492,7 @@ assets/stages/snowfield_a/s03a_na1/lndmd/s03a_na1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_na1/lndmd/s03a_na1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_na1/lndmd/s03a_na1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_na1/lndmd/s03a_na1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_nb2/lndmd/mirror-bake/c12bfeba91a3.res
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03_0_tile2.png
@@ -7209,6 +7512,7 @@ assets/stages/snowfield_a/s03a_nb2/lndmd/s03a_nb2_minimap_r0.svg
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03a_nb2_minimap_r180.svg
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03a_nb2_minimap_r270.svg
 assets/stages/snowfield_a/s03a_nb2/lndmd/s03a_nb2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_nc2/lndmd/mirror-bake/935140692f6c.res
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03_0_view2.png
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03_0_yuka1.png
@@ -7226,6 +7530,7 @@ assets/stages/snowfield_a/s03a_nc2/lndmd/s03a_nc2_minimap_r0.svg
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03a_nc2_minimap_r180.svg
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03a_nc2_minimap_r270.svg
 assets/stages/snowfield_a/s03a_nc2/lndmd/s03a_nc2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_sa1/lndmd/mirror-bake/f7b51c1805ee.res
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03_0_mosss.png
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03_0_tile2.png
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03_0_view2.png
@@ -7245,6 +7550,7 @@ assets/stages/snowfield_a/s03a_sa1/lndmd/s03a_sa1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03a_sa1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03a_sa1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_sa1/lndmd/s03a_sa1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_tb3/lndmd/mirror-bake/7235141a8954.res
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03_0_tile2.png
@@ -7264,6 +7570,7 @@ assets/stages/snowfield_a/s03a_tb3/lndmd/s03a_tb3_minimap_r0.svg
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03a_tb3_minimap_r180.svg
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03a_tb3_minimap_r270.svg
 assets/stages/snowfield_a/s03a_tb3/lndmd/s03a_tb3_minimap_r90.svg
+assets/stages/snowfield_a/s03a_tc3/lndmd/mirror-bake/6eec1bfd7a38.res
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03_0_tile2.png
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03_0_view2.png
@@ -7282,6 +7589,7 @@ assets/stages/snowfield_a/s03a_tc3/lndmd/s03a_tc3_minimap_r0.svg
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03a_tc3_minimap_r180.svg
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03a_tc3_minimap_r270.svg
 assets/stages/snowfield_a/s03a_tc3/lndmd/s03a_tc3_minimap_r90.svg
+assets/stages/snowfield_a/s03a_td1/lndmd/mirror-bake/8b94175be088.res
 assets/stages/snowfield_a/s03a_td1/lndmd/s03_0_moss2.png
 assets/stages/snowfield_a/s03a_td1/lndmd/s03_0_mosss.png
 assets/stages/snowfield_a/s03a_td1/lndmd/s03_0_view2.png
@@ -7300,6 +7608,7 @@ assets/stages/snowfield_a/s03a_td1/lndmd/s03a_td1_minimap_r0.svg
 assets/stages/snowfield_a/s03a_td1/lndmd/s03a_td1_minimap_r180.svg
 assets/stages/snowfield_a/s03a_td1/lndmd/s03a_td1_minimap_r270.svg
 assets/stages/snowfield_a/s03a_td1/lndmd/s03a_td1_minimap_r90.svg
+assets/stages/snowfield_a/s03a_td2/lndmd/mirror-bake/9438ab34794e.res
 assets/stages/snowfield_a/s03a_td2/lndmd/s03_0_moss2.png
 assets/stages/snowfield_a/s03a_td2/lndmd/s03_0_mosss.png
 assets/stages/snowfield_a/s03a_td2/lndmd/s03_0_view2.png
@@ -7318,6 +7627,7 @@ assets/stages/snowfield_a/s03a_td2/lndmd/s03a_td2_minimap_r0.svg
 assets/stages/snowfield_a/s03a_td2/lndmd/s03a_td2_minimap_r180.svg
 assets/stages/snowfield_a/s03a_td2/lndmd/s03a_td2_minimap_r270.svg
 assets/stages/snowfield_a/s03a_td2/lndmd/s03a_td2_minimap_r90.svg
+assets/stages/snowfield_a/s03a_xb2/lndmd/mirror-bake/47f63a47b733.res
 assets/stages/snowfield_a/s03a_xb2/lndmd/s03_0_mizu1.png
 assets/stages/snowfield_a/s03a_xb2/lndmd/s03_0_tile1.png
 assets/stages/snowfield_a/s03a_xb2/lndmd/s03_0_tile2.png
@@ -7650,6 +7960,7 @@ assets/stages/snowfield_b/s03b_xb2/lndmd/s03b_xb2_minimap_r0.svg
 assets/stages/snowfield_b/s03b_xb2/lndmd/s03b_xb2_minimap_r180.svg
 assets/stages/snowfield_b/s03b_xb2/lndmd/s03b_xb2_minimap_r270.svg
 assets/stages/snowfield_b/s03b_xb2/lndmd/s03b_xb2_minimap_r90.svg
+assets/stages/snowfield_e/s03e_ia1/lndmd/mirror-bake/eb689a7507cc.res
 assets/stages/snowfield_e/s03e_ia1/lndmd/s03_0_rock2.png
 assets/stages/snowfield_e/s03e_ia1/lndmd/s03_0_sky01.png
 assets/stages/snowfield_e/s03e_ia1/lndmd/s03_0_tuti.png
@@ -7687,6 +7998,7 @@ assets/stages/snowfield_z/s03z_na1/lndmd/s03z_na1_minimap_r0.svg
 assets/stages/snowfield_z/s03z_na1/lndmd/s03z_na1_minimap_r180.svg
 assets/stages/snowfield_z/s03z_na1/lndmd/s03z_na1_minimap_r270.svg
 assets/stages/snowfield_z/s03z_na1/lndmd/s03z_na1_minimap_r90.svg
+assets/stages/tower_0/s080_sa0/lndmd/mirror-bake/655591c5700a.res
 assets/stages/tower_0/s080_sa0/lndmd/s05_0_fiel3b.png
 assets/stages/tower_0/s080_sa0/lndmd/s05_0_field4.png
 assets/stages/tower_0/s080_sa0/lndmd/s05_0_hasi1.png
@@ -7708,6 +8020,7 @@ assets/stages/tower_0/s080_sa0/lndmd/s08_0_sky00.png
 assets/stages/tower_0/s080_sa0/lndmd/s08_1_st01.png
 assets/stages/tower_0/s080_sa0/lndmd/s08_1_st03.png
 assets/stages/tower_0/s080_sa0/lndmd/s08_2_sky01.png
+assets/stages/tower_1/s081_ga1/lndmd/mirror-bake/4cf9c8903043.res
 assets/stages/tower_1/s081_ga1/lndmd/s081_ga1-floor.glb
 assets/stages/tower_1/s081_ga1/lndmd/s081_ga1_m.glb
 assets/stages/tower_1/s081_ga1/lndmd/s081_ga1_minimap.svg
@@ -7728,6 +8041,7 @@ assets/stages/tower_1/s081_ga1/lndmd/s08_1_up02.png
 assets/stages/tower_1/s081_ga1/lndmd/s08_1_up06.png
 assets/stages/tower_1/s081_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_1/s081_ga1/lndmd/s08_1_up12.png
+assets/stages/tower_1/s081_ib1/lndmd/mirror-bake/a0e02f1a6f9d.res
 assets/stages/tower_1/s081_ib1/lndmd/s081_ib1-floor.glb
 assets/stages/tower_1/s081_ib1/lndmd/s081_ib1_m.glb
 assets/stages/tower_1/s081_ib1/lndmd/s081_ib1_minimap.svg
@@ -7746,6 +8060,7 @@ assets/stages/tower_1/s081_ib1/lndmd/s08_0_ps13.png
 assets/stages/tower_1/s081_ib1/lndmd/s08_0_sky10.png
 assets/stages/tower_1/s081_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_1/s081_ib1/lndmd/s08_1_sky11.png
+assets/stages/tower_1/s081_lb1/lndmd/mirror-bake/d35be6443a7e.res
 assets/stages/tower_1/s081_lb1/lndmd/s081_lb1-floor.glb
 assets/stages/tower_1/s081_lb1/lndmd/s081_lb1_m.glb
 assets/stages/tower_1/s081_lb1/lndmd/s081_lb1_minimap.svg
@@ -7766,6 +8081,7 @@ assets/stages/tower_1/s081_lb1/lndmd/s08_0_sky10.png
 assets/stages/tower_1/s081_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_1/s081_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_1/s081_lb1/lndmd/s08_1_sky11.png
+assets/stages/tower_1/s081_sa1/lndmd/mirror-bake/7d28a6f3969f.res
 assets/stages/tower_1/s081_sa1/lndmd/s081_sa1-floor.glb
 assets/stages/tower_1/s081_sa1/lndmd/s081_sa1_m.glb
 assets/stages/tower_1/s081_sa1/lndmd/s081_sa1_minimap.svg
@@ -7786,6 +8102,7 @@ assets/stages/tower_1/s081_sa1/lndmd/s08_1_dw06.png
 assets/stages/tower_1/s081_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_1/s081_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_1/s081_sa1/lndmd/s08_1_sky11.png
+assets/stages/tower_2/s082_ga1/lndmd/mirror-bake/a9c931a1fb90.res
 assets/stages/tower_2/s082_ga1/lndmd/s082_ga1-floor.glb
 assets/stages/tower_2/s082_ga1/lndmd/s082_ga1_m.glb
 assets/stages/tower_2/s082_ga1/lndmd/s082_ga1_minimap.svg
@@ -7806,6 +8123,7 @@ assets/stages/tower_2/s082_ga1/lndmd/s08_1_up06.png
 assets/stages/tower_2/s082_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_2/s082_ga1/lndmd/s08_1_up12.png
 assets/stages/tower_2/s082_ga1/lndmd/s08_2_up07.png
+assets/stages/tower_2/s082_ib1/lndmd/mirror-bake/d95cb9700444.res
 assets/stages/tower_2/s082_ib1/lndmd/s082_ib1-floor.glb
 assets/stages/tower_2/s082_ib1/lndmd/s082_ib1_m.glb
 assets/stages/tower_2/s082_ib1/lndmd/s082_ib1_minimap.svg
@@ -7825,6 +8143,7 @@ assets/stages/tower_2/s082_ib1/lndmd/s08_0_sky21.png
 assets/stages/tower_2/s082_ib1/lndmd/s08_1_ps01.png
 assets/stages/tower_2/s082_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_2/s082_ib1/lndmd/s08_2_ps12.png
+assets/stages/tower_2/s082_lb1/lndmd/mirror-bake/963e412b363b.res
 assets/stages/tower_2/s082_lb1/lndmd/s082_lb1-floor.glb
 assets/stages/tower_2/s082_lb1/lndmd/s082_lb1_m.glb
 assets/stages/tower_2/s082_lb1/lndmd/s082_lb1_minimap.svg
@@ -7845,6 +8164,7 @@ assets/stages/tower_2/s082_lb1/lndmd/s08_0_sky21.png
 assets/stages/tower_2/s082_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_2/s082_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_2/s082_lb1/lndmd/s08_2_le06.png
+assets/stages/tower_2/s082_sa1/lndmd/mirror-bake/9ad0537d4340.res
 assets/stages/tower_2/s082_sa1/lndmd/s082_sa1-floor.glb
 assets/stages/tower_2/s082_sa1/lndmd/s082_sa1_m.glb
 assets/stages/tower_2/s082_sa1/lndmd/s082_sa1_minimap.svg
@@ -7865,6 +8185,7 @@ assets/stages/tower_2/s082_sa1/lndmd/s08_1_dw06.png
 assets/stages/tower_2/s082_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_2/s082_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_2/s082_sa1/lndmd/s08_2_dw07.png
+assets/stages/tower_3/s083_ga1/lndmd/mirror-bake/1e12aa956228.res
 assets/stages/tower_3/s083_ga1/lndmd/s083_ga1-floor.glb
 assets/stages/tower_3/s083_ga1/lndmd/s083_ga1_m.glb
 assets/stages/tower_3/s083_ga1/lndmd/s083_ga1_minimap.svg
@@ -7885,6 +8206,7 @@ assets/stages/tower_3/s083_ga1/lndmd/s08_1_up06.png
 assets/stages/tower_3/s083_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_3/s083_ga1/lndmd/s08_1_up12.png
 assets/stages/tower_3/s083_ga1/lndmd/s08_2_up07.png
+assets/stages/tower_3/s083_ib1/lndmd/mirror-bake/a115937617ce.res
 assets/stages/tower_3/s083_ib1/lndmd/s083_ib1-floor.glb
 assets/stages/tower_3/s083_ib1/lndmd/s083_ib1_m.glb
 assets/stages/tower_3/s083_ib1/lndmd/s083_ib1_minimap.svg
@@ -7904,6 +8226,7 @@ assets/stages/tower_3/s083_ib1/lndmd/s08_0_sky31.png
 assets/stages/tower_3/s083_ib1/lndmd/s08_1_ps01.png
 assets/stages/tower_3/s083_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_3/s083_ib1/lndmd/s08_2_ps12.png
+assets/stages/tower_3/s083_lb1/lndmd/mirror-bake/cd0841d45e15.res
 assets/stages/tower_3/s083_lb1/lndmd/s083_lb1-floor.glb
 assets/stages/tower_3/s083_lb1/lndmd/s083_lb1_m.glb
 assets/stages/tower_3/s083_lb1/lndmd/s083_lb1_minimap.svg
@@ -7924,6 +8247,7 @@ assets/stages/tower_3/s083_lb1/lndmd/s08_0_sky31.png
 assets/stages/tower_3/s083_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_3/s083_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_3/s083_lb1/lndmd/s08_2_le06.png
+assets/stages/tower_3/s083_sa1/lndmd/mirror-bake/6bcd441ba798.res
 assets/stages/tower_3/s083_sa1/lndmd/s083_sa1-floor.glb
 assets/stages/tower_3/s083_sa1/lndmd/s083_sa1_m.glb
 assets/stages/tower_3/s083_sa1/lndmd/s083_sa1_minimap.svg
@@ -7944,6 +8268,7 @@ assets/stages/tower_3/s083_sa1/lndmd/s08_1_dw06.png
 assets/stages/tower_3/s083_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_3/s083_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_3/s083_sa1/lndmd/s08_2_dw07.png
+assets/stages/tower_4/s084_ga1/lndmd/mirror-bake/fae399b198cd.res
 assets/stages/tower_4/s084_ga1/lndmd/s084_ga1-floor.glb
 assets/stages/tower_4/s084_ga1/lndmd/s084_ga1_m.glb
 assets/stages/tower_4/s084_ga1/lndmd/s084_ga1_minimap.svg
@@ -7964,6 +8289,7 @@ assets/stages/tower_4/s084_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_4/s084_ga1/lndmd/s08_1_up12.png
 assets/stages/tower_4/s084_ga1/lndmd/s08_2_sky51.png
 assets/stages/tower_4/s084_ga1/lndmd/s08_2_up07.png
+assets/stages/tower_4/s084_ib1/lndmd/mirror-bake/aaf31185e832.res
 assets/stages/tower_4/s084_ib1/lndmd/s084_ib1-floor.glb
 assets/stages/tower_4/s084_ib1/lndmd/s084_ib1_m.glb
 assets/stages/tower_4/s084_ib1/lndmd/s084_ib1_minimap.svg
@@ -7984,6 +8310,7 @@ assets/stages/tower_4/s084_ib1/lndmd/s08_1_ps01.png
 assets/stages/tower_4/s084_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_4/s084_ib1/lndmd/s08_2_ps12.png
 assets/stages/tower_4/s084_ib1/lndmd/s08_2_sky51.png
+assets/stages/tower_4/s084_lb1/lndmd/mirror-bake/a5d4a491a624.res
 assets/stages/tower_4/s084_lb1/lndmd/s084_lb1-floor.glb
 assets/stages/tower_4/s084_lb1/lndmd/s084_lb1_m.glb
 assets/stages/tower_4/s084_lb1/lndmd/s084_lb1_minimap.svg
@@ -8004,6 +8331,7 @@ assets/stages/tower_4/s084_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_4/s084_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_4/s084_lb1/lndmd/s08_2_le06.png
 assets/stages/tower_4/s084_lb1/lndmd/s08_2_sky51.png
+assets/stages/tower_4/s084_sa1/lndmd/mirror-bake/34219fb20188.res
 assets/stages/tower_4/s084_sa1/lndmd/s084_sa1-floor.glb
 assets/stages/tower_4/s084_sa1/lndmd/s084_sa1_m.glb
 assets/stages/tower_4/s084_sa1/lndmd/s084_sa1_minimap.svg
@@ -8024,6 +8352,7 @@ assets/stages/tower_4/s084_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_4/s084_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_4/s084_sa1/lndmd/s08_2_dw07.png
 assets/stages/tower_4/s084_sa1/lndmd/s08_2_sky51.png
+assets/stages/tower_5/s085_ga1/lndmd/mirror-bake/7ca46e1727c3.res
 assets/stages/tower_5/s085_ga1/lndmd/s085_ga1-floor.glb
 assets/stages/tower_5/s085_ga1/lndmd/s085_ga1_m.glb
 assets/stages/tower_5/s085_ga1/lndmd/s085_ga1_minimap.svg
@@ -8044,6 +8373,7 @@ assets/stages/tower_5/s085_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_5/s085_ga1/lndmd/s08_1_up12.png
 assets/stages/tower_5/s085_ga1/lndmd/s08_2_sky51.png
 assets/stages/tower_5/s085_ga1/lndmd/s08_2_up07.png
+assets/stages/tower_5/s085_ib1/lndmd/mirror-bake/d47ff504ce7e.res
 assets/stages/tower_5/s085_ib1/lndmd/s085_ib1-floor.glb
 assets/stages/tower_5/s085_ib1/lndmd/s085_ib1_m.glb
 assets/stages/tower_5/s085_ib1/lndmd/s085_ib1_minimap.svg
@@ -8064,6 +8394,7 @@ assets/stages/tower_5/s085_ib1/lndmd/s08_1_ps01.png
 assets/stages/tower_5/s085_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_5/s085_ib1/lndmd/s08_2_ps12.png
 assets/stages/tower_5/s085_ib1/lndmd/s08_2_sky51.png
+assets/stages/tower_5/s085_lb1/lndmd/mirror-bake/3efb114899c0.res
 assets/stages/tower_5/s085_lb1/lndmd/s085_lb1-floor.glb
 assets/stages/tower_5/s085_lb1/lndmd/s085_lb1_m.glb
 assets/stages/tower_5/s085_lb1/lndmd/s085_lb1_minimap.svg
@@ -8084,6 +8415,7 @@ assets/stages/tower_5/s085_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_5/s085_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_5/s085_lb1/lndmd/s08_2_le06.png
 assets/stages/tower_5/s085_lb1/lndmd/s08_2_sky51.png
+assets/stages/tower_5/s085_sa1/lndmd/mirror-bake/c67eccac9289.res
 assets/stages/tower_5/s085_sa1/lndmd/s085_sa1-floor.glb
 assets/stages/tower_5/s085_sa1/lndmd/s085_sa1_m.glb
 assets/stages/tower_5/s085_sa1/lndmd/s085_sa1_minimap.svg
@@ -8104,6 +8436,7 @@ assets/stages/tower_5/s085_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_5/s085_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_5/s085_sa1/lndmd/s08_2_dw07.png
 assets/stages/tower_5/s085_sa1/lndmd/s08_2_sky51.png
+assets/stages/tower_6/s086_ga1/lndmd/mirror-bake/514b47550998.res
 assets/stages/tower_6/s086_ga1/lndmd/s086_ga1-floor.glb
 assets/stages/tower_6/s086_ga1/lndmd/s086_ga1_m.glb
 assets/stages/tower_6/s086_ga1/lndmd/s086_ga1_minimap.svg
@@ -8124,6 +8457,7 @@ assets/stages/tower_6/s086_ga1/lndmd/s08_1_up06.png
 assets/stages/tower_6/s086_ga1/lndmd/s08_1_up08.png
 assets/stages/tower_6/s086_ga1/lndmd/s08_1_up12.png
 assets/stages/tower_6/s086_ga1/lndmd/s08_2_up07.png
+assets/stages/tower_6/s086_ib1/lndmd/mirror-bake/5f9cf80b02d4.res
 assets/stages/tower_6/s086_ib1/lndmd/s086_ib1-floor.glb
 assets/stages/tower_6/s086_ib1/lndmd/s086_ib1_m.glb
 assets/stages/tower_6/s086_ib1/lndmd/s086_ib1_minimap.svg
@@ -8144,6 +8478,7 @@ assets/stages/tower_6/s086_ib1/lndmd/s08_1_ps01.png
 assets/stages/tower_6/s086_ib1/lndmd/s08_1_ps10.png
 assets/stages/tower_6/s086_ib1/lndmd/s08_2_ps12.png
 assets/stages/tower_6/s086_ib1/lndmd/s08_2_sky62.png
+assets/stages/tower_6/s086_lb1/lndmd/mirror-bake/c7c7bbf5591b.res
 assets/stages/tower_6/s086_lb1/lndmd/s086_lb1-floor.glb
 assets/stages/tower_6/s086_lb1/lndmd/s086_lb1_m.glb
 assets/stages/tower_6/s086_lb1/lndmd/s086_lb1_minimap.svg
@@ -8164,6 +8499,7 @@ assets/stages/tower_6/s086_lb1/lndmd/s08_0_sky61.png
 assets/stages/tower_6/s086_lb1/lndmd/s08_1_le08.png
 assets/stages/tower_6/s086_lb1/lndmd/s08_1_le09.png
 assets/stages/tower_6/s086_lb1/lndmd/s08_2_le06.png
+assets/stages/tower_6/s086_sa1/lndmd/mirror-bake/b343445f253b.res
 assets/stages/tower_6/s086_sa1/lndmd/s086_sa1-floor.glb
 assets/stages/tower_6/s086_sa1/lndmd/s086_sa1_m.glb
 assets/stages/tower_6/s086_sa1/lndmd/s086_sa1_minimap.svg
@@ -8184,6 +8520,7 @@ assets/stages/tower_6/s086_sa1/lndmd/s08_1_dw06.png
 assets/stages/tower_6/s086_sa1/lndmd/s08_1_dw08.png
 assets/stages/tower_6/s086_sa1/lndmd/s08_1_dw12.png
 assets/stages/tower_6/s086_sa1/lndmd/s08_2_dw07.png
+assets/stages/tower_7/s087_na1/lndmd/mirror-bake/fc090dd2811d.res
 assets/stages/tower_7/s087_na1/lndmd/s087_na1-floor.glb
 assets/stages/tower_7/s087_na1/lndmd/s087_na1_m.glb
 assets/stages/tower_7/s087_na1/lndmd/s087_na1_minimap.svg
@@ -8202,6 +8539,7 @@ assets/stages/tower_7/s087_na1/lndmd/s08_1_en09.png
 assets/stages/tower_7/s087_na1/lndmd/s08_1_sky72.png
 assets/stages/tower_7/s087_na1/lndmd/s08_2_en07.png
 assets/stages/tower_7/s087_na1/lndmd/s08_2_en08.png
+assets/stages/tower_e/s08e_ib1/lndmd/mirror-bake/1a5b2a1556d8.res
 assets/stages/tower_e/s08e_ib1/lndmd/s08_0_rm01.png
 assets/stages/tower_e/s08e_ib1/lndmd/s08_0_rm02.png
 assets/stages/tower_e/s08e_ib1/lndmd/s08_0_rm03.png
@@ -8222,6 +8560,10 @@ assets/stages/tower_e/s08e_ib1/lndmd/s08e_ib1_minimap_r0.svg
 assets/stages/tower_e/s08e_ib1/lndmd/s08e_ib1_minimap_r180.svg
 assets/stages/tower_e/s08e_ib1/lndmd/s08e_ib1_minimap_r270.svg
 assets/stages/tower_e/s08e_ib1/lndmd/s08e_ib1_minimap_r90.svg
+assets/stages/valley_a/native_mirror/lndmd/4a5bea34201bb8d0d131f02dbbc0a3130feaa46e53678a7a02036427bef4ec39.res
+assets/stages/valley_a/native_mirror/lndmd/4b0cf4af61ef673f9c441b6421105f836c4ea8e5f341f43adf209642797c5e68.res
+assets/stages/valley_a/native_mirror/lndmd/8523e1f3bdeb303971dc63ce6ff5fff408b9bc5e2696eeb5a2b7313be6c63809.res
+assets/stages/valley_a/s01a_ga1/lndmd/mirror-bake/d03e2f56f75f.res
 assets/stages/valley_a/s01a_ga1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_ga1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_ga1/lndmd/s01_0_oas1.png
@@ -8250,6 +8592,7 @@ assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_minimap_r0.svg
 assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_minimap_r180.svg
 assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_minimap_r270.svg
 assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_minimap_r90.svg
+assets/stages/valley_a/s01a_ib1/lndmd/mirror-bake/dabe47e8397a.res
 assets/stages/valley_a/s01a_ib1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_ib1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_ib1/lndmd/s01_0_oas1.png
@@ -8267,6 +8610,7 @@ assets/stages/valley_a/s01a_ib1/lndmd/s01a_ib1_minimap_r0.svg
 assets/stages/valley_a/s01a_ib1/lndmd/s01a_ib1_minimap_r180.svg
 assets/stages/valley_a/s01a_ib1/lndmd/s01a_ib1_minimap_r270.svg
 assets/stages/valley_a/s01a_ib1/lndmd/s01a_ib1_minimap_r90.svg
+assets/stages/valley_a/s01a_ib2/lndmd/mirror-bake/2b0921ffc581.res
 assets/stages/valley_a/s01a_ib2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_ib2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_ib2/lndmd/s01_0_oas1.png
@@ -8284,6 +8628,7 @@ assets/stages/valley_a/s01a_ib2/lndmd/s01a_ib2_minimap_r0.svg
 assets/stages/valley_a/s01a_ib2/lndmd/s01a_ib2_minimap_r180.svg
 assets/stages/valley_a/s01a_ib2/lndmd/s01a_ib2_minimap_r270.svg
 assets/stages/valley_a/s01a_ib2/lndmd/s01a_ib2_minimap_r90.svg
+assets/stages/valley_a/s01a_ic1/lndmd/mirror-bake/e7fa20e2643a.res
 assets/stages/valley_a/s01a_ic1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_ic1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_ic1/lndmd/s01_0_pass1.png
@@ -8303,6 +8648,7 @@ assets/stages/valley_a/s01a_ic1/lndmd/s01a_ic1_minimap_r0.svg
 assets/stages/valley_a/s01a_ic1/lndmd/s01a_ic1_minimap_r180.svg
 assets/stages/valley_a/s01a_ic1/lndmd/s01a_ic1_minimap_r270.svg
 assets/stages/valley_a/s01a_ic1/lndmd/s01a_ic1_minimap_r90.svg
+assets/stages/valley_a/s01a_ic3/lndmd/mirror-bake/65e60344d692.res
 assets/stages/valley_a/s01a_ic3/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_ic3/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_ic3/lndmd/s01_0_pass1.png
@@ -8322,6 +8668,7 @@ assets/stages/valley_a/s01a_ic3/lndmd/s01a_ic3_minimap_r0.svg
 assets/stages/valley_a/s01a_ic3/lndmd/s01a_ic3_minimap_r180.svg
 assets/stages/valley_a/s01a_ic3/lndmd/s01a_ic3_minimap_r270.svg
 assets/stages/valley_a/s01a_ic3/lndmd/s01a_ic3_minimap_r90.svg
+assets/stages/valley_a/s01a_lb1/lndmd/mirror-bake/ab3ac8df820c.res
 assets/stages/valley_a/s01a_lb1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_lb1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_lb1/lndmd/s01_0_oas1.png
@@ -8339,6 +8686,7 @@ assets/stages/valley_a/s01a_lb1/lndmd/s01a_lb1_minimap_r0.svg
 assets/stages/valley_a/s01a_lb1/lndmd/s01a_lb1_minimap_r180.svg
 assets/stages/valley_a/s01a_lb1/lndmd/s01a_lb1_minimap_r270.svg
 assets/stages/valley_a/s01a_lb1/lndmd/s01a_lb1_minimap_r90.svg
+assets/stages/valley_a/s01a_lb3/lndmd/mirror-bake/74597083eb1b.res
 assets/stages/valley_a/s01a_lb3/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_lb3/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_lb3/lndmd/s01_0_oas1.png
@@ -8356,6 +8704,7 @@ assets/stages/valley_a/s01a_lb3/lndmd/s01a_lb3_minimap_r0.svg
 assets/stages/valley_a/s01a_lb3/lndmd/s01a_lb3_minimap_r180.svg
 assets/stages/valley_a/s01a_lb3/lndmd/s01a_lb3_minimap_r270.svg
 assets/stages/valley_a/s01a_lb3/lndmd/s01a_lb3_minimap_r90.svg
+assets/stages/valley_a/s01a_lc1/lndmd/mirror-bake/26fd94ded8b8.res
 assets/stages/valley_a/s01a_lc1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_lc1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_lc1/lndmd/s01_0_pass1.png
@@ -8375,6 +8724,7 @@ assets/stages/valley_a/s01a_lc1/lndmd/s01a_lc1_minimap_r0.svg
 assets/stages/valley_a/s01a_lc1/lndmd/s01a_lc1_minimap_r180.svg
 assets/stages/valley_a/s01a_lc1/lndmd/s01a_lc1_minimap_r270.svg
 assets/stages/valley_a/s01a_lc1/lndmd/s01a_lc1_minimap_r90.svg
+assets/stages/valley_a/s01a_lc2/lndmd/mirror-bake/4fd937f029cb.res
 assets/stages/valley_a/s01a_lc2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_lc2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_lc2/lndmd/s01_0_pass1.png
@@ -8394,6 +8744,7 @@ assets/stages/valley_a/s01a_lc2/lndmd/s01a_lc2_minimap_r0.svg
 assets/stages/valley_a/s01a_lc2/lndmd/s01a_lc2_minimap_r180.svg
 assets/stages/valley_a/s01a_lc2/lndmd/s01a_lc2_minimap_r270.svg
 assets/stages/valley_a/s01a_lc2/lndmd/s01a_lc2_minimap_r90.svg
+assets/stages/valley_a/s01a_na1/lndmd/mirror-bake/5e4dba379982.res
 assets/stages/valley_a/s01a_na1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_na1/lndmd/s01_0_oas1.png
 assets/stages/valley_a/s01a_na1/lndmd/s01_0_pass1.png
@@ -8413,6 +8764,7 @@ assets/stages/valley_a/s01a_na1/lndmd/s01a_na1_minimap_r0.svg
 assets/stages/valley_a/s01a_na1/lndmd/s01a_na1_minimap_r180.svg
 assets/stages/valley_a/s01a_na1/lndmd/s01a_na1_minimap_r270.svg
 assets/stages/valley_a/s01a_na1/lndmd/s01a_na1_minimap_r90.svg
+assets/stages/valley_a/s01a_nb2/lndmd/mirror-bake/356ea062c9dd.res
 assets/stages/valley_a/s01a_nb2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_nb2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_nb2/lndmd/s01_0_oas1.png
@@ -8430,6 +8782,7 @@ assets/stages/valley_a/s01a_nb2/lndmd/s01a_nb2_minimap_r0.svg
 assets/stages/valley_a/s01a_nb2/lndmd/s01a_nb2_minimap_r180.svg
 assets/stages/valley_a/s01a_nb2/lndmd/s01a_nb2_minimap_r270.svg
 assets/stages/valley_a/s01a_nb2/lndmd/s01a_nb2_minimap_r90.svg
+assets/stages/valley_a/s01a_nc2/lndmd/mirror-bake/204c6f2f39e8.res
 assets/stages/valley_a/s01a_nc2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_nc2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_nc2/lndmd/s01_0_pass1.png
@@ -8449,6 +8802,7 @@ assets/stages/valley_a/s01a_nc2/lndmd/s01a_nc2_minimap_r0.svg
 assets/stages/valley_a/s01a_nc2/lndmd/s01a_nc2_minimap_r180.svg
 assets/stages/valley_a/s01a_nc2/lndmd/s01a_nc2_minimap_r270.svg
 assets/stages/valley_a/s01a_nc2/lndmd/s01a_nc2_minimap_r90.svg
+assets/stages/valley_a/s01a_sa1/lndmd/mirror-bake/bccde2c32c72.res
 assets/stages/valley_a/s01a_sa1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_sa1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_sa1/lndmd/s01_0_oas1.png
@@ -8466,6 +8820,7 @@ assets/stages/valley_a/s01a_sa1/lndmd/s01a_sa1_minimap_r0.svg
 assets/stages/valley_a/s01a_sa1/lndmd/s01a_sa1_minimap_r180.svg
 assets/stages/valley_a/s01a_sa1/lndmd/s01a_sa1_minimap_r270.svg
 assets/stages/valley_a/s01a_sa1/lndmd/s01a_sa1_minimap_r90.svg
+assets/stages/valley_a/s01a_tb3/lndmd/mirror-bake/c059a618f771.res
 assets/stages/valley_a/s01a_tb3/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_tb3/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_tb3/lndmd/s01_0_oas1.png
@@ -8483,6 +8838,7 @@ assets/stages/valley_a/s01a_tb3/lndmd/s01a_tb3_minimap_r0.svg
 assets/stages/valley_a/s01a_tb3/lndmd/s01a_tb3_minimap_r180.svg
 assets/stages/valley_a/s01a_tb3/lndmd/s01a_tb3_minimap_r270.svg
 assets/stages/valley_a/s01a_tb3/lndmd/s01a_tb3_minimap_r90.svg
+assets/stages/valley_a/s01a_tc3/lndmd/mirror-bake/7757f5bb249b.res
 assets/stages/valley_a/s01a_tc3/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_tc3/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_tc3/lndmd/s01_0_pass1.png
@@ -8501,6 +8857,7 @@ assets/stages/valley_a/s01a_tc3/lndmd/s01a_tc3_minimap_r0.svg
 assets/stages/valley_a/s01a_tc3/lndmd/s01a_tc3_minimap_r180.svg
 assets/stages/valley_a/s01a_tc3/lndmd/s01a_tc3_minimap_r270.svg
 assets/stages/valley_a/s01a_tc3/lndmd/s01a_tc3_minimap_r90.svg
+assets/stages/valley_a/s01a_td1/lndmd/mirror-bake/69f356f60c52.res
 assets/stages/valley_a/s01a_td1/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_td1/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_td1/lndmd/s01_0_pass1.png
@@ -8520,6 +8877,7 @@ assets/stages/valley_a/s01a_td1/lndmd/s01a_td1_minimap_r0.svg
 assets/stages/valley_a/s01a_td1/lndmd/s01a_td1_minimap_r180.svg
 assets/stages/valley_a/s01a_td1/lndmd/s01a_td1_minimap_r270.svg
 assets/stages/valley_a/s01a_td1/lndmd/s01a_td1_minimap_r90.svg
+assets/stages/valley_a/s01a_td2/lndmd/mirror-bake/0f55181e9925.res
 assets/stages/valley_a/s01a_td2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_td2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_td2/lndmd/s01_0_pass1.png
@@ -8539,6 +8897,7 @@ assets/stages/valley_a/s01a_td2/lndmd/s01a_td2_minimap_r0.svg
 assets/stages/valley_a/s01a_td2/lndmd/s01a_td2_minimap_r180.svg
 assets/stages/valley_a/s01a_td2/lndmd/s01a_td2_minimap_r270.svg
 assets/stages/valley_a/s01a_td2/lndmd/s01a_td2_minimap_r90.svg
+assets/stages/valley_a/s01a_xb2/lndmd/mirror-bake/ad28f6af6a1e.res
 assets/stages/valley_a/s01a_xb2/lndmd/s01_0_deco1.png
 assets/stages/valley_a/s01a_xb2/lndmd/s01_0_flo1.png
 assets/stages/valley_a/s01a_xb2/lndmd/s01_0_oas1.png
@@ -8556,6 +8915,7 @@ assets/stages/valley_a/s01a_xb2/lndmd/s01a_xb2_minimap_r0.svg
 assets/stages/valley_a/s01a_xb2/lndmd/s01a_xb2_minimap_r180.svg
 assets/stages/valley_a/s01a_xb2/lndmd/s01a_xb2_minimap_r270.svg
 assets/stages/valley_a/s01a_xb2/lndmd/s01a_xb2_minimap_r90.svg
+assets/stages/valley_b/s01b_ga1/lndmd/mirror-bake/2a04dc2963a3.res
 assets/stages/valley_b/s01b_ga1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_ga1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_ga1/lndmd/s01_0_flo2.png
@@ -8575,6 +8935,7 @@ assets/stages/valley_b/s01b_ga1/lndmd/s01b_ga1_minimap_r0.svg
 assets/stages/valley_b/s01b_ga1/lndmd/s01b_ga1_minimap_r180.svg
 assets/stages/valley_b/s01b_ga1/lndmd/s01b_ga1_minimap_r270.svg
 assets/stages/valley_b/s01b_ga1/lndmd/s01b_ga1_minimap_r90.svg
+assets/stages/valley_b/s01b_ib1/lndmd/mirror-bake/53d4ef13adcc.res
 assets/stages/valley_b/s01b_ib1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_ib1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_ib1/lndmd/s01_0_flo2b.png
@@ -8593,6 +8954,7 @@ assets/stages/valley_b/s01b_ib1/lndmd/s01b_ib1_minimap_r0.svg
 assets/stages/valley_b/s01b_ib1/lndmd/s01b_ib1_minimap_r180.svg
 assets/stages/valley_b/s01b_ib1/lndmd/s01b_ib1_minimap_r270.svg
 assets/stages/valley_b/s01b_ib1/lndmd/s01b_ib1_minimap_r90.svg
+assets/stages/valley_b/s01b_ib2/lndmd/mirror-bake/99dde72ed215.res
 assets/stages/valley_b/s01b_ib2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_ib2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_ib2/lndmd/s01_0_flo2b.png
@@ -8611,6 +8973,7 @@ assets/stages/valley_b/s01b_ib2/lndmd/s01b_ib2_minimap_r0.svg
 assets/stages/valley_b/s01b_ib2/lndmd/s01b_ib2_minimap_r180.svg
 assets/stages/valley_b/s01b_ib2/lndmd/s01b_ib2_minimap_r270.svg
 assets/stages/valley_b/s01b_ib2/lndmd/s01b_ib2_minimap_r90.svg
+assets/stages/valley_b/s01b_ic1/lndmd/mirror-bake/b24eac4aa8dc.res
 assets/stages/valley_b/s01b_ic1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_ic1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_ic1/lndmd/s01_0_flo2.png
@@ -8628,6 +8991,7 @@ assets/stages/valley_b/s01b_ic1/lndmd/s01b_ic1_minimap_r0.svg
 assets/stages/valley_b/s01b_ic1/lndmd/s01b_ic1_minimap_r180.svg
 assets/stages/valley_b/s01b_ic1/lndmd/s01b_ic1_minimap_r270.svg
 assets/stages/valley_b/s01b_ic1/lndmd/s01b_ic1_minimap_r90.svg
+assets/stages/valley_b/s01b_ic3/lndmd/mirror-bake/aecc5ed1d09d.res
 assets/stages/valley_b/s01b_ic3/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_ic3/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_ic3/lndmd/s01_0_flo2.png
@@ -8645,6 +9009,7 @@ assets/stages/valley_b/s01b_ic3/lndmd/s01b_ic3_minimap_r0.svg
 assets/stages/valley_b/s01b_ic3/lndmd/s01b_ic3_minimap_r180.svg
 assets/stages/valley_b/s01b_ic3/lndmd/s01b_ic3_minimap_r270.svg
 assets/stages/valley_b/s01b_ic3/lndmd/s01b_ic3_minimap_r90.svg
+assets/stages/valley_b/s01b_lb1/lndmd/mirror-bake/b421c1ab1bc9.res
 assets/stages/valley_b/s01b_lb1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_lb1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_lb1/lndmd/s01_0_flo2b.png
@@ -8663,6 +9028,7 @@ assets/stages/valley_b/s01b_lb1/lndmd/s01b_lb1_minimap_r0.svg
 assets/stages/valley_b/s01b_lb1/lndmd/s01b_lb1_minimap_r180.svg
 assets/stages/valley_b/s01b_lb1/lndmd/s01b_lb1_minimap_r270.svg
 assets/stages/valley_b/s01b_lb1/lndmd/s01b_lb1_minimap_r90.svg
+assets/stages/valley_b/s01b_lb3/lndmd/mirror-bake/c252cf845957.res
 assets/stages/valley_b/s01b_lb3/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_lb3/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_lb3/lndmd/s01_0_flo2b.png
@@ -8681,6 +9047,7 @@ assets/stages/valley_b/s01b_lb3/lndmd/s01b_lb3_minimap_r0.svg
 assets/stages/valley_b/s01b_lb3/lndmd/s01b_lb3_minimap_r180.svg
 assets/stages/valley_b/s01b_lb3/lndmd/s01b_lb3_minimap_r270.svg
 assets/stages/valley_b/s01b_lb3/lndmd/s01b_lb3_minimap_r90.svg
+assets/stages/valley_b/s01b_lc1/lndmd/mirror-bake/0f35a6b6d4f4.res
 assets/stages/valley_b/s01b_lc1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_lc1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_lc1/lndmd/s01_0_flo2.png
@@ -8698,6 +9065,7 @@ assets/stages/valley_b/s01b_lc1/lndmd/s01b_lc1_minimap_r0.svg
 assets/stages/valley_b/s01b_lc1/lndmd/s01b_lc1_minimap_r180.svg
 assets/stages/valley_b/s01b_lc1/lndmd/s01b_lc1_minimap_r270.svg
 assets/stages/valley_b/s01b_lc1/lndmd/s01b_lc1_minimap_r90.svg
+assets/stages/valley_b/s01b_lc2/lndmd/mirror-bake/edab11f7e10a.res
 assets/stages/valley_b/s01b_lc2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_lc2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_lc2/lndmd/s01_0_flo2.png
@@ -8715,6 +9083,7 @@ assets/stages/valley_b/s01b_lc2/lndmd/s01b_lc2_minimap_r0.svg
 assets/stages/valley_b/s01b_lc2/lndmd/s01b_lc2_minimap_r180.svg
 assets/stages/valley_b/s01b_lc2/lndmd/s01b_lc2_minimap_r270.svg
 assets/stages/valley_b/s01b_lc2/lndmd/s01b_lc2_minimap_r90.svg
+assets/stages/valley_b/s01b_na1/lndmd/mirror-bake/f35206a104f1.res
 assets/stages/valley_b/s01b_na1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_na1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_na1/lndmd/s01_0_flo2b.png
@@ -8733,6 +9102,7 @@ assets/stages/valley_b/s01b_na1/lndmd/s01b_na1_minimap_r0.svg
 assets/stages/valley_b/s01b_na1/lndmd/s01b_na1_minimap_r180.svg
 assets/stages/valley_b/s01b_na1/lndmd/s01b_na1_minimap_r270.svg
 assets/stages/valley_b/s01b_na1/lndmd/s01b_na1_minimap_r90.svg
+assets/stages/valley_b/s01b_nb2/lndmd/mirror-bake/7dc7f1e52962.res
 assets/stages/valley_b/s01b_nb2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_nb2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_nb2/lndmd/s01_0_flo2b.png
@@ -8751,6 +9121,7 @@ assets/stages/valley_b/s01b_nb2/lndmd/s01b_nb2_minimap_r0.svg
 assets/stages/valley_b/s01b_nb2/lndmd/s01b_nb2_minimap_r180.svg
 assets/stages/valley_b/s01b_nb2/lndmd/s01b_nb2_minimap_r270.svg
 assets/stages/valley_b/s01b_nb2/lndmd/s01b_nb2_minimap_r90.svg
+assets/stages/valley_b/s01b_nc2/lndmd/mirror-bake/e429880dcbbb.res
 assets/stages/valley_b/s01b_nc2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_nc2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_nc2/lndmd/s01_0_flo2.png
@@ -8768,6 +9139,7 @@ assets/stages/valley_b/s01b_nc2/lndmd/s01b_nc2_minimap_r0.svg
 assets/stages/valley_b/s01b_nc2/lndmd/s01b_nc2_minimap_r180.svg
 assets/stages/valley_b/s01b_nc2/lndmd/s01b_nc2_minimap_r270.svg
 assets/stages/valley_b/s01b_nc2/lndmd/s01b_nc2_minimap_r90.svg
+assets/stages/valley_b/s01b_sa1/lndmd/mirror-bake/641855215563.res
 assets/stages/valley_b/s01b_sa1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_sa1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_sa1/lndmd/s01_0_flo2b.png
@@ -8788,6 +9160,7 @@ assets/stages/valley_b/s01b_sa1/lndmd/s01b_sa1_minimap_r0.svg
 assets/stages/valley_b/s01b_sa1/lndmd/s01b_sa1_minimap_r180.svg
 assets/stages/valley_b/s01b_sa1/lndmd/s01b_sa1_minimap_r270.svg
 assets/stages/valley_b/s01b_sa1/lndmd/s01b_sa1_minimap_r90.svg
+assets/stages/valley_b/s01b_tb3/lndmd/mirror-bake/3ac6d2d5b6ea.res
 assets/stages/valley_b/s01b_tb3/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_tb3/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_tb3/lndmd/s01_0_flo2b.png
@@ -8806,6 +9179,7 @@ assets/stages/valley_b/s01b_tb3/lndmd/s01b_tb3_minimap_r0.svg
 assets/stages/valley_b/s01b_tb3/lndmd/s01b_tb3_minimap_r180.svg
 assets/stages/valley_b/s01b_tb3/lndmd/s01b_tb3_minimap_r270.svg
 assets/stages/valley_b/s01b_tb3/lndmd/s01b_tb3_minimap_r90.svg
+assets/stages/valley_b/s01b_tc3/lndmd/mirror-bake/470a153c4c27.res
 assets/stages/valley_b/s01b_tc3/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_tc3/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_tc3/lndmd/s01_0_flo2.png
@@ -8822,6 +9196,7 @@ assets/stages/valley_b/s01b_tc3/lndmd/s01b_tc3_minimap_r0.svg
 assets/stages/valley_b/s01b_tc3/lndmd/s01b_tc3_minimap_r180.svg
 assets/stages/valley_b/s01b_tc3/lndmd/s01b_tc3_minimap_r270.svg
 assets/stages/valley_b/s01b_tc3/lndmd/s01b_tc3_minimap_r90.svg
+assets/stages/valley_b/s01b_td1/lndmd/mirror-bake/a6ebc1a948d8.res
 assets/stages/valley_b/s01b_td1/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_td1/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_td1/lndmd/s01_0_flo2.png
@@ -8840,6 +9215,7 @@ assets/stages/valley_b/s01b_td1/lndmd/s01b_td1_minimap_r0.svg
 assets/stages/valley_b/s01b_td1/lndmd/s01b_td1_minimap_r180.svg
 assets/stages/valley_b/s01b_td1/lndmd/s01b_td1_minimap_r270.svg
 assets/stages/valley_b/s01b_td1/lndmd/s01b_td1_minimap_r90.svg
+assets/stages/valley_b/s01b_td2/lndmd/mirror-bake/8e4b4f674e42.res
 assets/stages/valley_b/s01b_td2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_td2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_td2/lndmd/s01_0_flo2.png
@@ -8858,6 +9234,7 @@ assets/stages/valley_b/s01b_td2/lndmd/s01b_td2_minimap_r0.svg
 assets/stages/valley_b/s01b_td2/lndmd/s01b_td2_minimap_r180.svg
 assets/stages/valley_b/s01b_td2/lndmd/s01b_td2_minimap_r270.svg
 assets/stages/valley_b/s01b_td2/lndmd/s01b_td2_minimap_r90.svg
+assets/stages/valley_b/s01b_xb2/lndmd/mirror-bake/aed2b7a0dd16.res
 assets/stages/valley_b/s01b_xb2/lndmd/s01_0_bri2.png
 assets/stages/valley_b/s01b_xb2/lndmd/s01_0_bri3.png
 assets/stages/valley_b/s01b_xb2/lndmd/s01_0_flo2b.png
@@ -8876,6 +9253,7 @@ assets/stages/valley_b/s01b_xb2/lndmd/s01b_xb2_minimap_r0.svg
 assets/stages/valley_b/s01b_xb2/lndmd/s01b_xb2_minimap_r180.svg
 assets/stages/valley_b/s01b_xb2/lndmd/s01b_xb2_minimap_r270.svg
 assets/stages/valley_b/s01b_xb2/lndmd/s01b_xb2_minimap_r90.svg
+assets/stages/valley_e/s01e_ia1/lndmd/mirror-bake/cf7b01bab978.res
 assets/stages/valley_e/s01e_ia1/lndmd/s01_0_deco1.png
 assets/stages/valley_e/s01e_ia1/lndmd/s01_0_fall.png
 assets/stages/valley_e/s01e_ia1/lndmd/s01_0_flo1b.png
@@ -8905,6 +9283,7 @@ assets/stages/valley_z/s01z_na1/lndmd/s01_0_byuka4.png
 assets/stages/valley_z/s01z_na1/lndmd/s01_2_bkemu1.png
 assets/stages/valley_z/s01z_na1/lndmd/s01z_na1-floor.glb
 assets/stages/valley_z/s01z_na1/lndmd/s01z_na1_m.glb
+assets/stages/wetlands_a/s02a_ga1/lndmd/mirror-bake/a3692bb45c6f.res
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02_0_hasim.png
@@ -8923,6 +9302,7 @@ assets/stages/wetlands_a/s02a_ga1/lndmd/s02a_ga1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02a_ga1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02a_ga1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_ga1/lndmd/s02a_ga1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_ib1/lndmd/mirror-bake/1ca21995a327.res
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02_0_earth5.png
@@ -8944,6 +9324,7 @@ assets/stages/wetlands_a/s02a_ib1/lndmd/s02a_ib1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02a_ib1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02a_ib1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_ib1/lndmd/s02a_ib1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_ib2/lndmd/mirror-bake/8e164d0b2fac.res
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02_0_earth5.png
@@ -8965,6 +9346,7 @@ assets/stages/wetlands_a/s02a_ib2/lndmd/s02a_ib2_minimap_r0.svg
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02a_ib2_minimap_r180.svg
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02a_ib2_minimap_r270.svg
 assets/stages/wetlands_a/s02a_ib2/lndmd/s02a_ib2_minimap_r90.svg
+assets/stages/wetlands_a/s02a_ic1/lndmd/mirror-bake/068da7df59e6.res
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02_0_hasim.png
@@ -8983,6 +9365,7 @@ assets/stages/wetlands_a/s02a_ic1/lndmd/s02a_ic1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02a_ic1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02a_ic1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_ic1/lndmd/s02a_ic1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_ic3/lndmd/mirror-bake/572b919f237c.res
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02_0_hasim.png
@@ -9001,6 +9384,7 @@ assets/stages/wetlands_a/s02a_ic3/lndmd/s02a_ic3_minimap_r0.svg
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02a_ic3_minimap_r180.svg
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02a_ic3_minimap_r270.svg
 assets/stages/wetlands_a/s02a_ic3/lndmd/s02a_ic3_minimap_r90.svg
+assets/stages/wetlands_a/s02a_lb1/lndmd/mirror-bake/0e8415c35cf5.res
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02_0_earth5.png
@@ -9022,6 +9406,7 @@ assets/stages/wetlands_a/s02a_lb1/lndmd/s02a_lb1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02a_lb1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02a_lb1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_lb1/lndmd/s02a_lb1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_lb3/lndmd/mirror-bake/421adbb82937.res
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02_0_earth5.png
@@ -9043,6 +9428,7 @@ assets/stages/wetlands_a/s02a_lb3/lndmd/s02a_lb3_minimap_r0.svg
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02a_lb3_minimap_r180.svg
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02a_lb3_minimap_r270.svg
 assets/stages/wetlands_a/s02a_lb3/lndmd/s02a_lb3_minimap_r90.svg
+assets/stages/wetlands_a/s02a_lc1/lndmd/mirror-bake/d6c9d3d4a9ab.res
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02_0_hasim.png
@@ -9061,6 +9447,7 @@ assets/stages/wetlands_a/s02a_lc1/lndmd/s02a_lc1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02a_lc1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02a_lc1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_lc1/lndmd/s02a_lc1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_lc2/lndmd/mirror-bake/9cb0b25a3e5a.res
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02_0_hasim.png
@@ -9078,6 +9465,7 @@ assets/stages/wetlands_a/s02a_lc2/lndmd/s02a_lc2_minimap_r0.svg
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02a_lc2_minimap_r180.svg
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02a_lc2_minimap_r270.svg
 assets/stages/wetlands_a/s02a_lc2/lndmd/s02a_lc2_minimap_r90.svg
+assets/stages/wetlands_a/s02a_na1/lndmd/mirror-bake/cdea2d7a4257.res
 assets/stages/wetlands_a/s02a_na1/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_na1/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_na1/lndmd/s02_0_hasim.png
@@ -9096,6 +9484,7 @@ assets/stages/wetlands_a/s02a_na1/lndmd/s02a_na1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_na1/lndmd/s02a_na1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_na1/lndmd/s02a_na1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_na1/lndmd/s02a_na1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_nb2/lndmd/mirror-bake/ec10a1939e68.res
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02_0_earth5.png
@@ -9117,6 +9506,7 @@ assets/stages/wetlands_a/s02a_nb2/lndmd/s02a_nb2_minimap_r0.svg
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02a_nb2_minimap_r180.svg
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02a_nb2_minimap_r270.svg
 assets/stages/wetlands_a/s02a_nb2/lndmd/s02a_nb2_minimap_r90.svg
+assets/stages/wetlands_a/s02a_nc2/lndmd/mirror-bake/ae02bfcbf781.res
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02_0_hasim.png
@@ -9134,6 +9524,7 @@ assets/stages/wetlands_a/s02a_nc2/lndmd/s02a_nc2_minimap_r0.svg
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02a_nc2_minimap_r180.svg
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02a_nc2_minimap_r270.svg
 assets/stages/wetlands_a/s02a_nc2/lndmd/s02a_nc2_minimap_r90.svg
+assets/stages/wetlands_a/s02a_sa1/lndmd/mirror-bake/df5f86688950.res
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02_0_hasim.png
@@ -9155,6 +9546,7 @@ assets/stages/wetlands_a/s02a_sa1/lndmd/s02a_sa1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02a_sa1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02a_sa1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_sa1/lndmd/s02a_sa1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_tb3/lndmd/mirror-bake/90bbe8c8d1d6.res
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02_0_earth5.png
@@ -9176,6 +9568,7 @@ assets/stages/wetlands_a/s02a_tb3/lndmd/s02a_tb3_minimap_r0.svg
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02a_tb3_minimap_r180.svg
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02a_tb3_minimap_r270.svg
 assets/stages/wetlands_a/s02a_tb3/lndmd/s02a_tb3_minimap_r90.svg
+assets/stages/wetlands_a/s02a_tc3/lndmd/mirror-bake/56f7e52c7506.res
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02_0_ground.png
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02_0_hasi2.png
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02_0_hasim.png
@@ -9194,6 +9587,7 @@ assets/stages/wetlands_a/s02a_tc3/lndmd/s02a_tc3_minimap_r0.svg
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02a_tc3_minimap_r180.svg
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02a_tc3_minimap_r270.svg
 assets/stages/wetlands_a/s02a_tc3/lndmd/s02a_tc3_minimap_r90.svg
+assets/stages/wetlands_a/s02a_td1/lndmd/mirror-bake/d97e7fff4c4b.res
 assets/stages/wetlands_a/s02a_td1/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_td1/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_td1/lndmd/s02_0_earth5.png
@@ -9215,6 +9609,7 @@ assets/stages/wetlands_a/s02a_td1/lndmd/s02a_td1_minimap_r0.svg
 assets/stages/wetlands_a/s02a_td1/lndmd/s02a_td1_minimap_r180.svg
 assets/stages/wetlands_a/s02a_td1/lndmd/s02a_td1_minimap_r270.svg
 assets/stages/wetlands_a/s02a_td1/lndmd/s02a_td1_minimap_r90.svg
+assets/stages/wetlands_a/s02a_td2/lndmd/mirror-bake/6f0f8c285cea.res
 assets/stages/wetlands_a/s02a_td2/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_td2/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_td2/lndmd/s02_0_earth5.png
@@ -9236,6 +9631,7 @@ assets/stages/wetlands_a/s02a_td2/lndmd/s02a_td2_minimap_r0.svg
 assets/stages/wetlands_a/s02a_td2/lndmd/s02a_td2_minimap_r180.svg
 assets/stages/wetlands_a/s02a_td2/lndmd/s02a_td2_minimap_r270.svg
 assets/stages/wetlands_a/s02a_td2/lndmd/s02a_td2_minimap_r90.svg
+assets/stages/wetlands_a/s02a_xb2/lndmd/mirror-bake/563f04ead030.res
 assets/stages/wetlands_a/s02a_xb2/lndmd/s02_0_earth.png
 assets/stages/wetlands_a/s02a_xb2/lndmd/s02_0_earth2.png
 assets/stages/wetlands_a/s02a_xb2/lndmd/s02_0_earth5.png
@@ -9569,6 +9965,7 @@ assets/stages/wetlands_b/s02b_xb2/lndmd/s02b_xb2_minimap_r0.svg
 assets/stages/wetlands_b/s02b_xb2/lndmd/s02b_xb2_minimap_r180.svg
 assets/stages/wetlands_b/s02b_xb2/lndmd/s02b_xb2_minimap_r270.svg
 assets/stages/wetlands_b/s02b_xb2/lndmd/s02b_xb2_minimap_r90.svg
+assets/stages/wetlands_e/s02e_ia1/lndmd/mirror-bake/ebd42178165f.res
 assets/stages/wetlands_e/s02e_ia1/lndmd/s02_0_earth4.png
 assets/stages/wetlands_e/s02e_ia1/lndmd/s02_0_ground.png
 assets/stages/wetlands_e/s02e_ia1/lndmd/s02_0_hasi2.png

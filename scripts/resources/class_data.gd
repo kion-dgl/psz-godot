@@ -21,7 +21,49 @@ class_name ClassData extends Resource
 @export var allowed_weapon_types: Array[int] = []
 
 ## Stats dict: { "hp": { "1": 82, "20": 258, ... }, "attack": {...}, ... }
+## Breakpoints are the fallback path; per-level lookup prefers the ROM rows
+## loaded from ROM_LEVEL_PARAMS_PATH (every level 1..100, no interpolation).
 @export var stats: Dictionary = {}
+
+## ROM-exact per-level stat rows, decoded from the original player_lv_param
+## table (data/re_reference/player_lv_param.json; pszm-decomp FUN_020412d8
+## row layout, dumped by scripts/tools/dump_player_lv_param.py). Class→member
+## mapping follows the JSON's class_match evidence: all 14 classes matched a
+## member's curve at every breakpoint (hucaseal accuracy L20 corrected to the
+## ROM value 178 when this table was hooked up).
+const ROM_LEVEL_PARAMS_PATH := "res://data/re_reference/player_lv_param.json"
+const ROM_STAT_NAMES := ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]
+static var _rom_rows_by_class: Dictionary = {}
+static var _rom_loaded := false
+
+
+static func _load_rom_rows() -> void:
+	if _rom_loaded:
+		return
+	_rom_loaded = true
+	if not FileAccess.file_exists(ROM_LEVEL_PARAMS_PATH):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(ROM_LEVEL_PARAMS_PATH))
+	if parsed == null or not parsed is Dictionary:
+		return
+	var members: Dictionary = parsed.get("members", {})
+	for member_key in members:
+		var member: Dictionary = members[member_key]
+		var match: Dictionary = member.get("class_match", {})
+		var class_id := ""
+		if match.get("exact", []) is Array and not (match["exact"] as Array).is_empty():
+			class_id = match["exact"][0]
+		elif match.has("near"):
+			class_id = match["near"]["class"]
+		if class_id.is_empty():
+			continue
+		var rows := {}
+		for stat_name in ROM_STAT_NAMES:
+			var series: Array = member.get("stats", {}).get(stat_name, [])
+			if series.size() == 100:
+				rows[stat_name] = series
+		if rows.size() == ROM_STAT_NAMES.size():
+			_rom_rows_by_class[class_id] = rows
 
 ## Technique limits: { "foieBartaZonde": 15, "grants": 0, ... } (0 = can't use)
 @export var technique_limits: Dictionary = {}
@@ -30,8 +72,13 @@ class_name ClassData extends Resource
 @export var trap_limits: Dictionary = {}
 
 
-## Get stat value at a specific level (interpolates between defined breakpoints)
+## Get stat value at a specific level. ROM rows give the exact per-level value
+## when loaded; authored breakpoints (interpolated) remain the fallback.
 func get_stat_at_level(stat_name: String, level: int) -> int:
+	_load_rom_rows()
+	if _rom_rows_by_class.has(id) and _rom_rows_by_class[id].has(stat_name):
+		var series: Array = _rom_rows_by_class[id][stat_name]
+		return int(series[clampi(level, 1, series.size()) - 1])
 	if not stats.has(stat_name):
 		return 0
 	var stat_table: Dictionary = stats[stat_name]

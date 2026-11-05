@@ -69,8 +69,9 @@ func _physics_process(delta: float) -> void:
 		to_target.y = 0.0
 		var cover := PhysicsRayQueryParameters3D.create(to + Vector3.UP * 0.3,
 			target.global_position + Vector3.UP * 0.5, 1)
-		var dodging: bool = target.has_method("is_dodge_iframed") and target.is_dodge_iframed()
-		if to_target.length() <= blast_radius + TARGET_RADIUS and not dodging \
+		# No dodge immunity (spec /mechanics/dodge): the blast damages a
+		# rolling player like any other — only cover can save the target.
+		if to_target.length() <= blast_radius + TARGET_RADIUS \
 				and get_world_3d().direct_space_state.intersect_ray(cover).is_empty() \
 				and target.has_method("take_damage"):
 			target.take_damage(damage, Vector3.ZERO, knockdown)

@@ -1,0 +1,139 @@
+{
+ "source": "FUN_0203686c decoded halfword by halfword out of build/arm9_dec.bin, then read back from 31 savestates",
+ "closes": "the boss-porting open item 'Where the global byte lives'. The previous iteration identified the third axis of the enemy descriptor's per-group table as a difficulty tier from the DATA alone -- every field non-decreasing across it, in 970 fields. This finds the selector itself.",
+ "THE_WHOLE_FUNCTION": {
+  "address": "0x0203686C, THUMB, 24 bytes",
+  "listing": [
+   "004a  lsl   r2, r1, #1        r2 = group * 2",
+   "188b  add   r3, r1, r2        r3 = group * 3",
+   "4a04  ldr   r2, [pc, #16]     -> the pool word at 0x02036884 = 0x0211A3C4",
+   "210d  mov   r1, #13",
+   "5651  ldrsb r1, [r2, r1]      r1 = SIGNED byte at 0x0211A3D1",
+   "6940  ldr   r0, [r0, #0x14]   the descriptor root, off the ENTITY",
+   "185a  add   r2, r3, r1        r2 = group * 3 + tier",
+   "2128  mov   r1, #0x28",
+   "6b40  ldr   r0, [r0, #0x34]   the per-group table pointer",
+   "4351  mul   r1, r2            r1 = 0x28 * (group * 3 + tier)",
+   "1840  add   r0, r0, r1",
+   "4770  bx    lr"
+  ],
+  "nothing_left_over": "twelve halfwords, twelve instructions, no padding and no unread field. The pc-relative target is re-derived under THUMB's own ((pc + 4) & ~3) + imm*4 rule rather than read off the comment.",
+  "it_also_pins_the_root": "the function takes the ENTITY and reaches the descriptor through entity+0x14 -- which is what tools/enemy_desc.py's docstring says the root is, arrived at here from the instruction stream instead."
+ },
+ "THE_SELECTOR": {
+  "address": "0x0211A3D1",
+  "as": "a SIGNED byte -- the load is LDRSB, not LDRB, so a negative tier is representable even though nothing on disk holds one",
+  "block": "0x0211A3C4, a 32-byte global; the tier is byte 13 of it",
+  "reads_0_in_all_31_savestates": "which is what one playthrough on one setting looks like, and is in range for the three-wide axis. Nothing here has SEEN the value change; a savestate taken on a second difficulty is what would show the axis moving."
+ },
+ "IT_IS_A_GAME_WIDE_MODE_NOT_A_DAMAGE_PATH_LOCAL": {
+  "the_census": "every arm9 function carrying the block's address in its literal pool was decoded for `mov rN,#imm; ldrsb rD,[rBlock,rN]` and the immediates counted.",
+  "result": "13 functions read the signed byte at +13, against 4 at +12, 2 at +24 and one each at +0, +16 and +18. It is the most-read byte of the block by a wide margin, and twelve of the thirteen are not the hit path.",
+  "reach": "48 pool words hold the block address -- 35 in arm9 and 13 across overlays 4, 12, 17, 22 and 30. A structure that widely referenced is not private to combat.",
+  "A_BUG_THIS_SCAN_HAD_FIRST": "the backward search for `mov rN,#imm` bounded the range as `0x2000|(N<<8)` to `0x2000|(N<<8)|0x100`. For ODD N the low bound already has bit 8 set, so the OR changes nothing and the range is empty -- silently dropping every site whose offset register was odd, including the selector itself. It reported 8 readers instead of 13, and the tell was that FUN_0203686c was missing from a census of functions that read its own byte. The check now asserts the selector appears."
+ },
+ "AN_UNCLAIMED_CORRESPONDENCE": "the u32 at the head of the block, 0x0211A3C4, equals save-work +0xDA8 in 27 of 31 states, and in each of the 4 that differ the GLOBAL reads 0 while save-work holds a value. Thirteen distinct values across the set, so it is not coincidence. save-work +0xDA8 was left unnamed last iteration as 'a u32 that differs between states taken seconds apart at identical progress'; whatever it is, it is the head of this block. Recorded as an observation, not a reading.",
+ "STILL_OPEN": [
+  "what byte +12 of the session record selects. The dive path writes 0 there and the builder range-checks it to 0..2 exactly like the tier, but nothing says what it means.",
+  "the axis has still never been observed moving, since no savestate on disk is a multiplayer session. A multiplayer savestate would confirm the identification end to end.",
+  "the other eight category-7 handlers (7:1 .. 7:8) are unread; they are the rest of the session protocol."
+ ],
+ "WHAT_WRITES_IT_NOTHING_ON_ITS_OWN": {
+  "the_answer": "the tier byte is never written by itself. It is byte 13 of a 16-byte RECORD, and the record is either cleared wholesale or copied wholesale. That is why the previous iteration's search for `strb rD,[rB,#13]` against the global found nothing -- the search was for the wrong shape, not evidence of a missing writer.",
+  "the_reset": {
+   "address": "0x020783B0, 14 bytes",
+   "listing": [
+    "2200  mov  r2, #0",
+    "8002  strh r2, [r0, #0]",
+    "1e51  sub  r1, r2, #1        r1 = -1",
+    "6081  str  r1, [r0, #8]",
+    "7302  strb r2, [r0, #12]",
+    "7342  strb r2, [r0, #13]     the tier, zeroed",
+    "4770  bx   lr"
+   ],
+   "it_is_a_reset_not_a_memset": "the -1 into the word at +8 is a sentinel, and +2..+7 and +14..+15 are left untouched. A zero-fill would do neither."
+  },
+  "the_copier": {
+   "address": "0x020783C0, 70 bytes, r0 = destination and r1 = source",
+   "the_field_map_falls_out_of_it": "a halfword at +0, six signed bytes at +2..+7, a word at +8, four signed bytes at +12..+15. Twelve stores tiling 0..15 with NO gap and NO overlap, which is what makes 16 the record size rather than a guess.",
+   "every_small_field_is_read_with_LDRSB": "all ten byte fields, the same signed treatment FUN_0203686c gives the tier -- an independent confirmation that these are signed values and not flags."
+  },
+  "the_block_is_one_of_these_records": "every THUMB bl in arm9 targeting either routine was decoded and the caller searched backwards for the `ldr r0,[pc,#imm]` that sets the first argument. Of 12 call sites, THREE load 0x0211A3C4: a copy at 0x02078398 and resets at 0x020785FC and 0x02078C8C. So the record layout is a statement about this global and not about an anonymous type.",
+  "where_the_value_comes_from": "at the copy site the source is r4, a value computed earlier in that function rather than a literal, so the chain does not end here. What is settled is that the difficulty arrives as byte 13 of a record copy and is cleared to 0 by the reset -- which is consistent with every savestate reading 0.",
+  "THE_NEGATIVE_IS_MEASURED_NOT_ASSUMED": "the search that found no direct writer resolves 2446 literal-based THUMB stores across 5621 functions and none of them covers 0x0211A3D1. A negative from a search that finds nothing at all would be worthless.",
+  "A_FALSE_POSITIVE_THIS_WALKED_INTO_FIRST": "the first pass tracked the base register across function boundaries and reported two writers, at 0x020783BA and 0x020783F6. Both store to [r0,#13] where r0 is a PARAMETER -- the scan had walked over a literal pool into the next function and kept a stale register model. The offsets were right and the base was a register the caller supplies, which is exactly what tools/offset_search.py exists for. Resetting the model per function removes them.",
+  "AN_OBSERVATION_NOT_A_CLAIM": "literals at 0x0211A3B4, 0x0211A3C4, 0x0211A3D4 and 0x0211A3E4 sit exactly 16 apart, matching the record size. That looks like an array of these records, but it is NOT claimed: 0x0211A3B8 is referenced by 25 pool words, and a field in the middle of a record should not be."
+ },
+ "WHERE_THE_COPIED_TIER_COMES_FROM": {
+  "the_chain_end_to_end": [
+   "FUN_0209ccd4(session) reads a SIGNED byte at session+0x15",
+   "  -> FUN_0209ce8c(sp+8, session, that byte): copies the 16-byte record field for field, then -- behind a session gate -- replaces the record's u32 at +8 with multiQuest[clamp(sel, 0..20)] and forces bytes +12 and +13 to 0 unless 0 <= v < 3",
+   "  -> FUN_0207836c(sp+8): -> FUN_020783c0(0x0211A3C4, sp+8), which fills the global",
+   "FUN_0203686c then reads byte 13 of the global as the difficulty tier"
+  ],
+  "ONE_BUFFER_NOT_TWO": "FUN_0209ccd4 sets r0 with `add r0,sp,#8` before BOTH calls, so the record that gets built is the record that reaches the global. Without that the chain would be two separate observations.",
+  "THE_GAME_RANGE_CHECKS_THE_TIER_TO_0..2": {
+   "the_code": "mov r0,#0xd; ldrsb r0,[r4,r0]; cmp r0,#0; blt clear; cmp r0,#3; blt keep; clear: mov r0,#0; strb r0,[r5,#13]",
+   "why_it_matters": "this is the strongest statement about the tier's width anywhere, and it comes from a different subsystem than either earlier line of evidence. The descriptor's group stride gave three; 970 monotone fields across 67 archives gave three; here the game itself compares the byte against 0 and against 3 and zeroes it outside that window.",
+   "byte_12_gets_the_identical_treatment": "so the record carries two tri-state mode bytes side by side. What +12 selects is NOT established -- it is read by 4 arm9 functions against the tier's 13."
+  },
+  "THE_RECORD_LAYOUT_HAS_A_SECOND_WITNESS": "FUN_0209ce8c walks the same fields as FUN_020783c0 -- halfword at +0, six signed bytes at +2..+7, word at +8, four signed bytes at +12..+15 -- in an unrelated part of arm9. The layout was derived from one function last iteration; this is the independent second witness.",
+  "THE_RECORD_IS_A_MULTIPLAYER_SESSION_CONFIG": {
+   "field_+8": "a QUEST ID. The builder clamps the caller's selector to 0..20 and indexes a 21-entry table at 0x020F495C.",
+   "cross_file": "all 21 words name a real quest_0NNNNNN.rel in the ROM filesystem -- 21 of 21 -- and every one lives under quest/multi (14 in multi/free, 7 in multi/dive). 39 further quest files exist and NONE is in the table.",
+   "which_explains_the_gate": "the clamp block sits behind FUN_02084bf8(0x0211A51C) returning non-zero, and the table it guards is the multiplayer quest list.",
+   "sample": "110100, 110200 .. 110700, 121100 .. 127100, 121200 .. 127200"
+  },
+  "SO_NOTHING_INVENTS_THE_VALUE": "the difficulty is carried in on a caller-supplied session record and validated. That is consistent with every savestate reading 0: the reset path leaves it 0 and single-player never goes through the multiplayer clamp block."
+ },
+ "ONE_LEVEL_FURTHER_UP": {
+  "the_top_is_FUN_02078810_the_multiplayer_DIVE_entry": [
+   "gated on the same session object at 0x0211A51C, and additionally on *(0x0211A3B8 + 0x14) being negative",
+   "FUN_02073974(&a, &b, &c) fills two out-params from ADJACENT SIGNED BYTES of one object: 0x0211A210 +0x10 and +0x11, plus a u16 at +0x1C",
+   "one value is clamped to 0..2 -- a THIRD independent site giving the tier width",
+   "the other is clamped to 1..8 and turned into a quest id by 110000 + floor * 100",
+   "FUN_0209ce58(id) searches the same 21-entry table for that id and returns its index, which is stored at the outer record's +0x15",
+   "FUN_0209ccd4(record) then runs the chain traced last iteration"
+  ],
+  "THE_QUEST_ID_SPACE_IS_DECIMAL": {
+   "the_constants_are_in_the_instruction_stream": "0x0001ADB0 = 110000 exactly, and a multiply by 0x64 = 100. That the ROM stores the base as a round DECIMAL number is the tell that these ids are decimal digits rather than a packed field -- which is why the files are named quest_0NNNNNN.rel.",
+   "cross_file": "floors 1..7 give 110100..110700, which are EXACTLY the seven quest/multi/dive files, no more and no fewer.",
+   "the_clamp_is_one_wider_than_the_data": "the bound keeps 1..8, and floor 8 would give 110800, which names no file. Recorded rather than smoothed over: either an eighth dive floor existed in an earlier build, or the source value never reaches 8."
+  },
+  "THE_SELECTOR_IS_A_REVERSE_LOOKUP": "FUN_0209ce58 walks the same 21 words at 0x020F495C comparing each against the quest id and returns the matching index (0 if absent, -1 if the session gate fails). So the +0x15 selector is not chosen independently -- it is FOUND by searching the very table FUN_0209ce8c later indexes to fill the record's +8. The round trip is id -> index -> id, and both ends read the same table.",
+  "FOUR_PLACES_ONE_NUMBER": "the tier width of three has now been asserted from the descriptor's group stride, from 970 monotone fields across 67 archives, from the session builder's range check, and from this starter's clamp.",
+  "the_values_read_zero_everywhere": "0x0211A210 +0x10 and +0x11 read 0 in all 31 savestates, and the object holds a pointer at +0 with zeros from +8 on -- an unset multiplayer session, which is why the axis has never been seen moving.",
+  "THE_TENSION_IS_WITHDRAWN": {
+   "the_cause": "the halfword at 0x0209CCE0 is `add r1,r5,#4`, NOT `mov r1,r5`. THUMB format 2 encodes ADD-immediate and the register move in the same 0x1C00..0x1FFF window, separated only by the imm3 field: imm3 == 0 is the move and anything else is a real add. A first-pass decoder printed the whole window as a move, which dropped the +4 and shifted every field of the record by four bytes.",
+   "with_the_shift_restored_everything_lands": {
+    "sp+0x10 -> record+0": "u16",
+    "sp+0x18 -> record+8": "the quest id, 110000 + floor * 100 -- exactly the field the builder re-canonicalises through the table",
+    "sp+0x1C -> record+12": "0",
+    "sp+0x1D -> record+13": "the value the starter already clamped to 0..2 -- THE TIER",
+    "sp+0x20 -> outer+0x14": "flags, |= 2, outside the copied 16",
+    "sp+0x21 -> outer+0x15": "the table index, outside the copied 16 -- and exactly the field FUN_0209ccd4 reads back"
+   },
+   "so_the_dive_path_DOES_fill_byte_13": "with a value already inside 0..2, which makes the builder's later range check a no-op on this path rather than a correction. The quest id sits at record+8, four bytes clear of the checked pair. Every store in the starter now lands on a named field with nothing unaccounted for.",
+   "the_withdrawn_text": {
+    "what": "FUN_02078810 stores the computed quest id as a WORD at record+0x0C and the 0..2 value as a BYTE at record+0x11. But FUN_0209ce8c copies only the record's first 16 bytes and range-checks bytes +12 and +13 of that copy.",
+    "so": "on this path the two bytes that get range-checked are the low half of the quest id word at +0x0C, and both are forced to 0 -- 110100 is 0x0001AE14, whose bytes 0 and 1 are 0x14 and 0xAE, neither in 0..2. The 0..2 value the starter clamped sits at +0x11, OUTSIDE the 16 bytes that are copied.",
+    "what_this_does_and_does_not_mean": "it is consistent with every savestate reading tier 0, and it does NOT overturn the descriptor-side finding, which stands on its own evidence. What it means is that the dive path is not the path that fills byte 13 of the session record, and the outer structure's field map has not been separated from the 16-byte one. Either another entry point supplies byte 13, or the two views overlap in a way this has not untangled.",
+    "why_it_is_here": "the arithmetic is unambiguous -- `sub sp,#0x24`, `add rN,sp,#0xc` for the record, `str r0,[sp,#0x18]` for the id -- so the overlap is real rather than a decode slip, and burying it would leave a false impression that the chain is closed."
+   },
+   "the_lesson_is_the_same_one_twice": "the earlier withdrawals in this project were for ignoring the BASE an offset hangs off; this one is for ignoring an offset inside an instruction whose encoding aliases a simpler one. Both times the number was right and the thing it was measured from was not."
+  }
+ },
+ "THERE_IS_NO_SINGLE_PLAYER_ENTRY_POINT": {
+  "the_answer": "the three tiers are a MULTIPLAYER feature. In single-player the enemy hit-reaction tier is always 0, because nothing outside the session path can set it.",
+  "the_measurement": "across arm9 and all 32 overlays -- 33 images -- exactly ONE call site copies a record into 0x0211A3C4, at 0x02078398 inside the session starter, and exactly TWO reset it. The reset zeroes byte 13. No overlay reaches either routine with the global.",
+  "the_indirect_entry_is_not_a_loophole": {
+   "what": "the only pointer-sized word in any image holding an address from the chain is 0x0209CCD5 at 0x020F2940 -- FUN_0209ccd4 with the THUMB bit.",
+   "where": "that word is the handler slot of a {u32 key, u32 handler|1} dispatch table at 0x020F2938, key (subtype << 16) | category. Its nine entries are category 7, terminated by 0xFFFF.",
+   "so": "the indirect route is the registration of MESSAGE HANDLER 7:0 -- the same gated path, entered by receiving a message rather than by a different subsystem."
+  },
+  "A_CROSS_CHECK_ACROSS_METHODS_AND_ITERATIONS": "data/message_handlers.json was built several iterations ago by walking the registry LIVE over the GDB stub. All nine category-7 entries agree with the static ROM table exactly -- key and address -- so a table read out of the image and a registry read out of a running game say the same thing.",
+  "AND_THE_REGISTRY_OBJECT_IS_THE_SESSION_OBJECT": "the live walk recorded the registry slot as 0x0211A210, which is the very object FUN_02073974 reads the floor and difficulty from at +0x10 and +0x11. The dispatch table and the session parameters are fields of one object, which makes 'the session start arrives as a message' a statement about the data rather than an inference from the call graph.",
+  "why_every_savestate_reads_0": "single-player never receives a 7:0 message, so the global is only ever reset -- and the reset writes 0 to byte 13.",
+  "for_psz_godot": "single-player enemies always use tier 0 of the per-group hit-reaction table. The other two rows are unreachable outside multiplayer."
+ }
+}

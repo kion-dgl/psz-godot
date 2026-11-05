@@ -186,3 +186,24 @@ func add_meseta(amount: int) -> void:
 
 func get_meseta() -> int:
 	return meseta
+
+
+## PSZ_TIME_SCALE=N (playtest lever): scales ALL game time — physics, timers,
+## animations — by N. For calibrating against the original's pacing: the DS
+## game's logic ticks at 30 Hz and its clips are true 30 fps, and the port's
+## simulation is delta-correct, so if a run feels uniformly fast/slow the
+## factor you dial in here measures how far the FEEL-TUNED constants (enemy
+## cadence, status durations, camera) sit from the original — it is a
+## measurement tool, not the fix.
+func _enter_tree() -> void:
+	_apply_debug_time_scale()
+
+
+func _apply_debug_time_scale() -> void:
+	var env: String = OS.get_environment("PSZ_TIME_SCALE")
+	if env.is_empty():
+		return
+	var scale: float = float(env)
+	if scale > 0.0 and not is_equal_approx(scale, 1.0):
+		Engine.time_scale = scale
+		print("[GameState] PSZ_TIME_SCALE=", scale)

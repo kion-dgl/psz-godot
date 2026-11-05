@@ -8731,9 +8731,12 @@
     ],
     "portals": [
       {
-        "direction": "north",
+        "direction": "south",
         "id": "portal_1769178737883_7bppcx8w1",
-        "label": "north",
+        "spawnPosition": [-4.906268227625629, 0, -23.8166114972771],
+        "triggerPosition": [-4.906268227625629, 0, -27.8166114972771],
+        "rotationOffset": 180,
+        "label": "south",
         "position": [
           -4.906268227625629,
           0,
@@ -8741,9 +8744,10 @@
         ]
       },
       {
-        "direction": "south",
+        "direction": "north",
         "id": "portal_1769178748150_zpfcscb89",
-        "label": "south",
+        "rotationOffset": 180,
+        "label": "north",
         "position": [
           5.18696974805887,
           0,
@@ -8777,7 +8781,7 @@
           -23.8166114972771
         ],
         "kind": "spawn",
-        "label": "spawn north"
+        "label": "spawn south"
       },
       {
         "id": "wp_load_0_1780290191963",
@@ -8787,7 +8791,7 @@
           -27.8166114972771
         ],
         "kind": "exit",
-        "label": "load north"
+        "label": "load south"
       },
       {
         "id": "wp_spawn_1_1780290191963",
@@ -8797,7 +8801,7 @@
           25.0
         ],
         "kind": "spawn",
-        "label": "spawn south"
+        "label": "spawn north"
       },
       {
         "id": "wp_load_1_1780290191963",
@@ -8807,7 +8811,7 @@
           29.0
         ],
         "kind": "exit",
-        "label": "load south"
+        "label": "load north"
       },
       {
         "id": "wp_1780290194531_3vjxc5",

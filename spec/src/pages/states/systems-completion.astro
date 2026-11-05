@@ -1,0 +1,66 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import { siteUrl } from '../../utils/site';
+---
+<Concept title="Systems completion audit — 2026-10-14" section="States">
+<p>Audited against main <code>6e6cf135</code> and psz-re
+<code>5b594c3672aa42be514e5b146282a5ed5bd4ec9c</code>. PRs #749, #751 and #752
+already supplied most player recovery, disk-learning and progression integration.
+This pass adds saved equipment sets, preserves stored instance identity and
+properties, adds EXP feedback, and fixes multi-area enemy-level fallback.</p>
+<h2>Issue disposition</h2>
+<table>
+<thead><tr><th>Issue</th><th>Disposition</th><th>Evidence / remaining scope</th></tr></thead>
+<tbody>
+<tr><td>#169</td><td>Close with this change</td><td>Versioned character-owned named sets preserve exact equipment references, identity tokens and inventory order through serialization and process restart. Mutable grind, attributes, armor slots and Mag growth remain attached to the item.</td></tr>
+<tr><td>#170</td><td>Close with this change</td><td>Equip → Sets supports save, recall, replacement confirmation, rename and delete. Recall retrieves owned stored gear, validates the entire set before committing, and rejects missing, replaced, incompatible or over-capacity gear. Live menu and bank checks plus rendered previews cover the UI.</td></tr>
+<tr><td>#341</td><td>Close with explicit permitted deferral</td><td>#413 implemented no-doll defeat; #749 implemented Scape Dolls. This pass replays both on actual rigs: one doll consumed, zero-HP presentation, full-HP stand-up, immunity expiry, no defeat prompt; without a doll, No stays defeated and Yes returns to the city, ends the session and halves carried meseta only. Companions still lack a damage/down-state; the issue explicitly permits deferring their revival. #345 retains the related support-delivery work.</td></tr>
+<tr><td>#343</td><td>Keep open; advanced</td><td>Kill EXP, growth, disk learning/upgrades and persistence already work and are rechecked. New HUD shows within-level EXP, a level-up flash and MAX at the cap. The remaining audit includes technique range/visual-level behavior and an owner-reviewed class/progression pacing pass. Current interpolated class curves are not claimed as exact original tables.</td></tr>
+<tr><td>#732</td><td>Keep open; advanced</td><td>All seven mapped area/difficulty combinations, explicit overrides and serialized level inputs have deterministic checks; live spawns and respawns show fixed levels independent of the player's level. Multi-area fallback now follows the current section. Quest JSONs still have no explicit enemy-level authoring, Tower has no defined area-level entry, and the current slopes need deliberate balance review. No new Tower value or quest curve is invented.</td></tr>
+</tbody>
+</table>
+<h2>Original evidence and deliberate remake behavior</h2>
+<ul>
+<li><code>check_progression_reference.py</code> reads the original ZARC bytes: 294 stat anchors (levels 1/50/100 across 14 members), 24-byte rows and 99 monotonic next-level thresholds per member. The first thresholds are 70 and 160. It does not infer every class identity from member order.</li>
+<li><code>check_systems_reference.py</code> reproduces the PB parameter bytes/hash, 65 enemy difficulty-row mappings, two starter weapon anchors and 16 grinding anchors. Original difficulty-tier rows do not establish the remake's displayed enemy-level curve, EXP reward or aura multiplier.</li>
+<li>Named loadouts, storage recall, the existing fixed-area curves and the death penalty/immunity durations are remake contracts. They are not presented as original PS Zero findings. Legacy storage entries without provenance require manual withdrawal before a set can retrieve them automatically.</li>
+<li>Damage math, Photon Blasts and grinding have substantial implementation in #752, but this audit does not close #723/#342/#734. Full status, support and casting audits (#724/#345/#745/#747) remain open; the recent trap work does not establish those broader contracts.</li>
+</ul>
+<h2>Reproduction</h2>
+<pre><code>{`python3 scripts/tools/check_systems_reference.py /path/to/psz-re
+python3 scripts/tools/check_progression_reference.py /path/to/psz-re
+XDG_DATA_HOME=/tmp/psz-unit godot --headless --path . res://scripts/tools/test_runner.tscn
+bash scripts/tools/run_systems_completion.sh
+XDG_DATA_HOME=/tmp/psz-force PSZ_PROBE_PACK="$PWD/dist/assets.pck" godot --headless --path . res://scripts/tools/technique_progression_probe.tscn`}</code></pre>
+<p>The live completion wrapper uses an isolated profile and a separate restart process,
+and rejects SCRIPT ERROR even if an interrupted coroutine later prints a success marker.
+The fresh Hunter route earns level two through seven real melee kills, performs the
+existing grinding/PB checks, exercises the live bank and loadout menu, then tests both
+recovery paths. The Force probe verifies learning, upgrade rejection/consumption,
+projectile level/damage, PP and persistence; its level gain is injected EXP and is
+not natural campaign pacing evidence.</p>
+<h2>Validation results</h2>
+<p>14,288 unit checks pass with zero failures or script errors. The isolated live
+route and separate-process restart pass, including ordinary bank withdrawal,
+frame-slot-count changes during recall, paginated full lists and both death paths.
+The Force probe, both original-reference checks, asset references, code-health
+and orphan ratchets pass. The 219-page site builds; rendered previews were inspected.</p>
+<p>The broader quest regression is not green. Boot and Search and Rescue pass,
+but generated Gurhacia/Rioh/Ozette/Paru routes hit floor or waypoint failures.
+Untouched main clears a different generated Rioh route; that does not establish
+parity for the failed variant. A separate untouched-main Paru Pact replay reaches
+the known missing floor at <code>s05a_lc2</code>, cell <code>3,4</code>, from
+approximately <code>(-14.8, 0.2, -20.9)</code>, with zero of three floor probes
+hitting. The PR records the final canonical/backtrack retry results and which
+later phases remain untested.</p>
+<h2>Human review</h2>
+<p>Review naming and recall with keyboard/controller, two same-name weapons with
+different upgrades, storage retrieval, full inventory, a sold item and save/relaunch.
+Check EXP readability and the level-up flash. Systems stays C with the existing
+2026-10-11 owner assessment; new tests and issue closures do not change the grade.</p>
+<p><a href={siteUrl('/states/equipment-sets')}>Equipment-set contract</a> ·
+<a href={siteUrl('/states/combat-progression')}>Combat progression contract</a> ·
+<a href={siteUrl('/states/player-death')}>Recovery contract</a></p>
+<img src={siteUrl('/research/systems-completion/equipment-sets.png')} alt="Equip menu showing a recalled Saber +5, Mag and named-set controls" />
+<img src={siteUrl('/research/systems-completion/equipment-set-pages.png')} alt="Paginated saved equipment sets with the ninth save disabled" />
+</Concept>

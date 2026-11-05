@@ -57,7 +57,7 @@ static func _gun(player: Node3D, variant: String) -> bool:
 	await _wait(player, 2.7)
 	ok = Check._check(gun.shots_fired == 1 and GameState.hp == GameState.max_hp, variant + " does not acquire targets behind its authored facing") and ok
 	gun.hurtbox.take_hit(1, Vector3.ZERO)
-	await _wait(player, 0.1)
+	await _wait(player, GunTrap.SPIN_TIME + 0.1)
 	ok = Check._check(gun.element_state == "spent" and not gun.hurtbox.monitorable and not gun.model.visible, variant + " real hurtbox disables firing and targeting") and ok
 	await _remove(player, gun)
 	return ok

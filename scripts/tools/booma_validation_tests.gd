@@ -18,7 +18,7 @@ static func run(r: Node) -> void:
 				"lost": enemy.target = null
 				"dodge_then_release":
 					target.position.z = 0.5
-					target.invincible = true
+					target.passing_through = true
 				"hurt": enemy._on_hit_received(1, Vector3.ZERO, 10000)
 				"death": enemy._die()
 			var saw_recovery := false
@@ -29,7 +29,7 @@ static func run(r: Node) -> void:
 					enemy.position += enemy.velocity / 60.0
 					saw_recovery = saw_recovery or enemy.current_anim == "atk_mi"
 				if mode == "dodge_then_release" and enemy._attack_hit_resolved:
-					target.invincible = false
+					target.passing_through = false
 				facing_held = facing_held and enemy._attack_facing.is_equal_approx(facing)
 			r.assert_true(facing_held, id + " committed direction " + mode)
 			r.assert_eq(target.hits, 0, id + " no contact after " + mode)

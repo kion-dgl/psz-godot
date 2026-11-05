@@ -28,9 +28,13 @@ var _spare_door_cells: int = 0
 
 ## Reproduce a specific field. Same seed + same area + same params = same field,
 ## rooms, rotations, gates, keys and enemy waves included.
+var _session_seed := 0
+
+
 func set_seed(value: int) -> void:
 	_rng.seed = value
 	_ambience_rng.seed = value + 1013
+	_session_seed = value
 
 
 ## Fisher-Yates through _rng — Array.shuffle() would use the global RNG.
@@ -386,6 +390,134 @@ func _get_gates(stage_id: String) -> Array[String]:
 
 ## Generate a complete field with 4 sections: a (grid), e (transition), b (grid), z (boss).
 ## area_id: "gurhacia", "ozette", etc. Defaults to "gurhacia" for backwards compatibility.
+## Original-algorithm field generation (the 1:1 path). The topology, room
+## codes, layout categories and per-room seeds come from
+## OriginalFieldGenerator — validated against all 14 console fixtures
+## (scripts/tools/field_gen_reference.py: 14/14 growth, 129/129 seeds and
+## layouts) — and the EXISTING gate/key economy then runs over that topology
+## (the original's gate stage, params 4..8, is not modelled; see
+## docs/field-generation-pass.md). Room rotation is chosen so the stage's
+## authored doors cover the generated connections; the original's exact
+## orientation code needs per-model orientation data psz-re has not exported.
+const USE_ORIGINAL_FIELD_GENERATOR := true
+
+const OriginalFieldGeneratorClass := preload("res://scripts/3d/field/original_field_generator.gd")
+
+static var _original_area_params: Dictionary = {}
+
+
+## The merged parameter block for an area, per
+## data/reference/field_generation_params.json (per-area sparse diff from the
+## quest dive rels over the random_dungeon.rel overlay; gate percentages
+## 50/25/50/30/85 and start/goal params are shared by all seven areas).
+static func _original_params_for(area_prefix: String) -> Array:
+	if _original_area_params.is_empty():
+		var doc: Dictionary = {}
+		var fa := FileAccess.open("res://data/re_reference/field_generation_params.json", FileAccess.READ)
+		if fa:
+			var json := JSON.new()
+			if json.parse(fa.get_as_text()) == OK:
+				doc = json.data
+			fa.close()
+		_original_area_params = doc.get("areas", {})
+	var stage_num := int(area_prefix.substr(1))
+	var a: Dictionary = _original_area_params.get(str(stage_num), _original_area_params.get("1", {}))
+	if a.is_empty():
+		return [8, 10, 2, 2, 50, 25, 50, 30, 85, 3, 0]
+	return [
+		int(a.get("min_rooms", 8)), int(a.get("max_rooms", 10)),
+		int(a.get("branch_pair", [2, 2])[0]), int(a.get("branch_pair", [2, 2])[1]),
+		50, 25, 50, 30, 85, 3, 0,
+	]
+
+
+## One grid section (area "a" or "b") on the original algorithm. Produces the
+## same internal-grid shape `generate()` does, so the gate economy, key slots
+## and _to_output all run unchanged.
+func generate_original(area: String, area_prefix: String) -> Dictionary:
+	_ensure_unified_config()
+	var stage_prefix := "%s%s" % [area_prefix, area]
+	var gen := OriginalFieldGeneratorClass.new(_session_seed & 0xFFFFFFFF, 0,
+		stage_prefix, _original_params_for(area_prefix))
+	# Two sections from one stream: area B continues where area A's generator
+	# stopped, exactly as successive floors continue one session stream.
+	if area == "b":
+		gen.continue_from(_last_generator_state)
+	gen.run()
+	gen.transcribe()
+	_last_generator_state = gen.get_rng_state()
+
+	var records: Array = gen.to_records()
+	var grid: Dictionary = {}
+	var start_pos := Vector2i.ZERO
+	var end_pos := Vector2i.ZERO
+	for rec in records:
+		var pos := Vector2i(rec["internal"].y, rec["internal"].x)  # row = y, col = x
+		var key := _pos_key(pos)
+		grid[key] = {
+			"stage_id": rec["code"],
+			"rotation": 0,
+			"is_start": rec["role"] == "start",
+			"is_end": rec["role"] == "goal",
+			"is_branch": false,
+			"has_key": false,
+			"key_for_cell": "",
+			"is_key_gate": false,
+			"key_gate_direction": "",
+			"path_order": int(rec["depth"]),
+			"generated_layout": int(rec["layout"]),
+			"room_seed": int(rec["seed"]),
+			"generated_dirs": _connection_dirs(rec),
+			"entry_direction": "" if rec["role"] == "start" else ["north", "east", "south", "west"][int(rec["way_back"])],
+		}
+		if rec["role"] == "start":
+			start_pos = pos
+		if rec["role"] == "goal":
+			end_pos = pos
+	_fit_original_tiles(grid, stage_prefix, area)
+	if not _assign_door_attributes(grid, _pos_key(start_pos)):
+		push_warning("GridGenerator: original-algorithm field not solvable (gate economy)")
+	return _to_output(grid, [], [], start_pos, end_pos)
+
+
+## Adapt the generated graph to the authored Godot door sets.
+func _fit_original_tiles(grid: Dictionary, prefix: String, area: String) -> void:
+	var stages: Array[String] = []
+	for stage in _active_gates:
+		if str(stage).begins_with(prefix) and not str(stage).ends_with("sa1") and not str(stage).ends_with("ga1"):
+			stages.append(str(stage))
+	for key in grid:
+		var cell: Dictionary = grid[key]
+		var needed: Array[String] = cell.generated_dirs.duplicate()
+		if cell.is_end:
+			cell.key_gate_direction = OPPOSITE[str(cell.entry_direction)]
+		if cell.is_start and area == "b":
+			cell.entry_warp_direction = OPPOSITE[str(needed[0])]
+			needed.append(cell.entry_warp_direction)
+		var fit := _tile_with_exact_doors(stages, needed, str(cell.stage_id))
+		if fit.is_empty():
+			push_error("No authored tile for generated connections %s: %s" % [cell.stage_id, needed])
+		else:
+			cell.stage_id = fit.stage
+			cell.rotation = int(fit.rotation) * 90
+
+
+## The connection directions a generated record carries, as godot direction
+## names (original direction order: 0 north, 1 east, 2 south, 3 west).
+func _connection_dirs(rec: Dictionary) -> Array[String]:
+	const DIR_NAMES := ["north", "east", "south", "west"]
+	var out: Array[String] = []
+	for d in 4:
+		if int(rec["adj"][d]) >= 0:
+			out.append(DIR_NAMES[d])
+	return out
+
+
+## The LCG state after the last generate_original section, so the b section
+## continues the a section's stream (no per-floor reseed in the original).
+static var _last_generator_state: Array = []
+
+
 func generate_field(difficulty: String, area_id: String = "gurhacia") -> Dictionary:
 	var all_params: Dictionary = load_params()
 	var params: Dictionary = all_params.get(difficulty, all_params.get("normal", DIFFICULTY_PARAMS["normal"]))
@@ -395,9 +527,11 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	var prefix: String = area_cfg["prefix"]
 	_active_gates = load_gates(area_id)
 	var sections: Array[Dictionary] = []
+	_last_generator_state = []
 
 	# Section 1: Area A grid
-	var a_result: Dictionary = generate("a", params["a"], prefix)
+	var a_result: Dictionary = generate_original("a", prefix) if USE_ORIGINAL_FIELD_GENERATOR \
+		else generate("a", params["a"], prefix)
 	var a_dirs: Dictionary = _section_warp_dirs(a_result["cells"])
 	sections.append({
 		"type": "grid", "area": "a", "cells": a_result["cells"],
@@ -431,7 +565,8 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	})
 
 	# Section 3: Area B grid
-	var b_result: Dictionary = generate("b", params["b"], prefix)
+	var b_result: Dictionary = generate_original("b", prefix) if USE_ORIGINAL_FIELD_GENERATOR \
+		else generate("b", params["b"], prefix)
 	var b_dirs: Dictionary = _section_warp_dirs(b_result["cells"])
 	sections.append({
 		"type": "grid", "area": "b", "cells": b_result["cells"],
@@ -1063,10 +1198,12 @@ func _assign_door_attributes(grid: Dictionary, start_key: String,
 
 ## The connections a cell actually has, as {dir: neighbour_key}.
 func _cell_connections(grid: Dictionary, key: String) -> Dictionary:
+	if grid[key].has("connections"):
+		return grid[key].connections.duplicate()
 	var cell: Dictionary = grid[key]
 	var pos: Vector2i = _parse_pos(key)
 	var out: Dictionary = {}
-	for dir in _get_rotated_gates(cell):
+	for dir in cell.get("generated_dirs", _get_rotated_gates(cell)):
 		var off: Vector2i = DIR_OFFSET[dir]
 		var nkey := _pos_key(Vector2i(pos.x + off.x, pos.y + off.y))
 		if grid.has(nkey):
@@ -1462,6 +1599,8 @@ func _leads_somewhere(grid: Dictionary, key: String, cell: Dictionary, dir: Stri
 ## An `a` section has none — it is entered from the city through `sa1`'s
 ## defaultSpawn, and that tile carries a single south door.
 func _entry_warp_dir(grid: Dictionary, key: String, cell: Dictionary) -> String:
+	if cell.has("generated_dirs"):
+		return str(cell.get("entry_warp_direction", ""))
 	if not cell.get("is_start", false):
 		return ""
 	var pos: Vector2i = _parse_pos(key)
@@ -1583,15 +1722,7 @@ func _to_output(grid: Dictionary, _path: Array[Vector2i],
 
 	for key in grid:
 		var cell: Dictionary = grid[key]
-		var pos: Vector2i = _parse_pos(key)
-		var gates: Array[String] = _get_rotated_gates(cell)
-
-		var connections: Dictionary = {}
-		for dir in gates:
-			var offset: Vector2i = DIR_OFFSET[dir]
-			var nkey := _pos_key(Vector2i(pos.x + offset.x, pos.y + offset.y))
-			if grid.has(nkey):
-				connections[dir] = nkey
+		var connections: Dictionary = _cell_connections(grid, key)
 
 		var warp_edge := ""
 		if cell.get("is_end", false):
@@ -1667,7 +1798,17 @@ func _populate_cell(cell: Dictionary) -> Dictionary:
 	var pop_rng := _rng
 	if is_start:
 		pop_rng = _ambience_rng
-	layout_mask = FieldPopulation.drawn_mask(stage_id, depth, pop_rng)
+	# The original-algorithm generator already DREW this room's layout
+	# category (+0x31) and seed as part of its transcription — use them rather
+	# than re-rolling, so a generated field's objects match the console's
+	# distribution for the same session stream, and its group-5 roll is
+	# seed-exact (FUN_02030B6C).
+	var generated_layout := int(cell.get("generated_layout", -1))
+	if generated_layout >= 0:
+		layout_mask = FieldPopulation.mask_for_layout(generated_layout, stage_id)
+	if layout_mask < 0:
+		layout_mask = FieldPopulation.drawn_mask(stage_id, depth, pop_rng)
+	var room_seed := int(cell.get("room_seed", -1))
 	var key_slots: Array = []
 	if cell.get("has_key", false):
 		key_slots = FieldPopulation.key_slot_positions(
@@ -1679,6 +1820,7 @@ func _populate_cell(cell: Dictionary) -> Dictionary:
 		pop_rng,
 		depth,
 		layout_mask,
+		room_seed,
 	)
 	# #639: the key drops on room clear, so a key cell with nothing to fight
 	# strands its gate (the runtime's on-entry fallback is the backstop, not

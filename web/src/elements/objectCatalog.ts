@@ -309,12 +309,16 @@ export const OBJECT_CATALOG: CatalogEntry[] = [
     id: 'boss-warp',
     title: 'Boss Warp',
     description:
-      'Third warp type alongside the start and area warps. Shares the start warp\'s scrolling o0s_1_swarp3 surface over its own o0s_0_bwarp1 base.',
+      'Third warp type alongside the start and area warps. Shares the start warp\'s scrolling o0s_1_swarp3 surface over its own o0s_0_bwarp1 base, which reads as two stacked 32px pages: repeat 2 with a one-page offset lands the rim on the gold band while the octagon fan keeps the steel segments.',
     category: 'Warps',
     glb: '/assets/objects/special_z/o0s_warpb.glb',
     model: 'o0s_warpb',
     sourceSet: 'special_z',
     scroll: { 'o0s_1_swarp3.png': { y: -1.35 } },
+    textures: {
+      'o0s_1_swarp3.png': { offsetX: 0, offsetY: -7.62, repeatX: 1, repeatY: 1, wrapS: 'mirror', wrapT: 'mirror' },
+      'o0s_0_bwarp1.png': { offsetX: 0, offsetY: 1, repeatX: 2, repeatY: 2, wrapS: 'mirror', wrapT: 'mirror' },
+    },
   },
   {
     id: 'start-warp-n',

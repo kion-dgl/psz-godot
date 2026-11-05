@@ -887,7 +887,7 @@ func _spawn_scripted_enemy(pos: Vector3, enemy_id: String, edata, script: GDScri
 		dormant: bool = false) -> EnemyBase:
 	var enemy: EnemyBase = (script.new() if script else EnemyBase.new())
 	var growth = preload("res://scripts/utils/enemy_progression.gd")
-	enemy.enemy_level = growth.level_for(SessionManager.get_session(), int(_c._current_cell.get("enemy_level", 0)))
+	enemy.enemy_level = growth.level_for(SessionManager.get_session(), int(_c._current_cell.get("enemy_level", 0)), SessionManager.get_current_area_id())
 	enemy.enemy_data = growth.scaled(edata, enemy.enemy_level, str(SessionManager.get_session().get("difficulty", "normal")))
 	# Before add_child, so _ready() hides the body during setup (see EnemyBase).
 	enemy.dormant = dormant
@@ -997,6 +997,7 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String, scaled_data: EnemyData =
 	if exp_amount > 0:
 		var result := CharacterManager.add_experience(exp_amount)
 		SessionManager.add_rewards(exp_amount, 0)
+		preload("res://scripts/3d/elements/combat_popup.gd").show(_c, pos + Vector3.UP * 2.8, "+%d exp" % exp_amount, Color(0.75, 0.35, 1.0))
 		print("[EnemyDrop] +%d EXP for %s" % [exp_amount, enemy_name])
 		if result.leveled_up:
 			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)

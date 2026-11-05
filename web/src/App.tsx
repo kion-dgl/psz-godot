@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import SiteNav from './SiteNav';
 import Landing from './pages/Landing';
 
+const MirrorBakeLab = lazy(() => import('./mirror-bake/MirrorBakeLab'));
 const QuestHome = lazy(() => import('./quest-editor/QuestHome'));
 const QuestEditor = lazy(() => import('./quest-editor/QuestEditor'));
 const StorybookViewer = lazy(() => import('./storybook/StorybookViewer'));
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
             <Route path="/storybook/flap-lab" element={<FlapLab />} />
             <Route path="/storybook/lighting-lab" element={<LightingLab />} />
+            <Route path="/mirror-bake" element={<MirrorBakeLab />} />
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/floor-mesh-editor" element={<FloorMeshEditor />} />
             <Route path="/floor-collider-builder" element={<FloorColliderBuilder />} />

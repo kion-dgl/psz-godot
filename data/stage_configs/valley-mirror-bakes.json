@@ -1,0 +1,944 @@
+{
+	"stages": {
+		"res://assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_ga1_m/Skeleton3D/s01a_ga1_m",
+					"resource": "res://assets/stages/valley_a/s01a_ga1/lndmd/mirror-bake/d03e2f56f75f.res",
+					"signature": "82a5fb6f10d8261662644edbfec0b2bde84ee5259aea747cf5290ae531a9fa9a"
+				}
+			],
+			"source_sha256": "3c8f7dc2065798b782c0f987309842e99b5e23ffc7201341859414d2c69cdaac",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_ib1/lndmd/s01a_ib1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_ib1_m/Skeleton3D/s01a_ib1_m",
+					"resource": "res://assets/stages/valley_a/s01a_ib1/lndmd/mirror-bake/dabe47e8397a.res",
+					"signature": "1bda3324c6223e31c41895821d2a54bd2d593ee71092a02b05d5538d76631636"
+				}
+			],
+			"source_sha256": "30f67317c3e8fdec4450d9005090e02e1b717a1cb973f7c97dd403f8ee712b48",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_ib2/lndmd/s01a_ib2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_ib2_m/Skeleton3D/s01a_ib2_m",
+					"resource": "res://assets/stages/valley_a/s01a_ib2/lndmd/mirror-bake/2b0921ffc581.res",
+					"signature": "944cdda2fad101501b356efef528b748620c3e37b604fe4e31809657b721650d"
+				}
+			],
+			"source_sha256": "0041d8bcd1f96df1ba3b340fd2f6f5ee961e27c7c8bd3b17860324077a957b3d",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_ic1/lndmd/s01a_ic1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						6
+					],
+					"node": "s01a_ic1_m/Skeleton3D/s01a_ic1_m",
+					"resource": "res://assets/stages/valley_a/s01a_ic1/lndmd/mirror-bake/e7fa20e2643a.res",
+					"signature": "1c6ce0fa255f1e0c5e99fec43af28e254b5219cce8fb103863ee5f135a99987b"
+				}
+			],
+			"source_sha256": "37ed57a31e05fe22228336ad4b7abbc30aa95d02c51f8d226089c0079b598a63",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_ic3/lndmd/s01a_ic3_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01a_ic3_m/Skeleton3D/s01a_ic3_m",
+					"resource": "res://assets/stages/valley_a/s01a_ic3/lndmd/mirror-bake/65e60344d692.res",
+					"signature": "bd1cc6e8a2048a568a47d281853f8aa8b7762063a58e85b81dbfd41fe1aee41e"
+				}
+			],
+			"source_sha256": "81b5da22fdc7d04b67a870c1fed7be13674e387a0b3c2716ac67c037433bbef1",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_lb1/lndmd/s01a_lb1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_lb1_m/Skeleton3D/s01a_lb1_m",
+					"resource": "res://assets/stages/valley_a/s01a_lb1/lndmd/mirror-bake/ab3ac8df820c.res",
+					"signature": "6bfc53e264a8324705b7ba605c68ed48de698f3ba435966c725cf1ff49a3eefd"
+				}
+			],
+			"source_sha256": "b21e3127df6298d322dfe6d8b1c262837d4dfeb200021dee8940a1d1483a80a7",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_lb3/lndmd/s01a_lb3_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_lb3_m/Skeleton3D/s01a_lb3_m",
+					"resource": "res://assets/stages/valley_a/s01a_lb3/lndmd/mirror-bake/74597083eb1b.res",
+					"signature": "76d33c9d702441c39e6d0d6d8cf27dc48b49479c3f0035fc1bb24a1bef5903aa"
+				}
+			],
+			"source_sha256": "70f45cbbf01d060caaceea3f6194d83b156871da8a4394f81676e8e4fd0f98f7",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_lc1/lndmd/s01a_lc1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01a_lc1_m/Skeleton3D/s01a_lc1_m",
+					"resource": "res://assets/stages/valley_a/s01a_lc1/lndmd/mirror-bake/26fd94ded8b8.res",
+					"signature": "ed915a89ad530f7d71e663f62eac6a60859417d9fd0c93212cc4ec7bcca5a32e"
+				}
+			],
+			"source_sha256": "ce26d3835d3d5e1bf43b7cf49abff100b822e481cfab37d1e00dc3ebf152ce28",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_lc2/lndmd/s01a_lc2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						6
+					],
+					"node": "s01a_lc2_m/Skeleton3D/s01a_lc2_m",
+					"resource": "res://assets/stages/valley_a/s01a_lc2/lndmd/mirror-bake/4fd937f029cb.res",
+					"signature": "3075c68958b8a9716c8d4d276e9e031320c5dcd6b2106d8b8df8dcb7fadf96ec"
+				}
+			],
+			"source_sha256": "c5bbfc1ad7a7dbff978c7ca59f7d6db9f14b255a695e01cfa09bccb225e51867",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_na1/lndmd/s01a_na1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						0
+					],
+					"node": "s01a_na1_m/Skeleton3D/s01a_na1_m",
+					"resource": "res://assets/stages/valley_a/s01a_na1/lndmd/mirror-bake/5e4dba379982.res",
+					"signature": "f193578f7f43e896ebb35ff1db39d6fbfef6fd79cda6bc44598320030c60031e"
+				}
+			],
+			"source_sha256": "3aebf99b0a201c2c5a9cf81d3249d1139a9ab9bb4baa1b6fdd849f854655aee5",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_nb2/lndmd/s01a_nb2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						3
+					],
+					"node": "s01a_nb2_m/Skeleton3D/s01a_nb2_m",
+					"resource": "res://assets/stages/valley_a/s01a_nb2/lndmd/mirror-bake/356ea062c9dd.res",
+					"signature": "6adde9fada8dd1d0f21ea3cef2297b15018c48076c3625b4377b740e44ddd6b9"
+				}
+			],
+			"source_sha256": "354610caffc3373051e9ff5add9f396426e1b4952f1f91b53687deba5b35d379",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_nc2/lndmd/s01a_nc2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01a_nc2_m/Skeleton3D/s01a_nc2_m",
+					"resource": "res://assets/stages/valley_a/s01a_nc2/lndmd/mirror-bake/204c6f2f39e8.res",
+					"signature": "86aedc3b81111495232ac52d0f2c10220ba26b8dd52ed958d1531f2789efcf17"
+				}
+			],
+			"source_sha256": "e2a6c54ac4337ff904bef1ca8f860cfcfffa512a0631e323febbcea75794800c",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_sa1/lndmd/s01a_sa1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						3
+					],
+					"node": "s01a_sa1_m/Skeleton3D/s01a_sa1_m",
+					"resource": "res://assets/stages/valley_a/s01a_sa1/lndmd/mirror-bake/bccde2c32c72.res",
+					"signature": "d045713172fa893a2214273003e315fa6210ebebee6d9fcdeb5c63022c02fcfd"
+				}
+			],
+			"source_sha256": "836f3903156a0c233f05285ba07d079c327b6bf222f117cc15b82bc7f4328349",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_tb3/lndmd/s01a_tb3_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4
+					],
+					"node": "s01a_tb3_m/Skeleton3D/s01a_tb3_m",
+					"resource": "res://assets/stages/valley_a/s01a_tb3/lndmd/mirror-bake/c059a618f771.res",
+					"signature": "67a9f58b41ca83bb56eace6de3ea6eb425c464f954157cd6c85c1b90809b4a8f"
+				}
+			],
+			"source_sha256": "43a52c9f8ff64fa75f4430902a13221527dd04d372e90cd8db2183b039e1ff10",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_tc3/lndmd/s01a_tc3_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						6
+					],
+					"node": "s01a_tc3_m/Skeleton3D/s01a_tc3_m",
+					"resource": "res://assets/stages/valley_a/s01a_tc3/lndmd/mirror-bake/7757f5bb249b.res",
+					"signature": "24b1dd04f86333a2644b2cf8f1522d32c73ab055b87f047b7e5eaac53ea1b81c"
+				}
+			],
+			"source_sha256": "10eec7e74996be160ac4ee48b37017e5d2e3418fcd2e381ae919cad746c646f3",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_td1/lndmd/s01a_td1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				},
+				"s01_1_toro.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.88,
+					"repeatX": 2.1,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						3,
+						9
+					],
+					"node": "s01a_td1_m/Skeleton3D/s01a_td1_m",
+					"resource": "res://assets/stages/valley_a/s01a_td1/lndmd/mirror-bake/69f356f60c52.res",
+					"signature": "a043e650e0d4fff1bad35dea8af5bf4fe14a41f3202febe574b7b4a29a96ddf7"
+				}
+			],
+			"source_sha256": "23de1ba4daca5d97e958b16a85be50a4f5e2cf99092840d84f29cfa09b0813ef",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_td2/lndmd/s01a_td2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				},
+				"s01_1_toro.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.88,
+					"repeatX": 2.1,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						4,
+						9
+					],
+					"node": "s01a_td2_m/Skeleton3D/s01a_td2_m",
+					"resource": "res://assets/stages/valley_a/s01a_td2/lndmd/mirror-bake/0f55181e9925.res",
+					"signature": "50fad984c00a74f153f79a2900d5118e3197069625a1fc462abce0078b8044d9"
+				}
+			],
+			"source_sha256": "6137ca8c118b40ce77949045a058adc233edf4e8a297f75e5a1aa4fdf3f3b8b6",
+			"version": 1
+		},
+		"res://assets/stages/valley_a/s01a_xb2/lndmd/s01a_xb2_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01a_xb2_m/Skeleton3D/s01a_xb2_m",
+					"resource": "res://assets/stages/valley_a/s01a_xb2/lndmd/mirror-bake/ad28f6af6a1e.res",
+					"signature": "5c80660fff39e33931c1f02be03b9d8a4f6abd51008601766268b9b694eca0ea"
+				}
+			],
+			"source_sha256": "570ffead4a3bb93fb235a6e2c025e70682c9720f8a0efdff2bc368ef9242431a",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_ga1/lndmd/s01b_ga1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01b_ga1_m/Skeleton3D/s01b_ga1_m",
+					"resource": "res://assets/stages/valley_b/s01b_ga1/lndmd/mirror-bake/2a04dc2963a3.res",
+					"signature": "40090df3f9bca875103bc6faa83ebcd2f16f8dde1d1f00d6ec627478a00dd321"
+				}
+			],
+			"source_sha256": "fc2166121ca83fb9d8d173aa256af8ada8c981dd8284661cbec8b250e9367ea1",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_ib1/lndmd/s01b_ib1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						7
+					],
+					"node": "s01b_ib1_m/Skeleton3D/s01b_ib1_m",
+					"resource": "res://assets/stages/valley_b/s01b_ib1/lndmd/mirror-bake/53d4ef13adcc.res",
+					"signature": "25798c376dbfd271eb2c817baccbdfa18fce1f2f8b8c42e8e300d12d15ce8f1f"
+				}
+			],
+			"source_sha256": "09a4a91261b54972da431ac4477c8d25c15effca8e6f918b915ccd2e401f98cf",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_ib2/lndmd/s01b_ib2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_ib2_m/Skeleton3D/s01b_ib2_m",
+					"resource": "res://assets/stages/valley_b/s01b_ib2/lndmd/mirror-bake/99dde72ed215.res",
+					"signature": "a8b0d70286af9635cd7fbf97cc9e27fae5ac7b24c6ff76f9b7d4787adb8c9283"
+				}
+			],
+			"source_sha256": "ec49d9f01c7a465b1c2871a241bce885e4c2eb4a0d313110582469cc03566c59",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_ic1/lndmd/s01b_ic1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_ic1_m/Skeleton3D/s01b_ic1_m",
+					"resource": "res://assets/stages/valley_b/s01b_ic1/lndmd/mirror-bake/b24eac4aa8dc.res",
+					"signature": "0297cca6ead4786fdc629aaaf1847bec5c5ad8ec5e2d368e2f7ab7b185c7e964"
+				}
+			],
+			"source_sha256": "ca1eb5b7fea888939976f772a2a9f734d30ed2352c29deae897d8db68fea5d9d",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_ic3/lndmd/s01b_ic3_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						9
+					],
+					"node": "s01b_ic3_m/Skeleton3D/s01b_ic3_m",
+					"resource": "res://assets/stages/valley_b/s01b_ic3/lndmd/mirror-bake/aecc5ed1d09d.res",
+					"signature": "05aa829b161c02de1c99cd22e81ec851eceaea196fa24045efc91dfe91ea6f66"
+				}
+			],
+			"source_sha256": "0fd6723eabc3e3af9653897b32b511605bd5d2a6a37748a4794c80d0248edc26",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_lb1/lndmd/s01b_lb1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_lb1_m/Skeleton3D/s01b_lb1_m",
+					"resource": "res://assets/stages/valley_b/s01b_lb1/lndmd/mirror-bake/b421c1ab1bc9.res",
+					"signature": "8ad71d1e228530ce928c238c549e3f7c2e7a944dd7718e74a8a5fc8172278e04"
+				}
+			],
+			"source_sha256": "b5a701e374f4fa484426ca0ba3b88c68a79df7172b4fe1bd1dbd53f726c74ac6",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_lb3/lndmd/s01b_lb3_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_lb3_m/Skeleton3D/s01b_lb3_m",
+					"resource": "res://assets/stages/valley_b/s01b_lb3/lndmd/mirror-bake/c252cf845957.res",
+					"signature": "0975847b323d2d0b7d7a9fa2f2c0bfbd457cce2d526a0be3e0b628d1ec542a33"
+				}
+			],
+			"source_sha256": "5218c86c79b3be1db3bc8d1e102d1cf7ed8effc5751c9f0440e4b6b5eb8310ca",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_lc1/lndmd/s01b_lc1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_lc1_m/Skeleton3D/s01b_lc1_m",
+					"resource": "res://assets/stages/valley_b/s01b_lc1/lndmd/mirror-bake/0f35a6b6d4f4.res",
+					"signature": "f0a1d55d735bc689dbf3f43458bcbc4c57720eb812a66191840b941c7d66da34"
+				}
+			],
+			"source_sha256": "ab6723b51ce163da0a8cc04c0b38f3f6d98f5037f8ac9fc397093f64e632586e",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_lc2/lndmd/s01b_lc2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_lc2_m/Skeleton3D/s01b_lc2_m",
+					"resource": "res://assets/stages/valley_b/s01b_lc2/lndmd/mirror-bake/edab11f7e10a.res",
+					"signature": "3e9a774c1f0dd9303cc60adbf6dc5a85877ba57ae8561902d531bdf189b87d7c"
+				}
+			],
+			"source_sha256": "f9721f7f2b8427f32776816603c4c7be1c9d13f8327eb9aaa93887ea45f7e07b",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_na1/lndmd/s01b_na1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01b_na1_m/Skeleton3D/s01b_na1_m",
+					"resource": "res://assets/stages/valley_b/s01b_na1/lndmd/mirror-bake/f35206a104f1.res",
+					"signature": "a7dfefe7edc3fe70559d8516c78118ce4d09ea6b1fd714bf719398e0de9660b1"
+				}
+			],
+			"source_sha256": "64126aabf5d4935b0e80f3bd0e4fe1f8ce44840e688339d89987200ee673e916",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_nb2/lndmd/s01b_nb2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						7
+					],
+					"node": "s01b_nb2_m/Skeleton3D/s01b_nb2_m",
+					"resource": "res://assets/stages/valley_b/s01b_nb2/lndmd/mirror-bake/7dc7f1e52962.res",
+					"signature": "ab52d5dea897e9632802e20f62dcd0481d6e827b2131d637c870d1bbe1f134ba"
+				}
+			],
+			"source_sha256": "274ad5d85e734a36786cddc2a6a4728a08fca214b48da5d7f157ef9aed9dddbd",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_nc2/lndmd/s01b_nc2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						8
+					],
+					"node": "s01b_nc2_m/Skeleton3D/s01b_nc2_m",
+					"resource": "res://assets/stages/valley_b/s01b_nc2/lndmd/mirror-bake/e429880dcbbb.res",
+					"signature": "7170fdc5d613f63a174e40f6ea14812bb1500d93c14451d55f62435d5f71a660"
+				}
+			],
+			"source_sha256": "9bad1bb573ab025108ec236b997a128273a397fc678af13b563172db1a28a999",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_sa1/lndmd/s01b_sa1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						10
+					],
+					"node": "s01b_sa1_m/Skeleton3D/s01b_sa1_m",
+					"resource": "res://assets/stages/valley_b/s01b_sa1/lndmd/mirror-bake/641855215563.res",
+					"signature": "45f3934310db17c224fe29afe64f3abba35e29384dd1997c3e929cc731814ec2"
+				}
+			],
+			"source_sha256": "ffb0469ce5f08d363fbd6f05ee449f18b692619573e6dde531b8f9174c065b29",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_tb3/lndmd/s01b_tb3_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						9
+					],
+					"node": "s01b_tb3_m/Skeleton3D/s01b_tb3_m",
+					"resource": "res://assets/stages/valley_b/s01b_tb3/lndmd/mirror-bake/3ac6d2d5b6ea.res",
+					"signature": "88fcbf275a47288decc79122b418196d024efe3ae374bbe78cc891ccfe712fd7"
+				}
+			],
+			"source_sha256": "7ebfc9b21ff22424e5f9de61de74b907622b969c48c6c7efbc2ae08557594794",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_tc3/lndmd/s01b_tc3_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						7
+					],
+					"node": "s01b_tc3_m/Skeleton3D/s01b_tc3_m",
+					"resource": "res://assets/stages/valley_b/s01b_tc3/lndmd/mirror-bake/470a153c4c27.res",
+					"signature": "33f7894fb1aa30c26e0b6ab4e727e6f2d556ddd782c642407e88fe733eae656e"
+				}
+			],
+			"source_sha256": "69d8109f025985ac4f280bc8ba92ebb6e3171fdde2def42917e5f8cba867d026",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_td1/lndmd/s01b_td1_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						7
+					],
+					"node": "s01b_td1_m/Skeleton3D/s01b_td1_m",
+					"resource": "res://assets/stages/valley_b/s01b_td1/lndmd/mirror-bake/a6ebc1a948d8.res",
+					"signature": "d8fb19f8159842956305c745d173b4fb3014f1c13385a5b629fb8e47ab63f153"
+				}
+			],
+			"source_sha256": "e1146517ae11c9f21daf195921b3a1b8aad162bef8047c0d57b1173413ff9c78",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_td2/lndmd/s01b_td2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						7
+					],
+					"node": "s01b_td2_m/Skeleton3D/s01b_td2_m",
+					"resource": "res://assets/stages/valley_b/s01b_td2/lndmd/mirror-bake/8e4b4f674e42.res",
+					"signature": "b09eea72370ba7391454e5f28209634ccb0090d2fc2cf36f3469bb23a8647c2e"
+				}
+			],
+			"source_sha256": "724c4738dd66a26b3947bc21c4ea84de86b088c8e56d129489f0ecc50dce5ea3",
+			"version": 1
+		},
+		"res://assets/stages/valley_b/s01b_xb2/lndmd/s01b_xb2_m.glb": {
+			"fixes": {
+				"s01_0_bri2.png": {
+					"offsetX": 0.0,
+					"offsetY": 1.0,
+					"repeatX": 2.0,
+					"repeatY": 2.0,
+					"wrapS": "mirror",
+					"wrapT": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						9
+					],
+					"node": "s01b_xb2_m/Skeleton3D/s01b_xb2_m",
+					"resource": "res://assets/stages/valley_b/s01b_xb2/lndmd/mirror-bake/aed2b7a0dd16.res",
+					"signature": "67c14650aba8aca0f3e01086128aa9d7925a24e23f3d8dd961673b3834f14dc7"
+				}
+			],
+			"source_sha256": "003a00f16190fd633d01d16ca1c96dba815f88018bd124a45e53b4b39f84b7ca",
+			"version": 1
+		},
+		"res://assets/stages/valley_e/s01e_ia1/lndmd/s01e_ia1_m.glb": {
+			"fixes": {
+				"s01_0_pass1.png": {
+					"offsetX": 0.0,
+					"offsetY": 0.0,
+					"repeatX": 2.0,
+					"repeatY": 1.0,
+					"wrapS": "mirror"
+				}
+			},
+			"meshes": [
+				{
+					"converted_surfaces": [
+						5
+					],
+					"node": "s01e_ia1_m/Skeleton3D/s01e_ia1_m",
+					"resource": "res://assets/stages/valley_e/s01e_ia1/lndmd/mirror-bake/cf7b01bab978.res",
+					"signature": "aa28a9514cf286efd609bc3ef60df48bacf15ba62bcaad872520e4048f2b21d5"
+				}
+			],
+			"source_sha256": "7bc3b396296000ddbb3f263ab54a3e3cb4c20d0772e845351dbd7f1691197f93",
+			"version": 1
+		}
+	},
+	"strategy": "reflected_period",
+	"textures": {
+		"4a5bea34201bb8d0d131f02dbbc0a3130feaa46e53678a7a02036427bef4ec39": {
+			"mipmaps": false,
+			"output_bytes": 65536,
+			"output_size": [
+				128,
+				128
+			],
+			"pixels_sha256": "0e25a720d0c02e97568f5f08e37b72f186bc9733f4ddb7b4da5f3f07fa02499c",
+			"resource": "res://assets/stages/valley_a/native_mirror/lndmd/4a5bea34201bb8d0d131f02dbbc0a3130feaa46e53678a7a02036427bef4ec39.res",
+			"source": "res://assets/stages/valley_b/s01b_ga1/lndmd/s01_0_bri2.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"4b0cf4af61ef673f9c441b6421105f836c4ea8e5f341f43adf209642797c5e68": {
+			"mipmaps": false,
+			"output_bytes": 32768,
+			"output_size": [
+				128,
+				64
+			],
+			"pixels_sha256": "067ba7de2468e4835bab68d19deb332fe7f78b3ab0864454e8c7461b3f2bdf93",
+			"resource": "res://assets/stages/valley_a/native_mirror/lndmd/4b0cf4af61ef673f9c441b6421105f836c4ea8e5f341f43adf209642797c5e68.res",
+			"source": "res://assets/stages/valley_a/s01a_td1/lndmd/s01_1_toro.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		},
+		"8523e1f3bdeb303971dc63ce6ff5fff408b9bc5e2696eeb5a2b7313be6c63809": {
+			"mipmaps": false,
+			"output_bytes": 32768,
+			"output_size": [
+				128,
+				64
+			],
+			"pixels_sha256": "b6da1dd1cca59e8a0ce1238cc251cfcdc57c487863855649b6a48adaac313435",
+			"resource": "res://assets/stages/valley_a/native_mirror/lndmd/8523e1f3bdeb303971dc63ce6ff5fff408b9bc5e2696eeb5a2b7313be6c63809.res",
+			"source": "res://assets/stages/valley_a/s01a_ga1/lndmd/s01_0_pass1.png",
+			"source_bytes": 16384,
+			"source_size": [
+				64,
+				64
+			]
+		}
+	},
+	"unchanged": [
+		"res://assets/stages/valley_z/s01z_na1/lndmd/s01z_na1_m.glb"
+	],
+	"version": 1
+}

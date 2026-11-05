@@ -26,7 +26,7 @@ const chart = `stateDiagram-v2
   WALKING --> DAMAGED: take_damage
   RUNNING --> DAMAGED: take_damage
   ATTACKING --> DAMAGED: take_damage (interrupts the swing)
-  DODGING --> DAMAGED: take_damage (outside i-frames)
+  DODGING --> DAMAGED: take_damage (outside post-hit protection)
   DAMAGED --> IDLE: hit-reaction animation finished
 
   IDLE --> DOWN: take_damage (heavy hit / lethal)
@@ -67,6 +67,7 @@ const chart = `stateDiagram-v2
 
   <h3>DAMAGED</h3>
   <p>An animation-driven hit reaction (light/medium hit, or the wake-up after a knockdown). No physics movement occurs — <code>_handle_damaged</code> holds horizontal velocity at zero. When the hit-reaction animation finishes, the avatar <strong>MUST</strong> return to IDLE.</p>
+  <p>A positive impact grants <strong>0.5 seconds of damage immunity</strong>, starting immediately so simultaneous crowd attacks cannot stack damage or repeatedly restart recoil. Rejected hits do not extend the timer. Existing poison/burn ticks bypass it and do not grant protection. This is playtest tuning, separate from revival protection and the dodge's body pass-through window; rolling alone does not grant damage immunity.</p>
 
   <h3>DOWN</h3>
   <p>The knockdown state, entered on a heavy hit (&gt;20 damage) or a lethal hit. Like DAMAGED it is animation-driven with no physics movement (it shares <code>_handle_damaged</code>). When the knockdown animation finishes, behavior <strong>MUST</strong> branch on HP: if HP&nbsp;&le;&nbsp;0 the avatar stays DOWN playing the lying-down loop (<code>&lt;prefix&gt;_dam_d_lp</code>); otherwise it plays the wake-up clip and transitions DOWN&nbsp;→&nbsp;DAMAGED, which then falls through to IDLE when the wake-up finishes.</p>
@@ -83,7 +84,7 @@ const chart = `stateDiagram-v2
     <thead><tr><th>Action</th><th>Player-cancelable by</th><th>Interrupted by</th><th>Notes</th></tr></thead>
     <tbody>
       <tr><td><strong>Attack</strong> (N/H/S swing)</td><td><strong>nothing</strong> — must fully execute</td><td>damage</td><td>the swing finishes before any dodge/next-action input registers</td></tr>
-      <tr><td><strong>Dodge / roll</strong></td><td><strong>nothing</strong> (NOT by attack)</td><td>damage <strong>outside</strong> the i-frame window</td><td>i-frames ≈ 11 frames ≈ <strong>0.2 s</strong> from roll start (mid-weight-roll feel)</td></tr>
+      <tr><td><strong>Dodge / roll</strong></td><td><strong>nothing</strong> (NOT by attack)</td><td>damage outside post-hit protection</td><td>first 10/30 seconds pass through enemy bodies; rolling grants no damage immunity</td></tr>
       <tr><td><strong>Hold-to-charge</strong> (tech)</td><td>dodge, N/H/S attack, Start Menu open, Quick Menu open</td><td>damage</td><td>the five drop cases — #352, #377</td></tr>
     </tbody>
   </table>

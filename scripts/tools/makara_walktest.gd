@@ -78,11 +78,8 @@ func _ready() -> void:
 		orbit.camera_rotation = atan2(start.x, start.z)
 	if not OS.get_environment("PSZ_WALK_YAW").is_empty():
 		orbit.camera_rotation = deg_to_rad(float(OS.get_environment("PSZ_WALK_YAW")))
-	if not OS.get_environment("PSZ_WALK_PITCH").is_empty():
-		orbit.camera_pitch = deg_to_rad(float(OS.get_environment("PSZ_WALK_PITCH")))
 	if not _preset_view.is_empty():
 		orbit.camera_rotation = _preset_view["yaw"]
-		orbit.camera_pitch = _preset_view["pitch"]
 		_preset_view.clear()
 	if OS.get_environment("PSZ_WALK_HIDE_PLAYER") == "1":
 		(_player.get_node("PlayerModel") as Node3D).visible = false
@@ -119,7 +116,7 @@ func _input(event: InputEvent) -> void:
 	var keycode: int = (event as InputEventKey).keycode
 	if _stage_id == "s04e_ia1" and keycode >= KEY_1 and keycode <= KEY_5:
 		var orbit := get_node("OrbitCamera")
-		_preset_view = {"position": _player.global_position, "yaw": orbit.camera_rotation, "pitch": orbit.camera_pitch}
+		_preset_view = {"position": _player.global_position, "yaw": orbit.camera_rotation}
 		preload("res://scripts/3d/field/makara_e_presets.gd").selected = keycode - KEY_1
 		_pending_stage = _stage_id
 		get_tree().reload_current_scene()

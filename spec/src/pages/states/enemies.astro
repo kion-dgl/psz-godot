@@ -33,7 +33,13 @@ const fsm = `stateDiagram-v2
 
   <p>Every enemy is one node class — <code>EnemyBase</code> (a <code>CharacterBody3D</code>) — driven by an <code>EnemyData</code> resource. Stats, model, element, and spawn locations live in the data; the AI, animation, status, and SFX logic live in the shared base. New enemies <strong>SHOULD</strong> be a new <code>EnemyData</code> resource with no new script.</p>
 
+  <h2>Physical bodies (#773)</h2>
+  <p>Active enemies block the player and each other through Godot body collisions: enemy bodies scan the environment, player, and enemy layers; the player scans environment, enemies, and solid bosses. Movement uses the existing collision solver rather than a custom crowd repulsion force. A blocked chase measures intended velocity before collision resolution and applies a short detour before the next movement step. Detours follow the blocking surface, test body clearance and floor support, and end when the enemy stops chasing. Dormant and defeated enemies disable their physical shapes. Revealing an enemy restores its body.</p>
+  <p>The player's existing ten-frame dodge contact window temporarily exempts enemy bodies in both directions. Normal collision resumes when that window ends. Helion and Blaze Helion use a radius of 1.4 and height of 3.0 for their body and hurtbox, replacing the small-enemy defaults. These dimensions are an initial model-based fit requiring playtest tuning, not recovered original-game constants.</p>
+  <p><code>scripts/tools/enemy_collision_probe.tscn</code> checks physical blocking, mixed-size crowd convergence, spawn overlap recovery, knockback movement, corridor clearance, dormant/reveal/death transitions, and dodge pass-through in a real physics world.</p>
+
   <h2>Roster &amp; data</h2>
+  <p>Ghowl (the Valley lizard) begins its basic swing within 1.5 units and uses a 1.2-unit hit reach, plus the shared 0.5-unit target allowance. Backing beyond 1.7 units before contact avoids the swing. These are playtest-tuned distances, not recovered original-game constants.</p>
   <p>The runtime roster is the set of <code>EnemyData</code> resources under <code>data/enemies/*.tres</code>, loaded at boot by <code>EnemyRegistry</code> and keyed by <code>id</code>. Each entry carries:</p>
   <table>
     <tr><th>Field</th><th>Meaning</th></tr>

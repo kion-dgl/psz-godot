@@ -1,0 +1,520 @@
+{
+  "source": "group_<set>.rel room tables via tools/waves.py parse_assignment()",
+  "answers": "parity request A6 — 'psz-godot's area B uses room codes it guessed from shapes'",
+  "*** AREA B'S CODES ARE AREA A'S, VERBATIM ***": "the room code carries the area in its variant field, and for all seven stages the set of room suffixes under variant 'b' is IDENTICAL to the set under variant 'a' — not similar, equal, with an empty symmetric difference in every stage. No guessing was ever needed.",
+  "variant_roles": {
+    "a": "area A. 16 or 17 rooms per stage.",
+    "b": "area B. the same 16 or 17 rooms as that stage's area A.",
+    "e": "a side area: 2 rooms (ia1, nr2) in stages 1-7, and 10 in stage 8.",
+    "z": "the stage CLIMAX room, and only six of the eight hold an actual boss."
+  },
+  "*** STAGES 3 AND 4 HAVE NO BOSS ***": "s01z, s02z, s05z, s06z and both s07z rooms carry a boss template and run exactly one wave (w3 == w4 == 1). s03z_na1 and s04z_na1 carry none: their lists hold only three-enemy GORILLA and ARMADILLO waves respectively, and they run exactly three waves (w3 == w4 == 3). So the two kinds of climax room are separable by their own wave counts.",
+  "*** THIS CLOSES THE s03z_na1 MYSTERY ***": "s03z_na1 was recorded as the one room whose spawn matched no allowed template. It matches fine. Its two templates are both THREE-enemy gorilla waves and the observed entity's vtable is the gorilla family, so the species was right all along — the observation caught TWO enemies because the wave had been partly cleared, and a shape match on [2] against templates of [3] could never succeed. Not an anomaly in the data; an anomaly in the sample.",
+  "rooms_by_stage_and_variant": {
+    "s01a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s01b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s01e": [
+      "ia1",
+      "nr2"
+    ],
+    "s01z": [
+      "na1"
+    ],
+    "s02a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s02b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s02e": [
+      "ia1",
+      "nr2"
+    ],
+    "s02z": [
+      "na1"
+    ],
+    "s03a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr5",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s03b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr5",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s03e": [
+      "ia1",
+      "nr2"
+    ],
+    "s03z": [
+      "na1"
+    ],
+    "s04a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr4",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s04b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr4",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s04e": [
+      "ia1",
+      "nr2"
+    ],
+    "s04z": [
+      "na1"
+    ],
+    "s05a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr3",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s05b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "nr3",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s05e": [
+      "ia1",
+      "nr2"
+    ],
+    "s05z": [
+      "na1"
+    ],
+    "s06a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s06b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s06e": [
+      "ia1",
+      "nr2"
+    ],
+    "s06z": [
+      "na1"
+    ],
+    "s07a": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s07b": [
+      "ib1",
+      "ib2",
+      "ic1",
+      "ic3",
+      "lb1",
+      "lb3",
+      "lc1",
+      "lc2",
+      "na1",
+      "nb2",
+      "nc2",
+      "tb3",
+      "tc3",
+      "td1",
+      "td2",
+      "xb2"
+    ],
+    "s07e": [
+      "ia1",
+      "nr2"
+    ],
+    "s07z": [
+      "na1",
+      "na2"
+    ],
+    "s081": [
+      "ib1",
+      "lb1"
+    ],
+    "s082": [
+      "ib1",
+      "lb1"
+    ],
+    "s083": [
+      "ib1",
+      "lb1"
+    ],
+    "s084": [
+      "ib1",
+      "lb1"
+    ],
+    "s085": [
+      "ib1",
+      "lb1"
+    ],
+    "s086": [
+      "ib1",
+      "lb1"
+    ],
+    "s087": [
+      "na1"
+    ],
+    "s08e": [
+      "ib0",
+      "ib1",
+      "ib2",
+      "ib3",
+      "ib4",
+      "ib5",
+      "ib6",
+      "ib7",
+      "ib8",
+      "ib9"
+    ]
+  },
+  "*** SAME ROOMS, DIFFERENT WAVE COUNTS ***": {
+    "claim": "area B carries area A's room codes verbatim but NOT its per-room wave counts. The (w3, w4) multiset differs in 4 of 7 stages (s01, s02, s04, s06) and matches exactly in s03, s05 and s07.",
+    "size_of_the_difference": "small. The mean minimum and maximum wave counts differ by at most 0.25 of a wave, so this is a texture difference and not a difficulty tier. Reporting it as a gradient would overstate it.",
+    "why_it_matters": "'area B uses area A's codes' invites a port to treat the two as interchangeable. They are not — the same room runs a different number of waves depending on which area it is in.",
+    "per_stage": {
+      "s01": {
+        "identical_pairs": false,
+        "A": {
+          "mean_min": 1.5,
+          "mean_max": 2.38,
+          "pairs": {
+            "(1, 2)": 4,
+            "(1, 3)": 4,
+            "(2, 2)": 6,
+            "(2, 3)": 2
+          }
+        },
+        "B": {
+          "mean_min": 1.75,
+          "mean_max": 2.56,
+          "pairs": {
+            "(1, 1)": 2,
+            "(1, 2)": 2,
+            "(2, 2)": 1,
+            "(2, 3)": 11
+          }
+        }
+      },
+      "s02": {
+        "identical_pairs": false,
+        "A": {
+          "mean_min": 1.5,
+          "mean_max": 2.25,
+          "pairs": {
+            "(1, 2)": 4,
+            "(1, 3)": 4,
+            "(2, 2)": 8
+          }
+        },
+        "B": {
+          "mean_min": 1.5,
+          "mean_max": 2.25,
+          "pairs": {
+            "(1, 1)": 2,
+            "(1, 2)": 2,
+            "(1, 3)": 4,
+            "(2, 2)": 6,
+            "(2, 3)": 2
+          }
+        }
+      },
+      "s03": {
+        "identical_pairs": true,
+        "A": {
+          "mean_min": 1.41,
+          "mean_max": 2.53,
+          "pairs": {
+            "(1, 2)": 7,
+            "(1, 3)": 4,
+            "(2, 2)": 1,
+            "(2, 3)": 4,
+            "(3, 3)": 1
+          }
+        },
+        "B": {
+          "mean_min": 1.41,
+          "mean_max": 2.53,
+          "pairs": {
+            "(1, 2)": 7,
+            "(1, 3)": 4,
+            "(2, 2)": 1,
+            "(2, 3)": 4,
+            "(3, 3)": 1
+          }
+        }
+      },
+      "s04": {
+        "identical_pairs": false,
+        "A": {
+          "mean_min": 1.29,
+          "mean_max": 2.06,
+          "pairs": {
+            "(1, 2)": 11,
+            "(1, 3)": 1,
+            "(2, 2)": 5
+          }
+        },
+        "B": {
+          "mean_min": 1.35,
+          "mean_max": 2.24,
+          "pairs": {
+            "(1, 2)": 11,
+            "(2, 2)": 2,
+            "(2, 3)": 4
+          }
+        }
+      },
+      "s05": {
+        "identical_pairs": true,
+        "A": {
+          "mean_min": 1.35,
+          "mean_max": 2.0,
+          "pairs": {
+            "(1, 2)": 11,
+            "(2, 2)": 6
+          }
+        },
+        "B": {
+          "mean_min": 1.35,
+          "mean_max": 2.0,
+          "pairs": {
+            "(1, 2)": 11,
+            "(2, 2)": 6
+          }
+        }
+      },
+      "s06": {
+        "identical_pairs": false,
+        "A": {
+          "mean_min": 1.69,
+          "mean_max": 2.0,
+          "pairs": {
+            "(1, 2)": 5,
+            "(2, 2)": 11
+          }
+        },
+        "B": {
+          "mean_min": 1.75,
+          "mean_max": 2.0,
+          "pairs": {
+            "(1, 2)": 4,
+            "(2, 2)": 12
+          }
+        }
+      },
+      "s07": {
+        "identical_pairs": true,
+        "A": {
+          "mean_min": 1.5,
+          "mean_max": 2.19,
+          "pairs": {
+            "(1, 2)": 5,
+            "(1, 3)": 3,
+            "(2, 2)": 8
+          }
+        },
+        "B": {
+          "mean_min": 1.5,
+          "mean_max": 2.19,
+          "pairs": {
+            "(1, 2)": 5,
+            "(1, 3)": 3,
+            "(2, 2)": 8
+          }
+        }
+      }
+    }
+  }
+}

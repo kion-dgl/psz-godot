@@ -44,6 +44,8 @@ func bind(enemy: Node3D, player: AnimationPlayer, model_id: String) -> void:
 				var track := anim.add_track(Animation.TYPE_METHOD)
 				anim.track_set_path(track, callback_path)
 				for event in events:
+					if str(clip_name).ends_with("_ded") and str(event["sound"]).ends_with("_DEAD"):
+						continue # played once when defeat is committed
 					var time := float(event["frame"]) / SOURCE_FPS
 					if time <= anim.length:
 						anim.track_insert_key(track, time, {"method": &"play_cue",
@@ -118,3 +120,33 @@ func stop_loops() -> void:
 		voice.queue_free()
 	_loops.clear()
 	_loop_clip = ""
+
+
+static func defeat_sound(model_id: String) -> String:
+	# PSO imports have no PSZ animation-event tracks; use their labelled defeat voices.
+	const IMPORTED := {
+		"pso_booma": "res://assets/sfx/forest/forest_007.wav",
+		"pso_gobooma": "res://assets/sfx/forest/forest_007.wav",
+		"pso_gigobooma": "res://assets/sfx/forest/forest_007.wav",
+		"poison_lily": "res://assets/sfx/cave/cave_015.wav",
+		"sinow_beat": "res://assets/sfx/machine/machine_022.wav",
+		"sinow_gold": "res://assets/sfx/machine/machine_022.wav",
+		"chaos_sorcerer": "res://assets/sfx/ancient/ancient_022.wav"
+	}
+	if IMPORTED.has(model_id):
+		return IMPORTED[model_id]
+	var data := catalogue()
+	var clips: Dictionary = data.get("models", {}).get(model_id, {})
+	for clip in clips:
+		if not str(clip).ends_with("_ded"):
+			continue
+		for event in clips[clip]:
+			var symbol := str(event.get("sound", ""))
+			if symbol.ends_with("_DEAD"):
+				return str(data.get("sounds", {}).get(symbol, {}).get("path", ""))
+	return ""
+
+static func play_defeat(model_id: String, at: Vector3) -> void:
+	var path := defeat_sound(model_id)
+	if not path.is_empty():
+		SfxManager.play_at(path, at)

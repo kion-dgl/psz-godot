@@ -1,0 +1,2021 @@
+{
+  "_": "The three-hit normal-attack combo, per weapon type and per character build. `length` is the animation's own frame count; `chain_opens`/`chain_closes` are the frames between which a follow-up press continues the combo. Regenerate with tools/plyevents.py.",
+  "_source": "player/NN_<weapon>_<build>_pa00.narc each carry one DSIF whose region A is 22 fixed 152-byte records, one per animation in file order. The two window frames are bytes +0x04 and +0x05 of the record; 0xFF means none.",
+  "_validation": "Frame-exact emulator traces agree on TEN boundaries across two weapons: rifle atk1 chains at 16 and 32 and not at 12 or 36 (table 16..32); rifle atk2 chains at 20, 24, 28 and not 16 or 32 (17..31); handgun atk1 chains at 16 and 24 and not 12 or 28 (15..24).",
+  "_units": "FRAMES of the attack animation at playback rate 1.0. The rate lives at 0x021A2184 (0x1000 = 1.0); a state running the 'Even Quicker Anims' cheat at 0x2000 halves every observed number.",
+  "_atk3": "atk3 never carries a window -- there is no fourth hit to chain into. grenade(12) and l_cannon(13) have only atk1 and no combo at all.",
+  "_anomaly": "16_slicer is the only weapon whose windows close at or AFTER its animation ends -- atk1 20..39 against a 33-frame animation, atk2 10..59 against 35. Not measured, not explained, and left in rather than trimmed: it is either a property of a thrown weapon or a sign the reading is incomplete for this type.",
+  "_not_established": "which weapon types each CLASS may equip. This table is a superset; class restrictions have not been read out of the game.",
+  "weapons": [
+    {
+      "archive": "00_common_m",
+      "weapon_type": 0,
+      "file_name": "common",
+      "build": "m",
+      "animation_key": "bn",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            8,
+            12
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 34,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "00_common_sm",
+      "weapon_type": 0,
+      "file_name": "common",
+      "build": "sm",
+      "animation_key": "bns",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            8,
+            12
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 34,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "00_common_sw",
+      "weapon_type": 0,
+      "file_name": "common",
+      "build": "sw",
+      "animation_key": "bns",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            8,
+            12
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 34,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "00_common_w",
+      "weapon_type": 0,
+      "file_name": "common",
+      "build": "w",
+      "animation_key": "bn",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            8,
+            12
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 29,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "01_saver_m",
+      "weapon_type": 1,
+      "file_name": "saver",
+      "build": "m",
+      "animation_key": "sa",
+      "attacks": {
+        "atk1": {
+          "length": 35,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "01_saver_sm",
+      "weapon_type": 1,
+      "file_name": "saver",
+      "build": "sm",
+      "animation_key": "sas",
+      "attacks": {
+        "atk1": {
+          "length": 35,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "01_saver_sw",
+      "weapon_type": 1,
+      "file_name": "saver",
+      "build": "sw",
+      "animation_key": "sas",
+      "attacks": {
+        "atk1": {
+          "length": 35,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "01_saver_w",
+      "weapon_type": 1,
+      "file_name": "saver",
+      "build": "w",
+      "animation_key": "sa",
+      "attacks": {
+        "atk1": {
+          "length": 35,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 28,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "02_sword_m",
+      "weapon_type": 2,
+      "file_name": "sword",
+      "build": "m",
+      "animation_key": "sw",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 18,
+          "chain_closes": 30,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 22,
+          "chain_closes": 34,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk3": {
+          "length": 50,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "02_sword_sm",
+      "weapon_type": 2,
+      "file_name": "sword",
+      "build": "sm",
+      "animation_key": "sw",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 18,
+          "chain_closes": 30,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 22,
+          "chain_closes": 34,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk3": {
+          "length": 50,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "02_sword_sw",
+      "weapon_type": 2,
+      "file_name": "sword",
+      "build": "sw",
+      "animation_key": "sw",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 18,
+          "chain_closes": 30,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 22,
+          "chain_closes": 34,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk3": {
+          "length": 50,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "02_sword_w",
+      "weapon_type": 2,
+      "file_name": "sword",
+      "build": "w",
+      "animation_key": "sw",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 18,
+          "chain_closes": 30,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 22,
+          "chain_closes": 34,
+          "hit_frames": [
+            15
+          ]
+        },
+        "atk3": {
+          "length": 50,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "03_dagger_m",
+      "weapon_type": 3,
+      "file_name": "dagger",
+      "build": "m",
+      "animation_key": "da",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 18,
+          "chain_closes": 28,
+          "hit_frames": [
+            7,
+            15
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 53,
+          "hit_frames": [
+            11,
+            22,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "03_dagger_sm",
+      "weapon_type": 3,
+      "file_name": "dagger",
+      "build": "sm",
+      "animation_key": "da",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            7,
+            15
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 53,
+          "hit_frames": [
+            11,
+            22,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "03_dagger_sw",
+      "weapon_type": 3,
+      "file_name": "dagger",
+      "build": "sw",
+      "animation_key": "da",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            7,
+            15
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 53,
+          "hit_frames": [
+            11,
+            22,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "03_dagger_w",
+      "weapon_type": 3,
+      "file_name": "dagger",
+      "build": "w",
+      "animation_key": "da",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            7,
+            15
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 53,
+          "hit_frames": [
+            11,
+            22,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "04_spear_m",
+      "weapon_type": 4,
+      "file_name": "spear",
+      "build": "m",
+      "animation_key": "sp",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 40,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "04_spear_sm",
+      "weapon_type": 4,
+      "file_name": "spear",
+      "build": "sm",
+      "animation_key": "sp",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 40,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "04_spear_sw",
+      "weapon_type": 4,
+      "file_name": "spear",
+      "build": "sw",
+      "animation_key": "sp",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 40,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "04_spear_w",
+      "weapon_type": 4,
+      "file_name": "spear",
+      "build": "w",
+      "animation_key": "sp",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 40,
+          "hit_frames": [
+            22
+          ]
+        }
+      }
+    },
+    {
+      "archive": "05_claw_m",
+      "weapon_type": 5,
+      "file_name": "claw",
+      "build": "m",
+      "animation_key": "cl",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 15,
+          "chain_closes": 27,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 49,
+          "hit_frames": [
+            11,
+            33
+          ]
+        }
+      }
+    },
+    {
+      "archive": "05_claw_sm",
+      "weapon_type": 5,
+      "file_name": "claw",
+      "build": "sm",
+      "animation_key": "cls",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 15,
+          "chain_closes": 27,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 47,
+          "hit_frames": [
+            11,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "05_claw_sw",
+      "weapon_type": 5,
+      "file_name": "claw",
+      "build": "sw",
+      "animation_key": "cls",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 15,
+          "chain_closes": 27,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 47,
+          "hit_frames": [
+            11,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "05_claw_w",
+      "weapon_type": 5,
+      "file_name": "claw",
+      "build": "w",
+      "animation_key": "cl",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 38,
+          "chain_opens": 15,
+          "chain_closes": 27,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk3": {
+          "length": 47,
+          "hit_frames": [
+            11,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "archive": "06_shield_m",
+      "weapon_type": 6,
+      "file_name": "shield",
+      "build": "m",
+      "animation_key": "sh",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 23,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 16,
+          "chain_closes": 26,
+          "hit_frames": [
+            12
+          ]
+        },
+        "atk3": {
+          "length": 39,
+          "hit_frames": [
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "06_shield_sm",
+      "weapon_type": 6,
+      "file_name": "shield",
+      "build": "sm",
+      "animation_key": "sh",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 23,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 16,
+          "chain_closes": 26,
+          "hit_frames": [
+            12
+          ]
+        },
+        "atk3": {
+          "length": 39,
+          "hit_frames": [
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "06_shield_sw",
+      "weapon_type": 6,
+      "file_name": "shield",
+      "build": "sw",
+      "animation_key": "sh",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 23,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 16,
+          "chain_closes": 26,
+          "hit_frames": [
+            12
+          ]
+        },
+        "atk3": {
+          "length": 39,
+          "hit_frames": [
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "06_shield_w",
+      "weapon_type": 6,
+      "file_name": "shield",
+      "build": "w",
+      "animation_key": "sh",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 14,
+          "chain_closes": 23,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 16,
+          "chain_closes": 26,
+          "hit_frames": [
+            12
+          ]
+        },
+        "atk3": {
+          "length": 39,
+          "hit_frames": [
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "07_d_saver_m",
+      "weapon_type": 7,
+      "file_name": "d_saver",
+      "build": "m",
+      "animation_key": "ds",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            16,
+            17
+          ]
+        },
+        "atk2": {
+          "length": 43,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            17
+          ]
+        },
+        "atk3": {
+          "length": 51,
+          "hit_frames": [
+            20,
+            24,
+            27
+          ]
+        }
+      }
+    },
+    {
+      "archive": "07_d_saver_sm",
+      "weapon_type": 7,
+      "file_name": "d_saver",
+      "build": "sm",
+      "animation_key": "dss",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            16,
+            17
+          ]
+        },
+        "atk2": {
+          "length": 43,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            17
+          ]
+        },
+        "atk3": {
+          "length": 51,
+          "hit_frames": [
+            20,
+            24,
+            27
+          ]
+        }
+      }
+    },
+    {
+      "archive": "07_d_saver_sw",
+      "weapon_type": 7,
+      "file_name": "d_saver",
+      "build": "sw",
+      "animation_key": "dss",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            16,
+            17
+          ]
+        },
+        "atk2": {
+          "length": 43,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            17
+          ]
+        },
+        "atk3": {
+          "length": 51,
+          "hit_frames": [
+            20,
+            24,
+            27
+          ]
+        }
+      }
+    },
+    {
+      "archive": "07_d_saver_w",
+      "weapon_type": 7,
+      "file_name": "d_saver",
+      "build": "w",
+      "animation_key": "dss",
+      "attacks": {
+        "atk1": {
+          "length": 47,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            16,
+            17
+          ]
+        },
+        "atk2": {
+          "length": 43,
+          "chain_opens": 22,
+          "chain_closes": 32,
+          "hit_frames": [
+            17
+          ]
+        },
+        "atk3": {
+          "length": 51,
+          "hit_frames": [
+            20,
+            24,
+            27
+          ]
+        }
+      }
+    },
+    {
+      "archive": "08_handgun_m",
+      "weapon_type": 8,
+      "file_name": "handgun",
+      "build": "m",
+      "animation_key": "hg",
+      "attacks": {
+        "atk1": {
+          "length": 29,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            3
+          ]
+        },
+        "atk2": {
+          "length": 31,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            4
+          ]
+        },
+        "atk3": {
+          "length": 35,
+          "hit_frames": [
+            6
+          ]
+        }
+      }
+    },
+    {
+      "archive": "08_handgun_sm",
+      "weapon_type": 8,
+      "file_name": "handgun",
+      "build": "sm",
+      "animation_key": "hg",
+      "attacks": {
+        "atk1": {
+          "length": 29,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            3
+          ]
+        },
+        "atk2": {
+          "length": 31,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            4
+          ]
+        },
+        "atk3": {
+          "length": 35,
+          "hit_frames": [
+            6
+          ]
+        }
+      }
+    },
+    {
+      "archive": "08_handgun_sw",
+      "weapon_type": 8,
+      "file_name": "handgun",
+      "build": "sw",
+      "animation_key": "hg",
+      "attacks": {
+        "atk1": {
+          "length": 29,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            3
+          ]
+        },
+        "atk2": {
+          "length": 31,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            4
+          ]
+        },
+        "atk3": {
+          "length": 35,
+          "hit_frames": [
+            6
+          ]
+        }
+      }
+    },
+    {
+      "archive": "08_handgun_w",
+      "weapon_type": 8,
+      "file_name": "handgun",
+      "build": "w",
+      "animation_key": "hg",
+      "attacks": {
+        "atk1": {
+          "length": 29,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            3
+          ]
+        },
+        "atk2": {
+          "length": 31,
+          "chain_opens": 15,
+          "chain_closes": 24,
+          "hit_frames": [
+            4
+          ]
+        },
+        "atk3": {
+          "length": 35,
+          "hit_frames": [
+            6
+          ]
+        }
+      }
+    },
+    {
+      "archive": "09_a_rifle_m",
+      "weapon_type": 9,
+      "file_name": "a_rifle",
+      "build": "m",
+      "animation_key": "ar",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 17,
+          "chain_closes": 31,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 42,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "09_a_rifle_sm",
+      "weapon_type": 9,
+      "file_name": "a_rifle",
+      "build": "sm",
+      "animation_key": "ar",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 17,
+          "chain_closes": 31,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 42,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "09_a_rifle_sw",
+      "weapon_type": 9,
+      "file_name": "a_rifle",
+      "build": "sw",
+      "animation_key": "ars",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 17,
+          "chain_closes": 31,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 42,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "09_a_rifle_w",
+      "weapon_type": 9,
+      "file_name": "a_rifle",
+      "build": "w",
+      "animation_key": "ars",
+      "attacks": {
+        "atk1": {
+          "length": 38,
+          "chain_opens": 16,
+          "chain_closes": 32,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 17,
+          "chain_closes": 31,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 42,
+          "hit_frames": [
+            13
+          ]
+        }
+      }
+    },
+    {
+      "archive": "10_shotgun_m",
+      "weapon_type": 10,
+      "file_name": "shotgun",
+      "build": "m",
+      "animation_key": "gb",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 25,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 13,
+          "chain_closes": 25,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 43,
+          "hit_frames": [
+            16
+          ]
+        }
+      }
+    },
+    {
+      "archive": "10_shotgun_sm",
+      "weapon_type": 10,
+      "file_name": "shotgun",
+      "build": "sm",
+      "animation_key": "gb",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 25,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 39,
+          "chain_opens": 13,
+          "chain_closes": 25,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 43,
+          "hit_frames": [
+            16
+          ]
+        }
+      }
+    },
+    {
+      "archive": "10_shotgun_sw",
+      "weapon_type": 10,
+      "file_name": "shotgun",
+      "build": "sw",
+      "animation_key": "gbs",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 25,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 25,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 43,
+          "hit_frames": [
+            16
+          ]
+        }
+      }
+    },
+    {
+      "archive": "10_shotgun_w",
+      "weapon_type": 10,
+      "file_name": "shotgun",
+      "build": "w",
+      "animation_key": "gbs",
+      "attacks": {
+        "atk1": {
+          "length": 36,
+          "chain_opens": 12,
+          "chain_closes": 25,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 25,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 43,
+          "hit_frames": [
+            16
+          ]
+        }
+      }
+    },
+    {
+      "archive": "11_machinegun_m",
+      "weapon_type": 11,
+      "file_name": "machinegun",
+      "build": "m",
+      "animation_key": "mg",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk3": {
+          "length": 46,
+          "hit_frames": [
+            8,
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "11_machinegun_sm",
+      "weapon_type": 11,
+      "file_name": "machinegun",
+      "build": "sm",
+      "animation_key": "mg",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk3": {
+          "length": 46,
+          "hit_frames": [
+            8,
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "11_machinegun_sw",
+      "weapon_type": 11,
+      "file_name": "machinegun",
+      "build": "sw",
+      "animation_key": "mg",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk3": {
+          "length": 46,
+          "hit_frames": [
+            8,
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "11_machinegun_w",
+      "weapon_type": 11,
+      "file_name": "machinegun",
+      "build": "w",
+      "animation_key": "mg",
+      "attacks": {
+        "atk1": {
+          "length": 45,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk2": {
+          "length": 46,
+          "chain_opens": 20,
+          "chain_closes": 33,
+          "hit_frames": [
+            8,
+            14
+          ]
+        },
+        "atk3": {
+          "length": 46,
+          "hit_frames": [
+            8,
+            14
+          ]
+        }
+      }
+    },
+    {
+      "archive": "12_grenade_m",
+      "weapon_type": 12,
+      "file_name": "grenade",
+      "build": "m",
+      "animation_key": "ba",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "12_grenade_sm",
+      "weapon_type": 12,
+      "file_name": "grenade",
+      "build": "sm",
+      "animation_key": "ba",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "12_grenade_sw",
+      "weapon_type": 12,
+      "file_name": "grenade",
+      "build": "sw",
+      "animation_key": "ba",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "12_grenade_w",
+      "weapon_type": 12,
+      "file_name": "grenade",
+      "build": "w",
+      "animation_key": "ba",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "hit_frames": [
+            11
+          ]
+        }
+      }
+    },
+    {
+      "archive": "13_l_cannon_m",
+      "weapon_type": 13,
+      "file_name": "l_cannon",
+      "build": "m",
+      "animation_key": "lc",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "hit_frames": [
+            10
+          ]
+        }
+      }
+    },
+    {
+      "archive": "13_l_cannon_sm",
+      "weapon_type": 13,
+      "file_name": "l_cannon",
+      "build": "sm",
+      "animation_key": "lc",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "hit_frames": [
+            10
+          ]
+        }
+      }
+    },
+    {
+      "archive": "13_l_cannon_sw",
+      "weapon_type": 13,
+      "file_name": "l_cannon",
+      "build": "sw",
+      "animation_key": "lc",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "hit_frames": [
+            10
+          ]
+        }
+      }
+    },
+    {
+      "archive": "13_l_cannon_w",
+      "weapon_type": 13,
+      "file_name": "l_cannon",
+      "build": "w",
+      "animation_key": "lc",
+      "attacks": {
+        "atk1": {
+          "length": 34,
+          "hit_frames": [
+            10
+          ]
+        }
+      }
+    },
+    {
+      "archive": "14_rod_m",
+      "weapon_type": 14,
+      "file_name": "rod",
+      "build": "m",
+      "animation_key": "ro",
+      "attacks": {
+        "atk1": {
+          "length": 40,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 14,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 37,
+          "hit_frames": [
+            17
+          ]
+        }
+      }
+    },
+    {
+      "archive": "14_rod_sm",
+      "weapon_type": 14,
+      "file_name": "rod",
+      "build": "sm",
+      "animation_key": "ro",
+      "attacks": {
+        "atk1": {
+          "length": 40,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 14,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 37,
+          "hit_frames": [
+            17
+          ]
+        }
+      }
+    },
+    {
+      "archive": "14_rod_sw",
+      "weapon_type": 14,
+      "file_name": "rod",
+      "build": "sw",
+      "animation_key": "ros",
+      "attacks": {
+        "atk1": {
+          "length": 40,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk2": {
+          "length": 40,
+          "chain_opens": 14,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 37,
+          "hit_frames": [
+            17
+          ]
+        }
+      }
+    },
+    {
+      "archive": "14_rod_w",
+      "weapon_type": 14,
+      "file_name": "rod",
+      "build": "w",
+      "animation_key": "ro",
+      "attacks": {
+        "atk1": {
+          "length": 40,
+          "chain_opens": 14,
+          "chain_closes": 26,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 14,
+          "chain_closes": 28,
+          "hit_frames": [
+            11
+          ]
+        },
+        "atk3": {
+          "length": 37,
+          "hit_frames": [
+            17
+          ]
+        }
+      }
+    },
+    {
+      "archive": "15_wand_m",
+      "weapon_type": 15,
+      "file_name": "wand",
+      "build": "m",
+      "animation_key": "wa",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 12,
+          "chain_closes": 26,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "15_wand_sm",
+      "weapon_type": 15,
+      "file_name": "wand",
+      "build": "sm",
+      "animation_key": "was",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 12,
+          "chain_closes": 26,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "15_wand_sw",
+      "weapon_type": 15,
+      "file_name": "wand",
+      "build": "sw",
+      "animation_key": "wa",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 12,
+          "chain_closes": 26,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "15_wand_w",
+      "weapon_type": 15,
+      "file_name": "wand",
+      "build": "w",
+      "animation_key": "wa",
+      "attacks": {
+        "atk1": {
+          "length": 37,
+          "chain_opens": 12,
+          "chain_closes": 26,
+          "hit_frames": [
+            8
+          ]
+        },
+        "atk2": {
+          "length": 41,
+          "chain_opens": 13,
+          "chain_closes": 28,
+          "hit_frames": [
+            9
+          ]
+        },
+        "atk3": {
+          "length": 33,
+          "hit_frames": [
+            15
+          ]
+        }
+      }
+    },
+    {
+      "archive": "16_slicer_m",
+      "weapon_type": 16,
+      "file_name": "slicer",
+      "build": "m",
+      "animation_key": "sl",
+      "attacks": {
+        "atk1": {
+          "length": 33,
+          "chain_opens": 20,
+          "chain_closes": 39,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 35,
+          "chain_opens": 10,
+          "chain_closes": 59,
+          "hit_frames": []
+        },
+        "atk3": {
+          "length": 31,
+          "hit_frames": []
+        }
+      }
+    },
+    {
+      "archive": "16_slicer_sm",
+      "weapon_type": 16,
+      "file_name": "slicer",
+      "build": "sm",
+      "animation_key": "sls",
+      "attacks": {
+        "atk1": {
+          "length": 33,
+          "chain_opens": 20,
+          "chain_closes": 39,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 35,
+          "chain_opens": 10,
+          "chain_closes": 59,
+          "hit_frames": []
+        },
+        "atk3": {
+          "length": 31,
+          "hit_frames": []
+        }
+      }
+    },
+    {
+      "archive": "16_slicer_sw",
+      "weapon_type": 16,
+      "file_name": "slicer",
+      "build": "sw",
+      "animation_key": "sls",
+      "attacks": {
+        "atk1": {
+          "length": 33,
+          "chain_opens": 20,
+          "chain_closes": 39,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 35,
+          "chain_opens": 10,
+          "chain_closes": 59,
+          "hit_frames": []
+        },
+        "atk3": {
+          "length": 31,
+          "hit_frames": []
+        }
+      }
+    },
+    {
+      "archive": "16_slicer_w",
+      "weapon_type": 16,
+      "file_name": "slicer",
+      "build": "w",
+      "animation_key": "sls",
+      "attacks": {
+        "atk1": {
+          "length": 33,
+          "chain_opens": 20,
+          "chain_closes": 39,
+          "hit_frames": [
+            10
+          ]
+        },
+        "atk2": {
+          "length": 35,
+          "chain_opens": 10,
+          "chain_closes": 59,
+          "hit_frames": []
+        },
+        "atk3": {
+          "length": 31,
+          "hit_frames": []
+        }
+      }
+    }
+  ],
+  "_hits": "hit_frames are the frames damage lands, read from bytes +0x08..+0x0C of the same record -- ascending, 0xFF-terminated, one entry per damage instance. Five weapon types strike more than once with a normal attack: unarmed, dagger, claw, double saber and machinegun. The Japanese wiki independently names the multi-hit weapons as dual daggers, claws, dual swords and machine guns -- the same set, its only omission being unarmed, which has no weapon page.",
+  "_not_identified": "The SOUND cue is not among the fields identified here, and it was not measurable either: melonDS's GDB stub returns zeros for I/O space, so the SPU channel registers cannot be sampled per frame. Byte +0x10 is NOT a frame -- it takes six values across 252 records (5, 6, 11, 12, 17, 18) and tracks the weapon's heft rather than its timing -- so an earlier description of it as frame-sized is withdrawn. +0x01 is 3 in every record and carries nothing per-animation."
+}

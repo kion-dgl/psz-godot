@@ -55,10 +55,13 @@ func _ready() -> void:
 
 	# Strip the per-GLB +X layout offset baked into each de_roll_le piece
 	# (20-unit grid: fe_obj002_mizu = +300, fe_obj006_grid2 = +200, etc.)
-	# and switch their materials to the mirror-wrap shader so tiling textures
-	# don't clamp at the edges. Three.js' bakeSkinnedMeshes() in the editor
+	# and load offline native mirror materials (shader fallback for older packs)
+	# so tiling textures don't clamp at the edges. Three.js' bakeSkinnedMeshes() in the editor
 	# collapses the offset; Godot's GLB import preserves it.
 	_setup_de_roll_le_pieces()
+	var mirrors := preload("res://scripts/utils/underground_mirror_variants.gd")
+	if not mirrors.apply($Underground):
+		MeshUtils.apply_mirror_wrap_fixes($Underground, mirrors.fixes_for($Underground), TEXTURE_FIX_SHADER)
 
 	# Wire up player references
 	_connect_player_to_interactables()
@@ -71,7 +74,8 @@ func _setup_de_roll_le_pieces() -> void:
 		if not String(child.name).begins_with("DeRollLe_"):
 			continue
 		_zero_inner_offset(child as Node3D)
-		_apply_mirror_wrap_recursive(child)
+		if not preload("res://scripts/utils/underground_mirror_variants.gd").apply(child):
+			_apply_mirror_wrap_recursive(child)
 
 
 func _zero_inner_offset(piece: Node3D) -> void:

@@ -77,7 +77,7 @@ func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Synthesis Shop"
 	_setup_portrait()
-	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
+	hint_label.text = "Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
 	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
@@ -187,7 +187,7 @@ func _handle_photon_input(event: InputEvent) -> void:
 		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		_selecting_photon = false
 		_pending_recipe_index = -1
-		hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Confirm  Esc: Leave"
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
@@ -564,7 +564,7 @@ func _refresh_display() -> void:
 	for child in _tab_row.get_children():
 		child.queue_free()
 	_tab_row.add_child(PszStyle.create_tab_bar(TAB_NAMES, _mode))
-	_tab_row.add_child(PszStyle.create_meseta_label(_get_meseta()))
+	PszStyle.update_shop_balance(self, _get_meseta())
 
 	for child in content_panel.get_children():
 		child.queue_free()
@@ -650,7 +650,7 @@ func _refresh_display() -> void:
 				if i == _selected_index:
 					selected_pill = pill
 
-	scroll.add_child(vbox)
+	PszStyle.set_list_content(scroll, vbox)
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:

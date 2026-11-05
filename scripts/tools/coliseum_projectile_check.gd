@@ -5,8 +5,6 @@ const MODES := ["hit", "dodge", "wall", "muzzle_wall", "sidestep", "hurt", "deat
 
 class Target extends Node3D:
 	var hits := 0
-	var dodge := false
-	func is_dodge_iframed() -> bool: return dodge
 	func take_damage(_damage: int, _knockback: Vector3, _knockdown: bool) -> void: hits += 1
 	func take_technique_hit(_damage: int, _tech: String) -> void: hits += 1
 
@@ -35,7 +33,6 @@ static func _case(source: EnemyBase, origin: Vector3, definition: Dictionary, mo
 	parent.add_child(target)
 	var distance := (float(definition.min_range) + float(definition.max_range)) * 0.5
 	target.global_position = origin + Vector3.BACK * distance
-	target.dodge = mode == "dodge"
 	var enemy := EnemyBase.new()
 	enemy.enemy_data = source.enemy_data
 	parent.add_child(enemy)
@@ -122,7 +119,9 @@ static func _simulate(enemy: EnemyBase, target: Target, definition: Dictionary,
 static func _result(enemy: EnemyBase, target: Target, definition: Dictionary, mode: String,
 		deliveries: Array[Node], releases: Array[Node], safe: bool, saw_release: bool) -> Dictionary:
 	var cancelled := mode in ["hurt", "death", "lost"]
-	var expected_hits := 1 if mode in ["hit", "owner_death"] or (mode == "aim_lock" and (definition.kind == "lob" or enemy._archetype == "boarder")) else 0
+	# "dodge" pins the ROM correction: no dodge immunity — a rolling player
+	# takes the delivery exactly like the standing "hit" case.
+	var expected_hits := 1 if mode in ["hit", "dodge", "owner_death"] or (mode == "aim_lock" and (definition.kind == "lob" or enemy._archetype == "boarder")) else 0
 	var expired := deliveries.all(func(node: Node): return node.is_queued_for_deletion())
 	var passed := safe and expired and target.hits == expected_hits and releases.size() == (0 if cancelled else 1) and not enemy.is_attacking
 	return {"attack":definition.id,"mode":mode,"passed":passed,"hits":target.hits,
