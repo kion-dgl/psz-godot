@@ -79,7 +79,7 @@ Do not advertise arbitrary VRM mods as working until that adapter, registry, saf
 
 Raw `.vrm` files require explicit inclusion in Godot exports; `Asset Pack` includes `assets/player/*.vrm`. Both asset publishers run the local coverage/profile preflight. R2 synchronization recognizes the VRM binary MIME type. Full independent validation and Godot probes must also run before release; the asset-free CI policy check alone cannot prove proprietary assets render.
 
-**Do not merge the migration until all 56 playable models are generated, independently validated, reviewed in Godot, included in the tested distribution pack, and the character policy/guidance is committed with the loader changes.** Publish the approved asset pack/tree and update the release's asset reference before deploying code that requires these files. Existing published packs predate this migration. No asset upload or deployment is performed by the conversion commands.
+**Do not merge the migration until all 56 playable models are generated, independently validated, reviewed in Godot, included in the tested distribution pack, and the character policy/guidance is committed with the loader changes.** Publish the approved asset pack/tree and update the release's asset reference before deploying code that requires these files. The asset manifest on this branch points to the validated migration pack. No asset upload or deployment is performed by the conversion commands.
 
 ## Migration verification record
 
@@ -93,7 +93,7 @@ Local validation on 2026-11-05, Godot 4.5.1:
 - Exported asset pack mounted in an empty project: all 56 raw VRM entries match conversion hashes.
 - Existing main suite: 14,694 passed, zero failed. Code-health/orphan checks have no new findings.
 
-Automated runtime checks do not replace final interactive combat review. Asset publication, release-manifest update and merge are intentionally outstanding.
+User interactive combat playtesting was approved on 2026-11-05. The validated pack is published at the URL in `assets_manifest.json` (SHA-256 `8bbe4d16c9dce0d52cfd4a87741c429fc2d57c765fba2d7ecf7fc406b29a2b8f`). Hosted pack/sidecar checks and the remote full-file hash pass. Merge remains outstanding.
 
 To independently verify an exported pack, run Godot from an empty project directory (containing only `project.godot` with `config_version=5`) and pass the absolute verifier script and pack paths:
 
