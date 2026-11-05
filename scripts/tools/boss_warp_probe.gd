@@ -1,5 +1,8 @@
 extends "res://scripts/tools/probe_checks.gd"
-## Run in a disposable project/user-data namespace. Optional PSZ_BOSS_SCREENSHOTS.
+## Run in a disposable project/user-data namespace. Optional PSZ_BOSS_SCREENSHOTS
+## folder env for per-state snapshots:
+## PSZ_BOSS_SCREENSHOTS=build/probe/boss-warp godot --path . \
+##   res://scripts/tools/boss_warp_probe.tscn
 
 func _run() -> void:
 	probe_label = "boss-warp"

@@ -1,5 +1,6 @@
 extends Node3D
 ## Interactive viewer for the boss warp in the real Valley goal room (seed 782).
+## Run: godot --path . res://scripts/tools/boss_warp_viewer.tscn
 ## Keys: 1-4 switch state, Space pauses/resumes the scroll, arrows orbit and
 ## zoom, C toggles auto-cycling, Esc quits.
 
