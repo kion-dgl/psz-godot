@@ -1,5 +1,6 @@
 extends "res://scripts/tools/probe_checks.gd"
 ## Run in a disposable project/user-data namespace. Optional PSZ_BOSS_SCREENSHOTS.
+
 func _run() -> void:
 	probe_label = "boss-warp"
 	CharacterManager._characters = [null, null, null, null]
@@ -20,10 +21,7 @@ func _run() -> void:
 		if room.player != null and room._gate_mgr != null:
 			break
 	await get_tree().create_timer(1.0).timeout
-	var warp: BossWarp = null
-	for child in room.get_children():
-		if child is BossWarp:
-			warp = child
+	var warp := _find_warp(room)
 	_check(warp != null, "actual Valley goal room spawns boss warp")
 	if warp == null:
 		get_tree().quit(1)
@@ -33,6 +31,24 @@ func _run() -> void:
 	warp._scroll_time = 0.0
 	warp._update_animation(0.0)
 	_check(warp._scroll_mat != null and warp._scroll_mat is StandardMaterial3D, "real GLB animated surface found")
+	await _snapshot_states(warp, room)
+	warp._update_animation(0.5)
+	await _snapshot("boss-warp-scroll")
+	_check(abs(warp._scroll_mat.uv1_offset.y - (-7.62 - 1.35 * 0.5) / 2.0) < 0.0001, "real surface scrolls at catalog speed")
+	_check_materials(warp)
+	room.free()
+	print("[boss-warp] DONE %s" % ("PASS" if _ok else "FAIL"))
+	get_tree().quit(0 if _ok else 1)
+
+
+func _find_warp(room: Node) -> BossWarp:
+	for child in room.get_children():
+		if child is BossWarp:
+			return child
+	return null
+
+
+func _snapshot_states(warp: BossWarp, room: Node) -> void:
 	var camera := Camera3D.new()
 	room.add_child(camera)
 	camera.global_position = warp.global_position + Vector3(7, 5, 10)
@@ -41,9 +57,9 @@ func _run() -> void:
 	for state in ["locked", "open", "inactive", "active"]:
 		warp.set_state(state)
 		await _snapshot("boss-warp-" + state)
-	warp._update_animation(0.5)
-	await _snapshot("boss-warp-scroll")
-	_check(abs(warp._scroll_mat.uv1_offset.y - (-7.62 - 1.35 * 0.5) / 2.0) < 0.0001, "real surface scrolls at catalog speed")
+
+
+func _check_materials(warp: BossWarp) -> void:
 	var surface_count := [0]
 	warp.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 		if mat is StandardMaterial3D and mat.texture_repeat:
@@ -63,8 +79,7 @@ func _run() -> void:
 		var tex: Texture2D = (mat as StandardMaterial3D).albedo_texture
 		if tex == null:
 			return
-		var arrays := mesh.mesh.surface_get_arrays(surface)
-		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+		var uvs: PackedVector2Array = mesh.mesh.surface_get_arrays(surface)[Mesh.ARRAY_TEX_UV]
 		if tex.get_width() == 32:
 			atlas_ok[0] = tex.get_height() == 64
 			for uv in uvs:
@@ -79,6 +94,3 @@ func _run() -> void:
 	_check(atlas_ok[0] and atlas_ok[1], "both surfaces sample doubled mirror atlases (swarp3 32x64, bwarp1 64x128)")
 	_check(bake_ok[0] >= 8, "curtain UVs baked into atlas space (x=0.125 count=%d)" % bake_ok[0])
 	_check(bake_ok[1] >= 8, "base UVs carry the one-page gold shift (v=1.0156 count=%d)" % bake_ok[1])
-	room.free()
-	print("[boss-warp] DONE %s" % ("PASS" if _ok else "FAIL"))
-	get_tree().quit(0 if _ok else 1)
