@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/tools/boss_warp_probe.gd" id="1"]
+[node name="BossWarpProbe" type="Node3D"]
+script = ExtResource("1")

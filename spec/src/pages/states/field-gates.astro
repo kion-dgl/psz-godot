@@ -308,4 +308,22 @@ const economy = `flowchart LR
       accept chance and the higher two-key chance, and it is the same flag the room
       builder uses for paired cells — but it is used here as an input, not explained.</li>
   </ul>
+  <h2>Boss warp presentation</h2>
+  <p>The boss entrance MUST use the large <code>special/o0s_warpb.glb</code>
+    model rendered with plain standard materials — no mirror shader. Both
+    surfaces' mirrored repeat is pre-baked the way the stage mirror bake
+    converts stages: per-vertex UVs transformed by the catalog config
+    (<code>o0s_1_swarp3</code> repeat 1,1 offset 0,-7.62;
+    <code>o0s_0_bwarp1</code> repeat 2,2 offset 0,1) and divided by the
+    mirrored period 2, sampling doubled mirror-atlas textures with ordinary
+    repeat. The <code>o0s_0_bwarp1</code> base then reads its stacked 32px
+    pages as separate mirrored tiles — the rim lands on the gold band while
+    the center octagon fan keeps the steel segment art — and MUST remain
+    stationary. The <code>o0s_1_swarp3</code> curtain MUST scroll at -1.35
+    raw UV units per second from the -7.62 raw phase, as <code>uv1_offset</code>
+    animation at half speed in atlas space. Both surfaces MUST retain nearest
+    filtering, unlit color and alpha cutout; opening or locking the gate MUST
+    NOT make transparent texels opaque. Gate triggers continue to own access
+    control. This is the current remake presentation contract, pending
+    original-game visual comparison.</p>
 </Concept>
