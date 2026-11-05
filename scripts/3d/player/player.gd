@@ -180,6 +180,10 @@ var walk_timer: float = 0.0
 # clears it after the particle phase; city arrival spawns a fresh Player.
 var _is_defeated: bool = false
 var _recovery_left := 0.0
+## Playtest tuning: a landed impact briefly protects against crowd multi-hits.
+## Separate from revive recovery and dodge; poison/burn ticks bypass it.
+const HIT_INVULNERABILITY_DURATION := 0.5
+var _hit_invulnerability_left := 0.0
 var _revival = preload("res://scripts/3d/player/player_revival.gd").new()
 var _ailments = preload("res://scripts/3d/player/player_ailments.gd").new()
 var _freeze = preload("res://scripts/3d/player/player_freeze.gd").new()
@@ -999,8 +1003,29 @@ func _process(delta: float) -> void:
 		_smooth_model_y(delta)
 
 
+var _dodge_body_exceptions: Array[PhysicsBody3D] = []
+
+
+## Keep the existing ten-frame dodge pass-through window when enemies are solid.
+## Exceptions are bilateral because either character can initiate movement.
+func _sync_dodge_body_collisions() -> void:
+	if not is_dodge_passing_through():
+		for body in _dodge_body_exceptions:
+			if is_instance_valid(body):
+				remove_collision_exception_with(body)
+				body.remove_collision_exception_with(self)
+		_dodge_body_exceptions.clear()
+		return
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy is PhysicsBody3D and enemy not in _dodge_body_exceptions:
+			add_collision_exception_with(enemy)
+			enemy.add_collision_exception_with(self)
+			_dodge_body_exceptions.append(enemy)
+
+
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
+	_tick_hit_invulnerability(delta)
 	if dodge_cooldown > 0.0:
 		dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
 	if _recovery_left > 0.0:
@@ -1028,6 +1053,7 @@ func _physics_process(delta: float) -> void:
 
 	var status_holds: bool = _ailments.tick(self, delta)
 	if _freeze.tick(self, delta) or status_holds:
+		_sync_dodge_body_collisions()
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
@@ -1048,6 +1074,7 @@ func _physics_process(delta: float) -> void:
 			velocity.z = 0
 
 	FrameProfiler.mark("player_move_slide")
+	_sync_dodge_body_collisions()
 	# Apply movement
 	move_and_slide()
 
@@ -2737,7 +2764,7 @@ func is_dodge_passing_through() -> bool:
 # (spec /mechanics/enemy-attacks) to the knock-down reaction regardless of damage tier.
 ## Enemy technique contact: dodge/defeat guards cover both damage and status.
 func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1.0) -> void:
-	if not can_take_hit():
+	if not can_take_hit() or _hit_invulnerability_left > 0.0:
 		return
 	take_damage(damage)
 	var definition: Dictionary = TechniqueManager.get_technique(technique_id)
@@ -2746,8 +2773,14 @@ func take_technique_hit(damage: int, technique_id: String, proc_roll: float = -1
 		apply_status_effect("freeze")
 
 
+func _tick_hit_invulnerability(delta: float) -> void:
+	_hit_invulnerability_left = maxf(0.0, _hit_invulnerability_left - delta)
+
+
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdown: bool = false, status_tick: bool = false) -> void:
 	if DebugConfig.invincible or _recovery_left > 0.0 or PhotonBlast.is_presenting(self):
+		return
+	if not status_tick and _hit_invulnerability_left > 0.0:
 		return
 	# Defeated — hard no-op for the whole defeat window (#469, spec
 	# /states/player-death). Decoupled from HP so it survives the full-HP
@@ -2768,6 +2801,7 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO, force_knockdow
 	# its displacement plus the 10-frame body pass-through, not i-frames.
 
 	if damage > 0 and not status_tick:
+		_hit_invulnerability_left = HIT_INVULNERABILITY_DURATION
 		_freeze.clear(self)
 	PhotonBlast.gain_damage(mini(maxi(damage, 0), GameState.hp), GameState.max_hp, true)
 	GameState.set_hp(GameState.hp - damage)
