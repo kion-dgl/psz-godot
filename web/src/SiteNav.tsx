@@ -75,6 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/retarget-tuner-vrm', label: 'VRM Tuner' },
       { to: '/vrm-mixamo', label: 'VRM × Mixamo' },
       { to: '/vrma-to-psz', label: 'VRMA → PSZ' },
+      { to: '/vrm-psz', label: 'VRM × PSZ' },
       { to: '/pso-ik-vrm', label: 'PSO → VRM (IK)' },
     ],
   },
