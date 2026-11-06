@@ -43,10 +43,10 @@ func get_variation(class_id: String, variation_index: int) -> String:
 	return prefix + str(clampi(variation_index, 0, HEAD_VARIATIONS - 1))
 
 
-## Get the model GLB path for a class + variation index
+## Get the model VRM path for a class + variation index
 func get_model_path(class_id: String, variation_index: int) -> String:
 	var variation := get_variation(class_id, variation_index)
-	return "res://assets/player/%s/%s_000.glb" % [variation, variation]
+	return "res://assets/player/%s/%s.vrm" % [variation, variation]
 
 
 ## Get the texture path for a specific appearance combo

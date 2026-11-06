@@ -10433,7 +10433,7 @@ func test_character_appearance() -> void:
 
 	# --- Model path generation ---
 	var model_path: String = PlayerConfig.get_model_path("ramarl", 2)
-	assert_eq(model_path, "res://assets/player/pc_032/pc_032_000.glb", "RAmarl model path correct")
+	assert_eq(model_path, "res://assets/player/pc_032/pc_032.vrm", "RAmarl model path correct")
 
 	# --- Texture index calculation ---
 	# hair=0, skin=0, body=0 → skinTone=0 → idx=000
@@ -10459,7 +10459,7 @@ func test_character_appearance() -> void:
 		}
 	}
 	var paths: Dictionary = PlayerConfig.get_paths_for_character(char_data)
-	assert_eq(paths["model_path"], "res://assets/player/pc_032/pc_032_000.glb", "Full model path via get_paths_for_character")
+	assert_eq(paths["model_path"], "res://assets/player/pc_032/pc_032.vrm", "Full model path via get_paths_for_character")
 	assert_true(str(paths["texture_path"]).ends_with("pc_032_123.png"), "Full texture path via get_paths_for_character")
 
 	# --- Appearance stored on character creation ---
@@ -10475,7 +10475,7 @@ func test_character_appearance() -> void:
 	# --- Backward compatibility (old save without appearance) ---
 	var old_char := {"class_id": "humar", "name": "OldChar"}
 	var old_paths: Dictionary = PlayerConfig.get_paths_for_character(old_char)
-	assert_eq(old_paths["model_path"], "res://assets/player/pc_000/pc_000_000.glb", "Old char defaults to pc_000 model")
+	assert_eq(old_paths["model_path"], "res://assets/player/pc_000/pc_000.vrm", "Old char defaults to pc_000 model")
 	assert_true(str(old_paths["texture_path"]).ends_with("pc_000_000.png"), "Old char defaults to 000 texture")
 
 	# Clean up

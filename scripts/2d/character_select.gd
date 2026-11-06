@@ -498,12 +498,7 @@ func _update_preview() -> void:
 	var paths: Dictionary = PlayerConfig.get_paths_for_character(character)
 	var model_path: String = paths["model_path"]
 	var texture_path: String = paths["texture_path"]
-	if not ResourceLoader.exists(model_path):
-		return
-	var packed: PackedScene = load(model_path) as PackedScene
-	if packed == null:
-		return
-	var model_node := packed.instantiate() as Node3D
+	var model_node := preload("res://scripts/3d/player/player_avatar.gd").instantiate(model_path)
 	if model_node == null:
 		return
 	model_node.position = Vector3.ZERO

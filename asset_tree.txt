@@ -541,6 +541,31 @@ assets/npcs/vrm_chibi/vrm_chibi__09.png
 assets/npcs/vrm_chibi/vrm_chibi__10.png
 assets/npcs/vrm_chibi/vrm_chibi__11.png
 assets/npcs/vrm_chibi/vrm_chibi__12.png
+assets/npcs/vrm_example/npc_idles_vrm.glb
+assets/npcs/vrm_example/vrm_example.glb
+assets/npcs/vrm_example/vrm_example_MatcapWarp.png
+assets/npcs/vrm_example/vrm_example_N00_000_00_Face_00_out.png
+assets/npcs/vrm_example/vrm_example_N00_000_00_HairBack_00_nml.png
+assets/npcs/vrm_example/vrm_example_N00_000_Hair_00_nml.png
+assets/npcs/vrm_example/vrm_example_Shader_NoneBlack.png
+assets/npcs/vrm_example/vrm_example_Shader_NoneNormal.png
+assets/npcs/vrm_example/vrm_example_Thumbnail.png
+assets/npcs/vrm_example/vrm_example__01.png
+assets/npcs/vrm_example/vrm_example__02.png
+assets/npcs/vrm_example/vrm_example__03.png
+assets/npcs/vrm_example/vrm_example__04.png
+assets/npcs/vrm_example/vrm_example__05.png
+assets/npcs/vrm_example/vrm_example__06.png
+assets/npcs/vrm_example/vrm_example__07.png
+assets/npcs/vrm_example/vrm_example__09.png
+assets/npcs/vrm_example/vrm_example__10.png
+assets/npcs/vrm_example/vrm_example__11.png
+assets/npcs/vrm_example/vrm_example__12.png
+assets/npcs/vrm_example/vrm_example__13.png
+assets/npcs/vrm_example/vrm_example__14.png
+assets/npcs/vrm_example/vrm_example__15.png
+assets/npcs/vrm_example/vrm_example__16.png
+assets/npcs/vrm_example/vrm_example__17.png
 assets/npcs/weapon-portrait.jpeg
 assets/objects/arca/ff_wall_o06.png
 assets/objects/arca/o06_cont.glb
@@ -833,6 +858,7 @@ assets/player/animations/sword_w.glb
 assets/player/animations/wand_m.glb
 assets/player/animations/wand_sw.glb
 assets/player/animations/wand_w.glb
+assets/player/pc_000/pc_000.vrm
 assets/player/pc_000/pc_000_000.glb
 assets/player/pc_000/textures/pc_000_000.png
 assets/player/pc_000/textures/pc_000_001.png
@@ -879,6 +905,7 @@ assets/player/pc_000/textures/pc_000_221.png
 assets/player/pc_000/textures/pc_000_222.png
 assets/player/pc_000/textures/pc_000_223.png
 assets/player/pc_000/textures/pc_000_224.png
+assets/player/pc_001/pc_001.vrm
 assets/player/pc_001/pc_001_000.glb
 assets/player/pc_001/textures/pc_001_000.png
 assets/player/pc_001/textures/pc_001_001.png
@@ -925,6 +952,7 @@ assets/player/pc_001/textures/pc_001_221.png
 assets/player/pc_001/textures/pc_001_222.png
 assets/player/pc_001/textures/pc_001_223.png
 assets/player/pc_001/textures/pc_001_224.png
+assets/player/pc_002/pc_002.vrm
 assets/player/pc_002/pc_002_000.glb
 assets/player/pc_002/textures/pc_002_000.png
 assets/player/pc_002/textures/pc_002_001.png
@@ -971,6 +999,7 @@ assets/player/pc_002/textures/pc_002_221.png
 assets/player/pc_002/textures/pc_002_222.png
 assets/player/pc_002/textures/pc_002_223.png
 assets/player/pc_002/textures/pc_002_224.png
+assets/player/pc_003/pc_003.vrm
 assets/player/pc_003/pc_003_000.glb
 assets/player/pc_003/textures/pc_003_000.png
 assets/player/pc_003/textures/pc_003_001.png
@@ -1017,6 +1046,7 @@ assets/player/pc_003/textures/pc_003_221.png
 assets/player/pc_003/textures/pc_003_222.png
 assets/player/pc_003/textures/pc_003_223.png
 assets/player/pc_003/textures/pc_003_224.png
+assets/player/pc_010/pc_010.vrm
 assets/player/pc_010/pc_010_000.glb
 assets/player/pc_010/textures/pc_010_000.png
 assets/player/pc_010/textures/pc_010_001.png
@@ -1063,6 +1093,7 @@ assets/player/pc_010/textures/pc_010_221.png
 assets/player/pc_010/textures/pc_010_222.png
 assets/player/pc_010/textures/pc_010_223.png
 assets/player/pc_010/textures/pc_010_224.png
+assets/player/pc_011/pc_011.vrm
 assets/player/pc_011/pc_011_000.glb
 assets/player/pc_011/textures/pc_011_000.png
 assets/player/pc_011/textures/pc_011_001.png
@@ -1109,6 +1140,7 @@ assets/player/pc_011/textures/pc_011_221.png
 assets/player/pc_011/textures/pc_011_222.png
 assets/player/pc_011/textures/pc_011_223.png
 assets/player/pc_011/textures/pc_011_224.png
+assets/player/pc_012/pc_012.vrm
 assets/player/pc_012/pc_012_000.glb
 assets/player/pc_012/textures/pc_012_000.png
 assets/player/pc_012/textures/pc_012_001.png
@@ -1155,6 +1187,7 @@ assets/player/pc_012/textures/pc_012_221.png
 assets/player/pc_012/textures/pc_012_222.png
 assets/player/pc_012/textures/pc_012_223.png
 assets/player/pc_012/textures/pc_012_224.png
+assets/player/pc_013/pc_013.vrm
 assets/player/pc_013/pc_013_000.glb
 assets/player/pc_013/textures/pc_013_000.png
 assets/player/pc_013/textures/pc_013_001.png
@@ -1201,6 +1234,7 @@ assets/player/pc_013/textures/pc_013_221.png
 assets/player/pc_013/textures/pc_013_222.png
 assets/player/pc_013/textures/pc_013_223.png
 assets/player/pc_013/textures/pc_013_224.png
+assets/player/pc_020/pc_020.vrm
 assets/player/pc_020/pc_020_000.glb
 assets/player/pc_020/textures/pc_020_000.png
 assets/player/pc_020/textures/pc_020_001.png
@@ -1247,6 +1281,7 @@ assets/player/pc_020/textures/pc_020_221.png
 assets/player/pc_020/textures/pc_020_222.png
 assets/player/pc_020/textures/pc_020_223.png
 assets/player/pc_020/textures/pc_020_224.png
+assets/player/pc_021/pc_021.vrm
 assets/player/pc_021/pc_021_000.glb
 assets/player/pc_021/textures/pc_021_000.png
 assets/player/pc_021/textures/pc_021_001.png
@@ -1293,6 +1328,7 @@ assets/player/pc_021/textures/pc_021_221.png
 assets/player/pc_021/textures/pc_021_222.png
 assets/player/pc_021/textures/pc_021_223.png
 assets/player/pc_021/textures/pc_021_224.png
+assets/player/pc_022/pc_022.vrm
 assets/player/pc_022/pc_022_000.glb
 assets/player/pc_022/textures/pc_022_000.png
 assets/player/pc_022/textures/pc_022_001.png
@@ -1339,6 +1375,7 @@ assets/player/pc_022/textures/pc_022_221.png
 assets/player/pc_022/textures/pc_022_222.png
 assets/player/pc_022/textures/pc_022_223.png
 assets/player/pc_022/textures/pc_022_224.png
+assets/player/pc_023/pc_023.vrm
 assets/player/pc_023/pc_023_000.glb
 assets/player/pc_023/textures/pc_023_000.png
 assets/player/pc_023/textures/pc_023_001.png
@@ -1385,6 +1422,7 @@ assets/player/pc_023/textures/pc_023_221.png
 assets/player/pc_023/textures/pc_023_222.png
 assets/player/pc_023/textures/pc_023_223.png
 assets/player/pc_023/textures/pc_023_224.png
+assets/player/pc_030/pc_030.vrm
 assets/player/pc_030/pc_030_000.glb
 assets/player/pc_030/textures/pc_030_000.png
 assets/player/pc_030/textures/pc_030_001.png
@@ -1431,6 +1469,7 @@ assets/player/pc_030/textures/pc_030_221.png
 assets/player/pc_030/textures/pc_030_222.png
 assets/player/pc_030/textures/pc_030_223.png
 assets/player/pc_030/textures/pc_030_224.png
+assets/player/pc_031/pc_031.vrm
 assets/player/pc_031/pc_031_000.glb
 assets/player/pc_031/textures/pc_031_000.png
 assets/player/pc_031/textures/pc_031_001.png
@@ -1477,6 +1516,7 @@ assets/player/pc_031/textures/pc_031_221.png
 assets/player/pc_031/textures/pc_031_222.png
 assets/player/pc_031/textures/pc_031_223.png
 assets/player/pc_031/textures/pc_031_224.png
+assets/player/pc_032/pc_032.vrm
 assets/player/pc_032/pc_032_000.glb
 assets/player/pc_032/textures/pc_032_000.png
 assets/player/pc_032/textures/pc_032_001.png
@@ -1523,6 +1563,7 @@ assets/player/pc_032/textures/pc_032_221.png
 assets/player/pc_032/textures/pc_032_222.png
 assets/player/pc_032/textures/pc_032_223.png
 assets/player/pc_032/textures/pc_032_224.png
+assets/player/pc_033/pc_033.vrm
 assets/player/pc_033/pc_033_000.glb
 assets/player/pc_033/textures/pc_033_000.png
 assets/player/pc_033/textures/pc_033_001.png
@@ -1569,6 +1610,7 @@ assets/player/pc_033/textures/pc_033_221.png
 assets/player/pc_033/textures/pc_033_222.png
 assets/player/pc_033/textures/pc_033_223.png
 assets/player/pc_033/textures/pc_033_224.png
+assets/player/pc_040/pc_040.vrm
 assets/player/pc_040/pc_040_000.glb
 assets/player/pc_040/textures/pc_040_000.png
 assets/player/pc_040/textures/pc_040_001.png
@@ -1615,6 +1657,7 @@ assets/player/pc_040/textures/pc_040_221.png
 assets/player/pc_040/textures/pc_040_222.png
 assets/player/pc_040/textures/pc_040_223.png
 assets/player/pc_040/textures/pc_040_224.png
+assets/player/pc_041/pc_041.vrm
 assets/player/pc_041/pc_041_000.glb
 assets/player/pc_041/textures/pc_041_000.png
 assets/player/pc_041/textures/pc_041_001.png
@@ -1661,6 +1704,7 @@ assets/player/pc_041/textures/pc_041_221.png
 assets/player/pc_041/textures/pc_041_222.png
 assets/player/pc_041/textures/pc_041_223.png
 assets/player/pc_041/textures/pc_041_224.png
+assets/player/pc_042/pc_042.vrm
 assets/player/pc_042/pc_042_000.glb
 assets/player/pc_042/textures/pc_042_000.png
 assets/player/pc_042/textures/pc_042_001.png
@@ -1707,6 +1751,7 @@ assets/player/pc_042/textures/pc_042_221.png
 assets/player/pc_042/textures/pc_042_222.png
 assets/player/pc_042/textures/pc_042_223.png
 assets/player/pc_042/textures/pc_042_224.png
+assets/player/pc_043/pc_043.vrm
 assets/player/pc_043/pc_043_000.glb
 assets/player/pc_043/textures/pc_043_000.png
 assets/player/pc_043/textures/pc_043_001.png
@@ -1753,6 +1798,7 @@ assets/player/pc_043/textures/pc_043_221.png
 assets/player/pc_043/textures/pc_043_222.png
 assets/player/pc_043/textures/pc_043_223.png
 assets/player/pc_043/textures/pc_043_224.png
+assets/player/pc_050/pc_050.vrm
 assets/player/pc_050/pc_050_000.glb
 assets/player/pc_050/textures/pc_050_000.png
 assets/player/pc_050/textures/pc_050_001.png
@@ -1799,6 +1845,7 @@ assets/player/pc_050/textures/pc_050_221.png
 assets/player/pc_050/textures/pc_050_222.png
 assets/player/pc_050/textures/pc_050_223.png
 assets/player/pc_050/textures/pc_050_224.png
+assets/player/pc_051/pc_051.vrm
 assets/player/pc_051/pc_051_000.glb
 assets/player/pc_051/textures/pc_051_000.png
 assets/player/pc_051/textures/pc_051_001.png
@@ -1845,6 +1892,7 @@ assets/player/pc_051/textures/pc_051_221.png
 assets/player/pc_051/textures/pc_051_222.png
 assets/player/pc_051/textures/pc_051_223.png
 assets/player/pc_051/textures/pc_051_224.png
+assets/player/pc_052/pc_052.vrm
 assets/player/pc_052/pc_052_000.glb
 assets/player/pc_052/textures/pc_052_000.png
 assets/player/pc_052/textures/pc_052_001.png
@@ -1891,6 +1939,7 @@ assets/player/pc_052/textures/pc_052_221.png
 assets/player/pc_052/textures/pc_052_222.png
 assets/player/pc_052/textures/pc_052_223.png
 assets/player/pc_052/textures/pc_052_224.png
+assets/player/pc_053/pc_053.vrm
 assets/player/pc_053/pc_053_000.glb
 assets/player/pc_053/textures/pc_053_000.png
 assets/player/pc_053/textures/pc_053_001.png
@@ -1937,6 +1986,7 @@ assets/player/pc_053/textures/pc_053_221.png
 assets/player/pc_053/textures/pc_053_222.png
 assets/player/pc_053/textures/pc_053_223.png
 assets/player/pc_053/textures/pc_053_224.png
+assets/player/pc_060/pc_060.vrm
 assets/player/pc_060/pc_060_000.glb
 assets/player/pc_060/textures/pc_060_000.png
 assets/player/pc_060/textures/pc_060_001.png
@@ -1983,6 +2033,7 @@ assets/player/pc_060/textures/pc_060_221.png
 assets/player/pc_060/textures/pc_060_222.png
 assets/player/pc_060/textures/pc_060_223.png
 assets/player/pc_060/textures/pc_060_224.png
+assets/player/pc_061/pc_061.vrm
 assets/player/pc_061/pc_061_000.glb
 assets/player/pc_061/textures/pc_061_000.png
 assets/player/pc_061/textures/pc_061_001.png
@@ -2029,6 +2080,7 @@ assets/player/pc_061/textures/pc_061_221.png
 assets/player/pc_061/textures/pc_061_222.png
 assets/player/pc_061/textures/pc_061_223.png
 assets/player/pc_061/textures/pc_061_224.png
+assets/player/pc_062/pc_062.vrm
 assets/player/pc_062/pc_062_000.glb
 assets/player/pc_062/textures/pc_062_000.png
 assets/player/pc_062/textures/pc_062_001.png
@@ -2075,6 +2127,7 @@ assets/player/pc_062/textures/pc_062_221.png
 assets/player/pc_062/textures/pc_062_222.png
 assets/player/pc_062/textures/pc_062_223.png
 assets/player/pc_062/textures/pc_062_224.png
+assets/player/pc_063/pc_063.vrm
 assets/player/pc_063/pc_063_000.glb
 assets/player/pc_063/textures/pc_063_000.png
 assets/player/pc_063/textures/pc_063_001.png
@@ -2121,6 +2174,7 @@ assets/player/pc_063/textures/pc_063_221.png
 assets/player/pc_063/textures/pc_063_222.png
 assets/player/pc_063/textures/pc_063_223.png
 assets/player/pc_063/textures/pc_063_224.png
+assets/player/pc_070/pc_070.vrm
 assets/player/pc_070/pc_070_000.glb
 assets/player/pc_070/textures/pc_070_000.png
 assets/player/pc_070/textures/pc_070_001.png
@@ -2167,6 +2221,7 @@ assets/player/pc_070/textures/pc_070_221.png
 assets/player/pc_070/textures/pc_070_222.png
 assets/player/pc_070/textures/pc_070_223.png
 assets/player/pc_070/textures/pc_070_224.png
+assets/player/pc_071/pc_071.vrm
 assets/player/pc_071/pc_071_000.glb
 assets/player/pc_071/textures/pc_071_000.png
 assets/player/pc_071/textures/pc_071_001.png
@@ -2213,6 +2268,7 @@ assets/player/pc_071/textures/pc_071_221.png
 assets/player/pc_071/textures/pc_071_222.png
 assets/player/pc_071/textures/pc_071_223.png
 assets/player/pc_071/textures/pc_071_224.png
+assets/player/pc_072/pc_072.vrm
 assets/player/pc_072/pc_072_000.glb
 assets/player/pc_072/textures/pc_072_000.png
 assets/player/pc_072/textures/pc_072_001.png
@@ -2259,6 +2315,7 @@ assets/player/pc_072/textures/pc_072_221.png
 assets/player/pc_072/textures/pc_072_222.png
 assets/player/pc_072/textures/pc_072_223.png
 assets/player/pc_072/textures/pc_072_224.png
+assets/player/pc_073/pc_073.vrm
 assets/player/pc_073/pc_073_000.glb
 assets/player/pc_073/textures/pc_073_000.png
 assets/player/pc_073/textures/pc_073_001.png
@@ -2305,6 +2362,7 @@ assets/player/pc_073/textures/pc_073_221.png
 assets/player/pc_073/textures/pc_073_222.png
 assets/player/pc_073/textures/pc_073_223.png
 assets/player/pc_073/textures/pc_073_224.png
+assets/player/pc_080/pc_080.vrm
 assets/player/pc_080/pc_080_000.glb
 assets/player/pc_080/textures/pc_080_000.png
 assets/player/pc_080/textures/pc_080_001.png
@@ -2351,6 +2409,7 @@ assets/player/pc_080/textures/pc_080_221.png
 assets/player/pc_080/textures/pc_080_222.png
 assets/player/pc_080/textures/pc_080_223.png
 assets/player/pc_080/textures/pc_080_224.png
+assets/player/pc_081/pc_081.vrm
 assets/player/pc_081/pc_081_000.glb
 assets/player/pc_081/textures/pc_081_000.png
 assets/player/pc_081/textures/pc_081_001.png
@@ -2397,6 +2456,7 @@ assets/player/pc_081/textures/pc_081_221.png
 assets/player/pc_081/textures/pc_081_222.png
 assets/player/pc_081/textures/pc_081_223.png
 assets/player/pc_081/textures/pc_081_224.png
+assets/player/pc_082/pc_082.vrm
 assets/player/pc_082/pc_082_000.glb
 assets/player/pc_082/textures/pc_082_000.png
 assets/player/pc_082/textures/pc_082_001.png
@@ -2443,6 +2503,7 @@ assets/player/pc_082/textures/pc_082_221.png
 assets/player/pc_082/textures/pc_082_222.png
 assets/player/pc_082/textures/pc_082_223.png
 assets/player/pc_082/textures/pc_082_224.png
+assets/player/pc_083/pc_083.vrm
 assets/player/pc_083/pc_083_000.glb
 assets/player/pc_083/textures/pc_083_000.png
 assets/player/pc_083/textures/pc_083_001.png
@@ -2489,6 +2550,7 @@ assets/player/pc_083/textures/pc_083_221.png
 assets/player/pc_083/textures/pc_083_222.png
 assets/player/pc_083/textures/pc_083_223.png
 assets/player/pc_083/textures/pc_083_224.png
+assets/player/pc_090/pc_090.vrm
 assets/player/pc_090/pc_090_000.glb
 assets/player/pc_090/textures/pc_090_000.png
 assets/player/pc_090/textures/pc_090_001.png
@@ -2535,6 +2597,7 @@ assets/player/pc_090/textures/pc_090_221.png
 assets/player/pc_090/textures/pc_090_222.png
 assets/player/pc_090/textures/pc_090_223.png
 assets/player/pc_090/textures/pc_090_224.png
+assets/player/pc_091/pc_091.vrm
 assets/player/pc_091/pc_091_000.glb
 assets/player/pc_091/textures/pc_091_000.png
 assets/player/pc_091/textures/pc_091_001.png
@@ -2581,6 +2644,7 @@ assets/player/pc_091/textures/pc_091_221.png
 assets/player/pc_091/textures/pc_091_222.png
 assets/player/pc_091/textures/pc_091_223.png
 assets/player/pc_091/textures/pc_091_224.png
+assets/player/pc_092/pc_092.vrm
 assets/player/pc_092/pc_092_000.glb
 assets/player/pc_092/textures/pc_092_000.png
 assets/player/pc_092/textures/pc_092_001.png
@@ -2627,6 +2691,7 @@ assets/player/pc_092/textures/pc_092_221.png
 assets/player/pc_092/textures/pc_092_222.png
 assets/player/pc_092/textures/pc_092_223.png
 assets/player/pc_092/textures/pc_092_224.png
+assets/player/pc_093/pc_093.vrm
 assets/player/pc_093/pc_093_000.glb
 assets/player/pc_093/textures/pc_093_000.png
 assets/player/pc_093/textures/pc_093_001.png
@@ -2673,6 +2738,7 @@ assets/player/pc_093/textures/pc_093_221.png
 assets/player/pc_093/textures/pc_093_222.png
 assets/player/pc_093/textures/pc_093_223.png
 assets/player/pc_093/textures/pc_093_224.png
+assets/player/pc_100/pc_100.vrm
 assets/player/pc_100/pc_100_000.glb
 assets/player/pc_100/textures/pc_100_000.png
 assets/player/pc_100/textures/pc_100_001.png
@@ -2719,6 +2785,7 @@ assets/player/pc_100/textures/pc_100_221.png
 assets/player/pc_100/textures/pc_100_222.png
 assets/player/pc_100/textures/pc_100_223.png
 assets/player/pc_100/textures/pc_100_224.png
+assets/player/pc_101/pc_101.vrm
 assets/player/pc_101/pc_101_000.glb
 assets/player/pc_101/textures/pc_101_000.png
 assets/player/pc_101/textures/pc_101_001.png
@@ -2765,6 +2832,7 @@ assets/player/pc_101/textures/pc_101_221.png
 assets/player/pc_101/textures/pc_101_222.png
 assets/player/pc_101/textures/pc_101_223.png
 assets/player/pc_101/textures/pc_101_224.png
+assets/player/pc_102/pc_102.vrm
 assets/player/pc_102/pc_102_000.glb
 assets/player/pc_102/textures/pc_102_000.png
 assets/player/pc_102/textures/pc_102_001.png
@@ -2811,6 +2879,7 @@ assets/player/pc_102/textures/pc_102_221.png
 assets/player/pc_102/textures/pc_102_222.png
 assets/player/pc_102/textures/pc_102_223.png
 assets/player/pc_102/textures/pc_102_224.png
+assets/player/pc_103/pc_103.vrm
 assets/player/pc_103/pc_103_000.glb
 assets/player/pc_103/textures/pc_103_000.png
 assets/player/pc_103/textures/pc_103_001.png
@@ -2857,6 +2926,7 @@ assets/player/pc_103/textures/pc_103_221.png
 assets/player/pc_103/textures/pc_103_222.png
 assets/player/pc_103/textures/pc_103_223.png
 assets/player/pc_103/textures/pc_103_224.png
+assets/player/pc_110/pc_110.vrm
 assets/player/pc_110/pc_110_000.glb
 assets/player/pc_110/textures/pc_110_000.png
 assets/player/pc_110/textures/pc_110_001.png
@@ -2903,6 +2973,7 @@ assets/player/pc_110/textures/pc_110_221.png
 assets/player/pc_110/textures/pc_110_222.png
 assets/player/pc_110/textures/pc_110_223.png
 assets/player/pc_110/textures/pc_110_224.png
+assets/player/pc_111/pc_111.vrm
 assets/player/pc_111/pc_111_000.glb
 assets/player/pc_111/textures/pc_111_000.png
 assets/player/pc_111/textures/pc_111_001.png
@@ -2949,6 +3020,7 @@ assets/player/pc_111/textures/pc_111_221.png
 assets/player/pc_111/textures/pc_111_222.png
 assets/player/pc_111/textures/pc_111_223.png
 assets/player/pc_111/textures/pc_111_224.png
+assets/player/pc_112/pc_112.vrm
 assets/player/pc_112/pc_112_000.glb
 assets/player/pc_112/textures/pc_112_000.png
 assets/player/pc_112/textures/pc_112_001.png
@@ -2995,6 +3067,7 @@ assets/player/pc_112/textures/pc_112_221.png
 assets/player/pc_112/textures/pc_112_222.png
 assets/player/pc_112/textures/pc_112_223.png
 assets/player/pc_112/textures/pc_112_224.png
+assets/player/pc_113/pc_113.vrm
 assets/player/pc_113/pc_113_000.glb
 assets/player/pc_113/textures/pc_113_000.png
 assets/player/pc_113/textures/pc_113_001.png
@@ -3041,6 +3114,7 @@ assets/player/pc_113/textures/pc_113_221.png
 assets/player/pc_113/textures/pc_113_222.png
 assets/player/pc_113/textures/pc_113_223.png
 assets/player/pc_113/textures/pc_113_224.png
+assets/player/pc_120/pc_120.vrm
 assets/player/pc_120/pc_120_000.glb
 assets/player/pc_120/textures/pc_120_000.png
 assets/player/pc_120/textures/pc_120_001.png
@@ -3087,6 +3161,7 @@ assets/player/pc_120/textures/pc_120_221.png
 assets/player/pc_120/textures/pc_120_222.png
 assets/player/pc_120/textures/pc_120_223.png
 assets/player/pc_120/textures/pc_120_224.png
+assets/player/pc_121/pc_121.vrm
 assets/player/pc_121/pc_121_000.glb
 assets/player/pc_121/textures/pc_121_000.png
 assets/player/pc_121/textures/pc_121_001.png
@@ -3133,6 +3208,7 @@ assets/player/pc_121/textures/pc_121_221.png
 assets/player/pc_121/textures/pc_121_222.png
 assets/player/pc_121/textures/pc_121_223.png
 assets/player/pc_121/textures/pc_121_224.png
+assets/player/pc_122/pc_122.vrm
 assets/player/pc_122/pc_122_000.glb
 assets/player/pc_122/textures/pc_122_000.png
 assets/player/pc_122/textures/pc_122_001.png
@@ -3179,6 +3255,7 @@ assets/player/pc_122/textures/pc_122_221.png
 assets/player/pc_122/textures/pc_122_222.png
 assets/player/pc_122/textures/pc_122_223.png
 assets/player/pc_122/textures/pc_122_224.png
+assets/player/pc_123/pc_123.vrm
 assets/player/pc_123/pc_123_000.glb
 assets/player/pc_123/textures/pc_123_000.png
 assets/player/pc_123/textures/pc_123_001.png
@@ -3225,6 +3302,7 @@ assets/player/pc_123/textures/pc_123_221.png
 assets/player/pc_123/textures/pc_123_222.png
 assets/player/pc_123/textures/pc_123_223.png
 assets/player/pc_123/textures/pc_123_224.png
+assets/player/pc_130/pc_130.vrm
 assets/player/pc_130/pc_130_000.glb
 assets/player/pc_130/textures/pc_130_000.png
 assets/player/pc_130/textures/pc_130_001.png
@@ -3271,6 +3349,7 @@ assets/player/pc_130/textures/pc_130_221.png
 assets/player/pc_130/textures/pc_130_222.png
 assets/player/pc_130/textures/pc_130_223.png
 assets/player/pc_130/textures/pc_130_224.png
+assets/player/pc_131/pc_131.vrm
 assets/player/pc_131/pc_131_000.glb
 assets/player/pc_131/textures/pc_131_000.png
 assets/player/pc_131/textures/pc_131_001.png
@@ -3317,6 +3396,7 @@ assets/player/pc_131/textures/pc_131_221.png
 assets/player/pc_131/textures/pc_131_222.png
 assets/player/pc_131/textures/pc_131_223.png
 assets/player/pc_131/textures/pc_131_224.png
+assets/player/pc_132/pc_132.vrm
 assets/player/pc_132/pc_132_000.glb
 assets/player/pc_132/textures/pc_132_000.png
 assets/player/pc_132/textures/pc_132_001.png
@@ -3363,6 +3443,7 @@ assets/player/pc_132/textures/pc_132_221.png
 assets/player/pc_132/textures/pc_132_222.png
 assets/player/pc_132/textures/pc_132_223.png
 assets/player/pc_132/textures/pc_132_224.png
+assets/player/pc_133/pc_133.vrm
 assets/player/pc_133/pc_133_000.glb
 assets/player/pc_133/textures/pc_133_000.png
 assets/player/pc_133/textures/pc_133_001.png
@@ -3417,6 +3498,7 @@ assets/player/photon_blasts/fb_kenta.glb
 assets/player/photon_blasts/fb_kenta.png
 assets/player/photon_blasts/fb_rabbit.glb
 assets/player/photon_blasts/fb_rabbit.png
+assets/player/vrm_conversion_report.json
 assets/sfx/ancient/ancient_022.wav
 assets/sfx/cave/cave_015.wav
 assets/sfx/common/common_000.wav

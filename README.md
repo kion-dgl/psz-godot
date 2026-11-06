@@ -104,3 +104,5 @@ outputs are development artifacts, not dependencies of the shipped game:
 godot --headless --path . --script res://scripts/tools/export_shrine_pillar_preview.gd
 godot --headless --path . --script res://scripts/tools/export_shrine_lantern.gd
 ```
+
+Character contributors: follow the [VRM character policy and migration guide](docs/character-vrm-policy.md). New human/humanoid runtime models must be VRM 1.0.

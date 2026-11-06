@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: VRM character policy
+        run: python3 scripts/tools/vrm/check_policy.py
+
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:

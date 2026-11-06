@@ -1068,14 +1068,9 @@ func _update_preview_model() -> void:
 	var vi: int = int(_state.appearance["variation_index"])
 	var model_path: String = PlayerConfig.get_model_path(_state.selected_class_id, vi)
 
-	if not ResourceLoader.exists(model_path):
+	_preview_model = preload("res://scripts/3d/player/player_avatar.gd").instantiate(model_path)
+	if _preview_model == null:
 		return
-
-	var packed: PackedScene = load(model_path) as PackedScene
-	if packed == null:
-		return
-
-	_preview_model = packed.instantiate() as Node3D
 	_preview_model.scale = Vector3(0.6, 0.6, 0.6)
 	_preview_model.position.y = -0.2
 	_preview_pivot.add_child(_preview_model)
