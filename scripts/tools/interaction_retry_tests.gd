@@ -1,0 +1,15 @@
+extends RefCounted
+const Retry := preload("res://scripts/tools/interaction_retry.gd")
+static func run(t) -> void:
+	var retry = Retry.new()
+	t.assert_eq(retry.tick(0, false), "press", "interact first attempt")
+	t.assert_eq(retry.tick(1.9, false), "wait", "wait for consequence")
+	t.assert_eq(retry.tick(0.2, false), "press", "retry after two seconds")
+	t.assert_eq(retry.tick(2, false), "press", "third and final press")
+	t.assert_eq(retry.tick(2, false), "fail", "bounded miss fails without global timeout")
+	retry = Retry.new()
+	retry.tick(0, false)
+	t.assert_eq(retry.tick(0.1, true), "done", "observe short-lived overlay")
+	t.assert_eq(retry.tick(3, false), "done", "closed overlay must not cause extra interact")
+	retry = Retry.new()
+	t.assert_eq(retry.tick(0, false, false), "done", "scene change cancels stale retry")
