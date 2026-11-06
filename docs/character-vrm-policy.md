@@ -52,6 +52,15 @@ python3 scripts/tools/run_humar_vrm_poc.py --gallery --variation 0
 python3 scripts/tools/run_humar_vrm_poc.py --game
 ```
 
+The launcher selects these Godot entry points. Use the isolated launcher rather than opening the comparison scenes against your normal saves:
+
+| Mode | Entry point |
+| --- | --- |
+| Animated comparison / `--portable` | `res://scripts/tools/humar_vrm_probe.tscn` |
+| `--all` | `res://scripts/tools/vrm/player_vrm_probe.tscn` |
+| `--gallery` | `res://scripts/tools/vrm/player_vrm_gallery.tscn` |
+| Exported-pack verification (empty project, absolute script path) | `res://scripts/tools/vrm/verify_pack.gd` |
+
 The launcher uses separate `psz-humar-vrm-poc` saves. `--godot` selects an executable; `--screenshot /absolute/file.png` captures comparison/gallery output. Inspect front/back, hair and clothing surfaces, feet, wrists, weapon sockets and mag placement. In combat, check attacks, techniques, dodge, damage, death and equipment changes with melee/ranged/technique weapons and both animation genders. Exercise character creation/selection and appearance changes as well.
 
 ## Port another existing humanoid
