@@ -183,4 +183,6 @@ Group, rendered solo and male-dagger regression checks passed. Owner playtest an
 
 Local female dagger library SHA-256: `bfa43ab82232ff75c1a4122ddb84b01c787f614ef7990a3535af76acb707387b`.
 
-Shared successful-block feedback: a 220 ms blue-white particle burst at chest height toward the attacker, emitted only after guard acceptance. Rear/rejected blocks emit nothing. All adapted weapon profiles share it; focused checks verify emission and cleanup.
+Shared successful-block feedback: a 300 ms blue-white particle burst plus a 320 ms camera-facing cyan guard flash at chest height toward the attacker, emitted only after guard acceptance. Rear/rejected blocks emit nothing. All adapted weapon profiles share it; focused checks verify emission and cleanup.
+
+Guard flash v2 is visible through overlapping enemy geometry at chest height. The fixture window title identifies this revision; the grip panel includes Preview block to demonstrate the effect without requiring a gameplay block. Rendered checks verify emission and cleanup.

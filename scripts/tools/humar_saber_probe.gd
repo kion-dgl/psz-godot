@@ -7,6 +7,7 @@ var _pso_prefix := "pso_sa"
 
 func _run() -> void:
 	probe_label = "humar-saber"
+	DisplayServer.window_set_title("PSZ Combat Test — Guard flash v2")
 	if ProjectSettings.get_setting("application/config/name") != "PSZ Saber Prototype":
 		push_error("Use scripts/tools/run_humar_saber.py to isolate saves")
 		get_tree().quit(1)
@@ -157,10 +158,11 @@ func _verify_exchange(player, enemy) -> void:
 	enemy._deal_damage_for({"kind":"melee_arc", "damage_mult":1.0})
 	_check(GameState.hp == hp and player.animation_player.current_animation == (_pso_prefix + "_block"), "real frontal melee is blocked")
 	_check(get_tree().get_nodes_in_group("prototype_block_feedback").size() == block_bursts + 1, "successful block emits guard spark")
+	_check(not get_tree().get_nodes_in_group("prototype_block_flash").is_empty(), "successful block emits visible guard flash")
 	await get_tree().create_timer(0.08).timeout
 	await _snapshot("successful_block")
 	await get_tree().create_timer(0.3).timeout
-	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty(), "guard sparks clean themselves up")
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty() and get_tree().get_nodes_in_group("prototype_block_flash").is_empty(), "guard sparks and flash clean themselves up")
 	player._start_attack()
 	_check(Rules.guarding(player), "block commits recovery and refuses attack cancel")
 	player._hit_invulnerability_left = 0

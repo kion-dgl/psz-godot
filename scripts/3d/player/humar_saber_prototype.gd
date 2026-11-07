@@ -166,8 +166,8 @@ static func block_feedback(player, source: Node3D) -> void:
 	burst.name = "GuardSpark"
 	burst.add_to_group("prototype_block_feedback")
 	burst.one_shot = true
-	burst.amount = 12
-	burst.lifetime = 0.22
+	burst.amount = 18
+	burst.lifetime = 0.3
 	burst.explosiveness = 1.0
 	burst.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	burst.emission_sphere_radius = 0.06
@@ -179,8 +179,8 @@ static func block_feedback(player, source: Node3D) -> void:
 	burst.scale_amount_min = 0.6
 	burst.scale_amount_max = 1.0
 	var mesh := SphereMesh.new()
-	mesh.radius = 0.035
-	mesh.height = 0.07
+	mesh.radius = 0.055
+	mesh.height = 0.11
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -198,3 +198,36 @@ static func block_feedback(player, source: Node3D) -> void:
 	burst.global_position = player.global_position + Vector3.UP * 1.1 + toward.normalized() * 0.45
 	burst.emitting = true
 	burst.finished.connect(burst.queue_free)
+
+	# Camera-facing flash stays readable even when the attacking enemy
+	# overlaps the player's hands. This is at chest height, never on the floor.
+	var flash := MeshInstance3D.new()
+	flash.name = "GuardFlash"
+	flash.add_to_group("prototype_block_flash")
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.8, 0.8)
+	var ring := Gradient.new()
+	ring.offsets = PackedFloat32Array([0.0, 0.55, 0.70, 0.84, 1.0])
+	ring.colors = PackedColorArray([Color(0.4,0.9,1,0.15), Color(0.4,0.9,1,0), Color(0.7,1,1,1), Color(0.2,0.8,1,0.85), Color(0.2,0.8,1,0)])
+	var texture := GradientTexture2D.new()
+	texture.width = 64
+	texture.height = 64
+	texture.gradient = ring
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	var flash_material := StandardMaterial3D.new()
+	flash_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	flash_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	flash_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	flash_material.no_depth_test = true
+	flash_material.albedo_texture = texture
+	quad.material = flash_material
+	flash.mesh = quad
+	player.get_tree().current_scene.add_child(flash)
+	flash.global_position = burst.global_position
+	flash.scale = Vector3.ONE * 0.7
+	var tween := flash.create_tween().set_parallel(true)
+	tween.tween_property(flash, "scale", Vector3.ONE * 1.25, 0.32)
+	tween.tween_property(flash_material, "albedo_color:a", 0.0, 0.24).set_delay(0.08)
+	tween.chain().tween_callback(flash.queue_free)

@@ -38,7 +38,7 @@ func setup(player: Node3D) -> void:
 			row.add_child(button)
 	var actions := HBoxContainer.new()
 	box.add_child(actions)
-	for caption in ["Reset", "Save", "Copy angles"]:
+	for caption in ["Reset", "Save", "Copy angles", "Preview block"]:
 		var button := Button.new()
 		button.text = caption
 		button.focus_mode = Control.FOCUS_NONE
@@ -74,7 +74,12 @@ func _update_angles() -> void:
 	_angles.text = "Rotation: X %.1f°   Y %.1f°   Z %.1f°" % [r.x, r.y, r.z]
 
 func _action(action: String) -> void:
-	if action == "Reset":
+	if action == "Preview block":
+		var enemies := get_tree().get_nodes_in_group("enemies")
+		if not enemies.is_empty():
+			preload("res://scripts/3d/player/humar_saber_prototype.gd").block_feedback(_player, enemies[0])
+			_status.text = "Block effect preview (no gameplay block triggered)."
+	elif action == "Reset":
 		_blade.basis = _original
 		_update_angles()
 		_status.text = "Reset to current branch defaults (Save to keep reset)."
