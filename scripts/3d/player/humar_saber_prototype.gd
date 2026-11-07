@@ -121,14 +121,14 @@ static func palette_cue(player) -> Dictionary:
 	return {"progress": progress, "ready": progress >= CHAIN[0], "queued": player._queued_combo != player.ComboQueue.NONE}
 
 static func contact_feedback(enemy, source, strong: bool) -> void:
+	if strong and enemy.is_alive and enemy.current_state == enemy.EnemyState.HURT:
+		enemy.hurt_timer = maxf(enemy.hurt_timer, 0.45)
 	if source._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS:
 		var now := Time.get_ticks_msec()
 		if now - int(enemy.get_meta("dagger_feedback_ms", -1000)) < 80: return
 		enemy.set_meta("dagger_feedback_ms", now)
 	# The caller verifies actual HP loss; no spark or sound on a whiff/immune hit.
 	SfxManager.play_at("res://assets/sfx/weapons/saber_hit.wav", enemy.global_position, 0.0 if strong else -7.0)
-	if strong and enemy.is_alive and enemy.current_state == enemy.EnemyState.HURT:
-		enemy.hurt_timer = maxf(enemy.hurt_timer, 0.45)
 	var burst := CPUParticles3D.new()
 	burst.name = "SaberContactSpark"
 	burst.add_to_group("saber_contact_feedback")

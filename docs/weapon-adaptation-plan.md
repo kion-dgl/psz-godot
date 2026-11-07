@@ -149,9 +149,9 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon daggers` (HUmar), with op
 | Light / heavy / fall / get up | PSO 135 / 133 / 136 / 134 |
 | Dodge / defeated hold | Native `pmda_esc_f`, `pmda_dam_d_lp` |
 
-Preserve the decoded native hit schedule from `original_attack_timing.json`: 2/1/3 contacts, at [0.1556, 0.3333] / [0.2895] / [0.2075, 0.4151, 0.5849] of the original motion. These records take precedence over the old generic 2/2/3 hit-count defaults. Recovery holds are 100/120/180 ms; the approved normal/strong continuation window remains shared. Each impact consumes one target, with the native short reach and 120-degree chain turn limit. The strong cue and extended flinch occur on the first impact only; subsequent hits keep normal impact feedback. An 80 ms per-enemy feedback throttle prevents sound/particle bursts when a slow frame catches up multiple contacts. Damage contacts are never throttled.
+Preserve the decoded native hit schedule from `original_attack_timing.json`: 2/1/3 contacts, at [0.1556, 0.3333] / [0.2895] / [0.2075, 0.4151, 0.5849] of the original motion. These records take precedence over the old generic 2/2/3 hit-count defaults. Recovery holds are 100/120/180 ms; the approved normal/strong continuation window remains shared. Each impact consumes one target, with a 120-degree chain turn limit. Prototype reach is tuned to 2.6, horizontal cone 38 degrees, vertical tolerance 0.9 and vertical cone 45 degrees; targeting and contact share the same configuration. Every contact of a strong swing retains 1.5× power plus strong impact feedback and extended flinch, including all three contacts of the finisher. The windup cue plays once per swing. An 80 ms per-enemy feedback throttle prevents sound/particle bursts when a slow frame catches up multiple contacts. Damage contacts are never throttled.
 
-Focused checks verify both hand attachments, authored contact onset, no repeat contact, single-target cap, first-impact-only extended flinch, all mixed combos and recovery outcomes. Group and rendered solo checks pass; female sword regression passes. Owner playtest and asset publication are pending.
+Focused checks verify both hand attachments, authored contact onset, no repeat contact, single-target cap, strong feedback on every impact, all mixed combos and recovery outcomes. Group and rendered solo checks pass; female sword regression passes. Owner playtest and asset publication are pending.
 
 Local male dagger library SHA-256: `a94743d033da4ab10f893857c7e64541b0e8809e7511921fffef52e382f5b30c`.
 
@@ -160,3 +160,5 @@ Male dagger visual: the fixture uses the native PSZ Ein Dagger (`wdac01_1_r`) me
 The interactive male dagger fixture includes a left-grip adjustment panel: local X/Y/Z rotations in 180°, 90° and 5° increments, Reset, Copy angles, and Save. Enemies start frozen while adjusting; toggle to resume combat. Save persists the exact basis in the ignored local `.godot/dagger-left-grip.json`; automated checks ignore this personal override. Once accepted, promote the saved basis into the attachment defaults.
 
 Owner-saved left dagger grip promoted into the default: basis columns `(0,0,-1)`, `(0,-1,0)`, `(1,0,0)`, retaining native scale. Reset in the live panel now returns to this calibrated default.
+
+Dagger reach checks cover an offset target at (0.8, 0, 2.2), agreement with the lock cursor, and rejection of targets behind or at distance 4. Strong third-swing power is verified against normal with identical damage variance.

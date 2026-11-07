@@ -520,6 +520,25 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 		player.animation_player.pause()
 		await _snapshot(clip)
 
+	var geometry: Dictionary = player._weapon_combat_config(WeaponData.WeaponType.DAGGERS)
+	player.player_rotation = 0
+	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)
+	enemies[0].global_position = player.global_position + Vector3(0.8, 0, 2.2)
+	_check(player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers reach an offset enemy at practical melee distance")
+	player._update_combat_targets()
+	_check(player._targeted_enemies.has(enemies[0]), "dagger cursor agrees with widened contact geometry")
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 4)
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers cannot hit distant enemies")
+	enemies[0].global_position = player.global_position + Vector3(0, 0, -1.5)
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers cannot hit behind the player")
+	player.combo_state = 3
+	player._is_special_attack = false
+	seed(791)
+	var normal: Dictionary = player._get_attack_damage()
+	player._is_special_attack = true
+	seed(791)
+	var strong: Dictionary = player._get_attack_damage()
+	_check(is_equal_approx(float(strong.power_multiplier), float(normal.power_multiplier) * 1.5), "third dagger swing snapshots strong power for all three contacts")
 	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.DAGGERS)
 	_check(config.max_targets == 1 and config.turn_limit_deg == [120, 120], "dagger target cap and turn limits preserved")
 	for step in range(3):
@@ -536,7 +555,6 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 		player._play_attack_animation(step + 1, true)
 		var hits: Array = Rules.profile(player).hit_fracs[step]
 		var motion_length: float = player._attack_anim_length - Rules.profile(player).recovery[step]
-		var impact_index := 0
 		for fraction in hits:
 			var contact: float = float(fraction) * motion_length
 			enemies[0].remove_meta("dagger_feedback_ms")
@@ -547,8 +565,7 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 			player._attack_anim_elapsed = contact + 0.001
 			player._update_attack_contact(contact - 0.001)
 			_check(enemies[0].current_hp < hp, "dagger authored contact lands on step %d" % (step + 1))
-			_check(enemies[0].hurt_timer >= 0.45 if impact_index == 0 else enemies[0].hurt_timer < 0.45, "only first dagger contact gets extended strong flinch")
-			impact_index += 1
+			_check(enemies[0].hurt_timer >= 0.45, "every strong dagger contact gets extended strong flinch")
 			hp = enemies[0].current_hp
 			player._update_attack_contact(contact)
 			_check(enemies[0].current_hp == hp, "dagger contact never repeats next frame")

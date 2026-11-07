@@ -1676,7 +1676,7 @@ func _attack_frac() -> float:
 func _try_queue_combo(special: bool) -> void:
 	if _attack_anim_length <= 0.0:
 		return  # Strong windup: committed, neither buffer nor fumble.
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if combo_state <= 0 or combo_state >= max_combo:
 		return  # technique cast or finisher — nothing to chain
 	if _queued_combo != ComboQueue.NONE:
@@ -1716,7 +1716,7 @@ func _attack_step_finished() -> void:
 		# Technique cast finished (no combo)
 		transition_to(PlayerState.IDLE)
 		return
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if _queued_combo != ComboQueue.NONE and combo_state < max_combo:
 		combo_state += 1
 		player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), combo_state, player_rotation, _queued_combo_yaw)
@@ -2418,7 +2418,7 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 	if current_state != PlayerState.ATTACKING or _attack_hit_done or combo_state <= 0 or _attack_anim_length <= 0:
 		return
 	var weapon_type := _get_equipped_weapon_type()
-	var config := CombatManager.get_weapon_type_config(weapon_type)
+	var config := _weapon_combat_config(weapon_type)
 	if SaberPrototype.enabled(self):
 		var step := clampi(combo_state - 1, 0, 2)
 		var motion_length := _attack_anim_length - float(SaberPrototype.profile(self).get("recovery", SaberPrototype.RECOVERY)[step])
@@ -2648,7 +2648,7 @@ func _ensure_combo_ring() -> void:
 func _chain_window(timing: Dictionary) -> Array[float]:
 	if SaberPrototype.enabled(self): return SaberPrototype.CHAIN.duplicate()
 	var window: Array[float] = [float(timing.just_start), 1.0]
-	var steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
+	var steps: Array = _weapon_combat_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
 	if not steps.is_empty():
 		var step: Dictionary = steps[clampi(combo_state - 1, 0, steps.size() - 1)]
 		if step.get("chain_open_frac") != null:
@@ -2667,7 +2667,7 @@ func _update_combo_ring(_delta: float) -> void:
 	_ensure_combo_ring()
 
 	# Use the same effective accept window as input, including imported close.
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
 		t = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
@@ -3077,7 +3077,7 @@ func _setup_attack_hitbox() -> void:
 	var box := BoxShape3D.new()
 	# Use weapon-specific hitbox size from config
 	var weapon_type: int = _get_equipped_weapon_type()
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	box.size = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	shape.shape = box
 	var offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
@@ -3086,6 +3086,13 @@ func _setup_attack_hitbox() -> void:
 
 	# Hitbox follows player rotation via model
 	model.add_child(attack_hitbox)
+
+
+func _weapon_combat_config(weapon_type: int) -> Dictionary:
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.DAGGERS:
+		return config.merged({"hit_h_dist": 2.6, "hit_v_dist": 0.9, "hit_h_angle_deg": 38.0, "hit_v_angle_deg": 45.0}, true)
+	return config
 
 
 func _get_attack_damage() -> Dictionary:
@@ -3139,7 +3146,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		_fire_projectile(atk)
 		return
 
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var in_cone: Array = _enemies_in_hit_cone(config)
 	var element: String = _current_attack_element if _is_special_attack else ""
 	var element_level: int = _current_attack_element_level if _is_special_attack else 0
@@ -3164,7 +3171,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		for _h in range(int(atk.get("hits", 1))):
 			if hb is Hurtbox:
 				var packet := atk.duplicate(true)
-				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack and (weapon_type != WeaponData.WeaponType.DAGGERS or _attack_hit_step == 0)
+				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 				packet["element"] = element
 				packet["element_level"] = element_level
 				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
@@ -3194,7 +3201,7 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 
 func _fire_projectile(atk: Dictionary) -> void:
 	var weapon_type: int = int(atk.get("weapon_type", 0))
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
 	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
@@ -3289,7 +3296,7 @@ func _update_combat_targets() -> void:
 	_targeted_enemies.clear()
 
 	var weapon_type: int = _get_equipped_weapon_type()
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var max_targets: int = int(config.get("max_targets", 1))
 
 	# Extend the scan to cover equipped techniques: their box-ish reach maps
